@@ -37,7 +37,4 @@ public sealed partial class MainWindow
 
     /// <summary>Full screen on, off or the other way (null).</summary>
     internal void ReaderSetFullscreen(bool? on) => Fullscreen(on);
-
-    /// <summary>Where the reader keeps this PC's own small choices.</summary>
-    internal string ReaderConfigDir => dirs.Config;
 }

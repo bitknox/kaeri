@@ -28,13 +28,15 @@ sealed class ReaderChrome
     public Border Group { get; } = new();
     public Border Notice { get; } = new() { Visibility = Visibility.Collapsed };
     public Button BackTo { get; } = new() { Visibility = Visibility.Collapsed };
+    /// <summary>Over the whole reader: the scrub preview, which follows the thumb above the group.</summary>
+    public Canvas PreviewLayer { get; } = new() { IsHitTestVisible = false };
 
     readonly TextBlock topTitle = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
     readonly Border credit = new() { Visibility = Visibility.Collapsed, CornerRadius = new CornerRadius(14), Padding = new Thickness(12, 4, 12, 4), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     readonly TextBlock creditText = new() { FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis };
     readonly Button back;
 
-    readonly Slider scrubber = new() { StepFrequency = 1, SmallChange = 1, LargeChange = 5, Minimum = 1, Maximum = 1, VerticalAlignment = VerticalAlignment.Center, IsThumbToolTipEnabled = true, Margin = new Thickness(8, 0, 8, 0) };
+    readonly Slider scrubber = new() { StepFrequency = 1, SmallChange = 1, LargeChange = 5, Minimum = 1, Maximum = 1, VerticalAlignment = VerticalAlignment.Center, IsThumbToolTipEnabled = false, Margin = new Thickness(8, 0, 8, 0) };
     readonly TextBlock leftNumber = Number();
     readonly TextBlock rightNumber = Number();
     readonly Canvas ringLayer = new() { IsHitTestVisible = false };
@@ -50,6 +52,15 @@ sealed class ReaderChrome
     readonly FontIcon fullscreenIcon = new() { Glyph = "", FontSize = 16 };
     bool scrubbing;
     bool setting;
+    readonly StackPanel preview = new() { Spacing = 6, Width = PreviewWidth, Visibility = Visibility.Collapsed };
+    readonly Border previewPage = new() { Width = PreviewWidth, Height = PreviewHeight, CornerRadius = new CornerRadius(4), BorderThickness = new Thickness(1) };
+    readonly PageImageView previewImage = new();
+    readonly TextBlock previewNumber = new() { FontSize = 13, FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    readonly Border previewPill = new() { Height = PillHeight, MinWidth = 36, CornerRadius = new CornerRadius(PillHeight / 2), Padding = new Thickness(10, 0, 10, 0), HorizontalAlignment = HorizontalAlignment.Center };
+    int previewAt = -1;
+    bool previewShown;
+
+    const double PreviewWidth = 96, PreviewHeight = 136, PillHeight = 24;
     ReaderAction? noticeKind;
 
     static TextBlock Number() => new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, MinWidth = 24, TextAlignment = TextAlignment.Center };
@@ -87,7 +98,11 @@ sealed class ReaderChrome
         AutomationProperties.SetName(scrubber, T.WindowsReaderScrubber);
         AutomationProperties.SetAccessibilityView(leftNumber, AccessibilityView.Raw);
         AutomationProperties.SetAccessibilityView(rightNumber, AccessibilityView.Raw);
-        scrubber.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, _) => scrubbing = true), true);
+        scrubber.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler((_, _) =>
+        {
+            scrubbing = true;
+            ShowPreview((int)Math.Round(scrubber.Value));
+        }), true);
         scrubber.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler((_, _) => EndScrub()), true);
         scrubber.AddHandler(UIElement.PointerCaptureLostEvent, new PointerEventHandler((_, _) => EndScrub()), true);
         scrubber.ValueChanged += (_, e) =>
@@ -97,9 +112,20 @@ sealed class ReaderChrome
             ShowNumbers((int)e.NewValue);
             if (!scrubbing)
                 owner.ScrubTo((int)Math.Round(e.NewValue));
+            else
+                ShowPreview((int)Math.Round(e.NewValue));
         };
         scrubber.SizeChanged += (_, _) => PlaceRing();
-        scrubber.ThumbToolTipValueConverter = new PageNumberConverter();
+
+        // The scrub preview: the page under the thumb, 96 wide, with its number under it.
+        previewImage.Width = PreviewWidth - 2;
+        previewImage.Height = PreviewHeight - 2;
+        previewPage.Child = previewImage;
+        previewPill.Child = previewNumber;
+        preview.Children.Add(previewPage);
+        preview.Children.Add(previewPill);
+        PreviewLayer.Children.Add(preview);
+        AutomationProperties.SetAccessibilityView(preview, AccessibilityView.Raw);
 
         Chapters = IconButton("", T.ReaderChapters, null, null);
         Settings = IconButton("", T.WindowsReaderSettingsOpen, null, null);
@@ -167,15 +193,6 @@ sealed class ReaderChrome
         Paint(owner.Palette);
     }
 
-    /// <summary>The page number a thumb tooltip shows while scrubbing.</summary>
-    sealed class PageNumberConverter : Microsoft.UI.Xaml.Data.IValueConverter
-    {
-        public object Convert(object value, Type targetType, object parameter, string language) =>
-            value is double d ? ((int)Math.Round(d)).ToString(System.Globalization.CultureInfo.CurrentCulture) : "";
-
-        public object ConvertBack(object value, Type targetType, object parameter, string language) => throw new NotSupportedException();
-    }
-
     Button IconButton(string glyph, string name, string? key, RoutedEventHandler? click)
     {
         var button = new Button
@@ -229,6 +246,11 @@ sealed class ReaderChrome
         leftNumber.Foreground = haze;
         rightNumber.Foreground = haze;
         ring.Stroke = silk;
+        previewPage.Background = new SolidColorBrush(palette.Raised);
+        previewPage.BorderBrush = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Rule, 0.8));
+        previewImage.Dim = palette.Paper;
+        previewPill.Background = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Glass, 0.96));
+        previewNumber.Foreground = silk;
         foreach (var button in new[] { back, Chapters, Settings, Fullscreen })
             Tint(button, palette);
         Notice.Background = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Glass, 0.96));
@@ -354,7 +376,88 @@ sealed class ReaderChrome
         if (!scrubbing)
             return;
         scrubbing = false;
+        HidePreview();
+        // The page underneath waited for the release; now it crossfades to where the thumb is.
         owner.ScrubTo((int)Math.Round(scrubber.Value));
+    }
+
+    // The scrub preview
+
+    /// <summary>
+    /// The page under the thumb, above the group, following the thumb and kept 12 from the
+    /// reader's edges. A novel has no pages to picture: its preview is the number alone.
+    /// </summary>
+    void ShowPreview(int value)
+    {
+        if (total <= 1)
+            return;
+        value = Math.Clamp(value, 1, total);
+        var fresh = !previewShown;
+        previewShown = true;
+        if (value != previewAt || fresh)
+        {
+            previewAt = value;
+            previewNumber.Text = value.ToString(System.Globalization.CultureInfo.CurrentCulture);
+            Picture();
+        }
+        PlacePreview();
+        if (!fresh)
+            return;
+        if (owner.PaperMode)
+            Motion.Set(preview, true);
+        else
+            Motion.Show(preview);
+    }
+
+    /// <summary>The engine's file for the page under the thumb, or the Raised plate until it lands.</summary>
+    void Picture()
+    {
+        var (file, pictured) = owner.PreviewOf(previewAt);
+        previewPage.Visibility = pictured ? Visibility.Visible : Visibility.Collapsed;
+        if (file is not null)
+        {
+            previewImage.Visibility = Visibility.Visible;
+            previewImage.Show(file, owner.Scale);
+        }
+        else
+            previewImage.Visibility = Visibility.Collapsed;
+    }
+
+    /// <summary>A page landed while the preview was up: it shows it.</summary>
+    public void RefreshPreview()
+    {
+        if (scrubbing && previewShown && previewAt > 0)
+            Picture();
+    }
+
+    void PlacePreview()
+    {
+        if (scrubber.ActualWidth <= 0 || PreviewLayer.ActualWidth <= 0 || previewAt < 1)
+            return;
+        // The thumb's centre, as PlaceRing finds the ring's.
+        const double thumb = 20;
+        var fraction = total <= 1 ? 0 : (previewAt - 1) / (double)(total - 1);
+        if (reversed)
+            fraction = 1 - fraction;
+        var x = thumb / 2 + fraction * (scrubber.ActualWidth - thumb);
+        var centre = scrubber.TransformToVisual(PreviewLayer).TransformPoint(new global::Windows.Foundation.Point(x, 0));
+        var groupTop = Group.TransformToVisual(PreviewLayer).TransformPoint(new global::Windows.Foundation.Point(0, 0)).Y;
+        var height = previewPage.Visibility == Visibility.Visible ? PreviewHeight + preview.Spacing + PillHeight : PillHeight;
+        var left = Math.Clamp(centre.X - PreviewWidth / 2, 12, Math.Max(12, PreviewLayer.ActualWidth - PreviewWidth - 12));
+        Canvas.SetLeft(preview, left);
+        Canvas.SetTop(preview, Math.Max(12, groupTop - height - 8));
+    }
+
+    void HidePreview()
+    {
+        if (!previewShown)
+            return;
+        previewShown = false;
+        previewAt = -1;
+        if (owner.PaperMode)
+            Motion.Set(preview, false);
+        else
+            Motion.Hide(preview);
     }
 
     public bool Scrubbing => scrubbing;

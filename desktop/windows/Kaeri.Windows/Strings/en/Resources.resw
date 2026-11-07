@@ -2275,6 +2275,10 @@
     <value>Saved to {server}</value>
     <comment>Page between chapters, under the tracker line: the book server the chapter came from has the progress.</comment>
   </data>
+  <data name="WindowsReaderServerSending" xml:space="preserve">
+    <value>Sending to {server}…</value>
+    <comment>Same place, while the server has not answered yet: shown after 600 ms, then replaced by the result.</comment>
+  </data>
   <data name="WindowsReaderServerOffline" xml:space="preserve">
     <value>Will send to {server} when you're back online</value>
     <comment>Same place, offline: the progress waits and is sent later.</comment>

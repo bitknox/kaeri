@@ -31,12 +31,21 @@ static class SendDialog
     /// Opens the dialog for <paramref name="chapters"/> of <paramref name="series"/>. With
     /// <paramref name="send"/> it shows a send already under way (a shot's staged one).
     /// </summary>
-    public static async Task Show(Ctx ctx, XamlRoot root, SeriesView series, IReadOnlyList<string> chapters, int? send = null)
+    public static Task Show(Ctx ctx, XamlRoot root, SeriesView series, IReadOnlyList<string> chapters, int? send = null) =>
+        Show(ctx, root, series.Work, series.Titles.Display, chapters, send);
+
+    /// <summary>
+    /// Opens the dialog for <paramref name="chapters"/> of <paramref name="work"/> where no series
+    /// page is open, as Downloads does for a series' downloaded chapters. The series' details are
+    /// asked for if not known yet; whether it is a novel follows once they come.
+    /// </summary>
+    public static async Task Show(Ctx ctx, XamlRoot root, string work, string? title, IReadOnlyList<string> chapters, int? send = null)
     {
         var reading = ctx.Known.Reading;
         var sending = reading.Sending;
-        var work = series.Work;
-        var novel = series.Medium == Medium.Novel;
+        bool Novel() => reading.Series.GetValueOrDefault(work)?.Medium == Medium.Novel;
+        var novel = Novel();
+        string Title() => reading.Series.GetValueOrDefault(work)?.Titles.Display is { Length: > 0 } known ? known : title ?? "";
         var ids = new List<string>(chapters);
         string? chosen = sending.Get(send ?? -1)?.Target;
         int? sendId = send;
@@ -47,8 +56,8 @@ static class SendDialog
         var whatPart = new StackPanel { Spacing = 4 };
         var notes = new StackPanel { Spacing = 6 };
         var progressPart = new StackPanel { Spacing = 8, Margin = new Thickness(0, 8, 0, 0) };
-        if (series.Titles.Display is { Length: > 0 } title)
-            body.Children.Add(Ui.Haze(title));
+        if (Title() is { Length: > 0 } named)
+            body.Children.Add(Ui.Haze(named));
         body.Children.Add(Heading(T.SendFor));
         body.Children.Add(targetsPart);
         body.Children.Add(Heading(T.SendWhat));
@@ -78,7 +87,7 @@ static class SendDialog
         {
             var targets = sending.Targets;
             var target = Target();
-            var print = Drawn.Fingerprint((targets.Select(t => t.Id).ToList(), target?.Id, Send()?.IsRunning));
+            var print = Drawn.Fingerprint((targets.Select(t => t.Id).ToList(), target?.Id, Send()?.IsRunning, novel));
             if (print == drawnTargets)
                 return;
             drawnTargets = print;
@@ -285,6 +294,7 @@ static class SendDialog
 
         void Draw()
         {
+            novel = Novel();
             DrawTargets();
             var target = Target();
             var running = Send();
@@ -394,7 +404,7 @@ static class SendDialog
             {
                 // The share sheet comes up over the window; the dialog closes once something took the files.
                 args.Cancel = true;
-                if (await SendFiles.Share(ctx, running, series.Titles.Display))
+                if (await SendFiles.Share(ctx, running, Title()))
                     dialog.Hide();
                 return;
             }
@@ -412,11 +422,12 @@ static class SendDialog
 
         void Changed(ReadingPart part)
         {
-            if (part is ReadingPart.Send or ReadingPart.Estimate or ReadingPart.Chapters or ReadingPart.Downloads)
+            if (part is ReadingPart.Send or ReadingPart.Estimate or ReadingPart.Chapters or ReadingPart.Downloads or ReadingPart.Series)
                 Draw();
         }
         reading.Changed += Changed;
         sending.LoadTargets();
+        reading.LoadSeriesInfo(work);
         if (!reading.Chapters.ContainsKey(work))
             reading.LoadChapters(work);
         if (reading.Downloads is null)
@@ -454,17 +465,18 @@ static class SendDialog
 
 /// <summary>
 /// The status rows a send keeps on its series page: the progress while it is made, the waiting
-/// line with Cancel, the files to share or save, or why it failed with Try again.
+/// line with Cancel, the files to share or save, or why it failed with Try again. Downloads keeps
+/// every send's rows, each naming its series.
 /// </summary>
 sealed partial class SendStatusRows : StackPanel
 {
     readonly Ctx ctx;
-    readonly Func<string> work;
+    readonly Func<string?> work;
     readonly Func<SeriesView?> series;
     string? drawn;
     readonly Dictionary<int, ProgressBar> bars = [];
 
-    public SendStatusRows(Ctx ctx, Func<string> work, Func<SeriesView?> series)
+    public SendStatusRows(Ctx ctx, Func<string?> work, Func<SeriesView?> series)
     {
         this.ctx = ctx;
         this.work = work;
@@ -474,10 +486,27 @@ sealed partial class SendStatusRows : StackPanel
         Draw();
     }
 
+    /// <summary>Every send, whatever its series, as Downloads shows them.</summary>
+    public SendStatusRows(Ctx ctx) : this(ctx, () => null, () => null)
+    {
+    }
+
+    /// <summary>Whether the rows show every send rather than one series' own.</summary>
+    bool All => work() is null;
+
+    /// <summary>The send's series: the page's own, else what the engine said about it.</summary>
+    SeriesView? SeriesOf(EReaderSend send) => (All ? null : series()) ?? ctx.Known.Reading.Series.GetValueOrDefault(send.Work);
+
+    /// <summary>The send's series title, from its details or its Downloads row.</summary>
+    string TitleOf(EReaderSend send) =>
+        SeriesOf(send)?.Titles.Display is { Length: > 0 } known
+            ? known
+            : ctx.Known.Reading.Downloads?.Series.FirstOrDefault(s => s.Work == send.Work)?.Title ?? "";
+
     public void Draw()
     {
-        var sends = ctx.Known.Reading.Sending.Sends.Where(s => s.Work == work() && s.Id != SendDialog.Showing).ToList();
-        var print = Drawn.Fingerprint(sends.Select(s => (s.Id, s.Phase, s.Done, s.Total, s.Line, s.Files.Length, s.Target)).ToList());
+        var sends = ctx.Known.Reading.Sending.Sends.Where(s => (All || s.Work == work()) && s.Id != SendDialog.Showing).ToList();
+        var print = Drawn.Fingerprint(sends.Select(s => (s.Id, s.Phase, s.Done, s.Total, s.Line, s.Files.Length, s.Target, All ? TitleOf(s) : "")).ToList());
         if (print == drawn)
         {
             // Only the progress moved: the bars take it in place.
@@ -505,6 +534,8 @@ sealed partial class SendStatusRows : StackPanel
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var words = new StackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
         words.Children.Add(Ui.Text(device.Length == 0 ? T.SendTitle : T.SendBanner(device), "BodyStrongTextBlockStyle", wrap: false));
+        if (All && TitleOf(send) is { Length: > 0 } title)
+            words.Children.Add(Ui.Text(title, "HazeCaptionStyle", wrap: false));
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(buttons, 1);
         switch (send.Phase)
@@ -527,7 +558,7 @@ sealed partial class SendStatusRows : StackPanel
                 words.Children.Add(Ui.Text(T.SendReady(send.Files.Length), "HazeCaptionStyle", wrap: false));
                 buttons.Children.Add(Ui.Label(T.ActionShare, async (_, _) =>
                 {
-                    if (await SendFiles.Share(ctx, send, series()?.Titles.Display ?? ""))
+                    if (await SendFiles.Share(ctx, send, TitleOf(send)))
                         Draw();
                 }));
                 buttons.Children.Add(Ui.Label(T.SendSaveFilesWindows, async (_, _) =>
@@ -570,7 +601,7 @@ sealed partial class SendStatusRows : StackPanel
         var sending = ctx.Known.Reading.Sending;
         if (sending.Targets.FirstOrDefault(t => t.Id == send.Target) is not { } target)
             return;
-        var novel = series()?.Medium == Medium.Novel;
+        var novel = SeriesOf(send)?.Medium == Medium.Novel;
         sending.Dismiss(send.Id);
         sending.Begin(send.Work, send.Chapters, target, novel);
         Draw();

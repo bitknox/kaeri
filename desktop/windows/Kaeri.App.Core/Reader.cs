@@ -70,6 +70,19 @@ public sealed class ReaderSession
     public (string Host, WriteBackResult Result)? ServerProgress { get; private set; }
     /// <summary>The id of the book server <see cref="ServerProgress"/> names, for Try again.</summary>
     public string? ServerProgressServer { get; private set; }
+    /// <summary>
+    /// The read chapter's progress is on its way to this book server, which has not answered yet:
+    /// from <see cref="ReaderEvent.ChapterRead"/> until <see cref="ReaderEvent.ProgressSent"/>. The
+    /// end page shows "Sending to" once it has waited 600 ms from <c>Since</c>.
+    /// </summary>
+    public (string Server, string Host, DateTimeOffset Since)? ServerSending { get; private set; }
+
+    /// <summary>
+    /// The book server a work's chapters come from when it is set to receive progress, as its id
+    /// and host; null when there is none. The engine sends no start event, so the session asks
+    /// this when a chapter counts as read. <see cref="Known"/> sets it.
+    /// </summary>
+    public Func<string, (string Server, string Host)?>? ProgressServer { get; set; }
     /// <summary>A place the paged reader is told to show (Back to page, Start over, another device's).</summary>
     public (int Leaf, int Tick)? GoTo { get; private set; }
     /// <summary>A novel place the web view is told to show.</summary>
@@ -416,6 +429,7 @@ public sealed class ReaderSession
                 ReadTrackers = [];
                 ServerProgress = null;
                 ServerProgressServer = null;
+                ServerSending = null;
                 NextPreview = null;
                 Opening = null;
                 Ring = null;
@@ -489,6 +503,10 @@ public sealed class ReaderSession
                 {
                     Read = true;
                     ReadTrackers = read.Trackers;
+                    // What the engine already knows (offline, held) came before this; otherwise the
+                    // server is asked now and its answer follows.
+                    if (ServerProgress is null && ServerSending is null && ProgressServer?.Invoke(read.Work) is { } to)
+                        ServerSending = (to.Server, to.Host, DateTimeOffset.UtcNow);
                     Changed?.Invoke(ReaderChange.Read);
                 }
                 break;
@@ -497,6 +515,7 @@ public sealed class ReaderSession
                 {
                     ServerProgress = (sent.Host, sent.Result);
                     ServerProgressServer = sent.Server;
+                    ServerSending = null;
                     Changed?.Invoke(ReaderChange.Sent);
                 }
                 break;
@@ -657,6 +676,7 @@ public sealed class ReaderSession
         ReadTrackers = [];
         ServerProgress = null;
         ServerProgressServer = null;
+        ServerSending = null;
         NextPreview = null;
         Opening = null;
         Chapters = [];
@@ -691,4 +711,22 @@ public sealed class ReaderSession
 
     /// <summary>The leaves the person sees as pages: the end page's leaf is not one.</summary>
     public int ReadingLeaves => Leaves.Count(l => !l.EndPage);
+
+    /// <summary>
+    /// The book server <paramref name="source"/> names, when it is one of <paramref name="servers"/>
+    /// and set to receive progress: its id and host. A folder or a plugin is no server.
+    /// </summary>
+    public static (string Server, string Host)? ReceivingServer(string? source, IEnumerable<BookServerRow>? servers)
+    {
+        if (string.IsNullOrEmpty(source) || servers is null)
+            return null;
+        foreach (var server in servers)
+            if (server.Id == source)
+                return server.ReportProgress && !server.Off ? (server.Id, HostOf(server.Address)) : null;
+        return null;
+    }
+
+    /// <summary>The host the end page names for a server's address, as the engine's own line does.</summary>
+    public static string HostOf(string address) =>
+        Uri.TryCreate(address, UriKind.Absolute, out var uri) && !string.IsNullOrEmpty(uri.Host) ? uri.Host : address;
 }

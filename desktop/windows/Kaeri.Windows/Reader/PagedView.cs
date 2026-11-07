@@ -56,6 +56,9 @@ sealed class LeafView : Canvas
 /// <summary>
 /// Pages one at a time, or two as a spread. A turn slides the next leaf in on 250 ms
 /// fast-out-slow-in; with animation effects off it crossfades, and Paper mode turns at once.
+/// A touch or pen drag turns the way the book reads: the leaf follows the finger with its
+/// neighbour beside it, and past a quarter of the width, or with a flick, both settle on the
+/// standard spring; otherwise they spring back. The mouse keeps the click zones and the wheel.
 /// The leaves either side stay mounted off screen so their images are decoded before the turn.
 /// Pinch and Ctrl+wheel zoom; a turn or a double click puts the zoom back.
 /// </summary>
@@ -68,11 +71,14 @@ sealed class PagedView : Grid
     int current = -1;
     string? chapter;
     Storyboard? turning;
+    bool swiping;
+    double swipeX, swipeVelocity;
     long lastWheel;
     double lastWheelOffset = -1;
 
     static readonly KeySpline FastOutSlowIn = new() { ControlPoint1 = new Point(0.4, 0), ControlPoint2 = new Point(0.2, 1) };
     static readonly TimeSpan TurnTime = TimeSpan.FromMilliseconds(250);
+    const string MoveX = "(UIElement.RenderTransform).(TranslateTransform.X)";
 
     public PagedView(ReaderOverlay owner)
     {
@@ -90,6 +96,8 @@ sealed class PagedView : Grid
             Content = stage,
         };
         stage.HorizontalAlignment = HorizontalAlignment.Center;
+        // Hit-testable everywhere, so a drag can start between a spread's pages.
+        stage.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
         stage.VerticalAlignment = VerticalAlignment.Center;
         Children.Add(zoom);
         Clip = new RectangleGeometry();
@@ -107,6 +115,23 @@ sealed class PagedView : Grid
                 e.Handled = true;
             }
         };
+
+        // Swipes: the scroll view keeps pinch and the vertical scroll (System), the stage takes
+        // a sideways drag while the page is not zoomed or wider than the window.
+        stage.ManipulationStarted += OnSwipeStarted;
+        stage.ManipulationDelta += OnSwipeDelta;
+        stage.ManipulationCompleted += OnSwipeCompleted;
+        stage.SizeChanged += (_, _) => Rails();
+        zoom.ViewChanged += (_, _) => Rails();
+        Rails();
+    }
+
+    /// <summary>A zoomed page, or one wider than the window, pans sideways; otherwise a drag turns.</summary>
+    void Rails()
+    {
+        var swipes = !Zoomed && zoom.ScrollableWidth <= 1;
+        zoom.HorizontalScrollMode = swipes ? ScrollMode.Disabled : ScrollMode.Auto;
+        stage.ManipulationMode = swipes ? ManipulationModes.System | ManipulationModes.TranslateX : ManipulationModes.System;
     }
 
     ReaderSession Reader => owner.Reader;
@@ -233,6 +258,7 @@ sealed class PagedView : Grid
         }
         stage.Width = cw;
         stage.Height = ch;
+        Rails();
         foreach (var element in mounted.Values)
         {
             element.Width = cw;
@@ -326,15 +352,15 @@ sealed class PagedView : Grid
             // A jump, or animation effects off: the new leaf crossfades in over the old.
             ((TranslateTransform)incoming.RenderTransform).X = 0;
             incoming.Opacity = 0;
-            turning = Board(incoming, "Opacity", 0, 1, null);
-            turning.Children.Add(Animation(old, "Opacity", 1, 0));
+            turning = Board(incoming, "Opacity", 0, 1, null, Motion.Quick);
+            turning.Children.Add(Animation(old, "Opacity", 1, 0, null, Motion.Quick));
             Run(target);
             return;
         }
         var width = ActualWidth;
         var sign = forward ? ForwardFrom : -ForwardFrom;
-        turning = Board(incoming, "(UIElement.RenderTransform).(TranslateTransform.X)", sign * width, 0, FastOutSlowIn);
-        turning.Children.Add(Animation(old, "(UIElement.RenderTransform).(TranslateTransform.X)", 0, -sign * width, FastOutSlowIn));
+        turning = Board(incoming, MoveX, sign * width, 0, FastOutSlowIn);
+        turning.Children.Add(Animation(old, MoveX, 0, -sign * width, FastOutSlowIn));
         Run(target);
     }
 
@@ -346,24 +372,26 @@ sealed class PagedView : Grid
             if (turning != board)
                 return;
             turning = null;
+            // Let go of the held values, so the next drag moves the leaves itself.
+            board.Stop();
             if (current == target)
                 Mount();
         };
         board.Begin();
     }
 
-    static Storyboard Board(UIElement element, string property, double from, double to, KeySpline? spline)
+    static Storyboard Board(UIElement element, string property, double from, double to, KeySpline? spline, TimeSpan? time = null)
     {
         var board = new Storyboard();
-        board.Children.Add(Animation(element, property, from, to, spline));
+        board.Children.Add(Animation(element, property, from, to, spline, time));
         return board;
     }
 
-    static DoubleAnimationUsingKeyFrames Animation(UIElement element, string property, double from, double to, KeySpline? spline = null)
+    static DoubleAnimationUsingKeyFrames Animation(UIElement element, string property, double from, double to, KeySpline? spline = null, TimeSpan? time = null)
     {
         var animation = new DoubleAnimationUsingKeyFrames();
         animation.KeyFrames.Add(new DiscreteDoubleKeyFrame { KeyTime = TimeSpan.Zero, Value = from });
-        animation.KeyFrames.Add(new SplineDoubleKeyFrame { KeyTime = TurnTime, Value = to, KeySpline = spline ?? FastOutSlowIn });
+        animation.KeyFrames.Add(new SplineDoubleKeyFrame { KeyTime = time ?? TurnTime, Value = to, KeySpline = spline ?? FastOutSlowIn });
         Storyboard.SetTarget(animation, element);
         Storyboard.SetTargetProperty(animation, property);
         return animation;
@@ -376,6 +404,149 @@ sealed class PagedView : Grid
         turning = null;
         board.Stop();
         Mount();
+    }
+
+    // Swiping
+
+    /// <summary>Whether a drag of <paramref name="x"/> goes forward: right in a right-to-left book, left otherwise.</summary>
+    bool Forward(double x) => x * -ForwardFrom > 0;
+
+    /// <summary>Whether a drag that way has somewhere to go: a leaf, or the next chapter past the end page.</summary>
+    bool CanGo(bool forward)
+    {
+        if (forward && Reader.Leaves[current].EndPage)
+            return (Reader.End?.Next ?? Reader.View?.Next) is not null;
+        var target = current + (forward ? 1 : -1);
+        return target >= 0 && target < Reader.Leaves.Length;
+    }
+
+    /// <summary>A finger or a pen starts a drag; the mouse keeps its click zones.</summary>
+    void OnSwipeStarted(object sender, ManipulationStartedRoutedEventArgs e)
+    {
+        if (e.PointerDeviceType == PointerDeviceType.Mouse || Zoomed || current < 0 || current >= Reader.Leaves.Length)
+        {
+            e.Complete();
+            return;
+        }
+        // A turn under way lands first, so the drag starts from a still page.
+        StopTurn();
+        swiping = true;
+        swipeX = 0;
+        swipeVelocity = 0;
+        e.Handled = true;
+    }
+
+    void OnSwipeDelta(object sender, ManipulationDeltaRoutedEventArgs e)
+    {
+        if (!swiping)
+            return;
+        e.Handled = true;
+        var x = e.Cumulative.Translation.X;
+        swipeX = x;
+        swipeVelocity = e.Velocities.Linear.X * 1000;
+        // Paper mode and reduced motion: nothing follows the finger; the turn comes on release.
+        if (owner.PaperMode || !Motion.Enabled)
+            return;
+        // Past either end the page gives a quarter of the way, and comes back.
+        if (!CanGo(Forward(x)))
+            x /= 4;
+        Follow(x);
+    }
+
+    void OnSwipeCompleted(object sender, ManipulationCompletedRoutedEventArgs e)
+    {
+        if (!swiping)
+            return;
+        swiping = false;
+        e.Handled = true;
+        if (current < 0 || current >= Reader.Leaves.Length)
+            return;
+        var x = swipeX;
+        var forward = Forward(x);
+        var flick = Math.Abs(swipeVelocity) > 450 && swipeVelocity * x > 0;
+        var commit = Math.Abs(x) > Math.Max(ActualWidth, 1) * 0.25 || flick;
+        if (!commit || !CanGo(forward))
+        {
+            SpringBack();
+            return;
+        }
+        if (Reader.Leaves[current].EndPage && forward)
+        {
+            // One more swipe past the end page opens the next chapter.
+            Mount();
+            Turn(true, TurnHow.Swipe);
+            return;
+        }
+        if (owner.PaperMode || !Motion.Enabled)
+        {
+            // Nothing followed the finger: the turn is the keys' (at once on paper, a crossfade otherwise).
+            Turn(forward, TurnHow.Swipe);
+            return;
+        }
+        var target = current + (forward ? 1 : -1);
+        Reader.Shown(target, TurnHow.Swipe);
+        Settle(target);
+        owner.Turned();
+    }
+
+    /// <summary>The leaf on screen at <paramref name="x"/>, each neighbour a width away on its side.</summary>
+    void Follow(double x)
+    {
+        var width = ActualWidth;
+        foreach (var (index, element) in mounted)
+            if (element.RenderTransform is TranslateTransform move)
+                move.X = x + (index == current ? 0 : (index > current ? ForwardFrom : -ForwardFrom) * width);
+    }
+
+    /// <summary>A drag let go past the line: the two leaves finish the way on the standard spring.</summary>
+    void Settle(int target)
+    {
+        var from = current;
+        if (!mounted.TryGetValue(from, out var old) || !mounted.TryGetValue(target, out var incoming)
+            || old.RenderTransform is not TranslateTransform oldMove || incoming.RenderTransform is not TranslateTransform inMove)
+        {
+            current = target;
+            Mount();
+            return;
+        }
+        current = target;
+        Canvas.SetZIndex(incoming, 1);
+        Canvas.SetZIndex(old, 0);
+        incoming.IsHitTestVisible = true;
+        old.IsHitTestVisible = false;
+        // The old leaf leaves on the side opposite the one the new leaf waited on.
+        var side = target > from ? ForwardFrom : -ForwardFrom;
+        turning = Board(incoming, MoveX, inMove.X, 0, Motion.SpringSpline(), Motion.Standard);
+        turning.Children.Add(Animation(old, MoveX, oldMove.X, -side * ActualWidth, Motion.SpringSpline(), Motion.Standard));
+        Run(target);
+    }
+
+    /// <summary>A drag let go short of the line: everything goes back where it was.</summary>
+    void SpringBack()
+    {
+        if (owner.PaperMode || !Motion.Enabled || mounted.Count == 0)
+        {
+            Mount();
+            return;
+        }
+        var width = ActualWidth;
+        Storyboard? board = null;
+        foreach (var (index, element) in mounted)
+        {
+            if (element.RenderTransform is not TranslateTransform move)
+                continue;
+            var home = index == current ? 0 : (index > current ? ForwardFrom : -ForwardFrom) * width;
+            var animation = Animation(element, MoveX, move.X, home, Motion.SpringSpline(), Motion.Standard);
+            board ??= new Storyboard();
+            board.Children.Add(animation);
+        }
+        if (board is null)
+        {
+            Mount();
+            return;
+        }
+        turning = board;
+        Run(current);
     }
 
     // Input

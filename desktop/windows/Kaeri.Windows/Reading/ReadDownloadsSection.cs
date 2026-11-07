@@ -14,8 +14,10 @@ namespace Kaeri.Windows.Pages;
 /// <summary>
 /// Downloads' Reading section: one row per series with what its chapters are doing, a failure's
 /// cause with Retry, and Delete read for chapters already read (the engine spares bookmarked
-/// ones). Headed Reading with its chapters and size, first on Downloads with both media on;
-/// alone, under the page's own title, with reading alone.
+/// ones). A series' menu offers Send to e-reader with its downloaded chapters, and every send
+/// under way, ready or failed keeps a status row above the series. Headed Reading with its
+/// chapters and size, first on Downloads with both media on; alone, under the page's own title,
+/// with reading alone.
 /// </summary>
 public sealed partial class ReadDownloadsSection : UserControl
 {
@@ -24,6 +26,7 @@ public sealed partial class ReadDownloadsSection : UserControl
     readonly TextBlock total = new() { Style = Ui.Res<Style>("HazeBodyStyle"), VerticalAlignment = VerticalAlignment.Bottom };
     readonly StackPanel head = new() { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(0, 0, 0, 8) };
     readonly StackPanel rows = new() { TabFocusNavigation = KeyboardNavigationMode.Local, XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled };
+    readonly SendStatusRows sends;
     BookDownloadsView? shown;
     bool hearing, headed = true;
 
@@ -40,7 +43,7 @@ public sealed partial class ReadDownloadsSection : UserControl
 
     /// <summary>Whether the engine has said what is downloaded, and whether any series is.</summary>
     public bool HasAnswer => ctx.Known.Reading.Downloads is not null;
-    public bool Any => ctx.Known.Reading.Downloads is { Series.Length: > 0 };
+    public bool Any => ctx.Known.Reading.Downloads is { Series.Length: > 0 } || ctx.Known.Reading.Sending.Sends.Count > 0;
 
     /// <summary>The section's content changed: the page may show or hide it, or its empty state.</summary>
     public event Action? Changed;
@@ -50,8 +53,10 @@ public sealed partial class ReadDownloadsSection : UserControl
         AutomationProperties.SetHeadingLevel(heading, AutomationHeadingLevel.Level2);
         head.Children.Add(heading);
         head.Children.Add(total);
+        sends = new SendStatusRows(ctx) { Margin = new Thickness(0, 0, 0, 8) };
         var stack = new StackPanel();
         stack.Children.Add(head);
+        stack.Children.Add(sends);
         stack.Children.Add(rows);
         Content = stack;
         Loaded += (_, _) =>
@@ -60,6 +65,10 @@ public sealed partial class ReadDownloadsSection : UserControl
                 ctx.Known.Reading.Changed += Heard;
             hearing = true;
             ctx.Known.Reading.LoadDownloads();
+            // The status rows name each send's e-reader.
+            if (ctx.Known.Reading.Sending.Targets.Length == 0)
+                ctx.Known.Reading.Sending.LoadTargets();
+            sends.Draw();
             Show();
         };
         Unloaded += (_, _) =>
@@ -71,9 +80,24 @@ public sealed partial class ReadDownloadsSection : UserControl
 
     void Heard(ReadingPart part)
     {
+        if (part is ReadingPart.Send or ReadingPart.Targets or ReadingPart.Series or ReadingPart.Downloads)
+            sends.Draw();
+        // A send starting or ending can show or hide the section.
+        if (part is ReadingPart.Send)
+            Changed?.Invoke();
         // A cover can come with a series' details later than its downloads.
         if (part is ReadingPart.Downloads or ReadingPart.Series)
             Show(part == ReadingPart.Series);
+    }
+
+    /// <summary>
+    /// Send to e-reader with the series' downloaded chapters, or the send it has under way.
+    /// </summary>
+    async void Send(BookDownloadSeries series, string[] kept)
+    {
+        var running = ctx.Known.Reading.Sending.Running(series.Work);
+        await SendDialog.Show(ctx, XamlRoot, series.Work, series.Title, running?.Chapters ?? kept, running?.Id);
+        sends.Draw();
     }
 
     /// <summary>"38 chapters · 1.1 GB", as the engine words the Reading total; empty with nothing kept.</summary>
@@ -124,6 +148,11 @@ public sealed partial class ReadDownloadsSection : UserControl
     UIElement Row(BookDownloadsView view, BookDownloadSeries series)
     {
         var failed = series.Failed.Length > 0;
+        // The chapters kept here: what Send to e-reader works from.
+        var kept = view.Rows
+            .Where(r => r.Work == series.Work && r.State is ChapterDownloadState.Done)
+            .Select(r => r.Chapter.Id)
+            .ToArray();
         var grid = new Grid { ColumnSpacing = 14, Padding = new Thickness(0, 10, 0, 10) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -180,6 +209,8 @@ public sealed partial class ReadDownloadsSection : UserControl
         // The row's menu: what the tools do, by right-click, Shift+F10 or the menu key.
         var menu = new MenuFlyout();
         menu.Items.Add(ReadingParts.Item(T.HomeDetails, () => ctx.Window.OpenSeries(series.Work)));
+        if (kept.Length > 0)
+            menu.Items.Add(ReadingParts.Item(T.SendTitle, () => Send(series, kept)));
         if (failed)
             menu.Items.Add(ReadingParts.Item(T.ChapterRetry, () => ctx.Known.Reading.Download(series.Work, new DownloadPick.Chapters(series.Failed))));
         if (series.Read > 0)

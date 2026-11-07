@@ -506,6 +506,7 @@ sealed class WelcomeDialog
             case KaeriIsFor.Read:
                 dialog.Title = T.OnboardingBooksTitle;
                 body.Children.Add(Ui.Text(T.OnboardingBooksLine, "BodyTextBlockStyle"));
+                DemoCard(both: false);
                 body.Children.Add(Row("WelcomeBookFolder", "", T.OnboardingBooksFolder, T.OnboardingBooksFolderLine, () => Leave("book-folder")));
                 body.Children.Add(Row("WelcomeBookServer", "", T.OnboardingBooksServer, T.OnboardingBooksServerLine, () => Leave("book-server")));
                 InviteRows(T.OnboardingBooksInviteHeading, T.OnboardingBooksInvitePlaceholder, T.OnboardingBooksPluginLine);
@@ -524,10 +525,13 @@ sealed class WelcomeDialog
                 body.Children.Add(Part(T.OnboardingBothBooks));
                 body.Children.Add(Row("WelcomeBookFolder", "", T.OnboardingBooksFolder, T.OnboardingBooksFolderLine, () => Leave("book-folder")));
                 body.Children.Add(Row("WelcomeBookServer", "", T.OnboardingBooksServer, T.OnboardingBooksServerLine, () => Leave("book-server")));
-                var tryIt = Heading(T.OnboardingDemoHeading);
-                AutomationProperties.SetHeadingLevel(tryIt, AutomationHeadingLevel.Level2);
-                body.Children.Add(tryIt);
-                body.Children.Add(Ui.Text(T.OnboardingDemoDetail, "BodyTextBlockStyle"));
+                if (!DemoCard(both: true))
+                {
+                    var tryIt = Heading(T.OnboardingDemoHeading);
+                    AutomationProperties.SetHeadingLevel(tryIt, AutomationHeadingLevel.Level2);
+                    body.Children.Add(tryIt);
+                    body.Children.Add(Ui.Text(T.OnboardingDemoDetail, "BodyTextBlockStyle"));
+                }
                 InviteRows(T.OnboardingInviteHeading, T.StoresInviteLinkHint, T.PluginRiskWarning);
                 break;
             default:
@@ -634,6 +638,37 @@ sealed class WelcomeDialog
             grid.Children.Add(control);
         }
         return grid;
+    }
+
+    /// <summary>
+    /// Try it now, with reading on: one raised card with the demo's line and Read the demo, which
+    /// ends first run on Read's Home, where the demo is the spotlight. With both, the line names the
+    /// episode and the comic, and Play the demo stays the dialog's own button. The comic's first
+    /// pages are fetched ahead while the page shows. False when the demo has no reading part.
+    /// </summary>
+    bool DemoCard(bool both)
+    {
+        if (!ctx.Known.Demo.Reading)
+            return false;
+        ctx.Send(new Command.BookSources(new BookSourceCommand.PrefetchDemo()));
+        var card = new StackPanel
+        {
+            Spacing = 6,
+            Padding = new Thickness(14, 12, 14, 14),
+            CornerRadius = new CornerRadius(8),
+            Background = Ui.Res<Brush>("RaisedBrush"),
+            Margin = new Thickness(0, 6, 0, 0),
+        };
+        var heading = Ui.Text(T.OnboardingDemoHeading, "BodyStrongTextBlockStyle");
+        AutomationProperties.SetHeadingLevel(heading, AutomationHeadingLevel.Level2);
+        card.Children.Add(heading);
+        card.Children.Add(Ui.Haze(both ? T.OnboardingDemoBothDetail : T.OnboardingDemoBooksDetail));
+        var read = Ui.Label(T.OnboardingReadDemo, (_, _) => Leave("read-demo"));
+        read.Name = "WelcomeReadDemo";
+        read.Margin = new Thickness(0, 6, 0, 0);
+        card.Children.Add(read);
+        body.Children.Add(card);
+        return true;
     }
 
     static TextBlock Part(string text)

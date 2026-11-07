@@ -713,6 +713,8 @@ public sealed partial class MainWindow : Window
                     await CameInDesk.PickFolder(ctx);
                 else if (welcome.Then == "book-server")
                     await new BookServerDialog(ctx, Root.XamlRoot).ShowAsync();
+                else if (welcome.Then == "read-demo")
+                    Navigate("read");
             });
     }
 

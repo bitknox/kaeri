@@ -1599,6 +1599,9 @@ public static partial class T
     /// <summary>Page between chapters, under the tracker line: the book server the chapter came from has the progress.</summary>
     public static string WindowsReaderServerSaved(string server) => Fill(Get("WindowsReaderServerSaved"), ("server", server));
 
+    /// <summary>Same place, while the server has not answered yet: shown after 600 ms, then replaced by the result.</summary>
+    public static string WindowsReaderServerSending(string server) => Fill(Get("WindowsReaderServerSending"), ("server", server));
+
     /// <summary>Same place, offline: the progress waits and is sent later.</summary>
     public static string WindowsReaderServerOffline(string server) => Fill(Get("WindowsReaderServerOffline"), ("server", server));
 
@@ -11673,6 +11676,7 @@ public static partial class T
         ["WindowsReaderEndOffline"] = "{chapter} isn't downloaded",
         ["WindowsReaderEndOfflineBody"] = "You're offline. It opens here once you're connected.",
         ["WindowsReaderServerSaved"] = "Saved to {server}",
+        ["WindowsReaderServerSending"] = "Sending to {server}…",
         ["WindowsReaderServerOffline"] = "Will send to {server} when you're back online",
         ["WindowsReaderServerRetrying"] = "{server} didn't answer. Kaeri will try again.",
         ["WindowsReaderServerFailed"] = "Not saved to {server}: {reason}.",

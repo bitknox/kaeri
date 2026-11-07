@@ -130,6 +130,12 @@ windows-reader-end-offline-body = You're offline. It opens here once you're conn
 # @max 60
 windows-reader-server-saved = Saved to { $server }
 
+# Same place, while the server has not answered yet: shown after 600 ms, then replaced by the result.
+# @only windows
+# @arg server: text
+# @max 60
+windows-reader-server-sending = Sending to { $server }…
+
 # Same place, offline: the progress waits and is sent later.
 # @only windows
 # @arg server: text

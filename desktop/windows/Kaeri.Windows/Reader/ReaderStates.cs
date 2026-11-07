@@ -160,7 +160,7 @@ sealed class EndPageView : Grid
         var read = ReaderText.Line(readLine, 15, palette.Haze);
         read.Margin = new Thickness(0, 6, 0, 0);
         words.Children.Add(read);
-        words.Children.Add(ServerLine(owner));
+        words.Children.Add(owner.ServerLine.Take());
 
         if (next is not null)
         {
@@ -242,45 +242,165 @@ sealed class EndPageView : Grid
         else
             Children.Add(words);
     }
+}
 
-    /// <summary>
-    /// The book server's line: saved, waiting, or not saved with Try again. Two lines' height is
-    /// kept for it, so nothing moves when it comes in.
-    /// </summary>
-    static FrameworkElement ServerLine(ReaderOverlay owner)
+/// <summary>
+/// The book server's line on the end page: saved, sending, waiting, or not saved with Try again.
+/// The engine says nothing when a send starts, so the session marks it when the chapter counts as
+/// read; the line shows nothing for 600 ms, then "Sending to" for at least 0.3 s, then the answer.
+/// Each change crossfades in place on 0.3 s (Paper mode cuts), and two lines' height is held from
+/// the first frame, so nothing under it moves. The reader keeps one, and each end page built
+/// takes it, so a rebuild keeps its timing and what it showed.
+/// </summary>
+sealed class ServerLineView : Grid
+{
+    static readonly TimeSpan Wait = TimeSpan.FromMilliseconds(600);
+
+    readonly ReaderOverlay owner;
+    readonly DispatcherQueueTimer later;
+    FrameworkElement? shown;
+    string? shownKey;
+    DateTimeOffset shownAt;
+    bool shownPaper;
+    /// <summary>A send was seen under way, so its answer comes in with a crossfade.</summary>
+    bool sawSending;
+
+    public ServerLineView(ReaderOverlay owner)
     {
-        var palette = owner.Palette;
-        var holder = new StackPanel { MinHeight = 44, Margin = new Thickness(0, 6, 0, 0), Spacing = 6 };
-        if (owner.Reader.ServerProgress is not { } sent)
-            return holder;
-        var host = sent.Host;
-        string? text = sent.Result switch
+        this.owner = owner;
+        MinHeight = 44;
+        Margin = new Thickness(0, 6, 0, 0);
+        later = Timers.Weak(this, Wait, false, o => o.Update());
+    }
+
+    /// <summary>The line, out of the end page that had it, for a new one.</summary>
+    public FrameworkElement Take()
+    {
+        if (Parent is Panel panel)
+            panel.Children.Remove(this);
+        Update();
+        return this;
+    }
+
+    /// <summary>What the session says now: the line follows, on the waiting rule.</summary>
+    public void Update()
+    {
+        later.Stop();
+        var reader = owner.Reader;
+        var now = DateTimeOffset.UtcNow;
+        if (reader.ServerProgress is { } sent)
         {
-            WriteBackResult.Saved => T.WindowsReaderServerSaved(host),
-            WriteBackResult.Waiting { Problem: WriteBackProblem.Offline } => T.WindowsReaderServerOffline(host),
-            WriteBackResult.Waiting => T.WindowsReaderServerRetrying(host),
-            WriteBackResult.NotSaved { Problem: WriteBackProblem.NotSetToReceive } => null,
-            WriteBackResult.NotSaved { Problem: var problem } => problem switch
+            // "Sending to" stays up for at least 0.3 s once it showed.
+            if (shownKey?.StartsWith("sending|", StringComparison.Ordinal) == true && now - shownAt < Motion.Standard)
             {
-                WriteBackProblem.RefusedKey => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyKey),
-                WriteBackProblem.RefusedPassword => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyPassword),
-                WriteBackProblem.SeriesGone => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyGone),
-                WriteBackProblem.Offline => T.WindowsReaderServerOffline(host),
-                _ => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyGaveUp),
-            },
-            _ => null,
-        };
-        if (text is null)
-            return holder;
-        var line = ReaderText.Line(text, 13, palette.Haze);
-        AutomationProperties.SetLiveSetting(line, AutomationLiveSetting.Polite);
-        holder.Children.Add(line);
-        if (sent.Result is WriteBackResult.NotSaved && owner.Reader.ServerProgressServer is { } server)
-        {
-            var again = ReaderButtons.Pill(T.ReaderTryAgain, palette, (_, _) => owner.RetryProgress(server), height: 32);
-            again.HorizontalAlignment = HorizontalAlignment.Left;
-            holder.Children.Add(again);
+                Schedule(Motion.Standard - (now - shownAt));
+                return;
+            }
+            var text = Words(sent.Host, sent.Result);
+            var again = text is not null && sent.Result is WriteBackResult.NotSaved && reader.ServerProgressServer is not null;
+            var key = text is null ? null : "result|" + text + (again ? "|again" : "");
+            Swap(key, () => Result(text!, again ? reader.ServerProgressServer : null), animate: shownKey is not null || sawSending);
+            return;
         }
-        return holder;
+        if (reader.ServerSending is { } sending)
+        {
+            sawSending = true;
+            var due = sending.Since + Wait - now;
+            if (due > TimeSpan.Zero)
+            {
+                Schedule(due);
+                return;
+            }
+            Swap("sending|" + sending.Host, () => Line(T.WindowsReaderServerSending(sending.Host)), animate: true);
+            return;
+        }
+        // Another chapter, or none from a server: the line is empty at once.
+        sawSending = false;
+        Swap(null, null, animate: false);
+    }
+
+    void Schedule(TimeSpan due)
+    {
+        later.Interval = due < TimeSpan.FromMilliseconds(16) ? TimeSpan.FromMilliseconds(16) : due;
+        later.Start();
+    }
+
+    static string? Words(string host, WriteBackResult result) => result switch
+    {
+        WriteBackResult.Saved => T.WindowsReaderServerSaved(host),
+        WriteBackResult.Waiting { Problem: WriteBackProblem.Offline } => T.WindowsReaderServerOffline(host),
+        WriteBackResult.Waiting => T.WindowsReaderServerRetrying(host),
+        WriteBackResult.NotSaved { Problem: WriteBackProblem.NotSetToReceive } => null,
+        WriteBackResult.NotSaved { Problem: var problem } => problem switch
+        {
+            WriteBackProblem.RefusedKey => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyKey),
+            WriteBackProblem.RefusedPassword => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyPassword),
+            WriteBackProblem.SeriesGone => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyGone),
+            WriteBackProblem.Offline => T.WindowsReaderServerOffline(host),
+            _ => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyGaveUp),
+        },
+        _ => null,
+    };
+
+    TextBlock Line(string text)
+    {
+        var line = ReaderText.Line(text, 13, owner.Palette.Haze);
+        AutomationProperties.SetLiveSetting(line, AutomationLiveSetting.Polite);
+        return line;
+    }
+
+    FrameworkElement Result(string text, string? retry)
+    {
+        var stack = new StackPanel { Spacing = 6 };
+        stack.Children.Add(Line(text));
+        if (retry is not null)
+        {
+            var again = ReaderButtons.Pill(T.ReaderTryAgain, owner.Palette, (_, _) => owner.RetryProgress(retry), height: 32);
+            again.HorizontalAlignment = HorizontalAlignment.Left;
+            stack.Children.Add(again);
+        }
+        return stack;
+    }
+
+    /// <summary>The new words fade in over the old, which fade away, in the same place.</summary>
+    void Swap(string? key, Func<FrameworkElement>? make, bool animate)
+    {
+        var paper = owner.PaperMode;
+        if (key == shownKey && paper == shownPaper)
+            return;
+        var old = shown;
+        shownKey = key;
+        shownAt = DateTimeOffset.UtcNow;
+        shownPaper = paper;
+        shown = key is null ? null : make!();
+        if (shown is not null)
+            Children.Add(shown);
+        if (old is null && shown is null)
+            return;
+        if (!animate || paper)
+        {
+            if (old is not null)
+                Children.Remove(old);
+            return;
+        }
+        if (shown is not null)
+        {
+            shown.Opacity = 0;
+            Motion.FadeTo(shown, 1, Motion.Standard);
+        }
+        if (old is not null)
+        {
+            old.IsHitTestVisible = false;
+            Motion.FadeTo(old, 0, Motion.Standard);
+            var gone = DispatcherQueue.CreateTimer();
+            gone.Interval = Motion.Standard + TimeSpan.FromMilliseconds(40);
+            gone.IsRepeating = false;
+            gone.Tick += (_, _) =>
+            {
+                gone.Stop();
+                Children.Remove(old);
+            };
+            gone.Start();
+        }
     }
 }

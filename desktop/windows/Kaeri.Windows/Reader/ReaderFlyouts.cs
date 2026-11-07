@@ -144,12 +144,15 @@ static class SettingsFlyout
                 [("system", T.ReaderLookSystem), ("paper", T.ReaderLookPaper), ("light", T.ReaderLookLight), ("sepia", T.ReaderLookSepia), ("dark", T.ReaderLookDark)]));
         }
 
-        // Paper mode: the engine's row where it offers one, otherwise this PC's own choice.
-        var paper = new ToggleSwitch { Header = null, IsOn = owner.PaperMode, OnContent = "", OffContent = "", MinWidth = 0 };
-        AutomationProperties.SetName(paper, T.WindowsReaderPaperMode);
-        paper.Toggled += (_, _) => owner.SetPaperMode(paper.IsOn);
-        stack.Children.Add(SwitchRow(T.WindowsReaderPaperMode, paper, palette));
-        stack.Children.Add(Note(T.WindowsReaderPaperModeNote, palette));
+        // Paper mode: only where the engine offers its row (a touch screen it counts as handheld).
+        if (owner.Reader.Row(ReaderSettingKey.PaperMode) is not null)
+        {
+            var paper = new ToggleSwitch { Header = null, IsOn = owner.PaperMode, OnContent = "", OffContent = "", MinWidth = 0 };
+            AutomationProperties.SetName(paper, T.WindowsReaderPaperMode);
+            paper.Toggled += (_, _) => owner.SetPaperMode(paper.IsOn);
+            stack.Children.Add(SwitchRow(T.WindowsReaderPaperMode, paper, palette));
+            stack.Children.Add(Note(T.WindowsReaderPaperModeNote, palette));
+        }
 
         var more = new HyperlinkButton { Content = T.WindowsReaderMoreSettings, Margin = new Thickness(0, 10, 0, 0), Padding = new Thickness(0, 4, 0, 4) };
         more.Click += (_, _) =>

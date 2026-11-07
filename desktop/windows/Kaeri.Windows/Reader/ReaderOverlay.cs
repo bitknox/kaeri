@@ -48,7 +48,6 @@ public sealed partial class ReaderOverlay : UserControl
     bool pointerHidden;
     bool overChrome;
     bool flyoutOpen;
-    bool? localPaper;
     Point lastPointer = new(-1, -1);
     long lastNovelWheel;
     string? lastFit, lastBackground;
@@ -63,6 +62,7 @@ public sealed partial class ReaderOverlay : UserControl
         root.Children.Add(chrome.Notice);
         root.Children.Add(chrome.BackTo);
         root.Children.Add(chrome.Group);
+        root.Children.Add(chrome.PreviewLayer);
         root.Children.Add(chrome.Top);
         root.Children.Add(announcer);
         AutomationProperties.SetLiveSetting(announcer, AutomationLiveSetting.Polite);
@@ -144,6 +144,9 @@ public sealed partial class ReaderOverlay : UserControl
                 Motion.FadeIn(this);
         }
         Clear();
+        // The end page's server line needs Your sources to know a send is under way.
+        if (Ctx.Known.Books.View is null)
+            Ctx.Known.Books.Load();
         Reader.Open(work, chapter, at);
         Repaint(force: true);
         chrome.FullscreenShown(Ctx.Window.ReaderFullscreen);
@@ -212,6 +215,7 @@ public sealed partial class ReaderOverlay : UserControl
             case ReaderChange.Page:
                 paged?.RefreshPages();
                 strip?.RefreshPages();
+                chrome.RefreshPreview();
                 break;
             case ReaderChange.Novel:
                 Render();
@@ -380,36 +384,16 @@ public sealed partial class ReaderOverlay : UserControl
     internal string Fit => Reader.Choice(ReaderSettingKey.Fit) ?? "screen";
 
     /// <summary>
-    /// Paper mode: the engine's row where it offers one, otherwise this PC's own choice. The
-    /// engine offers it on handheld screens, so on a PC the reader keeps it itself.
+    /// Paper mode, the engine's setting: it is offered only on the screens the engine names
+    /// (handhelds), and stays on the device as the engine keeps it. Elsewhere it is off, and the
+    /// Paper look is the reader's paper.
     /// </summary>
-    internal bool PaperMode
-    {
-        get
-        {
-            if (Reader.Row(ReaderSettingKey.PaperMode) is not null)
-                return Reader.IsOn(ReaderSettingKey.PaperMode);
-            localPaper ??= SmallFiles.Read(PaperPath) == "on";
-            return localPaper.Value;
-        }
-    }
-
-    string PaperPath => Path.Combine(Ctx.Window.ReaderConfigDir, "windows-reader-paper");
+    internal bool PaperMode => Reader.Row(ReaderSettingKey.PaperMode) is not null && Reader.IsOn(ReaderSettingKey.PaperMode);
 
     internal void SetPaperMode(bool on)
     {
         if (Reader.Row(ReaderSettingKey.PaperMode) is not null)
             Reader.Set(ReaderSettingKey.PaperMode, new ReaderValue.Toggle(on));
-        else
-        {
-            localPaper = on;
-            if (on)
-                SmallFiles.Write(PaperPath, "on");
-            else
-                SmallFiles.Delete(PaperPath);
-            Repaint();
-            ReportSurface();
-        }
     }
 
     internal global::Windows.UI.Color NovelGround => ReaderPalette.NovelGround(Reader.Choice(ReaderSettingKey.Look), PaperMode);
@@ -687,6 +671,59 @@ public sealed partial class ReaderOverlay : UserControl
 
     internal int ShownLeaf => paged?.Current ?? Reader.Current;
 
+    (string Chapter, uint Page)? askedForPreview;
+
+    /// <summary>
+    /// The scrub preview's page for a scrubber value: the file once it has landed, and whether
+    /// there is a page to picture at all (a novel's preview is its number alone). A page not
+    /// asked for yet is asked for, as the Mac's preview does.
+    /// </summary>
+    internal (PageFile? File, bool Pictured) PreviewOf(int value)
+    {
+        var chapter = Reader.View?.Chapter.Id ?? "";
+        LeafPart? part = null;
+        switch (kind)
+        {
+            case Kind.Paged:
+            {
+                var leaf = Reader.LeafOfPage(value);
+                if (leaf >= 0 && leaf < Reader.Leaves.Length && !Reader.Leaves[leaf].EndPage)
+                {
+                    var parts = Reader.Leaves[leaf].Parts;
+                    part = parts.FirstOrDefault(p => p.Page == (uint)Math.Max(value - 1, 0)) ?? parts.FirstOrDefault();
+                }
+                break;
+            }
+            case Kind.Strip:
+            {
+                var index = value - 1;
+                foreach (var leaf in Reader.Leaves)
+                {
+                    if (leaf.EndPage)
+                        continue;
+                    if (index < leaf.Parts.Length)
+                    {
+                        part = leaf.Parts[index];
+                        break;
+                    }
+                    index -= leaf.Parts.Length;
+                }
+                break;
+            }
+            default:
+                return (null, false);
+        }
+        if (part is null)
+            return (null, true);
+        var file = Reader.FileOf(part, chapter);
+        if (file is null && Reader.FailureOf(part, chapter) is null && askedForPreview != (chapter, part.Page))
+        {
+            askedForPreview = (chapter, part.Page);
+            Reader.NeedPage(part.Page);
+        }
+        return (file, true);
+    }
+
     internal void JumpToLeaf(int leaf) => paged?.Jump(leaf);
 
     internal NovelTocEntry[] NovelContents => novel?.Contents ?? [];
@@ -749,6 +786,11 @@ public sealed partial class ReaderOverlay : UserControl
     internal void RetryProgress(string server) => Ctx.Known.Books.RetryProgress(server);
 
     internal FrameworkElement BuildEndPage() => new EndPageView(this, ActualWidth);
+
+    ServerLineView? serverLine;
+
+    /// <summary>The book server's line, one for the reader, which each end page built takes.</summary>
+    internal ServerLineView ServerLine => serverLine ??= new ServerLineView(this);
 
     // Input
 
