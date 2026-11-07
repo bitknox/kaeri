@@ -2600,6 +2600,63 @@
   <data name="EpisodeDownloadFailed" xml:space="preserve">
     <value>Episode {episode} tidak dapat diunduh. Coba lagi.</value>
   </data>
+  <data name="FirstOtherTitle" xml:space="preserve">
+    <value>Sudah memakai Kaeri di perangkat lain?</value>
+  </data>
+  <data name="FirstOtherLine" xml:space="preserve">
+    <value>Pasangkan, lalu perangkat ini mendapatkan sumber-sumber, pelacak-pelacak, dan riwayat Anda. Langkah setelah ini pun selesai.</value>
+  </data>
+  <data name="FirstOtherPairLine" xml:space="preserve">
+    <value>Menampilkan kode untuk dimasukkan di perangkat itu. Keduanya harus memakai Wi-Fi yang sama.</value>
+  </data>
+  <data name="FirstOtherRestore" xml:space="preserve">
+    <value>Pulihkan dari folder cloud</value>
+  </data>
+  <data name="FirstOtherRestoreLine" xml:space="preserve">
+    <value>Memakai kunci pemulihan yang Anda simpan</value>
+  </data>
+  <data name="FirstOtherNo" xml:space="preserve">
+    <value>Tidak, mulai di sini</value>
+  </data>
+  <data name="PairWaiting" xml:space="preserve">
+    <value>Menunggu perangkat Anda yang lain</value>
+  </data>
+  <data name="PairNothingYet" xml:space="preserve">
+    <value>Belum ada? Kedua perangkat harus memakai Wi-Fi yang sama.</value>
+  </data>
+  <data name="FirstJoinGroup" xml:space="preserve">
+    <value>Dari {device}</value>
+  </data>
+  <data name="FirstJoinLooking" xml:space="preserve">
+    <value>Melihat isi {device}…</value>
+  </data>
+  <data name="FirstJoinMedium" xml:space="preserve">
+    <value>Kaeri untuk</value>
+  </data>
+  <data name="FirstJoinMediumLine" xml:space="preserve">
+    <value>Membaca, seperti di {device}</value>
+  </data>
+  <data name="FirstJoinSigninsLine" xml:space="preserve">
+    <value>{trackers}</value>
+  </data>
+  <data name="FirstJoinServer" xml:space="preserve">
+    <value>Tambah {host}</value>
+  </data>
+  <data name="FirstJoinServerLine" xml:space="preserve">
+    <value>{kind} · masuk dengan kunci dari {device}, disimpan di {store}</value>
+  </data>
+  <data name="FirstJoinFolders" xml:space="preserve">
+    <value>Folder tetap berada di {device}. Tambahkan folder milik perangkat ini di “sumber-sumber”.</value>
+  </data>
+  <data name="FirstJoinStepsDone" xml:space="preserve">
+    <value>Daftar dan sumber-sumber sudah diatur, jadi penyiapan awal selesai di sini. Anda dapat mengubahnya di Pengaturan.</value>
+  </data>
+  <data name="FirstJoinStoreRefused" xml:space="preserve">
+    <value>{store} tidak mengizinkan perangkat ini masuk. {owner} dapat mengirimi Anda undangan.</value>
+  </data>
+  <data name="FirstJoinSyncing" xml:space="preserve">
+    <value>Menyinkronkan dengan {device}</value>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>Beranda</value>
   </data>
@@ -4808,6 +4865,78 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Selengkapnya di Pengaturan…</value>
   </data>
+  <data name="OnboardingReadDemo" xml:space="preserve">
+    <value>Baca demo</value>
+  </data>
+  <data name="OnboardingDemoBooksDetail" xml:space="preserve">
+    <value>Demo berisi komik pendek dan cerita pendek yang dibagikan pembuatnya di bawah Creative Commons.</value>
+  </data>
+  <data name="OnboardingDemoBothDetail" xml:space="preserve">
+    <value>Satu episode pendek dan satu komik pendek, dibagikan pembuatnya di bawah Creative Commons.</value>
+  </data>
+  <data name="HomeDemoOnlyBooks" xml:space="preserve">
+    <value>Hanya demo yang aktif. Tambahkan folder, server, atau toko plugin untuk membaca buku Anda sendiri.</value>
+  </data>
+  <data name="HomeSpotlightRead" xml:space="preserve">
+    <value>Baca</value>
+  </data>
+  <data name="DemoSeriesFacts_other" xml:space="preserve">
+    <value>Demo · Komik · {pages} halaman</value>
+  </data>
+  <data name="DemoCreditBook" xml:space="preserve">
+    <value>{title} oleh {author}. Berlisensi {licence}. Dibaca dari Wikimedia Commons.</value>
+  </data>
+  <data name="DemoCreditStory" xml:space="preserve">
+    <value>{title} oleh {author}. Domain publik. Sudah ada di dalam aplikasi.</value>
+  </data>
+  <data name="ReaderDemoCredit" xml:space="preserve">
+    <value>{title} · {author} · {licence}</value>
+  </data>
+  <data name="SearchDemoReads" xml:space="preserve">
+    <value>Demo · Dapat dibaca sekarang</value>
+  </data>
+  <data name="SearchDemoOnlyBooks" xml:space="preserve">
+    <value>Hanya demo yang aktif. Judul lain muncul setelah Anda menambahkan sumber.</value>
+  </data>
+  <data name="ReaderDemoEnd" xml:space="preserve">
+    <value>Demo selesai</value>
+  </data>
+  <data name="ReaderDemoEndLine" xml:space="preserve">
+    <value>Untuk membaca buku Anda sendiri, tambahkan folder, server, atau toko plugin.</value>
+  </data>
+  <data name="ReaderDemoAddSource" xml:space="preserve">
+    <value>Tambah sumber</value>
+  </data>
+  <data name="ReaderDemoAgain" xml:space="preserve">
+    <value>Kembali ke halaman 1</value>
+  </data>
+  <data name="SourcesDemoBooksLine" xml:space="preserve">
+    <value>Satu komik dan satu cerita · CC BY 4.0 dan domain publik</value>
+  </data>
+  <data name="SourcesDemoBooksWhat" xml:space="preserve">
+    <value>Karya yang dibagikan pembuatnya di bawah Creative Commons, supaya Anda bisa mencoba Kaeri sebelum menambahkan sumber. Ini bukan sumber untuk disimpan.</value>
+  </data>
+  <data name="SourcesDemoBooksPrivate" xml:space="preserve">
+    <value>Demo tidak pernah masuk ke mana pun dan tidak pernah menulis ke pelacak.</value>
+  </data>
+  <data name="DemoChapters" xml:space="preserve">
+    <value>Bab</value>
+  </data>
+  <data name="DemoAlso" xml:space="preserve">
+    <value>Juga di demo</value>
+  </data>
+  <data name="DemoCredits" xml:space="preserve">
+    <value>Kredit</value>
+  </data>
+  <data name="DemoPages_other" xml:space="preserve">
+    <value>{pages} halaman</value>
+  </data>
+  <data name="DemoStoryRow" xml:space="preserve">
+    <value>Cerita · {author} · {licence}</value>
+  </data>
+  <data name="DemoReadChapter" xml:space="preserve">
+    <value>Baca bab {number}</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Musim sebelumnya</value>
   </data>
@@ -6049,6 +6178,189 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>Atur ulang gaya subtitle</value>
+  </data>
+  <data name="BookServerAddress" xml:space="preserve">
+    <value>Alamat</value>
+  </data>
+  <data name="BookServerAddressHint" xml:space="preserve">
+    <value>Sebuah alamat, atau seluruh tautan OPDS dari Kavita.</value>
+  </data>
+  <data name="BookServerKavitaKey" xml:space="preserve">
+    <value>Ini tautan OPDS Kavita. Kuncinya dipakai untuk masuk, jadi tidak perlu kata sandi.</value>
+  </data>
+  <data name="BookServerKeyKept" xml:space="preserve">
+    <value>Kaeri menyimpan kunci di {store} dan hanya menampilkan empat karakter terakhirnya.</value>
+  </data>
+  <data name="BookServerKey" xml:space="preserve">
+    <value>Kunci ••••{last}</value>
+  </data>
+  <data name="BookServerFoundTitle_other" xml:space="preserve">
+    <value>Ditemukan {series} seri di {libraries} pustaka</value>
+  </data>
+  <data name="BookServerFoundLine" xml:space="preserve">
+    <value>{kind} di {host}. Pilih pustaka yang akan ditambahkan.</value>
+  </data>
+  <data name="BookServerLibraryLine" xml:space="preserve">
+    <value>{series} seri</value>
+  </data>
+  <data name="BookServerSyncProgress" xml:space="preserve">
+    <value>Kirim progres ke server</value>
+  </data>
+  <data name="BookServerSyncProgressLine" xml:space="preserve">
+    <value>Halaman yang Anda baca di sini dikirim ke {host}, dan progresnya datang ke sini.</value>
+  </data>
+  <data name="BookServerUsername" xml:space="preserve">
+    <value>Nama pengguna</value>
+  </data>
+  <data name="BookServerPassword" xml:space="preserve">
+    <value>Kata sandi</value>
+  </data>
+  <data name="BookServerErrUnreachable" xml:space="preserve">
+    <value>Tidak dapat menjangkau {host}</value>
+  </data>
+  <data name="BookServerErrUnreachableLine" xml:space="preserve">
+    <value>Periksa alamatnya, dan pastikan server menyala serta berada di jaringan ini.</value>
+  </data>
+  <data name="BookServerErrPassword" xml:space="preserve">
+    <value>{host} tidak menerima kata sandi itu</value>
+  </data>
+  <data name="BookServerErrPasswordLine" xml:space="preserve">
+    <value>Gunakan nama pengguna dan kata sandi yang Anda pakai untuk {kind} di browser.</value>
+  </data>
+  <data name="BookServerErrKey" xml:space="preserve">
+    <value>{host} tidak menerima kunci itu</value>
+  </data>
+  <data name="BookServerErrKeyLine" xml:space="preserve">
+    <value>Kunci berubah saat direset di Kavita. Salin lagi tautan OPDS dari pengaturan akun Anda di sana.</value>
+  </data>
+  <data name="BookServerEmpty" xml:space="preserve">
+    <value>{host} tidak menampilkan seri untuk akun ini</value>
+  </data>
+  <data name="BookServerEmptyLine" xml:space="preserve">
+    <value>Akun ini bisa masuk, tetapi server mungkin masih memindai, atau akun ini mungkin tidak punya akses ke bukunya.</value>
+  </data>
+  <data name="BookServerEmptyRecheck" xml:space="preserve">
+    <value>Anda dapat menambahkannya sekarang. Kaeri memeriksa lagi setiap 30 menit.</value>
+  </data>
+  <data name="BookServerNotBooksLine" xml:space="preserve">
+    <value>Kaeri membaca dari katalog Komga, Kavita, dan OPDS.</value>
+  </data>
+  <data name="BookFolderFound_other" xml:space="preserve">
+    <value>Ditemukan {series} seri di {files} berkas</value>
+  </data>
+  <data name="BookFolderFoundLine" xml:space="preserve">
+    <value>{path}. Kaeri mencocokkan {matched} di antaranya berdasarkan detailnya.</value>
+  </data>
+  <data name="BookFolderUnsupported_other" xml:space="preserve">
+    <value>{count} berkas yang tidak dapat dibuka Kaeri</value>
+  </data>
+  <data name="BookFolderUnsupportedLine" xml:space="preserve">
+    <value>{kinds}. Berkas ini tetap berada di folder apa adanya.</value>
+  </data>
+  <data name="BookFolderDrm" xml:space="preserve">
+    <value>{count} EPUB terkunci dengan DRM</value>
+  </data>
+  <data name="BookFolderOpens" xml:space="preserve">
+    <value>Kaeri membuka berkas CBZ, CBR, EPUB, dan PDF, serta folder gambar.</value>
+  </data>
+  <data name="BookFolderShowFiles" xml:space="preserve">
+    <value>Tampilkan berkas</value>
+  </data>
+  <data name="BookFolderAdd" xml:space="preserve">
+    <value>Tambah folder</value>
+  </data>
+  <data name="BookFolderChange" xml:space="preserve">
+    <value>Ubah</value>
+  </data>
+  <data name="BookFolderEmpty" xml:space="preserve">
+    <value>Tidak ada yang dapat dibuka Kaeri di {folder}</value>
+  </data>
+  <data name="BookFolderEmptyLine_other" xml:space="preserve">
+    <value>Berisi {files} berkas, tidak ada yang berupa CBZ, CBR, EPUB, PDF, atau gambar.</value>
+  </data>
+  <data name="BookFolderChooseOther" xml:space="preserve">
+    <value>Pilih folder lain</value>
+  </data>
+  <data name="StoreJoinTitle" xml:space="preserve">
+    <value>Gabung ke toko plugin</value>
+  </data>
+  <data name="StoreInviteField" xml:space="preserve">
+    <value>Undangan</value>
+  </data>
+  <data name="StoreJoinedTitle" xml:space="preserve">
+    <value>Bergabung dengan {store}</value>
+  </data>
+  <data name="StoreJoinedLine_other" xml:space="preserve">
+    <value>{owner} menawarkan plugin-plugin: {count}. Bergabung tidak memasang apa pun; pilih yang Anda mau di sini atau nanti.</value>
+  </data>
+  <data name="StoreGroupReading" xml:space="preserve">
+    <value>Untuk dibaca</value>
+  </data>
+  <data name="StoreGroupWatching" xml:space="preserve">
+    <value>Untuk ditonton</value>
+  </data>
+  <data name="StoreInstall" xml:space="preserve">
+    <value>Pasang</value>
+  </data>
+  <data name="StoreInstalledRow" xml:space="preserve">
+    <value>Terpasang</value>
+  </data>
+  <data name="StoreInstallAllReading" xml:space="preserve">
+    <value>Pasang semua untuk dibaca</value>
+  </data>
+  <data name="StoreInstalled_other" xml:space="preserve">
+    <value>Terpasang, plugin-plugin: {count}. Semuanya ada di bagian “sumber-sumber”.</value>
+  </data>
+  <data name="StoreOtherMedium" xml:space="preserve">
+    <value>Setiap plugin di {store} untuk ditonton</value>
+  </data>
+  <data name="StoreOtherMediumLine" xml:space="preserve">
+    <value>Menonton nonaktif di perangkat ini, jadi tidak ada yang muncul di bagian “sumber-sumber”.</value>
+  </data>
+  <data name="StoreTurnOnWatching" xml:space="preserve">
+    <value>Aktifkan menonton</value>
+  </data>
+  <data name="StoreEmpty" xml:space="preserve">
+    <value>{store} belum punya plugin-plugin</value>
+  </data>
+  <data name="StoreEmptyLine" xml:space="preserve">
+    <value>Anda anggota, jadi plugin-plugin baru muncul di “Toko-toko plugin” saat {owner} menambahkannya.</value>
+  </data>
+  <data name="StoreErrUnreachable" xml:space="preserve">
+    <value>Tidak dapat menjangkau {host}</value>
+  </data>
+  <data name="StoreErrUnreachableLine" xml:space="preserve">
+    <value>Undangan tampak benar, tetapi toko tidak menjawab. Coba lagi nanti, atau tanyakan kepada {owner} apakah sudah berjalan.</value>
+  </data>
+  <data name="StoreOtherMediumMore_other" xml:space="preserve">
+    <value>{count} lagi untuk ditonton, yang nonaktif di perangkat ini.</value>
+  </data>
+  <data name="StoreTvReadingOnly_other" xml:space="preserve">
+    <value>{count} lagi untuk dibaca, yang tidak didukung TV ini.</value>
+  </data>
+  <data name="StoreTvAllReading" xml:space="preserve">
+    <value>Setiap plugin di {store} untuk dibaca, yang tidak didukung TV ini.</value>
+  </data>
+  <data name="StorePluginRow" xml:space="preserve">
+    <value>Versi {version} · dapat menghubungi {hosts}</value>
+  </data>
+  <data name="SourceAdded" xml:space="preserve">
+    <value>{name} ditambahkan · {series} seri</value>
+  </data>
+  <data name="SourceAddedPlugins_other" xml:space="preserve">
+    <value>Terpasang dari {store}, plugin-plugin: {count}</value>
+  </data>
+  <data name="SourceRowServer_other" xml:space="preserve">
+    <value>{kind} · {series} seri di {libraries} pustaka · baru ditambahkan</value>
+  </data>
+  <data name="SourceRowServerEmpty" xml:space="preserve">
+    <value>{kind} · belum ada seri · diperiksa lagi dalam 30 menit</value>
+  </data>
+  <data name="SourceRowFolder_other" xml:space="preserve">
+    <value>{path} · {series} seri · {skipped} berkas dilewati</value>
+  </data>
+  <data name="SourceRowPlugin" xml:space="preserve">
+    <value>Dari {store} · {medium} · versi {version}</value>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>Sumber-sumber</value>

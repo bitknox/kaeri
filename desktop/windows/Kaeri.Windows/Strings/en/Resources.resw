@@ -4235,6 +4235,82 @@
     <value>Couldn't download episode {episode}. Try again.</value>
     <comment>Line under that button after a failure.</comment>
   </data>
+  <data name="FirstOtherTitle" xml:space="preserve">
+    <value>Already use Kaeri on another device?</value>
+    <comment>First run, page 2 of 5.</comment>
+  </data>
+  <data name="FirstOtherLine" xml:space="preserve">
+    <value>Pair with it and this device gets your sources, trackers and history. The steps after this are then done.</value>
+    <comment>Under the title.</comment>
+  </data>
+  <data name="FirstOtherPairLine" xml:space="preserve">
+    <value>Shows a code to enter on that device. Both need the same Wi-Fi.</value>
+    <comment>Line under the pair row.</comment>
+  </data>
+  <data name="FirstOtherRestore" xml:space="preserve">
+    <value>Restore from a cloud folder</value>
+    <comment>Row that restores from a sync folder.</comment>
+  </data>
+  <data name="FirstOtherRestoreLine" xml:space="preserve">
+    <value>Uses the recovery key you saved</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="FirstOtherNo" xml:space="preserve">
+    <value>No, start here</value>
+    <comment>Primary action: go on with the first run on this device alone.</comment>
+  </data>
+  <data name="PairWaiting" xml:space="preserve">
+    <value>Waiting for your other device</value>
+    <comment>Beside a spinner, after 600 ms.</comment>
+  </data>
+  <data name="PairNothingYet" xml:space="preserve">
+    <value>Nothing yet? Both devices need to be on the same Wi-Fi.</value>
+    <comment>After 30 seconds with nothing.</comment>
+  </data>
+  <data name="FirstJoinGroup" xml:space="preserve">
+    <value>From {device}</value>
+    <comment>Group header for what the other device brings.</comment>
+  </data>
+  <data name="FirstJoinLooking" xml:space="preserve">
+    <value>Looking at what {device} has…</value>
+    <comment>Row while the rest arrives.</comment>
+  </data>
+  <data name="FirstJoinMedium" xml:space="preserve">
+    <value>Kaeri is for</value>
+    <comment>Row with a pop-up of Watch, Read and Both.</comment>
+  </data>
+  <data name="FirstJoinMediumLine" xml:space="preserve">
+    <value>Reading, as on {device}</value>
+    <comment>Line under it when the other device reads.</comment>
+  </data>
+  <data name="FirstJoinSigninsLine" xml:space="preserve">
+    <value>{trackers}</value>
+    <comment>Line under the sign-ins switch: the trackers the other device is signed in to, already joined.</comment>
+  </data>
+  <data name="FirstJoinServer" xml:space="preserve">
+    <value>Add {host}</value>
+    <comment>Switch, one per book server.</comment>
+  </data>
+  <data name="FirstJoinServerLine" xml:space="preserve">
+    <value>{kind} · signs in with the key from {device}, kept in {store}</value>
+    <comment>Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.</comment>
+  </data>
+  <data name="FirstJoinFolders" xml:space="preserve">
+    <value>Folders stay on {device}. Add this device’s own folders in Your sources.</value>
+    <comment>Note under the list.</comment>
+  </data>
+  <data name="FirstJoinStepsDone" xml:space="preserve">
+    <value>Lists and sources are set up, so first run ends here. You can change them in Settings.</value>
+    <comment>Note when the setup answered the remaining pages.</comment>
+  </data>
+  <data name="FirstJoinStoreRefused" xml:space="preserve">
+    <value>{store} didn’t let this device in. {owner} can send you an invite.</value>
+    <comment>Row error when a plugin store refused this device.</comment>
+  </data>
+  <data name="FirstJoinSyncing" xml:space="preserve">
+    <value>Syncing with {device}</value>
+    <comment>Notice on Home, for 4 seconds.</comment>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>Home</value>
     <comment>Name of the Home section in the sidebar, the tab bar and the window title.</comment>
@@ -7392,6 +7468,110 @@
     <value>System</value>
     <comment>Look choice that follows the system's light or dark.</comment>
   </data>
+  <data name="OnboardingReadDemo" xml:space="preserve">
+    <value>Read the demo</value>
+    <comment>Button in the first run that opens the reading demo.</comment>
+  </data>
+  <data name="OnboardingDemoBooksDetail" xml:space="preserve">
+    <value>The demo reads a short comic and a short story their makers share under Creative Commons.</value>
+    <comment>Under the first run's demo heading when the device is for reading.</comment>
+  </data>
+  <data name="OnboardingDemoBothDetail" xml:space="preserve">
+    <value>One short episode and one short comic, shared by their makers under Creative Commons.</value>
+    <comment>Under the first run's demo heading when the device is for both.</comment>
+  </data>
+  <data name="HomeDemoOnlyBooks" xml:space="preserve">
+    <value>Only the demo is on. Add a folder, a server or a plugin store to read your own books.</value>
+    <comment>Home, under the spotlight, when the demo is the only thing to read.</comment>
+  </data>
+  <data name="HomeSpotlightRead" xml:space="preserve">
+    <value>Read</value>
+    <comment>Primary action on Home's spotlight for a book.</comment>
+  </data>
+  <data name="DemoSeriesFacts_one" xml:space="preserve">
+    <value>Demo · Comic · one page</value>
+    <comment>The demo comic's facts line on its series page.</comment>
+  </data>
+  <data name="DemoSeriesFacts_other" xml:space="preserve">
+    <value>Demo · Comic · {pages} pages</value>
+    <comment>The demo comic's facts line on its series page.</comment>
+  </data>
+  <data name="DemoCreditBook" xml:space="preserve">
+    <value>{title} by {author}. Licensed {licence}. Read from Wikimedia Commons.</value>
+    <comment>The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".</comment>
+  </data>
+  <data name="DemoCreditStory" xml:space="preserve">
+    <value>{title} by {author}. Public domain. It comes with the app.</value>
+    <comment>The story's credit in About the demo.</comment>
+  </data>
+  <data name="ReaderDemoCredit" xml:space="preserve">
+    <value>{title} · {author} · {licence}</value>
+    <comment>Credit capsule in the reader's top bar on page 1.</comment>
+  </data>
+  <data name="SearchDemoReads" xml:space="preserve">
+    <value>Demo · Reads now</value>
+    <comment>A demo result's line in Search.</comment>
+  </data>
+  <data name="SearchDemoOnlyBooks" xml:space="preserve">
+    <value>Only the demo is on. Other titles appear once you add a source.</value>
+    <comment>Search, under the demo results, when only the demo is on.</comment>
+  </data>
+  <data name="ReaderDemoEnd" xml:space="preserve">
+    <value>That’s the end of the demo</value>
+    <comment>Title of the card after the demo's last page.</comment>
+  </data>
+  <data name="ReaderDemoEndLine" xml:space="preserve">
+    <value>To read your own books, add a folder, a server or a plugin store.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="ReaderDemoAddSource" xml:space="preserve">
+    <value>Add a source</value>
+    <comment>The card's primary action.</comment>
+  </data>
+  <data name="ReaderDemoAgain" xml:space="preserve">
+    <value>Back to page 1</value>
+    <comment>The card's secondary action, back to the first page.</comment>
+  </data>
+  <data name="SourcesDemoBooksLine" xml:space="preserve">
+    <value>A comic and a story · CC BY 4.0 and public domain</value>
+    <comment>The demo row's line in Your sources when reading is on.</comment>
+  </data>
+  <data name="SourcesDemoBooksWhat" xml:space="preserve">
+    <value>Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn’t a source to keep.</value>
+    <comment>About the demo, first line, when reading is on.</comment>
+  </data>
+  <data name="SourcesDemoBooksPrivate" xml:space="preserve">
+    <value>The demo never signs in anywhere and never writes to a tracker.</value>
+    <comment>About the demo, in place of sources-demo-private when reading is on.</comment>
+  </data>
+  <data name="DemoChapters" xml:space="preserve">
+    <value>Chapters</value>
+    <comment>Group on the demo's series page.</comment>
+  </data>
+  <data name="DemoAlso" xml:space="preserve">
+    <value>Also in the demo</value>
+    <comment>Group on the demo's series page: the other demo work.</comment>
+  </data>
+  <data name="DemoCredits" xml:space="preserve">
+    <value>Credits</value>
+    <comment>Group in About the demo.</comment>
+  </data>
+  <data name="DemoPages_one" xml:space="preserve">
+    <value>One page</value>
+    <comment>A chapter row's line on the demo's series page.</comment>
+  </data>
+  <data name="DemoPages_other" xml:space="preserve">
+    <value>{pages} pages</value>
+    <comment>A chapter row's line on the demo's series page.</comment>
+  </data>
+  <data name="DemoStoryRow" xml:space="preserve">
+    <value>Story · {author} · {licence}</value>
+    <comment>The story's row on the demo's series page. The licence is "Public domain" as the engine says it.</comment>
+  </data>
+  <data name="DemoReadChapter" xml:space="preserve">
+    <value>Read chapter {number}</value>
+    <comment>Primary action on the demo's series page.</comment>
+  </data>
   <data name="NavWatch" xml:space="preserve">
     <value>Watch</value>
     <comment>Sidebar and tab label: the shows' Home when both media are on.</comment>
@@ -10471,6 +10651,294 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Feed port</value>
     <comment>Row: the port the shared catalogue listens on. Empty picks a free one.</comment>
+  </data>
+  <data name="BookServerAddress" xml:space="preserve">
+    <value>Address</value>
+    <comment>Label of the address field in the Add a server sheet.</comment>
+  </data>
+  <data name="BookServerAddressHint" xml:space="preserve">
+    <value>An address, or the whole OPDS link from Kavita.</value>
+    <comment>Note under the empty address field.</comment>
+  </data>
+  <data name="BookServerKavitaKey" xml:space="preserve">
+    <value>This is a Kavita OPDS link. Its key signs you in, so no password is needed.</value>
+    <comment>Note under the address field once a Kavita OPDS link is pasted.</comment>
+  </data>
+  <data name="BookServerKeyKept" xml:space="preserve">
+    <value>Kaeri keeps the key in {store} and shows only its last four characters.</value>
+    <comment>Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.</comment>
+  </data>
+  <data name="BookServerKey" xml:space="preserve">
+    <value>Key ••••{last}</value>
+    <comment>Chip inside the address field, showing the key's last four characters after four dots.</comment>
+  </data>
+  <data name="BookServerFoundTitle_one" xml:space="preserve">
+    <value>Found {series} series</value>
+    <comment>Result title once the server signed in.</comment>
+  </data>
+  <data name="BookServerFoundTitle_other" xml:space="preserve">
+    <value>Found {series} series in {libraries} libraries</value>
+    <comment>Result title once the server signed in.</comment>
+  </data>
+  <data name="BookServerFoundLine" xml:space="preserve">
+    <value>{kind} at {host}. Pick the libraries to add.</value>
+    <comment>Line under the result title. The kind is Komga, Kavita or OPDS.</comment>
+  </data>
+  <data name="BookServerLibraryLine" xml:space="preserve">
+    <value>{series} series</value>
+    <comment>A library row's line in the result.</comment>
+  </data>
+  <data name="BookServerSyncProgress" xml:space="preserve">
+    <value>Send progress to the server</value>
+    <comment>Switch in the result, on to start with.</comment>
+  </data>
+  <data name="BookServerSyncProgressLine" xml:space="preserve">
+    <value>Pages you read here go back to {host}, and its progress comes here.</value>
+    <comment>Line under the switch.</comment>
+  </data>
+  <data name="BookServerUsername" xml:space="preserve">
+    <value>Username</value>
+    <comment>Field label.</comment>
+  </data>
+  <data name="BookServerPassword" xml:space="preserve">
+    <value>Password</value>
+    <comment>Field label.</comment>
+  </data>
+  <data name="BookServerErrUnreachable" xml:space="preserve">
+    <value>Couldn’t reach {host}</value>
+    <comment>Error title when the server could not be reached.</comment>
+  </data>
+  <data name="BookServerErrUnreachableLine" xml:space="preserve">
+    <value>Check the address, and that the server is on and on this network.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="BookServerErrPassword" xml:space="preserve">
+    <value>{host} didn’t accept that password</value>
+    <comment>Error title when the server turned the password down.</comment>
+  </data>
+  <data name="BookServerErrPasswordLine" xml:space="preserve">
+    <value>Use the username and password you use for {kind} in a browser.</value>
+    <comment>Line under it. The kind is Komga, Kavita or OPDS.</comment>
+  </data>
+  <data name="BookServerErrKey" xml:space="preserve">
+    <value>{host} didn’t accept that key</value>
+    <comment>Error title when Kavita turned the key in an OPDS link down.</comment>
+  </data>
+  <data name="BookServerErrKeyLine" xml:space="preserve">
+    <value>The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="BookServerEmpty" xml:space="preserve">
+    <value>{host} shows this account no series</value>
+    <comment>Title when the server lets the account in and shows it no series.</comment>
+  </data>
+  <data name="BookServerEmptyLine" xml:space="preserve">
+    <value>It lets you in, but the server may still be scanning, or this account may not have access to its books.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="BookServerEmptyRecheck" xml:space="preserve">
+    <value>You can add it now. Kaeri looks again every 30 minutes.</value>
+    <comment>Note under it.</comment>
+  </data>
+  <data name="BookServerNotBooksLine" xml:space="preserve">
+    <value>Kaeri reads from Komga, Kavita and OPDS catalogues.</value>
+    <comment>Line under an error when the address is not a book server.</comment>
+  </data>
+  <data name="BookFolderFound_one" xml:space="preserve">
+    <value>Found {series} series in one file</value>
+    <comment>Folder result title.</comment>
+  </data>
+  <data name="BookFolderFound_other" xml:space="preserve">
+    <value>Found {series} series in {files} files</value>
+    <comment>Folder result title.</comment>
+  </data>
+  <data name="BookFolderFoundLine" xml:space="preserve">
+    <value>{path}. Kaeri matched {matched} of them by their details.</value>
+    <comment>Line under it: the folder's path, then how many series were matched by their own details.</comment>
+  </data>
+  <data name="BookFolderUnsupported_one" xml:space="preserve">
+    <value>One file Kaeri can’t open</value>
+    <comment>Row in the folder result: files that are books in formats Kaeri can't open.</comment>
+  </data>
+  <data name="BookFolderUnsupported_other" xml:space="preserve">
+    <value>{count} files Kaeri can’t open</value>
+    <comment>Row in the folder result: files that are books in formats Kaeri can't open.</comment>
+  </data>
+  <data name="BookFolderUnsupportedLine" xml:space="preserve">
+    <value>{kinds}. They stay in the folder as they are.</value>
+    <comment>Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".</comment>
+  </data>
+  <data name="BookFolderDrm" xml:space="preserve">
+    <value>{count} EPUB locked with DRM</value>
+    <comment>One item of that list: EPUB files locked with DRM or a password.</comment>
+  </data>
+  <data name="BookFolderOpens" xml:space="preserve">
+    <value>Kaeri opens CBZ, CBR, EPUB and PDF files, and folders of images.</value>
+    <comment>Note under the folder result.</comment>
+  </data>
+  <data name="BookFolderShowFiles" xml:space="preserve">
+    <value>Show files</value>
+    <comment>Row action that lists the files skipped.</comment>
+  </data>
+  <data name="BookFolderAdd" xml:space="preserve">
+    <value>Add folder</value>
+    <comment>Primary action in the Add a folder sheet.</comment>
+  </data>
+  <data name="BookFolderChange" xml:space="preserve">
+    <value>Change</value>
+    <comment>Folder row action that picks another folder.</comment>
+  </data>
+  <data name="BookFolderEmpty" xml:space="preserve">
+    <value>Nothing in {folder} that Kaeri can open</value>
+    <comment>Title when a folder holds nothing Kaeri can open.</comment>
+  </data>
+  <data name="BookFolderEmptyLine_one" xml:space="preserve">
+    <value>It holds one file, which isn’t CBZ, CBR, EPUB, PDF or an image.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="BookFolderEmptyLine_other" xml:space="preserve">
+    <value>It holds {files} files, none of them CBZ, CBR, EPUB, PDF or images.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="BookFolderChooseOther" xml:space="preserve">
+    <value>Choose another folder</value>
+    <comment>Primary action after an empty folder.</comment>
+  </data>
+  <data name="StoreJoinTitle" xml:space="preserve">
+    <value>Join a plugin store</value>
+    <comment>Title of the Join a plugin store sheet.</comment>
+  </data>
+  <data name="StoreInviteField" xml:space="preserve">
+    <value>Invite</value>
+    <comment>Label of the invite field.</comment>
+  </data>
+  <data name="StoreJoinedTitle" xml:space="preserve">
+    <value>Joined {store}</value>
+    <comment>Result title once a plugin store is joined.</comment>
+  </data>
+  <data name="StoreJoinedLine_one" xml:space="preserve">
+    <value>{owner} offers one plugin. Joining installs nothing; install it here or later.</value>
+    <comment>Line under it. The owner is who runs the store.</comment>
+  </data>
+  <data name="StoreJoinedLine_other" xml:space="preserve">
+    <value>{owner} offers {count} plugins. Joining installs nothing; pick the ones you want here or later.</value>
+    <comment>Line under it. The owner is who runs the store.</comment>
+  </data>
+  <data name="StoreGroupReading" xml:space="preserve">
+    <value>For reading</value>
+    <comment>Group header in the joined store's list.</comment>
+  </data>
+  <data name="StoreGroupWatching" xml:space="preserve">
+    <value>For watching</value>
+    <comment>Group header in the joined store's list.</comment>
+  </data>
+  <data name="StoreInstall" xml:space="preserve">
+    <value>Install</value>
+    <comment>Row action.</comment>
+  </data>
+  <data name="StoreInstalledRow" xml:space="preserve">
+    <value>Installed</value>
+    <comment>Row state once installed.</comment>
+  </data>
+  <data name="StoreInstallAllReading" xml:space="preserve">
+    <value>Install all for reading</value>
+    <comment>Primary action when two or more plugins are for reading.</comment>
+  </data>
+  <data name="StoreInstalled_one" xml:space="preserve">
+    <value>One plugin installed. It’s in Your sources.</value>
+    <comment>Result after installing.</comment>
+  </data>
+  <data name="StoreInstalled_other" xml:space="preserve">
+    <value>{count} plugins installed. They’re in Your sources.</value>
+    <comment>Result after installing.</comment>
+  </data>
+  <data name="StoreOtherMedium" xml:space="preserve">
+    <value>Every plugin in {store} is for watching</value>
+    <comment>Info title when every plugin in a store is for watching, and watching is off here.</comment>
+  </data>
+  <data name="StoreOtherMediumLine" xml:space="preserve">
+    <value>Watching is off on this device, so none of them show in Your sources.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="StoreTurnOnWatching" xml:space="preserve">
+    <value>Turn on watching</value>
+    <comment>Secondary action under it.</comment>
+  </data>
+  <data name="StoreEmpty" xml:space="preserve">
+    <value>{store} has no plugins yet</value>
+    <comment>Info title when a store has no plugins.</comment>
+  </data>
+  <data name="StoreEmptyLine" xml:space="preserve">
+    <value>You’re a member, so new plugins show in Plugin stores when {owner} adds them.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="StoreErrUnreachable" xml:space="preserve">
+    <value>Couldn’t reach {host}</value>
+    <comment>Error title when the store doesn't answer.</comment>
+  </data>
+  <data name="StoreErrUnreachableLine" xml:space="preserve">
+    <value>The invite looks right, but the store isn’t answering. Try again later, or ask {owner} if it’s running.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="StoreOtherMediumMore_one" xml:space="preserve">
+    <value>One more is for watching, which is off on this device.</value>
+    <comment>Under the reading group: plugins for watching while watching is off here.</comment>
+  </data>
+  <data name="StoreOtherMediumMore_other" xml:space="preserve">
+    <value>{count} more are for watching, which is off on this device.</value>
+    <comment>Under the reading group: plugins for watching while watching is off here.</comment>
+  </data>
+  <data name="StoreTvReadingOnly_one" xml:space="preserve">
+    <value>One more is for reading, which this TV doesn’t do.</value>
+    <comment>On a TV, under the list: plugins for reading, which a TV doesn't do.</comment>
+  </data>
+  <data name="StoreTvReadingOnly_other" xml:space="preserve">
+    <value>{count} more are for reading, which this TV doesn’t do.</value>
+    <comment>On a TV, under the list: plugins for reading, which a TV doesn't do.</comment>
+  </data>
+  <data name="StoreTvAllReading" xml:space="preserve">
+    <value>Every plugin in {store} is for reading, which this TV doesn’t do.</value>
+    <comment>On a TV, info title when every plugin in a store is for reading.</comment>
+  </data>
+  <data name="StorePluginRow" xml:space="preserve">
+    <value>Version {version} · may contact {hosts}</value>
+    <comment>Plugin row in an invite's result.</comment>
+  </data>
+  <data name="SourceAdded" xml:space="preserve">
+    <value>Added {name} · {series} series</value>
+    <comment>Notice after a server or folder is added, for 4 seconds.</comment>
+  </data>
+  <data name="SourceAddedPlugins_one" xml:space="preserve">
+    <value>Installed one plugin from {store}</value>
+    <comment>Notice after Install all, for 4 seconds.</comment>
+  </data>
+  <data name="SourceAddedPlugins_other" xml:space="preserve">
+    <value>Installed {count} plugins from {store}</value>
+    <comment>Notice after Install all, for 4 seconds.</comment>
+  </data>
+  <data name="SourceRowServer_one" xml:space="preserve">
+    <value>{kind} · {series} series · added just now</value>
+    <comment>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</comment>
+  </data>
+  <data name="SourceRowServer_other" xml:space="preserve">
+    <value>{kind} · {series} series in {libraries} libraries · added just now</value>
+    <comment>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</comment>
+  </data>
+  <data name="SourceRowServerEmpty" xml:space="preserve">
+    <value>{kind} · no series yet · looks again in 30 minutes</value>
+    <comment>A server's row in Your sources while it shows no series.</comment>
+  </data>
+  <data name="SourceRowFolder_one" xml:space="preserve">
+    <value>{path} · {series} series · one file skipped</value>
+    <comment>A folder's row in Your sources.</comment>
+  </data>
+  <data name="SourceRowFolder_other" xml:space="preserve">
+    <value>{path} · {series} series · {skipped} files skipped</value>
+    <comment>A folder's row in Your sources.</comment>
+  </data>
+  <data name="SourceRowPlugin" xml:space="preserve">
+    <value>From {store} · {medium} · version {version}</value>
+    <comment>A plugin's row in Your sources. The medium is "Reading" or "Watching".</comment>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>Sources</value>

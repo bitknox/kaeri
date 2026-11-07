@@ -1143,6 +1143,25 @@
     <string name="episode_download_paused">İndirme %1$s noktasında duraklatıldı</string>
     <string name="episode_download_done">İndirildi</string>
     <string name="episode_download_failed">Bölüm %1$d indirilemedi. Yeniden deneyin.</string>
+    <string name="first_other_title">Başka bir cihazda Kaeri kullanıyor musunuz?</string>
+    <string name="first_other_line">Eşleştirirseniz kaynaklar, takip hizmetleri ve geçmiş bu cihaza gelir. Bundan sonraki adımlar da tamamlanmış olur.</string>
+    <string name="first_other_pair_line">Diğer cihazda girilecek bir kod gösterir. İkisi de aynı Wi-Fi ağında olmalı.</string>
+    <string name="first_other_restore">Bulut klasöründen geri yükle</string>
+    <string name="first_other_restore_line">Kaydettiğiniz kurtarma anahtarını kullanır</string>
+    <string name="first_other_no">Hayır, burada başla</string>
+    <string name="pair_waiting">Diğer cihaz bekleniyor</string>
+    <string name="pair_nothing_yet">Henüz bir şey yok mu? Her iki cihazlar da aynı Wi-Fi ağında olmalı.</string>
+    <string name="first_join_group">%1$s üzerinden</string>
+    <string name="first_join_looking">%1$s üzerinde olanlara bakılıyor…</string>
+    <string name="first_join_medium">Kaeri şunun için</string>
+    <string name="first_join_medium_line">%1$s gibi okuma</string>
+    <string name="first_join_signins_line">%1$s</string>
+    <string name="first_join_server">%1$s ekle</string>
+    <string name="first_join_server_line">%1$s · %2$s üzerindeki anahtarla giriş yapar, %3$s içinde saklanır</string>
+    <string name="first_join_folders">Klasörler %1$s üzerinde kalır. Bu cihazın kendi klasörlerini “kaynaklar” bölümünden ekleyin.</string>
+    <string name="first_join_steps_done">Listeler ve kaynaklar ayarlandı, bu yüzden ilk çalıştırma burada biter. Bunları Ayarlar’dan değiştirebilirsiniz.</string>
+    <string name="first_join_store_refused">%1$s bu cihaza izin vermedi. %2$s size davet gönderebilir.</string>
+    <string name="first_join_syncing">%1$s ile eşitleniyor</string>
     <string name="home_title">Ana sayfa</string>
     <string name="home_resume_episode">Bölüm %1$d devam et</string>
     <string name="home_play_episode">Bölüm %1$d oynat</string>
@@ -1930,6 +1949,36 @@
     <string name="player_subs_bg_shadow">Gölge</string>
     <string name="player_subs_bg_box">Kutu</string>
     <string name="player_subs_more">Ayarlar\'da daha fazlası…</string>
+    <string name="onboarding_read_demo">Demoyu oku</string>
+    <string name="onboarding_demo_books_detail">Demo, yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir hikâye sunar.</string>
+    <string name="onboarding_demo_both_detail">Yapımcılarının Creative Commons altında paylaştığı kısa bir bölüm ve kısa bir çizgi roman.</string>
+    <string name="home_demo_only_books">Yalnızca demo açık. Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.</string>
+    <string name="home_spotlight_read">Oku</string>
+    <plurals name="demo_series_facts">
+        <item quantity="one">Demo · Çizgi roman · bir sayfa</item>
+        <item quantity="other">Demo · Çizgi roman · %1$d sayfa</item>
+    </plurals>
+    <string name="demo_credit_book">%1$s, %2$s. Lisans: %3$s. Wikimedia Commons üzerinden okunur.</string>
+    <string name="demo_credit_story">%1$s, %2$s. Kamu malı. Uygulamayla birlikte gelir.</string>
+    <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
+    <string name="search_demo_reads">Demo · Şimdi okunabilir</string>
+    <string name="search_demo_only_books">Yalnızca demo açık. Başka başlıklar bir kaynak eklediğinizde görünür.</string>
+    <string name="reader_demo_end">Demo burada bitti</string>
+    <string name="reader_demo_end_line">Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.</string>
+    <string name="reader_demo_add_source">Bir kaynak ekle</string>
+    <string name="reader_demo_again">1. sayfaya dön</string>
+    <string name="sources_demo_books_line">Bir çizgi roman ve bir hikâye · CC BY 4.0 ve kamu malı</string>
+    <string name="sources_demo_books_what">Yapımcılarının Creative Commons altında paylaştığı eserler; böylece bir kaynak eklemeden önce Kaeri uygulamasını deneyebilirsiniz. Kalıcı bir kaynak değildir.</string>
+    <string name="sources_demo_books_private">Demo hiçbir yerde oturum açmaz, hiçbir takip hizmeti kaydı da yazmaz.</string>
+    <string name="demo_chapters">Bölümler</string>
+    <string name="demo_also">Demoda ayrıca</string>
+    <string name="demo_credits">Künye</string>
+    <plurals name="demo_pages">
+        <item quantity="one">Bir sayfa</item>
+        <item quantity="other">%1$d sayfa</item>
+    </plurals>
+    <string name="demo_story_row">Hikâye · %1$s · %2$s</string>
+    <string name="demo_read_chapter">%1$s. bölümü oku</string>
     <string name="seasonal_previous">Önceki sezon</string>
     <string name="seasonal_next">Sonraki sezon</string>
     <string name="seasonal_loading">Bu sezon yükleniyor</string>
@@ -2371,6 +2420,100 @@
     <string name="settings_subs_styled_strip">Tüm stili kaldır</string>
     <string name="settings_subs_styled_strip_detail">Her satır altta, sizin stilinizde düz diyalog olarak görünür. Yazılar yerini kaybeder; karaoke ve efektler kalkar.</string>
     <string name="settings_subs_reset">Altyazı stilini sıfırla</string>
+    <string name="book_server_address">Adres</string>
+    <string name="book_server_address_hint">Bir adres veya Kavita’daki OPDS bağlantısının tamamı.</string>
+    <string name="book_server_kavita_key">Bu bir Kavita OPDS bağlantısı. Anahtarı oturum açmayı sağlar, bu yüzden parola gerekmez.</string>
+    <string name="book_server_key_kept">Kaeri anahtarı %1$s içinde saklar ve yalnızca son dört karakterini gösterir.</string>
+    <string name="book_server_key">Anahtar ••••%1$s</string>
+    <plurals name="book_server_found_title">
+        <item quantity="one">%1$d seri bulundu</item>
+        <item quantity="other">%2$d kitaplıkta %1$d seri bulundu</item>
+    </plurals>
+    <string name="book_server_found_line">%2$s adresinde %1$s bulundu. Eklenecek kitaplıkları seçin.</string>
+    <string name="book_server_library_line">%1$d seri</string>
+    <string name="book_server_sync_progress">İlerlemeyi sunucuya gönder</string>
+    <string name="book_server_sync_progress_line">Burada okuduğunuz sayfalar %1$s adresine gider, oradaki ilerleme de buraya gelir.</string>
+    <string name="book_server_username">Kullanıcı adı</string>
+    <string name="book_server_password">Parola</string>
+    <string name="book_server_err_unreachable">%1$s adresine ulaşılamadı</string>
+    <string name="book_server_err_unreachable_line">Adresi ve sunucunun açık olup bu ağda bulunduğunu kontrol edin.</string>
+    <string name="book_server_err_password">%1$s bu parolayı kabul etmedi</string>
+    <string name="book_server_err_password_line">%1$s için tarayıcıda kullandığınız kullanıcı adı ve parolayı girin.</string>
+    <string name="book_server_err_key">%1$s bu anahtarı kabul etmedi</string>
+    <string name="book_server_err_key_line">Anahtar, Kavita’da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.</string>
+    <string name="book_server_empty">%1$s bu hesaba hiç seri göstermiyor</string>
+    <string name="book_server_empty_line">Giriş yapılıyor, ama sunucu hâlâ tarıyor olabilir veya bu hesabın kitaplara erişimi olmayabilir.</string>
+    <string name="book_server_empty_recheck">Şimdi ekleyebilirsiniz. Kaeri her 30 dakikada bir yeniden bakar.</string>
+    <string name="book_server_not_books_line">Kaeri Komga, Kavita ve OPDS kataloglarından okur.</string>
+    <plurals name="book_folder_found">
+        <item quantity="one">Bir dosyada %1$d seri bulundu</item>
+        <item quantity="other">%2$d dosyada %1$d seri bulundu</item>
+    </plurals>
+    <string name="book_folder_found_line">%1$s. Kaeri bunlardan %2$d tanesini ayrıntılarına göre eşleştirdi.</string>
+    <plurals name="book_folder_unsupported">
+        <item quantity="one">Kaeri uygulamasının açamadığı bir dosya</item>
+        <item quantity="other">Kaeri uygulamasının açamadığı %1$d dosya</item>
+    </plurals>
+    <string name="book_folder_unsupported_line">%1$s. Klasörde olduğu gibi kalırlar.</string>
+    <string name="book_folder_drm">DRM ile kilitli %1$d EPUB</string>
+    <string name="book_folder_opens">Kaeri CBZ, CBR, EPUB ve PDF dosyalarını ve görsel klasörlerini açar.</string>
+    <string name="book_folder_show_files">Dosyaları göster</string>
+    <string name="book_folder_add">Klasör ekle</string>
+    <string name="book_folder_change">Değiştir</string>
+    <string name="book_folder_empty">%1$s içinde Kaeri uygulamasının açabileceği bir şey yok</string>
+    <plurals name="book_folder_empty_line">
+        <item quantity="one">İçinde bir dosya var, ama CBZ, CBR, EPUB, PDF veya görsel değil.</item>
+        <item quantity="other">İçinde %1$d dosya var, hiçbiri CBZ, CBR, EPUB, PDF veya görsel değil.</item>
+    </plurals>
+    <string name="book_folder_choose_other">Başka bir klasör seçin</string>
+    <string name="store_join_title">Bir eklenti mağazasına katılın</string>
+    <string name="store_invite_field">Davet</string>
+    <string name="store_joined_title">Katıldınız: %1$s</string>
+    <plurals name="store_joined_line">
+        <item quantity="one">%1$s bir eklenti sunuyor. Katılmak hiçbir şey yüklemez; buradan veya daha sonra yükleyin.</item>
+        <item quantity="other">%1$s tarafından sunulan eklentiler: %2$d. Katılmak hiçbir şey yüklemez; istediklerinizi buradan veya daha sonra seçin.</item>
+    </plurals>
+    <string name="store_group_reading">Okumak için</string>
+    <string name="store_group_watching">İzlemek için</string>
+    <string name="store_install">Yükle</string>
+    <string name="store_installed_row">Yüklendi</string>
+    <string name="store_install_all_reading">Okuma için hepsini yükle</string>
+    <plurals name="store_installed">
+        <item quantity="one">Bir eklenti yüklendi. “kaynaklar” bölümünde.</item>
+        <item quantity="other">Yüklenen eklentiler: %1$d. Bunlar “kaynaklar” bölümünde.</item>
+    </plurals>
+    <string name="store_other_medium">%1$s içindeki her eklenti izlemek için</string>
+    <string name="store_other_medium_line">Bu cihazda izleme kapalı, bu yüzden hiçbiri “kaynaklar” bölümünde görünmez.</string>
+    <string name="store_turn_on_watching">İzlemeyi aç</string>
+    <string name="store_empty">%1$s içinde henüz eklentiler yok</string>
+    <string name="store_empty_line">Üyesiniz. %1$s yeni eklentiler eklediğinde bunlar “Eklenti mağazaları” içinde görünür.</string>
+    <string name="store_err_unreachable">%1$s adresine ulaşılamadı</string>
+    <string name="store_err_unreachable_line">Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin veya çalışıp çalışmadığını %1$s kişisine sorun.</string>
+    <plurals name="store_other_medium_more">
+        <item quantity="one">Bir tane daha izlemek için, ama izleme bu cihazda kapalı.</item>
+        <item quantity="other">%1$d tane daha izlemek için, ama izleme bu cihazda kapalı.</item>
+    </plurals>
+    <plurals name="store_tv_reading_only">
+        <item quantity="one">Bir tane daha okumak için, ama bu TV okuma yapmıyor.</item>
+        <item quantity="other">%1$d tane daha okumak için, ama bu TV okuma yapmıyor.</item>
+    </plurals>
+    <string name="store_tv_all_reading">%1$s içindeki her eklenti okumak için, ama bu TV okuma yapmıyor.</string>
+    <string name="store_plugin_row">Sürüm %1$s · %2$s ile iletişim kurabilir</string>
+    <string name="source_added">%1$s eklendi · %2$d seri</string>
+    <plurals name="source_added_plugins">
+        <item quantity="one">%2$s içinden bir eklenti yüklendi</item>
+        <item quantity="other">%2$s içinden yüklenen eklentiler: %1$d</item>
+    </plurals>
+    <plurals name="source_row_server">
+        <item quantity="one">%1$s · %2$d seri · az önce eklendi</item>
+        <item quantity="other">%1$s · %3$d kitaplıkta %2$d seri · az önce eklendi</item>
+    </plurals>
+    <string name="source_row_server_empty">%1$s · henüz seri yok · 30 dakika sonra yeniden bakar</string>
+    <plurals name="source_row_folder">
+        <item quantity="one">%1$s · %2$d seri · bir dosya atlandı</item>
+        <item quantity="other">%1$s · %2$d seri · %3$d dosya atlandı</item>
+    </plurals>
+    <string name="source_row_plugin">%1$s içinden · %2$s · sürüm %3$s</string>
     <string name="sources_title">Kaynaklar</string>
     <string name="sources_empty">Henüz kaynaklar yok. Birkaç tane eklemek için bir eklenti mağazasına katılın.</string>
     <string name="plugin_risk_warning">Eklentiler başkaları tarafından yazılır ve cihazınızda çalışır. Yalnızca güvendiğiniz ve kullanma hakkınız olan kaynaklarınız için eklentiler kurun.</string>

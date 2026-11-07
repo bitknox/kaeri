@@ -2693,6 +2693,63 @@
   <data name="EpisodeDownloadFailed" xml:space="preserve">
     <value>Bölüm {episode} indirilemedi. Yeniden deneyin.</value>
   </data>
+  <data name="FirstOtherTitle" xml:space="preserve">
+    <value>Başka bir cihazda Kaeri kullanıyor musunuz?</value>
+  </data>
+  <data name="FirstOtherLine" xml:space="preserve">
+    <value>Eşleştirirseniz kaynaklar, takip hizmetleri ve geçmiş bu cihaza gelir. Bundan sonraki adımlar da tamamlanmış olur.</value>
+  </data>
+  <data name="FirstOtherPairLine" xml:space="preserve">
+    <value>Diğer cihazda girilecek bir kod gösterir. İkisi de aynı Wi-Fi ağında olmalı.</value>
+  </data>
+  <data name="FirstOtherRestore" xml:space="preserve">
+    <value>Bulut klasöründen geri yükle</value>
+  </data>
+  <data name="FirstOtherRestoreLine" xml:space="preserve">
+    <value>Kaydettiğiniz kurtarma anahtarını kullanır</value>
+  </data>
+  <data name="FirstOtherNo" xml:space="preserve">
+    <value>Hayır, burada başla</value>
+  </data>
+  <data name="PairWaiting" xml:space="preserve">
+    <value>Diğer cihaz bekleniyor</value>
+  </data>
+  <data name="PairNothingYet" xml:space="preserve">
+    <value>Henüz bir şey yok mu? Her iki cihazlar da aynı Wi-Fi ağında olmalı.</value>
+  </data>
+  <data name="FirstJoinGroup" xml:space="preserve">
+    <value>{device} üzerinden</value>
+  </data>
+  <data name="FirstJoinLooking" xml:space="preserve">
+    <value>{device} üzerinde olanlara bakılıyor…</value>
+  </data>
+  <data name="FirstJoinMedium" xml:space="preserve">
+    <value>Kaeri şunun için</value>
+  </data>
+  <data name="FirstJoinMediumLine" xml:space="preserve">
+    <value>{device} gibi okuma</value>
+  </data>
+  <data name="FirstJoinSigninsLine" xml:space="preserve">
+    <value>{trackers}</value>
+  </data>
+  <data name="FirstJoinServer" xml:space="preserve">
+    <value>{host} ekle</value>
+  </data>
+  <data name="FirstJoinServerLine" xml:space="preserve">
+    <value>{kind} · {device} üzerindeki anahtarla giriş yapar, {store} içinde saklanır</value>
+  </data>
+  <data name="FirstJoinFolders" xml:space="preserve">
+    <value>Klasörler {device} üzerinde kalır. Bu cihazın kendi klasörlerini “kaynaklar” bölümünden ekleyin.</value>
+  </data>
+  <data name="FirstJoinStepsDone" xml:space="preserve">
+    <value>Listeler ve kaynaklar ayarlandı, bu yüzden ilk çalıştırma burada biter. Bunları Ayarlar’dan değiştirebilirsiniz.</value>
+  </data>
+  <data name="FirstJoinStoreRefused" xml:space="preserve">
+    <value>{store} bu cihaza izin vermedi. {owner} size davet gönderebilir.</value>
+  </data>
+  <data name="FirstJoinSyncing" xml:space="preserve">
+    <value>{device} ile eşitleniyor</value>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>Ana sayfa</value>
   </data>
@@ -4952,6 +5009,84 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Ayarlar'da daha fazlası…</value>
   </data>
+  <data name="OnboardingReadDemo" xml:space="preserve">
+    <value>Demoyu oku</value>
+  </data>
+  <data name="OnboardingDemoBooksDetail" xml:space="preserve">
+    <value>Demo, yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir hikâye sunar.</value>
+  </data>
+  <data name="OnboardingDemoBothDetail" xml:space="preserve">
+    <value>Yapımcılarının Creative Commons altında paylaştığı kısa bir bölüm ve kısa bir çizgi roman.</value>
+  </data>
+  <data name="HomeDemoOnlyBooks" xml:space="preserve">
+    <value>Yalnızca demo açık. Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.</value>
+  </data>
+  <data name="HomeSpotlightRead" xml:space="preserve">
+    <value>Oku</value>
+  </data>
+  <data name="DemoSeriesFacts_one" xml:space="preserve">
+    <value>Demo · Çizgi roman · bir sayfa</value>
+  </data>
+  <data name="DemoSeriesFacts_other" xml:space="preserve">
+    <value>Demo · Çizgi roman · {pages} sayfa</value>
+  </data>
+  <data name="DemoCreditBook" xml:space="preserve">
+    <value>{title}, {author}. Lisans: {licence}. Wikimedia Commons üzerinden okunur.</value>
+  </data>
+  <data name="DemoCreditStory" xml:space="preserve">
+    <value>{title}, {author}. Kamu malı. Uygulamayla birlikte gelir.</value>
+  </data>
+  <data name="ReaderDemoCredit" xml:space="preserve">
+    <value>{title} · {author} · {licence}</value>
+  </data>
+  <data name="SearchDemoReads" xml:space="preserve">
+    <value>Demo · Şimdi okunabilir</value>
+  </data>
+  <data name="SearchDemoOnlyBooks" xml:space="preserve">
+    <value>Yalnızca demo açık. Başka başlıklar bir kaynak eklediğinizde görünür.</value>
+  </data>
+  <data name="ReaderDemoEnd" xml:space="preserve">
+    <value>Demo burada bitti</value>
+  </data>
+  <data name="ReaderDemoEndLine" xml:space="preserve">
+    <value>Kendi kitaplarınızı okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.</value>
+  </data>
+  <data name="ReaderDemoAddSource" xml:space="preserve">
+    <value>Bir kaynak ekle</value>
+  </data>
+  <data name="ReaderDemoAgain" xml:space="preserve">
+    <value>1. sayfaya dön</value>
+  </data>
+  <data name="SourcesDemoBooksLine" xml:space="preserve">
+    <value>Bir çizgi roman ve bir hikâye · CC BY 4.0 ve kamu malı</value>
+  </data>
+  <data name="SourcesDemoBooksWhat" xml:space="preserve">
+    <value>Yapımcılarının Creative Commons altında paylaştığı eserler; böylece bir kaynak eklemeden önce Kaeri uygulamasını deneyebilirsiniz. Kalıcı bir kaynak değildir.</value>
+  </data>
+  <data name="SourcesDemoBooksPrivate" xml:space="preserve">
+    <value>Demo hiçbir yerde oturum açmaz, hiçbir takip hizmeti kaydı da yazmaz.</value>
+  </data>
+  <data name="DemoChapters" xml:space="preserve">
+    <value>Bölümler</value>
+  </data>
+  <data name="DemoAlso" xml:space="preserve">
+    <value>Demoda ayrıca</value>
+  </data>
+  <data name="DemoCredits" xml:space="preserve">
+    <value>Künye</value>
+  </data>
+  <data name="DemoPages_one" xml:space="preserve">
+    <value>Bir sayfa</value>
+  </data>
+  <data name="DemoPages_other" xml:space="preserve">
+    <value>{pages} sayfa</value>
+  </data>
+  <data name="DemoStoryRow" xml:space="preserve">
+    <value>Hikâye · {author} · {licence}</value>
+  </data>
+  <data name="DemoReadChapter" xml:space="preserve">
+    <value>{number}. bölümü oku</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Önceki sezon</value>
   </data>
@@ -6220,6 +6355,222 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>Altyazı stilini sıfırla</value>
+  </data>
+  <data name="BookServerAddress" xml:space="preserve">
+    <value>Adres</value>
+  </data>
+  <data name="BookServerAddressHint" xml:space="preserve">
+    <value>Bir adres veya Kavita’daki OPDS bağlantısının tamamı.</value>
+  </data>
+  <data name="BookServerKavitaKey" xml:space="preserve">
+    <value>Bu bir Kavita OPDS bağlantısı. Anahtarı oturum açmayı sağlar, bu yüzden parola gerekmez.</value>
+  </data>
+  <data name="BookServerKeyKept" xml:space="preserve">
+    <value>Kaeri anahtarı {store} içinde saklar ve yalnızca son dört karakterini gösterir.</value>
+  </data>
+  <data name="BookServerKey" xml:space="preserve">
+    <value>Anahtar ••••{last}</value>
+  </data>
+  <data name="BookServerFoundTitle_one" xml:space="preserve">
+    <value>{series} seri bulundu</value>
+  </data>
+  <data name="BookServerFoundTitle_other" xml:space="preserve">
+    <value>{libraries} kitaplıkta {series} seri bulundu</value>
+  </data>
+  <data name="BookServerFoundLine" xml:space="preserve">
+    <value>{host} adresinde {kind} bulundu. Eklenecek kitaplıkları seçin.</value>
+  </data>
+  <data name="BookServerLibraryLine" xml:space="preserve">
+    <value>{series} seri</value>
+  </data>
+  <data name="BookServerSyncProgress" xml:space="preserve">
+    <value>İlerlemeyi sunucuya gönder</value>
+  </data>
+  <data name="BookServerSyncProgressLine" xml:space="preserve">
+    <value>Burada okuduğunuz sayfalar {host} adresine gider, oradaki ilerleme de buraya gelir.</value>
+  </data>
+  <data name="BookServerUsername" xml:space="preserve">
+    <value>Kullanıcı adı</value>
+  </data>
+  <data name="BookServerPassword" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="BookServerErrUnreachable" xml:space="preserve">
+    <value>{host} adresine ulaşılamadı</value>
+  </data>
+  <data name="BookServerErrUnreachableLine" xml:space="preserve">
+    <value>Adresi ve sunucunun açık olup bu ağda bulunduğunu kontrol edin.</value>
+  </data>
+  <data name="BookServerErrPassword" xml:space="preserve">
+    <value>{host} bu parolayı kabul etmedi</value>
+  </data>
+  <data name="BookServerErrPasswordLine" xml:space="preserve">
+    <value>{kind} için tarayıcıda kullandığınız kullanıcı adı ve parolayı girin.</value>
+  </data>
+  <data name="BookServerErrKey" xml:space="preserve">
+    <value>{host} bu anahtarı kabul etmedi</value>
+  </data>
+  <data name="BookServerErrKeyLine" xml:space="preserve">
+    <value>Anahtar, Kavita’da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.</value>
+  </data>
+  <data name="BookServerEmpty" xml:space="preserve">
+    <value>{host} bu hesaba hiç seri göstermiyor</value>
+  </data>
+  <data name="BookServerEmptyLine" xml:space="preserve">
+    <value>Giriş yapılıyor, ama sunucu hâlâ tarıyor olabilir veya bu hesabın kitaplara erişimi olmayabilir.</value>
+  </data>
+  <data name="BookServerEmptyRecheck" xml:space="preserve">
+    <value>Şimdi ekleyebilirsiniz. Kaeri her 30 dakikada bir yeniden bakar.</value>
+  </data>
+  <data name="BookServerNotBooksLine" xml:space="preserve">
+    <value>Kaeri Komga, Kavita ve OPDS kataloglarından okur.</value>
+  </data>
+  <data name="BookFolderFound_one" xml:space="preserve">
+    <value>Bir dosyada {series} seri bulundu</value>
+  </data>
+  <data name="BookFolderFound_other" xml:space="preserve">
+    <value>{files} dosyada {series} seri bulundu</value>
+  </data>
+  <data name="BookFolderFoundLine" xml:space="preserve">
+    <value>{path}. Kaeri bunlardan {matched} tanesini ayrıntılarına göre eşleştirdi.</value>
+  </data>
+  <data name="BookFolderUnsupported_one" xml:space="preserve">
+    <value>Kaeri uygulamasının açamadığı bir dosya</value>
+  </data>
+  <data name="BookFolderUnsupported_other" xml:space="preserve">
+    <value>Kaeri uygulamasının açamadığı {count} dosya</value>
+  </data>
+  <data name="BookFolderUnsupportedLine" xml:space="preserve">
+    <value>{kinds}. Klasörde olduğu gibi kalırlar.</value>
+  </data>
+  <data name="BookFolderDrm" xml:space="preserve">
+    <value>DRM ile kilitli {count} EPUB</value>
+  </data>
+  <data name="BookFolderOpens" xml:space="preserve">
+    <value>Kaeri CBZ, CBR, EPUB ve PDF dosyalarını ve görsel klasörlerini açar.</value>
+  </data>
+  <data name="BookFolderShowFiles" xml:space="preserve">
+    <value>Dosyaları göster</value>
+  </data>
+  <data name="BookFolderAdd" xml:space="preserve">
+    <value>Klasör ekle</value>
+  </data>
+  <data name="BookFolderChange" xml:space="preserve">
+    <value>Değiştir</value>
+  </data>
+  <data name="BookFolderEmpty" xml:space="preserve">
+    <value>{folder} içinde Kaeri uygulamasının açabileceği bir şey yok</value>
+  </data>
+  <data name="BookFolderEmptyLine_one" xml:space="preserve">
+    <value>İçinde bir dosya var, ama CBZ, CBR, EPUB, PDF veya görsel değil.</value>
+  </data>
+  <data name="BookFolderEmptyLine_other" xml:space="preserve">
+    <value>İçinde {files} dosya var, hiçbiri CBZ, CBR, EPUB, PDF veya görsel değil.</value>
+  </data>
+  <data name="BookFolderChooseOther" xml:space="preserve">
+    <value>Başka bir klasör seçin</value>
+  </data>
+  <data name="StoreJoinTitle" xml:space="preserve">
+    <value>Bir eklenti mağazasına katılın</value>
+  </data>
+  <data name="StoreInviteField" xml:space="preserve">
+    <value>Davet</value>
+  </data>
+  <data name="StoreJoinedTitle" xml:space="preserve">
+    <value>Katıldınız: {store}</value>
+  </data>
+  <data name="StoreJoinedLine_one" xml:space="preserve">
+    <value>{owner} bir eklenti sunuyor. Katılmak hiçbir şey yüklemez; buradan veya daha sonra yükleyin.</value>
+  </data>
+  <data name="StoreJoinedLine_other" xml:space="preserve">
+    <value>{owner} tarafından sunulan eklentiler: {count}. Katılmak hiçbir şey yüklemez; istediklerinizi buradan veya daha sonra seçin.</value>
+  </data>
+  <data name="StoreGroupReading" xml:space="preserve">
+    <value>Okumak için</value>
+  </data>
+  <data name="StoreGroupWatching" xml:space="preserve">
+    <value>İzlemek için</value>
+  </data>
+  <data name="StoreInstall" xml:space="preserve">
+    <value>Yükle</value>
+  </data>
+  <data name="StoreInstalledRow" xml:space="preserve">
+    <value>Yüklendi</value>
+  </data>
+  <data name="StoreInstallAllReading" xml:space="preserve">
+    <value>Okuma için hepsini yükle</value>
+  </data>
+  <data name="StoreInstalled_one" xml:space="preserve">
+    <value>Bir eklenti yüklendi. “kaynaklar” bölümünde.</value>
+  </data>
+  <data name="StoreInstalled_other" xml:space="preserve">
+    <value>Yüklenen eklentiler: {count}. Bunlar “kaynaklar” bölümünde.</value>
+  </data>
+  <data name="StoreOtherMedium" xml:space="preserve">
+    <value>{store} içindeki her eklenti izlemek için</value>
+  </data>
+  <data name="StoreOtherMediumLine" xml:space="preserve">
+    <value>Bu cihazda izleme kapalı, bu yüzden hiçbiri “kaynaklar” bölümünde görünmez.</value>
+  </data>
+  <data name="StoreTurnOnWatching" xml:space="preserve">
+    <value>İzlemeyi aç</value>
+  </data>
+  <data name="StoreEmpty" xml:space="preserve">
+    <value>{store} içinde henüz eklentiler yok</value>
+  </data>
+  <data name="StoreEmptyLine" xml:space="preserve">
+    <value>Üyesiniz. {owner} yeni eklentiler eklediğinde bunlar “Eklenti mağazaları” içinde görünür.</value>
+  </data>
+  <data name="StoreErrUnreachable" xml:space="preserve">
+    <value>{host} adresine ulaşılamadı</value>
+  </data>
+  <data name="StoreErrUnreachableLine" xml:space="preserve">
+    <value>Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin veya çalışıp çalışmadığını {owner} kişisine sorun.</value>
+  </data>
+  <data name="StoreOtherMediumMore_one" xml:space="preserve">
+    <value>Bir tane daha izlemek için, ama izleme bu cihazda kapalı.</value>
+  </data>
+  <data name="StoreOtherMediumMore_other" xml:space="preserve">
+    <value>{count} tane daha izlemek için, ama izleme bu cihazda kapalı.</value>
+  </data>
+  <data name="StoreTvReadingOnly_one" xml:space="preserve">
+    <value>Bir tane daha okumak için, ama bu TV okuma yapmıyor.</value>
+  </data>
+  <data name="StoreTvReadingOnly_other" xml:space="preserve">
+    <value>{count} tane daha okumak için, ama bu TV okuma yapmıyor.</value>
+  </data>
+  <data name="StoreTvAllReading" xml:space="preserve">
+    <value>{store} içindeki her eklenti okumak için, ama bu TV okuma yapmıyor.</value>
+  </data>
+  <data name="StorePluginRow" xml:space="preserve">
+    <value>Sürüm {version} · {hosts} ile iletişim kurabilir</value>
+  </data>
+  <data name="SourceAdded" xml:space="preserve">
+    <value>{name} eklendi · {series} seri</value>
+  </data>
+  <data name="SourceAddedPlugins_one" xml:space="preserve">
+    <value>{store} içinden bir eklenti yüklendi</value>
+  </data>
+  <data name="SourceAddedPlugins_other" xml:space="preserve">
+    <value>{store} içinden yüklenen eklentiler: {count}</value>
+  </data>
+  <data name="SourceRowServer_one" xml:space="preserve">
+    <value>{kind} · {series} seri · az önce eklendi</value>
+  </data>
+  <data name="SourceRowServer_other" xml:space="preserve">
+    <value>{kind} · {libraries} kitaplıkta {series} seri · az önce eklendi</value>
+  </data>
+  <data name="SourceRowServerEmpty" xml:space="preserve">
+    <value>{kind} · henüz seri yok · 30 dakika sonra yeniden bakar</value>
+  </data>
+  <data name="SourceRowFolder_one" xml:space="preserve">
+    <value>{path} · {series} seri · bir dosya atlandı</value>
+  </data>
+  <data name="SourceRowFolder_other" xml:space="preserve">
+    <value>{path} · {series} seri · {skipped} dosya atlandı</value>
+  </data>
+  <data name="SourceRowPlugin" xml:space="preserve">
+    <value>{store} içinden · {medium} · sürüm {version}</value>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>Kaynaklar</value>

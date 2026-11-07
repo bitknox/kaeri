@@ -2600,6 +2600,63 @@
   <data name="EpisodeDownloadFailed" xml:space="preserve">
     <value>Không tải được tập {episode}. Hãy thử lại.</value>
   </data>
+  <data name="FirstOtherTitle" xml:space="preserve">
+    <value>Bạn đã dùng Kaeri trên thiết bị khác?</value>
+  </data>
+  <data name="FirstOtherLine" xml:space="preserve">
+    <value>Hãy ghép nối, và thiết bị này sẽ nhận các nguồn, các dịch vụ theo dõi và lịch sử của bạn. Các bước sau đó cũng xong.</value>
+  </data>
+  <data name="FirstOtherPairLine" xml:space="preserve">
+    <value>Hiện một mã để nhập trên thiết bị kia. Cả hai cần cùng một mạng Wi-Fi.</value>
+  </data>
+  <data name="FirstOtherRestore" xml:space="preserve">
+    <value>Khôi phục từ thư mục đám mây</value>
+  </data>
+  <data name="FirstOtherRestoreLine" xml:space="preserve">
+    <value>Dùng khóa khôi phục bạn đã lưu</value>
+  </data>
+  <data name="FirstOtherNo" xml:space="preserve">
+    <value>Không, bắt đầu từ đây</value>
+  </data>
+  <data name="PairWaiting" xml:space="preserve">
+    <value>Đang chờ thiết bị kia của bạn</value>
+  </data>
+  <data name="PairNothingYet" xml:space="preserve">
+    <value>Chưa thấy gì? các thiết bị cần cùng một mạng Wi-Fi.</value>
+  </data>
+  <data name="FirstJoinGroup" xml:space="preserve">
+    <value>Từ {device}</value>
+  </data>
+  <data name="FirstJoinLooking" xml:space="preserve">
+    <value>Đang xem {device} có gì…</value>
+  </data>
+  <data name="FirstJoinMedium" xml:space="preserve">
+    <value>Kaeri dùng để</value>
+  </data>
+  <data name="FirstJoinMediumLine" xml:space="preserve">
+    <value>Đọc, như trên {device}</value>
+  </data>
+  <data name="FirstJoinSigninsLine" xml:space="preserve">
+    <value>{trackers}</value>
+  </data>
+  <data name="FirstJoinServer" xml:space="preserve">
+    <value>Thêm {host}</value>
+  </data>
+  <data name="FirstJoinServerLine" xml:space="preserve">
+    <value>{kind} · đăng nhập bằng khóa từ {device}, lưu trong {store}</value>
+  </data>
+  <data name="FirstJoinFolders" xml:space="preserve">
+    <value>Thư mục vẫn ở trên {device}. Hãy thêm thư mục riêng của thiết bị này trong “các nguồn”.</value>
+  </data>
+  <data name="FirstJoinStepsDone" xml:space="preserve">
+    <value>Danh sách và các nguồn đã được thiết lập, nên lần chạy đầu kết thúc tại đây. Bạn có thể đổi chúng trong Cài đặt.</value>
+  </data>
+  <data name="FirstJoinStoreRefused" xml:space="preserve">
+    <value>{store} không cho thiết bị này vào. {owner} có thể gửi lời mời cho bạn.</value>
+  </data>
+  <data name="FirstJoinSyncing" xml:space="preserve">
+    <value>Đang đồng bộ với {device}</value>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>Trang chủ</value>
   </data>
@@ -4808,6 +4865,78 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Thêm trong Cài đặt…</value>
   </data>
+  <data name="OnboardingReadDemo" xml:space="preserve">
+    <value>Đọc bản demo</value>
+  </data>
+  <data name="OnboardingDemoBooksDetail" xml:space="preserve">
+    <value>Bản demo có một truyện tranh ngắn và một truyện ngắn mà tác giả chia sẻ theo Creative Commons.</value>
+  </data>
+  <data name="OnboardingDemoBothDetail" xml:space="preserve">
+    <value>Một tập ngắn và một truyện tranh ngắn, do tác giả chia sẻ theo Creative Commons.</value>
+  </data>
+  <data name="HomeDemoOnlyBooks" xml:space="preserve">
+    <value>Chỉ có bản demo đang bật. Hãy thêm thư mục, máy chủ hoặc cửa hàng plugin để đọc sách của bạn.</value>
+  </data>
+  <data name="HomeSpotlightRead" xml:space="preserve">
+    <value>Đọc</value>
+  </data>
+  <data name="DemoSeriesFacts_other" xml:space="preserve">
+    <value>Demo · Truyện tranh · {pages} trang</value>
+  </data>
+  <data name="DemoCreditBook" xml:space="preserve">
+    <value>{title} của {author}. Giấy phép {licence}. Đọc từ Wikimedia Commons.</value>
+  </data>
+  <data name="DemoCreditStory" xml:space="preserve">
+    <value>{title} của {author}. Phạm vi công cộng. Đi kèm trong ứng dụng.</value>
+  </data>
+  <data name="ReaderDemoCredit" xml:space="preserve">
+    <value>{title} · {author} · {licence}</value>
+  </data>
+  <data name="SearchDemoReads" xml:space="preserve">
+    <value>Demo · Đọc được ngay</value>
+  </data>
+  <data name="SearchDemoOnlyBooks" xml:space="preserve">
+    <value>Chỉ có bản demo đang bật. Các tựa khác sẽ hiện khi bạn thêm nguồn.</value>
+  </data>
+  <data name="ReaderDemoEnd" xml:space="preserve">
+    <value>Bản demo kết thúc ở đây</value>
+  </data>
+  <data name="ReaderDemoEndLine" xml:space="preserve">
+    <value>Để đọc sách của bạn, hãy thêm thư mục, máy chủ hoặc cửa hàng plugin.</value>
+  </data>
+  <data name="ReaderDemoAddSource" xml:space="preserve">
+    <value>Thêm nguồn</value>
+  </data>
+  <data name="ReaderDemoAgain" xml:space="preserve">
+    <value>Về trang 1</value>
+  </data>
+  <data name="SourcesDemoBooksLine" xml:space="preserve">
+    <value>Một truyện tranh và một truyện ngắn · CC BY 4.0 và phạm vi công cộng</value>
+  </data>
+  <data name="SourcesDemoBooksWhat" xml:space="preserve">
+    <value>Các tác phẩm do tác giả chia sẻ theo Creative Commons, để bạn thử Kaeri trước khi thêm nguồn. Đây không phải nguồn để giữ lại.</value>
+  </data>
+  <data name="SourcesDemoBooksPrivate" xml:space="preserve">
+    <value>Bản demo không đăng nhập ở đâu và không bao giờ ghi vào dịch vụ theo dõi.</value>
+  </data>
+  <data name="DemoChapters" xml:space="preserve">
+    <value>Các chương</value>
+  </data>
+  <data name="DemoAlso" xml:space="preserve">
+    <value>Cũng có trong demo</value>
+  </data>
+  <data name="DemoCredits" xml:space="preserve">
+    <value>Ghi công</value>
+  </data>
+  <data name="DemoPages_other" xml:space="preserve">
+    <value>{pages} trang</value>
+  </data>
+  <data name="DemoStoryRow" xml:space="preserve">
+    <value>Truyện ngắn · {author} · {licence}</value>
+  </data>
+  <data name="DemoReadChapter" xml:space="preserve">
+    <value>Đọc chương {number}</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Mùa trước</value>
   </data>
@@ -6049,6 +6178,189 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>Đặt lại kiểu phụ đề</value>
+  </data>
+  <data name="BookServerAddress" xml:space="preserve">
+    <value>Địa chỉ</value>
+  </data>
+  <data name="BookServerAddressHint" xml:space="preserve">
+    <value>Một địa chỉ, hoặc toàn bộ liên kết OPDS từ Kavita.</value>
+  </data>
+  <data name="BookServerKavitaKey" xml:space="preserve">
+    <value>Đây là liên kết OPDS của Kavita. Khóa trong đó dùng để đăng nhập, nên không cần mật khẩu.</value>
+  </data>
+  <data name="BookServerKeyKept" xml:space="preserve">
+    <value>Kaeri lưu khóa trong {store} và chỉ hiện bốn ký tự cuối của khóa.</value>
+  </data>
+  <data name="BookServerKey" xml:space="preserve">
+    <value>Khóa ••••{last}</value>
+  </data>
+  <data name="BookServerFoundTitle_other" xml:space="preserve">
+    <value>Tìm thấy {series} bộ trong {libraries} thư viện</value>
+  </data>
+  <data name="BookServerFoundLine" xml:space="preserve">
+    <value>{kind} tại {host}. Chọn các thư viện cần thêm.</value>
+  </data>
+  <data name="BookServerLibraryLine" xml:space="preserve">
+    <value>{series} bộ</value>
+  </data>
+  <data name="BookServerSyncProgress" xml:space="preserve">
+    <value>Gửi tiến độ lên máy chủ</value>
+  </data>
+  <data name="BookServerSyncProgressLine" xml:space="preserve">
+    <value>Các trang bạn đọc ở đây được gửi về {host}, và tiến độ của máy chủ đó được đưa về đây.</value>
+  </data>
+  <data name="BookServerUsername" xml:space="preserve">
+    <value>Tên người dùng</value>
+  </data>
+  <data name="BookServerPassword" xml:space="preserve">
+    <value>Mật khẩu</value>
+  </data>
+  <data name="BookServerErrUnreachable" xml:space="preserve">
+    <value>Không kết nối được với {host}</value>
+  </data>
+  <data name="BookServerErrUnreachableLine" xml:space="preserve">
+    <value>Kiểm tra địa chỉ, và xem máy chủ đã bật và nằm trong mạng này chưa.</value>
+  </data>
+  <data name="BookServerErrPassword" xml:space="preserve">
+    <value>{host} không chấp nhận mật khẩu đó</value>
+  </data>
+  <data name="BookServerErrPasswordLine" xml:space="preserve">
+    <value>Dùng tên người dùng và mật khẩu bạn dùng cho {kind} trong trình duyệt.</value>
+  </data>
+  <data name="BookServerErrKey" xml:space="preserve">
+    <value>{host} không chấp nhận khóa đó</value>
+  </data>
+  <data name="BookServerErrKeyLine" xml:space="preserve">
+    <value>Khóa thay đổi khi được đặt lại trong Kavita. Hãy sao chép lại liên kết OPDS từ phần cài đặt tài khoản của bạn ở đó.</value>
+  </data>
+  <data name="BookServerEmpty" xml:space="preserve">
+    <value>{host} không hiện bộ truyện nào cho tài khoản này</value>
+  </data>
+  <data name="BookServerEmptyLine" xml:space="preserve">
+    <value>Tài khoản vào được, nhưng máy chủ có thể vẫn đang quét, hoặc tài khoản này chưa có quyền truy cập sách của nó.</value>
+  </data>
+  <data name="BookServerEmptyRecheck" xml:space="preserve">
+    <value>Bạn có thể thêm ngay bây giờ. Kaeri sẽ kiểm tra lại mỗi 30 phút.</value>
+  </data>
+  <data name="BookServerNotBooksLine" xml:space="preserve">
+    <value>Kaeri đọc từ các danh mục Komga, Kavita và OPDS.</value>
+  </data>
+  <data name="BookFolderFound_other" xml:space="preserve">
+    <value>Tìm thấy {series} bộ trong {files} tệp</value>
+  </data>
+  <data name="BookFolderFoundLine" xml:space="preserve">
+    <value>{path}. Kaeri đã khớp {matched} trong số đó theo thông tin chi tiết của chúng.</value>
+  </data>
+  <data name="BookFolderUnsupported_other" xml:space="preserve">
+    <value>{count} tệp mà Kaeri không mở được</value>
+  </data>
+  <data name="BookFolderUnsupportedLine" xml:space="preserve">
+    <value>{kinds}. Các tệp này vẫn nằm nguyên trong thư mục.</value>
+  </data>
+  <data name="BookFolderDrm" xml:space="preserve">
+    <value>{count} EPUB bị khóa bằng DRM</value>
+  </data>
+  <data name="BookFolderOpens" xml:space="preserve">
+    <value>Kaeri mở tệp CBZ, CBR, EPUB và PDF, cùng các thư mục ảnh.</value>
+  </data>
+  <data name="BookFolderShowFiles" xml:space="preserve">
+    <value>Hiện tệp</value>
+  </data>
+  <data name="BookFolderAdd" xml:space="preserve">
+    <value>Thêm thư mục</value>
+  </data>
+  <data name="BookFolderChange" xml:space="preserve">
+    <value>Thay đổi</value>
+  </data>
+  <data name="BookFolderEmpty" xml:space="preserve">
+    <value>Không có gì trong {folder} mà Kaeri mở được</value>
+  </data>
+  <data name="BookFolderEmptyLine_other" xml:space="preserve">
+    <value>Thư mục có {files} tệp, không tệp nào là CBZ, CBR, EPUB, PDF hay ảnh.</value>
+  </data>
+  <data name="BookFolderChooseOther" xml:space="preserve">
+    <value>Chọn thư mục khác</value>
+  </data>
+  <data name="StoreJoinTitle" xml:space="preserve">
+    <value>Tham gia cửa hàng plugin</value>
+  </data>
+  <data name="StoreInviteField" xml:space="preserve">
+    <value>Lời mời</value>
+  </data>
+  <data name="StoreJoinedTitle" xml:space="preserve">
+    <value>Đã tham gia {store}</value>
+  </data>
+  <data name="StoreJoinedLine_other" xml:space="preserve">
+    <value>{owner} cung cấp các plugin: {count}. Tham gia không cài gì cả; hãy chọn cái bạn muốn tại đây hoặc sau.</value>
+  </data>
+  <data name="StoreGroupReading" xml:space="preserve">
+    <value>Để đọc</value>
+  </data>
+  <data name="StoreGroupWatching" xml:space="preserve">
+    <value>Để xem</value>
+  </data>
+  <data name="StoreInstall" xml:space="preserve">
+    <value>Cài đặt</value>
+  </data>
+  <data name="StoreInstalledRow" xml:space="preserve">
+    <value>Đã cài</value>
+  </data>
+  <data name="StoreInstallAllReading" xml:space="preserve">
+    <value>Cài tất cả để đọc</value>
+  </data>
+  <data name="StoreInstalled_other" xml:space="preserve">
+    <value>Đã cài, các plugin: {count}. Chúng nằm trong mục “các nguồn”.</value>
+  </data>
+  <data name="StoreOtherMedium" xml:space="preserve">
+    <value>Mọi plugin trong {store} đều để xem</value>
+  </data>
+  <data name="StoreOtherMediumLine" xml:space="preserve">
+    <value>Xem đang tắt trên thiết bị này, nên không cái nào hiện trong mục “các nguồn”.</value>
+  </data>
+  <data name="StoreTurnOnWatching" xml:space="preserve">
+    <value>Bật xem</value>
+  </data>
+  <data name="StoreEmpty" xml:space="preserve">
+    <value>{store} chưa có các plugin</value>
+  </data>
+  <data name="StoreEmptyLine" xml:space="preserve">
+    <value>Bạn là thành viên, nên các plugin mới sẽ hiện trong “Các cửa hàng plugin” khi {owner} thêm chúng.</value>
+  </data>
+  <data name="StoreErrUnreachable" xml:space="preserve">
+    <value>Không kết nối được với {host}</value>
+  </data>
+  <data name="StoreErrUnreachableLine" xml:space="preserve">
+    <value>Lời mời có vẻ đúng, nhưng cửa hàng không phản hồi. Hãy thử lại sau, hoặc hỏi {owner} xem nó có đang chạy không.</value>
+  </data>
+  <data name="StoreOtherMediumMore_other" xml:space="preserve">
+    <value>Còn {count} cái để xem, nhưng xem đang tắt trên thiết bị này.</value>
+  </data>
+  <data name="StoreTvReadingOnly_other" xml:space="preserve">
+    <value>Còn {count} cái để đọc, nhưng TV này không hỗ trợ đọc.</value>
+  </data>
+  <data name="StoreTvAllReading" xml:space="preserve">
+    <value>Mọi plugin trong {store} đều để đọc, nhưng TV này không hỗ trợ đọc.</value>
+  </data>
+  <data name="StorePluginRow" xml:space="preserve">
+    <value>Phiên bản {version} · có thể kết nối tới {hosts}</value>
+  </data>
+  <data name="SourceAdded" xml:space="preserve">
+    <value>Đã thêm {name} · {series} bộ</value>
+  </data>
+  <data name="SourceAddedPlugins_other" xml:space="preserve">
+    <value>Đã cài từ {store}, các plugin: {count}</value>
+  </data>
+  <data name="SourceRowServer_other" xml:space="preserve">
+    <value>{kind} · {series} bộ trong {libraries} thư viện · vừa thêm</value>
+  </data>
+  <data name="SourceRowServerEmpty" xml:space="preserve">
+    <value>{kind} · chưa có bộ nào · sẽ kiểm tra lại sau 30 phút</value>
+  </data>
+  <data name="SourceRowFolder_other" xml:space="preserve">
+    <value>{path} · {series} bộ · đã bỏ qua {skipped} tệp</value>
+  </data>
+  <data name="SourceRowPlugin" xml:space="preserve">
+    <value>Từ {store} · {medium} · phiên bản {version}</value>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>Các nguồn</value>

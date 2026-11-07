@@ -1102,6 +1102,25 @@
     <string name="episode_download_paused">%1$sで一時停止中</string>
     <string name="episode_download_done">ダウンロード済み</string>
     <string name="episode_download_failed">第%1$d話をダウンロードできませんでした。もう一度お試しください。</string>
+    <string name="first_other_title">ほかのデバイスですでにKaeriを使っていますか？</string>
+    <string name="first_other_line">ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれます。この後の手順は完了します。</string>
+    <string name="first_other_pair_line">そのデバイスに入力するコードを表示します。どちらも同じWi-Fiに接続している必要があります。</string>
+    <string name="first_other_restore">クラウドフォルダーから復元</string>
+    <string name="first_other_restore_line">保存した復元キーを使います</string>
+    <string name="first_other_no">いいえ、ここから始める</string>
+    <string name="pair_waiting">もう一方のデバイスを待っています</string>
+    <string name="pair_nothing_yet">まだ何も表示されませんか？2台のデバイスが同じWi-Fiに接続されている必要があります。</string>
+    <string name="first_join_group">%1$sから</string>
+    <string name="first_join_looking">%1$sの内容を確認しています…</string>
+    <string name="first_join_medium">Kaeriの用途</string>
+    <string name="first_join_medium_line">%1$sと同じ、読書</string>
+    <string name="first_join_signins_line">%1$s</string>
+    <string name="first_join_server">%1$sを追加</string>
+    <string name="first_join_server_line">%1$s · %2$sのキーでサインイン、%3$sに保存</string>
+    <string name="first_join_folders">フォルダーは%1$sに残ります。このデバイスのフォルダーはソースで追加してください。</string>
+    <string name="first_join_steps_done">リストとソースは設定済みなので、初回設定はここで終わりです。設定から変更できます。</string>
+    <string name="first_join_store_refused">%1$sはこのデバイスの参加を許可しませんでした。%2$sが招待を送れます。</string>
+    <string name="first_join_syncing">%1$sと同期中</string>
     <string name="home_title">ホーム</string>
     <string name="home_resume_episode">第%1$d話を再開</string>
     <string name="home_play_episode">第%1$d話を再生</string>
@@ -1872,6 +1891,34 @@
     <string name="player_subs_bg_shadow">影</string>
     <string name="player_subs_bg_box">ボックス</string>
     <string name="player_subs_more">設定でさらに表示…</string>
+    <string name="onboarding_read_demo">デモを読む</string>
+    <string name="onboarding_demo_books_detail">デモでは、作者がCreative Commonsで共有している短いコミックと短い物語を読めます。</string>
+    <string name="onboarding_demo_both_detail">作者がCreative Commonsで共有している、短いエピソードと短いコミックが1つずつあります。</string>
+    <string name="home_demo_only_books">デモだけがオンです。自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。</string>
+    <string name="home_spotlight_read">読む</string>
+    <plurals name="demo_series_facts">
+        <item quantity="other">デモ · コミック · %1$dページ</item>
+    </plurals>
+    <string name="demo_credit_book">%2$s「%1$s」。ライセンス: %3$s。Wikimedia Commonsから読み込んでいます。</string>
+    <string name="demo_credit_story">%2$s「%1$s」。パブリックドメイン。アプリに付属しています。</string>
+    <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
+    <string name="search_demo_reads">デモ · 今すぐ読めます</string>
+    <string name="search_demo_only_books">デモだけがオンです。ソースを追加すると、ほかのタイトルが表示されます。</string>
+    <string name="reader_demo_end">デモはここまでです</string>
+    <string name="reader_demo_end_line">自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。</string>
+    <string name="reader_demo_add_source">ソースを追加</string>
+    <string name="reader_demo_again">1ページ目に戻る</string>
+    <string name="sources_demo_books_line">コミックと物語 · CC BY 4.0とパブリックドメイン</string>
+    <string name="sources_demo_books_what">作者がCreative Commonsで共有している作品なので、ソースを追加する前にKaeriを試せます。保存しておくソースではありません。</string>
+    <string name="sources_demo_books_private">デモはどこにもサインインせず、連携サービスにも書き込みません。</string>
+    <string name="demo_chapters">章</string>
+    <string name="demo_also">デモ内のほかの作品</string>
+    <string name="demo_credits">クレジット</string>
+    <plurals name="demo_pages">
+        <item quantity="other">%1$dページ</item>
+    </plurals>
+    <string name="demo_story_row">物語 · %1$s · %2$s</string>
+    <string name="demo_read_chapter">第%1$s章を読む</string>
     <string name="seasonal_previous">前のシーズン</string>
     <string name="seasonal_next">次のシーズン</string>
     <string name="seasonal_loading">シーズンを読み込んでいます</string>
@@ -2304,6 +2351,89 @@
     <string name="settings_subs_styled_strip">すべてのスタイルを削除</string>
     <string name="settings_subs_styled_strip_detail">すべての行が、あなたのスタイルで画面下部に通常のセリフとして表示されます。看板は位置を失い、カラオケや効果も消えます。</string>
     <string name="settings_subs_reset">字幕スタイルをリセット</string>
+    <string name="book_server_address">アドレス</string>
+    <string name="book_server_address_hint">アドレス、またはKavitaのOPDSリンク全体を入力します。</string>
+    <string name="book_server_kavita_key">これはKavitaのOPDSリンクです。キーでサインインするため、パスワードは不要です。</string>
+    <string name="book_server_key_kept">Kaeriはキーを%1$sに保存し、末尾4文字だけを表示します。</string>
+    <string name="book_server_key">キー ••••%1$s</string>
+    <plurals name="book_server_found_title">
+        <item quantity="other">%2$d件のライブラリで%1$dシリーズが見つかりました</item>
+    </plurals>
+    <string name="book_server_found_line">%2$sの%1$sです。追加するライブラリを選んでください。</string>
+    <string name="book_server_library_line">%1$dシリーズ</string>
+    <string name="book_server_sync_progress">サーバーに進捗を送る</string>
+    <string name="book_server_sync_progress_line">ここで読んだページは%1$sに送られ、%1$sの進捗がここに反映されます。</string>
+    <string name="book_server_username">ユーザー名</string>
+    <string name="book_server_password">パスワード</string>
+    <string name="book_server_err_unreachable">%1$sに接続できませんでした</string>
+    <string name="book_server_err_unreachable_line">アドレスと、サーバーが起動していてこのネットワーク上にあるかを確認してください。</string>
+    <string name="book_server_err_password">%1$sはそのパスワードを受け付けませんでした</string>
+    <string name="book_server_err_password_line">ブラウザーで%1$sに使っているユーザー名とパスワードを入力してください。</string>
+    <string name="book_server_err_key">%1$sはそのキーを受け付けませんでした</string>
+    <string name="book_server_err_key_line">キーはKavitaでリセットすると変わります。Kavitaのアカウント設定からOPDSリンクをもう一度コピーしてください。</string>
+    <string name="book_server_empty">%1$sには、このアカウントで表示できるシリーズがありません</string>
+    <string name="book_server_empty_line">サーバーには入れますが、サーバーがまだスキャン中か、このアカウントに本へのアクセス権がない可能性があります。</string>
+    <string name="book_server_empty_recheck">今すぐ追加できます。Kaeriは30分ごとに再確認します。</string>
+    <string name="book_server_not_books_line">Kaeriは、Komga、Kavita、OPDSのカタログから読み込みます。</string>
+    <plurals name="book_folder_found">
+        <item quantity="other">%2$d個のファイルに%1$dシリーズが見つかりました</item>
+    </plurals>
+    <string name="book_folder_found_line">%1$s。Kaeriは、そのうち%2$dシリーズを詳細情報で照合しました。</string>
+    <plurals name="book_folder_unsupported">
+        <item quantity="other">Kaeriで開けないファイルが%1$d個</item>
+    </plurals>
+    <string name="book_folder_unsupported_line">%1$s。これらはフォルダー内にそのまま残ります。</string>
+    <string name="book_folder_drm">DRMで保護されたEPUBが%1$d個</string>
+    <string name="book_folder_opens">Kaeriは、CBZ、CBR、EPUB、PDFファイルと、画像のフォルダーを開けます。</string>
+    <string name="book_folder_show_files">ファイルを表示</string>
+    <string name="book_folder_add">フォルダーを追加</string>
+    <string name="book_folder_change">変更</string>
+    <string name="book_folder_empty">%1$sにKaeriで開けるものはありません</string>
+    <plurals name="book_folder_empty_line">
+        <item quantity="other">%1$d個のファイルがありますが、CBZ、CBR、EPUB、PDF、画像のいずれでもありません。</item>
+    </plurals>
+    <string name="book_folder_choose_other">別のフォルダーを選ぶ</string>
+    <string name="store_join_title">プラグインストアに参加</string>
+    <string name="store_invite_field">招待</string>
+    <string name="store_joined_title">%1$sに参加しました</string>
+    <plurals name="store_joined_line">
+        <item quantity="other">%1$sがプラグインを%2$d個提供しています。参加してもインストールはされません。ここで、または後で選んでインストールできます。</item>
+    </plurals>
+    <string name="store_group_reading">読書用</string>
+    <string name="store_group_watching">視聴用</string>
+    <string name="store_install">インストール</string>
+    <string name="store_installed_row">インストール済み</string>
+    <string name="store_install_all_reading">読書用をすべてインストール</string>
+    <plurals name="store_installed">
+        <item quantity="other">プラグインを%1$d個インストールしました。ソースに入っています。</item>
+    </plurals>
+    <string name="store_other_medium">%1$sのプラグインはすべて視聴用です</string>
+    <string name="store_other_medium_line">このデバイスでは視聴がオフなので、ソースには表示されません。</string>
+    <string name="store_turn_on_watching">視聴をオンにする</string>
+    <string name="store_empty">%1$sにはまだプラグインがありません</string>
+    <string name="store_empty_line">メンバーなので、%1$sが追加すると、新しいプラグインがプラグインストアに表示されます。</string>
+    <string name="store_err_unreachable">%1$sに接続できませんでした</string>
+    <string name="store_err_unreachable_line">招待は正しいようですが、ストアが応答していません。しばらくしてからもう一度試すか、稼働しているか%1$sに確認してください。</string>
+    <plurals name="store_other_medium_more">
+        <item quantity="other">ほかに%1$d個は視聴用ですが、このデバイスでは視聴がオフです。</item>
+    </plurals>
+    <plurals name="store_tv_reading_only">
+        <item quantity="other">ほかに%1$d個は読書用ですが、このTVでは読書できません。</item>
+    </plurals>
+    <string name="store_tv_all_reading">%1$sのプラグインはすべて読書用ですが、このTVでは読書できません。</string>
+    <string name="store_plugin_row">バージョン%1$s · %2$sに接続する場合があります</string>
+    <string name="source_added">%1$sを追加しました · %2$dシリーズ</string>
+    <plurals name="source_added_plugins">
+        <item quantity="other">%2$sからプラグインを%1$d個インストールしました</item>
+    </plurals>
+    <plurals name="source_row_server">
+        <item quantity="other">%1$s · %3$d件のライブラリに%2$dシリーズ · 追加したばかり</item>
+    </plurals>
+    <string name="source_row_server_empty">%1$s · シリーズはまだありません · 30分後に再確認します</string>
+    <plurals name="source_row_folder">
+        <item quantity="other">%1$s · %2$dシリーズ · %3$d個のファイルをスキップ</item>
+    </plurals>
+    <string name="source_row_plugin">%1$sから · %2$s · バージョン%3$s</string>
     <string name="sources_title">ソース</string>
     <string name="sources_empty">ソースはまだありません。プラグインストアに参加すると追加できます。</string>
     <string name="plugin_risk_warning">プラグインは他の人が作成したもので、あなたのデバイス上で実行されます。利用する権利のあるソース向けの、信頼できるプラグインだけをインストールしてください。</string>

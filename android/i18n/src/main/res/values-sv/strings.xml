@@ -1143,6 +1143,25 @@
     <string name="episode_download_paused">Nedladdningen pausad vid %1$s</string>
     <string name="episode_download_done">Nedladdad</string>
     <string name="episode_download_failed">Det gick inte att ladda ner avsnitt %1$d. Försök igen.</string>
+    <string name="first_other_title">Använder du redan Kaeri på en annan enhet?</string>
+    <string name="first_other_line">Parkoppla med den, så får denna enhet dina källor, trackers och din historik. Stegen efter detta är då klara.</string>
+    <string name="first_other_pair_line">Visar en kod att skriva in på en annan enhet. Båda behöver samma Wi-Fi.</string>
+    <string name="first_other_restore">Återställ från en molnmapp</string>
+    <string name="first_other_restore_line">Använder återställningsnyckeln du sparade</string>
+    <string name="first_other_no">Nej, börja här</string>
+    <string name="pair_waiting">Väntar på din andra enhet</string>
+    <string name="pair_nothing_yet">Inget än? Dina två enheter måste vara på samma Wi-Fi.</string>
+    <string name="first_join_group">Från %1$s</string>
+    <string name="first_join_looking">Tittar på vad %1$s har…</string>
+    <string name="first_join_medium">Kaeri är till för</string>
+    <string name="first_join_medium_line">Läsning, som på %1$s</string>
+    <string name="first_join_signins_line">%1$s</string>
+    <string name="first_join_server">Lägg till %1$s</string>
+    <string name="first_join_server_line">%1$s · loggar in med nyckeln från %2$s, sparad i %3$s</string>
+    <string name="first_join_folders">Mappar stannar på %1$s. Lägg till egna mappar för denna enhet i Dina källor.</string>
+    <string name="first_join_steps_done">Listor och källor är klara, så första starten slutar här. Du kan ändra dem i Inställningar.</string>
+    <string name="first_join_store_refused">%1$s släppte inte in denna enhet. %2$s kan skicka en inbjudan till dig.</string>
+    <string name="first_join_syncing">Synkar med %1$s</string>
     <string name="home_title">Hem</string>
     <string name="home_resume_episode">Fortsätt avsnitt %1$d</string>
     <string name="home_play_episode">Spela avsnitt %1$d</string>
@@ -1930,6 +1949,36 @@
     <string name="player_subs_bg_shadow">Skugga</string>
     <string name="player_subs_bg_box">Ruta</string>
     <string name="player_subs_more">Mer i Inställningar…</string>
+    <string name="onboarding_read_demo">Läs demon</string>
+    <string name="onboarding_demo_books_detail">Demon innehåller en kort tecknad serie och en kort novell som upphovspersonerna delar under Creative Commons.</string>
+    <string name="onboarding_demo_both_detail">Ett kort avsnitt och en kort tecknad serie, delade av upphovspersonerna under Creative Commons.</string>
+    <string name="home_demo_only_books">Bara demon är på. Lägg till en mapp, en server eller en tilläggsbutik för att läsa dina egna böcker.</string>
+    <string name="home_spotlight_read">Läs</string>
+    <plurals name="demo_series_facts">
+        <item quantity="one">Demo · Tecknad serie · en sida</item>
+        <item quantity="other">Demo · Tecknad serie · %1$d sidor</item>
+    </plurals>
+    <string name="demo_credit_book">%1$s av %2$s. Licensierad under %3$s. Läses från Wikimedia Commons.</string>
+    <string name="demo_credit_story">%1$s av %2$s. Allmän egendom. Den följer med appen.</string>
+    <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
+    <string name="search_demo_reads">Demo · Läsbar nu</string>
+    <string name="search_demo_only_books">Bara demon är på. Andra titlar visas när du lägger till en källa.</string>
+    <string name="reader_demo_end">Det här är slutet på demon</string>
+    <string name="reader_demo_end_line">För att läsa dina egna böcker, lägg till en mapp, en server eller en tilläggsbutik.</string>
+    <string name="reader_demo_add_source">Lägg till en källa</string>
+    <string name="reader_demo_again">Tillbaka till sida 1</string>
+    <string name="sources_demo_books_line">En tecknad serie och en novell · CC BY 4.0 och allmän egendom</string>
+    <string name="sources_demo_books_what">Verk som upphovspersonerna delar under Creative Commons, så att du kan prova Kaeri innan du lägger till en källa. Det är ingen källa att behålla.</string>
+    <string name="sources_demo_books_private">Demon loggar aldrig in någonstans och skriver aldrig till en tracker.</string>
+    <string name="demo_chapters">Kapitel</string>
+    <string name="demo_also">Även i demon</string>
+    <string name="demo_credits">Upphovsuppgifter</string>
+    <plurals name="demo_pages">
+        <item quantity="one">En sida</item>
+        <item quantity="other">%1$d sidor</item>
+    </plurals>
+    <string name="demo_story_row">Novell · %1$s · %2$s</string>
+    <string name="demo_read_chapter">Läs kapitel %1$s</string>
     <string name="seasonal_previous">Föregående säsong</string>
     <string name="seasonal_next">Nästa säsong</string>
     <string name="seasonal_loading">Laddar säsongen</string>
@@ -2371,6 +2420,100 @@
     <string name="settings_subs_styled_strip">Ta bort all stil</string>
     <string name="settings_subs_styled_strip_detail">Varje rad visas som vanlig dialog längst ned, i din stil. Skyltar förlorar sin plats, och karaoke och effekter försvinner.</string>
     <string name="settings_subs_reset">Återställ undertextstil</string>
+    <string name="book_server_address">Adress</string>
+    <string name="book_server_address_hint">En adress, eller hela OPDS-länken från Kavita.</string>
+    <string name="book_server_kavita_key">Det här är en OPDS-länk från Kavita. Nyckeln loggar in dig, så inget lösenord behövs.</string>
+    <string name="book_server_key_kept">Kaeri sparar nyckeln i %1$s och visar bara de fyra sista tecknen.</string>
+    <string name="book_server_key">Nyckel ••••%1$s</string>
+    <plurals name="book_server_found_title">
+        <item quantity="one">Hittade %1$d serier</item>
+        <item quantity="other">Hittade %1$d serier i %2$d bibliotek</item>
+    </plurals>
+    <string name="book_server_found_line">%1$s på %2$s. Välj vilka bibliotek som ska läggas till.</string>
+    <string name="book_server_library_line">%1$d serier</string>
+    <string name="book_server_sync_progress">Skicka framsteg till servern</string>
+    <string name="book_server_sync_progress_line">Sidor du läser här skickas till %1$s, och dess framsteg kommer hit.</string>
+    <string name="book_server_username">Användarnamn</string>
+    <string name="book_server_password">Lösenord</string>
+    <string name="book_server_err_unreachable">Det gick inte att nå %1$s</string>
+    <string name="book_server_err_unreachable_line">Kontrollera adressen och att servern är igång och på det här nätverket.</string>
+    <string name="book_server_err_password">%1$s godkände inte lösenordet</string>
+    <string name="book_server_err_password_line">Använd användarnamnet och lösenordet du använder för %1$s i en webbläsare.</string>
+    <string name="book_server_err_key">%1$s godkände inte nyckeln</string>
+    <string name="book_server_err_key_line">Nyckeln ändras när den återställs i Kavita. Kopiera OPDS-länken igen från dina kontoinställningar där.</string>
+    <string name="book_server_empty">%1$s visar inga serier för det här kontot</string>
+    <string name="book_server_empty_line">Du släpps in, men servern kanske fortfarande skannar, eller så saknar kontot åtkomst till böckerna.</string>
+    <string name="book_server_empty_recheck">Du kan lägga till den nu. Kaeri tittar igen var 30:e minut.</string>
+    <string name="book_server_not_books_line">Kaeri läser från Komga-, Kavita- och OPDS-kataloger.</string>
+    <plurals name="book_folder_found">
+        <item quantity="one">Hittade %1$d serier i en fil</item>
+        <item quantity="other">Hittade %1$d serier i %2$d filer</item>
+    </plurals>
+    <string name="book_folder_found_line">%1$s. Kaeri matchade %2$d av dem utifrån deras uppgifter.</string>
+    <plurals name="book_folder_unsupported">
+        <item quantity="one">En fil som Kaeri inte kan öppna</item>
+        <item quantity="other">%1$d filer som Kaeri inte kan öppna</item>
+    </plurals>
+    <string name="book_folder_unsupported_line">%1$s. De ligger kvar i mappen som de är.</string>
+    <string name="book_folder_drm">%1$d EPUB låsta med DRM</string>
+    <string name="book_folder_opens">Kaeri öppnar CBZ-, CBR-, EPUB- och PDF-filer samt mappar med bilder.</string>
+    <string name="book_folder_show_files">Visa filer</string>
+    <string name="book_folder_add">Lägg till mapp</string>
+    <string name="book_folder_change">Ändra</string>
+    <string name="book_folder_empty">Inget i %1$s som Kaeri kan öppna</string>
+    <plurals name="book_folder_empty_line">
+        <item quantity="one">Den innehåller en fil, som inte är CBZ, CBR, EPUB, PDF eller en bild.</item>
+        <item quantity="other">Den innehåller %1$d filer, ingen av dem CBZ, CBR, EPUB, PDF eller bilder.</item>
+    </plurals>
+    <string name="book_folder_choose_other">Välj en annan mapp</string>
+    <string name="store_join_title">Gå med i en tilläggsbutik</string>
+    <string name="store_invite_field">Inbjudan</string>
+    <string name="store_joined_title">Gick med i %1$s</string>
+    <plurals name="store_joined_line">
+        <item quantity="one">%1$s erbjuder ett tillägg. Att gå med installerar ingenting; installera det här eller senare.</item>
+        <item quantity="other">%1$s erbjuder %2$d tillägg. Att gå med installerar ingenting; välj de du vill ha här eller senare.</item>
+    </plurals>
+    <string name="store_group_reading">För läsning</string>
+    <string name="store_group_watching">För tittande</string>
+    <string name="store_install">Installera</string>
+    <string name="store_installed_row">Installerat</string>
+    <string name="store_install_all_reading">Installera alla för läsning</string>
+    <plurals name="store_installed">
+        <item quantity="one">Ett tillägg installerat. Det finns i Dina källor.</item>
+        <item quantity="other">%1$d tillägg installerade. De finns i Dina källor.</item>
+    </plurals>
+    <string name="store_other_medium">Alla tillägg i %1$s är för tittande</string>
+    <string name="store_other_medium_line">Tittande är avstängt på denna enhet, så inget av dem syns i Dina källor.</string>
+    <string name="store_turn_on_watching">Slå på tittande</string>
+    <string name="store_empty">%1$s har inga tillägg än</string>
+    <string name="store_empty_line">Du är medlem, så nya tillägg visas i Tilläggsbutiker när %1$s lägger till dem.</string>
+    <string name="store_err_unreachable">Det gick inte att nå %1$s</string>
+    <string name="store_err_unreachable_line">Inbjudan ser rätt ut, men ingen butik svarar. Försök igen senare, eller fråga %1$s om den är igång.</string>
+    <plurals name="store_other_medium_more">
+        <item quantity="one">Ett till är för tittande, vilket är avstängt på denna enhet.</item>
+        <item quantity="other">%1$d till är för tittande, vilket är avstängt på denna enhet.</item>
+    </plurals>
+    <plurals name="store_tv_reading_only">
+        <item quantity="one">Ett till är för läsning, vilket den här TV:n inte klarar.</item>
+        <item quantity="other">%1$d till är för läsning, vilket den här TV:n inte klarar.</item>
+    </plurals>
+    <string name="store_tv_all_reading">Alla tillägg i %1$s är för läsning, vilket den här TV:n inte klarar.</string>
+    <string name="store_plugin_row">Version %1$s · kan kontakta %2$s</string>
+    <string name="source_added">La till %1$s · %2$d serier</string>
+    <plurals name="source_added_plugins">
+        <item quantity="one">Installerade ett tillägg från %2$s</item>
+        <item quantity="other">Installerade %1$d tillägg från %2$s</item>
+    </plurals>
+    <plurals name="source_row_server">
+        <item quantity="one">%1$s · %2$d serier · nyss tillagd</item>
+        <item quantity="other">%1$s · %2$d serier i %3$d bibliotek · nyss tillagd</item>
+    </plurals>
+    <string name="source_row_server_empty">%1$s · inga serier än · tittar igen om 30 minuter</string>
+    <plurals name="source_row_folder">
+        <item quantity="one">%1$s · %2$d serier · en fil hoppades över</item>
+        <item quantity="other">%1$s · %2$d serier · %3$d filer hoppades över</item>
+    </plurals>
+    <string name="source_row_plugin">Från %1$s · %2$s · version %3$s</string>
     <string name="sources_title">Källor</string>
     <string name="sources_empty">Inga källor än. Anslut dig till en tilläggsbutik för att lägga till några.</string>
     <string name="plugin_risk_warning">Tillägg skrivs av andra och körs på din enhet. Installera bara tillägg du litar på, för källor du har rätt att använda.</string>

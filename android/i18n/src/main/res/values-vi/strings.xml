@@ -1102,6 +1102,25 @@
     <string name="episode_download_paused">Đã tạm dừng tải ở %1$s</string>
     <string name="episode_download_done">Đã tải</string>
     <string name="episode_download_failed">Không tải được tập %1$d. Hãy thử lại.</string>
+    <string name="first_other_title">Bạn đã dùng Kaeri trên thiết bị khác?</string>
+    <string name="first_other_line">Hãy ghép nối, và thiết bị này sẽ nhận các nguồn, các dịch vụ theo dõi và lịch sử của bạn. Các bước sau đó cũng xong.</string>
+    <string name="first_other_pair_line">Hiện một mã để nhập trên thiết bị kia. Cả hai cần cùng một mạng Wi-Fi.</string>
+    <string name="first_other_restore">Khôi phục từ thư mục đám mây</string>
+    <string name="first_other_restore_line">Dùng khóa khôi phục bạn đã lưu</string>
+    <string name="first_other_no">Không, bắt đầu từ đây</string>
+    <string name="pair_waiting">Đang chờ thiết bị kia của bạn</string>
+    <string name="pair_nothing_yet">Chưa thấy gì? các thiết bị cần cùng một mạng Wi-Fi.</string>
+    <string name="first_join_group">Từ %1$s</string>
+    <string name="first_join_looking">Đang xem %1$s có gì…</string>
+    <string name="first_join_medium">Kaeri dùng để</string>
+    <string name="first_join_medium_line">Đọc, như trên %1$s</string>
+    <string name="first_join_signins_line">%1$s</string>
+    <string name="first_join_server">Thêm %1$s</string>
+    <string name="first_join_server_line">%1$s · đăng nhập bằng khóa từ %2$s, lưu trong %3$s</string>
+    <string name="first_join_folders">Thư mục vẫn ở trên %1$s. Hãy thêm thư mục riêng của thiết bị này trong “các nguồn”.</string>
+    <string name="first_join_steps_done">Danh sách và các nguồn đã được thiết lập, nên lần chạy đầu kết thúc tại đây. Bạn có thể đổi chúng trong Cài đặt.</string>
+    <string name="first_join_store_refused">%1$s không cho thiết bị này vào. %2$s có thể gửi lời mời cho bạn.</string>
+    <string name="first_join_syncing">Đang đồng bộ với %1$s</string>
     <string name="home_title">Trang chủ</string>
     <string name="home_resume_episode">Xem tiếp tập %1$d</string>
     <string name="home_play_episode">Phát tập %1$d</string>
@@ -1872,6 +1891,34 @@
     <string name="player_subs_bg_shadow">Bóng đổ</string>
     <string name="player_subs_bg_box">Khung</string>
     <string name="player_subs_more">Thêm trong Cài đặt…</string>
+    <string name="onboarding_read_demo">Đọc bản demo</string>
+    <string name="onboarding_demo_books_detail">Bản demo có một truyện tranh ngắn và một truyện ngắn mà tác giả chia sẻ theo Creative Commons.</string>
+    <string name="onboarding_demo_both_detail">Một tập ngắn và một truyện tranh ngắn, do tác giả chia sẻ theo Creative Commons.</string>
+    <string name="home_demo_only_books">Chỉ có bản demo đang bật. Hãy thêm thư mục, máy chủ hoặc cửa hàng plugin để đọc sách của bạn.</string>
+    <string name="home_spotlight_read">Đọc</string>
+    <plurals name="demo_series_facts">
+        <item quantity="other">Demo · Truyện tranh · %1$d trang</item>
+    </plurals>
+    <string name="demo_credit_book">%1$s của %2$s. Giấy phép %3$s. Đọc từ Wikimedia Commons.</string>
+    <string name="demo_credit_story">%1$s của %2$s. Phạm vi công cộng. Đi kèm trong ứng dụng.</string>
+    <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
+    <string name="search_demo_reads">Demo · Đọc được ngay</string>
+    <string name="search_demo_only_books">Chỉ có bản demo đang bật. Các tựa khác sẽ hiện khi bạn thêm nguồn.</string>
+    <string name="reader_demo_end">Bản demo kết thúc ở đây</string>
+    <string name="reader_demo_end_line">Để đọc sách của bạn, hãy thêm thư mục, máy chủ hoặc cửa hàng plugin.</string>
+    <string name="reader_demo_add_source">Thêm nguồn</string>
+    <string name="reader_demo_again">Về trang 1</string>
+    <string name="sources_demo_books_line">Một truyện tranh và một truyện ngắn · CC BY 4.0 và phạm vi công cộng</string>
+    <string name="sources_demo_books_what">Các tác phẩm do tác giả chia sẻ theo Creative Commons, để bạn thử Kaeri trước khi thêm nguồn. Đây không phải nguồn để giữ lại.</string>
+    <string name="sources_demo_books_private">Bản demo không đăng nhập ở đâu và không bao giờ ghi vào dịch vụ theo dõi.</string>
+    <string name="demo_chapters">Các chương</string>
+    <string name="demo_also">Cũng có trong demo</string>
+    <string name="demo_credits">Ghi công</string>
+    <plurals name="demo_pages">
+        <item quantity="other">%1$d trang</item>
+    </plurals>
+    <string name="demo_story_row">Truyện ngắn · %1$s · %2$s</string>
+    <string name="demo_read_chapter">Đọc chương %1$s</string>
     <string name="seasonal_previous">Mùa trước</string>
     <string name="seasonal_next">Mùa sau</string>
     <string name="seasonal_loading">Đang tải mùa này</string>
@@ -2304,6 +2351,89 @@
     <string name="settings_subs_styled_strip">Bỏ mọi kiểu</string>
     <string name="settings_subs_styled_strip_detail">Mọi dòng hiện như thoại thường ở phía dưới, theo kiểu của bạn. Biển hiệu mất vị trí, karaoke và hiệu ứng cũng mất.</string>
     <string name="settings_subs_reset">Đặt lại kiểu phụ đề</string>
+    <string name="book_server_address">Địa chỉ</string>
+    <string name="book_server_address_hint">Một địa chỉ, hoặc toàn bộ liên kết OPDS từ Kavita.</string>
+    <string name="book_server_kavita_key">Đây là liên kết OPDS của Kavita. Khóa trong đó dùng để đăng nhập, nên không cần mật khẩu.</string>
+    <string name="book_server_key_kept">Kaeri lưu khóa trong %1$s và chỉ hiện bốn ký tự cuối của khóa.</string>
+    <string name="book_server_key">Khóa ••••%1$s</string>
+    <plurals name="book_server_found_title">
+        <item quantity="other">Tìm thấy %1$d bộ trong %2$d thư viện</item>
+    </plurals>
+    <string name="book_server_found_line">%1$s tại %2$s. Chọn các thư viện cần thêm.</string>
+    <string name="book_server_library_line">%1$d bộ</string>
+    <string name="book_server_sync_progress">Gửi tiến độ lên máy chủ</string>
+    <string name="book_server_sync_progress_line">Các trang bạn đọc ở đây được gửi về %1$s, và tiến độ của máy chủ đó được đưa về đây.</string>
+    <string name="book_server_username">Tên người dùng</string>
+    <string name="book_server_password">Mật khẩu</string>
+    <string name="book_server_err_unreachable">Không kết nối được với %1$s</string>
+    <string name="book_server_err_unreachable_line">Kiểm tra địa chỉ, và xem máy chủ đã bật và nằm trong mạng này chưa.</string>
+    <string name="book_server_err_password">%1$s không chấp nhận mật khẩu đó</string>
+    <string name="book_server_err_password_line">Dùng tên người dùng và mật khẩu bạn dùng cho %1$s trong trình duyệt.</string>
+    <string name="book_server_err_key">%1$s không chấp nhận khóa đó</string>
+    <string name="book_server_err_key_line">Khóa thay đổi khi được đặt lại trong Kavita. Hãy sao chép lại liên kết OPDS từ phần cài đặt tài khoản của bạn ở đó.</string>
+    <string name="book_server_empty">%1$s không hiện bộ truyện nào cho tài khoản này</string>
+    <string name="book_server_empty_line">Tài khoản vào được, nhưng máy chủ có thể vẫn đang quét, hoặc tài khoản này chưa có quyền truy cập sách của nó.</string>
+    <string name="book_server_empty_recheck">Bạn có thể thêm ngay bây giờ. Kaeri sẽ kiểm tra lại mỗi 30 phút.</string>
+    <string name="book_server_not_books_line">Kaeri đọc từ các danh mục Komga, Kavita và OPDS.</string>
+    <plurals name="book_folder_found">
+        <item quantity="other">Tìm thấy %1$d bộ trong %2$d tệp</item>
+    </plurals>
+    <string name="book_folder_found_line">%1$s. Kaeri đã khớp %2$d trong số đó theo thông tin chi tiết của chúng.</string>
+    <plurals name="book_folder_unsupported">
+        <item quantity="other">%1$d tệp mà Kaeri không mở được</item>
+    </plurals>
+    <string name="book_folder_unsupported_line">%1$s. Các tệp này vẫn nằm nguyên trong thư mục.</string>
+    <string name="book_folder_drm">%1$d EPUB bị khóa bằng DRM</string>
+    <string name="book_folder_opens">Kaeri mở tệp CBZ, CBR, EPUB và PDF, cùng các thư mục ảnh.</string>
+    <string name="book_folder_show_files">Hiện tệp</string>
+    <string name="book_folder_add">Thêm thư mục</string>
+    <string name="book_folder_change">Thay đổi</string>
+    <string name="book_folder_empty">Không có gì trong %1$s mà Kaeri mở được</string>
+    <plurals name="book_folder_empty_line">
+        <item quantity="other">Thư mục có %1$d tệp, không tệp nào là CBZ, CBR, EPUB, PDF hay ảnh.</item>
+    </plurals>
+    <string name="book_folder_choose_other">Chọn thư mục khác</string>
+    <string name="store_join_title">Tham gia cửa hàng plugin</string>
+    <string name="store_invite_field">Lời mời</string>
+    <string name="store_joined_title">Đã tham gia %1$s</string>
+    <plurals name="store_joined_line">
+        <item quantity="other">%1$s cung cấp các plugin: %2$d. Tham gia không cài gì cả; hãy chọn cái bạn muốn tại đây hoặc sau.</item>
+    </plurals>
+    <string name="store_group_reading">Để đọc</string>
+    <string name="store_group_watching">Để xem</string>
+    <string name="store_install">Cài đặt</string>
+    <string name="store_installed_row">Đã cài</string>
+    <string name="store_install_all_reading">Cài tất cả để đọc</string>
+    <plurals name="store_installed">
+        <item quantity="other">Đã cài, các plugin: %1$d. Chúng nằm trong mục “các nguồn”.</item>
+    </plurals>
+    <string name="store_other_medium">Mọi plugin trong %1$s đều để xem</string>
+    <string name="store_other_medium_line">Xem đang tắt trên thiết bị này, nên không cái nào hiện trong mục “các nguồn”.</string>
+    <string name="store_turn_on_watching">Bật xem</string>
+    <string name="store_empty">%1$s chưa có các plugin</string>
+    <string name="store_empty_line">Bạn là thành viên, nên các plugin mới sẽ hiện trong “Các cửa hàng plugin” khi %1$s thêm chúng.</string>
+    <string name="store_err_unreachable">Không kết nối được với %1$s</string>
+    <string name="store_err_unreachable_line">Lời mời có vẻ đúng, nhưng cửa hàng không phản hồi. Hãy thử lại sau, hoặc hỏi %1$s xem nó có đang chạy không.</string>
+    <plurals name="store_other_medium_more">
+        <item quantity="other">Còn %1$d cái để xem, nhưng xem đang tắt trên thiết bị này.</item>
+    </plurals>
+    <plurals name="store_tv_reading_only">
+        <item quantity="other">Còn %1$d cái để đọc, nhưng TV này không hỗ trợ đọc.</item>
+    </plurals>
+    <string name="store_tv_all_reading">Mọi plugin trong %1$s đều để đọc, nhưng TV này không hỗ trợ đọc.</string>
+    <string name="store_plugin_row">Phiên bản %1$s · có thể kết nối tới %2$s</string>
+    <string name="source_added">Đã thêm %1$s · %2$d bộ</string>
+    <plurals name="source_added_plugins">
+        <item quantity="other">Đã cài từ %2$s, các plugin: %1$d</item>
+    </plurals>
+    <plurals name="source_row_server">
+        <item quantity="other">%1$s · %2$d bộ trong %3$d thư viện · vừa thêm</item>
+    </plurals>
+    <string name="source_row_server_empty">%1$s · chưa có bộ nào · sẽ kiểm tra lại sau 30 phút</string>
+    <plurals name="source_row_folder">
+        <item quantity="other">%1$s · %2$d bộ · đã bỏ qua %3$d tệp</item>
+    </plurals>
+    <string name="source_row_plugin">Từ %1$s · %2$s · phiên bản %3$s</string>
     <string name="sources_title">Các nguồn</string>
     <string name="sources_empty">Chưa có các nguồn. Tham gia cửa hàng plugin để thêm.</string>
     <string name="plugin_risk_warning">Các plugin do người khác viết và chạy trên thiết bị của bạn. Chỉ cài các plugin bạn tin cậy, cho những các nguồn bạn có quyền dùng.</string>

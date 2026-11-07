@@ -2600,6 +2600,63 @@
   <data name="EpisodeDownloadFailed" xml:space="preserve">
     <value>第{episode}話をダウンロードできませんでした。もう一度お試しください。</value>
   </data>
+  <data name="FirstOtherTitle" xml:space="preserve">
+    <value>ほかのデバイスですでにKaeriを使っていますか？</value>
+  </data>
+  <data name="FirstOtherLine" xml:space="preserve">
+    <value>ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれます。この後の手順は完了します。</value>
+  </data>
+  <data name="FirstOtherPairLine" xml:space="preserve">
+    <value>そのデバイスに入力するコードを表示します。どちらも同じWi-Fiに接続している必要があります。</value>
+  </data>
+  <data name="FirstOtherRestore" xml:space="preserve">
+    <value>クラウドフォルダーから復元</value>
+  </data>
+  <data name="FirstOtherRestoreLine" xml:space="preserve">
+    <value>保存した復元キーを使います</value>
+  </data>
+  <data name="FirstOtherNo" xml:space="preserve">
+    <value>いいえ、ここから始める</value>
+  </data>
+  <data name="PairWaiting" xml:space="preserve">
+    <value>もう一方のデバイスを待っています</value>
+  </data>
+  <data name="PairNothingYet" xml:space="preserve">
+    <value>まだ何も表示されませんか？2台のデバイスが同じWi-Fiに接続されている必要があります。</value>
+  </data>
+  <data name="FirstJoinGroup" xml:space="preserve">
+    <value>{device}から</value>
+  </data>
+  <data name="FirstJoinLooking" xml:space="preserve">
+    <value>{device}の内容を確認しています…</value>
+  </data>
+  <data name="FirstJoinMedium" xml:space="preserve">
+    <value>Kaeriの用途</value>
+  </data>
+  <data name="FirstJoinMediumLine" xml:space="preserve">
+    <value>{device}と同じ、読書</value>
+  </data>
+  <data name="FirstJoinSigninsLine" xml:space="preserve">
+    <value>{trackers}</value>
+  </data>
+  <data name="FirstJoinServer" xml:space="preserve">
+    <value>{host}を追加</value>
+  </data>
+  <data name="FirstJoinServerLine" xml:space="preserve">
+    <value>{kind} · {device}のキーでサインイン、{store}に保存</value>
+  </data>
+  <data name="FirstJoinFolders" xml:space="preserve">
+    <value>フォルダーは{device}に残ります。このデバイスのフォルダーはソースで追加してください。</value>
+  </data>
+  <data name="FirstJoinStepsDone" xml:space="preserve">
+    <value>リストとソースは設定済みなので、初回設定はここで終わりです。設定から変更できます。</value>
+  </data>
+  <data name="FirstJoinStoreRefused" xml:space="preserve">
+    <value>{store}はこのデバイスの参加を許可しませんでした。{owner}が招待を送れます。</value>
+  </data>
+  <data name="FirstJoinSyncing" xml:space="preserve">
+    <value>{device}と同期中</value>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>ホーム</value>
   </data>
@@ -4808,6 +4865,78 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>設定でさらに表示…</value>
   </data>
+  <data name="OnboardingReadDemo" xml:space="preserve">
+    <value>デモを読む</value>
+  </data>
+  <data name="OnboardingDemoBooksDetail" xml:space="preserve">
+    <value>デモでは、作者がCreative Commonsで共有している短いコミックと短い物語を読めます。</value>
+  </data>
+  <data name="OnboardingDemoBothDetail" xml:space="preserve">
+    <value>作者がCreative Commonsで共有している、短いエピソードと短いコミックが1つずつあります。</value>
+  </data>
+  <data name="HomeDemoOnlyBooks" xml:space="preserve">
+    <value>デモだけがオンです。自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。</value>
+  </data>
+  <data name="HomeSpotlightRead" xml:space="preserve">
+    <value>読む</value>
+  </data>
+  <data name="DemoSeriesFacts_other" xml:space="preserve">
+    <value>デモ · コミック · {pages}ページ</value>
+  </data>
+  <data name="DemoCreditBook" xml:space="preserve">
+    <value>{author}「{title}」。ライセンス: {licence}。Wikimedia Commonsから読み込んでいます。</value>
+  </data>
+  <data name="DemoCreditStory" xml:space="preserve">
+    <value>{author}「{title}」。パブリックドメイン。アプリに付属しています。</value>
+  </data>
+  <data name="ReaderDemoCredit" xml:space="preserve">
+    <value>{title} · {author} · {licence}</value>
+  </data>
+  <data name="SearchDemoReads" xml:space="preserve">
+    <value>デモ · 今すぐ読めます</value>
+  </data>
+  <data name="SearchDemoOnlyBooks" xml:space="preserve">
+    <value>デモだけがオンです。ソースを追加すると、ほかのタイトルが表示されます。</value>
+  </data>
+  <data name="ReaderDemoEnd" xml:space="preserve">
+    <value>デモはここまでです</value>
+  </data>
+  <data name="ReaderDemoEndLine" xml:space="preserve">
+    <value>自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。</value>
+  </data>
+  <data name="ReaderDemoAddSource" xml:space="preserve">
+    <value>ソースを追加</value>
+  </data>
+  <data name="ReaderDemoAgain" xml:space="preserve">
+    <value>1ページ目に戻る</value>
+  </data>
+  <data name="SourcesDemoBooksLine" xml:space="preserve">
+    <value>コミックと物語 · CC BY 4.0とパブリックドメイン</value>
+  </data>
+  <data name="SourcesDemoBooksWhat" xml:space="preserve">
+    <value>作者がCreative Commonsで共有している作品なので、ソースを追加する前にKaeriを試せます。保存しておくソースではありません。</value>
+  </data>
+  <data name="SourcesDemoBooksPrivate" xml:space="preserve">
+    <value>デモはどこにもサインインせず、連携サービスにも書き込みません。</value>
+  </data>
+  <data name="DemoChapters" xml:space="preserve">
+    <value>章</value>
+  </data>
+  <data name="DemoAlso" xml:space="preserve">
+    <value>デモ内のほかの作品</value>
+  </data>
+  <data name="DemoCredits" xml:space="preserve">
+    <value>クレジット</value>
+  </data>
+  <data name="DemoPages_other" xml:space="preserve">
+    <value>{pages}ページ</value>
+  </data>
+  <data name="DemoStoryRow" xml:space="preserve">
+    <value>物語 · {author} · {licence}</value>
+  </data>
+  <data name="DemoReadChapter" xml:space="preserve">
+    <value>第{number}章を読む</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>前のシーズン</value>
   </data>
@@ -6049,6 +6178,189 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>字幕スタイルをリセット</value>
+  </data>
+  <data name="BookServerAddress" xml:space="preserve">
+    <value>アドレス</value>
+  </data>
+  <data name="BookServerAddressHint" xml:space="preserve">
+    <value>アドレス、またはKavitaのOPDSリンク全体を入力します。</value>
+  </data>
+  <data name="BookServerKavitaKey" xml:space="preserve">
+    <value>これはKavitaのOPDSリンクです。キーでサインインするため、パスワードは不要です。</value>
+  </data>
+  <data name="BookServerKeyKept" xml:space="preserve">
+    <value>Kaeriはキーを{store}に保存し、末尾4文字だけを表示します。</value>
+  </data>
+  <data name="BookServerKey" xml:space="preserve">
+    <value>キー ••••{last}</value>
+  </data>
+  <data name="BookServerFoundTitle_other" xml:space="preserve">
+    <value>{libraries}件のライブラリで{series}シリーズが見つかりました</value>
+  </data>
+  <data name="BookServerFoundLine" xml:space="preserve">
+    <value>{host}の{kind}です。追加するライブラリを選んでください。</value>
+  </data>
+  <data name="BookServerLibraryLine" xml:space="preserve">
+    <value>{series}シリーズ</value>
+  </data>
+  <data name="BookServerSyncProgress" xml:space="preserve">
+    <value>サーバーに進捗を送る</value>
+  </data>
+  <data name="BookServerSyncProgressLine" xml:space="preserve">
+    <value>ここで読んだページは{host}に送られ、{host}の進捗がここに反映されます。</value>
+  </data>
+  <data name="BookServerUsername" xml:space="preserve">
+    <value>ユーザー名</value>
+  </data>
+  <data name="BookServerPassword" xml:space="preserve">
+    <value>パスワード</value>
+  </data>
+  <data name="BookServerErrUnreachable" xml:space="preserve">
+    <value>{host}に接続できませんでした</value>
+  </data>
+  <data name="BookServerErrUnreachableLine" xml:space="preserve">
+    <value>アドレスと、サーバーが起動していてこのネットワーク上にあるかを確認してください。</value>
+  </data>
+  <data name="BookServerErrPassword" xml:space="preserve">
+    <value>{host}はそのパスワードを受け付けませんでした</value>
+  </data>
+  <data name="BookServerErrPasswordLine" xml:space="preserve">
+    <value>ブラウザーで{kind}に使っているユーザー名とパスワードを入力してください。</value>
+  </data>
+  <data name="BookServerErrKey" xml:space="preserve">
+    <value>{host}はそのキーを受け付けませんでした</value>
+  </data>
+  <data name="BookServerErrKeyLine" xml:space="preserve">
+    <value>キーはKavitaでリセットすると変わります。Kavitaのアカウント設定からOPDSリンクをもう一度コピーしてください。</value>
+  </data>
+  <data name="BookServerEmpty" xml:space="preserve">
+    <value>{host}には、このアカウントで表示できるシリーズがありません</value>
+  </data>
+  <data name="BookServerEmptyLine" xml:space="preserve">
+    <value>サーバーには入れますが、サーバーがまだスキャン中か、このアカウントに本へのアクセス権がない可能性があります。</value>
+  </data>
+  <data name="BookServerEmptyRecheck" xml:space="preserve">
+    <value>今すぐ追加できます。Kaeriは30分ごとに再確認します。</value>
+  </data>
+  <data name="BookServerNotBooksLine" xml:space="preserve">
+    <value>Kaeriは、Komga、Kavita、OPDSのカタログから読み込みます。</value>
+  </data>
+  <data name="BookFolderFound_other" xml:space="preserve">
+    <value>{files}個のファイルに{series}シリーズが見つかりました</value>
+  </data>
+  <data name="BookFolderFoundLine" xml:space="preserve">
+    <value>{path}。Kaeriは、そのうち{matched}シリーズを詳細情報で照合しました。</value>
+  </data>
+  <data name="BookFolderUnsupported_other" xml:space="preserve">
+    <value>Kaeriで開けないファイルが{count}個</value>
+  </data>
+  <data name="BookFolderUnsupportedLine" xml:space="preserve">
+    <value>{kinds}。これらはフォルダー内にそのまま残ります。</value>
+  </data>
+  <data name="BookFolderDrm" xml:space="preserve">
+    <value>DRMで保護されたEPUBが{count}個</value>
+  </data>
+  <data name="BookFolderOpens" xml:space="preserve">
+    <value>Kaeriは、CBZ、CBR、EPUB、PDFファイルと、画像のフォルダーを開けます。</value>
+  </data>
+  <data name="BookFolderShowFiles" xml:space="preserve">
+    <value>ファイルを表示</value>
+  </data>
+  <data name="BookFolderAdd" xml:space="preserve">
+    <value>フォルダーを追加</value>
+  </data>
+  <data name="BookFolderChange" xml:space="preserve">
+    <value>変更</value>
+  </data>
+  <data name="BookFolderEmpty" xml:space="preserve">
+    <value>{folder}にKaeriで開けるものはありません</value>
+  </data>
+  <data name="BookFolderEmptyLine_other" xml:space="preserve">
+    <value>{files}個のファイルがありますが、CBZ、CBR、EPUB、PDF、画像のいずれでもありません。</value>
+  </data>
+  <data name="BookFolderChooseOther" xml:space="preserve">
+    <value>別のフォルダーを選ぶ</value>
+  </data>
+  <data name="StoreJoinTitle" xml:space="preserve">
+    <value>プラグインストアに参加</value>
+  </data>
+  <data name="StoreInviteField" xml:space="preserve">
+    <value>招待</value>
+  </data>
+  <data name="StoreJoinedTitle" xml:space="preserve">
+    <value>{store}に参加しました</value>
+  </data>
+  <data name="StoreJoinedLine_other" xml:space="preserve">
+    <value>{owner}がプラグインを{count}個提供しています。参加してもインストールはされません。ここで、または後で選んでインストールできます。</value>
+  </data>
+  <data name="StoreGroupReading" xml:space="preserve">
+    <value>読書用</value>
+  </data>
+  <data name="StoreGroupWatching" xml:space="preserve">
+    <value>視聴用</value>
+  </data>
+  <data name="StoreInstall" xml:space="preserve">
+    <value>インストール</value>
+  </data>
+  <data name="StoreInstalledRow" xml:space="preserve">
+    <value>インストール済み</value>
+  </data>
+  <data name="StoreInstallAllReading" xml:space="preserve">
+    <value>読書用をすべてインストール</value>
+  </data>
+  <data name="StoreInstalled_other" xml:space="preserve">
+    <value>プラグインを{count}個インストールしました。ソースに入っています。</value>
+  </data>
+  <data name="StoreOtherMedium" xml:space="preserve">
+    <value>{store}のプラグインはすべて視聴用です</value>
+  </data>
+  <data name="StoreOtherMediumLine" xml:space="preserve">
+    <value>このデバイスでは視聴がオフなので、ソースには表示されません。</value>
+  </data>
+  <data name="StoreTurnOnWatching" xml:space="preserve">
+    <value>視聴をオンにする</value>
+  </data>
+  <data name="StoreEmpty" xml:space="preserve">
+    <value>{store}にはまだプラグインがありません</value>
+  </data>
+  <data name="StoreEmptyLine" xml:space="preserve">
+    <value>メンバーなので、{owner}が追加すると、新しいプラグインがプラグインストアに表示されます。</value>
+  </data>
+  <data name="StoreErrUnreachable" xml:space="preserve">
+    <value>{host}に接続できませんでした</value>
+  </data>
+  <data name="StoreErrUnreachableLine" xml:space="preserve">
+    <value>招待は正しいようですが、ストアが応答していません。しばらくしてからもう一度試すか、稼働しているか{owner}に確認してください。</value>
+  </data>
+  <data name="StoreOtherMediumMore_other" xml:space="preserve">
+    <value>ほかに{count}個は視聴用ですが、このデバイスでは視聴がオフです。</value>
+  </data>
+  <data name="StoreTvReadingOnly_other" xml:space="preserve">
+    <value>ほかに{count}個は読書用ですが、このTVでは読書できません。</value>
+  </data>
+  <data name="StoreTvAllReading" xml:space="preserve">
+    <value>{store}のプラグインはすべて読書用ですが、このTVでは読書できません。</value>
+  </data>
+  <data name="StorePluginRow" xml:space="preserve">
+    <value>バージョン{version} · {hosts}に接続する場合があります</value>
+  </data>
+  <data name="SourceAdded" xml:space="preserve">
+    <value>{name}を追加しました · {series}シリーズ</value>
+  </data>
+  <data name="SourceAddedPlugins_other" xml:space="preserve">
+    <value>{store}からプラグインを{count}個インストールしました</value>
+  </data>
+  <data name="SourceRowServer_other" xml:space="preserve">
+    <value>{kind} · {libraries}件のライブラリに{series}シリーズ · 追加したばかり</value>
+  </data>
+  <data name="SourceRowServerEmpty" xml:space="preserve">
+    <value>{kind} · シリーズはまだありません · 30分後に再確認します</value>
+  </data>
+  <data name="SourceRowFolder_other" xml:space="preserve">
+    <value>{path} · {series}シリーズ · {skipped}個のファイルをスキップ</value>
+  </data>
+  <data name="SourceRowPlugin" xml:space="preserve">
+    <value>{store}から · {medium} · バージョン{version}</value>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>ソース</value>

@@ -2693,6 +2693,63 @@
   <data name="EpisodeDownloadFailed" xml:space="preserve">
     <value>Det gick inte att ladda ner avsnitt {episode}. Försök igen.</value>
   </data>
+  <data name="FirstOtherTitle" xml:space="preserve">
+    <value>Använder du redan Kaeri på en annan enhet?</value>
+  </data>
+  <data name="FirstOtherLine" xml:space="preserve">
+    <value>Parkoppla med den, så får denna enhet dina källor, trackers och din historik. Stegen efter detta är då klara.</value>
+  </data>
+  <data name="FirstOtherPairLine" xml:space="preserve">
+    <value>Visar en kod att skriva in på en annan enhet. Båda behöver samma Wi-Fi.</value>
+  </data>
+  <data name="FirstOtherRestore" xml:space="preserve">
+    <value>Återställ från en molnmapp</value>
+  </data>
+  <data name="FirstOtherRestoreLine" xml:space="preserve">
+    <value>Använder återställningsnyckeln du sparade</value>
+  </data>
+  <data name="FirstOtherNo" xml:space="preserve">
+    <value>Nej, börja här</value>
+  </data>
+  <data name="PairWaiting" xml:space="preserve">
+    <value>Väntar på din andra enhet</value>
+  </data>
+  <data name="PairNothingYet" xml:space="preserve">
+    <value>Inget än? Dina två enheter måste vara på samma Wi-Fi.</value>
+  </data>
+  <data name="FirstJoinGroup" xml:space="preserve">
+    <value>Från {device}</value>
+  </data>
+  <data name="FirstJoinLooking" xml:space="preserve">
+    <value>Tittar på vad {device} har…</value>
+  </data>
+  <data name="FirstJoinMedium" xml:space="preserve">
+    <value>Kaeri är till för</value>
+  </data>
+  <data name="FirstJoinMediumLine" xml:space="preserve">
+    <value>Läsning, som på {device}</value>
+  </data>
+  <data name="FirstJoinSigninsLine" xml:space="preserve">
+    <value>{trackers}</value>
+  </data>
+  <data name="FirstJoinServer" xml:space="preserve">
+    <value>Lägg till {host}</value>
+  </data>
+  <data name="FirstJoinServerLine" xml:space="preserve">
+    <value>{kind} · loggar in med nyckeln från {device}, sparad i {store}</value>
+  </data>
+  <data name="FirstJoinFolders" xml:space="preserve">
+    <value>Mappar stannar på {device}. Lägg till egna mappar för denna enhet i Dina källor.</value>
+  </data>
+  <data name="FirstJoinStepsDone" xml:space="preserve">
+    <value>Listor och källor är klara, så första starten slutar här. Du kan ändra dem i Inställningar.</value>
+  </data>
+  <data name="FirstJoinStoreRefused" xml:space="preserve">
+    <value>{store} släppte inte in denna enhet. {owner} kan skicka en inbjudan till dig.</value>
+  </data>
+  <data name="FirstJoinSyncing" xml:space="preserve">
+    <value>Synkar med {device}</value>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>Hem</value>
   </data>
@@ -4952,6 +5009,84 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Mer i Inställningar…</value>
   </data>
+  <data name="OnboardingReadDemo" xml:space="preserve">
+    <value>Läs demon</value>
+  </data>
+  <data name="OnboardingDemoBooksDetail" xml:space="preserve">
+    <value>Demon innehåller en kort tecknad serie och en kort novell som upphovspersonerna delar under Creative Commons.</value>
+  </data>
+  <data name="OnboardingDemoBothDetail" xml:space="preserve">
+    <value>Ett kort avsnitt och en kort tecknad serie, delade av upphovspersonerna under Creative Commons.</value>
+  </data>
+  <data name="HomeDemoOnlyBooks" xml:space="preserve">
+    <value>Bara demon är på. Lägg till en mapp, en server eller en tilläggsbutik för att läsa dina egna böcker.</value>
+  </data>
+  <data name="HomeSpotlightRead" xml:space="preserve">
+    <value>Läs</value>
+  </data>
+  <data name="DemoSeriesFacts_one" xml:space="preserve">
+    <value>Demo · Tecknad serie · en sida</value>
+  </data>
+  <data name="DemoSeriesFacts_other" xml:space="preserve">
+    <value>Demo · Tecknad serie · {pages} sidor</value>
+  </data>
+  <data name="DemoCreditBook" xml:space="preserve">
+    <value>{title} av {author}. Licensierad under {licence}. Läses från Wikimedia Commons.</value>
+  </data>
+  <data name="DemoCreditStory" xml:space="preserve">
+    <value>{title} av {author}. Allmän egendom. Den följer med appen.</value>
+  </data>
+  <data name="ReaderDemoCredit" xml:space="preserve">
+    <value>{title} · {author} · {licence}</value>
+  </data>
+  <data name="SearchDemoReads" xml:space="preserve">
+    <value>Demo · Läsbar nu</value>
+  </data>
+  <data name="SearchDemoOnlyBooks" xml:space="preserve">
+    <value>Bara demon är på. Andra titlar visas när du lägger till en källa.</value>
+  </data>
+  <data name="ReaderDemoEnd" xml:space="preserve">
+    <value>Det här är slutet på demon</value>
+  </data>
+  <data name="ReaderDemoEndLine" xml:space="preserve">
+    <value>För att läsa dina egna böcker, lägg till en mapp, en server eller en tilläggsbutik.</value>
+  </data>
+  <data name="ReaderDemoAddSource" xml:space="preserve">
+    <value>Lägg till en källa</value>
+  </data>
+  <data name="ReaderDemoAgain" xml:space="preserve">
+    <value>Tillbaka till sida 1</value>
+  </data>
+  <data name="SourcesDemoBooksLine" xml:space="preserve">
+    <value>En tecknad serie och en novell · CC BY 4.0 och allmän egendom</value>
+  </data>
+  <data name="SourcesDemoBooksWhat" xml:space="preserve">
+    <value>Verk som upphovspersonerna delar under Creative Commons, så att du kan prova Kaeri innan du lägger till en källa. Det är ingen källa att behålla.</value>
+  </data>
+  <data name="SourcesDemoBooksPrivate" xml:space="preserve">
+    <value>Demon loggar aldrig in någonstans och skriver aldrig till en tracker.</value>
+  </data>
+  <data name="DemoChapters" xml:space="preserve">
+    <value>Kapitel</value>
+  </data>
+  <data name="DemoAlso" xml:space="preserve">
+    <value>Även i demon</value>
+  </data>
+  <data name="DemoCredits" xml:space="preserve">
+    <value>Upphovsuppgifter</value>
+  </data>
+  <data name="DemoPages_one" xml:space="preserve">
+    <value>En sida</value>
+  </data>
+  <data name="DemoPages_other" xml:space="preserve">
+    <value>{pages} sidor</value>
+  </data>
+  <data name="DemoStoryRow" xml:space="preserve">
+    <value>Novell · {author} · {licence}</value>
+  </data>
+  <data name="DemoReadChapter" xml:space="preserve">
+    <value>Läs kapitel {number}</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Föregående säsong</value>
   </data>
@@ -6220,6 +6355,222 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>Återställ undertextstil</value>
+  </data>
+  <data name="BookServerAddress" xml:space="preserve">
+    <value>Adress</value>
+  </data>
+  <data name="BookServerAddressHint" xml:space="preserve">
+    <value>En adress, eller hela OPDS-länken från Kavita.</value>
+  </data>
+  <data name="BookServerKavitaKey" xml:space="preserve">
+    <value>Det här är en OPDS-länk från Kavita. Nyckeln loggar in dig, så inget lösenord behövs.</value>
+  </data>
+  <data name="BookServerKeyKept" xml:space="preserve">
+    <value>Kaeri sparar nyckeln i {store} och visar bara de fyra sista tecknen.</value>
+  </data>
+  <data name="BookServerKey" xml:space="preserve">
+    <value>Nyckel ••••{last}</value>
+  </data>
+  <data name="BookServerFoundTitle_one" xml:space="preserve">
+    <value>Hittade {series} serier</value>
+  </data>
+  <data name="BookServerFoundTitle_other" xml:space="preserve">
+    <value>Hittade {series} serier i {libraries} bibliotek</value>
+  </data>
+  <data name="BookServerFoundLine" xml:space="preserve">
+    <value>{kind} på {host}. Välj vilka bibliotek som ska läggas till.</value>
+  </data>
+  <data name="BookServerLibraryLine" xml:space="preserve">
+    <value>{series} serier</value>
+  </data>
+  <data name="BookServerSyncProgress" xml:space="preserve">
+    <value>Skicka framsteg till servern</value>
+  </data>
+  <data name="BookServerSyncProgressLine" xml:space="preserve">
+    <value>Sidor du läser här skickas till {host}, och dess framsteg kommer hit.</value>
+  </data>
+  <data name="BookServerUsername" xml:space="preserve">
+    <value>Användarnamn</value>
+  </data>
+  <data name="BookServerPassword" xml:space="preserve">
+    <value>Lösenord</value>
+  </data>
+  <data name="BookServerErrUnreachable" xml:space="preserve">
+    <value>Det gick inte att nå {host}</value>
+  </data>
+  <data name="BookServerErrUnreachableLine" xml:space="preserve">
+    <value>Kontrollera adressen och att servern är igång och på det här nätverket.</value>
+  </data>
+  <data name="BookServerErrPassword" xml:space="preserve">
+    <value>{host} godkände inte lösenordet</value>
+  </data>
+  <data name="BookServerErrPasswordLine" xml:space="preserve">
+    <value>Använd användarnamnet och lösenordet du använder för {kind} i en webbläsare.</value>
+  </data>
+  <data name="BookServerErrKey" xml:space="preserve">
+    <value>{host} godkände inte nyckeln</value>
+  </data>
+  <data name="BookServerErrKeyLine" xml:space="preserve">
+    <value>Nyckeln ändras när den återställs i Kavita. Kopiera OPDS-länken igen från dina kontoinställningar där.</value>
+  </data>
+  <data name="BookServerEmpty" xml:space="preserve">
+    <value>{host} visar inga serier för det här kontot</value>
+  </data>
+  <data name="BookServerEmptyLine" xml:space="preserve">
+    <value>Du släpps in, men servern kanske fortfarande skannar, eller så saknar kontot åtkomst till böckerna.</value>
+  </data>
+  <data name="BookServerEmptyRecheck" xml:space="preserve">
+    <value>Du kan lägga till den nu. Kaeri tittar igen var 30:e minut.</value>
+  </data>
+  <data name="BookServerNotBooksLine" xml:space="preserve">
+    <value>Kaeri läser från Komga-, Kavita- och OPDS-kataloger.</value>
+  </data>
+  <data name="BookFolderFound_one" xml:space="preserve">
+    <value>Hittade {series} serier i en fil</value>
+  </data>
+  <data name="BookFolderFound_other" xml:space="preserve">
+    <value>Hittade {series} serier i {files} filer</value>
+  </data>
+  <data name="BookFolderFoundLine" xml:space="preserve">
+    <value>{path}. Kaeri matchade {matched} av dem utifrån deras uppgifter.</value>
+  </data>
+  <data name="BookFolderUnsupported_one" xml:space="preserve">
+    <value>En fil som Kaeri inte kan öppna</value>
+  </data>
+  <data name="BookFolderUnsupported_other" xml:space="preserve">
+    <value>{count} filer som Kaeri inte kan öppna</value>
+  </data>
+  <data name="BookFolderUnsupportedLine" xml:space="preserve">
+    <value>{kinds}. De ligger kvar i mappen som de är.</value>
+  </data>
+  <data name="BookFolderDrm" xml:space="preserve">
+    <value>{count} EPUB låsta med DRM</value>
+  </data>
+  <data name="BookFolderOpens" xml:space="preserve">
+    <value>Kaeri öppnar CBZ-, CBR-, EPUB- och PDF-filer samt mappar med bilder.</value>
+  </data>
+  <data name="BookFolderShowFiles" xml:space="preserve">
+    <value>Visa filer</value>
+  </data>
+  <data name="BookFolderAdd" xml:space="preserve">
+    <value>Lägg till mapp</value>
+  </data>
+  <data name="BookFolderChange" xml:space="preserve">
+    <value>Ändra</value>
+  </data>
+  <data name="BookFolderEmpty" xml:space="preserve">
+    <value>Inget i {folder} som Kaeri kan öppna</value>
+  </data>
+  <data name="BookFolderEmptyLine_one" xml:space="preserve">
+    <value>Den innehåller en fil, som inte är CBZ, CBR, EPUB, PDF eller en bild.</value>
+  </data>
+  <data name="BookFolderEmptyLine_other" xml:space="preserve">
+    <value>Den innehåller {files} filer, ingen av dem CBZ, CBR, EPUB, PDF eller bilder.</value>
+  </data>
+  <data name="BookFolderChooseOther" xml:space="preserve">
+    <value>Välj en annan mapp</value>
+  </data>
+  <data name="StoreJoinTitle" xml:space="preserve">
+    <value>Gå med i en tilläggsbutik</value>
+  </data>
+  <data name="StoreInviteField" xml:space="preserve">
+    <value>Inbjudan</value>
+  </data>
+  <data name="StoreJoinedTitle" xml:space="preserve">
+    <value>Gick med i {store}</value>
+  </data>
+  <data name="StoreJoinedLine_one" xml:space="preserve">
+    <value>{owner} erbjuder ett tillägg. Att gå med installerar ingenting; installera det här eller senare.</value>
+  </data>
+  <data name="StoreJoinedLine_other" xml:space="preserve">
+    <value>{owner} erbjuder {count} tillägg. Att gå med installerar ingenting; välj de du vill ha här eller senare.</value>
+  </data>
+  <data name="StoreGroupReading" xml:space="preserve">
+    <value>För läsning</value>
+  </data>
+  <data name="StoreGroupWatching" xml:space="preserve">
+    <value>För tittande</value>
+  </data>
+  <data name="StoreInstall" xml:space="preserve">
+    <value>Installera</value>
+  </data>
+  <data name="StoreInstalledRow" xml:space="preserve">
+    <value>Installerat</value>
+  </data>
+  <data name="StoreInstallAllReading" xml:space="preserve">
+    <value>Installera alla för läsning</value>
+  </data>
+  <data name="StoreInstalled_one" xml:space="preserve">
+    <value>Ett tillägg installerat. Det finns i Dina källor.</value>
+  </data>
+  <data name="StoreInstalled_other" xml:space="preserve">
+    <value>{count} tillägg installerade. De finns i Dina källor.</value>
+  </data>
+  <data name="StoreOtherMedium" xml:space="preserve">
+    <value>Alla tillägg i {store} är för tittande</value>
+  </data>
+  <data name="StoreOtherMediumLine" xml:space="preserve">
+    <value>Tittande är avstängt på denna enhet, så inget av dem syns i Dina källor.</value>
+  </data>
+  <data name="StoreTurnOnWatching" xml:space="preserve">
+    <value>Slå på tittande</value>
+  </data>
+  <data name="StoreEmpty" xml:space="preserve">
+    <value>{store} har inga tillägg än</value>
+  </data>
+  <data name="StoreEmptyLine" xml:space="preserve">
+    <value>Du är medlem, så nya tillägg visas i Tilläggsbutiker när {owner} lägger till dem.</value>
+  </data>
+  <data name="StoreErrUnreachable" xml:space="preserve">
+    <value>Det gick inte att nå {host}</value>
+  </data>
+  <data name="StoreErrUnreachableLine" xml:space="preserve">
+    <value>Inbjudan ser rätt ut, men ingen butik svarar. Försök igen senare, eller fråga {owner} om den är igång.</value>
+  </data>
+  <data name="StoreOtherMediumMore_one" xml:space="preserve">
+    <value>Ett till är för tittande, vilket är avstängt på denna enhet.</value>
+  </data>
+  <data name="StoreOtherMediumMore_other" xml:space="preserve">
+    <value>{count} till är för tittande, vilket är avstängt på denna enhet.</value>
+  </data>
+  <data name="StoreTvReadingOnly_one" xml:space="preserve">
+    <value>Ett till är för läsning, vilket den här TV:n inte klarar.</value>
+  </data>
+  <data name="StoreTvReadingOnly_other" xml:space="preserve">
+    <value>{count} till är för läsning, vilket den här TV:n inte klarar.</value>
+  </data>
+  <data name="StoreTvAllReading" xml:space="preserve">
+    <value>Alla tillägg i {store} är för läsning, vilket den här TV:n inte klarar.</value>
+  </data>
+  <data name="StorePluginRow" xml:space="preserve">
+    <value>Version {version} · kan kontakta {hosts}</value>
+  </data>
+  <data name="SourceAdded" xml:space="preserve">
+    <value>La till {name} · {series} serier</value>
+  </data>
+  <data name="SourceAddedPlugins_one" xml:space="preserve">
+    <value>Installerade ett tillägg från {store}</value>
+  </data>
+  <data name="SourceAddedPlugins_other" xml:space="preserve">
+    <value>Installerade {count} tillägg från {store}</value>
+  </data>
+  <data name="SourceRowServer_one" xml:space="preserve">
+    <value>{kind} · {series} serier · nyss tillagd</value>
+  </data>
+  <data name="SourceRowServer_other" xml:space="preserve">
+    <value>{kind} · {series} serier i {libraries} bibliotek · nyss tillagd</value>
+  </data>
+  <data name="SourceRowServerEmpty" xml:space="preserve">
+    <value>{kind} · inga serier än · tittar igen om 30 minuter</value>
+  </data>
+  <data name="SourceRowFolder_one" xml:space="preserve">
+    <value>{path} · {series} serier · en fil hoppades över</value>
+  </data>
+  <data name="SourceRowFolder_other" xml:space="preserve">
+    <value>{path} · {series} serier · {skipped} filer hoppades över</value>
+  </data>
+  <data name="SourceRowPlugin" xml:space="preserve">
+    <value>Från {store} · {medium} · version {version}</value>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>Källor</value>

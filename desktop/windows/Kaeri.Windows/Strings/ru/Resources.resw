@@ -2879,6 +2879,63 @@
   <data name="EpisodeDownloadFailed" xml:space="preserve">
     <value>Не удалось скачать эпизод {episode}. Попробуйте ещё раз.</value>
   </data>
+  <data name="FirstOtherTitle" xml:space="preserve">
+    <value>Есть другое устройство с Kaeri?</value>
+  </data>
+  <data name="FirstOtherLine" xml:space="preserve">
+    <value>Выполните сопряжение, и это устройство получит ваши источники, трекеры и историю. Остальные шаги тогда не нужны.</value>
+  </data>
+  <data name="FirstOtherPairLine" xml:space="preserve">
+    <value>Покажет код, который нужно ввести на другом. Другое устройство и это должны быть в одной сети Wi-Fi.</value>
+  </data>
+  <data name="FirstOtherRestore" xml:space="preserve">
+    <value>Восстановить из облачной папки</value>
+  </data>
+  <data name="FirstOtherRestoreLine" xml:space="preserve">
+    <value>Используется сохранённый вами ключ восстановления</value>
+  </data>
+  <data name="FirstOtherNo" xml:space="preserve">
+    <value>Нет, начать здесь</value>
+  </data>
+  <data name="PairWaiting" xml:space="preserve">
+    <value>Ожидание: другое устройство</value>
+  </data>
+  <data name="PairNothingYet" xml:space="preserve">
+    <value>Пока ничего? Оба устройства должны быть в одной сети Wi-Fi.</value>
+  </data>
+  <data name="FirstJoinGroup" xml:space="preserve">
+    <value>От {device}</value>
+  </data>
+  <data name="FirstJoinLooking" xml:space="preserve">
+    <value>Смотрим, что есть на {device}…</value>
+  </data>
+  <data name="FirstJoinMedium" xml:space="preserve">
+    <value>Kaeri для</value>
+  </data>
+  <data name="FirstJoinMediumLine" xml:space="preserve">
+    <value>Чтение, как на {device}</value>
+  </data>
+  <data name="FirstJoinSigninsLine" xml:space="preserve">
+    <value>{trackers}</value>
+  </data>
+  <data name="FirstJoinServer" xml:space="preserve">
+    <value>Добавить {host}</value>
+  </data>
+  <data name="FirstJoinServerLine" xml:space="preserve">
+    <value>{kind} · вход по ключу с {device}, он хранится в {store}</value>
+  </data>
+  <data name="FirstJoinFolders" xml:space="preserve">
+    <value>Папки остаются на {device}. Это устройство: свои папки добавьте в «Ваши источники».</value>
+  </data>
+  <data name="FirstJoinStepsDone" xml:space="preserve">
+    <value>Списки и источники настроены, поэтому первый запуск завершён. Их можно изменить в настройках.</value>
+  </data>
+  <data name="FirstJoinStoreRefused" xml:space="preserve">
+    <value>{store} не пустил это устройство. {owner} может прислать вам приглашение.</value>
+  </data>
+  <data name="FirstJoinSyncing" xml:space="preserve">
+    <value>Синхронизация с {device}</value>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>Главная</value>
   </data>
@@ -5240,6 +5297,96 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Больше в настройках…</value>
   </data>
+  <data name="OnboardingReadDemo" xml:space="preserve">
+    <value>Открыть демо</value>
+  </data>
+  <data name="OnboardingDemoBooksDetail" xml:space="preserve">
+    <value>В демо есть короткий комикс и короткий рассказ, которыми их авторы делятся по лицензии Creative Commons.</value>
+  </data>
+  <data name="OnboardingDemoBothDetail" xml:space="preserve">
+    <value>Один короткий эпизод и один короткий комикс, которыми их авторы делятся по лицензии Creative Commons.</value>
+  </data>
+  <data name="HomeDemoOnlyBooks" xml:space="preserve">
+    <value>Включено только демо. Добавьте папку, сервер или магазин плагинов, чтобы читать свои книги.</value>
+  </data>
+  <data name="HomeSpotlightRead" xml:space="preserve">
+    <value>Читать</value>
+  </data>
+  <data name="DemoSeriesFacts_one" xml:space="preserve">
+    <value>Демо · Комикс · {pages} страница</value>
+  </data>
+  <data name="DemoSeriesFacts_few" xml:space="preserve">
+    <value>Демо · Комикс · {pages} страницы</value>
+  </data>
+  <data name="DemoSeriesFacts_many" xml:space="preserve">
+    <value>Демо · Комикс · {pages} страниц</value>
+  </data>
+  <data name="DemoSeriesFacts_other" xml:space="preserve">
+    <value>Демо · Комикс · {pages} страниц</value>
+  </data>
+  <data name="DemoCreditBook" xml:space="preserve">
+    <value>{title}, автор: {author}. Лицензия: {licence}. Читается с Wikimedia Commons.</value>
+  </data>
+  <data name="DemoCreditStory" xml:space="preserve">
+    <value>{title}, автор: {author}. Общественное достояние. Входит в приложение.</value>
+  </data>
+  <data name="ReaderDemoCredit" xml:space="preserve">
+    <value>{title} · {author} · {licence}</value>
+  </data>
+  <data name="SearchDemoReads" xml:space="preserve">
+    <value>Демо · Можно читать сейчас</value>
+  </data>
+  <data name="SearchDemoOnlyBooks" xml:space="preserve">
+    <value>Включено только демо. Другие названия появятся, когда вы добавите источник.</value>
+  </data>
+  <data name="ReaderDemoEnd" xml:space="preserve">
+    <value>Демо закончилось</value>
+  </data>
+  <data name="ReaderDemoEndLine" xml:space="preserve">
+    <value>Чтобы читать свои книги, добавьте папку, сервер или магазин плагинов.</value>
+  </data>
+  <data name="ReaderDemoAddSource" xml:space="preserve">
+    <value>Добавить источник</value>
+  </data>
+  <data name="ReaderDemoAgain" xml:space="preserve">
+    <value>Вернуться к странице 1</value>
+  </data>
+  <data name="SourcesDemoBooksLine" xml:space="preserve">
+    <value>Комикс и рассказ · CC BY 4.0 и общественное достояние</value>
+  </data>
+  <data name="SourcesDemoBooksWhat" xml:space="preserve">
+    <value>Произведения, которыми их авторы делятся по лицензии Creative Commons, чтобы вы могли попробовать Kaeri, прежде чем добавите источник. Это не постоянный источник.</value>
+  </data>
+  <data name="SourcesDemoBooksPrivate" xml:space="preserve">
+    <value>Демо нигде не входит в учётную запись и никогда не записывает данные в трекер.</value>
+  </data>
+  <data name="DemoChapters" xml:space="preserve">
+    <value>Главы</value>
+  </data>
+  <data name="DemoAlso" xml:space="preserve">
+    <value>Ещё в демо</value>
+  </data>
+  <data name="DemoCredits" xml:space="preserve">
+    <value>Авторство</value>
+  </data>
+  <data name="DemoPages_one" xml:space="preserve">
+    <value>{pages} страница</value>
+  </data>
+  <data name="DemoPages_few" xml:space="preserve">
+    <value>{pages} страницы</value>
+  </data>
+  <data name="DemoPages_many" xml:space="preserve">
+    <value>{pages} страниц</value>
+  </data>
+  <data name="DemoPages_other" xml:space="preserve">
+    <value>{pages} страниц</value>
+  </data>
+  <data name="DemoStoryRow" xml:space="preserve">
+    <value>Рассказ · {author} · {licence}</value>
+  </data>
+  <data name="DemoReadChapter" xml:space="preserve">
+    <value>Читать главу {number}</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Предыдущий сезон</value>
   </data>
@@ -6562,6 +6709,288 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>Сбросить стиль субтитров</value>
+  </data>
+  <data name="BookServerAddress" xml:space="preserve">
+    <value>Адрес</value>
+  </data>
+  <data name="BookServerAddressHint" xml:space="preserve">
+    <value>Адрес или вся ссылка OPDS из Kavita.</value>
+  </data>
+  <data name="BookServerKavitaKey" xml:space="preserve">
+    <value>Это ссылка OPDS из Kavita. Ключ в ней служит для входа, поэтому пароль не нужен.</value>
+  </data>
+  <data name="BookServerKeyKept" xml:space="preserve">
+    <value>Kaeri хранит ключ в {store} и показывает только его последние четыре символа.</value>
+  </data>
+  <data name="BookServerKey" xml:space="preserve">
+    <value>Ключ ••••{last}</value>
+  </data>
+  <data name="BookServerFoundTitle_one" xml:space="preserve">
+    <value>Найдено серий: {series}, библиотек: {libraries}</value>
+  </data>
+  <data name="BookServerFoundTitle_few" xml:space="preserve">
+    <value>Найдено серий: {series}, библиотек: {libraries}</value>
+  </data>
+  <data name="BookServerFoundTitle_many" xml:space="preserve">
+    <value>Найдено серий: {series}, библиотек: {libraries}</value>
+  </data>
+  <data name="BookServerFoundTitle_other" xml:space="preserve">
+    <value>Найдено серий: {series}, библиотек: {libraries}</value>
+  </data>
+  <data name="BookServerFoundLine" xml:space="preserve">
+    <value>{kind} на {host}. Выберите библиотеки, которые нужно добавить.</value>
+  </data>
+  <data name="BookServerLibraryLine" xml:space="preserve">
+    <value>Серий: {series}</value>
+  </data>
+  <data name="BookServerSyncProgress" xml:space="preserve">
+    <value>Передавать прогресс на сервер</value>
+  </data>
+  <data name="BookServerSyncProgressLine" xml:space="preserve">
+    <value>Прочитанные здесь страницы попадают на {host}, а его прогресс приходит сюда.</value>
+  </data>
+  <data name="BookServerUsername" xml:space="preserve">
+    <value>Имя пользователя</value>
+  </data>
+  <data name="BookServerPassword" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="BookServerErrUnreachable" xml:space="preserve">
+    <value>Не удалось подключиться к {host}</value>
+  </data>
+  <data name="BookServerErrUnreachableLine" xml:space="preserve">
+    <value>Проверьте адрес, а также что сервер включён и доступен в этой сети.</value>
+  </data>
+  <data name="BookServerErrPassword" xml:space="preserve">
+    <value>{host} не принял этот пароль</value>
+  </data>
+  <data name="BookServerErrPasswordLine" xml:space="preserve">
+    <value>Введите имя пользователя и пароль, которые вы используете для {kind} в браузере.</value>
+  </data>
+  <data name="BookServerErrKey" xml:space="preserve">
+    <value>{host} не принял этот ключ</value>
+  </data>
+  <data name="BookServerErrKeyLine" xml:space="preserve">
+    <value>Ключ меняется при сбросе в Kavita. Скопируйте ссылку OPDS заново в настройках своей учётной записи там.</value>
+  </data>
+  <data name="BookServerEmpty" xml:space="preserve">
+    <value>{host} не показывает для этой учётной записи ни одной серии</value>
+  </data>
+  <data name="BookServerEmptyLine" xml:space="preserve">
+    <value>Вход выполнен, но сервер может ещё сканировать библиотеки, или у этой учётной записи нет доступа к его книгам.</value>
+  </data>
+  <data name="BookServerEmptyRecheck" xml:space="preserve">
+    <value>Вы можете добавить его сейчас. Kaeri проверяет снова каждые 30 минут.</value>
+  </data>
+  <data name="BookServerNotBooksLine" xml:space="preserve">
+    <value>Kaeri читает каталоги Komga, Kavita и OPDS.</value>
+  </data>
+  <data name="BookFolderFound_one" xml:space="preserve">
+    <value>Найдено серий: {series}, файлов: {files}</value>
+  </data>
+  <data name="BookFolderFound_few" xml:space="preserve">
+    <value>Найдено серий: {series}, файлов: {files}</value>
+  </data>
+  <data name="BookFolderFound_many" xml:space="preserve">
+    <value>Найдено серий: {series}, файлов: {files}</value>
+  </data>
+  <data name="BookFolderFound_other" xml:space="preserve">
+    <value>Найдено серий: {series}, файлов: {files}</value>
+  </data>
+  <data name="BookFolderFoundLine" xml:space="preserve">
+    <value>{path}. По их данным Kaeri сопоставил: {matched}.</value>
+  </data>
+  <data name="BookFolderUnsupported_one" xml:space="preserve">
+    <value>{count} файл, который Kaeri не может открыть</value>
+  </data>
+  <data name="BookFolderUnsupported_few" xml:space="preserve">
+    <value>{count} файла, которые Kaeri не может открыть</value>
+  </data>
+  <data name="BookFolderUnsupported_many" xml:space="preserve">
+    <value>{count} файлов, которые Kaeri не может открыть</value>
+  </data>
+  <data name="BookFolderUnsupported_other" xml:space="preserve">
+    <value>{count} файлов, которые Kaeri не может открыть</value>
+  </data>
+  <data name="BookFolderUnsupportedLine" xml:space="preserve">
+    <value>{kinds}. Они остаются в папке как есть.</value>
+  </data>
+  <data name="BookFolderDrm" xml:space="preserve">
+    <value>Файлов EPUB с защитой DRM: {count}</value>
+  </data>
+  <data name="BookFolderOpens" xml:space="preserve">
+    <value>Kaeri открывает файлы CBZ, CBR, EPUB и PDF, а также папки с изображениями.</value>
+  </data>
+  <data name="BookFolderShowFiles" xml:space="preserve">
+    <value>Показать файлы</value>
+  </data>
+  <data name="BookFolderAdd" xml:space="preserve">
+    <value>Добавить папку</value>
+  </data>
+  <data name="BookFolderChange" xml:space="preserve">
+    <value>Изменить</value>
+  </data>
+  <data name="BookFolderEmpty" xml:space="preserve">
+    <value>В папке {folder} нет ничего, что Kaeri может открыть</value>
+  </data>
+  <data name="BookFolderEmptyLine_one" xml:space="preserve">
+    <value>В ней {files} файл, и он не CBZ, CBR, EPUB, PDF и не изображение.</value>
+  </data>
+  <data name="BookFolderEmptyLine_few" xml:space="preserve">
+    <value>В ней {files} файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</value>
+  </data>
+  <data name="BookFolderEmptyLine_many" xml:space="preserve">
+    <value>В ней {files} файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</value>
+  </data>
+  <data name="BookFolderEmptyLine_other" xml:space="preserve">
+    <value>В ней {files} файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</value>
+  </data>
+  <data name="BookFolderChooseOther" xml:space="preserve">
+    <value>Выбрать другую папку</value>
+  </data>
+  <data name="StoreJoinTitle" xml:space="preserve">
+    <value>Подключение: магазин плагинов</value>
+  </data>
+  <data name="StoreInviteField" xml:space="preserve">
+    <value>Приглашение</value>
+  </data>
+  <data name="StoreJoinedTitle" xml:space="preserve">
+    <value>Подключено: {store}</value>
+  </data>
+  <data name="StoreJoinedLine_one" xml:space="preserve">
+    <value>{owner} предлагает {count} плагин. Подключение ничего не устанавливает: установите его здесь или позже.</value>
+  </data>
+  <data name="StoreJoinedLine_few" xml:space="preserve">
+    <value>У {owner} плагины: {count}. Подключение ничего не устанавливает: выберите нужные здесь или позже.</value>
+  </data>
+  <data name="StoreJoinedLine_many" xml:space="preserve">
+    <value>У {owner} плагины: {count}. Подключение ничего не устанавливает: выберите нужные здесь или позже.</value>
+  </data>
+  <data name="StoreJoinedLine_other" xml:space="preserve">
+    <value>У {owner} плагины: {count}. Подключение ничего не устанавливает: выберите нужные здесь или позже.</value>
+  </data>
+  <data name="StoreGroupReading" xml:space="preserve">
+    <value>Для чтения</value>
+  </data>
+  <data name="StoreGroupWatching" xml:space="preserve">
+    <value>Для просмотра</value>
+  </data>
+  <data name="StoreInstall" xml:space="preserve">
+    <value>Установить</value>
+  </data>
+  <data name="StoreInstalledRow" xml:space="preserve">
+    <value>Установлено</value>
+  </data>
+  <data name="StoreInstallAllReading" xml:space="preserve">
+    <value>Установить всё для чтения</value>
+  </data>
+  <data name="StoreInstalled_one" xml:space="preserve">
+    <value>Установлен {count} плагин. Он в списке «Ваши источники».</value>
+  </data>
+  <data name="StoreInstalled_few" xml:space="preserve">
+    <value>Установлено, плагины: {count}. Они в списке «Ваши источники».</value>
+  </data>
+  <data name="StoreInstalled_many" xml:space="preserve">
+    <value>Установлено, плагины: {count}. Они в списке «Ваши источники».</value>
+  </data>
+  <data name="StoreInstalled_other" xml:space="preserve">
+    <value>Установлено, плагины: {count}. Они в списке «Ваши источники».</value>
+  </data>
+  <data name="StoreOtherMedium" xml:space="preserve">
+    <value>Каждый плагин в {store} предназначен для просмотра</value>
+  </data>
+  <data name="StoreOtherMediumLine" xml:space="preserve">
+    <value>Это устройство: просмотр выключен, поэтому ни один из них не показан в списке «Ваши источники».</value>
+  </data>
+  <data name="StoreTurnOnWatching" xml:space="preserve">
+    <value>Включить просмотр</value>
+  </data>
+  <data name="StoreEmpty" xml:space="preserve">
+    <value>{store}: плагины пока нет</value>
+  </data>
+  <data name="StoreEmptyLine" xml:space="preserve">
+    <value>Вы участник, поэтому, когда {owner} добавит новые плагины, они появятся в разделе «Магазины плагинов».</value>
+  </data>
+  <data name="StoreErrUnreachable" xml:space="preserve">
+    <value>Не удалось подключиться к {host}</value>
+  </data>
+  <data name="StoreErrUnreachableLine" xml:space="preserve">
+    <value>Приглашение выглядит верным, но магазин не отвечает. Повторите попытку позже или спросите у {owner}, работает ли он.</value>
+  </data>
+  <data name="StoreOtherMediumMore_one" xml:space="preserve">
+    <value>Ещё {count} для просмотра. Это устройство: просмотр выключен.</value>
+  </data>
+  <data name="StoreOtherMediumMore_few" xml:space="preserve">
+    <value>Ещё {count} для просмотра. Это устройство: просмотр выключен.</value>
+  </data>
+  <data name="StoreOtherMediumMore_many" xml:space="preserve">
+    <value>Ещё {count} для просмотра. Это устройство: просмотр выключен.</value>
+  </data>
+  <data name="StoreOtherMediumMore_other" xml:space="preserve">
+    <value>Ещё {count} для просмотра. Это устройство: просмотр выключен.</value>
+  </data>
+  <data name="StoreTvReadingOnly_one" xml:space="preserve">
+    <value>Ещё {count} для чтения, а телевизор этого не умеет.</value>
+  </data>
+  <data name="StoreTvReadingOnly_few" xml:space="preserve">
+    <value>Ещё {count} для чтения, а телевизор этого не умеет.</value>
+  </data>
+  <data name="StoreTvReadingOnly_many" xml:space="preserve">
+    <value>Ещё {count} для чтения, а телевизор этого не умеет.</value>
+  </data>
+  <data name="StoreTvReadingOnly_other" xml:space="preserve">
+    <value>Ещё {count} для чтения, а телевизор этого не умеет.</value>
+  </data>
+  <data name="StoreTvAllReading" xml:space="preserve">
+    <value>Каждый плагин в {store} предназначен для чтения, а телевизор этого не умеет.</value>
+  </data>
+  <data name="StorePluginRow" xml:space="preserve">
+    <value>Версия {version} · может обращаться к {hosts}</value>
+  </data>
+  <data name="SourceAdded" xml:space="preserve">
+    <value>Добавлено: {name} · серий: {series}</value>
+  </data>
+  <data name="SourceAddedPlugins_one" xml:space="preserve">
+    <value>Установлен {count} плагин из {store}</value>
+  </data>
+  <data name="SourceAddedPlugins_few" xml:space="preserve">
+    <value>Установлено из {store}, плагины: {count}</value>
+  </data>
+  <data name="SourceAddedPlugins_many" xml:space="preserve">
+    <value>Установлено из {store}, плагины: {count}</value>
+  </data>
+  <data name="SourceAddedPlugins_other" xml:space="preserve">
+    <value>Установлено из {store}, плагины: {count}</value>
+  </data>
+  <data name="SourceRowServer_one" xml:space="preserve">
+    <value>{kind} · серий: {series} · библиотек: {libraries} · добавлено только что</value>
+  </data>
+  <data name="SourceRowServer_few" xml:space="preserve">
+    <value>{kind} · серий: {series} · библиотек: {libraries} · добавлено только что</value>
+  </data>
+  <data name="SourceRowServer_many" xml:space="preserve">
+    <value>{kind} · серий: {series} · библиотек: {libraries} · добавлено только что</value>
+  </data>
+  <data name="SourceRowServer_other" xml:space="preserve">
+    <value>{kind} · серий: {series} · библиотек: {libraries} · добавлено только что</value>
+  </data>
+  <data name="SourceRowServerEmpty" xml:space="preserve">
+    <value>{kind} · серий пока нет · проверка снова через 30 минут</value>
+  </data>
+  <data name="SourceRowFolder_one" xml:space="preserve">
+    <value>{path} · серий: {series} · пропущено файлов: {skipped}</value>
+  </data>
+  <data name="SourceRowFolder_few" xml:space="preserve">
+    <value>{path} · серий: {series} · пропущено файлов: {skipped}</value>
+  </data>
+  <data name="SourceRowFolder_many" xml:space="preserve">
+    <value>{path} · серий: {series} · пропущено файлов: {skipped}</value>
+  </data>
+  <data name="SourceRowFolder_other" xml:space="preserve">
+    <value>{path} · серий: {series} · пропущено файлов: {skipped}</value>
+  </data>
+  <data name="SourceRowPlugin" xml:space="preserve">
+    <value>Из {store} · {medium} · версия {version}</value>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>Источники</value>

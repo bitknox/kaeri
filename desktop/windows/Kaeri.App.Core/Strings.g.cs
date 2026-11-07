@@ -3030,6 +3030,63 @@ public static partial class T
     /// <summary>Line under that button after a failure.</summary>
     public static string EpisodeDownloadFailed(long episode) => Fill(Get("EpisodeDownloadFailed"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>First run, page 2 of 5.</summary>
+    public static string FirstOtherTitle => Get("FirstOtherTitle");
+
+    /// <summary>Under the title.</summary>
+    public static string FirstOtherLine => Get("FirstOtherLine");
+
+    /// <summary>Line under the pair row.</summary>
+    public static string FirstOtherPairLine => Get("FirstOtherPairLine");
+
+    /// <summary>Row that restores from a sync folder.</summary>
+    public static string FirstOtherRestore => Get("FirstOtherRestore");
+
+    /// <summary>Line under it.</summary>
+    public static string FirstOtherRestoreLine => Get("FirstOtherRestoreLine");
+
+    /// <summary>Primary action: go on with the first run on this device alone.</summary>
+    public static string FirstOtherNo => Get("FirstOtherNo");
+
+    /// <summary>Beside a spinner, after 600 ms.</summary>
+    public static string PairWaiting => Get("PairWaiting");
+
+    /// <summary>After 30 seconds with nothing.</summary>
+    public static string PairNothingYet => Get("PairNothingYet");
+
+    /// <summary>Group header for what the other device brings.</summary>
+    public static string FirstJoinGroup(string device) => Fill(Get("FirstJoinGroup"), ("device", device));
+
+    /// <summary>Row while the rest arrives.</summary>
+    public static string FirstJoinLooking(string device) => Fill(Get("FirstJoinLooking"), ("device", device));
+
+    /// <summary>Row with a pop-up of Watch, Read and Both.</summary>
+    public static string FirstJoinMedium => Get("FirstJoinMedium");
+
+    /// <summary>Line under it when the other device reads.</summary>
+    public static string FirstJoinMediumLine(string device) => Fill(Get("FirstJoinMediumLine"), ("device", device));
+
+    /// <summary>Line under the sign-ins switch: the trackers the other device is signed in to, already joined.</summary>
+    public static string FirstJoinSigninsLine(string trackers) => Fill(Get("FirstJoinSigninsLine"), ("trackers", trackers));
+
+    /// <summary>Switch, one per book server.</summary>
+    public static string FirstJoinServer(string host) => Fill(Get("FirstJoinServer"), ("host", host));
+
+    /// <summary>Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.</summary>
+    public static string FirstJoinServerLine(string kind, string device, string store) => Fill(Get("FirstJoinServerLine"), ("kind", kind), ("device", device), ("store", store));
+
+    /// <summary>Note under the list.</summary>
+    public static string FirstJoinFolders(string device) => Fill(Get("FirstJoinFolders"), ("device", device));
+
+    /// <summary>Note when the setup answered the remaining pages.</summary>
+    public static string FirstJoinStepsDone => Get("FirstJoinStepsDone");
+
+    /// <summary>Row error when a plugin store refused this device.</summary>
+    public static string FirstJoinStoreRefused(string store, string owner) => Fill(Get("FirstJoinStoreRefused"), ("store", store), ("owner", owner));
+
+    /// <summary>Notice on Home, for 4 seconds.</summary>
+    public static string FirstJoinSyncing(string device) => Fill(Get("FirstJoinSyncing"), ("device", device));
+
     /// <summary>Name of the Home section in the sidebar, the tab bar and the window title.</summary>
     public static string HomeTitle => Get("HomeTitle");
 
@@ -5338,6 +5395,78 @@ public static partial class T
     /// <summary>Look choice that follows the system's light or dark.</summary>
     public static string ReaderLookSystem => Get("ReaderLookSystem");
 
+    /// <summary>Button in the first run that opens the reading demo.</summary>
+    public static string OnboardingReadDemo => Get("OnboardingReadDemo");
+
+    /// <summary>Under the first run's demo heading when the device is for reading.</summary>
+    public static string OnboardingDemoBooksDetail => Get("OnboardingDemoBooksDetail");
+
+    /// <summary>Under the first run's demo heading when the device is for both.</summary>
+    public static string OnboardingDemoBothDetail => Get("OnboardingDemoBothDetail");
+
+    /// <summary>Home, under the spotlight, when the demo is the only thing to read.</summary>
+    public static string HomeDemoOnlyBooks => Get("HomeDemoOnlyBooks");
+
+    /// <summary>Primary action on Home's spotlight for a book.</summary>
+    public static string HomeSpotlightRead => Get("HomeSpotlightRead");
+
+    /// <summary>The demo comic's facts line on its series page.</summary>
+    public static string DemoSeriesFacts(long pages) => Fill(GetPlural("DemoSeriesFacts", pages), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".</summary>
+    public static string DemoCreditBook(string title, string author, string licence) => Fill(Get("DemoCreditBook"), ("title", title), ("author", author), ("licence", licence));
+
+    /// <summary>The story's credit in About the demo.</summary>
+    public static string DemoCreditStory(string title, string author) => Fill(Get("DemoCreditStory"), ("title", title), ("author", author));
+
+    /// <summary>Credit capsule in the reader's top bar on page 1.</summary>
+    public static string ReaderDemoCredit(string title, string author, string licence) => Fill(Get("ReaderDemoCredit"), ("title", title), ("author", author), ("licence", licence));
+
+    /// <summary>A demo result's line in Search.</summary>
+    public static string SearchDemoReads => Get("SearchDemoReads");
+
+    /// <summary>Search, under the demo results, when only the demo is on.</summary>
+    public static string SearchDemoOnlyBooks => Get("SearchDemoOnlyBooks");
+
+    /// <summary>Title of the card after the demo's last page.</summary>
+    public static string ReaderDemoEnd => Get("ReaderDemoEnd");
+
+    /// <summary>Line under it.</summary>
+    public static string ReaderDemoEndLine => Get("ReaderDemoEndLine");
+
+    /// <summary>The card's primary action.</summary>
+    public static string ReaderDemoAddSource => Get("ReaderDemoAddSource");
+
+    /// <summary>The card's secondary action, back to the first page.</summary>
+    public static string ReaderDemoAgain => Get("ReaderDemoAgain");
+
+    /// <summary>The demo row's line in Your sources when reading is on.</summary>
+    public static string SourcesDemoBooksLine => Get("SourcesDemoBooksLine");
+
+    /// <summary>About the demo, first line, when reading is on.</summary>
+    public static string SourcesDemoBooksWhat => Get("SourcesDemoBooksWhat");
+
+    /// <summary>About the demo, in place of sources-demo-private when reading is on.</summary>
+    public static string SourcesDemoBooksPrivate => Get("SourcesDemoBooksPrivate");
+
+    /// <summary>Group on the demo's series page.</summary>
+    public static string DemoChapters => Get("DemoChapters");
+
+    /// <summary>Group on the demo's series page: the other demo work.</summary>
+    public static string DemoAlso => Get("DemoAlso");
+
+    /// <summary>Group in About the demo.</summary>
+    public static string DemoCredits => Get("DemoCredits");
+
+    /// <summary>A chapter row's line on the demo's series page.</summary>
+    public static string DemoPages(long pages) => Fill(GetPlural("DemoPages", pages), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The story's row on the demo's series page. The licence is "Public domain" as the engine says it.</summary>
+    public static string DemoStoryRow(string author, string licence) => Fill(Get("DemoStoryRow"), ("author", author), ("licence", licence));
+
+    /// <summary>Primary action on the demo's series page.</summary>
+    public static string DemoReadChapter(string number) => Fill(Get("DemoReadChapter"), ("number", number));
+
     /// <summary>Sidebar and tab label: the shows' Home when both media are on.</summary>
     public static string NavWatch => Get("NavWatch");
 
@@ -7560,6 +7689,189 @@ public static partial class T
 
     /// <summary>Row: the port the shared catalogue listens on. Empty picks a free one.</summary>
     public static string SettingsOpdsPort => Get("SettingsOpdsPort");
+
+    /// <summary>Label of the address field in the Add a server sheet.</summary>
+    public static string BookServerAddress => Get("BookServerAddress");
+
+    /// <summary>Note under the empty address field.</summary>
+    public static string BookServerAddressHint => Get("BookServerAddressHint");
+
+    /// <summary>Note under the address field once a Kavita OPDS link is pasted.</summary>
+    public static string BookServerKavitaKey => Get("BookServerKavitaKey");
+
+    /// <summary>Under the key chip. The store is where the system keeps secrets: Keychain, or Android Keystore.</summary>
+    public static string BookServerKeyKept(string store) => Fill(Get("BookServerKeyKept"), ("store", store));
+
+    /// <summary>Chip inside the address field, showing the key's last four characters after four dots.</summary>
+    public static string BookServerKey(string last) => Fill(Get("BookServerKey"), ("last", last));
+
+    /// <summary>Result title once the server signed in.</summary>
+    public static string BookServerFoundTitle(long series, long libraries) => Fill(GetPlural("BookServerFoundTitle", libraries), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under the result title. The kind is Komga, Kavita or OPDS.</summary>
+    public static string BookServerFoundLine(string kind, string host) => Fill(Get("BookServerFoundLine"), ("kind", kind), ("host", host));
+
+    /// <summary>A library row's line in the result.</summary>
+    public static string BookServerLibraryLine(long series) => Fill(Get("BookServerLibraryLine"), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Switch in the result, on to start with.</summary>
+    public static string BookServerSyncProgress => Get("BookServerSyncProgress");
+
+    /// <summary>Line under the switch.</summary>
+    public static string BookServerSyncProgressLine(string host) => Fill(Get("BookServerSyncProgressLine"), ("host", host));
+
+    /// <summary>Field label.</summary>
+    public static string BookServerUsername => Get("BookServerUsername");
+
+    /// <summary>Field label.</summary>
+    public static string BookServerPassword => Get("BookServerPassword");
+
+    /// <summary>Error title when the server could not be reached.</summary>
+    public static string BookServerErrUnreachable(string host) => Fill(Get("BookServerErrUnreachable"), ("host", host));
+
+    /// <summary>Line under it.</summary>
+    public static string BookServerErrUnreachableLine => Get("BookServerErrUnreachableLine");
+
+    /// <summary>Error title when the server turned the password down.</summary>
+    public static string BookServerErrPassword(string host) => Fill(Get("BookServerErrPassword"), ("host", host));
+
+    /// <summary>Line under it. The kind is Komga, Kavita or OPDS.</summary>
+    public static string BookServerErrPasswordLine(string kind) => Fill(Get("BookServerErrPasswordLine"), ("kind", kind));
+
+    /// <summary>Error title when Kavita turned the key in an OPDS link down.</summary>
+    public static string BookServerErrKey(string host) => Fill(Get("BookServerErrKey"), ("host", host));
+
+    /// <summary>Line under it.</summary>
+    public static string BookServerErrKeyLine => Get("BookServerErrKeyLine");
+
+    /// <summary>Title when the server lets the account in and shows it no series.</summary>
+    public static string BookServerEmpty(string host) => Fill(Get("BookServerEmpty"), ("host", host));
+
+    /// <summary>Line under it.</summary>
+    public static string BookServerEmptyLine => Get("BookServerEmptyLine");
+
+    /// <summary>Note under it.</summary>
+    public static string BookServerEmptyRecheck => Get("BookServerEmptyRecheck");
+
+    /// <summary>Line under an error when the address is not a book server.</summary>
+    public static string BookServerNotBooksLine => Get("BookServerNotBooksLine");
+
+    /// <summary>Folder result title.</summary>
+    public static string BookFolderFound(long series, long files) => Fill(GetPlural("BookFolderFound", files), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under it: the folder's path, then how many series were matched by their own details.</summary>
+    public static string BookFolderFoundLine(string path, long matched) => Fill(Get("BookFolderFoundLine"), ("path", path), ("matched", matched.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Row in the folder result: files that are books in formats Kaeri can't open.</summary>
+    public static string BookFolderUnsupported(long count) => Fill(GetPlural("BookFolderUnsupported", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".</summary>
+    public static string BookFolderUnsupportedLine(string kinds) => Fill(Get("BookFolderUnsupportedLine"), ("kinds", kinds));
+
+    /// <summary>One item of that list: EPUB files locked with DRM or a password.</summary>
+    public static string BookFolderDrm(long count) => Fill(Get("BookFolderDrm"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Note under the folder result.</summary>
+    public static string BookFolderOpens => Get("BookFolderOpens");
+
+    /// <summary>Row action that lists the files skipped.</summary>
+    public static string BookFolderShowFiles => Get("BookFolderShowFiles");
+
+    /// <summary>Primary action in the Add a folder sheet.</summary>
+    public static string BookFolderAdd => Get("BookFolderAdd");
+
+    /// <summary>Folder row action that picks another folder.</summary>
+    public static string BookFolderChange => Get("BookFolderChange");
+
+    /// <summary>Title when a folder holds nothing Kaeri can open.</summary>
+    public static string BookFolderEmpty(string folder) => Fill(Get("BookFolderEmpty"), ("folder", folder));
+
+    /// <summary>Line under it.</summary>
+    public static string BookFolderEmptyLine(long files) => Fill(GetPlural("BookFolderEmptyLine", files), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Primary action after an empty folder.</summary>
+    public static string BookFolderChooseOther => Get("BookFolderChooseOther");
+
+    /// <summary>Title of the Join a plugin store sheet.</summary>
+    public static string StoreJoinTitle => Get("StoreJoinTitle");
+
+    /// <summary>Label of the invite field.</summary>
+    public static string StoreInviteField => Get("StoreInviteField");
+
+    /// <summary>Result title once a plugin store is joined.</summary>
+    public static string StoreJoinedTitle(string store) => Fill(Get("StoreJoinedTitle"), ("store", store));
+
+    /// <summary>Line under it. The owner is who runs the store.</summary>
+    public static string StoreJoinedLine(string owner, long count) => Fill(GetPlural("StoreJoinedLine", count), ("owner", owner), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Group header in the joined store's list.</summary>
+    public static string StoreGroupReading => Get("StoreGroupReading");
+
+    /// <summary>Group header in the joined store's list.</summary>
+    public static string StoreGroupWatching => Get("StoreGroupWatching");
+
+    /// <summary>Row action.</summary>
+    public static string StoreInstall => Get("StoreInstall");
+
+    /// <summary>Row state once installed.</summary>
+    public static string StoreInstalledRow => Get("StoreInstalledRow");
+
+    /// <summary>Primary action when two or more plugins are for reading.</summary>
+    public static string StoreInstallAllReading => Get("StoreInstallAllReading");
+
+    /// <summary>Result after installing.</summary>
+    public static string StoreInstalled(long count) => Fill(GetPlural("StoreInstalled", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Info title when every plugin in a store is for watching, and watching is off here.</summary>
+    public static string StoreOtherMedium(string store) => Fill(Get("StoreOtherMedium"), ("store", store));
+
+    /// <summary>Line under it.</summary>
+    public static string StoreOtherMediumLine => Get("StoreOtherMediumLine");
+
+    /// <summary>Secondary action under it.</summary>
+    public static string StoreTurnOnWatching => Get("StoreTurnOnWatching");
+
+    /// <summary>Info title when a store has no plugins.</summary>
+    public static string StoreEmpty(string store) => Fill(Get("StoreEmpty"), ("store", store));
+
+    /// <summary>Line under it.</summary>
+    public static string StoreEmptyLine(string owner) => Fill(Get("StoreEmptyLine"), ("owner", owner));
+
+    /// <summary>Error title when the store doesn't answer.</summary>
+    public static string StoreErrUnreachable(string host) => Fill(Get("StoreErrUnreachable"), ("host", host));
+
+    /// <summary>Line under it.</summary>
+    public static string StoreErrUnreachableLine(string owner) => Fill(Get("StoreErrUnreachableLine"), ("owner", owner));
+
+    /// <summary>Under the reading group: plugins for watching while watching is off here.</summary>
+    public static string StoreOtherMediumMore(long count) => Fill(GetPlural("StoreOtherMediumMore", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On a TV, under the list: plugins for reading, which a TV doesn't do.</summary>
+    public static string StoreTvReadingOnly(long count) => Fill(GetPlural("StoreTvReadingOnly", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>On a TV, info title when every plugin in a store is for reading.</summary>
+    public static string StoreTvAllReading(string store) => Fill(Get("StoreTvAllReading"), ("store", store));
+
+    /// <summary>Plugin row in an invite's result.</summary>
+    public static string StorePluginRow(string version, string hosts) => Fill(Get("StorePluginRow"), ("version", version), ("hosts", hosts));
+
+    /// <summary>Notice after a server or folder is added, for 4 seconds.</summary>
+    public static string SourceAdded(string name, long series) => Fill(Get("SourceAdded"), ("name", name), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Notice after Install all, for 4 seconds.</summary>
+    public static string SourceAddedPlugins(long count, string store) => Fill(GetPlural("SourceAddedPlugins", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("store", store));
+
+    /// <summary>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</summary>
+    public static string SourceRowServer(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServer", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A server's row in Your sources while it shows no series.</summary>
+    public static string SourceRowServerEmpty(string kind) => Fill(Get("SourceRowServerEmpty"), ("kind", kind));
+
+    /// <summary>A folder's row in Your sources.</summary>
+    public static string SourceRowFolder(string path, long series, long skipped) => Fill(GetPlural("SourceRowFolder", skipped), ("path", path), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("skipped", skipped.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A plugin's row in Your sources. The medium is "Reading" or "Watching".</summary>
+    public static string SourceRowPlugin(string store, string medium, string version) => Fill(Get("SourceRowPlugin"), ("store", store), ("medium", medium), ("version", version));
 
     /// <summary>Title of the screen or section that lists sources.</summary>
     public static string SourcesTitle => Get("SourcesTitle");
@@ -11323,6 +11635,25 @@ public static partial class T
         ["EpisodeDownloadPaused"] = "Download paused at {percent}",
         ["EpisodeDownloadDone"] = "Downloaded",
         ["EpisodeDownloadFailed"] = "Couldn't download episode {episode}. Try again.",
+        ["FirstOtherTitle"] = "Already use Kaeri on another device?",
+        ["FirstOtherLine"] = "Pair with it and this device gets your sources, trackers and history. The steps after this are then done.",
+        ["FirstOtherPairLine"] = "Shows a code to enter on that device. Both need the same Wi-Fi.",
+        ["FirstOtherRestore"] = "Restore from a cloud folder",
+        ["FirstOtherRestoreLine"] = "Uses the recovery key you saved",
+        ["FirstOtherNo"] = "No, start here",
+        ["PairWaiting"] = "Waiting for your other device",
+        ["PairNothingYet"] = "Nothing yet? Both devices need to be on the same Wi-Fi.",
+        ["FirstJoinGroup"] = "From {device}",
+        ["FirstJoinLooking"] = "Looking at what {device} has…",
+        ["FirstJoinMedium"] = "Kaeri is for",
+        ["FirstJoinMediumLine"] = "Reading, as on {device}",
+        ["FirstJoinSigninsLine"] = "{trackers}",
+        ["FirstJoinServer"] = "Add {host}",
+        ["FirstJoinServerLine"] = "{kind} · signs in with the key from {device}, kept in {store}",
+        ["FirstJoinFolders"] = "Folders stay on {device}. Add this device’s own folders in Your sources.",
+        ["FirstJoinStepsDone"] = "Lists and sources are set up, so first run ends here. You can change them in Settings.",
+        ["FirstJoinStoreRefused"] = "{store} didn’t let this device in. {owner} can send you an invite.",
+        ["FirstJoinSyncing"] = "Syncing with {device}",
         ["HomeTitle"] = "Home",
         ["HomeResumeEpisode"] = "Resume episode {episode}",
         ["HomePlayEpisode"] = "Play episode {episode}",
@@ -12118,6 +12449,32 @@ public static partial class T
         ["ReaderGapNone"] = "None",
         ["ReaderGapSmall"] = "Small",
         ["ReaderLookSystem"] = "System",
+        ["OnboardingReadDemo"] = "Read the demo",
+        ["OnboardingDemoBooksDetail"] = "The demo reads a short comic and a short story their makers share under Creative Commons.",
+        ["OnboardingDemoBothDetail"] = "One short episode and one short comic, shared by their makers under Creative Commons.",
+        ["HomeDemoOnlyBooks"] = "Only the demo is on. Add a folder, a server or a plugin store to read your own books.",
+        ["HomeSpotlightRead"] = "Read",
+        ["DemoSeriesFacts_one"] = "Demo · Comic · one page",
+        ["DemoSeriesFacts_other"] = "Demo · Comic · {pages} pages",
+        ["DemoCreditBook"] = "{title} by {author}. Licensed {licence}. Read from Wikimedia Commons.",
+        ["DemoCreditStory"] = "{title} by {author}. Public domain. It comes with the app.",
+        ["ReaderDemoCredit"] = "{title} · {author} · {licence}",
+        ["SearchDemoReads"] = "Demo · Reads now",
+        ["SearchDemoOnlyBooks"] = "Only the demo is on. Other titles appear once you add a source.",
+        ["ReaderDemoEnd"] = "That’s the end of the demo",
+        ["ReaderDemoEndLine"] = "To read your own books, add a folder, a server or a plugin store.",
+        ["ReaderDemoAddSource"] = "Add a source",
+        ["ReaderDemoAgain"] = "Back to page 1",
+        ["SourcesDemoBooksLine"] = "A comic and a story · CC BY 4.0 and public domain",
+        ["SourcesDemoBooksWhat"] = "Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn’t a source to keep.",
+        ["SourcesDemoBooksPrivate"] = "The demo never signs in anywhere and never writes to a tracker.",
+        ["DemoChapters"] = "Chapters",
+        ["DemoAlso"] = "Also in the demo",
+        ["DemoCredits"] = "Credits",
+        ["DemoPages_one"] = "One page",
+        ["DemoPages_other"] = "{pages} pages",
+        ["DemoStoryRow"] = "Story · {author} · {licence}",
+        ["DemoReadChapter"] = "Read chapter {number}",
         ["NavWatch"] = "Watch",
         ["NavRead"] = "Read",
         ["NavUpdates"] = "Updates",
@@ -12888,6 +13245,78 @@ public static partial class T
         ["SettingsOpdsFeed"] = "Share on this network",
         ["SettingsOpdsPassword"] = "Feed password",
         ["SettingsOpdsPort"] = "Feed port",
+        ["BookServerAddress"] = "Address",
+        ["BookServerAddressHint"] = "An address, or the whole OPDS link from Kavita.",
+        ["BookServerKavitaKey"] = "This is a Kavita OPDS link. Its key signs you in, so no password is needed.",
+        ["BookServerKeyKept"] = "Kaeri keeps the key in {store} and shows only its last four characters.",
+        ["BookServerKey"] = "Key ••••{last}",
+        ["BookServerFoundTitle_one"] = "Found {series} series",
+        ["BookServerFoundTitle_other"] = "Found {series} series in {libraries} libraries",
+        ["BookServerFoundLine"] = "{kind} at {host}. Pick the libraries to add.",
+        ["BookServerLibraryLine"] = "{series} series",
+        ["BookServerSyncProgress"] = "Send progress to the server",
+        ["BookServerSyncProgressLine"] = "Pages you read here go back to {host}, and its progress comes here.",
+        ["BookServerUsername"] = "Username",
+        ["BookServerPassword"] = "Password",
+        ["BookServerErrUnreachable"] = "Couldn’t reach {host}",
+        ["BookServerErrUnreachableLine"] = "Check the address, and that the server is on and on this network.",
+        ["BookServerErrPassword"] = "{host} didn’t accept that password",
+        ["BookServerErrPasswordLine"] = "Use the username and password you use for {kind} in a browser.",
+        ["BookServerErrKey"] = "{host} didn’t accept that key",
+        ["BookServerErrKeyLine"] = "The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.",
+        ["BookServerEmpty"] = "{host} shows this account no series",
+        ["BookServerEmptyLine"] = "It lets you in, but the server may still be scanning, or this account may not have access to its books.",
+        ["BookServerEmptyRecheck"] = "You can add it now. Kaeri looks again every 30 minutes.",
+        ["BookServerNotBooksLine"] = "Kaeri reads from Komga, Kavita and OPDS catalogues.",
+        ["BookFolderFound_one"] = "Found {series} series in one file",
+        ["BookFolderFound_other"] = "Found {series} series in {files} files",
+        ["BookFolderFoundLine"] = "{path}. Kaeri matched {matched} of them by their details.",
+        ["BookFolderUnsupported_one"] = "One file Kaeri can’t open",
+        ["BookFolderUnsupported_other"] = "{count} files Kaeri can’t open",
+        ["BookFolderUnsupportedLine"] = "{kinds}. They stay in the folder as they are.",
+        ["BookFolderDrm"] = "{count} EPUB locked with DRM",
+        ["BookFolderOpens"] = "Kaeri opens CBZ, CBR, EPUB and PDF files, and folders of images.",
+        ["BookFolderShowFiles"] = "Show files",
+        ["BookFolderAdd"] = "Add folder",
+        ["BookFolderChange"] = "Change",
+        ["BookFolderEmpty"] = "Nothing in {folder} that Kaeri can open",
+        ["BookFolderEmptyLine_one"] = "It holds one file, which isn’t CBZ, CBR, EPUB, PDF or an image.",
+        ["BookFolderEmptyLine_other"] = "It holds {files} files, none of them CBZ, CBR, EPUB, PDF or images.",
+        ["BookFolderChooseOther"] = "Choose another folder",
+        ["StoreJoinTitle"] = "Join a plugin store",
+        ["StoreInviteField"] = "Invite",
+        ["StoreJoinedTitle"] = "Joined {store}",
+        ["StoreJoinedLine_one"] = "{owner} offers one plugin. Joining installs nothing; install it here or later.",
+        ["StoreJoinedLine_other"] = "{owner} offers {count} plugins. Joining installs nothing; pick the ones you want here or later.",
+        ["StoreGroupReading"] = "For reading",
+        ["StoreGroupWatching"] = "For watching",
+        ["StoreInstall"] = "Install",
+        ["StoreInstalledRow"] = "Installed",
+        ["StoreInstallAllReading"] = "Install all for reading",
+        ["StoreInstalled_one"] = "One plugin installed. It’s in Your sources.",
+        ["StoreInstalled_other"] = "{count} plugins installed. They’re in Your sources.",
+        ["StoreOtherMedium"] = "Every plugin in {store} is for watching",
+        ["StoreOtherMediumLine"] = "Watching is off on this device, so none of them show in Your sources.",
+        ["StoreTurnOnWatching"] = "Turn on watching",
+        ["StoreEmpty"] = "{store} has no plugins yet",
+        ["StoreEmptyLine"] = "You’re a member, so new plugins show in Plugin stores when {owner} adds them.",
+        ["StoreErrUnreachable"] = "Couldn’t reach {host}",
+        ["StoreErrUnreachableLine"] = "The invite looks right, but the store isn’t answering. Try again later, or ask {owner} if it’s running.",
+        ["StoreOtherMediumMore_one"] = "One more is for watching, which is off on this device.",
+        ["StoreOtherMediumMore_other"] = "{count} more are for watching, which is off on this device.",
+        ["StoreTvReadingOnly_one"] = "One more is for reading, which this TV doesn’t do.",
+        ["StoreTvReadingOnly_other"] = "{count} more are for reading, which this TV doesn’t do.",
+        ["StoreTvAllReading"] = "Every plugin in {store} is for reading, which this TV doesn’t do.",
+        ["StorePluginRow"] = "Version {version} · may contact {hosts}",
+        ["SourceAdded"] = "Added {name} · {series} series",
+        ["SourceAddedPlugins_one"] = "Installed one plugin from {store}",
+        ["SourceAddedPlugins_other"] = "Installed {count} plugins from {store}",
+        ["SourceRowServer_one"] = "{kind} · {series} series · added just now",
+        ["SourceRowServer_other"] = "{kind} · {series} series in {libraries} libraries · added just now",
+        ["SourceRowServerEmpty"] = "{kind} · no series yet · looks again in 30 minutes",
+        ["SourceRowFolder_one"] = "{path} · {series} series · one file skipped",
+        ["SourceRowFolder_other"] = "{path} · {series} series · {skipped} files skipped",
+        ["SourceRowPlugin"] = "From {store} · {medium} · version {version}",
         ["SourcesTitle"] = "Sources",
         ["SourcesEmpty"] = "No sources yet. Join a plugin store to add some.",
         ["PluginRiskWarning"] = "Plugins are written by other people and run on your device. Install only plugins you trust, for sources you're entitled to use.",

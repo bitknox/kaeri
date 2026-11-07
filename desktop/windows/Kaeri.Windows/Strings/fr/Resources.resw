@@ -2786,6 +2786,63 @@
   <data name="EpisodeDownloadFailed" xml:space="preserve">
     <value>Impossible de télécharger l’épisode {episode}. Réessayez.</value>
   </data>
+  <data name="FirstOtherTitle" xml:space="preserve">
+    <value>Vous utilisez déjà Kaeri sur un autre appareil ?</value>
+  </data>
+  <data name="FirstOtherLine" xml:space="preserve">
+    <value>Associez-le et cet appareil reçoit vos sources, vos services de suivi et votre historique. Les étapes suivantes sont alors terminées.</value>
+  </data>
+  <data name="FirstOtherPairLine" xml:space="preserve">
+    <value>Affiche un code à saisir sur l’autre appareil. Les deux doivent être sur le même Wi-Fi.</value>
+  </data>
+  <data name="FirstOtherRestore" xml:space="preserve">
+    <value>Restaurer depuis un dossier cloud</value>
+  </data>
+  <data name="FirstOtherRestoreLine" xml:space="preserve">
+    <value>Utilise la clé de récupération que vous avez enregistrée</value>
+  </data>
+  <data name="FirstOtherNo" xml:space="preserve">
+    <value>Non, commencer ici</value>
+  </data>
+  <data name="PairWaiting" xml:space="preserve">
+    <value>En attente de votre autre appareil</value>
+  </data>
+  <data name="PairNothingYet" xml:space="preserve">
+    <value>Rien pour l’instant ? Les deux appareils doivent être sur le même Wi-Fi.</value>
+  </data>
+  <data name="FirstJoinGroup" xml:space="preserve">
+    <value>Depuis {device}</value>
+  </data>
+  <data name="FirstJoinLooking" xml:space="preserve">
+    <value>Consultation de ce que contient {device}…</value>
+  </data>
+  <data name="FirstJoinMedium" xml:space="preserve">
+    <value>Kaeri sert à</value>
+  </data>
+  <data name="FirstJoinMediumLine" xml:space="preserve">
+    <value>Lecture, comme sur {device}</value>
+  </data>
+  <data name="FirstJoinSigninsLine" xml:space="preserve">
+    <value>{trackers}</value>
+  </data>
+  <data name="FirstJoinServer" xml:space="preserve">
+    <value>Ajouter {host}</value>
+  </data>
+  <data name="FirstJoinServerLine" xml:space="preserve">
+    <value>{kind} · se connecte avec la clé de {device}, conservée dans {store}</value>
+  </data>
+  <data name="FirstJoinFolders" xml:space="preserve">
+    <value>Les dossiers restent sur {device}. Ajoutez ceux de cet appareil dans Vos sources.</value>
+  </data>
+  <data name="FirstJoinStepsDone" xml:space="preserve">
+    <value>Les listes et les sources sont prêtes, donc la première utilisation se termine ici. Vous pouvez les modifier dans les Réglages.</value>
+  </data>
+  <data name="FirstJoinStoreRefused" xml:space="preserve">
+    <value>{store} n’a pas laissé entrer cet appareil. {owner} peut vous envoyer une invitation.</value>
+  </data>
+  <data name="FirstJoinSyncing" xml:space="preserve">
+    <value>Synchronisation avec {device}</value>
+  </data>
   <data name="HomeTitle" xml:space="preserve">
     <value>Accueil</value>
   </data>
@@ -5096,6 +5153,90 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Plus dans les paramètres…</value>
   </data>
+  <data name="OnboardingReadDemo" xml:space="preserve">
+    <value>Lire la démo</value>
+  </data>
+  <data name="OnboardingDemoBooksDetail" xml:space="preserve">
+    <value>La démo propose une courte bande dessinée et une courte nouvelle que leurs auteurs partagent sous Creative Commons.</value>
+  </data>
+  <data name="OnboardingDemoBothDetail" xml:space="preserve">
+    <value>Un court épisode et une courte bande dessinée, partagés par leurs auteurs sous Creative Commons.</value>
+  </data>
+  <data name="HomeDemoOnlyBooks" xml:space="preserve">
+    <value>Seule la démo est active. Ajoutez un dossier, un serveur ou une boutique de plugins pour lire vos propres livres.</value>
+  </data>
+  <data name="HomeSpotlightRead" xml:space="preserve">
+    <value>Lire</value>
+  </data>
+  <data name="DemoSeriesFacts_one" xml:space="preserve">
+    <value>Démo · Bande dessinée · une page</value>
+  </data>
+  <data name="DemoSeriesFacts_many" xml:space="preserve">
+    <value>Démo · Bande dessinée · {pages} pages</value>
+  </data>
+  <data name="DemoSeriesFacts_other" xml:space="preserve">
+    <value>Démo · Bande dessinée · {pages} pages</value>
+  </data>
+  <data name="DemoCreditBook" xml:space="preserve">
+    <value>{title} de {author}. Sous licence {licence}. À lire sur Wikimedia Commons.</value>
+  </data>
+  <data name="DemoCreditStory" xml:space="preserve">
+    <value>{title} de {author}. Domaine public. Fourni avec l’application.</value>
+  </data>
+  <data name="ReaderDemoCredit" xml:space="preserve">
+    <value>{title} · {author} · {licence}</value>
+  </data>
+  <data name="SearchDemoReads" xml:space="preserve">
+    <value>Démo · Lisible maintenant</value>
+  </data>
+  <data name="SearchDemoOnlyBooks" xml:space="preserve">
+    <value>Seule la démo est active. D’autres titres apparaissent quand vous ajoutez une source.</value>
+  </data>
+  <data name="ReaderDemoEnd" xml:space="preserve">
+    <value>C’est la fin de la démo</value>
+  </data>
+  <data name="ReaderDemoEndLine" xml:space="preserve">
+    <value>Pour lire vos propres livres, ajoutez un dossier, un serveur ou une boutique de plugins.</value>
+  </data>
+  <data name="ReaderDemoAddSource" xml:space="preserve">
+    <value>Ajouter une source</value>
+  </data>
+  <data name="ReaderDemoAgain" xml:space="preserve">
+    <value>Retour à la page 1</value>
+  </data>
+  <data name="SourcesDemoBooksLine" xml:space="preserve">
+    <value>Une bande dessinée et une nouvelle · CC BY 4.0 et domaine public</value>
+  </data>
+  <data name="SourcesDemoBooksWhat" xml:space="preserve">
+    <value>Des œuvres que leurs auteurs partagent sous Creative Commons, pour essayer Kaeri avant d’ajouter une source. Ce n’est pas une source à conserver.</value>
+  </data>
+  <data name="SourcesDemoBooksPrivate" xml:space="preserve">
+    <value>La démo ne se connecte nulle part et n’écrit jamais dans un service de suivi.</value>
+  </data>
+  <data name="DemoChapters" xml:space="preserve">
+    <value>Chapitres</value>
+  </data>
+  <data name="DemoAlso" xml:space="preserve">
+    <value>Aussi dans la démo</value>
+  </data>
+  <data name="DemoCredits" xml:space="preserve">
+    <value>Crédits</value>
+  </data>
+  <data name="DemoPages_one" xml:space="preserve">
+    <value>Une page</value>
+  </data>
+  <data name="DemoPages_many" xml:space="preserve">
+    <value>{pages} pages</value>
+  </data>
+  <data name="DemoPages_other" xml:space="preserve">
+    <value>{pages} pages</value>
+  </data>
+  <data name="DemoStoryRow" xml:space="preserve">
+    <value>Nouvelle · {author} · {licence}</value>
+  </data>
+  <data name="DemoReadChapter" xml:space="preserve">
+    <value>Lire le chapitre {number}</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Saison précédente</value>
   </data>
@@ -6391,6 +6532,255 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>Réinitialiser le style des sous-titres</value>
+  </data>
+  <data name="BookServerAddress" xml:space="preserve">
+    <value>Adresse</value>
+  </data>
+  <data name="BookServerAddressHint" xml:space="preserve">
+    <value>Une adresse, ou le lien OPDS complet de Kavita.</value>
+  </data>
+  <data name="BookServerKavitaKey" xml:space="preserve">
+    <value>Ceci est un lien OPDS de Kavita. Sa clé vous connecte, aucun mot de passe n’est donc nécessaire.</value>
+  </data>
+  <data name="BookServerKeyKept" xml:space="preserve">
+    <value>Kaeri garde la clé dans {store} et n’affiche que ses quatre derniers caractères.</value>
+  </data>
+  <data name="BookServerKey" xml:space="preserve">
+    <value>Clé ••••{last}</value>
+  </data>
+  <data name="BookServerFoundTitle_one" xml:space="preserve">
+    <value>Séries trouvées : {series}</value>
+  </data>
+  <data name="BookServerFoundTitle_many" xml:space="preserve">
+    <value>Séries trouvées : {series} dans {libraries} bibliothèques</value>
+  </data>
+  <data name="BookServerFoundTitle_other" xml:space="preserve">
+    <value>Séries trouvées : {series} dans {libraries} bibliothèques</value>
+  </data>
+  <data name="BookServerFoundLine" xml:space="preserve">
+    <value>{kind} sur {host}. Choisissez les bibliothèques à ajouter.</value>
+  </data>
+  <data name="BookServerLibraryLine" xml:space="preserve">
+    <value>Séries : {series}</value>
+  </data>
+  <data name="BookServerSyncProgress" xml:space="preserve">
+    <value>Envoyer la progression au serveur</value>
+  </data>
+  <data name="BookServerSyncProgressLine" xml:space="preserve">
+    <value>Les pages lues ici sont renvoyées à {host}, et sa progression arrive ici.</value>
+  </data>
+  <data name="BookServerUsername" xml:space="preserve">
+    <value>Nom d’utilisateur</value>
+  </data>
+  <data name="BookServerPassword" xml:space="preserve">
+    <value>Mot de passe</value>
+  </data>
+  <data name="BookServerErrUnreachable" xml:space="preserve">
+    <value>Impossible de joindre {host}</value>
+  </data>
+  <data name="BookServerErrUnreachableLine" xml:space="preserve">
+    <value>Vérifiez l’adresse, et que le serveur est allumé et sur ce réseau.</value>
+  </data>
+  <data name="BookServerErrPassword" xml:space="preserve">
+    <value>{host} n’a pas accepté ce mot de passe</value>
+  </data>
+  <data name="BookServerErrPasswordLine" xml:space="preserve">
+    <value>Utilisez le nom d’utilisateur et le mot de passe de {kind} dans un navigateur.</value>
+  </data>
+  <data name="BookServerErrKey" xml:space="preserve">
+    <value>{host} n’a pas accepté cette clé</value>
+  </data>
+  <data name="BookServerErrKeyLine" xml:space="preserve">
+    <value>La clé change quand elle est réinitialisée dans Kavita. Copiez de nouveau le lien OPDS depuis les réglages de votre compte là-bas.</value>
+  </data>
+  <data name="BookServerEmpty" xml:space="preserve">
+    <value>{host} ne montre aucune série à ce compte</value>
+  </data>
+  <data name="BookServerEmptyLine" xml:space="preserve">
+    <value>Le serveur vous laisse entrer, mais il est peut-être encore en train d’analyser, ou ce compte n’a pas accès à ses livres.</value>
+  </data>
+  <data name="BookServerEmptyRecheck" xml:space="preserve">
+    <value>Vous pouvez l’ajouter maintenant. Kaeri vérifie de nouveau toutes les 30 minutes.</value>
+  </data>
+  <data name="BookServerNotBooksLine" xml:space="preserve">
+    <value>Kaeri lit les catalogues Komga, Kavita et OPDS.</value>
+  </data>
+  <data name="BookFolderFound_one" xml:space="preserve">
+    <value>Séries trouvées : {series} dans un fichier</value>
+  </data>
+  <data name="BookFolderFound_many" xml:space="preserve">
+    <value>Séries trouvées : {series} dans {files} fichiers</value>
+  </data>
+  <data name="BookFolderFound_other" xml:space="preserve">
+    <value>Séries trouvées : {series} dans {files} fichiers</value>
+  </data>
+  <data name="BookFolderFoundLine" xml:space="preserve">
+    <value>{path}. Kaeri en a reconnu {matched} d’après leurs détails.</value>
+  </data>
+  <data name="BookFolderUnsupported_one" xml:space="preserve">
+    <value>Un fichier que Kaeri ne peut pas ouvrir</value>
+  </data>
+  <data name="BookFolderUnsupported_many" xml:space="preserve">
+    <value>{count} fichiers que Kaeri ne peut pas ouvrir</value>
+  </data>
+  <data name="BookFolderUnsupported_other" xml:space="preserve">
+    <value>{count} fichiers que Kaeri ne peut pas ouvrir</value>
+  </data>
+  <data name="BookFolderUnsupportedLine" xml:space="preserve">
+    <value>{kinds}. Ils restent dans le dossier tels quels.</value>
+  </data>
+  <data name="BookFolderDrm" xml:space="preserve">
+    <value>{count} EPUB verrouillés par DRM</value>
+  </data>
+  <data name="BookFolderOpens" xml:space="preserve">
+    <value>Kaeri ouvre les fichiers CBZ, CBR, EPUB et PDF, ainsi que les dossiers d’images.</value>
+  </data>
+  <data name="BookFolderShowFiles" xml:space="preserve">
+    <value>Afficher les fichiers</value>
+  </data>
+  <data name="BookFolderAdd" xml:space="preserve">
+    <value>Ajouter le dossier</value>
+  </data>
+  <data name="BookFolderChange" xml:space="preserve">
+    <value>Modifier</value>
+  </data>
+  <data name="BookFolderEmpty" xml:space="preserve">
+    <value>Rien dans {folder} que Kaeri puisse ouvrir</value>
+  </data>
+  <data name="BookFolderEmptyLine_one" xml:space="preserve">
+    <value>Il contient un fichier, qui n’est ni CBZ, CBR, EPUB, PDF ni une image.</value>
+  </data>
+  <data name="BookFolderEmptyLine_many" xml:space="preserve">
+    <value>Il contient {files} fichiers, dont aucun n’est CBZ, CBR, EPUB, PDF ou image.</value>
+  </data>
+  <data name="BookFolderEmptyLine_other" xml:space="preserve">
+    <value>Il contient {files} fichiers, dont aucun n’est CBZ, CBR, EPUB, PDF ou image.</value>
+  </data>
+  <data name="BookFolderChooseOther" xml:space="preserve">
+    <value>Choisir un autre dossier</value>
+  </data>
+  <data name="StoreJoinTitle" xml:space="preserve">
+    <value>Rejoindre une boutique de plugins</value>
+  </data>
+  <data name="StoreInviteField" xml:space="preserve">
+    <value>Invitation</value>
+  </data>
+  <data name="StoreJoinedTitle" xml:space="preserve">
+    <value>Vous avez rejoint {store}</value>
+  </data>
+  <data name="StoreJoinedLine_one" xml:space="preserve">
+    <value>{owner} propose un plugin. Rejoindre n’installe rien : installez-le ici ou plus tard.</value>
+  </data>
+  <data name="StoreJoinedLine_many" xml:space="preserve">
+    <value>{owner} propose {count} plugins. Rejoindre n’installe rien : choisissez ceux que vous voulez ici ou plus tard.</value>
+  </data>
+  <data name="StoreJoinedLine_other" xml:space="preserve">
+    <value>{owner} propose {count} plugins. Rejoindre n’installe rien : choisissez ceux que vous voulez ici ou plus tard.</value>
+  </data>
+  <data name="StoreGroupReading" xml:space="preserve">
+    <value>Pour la lecture</value>
+  </data>
+  <data name="StoreGroupWatching" xml:space="preserve">
+    <value>Pour le visionnage</value>
+  </data>
+  <data name="StoreInstall" xml:space="preserve">
+    <value>Installer</value>
+  </data>
+  <data name="StoreInstalledRow" xml:space="preserve">
+    <value>Installé</value>
+  </data>
+  <data name="StoreInstallAllReading" xml:space="preserve">
+    <value>Tout installer pour la lecture</value>
+  </data>
+  <data name="StoreInstalled_one" xml:space="preserve">
+    <value>Un plugin installé. Il se trouve dans Vos sources.</value>
+  </data>
+  <data name="StoreInstalled_many" xml:space="preserve">
+    <value>{count} plugins installés. Ils se trouvent dans Vos sources.</value>
+  </data>
+  <data name="StoreInstalled_other" xml:space="preserve">
+    <value>{count} plugins installés. Ils se trouvent dans Vos sources.</value>
+  </data>
+  <data name="StoreOtherMedium" xml:space="preserve">
+    <value>Chaque plugin de {store} est pour le visionnage</value>
+  </data>
+  <data name="StoreOtherMediumLine" xml:space="preserve">
+    <value>Le visionnage est désactivé sur cet appareil, donc aucun n’apparaît dans Vos sources.</value>
+  </data>
+  <data name="StoreTurnOnWatching" xml:space="preserve">
+    <value>Activer le visionnage</value>
+  </data>
+  <data name="StoreEmpty" xml:space="preserve">
+    <value>{store} n’a pas encore de plugins</value>
+  </data>
+  <data name="StoreEmptyLine" xml:space="preserve">
+    <value>Vous êtes membre : les nouveaux plugins apparaissent dans Boutiques de plugins quand {owner} en ajoute.</value>
+  </data>
+  <data name="StoreErrUnreachable" xml:space="preserve">
+    <value>Impossible de joindre {host}</value>
+  </data>
+  <data name="StoreErrUnreachableLine" xml:space="preserve">
+    <value>L’invitation semble correcte, mais la boutique ne répond pas. Réessayez plus tard, ou demandez à {owner} si elle fonctionne.</value>
+  </data>
+  <data name="StoreOtherMediumMore_one" xml:space="preserve">
+    <value>Un autre est pour le visionnage, désactivé sur cet appareil.</value>
+  </data>
+  <data name="StoreOtherMediumMore_many" xml:space="preserve">
+    <value>{count} autres sont pour le visionnage, désactivé sur cet appareil.</value>
+  </data>
+  <data name="StoreOtherMediumMore_other" xml:space="preserve">
+    <value>{count} autres sont pour le visionnage, désactivé sur cet appareil.</value>
+  </data>
+  <data name="StoreTvReadingOnly_one" xml:space="preserve">
+    <value>Un autre est pour la lecture, que cette TV ne gère pas.</value>
+  </data>
+  <data name="StoreTvReadingOnly_many" xml:space="preserve">
+    <value>{count} autres sont pour la lecture, que cette TV ne gère pas.</value>
+  </data>
+  <data name="StoreTvReadingOnly_other" xml:space="preserve">
+    <value>{count} autres sont pour la lecture, que cette TV ne gère pas.</value>
+  </data>
+  <data name="StoreTvAllReading" xml:space="preserve">
+    <value>Chaque plugin de {store} est pour la lecture, que cette TV ne gère pas.</value>
+  </data>
+  <data name="StorePluginRow" xml:space="preserve">
+    <value>Version {version} · peut contacter {hosts}</value>
+  </data>
+  <data name="SourceAdded" xml:space="preserve">
+    <value>{name} ajouté · Séries : {series}</value>
+  </data>
+  <data name="SourceAddedPlugins_one" xml:space="preserve">
+    <value>Un plugin installé depuis {store}</value>
+  </data>
+  <data name="SourceAddedPlugins_many" xml:space="preserve">
+    <value>{count} plugins installés depuis {store}</value>
+  </data>
+  <data name="SourceAddedPlugins_other" xml:space="preserve">
+    <value>{count} plugins installés depuis {store}</value>
+  </data>
+  <data name="SourceRowServer_one" xml:space="preserve">
+    <value>{kind} · Séries : {series} · ajouté à l’instant</value>
+  </data>
+  <data name="SourceRowServer_many" xml:space="preserve">
+    <value>{kind} · Séries : {series} dans {libraries} bibliothèques · ajouté à l’instant</value>
+  </data>
+  <data name="SourceRowServer_other" xml:space="preserve">
+    <value>{kind} · Séries : {series} dans {libraries} bibliothèques · ajouté à l’instant</value>
+  </data>
+  <data name="SourceRowServerEmpty" xml:space="preserve">
+    <value>{kind} · aucune série pour l’instant · nouvelle vérification dans 30 minutes</value>
+  </data>
+  <data name="SourceRowFolder_one" xml:space="preserve">
+    <value>{path} · Séries : {series} · un fichier ignoré</value>
+  </data>
+  <data name="SourceRowFolder_many" xml:space="preserve">
+    <value>{path} · Séries : {series} · {skipped} fichiers ignorés</value>
+  </data>
+  <data name="SourceRowFolder_other" xml:space="preserve">
+    <value>{path} · Séries : {series} · {skipped} fichiers ignorés</value>
+  </data>
+  <data name="SourceRowPlugin" xml:space="preserve">
+    <value>Depuis {store} · {medium} · version {version}</value>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>Sources</value>
