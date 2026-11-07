@@ -220,7 +220,7 @@ public final class Navigator {
         if var work = route.work {
             // Shots: the reading demo's works by name, since their ids are hashes.
             if work == "demo-comic" || work == "demo-story",
-               let demo = readingDemoInfo().works.first(where: { $0.id == (work == "demo-comic" ? "pepper-carrot" : "kwaidan") }) {
+               let demo = readingDemoInfo().works.first(where: { $0.novel == (work == "demo-story") }) {
                 work = demo.work
             }
             #if os(macOS)

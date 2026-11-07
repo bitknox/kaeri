@@ -142,9 +142,15 @@ struct SeriesPage: View {
                         PhoneSeriesHeader(series: series, choosing: $choosing)
                     }
                     if case .send? = navigator.seriesSheet {} else { SendStatusRows(work: work) }
-                    SeriesChapters(series: series, chapters: store.reading.chapters[work],
-                                   choosing: $choosing, newestFirst: $newestFirst)
-                        .padding(.top, wide ? 32 : 24)
+                    if let demo = series.demo {
+                        // The demo's one chapter on its own row: no volumes, order or choosing.
+                        DemoChapter(work: work, demo: demo, chapters: store.reading.chapters[work])
+                            .padding(.top, wide ? 32 : 24)
+                    } else {
+                        SeriesChapters(series: series, chapters: store.reading.chapters[work],
+                                       choosing: $choosing, newestFirst: $newestFirst)
+                            .padding(.top, wide ? 32 : 24)
+                    }
                     if let demo = series.demo, let other = series.demoOther,
                        let info = store.demo.reading.works.first(where: { $0.id != demo.id }) {
                         DemoAlso(id: other, info: info)
@@ -428,7 +434,10 @@ private struct SeriesActions: View {
 
     var body: some View {
         Group {
-            if stretch {
+            if series.demo != nil {
+                // The demo is for trying the reader: no lists, tracking or downloads.
+                main
+            } else if stretch {
                 VStack(spacing: 12) {
                     main
                     HStack(spacing: 12) {

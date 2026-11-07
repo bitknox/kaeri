@@ -59,7 +59,8 @@ extension ReaderModel {
             case "settings": chromeShown = true; sheet = .settings
             case "chapters": chromeShown = true; sheet = .chapters
             case "ask": chromeShown = true; askingPage = true
-            case "end": requestJump(max(leaves.count - 1, 0))
+            // The end page is reached by reading on, by which time the resume notice has gone.
+            case "end": notice = nil; requestJump(max(leaves.count - 1, 0))
             case "scrub": chromeShown = true; shotScrub = max(leaves.count / 4, 1)
             case "pill": backTo = ReaderNoticeLine(id: bump(), text: L.readerBackToPage(page: 9), action: .backTo)
             case "opening": hold(.opening)
