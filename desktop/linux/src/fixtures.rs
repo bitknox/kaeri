@@ -305,6 +305,9 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     server.set_now(now);
     server.add_titles(fixtures::long_franchise());
     server.serve_art();
+    if !scene.demo && matches!(scene.home, HomeScene::Reading | HomeScene::ReadingDownloads) {
+        crate::fixtures_reading::keep_books(&store, &server.art_base(), now);
+    }
     // Home's world: this season's titles, the rest in the browse, and their broadcasts.
     if let Some(world) = &world {
         let (season, rest): (Vec<_>, Vec<_>) = world

@@ -118,7 +118,9 @@ pub fn seed_reading(store: &Store, downloads: bool, now: i64) {
     let _ = store.set_series_setting(READING_STRIP, "mode", Some("strip"), true, now);
     // Chapter 1 finished, chapter 2 under way.
     let _ = store.adopt_read(READING_STRIP, "1", None, now - 2 * DAY);
+    // As the reader writes a strip's place: the image as the page, and how far into it.
     read(READING_STRIP, "2", now - 600, &|e| {
+        e.page = Some(4);
         e.strip_image = Some(4);
         e.strip_offset = Some(0.35);
     });
@@ -147,14 +149,6 @@ fn seed_book_downloads(store: &Store, now: i64) {
     let warn = |e: kaeri_store::StoreError| {
         tracing::warn!(error = %e, "a reading scene's download was not seeded");
     };
-    // The titles the Downloads screen names the series by, as the catalogue keeps them.
-    for (work, medium, title) in [
-        (READING_MANGA, "manga", "The Lantern Ferry"),
-        (READING_NOVEL, "novel", "The Glass Orchard"),
-        (READING_STRIP, "manga", "Paper Kites Over Juniper Row"),
-    ] {
-        store.seed_book_work(work, medium, None, None, title, now).unwrap_or_else(warn);
-    }
     if let Some(id) = ask(READING_MANGA, "14", false) {
         let path = "/data/book-downloads/a~3a900301/14.cbz";
         store.book_download_done(id, path, Some(20), 9_400_000, now - 500).unwrap_or_else(warn);
@@ -241,4 +235,49 @@ fn seed_reading_catalog(store: &Store, now: i64) {
     }
     let _ =
         store.set_meta_text("read:updates:checked", &(now - 3_600).to_string()).map_err(warn);
+}
+
+/// The three works as the catalogue keeps them once fetched, covers included, so Updates and
+/// Downloads, which name a series from what is kept, have its art from the start. The art points
+/// at `art`, where the fake serves it, as the fake's own answers do; on every start, as its port
+/// changes.
+pub fn keep_books(store: &Store, art: &str, now: i64) {
+    use kaeri_meta::anilist::books::Book;
+    use kaeri_store::book_catalog::BookWork;
+    for value in kaeri_testkit::fixtures::books() {
+        let json = value.to_string().replace(kaeri_testkit::fixtures::ART_HOST, art);
+        let Ok(book) = serde_json::from_str::<Book>(&json) else { continue };
+        let work = format!("a:{}", book.id.get());
+        if ![READING_MANGA, READING_NOVEL, READING_STRIP].contains(&work.as_str()) {
+            continue;
+        }
+        let titles = serde_json::json!({
+            "romaji": book.title.romaji,
+            "english": book.title.english,
+            "native": book.title.native,
+            "synonyms": book.synonyms,
+        });
+        let status = book
+            .status
+            .and_then(|s| serde_json::to_value(s).ok())
+            .and_then(|v| v.as_str().map(str::to_owned));
+        let row = BookWork {
+            work,
+            anilist_id: Some(book.id.get()),
+            medium: book.medium().as_str().to_owned(),
+            format: Some(book.reading_format().as_str().to_owned()),
+            origin: book.origin().map(|o| o.code().to_owned()),
+            titles: titles.to_string(),
+            cover: book.cover_image.best().map(str::to_owned),
+            status,
+            chapters_total: book.chapters,
+            volumes_total: book.volumes,
+            // As the catalogue writes it: the book, and no page asked yet.
+            meta: Some(serde_json::json!({ "book": book, "detail_at": null }).to_string()),
+            fetched_at: now,
+        };
+        if let Err(e) = store.put_book_work(&row) {
+            tracing::warn!(error = %e, "a reading scene's book was not kept");
+        }
+    }
 }
