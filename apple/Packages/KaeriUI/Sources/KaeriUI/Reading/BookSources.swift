@@ -518,11 +518,11 @@ private struct AddBookServerStep: View {
         .onAppear {
             // A server added before is not this one.
             sources.resetServerSheet()
-            focus = .address
             if let shot = Self.shot {
                 Self.shot = nil
-                focus = nil
                 stage(shot)
+            } else {
+                focus = .address
             }
         }
         .task(id: address) {

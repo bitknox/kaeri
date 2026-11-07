@@ -460,7 +460,10 @@ public final class BookSourcesModel {
         case .serverFailed(let step, let failure):
             failed = (step, failure)
             checking = false
-        case .forWork(let work, let editions, let asking, let missing):
+        case .forWork(let work, let editions, let asking, var missing):
+            #if FIXTURES
+            if missing.isEmpty, let staged = stagedMisses[work] { missing = staged }
+            #endif
             forWork[work] = WorkEditions(editions: editions, asking: asking, missing: missing)
         case .sourceSeries(let work, let sourceId, let query, let choices, let failure):
             guard let current = sourceSeries[work], current.sourceId == sourceId, current.query == query else { return }
@@ -488,13 +491,19 @@ public final class BookSourcesModel {
     /// the work's editions are in. Does nothing outside the fixtures.
     public func stageMissShot(work: String) async {
         #if FIXTURES
+        let miss = EditionMiss(sourceId: "fixture-comics", sourceName: "Comics server", // i18n-skip: made up
+                               reason: .reading(.readingMissNoSeries))
+        // Kept, so the engine's later answers for the work carry it too.
+        stagedMisses[work] = [miss]
         for _ in 0..<30 where forWork[work] == nil {
             try? await Task.sleep(for: .milliseconds(100))
         }
         guard let found = forWork[work] else { return }
-        let miss = EditionMiss(sourceId: "fixture-comics", sourceName: "Comics server", // i18n-skip: made up
-                               reason: .reading(.readingMissNoSeries))
         showcase(.forWork(work: work, editions: found.editions, asking: found.asking, missing: [miss]))
         #endif
     }
+
+    #if FIXTURES
+    @ObservationIgnored private var stagedMisses: [String: [EditionMiss]] = [:]
+    #endif
 }
