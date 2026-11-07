@@ -187,6 +187,8 @@ pub struct App {
     pub medium: Option<kaeri_model::medium::MediumView>,
     /// The question the engine asked that is open, `None` when the choice is a plain change.
     medium_ask: Option<kaeri_model::medium::MediumAsk>,
+    /// The medium being turned off, while its confirmation is open.
+    medium_off: Option<medium::MediumOff>,
     /// The last question put to the person, so one is not asked again once closed.
     medium_asked: Option<kaeri_model::medium::MediumAsk>,
     /// The crash reports saved on this device, newest first, for Report a bug. The host fills it.
@@ -466,6 +468,7 @@ impl App {
             first_run_shown: false,
             medium: None,
             medium_ask: None,
+            medium_off: None,
             medium_asked: None,
             crashes: Vec::new(),
             deleted_crashes: Vec::new(),

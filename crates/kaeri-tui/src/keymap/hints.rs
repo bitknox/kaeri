@@ -501,6 +501,9 @@ fn overlay_hints(
         O::Medium => {
             vec![hint("↑↓", hint_move()), hint("↵", hint_choose()), hint(ESC, hint_close())]
         }
+        O::MediumOff => {
+            vec![hint("↑↓", hint_move()), hint("↵", hint_choose()), hint(ESC, hint_cancel())]
+        }
         O::BugReport => vec![
             hint("↑↓", hint_move()),
             hint("↵", super::said(kaeri_i18n::t::report_open_github())),

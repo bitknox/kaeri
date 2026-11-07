@@ -467,6 +467,7 @@ scenarios! {
     home_first_run,
     home_reading_only,
     medium_first_run,
+    medium_turn_off,
     settings_kaeri_is_for,
     home_offline,
     home_next_section,
@@ -3239,4 +3240,12 @@ fn medium_first_run(s: &mut Screen) {
 fn settings_kaeri_is_for(s: &mut Screen) {
     settled_on(s, 9);
     s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Both, None));
+}
+
+/// Turning reading off on a computer set to both: the confirmation, downloads kept by default.
+fn medium_turn_off(s: &mut Screen) {
+    settled_on(s, 1);
+    s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Both, None));
+    s.act(Action::ChooseMedium);
+    s.act(Action::Open);
 }

@@ -40,6 +40,15 @@ pub fn answer_words(answer: KaeriIsFor) -> String {
     }
 }
 
+/// A medium about to be turned off, and whether its downloads go with it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MediumOff {
+    pub answer: KaeriIsFor,
+    /// Watching is what goes off, else reading.
+    pub watching: bool,
+    pub delete: bool,
+}
+
 impl App {
     /// The engine's word on what Kaeri is for here. A question it carries is asked once.
     pub(super) fn apply_medium(&mut self, view: MediumView) {
@@ -105,13 +114,49 @@ impl App {
         self.nav.open_overlay(Overlay::Medium);
     }
 
-    /// Enter in the choice: the highlighted answer, to the engine.
+    /// Enter in the choice: the highlighted answer, to the engine. A plain change that turns a
+    /// medium off asks first, as the apps do.
     pub(super) fn confirm_medium(&mut self) -> Option<Command> {
         let answer = *CHOICES.get(self.cursors.overlay.selected)?;
+        let ask = self.medium_ask.take();
+        if ask.is_none() {
+            let now = self.medium.as_ref().map_or(KaeriIsFor::Watch, |view| view.answer);
+            let watching_off = now.watches() && !answer.watches();
+            let reading_off = now.reads() && !answer.reads();
+            if watching_off || reading_off {
+                self.medium_off =
+                    Some(MediumOff { answer, watching: watching_off, delete: false });
+                self.nav.close_overlay();
+                self.cursors.overlay.selected = 1;
+                self.nav.open_overlay(Overlay::MediumOff);
+                return None;
+            }
+        }
         self.nav.close_overlay();
-        Some(Command::Medium(match self.medium_ask.take() {
+        Some(Command::Medium(match ask {
             Some(ask) => MediumCommand::Answer { ask, answer },
             None => MediumCommand::Choose { answer, delete_downloads: false },
+        }))
+    }
+
+    /// The medium being turned off, while its confirmation is open.
+    pub fn medium_off(&self) -> Option<&MediumOff> {
+        self.medium_off.as_ref()
+    }
+
+    /// Enter in the confirmation: the switch flips, or the medium is turned off.
+    pub(super) fn confirm_medium_off(&mut self) -> Option<Command> {
+        if self.cursors.overlay.selected == 0 {
+            if let Some(off) = &mut self.medium_off {
+                off.delete = !off.delete;
+            }
+            return None;
+        }
+        let off = self.medium_off.take()?;
+        self.nav.close_overlay();
+        Some(Command::Medium(MediumCommand::Choose {
+            answer: off.answer,
+            delete_downloads: off.delete,
         }))
     }
 }
@@ -197,6 +242,52 @@ mod tests {
         // The engine answers with the view in effect, and Home is Home again.
         a.apply(Event::Medium(view(KaeriIsFor::Both, None)));
         assert!(!a.reading_only());
+    }
+
+    #[test]
+    fn turning_a_medium_off_asks_and_deleting_downloads_is_a_switch_left_off() {
+        let mut a = app();
+        a.apply(Event::Medium(view(KaeriIsFor::Both, None)));
+        a.handle(Action::ChooseMedium, 10);
+        // Both to Watch turns reading off.
+        a.cursors.overlay.selected = 0;
+        assert_eq!(a.handle(Action::Open, 10), None);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::MediumOff));
+        assert_eq!(a.medium_off().map(|o| (o.watching, o.delete)), Some((false, false)));
+        // Cancelling sends nothing.
+        a.handle(Action::Back, 10);
+        assert!(a.nav.overlay().is_none());
+        a.handle(Action::ChooseMedium, 10);
+        a.cursors.overlay.selected = 0;
+        a.handle(Action::Open, 10);
+        // Flip the switch, then turn it off.
+        a.handle(Action::Up, 10);
+        assert_eq!(a.handle(Action::Open, 10), None);
+        a.handle(Action::Down, 10);
+        assert_eq!(
+            a.handle(Action::Open, 10),
+            Some(Command::Medium(MediumCommand::Choose {
+                answer: KaeriIsFor::Watch,
+                delete_downloads: true
+            }))
+        );
+        // Turning one on, or the question of a first run, asks nothing.
+        a.apply(Event::Medium(view(KaeriIsFor::Watch, None)));
+        a.handle(Action::ChooseMedium, 10);
+        a.cursors.overlay.selected = 2;
+        assert!(a.handle(Action::Open, 10).is_some());
+        // Read to Watch turns reading off; the confirmation says which.
+        a.apply(Event::Medium(view(KaeriIsFor::Read, None)));
+        a.handle(Action::ChooseMedium, 10);
+        a.cursors.overlay.selected = 0;
+        a.handle(Action::Open, 10);
+        assert_eq!(a.medium_off().map(|o| o.watching), Some(false));
+        a.handle(Action::Back, 10);
+        a.apply(Event::Medium(view(KaeriIsFor::Both, None)));
+        a.handle(Action::ChooseMedium, 10);
+        a.cursors.overlay.selected = 1;
+        a.handle(Action::Open, 10);
+        assert_eq!(a.medium_off().map(|o| o.watching), Some(true));
     }
 
     #[test]

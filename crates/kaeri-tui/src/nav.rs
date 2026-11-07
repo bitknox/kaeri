@@ -200,6 +200,8 @@ pub enum Overlay {
     PublishPick,
     /// Watch, read or both: the question the engine asks once, and the choice in Settings.
     Medium,
+    /// Turning watching or reading off: whether its downloads go too.
+    MediumOff,
     /// The first launch with only the demo to play: play it, paste an invite, or skip.
     FirstRun,
     /// Report a bug, with the crash reports saved on this device to add.
@@ -274,6 +276,7 @@ impl Overlay {
             Self::PublishPick => t::nav_overlay_publish_pick(),
             Self::FirstRun => t::onboarding_welcome(),
             Self::Medium => t::onboarding_medium_title(),
+            Self::MediumOff => t::settings_kaeri_is_for(),
             Self::BugReport => t::report_title(),
             Self::SyncRoad => t::sync_road_title(),
             Self::SyncNearby => t::devices_add(),

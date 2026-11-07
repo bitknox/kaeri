@@ -257,6 +257,7 @@ impl App {
             Some(Overlay::PublishPick) => self.confirm_publish(),
             Some(Overlay::BugReport) => self.confirm_bug_report(),
             Some(Overlay::Medium) => self.confirm_medium(),
+            Some(Overlay::MediumOff) => self.confirm_medium_off(),
             _ => None,
         }
     }
@@ -286,6 +287,7 @@ impl App {
             Some(Overlay::PublishPick) => self.local_plugins.len(),
             Some(Overlay::BugReport) => 1 + self.crashes.len(),
             Some(Overlay::Medium) => super::medium::CHOICES.len(),
+            Some(Overlay::MediumOff) => 2,
             Some(overlay) if overlay.is_devices() => self.devices_overlay_len(overlay),
             _ => 0,
         }

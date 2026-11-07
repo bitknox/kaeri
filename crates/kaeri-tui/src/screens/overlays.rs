@@ -174,6 +174,7 @@ pub(super) fn render_overlay(
         Overlay::PublishPick => publish_rows(app),
         Overlay::BugReport => bug_report_rows(app),
         Overlay::Medium => medium_rows(app).0,
+        Overlay::MediumOff => medium_off_rows(app).0,
         Overlay::FirstRun => vec![
             (String::new(), t::onboarding_demo_heading()),
             (String::new(), t::onboarding_demo_detail()),
@@ -196,6 +197,7 @@ pub(super) fn render_overlay(
         // The plugin overlay explains before it offers, so its choices start below the facts.
         Overlay::PluginAction => Some(plugin_action_rows(app).1 + app.cursors.overlay.selected),
         Overlay::Medium => Some(medium_rows(app).1 + app.cursors.overlay.selected),
+        Overlay::MediumOff => Some(medium_off_rows(app).1 + app.cursors.overlay.selected),
         // "Nothing logged yet" is a note, not a line that can be picked.
         Overlay::Logs if app.logs.is_empty() => None,
         _ if body.is_some() => body.as_ref().and_then(|body| body.selected),
@@ -594,6 +596,39 @@ fn medium_rows(app: &App) -> (Vec<(String, String)>, usize) {
     rows.push((String::new(), String::new()));
     rows.push((String::new(), t::medium_change_later()));
     (rows, facts)
+}
+
+/// The confirmation before a medium is turned off: what happens, the switch for its downloads and
+/// the button. Also how many rows come before the two that can be picked.
+fn medium_off_rows(app: &App) -> (Vec<(String, String)>, usize) {
+    let device = t::sync_tui_kind();
+    let Some(off) = app.medium_off() else {
+        return (Vec::new(), 0);
+    };
+    let (title, body, delete, confirm) = if off.watching {
+        (
+            t::medium_off_title_watch(),
+            t::medium_off_watch_body(&device),
+            t::medium_off_delete_watch(),
+            t::medium_off_confirm_watch(),
+        )
+    } else {
+        (
+            t::medium_off_title_read(),
+            t::medium_off_read_body(&device),
+            t::medium_off_delete_read(),
+            t::medium_off_confirm_read(),
+        )
+    };
+    let mark = if off.delete { "[x]" } else { "[ ]" };
+    let rows = vec![
+        (String::new(), title),
+        (String::new(), body),
+        (String::new(), String::new()),
+        (String::new(), format!("{mark} {delete}")),
+        (String::new(), confirm),
+    ];
+    (rows, 3)
 }
 
 #[cfg(test)]
