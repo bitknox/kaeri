@@ -23,6 +23,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Dp
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.model.DemoWorkInfo
+import app.kaeri.engine.model.ReadDirection
 import app.kaeri.reader.phone.PhoneEndPage
 import app.kaeri.reader.phone.PhoneReader
 import app.kaeri.reader.phone.PhoneReaderActions
@@ -108,7 +109,7 @@ class PrelaunchProgressReaderShots {
         }
     }
 
-    // Piece 2: the demo
+    // Piece 2: the demo, a European comic the engine opens left to right under its series' name
 
     private val demo = DemoWorkInfo(
         id = "star-post",
@@ -140,7 +141,7 @@ class PrelaunchProgressReaderShots {
         val dir = kotlin.io.path.createTempDirectory("demo-shots").toFile()
         val page = ReaderFixtures.grey(dir, "p0", 352, 500)
         val state = ReaderState(
-            view = ReaderFixtures.view(start = 0u, next = null).copy(title = demo.series, demoCredit = demo),
+            view = ReaderFixtures.view(start = 0u, next = null).copy(title = demo.series, demoCredit = demo, direction = ReadDirection.LEFT_TO_RIGHT),
             leaves = ReaderFixtures.leaves(3) { if (it == 0u) page else null },
         )
         val images = PageImages().also { it.load(page) }
@@ -159,7 +160,7 @@ class PrelaunchProgressReaderShots {
     @Test
     fun p2_06_phone() {
         val state = ReaderState(
-            view = ReaderFixtures.view(next = null).copy(title = demo.series, demoCredit = demo),
+            view = ReaderFixtures.view(next = null).copy(title = demo.series, demoCredit = demo, direction = ReadDirection.LEFT_TO_RIGHT),
             leaves = ReaderFixtures.leaves(3),
         )
         compose.setContent {
