@@ -130,7 +130,15 @@ final class HoverCards {
         run()
     }
 
-    /// A scroll, a key press, the window losing key status: the card closes at once.
+    /// A scroll: the card closes, and the cover the grid brings under the pointer opens once the
+    /// grid has been still for the dwell.
+    func scrolled() {
+        stirred = .now
+        apply(intent.scrolled(at: now))
+        run()
+    }
+
+    /// A key press, the window losing key status: the card closes at once.
     func dismiss(holding: Bool = true) {
         stirred = .now
         apply(intent.dismiss(holding: holding))
@@ -319,7 +327,7 @@ private struct HoverCardLayer: ViewModifier {
                 }
                 cards.allowed = allowed
                 monitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel, .keyDown]) { [cards] event in
-                    cards.dismiss()
+                    if event.type == .scrollWheel { cards.scrolled() } else { cards.dismiss() }
                     return event
                 }
             }
