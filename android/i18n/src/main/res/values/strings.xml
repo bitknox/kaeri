@@ -1381,6 +1381,30 @@
     <string name="reader_paper_parts">What it changes</string>
     <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
     <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
+    <!-- Name of the notification channel for new chapters, shown in the system's settings. -->
+    <string name="channel_chapters_name">New chapters</string>
+    <!-- What the new chapters channel is for, shown in the system's settings. -->
+    <string name="channel_chapters_description">When a series on your Reading list has a new chapter.</string>
+    <!-- Name of the notification channel that says chapter downloads are done, shown in the system's settings. -->
+    <string name="channel_downloads_finished_name">Downloads finished</string>
+    <!-- What the downloads finished channel is for, shown in the system's settings. -->
+    <string name="channel_downloads_finished_description">When the chapters you asked to download are all done.</string>
+    <!-- Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". -->
+    <string name="notif_chapter_new">%1$s is new.</string>
+    <!-- Notification, new chapters: the line under the series' title when one series has several. -->
+    <plurals name="notif_chapters_new">
+        <item quantity="one">One new chapter</item>
+        <item quantity="other">%1$d new chapters</item>
+    </plurals>
+    <!-- Notification, new chapter: what the lock screen shows when previews are hidden. -->
+    <string name="notif_chapter_hidden">New chapter</string>
+    <!-- Notification, new chapter: the action that opens the reader on the chapter. -->
+    <string name="notif_chapter_read">Read</string>
+    <!-- The download notification while only chapters download. -->
+    <plurals name="downloads_notice_chapters">
+        <item quantity="one">Downloading one chapter</item>
+        <item quantity="other">Downloading %1$d chapters</item>
+    </plurals>
     <!-- Title of the sheet that prepares chapters for an e-reader and hands them to the share sheet. Also the menu item that opens it. -->
     <string name="send_ereader_title">Send to e-reader</string>
     <!-- Heading over the e-readers to prepare the files for. -->

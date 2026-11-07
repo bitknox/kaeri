@@ -29,7 +29,9 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
+import app.kaeri.store.chaptersBusy
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import app.kaeri.app.tv.CastService
@@ -306,16 +308,17 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * While the app is in front, ask for the download job whenever an episode waits or runs: a
+     * While the app is in front, ask for the download job whenever an episode or a chapter waits or runs: a
      * user-initiated job is asked for from a screen the person is using.
      */
     private fun keepDownloadsRunning() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                app.store.downloads.rows.collect { rows ->
+                combine(app.store.downloads.rows, app.store.reading.downloads, ::Pair).collect { (rows, books) ->
                     val wifiOnly = !app.store.settings.isOn(SettingKey.DOWNLOADS_ON_CELLULAR)
-                    if (DownloadsModel.busy(rows)) app.notifier.wantPermission()
-                    Downloads.ensure(this@MainActivity, rows, wifiOnly)
+                    val chapters = chaptersBusy(books)
+                    if (DownloadsModel.busy(rows) || chapters > 0) app.notifier.wantPermission()
+                    Downloads.ensure(this@MainActivity, rows, wifiOnly, chapters)
                 }
             }
         }
@@ -331,7 +334,9 @@ class MainActivity : ComponentActivity() {
         intent.action = null
         links.trySend(link)
         // A notification's action leaves its notification up; following it takes it away.
-        intent?.getStringExtra(EpisodeNotifier.EXTRA_NOTIFICATION)?.let(app.episodeNotifier::dismiss)
+        intent?.getStringExtra(EpisodeNotifier.EXTRA_NOTIFICATION)?.let { tag ->
+            if (ReadingNotifier.isChapters(tag)) app.readingNotifier.dismiss(tag) else app.episodeNotifier.dismiss(tag)
+        }
         ContinueShortcut.shortcutOf(link)?.let { ShortcutManagerCompat.reportShortcutUsed(this, it) }
         return true
     }

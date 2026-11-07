@@ -2569,6 +2569,42 @@ object Strings {
     fun readHomeOfflineLine(context: Context): String =
         context.getString(R.string.read_home_offline_line)
 
+    /** Name of the notification channel for new chapters, shown in the system's settings. */
+    fun channelChaptersName(context: Context): String =
+        context.getString(R.string.channel_chapters_name)
+
+    /** What the new chapters channel is for, shown in the system's settings. */
+    fun channelChaptersDescription(context: Context): String =
+        context.getString(R.string.channel_chapters_description)
+
+    /** Name of the notification channel that says chapter downloads are done, shown in the system's settings. */
+    fun channelDownloadsFinishedName(context: Context): String =
+        context.getString(R.string.channel_downloads_finished_name)
+
+    /** What the downloads finished channel is for, shown in the system's settings. */
+    fun channelDownloadsFinishedDescription(context: Context): String =
+        context.getString(R.string.channel_downloads_finished_description)
+
+    /** Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". */
+    fun notifChapterNew(context: Context, chapter: String): String =
+        context.getString(R.string.notif_chapter_new, chapter)
+
+    /** Notification, new chapters: the line under the series' title when one series has several. */
+    fun notifChaptersNew(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.notif_chapters_new, count, count)
+
+    /** Notification, new chapter: what the lock screen shows when previews are hidden. */
+    fun notifChapterHidden(context: Context): String =
+        context.getString(R.string.notif_chapter_hidden)
+
+    /** Notification, new chapter: the action that opens the reader on the chapter. */
+    fun notifChapterRead(context: Context): String =
+        context.getString(R.string.notif_chapter_read)
+
+    /** The download notification while only chapters download. */
+    fun downloadsNoticeChapters(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.downloads_notice_chapters, count, count)
+
     /** Title of the sheet that prepares chapters for an e-reader and hands them to the share sheet. Also the menu item that opens it. */
     fun sendEreaderTitle(context: Context): String =
         context.getString(R.string.send_ereader_title)

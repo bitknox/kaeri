@@ -47,6 +47,13 @@ class DownloadNotifier(private val context: Context, private val sdk: Int = Buil
         .setProgress(0, 0, true)
         .build()
 
+    /** The ongoing notification while only [count] chapters wait or download. */
+    fun chapters(count: Int): Notification = frame()
+        .setContentTitle(context.getString(R.string.downloads_channel))
+        .setContentText(Strings.downloadsNoticeChapters(context, count))
+        .setProgress(0, 0, true)
+        .build()
+
     /**
      * The ongoing notification for [live]: promoted with ProgressStyle from Android 16, the plain
      * progress bar before it. Pause or Resume, for all where there are several, and Cancel.
