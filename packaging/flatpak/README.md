@@ -1,9 +1,11 @@
 # Flatpak
 
 The Linux desktop app (`desktop/linux`) as a Flatpak, app id `app.kaeri.desktop`, on the GNOME
-49 runtime (GTK 4.20, libadwaita 1.8; the app asks for 4.16 and 1.7). Kaeri doesn't host any
-shows. You add your own sources. The Flatpak is the same app as the AppImage: the same sources, libmpv built as LGPL from the
-same pinned FFmpeg and mpv, and the same permissions the app asks for in the other builds.
+49 runtime (GTK 4.20, libadwaita 1.8; the app asks for 4.16 and 1.7). The Flatpak is the same
+app as the AppImage: the same source code, libmpv built as LGPL from the same pinned FFmpeg and
+mpv, and the same permissions the app asks for in the other builds.
+
+Kaeri doesn't host any shows or books. You add your own sources.
 
 - `app.kaeri.desktop.yml` is the manifest. Each permission has a comment saying why.
 - `desktop/linux/data/app.kaeri.desktop.metainfo.xml` is the AppStream file and
