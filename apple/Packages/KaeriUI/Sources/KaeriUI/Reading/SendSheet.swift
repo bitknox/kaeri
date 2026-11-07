@@ -126,7 +126,7 @@ struct SendSheet: View {
     }
 
     var body: some View {
-        ReadSheetFrame(title: L.sendTitle, subtitle: store.reading.series[request.work]?.titles.display, close: closeWords, tallest: 740, fitted: true, pinned: pinnedFooter) {
+        ReadSheetFrame(title: L.sendTitle, subtitle: store.reading.series[request.work]?.titles.display, close: closeWords, tallest: 740, pinned: pinnedFooter, fitted: true) {
             VStack(alignment: .leading, spacing: 0) {
                 SheetHeading(text: L.sendFor)
                 SheetRows {

@@ -67,8 +67,9 @@ struct ReadSheetFrame<Content: View>: View {
                     }
                 }
         }
-        .presentationDetents([.medium, .large])
-        .presentationSizing(fitted ? .fitted : .automatic)
+        // A sheet with a pinned foot opens tall, so what it asks is on screen with the button.
+        .presentationDetents(pinned == nil ? [.medium, .large] : [.large])
+        .sheetSizing(fitted: fitted)
         .presentationBackground(.raised)
         #endif
     }
@@ -502,5 +503,16 @@ private struct TrackerSheetRow: View {
         if let status = row.status { parts.append(ReadWords.list(status)) }
         parts.append(ReadSeriesWords.progress(row, series: series))
         return parts.joined(separator: " · ") // i18n-skip
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func sheetSizing(fitted: Bool) -> some View {
+        #if os(iOS)
+        if fitted { presentationSizing(.fitted) } else { presentationSizing(.automatic) }
+        #else
+        self
+        #endif
     }
 }
