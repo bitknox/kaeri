@@ -45,3 +45,4 @@ search-result-in-library = I ditt { -library }
 search-result-on-server = På { $server }
 search-result-on-service = På { $service }
 match-choice-line = { $parts } · { $percent } % match
+search-rate-limit-enter = Sökning medan du skriver är pausad en stund, för att hålla sig inom AniLists gränser. Tryck på Retur för att söka nu.

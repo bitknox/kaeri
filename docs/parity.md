@@ -253,6 +253,36 @@ Dynamic Island, then airing, then downloads.
 On Mac and iPad a queued download has Start Now beside it, and on iPhone a Start now swipe
 (`Command::DownloadStartNow`).
 
+## Reading
+
+Manga, manhwa and light novels, read from the code of the reading train.
+
+| Feature | Mac | iPhone | iPad | Android | TV | Windows | Linux | Terminal |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Reading places (home, search, library, series, updates, downloads, book sources) | yes | yes | yes | dev (1) | n/a | dev (2) | dev (2) | dev (2) |
+| Reader (paged, strip and novel) | yes | yes | yes | yes (3) | n/a | dev (2) | dev (2) | dev (2) |
+| E-ink reader | n/a | n/a | n/a | yes (4) | n/a | n/a | n/a | n/a |
+| Send a chapter to an e-reader | dev (5) | dev (5) | dev (5) | dev (5) | n/a | dev (2) | dev (2) | dev (2) |
+| Share the library as a feed on the network | dev (5) | dev (5) | dev (5) | dev (5) | n/a | dev (2) | dev (2) | dev (2) |
+
+1. The reader and its settings are built (`android/reader`, `android/eink`), but no place opens
+   them yet. Only the Fixtures build opens a book (`Flavour.kt`, `ReaderLauncher.open`).
+2. Windows, Linux and the terminal have no reading yet; it is planned. They only list the
+   reading settings in their catalogues (`desktop/linux/src/catalog.rs`,
+   `crates/kaeri-tui/src/app/settings.rs`, which leaves the feed rows out as the native apps' own),
+   and the terminal ignores the reading events (`crates/kaeri-tui/src/app/mod.rs`).
+3. `ReaderOverlay.kt` shows the reader over the app, and the phone reader has the chapters
+   sheet, the reader settings sheet and the end page.
+4. `android/eink` draws pages without animation, with refresh control and a colour question for
+   colour panels.
+5. The engine sends a chapter for the device kinds (`ExportDevice*`, `ExportChapter`) and serves
+   the feed (`crates/kaeri-engine/src/export/feed.rs`, off until turned on, with a password).
+   Android has the on and off setting in its model (`SettingsModel.kt`), Apple lists the feed
+   rows in its settings kit. No app has a screen for sending yet; the Apple settings leave a
+   group for it (`ReadingSettings.swift`).
+
+The TV has no reading and none is planned.
+
 ## On the TV
 
 | Feature | Mac | iPhone | iPad | Android | TV | Windows | Linux | Terminal |

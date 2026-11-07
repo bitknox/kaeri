@@ -521,6 +521,423 @@
   <data name="PartyServerUnreachable" xml:space="preserve">
     <value>Kunde inte nå {server}. Kontrollera servern eller försök igen.</value>
   </data>
+  <data name="ReadingNextChapter" xml:space="preserve">
+    <value>Kapitel {chapter}</value>
+  </data>
+  <data name="ReadingUsuallyMondays" xml:space="preserve">
+    <value>Oftast på måndagar</value>
+  </data>
+  <data name="ReadingUsuallyTuesdays" xml:space="preserve">
+    <value>Oftast på tisdagar</value>
+  </data>
+  <data name="ReadingUsuallyWednesdays" xml:space="preserve">
+    <value>Oftast på onsdagar</value>
+  </data>
+  <data name="ReadingUsuallyThursdays" xml:space="preserve">
+    <value>Oftast på torsdagar</value>
+  </data>
+  <data name="ReadingUsuallyFridays" xml:space="preserve">
+    <value>Oftast på fredagar</value>
+  </data>
+  <data name="ReadingUsuallySaturdays" xml:space="preserve">
+    <value>Oftast på lördagar</value>
+  </data>
+  <data name="ReadingUsuallySundays" xml:space="preserve">
+    <value>Oftast på söndagar</value>
+  </data>
+  <data name="ReadingAboutEveryWeeks_one" xml:space="preserve">
+    <value>Ungefär varje vecka</value>
+  </data>
+  <data name="ReadingAboutEveryWeeks_other" xml:space="preserve">
+    <value>Ungefär {weeks} veckor emellan</value>
+  </data>
+  <data name="ReadingAlsoAShow" xml:space="preserve">
+    <value>Finns även som serie</value>
+  </data>
+  <data name="ReadingAlsoABook" xml:space="preserve">
+    <value>Finns även som bok</value>
+  </data>
+  <data name="ReadingSplitChapter" xml:space="preserve">
+    <value>Kapitel {chapter} skickas till trackers som {whole}.</value>
+  </data>
+  <data name="ReaderResumed" xml:space="preserve">
+    <value>Fortsatte på sida {page}</value>
+  </data>
+  <data name="ReaderBackToPage" xml:space="preserve">
+    <value>Tillbaka till sida {page}</value>
+  </data>
+  <data name="ReaderMoved" xml:space="preserve">
+    <value>Flyttade till {chapter}, sida {page}, där {device} slutade</value>
+  </data>
+  <data name="ReaderMovedNumber" xml:space="preserve">
+    <value>Flyttade till kapitel {chapter}, sida {page}, där {device} slutade</value>
+  </data>
+  <data name="ReaderDetectedRightToLeft" xml:space="preserve">
+    <value>Höger till vänster, upptäckt</value>
+  </data>
+  <data name="ReaderDetectedLeftToRight" xml:space="preserve">
+    <value>Vänster till höger, upptäckt</value>
+  </data>
+  <data name="ReaderDetectedStrip" xml:space="preserve">
+    <value>Lång remsa, upptäckt</value>
+  </data>
+  <data name="ReadingFailedOffline" xml:space="preserve">
+    <value>Du är offline. Nedladdade kapitel går fortfarande att öppna.</value>
+  </data>
+  <data name="ReadingFailedSourceDown" xml:space="preserve">
+    <value>{source} svarar inte. Försök igen senare.</value>
+  </data>
+  <data name="ReadingFailedNotFound" xml:space="preserve">
+    <value>Den här källan har inte kvar det. Prova en annan källa.</value>
+  </data>
+  <data name="ReadingFailedBlocked" xml:space="preserve">
+    <value>{source} nekade begäran. {reason}</value>
+  </data>
+  <data name="ReadingFailedParse" xml:space="preserve">
+    <value>Kaeri kunde inte läsa det som {source} skickade. Dess tillägg kan behöva uppdateras.</value>
+  </data>
+  <data name="ReadingFailedPage" xml:space="preserve">
+    <value>Den här sidan laddades inte (fel {status}). Försök igen.</value>
+  </data>
+  <data name="ReadingFailedSignIn" xml:space="preserve">
+    <value>Logga in på {what} igen för att fortsätta läsa.</value>
+  </data>
+  <data name="ReadingFailedFileMissing" xml:space="preserve">
+    <value>{path} finns inte kvar. Om den ligger på en disk, anslut disken och försök igen.</value>
+  </data>
+  <data name="ReadingFailedUnreadable" xml:space="preserve">
+    <value>{path} kunde inte läsas som {format}. Filen kan vara skadad.</value>
+  </data>
+  <data name="ReadingFailedUnsupported" xml:space="preserve">
+    <value>Kaeri kan inte läsa filer av typen {kind}.</value>
+  </data>
+  <data name="ReadingFailedProtected" xml:space="preserve">
+    <value>Den här boken är kopieringsskyddad, så Kaeri kan inte öppna den.</value>
+  </data>
+  <data name="ReadingFailedDiskFull" xml:space="preserve">
+    <value>Det finns inget utrymme kvar på den här enheten. Frigör utrymme och försök igen.</value>
+  </data>
+  <data name="ReadingFailedWebview" xml:space="preserve">
+    <value>Romaner kräver en nyare systemwebbvy än version {version}. Uppdatera Android System WebView och försök igen.</value>
+  </data>
+  <data name="ReadingFailedNeedsNewer" xml:space="preserve">
+    <value>Det här tillägg kräver en nyare Kaeri ({world}). Uppdatera Kaeri för att använda det.</value>
+  </data>
+  <data name="ReadingFailedOff" xml:space="preserve">
+    <value>Läsning är inte tillgängligt i den här versionen av Kaeri.</value>
+  </data>
+  <data name="ReadingFailedOther" xml:space="preserve">
+    <value>Något gick fel. {reason}</value>
+  </data>
+  <data name="ReadingKindManga" xml:space="preserve">
+    <value>Manga</value>
+  </data>
+  <data name="ReadingKindManhwa" xml:space="preserve">
+    <value>Manhwa</value>
+  </data>
+  <data name="ReadingKindManhua" xml:space="preserve">
+    <value>Manhua</value>
+  </data>
+  <data name="ReadingKindWebtoon" xml:space="preserve">
+    <value>Webtoon</value>
+  </data>
+  <data name="ReadingKindOneShot" xml:space="preserve">
+    <value>One-shot</value>
+  </data>
+  <data name="ReadingKindLightNovel" xml:space="preserve">
+    <value>Light novel</value>
+  </data>
+  <data name="ReadingKindNovel" xml:space="preserve">
+    <value>Roman</value>
+  </data>
+  <data name="ReadingStatusReleasing" xml:space="preserve">
+    <value>Pågår</value>
+  </data>
+  <data name="ReadingStatusFinished" xml:space="preserve">
+    <value>Avslutad</value>
+  </data>
+  <data name="ReadingStatusHiatus" xml:space="preserve">
+    <value>Uppehåll</value>
+  </data>
+  <data name="ReadingStatusCancelled" xml:space="preserve">
+    <value>Avbruten</value>
+  </data>
+  <data name="ReadingStatusNotYet" xml:space="preserve">
+    <value>Inte utgiven än</value>
+  </data>
+  <data name="ReadingChapters_one" xml:space="preserve">
+    <value>1 kapitel</value>
+  </data>
+  <data name="ReadingChapters_other" xml:space="preserve">
+    <value>{count} kapitel</value>
+  </data>
+  <data name="ReadingVolumes_one" xml:space="preserve">
+    <value>1 volym</value>
+  </data>
+  <data name="ReadingVolumes_other" xml:space="preserve">
+    <value>{count} volymer</value>
+  </data>
+  <data name="ReadingOnPlanning" xml:space="preserve">
+    <value>På din planeringslista</value>
+  </data>
+  <data name="ReadingSpotlightNewChapter" xml:space="preserve">
+    <value>Nytt kapitel i en serie du följer</value>
+  </data>
+  <data name="ReadingSpotlightContinue" xml:space="preserve">
+    <value>Läs vidare</value>
+  </data>
+  <data name="ReadingSpotlightUpNext" xml:space="preserve">
+    <value>Nästa för dig</value>
+  </data>
+  <data name="ReadingSpotlightPopular" xml:space="preserve">
+    <value>Populärt, pågår nu</value>
+  </data>
+  <data name="ReadingOutToday" xml:space="preserve">
+    <value>Kapitel {chapter} kommer ut idag</value>
+  </data>
+  <data name="ReadingOutTodayTitled" xml:space="preserve">
+    <value>Kapitel {chapter}, {title}, kommer ut idag</value>
+  </data>
+  <data name="ReadingChapterPage" xml:space="preserve">
+    <value>Kapitel {chapter} · sida {page}</value>
+  </data>
+  <data name="ReadingChapterPercent" xml:space="preserve">
+    <value>Kapitel {chapter} · {percent}%</value>
+  </data>
+  <data name="ReadingChapterNew" xml:space="preserve">
+    <value>Kapitel {chapter} är nytt</value>
+  </data>
+  <data name="ReadingNextPart" xml:space="preserve">
+    <value>Del {part}</value>
+  </data>
+  <data name="ReadingPartPercent" xml:space="preserve">
+    <value>Del {part} · {percent}%</value>
+  </data>
+  <data name="ReadingPartNew" xml:space="preserve">
+    <value>Del {part} är ny</value>
+  </data>
+  <data name="ReadingPartTitled" xml:space="preserve">
+    <value>Del {part} · {title}</value>
+  </data>
+  <data name="ReadingPartOutToday" xml:space="preserve">
+    <value>Del {part} kommer ut idag</value>
+  </data>
+  <data name="ReadingPartOutTodayTitled" xml:space="preserve">
+    <value>Del {part}, {title}, kommer ut idag</value>
+  </data>
+  <data name="ReadingChapterOf" xml:space="preserve">
+    <value>Kapitel {chapter} av {of}</value>
+  </data>
+  <data name="ReadingVolumePart" xml:space="preserve">
+    <value>Volym {volume}, del {part}</value>
+  </data>
+  <data name="ReadingOriginJapan" xml:space="preserve">
+    <value>Japan</value>
+  </data>
+  <data name="ReadingOriginKorea" xml:space="preserve">
+    <value>Korea</value>
+  </data>
+  <data name="ReadingOriginChina" xml:space="preserve">
+    <value>Kina</value>
+  </data>
+  <data name="ReadingOriginTaiwan" xml:space="preserve">
+    <value>Taiwan</value>
+  </data>
+  <data name="ExportDeviceOther" xml:space="preserve">
+    <value>Annan e-läsare</value>
+  </data>
+  <data name="ExportDeviceEink6" xml:space="preserve">
+    <value>E-ink, 6 tum</value>
+  </data>
+  <data name="ExportDeviceEink7" xml:space="preserve">
+    <value>E-ink, 7 tum</value>
+  </data>
+  <data name="ExportDeviceColourEink" xml:space="preserve">
+    <value>Färg-e-ink, 7 tum</value>
+  </data>
+  <data name="ExportDeviceTablet" xml:space="preserve">
+    <value>Surfplatta</value>
+  </data>
+  <data name="ExportChapter" xml:space="preserve">
+    <value>Kapitel {chapter}</value>
+  </data>
+  <data name="ExportWaitsForWifi_one" xml:space="preserve">
+    <value>Ett kapitel är inte nedladdat än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.</value>
+  </data>
+  <data name="ExportWaitsForWifi_other" xml:space="preserve">
+    <value>{n} kapitel är inte nedladdade än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.</value>
+  </data>
+  <data name="ReadingChapterTitled" xml:space="preserve">
+    <value>Kapitel {chapter} · {title}</value>
+  </data>
+  <data name="ReadingRowRead" xml:space="preserve">
+    <value>Läst</value>
+  </data>
+  <data name="ReadingRowNew" xml:space="preserve">
+    <value>Ny</value>
+  </data>
+  <data name="ReadingRowDownloaded" xml:space="preserve">
+    <value>Nedladdad</value>
+  </data>
+  <data name="ReadingRowNotDownloaded" xml:space="preserve">
+    <value>Inte nedladdad</value>
+  </data>
+  <data name="ReadingRowOnDevice" xml:space="preserve">
+    <value>På den här enheten</value>
+  </data>
+  <data name="ReadingRowQueued" xml:space="preserve">
+    <value>I kö</value>
+  </data>
+  <data name="ReadingRowWaitsWifi" xml:space="preserve">
+    <value>I kö · väntar på Wi-Fi</value>
+  </data>
+  <data name="ReadingRowDownloading" xml:space="preserve">
+    <value>Laddar ner · {done} av {total} sidor</value>
+  </data>
+  <data name="ReadingRowFailed" xml:space="preserve">
+    <value>Kunde inte laddas ner</value>
+  </data>
+  <data name="ReadingRowPageOf" xml:space="preserve">
+    <value>Sida {page} av {of}</value>
+  </data>
+  <data name="ReadingRowPage" xml:space="preserve">
+    <value>Sida {page}</value>
+  </data>
+  <data name="ReadingRowPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="ReadingRowPages_one" xml:space="preserve">
+    <value>1 sida</value>
+  </data>
+  <data name="ReadingRowPages_other" xml:space="preserve">
+    <value>{n} sidor</value>
+  </data>
+  <data name="ReadingRowVersions_one" xml:space="preserve">
+    <value>1 version</value>
+  </data>
+  <data name="ReadingRowVersions_other" xml:space="preserve">
+    <value>{n} versioner</value>
+  </data>
+  <data name="ReadingAgoNow" xml:space="preserve">
+    <value>nyss</value>
+  </data>
+  <data name="ReadingAgoMinutes" xml:space="preserve">
+    <value>{minutes} min sedan</value>
+  </data>
+  <data name="ReadingAgoToday" xml:space="preserve">
+    <value>idag</value>
+  </data>
+  <data name="ReadingAgoYesterday" xml:space="preserve">
+    <value>igår</value>
+  </data>
+  <data name="ReadingAgoDays_one" xml:space="preserve">
+    <value>1 dag sedan</value>
+  </data>
+  <data name="ReadingAgoDays_other" xml:space="preserve">
+    <value>{days} dagar sedan</value>
+  </data>
+  <data name="ReadingAgoWeeks_one" xml:space="preserve">
+    <value>1 vecka sedan</value>
+  </data>
+  <data name="ReadingAgoWeeks_other" xml:space="preserve">
+    <value>{weeks} veckor sedan</value>
+  </data>
+  <data name="ReadingAgoMonths_one" xml:space="preserve">
+    <value>1 månad sedan</value>
+  </data>
+  <data name="ReadingAgoMonths_other" xml:space="preserve">
+    <value>{months} månader sedan</value>
+  </data>
+  <data name="ReadingAgoYears_one" xml:space="preserve">
+    <value>1 år sedan</value>
+  </data>
+  <data name="ReadingAgoYears_other" xml:space="preserve">
+    <value>{years} år sedan</value>
+  </data>
+  <data name="ReadingRemovedFrom" xml:space="preserve">
+    <value>Borttagen från {tracker}</value>
+  </data>
+  <data name="ReadingRemovedNotThere" xml:space="preserve">
+    <value>Fanns inte i din {tracker}-lista</value>
+  </data>
+  <data name="ReadingRemovedUnmatched" xml:space="preserve">
+    <value>Inte matchad på {tracker}, så inget ändrades där</value>
+  </data>
+  <data name="ReadingRemovedFailed" xml:space="preserve">
+    <value>Finns kvar i din {tracker}-lista</value>
+  </data>
+  <data name="ReadingRemovedSignIn" xml:space="preserve">
+    <value>Logga in på {tracker} igen och försök sedan en gång till.</value>
+  </data>
+  <data name="ReadingMissNoSeries" xml:space="preserve">
+    <value>Ingen serie med det här namnet</value>
+  </data>
+  <data name="ReadingMissDownSince" xml:space="preserve">
+    <value>Svarar inte sedan {time}</value>
+  </data>
+  <data name="ReadingMissDown" xml:space="preserve">
+    <value>Svarar inte</value>
+  </data>
+  <data name="ReadingDlParts_one" xml:space="preserve">
+    <value>1 del</value>
+  </data>
+  <data name="ReadingDlParts_other" xml:space="preserve">
+    <value>{count} delar</value>
+  </data>
+  <data name="ReadingDlSize" xml:space="preserve">
+    <value>{size}</value>
+  </data>
+  <data name="ReadingDlRead" xml:space="preserve">
+    <value>{count} lästa</value>
+  </data>
+  <data name="ReadingDlChapter" xml:space="preserve">
+    <value>Kapitel {chapter}</value>
+  </data>
+  <data name="ReadingDlPages" xml:space="preserve">
+    <value>{done} av {total} sidor</value>
+  </data>
+  <data name="ReadingDlMoreQueued" xml:space="preserve">
+    <value>{count} till i kö</value>
+  </data>
+  <data name="ReadingDlQueued" xml:space="preserve">
+    <value>{count} i kö</value>
+  </data>
+  <data name="ReadingDlWaitsWifi" xml:space="preserve">
+    <value>väntar på Wi-Fi</value>
+  </data>
+  <data name="ReadingDlFailed" xml:space="preserve">
+    <value>Kapitel {chapter} kunde inte laddas ner</value>
+  </data>
+  <data name="ReadingEstimateSize" xml:space="preserve">
+    <value>Cirka {size}</value>
+  </data>
+  <data name="ReadingEstimateWifi" xml:space="preserve">
+    <value>via Wi-Fi</value>
+  </data>
+  <data name="ReadingEstimateMobile" xml:space="preserve">
+    <value>via mobildata</value>
+  </data>
+  <data name="ReadingEstimateWaitsWifi" xml:space="preserve">
+    <value>väntar på Wi-Fi</value>
+  </data>
+  <data name="ReadingDownloadsDoneTitle" xml:space="preserve">
+    <value>Nedladdningar klara</value>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_one" xml:space="preserve">
+    <value>Ett kapitel av {title} är redo att läsas offline.</value>
+  </data>
+  <data name="ReadingDownloadsDoneChapters_other" xml:space="preserve">
+    <value>{count} kapitel av {title} är redo att läsas offline.</value>
+  </data>
+  <data name="ReadingDownloadsDoneParts_one" xml:space="preserve">
+    <value>En del av {title} är redo att läsas offline.</value>
+  </data>
+  <data name="ReadingDownloadsDoneParts_other" xml:space="preserve">
+    <value>{count} delar av {title} är redo att läsas offline.</value>
+  </data>
+  <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
+    <value>Kapitel från {count} serier är redo att läsas offline.</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Gick med i {store} som {member}.</value>
   </data>
@@ -673,6 +1090,9 @@
   </data>
   <data name="PluginMissingLocally" xml:space="preserve">
     <value>{plugin} finns inte längre i tilläggmappen.</value>
+  </data>
+  <data name="StoreTakesNoBooks" xml:space="preserve">
+    <value>{store} listar inga källor för böcker än. Dess ägare kan uppdatera tilläggsbutikn för att lägga till dem.</value>
   </data>
   <data name="StoreInviteNeedsLink" xml:space="preserve">
     <value>Den här enheten gick med i {store} via länken. Klistra in samma länk på den andra enheten.</value>
@@ -896,9 +1316,6 @@
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Det gick inte att nå servern.</value>
   </data>
-  <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri lagrar inga serier. Du lägger till dina egna källor.</value>
-  </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Sparade {label}.</value>
   </data>
@@ -1102,6 +1519,9 @@
   </data>
   <data name="MatchChoiceLine" xml:space="preserve">
     <value>{parts} · {percent} % match</value>
+  </data>
+  <data name="SearchRateLimitEnter" xml:space="preserve">
+    <value>Sökning medan du skriver är pausad en stund, för att hålla sig inom AniLists gränser. Tryck på Retur för att söka nu.</value>
   </data>
   <data name="DiscussionEditing" xml:space="preserve">
     <value>Redigerar din kommentar</value>
@@ -1313,6 +1733,39 @@
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
     <value>Låter en TV med inbyggd Chromecast spela torrents. Den här datorn skickar avsnittet så länge det spelas.</value>
   </data>
+  <data name="SettingsLanguageRestart" xml:space="preserve">
+    <value>Starta om</value>
+  </data>
+  <data name="SettingsDifferences_one" xml:space="preserve">
+    <value>En titel skiljer sig från {tracker}</value>
+  </data>
+  <data name="SettingsDifferences_other" xml:space="preserve">
+    <value>{count} titlar skiljer sig från {tracker}</value>
+  </data>
+  <data name="SettingsDifferencesReview" xml:space="preserve">
+    <value>Granska</value>
+  </data>
+  <data name="SettingsSearch" xml:space="preserve">
+    <value>Sök i inställningar</value>
+  </data>
+  <data name="SettingsQualityDetailWindows" xml:space="preserve">
+    <value>Högre tar den bästa versionen som en källa erbjuder, och tar mer plats.</value>
+  </data>
+  <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
+    <value>Undertexterna följer med avsnittet vart filen än hamnar.</value>
+  </data>
+  <data name="SettingsKeepSeedingDetailWindows" xml:space="preserve">
+    <value>En nedladdning som fortsätter dela ligger kvar i Kaeris cache, inte i nedladdningsmappen.</value>
+  </data>
+  <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
+    <value>Läser kommentarerna i AniLists forumtråd för avsnitt du har sett.</value>
+  </data>
+  <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
+    <value>Varje bild laddas från sajten som lagrar den, som ser din IP-adress.</value>
+  </data>
+  <data name="SettingsFolderBrowse" xml:space="preserve">
+    <value>Bläddra…</value>
+  </data>
   <data name="TrayStillDownloading" xml:space="preserve">
     <value>Kaeri laddar fortfarande ner</value>
   </data>
@@ -1441,6 +1894,42 @@
   </data>
   <data name="StartFailedQuit" xml:space="preserve">
     <value>Avsluta</value>
+  </data>
+  <data name="EngineStoppedTitle" xml:space="preserve">
+    <value>Kaeri slutade fungera</value>
+  </data>
+  <data name="EngineStoppedDetail" xml:space="preserve">
+    <value>Den del av appen som gör jobbet har stoppat. Öppna Kaeri igen för att fortsätta.</value>
+  </data>
+  <data name="EngineStoppedOpenAgain" xml:space="preserve">
+    <value>Öppna igen</value>
+  </data>
+  <data name="TitlebarSynced" xml:space="preserve">
+    <value>{tracker} synkad</value>
+  </data>
+  <data name="TitlebarNotSynced" xml:space="preserve">
+    <value>{tracker} inte synkad</value>
+  </data>
+  <data name="TitlebarSignInAgain" xml:space="preserve">
+    <value>Logga in på {tracker} igen</value>
+  </data>
+  <data name="TitlebarStatusHint" xml:space="preserve">
+    <value>Visar vad som körs</value>
+  </data>
+  <data name="TitlebarNothingRunning" xml:space="preserve">
+    <value>Inget körs.</value>
+  </data>
+  <data name="TitlebarOpenDevices" xml:space="preserve">
+    <value>Öppna Enheter</value>
+  </data>
+  <data name="MessagesTitle" xml:space="preserve">
+    <value>Meddelanden</value>
+  </data>
+  <data name="MessagesNone" xml:space="preserve">
+    <value>Inga meddelanden än</value>
+  </data>
+  <data name="MessagesAlert" xml:space="preserve">
+    <value>Problem</value>
   </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}, avsnitt {episode}</value>
@@ -3773,6 +4262,9 @@
   <data name="PartyFormNothing" xml:space="preserve">
     <value>Det som spelas nu spelas med rummet.</value>
   </data>
+  <data name="PartyFormPickLater" xml:space="preserve">
+    <value>När du är inne, tryck på Spela upp på valfritt avsnitt för att titta på det med rummet.</value>
+  </data>
   <data name="PartyFormEpisodeOf" xml:space="preserve">
     <value>Avsnitt {episode} av {title}</value>
   </data>
@@ -3922,6 +4414,9 @@
   </data>
   <data name="TogetherStart" xml:space="preserve">
     <value>Starta ett watch party</value>
+  </data>
+  <data name="TogetherStartLine" xml:space="preserve">
+    <value>Öppna ett rum och bjud in vänner med en länk eller kod, tryck sedan på Spela upp på det du vill titta på.</value>
   </data>
   <data name="TogetherJoin" xml:space="preserve">
     <value>Gå med i ett watch party</value>
@@ -4129,6 +4624,9 @@
   </data>
   <data name="PartyBarIdle" xml:space="preserve">
     <value>I rummet · inget spelas för dig</value>
+  </data>
+  <data name="PartyBarPick" xml:space="preserve">
+    <value>Tryck på Spela upp på valfritt avsnitt för att titta på det med rummet</value>
   </data>
   <data name="PartyPausedBy" xml:space="preserve">
     <value>Pausad av {name}</value>
@@ -4951,6 +5449,1110 @@
   </data>
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Mer i Inställningar…</value>
+  </data>
+  <data name="ReaderPageLoading" xml:space="preserve">
+    <value>Laddar sida {page}</value>
+  </data>
+  <data name="ReaderPageFailed" xml:space="preserve">
+    <value>Kunde inte ladda sida {page}</value>
+  </data>
+  <data name="ReaderTryAgain" xml:space="preserve">
+    <value>Försök igen</value>
+  </data>
+  <data name="ReaderClose" xml:space="preserve">
+    <value>Stäng</value>
+  </data>
+  <data name="ReaderEndRead" xml:space="preserve">
+    <value>Läst</value>
+  </data>
+  <data name="ReaderEndNext" xml:space="preserve">
+    <value>Nästa</value>
+  </data>
+  <data name="ReaderModeRtl" xml:space="preserve">
+    <value>Höger till vänster</value>
+  </data>
+  <data name="ReaderModeLtr" xml:space="preserve">
+    <value>Vänster till höger</value>
+  </data>
+  <data name="ReaderModeStrip" xml:space="preserve">
+    <value>Remsa</value>
+  </data>
+  <data name="ReaderFitScreen" xml:space="preserve">
+    <value>Skärm</value>
+  </data>
+  <data name="ReaderFitWidth" xml:space="preserve">
+    <value>Bredd</value>
+  </data>
+  <data name="ReaderFontSerif" xml:space="preserve">
+    <value>Serif</value>
+  </data>
+  <data name="ReaderFontSans" xml:space="preserve">
+    <value>Sans</value>
+  </data>
+  <data name="ReaderLookPaper" xml:space="preserve">
+    <value>Papper</value>
+  </data>
+  <data name="ReaderLookLight" xml:space="preserve">
+    <value>Ljus</value>
+  </data>
+  <data name="ReaderLookSepia" xml:space="preserve">
+    <value>Sepia</value>
+  </data>
+  <data name="ReaderLookDark" xml:space="preserve">
+    <value>Mörk</value>
+  </data>
+  <data name="ReaderMarginsNarrow" xml:space="preserve">
+    <value>Smala</value>
+  </data>
+  <data name="ReaderMarginsWide" xml:space="preserve">
+    <value>Breda</value>
+  </data>
+  <data name="ReaderLayoutAuto" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="ReaderLayoutSingle" xml:space="preserve">
+    <value>En</value>
+  </data>
+  <data name="ReaderLayoutDouble" xml:space="preserve">
+    <value>Två</value>
+  </data>
+  <data name="ReaderSpreadsSplit" xml:space="preserve">
+    <value>Dela</value>
+  </data>
+  <data name="ReaderSpreadsRotate" xml:space="preserve">
+    <value>Vrid</value>
+  </data>
+  <data name="ReaderSpreadsWhole" xml:space="preserve">
+    <value>Hel</value>
+  </data>
+  <data name="ReaderTapEdges" xml:space="preserve">
+    <value>Kanter</value>
+  </data>
+  <data name="ReaderTapSides" xml:space="preserve">
+    <value>Halvor</value>
+  </data>
+  <data name="ReaderTapOff" xml:space="preserve">
+    <value>Av</value>
+  </data>
+  <data name="ReaderChapters" xml:space="preserve">
+    <value>Kapitel</value>
+  </data>
+  <data name="ReaderPagesLeft_one" xml:space="preserve">
+    <value>En sida kvar i det här kapitlet</value>
+  </data>
+  <data name="ReaderPagesLeft_other" xml:space="preserve">
+    <value>{count} sidor kvar i det här kapitlet</value>
+  </data>
+  <data name="ReaderChaptersLoading" xml:space="preserve">
+    <value>Laddar kapitel</value>
+  </data>
+  <data name="ReaderBackgroundTheme" xml:space="preserve">
+    <value>Tema</value>
+  </data>
+  <data name="ReaderBackgroundBlack" xml:space="preserve">
+    <value>Svart</value>
+  </data>
+  <data name="ReaderBackgroundWhite" xml:space="preserve">
+    <value>Vit</value>
+  </data>
+  <data name="ReaderEndCaughtUp" xml:space="preserve">
+    <value>Du är ikapp</value>
+  </data>
+  <data name="ReaderGapNone" xml:space="preserve">
+    <value>Ingen</value>
+  </data>
+  <data name="ReaderGapSmall" xml:space="preserve">
+    <value>Liten</value>
+  </data>
+  <data name="ReaderLookSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="NavWatch" xml:space="preserve">
+    <value>Titta</value>
+  </data>
+  <data name="NavRead" xml:space="preserve">
+    <value>Läs</value>
+  </data>
+  <data name="NavUpdates" xml:space="preserve">
+    <value>Uppdateringar</value>
+  </data>
+  <data name="HomeReadReleasing" xml:space="preserve">
+    <value>Pågår nu</value>
+  </data>
+  <data name="HomeReadCheckedOnOpen" xml:space="preserve">
+    <value>Kontrolleras när du öppnar Kaeri</value>
+  </data>
+  <data name="HomeReadEnd" xml:space="preserve">
+    <value>Det var allt för nu. Uppdateringar och Sök har de fullständiga listorna.</value>
+  </data>
+  <data name="HomeReadNoSources" xml:space="preserve">
+    <value>Lägg till en mapp, en server eller en tilläggsbutik för att läsa från startsidan.</value>
+  </data>
+  <data name="WeekUsually" xml:space="preserve">
+    <value>Oftast</value>
+  </data>
+  <data name="WeekNothingUsually" xml:space="preserve">
+    <value>Oftast inget</value>
+  </data>
+  <data name="UpdatesChecked" xml:space="preserve">
+    <value>Kontrollerad {ago}</value>
+  </data>
+  <data name="ChapterUpdatesCheckedCaughtUp" xml:space="preserve">
+    <value>Kontrollerad {ago} · serier du är ikapp med</value>
+  </data>
+  <data name="ChapterUpdatesChecking" xml:space="preserve">
+    <value>Söker efter nya kapitel…</value>
+  </data>
+  <data name="UpdatesDownloadNew" xml:space="preserve">
+    <value>Ladda ner nya</value>
+  </data>
+  <data name="UpdatesEmptyTitle" xml:space="preserve">
+    <value>Inga nya kapitel</value>
+  </data>
+  <data name="ChapterUpdatesEmptyLine" xml:space="preserve">
+    <value>Kaeri kontrollerar serier på din Läslista som du är ikapp med, några gånger om dagen.</value>
+  </data>
+  <data name="ChapterUpdatesToday" xml:space="preserve">
+    <value>Idag</value>
+  </data>
+  <data name="ChapterUpdatesYesterday" xml:space="preserve">
+    <value>Igår</value>
+  </data>
+  <data name="ChapterUpdatesVersions_one" xml:space="preserve">
+    <value>1 version</value>
+  </data>
+  <data name="ChapterUpdatesVersions_other" xml:space="preserve">
+    <value>{n} versioner</value>
+  </data>
+  <data name="ChapterUpdatesOpenSeries" xml:space="preserve">
+    <value>Öppna {title}</value>
+  </data>
+  <data name="ChapterUpdatesOpenChapterHint" xml:space="preserve">
+    <value>Öppnar kapitlet</value>
+  </data>
+  <data name="ChapterUpdatesOpenSeriesMenu" xml:space="preserve">
+    <value>Öppna serie</value>
+  </data>
+  <data name="ActionReadChapter" xml:space="preserve">
+    <value>Läs kapitel {n}</value>
+  </data>
+  <data name="ActionContinueChapter" xml:space="preserve">
+    <value>Läs vidare på kapitel {n} · sida {page}</value>
+  </data>
+  <data name="ActionContinuePart" xml:space="preserve">
+    <value>Läs vidare på del {n} · {percent}%</value>
+  </data>
+  <data name="ActionContinuePartPlain" xml:space="preserve">
+    <value>Läs vidare på del {n}</value>
+  </data>
+  <data name="ActionReadPart" xml:space="preserve">
+    <value>Läs del {n}</value>
+  </data>
+  <data name="ActionReadAgain" xml:space="preserve">
+    <value>Läs igen</value>
+  </data>
+  <data name="SeriesReadingFrom" xml:space="preserve">
+    <value>Läser från</value>
+  </data>
+  <data name="SeriesChange" xml:space="preserve">
+    <value>Ändra</value>
+  </data>
+  <data name="SeriesSourcesMore_one" xml:space="preserve">
+    <value>1 till</value>
+  </data>
+  <data name="SeriesSourcesMore_other" xml:space="preserve">
+    <value>{n} till</value>
+  </data>
+  <data name="SeriesTrackerAsk" xml:space="preserve">
+    <value>Vilken serie är det här? Välj</value>
+  </data>
+  <data name="SeriesPreferredGroup" xml:space="preserve">
+    <value>Din föredragna grupp här</value>
+  </data>
+  <data name="SeriesTrackerChaptersOf_one" xml:space="preserve">
+    <value>{n} av {total} kapitel</value>
+  </data>
+  <data name="SeriesTrackerChaptersOf_other" xml:space="preserve">
+    <value>{n} av {total} kapitel</value>
+  </data>
+  <data name="SeriesTrackerChapters_one" xml:space="preserve">
+    <value>1 kapitel</value>
+  </data>
+  <data name="SeriesTrackerChapters_other" xml:space="preserve">
+    <value>{n} kapitel</value>
+  </data>
+  <data name="SeriesTrackerWithVolume" xml:space="preserve">
+    <value>{chapters} · volym {volume}</value>
+  </data>
+  <data name="SeriesTrackerVolumes" xml:space="preserve">
+    <value>Volym {volume} av {total}</value>
+  </data>
+  <data name="SeriesReadFromAnother" xml:space="preserve">
+    <value>Läs från en annan källa</value>
+  </data>
+  <data name="SeriesScore" xml:space="preserve">
+    <value>Betyg…</value>
+  </data>
+  <data name="SeriesAddToList" xml:space="preserve">
+    <value>Lägg till i lista</value>
+  </data>
+  <data name="SeriesRemoveFromLists" xml:space="preserve">
+    <value>Ta bort från listor…</value>
+  </data>
+  <data name="SeriesRemoveFromListsTitle" xml:space="preserve">
+    <value>Ta bort {title} från dina listor?</value>
+  </data>
+  <data name="SeriesRemoveFromListsLine" xml:space="preserve">
+    <value>Den tas bort från din lista på varje tracker du har anslutit. Din plats och lästa kapitel finns kvar i Kaeri.</value>
+  </data>
+  <data name="SeriesRemovedTitle" xml:space="preserve">
+    <value>Dina listor</value>
+  </data>
+  <data name="SeriesChosen_one" xml:space="preserve">
+    <value>1 kapitel valt</value>
+  </data>
+  <data name="SeriesChosen_other" xml:space="preserve">
+    <value>{n} kapitel valda</value>
+  </data>
+  <data name="SeriesChooseAllUnread" xml:space="preserve">
+    <value>Alla olästa</value>
+  </data>
+  <data name="ReadFromNotFound" xml:space="preserve">
+    <value>Hittades inte hos</value>
+  </data>
+  <data name="ReadFromSearchThere" xml:space="preserve">
+    <value>Sök där</value>
+  </data>
+  <data name="ReadFromSearchPlaceholder" xml:space="preserve">
+    <value>Sök i {source}</value>
+  </data>
+  <data name="ReadFromSearch" xml:space="preserve">
+    <value>Sök</value>
+  </data>
+  <data name="ReadFromSearchNone" xml:space="preserve">
+    <value>Inget hittades med de orden</value>
+  </data>
+  <data name="SeriesTracking" xml:space="preserve">
+    <value>Trackers</value>
+  </data>
+  <data name="SeriesReadFromMenu" xml:space="preserve">
+    <value>Byt källa…</value>
+  </data>
+  <data name="SeriesReadAgainMenu" xml:space="preserve">
+    <value>Läs igen från början…</value>
+  </data>
+  <data name="SeriesVolumes" xml:space="preserve">
+    <value>Volymer</value>
+  </data>
+  <data name="SeriesChapters" xml:space="preserve">
+    <value>Kapitel</value>
+  </data>
+  <data name="SeriesOrder" xml:space="preserve">
+    <value>Ordning</value>
+  </data>
+  <data name="SeriesNewestFirst" xml:space="preserve">
+    <value>Nyaste först</value>
+  </data>
+  <data name="SeriesOldestFirst" xml:space="preserve">
+    <value>Äldsta först</value>
+  </data>
+  <data name="SeriesVolume" xml:space="preserve">
+    <value>Volym {n}</value>
+  </data>
+  <data name="SeriesNoVolume" xml:space="preserve">
+    <value>Inte i någon volym än</value>
+  </data>
+  <data name="SeriesChapterRange" xml:space="preserve">
+    <value>kapitel {from} till {to}</value>
+  </data>
+  <data name="SeriesVolumeRead" xml:space="preserve">
+    <value>läst</value>
+  </data>
+  <data name="SeriesExpanded" xml:space="preserve">
+    <value>Utfälld</value>
+  </data>
+  <data name="SeriesCollapsed" xml:space="preserve">
+    <value>Hopfälld</value>
+  </data>
+  <data name="SeriesNoChaptersTitle" xml:space="preserve">
+    <value>Inga kapitel i den här källan än</value>
+  </data>
+  <data name="SeriesNoChaptersLine" xml:space="preserve">
+    <value>En annan källa kan ha dem.</value>
+  </data>
+  <data name="SeriesChaptersFailed" xml:space="preserve">
+    <value>Kunde inte ladda kapitel från {source}.</value>
+  </data>
+  <data name="SeriesChapterNumber" xml:space="preserve">
+    <value>Kapitel {n}</value>
+  </data>
+  <data name="SeriesBookmarked" xml:space="preserve">
+    <value>Bokmärkt</value>
+  </data>
+  <data name="SeriesMarkRead" xml:space="preserve">
+    <value>Markera som läst</value>
+  </data>
+  <data name="SeriesMarkUnread" xml:space="preserve">
+    <value>Markera som oläst</value>
+  </data>
+  <data name="SeriesMarkReadUpTo" xml:space="preserve">
+    <value>Markera som läst fram till hit</value>
+  </data>
+  <data name="SeriesDownload" xml:space="preserve">
+    <value>Ladda ner</value>
+  </data>
+  <data name="SeriesReadChapterMenu" xml:space="preserve">
+    <value>Läs</value>
+  </data>
+  <data name="SeriesBookmark" xml:space="preserve">
+    <value>Bokmärk</value>
+  </data>
+  <data name="SeriesRemoveBookmark" xml:space="preserve">
+    <value>Ta bort bokmärke</value>
+  </data>
+  <data name="SeriesVersions_one" xml:space="preserve">
+    <value>1 version</value>
+  </data>
+  <data name="SeriesVersions_other" xml:space="preserve">
+    <value>{n} versioner</value>
+  </data>
+  <data name="SeriesVersionsLoading" xml:space="preserve">
+    <value>Letar efter versioner…</value>
+  </data>
+  <data name="SeriesVersionInUse" xml:space="preserve">
+    <value>{name} används</value>
+  </data>
+  <data name="SeriesPreferVersion" xml:space="preserve">
+    <value>Föredra {name} för den här serien</value>
+  </data>
+  <data name="ChapterStateDownloaded" xml:space="preserve">
+    <value>Nedladdad</value>
+  </data>
+  <data name="ChapterStateQueued" xml:space="preserve">
+    <value>I kö</value>
+  </data>
+  <data name="ChapterStateWifi" xml:space="preserve">
+    <value>I kö · väntar på Wi-Fi</value>
+  </data>
+  <data name="ChapterStateDownloading" xml:space="preserve">
+    <value>Laddar ner · {done} av {total} sidor</value>
+  </data>
+  <data name="ChapterStateFailed" xml:space="preserve">
+    <value>Kunde inte laddas ner. {reason}</value>
+  </data>
+  <data name="ChapterStatePageOf" xml:space="preserve">
+    <value>Sida {page} av {of}</value>
+  </data>
+  <data name="ChapterStatePage" xml:space="preserve">
+    <value>Sida {page}</value>
+  </data>
+  <data name="ChapterStateRead" xml:space="preserve">
+    <value>Läst</value>
+  </data>
+  <data name="ChapterStateNew" xml:space="preserve">
+    <value>Ny</value>
+  </data>
+  <data name="ChapterDownloadStop" xml:space="preserve">
+    <value>Stoppa nedladdning</value>
+  </data>
+  <data name="ChapterRetry" xml:space="preserve">
+    <value>Försök igen</value>
+  </data>
+  <data name="ChapterDownloadDelete" xml:space="preserve">
+    <value>Ta bort nedladdning</value>
+  </data>
+  <data name="DownloadNext" xml:space="preserve">
+    <value>Nästa {n} olästa</value>
+  </data>
+  <data name="DownloadUnread" xml:space="preserve">
+    <value>Alla olästa kapitel</value>
+  </data>
+  <data name="DownloadVolumeCount_one" xml:space="preserve">
+    <value>{volume} · 1 kapitel</value>
+  </data>
+  <data name="DownloadVolumeCount_other" xml:space="preserve">
+    <value>{volume} · {n} kapitel</value>
+  </data>
+  <data name="DownloadChoose" xml:space="preserve">
+    <value>Välj kapitel…</value>
+  </data>
+  <data name="DownloadDeleteSeries" xml:space="preserve">
+    <value>Ta bort nedladdningar av den här serien</value>
+  </data>
+  <data name="DownloadChapters_one" xml:space="preserve">
+    <value>Ladda ner 1 kapitel</value>
+  </data>
+  <data name="DownloadChapters_other" xml:space="preserve">
+    <value>Ladda ner {n} kapitel</value>
+  </data>
+  <data name="DownloadOverWifi" xml:space="preserve">
+    <value>Via Wi-Fi</value>
+  </data>
+  <data name="ReadAgainTitle" xml:space="preserve">
+    <value>Läsa {title} igen från början?</value>
+  </data>
+  <data name="ReadAgainLine" xml:space="preserve">
+    <value>Din plats går tillbaka till kapitel 1 på alla dina enheter. Kapitlen förblir markerade som lästa hos dina trackers, och AniList räknar en omläsning.</value>
+  </data>
+  <data name="ReadAgainConfirm" xml:space="preserve">
+    <value>Läs igen</value>
+  </data>
+  <data name="SeriesReadFromTitle" xml:space="preserve">
+    <value>Läs från</value>
+  </data>
+  <data name="SeriesReadFromAsking" xml:space="preserve">
+    <value>Frågar dina källor…</value>
+  </data>
+  <data name="SeriesReadFromNoneTitle" xml:space="preserve">
+    <value>Ingen källa har den här serien</value>
+  </data>
+  <data name="SeriesReadFromNoneLine" xml:space="preserve">
+    <value>Lägg till en mapp, en server eller en tilläggsbutik under Dina källor.</value>
+  </data>
+  <data name="SeriesReadFromChapters" xml:space="preserve">
+    <value>Kapitel 1 till {latest}</value>
+  </data>
+  <data name="SeriesReadFromChaptersLater" xml:space="preserve">
+    <value>kapitel 1 till {latest}</value>
+  </data>
+  <data name="SeriesReadFromOnDevice" xml:space="preserve">
+    <value>på den här {device}</value>
+  </data>
+  <data name="SeriesReadFromNote" xml:space="preserve">
+    <value>Läsmarkeringar tillhör serien, så de följer med när du byter. Nedladdningar från den gamla källan finns kvar tills du tar bort dem.</value>
+  </data>
+  <data name="SeriesNotTracked" xml:space="preserve">
+    <value>Inte spårad här</value>
+  </data>
+  <data name="SeriesTrackerConnect" xml:space="preserve">
+    <value>Anslut i Inställningar för att spåra den här serien</value>
+  </data>
+  <data name="SeriesTrackerNotThere" xml:space="preserve">
+    <value>Ingen träff på den här trackern</value>
+  </data>
+  <data name="SeriesTrackerLooking" xml:space="preserve">
+    <value>Letar efter den här serien…</value>
+  </data>
+  <data name="SeriesTrackerBehind" xml:space="preserve">
+    <value>Har kapitel {has}. Får {gets} vid kommande synk.</value>
+  </data>
+  <data name="SeriesTrackerAhead" xml:space="preserve">
+    <value>Har kapitel {has}, längre än Kaeri.</value>
+  </data>
+  <data name="SeriesTrackerScore" xml:space="preserve">
+    <value>{score} / 10</value>
+  </data>
+  <data name="SeriesTrackerKeepKaeri" xml:space="preserve">
+    <value>Behåll platsen i Kaeri</value>
+  </data>
+  <data name="SeriesTrackerTakeTheirs" xml:space="preserve">
+    <value>Använd platsen hos {tracker}</value>
+  </data>
+  <data name="SeriesTrackerNoneOfThese" xml:space="preserve">
+    <value>Inget av dessa</value>
+  </data>
+  <data name="ReadListReading" xml:space="preserve">
+    <value>Läser</value>
+  </data>
+  <data name="ReadListPlanning" xml:space="preserve">
+    <value>Planerar</value>
+  </data>
+  <data name="ReadListCompleted" xml:space="preserve">
+    <value>Slutförda</value>
+  </data>
+  <data name="ReadListPaused" xml:space="preserve">
+    <value>Pausade</value>
+  </data>
+  <data name="ReadListDropped" xml:space="preserve">
+    <value>Övergivna</value>
+  </data>
+  <data name="ReadListRereading" xml:space="preserve">
+    <value>Läser om</value>
+  </data>
+  <data name="ReadListYourFiles" xml:space="preserve">
+    <value>Dina filer</value>
+  </data>
+  <data name="MediumWatch" xml:space="preserve">
+    <value>Titta</value>
+  </data>
+  <data name="MediumRead" xml:space="preserve">
+    <value>Läs</value>
+  </data>
+  <data name="MediumBoth" xml:space="preserve">
+    <value>Båda</value>
+  </data>
+  <data name="MediumWatchLine" xml:space="preserve">
+    <value>Serier och filmer från dina källor</value>
+  </data>
+  <data name="MediumReadLine" xml:space="preserve">
+    <value>Manga, webtoons och light novels från dina källor</value>
+  </data>
+  <data name="MediumBothLine" xml:space="preserve">
+    <value>Titta och läsa, var för sig</value>
+  </data>
+  <data name="MediumAnswerWatch" xml:space="preserve">
+    <value>Tittar</value>
+  </data>
+  <data name="MediumAnswerRead" xml:space="preserve">
+    <value>Läser</value>
+  </data>
+  <data name="MediumAnswerBoth" xml:space="preserve">
+    <value>Tittar och läser</value>
+  </data>
+  <data name="SourcesAddTitle" xml:space="preserve">
+    <value>Lägg till en källa</value>
+  </data>
+  <data name="BookAddLine" xml:space="preserve">
+    <value>Böcker du redan har, eller tillägg från en butik vars ägare har bjudit in dig.</value>
+  </data>
+  <data name="BookAddFolder" xml:space="preserve">
+    <value>En mapp</value>
+  </data>
+  <data name="BookAddFolderLine" xml:space="preserve">
+    <value>CBZ, EPUB, PDF och mappar med bilder på den här {device} eller en disk</value>
+  </data>
+  <data name="BookAddServer" xml:space="preserve">
+    <value>En server</value>
+  </data>
+  <data name="BookAddServerLine" xml:space="preserve">
+    <value>Komga, Kavita eller en OPDS-katalog som du kan logga in på</value>
+  </data>
+  <data name="BookAddStore" xml:space="preserve">
+    <value>En tilläggsbutik</value>
+  </data>
+  <data name="BookAddStoreLine" xml:space="preserve">
+    <value>Klistra in en inbjudan från butikens ägare</value>
+  </data>
+  <data name="BookAddServerTitle" xml:space="preserve">
+    <value>Lägg till en server</value>
+  </data>
+  <data name="BookAddServerButton" xml:space="preserve">
+    <value>Lägg till server</value>
+  </data>
+  <data name="SourcesFoundServer" xml:space="preserve">
+    <value>Hittade en {kind}-server</value>
+  </data>
+  <data name="SourcesFoundServerSeries_one" xml:space="preserve">
+    <value>Hittade en {kind}-server med 1 serie</value>
+  </data>
+  <data name="SourcesFoundServerSeries_other" xml:space="preserve">
+    <value>Hittade en {kind}-server med {n} serier</value>
+  </data>
+  <data name="BookServerLooking" xml:space="preserve">
+    <value>Tittar på den här adressen…</value>
+  </data>
+  <data name="BookServerNote" xml:space="preserve">
+    <value>Kaeri skickar tillbaka ditt läsförlopp till servern. Lösenordet stannar i Nyckelringen.</value>
+  </data>
+  <data name="BookSourcesFolders" xml:space="preserve">
+    <value>Mappar</value>
+  </data>
+  <data name="BookSourcesServers" xml:space="preserve">
+    <value>Servrar</value>
+  </data>
+  <data name="BookSourcesPlugins" xml:space="preserve">
+    <value>Tillägg</value>
+  </data>
+  <data name="BookSourcesPluginsFooter" xml:space="preserve">
+    <value>Tillägg kommer från tilläggsbutiker du går med i.</value>
+  </data>
+  <data name="BookSourcesSeries_one" xml:space="preserve">
+    <value>1 serie</value>
+  </data>
+  <data name="BookSourcesSeries_other" xml:space="preserve">
+    <value>{n} serier</value>
+  </data>
+  <data name="BookSourcesScanning" xml:space="preserve">
+    <value>Söker igenom · {n} hittade</value>
+  </data>
+  <data name="BookSourcesMissing" xml:space="preserve">
+    <value>Hittades inte. Är disken ansluten?</value>
+  </data>
+  <data name="BookSourcesOff" xml:space="preserve">
+    <value>Av</value>
+  </data>
+  <data name="BookSourcesProgressBack" xml:space="preserve">
+    <value>förloppet skickas tillbaka till servern</value>
+  </data>
+  <data name="BookSourcesOpds" xml:space="preserve">
+    <value>OPDS-katalog</value>
+  </data>
+  <data name="BookSourcesFromStore" xml:space="preserve">
+    <value>Från {store}</value>
+  </data>
+  <data name="BookSourcesVersion" xml:space="preserve">
+    <value>version {version}</value>
+  </data>
+  <data name="BookSourcesCheckMatches" xml:space="preserve">
+    <value>Granska träffar · {n}</value>
+  </data>
+  <data name="BookSourcesCheckMatchesTitle" xml:space="preserve">
+    <value>Granska träffar</value>
+  </data>
+  <data name="BookSourcesScan" xml:space="preserve">
+    <value>Sök igenom igen</value>
+  </data>
+  <data name="BookSourcesReportProgress" xml:space="preserve">
+    <value>Skicka förlopp till servern</value>
+  </data>
+  <data name="BookSourcesUse" xml:space="preserve">
+    <value>Använd den här servern</value>
+  </data>
+  <data name="BookSourcesNotABookServer" xml:space="preserve">
+    <value>Adressen svarar, men inte som en bokserver.</value>
+  </data>
+  <data name="BookSourcesNoMatch" xml:space="preserve">
+    <value>Ingen träff</value>
+  </data>
+  <data name="BookSourcesKeep" xml:space="preserve">
+    <value>Behåll omatchade</value>
+  </data>
+  <data name="BookSourcesFind" xml:space="preserve">
+    <value>Hitta</value>
+  </data>
+  <data name="BookSourcesUnmatchedNote" xml:space="preserve">
+    <value>Omatchade serier läses fortfarande från mappen. De har inget förlopp hos någon tracker förrän de matchats.</value>
+  </data>
+  <data name="LibraryScopeLabel" xml:space="preserve">
+    <value>Serier eller Läsning</value>
+  </data>
+  <data name="LibraryScopeShows" xml:space="preserve">
+    <value>Serier</value>
+  </data>
+  <data name="LibraryScopeReading" xml:space="preserve">
+    <value>Läsning</value>
+  </data>
+  <data name="ReadSortLastRead" xml:space="preserve">
+    <value>Senast läst</value>
+  </data>
+  <data name="ReadLibraryListValue_one" xml:space="preserve">
+    <value>{list}, 1 serie</value>
+  </data>
+  <data name="ReadLibraryListValue_other" xml:space="preserve">
+    <value>{list}, {n} serier</value>
+  </data>
+  <data name="ReadLibraryEmpty" xml:space="preserve">
+    <value>Inget i {list} än</value>
+  </data>
+  <data name="ReadLibraryEmptyLine" xml:space="preserve">
+    <value>Serier du lägger till från Sök eller en seriesida visas här.</value>
+  </data>
+  <data name="ReadLibraryFilesEmptyTitle" xml:space="preserve">
+    <value>Inget bland dina filer än</value>
+  </data>
+  <data name="ReadLibraryFilesEmptyLine" xml:space="preserve">
+    <value>Serier i dina mappar och servrar som inte är på någon lista visas här.</value>
+  </data>
+  <data name="ReadLibraryFilesAdd" xml:space="preserve">
+    <value>Lägg till en mapp eller server</value>
+  </data>
+  <data name="ReadSearchPlaceholder" xml:space="preserve">
+    <value>Sök i läsning</value>
+  </data>
+  <data name="SearchOtherScope_one" xml:space="preserve">
+    <value>1 träff i {scope}</value>
+  </data>
+  <data name="SearchOtherScope_other" xml:space="preserve">
+    <value>{n} träffar i {scope}</value>
+  </data>
+  <data name="SearchShowThem" xml:space="preserve">
+    <value>Visa dem</value>
+  </data>
+  <data name="ReadSearchBrowseLine" xml:space="preserve">
+    <value>{what} · från AniList</value>
+  </data>
+  <data name="ReadSearchTotal_one" xml:space="preserve">
+    <value>1 serie från AniList</value>
+  </data>
+  <data name="ReadSearchTotal_other" xml:space="preserve">
+    <value>{n} serier från AniList</value>
+  </data>
+  <data name="ReadSearchFailed" xml:space="preserve">
+    <value>Kunde inte söka</value>
+  </data>
+  <data name="ReadSearchNothing" xml:space="preserve">
+    <value>Hittade inget för {query}</value>
+  </data>
+  <data name="ReadSearchNothingBrowse" xml:space="preserve">
+    <value>Inget matchar de här filtren</value>
+  </data>
+  <data name="ReadSearchNothingLine" xml:space="preserve">
+    <value>Prova andra ord, eller en titel på ett annat språk.</value>
+  </data>
+  <data name="ReadSearchNothingFiltersLine" xml:space="preserve">
+    <value>Färre filter kan ge fler träffar.</value>
+  </data>
+  <data name="ReadSearchClearFilters" xml:space="preserve">
+    <value>Rensa filter</value>
+  </data>
+  <data name="ReadSortPopular" xml:space="preserve">
+    <value>Populära</value>
+  </data>
+  <data name="ReadSortTrending" xml:space="preserve">
+    <value>Trendande</value>
+  </data>
+  <data name="ReadSortScore" xml:space="preserve">
+    <value>Betyg</value>
+  </data>
+  <data name="ReadSortNewest" xml:space="preserve">
+    <value>Nyaste</value>
+  </data>
+  <data name="ReadFilterFormat" xml:space="preserve">
+    <value>Format</value>
+  </data>
+  <data name="ReadFilterOrigin" xml:space="preserve">
+    <value>Ursprung</value>
+  </data>
+  <data name="ReadFilterStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ReadFilterGenres" xml:space="preserve">
+    <value>Genrer</value>
+  </data>
+  <data name="ReadFilterTitle" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="ReadFilterReset" xml:space="preserve">
+    <value>Återställ</value>
+  </data>
+  <data name="ReadFilterAny" xml:space="preserve">
+    <value>Valfri</value>
+  </data>
+  <data name="ReadFilterSet" xml:space="preserve">
+    <value>{name}:</value>
+  </data>
+  <data name="ReadFilterMany" xml:space="preserve">
+    <value>{first} och {more} till</value>
+  </data>
+  <data name="ReadFilterNotGenre" xml:space="preserve">
+    <value>Inte {genre}</value>
+  </data>
+  <data name="ReadFilterGenresCount_one" xml:space="preserve">
+    <value>1 genre</value>
+  </data>
+  <data name="ReadFilterGenresCount_other" xml:space="preserve">
+    <value>{n} genrer</value>
+  </data>
+  <data name="ReadFilterIncluded" xml:space="preserve">
+    <value>Med</value>
+  </data>
+  <data name="ReadFilterLeftOut" xml:space="preserve">
+    <value>Utesluten</value>
+  </data>
+  <data name="OnboardingStep" xml:space="preserve">
+    <value>{step} av {total}</value>
+  </data>
+  <data name="OnboardingWelcomeLine" xml:space="preserve">
+    <value>Håll koll på vad du tittar på och läser, från dina egna källor.</value>
+  </data>
+  <data name="OnboardingWelcomeNote" xml:space="preserve">
+    <value>Dina listor och ditt förlopp stannar på dina enheter. Trackers och källor lägger du till själv.</value>
+  </data>
+  <data name="OnboardingMediumTitle" xml:space="preserve">
+    <value>Titta, läsa eller båda?</value>
+  </data>
+  <data name="OnboardingMediumLine" xml:space="preserve">
+    <value>Kaeri visar bara det du väljer. Du kan ändra det i Inställningar.</value>
+  </data>
+  <data name="OnboardingMediumHint" xml:space="preserve">
+    <value>Välj ett av de tre först</value>
+  </data>
+  <data name="OnboardingListsTitle" xml:space="preserve">
+    <value>Hämta in dina listor</value>
+  </data>
+  <data name="OnboardingListsLineWatch" xml:space="preserve">
+    <value>Kaeri håller ditt tittande i synk med {tracker}.</value>
+  </data>
+  <data name="OnboardingListsLineRead" xml:space="preserve">
+    <value>Kaeri håller ditt läsande i synk med {tracker}.</value>
+  </data>
+  <data name="OnboardingListsLineBoth" xml:space="preserve">
+    <value>Kaeri håller ditt läsande och tittande i synk med {tracker}.</value>
+  </data>
+  <data name="OnboardingListsAnilistLine" xml:space="preserve">
+    <value>Listor, förlopp och förslag</value>
+  </data>
+  <data name="OnboardingListsLaterWatch" xml:space="preserve">
+    <value>MyAnimeList, Kitsu, Simkl och Trakt kan läggas till senare i Inställningar, under Konton.</value>
+  </data>
+  <data name="OnboardingListsLaterRead" xml:space="preserve">
+    <value>MyAnimeList, Kitsu och MangaUpdates kan läggas till senare i Inställningar, under Konton.</value>
+  </data>
+  <data name="OnboardingListsLaterBoth" xml:space="preserve">
+    <value>MyAnimeList, Kitsu, MangaUpdates, Simkl och Trakt kan läggas till senare i Inställningar, under Konton.</value>
+  </data>
+  <data name="OnboardingConnect" xml:space="preserve">
+    <value>Anslut {tracker}</value>
+  </data>
+  <data name="OnboardingBooksTitle" xml:space="preserve">
+    <value>Varifrån dina böcker kommer</value>
+  </data>
+  <data name="OnboardingBooksLine" xml:space="preserve">
+    <value>Kaeri levereras utan böcker. Lägg till det du redan har, eller gå med i en tilläggsbutik med en inbjudan från dess ägare.</value>
+  </data>
+  <data name="OnboardingBooksFolder" xml:space="preserve">
+    <value>Lägg till en mapp</value>
+  </data>
+  <data name="OnboardingBooksFolderLine" xml:space="preserve">
+    <value>CBZ, EPUB, PDF och mappar med bilder</value>
+  </data>
+  <data name="OnboardingBooksServer" xml:space="preserve">
+    <value>Lägg till en server</value>
+  </data>
+  <data name="OnboardingBooksServerLine" xml:space="preserve">
+    <value>Komga, Kavita eller en OPDS-katalog</value>
+  </data>
+  <data name="OnboardingBooksInviteHeading" xml:space="preserve">
+    <value>Inbjudan till tilläggsbutik</value>
+  </data>
+  <data name="OnboardingBooksInvitePlaceholder" xml:space="preserve">
+    <value>Klistra in en inbjudan</value>
+  </data>
+  <data name="OnboardingBooksPluginLine" xml:space="preserve">
+    <value>Tillägg kör kod från personer du litar på. Gå bara med i tilläggsbutiker vars ägare du känner.</value>
+  </data>
+  <data name="OnboardingBothTitle" xml:space="preserve">
+    <value>Varifrån dina serier och böcker kommer</value>
+  </data>
+  <data name="OnboardingBothLine" xml:space="preserve">
+    <value>Kaeri levereras utan serier eller böcker. Lägg till det du redan har, eller gå med i en tilläggsbutik med en inbjudan från dess ägare.</value>
+  </data>
+  <data name="OnboardingBothShows" xml:space="preserve">
+    <value>Serier</value>
+  </data>
+  <data name="OnboardingBothBooks" xml:space="preserve">
+    <value>Böcker</value>
+  </data>
+  <data name="OnboardingBothShowsFolderLine" xml:space="preserve">
+    <value>Videofiler på den här {device}</value>
+  </data>
+  <data name="OnboardingBothShowsServerLine" xml:space="preserve">
+    <value>Din Jellyfin-server</value>
+  </data>
+  <data name="MediumChoicePosition" xml:space="preserve">
+    <value>{n} av {total}</value>
+  </data>
+  <data name="MediumChangeLater" xml:space="preserve">
+    <value>Du kan ändra det i Inställningar.</value>
+  </data>
+  <data name="MediumUpdateLine" xml:space="preserve">
+    <value>Kaeri kan nu läsa manga, webtoons och light novels från dina källor. Välj vad Kaeri är till för på den här {device}.</value>
+  </data>
+  <data name="MediumJoinTitleWatch_one" xml:space="preserve">
+    <value>{devices} är inställd på att titta</value>
+  </data>
+  <data name="MediumJoinTitleWatch_other" xml:space="preserve">
+    <value>{devices} är inställda på att titta</value>
+  </data>
+  <data name="MediumJoinTitleRead_one" xml:space="preserve">
+    <value>{devices} är inställd på att läsa</value>
+  </data>
+  <data name="MediumJoinTitleRead_other" xml:space="preserve">
+    <value>{devices} är inställda på att läsa</value>
+  </data>
+  <data name="MediumJoinTitleBoth_one" xml:space="preserve">
+    <value>{devices} är inställd på att titta och läsa</value>
+  </data>
+  <data name="MediumJoinTitleBoth_other" xml:space="preserve">
+    <value>{devices} är inställda på att titta och läsa</value>
+  </data>
+  <data name="MediumJoinLine" xml:space="preserve">
+    <value>Välj vad Kaeri är till för på den här {device}. Varje enhet behåller sitt eget svar.</value>
+  </data>
+  <data name="MediumOffTitleWatch" xml:space="preserve">
+    <value>Stänga av tittande?</value>
+  </data>
+  <data name="MediumOffTitleRead" xml:space="preserve">
+    <value>Stänga av läsning?</value>
+  </data>
+  <data name="MediumOffWatchBody" xml:space="preserve">
+    <value>Kalender, Säsong, Titta tillsammans och dina serier lämnar Kaeri på den här {device}. Din lista, ditt förlopp och dina nedladdningar finns kvar och kommer tillbaka om du slår på tittande igen.</value>
+  </data>
+  <data name="MediumOffReadBody" xml:space="preserve">
+    <value>Uppdateringar och din läsning lämnar Kaeri på den här {device}. Din lista, ditt förlopp och dina nedladdningar finns kvar och kommer tillbaka om du slår på läsning igen.</value>
+  </data>
+  <data name="MediumOffDeleteWatch" xml:space="preserve">
+    <value>Ta bort nedladdade avsnitt</value>
+  </data>
+  <data name="MediumOffDeleteRead" xml:space="preserve">
+    <value>Ta bort nedladdade kapitel</value>
+  </data>
+  <data name="MediumOffDeleteSize" xml:space="preserve">
+    <value>{size} på den här {device}</value>
+  </data>
+  <data name="MediumOffConfirmWatch" xml:space="preserve">
+    <value>Stäng av tittande</value>
+  </data>
+  <data name="MediumOffConfirmRead" xml:space="preserve">
+    <value>Stäng av läsning</value>
+  </data>
+  <data name="SettingsKaeriIsFor" xml:space="preserve">
+    <value>Kaeri är till för</value>
+  </data>
+  <data name="SettingsMediumNote" xml:space="preserve">
+    <value>Varje enhet behåller sitt eget svar</value>
+  </data>
+  <data name="SettingsMediumFooter" xml:space="preserve">
+    <value>Varje enhet behåller sitt eget svar. Att stänga av en behåller dess lista, förlopp och nedladdningar.</value>
+  </data>
+  <data name="SettingsOpenAtNote" xml:space="preserve">
+    <value>Vilken startsida Kaeri öppnas på</value>
+  </data>
+  <data name="SettingsGroupReading" xml:space="preserve">
+    <value>Läsning</value>
+  </data>
+  <data name="SettingsGroupShows" xml:space="preserve">
+    <value>Serier</value>
+  </data>
+  <data name="SettingsAsideReading" xml:space="preserve">
+    <value>Läsarens standardvärden är där varje serie börjar. En serie du ändrar i läsaren behåller sina egna val.</value>
+  </data>
+  <data name="SettingsReaderDefaults" xml:space="preserve">
+    <value>Läsarens standardvärden</value>
+  </data>
+  <data name="SettingsReaderDefaultsFooter" xml:space="preserve">
+    <value>En serie du ändrar behåller sitt eget läge, sin riktning och sitt utseende.</value>
+  </data>
+  <data name="SettingsReaderManga" xml:space="preserve">
+    <value>Manga</value>
+  </data>
+  <data name="SettingsReaderWebtoons" xml:space="preserve">
+    <value>Webtoons</value>
+  </data>
+  <data name="SettingsReaderWebtoonsNote" xml:space="preserve">
+    <value>Webtoons öppnas alltid som en lång remsa</value>
+  </data>
+  <data name="SettingsReaderNovels" xml:space="preserve">
+    <value>Light novels</value>
+  </data>
+  <data name="SettingsReaderRtl" xml:space="preserve">
+    <value>Sidor, höger till vänster</value>
+  </data>
+  <data name="SettingsReaderLtr" xml:space="preserve">
+    <value>Sidor, vänster till höger</value>
+  </data>
+  <data name="SettingsReaderStrip" xml:space="preserve">
+    <value>Lång remsa</value>
+  </data>
+  <data name="SettingsReaderPages" xml:space="preserve">
+    <value>Sidor</value>
+  </data>
+  <data name="SettingsReaderScrolled" xml:space="preserve">
+    <value>Rullning</value>
+  </data>
+  <data name="SettingsCountsRead" xml:space="preserve">
+    <value>Räknas som läst</value>
+  </data>
+  <data name="SettingsCountsReadNote" xml:space="preserve">
+    <value>En kort stund på sista sidan, eller att gå vidare till kapitlet efter</value>
+  </data>
+  <data name="SettingsCountsReadValue" xml:space="preserve">
+    <value>Efter sista sidan</value>
+  </data>
+  <data name="SettingsCountsReadMovingOn" xml:space="preserve">
+    <value>När du går vidare från den</value>
+  </data>
+  <data name="SettingsCountsReadMovingOnNote" xml:space="preserve">
+    <value>Att bläddra förbi sista sidan, eller öppna kapitlet efter</value>
+  </data>
+  <data name="SettingsCountsReadMarked" xml:space="preserve">
+    <value>När du markerar det</value>
+  </data>
+  <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
+    <value>Raden Läs vidare och dina trackers följer dina markeringar</value>
+  </data>
+  <data name="SettingsFollowGroup" xml:space="preserve">
+    <value>Serieinställningar som följer med dig</value>
+  </data>
+  <data name="SettingsFollowMode" xml:space="preserve">
+    <value>Läge, riktning och färg</value>
+  </data>
+  <data name="SettingsFollowModeNote" xml:space="preserve">
+    <value>En serie du ändrar läses likadant på dina andra enheter</value>
+  </data>
+  <data name="SettingsFollowFooter" xml:space="preserve">
+    <value>Textstorlek, marginaler, tryckytor och uppdatering stannar på den här {device}.</value>
+  </data>
+  <data name="SettingsLookFollowsNote" xml:space="preserve">
+    <value>Färg eller gråtoner</value>
+  </data>
+  <data name="SettingsNewChaptersReading" xml:space="preserve">
+    <value>Serier i Läsning</value>
+  </data>
+  <data name="SettingsNewChaptersNote" xml:space="preserve">
+    <value>En serie du läser får också sina kommande kapitel redo</value>
+  </data>
+  <data name="SettingsProgressGroup" xml:space="preserve">
+    <value>Förlopp</value>
+  </data>
+  <data name="SettingsProgressChapter" xml:space="preserve">
+    <value>När ett kapitel är läst</value>
+  </data>
+  <data name="SettingsProgressClose" xml:space="preserve">
+    <value>När läsaren stängs</value>
+  </data>
+  <data name="SettingsDisagreeFurthest" xml:space="preserve">
+    <value>Behåll det längsta</value>
+  </data>
+  <data name="SettingsDisagreeLatest" xml:space="preserve">
+    <value>Senaste ändringen</value>
+  </data>
+  <data name="SettingsDisagreeNote" xml:space="preserve">
+    <value>Status och betyg följer den senaste ändringen</value>
+  </data>
+  <data name="SettingsKeepChaptersReadyNote" xml:space="preserve">
+    <value>Kommande kapitel av serier på din Läslista</value>
+  </data>
+  <data name="SettingsDeleteAfterReadingNote" xml:space="preserve">
+    <value>Kapitel med bokmärke behålls</value>
+  </data>
+  <data name="SettingsChapterNotificationsNote" xml:space="preserve">
+    <value>Serier på din Läslista</value>
+  </data>
+  <data name="SettingsDownloadsFinishedNote" xml:space="preserve">
+    <value>När alla kapitel som laddas ner är klara</value>
+  </data>
+  <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
+    <value>Kapitel har en egen systemkanal, så de kan tystas för sig.</value>
+  </data>
+  <data name="AccountsMangaupdatesCredit" xml:space="preserve">
+    <value>MangaUpdates nås via sitt öppna API.</value>
+  </data>
+  <data name="AccountsUsername" xml:space="preserve">
+    <value>Användarnamn</value>
+  </data>
+  <data name="ReadDownloadsTotal_one" xml:space="preserve">
+    <value>{n} kapitel · {size}</value>
+  </data>
+  <data name="ReadDownloadsTotal_other" xml:space="preserve">
+    <value>{n} kapitel · {size}</value>
+  </data>
+  <data name="ReadDownloadsActive" xml:space="preserve">
+    <value>{chapter} · {done} av {total} sidor</value>
+  </data>
+  <data name="ReadDownloadsMoreQueued" xml:space="preserve">
+    <value>{n} till i kö</value>
+  </data>
+  <data name="ReadDownloadsQueued_one" xml:space="preserve">
+    <value>{n} kapitel i kö</value>
+  </data>
+  <data name="ReadDownloadsQueued_other" xml:space="preserve">
+    <value>{n} kapitel i kö</value>
+  </data>
+  <data name="ReadDownloadsFailed" xml:space="preserve">
+    <value>{chapter} kunde inte laddas ner. {reason}</value>
+  </data>
+  <data name="ReadDownloadsKept_one" xml:space="preserve">
+    <value>{n} kapitel</value>
+  </data>
+  <data name="ReadDownloadsKept_other" xml:space="preserve">
+    <value>{n} kapitel</value>
+  </data>
+  <data name="ReadDownloadsRead" xml:space="preserve">
+    <value>{n} lästa</value>
+  </data>
+  <data name="ReadDownloadsDeleteRead" xml:space="preserve">
+    <value>Ta bort lästa</value>
   </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Föregående säsong</value>
@@ -5834,6 +7436,42 @@
   <data name="SettingsTorrentsCellular" xml:space="preserve">
     <value>Torrent på mobildata</value>
   </data>
+  <data name="SettingsChapterDownloadsCellular" xml:space="preserve">
+    <value>Kapitelnedladdningar på mobildata</value>
+  </data>
+  <data name="SettingsKeepChaptersReady" xml:space="preserve">
+    <value>Ha kommande kapitel redo</value>
+  </data>
+  <data name="SettingsDeleteAfterReading" xml:space="preserve">
+    <value>Ta bort kapitel efter läsning</value>
+  </data>
+  <data name="SettingsSeriesChoicesFollow" xml:space="preserve">
+    <value>Serieinställningar följer med dig</value>
+  </data>
+  <data name="SettingsNewChaptersDownload" xml:space="preserve">
+    <value>Nya kapitel</value>
+  </data>
+  <data name="SettingsModeFollows" xml:space="preserve">
+    <value>Läge och riktning</value>
+  </data>
+  <data name="SettingsLookFollows" xml:space="preserve">
+    <value>Utseende</value>
+  </data>
+  <data name="SettingsSendProgressAfter" xml:space="preserve">
+    <value>Skicka förlopp efter</value>
+  </data>
+  <data name="SettingsWhenTrackersDisagree" xml:space="preserve">
+    <value>När trackers inte stämmer överens</value>
+  </data>
+  <data name="SettingsChapterNotifications" xml:space="preserve">
+    <value>Nya kapitel</value>
+  </data>
+  <data name="SettingsDownloadsFinished" xml:space="preserve">
+    <value>Nedladdningar klara</value>
+  </data>
+  <data name="SettingsOpenAt" xml:space="preserve">
+    <value>Öppna på</value>
+  </data>
   <data name="SettingsSeedAfter" xml:space="preserve">
     <value>Seeda efter tittande</value>
   </data>
@@ -5893,6 +7531,9 @@
   </data>
   <data name="SettingsNewEpisodes" xml:space="preserve">
     <value>Nya avsnitt</value>
+  </data>
+  <data name="SettingsNewEpisodesDetail" xml:space="preserve">
+    <value>Serier på din Tittlista</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
     <value>En avisering när ett avsnitt av en serie du följer kommer ut: serien och avsnittets nummer, aldrig dess namn. En serie kan stänga av sina egna i sina inställningar.</value>
@@ -6065,6 +7706,12 @@
   <data name="SettingsAsideAccounts" xml:space="preserve">
     <value>Kaeri fungerar utan konto. Din tittarhistorik stannar på den här enheten när du loggar ut.</value>
   </data>
+  <data name="SettingsAsideAccountsRead" xml:space="preserve">
+    <value>Kaeri fungerar utan konto. Din läshistorik stannar på den här enheten när du loggar ut.</value>
+  </data>
+  <data name="SettingsAsideAccountsBoth" xml:space="preserve">
+    <value>Kaeri fungerar utan konto. Din tittar- och läshistorik stannar på den här enheten när du loggar ut.</value>
+  </data>
   <data name="WidgetDayToday" xml:space="preserve">
     <value>idag</value>
   </data>
@@ -6220,6 +7867,15 @@
   </data>
   <data name="SettingsSubsReset" xml:space="preserve">
     <value>Återställ undertextstil</value>
+  </data>
+  <data name="SettingsOpdsFeed" xml:space="preserve">
+    <value>Dela i det här nätverket</value>
+  </data>
+  <data name="SettingsOpdsPassword" xml:space="preserve">
+    <value>Flödeslösenord</value>
+  </data>
+  <data name="SettingsOpdsPort" xml:space="preserve">
+    <value>Flödesport</value>
   </data>
   <data name="SourcesTitle" xml:space="preserve">
     <value>Källor</value>
@@ -7153,6 +8809,9 @@
   </data>
   <data name="CloudBrowserTitle" xml:space="preserve">
     <value>Logga in på {service} i webbläsaren</value>
+  </data>
+  <data name="CloudCloseCarriesOn" xml:space="preserve">
+    <value>Du kan stänga det här. Kaeri fortsätter och går vidare till steget efter av sig självt när det är klart.</value>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>datorn</value>
@@ -8264,6 +9923,9 @@
   <data name="OpenedChooseFile" xml:space="preserve">
     <value>Välj en torrentfil</value>
   </data>
+  <data name="OpenedUnreadable" xml:space="preserve">
+    <value>Kaeri kunde inte läsa den länken eller filen.</value>
+  </data>
   <data name="OpenedConfirm" xml:space="preserve">
     <value>Är det här {title}, avsnitt {episode}?</value>
   </data>
@@ -8314,6 +9976,27 @@
   </data>
   <data name="AccountsBringsLists" xml:space="preserve">
     <value>Hämtar dina listor och fyller Fortsätt titta med det du tittar på.</value>
+  </data>
+  <data name="AccountsBringsListsRead" xml:space="preserve">
+    <value>Hämtar in dina listor och fyller startsidan med det du läser.</value>
+  </data>
+  <data name="AccountsBringsListsBoth" xml:space="preserve">
+    <value>Hämtar in dina listor och fyller startsidan med det du tittar på och läser.</value>
+  </data>
+  <data name="AccountsTrackerLists" xml:space="preserve">
+    <value>Listor och förlopp</value>
+  </data>
+  <data name="AccountsTrackerReadingLists" xml:space="preserve">
+    <value>Läslistor och förlopp</value>
+  </data>
+  <data name="AccountsTrackerServesBoth" xml:space="preserve">
+    <value>Serier och läsning</value>
+  </data>
+  <data name="AccountsTrackerServesReading" xml:space="preserve">
+    <value>Läsning</value>
+  </data>
+  <data name="AccountsTrackerServesShows" xml:space="preserve">
+    <value>Serier</value>
   </data>
   <data name="AccountsLibraryNeeds" xml:space="preserve">
     <value>Bibliotek och synk kräver ditt konto hos {tracker}</value>

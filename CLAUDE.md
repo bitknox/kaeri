@@ -26,7 +26,7 @@ Folder guides: `crates/CLAUDE.md`, `apple/CLAUDE.md`, `android/CLAUDE.md`, `webs
 
 ## Rules that always apply
 
-- The legal line is "Kaeri doesn't host any shows. You add your own sources." The long form
+- The legal line is "Kaeri doesn't host any shows or books. You add your own sources." The long form
   is on the website's legal page. In the apps it shows only in About. Copy stays neutral and
   legal-first: Kaeri never supplies, promotes or curates sources (`i18n/lint.toml` lists the
   words it never uses).

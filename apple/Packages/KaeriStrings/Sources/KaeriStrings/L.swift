@@ -1672,7 +1672,7 @@ public enum L {
     public static var causeServerUnreachable: String { string("cause-server-unreachable", fallback: "The server couldn't be reached.") }
 
     /// The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-    public static var legalHostsNoContent: String { string("legal-hosts-no-content", fallback: "Kaeri doesn't host any shows. You add your own sources.") }
+    public static var legalHostsNoContent: String { string("legal-hosts-no-content", fallback: "Kaeri doesn't host any shows or books. You add your own sources.") }
 
     /// Toast after a setting is stored. The label is the setting's name.
     public static func noticeSaved(label: String) -> String {

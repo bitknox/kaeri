@@ -486,6 +486,423 @@ party-left = Keluar dari nonton bareng.
 # Message when a watch party's server could not be reached, in the lobby or when looking in.
 party-server-unreachable = Tidak bisa menjangkau { $server }. Periksa servernya, atau coba lagi.
 
+# Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
+reading-next-chapter = Bab { $chapter }
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-mondays = Biasanya hari Senin
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-tuesdays = Biasanya hari Selasa
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-wednesdays = Biasanya hari Rabu
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-thursdays = Biasanya hari Kamis
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-fridays = Biasanya hari Jumat
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-saturdays = Biasanya hari Sabtu
+
+# Under a cover or on a series page: when new chapters usually come out.
+reading-usually-sundays = Biasanya hari Minggu
+
+# Under a cover or on a series page: how often new chapters come out, in weeks.
+reading-about-every-weeks =
+    { $weeks ->
+       *[other] Sekitar tiap { $weeks } minggu
+    }
+
+# On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.
+reading-also-a-show = Ada versi serialnya
+
+# On a show's page, when the same story is also a manga or a novel. Shown only to someone who both watches and reads.
+reading-also-a-book = Ada versi bukunya
+
+# Under a tracker on a series page, when the furthest chapter read is a half chapter. Trackers count whole chapters only. The chapter is its number, such as 10.5; whole is the number the tracker gets, such as 10.
+reading-split-chapter = Bab { $chapter } dikirim ke pelacak-pelacak sebagai { $whole }.
+
+# A notice over the page when a chapter opens where it was left. It offers Start over.
+reader-resumed = Lanjut di halaman { $page }
+
+# A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
+reader-back-to-page = Kembali ke halaman { $page }
+
+# A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
+reader-moved = Pindah ke { $chapter }, halaman { $page }, tempat { $device } berhenti
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number = Pindah ke bab { $chapter }, halaman { $page }, tempat { $device } berhenti
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-right-to-left = Kanan ke kiri, terdeteksi
+
+# A notice the first time a series opens with its reading direction guessed. It offers Change.
+reader-detected-left-to-right = Kiri ke kanan, terdeteksi
+
+# A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
+reader-detected-strip = Strip panjang, terdeteksi
+
+# Why a chapter or a list could not load: there is no connection.
+reading-failed-offline = Anda sedang offline. Bab yang diunduh tetap bisa dibuka.
+
+# Why a chapter or a list could not load: the source did not answer. The source is its name.
+reading-failed-source-down = { $source } tidak menjawab. Coba lagi nanti.
+
+# Why a chapter could not load: the source no longer has it.
+reading-failed-not-found = Sumber ini sudah tidak memilikinya. Coba sumber lain.
+
+# Why a chapter or a list could not load: the source refused. The reason comes from the source.
+reading-failed-blocked = { $source } menolak permintaan. { $reason }
+
+# Why a chapter or a list could not load: the source answered with something Kaeri could not read.
+reading-failed-parse = Kaeri tidak bisa membaca data dari { $source }. Plugin-nya mungkin perlu diperbarui.
+
+# Why one page did not load. The status is the server's HTTP status code, such as 404.
+reading-failed-page = Halaman ini gagal dimuat (galat { $status }). Coba lagi.
+
+# Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
+reading-failed-sign-in = Masuk lagi ke { $what } untuk terus membaca.
+
+# Why a book could not open: its file or folder is gone, perhaps on a drive that is not connected. The path is the file's.
+reading-failed-file-missing = { $path } sudah tidak ada. Jika ada di drive, sambungkan lalu coba lagi.
+
+# Why a book could not open: the file is damaged or not what its name says. The format is a short name such as CBZ or EPUB.
+reading-failed-unreadable = { $path } tidak bisa dibaca sebagai { $format }. Berkasnya mungkin rusak.
+
+# Why a file was not added: Kaeri does not read its kind. The kind is a file extension such as .djvu.
+reading-failed-unsupported = Kaeri tidak bisa membaca berkas { $kind }.
+
+# Why a book could not open: it is copy-protected or encrypted.
+reading-failed-protected = Buku ini dilindungi salin, jadi Kaeri tidak bisa membukanya.
+
+# Why a chapter could not be saved: the disk is full.
+reading-failed-disk-full = Perangkat ini kehabisan ruang. Kosongkan sebagian ruang lalu coba lagi.
+
+# Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
+reading-failed-webview = Novel butuh WebView sistem yang lebih baru dari versi { $version }. Perbarui Android System WebView lalu coba lagi.
+
+# Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
+reading-failed-needs-newer = Plugin ini butuh Kaeri yang lebih baru ({ $world }). Perbarui Kaeri untuk memakainya.
+
+# Why a reading request was refused: reading is not available in this build.
+reading-failed-off = Fitur baca tidak tersedia di versi Kaeri ini.
+
+# Why something about reading failed, for any other reason. The reason is as it came.
+reading-failed-other = Terjadi kesalahan. { $reason }
+
+# Under a cover or on a series page: what kind of book it is. Manga is drawn in Japan.
+reading-kind-manga = Manga
+
+# Under a cover or on a series page: what kind of book it is. Manhwa is drawn in Korea.
+reading-kind-manhwa = Manhwa
+
+# Under a cover or on a series page: what kind of book it is. Manhua is drawn in China or Taiwan.
+reading-kind-manhua = Manhua
+
+# Under a cover or on a series page: what kind of book it is. A webtoon is drawn as one long strip that scrolls down.
+reading-kind-webtoon = Webtoon
+
+# Under a cover or on a series page: what kind of book it is. A one-shot is a story told in a single chapter.
+reading-kind-one-shot = One-shot
+
+# Under a cover or on a series page: what kind of book it is. A light novel is a novel from Japan.
+reading-kind-light-novel = Light novel
+
+# Under a cover or on a series page: what kind of book it is, for a novel from anywhere else.
+reading-kind-novel = Novel
+
+# Under a cover or on a series page: new chapters are still coming out.
+reading-status-releasing = Masih terbit
+
+# Under a cover or on a series page: the story is complete.
+reading-status-finished = Tamat
+
+# Under a cover or on a series page: new chapters have stopped for a while.
+reading-status-hiatus = Hiatus
+
+# Under a cover or on a series page: the story was stopped before it ended.
+reading-status-cancelled = Dibatalkan
+
+# Under a cover or on a series page: the first chapter is not out yet.
+reading-status-not-yet = Belum terbit
+
+# Under a cover or on a series page: how many chapters the series has.
+reading-chapters =
+    { $count ->
+       *[other] { $count } bab
+    }
+
+# Under a cover or on a series page: how many volumes the series has.
+reading-volumes =
+    { $count ->
+       *[other] { $count } volume
+    }
+
+# Under a cover: the series is on the person's Planning list.
+reading-on-planning = Ada di daftar Direncanakan Anda
+
+# Above the big picture at the top of reading's Home, saying why this series is there: a new chapter came out in a series the person reads.
+reading-spotlight-new-chapter = Bab baru di seri yang Anda ikuti
+
+# Above the big picture at the top of reading's Home: the series the person was reading last.
+reading-spotlight-continue = Lanjut membaca
+
+# Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
+reading-spotlight-up-next = Berikutnya untuk Anda
+
+# Above the big picture at the top of reading's Home: a popular series that is still coming out, shown when the person has nothing of their own yet. It is not a pick for them.
+reading-spotlight-popular = Populer, masih terbit
+
+# Under the big picture on reading's Home: a chapter that came out today. The chapter is its number, such as 88.
+reading-out-today = Bab { $chapter } terbit hari ini
+
+# Under the big picture on reading's Home: a chapter that came out today, with its title.
+reading-out-today-titled = Bab { $chapter }, { $title }, terbit hari ini
+
+# Under a cover or the big picture: the page the person stopped on in a chapter.
+reading-chapter-page = Bab { $chapter } · hal. { $page }
+
+# Under a cover or the big picture: how far into a novel's chapter the person is.
+reading-chapter-percent = Bab { $chapter } · { $percent }%
+
+# Under a cover: a chapter came out that the person has not read. The chapter is its number.
+reading-chapter-new = Bab { $chapter } baru
+
+# Under a cover: a light novel's part, next to read or in progress. Light novels read in parts.
+reading-next-part = Bagian { $part }
+
+# Under a cover or the big picture: how far into a light novel's part the person is.
+reading-part-percent = Bagian { $part } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read.
+reading-part-new = Bagian { $part } baru
+
+# Under a This week cell: a light novel's part that came out that day, with its own title.
+reading-part-titled = Bagian { $part } · { $title }
+
+# Under the big picture on reading's Home: a light novel's part that came out today.
+reading-part-out-today = Bagian { $part } terbit hari ini
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title.
+reading-part-out-today-titled = Bagian { $part }, { $title }, terbit hari ini
+
+# Under a Library cover: the chapter the person is at, and the newest chapter there is.
+reading-chapter-of = Bab { $chapter } dari { $of }
+
+# Under a Library cover: the volume and part of a light novel the person is at.
+reading-volume-part = Volume { $volume }, bagian { $part }
+
+# A search filter: books from Japan.
+reading-origin-japan = Jepang
+
+# A search filter: books from Korea.
+reading-origin-korea = Korea
+
+# A search filter: books from China.
+reading-origin-china = Tiongkok
+
+# A search filter: books from Taiwan.
+reading-origin-taiwan = Taiwan
+
+# Send to e-reader: a device class with no brand, for e-readers not listed by name. Opens CBZ and EPUB.
+export-device-other = E-reader lain
+
+# Send to e-reader: a device class, a grey e-ink screen of about 6 inches.
+export-device-eink-6 = E-ink, 6 inci
+
+# Send to e-reader: a device class, a grey e-ink screen of about 7 or 8 inches.
+export-device-eink-7 = E-ink, 7 inci
+
+# Send to e-reader: a device class, a colour e-ink screen of about 7 inches.
+export-device-colour-eink = E-ink warna, 7 inci
+
+# Send to e-reader: a device class, a colour tablet.
+export-device-tablet = Tablet
+
+# A table of contents entry in a file sent to an e-reader. The chapter is its number, such as 44 or 10.5.
+export-chapter = Bab { $chapter }
+
+# Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.
+export-waits-for-wifi =
+    { $n ->
+       *[other] { $n } bab belum diunduh, jadi pengiriman ini menunggu Wi-Fi dan lanjut sendiri.
+    }
+
+# Under a This week cell: the chapter that came out that day, with its own title.
+reading-chapter-titled = Bab { $chapter } · { $title }
+
+# A chapter row's state: the person read it.
+reading-row-read = Dibaca
+
+# A chapter row's state: it came out since the person last read and is not read.
+reading-row-new = Baru
+
+# A chapter row's state: it is kept on this device to read offline.
+reading-row-downloaded = Terunduh
+
+# A chapter row's state: it is read from the source and nothing of it is on this device.
+reading-row-not-downloaded = Belum diunduh
+
+# A chapter row's state: a file in one of the person's folders, or one already on the device.
+reading-row-on-device = Di perangkat ini
+
+# A chapter row's state: it waits its turn to download.
+reading-row-queued = Antre
+
+# A chapter row's state: it waits to download until the device is on Wi-Fi.
+reading-row-waits-wifi = Antre · tunggu Wi-Fi
+
+# A chapter row's state while it downloads.
+reading-row-downloading = Mengunduh · { $done } dari { $total } hal.
+
+# A chapter row's state: the download failed. The reason follows as the next part.
+reading-row-failed = Gagal diunduh
+
+# A chapter row's state: the page the person stopped on, of how many.
+reading-row-page-of = Hal. { $page } dari { $of }
+
+# A chapter row's state: the page the person stopped on, when the length isn't known.
+reading-row-page = Hal. { $page }
+
+# A novel's chapter row: how far into it the person is.
+reading-row-percent = { $percent }%
+
+# A chapter row: how long its pages are, for a file on the device.
+reading-row-pages =
+    { $n ->
+       *[other] { $n } hal.
+    }
+
+# A chapter row: how many versions the person's sources have of it. The row's menu lists them.
+reading-row-versions =
+    { $n ->
+       *[other] { $n } versi
+    }
+
+# A chapter row: when it was read or came out, under a minute ago.
+reading-ago-now = baru saja
+
+# A chapter row: when it was read or came out, in minutes.
+reading-ago-minutes = { $minutes } mnt lalu
+
+# A chapter row: when it was read or came out, earlier today.
+reading-ago-today = hari ini
+
+# A chapter row: when it was read or came out, the day before today.
+reading-ago-yesterday = kemarin
+
+# A chapter row: when it was read or came out, in days, under a week.
+reading-ago-days =
+    { $days ->
+       *[other] { $days } hari lalu
+    }
+
+# A chapter row: when it was read or came out, in weeks, under two months.
+reading-ago-weeks =
+    { $weeks ->
+       *[other] { $weeks } minggu lalu
+    }
+
+# A chapter row: when it was read or came out, in months, under a year.
+reading-ago-months =
+    { $months ->
+       *[other] { $months } bulan lalu
+    }
+
+# A chapter row: when it was read or came out, in years.
+reading-ago-years =
+    { $years ->
+       *[other] { $years } tahun lalu
+    }
+
+# The tracker took the series off its list.
+reading-removed-from = Dihapus dari { $tracker }
+
+# The tracker's list did not hold the series, so there was nothing to remove.
+reading-removed-not-there = Tidak ada di daftar { $tracker } Anda
+
+# The app never learned which of the tracker's entries this series is, so it asked nothing.
+reading-removed-unmatched = Tidak cocok di { $tracker }, jadi tidak ada yang berubah di sana
+
+# The tracker could not take the series off. The reason follows.
+reading-removed-failed = Masih ada di daftar { $tracker } Anda
+
+# Why a removal failed: the tracker turned the sign-in away.
+reading-removed-sign-in = Masuk lagi ke { $tracker }, lalu coba sekali lagi.
+
+# The source answered the search and has no series by the series' names.
+reading-miss-no-series = Tidak ada seri dengan nama ini
+
+# The source has failed every ask since this time of day, in the person's zone.
+reading-miss-down-since = Tidak menjawab sejak { $time }
+
+# The source has failed every ask, since a time on another day or not known.
+reading-miss-down = Tidak menjawab
+
+# How many parts of a light novel are downloaded.
+reading-dl-parts =
+    { $count ->
+       *[other] { $count } bagian
+    }
+
+# What the downloads take up on this device.
+reading-dl-size = { $size }
+
+# How many of the downloaded chapters are read, which Delete read clears.
+reading-dl-read = { $count } dibaca
+
+# The chapter downloading now.
+reading-dl-chapter = Bab { $chapter }
+
+# How far the chapter downloading now has come.
+reading-dl-pages = { $done } dari { $total } hal.
+
+# Chapters waiting their turn after the one downloading.
+reading-dl-more-queued = { $count } lagi antre
+
+# Chapters waiting their turn, none downloaded yet.
+reading-dl-queued = { $count } antre
+
+# Chapters that wait for Wi-Fi to download.
+reading-dl-waits-wifi = menunggu Wi-Fi
+
+# A chapter that failed. The reason follows as the next part.
+reading-dl-failed = Bab { $chapter } gagal diunduh
+
+# How much the chosen chapters will take, from their pages and the size of pages downloaded before.
+reading-estimate-size = Sekitar { $size }
+
+# The chapters download only on Wi-Fi, as the settings say.
+reading-estimate-wifi = lewat Wi-Fi
+
+# The device is on mobile data, and the settings let chapters download on it.
+reading-estimate-mobile = lewat data seluler
+
+# The device is on mobile data and the chapters wait until it's on Wi-Fi.
+reading-estimate-waits-wifi = menunggu Wi-Fi
+
+# The notification's title.
+reading-downloads-done-title = Unduhan selesai
+
+# The notification's text: one series' chapters are downloaded.
+reading-downloads-done-chapters =
+    { $count ->
+       *[other] { $count } bab { $title } siap dibaca offline.
+    }
+
+# The notification's text: one light novel's parts are downloaded.
+reading-downloads-done-parts =
+    { $count ->
+       *[other] { $count } bagian { $title } siap dibaca offline.
+    }
+
+# The notification's text: chapters of several series are downloaded.
+reading-downloads-done-series = Bab dari { $count } seri siap dibaca offline.
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Bergabung dengan { $store } sebagai { $member }.
 
@@ -638,6 +1055,9 @@ plugin-publish-failed = Tidak bisa menerbitkan { $plugin }. { $reason }
 
 # Error: a plugin to publish is no longer in the plugin folder.
 plugin-missing-locally = { $plugin } tidak lagi ada di folder plugin.
+
+# Error: a book source cannot be published to a store whose server is too old to list book sources.
+store-takes-no-books = { $store } belum mencantumkan sumber-sumber buku. Pemiliknya bisa memperbarui toko plugin untuk menambahkannya.
 
 # Error: an invite for another device cannot be made from a device that joined with the open link.
 store-invite-needs-link = Anda sudah bergabung dengan { $store } dari perangkat ini lewat tautan. Tempelkan tautan yang sama di perangkat lain.
@@ -860,9 +1280,6 @@ cause-proxy-address-unusable = Alamat proxy tidak dapat diperiksa.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Server tidak dapat dihubungi.
-
-# The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri tidak menghosting tayangan apa pun. Anda menambahkan sumber-sumber Anda sendiri.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = { $label } disimpan.
@@ -6379,6 +6796,9 @@ party-joining = Sedang bergabung ke { $room } di { $server }…
 # Line on the form when no episode is playing yet.
 party-form-nothing = Yang sedang diputar akan ikut ruang ini.
 
+# Line on the form that starts a party with nothing picked yet.
+party-form-pick-later = Setelah masuk, tekan Putar di episode mana pun untuk menontonnya bersama ruang.
+
 # Line naming the episode of the form.
 party-form-episode-of = Episode { $episode } dari { $title }
 
@@ -6528,6 +6948,9 @@ together-people-button = Nonton bareng
 
 # Button that starts a watch party from the place. The one amber button there.
 together-start = Mulai nonton bareng
+
+# Line under Start a party.
+together-start-line = Buka ruang dan undang teman lewat tautan atau kode, lalu tekan Putar pada yang ingin Anda tonton.
 
 # Heading of the field that joins a watch party.
 together-join = Gabung nonton bareng
@@ -6735,6 +7158,9 @@ party-bar-line = { $count } di ruang · { $ready } siap
 
 # Second line of the bar when nothing plays for you.
 party-bar-idle = Di ruang · tidak ada yang diputar untuk Anda
+
+# Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room.
+party-bar-pick = Tekan Putar di episode mana pun untuk menontonnya bersama ruang
 
 # Notice in the player when someone pauses.
 party-paused-by = Dijeda oleh { $name }
@@ -7534,6 +7960,1110 @@ player-subs-bg-box = Kotak
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Selengkapnya di Pengaturan…
+
+# Under a page that is still loading after four seconds.
+reader-page-loading = Memuat halaman { $page }
+
+# Heading where a page could not be loaded.
+reader-page-failed = Halaman { $page } gagal dimuat
+
+# Button that loads a failed page again.
+reader-try-again = Coba lagi
+
+# Closes the reader and goes back to the series.
+reader-close = Tutup
+
+# Under the top line of the page between chapters, once the chapter counts as read.
+reader-end-read = Dibaca
+
+# Small heading above the next chapter on the page between chapters.
+reader-end-next = Selanjutnya
+
+# A reading mode, and a reading direction.
+reader-mode-rtl = Kanan ke kiri
+
+# A reading mode, and a reading direction.
+reader-mode-ltr = Kiri ke kanan
+
+# A reading mode: one long scroll of images.
+reader-mode-strip = Strip
+
+# A choice for how a page is fitted.
+reader-fit-screen = Layar
+
+# A choice for how a page is fitted.
+reader-fit-width = Lebar
+
+# A choice of typeface.
+reader-font-serif = Serif
+
+# A choice of typeface.
+reader-font-sans = Sans
+
+# A look for reading: warm paper.
+reader-look-paper = Kertas
+
+# A look for reading: a light page.
+reader-look-light = Terang
+
+# A look for reading: a brown page.
+reader-look-sepia = Sepia
+
+# A look for reading: a dark page.
+reader-look-dark = Gelap
+
+# A choice of margins.
+reader-margins-narrow = Sempit
+
+# A choice of margins.
+reader-margins-wide = Lebar
+
+# A choice for page layout.
+reader-layout-auto = Otomatis
+
+# A choice for page layout.
+reader-layout-single = Satu
+
+# A choice for page layout.
+reader-layout-double = Dua
+
+# A choice for wide pages: cut in two.
+reader-spreads-split = Bagi
+
+# A choice for wide pages: turned to fill the screen.
+reader-spreads-rotate = Putar
+
+# A choice for wide pages: shown whole.
+reader-spreads-whole = Utuh
+
+# A choice for the reader's tap zones: taps near the left and right edges turn the page.
+reader-tap-edges = Tepi
+
+# A choice for the reader's tap zones: the left and right halves turn the page.
+reader-tap-sides = Separuh
+
+# A choice for the reader's tap zones: taps do not turn the page.
+reader-tap-off = Mati
+
+# Button in the reader's controls that opens the chapters and the page grid.
+reader-chapters = Bab
+
+# Line in the margin of a novel's page.
+reader-pages-left =
+    { $count ->
+       *[other] Sisa { $count } halaman di bab ini
+    }
+
+# Chapters sheet and the chapter list: the list is on its way.
+reader-chapters-loading = Memuat bab
+
+# Background choice.
+reader-background-theme = Tema
+
+# Background choice.
+reader-background-black = Hitam
+
+# Background choice.
+reader-background-white = Putih
+
+# Title of the end page when the series has no newer chapter.
+reader-end-caught-up = Anda sudah menyusul
+
+# A choice for the gap between a strip's images: none at all.
+reader-gap-none = Tanpa jarak
+
+# A choice for the gap between a strip's images: a small one.
+reader-gap-small = Kecil
+
+# Look choice that follows the system's light or dark.
+reader-look-system = Sistem
+
+# Sidebar and tab label: the shows' Home when both media are on.
+nav-watch = Tonton
+
+# Sidebar and tab label: reading's Home.
+nav-read = Baca
+
+# Sidebar and tab label: new chapters from followed series.
+nav-updates = Pembaruan
+
+# Shelf heading on Read: series releasing now.
+home-read-releasing = Sedang terbit
+
+# Line under the spotlight of a popular series, when the engine gives no line of its own.
+home-read-checked-on-open = Diperiksa saat Anda membuka Kaeri
+
+# Line at the end of Read, under the last shelf.
+home-read-end = Hanya itu untuk saat ini. Pembaruan dan Cari punya daftar lengkapnya.
+
+# Line at the end of Read with no book sources yet. A button to add one follows it.
+home-read-no-sources = Tambahkan folder, server, atau toko plugin untuk membaca dari Beranda.
+
+# Under a day in Read's week: what usually comes out that day, when the time isn't known.
+week-usually = Biasanya
+
+# Under a day in Read's week with nothing due.
+week-nothing-usually = Biasanya kosong
+
+# Line under Updates' title on iPhone and iPad.
+updates-checked = Diperiksa { $ago }
+
+# Line above Updates on the Mac: when it checked, and which series it checks.
+chapter-updates-checked-caught-up = Diperiksa { $ago } · seri yang sudah Anda susul
+
+# Line while Updates asks every followed series now.
+chapter-updates-checking = Memeriksa bab baru…
+
+# Toolbar button: queue every unread chapter in Updates.
+updates-download-new = Unduh yang baru
+
+# Updates with nothing in it.
+updates-empty-title = Tidak ada bab baru
+
+# Line under Updates' empty title.
+chapter-updates-empty-line = Kaeri memeriksa seri di daftar Membaca Anda yang sudah Anda susul, beberapa kali sehari.
+
+# Day heading in Updates.
+chapter-updates-today = Hari ini
+
+# Day heading in Updates.
+chapter-updates-yesterday = Kemarin
+
+# After a chapter on an Updates row, when several groups put it out.
+chapter-updates-versions =
+    { $n ->
+       *[other] { $n } versi
+    }
+
+# Accessibility label on an Updates row's cover, which opens the series.
+chapter-updates-open-series = Buka { $title }
+
+# Accessibility hint on an Updates row.
+chapter-updates-open-chapter-hint = Membuka bab
+
+# Context menu item on an Updates row.
+chapter-updates-open-series-menu = Buka seri
+
+# The series page's main action, and the spotlight's.
+action-read-chapter = Baca bab { $n }
+
+# The main action when a chapter is part read.
+action-continue-chapter = Lanjutkan bab { $n } · halaman { $page }
+
+# The main action for a light novel part, part read.
+action-continue-part = Lanjutkan bagian { $n } · { $percent }%
+
+# The main action for a light novel part, part read, when how far is not known.
+action-continue-part-plain = Lanjutkan bagian { $n }
+
+# The main action for a light novel part not opened yet.
+action-read-part = Baca bagian { $n }
+
+# The main action when every chapter is read.
+action-read-again = Baca ulang
+
+# Label of the source row on the series page.
+series-reading-from = Dibaca dari
+
+# Button beside a row on the series page that opens its sheet.
+series-change = Ubah
+
+# After the source's name: how many other sources have the series.
+series-sources-more =
+    { $n ->
+       *[other] { $n } lagi
+    }
+
+# Value of the trackers row while a tracker asks which series this is.
+series-tracker-ask = Seri yang mana? Pilih
+
+# Value of the group row: the chosen group is used for this series.
+series-preferred-group = Grup pilihan Anda di sini
+
+# A tracker's progress in chapters, with the total.
+series-tracker-chapters-of =
+    { $total ->
+       *[other] { $n } dari { $total } bab
+    }
+
+# A tracker's progress in chapters, total unknown.
+series-tracker-chapters =
+    { $n ->
+       *[other] { $n } bab
+    }
+
+# A tracker's progress in chapters, then the volume.
+series-tracker-with-volume = { $chapters } · volume { $volume }
+
+# A light novel tracker's progress in volumes.
+series-tracker-volumes = Volume { $volume } dari { $total }
+
+# Main place when the source can't be read from.
+series-read-from-another = Baca dari sumber lain
+
+# Status menu item: a score submenu.
+series-score = Skor…
+
+# Status menu's label before the series is on a list.
+series-add-to-list = Tambah ke daftar
+
+# Last item of a series' list menu: take the series off every tracker's list. Asks first.
+series-remove-from-lists = Hapus dari daftar…
+
+# Title of the question before a series is taken off the lists.
+series-remove-from-lists-title = Hapus { $title } dari daftar Anda?
+
+# Line in that question.
+series-remove-from-lists-line = Seri ini dihapus dari daftar di setiap pelacak yang Anda sambungkan. Posisi dan bab yang sudah dibaca tetap ada di Kaeri.
+
+# Heading over what the removal came to, one line per tracker.
+series-removed-title = Daftar Anda
+
+# Title while choosing chapters on a phone: how many are chosen.
+series-chosen =
+    { $n ->
+       *[other] { $n } bab
+    }
+
+# Button while choosing chapters on a phone: choose every unread chapter.
+series-choose-all-unread = Semua yang belum dibaca
+
+# Heading in Read from over the sources searched without finding the series.
+read-from-not-found = Tidak ditemukan di
+
+# Button beside such a source: look for the series there by other words.
+read-from-search-there = Cari di sana
+
+# Placeholder of the field that looks for the series in one source.
+read-from-search-placeholder = Cari di { $source }
+
+# Button that runs that search.
+read-from-search = Cari
+
+# Under the field when the source found nothing by those words.
+read-from-search-none = Tidak ada yang cocok dengan kata-kata ini
+
+# The More menu: the Tracking sheet.
+series-tracking = Pelacakan
+
+# The More menu: the Read from sheet.
+series-read-from-menu = Ganti sumber…
+
+# The More menu: start again from chapter 1.
+series-read-again-menu = Baca ulang dari awal…
+
+# Heading of the chapter list when the series has volumes.
+series-volumes = Volume
+
+# Heading of the chapter list.
+series-chapters = Bab
+
+# Accessibility label of the chapter order menu.
+series-order = Urutan
+
+# Chapter order.
+series-newest-first = Terbaru dulu
+
+# Chapter order.
+series-oldest-first = Terlama dulu
+
+# A volume's heading in the chapter list.
+series-volume = Volume { $n }
+
+# The heading for chapters that are in no volume yet.
+series-no-volume = Belum masuk volume
+
+# After a volume's heading: which chapters it holds.
+series-chapter-range = bab { $from } sampai { $to }
+
+# After a volume's heading when every chapter in it is read.
+series-volume-read = dibaca
+
+# Accessibility value of a volume heading.
+series-expanded = Terbuka
+
+# Accessibility value of a volume heading.
+series-collapsed = Terlipat
+
+# The chapter list when the source has none.
+series-no-chapters-title = Belum ada bab di sumber ini
+
+# Line under it.
+series-no-chapters-line = Sumber lain mungkin memilikinya.
+
+# The chapter list when the source failed. Downloaded chapters are listed under it.
+series-chapters-failed = Bab dari { $source } gagal dimuat.
+
+# A chapter row's title.
+series-chapter-number = Bab { $n }
+
+# Accessibility label of the bookmark mark on a chapter row.
+series-bookmarked = Ditandai
+
+# Chapter menu and swipe action.
+series-mark-read = Tandai dibaca
+
+# Chapter menu and swipe action.
+series-mark-unread = Tandai belum dibaca
+
+# Chapter menu item: every chapter before this one is read too.
+series-mark-read-up-to = Tandai dibaca sampai sini
+
+# Chapter menu and swipe action.
+series-download = Unduh
+
+# Chapter menu item: open the chapter in the reader.
+series-read-chapter-menu = Baca
+
+# Chapter menu item.
+series-bookmark = Beri penanda
+
+# Chapter menu item.
+series-remove-bookmark = Hapus penanda
+
+# Menu of a chapter that several groups put out.
+series-versions =
+    { $n ->
+       *[other] { $n } versi
+    }
+
+# In that menu while the versions load.
+series-versions-loading = Mencari versi…
+
+# The version in use, in that menu.
+series-version-in-use = { $name } dipakai
+
+# Make another group the one used for this series.
+series-prefer-version = Utamakan { $name } untuk seri ini
+
+# A downloaded chapter, after its state.
+chapter-state-downloaded = Terunduh
+
+# A chapter waiting to download.
+chapter-state-queued = Antre
+
+# A chapter waiting for Wi-Fi to download.
+chapter-state-wifi = Antre · tunggu Wi-Fi
+
+# A chapter downloading.
+chapter-state-downloading = Mengunduh · { $done } dari { $total } halaman
+
+# A chapter that failed to download, with the reason.
+chapter-state-failed = Gagal diunduh. { $reason }
+
+# A part-read chapter.
+chapter-state-page-of = Halaman { $page } dari { $of }
+
+# A part-read chapter whose length isn't known.
+chapter-state-page = Halaman { $page }
+
+# A read chapter.
+chapter-state-read = Dibaca
+
+# A chapter that came out since you last looked.
+chapter-state-new = Baru
+
+# Button: stop a chapter's download.
+chapter-download-stop = Hentikan unduhan
+
+# Button: try a failed chapter's download again.
+chapter-retry = Coba lagi
+
+# Chapter menu item.
+chapter-download-delete = Hapus unduhan
+
+# Download menu item.
+download-next = { $n } selanjutnya yang belum dibaca
+
+# Download menu item.
+download-unread = Semua bab yang belum dibaca
+
+# Download menu item: a volume's chapters not yet downloaded.
+download-volume-count =
+    { $n ->
+       *[other] { $volume } · { $n } bab
+    }
+
+# Download menu item: turns on choosing chapters in the list.
+download-choose = Pilih bab…
+
+# Download menu item.
+download-delete-series = Hapus unduhan seri ini
+
+# The amber button in the Choose chapters bar.
+download-chapters =
+    { $n ->
+       *[other] Unduh { $n } bab
+    }
+
+# Line above that button.
+download-over-wifi = Lewat Wi-Fi
+
+# Title of the question before reading a series again.
+read-again-title = Baca ulang { $title } dari awal?
+
+# What happens on each side.
+read-again-line = Posisi Anda kembali ke bab 1 di semua perangkat Anda. Bab tetap ditandai dibaca di pelacak-pelacak Anda, dan AniList menghitungnya sebagai baca ulang.
+
+# The confirming button.
+read-again-confirm = Baca ulang
+
+# Title of the sheet that changes where a series' chapters come from.
+series-read-from-title = Baca dari
+
+# While the sheet asks every source.
+series-read-from-asking = Menanyai sumber-sumber Anda…
+
+# The sheet with no source that has the series.
+series-read-from-none-title = Tidak ada sumber yang punya seri ini
+
+# Line under it.
+series-read-from-none-line = Tambahkan folder, server, atau toko plugin di Sumber-sumber Anda.
+
+# A source's chapters, first on its line.
+series-read-from-chapters = Bab 1 sampai { $latest }
+
+# A source's chapters, after its kind on the line.
+series-read-from-chapters-later = bab 1 sampai { $latest }
+
+# After a folder's chapters.
+series-read-from-on-device = di { $device } ini
+
+# Footnote of the Read from sheet.
+series-read-from-note = Tanda dibaca milik seri, jadi ikut pindah saat Anda berganti. Unduhan dari sumber lama tetap ada sampai Anda menghapusnya.
+
+# Heading for trackers that don't track this series.
+series-not-tracked = Tidak dilacak di sini
+
+# A tracker that isn't connected.
+series-tracker-connect = Sambungkan di Pengaturan untuk melacak seri ini
+
+# A tracker that has no such series.
+series-tracker-not-there = Tidak ada yang cocok di pelacak ini
+
+# A tracker looking for the series.
+series-tracker-looking = Mencari seri ini…
+
+# A tracker that is behind, and catches up on the next sync.
+series-tracker-behind = Baru sampai bab { $has }. Menjadi { $gets } pada sinkronisasi selanjutnya.
+
+# A tracker ahead of Kaeri.
+series-tracker-ahead = Sudah bab { $has }, lebih jauh dari Kaeri.
+
+# A tracker's score out of ten.
+series-tracker-score = { $score } / 10
+
+# Menu item on a tracker that differs.
+series-tracker-keep-kaeri = Pertahankan posisi Kaeri
+
+# Menu item on a tracker that differs.
+series-tracker-take-theirs = Pakai posisi { $tracker }
+
+# Under a tracker's guesses for the series.
+series-tracker-none-of-these = Bukan salah satunya
+
+# AniList's list.
+read-list-reading = Membaca
+
+# AniList's list.
+read-list-planning = Direncanakan
+
+# AniList's list.
+read-list-completed = Selesai
+
+# AniList's list.
+read-list-paused = Dijeda
+
+# AniList's list.
+read-list-dropped = Dihentikan
+
+# AniList's list.
+read-list-rereading = Membaca ulang
+
+# Series in folders and servers that are on no list.
+read-list-your-files = Berkas Anda
+
+# A choice.
+medium-watch = Menonton
+
+# A choice.
+medium-read = Membaca
+
+# A choice.
+medium-both = Keduanya
+
+# Line under the Watch choice.
+medium-watch-line = Serial dan film dari sumber-sumber Anda
+
+# Line under the Read choice.
+medium-read-line = Manga, webtoon, dan light novel dari sumber-sumber Anda
+
+# Line under the Both choice.
+medium-both-line = Menonton dan membaca, masing-masing di tempatnya
+
+# The answer, as the Settings row says it.
+medium-answer-watch = Menonton
+
+# The answer, as the Settings row says it.
+medium-answer-read = Membaca
+
+# The answer, as the Settings row says it.
+medium-answer-both = Menonton dan membaca
+
+# Title of the sheet and the toolbar button.
+sources-add-title = Tambah sumber
+
+# Line in the Add a source sheet.
+book-add-line = Buku yang sudah Anda punya, atau plugin-plugin dari toko yang pemiliknya mengundang Anda.
+
+# A kind in the Add a source sheet.
+book-add-folder = Folder
+
+# Line under it.
+book-add-folder-line = CBZ, EPUB, PDF, dan folder gambar di { $device } ini atau di drive
+
+# A kind in the Add a source sheet.
+book-add-server = Server
+
+# Line under it.
+book-add-server-line = Komga, Kavita, atau katalog OPDS yang bisa Anda masuki
+
+# A kind in the Add a source sheet.
+book-add-store = Toko plugin
+
+# Line under it.
+book-add-store-line = Tempel undangan dari pemilik toko
+
+# Title of the Add a server sheet.
+book-add-server-title = Tambah server
+
+# The sheet's amber button.
+book-add-server-button = Tambah server
+
+# What the address answered, before the sign-in.
+sources-found-server = Menemukan server { $kind }
+
+# What the server held once signed in, when it said how many series it lists.
+sources-found-server-series =
+    { $n ->
+       *[other] Menemukan server { $kind } dengan { $n } seri
+    }
+
+# While the address is tried.
+book-server-looking = Memeriksa alamat ini…
+
+# Line under the password.
+book-server-note = Kaeri mengirim kemajuan baca Anda kembali ke server ini. Kata sandi tetap di Keychain.
+
+# Heading in Your sources.
+book-sources-folders = Folder
+
+# Heading in Your sources.
+book-sources-servers = Server
+
+# Heading in Your sources.
+book-sources-plugins = Plugin-plugin
+
+# Under the plugins, before a link to the plugin stores.
+book-sources-plugins-footer = Plugin-plugin datang dari toko-toko plugin yang Anda ikuti.
+
+# How many series a folder or server holds.
+book-sources-series =
+    { $n ->
+       *[other] { $n } seri
+    }
+
+# A folder being looked through.
+book-sources-scanning = Menelusuri · { $n } ditemukan
+
+# A folder that can't be found, such as a drive that isn't plugged in.
+book-sources-missing = Tidak ditemukan. Apakah drive-nya tersambung?
+
+# A source that is turned off.
+book-sources-off = Mati
+
+# On a server's line.
+book-sources-progress-back = kemajuan dikirim kembali ke server
+
+# A server's kind.
+book-sources-opds = Katalog OPDS
+
+# A plugin's store.
+book-sources-from-store = Dari { $store }
+
+# A plugin's version.
+book-sources-version = versi { $version }
+
+# Button on a folder: series whose match needs a look.
+book-sources-check-matches = Periksa kecocokan · { $n }
+
+# Title of the Check matches sheet.
+book-sources-check-matches-title = Periksa kecocokan
+
+# A folder menu item: look through the folders again.
+book-sources-scan = Telusuri lagi
+
+# A server menu switch.
+book-sources-report-progress = Kirim kemajuan ke server
+
+# A server menu switch.
+book-sources-use = Pakai server ini
+
+# An address that answered but serves no books.
+book-sources-not-a-book-server = Alamat ini menjawab, tetapi bukan sebagai server buku.
+
+# A folder name with no match.
+book-sources-no-match = Tidak cocok
+
+# Button: keep the series as Your files, unmatched.
+book-sources-keep = Simpan yang belum cocok
+
+# Button: search for the match by hand.
+book-sources-find = Cari
+
+# Footnote of the Check matches sheet.
+book-sources-unmatched-note = Seri yang belum cocok tetap dibaca dari folder. Seri itu belum punya kemajuan di pelacak sampai dicocokkan.
+
+# Accessibility label of the control that sets Shows or Reading in the Library and Search.
+library-scope-label = Tontonan atau Bacaan
+
+# A side of that control.
+library-scope-shows = Tontonan
+
+# A side of that control.
+library-scope-reading = Bacaan
+
+# The reading library's order: as the engine sends it, most recently read first.
+read-sort-last-read = Terakhir dibaca
+
+# Accessibility value of the list menu: the list and how many series are on it.
+read-library-list-value =
+    { $n ->
+       *[other] { $list }, { $n } seri
+    }
+
+# A reading list with nothing on it. A Search button follows.
+read-library-empty = Belum ada apa pun di { $list }
+
+# Line under it.
+read-library-empty-line = Seri yang Anda tambahkan dari Cari atau halaman seri muncul di sini.
+
+# Your files with nothing in it.
+read-library-files-empty-title = Belum ada apa pun di berkas Anda
+
+# Line under it.
+read-library-files-empty-line = Seri di folder dan server Anda yang tidak masuk daftar mana pun muncul di sini.
+
+# The button under it.
+read-library-files-add = Tambah folder atau server
+
+# The search field's prompt while Search looks for reading.
+read-search-placeholder = Cari bacaan
+
+# The last row of reading's results with both media on: matches in the other scope.
+search-other-scope =
+    { $n ->
+       *[other] { $n } hasil di { $scope }
+    }
+
+# The button on that row, which switches the scope.
+search-show-them = Tampilkan
+
+# The line over browsing: what is shown, and where the list comes from.
+read-search-browse-line = { $what } · dari AniList
+
+# Over reading's results once every result is listed: how many series AniList found.
+read-search-total =
+    { $n ->
+       *[other] { $n } seri dari AniList
+    }
+
+# Search couldn't ask AniList.
+read-search-failed = Pencarian gagal
+
+# No results for what was typed.
+read-search-nothing = Tidak ada hasil untuk { $query }
+
+# No results while browsing with filters.
+read-search-nothing-browse = Tidak ada yang cocok dengan filter ini
+
+# Line under no results.
+read-search-nothing-line = Coba kata lain, atau judul dalam bahasa lain.
+
+# Line under no results with filters set. A Clear filters button follows.
+read-search-nothing-filters-line = Filter yang lebih sedikit mungkin menemukan lebih banyak.
+
+# The button under it.
+read-search-clear-filters = Hapus filter
+
+# A sort of reading's Search, AniList's.
+read-sort-popular = Populer
+
+# A sort of reading's Search, AniList's.
+read-sort-trending = Sedang tren
+
+# A sort of reading's Search, AniList's.
+read-sort-score = Skor
+
+# A sort of reading's Search, AniList's.
+read-sort-newest = Terbaru
+
+# A filter.
+read-filter-format = Format
+
+# A filter.
+read-filter-origin = Asal
+
+# A filter.
+read-filter-status = Status
+
+# A filter.
+read-filter-genres = Genre
+
+# Title of the iPhone's filters sheet.
+read-filter-title = Filter
+
+# Button in that sheet that clears every filter.
+read-filter-reset = Setel ulang
+
+# Accessibility value of a filter with nothing chosen.
+read-filter-any = Apa saja
+
+# A filter's name before its value, once set: "Origin: Korea".
+read-filter-set = { $name }:
+
+# A filter with several values: the first, then how many more.
+read-filter-many = { $first } dan { $more } lagi
+
+# A genre left out.
+read-filter-not-genre = Bukan { $genre }
+
+# How many genres are set.
+read-filter-genres-count =
+    { $n ->
+       *[other] { $n } genre
+    }
+
+# A genre's state: only series with it.
+read-filter-included = Disertakan
+
+# A genre's state: no series with it.
+read-filter-left-out = Dikecualikan
+
+# Over a first-run page's title: which page of how many.
+onboarding-step = { $step } dari { $total }
+
+# Line under "Welcome to Kaeri" on the first page, naming both media.
+onboarding-welcome-line = Catat yang Anda tonton dan baca, dari sumber-sumber Anda sendiri.
+
+# Note under the welcome line.
+onboarding-welcome-note = Daftar dan kemajuan Anda tetap ada di perangkat Anda. Anda sendiri yang menambahkan Pelacak-pelacak dan sumber-sumber.
+
+# Title of the page that asks what Kaeri is for, and of the sheet after the update.
+onboarding-medium-title = Menonton, membaca, atau keduanya?
+
+# Line under the title of the medium page.
+onboarding-medium-line = Kaeri hanya menampilkan yang Anda pilih. Anda bisa mengubahnya di Pengaturan.
+
+# Accessibility hint on Continue while nothing is chosen on the medium page.
+onboarding-medium-hint = Pilih salah satu dari ketiganya dulu
+
+# Title of the first-run page that offers AniList.
+onboarding-lists-title = Bawa masuk daftar Anda
+
+# Line on the AniList page after Watch.
+onboarding-lists-line-watch = Kaeri menyelaraskan tontonan Anda dengan { $tracker }.
+
+# Line on the AniList page after Read.
+onboarding-lists-line-read = Kaeri menyelaraskan bacaan Anda dengan { $tracker }.
+
+# Line on the AniList page after Both.
+onboarding-lists-line-both = Kaeri menyelaraskan bacaan dan tontonan Anda dengan { $tracker }.
+
+# Line under AniList's name on the first-run page.
+onboarding-lists-anilist-line = Daftar, kemajuan, dan saran
+
+# Under AniList on the first-run page after Watch: the other trackers, for later.
+onboarding-lists-later-watch = MyAnimeList, Kitsu, Simkl, dan Trakt bisa ditambahkan nanti di Pengaturan, bagian Akun.
+
+# Under AniList on the first-run page after Read: the other trackers, for later.
+onboarding-lists-later-read = MyAnimeList, Kitsu, dan MangaUpdates bisa ditambahkan nanti di Pengaturan, bagian Akun.
+
+# Under AniList on the first-run page after Both: the other trackers, for later.
+onboarding-lists-later-both = MyAnimeList, Kitsu, MangaUpdates, Simkl, dan Trakt bisa ditambahkan nanti di Pengaturan, bagian Akun.
+
+# The first-run page's main button: sign in to the tracker.
+onboarding-connect = Sambungkan { $tracker }
+
+# Title of the last first-run page after Read or Both.
+onboarding-books-title = Dari mana buku Anda berasal
+
+# Line under the title of the books page.
+onboarding-books-line = Kaeri tidak menyertakan buku. Tambahkan yang sudah Anda punya, atau ikuti toko plugin dengan undangan dari pemiliknya.
+
+# Row on the books page: add a folder of books.
+onboarding-books-folder = Tambah folder
+
+# Line under Add a folder on the books page.
+onboarding-books-folder-line = CBZ, EPUB, PDF, dan folder gambar
+
+# Row on the books page: add a book server.
+onboarding-books-server = Tambah server
+
+# Line under Add a server on the books page.
+onboarding-books-server-line = Komga, Kavita, atau katalog OPDS
+
+# Heading over the invite field on the books page.
+onboarding-books-invite-heading = Undangan toko plugin
+
+# Placeholder of the invite field on the books page.
+onboarding-books-invite-placeholder = Tempel undangan
+
+# Line under the invite field: whose code a plugin is.
+onboarding-books-plugin-line = Plugin-plugin menjalankan kode dari orang yang Anda percaya. Ikuti hanya toko-toko plugin yang pemiliknya Anda kenal.
+
+# Title of the last first-run page after Both: where shows and books come from.
+onboarding-both-title = Dari mana tontonan dan buku Anda berasal
+
+# Line under the title of that page.
+onboarding-both-line = Kaeri tidak menyertakan serial atau buku. Tambahkan yang sudah Anda punya, atau ikuti toko plugin dengan undangan dari pemiliknya.
+
+# Heading over the shows' rows on that page.
+onboarding-both-shows = Tontonan
+
+# Heading over the books' rows on that page.
+onboarding-both-books = Buku
+
+# Line under Add a folder in the shows' part, on a computer.
+onboarding-both-shows-folder-line = Berkas video di { $device } ini
+
+# Line under Add a server in the shows' part.
+onboarding-both-shows-server-line = Server Jellyfin milik Anda
+
+# Accessibility value of a choice row: its place among the three.
+medium-choice-position = { $n } dari { $total }
+
+# Under the choices in the sheet.
+medium-change-later = Anda bisa mengubahnya di Pengaturan.
+
+# Line of the sheet over Home after the update that brought reading.
+medium-update-line = Kaeri kini bisa membaca manga, webtoon, dan light novel dari sumber-sumber Anda. Pilih fungsi Kaeri di { $device } ini.
+
+# Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
+medium-join-title-watch =
+    { $n ->
+       *[other] { $devices } diatur untuk menonton
+    }
+
+# Title of the sheet when the other devices answer Read.
+medium-join-title-read =
+    { $n ->
+       *[other] { $devices } diatur untuk membaca
+    }
+
+# Title of the sheet when the other devices answer Both.
+medium-join-title-both =
+    { $n ->
+       *[other] { $devices } diatur untuk menonton dan membaca
+    }
+
+# Line of the sheet on joining.
+medium-join-line = Pilih fungsi Kaeri di { $device } ini. Setiap perangkat menyimpan jawabannya sendiri.
+
+# Title of the confirmation before watching is turned off.
+medium-off-title-watch = Matikan fitur menonton?
+
+# Title of the confirmation before reading is turned off.
+medium-off-title-read = Matikan fitur membaca?
+
+# What turning watching off does.
+medium-off-watch-body = Kalender, Musiman, Nonton bareng, dan tontonan Anda hilang dari Kaeri di { $device } ini. Daftar, kemajuan, dan unduhan Anda tetap ada, dan kembali jika Anda menyalakan fitur menonton lagi.
+
+# What turning reading off does.
+medium-off-read-body = Pembaruan dan bacaan Anda hilang dari Kaeri di { $device } ini. Daftar, kemajuan, dan unduhan Anda tetap ada, dan kembali jika Anda menyalakan fitur membaca lagi.
+
+# Switch in the confirmation, off by default.
+medium-off-delete-watch = Hapus episode yang diunduh
+
+# Switch in the confirmation, off by default.
+medium-off-delete-read = Hapus bab yang diunduh
+
+# Under the switch: how much the downloads take.
+medium-off-delete-size = { $size } di { $device } ini
+
+# The confirmation's main button.
+medium-off-confirm-watch = Matikan fitur menonton
+
+# The confirmation's main button.
+medium-off-confirm-read = Matikan fitur membaca
+
+# Settings row and page: what Kaeri is for on this device.
+settings-kaeri-is-for = Kaeri dipakai untuk
+
+# Line under Kaeri is for on the Mac and iPad.
+settings-medium-note = Setiap perangkat menyimpan jawabannya sendiri
+
+# Under the choices on the iPhone's page.
+settings-medium-footer = Setiap perangkat menyimpan jawabannya sendiri. Mematikan salah satunya tidak menghapus daftar, kemajuan, dan unduhannya.
+
+# Line under Open at.
+settings-open-at-note = Beranda mana yang dibuka Kaeri saat mulai
+
+# Settings pane and group: reading.
+settings-group-reading = Membaca
+
+# Downloads group with both media on: shows.
+settings-group-shows = Tontonan
+
+# The Reading pane's column beside it.
+settings-aside-reading = Bawaan pembaca adalah titik awal setiap seri. Seri yang Anda ubah di pembaca menyimpan pilihannya sendiri.
+
+# Group: how the reader opens each kind of book.
+settings-reader-defaults = Bawaan pembaca
+
+# Under the reader defaults.
+settings-reader-defaults-footer = Seri yang Anda ubah menyimpan mode, arah, dan tampilannya sendiri.
+
+# Row: manga's reader default.
+settings-reader-manga = Manga
+
+# Row: webtoons' reader default.
+settings-reader-webtoons = Webtoon
+
+# Line under Webtoons.
+settings-reader-webtoons-note = Webtoon selalu terbuka sebagai strip panjang
+
+# Row: light novels' reader default.
+settings-reader-novels = Light novel
+
+# A reader default: pages turned right to left.
+settings-reader-rtl = Halaman, kanan ke kiri
+
+# A reader default: pages turned left to right.
+settings-reader-ltr = Halaman, kiri ke kanan
+
+# A reader default: one long strip.
+settings-reader-strip = Strip panjang
+
+# A reader default for novels: pages.
+settings-reader-pages = Halaman
+
+# A reader default for novels: one scrolling column.
+settings-reader-scrolled = Gulir
+
+# Row: when a chapter counts as read.
+settings-counts-read = Dihitung sudah dibaca
+
+# Line under Counts as read.
+settings-counts-read-note = Berhenti sejenak di halaman terakhir, atau pindah ke bab selanjutnya
+
+# Value of Counts as read: a short stay on the last page, or moving on past it.
+settings-counts-read-value = Setelah halaman terakhir
+
+# Value of Counts as read: only moving on past the last page, to the end or the next chapter.
+settings-counts-read-moving-on = Saat meninggalkannya
+
+# Line under Counts as read when it is Moving on from it.
+settings-counts-read-moving-on-note = Membalik lewat halaman terakhir, atau membuka bab selanjutnya
+
+# Value of Counts as read: only the person's own marks; the reader marks nothing.
+settings-counts-read-marked = Saat Anda menandainya
+
+# Line under Counts as read when it is When you mark it.
+settings-counts-read-marked-note = Lanjutkan menonton dan pelacak-pelacak Anda mengikuti tanda dari Anda
+
+# Group: series settings that follow you to your other devices.
+settings-follow-group = Pengaturan seri yang ikut Anda
+
+# Row in that group.
+settings-follow-mode = Mode, arah, dan warna
+
+# Line under that row.
+settings-follow-mode-note = Seri yang Anda ubah dibaca sama di perangkat Anda yang lain
+
+# Under the group: what stays on this device.
+settings-follow-footer = Ukuran teks, margin, area ketuk, dan penyegaran tetap di { $device } ini.
+
+# Line under Look in Series settings that follow you.
+settings-look-follows-note = Warna atau abu-abu
+
+# Value of New chapters in Downloads: the series on the Reading list.
+settings-new-chapters-reading = Seri di daftar Membaca
+
+# Line under New chapters in Downloads.
+settings-new-chapters-note = Seri yang sedang dibaca juga menyiapkan bab selanjutnya
+
+# Group in Accounts: how reading progress goes to the trackers.
+settings-progress-group = Kemajuan
+
+# Value of Send progress after: as each chapter counts as read.
+settings-progress-chapter = Satu bab dibaca
+
+# Value of Send progress after: once, when the reader closes.
+settings-progress-close = Menutup pembaca
+
+# Value of When trackers disagree: the higher chapter wins.
+settings-disagree-furthest = Pertahankan yang terjauh
+
+# Value of When trackers disagree: the newest change wins, even a lower chapter.
+settings-disagree-latest = Perubahan terbaru
+
+# Line under When trackers disagree.
+settings-disagree-note = Status dan skor mengikuti perubahan terbaru
+
+# Line under Keep next chapters ready.
+settings-keep-chapters-ready-note = Bab selanjutnya dari seri di daftar Membaca Anda
+
+# Line under Delete chapters after reading.
+settings-delete-after-reading-note = Bab yang diberi penanda tetap disimpan
+
+# Line under New chapters.
+settings-chapter-notifications-note = Seri di daftar Membaca Anda
+
+# Line under Downloads finished.
+settings-downloads-finished-note = Saat semua bab yang diunduh selesai
+
+# Under New chapters.
+settings-chapter-notifications-footer = Bab punya kanal sistem sendiri, jadi bisa dibisukan tersendiri.
+
+# Credit under the trackers with reading on.
+accounts-mangaupdates-credit = MangaUpdates diakses lewat API publiknya.
+
+# Placeholder of the user name field when signing in to MangaUpdates.
+accounts-username = Nama pengguna
+
+# Beside the Reading heading in Downloads: how many chapters are kept and their size.
+read-downloads-total =
+    { $n ->
+       *[other] { $n } bab · { $size }
+    }
+
+# A series' line in Downloads while a chapter downloads.
+read-downloads-active = { $chapter } · { $done } dari { $total } halaman
+
+# After the chapter downloading: how many more wait.
+read-downloads-more-queued = { $n } lagi antre
+
+# A series' line in Downloads when its chapters wait to start.
+read-downloads-queued =
+    { $n ->
+       *[other] { $n } bab antre
+    }
+
+# A series' line in Downloads when a chapter failed, with the reason.
+read-downloads-failed = { $chapter } gagal diunduh. { $reason }
+
+# A series' line in Downloads: how many chapters are kept.
+read-downloads-kept =
+    { $n ->
+       *[other] { $n } bab
+    }
+
+# After the kept count: how many of them are read.
+read-downloads-read = { $n } dibaca
+
+# Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
+read-downloads-delete-read = Hapus yang dibaca
 
 # Button that shows the season before.
 seasonal-previous = Musim sebelumnya
@@ -8417,6 +9947,42 @@ settings-wifi-only-detail = Unduhan menunggu Wi-Fi
 # Row: torrents on a mobile connection.
 settings-torrents-cellular = Torrent lewat data seluler
 
+# Row: whether chapter downloads run on a mobile connection.
+settings-chapter-downloads-cellular = Unduh bab lewat data seluler
+
+# Row: keep the next chapters of what you read downloaded.
+settings-keep-chapters-ready = Siapkan bab selanjutnya
+
+# Row: delete a downloaded chapter once it is read. Bookmarked chapters stay.
+settings-delete-after-reading = Hapus bab setelah dibaca
+
+# Row: whether a series' reader mode, direction and colour follow you to your other devices.
+settings-series-choices-follow = Pengaturan seri ikut Anda
+
+# Row in Downloads: which series' new chapters download by themselves.
+settings-new-chapters-download = Bab baru
+
+# Row: whether a series' own reader mode and direction follow you to your other devices.
+settings-mode-follows = Mode dan arah
+
+# Row: whether a series' own look (colour or greys) follows you to your other devices.
+settings-look-follows = Tampilan
+
+# Row: when chapter progress goes to the reading trackers.
+settings-send-progress-after = Kirim kemajuan setelah
+
+# Row: which chapter progress wins when a tracker and this device disagree.
+settings-when-trackers-disagree = Saat pelacak-pelacak berbeda
+
+# Row: whether a new chapter of a series on your Reading list sends a notification.
+settings-chapter-notifications = Bab baru
+
+# Row: whether the app sends a notification when the chapters it was downloading are all done.
+settings-downloads-finished = Unduhan selesai
+
+# Row: which Home the app opens at while it is for watching and reading.
+settings-open-at = Buka di
+
 # Row: seeding after watching.
 settings-seed-after = Seeding setelah menonton
 
@@ -8476,6 +10042,9 @@ settings-artwork-detail = Atribusi ada di pemberitahuan aplikasi
 
 # Heading and row for notifications of new episodes.
 settings-new-episodes = Episode baru
+
+# Line under it.
+settings-new-episodes-detail = Muncul di daftar Menonton Anda
 
 # Line explaining what a notification says.
 settings-notify-detail = Satu notifikasi saat episode dari serial yang Anda ikuti terbit: nama serial dan nomor episodenya, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.
@@ -8648,6 +10217,12 @@ settings-upscaling-sharp = Tajam · Anime4K
 # Side note in Accounts.
 settings-aside-accounts = Kaeri bisa dipakai tanpa akun. Riwayat tontonan Anda tetap ada di perangkat ini saat Anda keluar.
 
+# Side note in Accounts when the app is for reading.
+settings-aside-accounts-read = Kaeri berfungsi tanpa akun. Riwayat baca Anda tetap ada di perangkat ini saat Anda keluar.
+
+# Side note in Accounts when the app is for watching and reading.
+settings-aside-accounts-both = Kaeri berfungsi tanpa akun. Riwayat tonton dan baca Anda tetap ada di perangkat ini saat Anda keluar.
+
 # Today, inside a line such as "Thursday 16:30".
 widget-day-today = hari ini
 
@@ -8803,6 +10378,15 @@ settings-subs-styled-strip-detail = Setiap baris tampil sebagai dialog polos di 
 
 # Button that restores the default subtitle style.
 settings-subs-reset = Atur ulang gaya subtitle
+
+# Row: whether this computer shares its downloads and folders as a catalogue that e-readers on the home network can browse.
+settings-opds-feed = Bagikan di jaringan ini
+
+# Row: the password e-readers ask for before they browse the shared catalogue.
+settings-opds-password = Kata sandi feed
+
+# Row: the port the shared catalogue listens on. Empty picks a free one.
+settings-opds-port = Port feed
 
 # Title of the screen or section that lists sources.
 sources-title = Sumber-sumber
@@ -9731,6 +11315,9 @@ cloud-browser-line = Browser Anda membuka halaman { $service }. Izinkan akses di
 
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = Masuk ke { $service } di browser Anda
+
+# Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
+cloud-close-carries-on = Anda boleh menutup ini. Kaeri terus berjalan, dan membuka langkah selanjutnya sendiri saat siap.
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = komputer
@@ -10839,6 +12426,9 @@ opened-paste-placeholder = Tautan magnet atau info hash
 # Button: choose a torrent file from the device.
 opened-choose-file = Pilih berkas torrent
 
+# Line under the field when the link or file could not be read, and the engine gave no reason.
+opened-unreadable = Kaeri tidak bisa membaca tautan atau berkas itu.
+
 # The question once the link's name matched a title and an episode.
 opened-confirm = Apakah ini { $title }, episode { $episode }?
 
@@ -10889,6 +12479,27 @@ accounts-welcome-detail = Masuk ke { $tracker } untuk menyinkronkan daftar Anda 
 
 # Line under a tracker that brings in lists.
 accounts-brings-lists = Mengambil daftar Anda dan mengisi Lanjutkan menonton dengan judul yang sedang Anda tonton.
+
+# Line under AniList when Kaeri is for reading: what signing in brings.
+accounts-brings-lists-read = Membawa masuk daftar Anda dan mengisi Lanjutkan menonton dengan yang sedang Anda baca.
+
+# Line under AniList when Kaeri is for watching and reading.
+accounts-brings-lists-both = Membawa masuk daftar Anda dan mengisi Lanjutkan menonton dengan yang sedang Anda tonton dan baca.
+
+# Line under a tracker that is not signed in: what it keeps in step.
+accounts-tracker-lists = Daftar dan kemajuan
+
+# Line under MangaUpdates when it is not signed in.
+accounts-tracker-reading-lists = Daftar baca dan kemajuan
+
+# Line under a tracker with both media on: it serves shows and reading.
+accounts-tracker-serves-both = Tontonan dan bacaan
+
+# Line under a tracker with both media on: it serves reading only.
+accounts-tracker-serves-reading = Bacaan
+
+# Line under a tracker with both media on: it serves shows only.
+accounts-tracker-serves-shows = Tontonan
 
 # Line under the accounts screen when the library needs a tracker.
 accounts-library-needs = Pustaka dan sinkronisasi memerlukan akun { $tracker } Anda

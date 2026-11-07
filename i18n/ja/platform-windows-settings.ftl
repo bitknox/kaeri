@@ -43,3 +43,15 @@ torrents-dialog-edit-proxy = プロキシを編集
 settings-note-trailers-windows = 予告編はミュートでYouTubeから再生され、YouTubeにIPアドレスが届きます。従量課金の接続、アニメーション効果オフ、省電力モード、ナレーター使用中は再生されません。
 settings-note-cast-tvs-pc = 「テレビで再生」のChromecastの下に表示されます。このPCがエピソードを送信します。
 settings-note-torrents-while-casting-pc = Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのPCがエピソードを送信します。
+settings-language-restart = 再起動
+settings-differences = { $count ->
+   *[other] { $tracker }と異なるタイトルが{ $count }件あります
+ }
+settings-differences-review = 確認
+settings-search = 設定を検索
+settings-quality-detail-windows = 高くすると、{ -source }が提供する最高の版を使い、容量も増えます。
+settings-merge-subtitles-detail-windows = ファイルを移動しても、字幕はエピソードと一緒に残ります。
+settings-keep-seeding-detail-windows = シードを続けるダウンロードは、保存フォルダではなく{ -app-name }のキャッシュに置かれます。
+settings-discussions-note-windows = 視聴済みのエピソードについて、AniList のフォーラムスレッドのコメントを読み込みます。
+settings-comment-images-note-windows = 画像は配信元のサイトから読み込まれ、そのサイトにIPアドレスが伝わります。
+settings-folder-browse = 参照…

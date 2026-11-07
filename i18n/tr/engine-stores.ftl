@@ -57,6 +57,7 @@ plugin-duplicate-file = { $path } zaten { $plugin } tanımlıyor. Önce o dosyay
 plugin-install-failed = { $plugin } kurulamadı. { $reason }
 plugin-publish-failed = { $plugin } yayımlanamadı. { $reason }
 plugin-missing-locally = { $plugin } artık { -plugin } klasöründe yok.
+store-takes-no-books = { $store } henüz kitap { -source-pl } listelemiyor. Sahibi bunları eklemek için { -plugin-store }nı güncelleyebilir.
 store-invite-needs-link = Bu { -device } bağlantıyla { $store } listesine katıldı. Aynı bağlantıyı diğer { -device }da yapıştırın.
 store-link-malformed = Bu { -plugin-store }nın gönderdiği bağlantı çalışmıyor. Sahibinden { -plugin-store }nı kontrol etmesini isteyin. { $reason }
 store-link-wrong-key = Bu { -plugin-store } farklı bir anahtarla bağlantı oluşturdu. Başladığınız adresi kontrol edin.

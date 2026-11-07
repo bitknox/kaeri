@@ -43,6 +43,7 @@ opened-open = Mở liên kết hoặc tệp
 opened-paste-title = Mở liên kết magnet hoặc tệp torrent
 opened-paste-placeholder = Liên kết magnet hoặc info hash
 opened-choose-file = Chọn tệp torrent
+opened-unreadable = { -app-name } không đọc được liên kết hoặc tệp đó.
 opened-confirm = Đây có phải { $title }, tập { $episode } không?
 opened-confirm-title = Đây có phải { $title } không? Hãy chọn tập.
 opened-no-guess = { -app-name } không nhận ra đây là gì. Hãy chọn tựa phim, hoặc phát mà không theo dõi.

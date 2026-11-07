@@ -1,5 +1,6 @@
 cloud-browser-line = Tarayıcınız { $service } sayfasını açtı. Orada erişime izin verin, { -app-name } kendiliğinden sürer.
 cloud-browser-title = Tarayıcınızda { $service } hesabına giriş yapın
+cloud-close-carries-on = Bunu kapatabilirsiniz. { -app-name } çalışmayı sürdürür ve hazır olunca sonraki adımı kendiliğinden açar.
 device-kind-computer = bilgisayar
 devices-enter-code = Kod gir
 devices-show-key = Göster

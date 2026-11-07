@@ -44,3 +44,4 @@ search-result-in-library = Di { -library } Anda
 search-result-on-server = Di { $server }
 search-result-on-service = Di { $service }
 match-choice-line = { $parts } · cocok { $percent }%
+search-rate-limit-enter = Pencarian saat mengetik dijeda sebentar agar tetap dalam batas AniList. Tekan Enter untuk mencari sekarang.

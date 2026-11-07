@@ -5,7 +5,7 @@ Kotlin bindings UniFFI generates from `crates/kaeri-ffi`. Phones, tablets and fo
 Android 11 (API 30) and up, built to the rules in `docs/native-ux.md` and the motion
 spec in `android/docs/motion-android.md`.
 
-Kaeri doesn't host any shows. You add your own sources.
+Kaeri doesn't host any shows or books. You add your own sources.
 
 ## Modules
 
