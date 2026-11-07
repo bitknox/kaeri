@@ -57,7 +57,7 @@ struct BookSourcesList: View {
             if let view, !view.servers.isEmpty {
                 SettingsGroup(title: L.bookSourcesServers) {
                     ForEach(view.servers, id: \.id) { server in
-                        SettingsRow(title: server.name, note: Self.serverLine(server, justAdded: store.cameIn.justAdded.contains(server.id))) {
+                        BookServerSourceRow(server: server, note: Self.serverLine(server, justAdded: store.cameIn.justAdded.contains(server.id))) {
                             HStack(spacing: 8) {
                                 if server.signedOut {
                                     Label(L.serversRowSignedOut, systemImage: "exclamationmark.triangle.fill")
@@ -171,17 +171,17 @@ struct BookSourcesList: View {
         return parts.joined(separator: " · ") // i18n-skip
     }
 
-    /// "Kavita · 212 series · progress goes back to the server".
+    /// "Kavita · 212 series in 2 libraries". What became of the progress sent to it is the line
+    /// under this one (ServerProgressModel), so this no longer says progress goes back.
     static func serverLine(_ server: BookServerRow, justAdded: Bool = false) -> String {
         if server.empty { return L.sourceRowServerEmpty(kind: BookServerWords.kind(server.kind)) }
-        if justAdded {
+        if server.libraries > 0 && !server.off {
             return L.sourceRowServer(kind: BookServerWords.kind(server.kind), series: Int(server.series), libraries: Int(server.libraries))
         }
         var parts = [BookServerWords.kind(server.kind)]
-        if server.name != server.address { parts.append(server.address) }
+        if server.name != server.address, server.name != server.progressHost { parts.append(server.address) }
         parts.append(L.bookSourcesSeries(n: Int(server.series)))
         if server.off { parts.append(L.bookSourcesOff) }
-        if server.reportProgress { parts.append(L.bookSourcesProgressBack) }
         return parts.joined(separator: " · ") // i18n-skip
     }
 

@@ -187,6 +187,7 @@ struct ReaderEndPage: View {
     let size: CGSize
     @Environment(\.readerClose) private var closeReader
     @Environment(Navigator.self) private var navigator
+    @Environment(AppStore.self) private var store
 
     var body: some View {
         if model.view?.demoCredit != nil {
@@ -227,8 +228,15 @@ struct ReaderEndPage: View {
         return VStack(alignment: .leading, spacing: 0) {
             Spacer(minLength: 0)
             Text(L.readerEndOfChapter(chapter: chapter)).font(.ui(24, weight: .semibold)).foregroundStyle(theme.silk)
-            Text(model.read ? L.readerEndRead : L.readerEndNotRead).font(.ui(15)).foregroundStyle(theme.haze)
+            Text(readLine).font(.ui(15)).foregroundStyle(theme.haze)
                 .padding(.top, 6)
+            if let work = model.view?.work, let chapterId = model.view?.chapter.id,
+               store.serverProgress.holds(work: work, chapter: chapterId) {
+                ReaderServerLine(line: store.serverProgress.lines[chapterId], theme: theme) {
+                    store.serverProgress.retry(chapter: chapterId)
+                }
+                .padding(.top, 4)
+            }
             if let next {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(L.readerEndNext).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(nil)
@@ -260,6 +268,13 @@ struct ReaderEndPage: View {
         .background(theme.page)
     }
 
+    /// "Read · AniList updated", or Read alone when no tracker took it.
+    private var readLine: String {
+        guard model.read else { return L.readerEndNotRead }
+        guard !model.readTrackers.isEmpty else { return L.readerEndRead }
+        return L.readerEndTracker(trackers: model.readTrackers.formatted(.list(type: .and).locale(AirTime.locale)))
+    }
+
     private func detail(_ next: ChapterRow) -> String {
         if let pages = next.pages { return L.readerEndNextDetail(chapter: next.label, pages: Int(pages)) }
         return next.label
@@ -282,6 +297,85 @@ struct ReaderEndPage: View {
         case .finished: L.readerEndFinishedBody
         case .noSourceHasIt: nil
         case .offline: L.readerEndOfflineBody
+        }
+    }
+}
+
+// MARK: The server line
+
+/// Did my server get it: one line under the tracker line, its two lines of room held from the
+/// first frame so Next and Continue never move. Each change crossfades in place (0.3 s reveal);
+/// Reduce Motion keeps the crossfade, which moves nothing.
+struct ReaderServerLine: View {
+    let line: ServerLine?
+    let theme: ReaderTheme
+    let retry: () -> Void
+    @ScaledMetric(relativeTo: .body) private var room: CGFloat = 40
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            if let line {
+                content(line)
+                    .id(Self.key(line))
+                    .transition(.opacity)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: room, alignment: .topLeading)
+        .animation(.reveal, value: line.map(Self.key))
+        .environment(\.openURL, OpenURLAction { _ in
+            retry()
+            return .handled
+        })
+    }
+
+    private func content(_ line: ServerLine) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            glyph(line)
+            words(line)
+                .font(.ui(15))
+                .foregroundStyle(Self.failed(line) ? theme.silk : theme.haze)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAction(named: L.readerTryAgain) { if line.canRetry { retry() } }
+    }
+
+    @ViewBuilder
+    private func glyph(_ line: ServerLine) -> some View {
+        switch line {
+        case .saved: EmptyView()
+        case .sending:
+            ProgressView().controlSize(.mini).tint(theme.haze)
+                .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+        case .offline: Image(systemName: "wifi.slash").font(.ui(12)).foregroundStyle(theme.haze)
+        case .retrying: Image(systemName: "arrow.triangle.2.circlepath").font(.ui(12)).foregroundStyle(theme.haze)
+        case .failed: Image(systemName: "exclamationmark.triangle.fill").font(.ui(12)).foregroundStyle(theme.vermilion)
+        }
+    }
+
+    /// The words, with Try again as a link after them where the line can be tried again.
+    private func words(_ line: ServerLine) -> Text {
+        let said = Text(ServerProgressWords.line(line))
+        guard line.canRetry, let url = URL(string: "kaeri-retry:progress") else { return said } // i18n-skip: never shown
+        var link = AttributedString(L.readerTryAgain)
+        link.link = url
+        link.underlineStyle = .single
+        link.foregroundColor = theme.silk
+        return said + Text(" ") + Text(link)
+    }
+
+    private static func failed(_ line: ServerLine) -> Bool {
+        if case .failed = line { true } else { false }
+    }
+
+    /// One key per kind of line, so a change of kind crossfades and a same kind stays.
+    static func key(_ line: ServerLine) -> String {
+        switch line {
+        case .saved: "saved" // i18n-skip: an animation key
+        case .sending: "sending" // i18n-skip: an animation key
+        case .offline: "offline" // i18n-skip: an animation key
+        case .retrying: "retrying" // i18n-skip: an animation key
+        case .failed: "failed" // i18n-skip: an animation key
         }
     }
 }

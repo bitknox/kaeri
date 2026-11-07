@@ -382,6 +382,7 @@ extension Event {
         case .connectivity: "connectivity"
         case .content: "content"
         case .sourceOptions: "sourceOptions"
+        case .bookSources(.view): "bookSourcesView"
         default: nil
         }
     }

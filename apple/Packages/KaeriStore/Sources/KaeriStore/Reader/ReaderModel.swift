@@ -69,6 +69,10 @@ public final class ReaderModel {
     public private(set) var openedAt: ContinuousClock.Instant?
     /// Whether the chapter counted as read.
     public private(set) var read = false
+    /// The trackers the read went to, by name: "Read · AniList updated".
+    public private(set) var readTrackers: [String] = []
+    /// The reader closed: the page between chapters' server lines are forgotten.
+    @ObservationIgnored var onClosed: (() -> Void)?
     /// A place the paged reader is told to show (Back to page, Start over, another device's).
     public private(set) var goTo: (leaf: Int, tick: Int)?
     /// A novel place the web view is told to show.
@@ -209,9 +213,18 @@ public final class ReaderModel {
         send?(.reader(.surface(session: session, surface: surface)))
     }
 
+    #if FIXTURES
+    /// For shots: the chapter counts as read, sent to `trackers`.
+    public func stageRead(trackers: [String]) {
+        read = true
+        readTrackers = trackers
+    }
+    #endif
+
     public func close() {
         guard request != nil || session != 0 else { return }
         if session != 0 { send?(.reader(.close(session: session))) }
+        onClosed?()
         reset()
         request = nil
         phase = .closed
@@ -261,6 +274,7 @@ public final class ReaderModel {
         guard session != 0 else { return }
         end = nil
         read = false
+        readTrackers = []
         send?(.reader(.openChapter(session: session, chapter: id)))
         phase = .opening
         openedAt = .now
@@ -273,6 +287,7 @@ public final class ReaderModel {
         guard session != 0, let next = view?.next else { return }
         end = nil
         read = false
+        readTrackers = []
         send?(.reader(.openChapter(session: session, chapter: next.id)))
     }
 
@@ -421,6 +436,7 @@ public final class ReaderModel {
             novel = nil
             end = nil
             read = false
+            readTrackers = []
             ring = nil
             backTo = nil
             notice = nil
@@ -455,13 +471,16 @@ public final class ReaderModel {
         case .novelStyle(let session, let style, _, _):
             guard session == self.session else { return }
             novelStyle = style
-        case .chapterRead(_, let chapter, _):
-            if chapter == view?.chapter.id { read = true }
+        case .chapterRead(_, let chapter, let trackers):
+            if chapter == view?.chapter.id {
+                read = true
+                readTrackers = trackers
+            }
         case .endPage(let session, let next, let why, _):
             guard session == self.session else { return }
             end = ReaderEnd(next: next, why: why)
         case .progressSent:
-            // The page between chapters does not show the server's answer yet.
+            // The page between chapters' server line: AppStore hands it to ServerProgressModel.
             break
         case .nextPreview, .opening:
             // The Android reader's end page preview and opening screen; this reader has neither.
@@ -571,6 +590,7 @@ public final class ReaderModel {
         goTo = nil
         novelGoTo = nil
         read = false
+        readTrackers = []
         chapters = []
         chaptersLoaded = false
         sheet = nil
