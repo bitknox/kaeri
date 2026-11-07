@@ -184,6 +184,20 @@ class ReadSettingsShots : ReadingShotHarness() {
 
     @Test
     @Config(qualifiers = PHONE, fontScale = 1.3f)
+    fun phone_read_first_run_lists_text_130() = snap("phone-read-first-run-lists-text-130", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = {
+        toMedium(R.string.medium_both_line)
+        tap(text(R.string.onboarding_continue))
+    })
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 2.0f)
+    fun phone_read_first_run_lists_text_200() = snap("phone-read-first-run-lists-text-200", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = {
+        toMedium(R.string.medium_both_line)
+        tap(text(R.string.onboarding_continue))
+    })
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 1.3f)
     fun phone_read_first_run_books_text_130() = snap("phone-read-first-run-books-text-130", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = { toSources(R.string.medium_read_line) })
 
     @Test
