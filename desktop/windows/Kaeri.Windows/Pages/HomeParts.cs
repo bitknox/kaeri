@@ -290,7 +290,7 @@ sealed partial class HomeShelf : Grid
                 // A mouse's notches glide along the strip as the page's do (Smooth scrolling).
                 if (SmoothWheel.Sideways(inner, e, by))
                     return;
-                heading =Math.Clamp((heading ?? inner.HorizontalOffset) + by, 0, inner.ScrollableWidth);
+                heading = Math.Clamp((heading ?? inner.HorizontalOffset) + by, 0, inner.ScrollableWidth);
                 inner.ChangeView(heading, null, null, false);
                 return;
             }

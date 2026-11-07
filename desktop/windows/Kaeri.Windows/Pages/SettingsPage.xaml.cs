@@ -791,7 +791,6 @@ public sealed partial class SettingsPage : Page
         Margin = new Thickness(0, 16, 0, 4),
     };
 
-    /// <summary>A row as Windows 11 Settings draws one: the Toolkit's SettingsCard.</summary>
     /// <summary>Smooth scrolling: the app's own setting, kept on this device. Off, the wheel moves pages as Windows does.</summary>
     static SettingsCard SmoothScrollingCard()
     {
@@ -824,6 +823,7 @@ public sealed partial class SettingsPage : Page
         return lines;
     }
 
+    /// <summary>A row as Windows 11 Settings draws one: the Toolkit's SettingsCard.</summary>
     static SettingsCard CardFrame(string title, string? description, FrameworkElement? control, string? glyph = null)
     {
         var card = new SettingsCard { Header = title, Description = description, Content = control };
