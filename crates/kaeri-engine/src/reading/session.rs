@@ -420,6 +420,7 @@ impl Reader {
         surface: ReaderSurface,
     ) {
         let store = &cx.services.store;
+        let form = crate::data::title_form(cx.services.meta.titles());
         let kind = store.book_work_kind(work.as_str()).ok().flatten();
         // A demo work says its own medium: opened from Home or the first run before its page was
         // ever loaded, the catalogue has not fetched it, and its chapters come from the demo.
@@ -483,7 +484,7 @@ impl Reader {
             id,
             work,
             medium,
-            title: kind.and_then(|k| k.title).unwrap_or_default(),
+            title: kind.and_then(|k| k.title_in(form)).unwrap_or_default(),
             ended,
             chapters,
             at: index,
@@ -1987,7 +1988,9 @@ mod tests {
         assert_eq!(notices(&said), [ReadingMsg::ReaderResumed { page: 2 }]);
         let session = h.session();
         h.send(ReaderCommand::Close { session });
-        drop(h);
+        // The book stays where the first run laid it; only the app is started again.
+        let _books = h._dir;
+        drop((h.reader, h.services, h.tx, h.inbox));
 
         // Started again on the same store.
         let mut h = harness(Store::open(&db).unwrap());

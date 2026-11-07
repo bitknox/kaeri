@@ -176,6 +176,8 @@ struct Inner {
     /// What a test takes to be free on the device, in place of asking the disk.
     free: Mutex<Option<u64>>,
     told: Mutex<Option<Instant>>,
+    /// The title language setting, for the series' names; English first until it is given.
+    titles: std::sync::OnceLock<kaeri_meta::titles::Titles>,
 }
 
 impl std::fmt::Debug for BookDownloads {
@@ -221,7 +223,18 @@ impl BookDownloads {
             changed: tokio::sync::watch::channel(Setup::UNSAID).0,
             free: Mutex::new(None),
             told: Mutex::new(None),
+            titles: std::sync::OnceLock::new(),
         }))
+    }
+
+    /// Name series in the title language `titles` follows.
+    pub fn use_titles(&self, titles: kaeri_meta::titles::Titles) {
+        let _ = self.0.titles.set(titles);
+    }
+
+    /// The form of a title to show now.
+    fn title_form(&self) -> kaeri_store::shelf::TitleForm {
+        self.0.titles.get().map(crate::data::title_form).unwrap_or_default()
     }
 
     pub fn dir(&self) -> &Path {
@@ -300,6 +313,7 @@ impl BookDownloads {
         let rows = store.book_downloads(None).unwrap_or_default();
         let mut marks: HashMap<String, kaeri_store::reading::ReadMarks> = HashMap::new();
         let mut shown = Vec::with_capacity(rows.len());
+        let form = self.title_form();
         for d in &rows {
             let read = marks
                 .entry(d.work.clone())
@@ -311,7 +325,8 @@ impl BookDownloads {
                 .as_ref()
                 .and_then(|kind| kaeri_core::media::Medium::parse(&kind.medium))
                 .unwrap_or(kaeri_core::media::Medium::Manga);
-            let title = kind.and_then(|kind| kind.title).unwrap_or_else(|| d.work.clone());
+            let title =
+                kind.and_then(|kind| kind.title_in(form)).unwrap_or_else(|| d.work.clone());
             let state = state_of(d, wifi);
             let mut chapter = chapter_row(d, read, bookmarked);
             // A download row carries no dates, so the clock plays no part in its words.
@@ -332,7 +347,7 @@ impl BookDownloads {
         }
         let (used, chapters) = store.book_download_totals().unwrap_or((0, 0));
         let free = self.free().unwrap_or(0);
-        let (series, read_bytes, kept) = sizes::series(store, &rows, wifi);
+        let (series, read_bytes, kept) = sizes::series(store, &rows, wifi, form);
         BookDownloadsView {
             rows: shown,
             meter: StorageMeter { used, free, chapters, read_bytes },
@@ -721,7 +736,8 @@ impl BookDownloads {
         // Only a run that emptied the queue is done: a held or full one has more to come.
         let held = self.setup().hold;
         if self.setup().tell_done && !stopped && !held && !finished.is_empty() {
-            let _ = lent.tx.send(Event::Reading(done_notice(&store, &finished)));
+            let _ =
+                lent.tx.send(Event::Reading(done_notice(&store, &finished, self.title_form())));
         }
     }
 
@@ -1090,14 +1106,18 @@ fn decode(text: &str) -> ReadingFailure {
 /// A work's chapters in reading order, and the source they come from.
 /// The Downloads finished notification for what a run finished: one series by name, in its own
 /// unit, or several counted.
-fn done_notice(store: &Store, finished: &[(String, usize)]) -> ReadingEvent {
+fn done_notice(
+    store: &Store,
+    finished: &[(String, usize)],
+    form: kaeri_store::shelf::TitleForm,
+) -> ReadingEvent {
     let title = Msg::Reading(ReadingMsg::ReadingDownloadsDoneTitle);
     let count = |n: usize| i64::try_from(n).unwrap_or(i64::MAX);
     match finished {
         [(work, n)] => {
             let kind = store.book_work_kind(work).ok().flatten();
             let novel = kind.as_ref().is_some_and(|k| k.medium == "novel");
-            let name = kind.and_then(|k| k.title).unwrap_or_else(|| work.clone());
+            let name = kind.and_then(|k| k.title_in(form)).unwrap_or_else(|| work.clone());
             let body = if novel {
                 ReadingMsg::ReadingDownloadsDoneParts { title: name, count: count(*n) }
             } else {

@@ -290,7 +290,7 @@ fn prepare_files(
         .book_work_kind(work.as_str())
         .ok()
         .flatten()
-        .and_then(|kind| kind.title)
+        .and_then(|kind| kind.title_in(crate::data::title_form(services.meta.titles())))
         .unwrap_or_else(|| work.as_str().to_owned());
     let right_to_left = store
         .series_settings(work.as_str())
