@@ -2640,6 +2640,27 @@ public static partial class T
     /// <summary>Name of the controller's right stick, in the controller help.</summary>
     public static string PadButtonRightStick => Get("PadButtonRightStick");
 
+    /// <summary>Controller help: the D-pad in the reader turns the page, the way the book reads.</summary>
+    public static string PadHelpTurnPage => Get("PadHelpTurnPage");
+
+    /// <summary>Controller help: the left shoulder button in the reader.</summary>
+    public static string PadHelpPreviousChapter => Get("PadHelpPreviousChapter");
+
+    /// <summary>Controller help: the right shoulder button in the reader.</summary>
+    public static string PadHelpNextChapter => Get("PadHelpNextChapter");
+
+    /// <summary>Controller help: the A button in the reader shows or hides the bar with the title and settings.</summary>
+    public static string PadHelpReaderBar => Get("PadHelpReaderBar");
+
+    /// <summary>Controller help: the menu button in the reader.</summary>
+    public static string PadHelpReaderSettings => Get("PadHelpReaderSettings");
+
+    /// <summary>Controller help: the B button in the reader.</summary>
+    public static string PadHelpCloseReader => Get("PadHelpCloseReader");
+
+    /// <summary>Heading in the controller help for the buttons in the reader.</summary>
+    public static string PadHelpReader => Get("PadHelpReader");
+
     /// <summary>Checkbox of the close question.</summary>
     public static string CloseDontAsk => Get("CloseDontAsk");
 
@@ -11189,6 +11210,13 @@ public static partial class T
         ["PadButtonView"] = "View",
         ["PadButtonLeftStick"] = "Left stick",
         ["PadButtonRightStick"] = "Right stick",
+        ["PadHelpTurnPage"] = "Turn the page",
+        ["PadHelpPreviousChapter"] = "Previous chapter",
+        ["PadHelpNextChapter"] = "Next chapter",
+        ["PadHelpReaderBar"] = "Show or hide the bar",
+        ["PadHelpReaderSettings"] = "Reader settings",
+        ["PadHelpCloseReader"] = "Close the reader",
+        ["PadHelpReader"] = "Reader",
         ["CloseDontAsk"] = "Don't ask again",
         ["CloseKeepGoing"] = "Keep going",
         ["PartyLookingSources"] = "Looking through your sources…",

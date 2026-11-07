@@ -51,6 +51,14 @@ linux-reader-fit = Fit
 
 # @only linux
 # @max 20
+linux-reader-crop-borders = Crop borders
+
+# @only linux
+# @max 20
+linux-reader-page-layout = Page layout
+
+# @only linux
+# @max 20
 linux-reader-background = Background
 
 # @only linux
@@ -76,6 +84,27 @@ linux-reader-line-spacing = Line spacing
 # @only linux
 # @max 20
 linux-reader-justify = Justify text
+
+# @only linux
+# @max 20
+linux-reader-direction = Direction
+
+# @only linux
+# @max 20
+linux-reader-spreads = Wide pages
+
+# @only linux
+# @max 20
+linux-reader-strip-width = Strip width
+
+# @only linux
+# @max 22
+linux-reader-strip-gap = Image gap
+
+# The fit that fills the window's height.
+# @only linux
+# @max 16
+linux-reader-fit-height = Height
 
 # Reading mode names.
 # @only linux
@@ -117,3 +146,13 @@ linux-send-save = Save to a folder
 # @only linux
 # @max 24
 linux-send-menu = Send to e-reader
+
+# Heading when the web view that shows a novel cannot start.
+# @only linux
+# @max 40
+linux-reader-novel-unavailable = Novels can't open here
+
+# Line under it: what a novel needs on this computer.
+# @only linux
+# @max 80
+linux-reader-novel-needs-webkit = Novels need WebKitGTK 6 with its sandbox working.

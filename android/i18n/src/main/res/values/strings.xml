@@ -2530,6 +2530,20 @@
     <string name="pad_button_left_stick">Left stick</string>
     <!-- Name of the controller's right stick, in the controller help. -->
     <string name="pad_button_right_stick">Right stick</string>
+    <!-- Controller help: the D-pad in the reader turns the page, the way the book reads. -->
+    <string name="pad_help_turn_page">Turn the page</string>
+    <!-- Controller help: the left shoulder button in the reader. -->
+    <string name="pad_help_previous_chapter">Previous chapter</string>
+    <!-- Controller help: the right shoulder button in the reader. -->
+    <string name="pad_help_next_chapter">Next chapter</string>
+    <!-- Controller help: the A button in the reader shows or hides the bar with the title and settings. -->
+    <string name="pad_help_reader_bar">Show or hide the bar</string>
+    <!-- Controller help: the menu button in the reader. -->
+    <string name="pad_help_reader_settings">Reader settings</string>
+    <!-- Controller help: the B button in the reader. -->
+    <string name="pad_help_close_reader">Close the reader</string>
+    <!-- Heading in the controller help for the buttons in the reader. -->
+    <string name="pad_help_reader">Reader</string>
     <!-- Checkbox of the close question. -->
     <string name="close_dont_ask">Don\'t ask again</string>
     <!-- Response of the close question: keep it running in the background. -->

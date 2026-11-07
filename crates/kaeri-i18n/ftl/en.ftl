@@ -1489,6 +1489,12 @@ title-linux-episode-watched = Episode { $episode } watched
 # Line in a day's column when nothing airs that day.
 calendar-linux-day-empty = Nothing airs
 
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+linux-read-library-list = List
+
+# Under No downloads on Downloads, Reading side.
+linux-read-downloads-empty = Downloaded chapters open without a connection.
+
 # Accessible label of the line that says how the watch party form is getting on.
 party-status = Watch party status
 
@@ -1602,6 +1608,10 @@ linux-reader-reading-mode = Reading mode
 
 linux-reader-fit = Fit
 
+linux-reader-crop-borders = Crop borders
+
+linux-reader-page-layout = Page layout
+
 linux-reader-background = Background
 
 linux-reader-look = Look
@@ -1615,6 +1625,17 @@ linux-reader-margins = Margins
 linux-reader-line-spacing = Line spacing
 
 linux-reader-justify = Justify text
+
+linux-reader-direction = Direction
+
+linux-reader-spreads = Wide pages
+
+linux-reader-strip-width = Strip width
+
+linux-reader-strip-gap = Image gap
+
+# The fit that fills the window's height.
+linux-reader-fit-height = Height
 
 # Reading mode names.
 linux-reader-mode-paged = Paged
@@ -1638,6 +1659,12 @@ linux-send-save = Save to a folder
 
 # Menu item of a series that opens that sheet.
 linux-send-menu = Send to e-reader
+
+# Heading when the web view that shows a novel cannot start.
+linux-reader-novel-unavailable = Novels can't open here
+
+# Line under it: what a novel needs on this computer.
+linux-reader-novel-needs-webkit = Novels need WebKitGTK 6 with its sandbox working.
 
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Preview
@@ -5443,6 +5470,27 @@ pad-button-left-stick = Left stick
 
 # Name of the controller's right stick, in the controller help.
 pad-button-right-stick = Right stick
+
+# Controller help: the D-pad in the reader turns the page, the way the book reads.
+pad-help-turn-page = Turn the page
+
+# Controller help: the left shoulder button in the reader.
+pad-help-previous-chapter = Previous chapter
+
+# Controller help: the right shoulder button in the reader.
+pad-help-next-chapter = Next chapter
+
+# Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pad-help-reader-bar = Show or hide the bar
+
+# Controller help: the menu button in the reader.
+pad-help-reader-settings = Reader settings
+
+# Controller help: the B button in the reader.
+pad-help-close-reader = Close the reader
+
+# Heading in the controller help for the buttons in the reader.
+pad-help-reader = Reader
 
 # Checkbox of the close question.
 close-dont-ask = Don't ask again

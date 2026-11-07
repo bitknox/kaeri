@@ -2280,6 +2280,16 @@ pub fn calendar_linux_day_empty() -> String {
     text("calendar-linux-day-empty", &[])
 }
 
+/// Accessible name of the reading Library's list menu, the button that says the list on screen.
+pub fn linux_read_library_list() -> String {
+    text("linux-read-library-list", &[])
+}
+
+/// Under No downloads on Downloads, Reading side.
+pub fn linux_read_downloads_empty() -> String {
+    text("linux-read-downloads-empty", &[])
+}
+
 /// Accessible label of the line that says how the watch party form is getting on.
 pub fn party_status() -> String {
     text("party-status", &[])
@@ -2449,6 +2459,14 @@ pub fn linux_reader_fit() -> String {
     text("linux-reader-fit", &[])
 }
 
+pub fn linux_reader_crop_borders() -> String {
+    text("linux-reader-crop-borders", &[])
+}
+
+pub fn linux_reader_page_layout() -> String {
+    text("linux-reader-page-layout", &[])
+}
+
 pub fn linux_reader_background() -> String {
     text("linux-reader-background", &[])
 }
@@ -2475,6 +2493,27 @@ pub fn linux_reader_line_spacing() -> String {
 
 pub fn linux_reader_justify() -> String {
     text("linux-reader-justify", &[])
+}
+
+pub fn linux_reader_direction() -> String {
+    text("linux-reader-direction", &[])
+}
+
+pub fn linux_reader_spreads() -> String {
+    text("linux-reader-spreads", &[])
+}
+
+pub fn linux_reader_strip_width() -> String {
+    text("linux-reader-strip-width", &[])
+}
+
+pub fn linux_reader_strip_gap() -> String {
+    text("linux-reader-strip-gap", &[])
+}
+
+/// The fit that fills the window's height.
+pub fn linux_reader_fit_height() -> String {
+    text("linux-reader-fit-height", &[])
 }
 
 /// Reading mode names.
@@ -2514,6 +2553,16 @@ pub fn linux_send_save() -> String {
 /// Menu item of a series that opens that sheet.
 pub fn linux_send_menu() -> String {
     text("linux-send-menu", &[])
+}
+
+/// Heading when the web view that shows a novel cannot start.
+pub fn linux_reader_novel_unavailable() -> String {
+    text("linux-reader-novel-unavailable", &[])
+}
+
+/// Line under it: what a novel needs on this computer.
+pub fn linux_reader_novel_needs_webkit() -> String {
+    text("linux-reader-novel-needs-webkit", &[])
 }
 
 /// Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
@@ -8657,6 +8706,41 @@ pub fn pad_button_left_stick() -> String {
 /// Name of the controller's right stick, in the controller help.
 pub fn pad_button_right_stick() -> String {
     text("pad-button-right-stick", &[])
+}
+
+/// Controller help: the D-pad in the reader turns the page, the way the book reads.
+pub fn pad_help_turn_page() -> String {
+    text("pad-help-turn-page", &[])
+}
+
+/// Controller help: the left shoulder button in the reader.
+pub fn pad_help_previous_chapter() -> String {
+    text("pad-help-previous-chapter", &[])
+}
+
+/// Controller help: the right shoulder button in the reader.
+pub fn pad_help_next_chapter() -> String {
+    text("pad-help-next-chapter", &[])
+}
+
+/// Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pub fn pad_help_reader_bar() -> String {
+    text("pad-help-reader-bar", &[])
+}
+
+/// Controller help: the menu button in the reader.
+pub fn pad_help_reader_settings() -> String {
+    text("pad-help-reader-settings", &[])
+}
+
+/// Controller help: the B button in the reader.
+pub fn pad_help_close_reader() -> String {
+    text("pad-help-close-reader", &[])
+}
+
+/// Heading in the controller help for the buttons in the reader.
+pub fn pad_help_reader() -> String {
+    text("pad-help-reader", &[])
 }
 
 /// Checkbox of the close question.

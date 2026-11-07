@@ -3699,6 +3699,34 @@
     <value>Right stick</value>
     <comment>Name of the controller's right stick, in the controller help.</comment>
   </data>
+  <data name="PadHelpTurnPage" xml:space="preserve">
+    <value>Turn the page</value>
+    <comment>Controller help: the D-pad in the reader turns the page, the way the book reads.</comment>
+  </data>
+  <data name="PadHelpPreviousChapter" xml:space="preserve">
+    <value>Previous chapter</value>
+    <comment>Controller help: the left shoulder button in the reader.</comment>
+  </data>
+  <data name="PadHelpNextChapter" xml:space="preserve">
+    <value>Next chapter</value>
+    <comment>Controller help: the right shoulder button in the reader.</comment>
+  </data>
+  <data name="PadHelpReaderBar" xml:space="preserve">
+    <value>Show or hide the bar</value>
+    <comment>Controller help: the A button in the reader shows or hides the bar with the title and settings.</comment>
+  </data>
+  <data name="PadHelpReaderSettings" xml:space="preserve">
+    <value>Reader settings</value>
+    <comment>Controller help: the menu button in the reader.</comment>
+  </data>
+  <data name="PadHelpCloseReader" xml:space="preserve">
+    <value>Close the reader</value>
+    <comment>Controller help: the B button in the reader.</comment>
+  </data>
+  <data name="PadHelpReader" xml:space="preserve">
+    <value>Reader</value>
+    <comment>Heading in the controller help for the buttons in the reader.</comment>
+  </data>
   <data name="CloseDontAsk" xml:space="preserve">
     <value>Don't ask again</value>
     <comment>Checkbox of the close question.</comment>
