@@ -274,8 +274,35 @@ pub(super) fn list(cx: &Cx<'_>, session: u64, work: &WorkId) -> Option<Listed> {
     let done = wake(cx.tx, session, ReaderWake::Listed);
     tokio::spawn(async move {
         let listed = sources.chapters(&work, None, now).await.map(|(_, g)| source_chapters(g));
+        // The listing asked the source how the series reads, if it had not said lately.
+        if let Some(lookup) = sources.hint_lookup(&work) {
+            crate::read_sources::settle_hint(lookup).await;
+        }
         if let Ok(mut s) = out.lock() {
             *s = Some(listed);
+        }
+        done();
+    });
+    Some(slot)
+}
+
+/// A work on the shelf whose source is being asked how it reads, with no answer kept: its open
+/// waits a moment for the answer, then goes on with what is kept.
+pub(super) fn after_hint(
+    cx: &Cx<'_>,
+    session: u64,
+    work: &WorkId,
+    chapters: &[ShelfChapter],
+) -> Option<Listed> {
+    let lookup = cx.services.book_sources.hint_lookup(work)?;
+    let slot = Listed::default();
+    let out = slot.clone();
+    let chapters = chapters.to_vec();
+    let done = wake(cx.tx, session, ReaderWake::Listed);
+    tokio::spawn(async move {
+        crate::read_sources::settle_hint(lookup).await;
+        if let Ok(mut s) = out.lock() {
+            *s = Some(Ok(chapters));
         }
         done();
     });

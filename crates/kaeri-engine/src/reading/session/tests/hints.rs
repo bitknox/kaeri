@@ -2,7 +2,7 @@
 //! the series comes first, then the source's hint, then the reader's guess from the book, then
 //! the medium.
 
-use std::io::Cursor;
+use std::{io::Cursor, time::Duration};
 
 use async_trait::async_trait;
 use kaeri_core::{
@@ -20,6 +20,10 @@ use super::*;
 struct HintedSource {
     manifest: BookSourceManifest,
     hint: Option<ReadingHint>,
+    /// How long the series' details take to come.
+    slow: Duration,
+    /// How many times the series' details were asked for.
+    asked: std::sync::atomic::AtomicU32,
 }
 
 impl HintedSource {
@@ -36,7 +40,15 @@ impl HintedSource {
                 capabilities: Vec::new(),
             },
             hint,
+            slow: Duration::ZERO,
+            asked: Default::default(),
         })
+    }
+
+    fn slow(id: &str, hint: Option<ReadingHint>, slow: Duration) -> Arc<Self> {
+        let mut source = Arc::into_inner(Self::new(id, BookSourceKind::Plugin, hint)).unwrap();
+        source.slow = slow;
+        Arc::new(source)
     }
 }
 
@@ -51,6 +63,8 @@ impl kaeri_core::traits::BookSource for HintedSource {
     }
 
     async fn series(&self, id: &str, _: &BookHints) -> Result<SeriesDetail, ProviderError> {
+        self.asked.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        tokio::time::sleep(self.slow).await;
         Ok(SeriesDetail {
             reading_hint: self.hint,
             ..SeriesDetail::new(id, "The Tin Lighthouse")
@@ -239,4 +253,80 @@ async fn with_no_hint_the_book_decides_and_a_hint_wins_over_it() {
     let (view, _, said) = h.open(OpenAt::Start).await;
     assert_eq!(view.direction, ReadDirection::RightToLeft, "the source's hint beats the guess");
     assert!(notices(&said).is_empty(), "{said:?}");
+}
+
+/// Slow series details never hold up a chapter list: the list comes at once, the hint is asked
+/// once however many lists are made meanwhile, and it is kept when it comes.
+#[tokio::test(start_paused = true)]
+async fn a_slow_series_details_call_never_delays_the_chapters() {
+    let source = HintedSource::slow(
+        "plugin-books",
+        Some(ReadingHint::LeftToRight),
+        Duration::from_secs(10),
+    );
+    let h = hinted(source.clone());
+    let work = WorkId::new(HINTED);
+    let sources = &h.services.book_sources;
+    let started = tokio::time::Instant::now();
+    let (_, volumes) = sources.chapters(&work, None, 1).await.unwrap();
+    sources.chapters(&work, None, 1).await.unwrap();
+    assert!(started.elapsed() < Duration::from_millis(100), "{:?}", started.elapsed());
+    // The lookup starts once the test yields.
+    tokio::time::sleep(Duration::from_millis(1)).await;
+    assert_eq!(volumes.iter().map(|v| v.chapters.len()).sum::<usize>(), 1);
+    assert_eq!(source.asked.load(std::sync::atomic::Ordering::Relaxed), 1, "asked once");
+    assert!(sources.hint_lookup(&work).is_some(), "the lookup runs on");
+
+    tokio::time::sleep(Duration::from_secs(11)).await;
+    let kept = h.services.store.book_series_hint("plugin-books", "series-1").unwrap();
+    assert_eq!(kept.and_then(|(hint, _)| hint).as_deref(), Some("ltr"));
+    assert!(sources.hint_lookup(&work).is_none());
+}
+
+/// The reader's open does not wait out a slow hint: it opens as the medium says, and the hint
+/// that comes later changes nothing until the series is opened again.
+#[tokio::test(start_paused = true)]
+async fn the_open_waits_a_moment_for_a_slow_hint_then_keeps_its_direction() {
+    let source = HintedSource::slow(
+        "plugin-books",
+        Some(ReadingHint::LeftToRight),
+        Duration::from_secs(10),
+    );
+    let mut h = hinted(source);
+    // The open goes on without the hint once its moment is up: the page worker's thread lets
+    // the paused clock run on, so the time is not measured here, only that the hint was not
+    // waited for.
+    let (view, _, _) = h.open_work(WorkId::new(HINTED), OpenAt::Start).await;
+    assert_eq!(view.direction, ReadDirection::RightToLeft, "a manga's default");
+
+    // The hint comes mid-chapter; a setting changed then lays the chapter out the same way.
+    tokio::time::sleep(Duration::from_secs(10)).await;
+    let session = h.session();
+    h.send(ReaderCommand::SetSetting {
+        session: Some(session),
+        medium: Medium::Manga,
+        work: Some(WorkId::new(HINTED)),
+        key: Key::Spreads,
+        scope: kaeri_model::reader::SettingScope::Medium,
+        value: ReaderValue::Choice { name: "whole".into() },
+    });
+    h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+    assert_eq!(h.reader.session.as_ref().unwrap().direction, ReadDirection::RightToLeft);
+    let session = h.session();
+    h.send(ReaderCommand::Close { session });
+
+    let (view, _, _) = h.open_work(WorkId::new(HINTED), OpenAt::Start).await;
+    assert_eq!(view.direction, ReadDirection::LeftToRight, "opened again, the hint holds");
+}
+
+/// An open waits for a running lookup no longer than a moment, and not at all once it ended.
+#[tokio::test(start_paused = true)]
+async fn an_open_waits_for_a_lookup_no_longer_than_a_moment() {
+    let (ended, lookup) = tokio::sync::watch::channel(());
+    let started = tokio::time::Instant::now();
+    crate::read_sources::settle_hint(lookup.clone()).await;
+    assert_eq!(started.elapsed(), Duration::from_millis(1500));
+    drop(ended);
+    crate::read_sources::settle_hint(lookup).await;
+    assert_eq!(started.elapsed(), Duration::from_millis(1500));
 }

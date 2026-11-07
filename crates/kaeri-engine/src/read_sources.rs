@@ -62,8 +62,18 @@ const META_ORDER: &str = "reading.book_order";
 const HINT_KEPT: i64 = 7 * 24 * 3600;
 /// When a source could not say, how long until it is asked again.
 const HINT_RETRY: i64 = 3600;
-/// How long a chapter list waits for the source's word on how the series reads.
-const HINT_WAIT: std::time::Duration = std::time::Duration::from_secs(5);
+/// How long the source has to say how a series reads, asked in the background.
+const HINT_WAIT: std::time::Duration = std::time::Duration::from_secs(20);
+/// How long the reader's open waits for that answer, when none is kept and one is coming.
+const HINT_OPEN_WAIT: std::time::Duration = std::time::Duration::from_millis(1500);
+
+/// A source being asked how a series reads: it ends when the answer is kept or given up on.
+pub(crate) type HintLookup = tokio::sync::watch::Receiver<()>;
+
+/// Wait for a lookup to end, for no longer than the reader's open waits.
+pub(crate) async fn settle_hint(mut lookup: HintLookup) {
+    let _ = tokio::time::timeout(HINT_OPEN_WAIT, lookup.changed()).await;
+}
 const META_OFF: &str = "reading.book_off";
 /// How long a removed folder can be taken back.
 const UNDO_SECONDS: u64 = 8;
@@ -221,6 +231,8 @@ pub struct BookSources {
     pending: Arc<Mutex<HashMap<String, added::Pending>>>,
     /// The reading demo, in the registry while the demo is on.
     pub demo: kaeri_providers::reading_demo::ReadingDemo,
+    /// The series whose sources are being asked how they read, by source and series.
+    hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
     /// What reading's catalogue keeps between commands: see [`crate::read_catalog::Memory`].
     pub catalog: crate::read_catalog::Memory,
     /// The chapters downloaded for reading and the queue that fetches them.
@@ -258,6 +270,7 @@ impl BookSources {
             removed: Arc::default(),
             undo: Arc::default(),
             pending: Arc::default(),
+            hint_lookups: Arc::default(),
             demo: kaeri_providers::reading_demo::ReadingDemo::new(Some(
                 paths.cache_dir.join("reading-demo"),
             )),
@@ -1253,12 +1266,51 @@ impl BookSources {
         hint.as_deref().and_then(ReadingHint::parse)
     }
 
-    /// Ask the source how a series reads, unless it was asked lately, and keep the answer.
-    async fn learn_hint(&self, source: &str, series: &str, now: i64) {
+    /// A lookup the reader's open may wait for: the source of the work's edition is being asked
+    /// how it reads, and nothing it said is kept.
+    pub(crate) fn hint_lookup(&self, work: &WorkId) -> Option<HintLookup> {
+        let (source, series) = self.edition_of(work, None)?;
+        let lookup =
+            self.hint_lookups.lock().ok()?.get(&(source.clone(), series.clone())).cloned()?;
+        let kept = self.store.book_series_hint(&source, &series).ok().flatten();
+        kept.is_none().then_some(lookup)
+    }
+
+    /// Ask the source how a series reads in the background, unless it was asked lately or is
+    /// being asked now.
+    fn ask_hint(&self, source: &str, series: &str, now: i64) {
         let kept = self.store.book_series_hint(source, series).ok().flatten();
         if kept.as_ref().is_some_and(|(_, at)| now - at < HINT_KEPT) {
             return;
         }
+        let key = (source.to_owned(), series.to_owned());
+        let (ended, lookup) = tokio::sync::watch::channel(());
+        {
+            let Ok(mut lookups) = self.hint_lookups.lock() else { return };
+            if lookups.contains_key(&key) {
+                return;
+            }
+            lookups.insert(key.clone(), lookup);
+        }
+        let sources = self.clone();
+        tokio::spawn(async move {
+            sources.learn_hint(&key.0, &key.1, kept, now).await;
+            if let Ok(mut lookups) = sources.hint_lookups.lock() {
+                lookups.remove(&key);
+            }
+            // Its waiters hear the lookup end as the sender goes.
+            drop(ended);
+        });
+    }
+
+    /// Ask the source how a series reads and keep the answer.
+    async fn learn_hint(
+        &self,
+        source: &str,
+        series: &str,
+        kept: Option<(Option<String>, i64)>,
+        now: i64,
+    ) {
         let hints = BookHints::default();
         let asked = self.registry.series(source, series, &hints, now);
         let (hint, at) = match tokio::time::timeout(HINT_WAIT, asked).await {
@@ -1287,14 +1339,13 @@ impl BookSources {
     ) -> Result<(Option<BookEditionRow>, Vec<VolumeGroup>), ReadingFailure> {
         let (source, series) =
             self.edition_of(work, edition).ok_or(ReadingFailure::NotFound)?;
-        // The source's word on how the series reads comes with its chapters, so the reader has
-        // it before the first page.
-        let hints = BookHints::default();
-        let (chapters, ()) = tokio::join!(
-            self.registry.chapters(&source, &series, &hints, now),
-            self.learn_hint(&source, &series, now),
-        );
-        let chapters = chapters.map_err(|e| failure(&source, &e))?;
+        // The source is asked how the series reads beside its chapters, and never held up for.
+        self.ask_hint(&source, &series, now);
+        let chapters = self
+            .registry
+            .chapters(&source, &series, &BookHints::default(), now)
+            .await
+            .map_err(|e| failure(&source, &e))?;
         crate::read_catalog::chapters::keep(&self.store, &source, &series, &chapters, now);
         let restarts = restarts_per_volume(&chapters);
         let read: HashMap<String, kaeri_store::reading::ReadChapter> = self

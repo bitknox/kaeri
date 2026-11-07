@@ -75,6 +75,18 @@ impl Cx<'_> {
     }
 
     fn layers(&self, medium: Medium, work: Option<&str>) -> Layers {
+        let source = work.map(|w| self.source_word(&WorkId::new(w)));
+        self.layers_with(medium, work, source)
+    }
+
+    /// The layers with the source's word as given: a session's, read once when it opened, so a
+    /// hint that comes later changes nothing until the series is opened again.
+    fn layers_with(
+        &self,
+        medium: Medium,
+        work: Option<&str>,
+        source: Option<SourceWord>,
+    ) -> Layers {
         let layers = Layers::read(
             &self.services.store,
             &self.config.effective().reading,
@@ -82,8 +94,8 @@ impl Cx<'_> {
             work,
             self.screen,
         );
-        match work {
-            Some(work) => layers.with_source(self.source_word(&WorkId::new(work))),
+        match source {
+            Some(source) => layers.with_source(source),
             None => layers,
         }
     }
@@ -101,8 +113,22 @@ impl Cx<'_> {
     }
 
     pub fn settings_view(&self, medium: Medium, work: Option<&WorkId>) -> ReaderSettingsView {
-        let rows = self.layers(medium, work.map(WorkId::as_str)).rows();
-        ReaderSettingsView { medium, work: work.cloned(), rows }
+        self.settings_view_with(medium, work, None)
+    }
+
+    /// The sheet as the open session reads it: with its source's word, when it is the work's.
+    fn settings_view_with(
+        &self,
+        medium: Medium,
+        work: Option<&WorkId>,
+        session: Option<SourceWord>,
+    ) -> ReaderSettingsView {
+        let id = work.map(WorkId::as_str);
+        let layers = match session {
+            Some(source) => self.layers_with(medium, id, Some(source)),
+            None => self.layers(medium, id),
+        };
+        ReaderSettingsView { medium, work: work.cloned(), rows: layers.rows() }
     }
 }
 
@@ -196,6 +222,8 @@ pub struct Session {
     novel_resumed: bool,
     /// A work of the reading demo, whose credit the reader shows.
     demo: Option<kaeri_model::sources::DemoWorkInfo>,
+    /// What the source and the catalogue said of how the series reads, when it opened.
+    source: SourceWord,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -264,7 +292,12 @@ impl Reader {
                 self.open(cx, work, chapter, at, surface)
             }
             ReaderCommand::LoadSettings { medium, work } => {
-                cx.send(ReaderEvent::Settings(cx.settings_view(medium, work.as_ref())));
+                let session = self.source_of(work.as_ref());
+                cx.send(ReaderEvent::Settings(cx.settings_view_with(
+                    medium,
+                    work.as_ref(),
+                    session,
+                )));
             }
             ReaderCommand::SetSetting { session, medium, work, key, scope, value } => {
                 let now = cx.now();
@@ -320,14 +353,15 @@ impl Reader {
         work: Option<WorkId>,
         key: Key,
     ) {
-        cx.send(ReaderEvent::Settings(cx.settings_view(medium, work.as_ref())));
+        let source = self.source_of(work.as_ref());
+        cx.send(ReaderEvent::Settings(cx.settings_view_with(medium, work.as_ref(), source)));
         let pages = self.pages(cx);
         if let Some(s) = self
             .session
             .as_mut()
             .filter(|s| Some(s.id) == session || Some(&s.work) == work.as_ref())
         {
-            s.layers = cx.layers(s.medium, Some(s.work.as_str()));
+            s.layers = cx.layers_with(s.medium, Some(s.work.as_str()), Some(s.source));
             if s.novel.is_some() {
                 s.restyle(cx);
             } else if settings::relays(key) {
@@ -385,6 +419,14 @@ impl Reader {
         ) {
             shelf::name_downloads(&mut chapters, &list);
         }
+        // No word kept yet on how the series reads, and a source being asked: the open waits
+        // a moment for its answer.
+        if !chapters.is_empty()
+            && let Some(slot) = novel::after_hint(cx, id, &work, &chapters)
+        {
+            self.listing = Some(Listing { id, work, chapter, at, surface, slot });
+            return;
+        }
         if chapters.is_empty()
             && let Some(slot) = novel::list(cx, id, &work)
         {
@@ -396,6 +438,11 @@ impl Reader {
             return;
         }
         self.open_with(cx, id, work, chapters, chapter, at, surface);
+    }
+
+    /// The open session's word from its source, when it reads `work`.
+    fn source_of(&self, work: Option<&WorkId>) -> Option<SourceWord> {
+        self.session.as_ref().filter(|s| Some(&s.work) == work).map(|s| s.source)
     }
 
     /// A source listed the chapters an open waited for.
@@ -463,7 +510,8 @@ impl Reader {
             chapter: Some(chapters[index].row(&marks)),
             wait: None,
         });
-        let layers = cx.layers(medium, Some(work.as_str()));
+        let source = cx.source_word(&work);
+        let layers = cx.layers_with(medium, Some(work.as_str()), Some(source));
         // A novel opens at its kept text position, or the one asked for.
         let restore = match &at {
             OpenAt::Place { place } if place.chapter == chapters[index].id => {
@@ -488,6 +536,7 @@ impl Reader {
             .map(kaeri_model::sources::DemoWorkInfo::of);
         let mut session = Session {
             demo,
+            source,
             id,
             work,
             medium,
@@ -692,7 +741,11 @@ impl Session {
                 .checked_sub(1)
                 .and_then(|i| self.chapters.get(i))
                 .map(|c| c.row(&marks)),
-            settings: Some(cx.settings_view(self.medium, Some(&self.work))),
+            settings: Some(cx.settings_view_with(
+                self.medium,
+                Some(&self.work),
+                Some(self.source),
+            )),
             demo_credit: self.demo.clone(),
             progress_host: cx.services.book_sources.progress_host(&self.work),
         }
@@ -868,7 +921,8 @@ impl Session {
             }
         }
         if said.is_some() {
-            self.layers = cx.layers(self.medium, Some(self.work.as_str()));
+            self.layers =
+                cx.layers_with(self.medium, Some(self.work.as_str()), Some(self.source));
         }
         if !self.opened {
             self.opened = true;
