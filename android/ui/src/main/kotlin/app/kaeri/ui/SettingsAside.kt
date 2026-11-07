@@ -74,6 +74,8 @@ internal fun SettingsAside(pane: SettingsPane, focus: String?) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         when (pane) {
+            SettingsPane.Medium -> Aside(stringResource(R.string.settings_kaeri_is_for), stringResource(R.string.settings_medium_footer))
+            SettingsPane.Reading -> Aside(stringResource(R.string.settings_reader_defaults), stringResource(R.string.settings_reader_defaults_footer))
             SettingsPane.General -> TitleLanguagePreview()
             SettingsPane.Playback -> UpscalingPreview()
             SettingsPane.Notifications -> Aside(

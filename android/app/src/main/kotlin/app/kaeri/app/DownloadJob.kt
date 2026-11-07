@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import app.kaeri.store.AppLanguage
 import app.kaeri.store.AppStore
+import app.kaeri.store.chaptersBusy
 import kotlinx.coroutines.launch
 import app.kaeri.engine.model.DownloadRow
 import app.kaeri.engine.model.DownloadState
@@ -56,8 +57,8 @@ object Downloads {
      * when a user-initiated job or a foreground service may be started. Once it runs, asking
      * again does nothing.
      */
-    fun ensure(context: Context, rows: List<DownloadRow>, wifiOnly: Boolean) {
-        if (!DownloadsModel.busy(rows)) return
+    fun ensure(context: Context, rows: List<DownloadRow>, wifiOnly: Boolean, chapters: Int = 0) {
+        if (!DownloadsModel.busy(rows) && chapters == 0) return
         if (Build.VERSION.SDK_INT >= JOBS_SDK) DownloadJob.ensure(context, rows, wifiOnly) else DownloadService.ensure(context)
     }
 }
@@ -100,12 +101,18 @@ internal class DownloadRun(
         }
         scope.launch {
             app.store.loadDownloads(force = true)
-            combine(app.store.downloads.rows, app.store.downloads.rates, ::Pair).collect { (rows, rates) ->
+            app.store.reading.loadDownloads()
+            combine(app.store.downloads.rows, app.store.downloads.rates, app.store.reading.downloads, ::Triple).collect { (rows, rates, books) ->
                 if (!app.store.downloads.loaded.value) return@collect
                 session.saw(rows).forEach(notifier::postFinished)
                 val live = LiveDownloads.of(service, rows, rates, session.finished)
                 if (live == null) {
-                    end()
+                    // Chapters alone keep it, saying how many are left; the engine says when
+                    // they are all done (Downloads finished).
+                    val chapters = chaptersBusy(books)
+                    grace?.cancel()
+                    grace = null
+                    if (chapters > 0) manager.notify(Downloads.NOTIFICATION, notifier.chapters(chapters)) else end()
                     return@collect
                 }
                 // Paused, nothing runs; the notification stays a while for Resume, then goes.

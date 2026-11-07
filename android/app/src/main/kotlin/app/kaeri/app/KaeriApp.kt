@@ -44,6 +44,11 @@ import app.kaeri.player.PlayerModel
 import app.kaeri.store.AppHost
 import app.kaeri.store.BackgroundEngine
 import app.kaeri.store.EngineEpisodeCheck
+import app.kaeri.store.ChapterCheck
+import app.kaeri.store.EngineChapterCheck
+import app.kaeri.store.NewChapterNote
+import app.kaeri.store.covers
+import app.kaeri.store.text
 import app.kaeri.store.EpisodeCheck
 import app.kaeri.app.tv.CastKeeper
 import app.kaeri.app.tv.TvConnection
@@ -135,6 +140,11 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
 
     override val episodeNotifier: EpisodeNotifier by lazy { EpisodeNotifier(this) }
 
+    override val readingNotifier: ReadingNotifier by lazy { ReadingNotifier(this) }
+
+    /** The check for new chapters, on the engine. */
+    override val chapterCheck: ChapterCheck by lazy { EngineChapterCheck(background) }
+
     /** What the home-screen widgets show, as the engine last made it. */
     val widgets: WidgetRecord by lazy { WidgetRecord.of(filesDir) }
 
@@ -200,6 +210,27 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         )
     }
 
+    /**
+     * New chapters a check found while the app runs, and the chapters asked for all downloaded:
+     * posted as the engine says them, which it does only while their setting is on. Where they
+     * cannot show for want of the permission, the activity asks for it.
+     */
+    private fun followReadingNotices() {
+        scope.launch {
+            store.reading.newChapters.collect { found ->
+                if (!readingNotifier.canPost(ReadingNotifier.CHAPTERS)) return@collect notifier.wantPermission()
+                val art = store.covers(found.flatMap { listOfNotNull(it.cover, it.banner) }.distinct(), EngineEpisodeCheck.COVER_SIZE, EngineEpisodeCheck.COVERS_MILLIS)
+                readingNotifier.chapters(found.map { NewChapterNote.of(it, art) })
+            }
+        }
+        scope.launch {
+            store.reading.downloadsDone.collect { done ->
+                if (!readingNotifier.canPost(ReadingNotifier.DOWNLOADS_FINISHED)) return@collect notifier.wantPermission()
+                readingNotifier.downloadsDone(done.work, done.title.text(this@KaeriApp), done.body.text(this@KaeriApp))
+            }
+        }
+    }
+
     override suspend fun markWatched(id: AnilistId, episode: UInt) {
         background.use { it.setWatched(id, listOf(episode.toString())) }
     }
@@ -232,6 +263,7 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         // A profile switched to: remembered, and the engine started again on it.
         store.onProfileSwitch = { id -> ProfileChoice.switchTo(this, id) }
         episodeAlerts.follow(scope)
+        followReadingNotices()
         ContinueShortcut(this).follow(store, scope)
         widgetKeeper.followFillIns(store, scope)
         recordWidgetsOnLeaving()

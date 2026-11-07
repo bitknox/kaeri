@@ -675,20 +675,38 @@ public static partial class T
     /// <summary>Under a cover: a light novel's part came out that the person has not read.</summary>
     public static string ReadingPartNew(string part) => Fill(Get("ReadingPartNew"), ("part", part));
 
+    /// <summary>Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.</summary>
+    public static string ReadingLabelPercent(string label, long percent) => Fill(Get("ReadingLabelPercent"), ("label", label), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").</summary>
+    public static string ReadingLabelNew(string label) => Fill(Get("ReadingLabelNew"), ("label", label));
+
     /// <summary>Under a This week cell: a light novel's part that came out that day, with its own title.</summary>
     public static string ReadingPartTitled(string part, string title) => Fill(Get("ReadingPartTitled"), ("part", part), ("title", title));
+
+    /// <summary>Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").</summary>
+    public static string ReadingLabelTitled(string label, string title) => Fill(Get("ReadingLabelTitled"), ("label", label), ("title", title));
 
     /// <summary>Under the big picture on reading's Home: a light novel's part that came out today.</summary>
     public static string ReadingPartOutToday(string part) => Fill(Get("ReadingPartOutToday"), ("part", part));
 
+    /// <summary>Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").</summary>
+    public static string ReadingLabelOutToday(string label) => Fill(Get("ReadingLabelOutToday"), ("label", label));
+
     /// <summary>Under the big picture on reading's Home: a light novel's part that came out today, with its title.</summary>
     public static string ReadingPartOutTodayTitled(string part, string title) => Fill(Get("ReadingPartOutTodayTitled"), ("part", part), ("title", title));
+
+    /// <summary>Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").</summary>
+    public static string ReadingLabelOutTodayTitled(string label, string title) => Fill(Get("ReadingLabelOutTodayTitled"), ("label", label), ("title", title));
 
     /// <summary>Under a Library cover: the chapter the person is at, and the newest chapter there is.</summary>
     public static string ReadingChapterOf(string chapter, string of) => Fill(Get("ReadingChapterOf"), ("chapter", chapter), ("of", of));
 
     /// <summary>Under a Library cover: the volume and part of a light novel the person is at.</summary>
     public static string ReadingVolumePart(string volume, string part) => Fill(Get("ReadingVolumePart"), ("volume", volume), ("part", part));
+
+    /// <summary>Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").</summary>
+    public static string ReadingVolumeLabel(string volume, string label) => Fill(Get("ReadingVolumeLabel"), ("volume", volume), ("label", label));
 
     /// <summary>A search filter: books from Japan.</summary>
     public static string ReadingOriginJapan => Get("ReadingOriginJapan");
@@ -764,6 +782,12 @@ public static partial class T
 
     /// <summary>A novel's chapter row: how far into it the person is.</summary>
     public static string ReadingRowPercent(long percent) => Fill(Get("ReadingRowPercent"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A novel's chapter row: the person opened it, and how far in is too little to say as a percent.</summary>
+    public static string ReadingRowOpened => Get("ReadingRowOpened");
+
+    /// <summary>A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.</summary>
+    public static string ReadingRowBookmarked => Get("ReadingRowBookmarked");
 
     /// <summary>A chapter row: how long its pages are, for a file on the device.</summary>
     public static string ReadingRowPages(long n) => Fill(GetPlural("ReadingRowPages", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -5559,6 +5583,15 @@ public static partial class T
 
     /// <summary>The main action for a light novel part not opened yet.</summary>
     public static string ActionReadPart(string n) => Fill(Get("ActionReadPart"), ("n", n));
+
+    /// <summary>The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.</summary>
+    public static string ActionContinueNamed(string label, long percent) => Fill(Get("ActionContinueNamed"), ("label", label), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The main action for a light novel part, part read, named in the source's own words, when how far is not known.</summary>
+    public static string ActionContinueNamedPlain(string label) => Fill(Get("ActionContinueNamedPlain"), ("label", label));
+
+    /// <summary>The main action for a light novel part not opened yet, named in the source's own words.</summary>
+    public static string ActionReadNamed(string label) => Fill(Get("ActionReadNamed"), ("label", label));
 
     /// <summary>The main action when every chapter is read.</summary>
     public static string ActionReadAgain => Get("ActionReadAgain");
@@ -11035,11 +11068,17 @@ public static partial class T
         ["ReadingNextPart"] = "Part {part}",
         ["ReadingPartPercent"] = "Part {part} · {percent}%",
         ["ReadingPartNew"] = "Part {part} is new",
+        ["ReadingLabelPercent"] = "{label} · {percent}%",
+        ["ReadingLabelNew"] = "{label} is new",
         ["ReadingPartTitled"] = "Part {part} · {title}",
+        ["ReadingLabelTitled"] = "{label} · {title}",
         ["ReadingPartOutToday"] = "Part {part} is out today",
+        ["ReadingLabelOutToday"] = "{label} is out today",
         ["ReadingPartOutTodayTitled"] = "Part {part}, {title}, out today",
+        ["ReadingLabelOutTodayTitled"] = "{label}, {title}, out today",
         ["ReadingChapterOf"] = "Chapter {chapter} of {of}",
         ["ReadingVolumePart"] = "Volume {volume}, part {part}",
+        ["ReadingVolumeLabel"] = "Volume {volume}, {label}",
         ["ReadingOriginJapan"] = "Japan",
         ["ReadingOriginKorea"] = "Korea",
         ["ReadingOriginChina"] = "China",
@@ -11066,6 +11105,8 @@ public static partial class T
         ["ReadingRowPageOf"] = "Page {page} of {of}",
         ["ReadingRowPage"] = "Page {page}",
         ["ReadingRowPercent"] = "{percent}%",
+        ["ReadingRowOpened"] = "Opened",
+        ["ReadingRowBookmarked"] = "Bookmarked",
         ["ReadingRowPages_one"] = "1 page",
         ["ReadingRowPages_other"] = "{n} pages",
         ["ReadingRowVersions_one"] = "1 version",
@@ -12726,6 +12767,9 @@ public static partial class T
         ["ActionContinuePart"] = "Continue part {n} · {percent}%",
         ["ActionContinuePartPlain"] = "Continue part {n}",
         ["ActionReadPart"] = "Read part {n}",
+        ["ActionContinueNamed"] = "Continue {label} · {percent}%",
+        ["ActionContinueNamedPlain"] = "Continue {label}",
+        ["ActionReadNamed"] = "Read {label}",
         ["ActionReadAgain"] = "Read again",
         ["SeriesReadingFrom"] = "Reading from",
         ["SeriesChange"] = "Change",

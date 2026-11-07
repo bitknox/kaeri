@@ -377,7 +377,7 @@ public final class ReadingModel {
         spot.label = .reading(.readingSpotlightNewChapter)
         if novel {
             spot.line = .reading(.readingPartOutToday(part: "4"))
-            spot.action = .readPart(chapter: "4", label: "4")
+            spot.action = .readPart(chapter: "4", label: "4", named: nil)
         } else {
             spot.line = .reading(.readingOutTodayTitled(chapter: "15", title: "The Far Shore")) // i18n-skip
             spot.action = .read(chapter: "15", label: "15")
