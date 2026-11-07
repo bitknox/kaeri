@@ -1085,9 +1085,24 @@ pub fn reading_part_new(part: &str) -> String {
     text("reading-part-new", &[("part", Arg::Text(part))])
 }
 
+/// Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+pub fn reading_label_percent(label: &str, percent: i64) -> String {
+    text("reading-label-percent", &[("label", Arg::Text(label)), ("percent", Arg::Int(percent))])
+}
+
+/// Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+pub fn reading_label_new(label: &str) -> String {
+    text("reading-label-new", &[("label", Arg::Text(label))])
+}
+
 /// Under a This week cell: a light novel's part that came out that day, with its own title.
 pub fn reading_part_titled(part: &str, title: &str) -> String {
     text("reading-part-titled", &[("part", Arg::Text(part)), ("title", Arg::Text(title))])
+}
+
+/// Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+pub fn reading_label_titled(label: &str, title: &str) -> String {
+    text("reading-label-titled", &[("label", Arg::Text(label)), ("title", Arg::Text(title))])
 }
 
 /// Under the big picture on reading's Home: a light novel's part that came out today.
@@ -1095,9 +1110,19 @@ pub fn reading_part_out_today(part: &str) -> String {
     text("reading-part-out-today", &[("part", Arg::Text(part))])
 }
 
+/// Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+pub fn reading_label_out_today(label: &str) -> String {
+    text("reading-label-out-today", &[("label", Arg::Text(label))])
+}
+
 /// Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 pub fn reading_part_out_today_titled(part: &str, title: &str) -> String {
     text("reading-part-out-today-titled", &[("part", Arg::Text(part)), ("title", Arg::Text(title))])
+}
+
+/// Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+pub fn reading_label_out_today_titled(label: &str, title: &str) -> String {
+    text("reading-label-out-today-titled", &[("label", Arg::Text(label)), ("title", Arg::Text(title))])
 }
 
 /// Under a Library cover: the chapter the person is at, and the newest chapter there is.
@@ -1108,6 +1133,11 @@ pub fn reading_chapter_of(chapter: &str, of: &str) -> String {
 /// Under a Library cover: the volume and part of a light novel the person is at.
 pub fn reading_volume_part(volume: &str, part: &str) -> String {
     text("reading-volume-part", &[("volume", Arg::Text(volume)), ("part", Arg::Text(part))])
+}
+
+/// Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+pub fn reading_volume_label(volume: &str, label: &str) -> String {
+    text("reading-volume-label", &[("volume", Arg::Text(volume)), ("label", Arg::Text(label))])
 }
 
 /// A search filter: books from Japan.
@@ -1228,6 +1258,16 @@ pub fn reading_row_page(page: i64) -> String {
 /// A novel's chapter row: how far into it the person is.
 pub fn reading_row_percent(percent: i64) -> String {
     text("reading-row-percent", &[("percent", Arg::Int(percent))])
+}
+
+/// A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+pub fn reading_row_opened() -> String {
+    text("reading-row-opened", &[])
+}
+
+/// A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+pub fn reading_row_bookmarked() -> String {
+    text("reading-row-bookmarked", &[])
 }
 
 /// A chapter row: how long its pages are, for a file on the device.
@@ -13188,6 +13228,21 @@ pub fn action_continue_part_plain(n: &str) -> String {
 /// The main action for a light novel part not opened yet.
 pub fn action_read_part(n: &str) -> String {
     text("action-read-part", &[("n", Arg::Text(n))])
+}
+
+/// The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+pub fn action_continue_named(label: &str, percent: i64) -> String {
+    text("action-continue-named", &[("label", Arg::Text(label)), ("percent", Arg::Int(percent))])
+}
+
+/// The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+pub fn action_continue_named_plain(label: &str) -> String {
+    text("action-continue-named-plain", &[("label", Arg::Text(label))])
+}
+
+/// The main action for a light novel part not opened yet, named in the source's own words.
+pub fn action_read_named(label: &str) -> String {
+    text("action-read-named", &[("label", Arg::Text(label))])
 }
 
 /// The main action when every chapter is read.

@@ -943,17 +943,37 @@
     <value>Part {part} is new</value>
     <comment>Under a cover: a light novel's part came out that the person has not read.</comment>
   </data>
+  <data name="ReadingLabelPercent" xml:space="preserve">
+    <value>{label} · {percent}%</value>
+    <comment>Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.</comment>
+  </data>
+  <data name="ReadingLabelNew" xml:space="preserve">
+    <value>{label} is new</value>
+    <comment>Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").</comment>
+  </data>
   <data name="ReadingPartTitled" xml:space="preserve">
     <value>Part {part} · {title}</value>
     <comment>Under a This week cell: a light novel's part that came out that day, with its own title.</comment>
+  </data>
+  <data name="ReadingLabelTitled" xml:space="preserve">
+    <value>{label} · {title}</value>
+    <comment>Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").</comment>
   </data>
   <data name="ReadingPartOutToday" xml:space="preserve">
     <value>Part {part} is out today</value>
     <comment>Under the big picture on reading's Home: a light novel's part that came out today.</comment>
   </data>
+  <data name="ReadingLabelOutToday" xml:space="preserve">
+    <value>{label} is out today</value>
+    <comment>Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").</comment>
+  </data>
   <data name="ReadingPartOutTodayTitled" xml:space="preserve">
     <value>Part {part}, {title}, out today</value>
     <comment>Under the big picture on reading's Home: a light novel's part that came out today, with its title.</comment>
+  </data>
+  <data name="ReadingLabelOutTodayTitled" xml:space="preserve">
+    <value>{label}, {title}, out today</value>
+    <comment>Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").</comment>
   </data>
   <data name="ReadingChapterOf" xml:space="preserve">
     <value>Chapter {chapter} of {of}</value>
@@ -962,6 +982,10 @@
   <data name="ReadingVolumePart" xml:space="preserve">
     <value>Volume {volume}, part {part}</value>
     <comment>Under a Library cover: the volume and part of a light novel the person is at.</comment>
+  </data>
+  <data name="ReadingVolumeLabel" xml:space="preserve">
+    <value>Volume {volume}, {label}</value>
+    <comment>Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").</comment>
   </data>
   <data name="ReadingOriginJapan" xml:space="preserve">
     <value>Japan</value>
@@ -1062,6 +1086,14 @@
   <data name="ReadingRowPercent" xml:space="preserve">
     <value>{percent}%</value>
     <comment>A novel's chapter row: how far into it the person is.</comment>
+  </data>
+  <data name="ReadingRowOpened" xml:space="preserve">
+    <value>Opened</value>
+    <comment>A novel's chapter row: the person opened it, and how far in is too little to say as a percent.</comment>
+  </data>
+  <data name="ReadingRowBookmarked" xml:space="preserve">
+    <value>Bookmarked</value>
+    <comment>A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.</comment>
   </data>
   <data name="ReadingRowPages_one" xml:space="preserve">
     <value>1 page</value>
@@ -7499,6 +7531,18 @@
   <data name="ActionReadPart" xml:space="preserve">
     <value>Read part {n}</value>
     <comment>The main action for a light novel part not opened yet.</comment>
+  </data>
+  <data name="ActionContinueNamed" xml:space="preserve">
+    <value>Continue {label} · {percent}%</value>
+    <comment>The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.</comment>
+  </data>
+  <data name="ActionContinueNamedPlain" xml:space="preserve">
+    <value>Continue {label}</value>
+    <comment>The main action for a light novel part, part read, named in the source's own words, when how far is not known.</comment>
+  </data>
+  <data name="ActionReadNamed" xml:space="preserve">
+    <value>Read {label}</value>
+    <comment>The main action for a light novel part not opened yet, named in the source's own words.</comment>
   </data>
   <data name="ActionReadAgain" xml:space="preserve">
     <value>Read again</value>

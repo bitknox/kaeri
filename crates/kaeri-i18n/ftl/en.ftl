@@ -692,20 +692,38 @@ reading-part-percent = Part { $part } · { $percent }%
 # Under a cover: a light novel's part came out that the person has not read.
 reading-part-new = Part { $part } is new
 
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = { $label } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = { $label } is new
+
 # Under a This week cell: a light novel's part that came out that day, with its own title.
 reading-part-titled = Part { $part } · { $title }
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = { $label } · { $title }
 
 # Under the big picture on reading's Home: a light novel's part that came out today.
 reading-part-out-today = Part { $part } is out today
 
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = { $label } is out today
+
 # Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 reading-part-out-today-titled = Part { $part }, { $title }, out today
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = { $label }, { $title }, out today
 
 # Under a Library cover: the chapter the person is at, and the newest chapter there is.
 reading-chapter-of = Chapter { $chapter } of { $of }
 
 # Under a Library cover: the volume and part of a light novel the person is at.
 reading-volume-part = Volume { $volume }, part { $part }
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = Volume { $volume }, { $label }
 
 # A search filter: books from Japan.
 reading-origin-japan = Japan
@@ -782,6 +800,12 @@ reading-row-page = Page { $page }
 
 # A novel's chapter row: how far into it the person is.
 reading-row-percent = { $percent }%
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = Opened
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = Bookmarked
 
 # A chapter row: how long its pages are, for a file on the device.
 reading-row-pages =
@@ -8248,6 +8272,15 @@ action-continue-part-plain = Continue part { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Read part { $n }
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = Continue { $label } · { $percent }%
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = Continue { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+action-read-named = Read { $label }
 
 # The main action when every chapter is read.
 action-read-again = Read again
