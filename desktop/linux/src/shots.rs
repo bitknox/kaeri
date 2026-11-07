@@ -364,6 +364,10 @@ pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
 
 /// Put the window in the state `shot` shows, and say how long to let it settle.
 fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_reading::stage(shell, shot) {
+        return settle;
+    }
     let window = &shell.ctx.window;
     match shot {
         "home" => {
@@ -1362,6 +1366,8 @@ fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f6
 }
 
 fn unstage(shell: &Rc<Shell>, shot: &str) {
+    #[cfg(feature = "fixtures")]
+    crate::shots_reading::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -2025,6 +2031,10 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                     title_menu_popover(&window)
                 }
                 "trailer-preview" => crate::trailer::shot_preview(window.upcast_ref()),
+                #[cfg(feature = "fixtures")]
+                "read-library-filters" | "read-search-filters" | "read-paged-settings" => {
+                    open_popover(&window)
+                }
                 party if party.starts_with("party-") => player.shot_party_popover(),
                 _ => None,
             };
@@ -2078,6 +2088,10 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "cast" => CAST.iter().map(|p| (*p).to_owned()).collect(),
                 #[cfg(feature = "fixtures")]
                 "sync" => crate::sync::shots::NAMES.iter().map(|p| (*p).to_owned()).collect(),
+                #[cfg(feature = "fixtures")]
+                "reading" => {
+                    crate::shots_reading::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
                 "match" => MATCH.iter().map(|p| (*p).to_owned()).collect(),
                 one => vec![one.to_owned()],
             })
@@ -3253,6 +3267,34 @@ fn period_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, 
     let bounds = button.compute_bounds(window)?;
     let width = popover.width() as f32;
     let x = (bounds.x() - 4.0).clamp(0.0, (window.width() as f32 - width).max(0.0));
+    Some((popover.upcast(), x, bounds.y() + bounds.height()))
+}
+
+/// Whichever menu button has its popover open, the popover under it, over the window.
+#[cfg(feature = "fixtures")]
+fn open_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
+    fn find(widget: &gtk::Widget) -> Option<gtk::MenuButton> {
+        if let Some(button) = widget.downcast_ref::<gtk::MenuButton>()
+            && button.is_mapped()
+            && button.popover().is_some_and(|p| p.is_visible())
+        {
+            return Some(button.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = find(&next) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
+    let button = find(window.upcast_ref())?;
+    let popover = button.popover()?;
+    let bounds = button.compute_bounds(window)?;
+    let width = popover.width() as f32;
+    let x = (bounds.x() + bounds.width() / 2.0 - width / 2.0)
+        .clamp(0.0, (window.width() as f32 - width).max(0.0));
     Some((popover.upcast(), x, bounds.y() + bounds.height()))
 }
 

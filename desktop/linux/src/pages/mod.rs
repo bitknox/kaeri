@@ -143,6 +143,29 @@ impl Dest {
         rows
     }
 
+    /// The sections the controller's shoulder buttons walk, in the sidebar's order for
+    /// `answer`: its rows without Settings, which has its own key.
+    pub fn sections(answer: kaeri_model::medium::KaeriIsFor) -> Vec<Self> {
+        let mut rows = Self::rows(answer);
+        rows.retain(|d| *d != Self::Settings);
+        rows
+    }
+
+    /// The sections Ctrl+1 to 8 open. With both media Ctrl+1 is Watch and Ctrl+2 is Read, as
+    /// the reading board has it, and the rest follow in the sidebar's order; with one medium
+    /// it is the sidebar's order.
+    pub fn numbered(answer: kaeri_model::medium::KaeriIsFor) -> Vec<Self> {
+        let mut rows = Self::sections(answer);
+        if answer == kaeri_model::medium::KaeriIsFor::Both
+            && let Some(at) = rows.iter().position(|d| *d == Self::Read)
+        {
+            let read = rows.remove(at);
+            rows.insert(1, read);
+        }
+        rows.truncate(8);
+        rows
+    }
+
     /// The destination that shares this row's name with the other medium, Reading's side.
     pub fn reading_side(self) -> Option<Self> {
         match self {
@@ -239,7 +262,7 @@ pub fn shortcuts(ctx: &Ctx) {
         (
             t::settings_group_general(),
             vec![
-                (t::shortcuts_go_to_section(), "<Control>1...<Control>7"), // i18n-skip
+                (t::shortcuts_go_to_section(), "<Control>1...<Control>8"), // i18n-skip
                 (t::nav_search(), "<Control>f"),                           // i18n-skip
                 (t::nav_settings(), "<Control>comma"),                     // i18n-skip
                 (t::accounts_sync_now(), "<Control>r"),                    // i18n-skip
@@ -382,5 +405,38 @@ mod tests {
         for dest in Dest::ALL {
             assert_eq!(Dest::named(dest.name()), Some(dest));
         }
+    }
+
+    #[test]
+    fn the_shoulder_buttons_walk_the_sidebar_for_each_answer() {
+        use kaeri_model::medium::KaeriIsFor::{Both, Read, Watch};
+        assert_eq!(Dest::sections(Watch)[0], Dest::Home);
+        let both = Dest::sections(Both);
+        assert_eq!(both[3], Dest::Read);
+        assert_eq!(both[4], Dest::Updates);
+        assert!(!both.contains(&Dest::Settings));
+        let read = Dest::sections(Read);
+        assert_eq!(read[..2], [Dest::Read, Dest::Updates]);
+    }
+
+    #[test]
+    fn ctrl_1_and_2_are_watch_and_read_with_both() {
+        use kaeri_model::medium::KaeriIsFor::{Both, Read, Watch};
+        let both = Dest::numbered(Both);
+        assert_eq!(
+            both,
+            [
+                Dest::Home,
+                Dest::Read,
+                Dest::Calendar,
+                Dest::Seasonal,
+                Dest::Updates,
+                Dest::Search,
+                Dest::Library,
+                Dest::Downloads,
+            ]
+        );
+        assert_eq!(Dest::numbered(Read)[..2], [Dest::Read, Dest::Updates]);
+        assert_eq!(Dest::numbered(Watch), Dest::ALL[..8]);
     }
 }

@@ -194,6 +194,24 @@ Reading added:
   headers, the paginator is injected as a user script, and every navigation off that scheme is
   refused. A Flatpak on the GNOME runtime has WebKitGTK 6 and libsoup 3; an AppImage or a
   distribution package needs both installed, as for trailers.
+- A series' page has Reading from and the trackers' rows under its head (`series_extra.rs`). Change
+  opens Read from: the sources that have the series, with the one in use ticked, then the ones that
+  do not, each with Search there. The trackers' row opens each tracker's progress, its guesses to
+  pick from and, where Kaeri and the tracker differ, which place to keep.
+- The paged view draws each leaf the engine lays out: two pages side by side when the window is
+  wide (Page layout in the popover is Auto, One or Two), a spread turned or split on a single
+  page, and a page cut to its crop when Crop borders is on. The library has an order menu, Last
+  read or Title.
+- Ctrl+1 to 8 open the first eight sidebar rows. With Both, Ctrl+1 is Watch and Ctrl+2 is Read,
+  then the rest in the sidebar's order. The controller's shoulder buttons walk the sidebar's rows
+  as they are drawn. Settings keeps Ctrl+comma.
+- Search, Reading side, has Format, Origin, Status and Genres as menu buttons under the field, and
+  the order at the end of the row. With nothing typed it browses, and a line over the covers says
+  what it shows.
+- The Fixtures scene `--scene reading` (and `reading-downloads`) has the three made-up works the
+  phones' scenes have, a manga, a novel and a strip, as CBZ and EPUB files made on the spot.
+  `SIZES=reading shots.sh` takes the reading shots; the app is dark only, so the light ones are
+  the reader's own light looks.
 - Reading is on in the Fixtures build and when the config's hidden `reading.dev` key is set, as in
   the terminal; release builds leave it off until it ships.
 

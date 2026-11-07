@@ -113,7 +113,14 @@ fn rules(platform: Platform) -> Rules {
             roots: &["desktop/linux/src"],
             extensions: &["rs"],
             // The screenshot driver and the fixture scene's invented rows, never text the app says.
-            skip: skip(&["shots.rs", "showcase.rs", "fixtures.rs", "fixture.rs"]),
+            skip: skip(&[
+                "shots.rs",
+                "shots_reading.rs",
+                "showcase.rs",
+                "fixtures.rs",
+                "fixtures_reading.rs",
+                "fixture.rs",
+            ]),
             patterns: Vec::new(),
             stop_at_tests: true,
             every_literal: true,

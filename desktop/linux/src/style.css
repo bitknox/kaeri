@@ -66,6 +66,7 @@ progressbar progress { background: var(--amber); }
 /* Covers and banners: flat placeholders in the cover's own colour until the art lands. */
 .cover { border-radius: 8px; }
 .cover.small { border-radius: 6px; }
+.cover-empty { border: 1px solid var(--rule); }
 .banner { border-radius: 12px; }
 .banner.flush { border-radius: 0; }
 .still { border-radius: 6px; }
@@ -341,6 +342,8 @@ progressbar.read-track progress { min-height: 3px; border-radius: 2px; backgroun
 .read-card:focus-visible { outline: 2px solid var(--silk); outline-offset: 2px; }
 .read-spotlight { padding: 12px 0 8px; }
 .reader-ground { background: var(--ground); }
+.reader-black { background: #000; }
+.reader-white { background: #fff; }
 .strip-leaf { background: transparent; }
 .home-week { border-top: 1px solid var(--faint-rule); padding-top: 12px; }
 .home-day { font-size: 12px; line-height: 1.33; font-weight: 600; }

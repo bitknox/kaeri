@@ -57,8 +57,13 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             let Some(ctx) = ctx.upgrade() else { return };
             if let Event::BookSources(BookSourceEvent::View(view)) = event {
                 super::clear(&column);
-                draw(&ctx, &column, view);
-                states.content();
+                if view.folders.is_empty() && view.servers.is_empty() && view.plugins.is_empty()
+                {
+                    states.empty();
+                } else {
+                    draw(&ctx, &column, view);
+                    states.content();
+                }
             }
             if matches!(event, Event::Medium(_)) && super::reads(&ctx.hub) {
                 send(&ctx.hub, BookSourceCommand::Load);
@@ -71,7 +76,20 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     page
 }
 
+/// Each kind of source that has one: folders, servers, plugins.
 fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &BookSourcesView) {
+    if !view.folders.is_empty() {
+        draw_folders(ctx, column, view);
+    }
+    if !view.servers.is_empty() {
+        draw_servers(ctx, column, view);
+    }
+    if !view.plugins.is_empty() {
+        draw_plugins(ctx, column, view);
+    }
+}
+
+fn draw_folders(ctx: &Rc<Ctx>, column: &gtk::Box, view: &BookSourcesView) {
     column.append(&widgets::heading(&t::book_sources_folders()));
     let folders = widgets::boxed_list();
     for folder in &view.folders {
@@ -99,7 +117,9 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &BookSourcesView) {
         folders.append(&row);
     }
     column.append(&folders);
+}
 
+fn draw_servers(ctx: &Rc<Ctx>, column: &gtk::Box, view: &BookSourcesView) {
     column.append(&widgets::heading(&t::book_sources_servers()));
     let servers = widgets::boxed_list();
     for server in &view.servers {
@@ -122,8 +142,10 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &BookSourcesView) {
         servers.append(&row);
     }
     column.append(&servers);
+}
 
-    if !view.plugins.is_empty() {
+fn draw_plugins(ctx: &Rc<Ctx>, column: &gtk::Box, view: &BookSourcesView) {
+    {
         column.append(&widgets::heading(&t::book_sources_plugins()));
         let plugins = widgets::boxed_list();
         for plugin in &view.plugins {

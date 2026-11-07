@@ -520,6 +520,8 @@ impl Shell {
     pub fn pad_context(&self) -> kaeri_model::input::PadContext {
         if self.is_player() {
             self.player.pad_context()
+        } else if self.is_reader() {
+            self.reader.pad_context()
         } else {
             kaeri_model::input::PadContext::Browse
         }
@@ -565,9 +567,9 @@ impl Shell {
     /// Show `dest`, as its sidebar row does.
     pub fn go(&self, dest: Dest) {
         let ctx = &self.ctx;
-        let dest = self.resolve(dest);
-        ctx.stack.set_visible_child_name(dest.name());
-        let dest = dest.row();
+        let shown = self.resolve(dest);
+        ctx.stack.set_visible_child_name(shown.name());
+        let dest = shown.row();
         let (list, other) = if dest == Dest::Settings {
             (&self.foot, &self.sidebar)
         } else {
@@ -587,7 +589,8 @@ impl Shell {
         if ctx.split.is_collapsed() {
             ctx.split.set_show_sidebar(false);
         }
-        if dest == Dest::Search {
+        // The Shows side's field, only while that side shows.
+        if shown == Dest::Search {
             self.search.focus();
         }
     }
@@ -698,6 +701,8 @@ impl Shell {
     pub fn back(&self) {
         if self.top.visible_child_name().as_deref() == Some("player") {
             self.player.close();
+        } else if self.is_reader() {
+            self.reader.close();
         } else if let Some(nav) = self.ctx.nav() {
             nav.pop();
         }
@@ -961,6 +966,18 @@ impl Shell {
                 }
             }),
         );
+        // Ctrl+1 to 8: Watch and Read first with both media, then the sidebar's order.
+        add(
+            "go-section",
+            Some(glib::VariantTy::INT32),
+            Box::new(move |s, a| {
+                let n = a.and_then(|a| a.get::<i32>()).unwrap_or(0);
+                let sections = Dest::numbered(pages::answer());
+                if let Some(dest) = usize::try_from(n - 1).ok().and_then(|i| sections.get(i)) {
+                    s.go(*dest);
+                }
+            }),
+        );
         add(
             "open-series",
             Some(glib::VariantTy::STRING),
@@ -1189,10 +1206,10 @@ impl Shell {
         add("join-store", None, Box::new(|s, _| pages::join::open_from_clipboard(&s.ctx)));
         let _ = hub;
 
-        for (i, dest) in Dest::ALL.iter().take(8).enumerate() {
+        for n in 1..=8 {
             app.set_accels_for_action(
-                &format!("win.go::{}", dest.name()),
-                &[&format!("<Control>{}", i + 1)],
+                &format!("win.go-section({n})"),
+                &[&format!("<Control>{n}")],
             );
         }
         app.set_accels_for_action("win.go::settings", &["<Control>comma"]);
@@ -1605,6 +1622,11 @@ impl Shell {
 
     pub fn is_player(&self) -> bool {
         self.top.visible_child_name().as_deref() == Some("player")
+    }
+
+    /// Whether the reader is what the window shows.
+    pub fn is_reader(&self) -> bool {
+        self.top.visible_child_name().as_deref() == Some("reader")
     }
 }
 

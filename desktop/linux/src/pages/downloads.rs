@@ -211,6 +211,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_start(&crate::window::tv_session_button(ctx));
+    header.pack_end(&crate::reading::scope(ctx, super::Dest::Downloads, false));
     header.pack_end(&menu);
     header.pack_end(&open_folder);
     header.pack_end(&pause_all);
@@ -737,16 +738,16 @@ fn episode_row(row: &DownloadRow, narrow: bool) -> EpisodeRow {
         button.set_tooltip_text(Some(tip));
         button.add_css_class("flat");
         button.set_valign(gtk::Align::Center);
-        button.set_action_name(Some(action));
         button.set_action_target_value(Some(&target));
+        button.set_action_name(Some(action));
         button
     };
     let text_button = |label: &str, action: &str| {
         let button = gtk::Button::with_label(label);
         button.add_css_class("flat");
         button.set_valign(gtk::Align::Center);
-        button.set_action_name(Some(action));
         button.set_action_target_value(Some(&target));
+        button.set_action_name(Some(action));
         button
     };
     // The one action that fits the state: an icon where one says it, words where none does.

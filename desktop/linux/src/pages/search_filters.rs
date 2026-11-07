@@ -70,7 +70,7 @@ pub struct Filters {
 }
 
 /// A menu button of the row: flat until it holds a choice.
-fn menu_button(label: &str) -> gtk::MenuButton {
+pub fn menu_button(label: &str) -> gtk::MenuButton {
     let button = gtk::MenuButton::builder().label(label).always_show_arrow(true).build();
     button.add_css_class("flat");
     button.add_css_class("filter");
@@ -574,8 +574,8 @@ impl Filters {
             chip.update_property(&[gtk::accessible::Property::Label(&t::filter_remove(
                 &chip_label(&query, filter),
             ))]);
-            chip.set_action_name(Some("filter.remove"));
             chip.set_action_target_value(Some(&(at as u32).to_variant()));
+            chip.set_action_name(Some("filter.remove"));
             self.chips.append(&chip);
         }
         if active.len() > 1 {
@@ -590,7 +590,7 @@ impl Filters {
 }
 
 /// A button's words, and whether it holds a choice: flat until it does.
-fn set_label(button: &gtk::MenuButton, label: &str, set: bool) {
+pub fn set_label(button: &gtk::MenuButton, label: &str, set: bool) {
     button.set_label(label);
     if set {
         button.remove_css_class("flat");
@@ -683,7 +683,7 @@ fn this_year() -> u32 {
 /// The menu buttons in a row that scrolls sideways, as the Mac draws it: the edge faded where
 /// more of it goes on, with an arrow there that scrolls to it, so a narrow window shows there is
 /// more to reach.
-fn faded_scroll(capsules: &gtk::Box) -> gtk::Overlay {
+pub fn faded_scroll(capsules: &gtk::Box) -> gtk::Overlay {
     let scroll = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::External)
         .vscrollbar_policy(gtk::PolicyType::Never)

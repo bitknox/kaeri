@@ -45,10 +45,13 @@ struct State {
     medium: Option<Medium>,
     chapter: Option<ChapterRow>,
     next: Option<ChapterRow>,
+    previous: Option<ChapterRow>,
     why_none: Option<NoNext>,
     mode: Option<ReaderMode>,
     direction: Option<ReadDirection>,
     start_page: Option<u32>,
+    /// Where a strip was left: its image and how far down it.
+    start_strip: Option<StripPos>,
     leaves: Vec<Leaf>,
     files: HashMap<u32, PageFile>,
     textures: HashMap<u32, gdk::Texture>,
@@ -56,7 +59,8 @@ struct State {
     asked: HashSet<u32>,
     index: usize,
     settings: Option<ReaderSettingsView>,
-    strip_frames: Vec<(gtk::AspectFrame, gtk::Picture)>,
+    /// Each strip image and its width over height.
+    strip_frames: Vec<(gtk::Picture, f32)>,
 }
 
 pub struct Reader {
@@ -66,6 +70,7 @@ pub struct Reader {
     state: RefCell<State>,
     stack: gtk::Stack,
     picture: gtk::Picture,
+    paged_scroll: gtk::ScrolledWindow,
     strip: gtk::Box,
     strip_scroll: gtk::ScrolledWindow,
     status: adw::StatusPage,
@@ -88,6 +93,14 @@ impl Reader {
         picture.set_can_shrink(true);
         picture.set_hexpand(true);
         picture.set_vexpand(true);
+        // Fit screen keeps the page inside the window; width and height let it run past and
+        // scroll.
+        let paged_scroll = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::Never)
+            .vscrollbar_policy(gtk::PolicyType::Never)
+            .child(&picture)
+            .build();
+        // A centred column; each image is sized to the strip width setting.
         let strip = gtk::Box::new(gtk::Orientation::Vertical, 0);
         strip.set_halign(gtk::Align::Center);
         let strip_scroll = gtk::ScrolledWindow::builder()
@@ -99,7 +112,7 @@ impl Reader {
         let stack = gtk::Stack::new();
         stack.set_transition_type(gtk::StackTransitionType::Crossfade);
         stack.set_transition_duration(200);
-        stack.add_named(&picture, Some("paged"));
+        stack.add_named(&paged_scroll, Some("paged"));
         stack.add_named(&strip_scroll, Some("strip"));
         stack.add_named(&status, Some("status"));
         stack.add_css_class("reader-ground");
@@ -153,6 +166,7 @@ impl Reader {
             state: RefCell::default(),
             stack,
             picture,
+            paged_scroll,
             strip,
             strip_scroll,
             status,
@@ -200,12 +214,14 @@ impl Reader {
     fn surface(&self) -> ReaderSurface {
         let scale = self.widget.scale_factor().max(1);
         let dark = adw::StyleManager::default().is_dark();
+        let width_px = (self.widget.width().max(800) * scale) as u32;
+        let height_px = (self.widget.height().max(600) * scale) as u32;
         ReaderSurface {
-            width_px: (self.widget.width().max(800) * scale) as u32,
-            height_px: (self.widget.height().max(600) * scale) as u32,
+            width_px,
+            height_px,
             scale: scale as f32,
             eink: false,
-            two_pages: false,
+            two_pages: width_px >= height_px * 13 / 10,
             dark,
         }
     }
@@ -238,6 +254,28 @@ impl Reader {
         }
         self.title.set_label("");
         self.counter.set_label("");
+    }
+
+    /// Set a reader setting for the shots, on the medium's own value. A choice or `on`/`off`.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_setting(&self, key: ReaderSettingKey, name: &str) {
+        let medium = match key {
+            ReaderSettingKey::Look => Medium::Novel,
+            _ => Medium::Manga,
+        };
+        let value = match name {
+            "on" => ReaderValue::Toggle { on: true },
+            "off" => ReaderValue::Toggle { on: false },
+            other => ReaderValue::Choice { name: other.to_owned() },
+        };
+        self.send(ReaderCommand::SetSetting {
+            session: None,
+            medium,
+            work: None,
+            key,
+            scope: key.home_scope(),
+            value,
+        });
     }
 
     /// Leave the reader; the engine saves the place as the session closes.
@@ -345,9 +383,11 @@ impl Reader {
             state.medium = Some(view.medium);
             state.chapter = Some(view.chapter.clone());
             state.next = view.next.clone();
+            state.previous = view.previous.clone();
             state.mode = Some(view.mode);
             state.direction = Some(view.direction);
             state.start_page = view.start.page;
+            state.start_strip = view.start.strip;
             state.settings = view.settings.clone();
             state.leaves.clear();
             state.files.clear();
@@ -358,6 +398,7 @@ impl Reader {
         }
         self.title.set_label(&format!("{} \u{b7} {}", view.title, view.chapter.label));
         self.settings.set_popover(Some(&self.settings_popover()));
+        self.apply_look();
         if view.medium == Medium::Novel {
             // The novel's own event follows; the web view takes the stack then.
             return;
@@ -384,17 +425,23 @@ impl Reader {
                 }
             }
             let start = state.start_page;
-            state.index = start
-                .and_then(|p| {
-                    leaves.iter().position(|l| l.parts.iter().any(|part| part.page == p))
+            let in_strip =
+                state.start_strip.as_ref().map(|s| s.image as usize).filter(|_| flows);
+            state.index = in_strip
+                .or_else(|| {
+                    start.and_then(|p| {
+                        leaves.iter().position(|l| l.parts.iter().any(|part| part.page == p))
+                    })
                 })
-                .unwrap_or(0);
+                .unwrap_or(0)
+                .min(leaves.len().saturating_sub(1));
             state.leaves = leaves;
         }
         if flows {
             self.build_strip();
         } else {
-            self.show_leaf(self.state.borrow().index, TurnHow::Jump);
+            let index = self.state.borrow().index;
+            self.show_leaf(index, TurnHow::Jump);
         }
     }
 
@@ -403,8 +450,8 @@ impl Reader {
     }
 
     fn is_current_page(&self, page: u32) -> bool {
-        let index = self.state.borrow().index;
-        self.page_of(index) == Some(page)
+        let state = self.state.borrow();
+        state.leaves.get(state.index).is_some_and(|l| l.parts.iter().any(|p| p.page == page))
     }
 
     fn texture_for(&self, page: u32) -> Option<gdk::Texture> {
@@ -415,6 +462,67 @@ impl Reader {
         let texture = load_texture(&file)?;
         self.state.borrow_mut().textures.insert(page, texture.clone());
         Some(texture)
+    }
+
+    /// The leaf drawn as one picture: each part at its place, cropped to what the engine says to
+    /// show, a spread turned on its side when it must be. `None` until every part has landed.
+    fn compose(&self, index: usize) -> Option<gdk::Paintable> {
+        let leaf = self.state.borrow().leaves.get(index).cloned()?;
+        let mut drawn = Vec::new();
+        for part in &leaf.parts {
+            let texture = self.texture_for(part.page)?;
+            let file = self.state.borrow().files.get(&part.page).cloned()?;
+            let crop = file
+                .crop
+                .map(|c| (c.x as f32, c.y as f32, c.width as f32, c.height as f32))
+                .filter(|c| c.2 > 0.0 && c.3 > 0.0)
+                .unwrap_or((0.0, 0.0, texture.width() as f32, texture.height() as f32));
+            drawn.push((part, texture, crop));
+        }
+        if drawn.is_empty() {
+            return None;
+        }
+        // The leaf is as tall as its tallest part, and as wide as the parts side by side.
+        let size = |part: &kaeri_model::reader::LeafPart, crop: (f32, f32, f32, f32)| {
+            if part.rotate { (crop.3, crop.2) } else { (crop.2, crop.3) }
+        };
+        let height = drawn.iter().map(|(p, _, c)| size(p, *c).1).fold(1.0_f32, f32::max);
+        let width: f32 = drawn
+            .iter()
+            .map(|(p, _, c)| {
+                let (w, h) = size(p, *c);
+                w * height / h.max(1.0)
+            })
+            .sum::<f32>()
+            .max(1.0);
+        let snapshot = gtk::Snapshot::new();
+        for (part, texture, crop) in &drawn {
+            let (bx, by) = (part.place.x * width, part.place.y * height);
+            let (bw, bh) = (part.place.width * width, part.place.height * height);
+            let (w, h) = size(part, *crop);
+            let scale = (bw / w.max(1.0)).min(bh / h.max(1.0));
+            snapshot.save();
+            // Centred in its box.
+            snapshot.translate(&gtk::graphene::Point::new(
+                bx + (bw - w * scale) / 2.0,
+                by + (bh - h * scale) / 2.0,
+            ));
+            snapshot.scale(scale, scale);
+            if part.rotate {
+                snapshot.translate(&gtk::graphene::Point::new(w, 0.0));
+                snapshot.rotate(90.0);
+            }
+            snapshot.push_clip(&gtk::graphene::Rect::new(0.0, 0.0, crop.2, crop.3));
+            snapshot.translate(&gtk::graphene::Point::new(-crop.0, -crop.1));
+            texture.snapshot(
+                &snapshot,
+                f64::from(texture.width()),
+                f64::from(texture.height()),
+            );
+            snapshot.pop();
+            snapshot.restore();
+        }
+        snapshot.to_paintable(Some(&gtk::graphene::Size::new(width, height)))
     }
 
     fn want(&self, index: usize) {
@@ -442,11 +550,13 @@ impl Reader {
         if flows {
             self.fill_strip_page(page);
         } else if self.is_current_page(page) {
-            self.show_leaf(self.state.borrow().index, TurnHow::Jump);
+            let index = self.state.borrow().index;
+            self.show_leaf(index, TurnHow::Jump);
         }
     }
 
     fn failed_page(self: &Rc<Self>, page: u32) {
+        self.status.set_description(None);
         self.status.set_icon_name(Some("dialog-warning-symbolic"));
         self.status.set_title(&t::reader_page_failed(i64::from(page + 1)));
         let again = gtk::Button::with_label(&t::reader_try_again());
@@ -471,19 +581,29 @@ impl Reader {
     }
 
     fn show_leaf(self: &Rc<Self>, index: usize, how: TurnHow) {
-        let Some(page) = self.page_of(index) else { return };
+        if self.page_of(index).is_none() {
+            return;
+        }
         self.state.borrow_mut().index = index;
         self.want(index);
-        if self.state.borrow().failed.contains(&page) {
+        let failed = {
+            let state = self.state.borrow();
+            state.leaves.get(index).and_then(|l| {
+                l.parts.iter().map(|p| p.page).find(|page| state.failed.contains(page))
+            })
+        };
+        if let Some(page) = failed {
             self.failed_page(page);
             return;
         }
-        let Some(texture) = self.texture_for(page) else {
+        let Some(paintable) = self.compose(index) else {
             self.wait();
             return;
         };
         self.stop_wait();
-        self.picture.set_paintable(Some(&texture));
+        self.picture.set_paintable(Some(&paintable));
+        self.apply_fit();
+        self.scroll_to_start();
         self.stack.set_visible_child_name("paged");
         motion::crossfade_in(&self.picture);
         let total = self.state.borrow().leaves.len();
@@ -527,6 +647,9 @@ impl Reader {
             adj.set_value((adj.value() + by).clamp(adj.lower(), adj.upper() - adj.page_size()));
             return;
         }
+        if matches!(how, TurnHow::Key) && self.scroll_within(forward) {
+            return;
+        }
         if forward {
             if index + 1 < total {
                 self.show_leaf(index + 1, how);
@@ -557,21 +680,27 @@ impl Reader {
                 };
                 self.status.set_icon_name(Some("emblem-ok-symbolic"));
                 self.status.set_title(&words);
-                let back = gtk::Button::with_label(&t::linux_reader_back_to_series());
-                back.add_css_class("pill");
-                back.set_halign(gtk::Align::Center);
-                back.connect_clicked({
-                    let this = Rc::downgrade(self);
-                    move |_| {
-                        if let Some(this) = this.upgrade() {
-                            this.close();
-                        }
-                    }
-                });
-                self.status.set_child(Some(&back));
+                self.status.set_description(None);
+                self.status.set_child(Some(&self.back_button()));
                 self.stack.set_visible_child_name("status");
             }
         }
+    }
+
+    /// Back to the series, under the end page and under a novel that can't open.
+    fn back_button(self: &Rc<Self>) -> gtk::Button {
+        let back = gtk::Button::with_label(&t::linux_reader_back_to_series());
+        back.add_css_class("pill");
+        back.set_halign(gtk::Align::Center);
+        back.connect_clicked({
+            let this = Rc::downgrade(self);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.close();
+                }
+            }
+        });
+        back
     }
 
     // ---------------------------------------------------------------------------------------
@@ -596,59 +725,70 @@ impl Reader {
                 .max(0.05);
             let picture = gtk::Picture::new();
             picture.set_content_fit(gtk::ContentFit::Fill);
-            let frame = gtk::AspectFrame::new(0.5, 0.5, ratio, false);
-            frame.set_child(Some(&picture));
-            frame.add_css_class("strip-leaf");
-            self.strip.append(&frame);
-            frames.push((frame, picture));
+            picture.set_can_shrink(true);
+            picture.add_css_class("strip-leaf");
+            self.strip.append(&picture);
+            frames.push((picture, ratio));
         }
         self.state.borrow_mut().strip_frames = frames;
-        let this = Rc::downgrade(self);
-        self.strip_scroll.vadjustment().connect_value_changed(move |_| {
-            if let Some(this) = this.upgrade() {
-                this.strip_moved();
-            }
-        });
-        // The strip keeps to a column as wide as the window allows, up to a comfortable width.
-        let width_cap = 900;
-        self.strip.set_size_request(-1, -1);
-        let this = Rc::downgrade(self);
-        self.strip_scroll.connect_notify_local(Some("default-width"), |_, _| {});
-        self.strip_scroll.add_tick_callback({
-            let done = Cell::new(false);
-            move |scroll, _| {
-                if done.get() || this.upgrade().is_none() {
-                    return glib::ControlFlow::Break;
-                }
-                let width = scroll.width();
-                if width > 0
-                    && let Some(this) = this.upgrade()
-                {
-                    this.strip.set_size_request(width.min(width_cap), -1);
-                    done.set(true);
-                }
-                glib::ControlFlow::Continue
-            }
-        });
+        self.size_strip();
+        self.stop_wait();
         self.strip_moved();
         // Back where the place was: the leaf the engine opened at.
         let index = self.state.borrow().index;
-        if index > 0 {
-            let this = Rc::downgrade(self);
-            glib::idle_add_local_once(move || {
-                if let Some(this) = this.upgrade() {
-                    this.scroll_to_leaf(index);
-                }
-            });
-        }
+        self.scroll_to_leaf(index);
     }
 
+    /// Scroll the strip to a leaf once the layout has room for it.
     fn scroll_to_leaf(&self, index: usize) {
-        let frame = self.state.borrow().strip_frames.get(index).map(|(f, _)| f.clone());
-        if let Some(frame) = frame
-            && let Some(point) = frame.compute_point(&self.strip, &gtk::graphene::Point::zero())
-        {
-            self.strip_scroll.vadjustment().set_value(f64::from(point.y()));
+        let adj = self.strip_scroll.vadjustment();
+        let target = {
+            let state = self.state.borrow();
+            let spacing = self.strip.spacing();
+            let above: i32 = state
+                .strip_frames
+                .iter()
+                .take(index)
+                .map(|(p, _)| p.height_request() + spacing)
+                .sum();
+            // Into the image as far as it was left, the first time only.
+            let into = state
+                .start_strip
+                .as_ref()
+                .filter(|s| s.image as usize == index)
+                .zip(state.strip_frames.get(index))
+                .map_or(0.0, |(s, (p, _))| f64::from(s.offset) * f64::from(p.height_request()));
+            f64::from(above) + into
+        };
+        if index == 0 {
+            adj.set_value(adj.lower());
+            return;
+        }
+        let frames = Cell::new(0);
+        self.strip_scroll.add_tick_callback(move |_, _| {
+            frames.set(frames.get() + 1);
+            if adj.upper() > target || frames.get() > 30 {
+                adj.set_value(target.min(adj.upper() - adj.page_size()));
+                return glib::ControlFlow::Break;
+            }
+            glib::ControlFlow::Continue
+        });
+    }
+
+    /// Each strip image at the column's width: the strip width setting's share of 720 px at
+    /// the default, never wider than the window. Pages one under another fit the window.
+    fn size_strip(&self) {
+        let vertical = self.state.borrow().mode == Some(ReaderMode::Vertical);
+        let share = self.amount(ReaderSettingKey::StripWidth).unwrap_or(0.6).clamp(0.3, 1.0);
+        let gap = self.choice(ReaderSettingKey::StripGap).as_deref() == Some("small");
+        let width = f64::from(self.widget.width().max(1));
+        let height = f64::from(self.widget.height().max(1));
+        self.strip.set_spacing(if gap || vertical { 8 } else { 0 });
+        let column = width.min(720.0 * share / 0.6);
+        for (picture, ratio) in &self.state.borrow().strip_frames {
+            let ratio = f64::from(*ratio);
+            let w = if vertical { width.min(height * ratio) } else { column };
+            picture.set_size_request(w.round() as i32, (w / ratio).round() as i32);
         }
     }
 
@@ -662,9 +802,23 @@ impl Reader {
         if let Some(at) = at
             && let Some(texture) = self.texture_for(page)
         {
-            let picture = self.state.borrow().strip_frames.get(at).map(|(_, p)| p.clone());
+            let ratio = texture.width() as f32 / texture.height().max(1) as f32;
+            let (picture, resized) = {
+                let mut state = self.state.borrow_mut();
+                match state.strip_frames.get_mut(at) {
+                    Some((picture, guess)) => {
+                        let resized = (*guess - ratio).abs() > 0.01;
+                        *guess = ratio;
+                        (Some(picture.clone()), resized)
+                    }
+                    None => (None, false),
+                }
+            };
             if let Some(picture) = picture {
                 picture.set_paintable(Some(&texture));
+            }
+            if resized {
+                self.size_strip();
             }
         }
     }
@@ -768,7 +922,9 @@ impl Reader {
             Err(why) => {
                 tracing::warn!(%why, "the novel reader could not start");
                 self.status.set_icon_name(Some("dialog-warning-symbolic"));
-                self.status.set_title(&t::linux_reader_chapter_failed());
+                self.status.set_title(&t::linux_reader_novel_unavailable());
+                self.status.set_description(Some(&t::linux_reader_novel_needs_webkit()));
+                self.status.set_child(Some(&self.back_button()));
                 self.stack.set_visible_child_name("status");
             }
         }
@@ -781,6 +937,92 @@ impl Reader {
     fn settings_view(self: &Rc<Self>, view: ReaderSettingsView) {
         self.state.borrow_mut().settings = Some(view);
         self.settings.set_popover(Some(&self.settings_popover()));
+        self.apply_look();
+    }
+
+    /// A choice setting as the engine last sent it.
+    fn choice(&self, key: ReaderSettingKey) -> Option<String> {
+        let state = self.state.borrow();
+        let row = state.settings.as_ref()?.rows.iter().find(|r| r.key == key)?;
+        match &row.value {
+            ReaderValue::Choice { name } => Some(name.clone()),
+            _ => None,
+        }
+    }
+
+    fn amount(&self, key: ReaderSettingKey) -> Option<f64> {
+        let state = self.state.borrow();
+        let row = state.settings.as_ref()?.rows.iter().find(|r| r.key == key)?;
+        match row.value {
+            ReaderValue::Amount { value } => Some(value),
+            _ => None,
+        }
+    }
+
+    /// What the settings change on screen: the ground behind the pages, the fit and the strip.
+    fn apply_look(&self) {
+        let manga = self.state.borrow().medium == Some(Medium::Manga);
+        let ground = if manga { self.choice(ReaderSettingKey::Background) } else { None };
+        for view in
+            [self.paged_scroll.upcast_ref::<gtk::Widget>(), self.strip_scroll.upcast_ref()]
+        {
+            view.remove_css_class("reader-black");
+            view.remove_css_class("reader-white");
+            match ground.as_deref() {
+                Some("black") => view.add_css_class("reader-black"),
+                Some("white") => view.add_css_class("reader-white"),
+                _ => {}
+            }
+        }
+        self.apply_fit();
+        self.size_strip();
+    }
+
+    /// Fit screen keeps the whole page in the window; width and height fill that side and let
+    /// the other run past, to scroll.
+    fn apply_fit(&self) {
+        use gtk::PolicyType::{Automatic, Never};
+        let fit = self.choice(ReaderSettingKey::Fit).unwrap_or_default();
+        let ratio =
+            self.picture.paintable().map(|p| p.intrinsic_aspect_ratio()).filter(|r| *r > 0.0);
+        let width = f64::from(self.widget.width().max(1));
+        let height = f64::from(self.widget.height().max(1));
+        let (h, v, request) = match (fit.as_str(), ratio) {
+            ("width", Some(r)) => (Never, Automatic, (-1, (width / r).round() as i32)),
+            ("height", Some(r)) => (Automatic, Never, ((height * r).round() as i32, -1)),
+            _ => (Never, Never, (-1, -1)),
+        };
+        self.paged_scroll.set_policy(h, v);
+        self.picture.set_size_request(request.0, request.1);
+    }
+
+    /// A new page starts at its top, and at its right edge in a right-to-left book.
+    fn scroll_to_start(&self) {
+        let rtl = self.rtl();
+        let scroll = self.paged_scroll.clone();
+        glib::idle_add_local_once(move || {
+            let v = scroll.vadjustment();
+            v.set_value(v.lower());
+            let h = scroll.hadjustment();
+            h.set_value(if rtl { h.upper() - h.page_size() } else { h.lower() });
+        });
+    }
+
+    /// With a page taller than the window, the keys scroll it before they turn. True when they
+    /// scrolled.
+    fn scroll_within(&self, forward: bool) -> bool {
+        let adj = self.paged_scroll.vadjustment();
+        let room = if forward {
+            adj.upper() - adj.page_size() - adj.value()
+        } else {
+            adj.value() - adj.lower()
+        };
+        if room <= 1.0 {
+            return false;
+        }
+        let by = room.min(adj.page_size() * 0.9);
+        adj.set_value(adj.value() + if forward { by } else { -by });
+        true
     }
 
     fn settings_popover(self: &Rc<Self>) -> gtk::Popover {
@@ -797,20 +1039,27 @@ impl Reader {
         let (Some(view), Some(medium)) = (view, medium) else {
             return popover;
         };
+        let flows = self.state.borrow().mode.is_some_and(ReaderMode::flows);
         for row in &view.rows {
-            if !matches!(
-                row.key,
+            let shown = match row.key {
                 ReaderSettingKey::Mode
-                    | ReaderSettingKey::Direction
-                    | ReaderSettingKey::Fit
-                    | ReaderSettingKey::Background
-                    | ReaderSettingKey::Look
-                    | ReaderSettingKey::Font
-                    | ReaderSettingKey::TextSize
-                    | ReaderSettingKey::Margins
-                    | ReaderSettingKey::LineSpacing
-                    | ReaderSettingKey::Justify
-            ) {
+                | ReaderSettingKey::Background
+                | ReaderSettingKey::Look
+                | ReaderSettingKey::Font
+                | ReaderSettingKey::TextSize
+                | ReaderSettingKey::Margins
+                | ReaderSettingKey::LineSpacing
+                | ReaderSettingKey::Justify => true,
+                // A strip has no direction, no fit and no spreads; pages have no strip width.
+                ReaderSettingKey::Direction
+                | ReaderSettingKey::Fit
+                | ReaderSettingKey::CropBorders
+                | ReaderSettingKey::PageLayout
+                | ReaderSettingKey::Spreads => !flows,
+                ReaderSettingKey::StripWidth | ReaderSettingKey::StripGap => flows,
+                _ => false,
+            };
+            if !shown {
                 continue;
             }
             let scope = row.key.series_scope().unwrap_or_else(|| row.key.home_scope());
@@ -857,8 +1106,14 @@ impl Reader {
                     column.append(&group);
                 }
                 ReaderValue::Amount { value } => {
+                    let (low, high) = match row.key {
+                        ReaderSettingKey::StripWidth => (0.3, 1.0),
+                        ReaderSettingKey::LineSpacing => (1.2, 1.8),
+                        ReaderSettingKey::Margins => (0.6, 1.6),
+                        _ => (0.5, 3.0),
+                    };
                     let scale =
-                        gtk::Scale::with_range(gtk::Orientation::Horizontal, 0.6, 2.0, 0.05);
+                        gtk::Scale::with_range(gtk::Orientation::Horizontal, low, high, 0.05);
                     scale.set_value(*value);
                     scale.set_size_request(220, -1);
                     scale.connect_value_changed(move |scale| {
@@ -899,6 +1154,58 @@ impl Reader {
             }
         });
         *self.hide_timer.borrow_mut() = Some(id);
+    }
+
+    /// What the controller is pointed at: the page, or the settings while they are open.
+    pub fn pad_context(&self) -> kaeri_model::input::PadContext {
+        kaeri_model::input::PadContext::Reader { settings_open: self.settings.is_active() }
+    }
+
+    /// A controller press: the D-pad turns as the arrow keys do, the shoulders change the
+    /// chapter, A shows or hides the bar, the menu button opens the settings and B closes.
+    pub fn pad(self: &Rc<Self>, what: kaeri_model::input::ReaderPad) {
+        use kaeri_model::input::{Direction, ReaderPad};
+        let rtl = self.rtl();
+        match what {
+            ReaderPad::Turn(Direction::Left) => self.turn(rtl, TurnHow::Key),
+            ReaderPad::Turn(Direction::Right) => self.turn(!rtl, TurnHow::Key),
+            ReaderPad::Turn(Direction::Up) => self.turn(false, TurnHow::Key),
+            ReaderPad::Turn(Direction::Down) => self.turn(true, TurnHow::Key),
+            ReaderPad::Chapter(by) => self.step_chapter(by),
+            ReaderPad::Bar => {
+                if self.toolbar.reveals_child() {
+                    self.hide_toolbar();
+                } else {
+                    self.reveal_toolbar();
+                }
+            }
+            ReaderPad::Settings => {
+                self.reveal_toolbar();
+                self.settings.popup();
+            }
+            ReaderPad::Close => self.close(),
+        }
+    }
+
+    /// The previous (`-1`) or next chapter, when there is one.
+    fn step_chapter(self: &Rc<Self>, by: i32) {
+        let (session, chapter) = {
+            let state = self.state.borrow();
+            let chapter = if by < 0 { state.previous.clone() } else { state.next.clone() };
+            (state.session, chapter)
+        };
+        if let Some(chapter) = chapter
+            && session != 0
+        {
+            self.send(ReaderCommand::OpenChapter { session, chapter: chapter.id });
+        }
+    }
+
+    fn hide_toolbar(&self) {
+        if let Some(id) = self.hide_timer.borrow_mut().take() {
+            id.remove();
+        }
+        self.toolbar.set_reveal_child(false);
     }
 
     fn rtl(&self) -> bool {
@@ -971,6 +1278,17 @@ impl Reader {
         });
         self.widget.add_controller(moved);
 
+        self.strip_scroll.vadjustment().connect_value_changed({
+            let this = Rc::downgrade(self);
+            move |_| {
+                if let Some(this) = this.upgrade()
+                    && !this.state.borrow().strip_frames.is_empty()
+                {
+                    this.strip_moved();
+                }
+            }
+        });
+
         // The window's size is the engine's to know: the pages are prepared for it.
         self.widget.connect_notify_local(Some("scale-factor"), {
             let this = Rc::downgrade(self);
@@ -981,6 +1299,45 @@ impl Reader {
                         this.send(ReaderCommand::Surface { session, surface: this.surface() });
                     }
                 }
+            }
+        });
+        // A window that changes shape changes whether two pages fit: the engine is told once it
+        // has settled.
+        let last = Cell::new((0, 0));
+        let pending: Rc<RefCell<Option<glib::SourceId>>> = Rc::default();
+        self.widget.add_tick_callback({
+            let this = Rc::downgrade(self);
+            move |widget, _| {
+                let size = (widget.width(), widget.height());
+                if size == last.get() {
+                    return glib::ControlFlow::Continue;
+                }
+                let first = last.replace(size) == (0, 0);
+                // The page and the strip follow the window at once; the engine after a pause.
+                if let Some(this) = this.upgrade() {
+                    this.apply_fit();
+                    this.size_strip();
+                }
+                if let Some(id) = pending.borrow_mut().take() {
+                    id.remove();
+                }
+                if !first {
+                    let (this, done) = (this.clone(), Rc::clone(&pending));
+                    let id =
+                        glib::timeout_add_local_once(Duration::from_millis(250), move || {
+                            done.borrow_mut().take();
+                            let Some(this) = this.upgrade() else { return };
+                            let session = this.state.borrow().session;
+                            if session != 0 && this.widget.is_mapped() {
+                                this.send(ReaderCommand::Surface {
+                                    session,
+                                    surface: this.surface(),
+                                });
+                            }
+                        });
+                    *pending.borrow_mut() = Some(id);
+                }
+                glib::ControlFlow::Continue
             }
         });
         let _ = say::percent;
@@ -1013,8 +1370,13 @@ fn load_texture(file: &PageFile) -> Option<gdk::Texture> {
 fn setting_name(key: ReaderSettingKey) -> String {
     match key {
         ReaderSettingKey::Mode => t::linux_reader_reading_mode(),
-        ReaderSettingKey::Direction => t::linux_reader_reading_mode(),
+        ReaderSettingKey::Direction => t::linux_reader_direction(),
+        ReaderSettingKey::Spreads => t::linux_reader_spreads(),
+        ReaderSettingKey::StripWidth => t::linux_reader_strip_width(),
+        ReaderSettingKey::StripGap => t::linux_reader_strip_gap(),
         ReaderSettingKey::Fit => t::linux_reader_fit(),
+        ReaderSettingKey::CropBorders => t::linux_reader_crop_borders(),
+        ReaderSettingKey::PageLayout => t::linux_reader_page_layout(),
         ReaderSettingKey::Background => t::linux_reader_background(),
         ReaderSettingKey::Look => t::linux_reader_look(),
         ReaderSettingKey::Font => t::linux_reader_font(),
@@ -1033,8 +1395,17 @@ fn choice_label(name: &str) -> String {
         "strip" => t::reader_mode_strip(),
         "paged" => t::linux_reader_mode_paged(),
         "scrolled" | "vertical" => t::linux_reader_mode_scrolled(),
+        "auto" => t::reader_layout_auto(),
+        "single" => t::reader_layout_single(),
+        "double" => t::reader_layout_double(),
         "screen" => t::reader_fit_screen(),
         "width" => t::reader_fit_width(),
+        "height" => t::linux_reader_fit_height(),
+        "split" => t::reader_spreads_split(),
+        "rotate" => t::reader_spreads_rotate(),
+        "whole" => t::reader_spreads_whole(),
+        "none" => t::reader_gap_none(),
+        "small" => t::reader_gap_small(),
         "serif" => t::reader_font_serif(),
         "sans" => t::reader_font_sans(),
         "system" => t::reader_look_system(),

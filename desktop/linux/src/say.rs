@@ -270,6 +270,7 @@ pub fn tracker_name(id: &str) -> &str {
     match id {
         "anilist" => "AniList",                 // i18n-skip
         "kitsu" => "Kitsu",                     // i18n-skip
+        "mangaupdates" => "MangaUpdates",       // i18n-skip
         "mal" | "myanimelist" => "MyAnimeList", // i18n-skip
         "simkl" => "Simkl",                     // i18n-skip
         "trakt" => "Trakt",                     // i18n-skip

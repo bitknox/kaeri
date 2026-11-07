@@ -107,11 +107,11 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &UpdatesView) {
             if row.chapter.new_chapter {
                 line.add_suffix(&super::new_words());
             }
-            line.set_action_name(Some("win.read"));
             line.set_action_target_value(Some(&super::read_target(
                 &row.tile.work,
                 Some(&row.chapter.id),
             )));
+            line.set_action_name(Some("win.read"));
             super::work_menu(&line, &row.tile.work, None);
             list.append(&line);
         }

@@ -14,8 +14,11 @@ use super::{Dest, Place, dotted, listen, place, scope, send};
 use crate::{nagare, states::Shape, widgets, window::Ctx};
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
-    let empty =
-        nagare::status_page(&t::downloads_empty_title(), &t::downloads_empty_detail(), None);
+    let empty = nagare::status_page(
+        &t::downloads_empty_title(),
+        &t::linux_read_downloads_empty(),
+        None,
+    );
     let Place { page, header, states, column } = place(
         ctx,
         &t::nav_downloads(),
@@ -24,7 +27,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         &t::downloads_load_failed(),
         false,
     );
-    header.pack_end(&scope(ctx, Dest::Downloads));
+    header.pack_end(&scope(ctx, Dest::Downloads, true));
     states.loading(Some(t::activity_downloads()));
     states.on_retry({
         let hub = Rc::downgrade(&ctx.hub);
@@ -101,8 +104,8 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &BookDownloadsView) {
             }
         });
         row.add_suffix(&delete);
-        row.set_action_name(Some("win.open-series"));
         row.set_action_target_value(Some(&item.work.0.to_variant()));
+        row.set_action_name(Some("win.open-series"));
         series.append(&row);
     }
     column.append(&series);

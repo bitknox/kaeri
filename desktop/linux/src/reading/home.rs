@@ -8,6 +8,7 @@ use adw::prelude::*;
 use kaeri_i18n::t;
 use kaeri_model::{
     event::Event,
+    medium::KaeriIsFor,
     reading::{ReadSpotlightCase, ReadingCommand, ReadingEvent, ReadingHomeView, WorkTile},
 };
 
@@ -38,6 +39,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     });
     listen(ctx, &page, {
         let (ctx, states, column) = (Rc::downgrade(ctx), states.clone(), column.clone());
+        let page = page.downgrade();
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
             match event {
@@ -55,6 +57,14 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                     }
                 }
                 Event::Medium(_) if super::reads(&ctx.hub) => {
+                    // Read beside Home when both are on, Home when reading is all there is.
+                    if let Some(page) = page.upgrade() {
+                        page.set_title(&if super::answer(&ctx.hub) == KaeriIsFor::Both {
+                            t::nav_read()
+                        } else {
+                            t::home_title()
+                        });
+                    }
                     send(&ctx.hub, ReadingCommand::LoadHome { refresh: false });
                 }
                 _ => {}
@@ -144,8 +154,8 @@ fn spotlight(
     }
     let open = gtk::Button::with_label(&t::chapter_updates_open_series_menu());
     open.add_css_class("pill");
-    open.set_action_name(Some("win.open-series"));
     open.set_action_target_value(Some(&tile.work.0.to_variant()));
+    open.set_action_name(Some("win.open-series"));
     buttons.append(&open);
     text.append(&buttons);
     card.append(&text);

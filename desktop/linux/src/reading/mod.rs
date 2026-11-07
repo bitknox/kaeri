@@ -13,6 +13,7 @@ pub mod novel;
 pub mod reader;
 pub mod search;
 pub mod series;
+pub mod series_extra;
 pub mod sources;
 pub mod updates;
 
@@ -78,6 +79,10 @@ pub fn failure(failure: &ReadingFailure) -> String {
 /// A work's cover at 2:3, `width` wide, named for screen readers by its title.
 pub fn cover(hub: &Hub, url: Option<&str>, title: &str, width: i32) -> Fit {
     let (frame, _) = widgets::art(hub, url, None, "cover");
+    if url.is_none_or(str::is_empty) {
+        // No art yet: an outlined place, so a row on the raised colour still shows one.
+        frame.add_css_class("cover-empty");
+    }
     let fit = Fit::new(&frame, 2.0 / 3.0, width, true, 0);
     fit.set_halign(gtk::Align::Start);
     fit.set_valign(gtk::Align::Start);
@@ -181,15 +186,13 @@ pub fn work_card(hub: &Hub, tile: &WorkTile, width: i32) -> gtk::Box {
         column.append(&new_words());
         said.push(t::chapter_state_new());
     }
-    let mut lines: Vec<String> = Vec::new();
-    if let Some(next) = &tile.next {
-        lines.push(say::msg(next));
-    }
-    if let Some(format) = &tile.format_label {
-        lines.push(format.clone());
-    }
-    lines.extend(tile.facts.iter().map(say::msg));
-    for line in lines.into_iter().filter(|l| !l.is_empty()).take(2) {
+    // What comes next, or with nothing next the facts on one line. The format label is a key,
+    // for filters, not words.
+    let line = match &tile.next {
+        Some(next) => say::msg(next),
+        None => dotted(&tile.facts),
+    };
+    for line in [line].into_iter().filter(|l| !l.is_empty()) {
         let label = widgets::haze(&line, "caption");
         label.set_wrap(false);
         label.set_ellipsize(gtk::pango::EllipsizeMode::End);
@@ -276,8 +279,8 @@ pub fn heading_row(title: &str, aside: Option<&str>, link: Option<(&str, Dest)>)
         button.add_css_class("flat");
         button.add_css_class("home-all");
         button.set_valign(gtk::Align::Center);
-        button.set_action_name(Some("win.go"));
         button.set_action_target_value(Some(&dest.name().to_variant()));
+        button.set_action_name(Some("win.go"));
         head.append(&button);
     }
     head
@@ -380,7 +383,7 @@ fn page_by(host: &gtk::ScrolledWindow, direction: i32, pitch: f64) {
 /// A day as the updates and the week say it: Today, Yesterday, or the day's name and date.
 pub fn day_label(day: i64) -> String {
     let now = glib::DateTime::now_local().ok();
-    let then = glib::DateTime::from_unix_local(day * 86_400).ok();
+    let then = glib::DateTime::from_unix_local(day).ok();
     if let (Some(now), Some(then)) = (now, then) {
         let today = now.day_of_year() + now.year() * 400;
         let that = then.day_of_year() + then.year() * 400;
@@ -405,28 +408,36 @@ pub fn ago(since: i64) -> String {
 
 /// Which of Shows and Reading a screen shared by both is on, kept for this device. Shown in the
 /// header only with Both; with one medium the screen is that medium's and there is no control.
-pub fn scope(ctx: &Rc<Ctx>, screen: Dest) -> gtk::Widget {
+/// `reading` is the side the page is on, which its choice shows.
+pub fn scope(ctx: &Rc<Ctx>, screen: Dest, reading: bool) -> gtk::Widget {
     let toggles = adw::ToggleGroup::new();
     toggles.add(adw::Toggle::builder().name("shows").label(t::library_scope_shows()).build());
     toggles
         .add(adw::Toggle::builder().name("reading").label(t::library_scope_reading()).build());
     toggles.add_css_class("round");
     toggles.set_valign(gtk::Align::Center);
-    let reading = ctx.prefs.scope_reading(screen.name());
     toggles.set_active_name(Some(if reading { "reading" } else { "shows" }));
     toggles.set_tooltip_text(Some(&t::library_scope_label()));
     toggles.set_visible(answer(&ctx.hub) == KaeriIsFor::Both);
+    let settling = Cell::new(false);
     toggles.connect_active_name_notify({
         let ctx = Rc::downgrade(ctx);
         move |toggles| {
             let Some(ctx) = ctx.upgrade() else { return };
-            let reading = toggles.active_name().as_deref() == Some("reading");
-            ctx.prefs.set_scope_reading(screen.name(), reading);
+            if settling.get() {
+                return;
+            }
+            let chosen = toggles.active_name().as_deref() == Some("reading");
+            ctx.prefs.set_scope_reading(screen.name(), chosen);
             let _ = WidgetExt::activate_action(
                 &ctx.window,
                 "win.scope",
                 Some(&screen.name().to_variant()),
             );
+            // This page stays the side it is on, for when the choice comes back to it.
+            settling.set(true);
+            toggles.set_active_name(Some(if reading { "reading" } else { "shows" }));
+            settling.set(false);
         }
     });
     let id = ctx.hub.listen({
@@ -547,8 +558,8 @@ pub fn read_button(label: &str, work: &WorkId, chapter: &ChapterId) -> gtk::Butt
     let button = gtk::Button::with_label(label);
     button.add_css_class("pill");
     button.add_css_class("suggested-action");
-    button.set_action_name(Some("win.read"));
     button.set_action_target_value(Some(&read_target(work, Some(chapter))));
+    button.set_action_name(Some("win.read"));
     button
 }
 
