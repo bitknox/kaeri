@@ -960,7 +960,7 @@ settings-counts-read-moving-on-note = Turning past the last page, or opening the
 settings-counts-read-marked = When you mark it
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = Continue and your { -tracker-pl } follow your marks
+settings-counts-read-marked-note = { -continue-cap } and your { -tracker-pl } follow your marks
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Series settings that follow you
