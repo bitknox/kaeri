@@ -391,6 +391,7 @@ extension ReadingMsg {
         case .readingRowRead: L.readingRowRead
         case .readingRowNew: L.readingRowNew
         case .readingRowDownloaded: L.readingRowDownloaded
+        case .readingRowGoneFromSource: L.readingRowGoneFromSource
         case .readingRowNotDownloaded: L.readingRowNotDownloaded
         case .readingRowOnDevice: L.readingRowOnDevice
         case .readingRowQueued: L.readingRowQueued

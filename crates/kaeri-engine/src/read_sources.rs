@@ -1044,6 +1044,7 @@ impl BookSources {
                 version_label: chapter.version_label.clone(),
                 read_at,
                 line: Vec::new(),
+                gone_from_source: false,
             };
             match groups.iter_mut().find(|g| g.volume == chapter.volume) {
                 Some(group) => group.chapters.push(row),
@@ -1055,6 +1056,7 @@ impl BookSources {
                 }),
             }
         }
+        keep_dropped(&self.store, work, &read, &bookmarks, &mut groups);
         for group in &mut groups {
             group.all_read =
                 group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
@@ -1154,6 +1156,77 @@ impl BookSources {
             }
         });
     }
+}
+
+/// Chapters downloaded here that the source no longer lists stay on the series page, marked as
+/// gone from the source, in their place among the others: the file is still on the device and
+/// still opens.
+fn keep_dropped(
+    store: &Store,
+    work: &WorkId,
+    read: &HashMap<String, kaeri_store::reading::ReadChapter>,
+    bookmarks: &HashSet<String>,
+    groups: &mut Vec<VolumeGroup>,
+) {
+    let listed: HashSet<String> = groups
+        .iter()
+        .flat_map(|g| g.chapters.iter().map(|c| c.id.as_str().to_owned()))
+        .collect();
+    let downloads = store.book_downloads(Some(work.as_str())).unwrap_or_default();
+    for d in downloads.iter().filter(|d| {
+        d.state == kaeri_store::book_downloads::BookDownloadState::Done
+            && d.path.as_deref().is_some_and(|p| std::path::Path::new(p).exists())
+            && !listed.contains(&d.chapter)
+    }) {
+        let was = read.get(&d.chapter);
+        let mut row = crate::downloads::books::chapter_row(
+            d,
+            was.is_some_and(|r| r.read),
+            bookmarks.contains(&d.chapter),
+        );
+        if let Some(r) = was {
+            row.read_at = r.read_at;
+            if !r.read
+                && let Some(page) = r.last_page
+            {
+                row.state = ChapterReadState::InProgress {
+                    page: kaeri_model::reading::shown_page(page),
+                    of: r.of_pages,
+                };
+            }
+        }
+        row.gone_from_source = true;
+        let group = match groups.iter().position(|g| g.volume == row.volume) {
+            Some(at) => &mut groups[at],
+            None => {
+                groups.push(VolumeGroup {
+                    volume: row.volume.clone(),
+                    title: None,
+                    chapters: Vec::new(),
+                    all_read: false,
+                });
+                groups.last_mut().expect("just pushed")
+            }
+        };
+        let at = place_of(&group.chapters, &row);
+        group.chapters.insert(at, row);
+    }
+}
+
+/// Where a row goes among others listed in number order, rising or falling; the end when its
+/// number is not known.
+fn place_of(rows: &[ChapterRow], row: &ChapterRow) -> usize {
+    let range = |r: &ChapterRow| r.id.key().and_then(|k| k.range());
+    let Some(mine) = range(row) else { return rows.len() };
+    let falling = match (rows.first().and_then(range), rows.last().and_then(range)) {
+        (Some(first), Some(last)) => first > last,
+        _ => false,
+    };
+    rows.iter()
+        .position(|r| {
+            range(r).is_some_and(|theirs| if falling { theirs < mine } else { theirs > mine })
+        })
+        .unwrap_or(rows.len())
 }
 
 /// A page fetched with the engine's own client, for a source that does not fetch its own.

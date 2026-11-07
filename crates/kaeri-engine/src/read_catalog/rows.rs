@@ -82,6 +82,9 @@ pub fn line(row: &ChapterRow, kept: Kept, now: i64, zone: &TimeZone) -> Vec<Msg>
         }),
         (None, _) => {}
     }
+    if row.gone_from_source {
+        parts.push(r(ReadingMsg::ReadingRowGoneFromSource));
+    }
     parts
 }
 
@@ -142,6 +145,7 @@ mod tests {
             version_label: None,
             read_at: None,
             line: Vec::new(),
+            gone_from_source: false,
         }
     }
 
@@ -171,6 +175,16 @@ mod tests {
         assert_eq!(
             words(&read, Kept::Source),
             ["reading-row-read", "reading-ago-days", "reading-row-downloaded"]
+        );
+        let gone = ChapterRow { gone_from_source: true, ..read.clone() };
+        assert_eq!(
+            words(&gone, Kept::Source),
+            [
+                "reading-row-read",
+                "reading-ago-days",
+                "reading-row-downloaded",
+                "reading-row-gone-from-source"
+            ]
         );
         let read_here = ChapterRow { download: None, ..read };
         assert_eq!(words(&read_here, Kept::Source), ["reading-row-read", "reading-ago-days"]);

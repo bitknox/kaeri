@@ -1205,6 +1205,11 @@ pub fn reading_row_downloaded() -> String {
     text("reading-row-downloaded", &[])
 }
 
+/// A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+pub fn reading_row_gone_from_source() -> String {
+    text("reading-row-gone-from-source", &[])
+}
+
 /// A chapter row's state: it is read from the source and nothing of it is on this device.
 pub fn reading_row_not_downloaded() -> String {
     text("reading-row-not-downloaded", &[])

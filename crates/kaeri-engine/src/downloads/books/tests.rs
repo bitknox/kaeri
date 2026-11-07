@@ -648,6 +648,7 @@ fn listed(id: &str, pages: Option<u32>) -> ChapterRow {
         version_label: None,
         read_at: None,
         line: Vec::new(),
+        gone_from_source: false,
     }
 }
 
@@ -688,4 +689,33 @@ async fn the_estimate_counts_pages_at_the_size_past_pages_took_and_names_the_net
     let none = DownloadPick::Chapters { ids: ids(&["1"]) };
     let nothing = kit.queue.estimate(kit.store(), &work, none, &rows, Some("shelf"));
     assert_eq!((nothing.chapters, nothing.bytes, nothing.line.len()), (0, 0, 0));
+}
+
+#[tokio::test]
+async fn a_downloaded_chapter_the_source_dropped_stays_listed_and_opens() {
+    let kit = kit(&["1", "2", "3", "4"]);
+    kit.queue
+        .download(
+            &kit.lent,
+            WorkId::new(WORK),
+            DownloadPick::Chapters { ids: ids(&["2", "3"]) },
+        )
+        .await;
+    kit.settle().await;
+    kit.read("2", 1);
+    // The source drops 2, which is downloaded, and 4, which is not.
+    kit.shelf.listed.lock().unwrap().retain(|c| c.id != "2" && c.id != "4");
+
+    let (_, volumes) = kit.lent.sources.chapters(&WorkId::new(WORK), None, 2).await.unwrap();
+    let rows: Vec<_> = volumes.into_iter().flat_map(|g| g.chapters).collect();
+    let listed: Vec<(&str, bool)> =
+        rows.iter().map(|r| (r.id.as_str(), r.gone_from_source)).collect();
+    assert_eq!(listed, [("1", false), ("2", true), ("3", false)], "in its place, 4 gone");
+    let gone = &rows[1];
+    assert_eq!(gone.download, Some(ChapterDownloadState::Done));
+    assert_eq!(gone.state, ChapterReadState::Read);
+
+    // The file is still on the shelf the reader opens from.
+    let shelf = kit.store().shelf(WORK).unwrap();
+    assert!(shelf.iter().any(|f| f.chapter.as_deref() == Some("2")), "{shelf:?}");
 }

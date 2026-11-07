@@ -768,6 +768,9 @@ reading-row-new = New
 # A chapter row's state: it is kept on this device to read offline.
 reading-row-downloaded = Downloaded
 
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+reading-row-gone-from-source = Gone from the source
+
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 reading-row-not-downloaded = Not downloaded
 

@@ -518,6 +518,8 @@
     <string name="reading_row_new">New</string>
     <!-- A chapter row's state: it is kept on this device to read offline. -->
     <string name="reading_row_downloaded">Downloaded</string>
+    <!-- A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download. -->
+    <string name="reading_row_gone_from_source">Gone from the source</string>
     <!-- A chapter row's state: it is read from the source and nothing of it is on this device. -->
     <string name="reading_row_not_downloaded">Not downloaded</string>
     <!-- A chapter row's state: a file in one of the person's folders, or one already on the device. -->

@@ -230,6 +230,9 @@ pub struct ChapterRow {
     /// in Updates or in Downloads.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub line: Vec<Msg>,
+    /// Downloaded here, and the source no longer lists it. It still opens from the file.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub gone_from_source: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -885,9 +888,6 @@ pub enum ReadingFailure {
     Other {
         reason: String,
     },
-}
-
-impl ReadingFailure {
     /// A file Send to e-reader wrote is bigger than the target takes. `file` is the file's
     /// name, `target` the e-reader's, and the sizes are in bytes.
     SendTooLarge {
@@ -915,6 +915,9 @@ pub enum SendProblem {
     NotUtf8,
     /// The part is there but is not what the format requires.
     Malformed,
+}
+
+impl ReadingFailure {
     pub fn msg(&self) -> Msg {
         Msg::Reading(self.reading_msg())
     }
@@ -984,9 +987,6 @@ pub enum SendProblem {
     }
 }
 
-/// Which part of which screen a failure belongs to, so it shows in place.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 /// [`ReadingFailure::reading_msg`] for a front end, so an app says a failure in the engine's
 /// words, with sizes at human scale.
 #[cfg_attr(feature = "ffi", uniffi::export)]
@@ -994,6 +994,9 @@ pub fn reading_failure_msg(failure: ReadingFailure) -> ReadingMsg {
     failure.reading_msg()
 }
 
+/// Which part of which screen a failure belongs to, so it shows in place.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReadingAbout {
     Home,
     Updates,

@@ -172,6 +172,7 @@ pub(crate) fn row_of(chapter: &chapters::Kept, read: &chapters::Read) -> Chapter
         version_label: chapter.version_label.clone(),
         read_at: None,
         line: Vec::new(),
+        gone_from_source: false,
     }
 }
 

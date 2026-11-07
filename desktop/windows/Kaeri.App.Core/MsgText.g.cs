@@ -389,6 +389,7 @@ public static class MsgText
         ReadingMsg.ReadingRowRead => T.ReadingRowRead,
         ReadingMsg.ReadingRowNew => T.ReadingRowNew,
         ReadingMsg.ReadingRowDownloaded => T.ReadingRowDownloaded,
+        ReadingMsg.ReadingRowGoneFromSource => T.ReadingRowGoneFromSource,
         ReadingMsg.ReadingRowNotDownloaded => T.ReadingRowNotDownloaded,
         ReadingMsg.ReadingRowOnDevice => T.ReadingRowOnDevice,
         ReadingMsg.ReadingRowQueued => T.ReadingRowQueued,

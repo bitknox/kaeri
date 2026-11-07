@@ -424,6 +424,11 @@ reading-row-new = New
 # @max 20
 reading-row-downloaded = Downloaded
 
+# A chapter row's state: it is downloaded on this device, and the source no longer lists it. It
+# still opens from the download.
+# @max 28
+reading-row-gone-from-source = Gone from the { -source }
+
 # A chapter row's state: it is read from the source and nothing of it is on this device.
 # @max 20
 reading-row-not-downloaded = Not downloaded

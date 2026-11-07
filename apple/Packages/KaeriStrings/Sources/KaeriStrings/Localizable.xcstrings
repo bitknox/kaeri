@@ -171733,6 +171733,18 @@
         }
       }
     },
+    "reading-row-gone-from-source" : {
+      "comment" : "A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gone from the source"
+          }
+        }
+      }
+    },
     "reading-row-new" : {
       "comment" : "A chapter row's state: it came out since the person last read and is not read.",
       "extractionState" : "manual",

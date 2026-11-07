@@ -969,6 +969,10 @@ object Strings {
     fun readingRowDownloaded(context: Context): String =
         context.getString(R.string.reading_row_downloaded)
 
+    /** A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download. */
+    fun readingRowGoneFromSource(context: Context): String =
+        context.getString(R.string.reading_row_gone_from_source)
+
     /** A chapter row's state: it is read from the source and nothing of it is on this device. */
     fun readingRowNotDownloaded(context: Context): String =
         context.getString(R.string.reading_row_not_downloaded)

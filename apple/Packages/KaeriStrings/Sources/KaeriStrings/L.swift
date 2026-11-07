@@ -975,6 +975,9 @@ public enum L {
     /// A chapter row's state: it is kept on this device to read offline.
     public static var readingRowDownloaded: String { string("reading-row-downloaded", fallback: "Downloaded") }
 
+    /// A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.
+    public static var readingRowGoneFromSource: String { string("reading-row-gone-from-source", fallback: "Gone from the source") }
+
     /// A chapter row's state: it is read from the source and nothing of it is on this device.
     public static var readingRowNotDownloaded: String { string("reading-row-not-downloaded", fallback: "Not downloaded") }
 

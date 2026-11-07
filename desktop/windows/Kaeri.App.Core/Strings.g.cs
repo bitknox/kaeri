@@ -735,6 +735,9 @@ public static partial class T
     /// <summary>A chapter row's state: it is kept on this device to read offline.</summary>
     public static string ReadingRowDownloaded => Get("ReadingRowDownloaded");
 
+    /// <summary>A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.</summary>
+    public static string ReadingRowGoneFromSource => Get("ReadingRowGoneFromSource");
+
     /// <summary>A chapter row's state: it is read from the source and nothing of it is on this device.</summary>
     public static string ReadingRowNotDownloaded => Get("ReadingRowNotDownloaded");
 
@@ -10483,13 +10486,13 @@ public static partial class T
         ["ReadingFailedNeedsNewer"] = "This plugin needs a newer Kaeri ({world}). Update Kaeri to use it.",
         ["ReadingFailedOff"] = "Reading isn't available in this version of Kaeri.",
         ["ReadingFailedOther"] = "Something went wrong. {reason}",
-        ["ReadingKindManga"] = "Manga",
-        ["ReadingKindManhwa"] = "Manhwa",
-        ["ReadingKindManhua"] = "Manhua",
         ["ReadingFailedSendTooLarge"] = "{file} is {size}, and {target} takes files up to {limit}. Send fewer chapters at a time and try again.",
         ["ReadingFailedSendMissing"] = "{file} is missing {part}, so it wasn't sent. Try again.",
         ["ReadingFailedSendEncoding"] = "{part} in {file} has the wrong text encoding, so it wasn't sent. Try again.",
         ["ReadingFailedSendMalformed"] = "{part} in {file} isn't valid, so it wasn't sent. Try again.",
+        ["ReadingKindManga"] = "Manga",
+        ["ReadingKindManhwa"] = "Manhwa",
+        ["ReadingKindManhua"] = "Manhua",
         ["ReadingKindWebtoon"] = "Webtoon",
         ["ReadingKindOneShot"] = "One-shot",
         ["ReadingKindLightNovel"] = "Light novel",
@@ -10537,6 +10540,7 @@ public static partial class T
         ["ReadingRowRead"] = "Read",
         ["ReadingRowNew"] = "New",
         ["ReadingRowDownloaded"] = "Downloaded",
+        ["ReadingRowGoneFromSource"] = "Gone from the source",
         ["ReadingRowNotDownloaded"] = "Not downloaded",
         ["ReadingRowOnDevice"] = "On this device",
         ["ReadingRowQueued"] = "Queued",

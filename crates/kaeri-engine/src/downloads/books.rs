@@ -1007,6 +1007,7 @@ pub(crate) fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> Cha
         version_label: d.version_label.clone(),
         read_at: None,
         line: Vec::new(),
+        gone_from_source: false,
     }
 }
 

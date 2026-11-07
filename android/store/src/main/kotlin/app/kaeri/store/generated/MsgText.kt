@@ -392,6 +392,7 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingRowRead -> Strings.readingRowRead(context)
         is ReadingMsg.ReadingRowNew -> Strings.readingRowNew(context)
         is ReadingMsg.ReadingRowDownloaded -> Strings.readingRowDownloaded(context)
+        is ReadingMsg.ReadingRowGoneFromSource -> Strings.readingRowGoneFromSource(context)
         is ReadingMsg.ReadingRowNotDownloaded -> Strings.readingRowNotDownloaded(context)
         is ReadingMsg.ReadingRowOnDevice -> Strings.readingRowOnDevice(context)
         is ReadingMsg.ReadingRowQueued -> Strings.readingRowQueued(context)

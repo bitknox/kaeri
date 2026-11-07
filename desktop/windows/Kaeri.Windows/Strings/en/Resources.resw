@@ -1043,6 +1043,10 @@
     <value>Downloaded</value>
     <comment>A chapter row's state: it is kept on this device to read offline.</comment>
   </data>
+  <data name="ReadingRowGoneFromSource" xml:space="preserve">
+    <value>Gone from the source</value>
+    <comment>A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.</comment>
+  </data>
   <data name="ReadingRowNotDownloaded" xml:space="preserve">
     <value>Not downloaded</value>
     <comment>A chapter row's state: it is read from the source and nothing of it is on this device.</comment>
