@@ -416,6 +416,7 @@ impl Reader {
         surface: ReaderSurface,
     ) {
         let store = &cx.services.store;
+        let form = crate::data::title_form(cx.services.meta.titles());
         let kind = store.book_work_kind(work.as_str()).ok().flatten();
         let medium = match (kind.as_ref().map(|k| k.medium.as_str()), chapters.first()) {
             (Some("novel"), _) => Medium::Novel,
@@ -475,7 +476,7 @@ impl Reader {
             id,
             work,
             medium,
-            title: kind.and_then(|k| k.title).unwrap_or_default(),
+            title: kind.and_then(|k| k.title_in(form)).unwrap_or_default(),
             ended,
             chapters,
             at: index,
