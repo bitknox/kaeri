@@ -158,6 +158,9 @@ struct DemoBooksAbout: View {
             ForEach(reading.works, id: \.id) { work in
                 VStack(alignment: .leading, spacing: 4) {
                     line(demoCreditLine(work))
+                    if let cover = work.coverCredit {
+                        line(L.demoCreditCover(title: cover.title, artist: cover.artist, year: String(cover.year)))
+                    }
                     HStack(spacing: 14) {
                         if let url = work.licenceUrl, let link = URL(string: url) {
                             Link(L.sourcesDemoLinkLicence, destination: link)
