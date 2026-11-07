@@ -22,7 +22,7 @@ linux-reader-end-finished = End of the series
 
 # End page heading when the next chapter is not downloaded and the device is offline.
 # @only linux
-# @max 40
+# @max 48
 linux-reader-end-offline = The next chapter isn't downloaded
 
 # End page heading when no source has the next chapter.
@@ -93,8 +93,8 @@ linux-send-title = Send to e-reader
 
 # Line under that title.
 # @only linux
-# @max 90
-linux-send-line = Pick the device. The next unread chapters are prepared as files that fit its screen.
+# @max 110
+linux-send-line = Pick the { -device }. The next unread chapters are prepared as files that fit its screen.
 
 # Button that starts preparing the files.
 # @only linux
