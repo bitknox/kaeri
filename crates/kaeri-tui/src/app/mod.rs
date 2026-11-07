@@ -47,6 +47,7 @@ mod fixtures;
 mod home;
 mod input;
 mod lists;
+pub mod medium;
 mod notices;
 mod overlays;
 mod playback;
@@ -182,6 +183,12 @@ pub struct App {
     pub demo: kaeri_model::sources::DemoState,
     /// Whether the first-run question has been asked this session.
     first_run_shown: bool,
+    /// What Kaeri is for on this computer, as the engine last said. `None` until it has.
+    pub medium: Option<kaeri_model::medium::MediumView>,
+    /// The question the engine asked that is open, `None` when the choice is a plain change.
+    medium_ask: Option<kaeri_model::medium::MediumAsk>,
+    /// The last question put to the person, so one is not asked again once closed.
+    medium_asked: Option<kaeri_model::medium::MediumAsk>,
     /// The crash reports saved on this device, newest first, for Report a bug. The host fills it.
     pub crashes: Vec<kaeri_model::crash::CrashRecord>,
     /// Crash reports the person deleted in Report a bug, for the host to remove from disk.
@@ -457,6 +464,9 @@ impl App {
             providers: Vec::new(),
             demo: kaeri_model::sources::DemoState::default(),
             first_run_shown: false,
+            medium: None,
+            medium_ask: None,
+            medium_asked: None,
             crashes: Vec::new(),
             deleted_crashes: Vec::new(),
             meta_status: Vec::new(),
@@ -563,9 +573,10 @@ impl App {
             | Event::LicensedReturn(_)
             | Event::Server(_)
             | Event::Local(_) => {}
-            // Reading is not in the terminal yet.
-            Event::Reading(_) | Event::Reader(_) | Event::BookSources(_) | Event::Medium(_) => {
-            }
+            // The terminal has no reader: reading's own events are not drawn here. What Kaeri is
+            // for is, and the engine relays reading's sync ops without them.
+            Event::Reading(_) | Event::Reader(_) | Event::BookSources(_) => {}
+            Event::Medium(view) => self.apply_medium(view),
             Event::Content { view, content } => self.apply_content(view, content),
             // Up next for you is a section of Home now; it is not asked for on its own.
             Event::UpNext(_) => {}

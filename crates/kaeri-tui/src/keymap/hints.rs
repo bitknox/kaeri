@@ -493,6 +493,14 @@ fn overlay_hints(
             hint("i", super::said(kaeri_i18n::t::onboarding_invite_heading())),
             hint("s", super::said(kaeri_i18n::t::onboarding_skip())),
         ],
+        O::Medium
+            if app.medium_question() == Some(&kaeri_model::medium::MediumAsk::FirstRun) =>
+        {
+            vec![hint("↑↓", hint_move()), hint("↵", hint_choose())]
+        }
+        O::Medium => {
+            vec![hint("↑↓", hint_move()), hint("↵", hint_choose()), hint(ESC, hint_close())]
+        }
         O::BugReport => vec![
             hint("↑↓", hint_move()),
             hint("↵", super::said(kaeri_i18n::t::report_open_github())),

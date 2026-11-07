@@ -55,6 +55,8 @@ impl App {
                 self.should_quit = true;
                 return None;
             }
+            // The first run's question has no Skip: it is answered.
+            Action::Back if self.medium_must_answer() => return None,
             Action::Back => {
                 self.nav.close_overlay();
                 return None;
@@ -254,6 +256,7 @@ impl App {
             Some(Overlay::PluginAction) => self.confirm_plugin_choice(),
             Some(Overlay::PublishPick) => self.confirm_publish(),
             Some(Overlay::BugReport) => self.confirm_bug_report(),
+            Some(Overlay::Medium) => self.confirm_medium(),
             _ => None,
         }
     }
@@ -282,6 +285,7 @@ impl App {
             Some(Overlay::PluginAction) => self.plugin_choices().len(),
             Some(Overlay::PublishPick) => self.local_plugins.len(),
             Some(Overlay::BugReport) => 1 + self.crashes.len(),
+            Some(Overlay::Medium) => super::medium::CHOICES.len(),
             Some(overlay) if overlay.is_devices() => self.devices_overlay_len(overlay),
             _ => 0,
         }

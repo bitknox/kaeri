@@ -173,6 +173,7 @@ pub(super) fn render_overlay(
         Overlay::OpenLink => open_link_rows(app, link_width(area.width)),
         Overlay::PublishPick => publish_rows(app),
         Overlay::BugReport => bug_report_rows(app),
+        Overlay::Medium => medium_rows(app).0,
         Overlay::FirstRun => vec![
             (String::new(), t::onboarding_demo_heading()),
             (String::new(), t::onboarding_demo_detail()),
@@ -194,6 +195,7 @@ pub(super) fn render_overlay(
     let selected = match overlay {
         // The plugin overlay explains before it offers, so its choices start below the facts.
         Overlay::PluginAction => Some(plugin_action_rows(app).1 + app.cursors.overlay.selected),
+        Overlay::Medium => Some(medium_rows(app).1 + app.cursors.overlay.selected),
         // "Nothing logged yet" is a note, not a line that can be picked.
         Overlay::Logs if app.logs.is_empty() => None,
         _ if body.is_some() => body.as_ref().and_then(|body| body.selected),
@@ -545,6 +547,53 @@ fn log_rows(app: &App) -> Vec<(String, String)> {
             (count, format!("{}  {}", marker, row.text))
         })
         .collect()
+}
+
+/// The question of what Kaeri is for: what it is about, then the three answers. Also how many rows
+/// come before the answers, which are the ones that can be picked.
+fn medium_rows(app: &App) -> (Vec<(String, String)>, usize) {
+    use crate::app::medium::{CHOICES, choice_line, choice_word};
+    use kaeri_model::medium::MediumAsk;
+    let device = t::sync_tui_kind();
+    let mut rows = Vec::new();
+    match app.medium_question() {
+        Some(MediumAsk::Updated) => {
+            rows.push((String::new(), t::medium_update_line(&device)));
+        }
+        Some(MediumAsk::Joined { devices, answer }) => {
+            let names = devices.join(", ");
+            let n = devices.len() as i64;
+            rows.push((
+                String::new(),
+                match answer {
+                    kaeri_model::medium::KaeriIsFor::Watch => {
+                        t::medium_join_title_watch(&names, n)
+                    }
+                    kaeri_model::medium::KaeriIsFor::Read => {
+                        t::medium_join_title_read(&names, n)
+                    }
+                    kaeri_model::medium::KaeriIsFor::Both => {
+                        t::medium_join_title_both(&names, n)
+                    }
+                },
+            ));
+            rows.push((String::new(), t::medium_join_line(&device)));
+        }
+        Some(MediumAsk::FirstRun) | None => {
+            rows.push((String::new(), t::onboarding_medium_line()));
+        }
+    }
+    rows.push((String::new(), String::new()));
+    let facts = rows.len();
+    for answer in CHOICES {
+        rows.push((
+            String::new(),
+            format!("{}  ·  {}", choice_word(answer), choice_line(answer)),
+        ));
+    }
+    rows.push((String::new(), String::new()));
+    rows.push((String::new(), t::medium_change_later()));
+    (rows, facts)
 }
 
 #[cfg(test)]

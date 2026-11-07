@@ -101,6 +101,18 @@ impl ReadingState {
         }
     }
 
+    /// Whether synced reading entries (chapter progress, book source choices) are acted on here.
+    /// The TV stores and relays them untouched and does nothing with them.
+    pub fn takes_synced_reading(&self) -> bool {
+        self.edition != AppEdition::WatchOnly
+    }
+
+    /// Whether this synced register kind is a reading entry this device ignores.
+    pub fn ignores_synced(&self, kind: &str) -> bool {
+        !self.takes_synced_reading()
+            && matches!(kind, kinds::BOOK_SOURCE_ORDER | kinds::BOOK_SOURCE_OFF)
+    }
+
     /// Whether this device's answer is its own to give.
     fn open(&self) -> bool {
         self.available && self.edition.fixed().is_none()
@@ -611,6 +623,11 @@ mod tests {
 
         let tv = ReadingState::new(true, AppEdition::WatchOnly);
         assert!(tv.view().fixed && !tv.reads());
+        assert!(!tv.takes_synced_reading());
+        assert!(tv.ignores_synced(kinds::BOOK_SOURCE_ORDER));
+        assert!(tv.ignores_synced(kinds::BOOK_SOURCE_OFF));
+        assert!(!tv.ignores_synced(kinds::MEDIUM_ACCOUNT));
+        assert!(on.takes_synced_reading() && !on.ignores_synced(kinds::BOOK_SOURCE_OFF));
         let reader = ReadingState {
             ask: Some(MediumAsk::FirstRun),
             ..ReadingState::new(true, AppEdition::ReadOnly)
