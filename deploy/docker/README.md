@@ -87,7 +87,7 @@ On its first start, the store prints a one-time owner invite:
 docker compose logs store
 ```
 
-In Kaeri, go to Providers, press Enter, choose join a store and paste the link. The link works
+In Kaeri, go to Sources, press Enter, choose join a store and paste the link. The link works
 once, for seven days, and each start prints a new one until somebody uses it. The device that joins
 with it owns the store.
 

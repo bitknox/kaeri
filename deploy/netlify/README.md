@@ -39,7 +39,7 @@ Kaeri. Add it under Project configuration, Environment variables, and deploy aga
 
 1. Open `https://<your-project>.netlify.app/admin/` in a browser.
 2. Enter the setup code. The page answers with an owner invite link.
-3. In Kaeri, go to Providers, press Enter to open plugin stores, choose join a store and paste
+3. In Kaeri, go to Sources, press Enter to open plugin stores, choose join a store and paste
    the link.
 
 The device that joins with that link becomes the owner. From then on you invite people, publish

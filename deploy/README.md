@@ -1,6 +1,6 @@
 # Deploy a plugin store
 
-A plugin store is a small private server for sharing Kaeri provider plugins with people you
+A plugin store is a small private server for sharing Kaeri plugins with people you
 invite. Each folder here sets one up somewhere different. Pick one, deploy it, [claim
 it](#claim-your-store), then invite people from the store's page in Kaeri. An owner can also
 let anyone with the store's link join, without a name; see
@@ -31,7 +31,7 @@ A new store has no owner. There are two ways to become it:
 - From the log. On its first start the store prints a one-time owner invite, and prints a new one
   on each start until somebody uses it.
 
-In Kaeri, go to Providers, press Enter, choose join a store and paste the link. The device that
+In Kaeri, go to Sources, press Enter, choose join a store and paste the link. The device that
 joins with it owns the store.
 
 ## Fly.io

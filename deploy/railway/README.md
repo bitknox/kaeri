@@ -10,7 +10,7 @@ After the deploy:
 1. Open the service's Variables tab and copy `KAERI_STORE_SETUP_CODE`.
 2. Open `https://<your-service>.up.railway.app/admin/` and enter the code. The page answers with
    an owner invite link.
-3. In Kaeri, go to Providers, press Enter, choose join a store and paste the link.
+3. In Kaeri, go to Sources, press Enter, choose join a store and paste the link.
 
 The deploy log also shows a one-time owner invite, which works the same way.
 
