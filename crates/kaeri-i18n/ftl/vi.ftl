@@ -8051,6 +8051,9 @@ reader-close = Đóng
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = Đã đọc
 
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = Đã đọc · đã cập nhật { $trackers }
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Kế tiếp
 

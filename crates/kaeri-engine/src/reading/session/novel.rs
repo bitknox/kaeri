@@ -124,6 +124,51 @@ pub(super) fn prepares(chapter: &ShelfChapter) -> bool {
     chapter.format == "epub" || chapter.format == SOURCE
 }
 
+/// The folder a session's chapters of pictures from a source are fetched into, one folder per
+/// layout. It goes when the session closes.
+pub(super) fn streamed_dir(cache: &Path, session: u64) -> PathBuf {
+    cache_dir(cache).join(format!("{session}-pages"))
+}
+
+/// Fetch every page of a source's chapter of pictures into `dir`, named in reading order with
+/// the type their bytes are, so the page worker opens the folder as a book.
+async fn fetch_pages(
+    sources: &crate::read_sources::BookSources,
+    opened: &mut crate::read_sources::Opened,
+    dir: &Path,
+    now: i64,
+) -> Prepared {
+    let ChapterContent::Images(pages) = &opened.content else {
+        return Prepared::Failed(ReadingFailure::NotFound);
+    };
+    let total = pages.len();
+    if total == 0 {
+        return Prepared::Failed(ReadingFailure::NotFound);
+    }
+    let io = |e: std::io::Error| ReadingFailure::Other { reason: e.to_string() };
+    if let Err(e) = tokio::fs::create_dir_all(dir).await {
+        return Prepared::Failed(io(e));
+    }
+    for index in 0..total {
+        let bytes = match sources.page(opened, index, now).await {
+            Ok(bytes) => bytes,
+            Err(failure) => return Prepared::Failed(failure),
+        };
+        let Some(ext) =
+            kaeri_books::mime::sniff_image(&bytes).and_then(|m| m.strip_prefix("image/"))
+        else {
+            return Prepared::Failed(ReadingFailure::Unsupported { extension: "page".into() });
+        };
+        let ext = if ext == "jpeg" { "jpg" } else { ext };
+        if let Err(e) =
+            tokio::fs::write(dir.join(format!("{:05}.{ext}", index + 1)), &bytes).await
+        {
+            return Prepared::Failed(io(e));
+        }
+    }
+    Prepared::Pages(dir.to_owned())
+}
+
 /// The format of a chapter read from a source rather than a file on the shelf.
 pub(crate) const SOURCE: &str = "source";
 
@@ -285,9 +330,15 @@ impl Session {
         let id = chapter.id.clone();
         let label = chapter.label.clone();
         let now = cx.now();
+        let streamed =
+            streamed_dir(&cx.services.paths.cache_dir, self.id).join(generation.to_string());
         tokio::spawn(async move {
             let prepared = match sources.open(&work, &id, None, now).await {
                 Err(failure) => Prepared::Failed(failure),
+                // A source's pictures are fetched into a folder the page worker reads as a book.
+                Ok(mut opened) if matches!(opened.content, ChapterContent::Images(_)) => {
+                    fetch_pages(&sources, &mut opened, &streamed, now).await
+                }
                 Ok(opened) => match opened.content {
                     ChapterContent::Text(xhtml) => {
                         let title = opened.chapter.title.clone().unwrap_or(label);
@@ -309,12 +360,7 @@ impl Session {
                             }),
                         }
                     }
-                    // Streamed page images reach the reader with the sources' page fetches.
-                    ChapterContent::Images(_) => {
-                        Prepared::Failed(ReadingFailure::Unsupported {
-                            extension: "images".into(),
-                        })
-                    }
+                    ChapterContent::Images(_) => Prepared::Failed(ReadingFailure::NotFound),
                 },
             };
             put(prepared);

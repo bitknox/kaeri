@@ -93,6 +93,12 @@ final class Delegate: NSObject, NSApplicationDelegate {
         // Only an app in the Dock goes full screen, so `--full-screen` runs as one.
         let regular = options.snapshot == nil || options.fullScreenCycles > 0
         NSApp.setActivationPolicy(regular ? .regular : .accessory)
+        // Shots: KAERI_APPEARANCE=light|dark overrides the system appearance for this process only.
+        switch ProcessInfo.processInfo.environment["KAERI_APPEARANCE"] {
+        case "light": NSApp.appearance = NSAppearance(named: .aqua)
+        case "dark": NSApp.appearance = NSAppearance(named: .darkAqua)
+        default: break
+        }
         if regular { NSApp.activate() }
     }
 
@@ -138,7 +144,13 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if store.applyGoOfflineArgument() { settled = await store.settle() }
         store.applyShowcase()
         if let scene = SyncScene.named() { _ = await store.sync.stage(scene, store: store) }
+        if let scene = PrelaunchScene.named() {
+            store.cameIn.stage(scene)
+            store.sync.stage(prelaunch: scene)
+            if !scene.isJoin, !scene.isProgressLine { store.stagePrelaunchSources(scene) }
+        }
         if ReaderModel.shotWork(arguments: ProcessInfo.processInfo.arguments) != nil { _ = await store.reader.stage() }
+        if let scene = PrelaunchScene.named() { store.stagePrelaunchLine(scene) }
         await visit(options.visit)
         // A launch sheet whose button the showcase puts up (sheet=proxy) opens only once it is
         // there: wait for the sheet to be taken, and for it to slide in.

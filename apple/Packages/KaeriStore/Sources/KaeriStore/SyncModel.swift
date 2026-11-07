@@ -123,6 +123,13 @@ public final class SyncModel {
     public private(set) var pairFailedDevice: String?
     /// What the last Copy sign-ins brought.
     public private(set) var copied: SyncSignInsCopiedView?
+    /// What the device just paired with has to bring: the medium it answered, its book servers
+    /// and plugin stores, and the first-run pages it already answered.
+    public private(set) var setup: JoinedSetup?
+    /// The name of a plugin store the paired device's invite did not get this device into.
+    public private(set) var storeRefused: String?
+    /// The device first run just paired with, until Home has said it is syncing with it.
+    public internal(set) var joinedFrom: String?
     /// The cloud service signed in to, until its folder is made: the row says it is setting up.
     public private(set) var settingUp: SyncFolderKind?
     /// Whether the folder is being set up long enough to say so (past 600 ms).
@@ -439,8 +446,14 @@ public final class SyncModel {
         send(.syncGroup(.pairWithCode(deviceName: deviceName, code: code)))
     }
 
+    /// First run paired with `device`: Home says it is syncing with it.
+    public func noteJoined(_ device: String) { joinedFrom = device }
+
     public func resetPair() {
+        joinedFrom = nil
         pair = .idle
+        setup = nil
+        storeRefused = nil
         pairFailedDevice = nil
     }
 
@@ -489,6 +502,17 @@ public final class SyncModel {
     /// Join plugin stores through a paired device: it makes this device its own invite, so this
     /// device gets a token of its own. With no `device`, asks the next device to pair for its
     /// invites, inside the pairing session. An empty `stores` means every store `device` is in.
+    /// Ask the paired device for its setup: stores, book servers, sign-ins and the medium. Without
+    /// a device, the next one to pair.
+    public func askSetup(from device: String?, address: String? = nil) {
+        send(.syncGroup(.askSetupFrom(device: device, address: address)))
+    }
+
+    /// Add the book servers picked from a paired device; none picked adds every one held.
+    public func addBookServers(from device: String, _ ids: [String]) {
+        send(.syncGroup(.addBookServersFrom(device: device, servers: ids)))
+    }
+
     public func joinStores(from device: String?, _ stores: [String] = [], address: String? = nil) {
         send(.syncGroup(.joinStoresFrom(device: device, stores: stores, address: address)))
     }
@@ -569,6 +593,10 @@ public final class SyncModel {
             copied = SyncSignInsCopiedView(device: device, trackers: trackers, clouds: clouds, lacking: lacking)
         case .profiles(let view):
             profiles = view.profiles
+        case .setupFrom(let joined):
+            setup = joined
+        case .syncStoreJoinFailed(_, _, let name, _):
+            storeRefused = name
         default:
             break
         }
@@ -701,6 +729,7 @@ public final class SyncModel {
         settingUpShown = service != nil
     }
     public func stage(copied new: SyncSignInsCopiedView?) { copied = new }
+    public func stage(setup new: JoinedSetup?, refused: String? = nil) { staged = true; setup = new; storeRefused = refused }
     public func stage(cloudStep step: CloudStep?, switching: Bool = false) {
         self.switching = switching
         cloudTarget = step

@@ -41,3 +41,4 @@ reader-end-caught-up = Вы всё прочитали
 reader-gap-none = Нет
 reader-gap-small = Малый
 reader-look-system = Как в системе
+reader-end-tracker = Прочитано · обновлено: { $trackers }

@@ -86,7 +86,7 @@ private struct SyncSheetHost: View {
     }
 }
 
-private extension SyncModel {
+extension SyncModel {
     func close() { sheet = nil }
 }
 
@@ -607,13 +607,24 @@ struct PairShowSheet: View {
     var leave: (() -> Void)?
     /// First launch: the pairing is done and the flow ends.
     var finished: () -> Void = {}
+    /// First launch: the first-run pages the paired device had already answered.
+    var answeredPages: (Set<FirstRunPage>) -> Void = { _ in }
+    /// Whether the invite has been shown for a while without a device arriving.
+    @State private var nothingYet = PrelaunchScene.named() == .joinNothing
+    /// The invite ran out, which shows the code page's one new action.
+    @State private var expired = false
 
     var body: some View {
         let sync = store.sync
         Group {
             if case .paired(let device) = sync.pair {
-                PairedContent(device: device, first: first, done: { if first { finished() } else { dismiss() } })
-                    .transition(.opacity)
+                if first, store.medium.choosable {
+                    FirstJoinPaired(device: device, done: finished, skip: answeredPages)
+                        .transition(.opacity)
+                } else {
+                    PairedContent(device: device, first: first, done: { if first { finished() } else { dismiss() } })
+                        .transition(.opacity)
+                }
             } else {
                 showing(sync)
                     .transition(.opacity)
@@ -625,7 +636,7 @@ struct PairShowSheet: View {
             if !sync.staged { sync.invite(deviceName: sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName) }
             // First launch: the device that pairs is asked for invites to its plugin stores, with
             // the pairing, so the switch on the paired page can join them.
-            if first, !sync.staged { sync.joinStores(from: nil) }
+            if first, !sync.staged { store.medium.choosable ? sync.askSetup(from: nil, address: nil) : sync.joinStores(from: nil) }
         }
         .onChange(of: sync.devices.count) { old, new in
             if new > old, sync.invite != nil, let other = sync.others.last { sync.stage(pair: .paired(other.name)) }
@@ -671,6 +682,7 @@ struct PairShowSheet: View {
                     let left = max(0, Int(invite.until.timeIntervalSince(context.date)))
                     if left == 0 {
                         SyncProblemLine(text: L.pairErrExpired)
+                            .onAppear { expired = true }
                     } else {
                         SyncNote(text: (first ? L.pairSameWifi : L.pairShowScan) + " " + L.pairGoodFor(left: String(format: "%d:%02d", left / 60, left % 60)))
                             .monospacedDigit()
@@ -679,11 +691,23 @@ struct PairShowSheet: View {
                 #if os(iOS)
                 .listRowBackground(Color.clear)
                 #endif
+                if first, !expired {
+                    PairWaiting(nothingYet: nothingYet)
+                        #if os(iOS)
+                        .listRowBackground(Color.clear)
+                        #endif
+                }
             } else {
                 ProgressView().frame(maxWidth: .infinity)
             }
         } bottom: {
             if first {
+                if expired {
+                    SyncButton(title: L.pairShowCode, primary: true, wide: touch) {
+                        expired = false
+                        sync.invite(deviceName: sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName)
+                    }
+                }
                 #if os(macOS)
                 SyncButton(title: L.actionCancel) { sync.close(); leave?() }
                 #endif
@@ -707,10 +731,44 @@ struct PairShowSheet: View {
     }
 }
 
+/// Under the code on first run: nothing for 600 ms, then the waiting line with its spinner, kept
+/// at least 0.3 s once shown; after 30 s without a device, the Wi-Fi note replaces it.
+private struct PairWaiting: View {
+    var nothingYet: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var shown = false
+    @State private var late = false
+
+    var body: some View {
+        Group {
+            if late || nothingYet {
+                SyncNote(text: L.pairNothingYet)
+            } else if shown {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text(L.pairWaiting)
+                        .font(.plat(mac: 12, touch: 15))
+                        .foregroundStyle(.haze)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+        }
+        .animation(reduceMotion ? .easeInOut(duration: 0.2) : .standard, value: shown)
+        .animation(reduceMotion ? .easeInOut(duration: 0.2) : .standard, value: late)
+        .task {
+            try? await Task.sleep(for: .milliseconds(600))
+            shown = true
+            try? await Task.sleep(for: .seconds(30))
+            late = true
+        }
+    }
+}
+
 struct PairEnterSheet: View {
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var code = ""
+    // i18n-skip: a shot of the other device's side has the code typed in
+    @State private var code = PrelaunchScene.named() == .joinOther ? "482 913" : ""
     @State private var address = ""
     @State private var scanning = false
     @FocusState private var focused: Bool

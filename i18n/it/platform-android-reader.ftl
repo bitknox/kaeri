@@ -136,7 +136,6 @@ reader-paper-line = Le pagine girano subito e nulla nel lettore si muove. Cambia
 reader-grid-page = Vai alla pagina { $page }
 reader-scrubber-in-chapter = Pagina nel capitolo
 reader-failed-novel = Impossibile mostrare questo capitolo
-reader-end-tracker = Letto · aggiornati: { $trackers }
 reader-end-tracker-offline = Letto · { $tracker } si aggiorna quando torni online
 reader-end-none = Il capitolo { $chapter } non è ancora nelle tue { -source-pl }
 reader-end-none-line = { -app-name } cerca nuovi capitoli in background e li aggiunge ad Aggiornamenti.

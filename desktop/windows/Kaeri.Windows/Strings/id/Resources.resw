@@ -5354,6 +5354,9 @@
   <data name="ReaderEndRead" xml:space="preserve">
     <value>Dibaca</value>
   </data>
+  <data name="ReaderEndTracker" xml:space="preserve">
+    <value>Dibaca · {trackers} diperbarui</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Selanjutnya</value>
   </data>

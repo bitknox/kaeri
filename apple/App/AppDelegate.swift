@@ -275,6 +275,14 @@ final class AppDelegate: NSObject {
         if let scene = SyncScene.named() {
             ready = await store.sync.stage(scene, store: store) && ready
         }
+        // A screenshot of a prelaunch state: what came in, the demo, or the first-run join.
+        if let scene = PrelaunchScene.named() {
+            store.cameIn.stage(scene)
+            store.sync.stage(prelaunch: scene)
+            if !scene.isJoin, !scene.isProgressLine { store.stagePrelaunchSources(scene) }
+            store.stagePrelaunchLine(scene)
+            store.playPrelaunchRow(scene)
+        }
         // A screenshot of casting: the scene the arguments name, on screen.
         if let scene = CastScene.named() {
             ready = await store.tv.cast.reached(scene, tv: store.tv) && ready

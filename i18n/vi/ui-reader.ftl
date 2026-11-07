@@ -38,3 +38,4 @@ reader-end-caught-up = Bạn đã đọc kịp
 reader-gap-none = Không
 reader-gap-small = Nhỏ
 reader-look-system = Theo hệ thống
+reader-end-tracker = Đã đọc · đã cập nhật { $trackers }

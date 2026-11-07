@@ -136,7 +136,6 @@ reader-paper-line = As páginas viram de uma vez e nada se mexe no leitor. Mude 
 reader-grid-page = Ir para a página { $page }
 reader-scrubber-in-chapter = Página no capítulo
 reader-failed-novel = Não foi possível mostrar este capítulo
-reader-end-tracker = Lido · { $trackers } atualizado
 reader-end-tracker-offline = Lido · { $tracker } atualiza quando você voltar online
 reader-end-none = Ainda não há o capítulo { $chapter } nas suas { -source-pl }
 reader-end-none-line = O { -app-name } procura capítulos novos em segundo plano e os adiciona a Novidades.

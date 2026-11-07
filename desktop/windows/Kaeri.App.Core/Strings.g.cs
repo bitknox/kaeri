@@ -5344,6 +5344,9 @@ public static partial class T
     /// <summary>Under the top line of the page between chapters, once the chapter counts as read.</summary>
     public static string ReaderEndRead => Get("ReaderEndRead");
 
+    /// <summary>Under the end of chapter line, naming the trackers the read went to.</summary>
+    public static string ReaderEndTracker(string trackers) => Fill(Get("ReaderEndTracker"), ("trackers", trackers));
+
     /// <summary>Small heading above the next chapter on the page between chapters.</summary>
     public static string ReaderEndNext => Get("ReaderEndNext");
 
@@ -5517,6 +5520,51 @@ public static partial class T
 
     /// <summary>Primary action on the demo's series page.</summary>
     public static string DemoReadChapter(string number) => Fill(Get("DemoReadChapter"), ("number", number));
+
+    /// <summary>Page between chapters, under the tracker line: the server has the progress.</summary>
+    public static string ProgressServerSaved(string server) => Fill(Get("ProgressServerSaved"), ("server", server));
+
+    /// <summary>Same place, only after 600 ms without an answer.</summary>
+    public static string ProgressServerSending(string server) => Fill(Get("ProgressServerSending"), ("server", server));
+
+    /// <summary>Same place, offline: the send waits in the queue.</summary>
+    public static string ProgressServerOffline(string server) => Fill(Get("ProgressServerOffline"), ("server", server));
+
+    /// <summary>Same place, the send failed for a reason that can pass.</summary>
+    public static string ProgressServerRetrying(string server) => Fill(Get("ProgressServerRetrying"), ("server", server));
+
+    /// <summary>Same place, the server said no. Try again follows it.</summary>
+    public static string ProgressServerFailed(string server, string reason) => Fill(Get("ProgressServerFailed"), ("server", server), ("reason", reason));
+
+    /// <summary>Reason: a Kavita key.</summary>
+    public static string ProgressWhyKey => Get("ProgressWhyKey");
+
+    /// <summary>Reason: a Komga or OPDS password.</summary>
+    public static string ProgressWhyPassword => Get("ProgressWhyPassword");
+
+    /// <summary>Reason.</summary>
+    public static string ProgressWhyGone => Get("ProgressWhyGone");
+
+    /// <summary>Reason, after a day of retries.</summary>
+    public static string ProgressWhyGaveUp => Get("ProgressWhyGaveUp");
+
+    /// <summary>Your sources, the server's row, second line.</summary>
+    public static string ProgressRowSaved(string ago) => Fill(Get("ProgressRowSaved"), ("ago", ago));
+
+    /// <summary>The server's row, after 600 ms without an answer.</summary>
+    public static string ProgressRowSending(long count) => Fill(GetPlural("ProgressRowSending", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The server's row, offline.</summary>
+    public static string ProgressRowOffline(long count) => Fill(GetPlural("ProgressRowOffline", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The server's row, the last try failed for a reason that can pass.</summary>
+    public static string ProgressRowRetrying(long count) => Fill(GetPlural("ProgressRowRetrying", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The server's row, the server said no. Try again sits beside it.</summary>
+    public static string ProgressRowFailed(long count, string reason) => Fill(GetPlural("ProgressRowFailed", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
+
+    /// <summary>The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</summary>
+    public static string ProgressRowOff(string kind) => Fill(Get("ProgressRowOff"), ("kind", kind));
 
     /// <summary>Sidebar and tab label: the shows' Home when both media are on.</summary>
     public static string NavWatch => Get("NavWatch");
@@ -8127,6 +8175,9 @@ public static partial class T
 
     /// <summary>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</summary>
     public static string SourceRowServer(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServer", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.</summary>
+    public static string SourceRowServerSeries(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServerSeries", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A server's row in Your sources while it shows no series.</summary>
     public static string SourceRowServerEmpty(string kind) => Fill(Get("SourceRowServerEmpty"), ("kind", kind));
@@ -12695,6 +12746,7 @@ public static partial class T
         ["ReaderTryAgain"] = "Try again",
         ["ReaderClose"] = "Close",
         ["ReaderEndRead"] = "Read",
+        ["ReaderEndTracker"] = "Read · {trackers} updated",
         ["ReaderEndNext"] = "Next",
         ["ReaderModeRtl"] = "Right to left",
         ["ReaderModeLtr"] = "Left to right",
@@ -12756,6 +12808,25 @@ public static partial class T
         ["DemoPages_other"] = "{pages} pages",
         ["DemoStoryRow"] = "Story · {author} · {licence}",
         ["DemoReadChapter"] = "Read chapter {number}",
+        ["ProgressServerSaved"] = "Saved to {server}",
+        ["ProgressServerSending"] = "Sending to {server}…",
+        ["ProgressServerOffline"] = "Will send to {server} when you’re back online",
+        ["ProgressServerRetrying"] = "{server} didn’t answer. Kaeri will try again.",
+        ["ProgressServerFailed"] = "Not saved to {server}: {reason}.",
+        ["ProgressWhyKey"] = "the server refused the key",
+        ["ProgressWhyPassword"] = "the server refused the password",
+        ["ProgressWhyGone"] = "this series isn’t on the server any more",
+        ["ProgressWhyGaveUp"] = "no answer for a day",
+        ["ProgressRowSaved"] = "Progress saved {ago}",
+        ["ProgressRowSending_one"] = "Sending 1 chapter…",
+        ["ProgressRowSending_other"] = "Sending {count} chapters…",
+        ["ProgressRowOffline_one"] = "1 chapter will send when you’re back online",
+        ["ProgressRowOffline_other"] = "{count} chapters will send when you’re back online",
+        ["ProgressRowRetrying_one"] = "1 chapter waiting. Kaeri will try again.",
+        ["ProgressRowRetrying_other"] = "{count} chapters waiting. Kaeri will try again.",
+        ["ProgressRowFailed_one"] = "1 chapter not saved: {reason}",
+        ["ProgressRowFailed_other"] = "{count} chapters not saved: {reason}",
+        ["ProgressRowOff"] = "Progress stays on this {kind}",
         ["NavWatch"] = "Watch",
         ["NavRead"] = "Read",
         ["NavUpdates"] = "Updates",
@@ -13670,6 +13741,8 @@ public static partial class T
         ["SourceAddedPlugins_other"] = "Installed {count} plugins from {store}",
         ["SourceRowServer_one"] = "{kind} · {series} series · added just now",
         ["SourceRowServer_other"] = "{kind} · {series} series in {libraries} libraries · added just now",
+        ["SourceRowServerSeries_one"] = "{kind} · {series} series",
+        ["SourceRowServerSeries_other"] = "{kind} · {series} series in {libraries} libraries",
         ["SourceRowServerEmpty"] = "{kind} · no series yet · looks again in 30 minutes",
         ["SourceRowFolder_one"] = "{path} · {series} series · one file skipped",
         ["SourceRowFolder_other"] = "{path} · {series} series · {skipped} files skipped",

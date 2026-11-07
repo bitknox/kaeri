@@ -134,7 +134,6 @@ reader-paper-line = Sayfalar anında döner ve okuyucuda hiçbir şey hareket et
 reader-grid-page = Sayfa { $page } konumuna git
 reader-scrubber-in-chapter = Bölümdeki sayfa
 reader-failed-novel = Bu bölüm gösterilemedi
-reader-end-tracker = Okundu · { $trackers } güncellendi
 reader-end-tracker-offline = Okundu · çevrimiçi olunca { $tracker } güncellenir
 reader-end-none = Bölüm { $chapter } henüz { -source-pl } arasında yok
 reader-end-none-line = { -app-name } yeni bölümleri arka planda arar ve Güncellemeler'e ekler.

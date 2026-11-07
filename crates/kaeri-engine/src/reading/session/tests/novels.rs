@@ -488,6 +488,75 @@ async fn a_sources_text_chapter_is_served_like_a_book() {
     assert_eq!(h.kept(&chapter).and_then(|c| c.novel_pos).as_deref(), Some("0/0/4"));
 }
 
+/// A source whose chapters are pictures, three pages each, fetched through the source.
+struct PictureSource(BookSourceManifest);
+
+#[async_trait]
+impl kaeri_core::traits::BookSource for PictureSource {
+    fn manifest(&self) -> &BookSourceManifest {
+        &self.0
+    }
+
+    async fn search(&self, _: &str, _: &BookHints) -> Result<Vec<SeriesHit>, ProviderError> {
+        Ok(Vec::new())
+    }
+
+    async fn series(&self, id: &str, _: &BookHints) -> Result<SeriesDetail, ProviderError> {
+        Ok(SeriesDetail::new(id, id))
+    }
+
+    async fn chapters(
+        &self,
+        _: &str,
+        _: &BookHints,
+    ) -> Result<Vec<SourceChapter>, ProviderError> {
+        Ok(vec![SourceChapter::new("c1", "1")])
+    }
+
+    async fn content(&self, _: &str, chapter: &str) -> Result<ChapterContent, ProviderError> {
+        Ok(ChapterContent::Images(
+            (1..=3)
+                .map(|n| {
+                    kaeri_core::books::PageRef::new(format!(
+                        "https://pages.example/{chapter}/{n}"
+                    ))
+                })
+                .collect(),
+        ))
+    }
+
+    async fn fetch_page(
+        &self,
+        page: &kaeri_core::books::PageRef,
+    ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
+        let shade = page.url.bytes().last().unwrap_or(b'1');
+        let picture = image::GrayImage::from_pixel(300, 450, image::Luma([shade]));
+        let mut png = Vec::new();
+        picture.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+        Ok(png)
+    }
+}
+
+/// A chapter of pictures from a source, with nothing on the shelf, opens in the page reader.
+#[tokio::test(start_paused = true)]
+async fn a_sources_chapter_of_pictures_opens_as_pages() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
+    h.services.book_sources.registry.put(Arc::new(PictureSource(BookSourceManifest {
+        id: "pictures".into(),
+        name: "Pictures".into(),
+        version: "1".into(),
+        kind: BookSourceKind::Plugin,
+        media: vec![Medium::Manga],
+        languages: vec!["en".into()],
+        allowed_hosts: Vec::new(),
+        capabilities: Vec::new(),
+    })));
+    h.services.store.set_book_match("pictures", "series-1", WORK, 90, true, false, 1).unwrap();
+    let (view, leaves, _) = h.open(OpenAt::Start).await;
+    assert_eq!(view.medium, Medium::Manga);
+    assert_eq!(leaves.len(), 4, "three pages and the end page");
+}
+
 /// The server a chapter came from, when the person lets Kaeri write progress to it, is told
 /// the chapter was read as the reader marks it: Komga's and Kavita's write-back.
 #[tokio::test(start_paused = true)]

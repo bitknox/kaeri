@@ -8011,6 +8011,11 @@ public enum L {
     /// Under the top line of the page between chapters, once the chapter counts as read.
     public static var readerEndRead: String { string("reader-end-read", fallback: "Read") }
 
+    /// Under the end of chapter line, naming the trackers the read went to.
+    public static func readerEndTracker(trackers: String) -> String {
+        Self.format("reader-end-tracker", fallback: "Read · %1$@ updated", trackers)
+    }
+
     /// Small heading above the next chapter on the page between chapters.
     public static var readerEndNext: String { string("reader-end-next", fallback: "Next") }
 
@@ -8201,6 +8206,73 @@ public enum L {
     /// Primary action on the demo's series page.
     public static func demoReadChapter(number: String) -> String {
         Self.format("demo-read-chapter", fallback: "Read chapter %1$@", number)
+    }
+
+    /// Page between chapters, under the tracker line: the server has the progress.
+    public static func progressServerSaved(server: String) -> String {
+        Self.format("progress-server-saved", fallback: "Saved to %1$@", server)
+    }
+
+    /// Same place, only after 600 ms without an answer.
+    public static func progressServerSending(server: String) -> String {
+        Self.format("progress-server-sending", fallback: "Sending to %1$@…", server)
+    }
+
+    /// Same place, offline: the send waits in the queue.
+    public static func progressServerOffline(server: String) -> String {
+        Self.format("progress-server-offline", fallback: "Will send to %1$@ when you’re back online", server)
+    }
+
+    /// Same place, the send failed for a reason that can pass.
+    public static func progressServerRetrying(server: String) -> String {
+        Self.format("progress-server-retrying", fallback: "%1$@ didn’t answer. Kaeri will try again.", server)
+    }
+
+    /// Same place, the server said no. Try again follows it.
+    public static func progressServerFailed(server: String, reason: String) -> String {
+        Self.format("progress-server-failed", fallback: "Not saved to %1$@: %2$@.", server, reason)
+    }
+
+    /// Reason: a Kavita key.
+    public static var progressWhyKey: String { string("progress-why-key", fallback: "the server refused the key") }
+
+    /// Reason: a Komga or OPDS password.
+    public static var progressWhyPassword: String { string("progress-why-password", fallback: "the server refused the password") }
+
+    /// Reason.
+    public static var progressWhyGone: String { string("progress-why-gone", fallback: "this series isn’t on the server any more") }
+
+    /// Reason, after a day of retries.
+    public static var progressWhyGaveUp: String { string("progress-why-gave-up", fallback: "no answer for a day") }
+
+    /// Your sources, the server's row, second line.
+    public static func progressRowSaved(ago: String) -> String {
+        Self.format("progress-row-saved", fallback: "Progress saved %1$@", ago)
+    }
+
+    /// The server's row, after 600 ms without an answer.
+    public static func progressRowSending(count: Int) -> String {
+        Self.format("progress-row-sending", fallback: "Sending %1$lld chapters…", count)
+    }
+
+    /// The server's row, offline.
+    public static func progressRowOffline(count: Int) -> String {
+        Self.format("progress-row-offline", fallback: "%1$lld chapters will send when you’re back online", count)
+    }
+
+    /// The server's row, the last try failed for a reason that can pass.
+    public static func progressRowRetrying(count: Int) -> String {
+        Self.format("progress-row-retrying", fallback: "%1$lld chapters waiting. Kaeri will try again.", count)
+    }
+
+    /// The server's row, the server said no. Try again sits beside it.
+    public static func progressRowFailed(count: Int, reason: String) -> String {
+        Self.format("progress-row-failed", fallback: "%1$lld chapters not saved: %2$@", count, reason)
+    }
+
+    /// The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+    public static func progressRowOff(kind: String) -> String {
+        Self.format("progress-row-off", fallback: "Progress stays on this %1$@", kind)
     }
 
     /// Sidebar and tab label: the shows' Home when both media are on.
@@ -11217,6 +11289,11 @@ public enum L {
     /// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
     public static func sourceRowServer(kind: String, series: Int, libraries: Int) -> String {
         Self.format("source-row-server", fallback: "%1$@ · %2$lld series in %3$lld libraries · added just now", kind, series, libraries)
+    }
+
+    /// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+    public static func sourceRowServerSeries(kind: String, series: Int, libraries: Int) -> String {
+        Self.format("source-row-server-series", fallback: "%1$@ · %2$lld series in %3$lld libraries", kind, series, libraries)
     }
 
     /// A server's row in Your sources while it shows no series.
