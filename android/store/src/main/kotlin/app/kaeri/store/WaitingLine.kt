@@ -60,6 +60,11 @@ class WaitingLine(private val scope: CoroutineScope, private val onShow: () -> U
         }
     }
 
+    /** The line shows now, as a staged shot has it. */
+    fun show() {
+        _shown.value = true
+    }
+
     /** Nothing is asked any more. */
     fun cancel() {
         gate?.cancel()

@@ -16,11 +16,8 @@ import app.kaeri.engine.model.ServerFound
 import app.kaeri.engine.model.StoreReport
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.stateIn
 
 /** The form a source is being added with. */
 enum class Adding { SERVER, FOLDER, STORE }
@@ -67,11 +64,8 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
     /** The server look under way, or the one [outcome] answers. */
     val asked: StateFlow<Asked?> = _asked.asStateFlow()
 
-    private val staged = MutableStateFlow(false)
-
     /** The question has taken 600 ms: its waiting line shows, and then stays at least 0.3 s. */
-    val looking: StateFlow<Boolean> = combine(waiting.shown, staged) { shown, held -> shown || held }
-        .stateIn(scope, SharingStarted.Eagerly, false)
+    val looking: StateFlow<Boolean> = waiting.shown
 
     private val _asking = MutableStateFlow(false)
 
@@ -163,7 +157,6 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
         val withPassword = !user.isNullOrBlank() && !password.isNullOrEmpty()
         _asked.value = Asked(asked, withPassword)
         _asking.value = true
-        staged.value = false
         waiting.begin()
         send(
             Command.BookSources(
@@ -183,7 +176,6 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
         _folder.value = name
         _outcome.value = null
         _asking.value = true
-        staged.value = false
         waiting.begin()
     }
 
@@ -195,7 +187,6 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
     /** Install every plugin a joined store offers for reading. */
     fun installAll(store: String) {
         _asking.value = true
-        staged.value = false
         waiting.begin()
         send(Command.InstallAllForReading(store))
     }
@@ -203,7 +194,6 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
     /** A join went out from the store form (the store model sends it): its answer comes here. */
     fun joining() {
         _asking.value = true
-        staged.value = false
         waiting.begin()
     }
 
@@ -212,7 +202,6 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
 
     private fun reset() {
         waiting.cancel()
-        staged.value = false
         _asking.value = false
         _outcome.value = null
         _report.value = null
@@ -278,7 +267,7 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
         if (answer is CameIn.Folder) _justAdded.value += answer.v1.id
         waiting.cancel()
         _asking.value = asking
-        staged.value = looking
+        if (looking) waiting.show()
     }
 
     /** For shots: the store's report, under an install's answer. */
