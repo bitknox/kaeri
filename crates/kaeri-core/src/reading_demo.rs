@@ -11,6 +11,11 @@
 //! Nothing here can be changed from outside: no manifest, no store record, no setting. The only
 //! hosts the comic reaches are [`crate::demo::DEMO_HOSTS`].
 
+use crate::{
+    books::{WorkId, WorkKey},
+    media::Medium,
+};
+
 /// The series id of the comic within the demo source.
 pub const COMIC_ID: &str = "pepper-carrot";
 /// The series id of the story within the demo source.
@@ -124,6 +129,45 @@ with the app.",
 /// Both works, the comic first.
 pub const WORKS: [DemoWork; 2] = [COMIC, STORY];
 
+impl DemoWork {
+    /// How it reads: a novel, or a comic read as pages.
+    pub const fn medium(&self) -> Medium {
+        if self.novel { Medium::Novel } else { Medium::Manga }
+    }
+
+    /// The format key the catalogue gives it: `manga` or `novel`.
+    pub const fn format(&self) -> &'static str {
+        if self.novel { "novel" } else { "manga" }
+    }
+
+    /// The work it is read under on every device: the key an unmatched series of its name and
+    /// medium gets. The demo source's series are matched to it before anything is searched.
+    pub fn work_id(&self) -> WorkId {
+        WorkKey::local(self.medium(), self.series).id()
+    }
+
+    /// Its cover: the comic's first page, as Commons holds it and as pinned. The story has
+    /// none, so the apps draw its plate.
+    pub const fn cover(&self) -> Option<&'static str> {
+        if self.novel { None } else { Some(COMIC_PAGES[0].file_url) }
+    }
+
+    /// Whether a search for `query` finds it: by its series, its chapter, its author, or the
+    /// demo's own name. An empty query finds nothing, so a browse without words stays AniList's.
+    pub fn answers_to(&self, query: &str) -> bool {
+        let query = query.trim().to_lowercase();
+        !query.is_empty()
+            && [self.series, self.chapter, self.author, crate::demo::DEMO_SOURCE_NAME]
+                .iter()
+                .any(|name| name.to_lowercase().contains(&query))
+    }
+}
+
+/// The work a demo cover's address is the cover of: only the comic's pinned first page.
+pub fn cover_page(url: &str) -> Option<&'static DemoPage> {
+    COMIC.cover().filter(|cover| *cover == url).map(|_| &COMIC_PAGES[0])
+}
+
 /// The work a demo series id names.
 pub fn work(id: &str) -> Option<&'static DemoWork> {
     WORKS.iter().find(|w| w.id == id)
@@ -172,5 +216,28 @@ mod tests {
         assert_eq!(work(COMIC_ID), Some(&COMIC));
         assert_eq!(work(STORY_ID).map(|w| w.novel), Some(true));
         assert_eq!(work("other"), None);
+    }
+
+    #[test]
+    fn each_work_has_its_own_key_and_only_the_comic_a_cover() {
+        assert_ne!(COMIC.work_id(), STORY.work_id());
+        assert!(COMIC.work_id().key().is_some_and(|k| k.is_local()));
+        assert_eq!(COMIC.work_id(), WorkKey::local(Medium::Manga, "pepper&carrot").id());
+        assert_eq!(STORY.work_id(), WorkKey::local(Medium::Novel, "Kwaidan").id());
+        assert_eq!(COMIC.cover(), Some(COMIC_PAGES[0].file_url));
+        assert_eq!(STORY.cover(), None);
+        assert_eq!(cover_page(COMIC_PAGES[0].file_url), Some(&COMIC_PAGES[0]));
+        assert_eq!(cover_page(COMIC_PAGES[1].file_url), None);
+    }
+
+    #[test]
+    fn a_search_finds_a_work_by_its_names_and_never_by_nothing() {
+        assert!(COMIC.answers_to("pepper"));
+        assert!(COMIC.answers_to("  POTION "));
+        assert!(STORY.answers_to("hearn"));
+        assert!(STORY.answers_to("demo") && COMIC.answers_to("demo"));
+        assert!(!STORY.answers_to("pepper"));
+        assert!(!COMIC.answers_to(""));
+        assert!(!COMIC.answers_to("   "));
     }
 }

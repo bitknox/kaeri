@@ -818,7 +818,9 @@ fn scene_config(dirs: &FfiDirs, scene: &FfiScene, now: i64) -> Result<(), FfiErr
         FfiScene::CrashSaved => crash_config(now),
         FfiScene::CrashHeld => crash_config(now - 24 * 3_600),
         FfiScene::ReadingUpdateSheet => "[sources]\ndemo = true\n".to_owned(),
-        FfiScene::ReadingDemo => "[reading]\nkaeri_is_for = \"read\"\n\n[sources]\ndemo = true\n".to_owned(),
+        FfiScene::ReadingDemo => {
+            "[reading]\nkaeri_is_for = \"read\"\n\n[sources]\ndemo = true\n".to_owned()
+        }
         FfiScene::ReadingJoinAsk => "[reading]\nkaeri_is_for = \"watch\"\n".to_owned(),
         FfiScene::ReadingDownloads => {
             "[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n".to_owned()

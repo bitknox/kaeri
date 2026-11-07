@@ -71,7 +71,20 @@ pub fn plain(meta: &Meta, book: &Book) -> WorkTile {
         new_chapter: false,
         adult: book.adult(),
         facts: facts(book),
+        demo: false,
     }
+}
+
+/// A work of the reading demo, with where the person is in it.
+pub fn demo(
+    work: &str,
+    store: &Store,
+    sources: &crate::read_sources::BookSources,
+) -> Option<WorkTile> {
+    let demo = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id().as_str() == work)?;
+    let mut tile = crate::read_sources::demo_tile(demo);
+    mark(&mut tile, store, sources);
+    Some(tile)
 }
 
 /// A book's cover with where the person is in it: the page they stopped on, or the next

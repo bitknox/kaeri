@@ -67,6 +67,9 @@ pub struct WorkTile {
     /// key (`manga`, `webtoon`, `one-shot`, `novel`), for an icon or a filter.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub facts: Vec<Msg>,
+    /// A work of the reading demo, which Search labels as the demo's.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub demo: bool,
 }
 
 /// One series' page.
@@ -128,6 +131,9 @@ pub struct SeriesView {
     /// More like this: what people who liked it rated highest.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub recommended: Vec<WorkTile>,
+    /// The series page is still waiting for the catalogue: the header is from what was kept.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub partial: bool,
     /// The reading demo's work this series is, for its credit and licence. `None` for every
     /// other series.
     #[cfg_attr(feature = "ffi", uniffi(default))]
@@ -135,9 +141,6 @@ pub struct SeriesView {
     /// For a demo series: the demo's other work, for "Also in the demo".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub demo_other: Option<WorkId>,
-    /// The series page is still waiting for the catalogue: the header is from what was kept.
-    #[cfg_attr(feature = "ffi", uniffi(default))]
-    pub partial: bool,
 }
 
 /// The series page's main button.

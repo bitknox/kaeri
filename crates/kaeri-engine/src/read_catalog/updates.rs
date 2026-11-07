@@ -118,6 +118,9 @@ fn tile_of(kit: &Kit, work: &str) -> Option<WorkTile> {
     if let Some(kept) = tiles::anilist(work).and_then(|id| kit.meta.kept_book(id)) {
         return Some(tiles::reading(&kit.meta, &kit.store, &kit.sources, &kept.book));
     }
+    if let Some(tile) = tiles::demo(work, &kit.store, &kit.sources) {
+        return Some(tile);
+    }
     // Nothing kept of it yet: its folder's name, or its key until the catalogue answers.
     let local = kit.store.local_book_series().unwrap_or_default();
     let series = local.iter().find(|s| s.work.as_deref() == Some(work));
@@ -135,6 +138,7 @@ fn tile_of(kit: &Kit, work: &str) -> Option<WorkTile> {
         new_chapter: false,
         adult: false,
         facts: Vec::new(),
+        demo: false,
     };
     tiles::mark(&mut tile, &kit.store, &kit.sources);
     Some(tile)

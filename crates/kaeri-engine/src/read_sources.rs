@@ -621,9 +621,58 @@ impl BookSources {
         }
     }
 
-    /// Put the reading demo in the registry, as the demo is switched on.
-    pub fn put_demo(&self) {
+    /// Put the reading demo in the registry, as the demo is switched on, with each of its series
+    /// matched to the work it is read under, so a demo work opens before anything is searched.
+    pub fn put_demo(&self, now: i64) {
         self.registry.put(Arc::new(self.demo.clone()));
+        self.match_demo(now);
+    }
+
+    /// Match the demo's series to their works, unless they already are: kept in the store, so
+    /// the works keep their progress across launches, and never shared with other devices,
+    /// which match them the same way.
+    fn match_demo(&self, now: i64) {
+        use kaeri_core::{demo::DEMO_SOURCE_ID, reading_demo::WORKS};
+        for work in &WORKS {
+            let id = work.work_id();
+            if matches!(self.store.book_match(DEMO_SOURCE_ID, work.id), Ok(Some(w)) if w == id.as_str())
+            {
+                continue;
+            }
+            if let Err(e) = self.store.set_book_match(
+                DEMO_SOURCE_ID,
+                work.id,
+                id.as_str(),
+                100,
+                true,
+                false,
+                now,
+            ) {
+                tracing::warn!(error = %e, "a demo work was not matched");
+            }
+        }
+    }
+
+    /// The demo's works a reading search for `query` finds while the demo is on, as tiles
+    /// marked as the demo's: none with the demo off, for an empty query, or for filters the
+    /// demo has nothing for (genres, origins, a status).
+    pub fn demo_tiles(&self, query: &kaeri_model::reading::ReadSearchQuery) -> Vec<WorkTile> {
+        if self.registry.get(kaeri_core::demo::DEMO_SOURCE_ID).is_none()
+            || !query.genres.is_empty()
+            || !query.origins.is_empty()
+            || query.status.is_some()
+        {
+            return Vec::new();
+        }
+        kaeri_core::reading_demo::WORKS
+            .iter()
+            .filter(|w| w.answers_to(&query.text))
+            .filter(|w| query.medium.is_none_or(|m| m == w.medium()))
+            .filter(|w| {
+                query.formats.is_empty() || query.formats.iter().any(|f| f == w.format())
+            })
+            .map(demo_tile)
+            .collect()
     }
 
     /// Take the reading demo out, and the pages it kept.
@@ -641,6 +690,24 @@ impl BookSources {
                 .ids()
                 .iter()
                 .any(|id| id != FOLDERS && id != kaeri_core::demo::DEMO_SOURCE_ID)
+    }
+}
+
+/// A work of the reading demo as a tile: its own medium and cover, marked as the demo's.
+pub(crate) fn demo_tile(work: &kaeri_core::reading_demo::DemoWork) -> WorkTile {
+    let medium = work.medium();
+    WorkTile {
+        work: work.work_id(),
+        title: work.series.to_owned(),
+        medium,
+        cover: work.cover().map(str::to_owned),
+        format_label: Some(work.format().to_owned()),
+        progress: None,
+        next: None,
+        new_chapter: false,
+        adult: false,
+        facts: vec![kaeri_model::reading::kind_words(Some(work.format()), medium, None)],
+        demo: true,
     }
 }
 
@@ -1108,6 +1175,15 @@ impl BookSources {
                 .and_then(|m| m.media.iter().copied().find(|m| m.is_reading()))
                 .unwrap_or(Medium::Manga);
             for hit in hits {
+                // The demo's works are tiles of their own, in their medium and with their cover.
+                if source == kaeri_core::demo::DEMO_SOURCE_ID {
+                    if let Some(work) = kaeri_core::reading_demo::work(&hit.id)
+                        && seen.insert(work.work_id().0)
+                    {
+                        tiles.push(demo_tile(work));
+                    }
+                    continue;
+                }
                 let folder = (source == FOLDERS)
                     .then(|| local.iter().find(|s| s.id == hit.id))
                     .flatten();
@@ -1137,22 +1213,11 @@ impl BookSources {
                     new_chapter: false,
                     adult: false,
                     facts: Vec::new(),
+                    demo: false,
                 });
             }
         }
         tiles
-    }
-
-    /// The work id a demo work is read under: its match once it has been listed, else the key an
-    /// unmatched series of its name and medium gets.
-    pub(crate) fn demo_work_id(&self, work: &kaeri_core::reading_demo::DemoWork) -> WorkId {
-        match self.store.book_match(kaeri_core::demo::DEMO_SOURCE_ID, work.id) {
-            Ok(Some(found)) => WorkId::new(found),
-            _ => {
-                let medium = if work.novel { Medium::Novel } else { Medium::Manga };
-                WorkId::new(WorkKey::local(medium, work.series).to_string())
-            }
-        }
     }
 
     /// Which source and series reference a work is read from: the chosen edition, the person's
