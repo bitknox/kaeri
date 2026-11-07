@@ -29,10 +29,11 @@ use kaeri_model::{
         ReaderCommand, ReaderEvent, ReaderMode, ReaderSettingKey, ReaderSettingsView,
         ReaderSurface, ReaderValue, ReaderView, SettingScope, StripPos, TurnHow,
     },
-    reading::ChapterRow,
+    reading::{ChapterRow, ReadingCommand, ReadingEvent},
 };
 
 use super::{
+    chapters::{Ask, Chapters, Here},
     listen,
     novel::{NovelSays, NovelView},
 };
@@ -101,6 +102,9 @@ pub struct Reader {
     scrub_total: gtk::Label,
     scrub_timer: RefCell<Option<glib::SourceId>>,
     settings: gtk::MenuButton,
+    /// Chapters: the pages of this one and the series' chapters.
+    chapters: Rc<Chapters>,
+    chapters_button: gtk::MenuButton,
     loading: gtk::Label,
     loading_since: Cell<Option<Instant>>,
     loading_timer: RefCell<Option<glib::SourceId>>,
@@ -198,8 +202,16 @@ impl Reader {
         let ends = gtk::Box::new(gtk::Orientation::Horizontal, 2);
         ends.append(&settings);
         ends.append(&full);
+        let chapters = Chapters::new();
+        let chapters_button = gtk::MenuButton::builder()
+            .icon_name("view-list-symbolic")
+            .popover(&chapters.popover)
+            .direction(gtk::ArrowType::Up)
+            .build();
+        chapters_button.set_tooltip_text(Some(&t::reader_chapters()));
         // The names sit in the middle of the group, whatever is at its ends.
         let row = gtk::CenterBox::new();
+        row.set_start_widget(Some(&chapters_button));
         row.set_center_widget(Some(&names));
         row.set_end_widget(Some(&ends));
         let group = gtk::Box::new(gtk::Orientation::Vertical, 2);
@@ -252,6 +264,8 @@ impl Reader {
             scrub_total,
             scrub_timer: RefCell::default(),
             settings,
+            chapters,
+            chapters_button,
             loading,
             loading_since: Cell::new(None),
             loading_timer: RefCell::default(),
@@ -286,11 +300,42 @@ impl Reader {
             }
         });
         this.controls();
+        this.chapters.set_ask(Rc::new({
+            let this = Rc::downgrade(&this);
+            move |ask| {
+                let Some(this) = this.upgrade() else { return };
+                match ask {
+                    Ask::Jump(index) => this.jump_to(index),
+                    Ask::Open(chapter) => {
+                        let session = this.state.borrow().session;
+                        if session != 0 {
+                            this.send(ReaderCommand::OpenChapter { session, chapter });
+                        }
+                    }
+                    Ask::Need(page) => this.need_page(page),
+                }
+            }
+        }));
+        this.chapters.popover.connect_show({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.fill_chapters();
+                }
+            }
+        });
         listen(ctx, &this.widget, {
             let this = Rc::downgrade(&this);
             move |event| {
-                if let (Event::Reader(event), Some(this)) = (event, this.upgrade()) {
-                    this.take(event);
+                let Some(this) = this.upgrade() else { return };
+                match event {
+                    Event::Reader(event) => this.take(event),
+                    Event::Reading(ReadingEvent::Chapters { work, volumes, .. })
+                        if this.state.borrow().work.as_ref() == Some(work) =>
+                    {
+                        this.chapters.set_volumes(volumes.clone());
+                    }
+                    _ => {}
                 }
             }
         });
@@ -352,6 +397,7 @@ impl Reader {
         self.group_title.set_label("");
         self.line.set_label("");
         self.progress(0, 0);
+        self.chapters.clear();
     }
 
     /// Set a reader setting for the shots, on the medium's own value. A choice or `on`/`off`.
@@ -474,6 +520,13 @@ impl Reader {
     }
 
     fn opened(self: &Rc<Self>, view: &ReaderView) {
+        // The series' chapters for Chapters, with their states as they are now.
+        if let Some(ctx) = self.ctx.upgrade() {
+            super::send(
+                &ctx.hub,
+                ReadingCommand::LoadChapters { work: view.work.clone(), edition: None },
+            );
+        }
         {
             let mut state = self.state.borrow_mut();
             state.session = view.session;
@@ -648,6 +701,7 @@ impl Reader {
     }
 
     fn page_ready(self: &Rc<Self>, page: u32, file: PageFile) {
+        self.chapters.page_ready(page, &file);
         self.state.borrow_mut().files.insert(page, file);
         self.state.borrow_mut().failed.remove(&page);
         let flows = self.state.borrow().mode.is_some_and(ReaderMode::flows);
@@ -955,6 +1009,7 @@ impl Reader {
             self.want_strip(i);
         }
         let total = self.state.borrow().leaves.len();
+        self.state.borrow_mut().index = here.0;
         self.progress(here.0, total);
         if let Some(id) = self.strip_timer.borrow_mut().take() {
             id.remove();
@@ -1253,6 +1308,39 @@ impl Reader {
     // ---------------------------------------------------------------------------------------
     // Controls
 
+    /// Fill Chapters for where the reader is, as it opens.
+    fn fill_chapters(&self) {
+        let here = {
+            let state = self.state.borrow();
+            let Some(chapter) = state.chapter.as_ref() else { return };
+            Here {
+                chapter: chapter.id.clone(),
+                label: chapter.label.clone(),
+                pages: state.medium == Some(Medium::Manga) && !state.leaves.is_empty(),
+                rtl: matches!(state.direction, Some(ReadDirection::RightToLeft))
+                    && !state.mode.is_some_and(ReaderMode::flows),
+                leaves: state.leaves.clone(),
+                open_leaf: state.index,
+                files: state.files.clone(),
+            }
+        };
+        self.chapters.show_here(here);
+    }
+
+    /// Ask the engine for one page, once.
+    fn need_page(&self, page: u32) {
+        let (session, chapter) = {
+            let state = self.state.borrow();
+            if state.files.contains_key(&page) || state.asked.contains(&page) {
+                return;
+            }
+            (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
+        };
+        let Some(chapter) = chapter else { return };
+        self.state.borrow_mut().asked.insert(page);
+        self.send(ReaderCommand::NeedPage { session, chapter, page });
+    }
+
     /// Bring the chrome, and take it away again `CHROME_REST` after the last call: the pointer
     /// moving calls this as it moves. It stays while the settings are open, the pointer is over
     /// the group or a shot pinned it.
@@ -1266,7 +1354,8 @@ impl Reader {
         let id = glib::timeout_add_local_once(CHROME_REST, move || {
             let Some(this) = this.upgrade() else { return };
             this.hide_timer.borrow_mut().take();
-            if this.settings.is_active() || this.group_hovered() || this.pinned.get() {
+            let open = this.settings.is_active() || this.chapters_button.is_active();
+            if open || this.group_hovered() || this.pinned.get() {
                 this.reveal_chrome();
                 return;
             }
@@ -1305,7 +1394,17 @@ impl Reader {
         self.pinned.set(pinned);
         if pinned {
             self.reveal_chrome();
+        } else {
+            self.chapters.popover.popdown();
         }
+    }
+
+    /// Open Chapters for a shot, on its `tab`: "pages" or "chapters".
+    #[cfg(feature = "fixtures")]
+    pub fn shot_chapters(self: &Rc<Self>, tab: &str) {
+        self.shot_chrome(true);
+        self.chapters_button.popup();
+        self.chapters.shot_tab(tab);
     }
 
     /// Where the place is, for the scrubber: `index` from 0 of `total`.

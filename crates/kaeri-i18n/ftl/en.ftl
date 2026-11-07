@@ -1711,6 +1711,9 @@ linux-reader-novel-needs-webkit = Novels need WebKitGTK 6 with its sandbox worki
 # The reader's scrubber as a screen reader says it: the page showing and how many there are.
 linux-reader-page-of = Page { $page } of { $pages }
 
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+linux-reader-pages = Pages
+
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Preview
 

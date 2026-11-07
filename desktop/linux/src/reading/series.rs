@@ -366,7 +366,7 @@ fn draw_head(ctx: &Rc<Ctx>, head: &gtk::Box, view: &SeriesView, menus: &[&gtk::M
     }
 }
 
-fn state_line(chapter: &ChapterRow) -> String {
+pub(super) fn state_line(chapter: &ChapterRow) -> String {
     // The engine's words say it all: the state, when, and what is downloaded.
     let said = dotted(&chapter.line);
     if !said.is_empty() {

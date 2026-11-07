@@ -11,7 +11,7 @@ use kaeri_model::reader::ReaderSettingKey;
 use crate::{pages::Dest, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 21] = [
+pub const NAMES: [&str; 24] = [
     "read",
     "read-updates",
     "read-library",
@@ -30,6 +30,8 @@ pub const NAMES: [&str; 21] = [
     "read-paged-settings",
     "read-strip",
     "read-strip-light",
+    "read-chapters",
+    "read-chapters-list",
     "read-novel",
     "read-novel-light",
     "read-novel-paper",
@@ -146,6 +148,17 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             shell.reader.shot_setting(ReaderSettingKey::Background, "white");
             read(shell, STRIP, "2");
             4.0
+        }
+        // Chapters over a manga page: the page grid, then the chapters by volume.
+        "read-chapters" | "read-chapters-list" => {
+            read(shell, MANGA, "13");
+            let reader = Rc::clone(&shell.reader);
+            let tab = if shot == "read-chapters" { "pages" } else { "chapters" };
+            gtk::glib::timeout_add_local_once(
+                std::time::Duration::from_millis(2500),
+                move || reader.shot_chapters(tab),
+            );
+            5.0
         }
         // The novel in each look the board draws, with the chrome up: the theme's (dark), Light,
         // and Paper with Aa open.

@@ -2640,6 +2640,11 @@ pub fn linux_reader_page_of(page: i64, pages: i64) -> String {
     text("linux-reader-page-of", &[("page", Arg::Int(page)), ("pages", Arg::Int(pages))])
 }
 
+/// Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+pub fn linux_reader_pages() -> String {
+    text("linux-reader-pages", &[])
+}
+
 /// Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 pub fn settings_preview() -> String {
     text("settings-preview", &[])

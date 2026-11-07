@@ -163,3 +163,9 @@ linux-reader-novel-needs-webkit = Novels need WebKitGTK 6 with its sandbox worki
 # @arg page: int
 # @arg pages: int
 linux-reader-page-of = Page { $page } of { $pages }
+
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab
+# is the list of chapters.
+# @only linux
+# @max 14
+linux-reader-pages = Pages
