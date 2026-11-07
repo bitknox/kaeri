@@ -767,11 +767,8 @@ private fun ReadWeekCell(entry: ReadWeekEntry) {
         ReadCover(tile.cover, 40.dp, Modifier.sharedWork(Shared.Cover, tile.work, "read-week"))
         Column(Modifier.weight(1f)) {
             if (out != null && !entry.usually) {
-                // The time it came out, with the dot: it is new.
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    WaterDot()
-                    Text(clockWords(out), style = MaterialTheme.typography.labelMedium.tabular(), color = colors.onSurface)
-                }
+                // The time it came out, in silk. The water dot waits for words that say new.
+                Text(clockWords(out), style = MaterialTheme.typography.labelMedium.tabular(), color = colors.onSurface)
             } else {
                 Text(Strings.weekUsually(context), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
             }

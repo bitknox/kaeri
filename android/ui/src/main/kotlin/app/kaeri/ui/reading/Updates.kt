@@ -168,9 +168,10 @@ private fun DayHeading(day: UpdateDay) {
 }
 
 /** "Chapter 88 · Bluefinch Group", "Chapter 43 · 2 versions": the label, then the versions. */
-private fun chapterLine(context: android.content.Context, row: UpdateRow): String {
+private fun chapterLine(context: android.content.Context, row: UpdateRow, unread: Boolean): String {
     val chapter = row.chapter
-    val parts = mutableListOf(chapter.label)
+    // The water dot stands only beside words that say the chapter is new.
+    val parts = if (unread) mutableListOf(context.getString(R.string.chapter_state_new), chapter.label) else mutableListOf(chapter.label)
     val label = chapter.versionLabel
     if (chapter.versions > 1u) parts += Strings.chapterUpdatesVersions(context, chapter.versions.toInt())
     else if (!label.isNullOrBlank()) parts += label
@@ -247,7 +248,7 @@ private fun UpdateRowView(row: UpdateRow, actions: AppActions) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         if (unread) WaterDot()
                         Text(
-                            chapterLine(context, row),
+                            chapterLine(context, row, unread),
                             style = MaterialTheme.typography.bodyMedium.tabular(),
                             color = if (unread) colors.onSurface else colors.onSurfaceVariant,
                         )

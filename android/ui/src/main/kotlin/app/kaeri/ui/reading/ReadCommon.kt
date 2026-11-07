@@ -133,7 +133,7 @@ internal fun ReadTile(
             // The track holds its place on every Continue cover, so the titles line up.
             Box(Modifier.padding(top = 6.dp).height(3.dp).fillMaxWidth()) {
                 val progress = tile.progress
-                if (progress != null && !tile.newChapter) SilkTrack(progress)
+                SilkTrack(progress ?: 0f)
             }
         }
         Text(
@@ -272,7 +272,7 @@ internal fun WorkTile.factsLine(context: Context): String = facts.joinToString("
 internal fun actionWords(context: Context, action: SeriesAction?): String? = when (action) {
     is SeriesAction.Read -> Strings.actionReadChapter(context, action.label)
     is SeriesAction.Continue -> Strings.actionContinueChapter(context, action.label, action.page.toInt())
-    is SeriesAction.ContinuePart -> action.percent?.let { Strings.actionContinuePart(context, action.label, it.toInt()) }
+    is SeriesAction.ContinuePart -> action.percent?.takeIf { it > 0u }?.let { Strings.actionContinuePart(context, action.label, it.toInt()) }
         ?: Strings.actionContinuePartPlain(context, action.label)
     is SeriesAction.ReadPart -> Strings.actionReadPart(context, action.label)
     SeriesAction.ReadAgain -> Strings.actionReadAgain(context)
