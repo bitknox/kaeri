@@ -39,6 +39,20 @@ class ReadBrowseShots : ReadingShotHarness() {
     }
 
     @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE, fontScale = 1.3f)
+    fun phone_updates_text_130() {
+        places()
+        shoot("phone-updates-text-130", FixtureScene.READING_HOME, Destination.Updates, medium = KaeriIsFor.READ, ready = updatesWithCovers())
+    }
+
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE, fontScale = 2.0f)
+    fun phone_updates_text_200() {
+        places()
+        shoot("phone-updates-text-200", FixtureScene.READING_HOME, Destination.Updates, medium = KaeriIsFor.READ, ready = updatesWithCovers())
+    }
+
+    @Test
     @Config(qualifiers = ReadingShotHarness.TABLET)
     fun tablet_updates() {
         places()

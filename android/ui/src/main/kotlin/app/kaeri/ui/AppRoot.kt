@@ -513,10 +513,13 @@ private fun DestinationScreen(
 /** The filled icons carry their own two colours; the rest take the item's. */
 @Composable
 private fun DestinationIcon(destination: Destination, selected: Boolean, answer: KaeriIsFor) {
-    // Home beside Read is Watch, and draws a screen.
-    val watch = destination == Destination.Home && answer == KaeriIsFor.BOTH
-    val icon = if (watch) Icons.Watch else destination.icon
-    val selectedIcon = if (watch) Icons.WatchSelected else destination.selectedIcon
+    // Home beside Read is Watch, and draws a screen; reading's own Home, with Read alone, a house.
+    val home = destination == Destination.Home
+    val (icon, selectedIcon) = when {
+        home && answer == KaeriIsFor.BOTH -> Icons.Watch to Icons.WatchSelected
+        home && answer == KaeriIsFor.READ -> Icons.House to Icons.HouseSelected
+        else -> destination.icon to destination.selectedIcon
+    }
     val filled = selected && selectedIcon != icon
     Icon(
         if (selected) selectedIcon else icon,

@@ -72,7 +72,6 @@ import app.kaeri.engine.model.FolderRef
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
 import app.kaeri.store.ServerAnswer
-import app.kaeri.ui.EmptyState
 import app.kaeri.ui.Icons
 import app.kaeri.ui.InfoRow
 import app.kaeri.ui.LocalAppStore
@@ -215,15 +214,21 @@ internal fun bookSourcesSummary(context: android.content.Context, view: BookSour
 @Composable
 internal fun BookSourcesScreen(title: String) {
     val navigator = LocalNavigator.current
+    val store = LocalAppStore.current
+    val view by store.bookSources.view.collectAsStateWithLifecycle()
     var adding by rememberSaveable { mutableStateOf(false) }
+    // With nothing added, the empty state's own button is the one Add.
+    val empty = view?.let { v -> v.folders.none { !it.removed } && v.servers.isEmpty() && v.plugins.isEmpty() } ?: true
     ScreenFrame(
         title = title,
         onBack = navigator::back,
         actions = {
-            TextButton(
-                onClick = { adding = true },
-                colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-            ) { Text(stringResource(R.string.sources_add)) }
+            if (!empty) {
+                TextButton(
+                    onClick = { adding = true },
+                    colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                ) { Text(stringResource(R.string.sources_add)) }
+            }
         },
     ) { padding ->
         Column(
@@ -256,10 +261,12 @@ internal fun BookSourcesList(onAdd: () -> Unit, storesLink: Boolean = true) {
     val shown = view ?: return
     val folders = shown.folders.filter { !it.removed }
     if (folders.isEmpty() && shown.servers.isEmpty() && shown.plugins.isEmpty()) {
-        EmptyState(
+        // As every reading empty state: a title, a line and one outlined button, no picture.
+        PlainEmpty(
             title = stringResource(R.string.sources_add_title),
             line = stringResource(R.string.book_add_line),
-            action = stringResource(R.string.sources_add_title),
+            action = stringResource(R.string.sources_add),
+            inset = 0.dp,
             onAction = onAdd,
         )
         return

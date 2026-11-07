@@ -265,13 +265,20 @@ private fun FirstLaunchPages(
 
 /**
  * Nagare, the name, what Kaeri is, and Continue. With four pages, the first of them: Welcome to
- * Kaeri, keeping track of what is watched and read, and that lists and progress stay the person's.
+ * Kaeri, keeping track of what is watched and read, and that lists and progress stay the person's,
+ * leading with the words and set to the start as the pages after it are, with no picture.
  */
 @Composable
 private fun WelcomePage(four: Boolean, next: () -> Unit, setUp: () -> Unit) {
-    val step: (@Composable () -> Unit)? = if (four) ({ StepLabel(1) }) else null
+    // The step where the pages after it have theirs.
+    val step: (@Composable () -> Unit)? = if (four) {
+        { Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) { StepLabel(1) } }
+    } else {
+        null
+    }
     PageFrame(
         top = step,
+        lead = four,
         buttons = {
             Button(onClick = next, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.onboarding_continue)) }
             TextButton(
@@ -281,20 +288,19 @@ private fun WelcomePage(four: Boolean, next: () -> Unit, setUp: () -> Unit) {
             ) { Text(stringResource(R.string.first_setup_other)) }
         },
     ) {
-        Nagare(cell = 5, modifier = Modifier.align(Alignment.CenterHorizontally))
+        if (!four) Nagare(cell = 5, modifier = Modifier.align(Alignment.CenterHorizontally))
         Text(
             if (four) stringResource(R.string.onboarding_welcome_to) else "Kaeri", // i18n-skip
             style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(top = 24.dp).semantics { heading() },
+            textAlign = if (four) TextAlign.Start else TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = if (four) 8.dp else 24.dp).semantics { heading() },
         )
-        PageLine(stringResource(if (four) R.string.onboarding_welcome_line else R.string.onboarding_tagline), Modifier.padding(top = 8.dp), center = true)
+        PageLine(stringResource(if (four) R.string.onboarding_welcome_line else R.string.onboarding_tagline), Modifier.padding(top = 8.dp), center = !four)
         if (four) {
             Text(
                 stringResource(R.string.onboarding_welcome_note),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
             )
         }
@@ -479,7 +485,12 @@ private fun SourcesPage(step: Int?, join: (String) -> Unit, skip: () -> Unit, pl
  * window is short, with its buttons at the foot.
  */
 @Composable
-private fun PageFrame(buttons: @Composable ColumnScope.() -> Unit, top: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
+private fun PageFrame(
+    buttons: @Composable ColumnScope.() -> Unit,
+    top: (@Composable () -> Unit)? = null,
+    lead: Boolean = false,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Box(
         Modifier
             .fillMaxSize()
@@ -488,12 +499,13 @@ private fun PageFrame(buttons: @Composable ColumnScope.() -> Unit, top: (@Compos
     ) {
         Column(
             Modifier
-                .widthIn(max = 480.dp)
+                .widthIn(max = if (lead) 560.dp else 480.dp)
                 .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 24.dp),
+                .padding(horizontal = 24.dp, vertical = if (lead) 16.dp else 24.dp),
         ) {
             top?.invoke()
-            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            // A page that leads with words starts under its step, as the other pages do.
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = if (lead) Alignment.TopStart else Alignment.Center) {
                 Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), content = content)
             }
             Column(
@@ -720,6 +732,8 @@ private fun BooksPage(join: (String) -> Unit, back: () -> Unit, done: () -> Unit
         step = 4,
         title = stringResource(if (both) R.string.onboarding_both_title else R.string.onboarding_books_title),
         back = back,
+        // Skippable as every page but the medium question: books can be added later in Settings.
+        skip = done,
         actions = { Button(onClick = done) { Text(stringResource(R.string.action_done)) } },
     ) {
         PageLine(stringResource(if (both) R.string.onboarding_both_line else R.string.onboarding_books_line), Modifier.padding(top = 8.dp))

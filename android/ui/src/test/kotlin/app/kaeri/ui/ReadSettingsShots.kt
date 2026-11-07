@@ -160,6 +160,36 @@ class ReadSettingsShots : ReadingShotHarness() {
     @Config(qualifiers = PHONE)
     fun phone_read_first_run_both() = snap("phone-read-first-run-both", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = { toSources(R.string.medium_both_line) })
 
+    // First run in large text: the welcome, the medium and page 4 at 130% and 200%.
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 1.3f)
+    fun phone_read_first_run_welcome_text_130() = snap("phone-read-first-run-welcome-text-130", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = {
+        pump("first launch") { compose.onAllNodesWithText(text(R.string.onboarding_continue)).fetchSemanticsNodes().isNotEmpty() }
+    })
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 2.0f)
+    fun phone_read_first_run_welcome_text_200() = snap("phone-read-first-run-welcome-text-200", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = {
+        pump("first launch") { compose.onAllNodesWithText(text(R.string.onboarding_continue)).fetchSemanticsNodes().isNotEmpty() }
+    })
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 1.3f)
+    fun phone_read_first_run_medium_text_130() = snap("phone-read-first-run-medium-text-130", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = { toMedium(R.string.medium_read_line) })
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 2.0f)
+    fun phone_read_first_run_medium_text_200() = snap("phone-read-first-run-medium-text-200", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = { toMedium(R.string.medium_read_line) })
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 1.3f)
+    fun phone_read_first_run_books_text_130() = snap("phone-read-first-run-books-text-130", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = { toSources(R.string.medium_read_line) })
+
+    @Test
+    @Config(qualifiers = PHONE, fontScale = 2.0f)
+    fun phone_read_first_run_books_text_200() = snap("phone-read-first-run-books-text-200", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = { toSources(R.string.medium_read_line) })
+
     @Test
     @Config(qualifiers = TABLET)
     fun tablet_read_first_run_medium() = snap("tablet-read-first-run-medium", FixtureScene.READING_FIRST_RUN, firstLaunch = true, act = { toMedium(R.string.medium_read_line) })
