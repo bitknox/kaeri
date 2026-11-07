@@ -190,7 +190,7 @@ private fun ListChips(segment: LibrarySegmentRead, lists: Map<LibrarySegmentRead
                     Text(listWords(context, each))
                     if (count != null) {
                         Spacer(Modifier.size(8.dp))
-                        Text("$count", style = MaterialTheme.typography.labelLarge.tabular().copy(fontWeight = FontWeight.Normal))
+                        Text("$count", style = MaterialTheme.typography.labelLarge.tabular().copy(fontWeight = FontWeight.Normal)) // i18n-skip
                     }
                 },
                 leadingIcon = if (selected) ({ Icon(Icons.Check, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }) else null,

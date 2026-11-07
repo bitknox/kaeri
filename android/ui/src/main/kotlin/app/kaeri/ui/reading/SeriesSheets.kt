@@ -570,7 +570,7 @@ internal fun StatusMenu(series: SeriesView, expanded: Boolean, onDismiss: () -> 
         onDismiss()
     }
     Menu(expanded = expanded, onDismissRequest = ::close) {
-        AnimatedContent(pane, label = "status") { now ->
+        AnimatedContent(pane, label = "status") { now -> // i18n-skip
             Column(Modifier.widthIn(min = 200.dp, max = 320.dp)) {
                 when (now) {
                     StatusPane.Lists -> {

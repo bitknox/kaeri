@@ -146,7 +146,7 @@ internal fun SendToEreaderSheet(work: WorkId, chapters: List<ChapterId>, actions
         AnimatedContent(
             phase,
             transitionSpec = { fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut()) },
-            label = "send",
+            label = "send", // i18n-skip
         ) { showing ->
             when (showing) {
                 SendPhase.Choose -> Column {
@@ -217,7 +217,7 @@ internal fun SendToEreaderSheet(work: WorkId, chapters: List<ChapterId>, actions
                                 (now as? ExportJob.Waiting)?.line?.text(context)
                                     ?: Strings.sendEreaderPreparing(context, preparing?.done?.toInt() ?: 0, total),
                                 transitionSpec = { fadeIn(Motion.fadeIn()) togetherWith fadeOut(Motion.fadeOut()) },
-                                label = "send-line",
+                                label = "send-line", // i18n-skip
                             ) { words -> Text(words, style = MaterialTheme.typography.bodyLarge.tabular()) }
                             chosen?.let { SheetText(Strings.sendEreaderSized(context, it.name), Modifier.padding(top = 2.dp)) }
                         }
