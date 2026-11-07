@@ -703,8 +703,8 @@ impl Session {
         };
         let layout = l.word(Key::PageLayout);
         let strip = match self.webtoon {
-            Some(mode) => mode == WebtoonMode::Strip,
-            None => l.word(Key::Mode) == "strip",
+            Some(mode) if !l.series_has(Key::Mode) => mode == WebtoonMode::Strip,
+            _ => l.word(Key::Mode) == "strip",
         };
         let vertical = l.word(Key::Mode) == "vertical" && !self.surface.eink;
         Plan {
