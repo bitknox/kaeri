@@ -8267,6 +8267,9 @@ demo-credit-book = { $title } von { $author }. Lizenz: { $licence }. Gelesen üb
 # The story's credit in About the demo.
 demo-credit-story = { $title } von { $author }. Gemeinfrei. Sie ist in der App enthalten.
 
+# The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+demo-credit-cover = Cover: „{ $title }“ von { $artist }, { $year }. Gemeinfrei. Es ist in der App enthalten.
+
 # Credit capsule in the reader's top bar on page 1.
 reader-demo-credit = { $title } · { $author } · { $licence }
 

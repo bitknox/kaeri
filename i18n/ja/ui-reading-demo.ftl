@@ -8,6 +8,7 @@ demo-series-facts = { $pages ->
  }
 demo-credit-book = { $author }「{ $title }」。ライセンス: { $licence }。Wikimedia Commonsから読み込んでいます。
 demo-credit-story = { $author }「{ $title }」。パブリックドメイン。アプリに付属しています。
+demo-credit-cover = 表紙：{ $artist }「{ $title }」（{ $year }年）。パブリックドメイン。アプリに付属しています。
 reader-demo-credit = { $title } · { $author } · { $licence }
 search-demo-reads = デモ · 今すぐ読めます
 search-demo-only-books = デモだけがオンです。{ -source }を追加すると、ほかのタイトルが表示されます。

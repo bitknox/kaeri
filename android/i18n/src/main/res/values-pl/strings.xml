@@ -2510,6 +2510,7 @@
     </plurals>
     <string name="demo_credit_book">%1$s, autor: %2$s. Licencja: %3$s. Czytane z Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s, autor: %2$s. Domena publiczna. Jest w zestawie z aplikacją.</string>
+    <string name="demo_credit_cover">Okładka: „%1$s”, autor: %2$s, %3$s. Domena publiczna. Jest w zestawie z aplikacją.</string>
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Demo · Do czytania teraz</string>
     <string name="search_demo_only_books">Włączone jest tylko demo. Inne tytuły pojawią się, gdy dodasz źródło.</string>

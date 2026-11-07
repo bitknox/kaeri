@@ -8180,6 +8180,9 @@ demo-credit-book = { $title } của { $author }. Giấy phép { $licence }. Đ�
 # The story's credit in About the demo.
 demo-credit-story = { $title } của { $author }. Phạm vi công cộng. Đi kèm trong ứng dụng.
 
+# The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
+demo-credit-cover = Bìa: “{ $title }” của { $artist }, { $year }. Phạm vi công cộng. Đi kèm trong ứng dụng.
+
 # Credit capsule in the reader's top bar on page 1.
 reader-demo-credit = { $title } · { $author } · { $licence }
 

@@ -5669,6 +5669,9 @@
   <data name="DemoCreditStory" xml:space="preserve">
     <value>{title} av {author}. Allmän egendom. Den följer med appen.</value>
   </data>
+  <data name="DemoCreditCover" xml:space="preserve">
+    <value>Omslag: ”{title}” av {artist}, {year}. Allmän egendom. Det följer med appen.</value>
+  </data>
   <data name="ReaderDemoCredit" xml:space="preserve">
     <value>{title} · {author} · {licence}</value>
   </data>

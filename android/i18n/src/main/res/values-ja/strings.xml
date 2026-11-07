@@ -2279,6 +2279,7 @@
     </plurals>
     <string name="demo_credit_book">%2$s「%1$s」。ライセンス: %3$s。Wikimedia Commonsから読み込んでいます。</string>
     <string name="demo_credit_story">%2$s「%1$s」。パブリックドメイン。アプリに付属しています。</string>
+    <string name="demo_credit_cover">表紙：%2$s「%1$s」（%3$s年）。パブリックドメイン。アプリに付属しています。</string>
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">デモ · 今すぐ読めます</string>
     <string name="search_demo_only_books">デモだけがオンです。ソースを追加すると、ほかのタイトルが表示されます。</string>

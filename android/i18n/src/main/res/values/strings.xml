@@ -4456,6 +4456,8 @@
     <string name="demo_credit_book">%1$s by %2$s. Licensed %3$s. Read from Wikimedia Commons.</string>
     <!-- The story's credit in About the demo. -->
     <string name="demo_credit_story">%1$s by %2$s. Public domain. It comes with the app.</string>
+    <!-- The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904. -->
+    <string name="demo_credit_cover">Cover: “%1$s” by %2$s, %3$s. Public domain. It comes with the app.</string>
     <!-- Credit capsule in the reader's top bar on page 1. -->
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <!-- A demo result's line in Search. -->

@@ -5669,6 +5669,9 @@
   <data name="DemoCreditStory" xml:space="preserve">
     <value>{title} von {author}. Gemeinfrei. Sie ist in der App enthalten.</value>
   </data>
+  <data name="DemoCreditCover" xml:space="preserve">
+    <value>Cover: „{title}“ von {artist}, {year}. Gemeinfrei. Es ist in der App enthalten.</value>
+  </data>
   <data name="ReaderDemoCredit" xml:space="preserve">
     <value>{title} · {author} · {licence}</value>
   </data>

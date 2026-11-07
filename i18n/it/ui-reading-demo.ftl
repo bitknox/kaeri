@@ -10,6 +10,7 @@ demo-series-facts = { $pages ->
  }
 demo-credit-book = { $title } di { $author }. Licenza { $licence }. Letto da Wikimedia Commons.
 demo-credit-story = { $title } di { $author }. Pubblico dominio. È inclusa nell’app.
+demo-credit-cover = Copertina: «{ $title }» di { $artist }, { $year }. Pubblico dominio. È inclusa nell’app.
 reader-demo-credit = { $title } · { $author } · { $licence }
 search-demo-reads = Demo · Si legge ora
 search-demo-only-books = È attiva solo la demo. Altri titoli compaiono quando aggiungi una { -source }.

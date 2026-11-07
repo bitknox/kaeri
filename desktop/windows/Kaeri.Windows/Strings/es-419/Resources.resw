@@ -5861,6 +5861,9 @@
   <data name="DemoCreditStory" xml:space="preserve">
     <value>{title} de {author}. Dominio público. Viene con la app.</value>
   </data>
+  <data name="DemoCreditCover" xml:space="preserve">
+    <value>Portada: «{title}» de {artist}, {year}. Dominio público. Viene con la app.</value>
+  </data>
   <data name="ReaderDemoCredit" xml:space="preserve">
     <value>{title} · {author} · {licence}</value>
   </data>

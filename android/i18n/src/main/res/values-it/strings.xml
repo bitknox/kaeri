@@ -2433,6 +2433,7 @@
     </plurals>
     <string name="demo_credit_book">%1$s di %2$s. Licenza %3$s. Letto da Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s di %2$s. Pubblico dominio. È inclusa nell’app.</string>
+    <string name="demo_credit_cover">Copertina: «%1$s» di %2$s, %3$s. Pubblico dominio. È inclusa nell’app.</string>
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Demo · Si legge ora</string>
     <string name="search_demo_only_books">È attiva solo la demo. Altri titoli compaiono quando aggiungi una fonte.</string>
