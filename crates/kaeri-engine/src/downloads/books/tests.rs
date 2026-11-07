@@ -157,6 +157,8 @@ fn kit(chapters: &[&str]) -> Kit {
         clock: Clock::default(),
         tx: Outbox::from(tx),
     };
+    // As the engine sets it up once the front end says Wi-Fi.
+    queue.configure(Setup::default());
     Kit { lent, shelf, queue, events, _dir: dir }
 }
 
@@ -249,19 +251,25 @@ async fn nothing_is_fetched_on_cellular_and_rows_wait_for_wifi_until_it_returns(
 #[test]
 fn setup_follows_the_network_the_config_and_the_edition() {
     let mut config = Config::default();
-    let wifi = Network::default();
-    let cell = Network { cellular: true, ..Network::default() };
+    let wifi = Some(Network::default());
+    let cell = Some(Network { cellular: true, ..Network::default() });
     let on = |network, config: &Config| {
         Setup::of(AppState::Foreground, network, config, AppEdition::Full)
     };
     assert_eq!(on(wifi, &config), Setup::default());
     assert_eq!((on(cell, &config).hold, on(cell, &config).wifi), (true, true));
+    // Before the front end says the network, nothing is fetched, whatever the setting: it may
+    // be cellular. The rows only wait, as nothing says it is for Wi-Fi yet.
+    let unsaid = on(None, &config);
+    assert!(unsaid.hold && !unsaid.wifi && !unsaid.offline);
     config.reading.downloads_on_cellular = true;
     assert!(!on(cell, &config).hold);
-    let low = Network { constrained: true, ..Network::default() };
+    assert!(on(None, &config).hold);
+    let low = Some(Network { constrained: true, ..Network::default() });
     assert!(on(low, &config).hold && on(low, &config).wifi);
-    let offline = Network { offline: true, ..Network::default() };
+    let offline = Some(Network { offline: true, ..Network::default() });
     assert!(on(offline, &config).hold && !on(offline, &config).wifi);
+    assert!(on(offline, &config).offline);
     let away =
         Setup::of(AppState::Background { playing: false }, wifi, &config, AppEdition::Full);
     assert!(away.hold && !away.wifi);

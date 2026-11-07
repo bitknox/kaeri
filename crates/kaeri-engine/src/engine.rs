@@ -3455,6 +3455,7 @@ mod tests {
             })
             .await;
             events.launch().await;
+            engine.send(network(false, false));
             let work = WorkId::new(WORK);
             let ids =
                 |list: &[&str]| list.iter().map(|c| ChapterId::new(*c)).collect::<Vec<_>>();
@@ -3685,6 +3686,14 @@ mod tests {
         struct Pages {
             manifest: BookSourceManifest,
             held: AtomicBool,
+            fetched: std::sync::atomic::AtomicUsize,
+        }
+
+        impl Pages {
+            /// How many pages were fetched so far.
+            fn fetched(&self) -> usize {
+                self.fetched.load(Ordering::SeqCst)
+            }
         }
 
         #[async_trait]
@@ -3736,6 +3745,7 @@ mod tests {
             }
 
             async fn fetch_page(&self, page: &PageRef) -> Result<Vec<u8>, PageError> {
+                self.fetched.fetch_add(1, Ordering::SeqCst);
                 while self.held.load(Ordering::SeqCst) && page.url.ends_with("/2") {
                     tokio::time::sleep(Duration::from_millis(10)).await;
                 }
@@ -3761,6 +3771,7 @@ mod tests {
                     capabilities: Vec::new(),
                 },
                 held: AtomicBool::new(held),
+                fetched: Default::default(),
             })
         }
 
@@ -3826,6 +3837,7 @@ mod tests {
 
             // One downloaded chapter and one not: both are sent, the second fetched for the
             // send alone.
+            engine.send(network(false, false));
             engine.send(prepare(&["1", "2"]));
             let seen = seen_until(&mut events, |e| {
                 matches!(
@@ -3908,13 +3920,24 @@ mod tests {
             dir: &std::path::Path,
             store: Option<kaeri_store::Store>,
         ) -> (Engine, EventStream, kaeri_store::Store) {
+            let (engine, events, store, _) = launch_engine(dir, store).await;
+            (engine, events, store)
+        }
+
+        /// [`send_engine`], with its source too, to count what it fetched.
+        async fn launch_engine(
+            dir: &std::path::Path,
+            store: Option<kaeri_store::Store>,
+        ) -> (Engine, EventStream, kaeri_store::Store, Arc<Pages>) {
             let host = Arc::new(QuietHost::in_dir(&dir.join("tokens")));
+            let source = pages_source(false);
+            let lent = Arc::clone(&source);
             let mut kept = None;
             let (engine, events) = engine_with(dir, host, |o| {
                 // Launch takes the sends left waiting as the app's launch does.
                 o.background.keep_next = true;
                 o.reading = true;
-                o.book_source = Some(pages_source(false));
+                o.book_source = Some(lent);
                 if let Some(store) = store {
                     o.store = store;
                 } else {
@@ -3942,7 +3965,7 @@ mod tests {
                 kept = Some(o.store.clone());
             })
             .await;
-            (engine, events, kept.unwrap())
+            (engine, events, kept.unwrap(), source)
         }
 
         fn send_of(list: &[&str]) -> Command {
@@ -4005,6 +4028,96 @@ mod tests {
 
         fn kept_waiting(store: &kaeri_store::Store) -> bool {
             store.get_meta_text("export:held").unwrap().is_some()
+        }
+
+        /// Once a send is kept as waiting.
+        async fn until_kept(store: &kaeri_store::Store) {
+            for _ in 0..500 {
+                if kept_waiting(store) {
+                    return;
+                }
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+            panic!("the send was never kept as waiting");
+        }
+
+        /// What the engine said up to a look at the downloads, asked for after what was sent.
+        async fn said_so_far(engine: &Engine, events: &mut EventStream) -> Vec<Event> {
+            engine.send(Command::Reading(ReadingCommand::LoadDownloads));
+            seen_until(events, |e| matches!(e, Event::Reading(ReadingEvent::Downloads(_))))
+                .await
+        }
+
+        fn said_waiting(e: &Event) -> bool {
+            matches!(e, Event::Reading(ReadingEvent::ExportWaiting { .. }))
+        }
+
+        #[tokio::test]
+        async fn at_launch_a_send_with_chapters_to_fetch_waits_for_the_network_to_be_said() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, store, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+
+            // Downloaded chapters need no network, so they go before anything says it.
+            engine.send(send_of(&["1"]));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen).map(|(_, pages)| pages), Some(2), "{seen:?}");
+
+            // One to fetch: nothing has said the network, which may be cellular, so the send
+            // waits, and says nothing about Wi-Fi yet.
+            engine.send(send_of(&["1", "2"]));
+            until_kept(&store).await;
+            let seen = said_so_far(&engine, &mut events).await;
+            assert!(!seen.iter().any(|e| send_ended(e) || said_waiting(e)), "{seen:?}");
+            assert_eq!(source.fetched(), 0);
+
+            // Cellular keeps it waiting, for Wi-Fi now.
+            engine.send(network(true, false));
+            let (job, seen) = waiting(&mut events).await;
+            assert!(!seen.iter().any(send_ended), "{seen:?}");
+            assert_eq!(source.fetched(), 0);
+
+            // Wi-Fi starts it, and it is sent whole.
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
+            assert_eq!(pages_sent(&seen), Some((job, 4)), "{seen:?}");
+            assert!(source.fetched() > 0);
+            assert!(!kept_waiting(&store));
+            engine.shutdown().await;
+        }
+
+        #[tokio::test]
+        async fn at_launch_downloads_wait_for_the_network_to_be_said() {
+            let dir = tempfile::tempdir().unwrap();
+            let (engine, mut events, _, source) = launch_engine(dir.path(), None).await;
+            events.launch().await;
+            let counted = |state: ChapterDownloadState| {
+                move |v: &BookDownloadsView| {
+                    states(v).iter().filter(|(_, s)| *s == state).count() == 2
+                }
+            };
+
+            // Nothing has said the network, which may be cellular: the chapters only queue.
+            engine.send(Command::Reading(ReadingCommand::Download {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters {
+                    ids: ["2", "3"].iter().map(|c| ChapterId::new(*c)).collect(),
+                },
+            }));
+            downloads_until(&engine, &mut events, counted(ChapterDownloadState::Queued)).await;
+            assert_eq!(source.fetched(), 0);
+
+            // Cellular keeps them waiting, for Wi-Fi now.
+            engine.send(network(true, false));
+            downloads_until(&engine, &mut events, counted(ChapterDownloadState::WaitsForWifi))
+                .await;
+            assert_eq!(source.fetched(), 0);
+
+            // Wi-Fi starts them.
+            engine.send(network(false, false));
+            downloads_until(&engine, &mut events, |v| done_ids(v) == ["1", "2", "3"]).await;
+            assert_eq!(source.fetched(), 4);
+            engine.shutdown().await;
         }
 
         #[tokio::test]
@@ -4104,13 +4217,21 @@ mod tests {
             engine.shutdown().await;
             assert!(kept_waiting(&store), "still kept after the engine stopped");
 
-            // The next launch asks for it again, as a job of its own, and on Wi-Fi it is sent.
-            let (engine, mut events, store) = send_engine(dir.path(), Some(store)).await;
-            let seen = seen_until(&mut events, send_ended).await;
+            // The next launch asks for it again, as a job of its own. It waits until the
+            // network is said, and on Wi-Fi it is sent.
+            let (engine, mut events, store, source) =
+                launch_engine(dir.path(), Some(store)).await;
+            let seen = seen_until(&mut events, |e| matches!(e, Event::JobStarted { .. })).await;
             let started = seen.iter().find_map(|e| match e {
                 Event::JobStarted { job, .. } => Some(*job),
                 _ => None,
             });
+            let seen = said_so_far(&engine, &mut events).await;
+            assert!(!seen.iter().any(send_ended), "{seen:?}");
+            assert_eq!(source.fetched(), 0);
+            assert!(kept_waiting(&store));
+            engine.send(network(false, false));
+            let seen = seen_until(&mut events, send_ended).await;
             let (job, pages) = pages_sent(&seen).unwrap_or_else(|| panic!("{seen:?}"));
             assert_eq!((Some(job), pages), (started, 4));
             assert!(!kept_waiting(&store));

@@ -261,7 +261,7 @@ fn downloads(
     let queue = services.book_sources.downloads.clone();
     queue.configure(Setup::of(
         engine.phase,
-        engine.network,
+        engine.network_said.then_some(engine.network),
         engine.config.effective(),
         engine.reading.edition,
     ));

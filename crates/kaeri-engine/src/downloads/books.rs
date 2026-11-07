@@ -13,7 +13,8 @@
 //!
 //! **Wi-Fi only until told otherwise.** On cellular, in Low Data Mode, offline, or with the app
 //! off screen (but for a downloads window) the queue holds; rows show as waiting for Wi-Fi
-//! where that is why, and go on by themselves when the network or the setting changes.
+//! where that is why, and go on by themselves when the network or the setting changes. Until
+//! the front end first says the network, the queue holds too: at launch it may be cellular.
 //!
 //! **Keeping chapters ready.** With the setting on (it is on in the e-reader build), starting
 //! or finishing a chapter queues the next [`KEEP_AHEAD`] unread ones after it. They are marked
@@ -99,12 +100,30 @@ pub struct Setup {
 }
 
 impl Setup {
-    pub fn of(phase: AppState, network: Network, config: &Config, edition: AppEdition) -> Self {
+    /// Where the queue starts, before the engine has set it up: held, as the network is not
+    /// said yet.
+    pub const UNSAID: Self = Self {
+        hold: true,
+        wifi: false,
+        offline: false,
+        keep_ready: false,
+        delete_after: false,
+    };
+
+    /// The setup for the `network` the front end last said, `None` before it has said one.
+    pub fn of(
+        phase: AppState,
+        network: Option<Network>,
+        config: &Config,
+        edition: AppEdition,
+    ) -> Self {
         let reading = &config.reading;
+        let unsaid = network.is_none();
+        let network = network.unwrap_or_default();
         let wifi = network.constrained || (network.cellular && !reading.downloads_on_cellular);
         let away = matches!(phase, AppState::Background { .. });
         Self {
-            hold: wifi || network.offline || away,
+            hold: unsaid || wifi || network.offline || away,
             wifi,
             offline: network.offline,
             keep_ready: reading
@@ -170,8 +189,8 @@ impl BookDownloads {
             dir,
             pace,
             running: Mutex::new(false),
-            setup: Mutex::new(Setup::default()),
-            changed: tokio::sync::watch::channel(Setup::default()).0,
+            setup: Mutex::new(Setup::UNSAID),
+            changed: tokio::sync::watch::channel(Setup::UNSAID).0,
             free: Mutex::new(None),
             told: Mutex::new(None),
         }))
@@ -990,7 +1009,7 @@ pub fn resume(engine: &crate::state::EngineState, services: &Services, tx: &Outb
     }
     let setup = Setup::of(
         engine.phase,
-        engine.network,
+        engine.network_said.then_some(engine.network),
         engine.config.effective(),
         engine.reading.edition,
     );

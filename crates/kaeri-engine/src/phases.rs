@@ -92,6 +92,7 @@ pub fn app_phase(phase: AppState, engine: &mut EngineState) {
 pub fn network_path(network: Network, engine: &mut EngineState, tx: &Outbox) {
     let was = engine.network;
     engine.network = network;
+    engine.network_said = true;
     crate::connectivity::moved(was.offline, network.offline, &mut engine.missed, tx);
     crate::autoplay::changed(engine, tx);
     reapply(engine);

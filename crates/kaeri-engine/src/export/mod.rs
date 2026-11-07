@@ -8,8 +8,9 @@
 //! is announced like any other, told as `ExportProgress` and ended with `ExportReady`; it stops
 //! on `CancelPrepare` and leaves no files behind. A send with chapters to fetch waits while the
 //! downloads do, and goes on by itself: for Wi-Fi it says so with `ExportWaiting`, and one left
-//! waiting when the engine stops starts again at the next launch ([`held`]). With no network at
-//! all it fails as offline. Once the files are shared, the series page asks
+//! waiting when the engine stops starts again at the next launch ([`held`]). Until the front end
+//! first says the network it waits too, without a word, as the network may be cellular. With no
+//! network at all it fails as offline. Once the files are shared, the series page asks
 //! where you stopped, and the answer is a `ReadAdopt` op.
 //!
 //! **The OPDS feed** is in [`feed`], behind the `opds-feed` feature the desktop builds turn on.
