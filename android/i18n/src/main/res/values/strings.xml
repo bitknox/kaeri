@@ -6490,6 +6490,11 @@
         <item quantity="one">%1$s · %2$d series · added just now</item>
         <item quantity="other">%1$s · %2$d series in %3$d libraries · added just now</item>
     </plurals>
+    <!-- A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS. -->
+    <plurals name="source_row_server_series">
+        <item quantity="one">%1$s · %2$d series</item>
+        <item quantity="other">%1$s · %2$d series in %3$d libraries</item>
+    </plurals>
     <!-- A server's row in Your sources while it shows no series. -->
     <string name="source_row_server_empty">%1$s · no series yet · looks again in 30 minutes</string>
     <!-- A folder's row in Your sources. -->

@@ -290327,6 +290327,40 @@
         }
       }
     },
+    "source-row-server-series" : {
+      "comment" : "A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS. Argument 1: kind (Text). Argument 2: series (Int). Argument 3: libraries (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@libraries@"
+          },
+          "substitutions" : {
+            "libraries" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ · %2$lld series"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ · %2$lld series in %3$lld libraries"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "source-switched-off" : {
       "comment" : "Toast after a source (plugin) is switched off. It is skipped when looking for episodes. Argument 1: name (Text).",
       "extractionState" : "manual",

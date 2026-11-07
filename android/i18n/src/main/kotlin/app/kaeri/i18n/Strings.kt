@@ -12210,6 +12210,10 @@ object Strings {
     fun sourceRowServer(context: Context, kind: String, series: Int, libraries: Int): String =
         context.resources.getQuantityString(R.plurals.source_row_server, libraries, kind, series, libraries)
 
+    /** A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS. */
+    fun sourceRowServerSeries(context: Context, kind: String, series: Int, libraries: Int): String =
+        context.resources.getQuantityString(R.plurals.source_row_server_series, libraries, kind, series, libraries)
+
     /** A server's row in Your sources while it shows no series. */
     fun sourceRowServerEmpty(context: Context, kind: String): String =
         context.getString(R.string.source_row_server_empty, kind)

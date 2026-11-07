@@ -8176,6 +8176,9 @@ public static partial class T
     /// <summary>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</summary>
     public static string SourceRowServer(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServer", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.</summary>
+    public static string SourceRowServerSeries(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServerSeries", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>A server's row in Your sources while it shows no series.</summary>
     public static string SourceRowServerEmpty(string kind) => Fill(Get("SourceRowServerEmpty"), ("kind", kind));
 
@@ -13738,6 +13741,8 @@ public static partial class T
         ["SourceAddedPlugins_other"] = "Installed {count} plugins from {store}",
         ["SourceRowServer_one"] = "{kind} · {series} series · added just now",
         ["SourceRowServer_other"] = "{kind} · {series} series in {libraries} libraries · added just now",
+        ["SourceRowServerSeries_one"] = "{kind} · {series} series",
+        ["SourceRowServerSeries_other"] = "{kind} · {series} series in {libraries} libraries",
         ["SourceRowServerEmpty"] = "{kind} · no series yet · looks again in 30 minutes",
         ["SourceRowFolder_one"] = "{path} · {series} series · one file skipped",
         ["SourceRowFolder_other"] = "{path} · {series} series · {skipped} files skipped",

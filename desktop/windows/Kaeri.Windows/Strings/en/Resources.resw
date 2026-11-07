@@ -11376,6 +11376,14 @@
     <value>{kind} · {series} series in {libraries} libraries · added just now</value>
     <comment>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</comment>
   </data>
+  <data name="SourceRowServerSeries_one" xml:space="preserve">
+    <value>{kind} · {series} series</value>
+    <comment>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.</comment>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · {series} series in {libraries} libraries</value>
+    <comment>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.</comment>
+  </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · no series yet · looks again in 30 minutes</value>
     <comment>A server's row in Your sources while it shows no series.</comment>

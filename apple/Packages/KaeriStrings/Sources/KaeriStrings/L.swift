@@ -11291,6 +11291,11 @@ public enum L {
         Self.format("source-row-server", fallback: "%1$@ · %2$lld series in %3$lld libraries · added just now", kind, series, libraries)
     }
 
+    /// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+    public static func sourceRowServerSeries(kind: String, series: Int, libraries: Int) -> String {
+        Self.format("source-row-server-series", fallback: "%1$@ · %2$lld series in %3$lld libraries", kind, series, libraries)
+    }
+
     /// A server's row in Your sources while it shows no series.
     public static func sourceRowServerEmpty(kind: String) -> String {
         Self.format("source-row-server-empty", fallback: "%1$@ · no series yet · looks again in 30 minutes", kind)

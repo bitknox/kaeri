@@ -175,8 +175,11 @@ struct BookSourcesList: View {
     /// under this one (ServerProgressModel), so this no longer says progress goes back.
     static func serverLine(_ server: BookServerRow, justAdded: Bool = false) -> String {
         if server.empty { return L.sourceRowServerEmpty(kind: BookServerWords.kind(server.kind)) }
-        if server.libraries > 0 && !server.off {
+        if justAdded {
             return L.sourceRowServer(kind: BookServerWords.kind(server.kind), series: Int(server.series), libraries: Int(server.libraries))
+        }
+        if server.libraries > 0 && !server.off {
+            return L.sourceRowServerSeries(kind: BookServerWords.kind(server.kind), series: Int(server.series), libraries: Int(server.libraries))
         }
         var parts = [BookServerWords.kind(server.kind)]
         if server.name != server.address, server.name != server.progressHost { parts.append(server.address) }
@@ -451,6 +454,10 @@ enum BookFolders {
 struct KavitaLink {
     let host: String
     let last4: String
+    /// The link up to its key, "https://host/api/opds/", which the address field shows.
+    let base: String
+    /// The key and anything after it, kept off screen.
+    let key: String
 
     init?(_ address: String) {
         let text = address.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -461,6 +468,9 @@ struct KavitaLink {
               parts.indices.contains(at + 1), parts[at + 1].count >= 4 else { return nil }
         self.host = host
         self.last4 = String(parts[at + 1].suffix(4))
+        guard let end = text.range(of: "/api/opds/")?.upperBound else { return nil } // i18n-skip: a path
+        base = String(text[..<end])
+        key = String(text[end...])
     }
 }
 
@@ -472,6 +482,8 @@ struct AddBookServerStep: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var address = ""
+    /// A pasted Kavita link's key: the field keeps only the link up to it, and the chip its last four.
+    @State private var key: String?
     @State private var user = ""
     @State private var password = ""
     @State private var reportProgress = true
@@ -491,7 +503,8 @@ struct AddBookServerStep: View {
         address = scene == .kavitaLink || scene == .found || scene == .wrongKey || scene == .looking
             ? "https://books.home.example/api/opds/9c1e7a2b4d5f3f9a" // i18n-skip: a made-up link
             : "books.home.example" // i18n-skip: a made-up host
-        if KavitaLink(address) == nil { user = "reader"; password = "example-password" } // i18n-skip: made up
+        hideKey()
+        if link == nil { user = "reader"; password = "example-password" } // i18n-skip: made up
         store.cameIn.stage(scene)
     }
 
@@ -568,26 +581,43 @@ struct AddBookServerStep: View {
 
     private var lifecycle: ServerStepLifecycle {
         ServerStepLifecycle(
-            address: address, user: user, password: password, staged: staged,
+            address: full, user: user, password: password, staged: staged,
             onAppear: {
                 store.cameIn.reset()
-                if let shot = Self.shot { Self.shot = nil; stage(shot) } else if let link = Self.prefill { Self.prefill = nil; address = link } else { focus = .address }
+                if let shot = Self.shot { Self.shot = nil; stage(shot) } else if let link = Self.prefill { Self.prefill = nil; address = link; hideKey() } else { focus = .address }
             },
             look: look,
             added: { dismiss() })
     }
 
     private var ready: Bool {
-        if KavitaLink(address) != nil { return true }
+        if link != nil { return true }
         return !trimmed.isEmpty && !user.isEmpty && !password.isEmpty
     }
 
     private var trimmed: String { address.trimmingCharacters(in: .whitespacesAndNewlines) }
 
+    /// The address as typed, with a pasted Kavita link's key put back after it.
+    private var full: String { key.map { trimmed + $0 } ?? trimmed }
+
+    private var link: KavitaLink? { KavitaLink(full) }
+
+    /// A Kavita link was pasted: the key leaves the field, so only its last four are ever shown.
+    /// Typing never moves it, and editing the link once its key is held lets the key go.
+    private func hideKey(pasted: Bool = true) {
+        if key != nil {
+            if !trimmed.hasSuffix("/api/opds/") { key = nil } // i18n-skip: a path
+            return
+        }
+        guard pasted, let pasted = KavitaLink(trimmed), !pasted.key.isEmpty else { return }
+        key = pasted.key
+        address = pasted.base
+    }
+
     private func look() {
         guard ready, !staged else { return }
-        if KavitaLink(address) != nil {
-            store.cameIn.probe(address: trimmed, user: nil, password: nil)
+        if link != nil {
+            store.cameIn.probe(address: full, user: nil, password: nil)
         } else {
             store.cameIn.probe(address: trimmed, user: user, password: password)
         }
@@ -601,7 +631,7 @@ struct AddBookServerStep: View {
     }
 
     private var form: some View {
-        let link = KavitaLink(address)
+        let link = self.link
         return VStack(alignment: .leading, spacing: 0) {
             label(L.bookServerAddress)
             addressField(link)
@@ -669,7 +699,7 @@ struct AddBookServerStep: View {
         }
     }
 
-    private var trimmedHost: String { KavitaLink(address)?.host ?? trimmed }
+    private var trimmedHost: String { link?.host ?? trimmed }
 
     /// One row per library, ticked by default.
     private func libraries(_ found: ServerFound) -> some View {
@@ -728,6 +758,7 @@ struct AddBookServerStep: View {
     private func addressField(_ link: KavitaLink?) -> some View {
         HStack(spacing: 8) {
             field(L.bookServerAddress, text: $address, focus: .address, bare: true)
+                .onChange(of: address) { old, new in hideKey(pasted: new.count - old.count > 1) }
             if let link {
                 HStack(spacing: 4) {
                     Image(systemName: "key").font(.ui(11))

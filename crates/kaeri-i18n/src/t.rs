@@ -17800,6 +17800,11 @@ pub fn source_row_server(kind: &str, series: i64, libraries: i64) -> String {
     text("source-row-server", &[("kind", Arg::Text(kind)), ("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
 }
 
+/// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+pub fn source_row_server_series(kind: &str, series: i64, libraries: i64) -> String {
+    text("source-row-server-series", &[("kind", Arg::Text(kind)), ("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
+}
+
 /// A server's row in Your sources while it shows no series.
 pub fn source_row_server_empty(kind: &str) -> String {
     text("source-row-server-empty", &[("kind", Arg::Text(kind))])

@@ -11211,6 +11211,13 @@ source-row-server =
        *[other] [{ $kind } · { $series } šéŕîéš îñ { $libraries } ļîƀŕàŕîéš · àððéð ĵüšţ ñöŵ~~~~~~~~~~~~~~~]
     }
 
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+source-row-server-series =
+    { $libraries ->
+        [one] [{ $kind } · { $series } šéŕîéš~~~~~]
+       *[other] [{ $kind } · { $series } šéŕîéš îñ { $libraries } ļîƀŕàŕîéš~~~~~~~~~~]
+    }
+
 # A server's row in Your sources while it shows no series.
 source-row-server-empty = [{ $kind } · ñö šéŕîéš ýéţ · ļööķš àĝàîñ îñ 30 ɱîñüţéš~~~~~~~~~~~~~~~]
 
