@@ -785,8 +785,18 @@ struct FirstLaunch: View {
 
     @State private var pickingFolder = false
 
+    /// Read the demo: first run ends and the reader opens on the demo's comic, page 1, with its
+    /// credit. On iPhone and iPad first run leaves as a full-screen cover into the reader; on the
+    /// Mac its sheet closes over the reader.
+    private func readDemo() {
+        finish(nil)
+        if let comic = store.demo.reading.works.first(where: { !$0.novel }) {
+            store.reader.open(work: comic.work, at: .start)
+        }
+    }
+
     /// Try it now: the demo, read, or played and read after Both. It is one card above the rows,
-    /// and Read the demo ends first run on Home, where the demo is the spotlight.
+    /// and Read the demo opens the reader on the comic.
     @ViewBuilder
     private func demoTry(both: Bool) -> some View {
         if store.demo.state.reading {
@@ -804,7 +814,7 @@ struct FirstLaunch: View {
                         Button { store.playDemo(); finish(nil) } label: { Text(L.onboardingPlayDemo) }
                             .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
                     }
-                    Button { finish(nil) } label: { Text(L.onboardingReadDemo) }
+                    Button { readDemo() } label: { Text(L.onboardingReadDemo) }
                         .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
                 }
                 .padding(.top, 6)
