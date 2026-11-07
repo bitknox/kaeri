@@ -3,15 +3,15 @@ Kaeri                                                  plugins ●  ·  anilist 
 ▌▸ │  █▓▒  Loading…
  ▤ │
  ▦ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
- / │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
- ▥ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
- ↓ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
- ◇ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
- ◎ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
- ≡ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
- ⇄ │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-   │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-   │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+────────────────────────────────────────────────────────────────────────────────
+▌ Kaeri is for
+────────────────────────────────────────────────────────────────────────────────
+  Turn off reading?
+  Updates and your reading leave Kaeri on this computer. Your list, progre…
+
+  [ ] Delete downloaded chapters
+▌ Turn off reading
+
    │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
    │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
    │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
@@ -21,68 +21,52 @@ Kaeri                                                  plugins ●  ·  anilist 
    │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
    │  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
 ────────────────────────────────────────────────────────────────────────────────
-plugins · Subbed · 1080p                                                  ? keys
+plugins · Subbed · 1080p                         ↑↓ move   ↵ choose   esc cancel
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
-r00 c00-04 fg=text mod=BOLD
-r00 c55-63 fg=state
-r00 c64-65 fg=text-dim
-r00 c66-66 fg=rule
-r00 c67-68 fg=text-dim
-r00 c69-79 fg=state
+r00 c00-04 fg=rule mod=BOLD
+r00 c05-79 fg=rule
 r01 c00-79 fg=rule
-r02 c00-00 fg=text-dim
-r02 c01-01 fg=text mod=BOLD
-r02 c03-03 fg=rule
-r02 c06-08 fg=obi
-r02 c11-18 fg=text-dim
-r03 c01-01 fg=text-dim
-r03 c03-03 fg=rule
-r04 c01-01 fg=text-dim
-r04 c03-03 fg=rule
-r04 c06-61 fg=text-dim
-r05 c01-01 fg=text-dim
-r05 c03-03 fg=rule
-r05 c06-43 fg=rule
-r06 c01-01 fg=text-dim
-r06 c03-03 fg=rule
-r06 c06-52 fg=rule
-r07 c01-01 fg=text-dim
-r07 c03-03 fg=rule
-r07 c06-35 fg=rule
-r08 c01-01 fg=text-dim
-r08 c03-03 fg=rule
-r08 c06-56 fg=rule
-r09 c01-01 fg=text-dim
-r09 c03-03 fg=rule
-r09 c06-48 fg=rule
-r10 c01-01 fg=text-dim
-r10 c03-03 fg=rule
-r10 c06-61 fg=rule
-r11 c01-01 fg=text-dim
-r11 c03-03 fg=rule
-r11 c06-43 fg=rule
-r12 c03-03 fg=rule
-r12 c06-52 fg=rule
-r13 c03-03 fg=rule
-r13 c06-35 fg=rule
-r14 c03-03 fg=rule
-r14 c06-56 fg=rule
-r15 c03-03 fg=rule
-r15 c06-48 fg=rule
-r16 c03-03 fg=rule
-r16 c06-61 fg=rule
-r17 c03-03 fg=rule
-r17 c06-43 fg=rule
-r18 c03-03 fg=rule
-r18 c06-52 fg=rule
-r19 c03-03 fg=rule
-r19 c06-35 fg=rule
-r20 c03-03 fg=rule
-r20 c06-56 fg=rule
-r21 c03-03 fg=rule
-r21 c06-48 fg=rule
+r02 c00-00 fg=rule
+r02 c01-01 fg=rule mod=BOLD
+r02 c02-79 fg=rule
+r03 c00-79 fg=rule
+r04 c00-79 fg=rule
+r05 c00-79 fg=rule bg=ground
+r06 c00-00 fg=obi bg=ground
+r06 c01-01 fg=rule bg=ground
+r06 c02-13 fg=text bg=ground mod=BOLD
+r06 c14-79 fg=rule bg=ground
+r07 c00-79 fg=rule bg=ground
+r08 c00-01 fg=rule bg=ground
+r08 c02-18 fg=text-dim bg=ground
+r08 c19-79 fg=rule bg=ground
+r09 c00-01 fg=rule bg=ground
+r09 c02-74 fg=text-dim bg=ground
+r09 c75-79 fg=rule bg=ground
+r10 c00-79 fg=rule bg=ground
+r11 c00-01 fg=rule bg=ground
+r11 c02-31 fg=text-dim bg=ground
+r11 c32-79 fg=rule bg=ground
+r12 c00-00 fg=obi bg=ground
+r12 c01-01 fg=rule bg=ground
+r12 c02-17 fg=text bg=ground mod=BOLD
+r12 c18-79 fg=rule bg=ground
+r13 c00-79 fg=rule bg=ground
+r14 c00-79 fg=rule
+r15 c00-79 fg=rule
+r16 c00-79 fg=rule
+r17 c00-79 fg=rule
+r18 c00-79 fg=rule
+r19 c00-79 fg=rule
+r20 c00-79 fg=rule
+r21 c00-79 fg=rule
 r22 c00-79 fg=rule
 r23 c00-23 fg=text-dim
-r23 c74-74 fg=text
-r23 c75-79 fg=text-dim
+r23 c24-48 fg=rule
+r23 c49-50 fg=text
+r23 c51-58 fg=text-dim
+r23 c59-59 fg=text
+r23 c60-69 fg=text-dim
+r23 c70-72 fg=text
+r23 c73-79 fg=text-dim

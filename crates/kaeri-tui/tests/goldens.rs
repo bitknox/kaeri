@@ -3247,5 +3247,8 @@ fn medium_turn_off(s: &mut Screen) {
     settled_on(s, 1);
     s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Both, None));
     s.act(Action::ChooseMedium);
+    // From Both up to Watch, which turns reading off.
+    s.act(Action::Up);
+    s.act(Action::Up);
     s.act(Action::Open);
 }
