@@ -45,7 +45,14 @@ public sealed class TrailerFlow
     /// <summary>A web view is held: loading, playing or paused.</summary>
     public bool Active => Phase is TrailerPhase.Loading or TrailerPhase.Playing or TrailerPhase.Paused;
 
-    public bool Showing => Phase == TrailerPhase.Playing;
+    /// <summary>The video is in front of the banner: a frame plays and nothing holds it back.</summary>
+    public bool Showing => Phase == TrailerPhase.Playing && !Held;
+
+    /// <summary>
+    /// It loads ahead of being seen, as a hover card's cued trailer does: a frame playing shows
+    /// nothing until <see cref="Unhold"/>.
+    /// </summary>
+    public bool Held { get; private set; }
 
     /// <summary>A trailer may start: nothing is held and it has not already ended or failed.</summary>
     public bool CanStart => Phase == TrailerPhase.Idle;
@@ -58,6 +65,22 @@ public sealed class TrailerFlow
         return true;
     }
 
+    /// <summary>Load it unseen: before it starts, or while it loads.</summary>
+    public void Hold()
+    {
+        if (Phase is TrailerPhase.Idle or TrailerPhase.Loading)
+            Held = true;
+    }
+
+    /// <summary>It is being seen now: the video shows at once when a frame already plays, or when one does.</summary>
+    public TrailerEffect Unhold()
+    {
+        if (!Held)
+            return TrailerEffect.None;
+        Held = false;
+        return Phase == TrailerPhase.Playing ? TrailerEffect.ShowVideo : TrailerEffect.None;
+    }
+
     /// <summary>The page said something. Only a frame playing shows the video; an end or an error lets go for good.</summary>
     public TrailerEffect Heard(TrailerMessage? message)
     {
@@ -65,7 +88,7 @@ public sealed class TrailerFlow
         {
             case TrailerMessage.Playing when Phase is TrailerPhase.Loading or TrailerPhase.Paused:
                 Phase = TrailerPhase.Playing;
-                return TrailerEffect.ShowVideo;
+                return Held ? TrailerEffect.None : TrailerEffect.ShowVideo;
             case TrailerMessage.Ended or TrailerMessage.Error when Active:
                 return Let(TrailerPhase.Done);
             default:
@@ -84,8 +107,9 @@ public sealed class TrailerFlow
     {
         if (Phase != TrailerPhase.Playing)
             return TrailerEffect.None;
+        var shown = Showing;
         Phase = TrailerPhase.Paused;
-        return TrailerEffect.PausePlayer | TrailerEffect.HideVideo;
+        return TrailerEffect.PausePlayer | (shown ? TrailerEffect.HideVideo : TrailerEffect.None);
     }
 
     /// <summary>Play it again from where it paused; the video shows when the page says it is playing.</summary>
@@ -96,9 +120,193 @@ public sealed class TrailerFlow
 
     TrailerEffect Let(TrailerPhase then)
     {
-        var was = Phase;
+        var shown = Showing;
         Phase = then;
-        return TrailerEffect.Release | (was is TrailerPhase.Playing ? TrailerEffect.HideVideo : TrailerEffect.None);
+        Held = false;
+        return TrailerEffect.Release | (shown ? TrailerEffect.HideVideo : TrailerEffect.None);
+    }
+}
+
+/// <summary>A trailer page the shelf keeps between trailers, as it sees one.</summary>
+public interface IWarmPage
+{
+    EmbedStyle Style { get; }
+    /// <summary>The subtitle language its captions were set up for, as it loaded.</summary>
+    string Subtitles { get; }
+    /// <summary>Its page failed to load or its process ended: not kept.</summary>
+    bool Broken { get; }
+}
+
+/// <summary>
+/// The trailer pages kept for the run, as on the Mac: a page handed back is paused and kept, its
+/// player loaded, and the next trailer only switches video in it rather than loading YouTube's
+/// player again. Two of a style at most, as one can be on its way out while the next comes.
+/// No WinUI in it, so the rules are tested.
+/// </summary>
+public sealed class TrailerShelf<T>(int keep = 2) where T : class, IWarmPage
+{
+    readonly List<T> idle = [];
+
+    /// <summary>The pages waiting, for the tests and the log.</summary>
+    public IReadOnlyList<T> Idle => idle;
+
+    /// <summary>Whether the run's page with no video has been asked for.</summary>
+    public bool Warmed { get; private set; }
+
+    /// <summary>True the first time only: the page with no video loads once a run.</summary>
+    public bool Warm()
+    {
+        if (Warmed)
+            return false;
+        Warmed = true;
+        return true;
+    }
+
+    /// <summary>
+    /// A kept page for <paramref name="style"/>, or none. Pages that can serve no trailer now (broken,
+    /// or set up for another subtitle language) come off the shelf into <paramref name="drop"/>,
+    /// for the caller to close.
+    /// </summary>
+    public T? Take(EmbedStyle style, string subtitles, List<T> drop)
+    {
+        foreach (var page in idle.Where(p => p.Broken || p.Subtitles != subtitles).ToList())
+        {
+            idle.Remove(page);
+            drop.Add(page);
+        }
+        var found = idle.FirstOrDefault(p => p.Style == style);
+        if (found is not null)
+            idle.Remove(found);
+        return found;
+    }
+
+    /// <summary>Take a page back. False when it is not kept (broken, already there, or no room), for the caller to close.</summary>
+    public bool Give(T page)
+    {
+        if (page.Broken || idle.Any(p => ReferenceEquals(p, page)) || idle.Count(p => p.Style == page.Style) >= keep)
+            return false;
+        idle.Add(page);
+        return true;
+    }
+}
+
+/// <summary>What the hover card's trailer does when the pointer cues a cover, leaves it, or opens its card.</summary>
+public enum HoverTrailerStep
+{
+    /// <summary>Nothing changes.</summary>
+    None,
+    /// <summary>Start loading this title's trailer, held: silent and unseen.</summary>
+    Start,
+    /// <summary>Let go of the trailer loading or playing for the hover.</summary>
+    Stop,
+    /// <summary>Let go of the one there, then start this title's.</summary>
+    Replace,
+    /// <summary>The card takes the trailer already loading for it.</summary>
+    Adopt,
+}
+
+/// <summary>
+/// Which title the hover card's trailer is loading for, and whether its card has taken it, as on
+/// the Mac: the pointer resting on a cover cues its trailer 300 ms before the card opens, the
+/// pointer leaving the cover before then lets it go, and the card that opens takes it. A cue that
+/// comes while another card still has its trailer waits for that card to close. No WinUI in it,
+/// so the rules are tested.
+/// </summary>
+public sealed class HoverCue
+{
+    /// <summary>How long the pointer rests on a cover before its trailer is cued: 300 ms before the card's 450.</summary>
+    public static readonly TimeSpan Wait = TimeSpan.FromMilliseconds(150);
+
+    /// <summary>When to cue, for a dwell of <paramref name="dwell"/>; never when the card opens as soon (scanning a row).</summary>
+    public static TimeSpan? After(TimeSpan dwell) => dwell > Wait ? Wait : null;
+
+    /// <summary>The title the trailer is for, while there is one.</summary>
+    public uint? Id { get; private set; }
+
+    /// <summary>Its card has taken it.</summary>
+    public bool Adopted { get; private set; }
+
+    /// <summary>A cue that came while a card had its trailer: it starts once that card closes.</summary>
+    public uint? Queued { get; private set; }
+
+    /// <summary>The pointer has rested on title <paramref name="id"/>'s cover.</summary>
+    public HoverTrailerStep Cue(uint id)
+    {
+        if (Id == id)
+            return HoverTrailerStep.None;
+        // An open card keeps its trailer until it closes, which is moments away: the pointer has left it.
+        if (Adopted)
+        {
+            Queued = id;
+            return HoverTrailerStep.None;
+        }
+        var step = Id is null ? HoverTrailerStep.Start : HoverTrailerStep.Replace;
+        Id = id;
+        return step;
+    }
+
+    /// <summary>The pointer left title <paramref name="id"/>'s cover before its card opened.</summary>
+    public HoverTrailerStep Uncue(uint id)
+    {
+        if (Queued == id)
+            Queued = null;
+        if (Id != id || Adopted)
+            return HoverTrailerStep.None;
+        Id = null;
+        return HoverTrailerStep.Stop;
+    }
+
+    /// <summary>A scroll: covers move from under the pointer, and no cue stands. An open card closes by itself.</summary>
+    public HoverTrailerStep Scrolled()
+    {
+        Queued = null;
+        return Id is { } id ? Uncue(id) : HoverTrailerStep.None;
+    }
+
+    /// <summary>Every trailer is let go of: nothing is cued or waits.</summary>
+    public HoverTrailerStep Reset()
+    {
+        var had = Id;
+        Id = Queued = null;
+        Adopted = false;
+        return had is null ? HoverTrailerStep.None : HoverTrailerStep.Stop;
+    }
+
+    /// <summary>
+    /// Title <paramref name="id"/>'s card opened. <paramref name="live"/>: the trailer cued for it is
+    /// still loading or playing. With <paramref name="plays"/> false (no trailer, or trailers may
+    /// not play now) any trailer there is let go.
+    /// </summary>
+    public HoverTrailerStep Open(uint id, bool live, bool plays)
+    {
+        var had = Id;
+        Queued = null;
+        if (!plays)
+        {
+            Id = null;
+            Adopted = false;
+            return had is null ? HoverTrailerStep.None : HoverTrailerStep.Stop;
+        }
+        Id = id;
+        Adopted = true;
+        if (had == id && live)
+            return HoverTrailerStep.Adopt;
+        return had is null ? HoverTrailerStep.Start : HoverTrailerStep.Replace;
+    }
+
+    /// <summary>
+    /// The card that had the trailer closed: it is let go of, and a queued cue starts
+    /// (<see cref="HoverTrailerStep.Replace"/>, or <see cref="HoverTrailerStep.Start"/> when there was none).
+    /// </summary>
+    public HoverTrailerStep Closed()
+    {
+        var had = Id;
+        Adopted = false;
+        Id = Queued;
+        Queued = null;
+        if (Id is not null)
+            return had is null ? HoverTrailerStep.Start : HoverTrailerStep.Replace;
+        return had is null ? HoverTrailerStep.None : HoverTrailerStep.Stop;
     }
 }
 
@@ -153,6 +361,23 @@ public static class Trailers
             return FixtureStuckPage;
 #endif
         return entry.Trailer is { } trailer ? KaeriFfiMethods.TrailerPage(trailer, style, Identity, subtitles) : null;
+    }
+
+    /// <summary>The preview's page with no video in it, loaded ahead of the first hover: a kept page then only switches video.</summary>
+    public static string? WarmPage(string subtitles = "") =>
+        KaeriFfiMethods.TrailerPage(null, EmbedStyle.Banner, Identity, subtitles);
+
+    /// <summary>
+    /// The script that switches a kept page to this title's trailer, or null when the title's
+    /// trailer plays in a page of its own: one the app does not play, or the fixture scene's.
+    /// </summary>
+    public static string? Switch(Entry entry)
+    {
+#if KAERI_TESTING
+        if (entry.Trailer?.Id is FixtureId or FixtureStuckId)
+            return null;
+#endif
+        return entry.Trailer is { } trailer ? KaeriFfiMethods.TrailerLoadScript(trailer) : null;
     }
 
     /// <summary>

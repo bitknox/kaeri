@@ -201,7 +201,7 @@ sealed partial class HomeCardFactory(HomeShape shape, HomePage page) : IElementF
             Style = Ui.Res<Style>("HomeCardButtonStyle"),
             Content = stack,
             Tag = card,
-            Width = width,
+            Width = width + 2 * HomeWording.HoverOutset,
         };
         // The words from the card as it is now: set once, then again only where a newer reading
         // of the title changed them, so a card is never made again for a new line or a new dot.
@@ -371,6 +371,10 @@ sealed partial class HomeShelf : Grid
             TabFocusNavigation = KeyboardNavigationMode.Once,
             XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled,
         };
+        // The strip reaches past the shelf by a card's hover outset, which the repeater gives back,
+        // so the fill of a card at either end or edge is not cut off.
+        scroll.Margin = new Thickness(-HomeWording.HoverOutset);
+        repeater.Margin = new Thickness(HomeWording.HoverOutset);
         scroll.Content = repeater;
         // The wheel moves the page, not the shelf; Shift and a sideways wheel move the shelf.
         ForwardWheel(scroll);
@@ -455,7 +459,9 @@ sealed partial class HomeShelf : Grid
     /// <summary>A page: by the whole cards that fit, landing on a card edge, on the standard token.</summary>
     void Page(bool forward)
     {
-        var to = ShelfPaging.Target(scroll.HorizontalOffset, scroll.ViewportWidth, scroll.ExtentWidth, cardWidth, Cards.Count, forward);
+        // The cards show across the shelf's own width; the strip's outset either side is for hover fills.
+        var outset = 2 * HomeWording.HoverOutset;
+        var to = ShelfPaging.Target(scroll.HorizontalOffset, scroll.ViewportWidth - outset, scroll.ExtentWidth - outset, cardWidth, Cards.Count, forward);
         Motion.Ease(scroll, scroll.HorizontalOffset, to, v => scroll.ChangeView(v, null, null, true));
     }
 

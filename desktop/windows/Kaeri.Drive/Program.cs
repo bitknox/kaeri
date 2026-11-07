@@ -63,9 +63,18 @@ var all = new (string Name, Func<Run, Task> Body, string Scene, bool Player)[]
     ("idle-real", IdleScenario.All, "", false),
     ("hover-card", IdleScenario.HoverCard, "watching", false),
     ("season", IdleScenario.Season, "watching", false),
+    // A hover card's trailer, from the pointer resting to the first frame, on a profile copy
+    // (KAERI_PROFILE_ROOT) with its real network (HoverTrailerScenario.cs). By name only.
+    ("hover-trailer", HoverTrailerScenario.All, "", false),
 };
 if (options.Only is null)
-    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks" or "player-film" or "party-film" or "idle" or "idle-real" or "hover-card" or "season"))];
+    all = [.. all.Where(s => s.Name is not ("dump" or "real" or "real-nav" or "feel" or "feel-real" or "scroll" or "scroll-real" or "pages" or "pages-sources" or "wheel" or "player-checks" or "player-film" or "party-film" or "idle" or "idle-real" or "hover-card" or "season" or "hover-trailer"))];
+// The trailer run uses the profile copy only: without one it would start on the person's own profile.
+if (options.Only?.Contains("hover-trailer") == true && Environment.GetEnvironmentVariable("KAERI_PROFILE_ROOT") is not { Length: > 0 })
+{
+    Console.WriteLine("Kaeri.Drive: hover-trailer runs on a profile copy only; set KAERI_PROFILE_ROOT.");
+    Environment.Exit(1);
+}
 Directory.CreateDirectory(options.Out);
 var results = new List<Result>();
 Console.WriteLine($"Kaeri.Drive: display refresh {Native.RefreshHz()} Hz; the pointer and keyboard are in use until this says done.");

@@ -1,22 +1,21 @@
 using Kaeri.App;
 using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
-using Microsoft.UI;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.Web.WebView2.Core;
 
 namespace Kaeri.Windows;
 
 /// <summary>
-/// A trailer's web view in one place (the title page's banner, a hover preview, the Play trailer
-/// window). The art lies over the web view and holds the video's place; it fades away only when
-/// the page says a frame is playing, so the wait is never seen, and it comes back over the video
-/// before the trailer is held or let go of, so the player's own pause and end screens are never
-/// seen. Nothing is ever drawn over the video, and the view takes no pointer or keyboard input
-/// of its own.
+/// A trailer in one place (a hover preview, the Play trailer window). The art lies over the web
+/// view and holds the video's place; it fades away only when the page says a frame is playing,
+/// so the wait is never seen, and it comes back over the video before the trailer is held or let
+/// go of, so the player's own pause and end screens are never seen. Nothing is ever drawn over
+/// the video, and the view takes no pointer or keyboard input of its own.
+/// A preview's trailer plays in one of <see cref="TrailerPool"/>'s kept pages, which only switches
+/// video, and may load held: silent and unseen in the pool's dock until a card takes it
+/// (<see cref="Adopt"/>) and shows it (<see cref="Unhold"/>).
 /// </summary>
 sealed class TrailerStage
 {
@@ -25,17 +24,19 @@ sealed class TrailerStage
 
     static readonly TimeSpan GiveUp = TimeSpan.FromSeconds(8);
 
-    readonly Panel host;
+    Panel host;
+    UIElement? art;
     readonly EmbedStyle style;
     readonly TrailerFlow flow = new();
-    readonly Func<Entry, string?> pageFor;
-    readonly UIElement? art;
-    WebView2? view;
+    readonly string subtitles;
+    /// <summary>A page of the caller's own, never one of the pool's.</summary>
+    readonly Func<Entry, string?>? pageFor;
+    TrailerPage? page;
     DispatcherQueueTimer? timeout, ending;
-    string? folder;
     string id = "";
     long started;
     int generation;
+    bool warm;
     double width, height;
     (double Width, double Height, Thickness Margin, HorizontalAlignment Side)? fixedPlace;
 
@@ -57,8 +58,11 @@ sealed class TrailerStage
         this.host = host;
         this.style = style;
         this.art = art;
-        this.pageFor = pageFor ?? (entry => Trailers.Page(entry, style, subtitles));
+        this.subtitles = subtitles;
+        this.pageFor = pageFor;
     }
+
+    WebView2? View => page?.View;
 
     public TrailerFlow Flow => flow;
     public bool Active => flow.Active;
@@ -83,7 +87,7 @@ sealed class TrailerStage
 
     void Fit()
     {
-        if (view is null)
+        if (View is not { } view)
             return;
         if (fixedPlace is { } place)
         {
@@ -94,6 +98,7 @@ sealed class TrailerStage
             view.VerticalAlignment = VerticalAlignment.Top;
             return;
         }
+        view.Margin = default;
         if (style == EmbedStyle.Full)
         {
             // The window's own: the view fills it, and YouTube's player letterboxes inside.
@@ -102,6 +107,8 @@ sealed class TrailerStage
             view.VerticalAlignment = VerticalAlignment.Stretch;
             return;
         }
+        if (width <= 0 || height <= 0)
+            return;
         view.Height = height;
         view.Width = Math.Min(width, height * 16 / 9);
         view.HorizontalAlignment = HorizontalAlignment.Center;
@@ -113,36 +120,39 @@ sealed class TrailerStage
         flow.Phase != TrailerPhase.Done
         && (fixedPlace is { } place ? w >= place.Width + place.Margin.Right + 260 : Math.Min(w, h * 16 / 9) >= 356 && h >= MinSide);
 
+    /// <summary>Load it unseen and silent, until <see cref="Unhold"/>: call before <see cref="Start"/>.</summary>
+    public void Hold() => flow.Hold();
+
     /// <summary>Load the title's trailer. False when it cannot: no runtime, nothing the player plays, or one already held.</summary>
     public bool Start(Entry entry)
     {
-        if (!TrailerHub.Available || view is not null || !flow.CanStart)
+        if (!TrailerHub.Available || page is not null || !flow.CanStart)
             return false;
-        var page = pageFor(entry);
-        if (page is null)
-            return false;
+        var index = art is null ? host.Children.Count : Math.Max(0, host.Children.IndexOf(art));
+        // Under the art, which holds the place until a frame plays.
+        var taken = style == EmbedStyle.Banner && pageFor is null ? TrailerPool.Take(entry, subtitles, host, index, out warm) : null;
+        if (taken is null)
+        {
+            warm = false;
+            if ((pageFor ?? (e => Trailers.Page(e, style, subtitles)))(entry) is not { } html)
+                return false;
+            taken = TrailerPage.Open(style, html, subtitles, pooled: false, host, index);
+        }
         flow.Start();
+        page = taken;
         id = entry.Trailer?.Id ?? "";
         started = Environment.TickCount64;
         var mine = ++generation;
-        // The view takes no input of its own: a pointer over it does nothing on the viewer's behalf.
-        view = new WebView2
-        {
-            DefaultBackgroundColor = Colors.Transparent,
-            IsHitTestVisible = style == EmbedStyle.Full,
-            IsTabStop = style == EmbedStyle.Full,
-            Opacity = style == EmbedStyle.Full || art is not null ? 1 : 0,
-        };
-        AutomationProperties.SetAccessibilityView(view, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+        page.Hear = text => Heard(mine, text);
+        page.View.Opacity = style == EmbedStyle.Full || art is not null || flow.Held ? 1 : 0;
         Fit();
-        // Under the art, which holds the place until a frame plays.
-        host.Children.Insert(art is null ? host.Children.Count : Math.Max(0, host.Children.IndexOf(art)), view);
+        Log(FfiLogLevel.Debug, $"loading {id}, {Kind}");
         timeout = host.DispatcherQueue.CreateTimer();
         timeout.Interval = GiveUp;
         timeout.IsRepeating = false;
         timeout.Tick += (_, _) =>
         {
-            Log(FfiLogLevel.Warn, $"{id} gave up after {Environment.TickCount64 - started} ms, never playing");
+            Log(FfiLogLevel.Warn, $"{id} gave up after {Environment.TickCount64 - started} ms, never playing, {Kind}");
             var effect = flow.GiveUp();
             if (effect != TrailerEffect.None && style == EmbedStyle.Full)
                 TimedOut?.Invoke();
@@ -151,55 +161,30 @@ sealed class TrailerStage
         timeout.Start();
         if (style == EmbedStyle.Banner)
             TrailerHub.Claim(this);
-        _ = Load(view, page, mine);
         return true;
     }
 
-    async Task Load(WebView2 mine, string page, int token)
+    string Kind => (warm ? "warm" : "cold") + (flow.Held ? ", held" : "");
+
+    /// <summary>
+    /// A held trailer goes under <paramref name="cover"/> in <paramref name="place"/>, an area of
+    /// <paramref name="w"/> by <paramref name="h"/>: a hover card taking the trailer cued for it.
+    /// It stays held, and plays on where it is.
+    /// </summary>
+    public void Adopt(Panel place, UIElement cover, double w, double h)
     {
-        try
-        {
-            var env = await TrailerHub.Environment();
-            await mine.EnsureCoreWebView2Async(env, await TrailerHub.Private());
-            if (token != generation || view != mine)
-                return;
-            var core = mine.CoreWebView2;
-            var settings = core.Settings;
-            settings.AreDefaultContextMenusEnabled = false;
-            settings.AreDevToolsEnabled = false;
-            settings.AreBrowserAcceleratorKeysEnabled = false;
-            settings.IsStatusBarEnabled = false;
-            settings.IsZoomControlEnabled = false;
-            settings.IsSwipeNavigationEnabled = false;
-            settings.IsPasswordAutosaveEnabled = false;
-            settings.IsGeneralAutofillEnabled = false;
-            core.NewWindowRequested += (_, e) => e.Handled = true;
-            // In a preview YouTube's own controls are hidden in its frame; Play trailer keeps them.
-            // WebView2 runs this as each document is created, before it has a head or even a root
-            // to put the style in, where Apple's user script runs at the document's end; so it
-            // waits for the document to be parsed, as there.
-            if (style == EmbedStyle.Banner)
-                await core.AddScriptToExecuteOnDocumentCreatedAsync(
-                    "(function () { var run = function () { " + KaeriFfiMethods.TrailerChromeScript() + " };"
-                    + " if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', run, { once: true }); }"
-                    + " else { run(); } })();");
-            core.WebMessageReceived += (_, e) => Heard(token, e.TryGetWebMessageAsString());
-            // The page is served from the app's own origin, so YouTube sees it as the Referer.
-            folder = Path.Combine(Path.GetTempPath(), "kaeri-windows", "trailers", Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(folder);
-            await File.WriteAllTextAsync(Path.Combine(folder, "trailer.html"), page);
-            core.SetVirtualHostNameToFolderMapping(Trailers.Host, folder, CoreWebView2HostResourceAccessKind.Allow);
-            mine.CoreWebView2.Navigate($"{Trailers.Origin}/trailer.html");
-        }
-        catch (Exception e)
-        {
-            if (token == generation)
-            {
-                Log(FfiLogLevel.Warn, $"the trailer's web view failed: {e.GetType().Name}");
-                Fail();
-            }
-        }
+        host = place;
+        art = cover;
+        (width, height) = (w, h);
+        if (page is null)
+            return;
+        page.MoveTo(place, Math.Max(0, place.Children.IndexOf(cover)));
+        page.View.Opacity = 1;
+        Fit();
     }
+
+    /// <summary>It is being seen now: the art fades from a frame already playing, or once one plays.</summary>
+    public void Unhold() => Apply(flow.Unhold());
 
     void Heard(int token, string? text)
     {
@@ -212,33 +197,30 @@ sealed class TrailerStage
             Log(FfiLogLevel.Warn, $"{id} failed after {ms} ms: error {error.Code}, {Trailers.Meaning(error.Code)}");
             Refused?.Invoke(error.Code);
         }
-        else if (message is TrailerMessage.Playing)
-            Log(FfiLogLevel.Debug, $"{id} playing, shown after {ms} ms");
+        else if (message is TrailerMessage.Playing && flow.Phase is TrailerPhase.Loading or TrailerPhase.Paused)
+            Log(FfiLogLevel.Debug, flow.Held ? $"{id} playing after {ms} ms, {Kind}" : $"{id} playing, shown after {ms} ms, {Kind}");
         Apply(flow.Heard(message));
+        // It played: no giving up on it now, held or not.
+        if (flow.Phase == TrailerPhase.Playing)
+            timeout?.Stop();
     }
 
     static void Log(FfiLogLevel level, string line) => KaeriFfiMethods.LogLine(level, "trailer", line);
 
-    void Fail()
-    {
-        Refused?.Invoke(0);
-        Apply(flow.Failed());
-    }
-
-    void Apply(TrailerEffect effect)
+    void Apply(TrailerEffect effect, bool fade = true)
     {
         if (effect.HasFlag(TrailerEffect.PausePlayer))
         {
             if (art is not null && effect.HasFlag(TrailerEffect.HideVideo))
             {
                 // Pause once the art covers it, so the paused screen is never seen.
-                var mine = view;
+                var mine = page;
                 var wait = host.DispatcherQueue.CreateTimer();
                 wait.Interval = Motion.FadeOutTime;
                 wait.IsRepeating = false;
                 wait.Tick += (_, _) =>
                 {
-                    if (view == mine && flow.Phase == TrailerPhase.Paused)
+                    if (page == mine && flow.Phase == TrailerPhase.Paused)
                         Control(TrailerControl.Pause);
                 };
                 wait.Start();
@@ -248,7 +230,7 @@ sealed class TrailerStage
         }
         if (effect.HasFlag(TrailerEffect.PlayPlayer))
             Control(TrailerControl.Play);
-        if (effect.HasFlag(TrailerEffect.ShowVideo) && view is not null)
+        if (effect.HasFlag(TrailerEffect.ShowVideo) && View is { } view)
         {
             timeout?.Stop();
             if (art is not null)
@@ -266,12 +248,12 @@ sealed class TrailerStage
                 if (!effect.HasFlag(TrailerEffect.Release))
                     Motion.Cover(art, true);
             }
-            else if (!effect.HasFlag(TrailerEffect.Release) && view is not null)
-                Motion.Video(view, false);
+            else if (!effect.HasFlag(TrailerEffect.Release) && View is { } shown)
+                Motion.Video(shown, false);
             Showing?.Invoke(false);
         }
         if (effect.HasFlag(TrailerEffect.Release))
-            Let(fade: effect.HasFlag(TrailerEffect.HideVideo) && style == EmbedStyle.Banner);
+            Let(fade: fade && effect.HasFlag(TrailerEffect.HideVideo) && style == EmbedStyle.Banner);
     }
 
     /// <summary>
@@ -297,19 +279,11 @@ sealed class TrailerStage
 
     async void OnEnding(DispatcherQueueTimer sender, object args)
     {
-        var mine = view;
-        if (mine?.CoreWebView2 is not { } core || !flow.Showing)
+        var mine = page;
+        if (mine is null || !flow.Showing)
             return;
-        string text;
-        try
-        {
-            text = await core.ExecuteScriptAsync("window.trailer && window.trailer.remaining ? window.trailer.remaining() : -1");
-        }
-        catch (Exception)
-        {
-            return;
-        }
-        if (view != mine || !flow.Showing)
+        var text = await mine.Ask("window.trailer && window.trailer.remaining ? window.trailer.remaining() : -1");
+        if (page != mine || !flow.Showing || text is null)
             return;
         if (double.TryParse(text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var left)
             && left >= 0 && left <= BeforeTheEnd.TotalSeconds)
@@ -329,20 +303,18 @@ sealed class TrailerStage
     /// <summary>Sound on or off, for this trailer only.</summary>
     public void SetSound(bool on) => Control(on ? TrailerControl.Unmute : TrailerControl.Mute);
 
-    /// <summary>Let go of the view and bring the banner back.</summary>
-    public void Stop() => Apply(flow.Stop());
+    /// <summary>
+    /// Let go of the view and bring the banner back. With <paramref name="fade"/> false the view goes
+    /// at once: its card is closing over it.
+    /// </summary>
+    public void Stop(bool fade = true) => Apply(flow.Stop(), fade);
 
-    void Control(TrailerControl control)
-    {
-        if (view?.CoreWebView2 is { } core)
-        {
-            if (control is TrailerControl.Mute or TrailerControl.Unmute)
-                core.IsMuted = control == TrailerControl.Mute;
-            _ = core.ExecuteScriptAsync(KaeriFfiMethods.TrailerScript(control));
-        }
-    }
+    void Control(TrailerControl control) => page?.Control(control);
 
-    /// <summary>The view goes, with the page's folder: after the video has faded away when it was showing.</summary>
+    /// <summary>
+    /// The page goes back to the pool, or is closed when it is not the pool's: after the video has
+    /// faded away when it was showing.
+    /// </summary>
     void Let(bool fade)
     {
         generation++;
@@ -350,47 +322,33 @@ sealed class TrailerStage
         timeout = null;
         ending?.Stop();
         TrailerHub.Release(this);
-        var gone = view;
-        view = null;
-        void Close()
+        var gone = page;
+        page = null;
+        if (gone is null)
+            return;
+        gone.Hear = null;
+        void Done()
         {
-            host.Children.Remove(gone);
-            try
-            {
-                gone.Close();
-            }
-            catch (Exception)
-            {
-                // Already closed with its window.
-            }
-        }
-        if (gone is not null)
-        {
-            if (fade && art is not null)
-            {
-                // The art comes back over the playing video; the player goes under it.
-                Motion.Cover(art, true, () =>
-                {
-                    _ = gone.CoreWebView2?.ExecuteScriptAsync(KaeriFfiMethods.TrailerScript(TrailerControl.Pause));
-                    Close();
-                });
-            }
-            else if (fade)
-            {
-                _ = gone.CoreWebView2?.ExecuteScriptAsync(KaeriFfiMethods.TrailerScript(TrailerControl.Pause));
-                Motion.Video(gone, false, Close);
-            }
+            if (gone.Pooled)
+                TrailerPool.Give(gone);
             else
-                Close();
+                gone.Close();
         }
-        if (folder is not null)
+        if (fade && art is not null)
         {
-            var dir = folder;
-            folder = null;
-            _ = Task.Run(() =>
+            // The art comes back over the playing video; the player goes under it.
+            Motion.Cover(art, true, () =>
             {
-                try { Directory.Delete(dir, true); } catch (IOException) { }
+                gone.Control(TrailerControl.Pause);
+                Done();
             });
         }
+        else if (fade)
+        {
+            gone.Control(TrailerControl.Pause);
+            Motion.Video(gone.View, false, Done);
+        }
+        else
+            Done();
     }
 }
