@@ -3,8 +3,8 @@
 //!
 //! | Component | Job |
 //! |---|---|
-//! | `example-books` | The reference book source: a manga and a novel, on `books.example`. |
-//! | `test-hostile-books` | Attacks the host: spins, allocates, reaches for undeclared hosts, hands over pages no reader should take. |
+//! | `example-books` | The reference book source: a manga and a novel, on `books.example`. Built for `book-plugin`, so the host fetches every page. |
+//! | `test-hostile-books` | Attacks the host: spins, allocates, reaches for undeclared hosts, hands over pages no reader should take. Built for `book-plugin-with-pages`. |
 //!
 //! It also answers a question about the ABI itself: whether a record in `source` can grow a
 //! field without making a different world. It cannot. See [`a_record_that_grows_a_field_is_a_different_world`].
@@ -22,7 +22,7 @@ use std::{path::PathBuf, time::Duration};
 
 use kaeri_plugin::{
     AnyPlugin, PluginError, PluginHost, PluginKind, WasmBookSource,
-    books::{Content, MAX_PAGE_BYTES, PageImage, SourceError, TitleHints},
+    books::{Content, MAX_PAGE_BYTES, SourceError, TitleHints},
     sandbox::Limits,
 };
 
@@ -232,10 +232,9 @@ async fn chapter_content_is_pages_with_their_headers_or_text() {
     let pages = plugin.chapter_content(LANTERN, "lantern-1").await.expect("no trap");
     let Ok(Content::Images(pages)) = pages else { panic!("expected pages, got {pages:?}") };
     assert_eq!(pages.len(), 3);
-    let PageImage::Url(at) = &pages[0].image else { panic!("expected an address") };
-    assert_eq!(at.url, "https://pages.example/lantern/lantern-1/001.jpg");
-    assert!(at.headers.iter().any(|(name, _)| name == "referer"));
+    assert_eq!(pages[0].url, "https://pages.example/lantern/lantern-1/001.jpg");
     assert_eq!(pages[0].width, Some(1_200));
+    assert!(pages[0].headers.iter().any(|(name, _)| name == "referer"));
 
     let text = plugin.chapter_content(SALTGLASS, "saltglass-2").await.expect("no trap");
     let Ok(Content::Text(text)) = text else { panic!("expected text, got {text:?}") };
@@ -297,10 +296,11 @@ async fn a_book_plugin_is_an_ordinary_book_source() {
     // Read marks key on the work and the number, not on the version.
     assert_eq!(chapters[1].key(false), chapters[2].key(false));
 
-    let content = source.content(LANTERN, "lantern-1").await.expect("content");
+    let content = source.content(LANTERN, "lantern-extra").await.expect("content");
     let ChapterContent::Images(pages) = content else { panic!("expected pages") };
-    assert_eq!(pages.len(), 3);
-    assert!(pages.iter().all(|p| p.made.is_none() && !p.url.is_empty()));
+    assert_eq!(pages.len(), 4);
+    // A plugin built for `book-plugin` makes no pages: the host fetches every one.
+    assert!(pages.iter().all(|p| p.made.is_none()), "{pages:?}");
 
     let missing = source.chapters("nope", &BookHints::default()).await.unwrap_err();
     assert!(!missing.should_failover());
@@ -312,47 +312,41 @@ async fn a_book_plugin_is_an_ordinary_book_source() {
 }
 
 #[tokio::test]
-async fn a_page_the_plugin_makes_is_asked_for_one_at_a_time_and_checked() {
-    use kaeri_core::{books::ChapterContent, traits::BookSource};
+async fn a_plugin_built_for_book_plugin_is_never_asked_for_pages() {
     let Some(path) = example() else { return };
     let plugin = host().load_book(&path).await.expect("load");
+    assert!(!plugin.makes_pages());
+    let url = "https://pages.example/lantern/lantern-1/001.jpg";
+    let page = plugin.page_bytes(LANTERN, "lantern-1", url).await.expect("no call to trap");
+    assert!(matches!(page, Ok(None)), "got {page:?}");
+}
 
-    // The archive chapter names its pages by entry, with no address.
-    let content = plugin.chapter_content(LANTERN, "lantern-extra").await.expect("no trap");
-    let Ok(Content::Images(pages)) = content else { panic!("expected pages, got {content:?}") };
-    let ids: Vec<_> = pages
-        .iter()
-        .map(|p| match &p.image {
-            PageImage::Plugin(id) => id.as_str(),
-            PageImage::Url(at) => panic!("expected a page the plugin makes, got {}", at.url),
-        })
-        .collect();
-    assert_eq!(ids, ["001.png", "002.png", "003.png", "004.png"]);
+#[tokio::test]
+async fn a_plugin_with_pages_makes_the_pages_it_names_and_leaves_the_rest() {
+    use kaeri_core::{books::ChapterContent, traits::BookSource};
+    let Some(path) = hostile() else { return };
+    let plugin = host().load_book(&path).await.expect("load");
+    assert!(plugin.makes_pages());
 
-    // Each page comes back whole, as a PNG, and passes the host's check.
-    let page = plugin.page_bytes(LANTERN, "lantern-extra", "003.png").await.expect("no trap");
-    let page = page.expect("a page");
+    // A page it makes comes back whole, as a real PNG that passes the host's check.
+    let page = plugin.page_bytes("x", "1", &made("honest")).await.expect("no trap");
+    let page = page.expect("a page").expect("made by the plugin");
     assert!(page.starts_with(b"\x89PNG"), "{:?}", &page[..8.min(page.len())]);
-    // A page it does not make is not found, which never fails over.
-    let missing = plugin.page_bytes(LANTERN, "lantern-1", "001.jpg").await.expect("no trap");
-    assert!(matches!(missing, Err(SourceError::NotFound)), "got {missing:?}");
+    // A page it leaves to the host is `None`.
+    let left = plugin.page_bytes("x", "1", "https://allowed.example/page-2.jpg").await;
+    assert!(matches!(left, Ok(Ok(None))), "got {left:?}");
 
-    // As a book source, the page carries what the plugin needs to make it again, and the
-    // source's own page fetch asks the plugin rather than any address.
+    // As a book source, each page carries its chapter, and the source's own page fetch asks
+    // the plugin first.
     let source = WasmBookSource::new(plugin);
-    let ChapterContent::Images(refs) =
-        source.content(LANTERN, "lantern-extra").await.expect("content")
-    else {
+    let ChapterContent::Images(pages) = source.content("x", "1").await.expect("content") else {
         panic!("expected pages")
     };
-    let made = refs[1].made.as_ref().expect("a made page");
-    assert_eq!((made.series.as_str(), made.chapter.as_str()), (LANTERN, "lantern-extra"));
-    assert_eq!(made.id, "002.png");
-    assert!(refs[1].url.is_empty());
-    assert_eq!((refs[1].width, refs[1].height), (Some(60), Some(90)));
-    let bytes = BookSource::fetch_page(&source, &refs[1]).await.expect("the plugin's page");
-    assert!(bytes.starts_with(b"\x89PNG"));
-    assert_ne!(bytes, page, "each entry is its own page");
+    let chapter = pages[0].made.as_ref().expect("a page the plugin may make");
+    assert_eq!((chapter.series.as_str(), chapter.chapter.as_str()), ("x", "1"));
+    let honest = &hostile_pages(&source).await["honest"];
+    let bytes = BookSource::fetch_page(&source, honest).await.expect("the plugin's page");
+    assert_eq!(bytes, page);
 }
 
 #[tokio::test]
@@ -472,7 +466,12 @@ async fn pages_on_an_undeclared_host_are_never_fetched() {
     assert!(reason.contains("host"), "{reason}");
 }
 
-/// The hostile plugin's pages that it makes itself, as a book source sees them, by id.
+/// The address of the hostile plugin's page `name`, one it makes itself.
+fn made(name: &str) -> String {
+    format!("https://allowed.example/made/{name}.png")
+}
+
+/// The hostile plugin's pages that it makes itself, as a book source sees them, by name.
 async fn hostile_pages(
     source: &WasmBookSource,
 ) -> std::collections::HashMap<String, kaeri_core::books::PageRef> {
@@ -480,7 +479,14 @@ async fn hostile_pages(
     let ChapterContent::Images(pages) = source.content("x", "1").await.expect("content") else {
         panic!("expected pages")
     };
-    pages.into_iter().filter_map(|p| Some((p.made.clone()?.id, p))).collect()
+    pages
+        .into_iter()
+        .filter_map(|p| {
+            let name =
+                p.url.strip_prefix("https://allowed.example/made/")?.strip_suffix(".png")?;
+            Some((name.to_owned(), p))
+        })
+        .collect()
 }
 
 #[tokio::test]
@@ -488,9 +494,9 @@ async fn a_page_over_the_size_ceiling_is_refused_as_a_parse_error() {
     use kaeri_core::{error::ProviderError, traits::BookSource};
     let Some(path) = hostile() else { return };
     let plugin = host().load_book(&path).await.expect("load");
-    let result = plugin.page_bytes("x", "1", "too-large").await.expect("no trap");
+    let result = plugin.page_bytes("x", "1", &made("too-large")).await.expect("no trap");
     let Err(SourceError::Parse(reason)) = result else {
-        panic!("expected the page to be refused, got {:?}", result.map(|b| b.len()))
+        panic!("expected the page to be refused, got {:?}", result.map(|b| b.map(|b| b.len())))
     };
     assert!(reason.contains(&format!("{} bytes", MAX_PAGE_BYTES + 1)), "{reason}");
 
@@ -508,7 +514,7 @@ async fn a_page_over_the_size_ceiling_is_refused_as_a_parse_error() {
 async fn a_page_that_is_no_image_is_refused_by_its_first_bytes() {
     let Some(path) = hostile() else { return };
     let plugin = host().load_book(&path).await.expect("load");
-    let result = plugin.page_bytes("x", "1", "not-an-image").await.expect("no trap");
+    let result = plugin.page_bytes("x", "1", &made("not-an-image")).await.expect("no trap");
     let Err(SourceError::Parse(reason)) = result else {
         panic!("expected the page to be refused, got {result:?}")
     };
@@ -519,7 +525,7 @@ async fn a_page_that_is_no_image_is_refused_by_its_first_bytes() {
 async fn a_page_whose_header_claims_too_many_pixels_is_refused_before_decoding() {
     let Some(path) = hostile() else { return };
     let plugin = host().load_book(&path).await.expect("load");
-    let result = plugin.page_bytes("x", "1", "too-many-pixels").await.expect("no trap");
+    let result = plugin.page_bytes("x", "1", &made("too-many-pixels")).await.expect("no trap");
     let Err(SourceError::Parse(reason)) = result else {
         panic!("expected the page to be refused, got {result:?}")
     };
@@ -538,7 +544,7 @@ async fn a_page_that_never_comes_is_stopped_by_the_deadline() {
     .unwrap();
     let plugin = host.load_book(&path).await.expect("load");
     let started = std::time::Instant::now();
-    let error = plugin.page_bytes("x", "1", "spin").await.expect_err("stopped");
+    let error = plugin.page_bytes("x", "1", &made("spin")).await.expect_err("stopped");
     assert!(matches!(error, PluginError::Deadline { .. }), "got {error:?}");
     assert!(started.elapsed() < Duration::from_secs(10));
 
@@ -562,14 +568,14 @@ async fn a_page_that_hoards_memory_is_stopped_by_the_memory_ceiling() {
     )
     .unwrap();
     let plugin = host.load_book(&path).await.expect("load");
-    match plugin.page_bytes("x", "1", "hoard").await {
+    match plugin.page_bytes("x", "1", &made("hoard")).await {
         Err(PluginError::Trap { .. } | PluginError::Deadline { .. }) => {}
         Ok(Err(SourceError::Other(message))) if message.contains("ESCAPED") => {
             panic!("the memory ceiling did not hold: {message}")
         }
         other => panic!(
             "expected the guest to be stopped, got {:?}",
-            other.map(|r| r.map(|b| b.len()))
+            other.map(|r| r.map(|b| b.map(|b| b.len())))
         ),
     }
 }
