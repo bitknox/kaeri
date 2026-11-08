@@ -22,7 +22,7 @@ public static partial class T
     public static string NoticeNotSaved(string cause) => Fill(Get("NoticeNotSaved"), ("cause", cause));
 
     /// <summary>Toast with a wait.</summary>
-    public static string NoticeEverything(string wait, string size, long count, string percent) => Fill(GetPlural("NoticeEverything", count), ("wait", wait), ("size", size), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("percent", percent));
+    public static string NoticeEverything(string wait, string size, long count, string percent) => Fill(GetPlural("NoticeEverything", count), ("wait", wait), ("size", size), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("percent", percent));
 
     /// <summary>The storage is full.</summary>
     public static string CauseDiskFull => Get("CauseDiskFull");
@@ -37,7 +37,7 @@ public static partial class T
     public static string SettingsLanguage => Get("SettingsLanguage");
 
     /// <summary>Row subtitle on the continue shelf.</summary>
-    public static string QueueLeft(long count, string title) => Fill(GetPlural("QueueLeft", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
+    public static string QueueLeft(long count, string title) => Fill(GetPlural("QueueLeft", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
 
     /// <summary>The reasons a match was made.</summary>
     public static string MatchRemembered(string percent) => Fill(Get("MatchRemembered"), ("percent", percent));
@@ -53,6 +53,9 @@ public static partial class T
 
     /// <summary>Order changes per language.</summary>
     public static string TwoArgs(string who, string what) => Fill(Get("TwoArgs"), ("who", who), ("what", what));
+
+    /// <summary>A number that names something beside a count.</summary>
+    public static string EpisodeSeen(long episode, long count) => Fill(Get("EpisodeSeen"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The languages this build has text for, source first. Draft ones carry the draft label.</summary>
     public static readonly IReadOnlyList<(string Tag, string Name, string? Flag, bool Draft)> Languages = new (string, string, string?, bool)[]
@@ -79,6 +82,7 @@ public static partial class T
         ["AtHome"] = "@home is Kaeri",
         ["Braces"] = "Use {{name}} here",
         ["TwoArgs"] = "{who} watched {what}",
+        ["EpisodeSeen"] = "Episode {episode}, seen {count} times",
     };
 
     /// <summary>The plural category of a whole number in a language, from CLDR.</summary>

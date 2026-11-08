@@ -16,15 +16,15 @@
     <string name="notice_cast_no_device">TV đã chọn không còn trong mạng nữa.</string>
     <string name="notice_cast_unavailable">Phiên bản Kaeri này không hỗ trợ chiếu lên TV.</string>
     <string name="cast_phase_starting">Đang bắt đầu trên %1$s</string>
-    <string name="cast_phase_starting_for">Đang bắt đầu trên %1$s · %2$d giây</string>
-    <string name="cast_phase_waiting">Đang chờ %1$s · %2$d giây</string>
-    <string name="cast_phase_preparing">Đang chuẩn bị luồng phát · %1$d giây</string>
+    <string name="cast_phase_starting_for">Đang bắt đầu trên %1$s · %2$,d giây</string>
+    <string name="cast_phase_waiting">Đang chờ %1$s · %2$,d giây</string>
+    <string name="cast_phase_preparing">Đang chuẩn bị luồng phát · %1$,d giây</string>
     <string name="discussion_age_now">vừa xong</string>
-    <string name="discussion_age_minutes">%1$d phút</string>
-    <string name="discussion_age_hours">%1$d giờ</string>
-    <string name="discussion_age_days">%1$d ngày</string>
-    <string name="discussion_age_weeks">%1$d tuần</string>
-    <string name="discussion_age_years">%1$d năm</string>
+    <string name="discussion_age_minutes">%1$,d phút</string>
+    <string name="discussion_age_hours">%1$,d giờ</string>
+    <string name="discussion_age_days">%1$,d ngày</string>
+    <string name="discussion_age_weeks">%1$,d tuần</string>
+    <string name="discussion_age_years">%1$,d năm</string>
     <string name="notice_comment_like_failed">Không thể thích bình luận. Hãy thử lại.</string>
     <string name="notice_comment_delete_failed">Không thể xóa bình luận. Hãy thử lại.</string>
     <string name="notice_discussion_sign_in">Đăng nhập AniList để thích và trả lời.</string>
@@ -34,7 +34,7 @@
     <string name="home_spotlight_because">Vì bạn đã xem xong %1$s</string>
     <string name="home_spotlight_recommended">Gợi ý cho bạn</string>
     <string name="home_spotlight_popular">Phổ biến mùa này</string>
-    <string name="home_time_left">Tập %1$d · còn %2$d phút</string>
+    <string name="home_time_left">Tập %1$d · còn %2$,d phút</string>
     <string name="home_episode_out">Tập %1$d đã phát hành</string>
     <string name="home_episode_next">Tập %1$d sẽ phát sau</string>
     <string name="home_episode_out_today">Tập %1$d · ra hôm nay</string>
@@ -55,6 +55,24 @@
     <string name="home_trending">Đang thịnh hành</string>
     <string name="home_because">Vì bạn đã xem xong %1$s</string>
     <string name="home_more_genre">Thêm %1$s</string>
+    <string name="home_more_genre_action">Thêm hành động</string>
+    <string name="home_more_genre_adventure">Thêm phiêu lưu</string>
+    <string name="home_more_genre_comedy">Thêm hài</string>
+    <string name="home_more_genre_drama">Thêm chính kịch</string>
+    <string name="home_more_genre_ecchi">Thêm ecchi</string>
+    <string name="home_more_genre_fantasy">Thêm giả tưởng</string>
+    <string name="home_more_genre_horror">Thêm kinh dị</string>
+    <string name="home_more_genre_mahou_shoujo">Thêm mahou shoujo</string>
+    <string name="home_more_genre_mecha">Thêm mecha</string>
+    <string name="home_more_genre_music">Thêm âm nhạc</string>
+    <string name="home_more_genre_mystery">Thêm bí ẩn</string>
+    <string name="home_more_genre_psychological">Thêm tâm lý</string>
+    <string name="home_more_genre_romance">Thêm lãng mạn</string>
+    <string name="home_more_genre_sci_fi">Thêm khoa học viễn tưởng</string>
+    <string name="home_more_genre_slice_of_life">Thêm đời thường</string>
+    <string name="home_more_genre_sports">Thêm thể thao</string>
+    <string name="home_more_genre_supernatural">Thêm siêu nhiên</string>
+    <string name="home_more_genre_thriller">Thêm giật gân</string>
     <string name="home_spotlight_demo">Bản demo, chia sẻ thoải mái</string>
     <string name="licensed_return">Bạn đã xem tập %1$d trên %2$s chưa?</string>
     <string name="licensed_marked">Đã đánh dấu tập %1$d là đã xem.</string>
@@ -66,7 +84,7 @@
     <string name="cause_airs_today">hôm nay lúc %1$s</string>
     <string name="cause_airs_tomorrow">ngày mai lúc %1$s</string>
     <plurals name="cause_airs_in_days">
-        <item quantity="other">sau %1$d ngày lúc %2$s</item>
+        <item quantity="other">sau %1$,d ngày lúc %2$s</item>
     </plurals>
     <string name="cause_airs_on_date">vào %1$s lúc %2$s</string>
     <string name="cause_no_playable_stream">Nguồn đã trả lời nhưng không có gì để phát. Hãy thử nguồn khác.</string>
@@ -78,11 +96,11 @@
     <string name="cause_source_cannot_download">Nguồn này phát được tập nhưng không tải về được.</string>
     <string name="cause_no_source_could_list_show">Không có nguồn nào liệt kê được tựa này, nên không tải về được.</string>
     <plurals name="cause_subtitles_merged">
-        <item quantity="other">Đã gộp %1$d bản phụ đề vào video.</item>
+        <item quantity="other">Đã gộp %1$,d bản phụ đề vào video.</item>
     </plurals>
     <string name="cause_subtitles_left_apart">Phụ đề vẫn nằm trong tệp riêng bên cạnh. %1$s</string>
     <plurals name="cause_already_in_downloads">
-        <item quantity="other">%1$d tập đã có trong mục tải về.</item>
+        <item quantity="other">%1$,d tập đã có trong mục tải về.</item>
     </plurals>
     <string name="status_looking_up_title">Đang tìm tựa…</string>
     <string name="status_loading_sources">Đang tải các nguồn…</string>
@@ -95,10 +113,10 @@
     <string name="start_buffering">Đang đệm</string>
     <string name="status_searching_sources">Đang tìm trong các nguồn tập %1$s…</string>
     <string name="notice_player_failed_to_start">Không khởi chạy được mpv. Hãy kiểm tra mpv chạy được khi mở riêng. (%1$s)</string>
-    <string name="notice_stream_no_video">Luồng này không có hình. Đang thử %1$d trên %2$d.</string>
+    <string name="notice_stream_no_video">Luồng này không có hình. Đang thử %1$,d trên %2$,d.</string>
     <string name="notice_player_could_not_play">mpv không phát được tệp này. %1$s</string>
     <string name="notice_player_exited_silently">mpv đã đóng mà không phát gì và không nêu lý do. Hãy thử nguồn khác.</string>
-    <string name="notice_player_not_playing">mpv chưa bắt đầu phát sau %1$d giây. Nguồn có thể không có dữ liệu. Hãy kiểm tra mpv có phát được một tệp khi chạy riêng không.</string>
+    <string name="notice_player_not_playing">mpv chưa bắt đầu phát sau %1$,d giây. Nguồn có thể không có dữ liệu. Hãy kiểm tra mpv có phát được một tệp khi chạy riêng không.</string>
     <string name="notice_no_player">Phiên bản Kaeri này không phát được video.</string>
     <string name="notice_mpv_missing">Không tìm thấy %1$s. Hãy cài mpv để phát tập.</string>
     <string name="notice_mpv_old">mpv %1$s có thể phát, nhưng trình phát của Kaeri cần mpv 0.36 trở lên cho nút bỏ qua, thẻ Tiếp theo, menu và ảnh xem trước.</string>
@@ -140,10 +158,10 @@
     <string name="notice_download_removed_file_kept">Đã xóa bản tải về, nhưng không xóa được tệp. %1$s</string>
     <string name="notice_download_removed">Đã xóa bản tải về.</string>
     <plurals name="notice_downloads_cleared">
-        <item quantity="other">Đã xóa %1$d bản tải về đã xong.</item>
+        <item quantity="other">Đã xóa %1$,d bản tải về đã xong.</item>
     </plurals>
     <plurals name="notice_skip_marks_cleared">
-        <item quantity="other">Đã xóa %1$d mốc bỏ qua bạn đã đánh dấu.</item>
+        <item quantity="other">Đã xóa %1$,d mốc bỏ qua bạn đã đánh dấu.</item>
     </plurals>
     <string name="notice_skip_marks_none">Bạn chưa đánh dấu mốc bỏ qua nào.</string>
     <string name="notice_skip_marks_not_cleared">Không xóa được các mốc bỏ qua của bạn. %1$s</string>
@@ -155,13 +173,13 @@
     <string name="notice_downloads_none_new">Chưa thêm gì mới vào hàng chờ. %1$s</string>
     <string name="notice_downloads_none_new_stopped">Chưa thêm gì mới vào hàng chờ. %1$s %2$s</string>
     <plurals name="notice_episodes_queued_existing">
-        <item quantity="other">Đã thêm %1$d tập vào hàng chờ. %2$s</item>
+        <item quantity="other">Đã thêm %1$,d tập vào hàng chờ. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_stopped">
-        <item quantity="other">Đã thêm %1$d tập vào hàng chờ, sau đó dừng. %2$s</item>
+        <item quantity="other">Đã thêm %1$,d tập vào hàng chờ, sau đó dừng. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_existing_stopped">
-        <item quantity="other">Đã thêm %1$d tập vào hàng chờ, sau đó dừng. %2$s %3$s</item>
+        <item quantity="other">Đã thêm %1$,d tập vào hàng chờ, sau đó dừng. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Không đủ dung lượng trống để giữ các tập sau đã tải. Hãy giải phóng thêm dung lượng để tải thêm.</string>
     <string name="party_needs_server">Hãy chọn máy chủ cho xem chung trước, dưới tên syncplay.server. %1$s do %2$s vận hành.</string>
@@ -181,13 +199,13 @@
     <string name="reading_usually_saturdays">Thường ra vào thứ Bảy</string>
     <string name="reading_usually_sundays">Thường ra vào Chủ nhật</string>
     <plurals name="reading_about_every_weeks">
-        <item quantity="other">Khoảng %1$d tuần một lần</item>
+        <item quantity="other">Khoảng %1$,d tuần một lần</item>
     </plurals>
     <string name="reading_also_a_show">Cũng có bản phim</string>
     <string name="reading_also_a_book">Cũng có bản truyện</string>
     <string name="reading_split_chapter">Chương %1$s được gửi tới các dịch vụ theo dõi là chương %2$s.</string>
     <string name="reader_resumed">Mở lại ở trang %1$d</string>
-    <string name="reader_resumed_image">Mở lại ở ảnh %1$d</string>
+    <string name="reader_resumed_image">Mở lại ở ảnh %1$,d</string>
     <string name="reader_back_to_page">Quay lại trang %1$d</string>
     <string name="reader_moved">Đã chuyển tới %1$s, trang %2$d, nơi %3$s dừng lại</string>
     <string name="reader_moved_number">Đã chuyển tới chương %1$s, trang %2$d, nơi %3$s dừng lại</string>
@@ -227,10 +245,10 @@
     <string name="reading_status_cancelled">Đã hủy</string>
     <string name="reading_status_not_yet">Chưa phát hành</string>
     <plurals name="reading_chapters">
-        <item quantity="other">%1$d chương</item>
+        <item quantity="other">%1$,d chương</item>
     </plurals>
     <plurals name="reading_volumes">
-        <item quantity="other">%1$d tập</item>
+        <item quantity="other">%1$,d tập</item>
     </plurals>
     <string name="reading_on_planning">Trong danh sách dự định của bạn</string>
     <string name="reading_spotlight_new_chapter">Chương mới của truyện bạn theo dõi</string>
@@ -240,12 +258,12 @@
     <string name="reading_out_today">Chương %1$s ra hôm nay</string>
     <string name="reading_out_today_titled">Chương %1$s, %2$s, ra hôm nay</string>
     <string name="reading_chapter_page">Chương %1$s · trang %2$d</string>
-    <string name="reading_chapter_percent">Chương %1$s · %2$d%%</string>
+    <string name="reading_chapter_percent">Chương %1$s · %2$,d%%</string>
     <string name="reading_chapter_new">Chương %1$s là chương mới</string>
     <string name="reading_next_part">Phần %1$s</string>
-    <string name="reading_part_percent">Phần %1$s · %2$d%%</string>
+    <string name="reading_part_percent">Phần %1$s · %2$,d%%</string>
     <string name="reading_part_new">Phần %1$s là phần mới</string>
-    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_percent">%1$s · %2$,d%%</string>
     <string name="reading_label_new">%1$s là phần mới</string>
     <string name="reading_part_titled">Phần %1$s · %2$s</string>
     <string name="reading_label_titled">%1$s · %2$s</string>
@@ -267,7 +285,7 @@
     <string name="export_device_tablet">Máy tính bảng</string>
     <string name="export_chapter">Chương %1$s</string>
     <plurals name="export_waits_for_wifi">
-        <item quantity="other">%1$d chương chưa được tải, nên lượt gửi này sẽ chờ Wi-Fi rồi tự chạy tiếp.</item>
+        <item quantity="other">%1$,d chương chưa được tải, nên lượt gửi này sẽ chờ Wi-Fi rồi tự chạy tiếp.</item>
     </plurals>
     <string name="reading_chapter_titled">Chương %1$s · %2$s</string>
     <string name="reading_row_read">Đã đọc</string>
@@ -278,34 +296,34 @@
     <string name="reading_row_on_device">Trên thiết bị này</string>
     <string name="reading_row_queued">Đang chờ</string>
     <string name="reading_row_waits_wifi">Đang chờ · cần Wi-Fi</string>
-    <string name="reading_row_downloading">Đang tải · %1$d/%2$d trang</string>
+    <string name="reading_row_downloading">Đang tải · %1$,d/%2$,d trang</string>
     <string name="reading_row_failed">Không tải được</string>
     <string name="reading_row_page_of">Trang %1$d/%2$d</string>
     <string name="reading_row_page">Trang %1$d</string>
-    <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_percent">%1$,d%%</string>
     <string name="reading_row_opened">Đã mở</string>
     <string name="reading_row_bookmarked">Đã đánh dấu</string>
     <plurals name="reading_row_pages">
-        <item quantity="other">%1$d trang</item>
+        <item quantity="other">%1$,d trang</item>
     </plurals>
     <plurals name="reading_row_versions">
-        <item quantity="other">%1$d phiên bản</item>
+        <item quantity="other">%1$,d phiên bản</item>
     </plurals>
     <string name="reading_ago_now">vừa xong</string>
-    <string name="reading_ago_minutes">%1$d phút trước</string>
+    <string name="reading_ago_minutes">%1$,d phút trước</string>
     <string name="reading_ago_today">hôm nay</string>
     <string name="reading_ago_yesterday">hôm qua</string>
     <plurals name="reading_ago_days">
-        <item quantity="other">%1$d ngày trước</item>
+        <item quantity="other">%1$,d ngày trước</item>
     </plurals>
     <plurals name="reading_ago_weeks">
-        <item quantity="other">%1$d tuần trước</item>
+        <item quantity="other">%1$,d tuần trước</item>
     </plurals>
     <plurals name="reading_ago_months">
-        <item quantity="other">%1$d tháng trước</item>
+        <item quantity="other">%1$,d tháng trước</item>
     </plurals>
     <plurals name="reading_ago_years">
-        <item quantity="other">%1$d năm trước</item>
+        <item quantity="other">%1$,d năm trước</item>
     </plurals>
     <string name="reading_removed_from">Đã xóa khỏi %1$s</string>
     <string name="reading_removed_not_there">Không có trong danh sách %1$s của bạn</string>
@@ -316,14 +334,14 @@
     <string name="reading_miss_down_since">Không phản hồi từ %1$s</string>
     <string name="reading_miss_down">Không phản hồi</string>
     <plurals name="reading_dl_parts">
-        <item quantity="other">%1$d phần</item>
+        <item quantity="other">%1$,d phần</item>
     </plurals>
     <string name="reading_dl_size">%1$s</string>
-    <string name="reading_dl_read">%1$d đã đọc</string>
+    <string name="reading_dl_read">%1$,d đã đọc</string>
     <string name="reading_dl_chapter">Chương %1$s</string>
-    <string name="reading_dl_pages">%1$d/%2$d trang</string>
-    <string name="reading_dl_more_queued">%1$d đang chờ nữa</string>
-    <string name="reading_dl_queued">%1$d đang chờ</string>
+    <string name="reading_dl_pages">%1$,d/%2$,d trang</string>
+    <string name="reading_dl_more_queued">%1$,d đang chờ nữa</string>
+    <string name="reading_dl_queued">%1$,d đang chờ</string>
     <string name="reading_dl_waits_wifi">chờ Wi-Fi</string>
     <string name="reading_dl_failed">Chương %1$s không tải được</string>
     <string name="reading_estimate_size">Khoảng %1$s</string>
@@ -332,12 +350,25 @@
     <string name="reading_estimate_waits_wifi">chờ Wi-Fi</string>
     <string name="reading_downloads_done_title">Đã tải xong</string>
     <plurals name="reading_downloads_done_chapters">
-        <item quantity="other">%2$d chương của %1$s đã sẵn sàng để đọc ngoại tuyến.</item>
+        <item quantity="other">%2$,d chương của %1$s đã sẵn sàng để đọc ngoại tuyến.</item>
     </plurals>
     <plurals name="reading_downloads_done_parts">
-        <item quantity="other">%2$d phần của %1$s đã sẵn sàng để đọc ngoại tuyến.</item>
+        <item quantity="other">%2$,d phần của %1$s đã sẵn sàng để đọc ngoại tuyến.</item>
     </plurals>
-    <string name="reading_downloads_done_series">Các chương của %1$d bộ truyện đã sẵn sàng để đọc ngoại tuyến.</string>
+    <string name="reading_downloads_done_series">Các chương của %1$,d bộ truyện đã sẵn sàng để đọc ngoại tuyến.</string>
+    <string name="read_source_folders">Thư mục</string>
+    <string name="reading_since_january">từ tháng 1</string>
+    <string name="reading_since_february">từ tháng 2</string>
+    <string name="reading_since_march">từ tháng 3</string>
+    <string name="reading_since_april">từ tháng 4</string>
+    <string name="reading_since_may">từ tháng 5</string>
+    <string name="reading_since_june">từ tháng 6</string>
+    <string name="reading_since_july">từ tháng 7</string>
+    <string name="reading_since_august">từ tháng 8</string>
+    <string name="reading_since_september">từ tháng 9</string>
+    <string name="reading_since_october">từ tháng 10</string>
+    <string name="reading_since_november">từ tháng 11</string>
+    <string name="reading_since_december">từ tháng 12</string>
     <string name="store_joined">Đã tham gia %1$s với tên %2$s.</string>
     <string name="store_joined_unnamed">Đã tham gia %1$s mà không có tên.</string>
     <string name="store_left">Đã rời %1$s. Các plugin đã cài vẫn được giữ lại.</string>
@@ -345,12 +376,12 @@
     <string name="store_member_removed">Đã xóa. Các thiết bị của họ không còn hoạt động với cửa hàng plugin này.</string>
     <string name="store_invite_cancelled">Đã hủy lời mời. Liên kết không còn hoạt động.</string>
     <plurals name="store_invite_cancelled_kept">
-        <item quantity="other">Đã hủy lời mời. %1$d người đã tham gia vẫn là thành viên.</item>
+        <item quantity="other">Đã hủy lời mời. %1$,d người đã tham gia vẫn là thành viên.</item>
     </plurals>
     <string name="store_open_join_on">Bất kỳ ai có liên kết của cửa hàng plugin giờ đều có thể tham gia. Sao chép liên kết từ màn hình thành viên.</string>
     <string name="store_open_join_off">Chỉ những người bạn mời mới có thể tham gia.</string>
     <plurals name="store_open_join_off_devices">
-        <item quantity="other">Chỉ những người bạn mời mới có thể tham gia. %1$d thiết bị đã tham gia bằng liên kết vẫn hoạt động cho đến khi bạn xóa đi.</item>
+        <item quantity="other">Chỉ những người bạn mời mới có thể tham gia. %1$,d thiết bị đã tham gia bằng liên kết vẫn hoạt động cho đến khi bạn xóa đi.</item>
     </plurals>
     <string name="store_device_removed">Thiết bị đó không còn hoạt động với cửa hàng plugin này.</string>
     <string name="store_devices_removed">Đã xóa mọi thiết bị đã tham gia bằng liên kết.</string>
@@ -364,10 +395,10 @@
     <string name="plugin_installed_not_loaded">Đã cài %1$s, nhưng không tải được. %2$s</string>
     <string name="plugin_installed_outdated">Đã cài %1$s, nhưng bản này được tạo cho phiên bản Kaeri cũ hơn và cần cập nhật. Hãy nhờ tác giả cung cấp bản mới.</string>
     <plurals name="plugins_outdated">
-        <item quantity="other">%1$d plugin được tạo cho phiên bản Kaeri cũ hơn và cần cập nhật: %2$s.</item>
+        <item quantity="other">%1$,d plugin được tạo cho phiên bản Kaeri cũ hơn và cần cập nhật: %2$s.</item>
     </plurals>
     <plurals name="plugin_updates_ready">
-        <item quantity="other">Plugin có %1$d bản cập nhật sẵn sàng: %2$s.</item>
+        <item quantity="other">Plugin có %1$,d bản cập nhật sẵn sàng: %2$s.</item>
     </plurals>
     <string name="plugins_load_failed">Không tải được các plugin. %1$s</string>
     <string name="store_token_missing">Không có mã thông báo cho %1$s trên thiết bị này. Hãy tham gia lại bằng lời mời mới.</string>
@@ -450,7 +481,7 @@
     <string name="notice_client_id_missing">Hãy đặt %1$s trong tệp cấu hình trước.</string>
     <string name="notice_signed_out">Đã đăng xuất khỏi %1$s.</string>
     <plurals name="notice_signed_out_queue">
-        <item quantity="other">Đã đăng xuất khỏi %1$s. %2$d thay đổi đang chờ được giữ lại cho lần đăng nhập sau.</item>
+        <item quantity="other">Đã đăng xuất khỏi %1$s. %2$,d thay đổi đang chờ được giữ lại cho lần đăng nhập sau.</item>
     </plurals>
     <string name="notice_sign_out_failed">Không đăng xuất được khỏi %1$s. Hãy thử lại. %2$s</string>
     <string name="notice_not_saved_because">Không lưu được cài đặt đó. %1$s</string>
@@ -465,7 +496,7 @@
     <string name="notice_mapping_data_failed">Không làm mới được dữ liệu ánh xạ (%1$s). Sẽ thử lại sau %2$s. %3$s</string>
     <string name="notice_episode_aired">%1$s, tập %2$d, đã phát sóng khi bạn vắng mặt.</string>
     <plurals name="notice_episodes_aired">
-        <item quantity="other">Có %1$d tập mới của các bộ phim bạn theo dõi đã phát sóng. Lịch chiếu đã có các tập đó.</item>
+        <item quantity="other">Có %1$,d tập mới của các bộ phim bạn theo dõi đã phát sóng. Lịch chiếu đã có các tập đó.</item>
     </plurals>
     <string name="notice_update_available">Đã có bản %1$s. Chạy kaeri --update để cài đặt.</string>
     <string name="cause_proxy_needs_address">Proxy cần có máy chủ và cổng.</string>
@@ -487,7 +518,7 @@
     <string name="start_failed_remote">Không khởi động được chức năng điều khiển từ xa. %1$s</string>
     <string name="start_failed_player">Không khởi động được trình phát. %1$s</string>
     <plurals name="notice_episodes_queued">
-        <item quantity="other">Đã thêm %1$d tập vào hàng đợi tải xuống.</item>
+        <item quantity="other">Đã thêm %1$,d tập vào hàng đợi tải xuống.</item>
     </plurals>
     <string name="settings_subs_reset_done">Đã đặt lại kiểu phụ đề</string>
     <string name="crash_notice">Kaeri đã đóng sau một sự cố.</string>
@@ -515,19 +546,19 @@
     <string name="discussion_image_host">Ảnh · %1$s</string>
     <string name="discussion_video_host">Video · %1$s</string>
     <plurals name="player_more_discussion_note">
-        <item quantity="other">%1$d bình luận · tạm dừng video</item>
+        <item quantity="other">%1$,d bình luận · tạm dừng video</item>
     </plurals>
     <string name="player_more_discussion_pauses">Tạm dừng video</string>
     <string name="search_pill_set">%1$s, %2$s</string>
     <string name="search_pill_any">%1$s, bất kỳ</string>
-    <string name="search_pill_all_set">Tất cả bộ lọc, đã đặt %1$d</string>
+    <string name="search_pill_all_set">Tất cả bộ lọc, đã đặt %1$,d</string>
     <string name="search_pill_clear">Xóa tất cả bộ lọc</string>
     <string name="cast_sheet_group">Chromecast</string>
     <string name="cast_sheet_through_phone">Phát qua điện thoại này</string>
     <string name="cast_sheet_through_tablet">Phát qua máy tính bảng này</string>
     <string name="cast_sheet_chromecast_too">TV tích hợp Chromecast cũng hiện ở đây.</string>
     <string name="cast_sheet_local_network">Cho phép Kaeri tìm các thiết bị trong mạng nội bộ của bạn</string>
-    <string name="cast_card_up_next_in">Tiếp theo · phát sau %1$d giây</string>
+    <string name="cast_card_up_next_in">Tiếp theo · phát sau %1$,d giây</string>
     <string name="cast_card_up_next">Tiếp theo</string>
     <string name="cast_card_up_next_cancel">Hủy</string>
     <string name="cast_card_up_next_play">Phát ngay</string>
@@ -548,7 +579,7 @@
     <string name="book_server_keystore_android">kho khóa của Android</string>
     <string name="store_invite_chip">Lời mời ••••%1$s</string>
     <plurals name="store_plugin_hosts">
-        <item quantity="other">%1$d máy chủ</item>
+        <item quantity="other">%1$,d máy chủ</item>
     </plurals>
     <string name="join_medium_line_watch">Xem, như trên %1$s</string>
     <string name="join_medium_line_both">Xem và đọc, như trên %1$s</string>
@@ -570,7 +601,7 @@
     <string name="eink_contents">Mục lục</string>
     <string name="eink_back">Quay lại</string>
     <plurals name="eink_pages_left">
-        <item quantity="other">Còn %1$d trang trong chương</item>
+        <item quantity="other">Còn %1$,d trang trong chương</item>
     </plurals>
     <string name="eink_next_chapter">Chương sau</string>
     <string name="eink_previous_chapter">Chương trước</string>
@@ -580,7 +611,7 @@
     <string name="eink_counted_read">Đã tính là đã đọc</string>
     <string name="eink_end_next">Kế tiếp</string>
     <plurals name="eink_end_pages">
-        <item quantity="other">%1$d trang</item>
+        <item quantity="other">%1$,d trang</item>
     </plurals>
     <string name="eink_reads_rtl">phải sang trái</string>
     <string name="eink_reads_ltr">trái sang phải</string>
@@ -620,7 +651,7 @@
     <string name="reader_notice_change">Đổi</string>
     <string name="reader_settings">Cài đặt trình đọc</string>
     <string name="reader_novel_line_scroll">Chương %1$s · cuộn</string>
-    <string name="reader_minutes_left">%1$d phút</string>
+    <string name="reader_minutes_left">%1$,d phút</string>
     <string name="reader_zone_next">Trang sau</string>
     <string name="reader_grid_title">Trang</string>
     <string name="reader_end_continue">Đọc tiếp</string>
@@ -713,7 +744,7 @@
     <string name="reader_row_strip_gap">Khoảng cách giữa ảnh</string>
     <string name="reader_paper_look">Giao diện giấy ban ngày</string>
     <string name="reader_paper_dim">Làm tối trang</string>
-    <string name="reader_opening_waited">%1$s · %2$d giây</string>
+    <string name="reader_opening_waited">%1$s · %2$,d giây</string>
     <string name="reader_sources_title">Đọc chương này từ</string>
     <string name="reader_paper_parts">Những gì nó thay đổi</string>
     <string name="read_home_offline_line">Trang chủ phần Đọc cần kết nối lần đầu mở. Các chương đã tải vẫn mở được.</string>
@@ -723,32 +754,32 @@
     <string name="channel_downloads_finished_description">Khi các chương bạn yêu cầu tải đều đã xong.</string>
     <string name="notif_chapter_new">%1$s đã ra mắt.</string>
     <plurals name="notif_chapters_new">
-        <item quantity="other">%1$d chương mới</item>
+        <item quantity="other">%1$,d chương mới</item>
     </plurals>
     <string name="notif_chapter_hidden">Chương mới</string>
     <string name="notif_chapter_read">Đọc</string>
     <plurals name="downloads_notice_chapters">
-        <item quantity="other">Đang tải %1$d chương</item>
+        <item quantity="other">Đang tải %1$,d chương</item>
     </plurals>
     <plurals name="read_series_downloaded_open">
-        <item quantity="other">%1$d chương đã tải vẫn mở được.</item>
+        <item quantity="other">%1$,d chương đã tải vẫn mở được.</item>
     </plurals>
     <string name="read_downloads_empty_detail">Chương đã tải mở được khi không có kết nối.</string>
     <string name="read_downloads_empty_both">Tập và chương đã tải mở được khi không có kết nối.</string>
     <string name="settings_summary_chapters_on">Chương mới đang bật</string>
     <string name="settings_summary_chapters_off">Chương mới đang tắt</string>
     <plurals name="settings_summary_book_folders">
-        <item quantity="other">%1$d thư mục</item>
+        <item quantity="other">%1$,d thư mục</item>
     </plurals>
     <plurals name="settings_summary_book_servers">
-        <item quantity="other">%1$d máy chủ</item>
+        <item quantity="other">%1$,d máy chủ</item>
     </plurals>
     <plurals name="settings_summary_book_plugins">
-        <item quantity="other">%1$d plugin</item>
+        <item quantity="other">%1$,d plugin</item>
     </plurals>
     <string name="settings_book_sources">Nguồn sách</string>
     <plurals name="book_matches_line">
-        <item quantity="other">Kaeri đã khớp %1$d bộ theo thông tin của chúng. %2$d bộ này cần bạn xem lại.</item>
+        <item quantity="other">Kaeri đã khớp %1$,d bộ theo thông tin của chúng. %2$,d bộ này cần bạn xem lại.</item>
     </plurals>
     <string name="book_folder_failed">Không thêm được thư mục đó. Hãy thử thư mục khác.</string>
     <string name="book_server_note_device">Kaeri gửi tiến độ đọc của bạn về máy chủ này. Mật khẩu được giữ trên thiết bị này.</string>
@@ -768,8 +799,8 @@
     <string name="tv_connect_tracker">Kết nối dịch vụ theo dõi</string>
     <string name="tv_change_status">Đổi trạng thái</string>
     <string name="tv_add_to_planning">Thêm vào Dự định xem</string>
-    <string name="tv_progress_of">%1$d / %2$d</string>
-    <string name="tv_progress_unknown">%1$d / ?</string>
+    <string name="tv_progress_of">%1$,d / %2$,d</string>
+    <string name="tv_progress_unknown">%1$,d / ?</string>
     <string name="tv_calendar_signed_out_note">Đăng nhập để chỉ xem các bộ của bạn</string>
     <string name="tv_calendar_time_was">%1$s (trước là %2$s)</string>
     <string name="tv_player_undo_pill">%1$s · Hoàn tác</string>
@@ -783,9 +814,9 @@
     <string name="tv_search_space">Dấu cách</string>
     <string name="tv_search_season_in">Mùa trong %1$d</string>
     <string name="tv_search_genres_offline">Thể loại sẽ tải sau khi TV có kết nối mạng.</string>
-    <string name="tv_seasons_position">%1$d trên %2$d</string>
+    <string name="tv_seasons_position">%1$,d trên %2$,d</string>
     <plurals name="tv_seasons_count">
-        <item quantity="other">%1$d mùa</item>
+        <item quantity="other">%1$,d mùa</item>
     </plurals>
     <string name="tv_episode_mark_up_to_here">Đánh dấu đã xem đến đây</string>
     <string name="tv_card_label_watched">%1$s, đã xem</string>
@@ -814,10 +845,10 @@
     <string name="tv_update_auto_check">Tự động kiểm tra cập nhật</string>
     <string name="tv_update_auto_check_detail">Mỗi ngày, từ các bản phát hành của Kaeri</string>
     <plurals name="tv_phone_used_days">
-        <item quantity="other">Đã dùng cách đây %1$d ngày</item>
+        <item quantity="other">Đã dùng cách đây %1$,d ngày</item>
     </plurals>
     <plurals name="tv_phone_paired_days">
-        <item quantity="other">Đã ghép nối cách đây %1$d ngày</item>
+        <item quantity="other">Đã ghép nối cách đây %1$,d ngày</item>
     </plurals>
     <string name="tv_update_installed">TV này đang chạy v%1$s</string>
     <string name="tv_page_not_found_text">Trang này không còn tồn tại. Hãy quét lại mã trên TV.</string>
@@ -847,7 +878,7 @@
     <string name="tv_field_password_optional">Mật khẩu, nếu được yêu cầu</string>
     <string name="tv_qr_label_link">Mã QR cho trang nhập liên kết</string>
     <string name="tv_preview_key">Khóa %1$s</string>
-    <string name="tv_preview_more">và %1$d nữa</string>
+    <string name="tv_preview_more">và %1$,d nữa</string>
     <string name="tv_already_joined">Đã tham gia</string>
     <string name="tv_joining">Đang tham gia</string>
     <string name="tv_signin_done_as">Đã đăng nhập vào %1$s với tên %2$s</string>
@@ -864,10 +895,10 @@
     <string name="tv_card_progress_spoken">Đã xem %1$s</string>
     <string name="tv_discussion_footer">Để trả lời, mở thảo luận này trên điện thoại của bạn.</string>
     <plurals name="tv_discussion_count_read_only">
-        <item quantity="other">%1$d bình luận · Chỉ đọc</item>
+        <item quantity="other">%1$,d bình luận · Chỉ đọc</item>
     </plurals>
     <plurals name="tv_discussion_likes">
-        <item quantity="other">%1$d lượt thích</item>
+        <item quantity="other">%1$,d lượt thích</item>
     </plurals>
     <string name="tv_discussion_select_spoiler">Chọn để hiện nội dung tiết lộ</string>
     <string name="updates_unknown_sources_path">Cài đặt › Ứng dụng › Bảo mật &amp; hạn chế › Nguồn không xác định</string>
@@ -875,7 +906,7 @@
     <string name="episode_short_dubbed">E%1$d · Lồng tiếng</string>
     <string name="episode_long_dubbed">Tập %1$d · Lồng tiếng</string>
     <plurals name="downloads_live_paused">
-        <item quantity="other">%1$d tập đã tạm dừng</item>
+        <item quantity="other">%1$,d tập đã tạm dừng</item>
     </plurals>
     <string name="downloads_live_lead">%1$s E%2$d</string>
     <string name="downloads_live_left">Còn %1$s</string>
@@ -897,7 +928,7 @@
     <string name="title_facts_airs">Sẽ phát sóng từ %1$s</string>
     <string name="media_dates_range">%1$s đến %2$s</string>
     <plurals name="title_also_on_more">
-        <item quantity="other">%1$s và %2$d nơi khác</item>
+        <item quantity="other">%1$s và %2$,d nơi khác</item>
     </plurals>
     <string name="title_adult_mark">18+</string>
     <string name="downloads_storage_used_free">%1$s đã dùng · %2$s còn trống</string>
@@ -907,7 +938,7 @@
     <string name="downloads_uploaded">Đã tải lên %1$s</string>
     <string name="downloads_ratio_of">%1$s trên %2$s</string>
     <plurals name="downloads_group_summary">
-        <item quantity="other">%1$d tập · %2$s</item>
+        <item quantity="other">%1$,d tập · %2$s</item>
     </plurals>
     <string name="episode_menu_download">Tải xuống</string>
     <string name="episode_menu_download_paused">Đã tạm dừng tải xuống</string>
@@ -924,13 +955,13 @@
     <string name="updates_open_release">Mở trang</string>
     <string name="country_korea">Hàn Quốc</string>
     <plurals name="search_genres_picked">
-        <item quantity="other">%1$d thể loại</item>
+        <item quantity="other">%1$,d thể loại</item>
     </plurals>
     <plurals name="search_formats_picked">
-        <item quantity="other">%1$d định dạng</item>
+        <item quantity="other">%1$,d định dạng</item>
     </plurals>
     <plurals name="search_statuses_picked">
-        <item quantity="other">%1$d trạng thái</item>
+        <item quantity="other">%1$,d trạng thái</item>
     </plurals>
     <string name="filter_score_any">Bất kỳ</string>
     <string name="filter_years_from">Từ %1$s</string>
@@ -957,7 +988,7 @@
     <string name="reason_source_no_address">Không tìm thấy địa chỉ.</string>
     <string name="reason_source_unreachable">Không kết nối được.</string>
     <plurals name="stores_updates_waiting">
-        <item quantity="other">%1$d bản cập nhật</item>
+        <item quantity="other">%1$,d bản cập nhật</item>
     </plurals>
     <string name="stores_checked_ago">kiểm tra %1$s</string>
     <string name="stores_preview_key_link">Khóa khớp với liên kết</string>
@@ -975,7 +1006,7 @@
     <string name="settings_summary_notify_on">Tập mới đang bật</string>
     <string name="settings_summary_notify_off">Tập mới đang tắt</string>
     <plurals name="settings_summary_sources">
-        <item quantity="other">%1$d nguồn</item>
+        <item quantity="other">%1$,d nguồn</item>
     </plurals>
     <string name="settings_summary_no_sources">Chưa có các nguồn</string>
     <string name="settings_summary_torrents_on">torrent đang bật</string>
@@ -1000,15 +1031,15 @@
     <string name="settings_titles_note_english_missing">%1$s không có tên tiếng Anh trên AniList, nên vẫn dùng tên romaji.</string>
     <string name="settings_titles_note_english">Tên tiếng Anh như AniList ghi, và romaji nếu không có tên tiếng Anh.</string>
     <string name="settings_titles_note_romaji">Tên tiếng Nhật viết bằng chữ Latin, như AniList ghi.</string>
-    <string name="settings_stores_with_updates">%1$d · %2$s</string>
+    <string name="settings_stores_with_updates">%1$,d · %2$s</string>
     <string name="settings_seeding_best_effort">Thiết bị này chỉ chia sẻ lại khi Kaeri đang mở.</string>
     <plurals name="settings_downloads_count">
-        <item quantity="other">%1$d tập</item>
+        <item quantity="other">%1$,d tập</item>
     </plurals>
     <string name="settings_anilist_footer">Tiến độ và thay đổi danh sách được đồng bộ sang AniList. Thư viện hiển thị các danh sách AniList của bạn.</string>
     <string name="accounts_sign_in_again_button">Đăng nhập lại</string>
     <plurals name="accounts_review_differences">
-        <item quantity="other">Xem %1$d khác biệt</item>
+        <item quantity="other">Xem %1$,d khác biệt</item>
     </plurals>
     <string name="settings_licence_title">Giấy phép</string>
     <string name="settings_licence_value">MIT, mã nguồn mở và phi thương mại</string>
@@ -1047,7 +1078,7 @@
     <string name="tv_sheet_volume">Âm lượng TV</string>
     <string name="tv_sheet_volume_down">Giảm âm lượng</string>
     <string name="tv_sheet_volume_up">Tăng âm lượng</string>
-    <string name="tv_sheet_volume_value">%1$d trên 100</string>
+    <string name="tv_sheet_volume_value">%1$,d trên 100</string>
     <string name="tv_sheet_nothing_playing">Không phát gì</string>
     <string name="tv_sheet_position">Vị trí trên TV</string>
     <string name="tv_sheet_position_state">%1$s trên %2$s</string>
@@ -1070,7 +1101,7 @@
     <string name="player_sheet_episodes_loading">Danh sách tập đang được tải.</string>
     <string name="player_dual_audio">Có phụ đề và lồng tiếng</string>
     <plurals name="notif_new_episodes">
-        <item quantity="other">%1$d tập mới</item>
+        <item quantity="other">%1$,d tập mới</item>
     </plurals>
     <string name="notif_hidden_text">Tập mới</string>
     <string name="notif_episode_out">Tập %1$d đã ra mắt.</string>
@@ -1081,7 +1112,7 @@
     <string name="device_name_tablet">Máy tính bảng Android</string>
     <string name="tv_session_starting">Đang bắt đầu trên %1$s</string>
     <string name="tv_session_line">%1$s · %2$s</string>
-    <string name="widget_line_left">%1$s · còn %2$d phút</string>
+    <string name="widget_line_left">%1$s · còn %2$,d phút</string>
     <string name="widget_line_of">E%1$d trên %2$d</string>
     <string name="widget_continue_title">Xem tiếp</string>
     <string name="widget_caught_up_title">Đã theo kịp</string>
@@ -1099,7 +1130,7 @@
     <string name="poster_new">Mới</string>
     <string name="channel_downloads_name">Tải xuống</string>
     <plurals name="release_seeders">
-        <item quantity="other">%1$d seed</item>
+        <item quantity="other">%1$,d seed</item>
     </plurals>
     <string name="trailer_failed">Không mở được trailer</string>
     <string name="engine_down_title">Kaeri đã dừng</string>
@@ -1199,7 +1230,7 @@
     <string name="cast_torrents_note_mac">Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. Mac này gửi tập phim trong suốt thời gian phát.</string>
     <string name="cast_torrents_note_iphone">Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. iPhone này gửi tập phim trong suốt thời gian phát.</string>
     <string name="cast_torrents_note_ipad">Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. iPad này gửi tập phim trong suốt thời gian phát.</string>
-    <string name="cast_up_next_plays_in">Tiếp theo · phát sau %1$d giây</string>
+    <string name="cast_up_next_plays_in">Tiếp theo · phát sau %1$,d giây</string>
     <string name="cast_couldnt_start">Không bắt đầu được trên %1$s</string>
     <string name="cast_stopped">Đã dừng chiếu</string>
     <string name="cast_play_here">Phát tại đây</string>
@@ -1209,12 +1240,12 @@
     <string name="action_cancel">Hủy</string>
     <string name="action_go">Đi</string>
     <string name="action_not_now">Để sau</string>
-    <string name="duration_days">%1$d ngày</string>
-    <string name="duration_hours_minutes">%1$d giờ %2$d phút</string>
-    <string name="duration_hours">%1$d giờ</string>
-    <string name="duration_minutes">%1$d phút</string>
-    <string name="duration_minutes_seconds">%1$d phút %2$s giây</string>
-    <string name="duration_seconds">%1$d giây</string>
+    <string name="duration_days">%1$,d ngày</string>
+    <string name="duration_hours_minutes">%1$,d giờ %2$,d phút</string>
+    <string name="duration_hours">%1$,d giờ</string>
+    <string name="duration_minutes">%1$,d phút</string>
+    <string name="duration_minutes_seconds">%1$,d phút %2$s giây</string>
+    <string name="duration_seconds">%1$,d giây</string>
     <string name="size_byte">%1$s B</string>
     <string name="size_kilobyte">%1$s kB</string>
     <string name="size_megabyte">%1$s MB</string>
@@ -1274,8 +1305,8 @@
     <string name="day_yesterday">Hôm qua</string>
     <string name="time_ago">%1$s trước</string>
     <string name="time_in">sau %1$s</string>
-    <string name="time_minutes_left">còn %1$d phút</string>
-    <string name="time_minutes">%1$d phút</string>
+    <string name="time_minutes_left">còn %1$,d phút</string>
+    <string name="time_minutes">%1$,d phút</string>
     <string name="time_now_inline">bây giờ</string>
     <string name="time_just_now_inline">vừa xong</string>
     <string name="when_today">hôm nay lúc %1$s</string>
@@ -1309,10 +1340,10 @@
     <string name="pad_help_page_up">Lên một trang</string>
     <string name="pad_help_page_down">Xuống một trang</string>
     <plurals name="pad_help_seek_back">
-        <item quantity="other">Lùi %1$d giây</item>
+        <item quantity="other">Lùi %1$,d giây</item>
     </plurals>
     <plurals name="pad_help_seek_forward">
-        <item quantity="other">Tiến %1$d giây</item>
+        <item quantity="other">Tiến %1$,d giây</item>
     </plurals>
     <string name="pad_help_skip">Bỏ qua</string>
     <string name="pad_help_play_now">Phát ngay</string>
@@ -1367,7 +1398,7 @@
     <string name="tv_problem_version">TV đang chạy phiên bản Kaeri khác. Hãy cập nhật cả hai lên cùng một phiên bản.</string>
     <string name="tv_problem_wrong_code">Mã không khớp. Kiểm tra mã trên TV rồi thử lại.</string>
     <string name="tv_volume_down">Giảm âm lượng</string>
-    <string name="tv_volume_of">%1$d trên 100</string>
+    <string name="tv_volume_of">%1$,d trên 100</string>
     <string name="tv_volume_up">Tăng âm lượng</string>
     <string name="updates_download">Tải bản cập nhật</string>
     <string name="updates_restart">Cập nhật và mở lại</string>
@@ -1379,15 +1410,15 @@
     <string name="discussion_open">Thảo luận</string>
     <string name="discussion_title_episode">Thảo luận tập %1$d</string>
     <plurals name="discussion_row">
-        <item quantity="other">Thảo luận · %1$d bình luận</item>
+        <item quantity="other">Thảo luận · %1$,d bình luận</item>
     </plurals>
     <plurals name="discussion_count">
-        <item quantity="other">%1$d bình luận</item>
+        <item quantity="other">%1$,d bình luận</item>
     </plurals>
     <string name="discussion_like">Thích</string>
     <string name="discussion_reply">Trả lời</string>
     <plurals name="discussion_more_replies">
-        <item quantity="other">%1$d trả lời khác</item>
+        <item quantity="other">%1$,d trả lời khác</item>
     </plurals>
     <string name="discussion_spoiler">Tiết lộ</string>
     <string name="discussion_image">Hình ảnh</string>
@@ -1473,7 +1504,7 @@
     <string name="downloads_notice_done">Đã tải xong tập %1$d</string>
     <string name="downloads_notice_done_detail">%1$s · sẵn sàng xem khi ngoại tuyến</string>
     <plurals name="downloads_notice_running">
-        <item quantity="other">Đang tải %1$d tập</item>
+        <item quantity="other">Đang tải %1$,d tập</item>
     </plurals>
     <string name="downloads_notice_episode_left">Tập %1$d · còn %2$s</string>
     <string name="downloads_notice_starting">Đang bắt đầu</string>
@@ -1513,13 +1544,13 @@
     <string name="home_marked_watched">Đã đánh dấu tập %1$d là đã xem</string>
     <string name="home_remove_continue">Xóa khỏi Xem tiếp</string>
     <plurals name="home_continue_count">
-        <item quantity="other">%1$d bộ</item>
+        <item quantity="other">%1$,d bộ</item>
     </plurals>
     <string name="home_view_all">Xem tất cả</string>
     <string name="home_full_calendar">Lịch đầy đủ</string>
     <string name="home_today">Hôm nay</string>
     <string name="home_nothing_airing">Không có gì chiếu</string>
-    <string name="home_day_more">Còn %1$d nữa</string>
+    <string name="home_day_more">Còn %1$,d nữa</string>
     <string name="home_seasonal">Theo mùa</string>
     <string name="home_search">Tìm kiếm</string>
     <string name="home_end">Tạm hết rồi. Mục Theo mùa và Lịch có đầy đủ danh sách.</string>
@@ -1544,15 +1575,15 @@
     <string name="home_next">Sau</string>
     <string name="home_synced">Đã đồng bộ AniList</string>
     <plurals name="queue_episodes_left">
-        <item quantity="other">Còn %1$d tập của %2$s</item>
+        <item quantity="other">Còn %1$,d tập của %2$s</item>
     </plurals>
     <plurals name="episodes_count">
-        <item quantity="other">%1$d tập</item>
+        <item quantity="other">%1$,d tập</item>
     </plurals>
     <plurals name="progress_episodes">
-        <item quantity="other">%1$d trên %2$d tập</item>
+        <item quantity="other">%1$,d trên %2$,d tập</item>
     </plurals>
-    <string name="duration_days_hours">%1$d ngày %2$d giờ</string>
+    <string name="duration_days_hours">%1$,d ngày %2$,d giờ</string>
     <string name="group_in_progress">Đang xem</string>
     <string name="group_new_this_week">Mới trong tuần</string>
     <string name="continue_empty_title">Chưa xem gì</string>
@@ -1597,8 +1628,8 @@
     <string name="library_added_planning">Đã thêm vào Kế hoạch.</string>
     <string name="library_on_your_list">Trong danh sách</string>
     <string name="library_in_your_list">Đã có</string>
-    <string name="progress_episodes_short">E%1$d trên %2$d</string>
-    <string name="progress_episode_short">E%1$d</string>
+    <string name="progress_episodes_short">E%1$,d trên %2$,d</string>
+    <string name="progress_episode_short">E%1$,d</string>
     <string name="continue_row_start_aired_dubbed">Phát E%1$d lồng tiếng · ra mắt %2$s</string>
     <string name="up_next_starts">Bắt đầu %1$s</string>
     <string name="up_next_reason_new_season">Mùa mới</string>
@@ -1614,18 +1645,18 @@
     <string name="up_next_broadcast">Tập %1$d · %2$s</string>
     <string name="up_next_out">ra mắt %1$s</string>
     <plurals name="library_row_scanning">
-        <item quantity="other">Đang quét · tìm thấy %1$d tệp</item>
+        <item quantity="other">Đang quét · tìm thấy %1$,d tệp</item>
     </plurals>
-    <string name="library_row_matching">Đang khớp · %1$d trên %2$d bộ</string>
-    <string name="library_row_waiting">Đang chờ AniList · %1$d giây</string>
+    <string name="library_row_matching">Đang khớp · %1$,d trên %2$,d bộ</string>
+    <string name="library_row_waiting">Đang chờ AniList · %1$,d giây</string>
     <string name="library_row_summary">%1$s của %2$s</string>
     <plurals name="library_episodes">
-        <item quantity="other">%1$d tập</item>
+        <item quantity="other">%1$,d tập</item>
     </plurals>
     <plurals name="library_series">
-        <item quantity="other">%1$d bộ</item>
+        <item quantity="other">%1$,d bộ</item>
     </plurals>
-    <string name="library_row_needs_look">%1$d cần xem lại</string>
+    <string name="library_row_needs_look">%1$,d cần xem lại</string>
     <string name="library_row_drive_offline">Ổ đĩa chưa kết nối</string>
     <string name="library_row_missing">Không tìm thấy thư mục</string>
     <string name="library_row_no_access">Kaeri không còn mở được thư mục này</string>
@@ -1638,23 +1669,23 @@
     <string name="library_remove_folder">Gỡ thư mục</string>
     <string name="library_needs_look">Cần xem lại</string>
     <string name="library_not_matched">Chưa khớp</string>
-    <string name="library_matched">Đã khớp %1$d bộ</string>
-    <string name="library_best_guess">Đoán gần nhất: %1$s · khớp %2$d%%</string>
+    <string name="library_matched">Đã khớp %1$,d bộ</string>
+    <string name="library_best_guess">Đoán gần nhất: %1$s · khớp %2$,d%%</string>
     <string name="library_picker_prompt">Thêm thư mục</string>
     <string name="library_picker_message">Chọn thư mục chứa các tập của bạn.</string>
-    <string name="library_fix_confidence">Khớp %1$d%%</string>
+    <string name="library_fix_confidence">Khớp %1$,d%%</string>
     <string name="library_open_folder">Mở thư mục</string>
-    <string name="library_matched_count">Đã khớp %1$d bộ</string>
+    <string name="library_matched_count">Đã khớp %1$,d bộ</string>
     <plurals name="library_row_series">
-        <item quantity="other">%1$d bộ</item>
+        <item quantity="other">%1$,d bộ</item>
     </plurals>
     <plurals name="library_row_files">
-        <item quantity="other">%1$d tệp</item>
+        <item quantity="other">%1$,d tệp</item>
     </plurals>
     <string name="library_show_finder">Hiện trong Finder</string>
     <string name="library_remove_line">Tệp của bạn vẫn ở nguyên chỗ cũ.</string>
     <plurals name="library_files">
-        <item quantity="other">%1$d tệp</item>
+        <item quantity="other">%1$,d tệp</item>
     </plurals>
     <string name="library_reason_no_episode">Tên tệp không có số tập</string>
     <string name="library_reason_no_title">Không tìm thấy tựa phim trên AniList</string>
@@ -1667,7 +1698,7 @@
     <string name="library_fix_search">Tìm trên AniList</string>
     <string name="library_fix_hint">Tìm tựa phim để khớp với các tệp này.</string>
     <string name="library_connect_drive">Kết nối ổ đĩa để phát</string>
-    <string name="library_fix_count_mismatch">Có %1$d tập, thư mục này có %2$d</string>
+    <string name="library_fix_count_mismatch">Có %1$,d tập, thư mục này có %2$,d</string>
     <string name="library_leave_unmatched">Để chưa khớp</string>
     <string name="library_episode_title">Tệp này là tập nào?</string>
     <string name="library_season">Mùa</string>
@@ -1684,13 +1715,13 @@
     <string name="library_fix_none">Không tìm thấy tựa phim nào</string>
     <string name="library_fix_offline">Không kết nối được AniList. Hãy thử lại khi có mạng.</string>
     <string name="library_removed">Đã gỡ %1$s</string>
-    <string name="library_match_percent">Khớp %1$d%%</string>
+    <string name="library_match_percent">Khớp %1$,d%%</string>
     <string name="licensed_title">Dịch vụ có bản quyền</string>
     <string name="licensed_body">Kaeri có thể mở tựa phim trong các dịch vụ phát trực tuyến bạn trả phí. Ứng dụng không bao giờ tự phát chúng. Liên kết lấy từ AniList.</string>
     <string name="licensed_region">Khu vực</string>
     <string name="licensed_region_line">Các liên kết AniList đánh dấu cho nước khác sẽ bị ẩn. Hầu hết liên kết không ghi nước nào, nên hãy chọn cả dịch vụ của bạn.</string>
     <string name="licensed_yours">Dịch vụ của bạn</string>
-    <string name="licensed_show_all">Xem tất cả %1$d</string>
+    <string name="licensed_show_all">Xem tất cả %1$,d</string>
     <string name="licensed_region_system">Theo thiết bị này</string>
     <string name="licensed_region_device">Khu vực của thiết bị này</string>
     <string name="licensed_show_others">Hiện dịch vụ khác trên trang tựa phim</string>
@@ -1746,9 +1777,9 @@
     <string name="media_streaming_on">Phát trên</string>
     <string name="media_streaming_region_note">Tùy thuộc vào khu vực của bạn.</string>
     <string name="media_link_language">Trang bằng %1$s</string>
-    <string name="film_length_hours_minutes">%1$d giờ %2$d phút</string>
-    <string name="film_length_hours">%1$d giờ</string>
-    <string name="film_length_minutes">%1$d phút</string>
+    <string name="film_length_hours_minutes">%1$,d giờ %2$,d phút</string>
+    <string name="film_length_hours">%1$,d giờ</string>
+    <string name="film_length_minutes">%1$,d phút</string>
     <string name="country_japan">Nhật Bản</string>
     <string name="country_china">Trung Quốc</string>
     <string name="country_south_korea">Hàn Quốc</string>
@@ -1892,11 +1923,11 @@
     <string name="party_wait_you">Sẽ phát khi bạn sẵn sàng</string>
     <string name="party_wait_one">Sẽ phát khi %1$s sẵn sàng</string>
     <string name="party_wait_two">Sẽ phát khi %1$s và %2$s sẵn sàng</string>
-    <string name="party_wait_many">Sẽ phát khi còn %1$d người nữa sẵn sàng.</string>
-    <string name="party_connection_lost">Mất kết nối. Đang thử lại, lần %1$d trên %2$d.</string>
+    <string name="party_wait_many">Sẽ phát khi còn %1$,d người nữa sẵn sàng.</string>
+    <string name="party_connection_lost">Mất kết nối. Đang thử lại, lần %1$,d trên %2$,d.</string>
     <string name="party_connected_encrypted">Đã kết nối, được mã hóa</string>
     <string name="party_connected_plain">Đã kết nối, không mã hóa</string>
-    <string name="party_connected_latency">%1$s · %2$d ms</string>
+    <string name="party_connected_latency">%1$s · %2$,d ms</string>
     <string name="party_invite_after_play">Liên kết mời sẽ có khi một tập bắt đầu phát.</string>
     <string name="party_invite_detail">Liên kết ghi tên phòng và tập. Mỗi người bạn sẽ phát tập từ các nguồn của riêng họ.</string>
     <string name="party_in_room_idle">Bạn đang ở trong %1$s trên %2$s, chưa phát gì.</string>
@@ -1915,10 +1946,10 @@
     <string name="party_nosource_unaired">Trước khi phát sóng, các nguồn của bạn sẽ chưa có tập %1$d.</string>
     <string name="party_nosource_unaired_plain">Trước đó, các nguồn của bạn sẽ chưa có tập này. Tập sẽ phát cùng phòng khi một trong số đó có tập.</string>
     <plurals name="party_sources_found">
-        <item quantity="other">%1$d nguồn có tập này.</item>
+        <item quantity="other">%1$,d nguồn có tập này.</item>
     </plurals>
     <string name="party_sources_label">Các nguồn của tập này</string>
-    <string name="party_source_seeders">%1$d seeder</string>
+    <string name="party_source_seeders">%1$,d seeder</string>
     <string name="party_no_source_lists">Không có nguồn nào liệt kê tập %1$s. Các nguồn đến từ các plugin, do một cửa hàng plugin thêm vào.</string>
     <string name="party_play_with">Phát cùng xem chung</string>
     <string name="together_title">Cùng xem</string>
@@ -1932,7 +1963,7 @@
     <string name="together_paste">Dán</string>
     <string name="together_join_action">Vào</string>
     <string name="together_in_party">Đang ở trong phòng</string>
-    <string name="together_in_party_line">Tập %1$s · %2$d người trong phòng · %3$d sẵn sàng</string>
+    <string name="together_in_party_line">Tập %1$s · %2$,d người trong phòng · %3$,d sẵn sàng</string>
     <string name="together_open_lobby">Mở phòng chờ</string>
     <string name="together_open_player">Mở trình phát</string>
     <string name="together_recent">Phòng gần đây</string>
@@ -1947,7 +1978,7 @@
     <string name="together_servers">Máy chủ</string>
     <string name="together_server_suggested">Đề xuất · do %1$s vận hành</string>
     <plurals name="together_server_used">
-        <item quantity="other">Đã dùng cho %1$d phòng</item>
+        <item quantity="other">Đã dùng cho %1$,d phòng</item>
     </plurals>
     <string name="together_add_server">Thêm máy chủ</string>
     <string name="together_paste_shortcut_hint">Dán liên kết hoặc mã ở bất cứ đâu trên trang này.</string>
@@ -1960,7 +1991,7 @@
     <string name="party_lobby_sources_missing">Chưa có trong các nguồn của bạn</string>
     <string name="party_lobby_out_on">Ra mắt %1$s</string>
     <string name="party_still_in_room">Bạn vẫn ở trong phòng.</string>
-    <string name="party_lobby_count">Trong phòng · %1$d trên %2$d sẵn sàng</string>
+    <string name="party_lobby_count">Trong phòng · %1$,d trên %2$,d sẵn sàng</string>
     <string name="party_invited_by">%1$s đã mời bạn</string>
     <string name="party_looking_in">Đang xem thử</string>
     <string name="party_looking_in_note">Mở một phòng sẽ hiện bạn trong đó trong chốc lát.</string>
@@ -1975,7 +2006,7 @@
     <string name="party_invite_copied">Đã sao chép liên kết mời</string>
     <string name="party_starts_line">Bắt đầu từ 0:00 khi mọi người sẵn sàng</string>
     <string name="party_start_anyway">Cứ bắt đầu</string>
-    <string name="party_starting">Bắt đầu sau %1$d</string>
+    <string name="party_starting">Bắt đầu sau %1$,d</string>
     <string name="party_change_episode">Đổi tập</string>
     <string name="party_change_server">Đổi máy chủ</string>
     <string name="party_room_watching">Phòng đang xem</string>
@@ -1995,14 +2026,14 @@
     <string name="party_code_wait">Chờ ở đây</string>
     <string name="party_code_other_server">Mã dùng được trên %1$s. Với máy chủ khác, hãy xin liên kết mời.</string>
     <string name="party_bar_title">%1$s · Tập %2$s</string>
-    <string name="party_bar_line">%1$d người trong phòng · %2$d sẵn sàng</string>
+    <string name="party_bar_line">%1$,d người trong phòng · %2$,d sẵn sàng</string>
     <string name="party_bar_idle">Trong phòng · chưa có gì phát cho bạn</string>
     <string name="party_bar_pick">Nhấn Phát trên bất kỳ tập nào để xem cùng phòng</string>
     <string name="party_paused_by">%1$s đã tạm dừng</string>
     <string name="party_played_by">%1$s đã phát</string>
     <string name="party_seeked_by">%1$s đã tua tới %2$s</string>
-    <string name="party_next_line">Mọi người sang tập sau trong %1$d giây</string>
-    <string name="party_next_waiting">Đang chờ %1$s · %2$d giây</string>
+    <string name="party_next_line">Mọi người sang tập sau trong %1$,d giây</string>
+    <string name="party_next_waiting">Đang chờ %1$s · %2$,d giây</string>
     <string name="party_next_joined_at">%1$s đã vào lúc %2$s</string>
     <string name="party_next_off">Cả phòng cùng chuyển tập khi hết tập.</string>
     <string name="party_last_out">Đó là tập mới nhất đã ra.</string>
@@ -2023,17 +2054,17 @@
     <string name="party_ready_on_device">Sẵn sàng trên %1$s</string>
     <string name="party_leave_on_device">Rời phòng trên %1$s</string>
     <string name="party_in_the_room">Trong phòng</string>
-    <string name="party_here_count">%1$d người ở đây</string>
+    <string name="party_here_count">%1$,d người ở đây</string>
     <string name="together_recent_note">Mười phòng gần nhất, lưu trên thiết bị này</string>
     <string name="party_pick_continue">Tiếp tục</string>
     <string name="party_chat_field">Nhắn gì đó</string>
     <string name="party_chat_send">Gửi</string>
     <string name="party_chat_title">Trò chuyện</string>
-    <string name="party_chat_wait">Chờ %1$d giây</string>
+    <string name="party_chat_wait">Chờ %1$,d giây</string>
     <plurals name="party_chat_wait_spoken">
-        <item quantity="other">Chờ %1$d giây</item>
+        <item quantity="other">Chờ %1$,d giây</item>
     </plurals>
-    <string name="party_chat_more">%1$d tin nữa</string>
+    <string name="party_chat_more">%1$,d tin nữa</string>
     <string name="party_chat_off">Máy chủ của phòng này đã tắt trò chuyện</string>
     <string name="party_chat_privacy">Tin nhắn đi qua máy chủ của phòng. Kaeri không lưu tin nào.</string>
     <string name="party_chat_hidden">Trò chuyện đang ẩn</string>
@@ -2060,18 +2091,18 @@
     <string name="party_reacted_at">%1$s lúc %2$s</string>
     <string name="party_names_two">%1$s và %2$s</string>
     <string name="party_names_three">%1$s, %2$s và %3$s</string>
-    <string name="party_names_others">%1$s, %2$s và %3$d người khác</string>
+    <string name="party_names_others">%1$s, %2$s và %3$,d người khác</string>
     <string name="party_chat_you">Bạn</string>
     <string name="party_sends_as">Gửi với tên %1$s</string>
     <string name="party_tick_label">%1$s · %2$s</string>
     <string name="party_chat_announce">%1$s nói %2$s</string>
     <plurals name="party_chat_left">
-        <item quantity="other">Còn %1$d ký tự</item>
+        <item quantity="other">Còn %1$,d ký tự</item>
     </plurals>
     <string name="player_up_next">Tiếp theo</string>
     <string name="title_based_on">Dựa trên</string>
     <string name="player_starting">Đang mở tập %1$d</string>
-    <string name="player_finding_source">Đang tìm nguồn · %1$d s</string>
+    <string name="player_finding_source">Đang tìm nguồn · %1$,d s</string>
     <string name="player_finding_source_plain">Đang tìm nguồn</string>
     <string name="player_failed_title">Không phát được tập %1$d</string>
     <string name="player_failed_detail">Không có nguồn nào có luồng phát được. Hãy thử một nguồn khác.</string>
@@ -2080,7 +2111,7 @@
     <string name="player_choose_another_source">Chọn nguồn khác</string>
     <string name="player_add_plugin_store">Thêm cửa hàng plugin</string>
     <string name="player_buffering">Đang đệm</string>
-    <string name="player_start_place">nguồn %1$d trên %2$d</string>
+    <string name="player_start_place">nguồn %1$,d trên %2$,d</string>
     <string name="player_start_pinned">Lựa chọn của bạn cho phim này</string>
     <string name="player_start_miss_no_match">%1$s không có phim này</string>
     <string name="player_start_miss_no_episode">%1$s không có tập %2$s</string>
@@ -2091,9 +2122,9 @@
     <string name="player_start_resting">Đã bỏ qua do lỗi gần đây</string>
     <string name="player_start_from">Từ %1$s</string>
     <string name="player_start_no_video">Luồng đầu tiên không có hình</string>
-    <string name="player_start_stream_place">Luồng %1$d trên %2$d</string>
+    <string name="player_start_stream_place">Luồng %1$,d trên %2$,d</string>
     <plurals name="player_start_peers">
-        <item quantity="other">%1$d peer</item>
+        <item quantity="other">%1$,d peer</item>
     </plurals>
     <string name="player_start_speed">%1$s/s</string>
     <string name="player_start_buffering_percent">Đang đệm · %1$s</string>
@@ -2108,7 +2139,7 @@
     <string name="player_start_fix_match">Sửa kết quả khớp</string>
     <string name="player_start_translation">Âm thanh và phụ đề</string>
     <string name="player_start_looked_up">Đã tìm thấy tiêu đề</string>
-    <string name="player_start_seconds">%1$d giây</string>
+    <string name="player_start_seconds">%1$,d giây</string>
     <string name="player_start_still_starting">Vẫn đang bắt đầu. Bạn có thể chọn nguồn.</string>
     <string name="player_start_announce">Đang bắt đầu tập %1$s, %2$s</string>
     <string name="player_start_failed_announce">%1$s. %2$s</string>
@@ -2122,11 +2153,11 @@
     <string name="player_start_row_skipped">Đã bỏ qua</string>
     <string name="player_start_asked">Đã hỏi: %1$s.</string>
     <string name="player_start_subtitled">Có phụ đề</string>
-    <string name="player_stall_title">Nguồn đang đệm · %1$d s</string>
+    <string name="player_stall_title">Nguồn đang đệm · %1$,d s</string>
     <string name="player_stall_detail">Luồng khác có thể phát mà không cần chờ.</string>
     <string name="player_switch_source">Đổi nguồn</string>
     <string name="player_keep_waiting">Tiếp tục chờ</string>
-    <string name="player_plays_in">Phát sau %1$d s</string>
+    <string name="player_plays_in">Phát sau %1$,d s</string>
     <string name="player_skip_opening">Bỏ qua phần mở đầu</string>
     <string name="player_skip_ending">Bỏ qua phần kết</string>
     <string name="player_skipped_opening">Đã bỏ qua phần mở đầu</string>
@@ -2206,7 +2237,7 @@
     <string name="player_start_over">Phát từ đầu</string>
     <string name="player_still_watching">Vẫn đang xem?</string>
     <plurals name="player_still_watching_detail">
-        <item quantity="other">Tạm dừng sau %1$d tập liên tiếp.</item>
+        <item quantity="other">Tạm dừng sau %1$,d tập liên tiếp.</item>
     </plurals>
     <string name="player_still_watching_continue">Xem tiếp</string>
     <string name="player_ends_at">Kết thúc lúc %1$s</string>
@@ -2265,7 +2296,7 @@
     <string name="player_scrub_quarter">Tua với một phần tư tốc độ</string>
     <string name="player_starting_text">Đang mở tập %1$s</string>
     <string name="player_track_n">Rãnh %1$d</string>
-    <string name="player_wait_note">%1$s · %2$d s</string>
+    <string name="player_wait_note">%1$s · %2$,d s</string>
     <string name="player_command_failed">Thao tác không thành công. Hãy thử lại.</string>
     <string name="player_subs_style">Kiểu</string>
     <string name="player_subs_larger">Phụ đề lớn hơn</string>
@@ -2307,7 +2338,7 @@
     <string name="reader_tap_off">Tắt</string>
     <string name="reader_chapters">Các chương</string>
     <plurals name="reader_pages_left">
-        <item quantity="other">Còn %1$d trang trong chương này</item>
+        <item quantity="other">Còn %1$,d trang trong chương này</item>
     </plurals>
     <string name="reader_chapters_loading">Đang tải các chương</string>
     <string name="reader_background_theme">Theo giao diện</string>
@@ -2320,14 +2351,14 @@
     <string name="reader_end_of_chapter_number">Hết chương %1$s</string>
     <string name="reader_end_facts">Chương %1$s · %2$s</string>
     <plurals name="reader_end_pages">
-        <item quantity="other">%1$d trang</item>
+        <item quantity="other">%1$,d trang</item>
     </plurals>
     <string name="reader_end_from">Từ %1$s</string>
     <string name="reader_chapter_line">Chương %1$s</string>
     <string name="reader_divider_facts_source">%1$s · từ %2$s</string>
     <string name="reader_end_swipe">Vuốt để đọc tiếp</string>
     <plurals name="reader_divider_images">
-        <item quantity="other">%1$d ảnh</item>
+        <item quantity="other">%1$,d ảnh</item>
     </plurals>
     <string name="reader_chapter_line_titled">Chương %1$s · %2$s</string>
     <string name="onboarding_read_demo">Đọc bản demo</string>
@@ -2336,7 +2367,7 @@
     <string name="home_demo_only_books">Chỉ có bản demo đang bật. Hãy thêm thư mục, máy chủ hoặc cửa hàng plugin để đọc sách của bạn.</string>
     <string name="home_spotlight_read">Đọc</string>
     <plurals name="demo_series_facts">
-        <item quantity="other">Demo · Truyện tranh · %1$d trang</item>
+        <item quantity="other">Demo · Truyện tranh · %1$,d trang</item>
     </plurals>
     <string name="demo_credit_book">%1$s của %2$s. Giấy phép %3$s. Đọc từ Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s của %2$s. Phạm vi công cộng. Đi kèm trong ứng dụng.</string>
@@ -2355,7 +2386,7 @@
     <string name="demo_also">Cũng có trong demo</string>
     <string name="demo_credits">Ghi công</string>
     <plurals name="demo_pages">
-        <item quantity="other">%1$d trang</item>
+        <item quantity="other">%1$,d trang</item>
     </plurals>
     <string name="demo_story_row">Truyện ngắn · %1$s · %2$s</string>
     <string name="demo_read_chapter">Đọc chương %1$s</string>
@@ -2370,16 +2401,16 @@
     <string name="progress_why_gave_up">không có phản hồi trong một ngày</string>
     <string name="progress_row_saved">Đã lưu tiến độ %1$s</string>
     <plurals name="progress_row_sending">
-        <item quantity="other">Đang gửi %1$d chương…</item>
+        <item quantity="other">Đang gửi %1$,d chương…</item>
     </plurals>
     <plurals name="progress_row_offline">
-        <item quantity="other">%1$d chương sẽ được gửi khi bạn có mạng lại</item>
+        <item quantity="other">%1$,d chương sẽ được gửi khi bạn có mạng lại</item>
     </plurals>
     <plurals name="progress_row_retrying">
-        <item quantity="other">%1$d chương đang chờ. Kaeri sẽ thử lại.</item>
+        <item quantity="other">%1$,d chương đang chờ. Kaeri sẽ thử lại.</item>
     </plurals>
     <plurals name="progress_row_failed">
-        <item quantity="other">%1$d chương chưa được lưu: %2$s</item>
+        <item quantity="other">%1$,d chương chưa được lưu: %2$s</item>
     </plurals>
     <string name="progress_row_off">Tiến độ được giữ trên %1$s này</string>
     <string name="nav_watch">Xem</string>
@@ -2401,32 +2432,32 @@
     <string name="chapter_updates_today">Hôm nay</string>
     <string name="chapter_updates_yesterday">Hôm qua</string>
     <plurals name="chapter_updates_versions">
-        <item quantity="other">%1$d phiên bản</item>
+        <item quantity="other">%1$,d phiên bản</item>
     </plurals>
     <string name="chapter_updates_open_series">Mở %1$s</string>
     <string name="chapter_updates_open_chapter_hint">Mở chương</string>
     <string name="chapter_updates_open_series_menu">Mở bộ truyện</string>
     <string name="action_read_chapter">Đọc chương %1$s</string>
     <string name="action_continue_chapter">Đọc tiếp chương %1$s · trang %2$d</string>
-    <string name="action_continue_part">Đọc tiếp phần %1$s · %2$d%%</string>
+    <string name="action_continue_part">Đọc tiếp phần %1$s · %2$,d%%</string>
     <string name="action_continue_part_plain">Đọc tiếp phần %1$s</string>
     <string name="action_read_part">Đọc phần %1$s</string>
-    <string name="action_continue_named">Đọc tiếp %1$s · %2$d%%</string>
+    <string name="action_continue_named">Đọc tiếp %1$s · %2$,d%%</string>
     <string name="action_continue_named_plain">Đọc tiếp %1$s</string>
     <string name="action_read_named">Đọc %1$s</string>
     <string name="action_read_again">Đọc lại</string>
     <string name="series_reading_from">Đang đọc từ</string>
     <string name="series_change">Đổi</string>
     <plurals name="series_sources_more">
-        <item quantity="other">và %1$d nữa</item>
+        <item quantity="other">và %1$,d nữa</item>
     </plurals>
     <string name="series_tracker_ask">Đây là bộ truyện nào? Chọn</string>
     <string name="series_preferred_group">Nhóm bạn ưu tiên ở đây</string>
     <plurals name="series_tracker_chapters_of">
-        <item quantity="other">%1$d/%2$d chương</item>
+        <item quantity="other">%1$,d/%2$,d chương</item>
     </plurals>
     <plurals name="series_tracker_chapters">
-        <item quantity="other">%1$d chương</item>
+        <item quantity="other">%1$,d chương</item>
     </plurals>
     <string name="series_tracker_with_volume">%1$s · tập %2$d</string>
     <string name="series_tracker_volumes">Tập %1$d/%2$d</string>
@@ -2438,7 +2469,7 @@
     <string name="series_remove_from_lists_line">Bộ truyện sẽ bị xóa khỏi danh sách trên mỗi dịch vụ theo dõi bạn đã kết nối. Vị trí đọc và các chương đã đọc vẫn ở lại trong Kaeri.</string>
     <string name="series_removed_title">Các danh sách của bạn</string>
     <plurals name="series_chosen">
-        <item quantity="other">%1$d chương</item>
+        <item quantity="other">%1$,d chương</item>
     </plurals>
     <string name="series_choose_all_unread">Tất cả chưa đọc</string>
     <string name="read_from_not_found">Không tìm thấy trong</string>
@@ -2473,7 +2504,7 @@
     <string name="series_bookmark">Đánh dấu trang</string>
     <string name="series_remove_bookmark">Bỏ đánh dấu</string>
     <plurals name="series_versions">
-        <item quantity="other">%1$d phiên bản</item>
+        <item quantity="other">%1$,d phiên bản</item>
     </plurals>
     <string name="series_versions_loading">Đang tìm các phiên bản…</string>
     <string name="series_version_in_use">Đang dùng %1$s</string>
@@ -2481,7 +2512,7 @@
     <string name="chapter_state_downloaded">Đã tải</string>
     <string name="chapter_state_queued">Đang chờ</string>
     <string name="chapter_state_wifi">Đang chờ · cần Wi-Fi</string>
-    <string name="chapter_state_downloading">Đang tải · %1$d/%2$d trang</string>
+    <string name="chapter_state_downloading">Đang tải · %1$,d/%2$,d trang</string>
     <string name="chapter_state_failed">Không tải được. %1$s</string>
     <string name="chapter_state_page_of">Trang %1$d/%2$d</string>
     <string name="chapter_state_page">Trang %1$d</string>
@@ -2490,15 +2521,15 @@
     <string name="chapter_download_stop">Dừng tải</string>
     <string name="chapter_retry">Thử lại</string>
     <string name="chapter_download_delete">Xóa bản tải</string>
-    <string name="download_next">%1$d chương chưa đọc kế</string>
+    <string name="download_next">%1$,d chương chưa đọc kế</string>
     <string name="download_unread">Mọi chương chưa đọc</string>
     <plurals name="download_volume_count">
-        <item quantity="other">%1$s · %2$d chương</item>
+        <item quantity="other">%1$s · %2$,d chương</item>
     </plurals>
     <string name="download_choose">Chọn chương…</string>
     <string name="download_delete_series">Xóa các bản tải của bộ truyện này</string>
     <plurals name="download_chapters">
-        <item quantity="other">Tải %1$d chương</item>
+        <item quantity="other">Tải %1$,d chương</item>
     </plurals>
     <string name="download_over_wifi">Qua Wi-Fi</string>
     <string name="read_again_title">Đọc lại %1$s từ đầu?</string>
@@ -2516,8 +2547,8 @@
     <string name="series_tracker_connect">Kết nối trong Cài đặt để theo dõi bộ truyện này</string>
     <string name="series_tracker_not_there">Không có kết quả khớp trên dịch vụ theo dõi này</string>
     <string name="series_tracker_looking">Đang tìm bộ truyện này…</string>
-    <string name="series_tracker_behind">Đang ở chương %1$d. Sẽ nhận chương %2$d ở lần đồng bộ sau.</string>
-    <string name="series_tracker_ahead">Đang ở chương %1$d, xa hơn Kaeri.</string>
+    <string name="series_tracker_behind">Đang ở chương %1$,d. Sẽ nhận chương %2$,d ở lần đồng bộ sau.</string>
+    <string name="series_tracker_ahead">Đang ở chương %1$,d, xa hơn Kaeri.</string>
     <string name="series_tracker_score">%1$s/10</string>
     <string name="series_tracker_keep_kaeri">Giữ vị trí của Kaeri</string>
     <string name="series_tracker_take_theirs">Dùng vị trí của %1$s</string>
@@ -2550,7 +2581,7 @@
     <string name="book_add_server_button">Thêm máy chủ</string>
     <string name="sources_found_server">Đã tìm thấy máy chủ %1$s</string>
     <plurals name="sources_found_server_series">
-        <item quantity="other">Đã tìm thấy máy chủ %1$s có %2$d bộ truyện</item>
+        <item quantity="other">Đã tìm thấy máy chủ %1$s có %2$,d bộ truyện</item>
     </plurals>
     <string name="book_server_looking">Đang kiểm tra địa chỉ này…</string>
     <string name="book_server_note">Kaeri gửi tiến độ đọc của bạn về máy chủ này. Mật khẩu được giữ trong Keychain.</string>
@@ -2559,16 +2590,16 @@
     <string name="book_sources_plugins">Các plugin</string>
     <string name="book_sources_plugins_footer">Các plugin đến từ các cửa hàng plugin mà bạn tham gia.</string>
     <plurals name="book_sources_series">
-        <item quantity="other">%1$d bộ truyện</item>
+        <item quantity="other">%1$,d bộ truyện</item>
     </plurals>
-    <string name="book_sources_scanning">Đang quét · đã thấy %1$d</string>
+    <string name="book_sources_scanning">Đang quét · đã thấy %1$,d</string>
     <string name="book_sources_missing">Không tìm thấy. Ổ đĩa đã được kết nối chưa?</string>
     <string name="book_sources_off">Tắt</string>
     <string name="book_sources_progress_back">tiến độ được gửi về máy chủ</string>
     <string name="book_sources_opds">Danh mục OPDS</string>
     <string name="book_sources_from_store">Từ %1$s</string>
     <string name="book_sources_version">phiên bản %1$s</string>
-    <string name="book_sources_check_matches">Kiểm tra kết quả khớp · %1$d</string>
+    <string name="book_sources_check_matches">Kiểm tra kết quả khớp · %1$,d</string>
     <string name="book_sources_check_matches_title">Kiểm tra kết quả khớp</string>
     <string name="book_sources_scan">Quét lại</string>
     <string name="book_sources_report_progress">Gửi tiến độ về máy chủ</string>
@@ -2583,7 +2614,7 @@
     <string name="library_scope_reading">Truyện</string>
     <string name="read_sort_last_read">Đọc gần nhất</string>
     <plurals name="read_library_list_value">
-        <item quantity="other">%1$s, %2$d bộ truyện</item>
+        <item quantity="other">%1$s, %2$,d bộ truyện</item>
     </plurals>
     <string name="read_library_empty">Chưa có gì trong %1$s</string>
     <string name="read_library_empty_line">Các bộ truyện bạn thêm từ Tìm kiếm hoặc trang truyện sẽ hiện ở đây.</string>
@@ -2592,12 +2623,12 @@
     <string name="read_library_files_add">Thêm thư mục hoặc máy chủ</string>
     <string name="read_search_placeholder">Tìm truyện</string>
     <plurals name="search_other_scope">
-        <item quantity="other">%1$d kết quả trong %2$s</item>
+        <item quantity="other">%1$,d kết quả trong %2$s</item>
     </plurals>
     <string name="search_show_them">Hiện ra</string>
     <string name="read_search_browse_line">%1$s · từ AniList</string>
     <plurals name="read_search_total">
-        <item quantity="other">%1$d bộ truyện từ AniList</item>
+        <item quantity="other">%1$,d bộ truyện từ AniList</item>
     </plurals>
     <string name="read_search_failed">Không tìm kiếm được</string>
     <string name="read_search_nothing">Không tìm thấy gì cho %1$s</string>
@@ -2617,14 +2648,14 @@
     <string name="read_filter_reset">Đặt lại</string>
     <string name="read_filter_any">Bất kỳ</string>
     <string name="read_filter_set">%1$s:</string>
-    <string name="read_filter_many">%1$s và %2$d nữa</string>
+    <string name="read_filter_many">%1$s và %2$,d nữa</string>
     <string name="read_filter_not_genre">Không phải %1$s</string>
     <plurals name="read_filter_genres_count">
-        <item quantity="other">%1$d thể loại</item>
+        <item quantity="other">%1$,d thể loại</item>
     </plurals>
     <string name="read_filter_included">Bao gồm</string>
     <string name="read_filter_left_out">Loại trừ</string>
-    <string name="onboarding_step">%1$d/%2$d</string>
+    <string name="onboarding_step">%1$,d/%2$,d</string>
     <string name="onboarding_welcome_line">Theo dõi những gì bạn xem và đọc, từ các nguồn của riêng bạn.</string>
     <string name="onboarding_welcome_note">Danh sách và tiến độ của bạn nằm trên các thiết bị của bạn. Bạn tự thêm các dịch vụ theo dõi và các nguồn.</string>
     <string name="onboarding_medium_title">Xem, đọc hay cả hai?</string>
@@ -2654,7 +2685,7 @@
     <string name="onboarding_both_books">Sách</string>
     <string name="onboarding_both_shows_folder_line">Tệp video trên %1$s này</string>
     <string name="onboarding_both_shows_server_line">Máy chủ Jellyfin của bạn</string>
-    <string name="medium_choice_position">%1$d/%2$d</string>
+    <string name="medium_choice_position">%1$,d/%2$,d</string>
     <string name="medium_change_later">Bạn có thể đổi trong Cài đặt.</string>
     <string name="medium_update_line">Kaeri giờ đây có thể đọc manga, webtoon và light novel từ các nguồn của bạn. Hãy chọn Kaeri dùng để làm gì trên %1$s này.</string>
     <plurals name="medium_join_title_watch">
@@ -2722,18 +2753,18 @@
     <string name="accounts_mangaupdates_credit">Kaeri kết nối với MangaUpdates qua API công khai của dịch vụ này.</string>
     <string name="accounts_username">Tên người dùng</string>
     <plurals name="read_downloads_total">
-        <item quantity="other">%1$d chương · %2$s</item>
+        <item quantity="other">%1$,d chương · %2$s</item>
     </plurals>
-    <string name="read_downloads_active">%1$s · %2$d/%3$d trang</string>
-    <string name="read_downloads_more_queued">%1$d đang chờ nữa</string>
+    <string name="read_downloads_active">%1$s · %2$,d/%3$,d trang</string>
+    <string name="read_downloads_more_queued">%1$,d đang chờ nữa</string>
     <plurals name="read_downloads_queued">
-        <item quantity="other">%1$d chương đang chờ</item>
+        <item quantity="other">%1$,d chương đang chờ</item>
     </plurals>
     <string name="read_downloads_failed">%1$s không tải được. %2$s</string>
     <plurals name="read_downloads_kept">
-        <item quantity="other">%1$d chương</item>
+        <item quantity="other">%1$,d chương</item>
     </plurals>
-    <string name="read_downloads_read">%1$d đã đọc</string>
+    <string name="read_downloads_read">%1$,d đã đọc</string>
     <string name="read_downloads_delete_read">Xóa chương đã đọc</string>
     <string name="send_title">Gửi tới máy đọc sách</string>
     <string name="send_for">Gửi tới</string>
@@ -2746,7 +2777,7 @@
     <string name="send_no_place">Kaeri không biết bạn đọc tới đâu trên máy đọc sách này. Khi bạn quay lại, trang truyện sẽ hỏi bạn đã dừng ở đâu.</string>
     <string name="send_prepare">Chuẩn bị và chia sẻ</string>
     <plurals name="send_preparing">
-        <item quantity="other">Đang chuẩn bị chương %1$d/%2$d</item>
+        <item quantity="other">Đang chuẩn bị chương %1$,d/%2$,d</item>
     </plurals>
     <string name="send_sized_for">Trang được định cỡ cho %1$s</string>
     <string name="send_in_parts">Vượt quá %1$s, nên các tệp được chia thành nhiều phần.</string>
@@ -2755,12 +2786,12 @@
     <string name="send_size_working">Đang tính</string>
     <string name="send_chapters_open">Mở</string>
     <string name="send_chapters_closed">Đóng</string>
-    <string name="send_progress_spoken">%1$d phần trăm</string>
+    <string name="send_progress_spoken">%1$,d phần trăm</string>
     <string name="send_chapter_action">Gửi tới máy đọc sách</string>
     <string name="send_parts_over">chia phần khi quá %1$s</string>
     <string name="send_waiting_cancel">Hủy gửi</string>
     <plurals name="send_ready">
-        <item quantity="other">%1$d tệp đã sẵn sàng.</item>
+        <item quantity="other">%1$,d tệp đã sẵn sàng.</item>
     </plurals>
     <string name="send_share_again">Chia sẻ lại</string>
     <string name="send_banner">Đang gửi tới %1$s</string>
@@ -2794,12 +2825,12 @@
     <string name="opds_shares">Những gì được chia sẻ</string>
     <string name="opds_share_downloads">Tải xuống</string>
     <plurals name="opds_share_downloads_count">
-        <item quantity="other">%1$d chương</item>
+        <item quantity="other">%1$,d chương</item>
     </plurals>
     <string name="opds_share_manga">Thư mục manga</string>
     <string name="opds_share_novels">Thư mục light novel</string>
     <plurals name="opds_share_series_count">
-        <item quantity="other">%1$d bộ</item>
+        <item quantity="other">%1$,d bộ</item>
     </plurals>
     <string name="opds_fetched_by">Máy đã tải</string>
     <string name="opds_fetched_none">Chưa có máy đọc sách nào tải gì.</string>
@@ -2810,7 +2841,7 @@
     <string name="opds_new_password_warning">Các máy đọc sách đang dùng feed sẽ ngừng hoạt động cho đến khi bạn nhập mật khẩu mới vào từng máy.</string>
     <string name="opds_fetched_time">Yêu cầu gần nhất %1$s</string>
     <plurals name="opds_fetched_files">
-        <item quantity="other">%1$d tệp</item>
+        <item quantity="other">%1$,d tệp</item>
     </plurals>
     <string name="opds_reader_unnamed">Máy đọc sách tại %1$s</string>
     <string name="seasonal_previous">Mùa trước</string>
@@ -2850,7 +2881,7 @@
     <string name="search_loading_more">Đang tải thêm tựa</string>
     <string name="filters_title">Bộ lọc</string>
     <string name="filters_close">Đóng bộ lọc</string>
-    <string name="filters_button_count">Tất cả bộ lọc · %1$d</string>
+    <string name="filters_button_count">Tất cả bộ lọc · %1$,d</string>
     <string name="filters_button">Tất cả bộ lọc</string>
     <string name="filter_genre">Thể loại</string>
     <string name="filter_genres">Thể loại</string>
@@ -2906,26 +2937,26 @@
     <string name="search_available_services">Trên dịch vụ của bạn</string>
     <string name="search_line_service">Trên %1$s</string>
     <plurals name="count_episodes">
-        <item quantity="other">%1$d tập</item>
+        <item quantity="other">%1$,d tập</item>
     </plurals>
-    <string name="count_episodes_short">%1$d tập</string>
-    <string name="count_out_of">Đã ra %1$d trên %2$d tập</string>
-    <string name="count_out_of_short">%1$d trên %2$d</string>
+    <string name="count_episodes_short">%1$,d tập</string>
+    <string name="count_out_of">Đã ra %1$,d trên %2$,d tập</string>
+    <string name="count_out_of_short">%1$,d trên %2$,d</string>
     <plurals name="count_out">
-        <item quantity="other">Đã ra %1$d tập</item>
+        <item quantity="other">Đã ra %1$,d tập</item>
     </plurals>
-    <string name="count_out_short">Ra %1$d</string>
+    <string name="count_out_short">Ra %1$,d</string>
     <string name="count_starts">Bắt đầu %1$s</string>
     <string name="count_not_out">Chưa ra mắt</string>
     <string name="count_next_of">Tập %1$d trên %2$d</string>
     <string name="count_dub">Lồng tiếng</string>
     <string name="count_dub_through">LT %1$d</string>
     <plurals name="count_spoken_episodes">
-        <item quantity="other">%1$d tập</item>
+        <item quantity="other">%1$,d tập</item>
     </plurals>
-    <string name="count_spoken_out_of">Đã ra %1$d trên %2$d tập</string>
+    <string name="count_spoken_out_of">Đã ra %1$,d trên %2$,d tập</string>
     <plurals name="count_spoken_out">
-        <item quantity="other">Đã ra %1$d tập</item>
+        <item quantity="other">Đã ra %1$,d tập</item>
     </plurals>
     <string name="count_spoken_starts">Bắt đầu %1$s</string>
     <string name="count_spoken_next_of">Tập %1$d trên %2$d</string>
@@ -2995,21 +3026,21 @@
     <string name="servers_qc_new_code">Lấy mã mới</string>
     <string name="servers_libraries_title">Chọn thư viện</string>
     <string name="servers_libraries_body">Phim được khớp với AniList để xuất hiện trong Trang chủ, danh sách và Tìm kiếm của bạn.</string>
-    <string name="servers_library_line">%1$s · %2$d bộ</string>
+    <string name="servers_library_line">%1$s · %2$,d bộ</string>
     <string name="servers_report">Báo cho Jellyfin những gì bạn xem</string>
     <string name="servers_report_line">Điểm dừng và dấu đã xem sẽ theo những gì bạn phát ở đây.</string>
     <string name="servers_add">Thêm máy chủ</string>
-    <string name="servers_row_matching">Đang khớp · %1$d trên %2$d bộ</string>
+    <string name="servers_row_matching">Đang khớp · %1$,d trên %2$,d bộ</string>
     <plurals name="servers_row_summary">
-        <item quantity="other">%1$d thư viện · %2$d bộ</item>
+        <item quantity="other">%1$,d thư viện · %2$,d bộ</item>
     </plurals>
     <plurals name="servers_row_libraries">
-        <item quantity="other">%1$d thư viện</item>
+        <item quantity="other">%1$,d thư viện</item>
     </plurals>
     <plurals name="servers_row_series">
-        <item quantity="other">%1$d bộ</item>
+        <item quantity="other">%1$,d bộ</item>
     </plurals>
-    <string name="servers_row_needs_look">%1$d cần xem lại</string>
+    <string name="servers_row_needs_look">%1$,d cần xem lại</string>
     <string name="servers_page_line">%1$s · Jellyfin %2$s · đăng nhập là %3$s</string>
     <string name="servers_sign_out">Đăng xuất</string>
     <string name="servers_remove">Gỡ máy chủ</string>
@@ -3037,7 +3068,7 @@
     <string name="servers_quick_connect">Quick Connect</string>
     <string name="servers_libraries_heading">Thư viện</string>
     <string name="servers_refresh">Khớp lại</string>
-    <string name="servers_needs_look">%1$d chưa khớp với AniList</string>
+    <string name="servers_needs_look">%1$,d chưa khớp với AniList</string>
     <string name="servers_kind_films">Phim điện ảnh</string>
     <string name="servers_error_certificate">%1$s dùng một chứng chỉ mà thiết bị này không tin cậy. Hãy dùng địa chỉ https:// có chứng chỉ mà nó tin cậy.</string>
     <string name="servers_row_signed_out_here">Đã đăng xuất</string>
@@ -3105,7 +3136,7 @@
     <string name="settings_system_captions">Theo kiểu phụ đề của hệ thống</string>
     <string name="settings_system_captions_detail">Phụ đề thường dùng tùy chọn phụ đề trong Trợ năng. Phụ đề có kiểu riêng giữ nguyên kiểu của chúng.</string>
     <plurals name="settings_overridden">
-        <item quantity="other">Đã ghi đè ở %1$d tựa</item>
+        <item quantity="other">Đã ghi đè ở %1$,d tựa</item>
     </plurals>
     <string name="settings_new_downloads">Tải xuống mới</string>
     <string name="settings_keep_next">Giữ các tập kế tiếp</string>
@@ -3188,7 +3219,7 @@
     <string name="widget_start_label">Phát tập %1$d của %2$s</string>
     <string name="widget_resume_dubbed_label">Xem tiếp tập %1$d, lồng tiếng, của %2$s</string>
     <plurals name="accounts_changes_waiting">
-        <item quantity="other">Còn %1$d thay đổi chờ đồng bộ</item>
+        <item quantity="other">Còn %1$,d thay đổi chờ đồng bộ</item>
     </plurals>
     <string name="settings_quality_higher">Cao hơn</string>
     <string name="settings_quality_standard">Chuẩn</string>
@@ -3227,7 +3258,7 @@
     <string name="settings_subs_system_change">Đổi trong cài đặt Trợ năng</string>
     <string name="settings_subs_system_value">Từ hệ thống</string>
     <string name="settings_subs_size">Cỡ chữ</string>
-    <string name="settings_subs_size_value">%1$d%%</string>
+    <string name="settings_subs_size_value">%1$,d%%</string>
     <string name="settings_subs_font">Phông chữ</string>
     <string name="settings_subs_font_default">Mặc định</string>
     <string name="settings_subs_font_serif">Có chân</string>
@@ -3251,7 +3282,7 @@
     <string name="settings_subs_background_all">Sau mọi dòng</string>
     <string name="settings_subs_opacity">Độ mờ đục</string>
     <string name="settings_subs_raise">Nâng phụ đề lên</string>
-    <string name="settings_subs_raise_value">%1$d%% khung hình</string>
+    <string name="settings_subs_raise_value">%1$,d%% khung hình</string>
     <string name="settings_subs_styled">Phụ đề có kiểu</string>
     <string name="settings_subs_styled_keep">Giữ nguyên kiểu</string>
     <string name="settings_subs_styled_keep_detail">Phụ đề có kiểu giữ phông chữ, màu sắc và vị trí biển hiệu do tác giả đặt. Cỡ chữ và Nâng lên vẫn áp dụng.</string>
@@ -3269,10 +3300,10 @@
     <string name="book_server_key_kept">Kaeri lưu khóa trong %1$s và chỉ hiện bốn ký tự cuối của khóa.</string>
     <string name="book_server_key">Khóa ••••%1$s</string>
     <plurals name="book_server_found_title">
-        <item quantity="other">Tìm thấy %1$d bộ trong %2$d thư viện</item>
+        <item quantity="other">Tìm thấy %1$,d bộ trong %2$,d thư viện</item>
     </plurals>
     <string name="book_server_found_line">%1$s tại %2$s. Chọn các thư viện cần thêm.</string>
-    <string name="book_server_library_line">%1$d bộ</string>
+    <string name="book_server_library_line">%1$,d bộ</string>
     <string name="book_server_sync_progress">Gửi tiến độ lên máy chủ</string>
     <string name="book_server_sync_progress_line">Các trang bạn đọc ở đây được gửi về %1$s, và tiến độ của máy chủ đó được đưa về đây.</string>
     <string name="book_server_username">Tên người dùng</string>
@@ -3288,28 +3319,28 @@
     <string name="book_server_empty_recheck">Bạn có thể thêm ngay bây giờ. Kaeri sẽ kiểm tra lại mỗi 30 phút.</string>
     <string name="book_server_not_books_line">Kaeri đọc từ các danh mục Komga, Kavita và OPDS.</string>
     <plurals name="book_folder_found">
-        <item quantity="other">Tìm thấy %1$d bộ trong %2$d tệp</item>
+        <item quantity="other">Tìm thấy %1$,d bộ trong %2$,d tệp</item>
     </plurals>
-    <string name="book_folder_found_line">%1$s. Kaeri đã khớp %2$d trong số đó theo thông tin chi tiết của chúng.</string>
+    <string name="book_folder_found_line">%1$s. Kaeri đã khớp %2$,d trong số đó theo thông tin chi tiết của chúng.</string>
     <plurals name="book_folder_unsupported">
-        <item quantity="other">%1$d tệp mà Kaeri không mở được</item>
+        <item quantity="other">%1$,d tệp mà Kaeri không mở được</item>
     </plurals>
     <string name="book_folder_unsupported_line">%1$s. Các tệp này vẫn nằm nguyên trong thư mục.</string>
-    <string name="book_folder_drm">%1$d EPUB bị khóa bằng DRM</string>
+    <string name="book_folder_drm">%1$,d EPUB bị khóa bằng DRM</string>
     <string name="book_folder_opens">Kaeri mở tệp CBZ, CBR, EPUB và PDF, cùng các thư mục ảnh.</string>
     <string name="book_folder_show_files">Hiện tệp</string>
     <string name="book_folder_add">Thêm thư mục</string>
     <string name="book_folder_change">Thay đổi</string>
     <string name="book_folder_empty">Không có gì trong %1$s mà Kaeri mở được</string>
     <plurals name="book_folder_empty_line">
-        <item quantity="other">Thư mục có %1$d tệp, không tệp nào là CBZ, CBR, EPUB, PDF hay ảnh.</item>
+        <item quantity="other">Thư mục có %1$,d tệp, không tệp nào là CBZ, CBR, EPUB, PDF hay ảnh.</item>
     </plurals>
     <string name="book_folder_choose_other">Chọn thư mục khác</string>
     <string name="store_join_title">Tham gia cửa hàng plugin</string>
     <string name="store_invite_field">Lời mời</string>
     <string name="store_joined_title">Đã tham gia %1$s</string>
     <plurals name="store_joined_line">
-        <item quantity="other">%1$s cung cấp các plugin: %2$d. Tham gia không cài gì cả; hãy chọn cái bạn muốn tại đây hoặc sau.</item>
+        <item quantity="other">%1$s cung cấp các plugin: %2$,d. Tham gia không cài gì cả; hãy chọn cái bạn muốn tại đây hoặc sau.</item>
     </plurals>
     <string name="store_group_reading">Để đọc</string>
     <string name="store_group_watching">Để xem</string>
@@ -3317,7 +3348,7 @@
     <string name="store_installed_row">Đã cài</string>
     <string name="store_install_all_reading">Cài tất cả để đọc</string>
     <plurals name="store_installed">
-        <item quantity="other">Đã cài %1$d plugin. Chúng nằm trong mục Các nguồn của bạn.</item>
+        <item quantity="other">Đã cài %1$,d plugin. Chúng nằm trong mục Các nguồn của bạn.</item>
     </plurals>
     <string name="store_other_medium">Mọi plugin trong %1$s đều để xem</string>
     <string name="store_other_medium_line">Xem đang tắt trên thiết bị này, nên không cái nào hiện trong mục “các nguồn”.</string>
@@ -3327,26 +3358,26 @@
     <string name="store_err_unreachable">Không kết nối được với %1$s</string>
     <string name="store_err_unreachable_line">Lời mời có vẻ đúng, nhưng cửa hàng không phản hồi. Hãy thử lại sau, hoặc hỏi %1$s xem nó có đang chạy không.</string>
     <plurals name="store_other_medium_more">
-        <item quantity="other">Còn %1$d cái để xem, nhưng xem đang tắt trên thiết bị này.</item>
+        <item quantity="other">Còn %1$,d cái để xem, nhưng xem đang tắt trên thiết bị này.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
-        <item quantity="other">Còn %1$d plugin khác dành cho việc đọc, mà TV này không hỗ trợ.</item>
+        <item quantity="other">Còn %1$,d plugin khác dành cho việc đọc, mà TV này không hỗ trợ.</item>
     </plurals>
     <string name="store_tv_all_reading">Mọi plugin trong %1$s đều dành cho việc đọc, mà TV này không hỗ trợ.</string>
     <string name="store_plugin_row">Phiên bản %1$s · có thể kết nối tới %2$s</string>
-    <string name="source_added">Đã thêm %1$s · %2$d bộ</string>
+    <string name="source_added">Đã thêm %1$s · %2$,d bộ</string>
     <plurals name="source_added_plugins">
-        <item quantity="other">Đã cài từ %2$s, các plugin: %1$d</item>
+        <item quantity="other">Đã cài từ %2$s, các plugin: %1$,d</item>
     </plurals>
     <plurals name="source_row_server">
-        <item quantity="other">%1$s · %2$d bộ trong %3$d thư viện · vừa thêm</item>
+        <item quantity="other">%1$s · %2$,d bộ trong %3$,d thư viện · vừa thêm</item>
     </plurals>
     <plurals name="source_row_server_series">
-        <item quantity="other">%1$s · %2$d bộ trong %3$d thư viện</item>
+        <item quantity="other">%1$s · %2$,d bộ trong %3$,d thư viện</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · chưa có bộ nào · sẽ kiểm tra lại sau 30 phút</string>
     <plurals name="source_row_folder">
-        <item quantity="other">%1$s · %2$d bộ · đã bỏ qua %3$d tệp</item>
+        <item quantity="other">%1$s · %2$,d bộ · đã bỏ qua %3$,d tệp</item>
     </plurals>
     <string name="source_row_plugin">Từ %1$s · %2$s · phiên bản %3$s</string>
     <string name="sources_title">Các nguồn</string>
@@ -3356,7 +3387,7 @@
     <string name="source_picker_automatic">Tự động</string>
     <string name="source_picker_automatic_detail">Mỗi tập lấy từ nguồn đầu tiên có tập đó</string>
     <plurals name="source_picker_coverage">
-        <item quantity="other">%1$d trên %2$d tập</item>
+        <item quantity="other">%1$,d trên %2$,d tập</item>
     </plurals>
     <string name="source_note_off">Đã tắt</string>
     <string name="source_note_resting">Không phản hồi, sẽ thử lại sớm</string>
@@ -3404,13 +3435,13 @@
     <string name="sources_listed_by_store">Do cửa hàng plugin liệt kê</string>
     <string name="sources_contacts_one">Kết nối tới %1$s</string>
     <plurals name="sources_contacts_line">
-        <item quantity="other">Kết nối tới %1$s và %2$d máy chủ nữa</item>
+        <item quantity="other">Kết nối tới %1$s và %2$,d máy chủ nữa</item>
     </plurals>
     <string name="sources_contacts_none">Không liệt kê máy chủ nào để kết nối</string>
     <string name="sources_no_hosts">Không có máy chủ</string>
     <string name="sources_update_contacts_one">Bản cập nhật này cũng kết nối tới %1$s.</string>
     <plurals name="sources_update_contacts">
-        <item quantity="other">Bản cập nhật này cũng kết nối tới %1$s và %2$d máy chủ nữa.</item>
+        <item quantity="other">Bản cập nhật này cũng kết nối tới %1$s và %2$,d máy chủ nữa.</item>
     </plurals>
     <string name="sources_update_title">Cập nhật %1$s?</string>
     <string name="sources_replace_title">Thay thế %1$s?</string>
@@ -3421,11 +3452,11 @@
     <string name="sources_source_order_row">Thứ tự ưu tiên</string>
     <string name="sources_torrents_note">Torrent là một phần của Kaeri, không phải plugin. Proxy và việc seed được đặt trong Cài đặt, mục Các nguồn.</string>
     <string name="sources_rebuilding">Đang thiết lập lại các nguồn</string>
-    <string name="sources_response_ms">%1$d ms</string>
+    <string name="sources_response_ms">%1$,d ms</string>
     <string name="match_fix">Sửa tựa này</string>
     <string name="match_choose">Chọn tựa phù hợp</string>
     <plurals name="match_uncertain">
-        <item quantity="other">%2$s liệt kê %1$d tựa có thể là tựa này. Chọn một tựa để phát các tập của nó.</item>
+        <item quantity="other">%2$s liệt kê %1$,d tựa có thể là tựa này. Chọn một tựa để phát các tập của nó.</item>
     </plurals>
     <string name="match_uncertain_none">%1$s không có tựa nào phù hợp với tựa này. Vẫn có thể chọn một tựa, hoặc tìm kiếm.</string>
     <string name="match_source_picker_row">Sai tựa? Sửa tựa này</string>
@@ -3585,7 +3616,7 @@
     <string name="stores_members">Thành viên</string>
     <string name="stores_owner_devices">Chủ sở hữu · %1$s</string>
     <plurals name="stores_member_devices">
-        <item quantity="other">Họ có %1$d thiết bị</item>
+        <item quantity="other">Họ có %1$,d thiết bị</item>
     </plurals>
     <string name="stores_invite_for">Dành cho ai? (không bắt buộc)</string>
     <string name="stores_their_name">Tên của họ</string>
@@ -3612,8 +3643,8 @@
     <string name="stores_invite_lasts_forever">Không hết hạn</string>
     <string name="stores_invite_group_name">Tên cho lời mời này (tùy chọn)</string>
     <string name="stores_invite_group_detail">Mỗi người tự thêm tên của mình khi tham gia.</string>
-    <string name="stores_invite_works_times">Dùng được %1$d lần, đến %2$s.</string>
-    <string name="stores_invite_works_times_forever">Dùng được %1$d lần, cho đến khi bạn hủy.</string>
+    <string name="stores_invite_works_times">Dùng được %1$,d lần, đến %2$s.</string>
+    <string name="stores_invite_works_times_forever">Dùng được %1$,d lần, cho đến khi bạn hủy.</string>
     <string name="stores_invite_works_any">Ai có liên kết này đều tham gia được, đến %1$s.</string>
     <string name="stores_invite_works_any_forever">Ai có liên kết này đều tham gia được, cho đến khi bạn hủy.</string>
     <string name="stores_invite_once_until">Dùng được một lần, cho người bạn gửi tới, đến %1$s.</string>
@@ -3623,9 +3654,9 @@
     <string name="stores_invite_links">Liên kết mời</string>
     <string name="stores_invite_not_used">Chưa dùng</string>
     <plurals name="stores_invite_used">
-        <item quantity="other">Đã dùng %1$d lần</item>
+        <item quantity="other">Đã dùng %1$,d lần</item>
     </plurals>
-    <string name="stores_invite_used_of">Đã dùng %1$d trên %2$d</string>
+    <string name="stores_invite_used_of">Đã dùng %1$,d trên %2$,d</string>
     <string name="stores_invites_ended">Đã hết hạn trong 30 ngày qua</string>
     <string name="stores_invite_used_up">Hết lượt dùng %1$s</string>
     <string name="stores_invite_ran_out">Hết hạn %1$s</string>
@@ -3633,7 +3664,7 @@
     <string name="stores_invite_show_uses">Lượt dùng</string>
     <string name="stores_invite_joined">%1$s · đã tham gia %2$s</string>
     <plurals name="stores_cancel_invite_detail">
-        <item quantity="other">Không ai khác tham gia được bằng nó. %1$d người đã tham gia vẫn là thành viên.</item>
+        <item quantity="other">Không ai khác tham gia được bằng nó. %1$,d người đã tham gia vẫn là thành viên.</item>
     </plurals>
     <string name="stores_join_your_name">Tên của bạn (tùy chọn)</string>
     <string name="stores_join_your_name_detail">Chủ sở hữu cửa hàng thấy tên này trong danh sách thành viên.</string>
@@ -3645,10 +3676,10 @@
     <string name="stores_anyone_with_store_link">Bất kỳ ai có liên kết của cửa hàng plugin</string>
     <string name="stores_only_invited">Chỉ những người bạn mời</string>
     <plurals name="stores_devices_joined">
-        <item quantity="other">%1$d thiết bị đã tham gia bằng liên kết</item>
+        <item quantity="other">%1$,d thiết bị đã tham gia bằng liên kết</item>
     </plurals>
     <string name="stores_device_joined_at">Đã tham gia %1$s</string>
-    <string name="stores_newest_listed">Hiển thị %1$d mục mới nhất.</string>
+    <string name="stores_newest_listed">Hiển thị %1$,d mục mới nhất.</string>
     <string name="stores_server_older">Máy chủ của cửa hàng plugin này cũ hơn, và chỉ cho phép những người bạn mời vào. Cập nhật máy chủ sẽ thêm lựa chọn này.</string>
     <string name="stores_remove_devices_title">Xóa các thiết bị đã tham gia bằng liên kết?</string>
     <string name="stores_remove_devices_detail">Chúng ngừng hoạt động với %1$s ngay lập tức. Các plugin đã cài trên chúng vẫn được giữ lại.</string>
@@ -3658,7 +3689,7 @@
     <string name="stores_remove_all">Xóa tất cả</string>
     <string name="stores_copy_link">Sao chép liên kết</string>
     <plurals name="stores_offers_plugins">
-        <item quantity="other">Cung cấp %1$d plugin</item>
+        <item quantity="other">Cung cấp %1$,d plugin</item>
     </plurals>
     <string name="notice_open_stores">Mở các cửa hàng plugin</string>
     <string name="stores_what_is">Cửa hàng plugin là một máy chủ nhỏ giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Các plugin của nó thêm các nguồn. Kaeri không vận hành cửa hàng plugin nào và cũng không liệt kê cái nào, nên bạn tham gia một cửa hàng plugin bằng liên kết mời từ chủ của nó.</string>
@@ -3713,7 +3744,7 @@
     <string name="devices_only_this">Chỉ thiết bị này</string>
     <string name="devices_only_this_line">Hãy ghép nối thêm một thiết bị để chia sẻ chỗ xem dở, lịch sử và cài đặt của bạn.</string>
     <string name="devices_add">Thêm một thiết bị</string>
-    <string name="devices_not_seen">Đã %1$d ngày chưa thấy</string>
+    <string name="devices_not_seen">Đã %1$,d ngày chưa thấy</string>
     <string name="devices_remote_only">Chỉ điều khiển</string>
     <string name="devices_also_sync">Đồng bộ luôn với %1$s</string>
     <string name="devices_paired_tvs_foot">Đã ghép nối để Phát trên TV. TV được ghép nối làm bộ điều khiển sẽ không nhận lịch sử của bạn.</string>
@@ -3790,7 +3821,7 @@
     <string name="rkey_new_foot">Khóa cũ sẽ ngừng hoạt động, và các các thiết bị của bạn chuyển sang khóa mới ở lần đồng bộ kế tiếp.</string>
     <string name="rkey_enter_title">Nhập khóa khôi phục của bạn</string>
     <plurals name="rkey_enter_line">
-        <item quantity="other">%1$s đang giữ lịch sử từ %2$d thiết bị. Khóa bạn đã lưu khi bật đồng bộ sẽ mở được nó.</item>
+        <item quantity="other">%1$s đang giữ lịch sử từ %2$,d thiết bị. Khóa bạn đã lưu khi bật đồng bộ sẽ mở được nó.</item>
     </plurals>
     <string name="rkey_enter_note">24 chữ cái và chữ số, chia thành các nhóm bốn. Khoảng trắng và chữ hoa, chữ thường đều không quan trọng.</string>
     <string name="rkey_wrong">Khóa đó không mở được thư mục này. Hãy kiểm tra từng nhóm bốn ký tự rồi thử lại.</string>
@@ -3854,7 +3885,7 @@
     <string name="cloud_folder">Một thư mục trên %1$s này</string>
     <string name="cloud_app_password_note">Hãy tạo một mật khẩu trong Nextcloud, mục Cài đặt, Bảo mật. Mật khẩu được giữ trên %1$s này.</string>
     <plurals name="devices_tvs_for_play">
-        <item quantity="other">%1$d TV để Phát trên TV</item>
+        <item quantity="other">%1$,d TV để Phát trên TV</item>
     </plurals>
     <string name="devices_paired_today">Ghép nối hôm nay</string>
     <string name="tv_devices_add_line">Hiện một mã để nhập trên điện thoại của bạn</string>
@@ -3933,15 +3964,15 @@
     <string name="episode_synopsis_hidden">Tóm tắt bị ẩn bởi chế độ chống spoiler</string>
     <string name="episode_synopsis_show">Hiện tóm tắt</string>
     <string name="episode_synopsis_show_hint">Hiện ảnh và tóm tắt của tập này</string>
-    <string name="episode_facts">%1$d phút · Phát sóng %2$s</string>
-    <string name="episode_facts_length">%1$d phút</string>
-    <string name="episode_facts_left">Còn %1$d phút</string>
+    <string name="episode_facts">%1$,d phút · Phát sóng %2$s</string>
+    <string name="episode_facts_length">%1$,d phút</string>
+    <string name="episode_facts_left">Còn %1$,d phút</string>
     <string name="episode_protection_line">Chế độ chống spoiler ẩn mọi thứ sau tập %1$d.</string>
     <string name="episode_protection_line_short">Ẩn sau tập %1$d</string>
     <string name="episode_range">Tập %1$d đến %2$d</string>
     <string name="episode_range_label">Phạm vi tập</string>
     <plurals name="episode_fold">
-        <item quantity="other">%1$d tập đã xem</item>
+        <item quantity="other">%1$,d tập đã xem</item>
     </plurals>
     <string name="episode_short">T%1$d</string>
     <string name="episode_aired">Phát sóng %1$s</string>
@@ -3973,14 +4004,14 @@
     <string name="more_rankings">Xếp hạng</string>
     <string name="more_following">Người bạn theo dõi</string>
     <string name="more_following_note">Từ AniList</string>
-    <string name="more_followed_score">%1$d/10</string>
+    <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Tác phẩm tương tự</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList chưa có diễn viên, đội ngũ sản xuất hay đề xuất cho tác phẩm này.</string>
     <string name="more_spoiler">Tiết lộ</string>
     <string name="more_hide_spoiler_tags">Ẩn thẻ tiết lộ</string>
     <plurals name="more_show_spoiler_tags">
-        <item quantity="other">Hiện %1$d thẻ tiết lộ</item>
+        <item quantity="other">Hiện %1$,d thẻ tiết lộ</item>
     </plurals>
     <string name="episode_line_dubbed">%1$s · Lồng tiếng</string>
     <string name="title_button_play_dubbed">Phát tập %1$d · Lồng tiếng</string>
@@ -3992,7 +4023,7 @@
     <string name="title_fact_after">Sau tập %1$d</string>
     <string name="title_fact_now">Đang phát sóng</string>
     <string name="title_fact_tba">Chưa công bố</string>
-    <string name="more_following_line">%1$s · %2$d/10</string>
+    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Đến tập…</string>
     <string name="episode_go_to_title">Đến tập</string>
     <string name="episode_go_to_go">Đi</string>
@@ -4078,7 +4109,7 @@
     <string name="accounts_state_signed_out">Chưa đăng nhập</string>
     <string name="accounts_state_signed_in">Đã đăng nhập vào %1$s với tên %2$s</string>
     <plurals name="accounts_state_signed_in_waiting">
-        <item quantity="other">Đã đăng nhập vào %1$s với tên %2$s · %3$d thay đổi đang chờ</item>
+        <item quantity="other">Đã đăng nhập vào %1$s với tên %2$s · %3$,d thay đổi đang chờ</item>
     </plurals>
     <string name="accounts_state_expired">%1$s cần bạn đăng nhập lại</string>
     <string name="accounts_state_expired_short">Đăng nhập lại để tiếp tục đồng bộ</string>
@@ -4200,7 +4231,7 @@
     <string name="tv_volume">Âm lượng TV</string>
     <string name="tv_cast_group">Chromecast</string>
     <string name="tv_cast_none_found">TV có Chromecast tích hợp cũng sẽ hiển thị ở đây.</string>
-    <string name="tv_cast_counting">%1$s · %2$d s</string>
+    <string name="tv_cast_counting">%1$s · %2$,d s</string>
     <string name="tv_cast_couldnt_start">Không bắt đầu được trên %1$s</string>
     <string name="tv_cast_stopped">Đã dừng truyền</string>
     <string name="tv_cast_play_here">Phát ở đây</string>
@@ -4208,7 +4239,7 @@
     <string name="tv_cast_mute">Tắt tiếng</string>
     <string name="tv_cast_unmute">Bật tiếng</string>
     <string name="tv_cast_volume_on_tv">Chỉnh trên TV</string>
-    <string name="tv_cast_up_next_in">Tiếp theo · phát sau %1$d s</string>
+    <string name="tv_cast_up_next_in">Tiếp theo · phát sau %1$,d s</string>
     <string name="tv_forget_note">Quên một TV ở đây thì TV đó cũng quên thiết bị này.</string>
     <string name="updates_title">Cập nhật</string>
     <string name="updates_checking">Đang kiểm tra phiên bản mới hơn…</string>

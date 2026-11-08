@@ -217,9 +217,81 @@ object Strings {
     fun homeBecause(context: Context, title: String): String =
         context.getString(R.string.home_because, title)
 
-    /** Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha". */
+    /** Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it. */
     fun homeMoreGenre(context: Context, genre: String): String =
         context.getString(R.string.home_more_genre, genre)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreAction(context: Context): String =
+        context.getString(R.string.home_more_genre_action)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreAdventure(context: Context): String =
+        context.getString(R.string.home_more_genre_adventure)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreComedy(context: Context): String =
+        context.getString(R.string.home_more_genre_comedy)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreDrama(context: Context): String =
+        context.getString(R.string.home_more_genre_drama)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreEcchi(context: Context): String =
+        context.getString(R.string.home_more_genre_ecchi)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreFantasy(context: Context): String =
+        context.getString(R.string.home_more_genre_fantasy)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreHorror(context: Context): String =
+        context.getString(R.string.home_more_genre_horror)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreMahouShoujo(context: Context): String =
+        context.getString(R.string.home_more_genre_mahou_shoujo)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreMecha(context: Context): String =
+        context.getString(R.string.home_more_genre_mecha)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreMusic(context: Context): String =
+        context.getString(R.string.home_more_genre_music)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreMystery(context: Context): String =
+        context.getString(R.string.home_more_genre_mystery)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenrePsychological(context: Context): String =
+        context.getString(R.string.home_more_genre_psychological)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreRomance(context: Context): String =
+        context.getString(R.string.home_more_genre_romance)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreSciFi(context: Context): String =
+        context.getString(R.string.home_more_genre_sci_fi)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreSliceOfLife(context: Context): String =
+        context.getString(R.string.home_more_genre_slice_of_life)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreSports(context: Context): String =
+        context.getString(R.string.home_more_genre_sports)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreSupernatural(context: Context): String =
+        context.getString(R.string.home_more_genre_supernatural)
+
+    /** Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. */
+    fun homeMoreGenreThriller(context: Context): String =
+        context.getString(R.string.home_more_genre_thriller)
 
     /** Line over the spotlight's title when it is the built-in demo. */
     fun homeSpotlightDemo(context: Context): String =
@@ -1260,6 +1332,98 @@ object Strings {
     /** Under a source's hit in Search: the book files it holds, all in one format ("CBZ"). */
     fun readHitFilesFormat(context: Context, count: Int, format: String): String =
         context.resources.getQuantityString(R.plurals.read_hit_files_format, count, count, format)
+
+    /** The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it. */
+    fun readSourceFolders(context: Context): String =
+        context.getString(R.string.read_source_folders)
+
+    /** A section of the feed that e-readers fetch from: the chapters downloaded on this device. */
+    fun readFeedDownloads(context: Context): String =
+        context.getString(R.string.read_feed_downloads)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January". */
+    fun readingSinceJanuary(context: Context): String =
+        context.getString(R.string.reading_since_january)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February". */
+    fun readingSinceFebruary(context: Context): String =
+        context.getString(R.string.reading_since_february)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March". */
+    fun readingSinceMarch(context: Context): String =
+        context.getString(R.string.reading_since_march)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April". */
+    fun readingSinceApril(context: Context): String =
+        context.getString(R.string.reading_since_april)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May". */
+    fun readingSinceMay(context: Context): String =
+        context.getString(R.string.reading_since_may)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June". */
+    fun readingSinceJune(context: Context): String =
+        context.getString(R.string.reading_since_june)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July". */
+    fun readingSinceJuly(context: Context): String =
+        context.getString(R.string.reading_since_july)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August". */
+    fun readingSinceAugust(context: Context): String =
+        context.getString(R.string.reading_since_august)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September". */
+    fun readingSinceSeptember(context: Context): String =
+        context.getString(R.string.reading_since_september)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October". */
+    fun readingSinceOctober(context: Context): String =
+        context.getString(R.string.reading_since_october)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November". */
+    fun readingSinceNovember(context: Context): String =
+        context.getString(R.string.reading_since_november)
+
+    /** On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December". */
+    fun readingSinceDecember(context: Context): String =
+        context.getString(R.string.reading_since_december)
+
+    /** The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList". */
+    fun readViewAllTrendingManga(context: Context): String =
+        context.getString(R.string.read_view_all_trending_manga)
+
+    /** The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList". */
+    fun readViewAllTrendingWebtoons(context: Context): String =
+        context.getString(R.string.read_view_all_trending_webtoons)
+
+    /** The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList". */
+    fun readViewAllTrendingNovels(context: Context): String =
+        context.getString(R.string.read_view_all_trending_novels)
+
+    /** The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList". */
+    fun readViewAllNewManga(context: Context): String =
+        context.getString(R.string.read_view_all_new_manga)
+
+    /** The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList". */
+    fun readViewAllNewWebtoons(context: Context): String =
+        context.getString(R.string.read_view_all_new_webtoons)
+
+    /** The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList". */
+    fun readViewAllNewNovels(context: Context): String =
+        context.getString(R.string.read_view_all_new_novels)
+
+    /** The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList". */
+    fun readViewAllFinishedManga(context: Context): String =
+        context.getString(R.string.read_view_all_finished_manga)
+
+    /** The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList". */
+    fun readViewAllFinishedWebtoons(context: Context): String =
+        context.getString(R.string.read_view_all_finished_webtoons)
+
+    /** The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList". */
+    fun readViewAllFinishedNovels(context: Context): String =
+        context.getString(R.string.read_view_all_finished_novels)
 
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =

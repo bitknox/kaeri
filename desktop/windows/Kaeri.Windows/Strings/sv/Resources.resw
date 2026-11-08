@@ -194,6 +194,60 @@
   <data name="HomeMoreGenre" xml:space="preserve">
     <value>Mer {genre}</value>
   </data>
+  <data name="HomeMoreGenreAction" xml:space="preserve">
+    <value>Mer action</value>
+  </data>
+  <data name="HomeMoreGenreAdventure" xml:space="preserve">
+    <value>Mer äventyr</value>
+  </data>
+  <data name="HomeMoreGenreComedy" xml:space="preserve">
+    <value>Mer komedi</value>
+  </data>
+  <data name="HomeMoreGenreDrama" xml:space="preserve">
+    <value>Mer drama</value>
+  </data>
+  <data name="HomeMoreGenreEcchi" xml:space="preserve">
+    <value>Mer ecchi</value>
+  </data>
+  <data name="HomeMoreGenreFantasy" xml:space="preserve">
+    <value>Mer fantasy</value>
+  </data>
+  <data name="HomeMoreGenreHorror" xml:space="preserve">
+    <value>Mer skräck</value>
+  </data>
+  <data name="HomeMoreGenreMahouShoujo" xml:space="preserve">
+    <value>Mer mahou shoujo</value>
+  </data>
+  <data name="HomeMoreGenreMecha" xml:space="preserve">
+    <value>Mer mecha</value>
+  </data>
+  <data name="HomeMoreGenreMusic" xml:space="preserve">
+    <value>Mer musik</value>
+  </data>
+  <data name="HomeMoreGenreMystery" xml:space="preserve">
+    <value>Mer mysterium</value>
+  </data>
+  <data name="HomeMoreGenrePsychological" xml:space="preserve">
+    <value>Mer psykologisk</value>
+  </data>
+  <data name="HomeMoreGenreRomance" xml:space="preserve">
+    <value>Mer romantik</value>
+  </data>
+  <data name="HomeMoreGenreSciFi" xml:space="preserve">
+    <value>Mer sci-fi</value>
+  </data>
+  <data name="HomeMoreGenreSliceOfLife" xml:space="preserve">
+    <value>Mer vardagsliv</value>
+  </data>
+  <data name="HomeMoreGenreSports" xml:space="preserve">
+    <value>Mer sport</value>
+  </data>
+  <data name="HomeMoreGenreSupernatural" xml:space="preserve">
+    <value>Mer övernaturligt</value>
+  </data>
+  <data name="HomeMoreGenreThriller" xml:space="preserve">
+    <value>Mer thriller</value>
+  </data>
   <data name="HomeSpotlightDemo" xml:space="preserve">
     <value>Demo, fri att dela</value>
   </data>
@@ -979,6 +1033,45 @@
   </data>
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>Kapitel från {count} serier är redo att läsas offline.</value>
+  </data>
+  <data name="ReadSourceFolders" xml:space="preserve">
+    <value>Mappar</value>
+  </data>
+  <data name="ReadingSinceJanuary" xml:space="preserve">
+    <value>sedan januari</value>
+  </data>
+  <data name="ReadingSinceFebruary" xml:space="preserve">
+    <value>sedan februari</value>
+  </data>
+  <data name="ReadingSinceMarch" xml:space="preserve">
+    <value>sedan mars</value>
+  </data>
+  <data name="ReadingSinceApril" xml:space="preserve">
+    <value>sedan april</value>
+  </data>
+  <data name="ReadingSinceMay" xml:space="preserve">
+    <value>sedan maj</value>
+  </data>
+  <data name="ReadingSinceJune" xml:space="preserve">
+    <value>sedan juni</value>
+  </data>
+  <data name="ReadingSinceJuly" xml:space="preserve">
+    <value>sedan juli</value>
+  </data>
+  <data name="ReadingSinceAugust" xml:space="preserve">
+    <value>sedan augusti</value>
+  </data>
+  <data name="ReadingSinceSeptember" xml:space="preserve">
+    <value>sedan september</value>
+  </data>
+  <data name="ReadingSinceOctober" xml:space="preserve">
+    <value>sedan oktober</value>
+  </data>
+  <data name="ReadingSinceNovember" xml:space="preserve">
+    <value>sedan november</value>
+  </data>
+  <data name="ReadingSinceDecember" xml:space="preserve">
+    <value>sedan december</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Gick med i {store} som {member}.</value>

@@ -1,10 +1,10 @@
 # Under a page that is still loading after four seconds.
-# @arg page: int
+# @arg page: plain
 # @max 40
 reader-page-loading = Loading page { $page }
 
 # Heading where a page could not be loaded.
-# @arg page: int
+# @arg page: plain
 # @max 40
 reader-page-failed = Couldn't load page { $page }
 

@@ -539,7 +539,7 @@ lists-count-soon = soon
 
 # A search result's count at the end of its row, for a title not out yet: the day and month it
 # starts, such as "9 Jan". The month is the short month name.
-# @arg day: int
+# @arg day: plain
 # @arg month: text
 # @max 12
 # @only tui
@@ -553,7 +553,7 @@ lists-count-dub = dub
 
 # After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The
 # column is narrow, so it is one letter and the number.
-# @arg through: int
+# @arg through: plain
 # @max 7
 # @only tui
 lists-count-dub-through = d{ $through }

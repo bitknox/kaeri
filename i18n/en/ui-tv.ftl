@@ -158,7 +158,7 @@ tv-search-on-tv = Search on the TV
 tv-type-search = Type a search
 
 # Name of a track that has no name.
-# @arg id: int
+# @arg id: plain
 tv-track-n = Track { $id }
 
 ## The TV's own pairing screens
