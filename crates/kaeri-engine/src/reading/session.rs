@@ -1159,17 +1159,26 @@ impl Session {
         event.page = self.pages_total.checked_sub(1);
         event.of_pages = Some(self.pages_total).filter(|n| *n > 0);
         event.source_id = Some("local".into());
-        let queued_for = match cx.config.effective().reading.send_progress_after {
-            SendProgressAfter::Chapter => queue_trackers(cx, &self.work, &chapter, at),
-            SendProgressAfter::Close => {
-                self.unsent = Some((chapter.clone(), at));
-                Vec::new()
-            }
+        let send_now = matches!(
+            cx.config.effective().reading.send_progress_after,
+            SendProgressAfter::Chapter
+        );
+        // The read is kept before the trackers hear of it, so what they are told counts it:
+        // the chapter that finishes a volume names that volume.
+        let told = match trackers_of(cx, &self.work) {
+            Some((_, trackers)) if send_now => trackers,
+            _ => Vec::new(),
         };
-        let trackers = queued_for.iter().map(|id| crate::tracking::tracker_name(id)).collect();
-        if let Err(e) = cx.services.store.record_read(&event, queued_for) {
+        if let Err(e) = cx.services.store.record_read(&event, told) {
             tracing::warn!(error = %e, "a read chapter was not kept");
         }
+        let queued_for = if send_now {
+            queue_trackers(cx, &self.work, &chapter, at)
+        } else {
+            self.unsent = Some((chapter.clone(), at));
+            Vec::new()
+        };
+        let trackers = queued_for.iter().map(|id| crate::tracking::tracker_name(id)).collect();
         // A book server the person lets Kaeri write to hears of it now, as a mark from the
         // series page does: it is their own library, not a tracker.
         cx.services.book_sources.report_read(&self.work, &chapter, at, cx.tx);
@@ -1343,33 +1352,36 @@ pub(super) fn counts(cx: &Cx<'_>, reached: Reached) -> bool {
     }
 }
 
-/// Queue the chapter for the trackers signed in, for a work AniList lists: the highest whole
-/// chapter, never lower than a tracker holds.
-fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> Vec<String> {
-    // The demo is read to try the reader, never told to a tracker, even matched to a work.
+/// The work's AniList id and the signed-in reading trackers a read of it goes to. `None` for a
+/// work AniList does not know, and for the demo: it is read to try the reader, never told to a
+/// tracker, even matched to a work.
+fn trackers_of(cx: &Cx<'_>, work: &WorkId) -> Option<(AnilistId, Vec<String>)> {
     let demo = cx
         .services
         .book_sources
         .edition_of(work, None)
         .is_some_and(|(source, _)| source == kaeri_core::demo::DEMO_SOURCE_ID);
     if demo {
-        return Vec::new();
+        return None;
     }
-    let Some(id) = work.as_str().strip_prefix("a:").and_then(|n| n.parse::<u32>().ok()) else {
-        return Vec::new();
-    };
+    let id = work.as_str().strip_prefix("a:").and_then(|n| n.parse::<u32>().ok())?;
+    let trackers = crate::tracking::commands::signed_in_reading_tracker_ids(&cx.services.sync);
+    Some((AnilistId::new(id), trackers))
+}
+
+/// Queue the chapter for the trackers signed in, for a work AniList lists: the highest whole
+/// chapter, never lower than a tracker holds, with the volume the progress kept names. The
+/// read of `chapter` is kept first. Says which trackers it went to.
+fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> Vec<String> {
+    let Some((id, trackers)) = trackers_of(cx, work) else { return Vec::new() };
     let Some(number) = chapter.key().and_then(|k| k.range()).map(|r| r.last().whole()) else {
         return Vec::new();
     };
     // The highest whole chapter read, and the volume a watermark named: half chapters go as
     // the chapter below them, and a tracker never holds less than it was told.
     let (read, volume) = crate::read_tracking::progress_of(cx.services, work);
-    let op = TrackOp::SetReadProgress {
-        anilist_id: AnilistId::new(id),
-        chapter: number.max(read),
-        volume,
-    };
-    crate::tracking::commands::signed_in_reading_tracker_ids(&cx.services.sync)
+    let op = TrackOp::SetReadProgress { anilist_id: id, chapter: number.max(read), volume };
+    trackers
         .into_iter()
         .filter(|tracker| cx.services.store.enqueue(tracker, &op, at).is_ok())
         .collect()
@@ -1418,6 +1430,7 @@ mod tests {
     mod leaving;
     mod novels;
     mod peek;
+    mod trackers;
 
     const WORK: &str = "a:4242";
 
