@@ -6772,6 +6772,9 @@ public static partial class T
     /// <summary>A genre's state: no series with it.</summary>
     public static string ReadFilterLeftOut => Get("ReadFilterLeftOut");
 
+    /// <summary>The last entry of the Genres menu, which holds the genres the menu has no room for.</summary>
+    public static string ReadFilterMoreGenres => Get("ReadFilterMoreGenres");
+
     /// <summary>A filter of reading's Search: when a series started.</summary>
     public static string ReadSearchStarted => Get("ReadSearchStarted");
 
@@ -6838,6 +6841,60 @@ public static partial class T
 
     /// <summary>The button of a source group with more than five hits.</summary>
     public static string ReadSearchSourceMore(long n) => Fill(Get("ReadSearchSourceMore"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList".</summary>
+    public static string ReadSearchLineTotal(string line, string total) => Fill(Get("ReadSearchLineTotal"), ("line", line), ("total", total));
+
+    /// <summary>Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular".</summary>
+    public static string ReadSearchBrowseParts(string list, string next) => Fill(Get("ReadSearchBrowseParts"), ("list", list), ("next", next));
+
+    /// <summary>A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing".</summary>
+    public static string ReadCaptionTwo(string first, string second) => Fill(Get("ReadCaptionTwo"), ("first", first), ("second", second));
+
+    /// <summary>A filter's button once set, as shown: its name, then the value. As in "Format: Manga".</summary>
+    public static string ReadFilterShown(string name, string value) => Fill(Get("ReadFilterShown"), ("name", name), ("value", value));
+
+    /// <summary>A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan".</summary>
+    public static string ReadNameTile(string title, string line) => Fill(Get("ReadNameTile"), ("title", title), ("line", line));
+
+    /// <summary>A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders".</summary>
+    public static string ReadNameTilePlaced(string title, string line, string placed) => Fill(Get("ReadNameTilePlaced"), ("title", title), ("line", line), ("placed", placed));
+
+    /// <summary>A tile with only its title and the source that has it. As in "Paper Lantern, In Folders".</summary>
+    public static string ReadNameTileOnlyPlaced(string title, string placed) => Fill(Get("ReadNameTileOnlyPlaced"), ("title", title), ("placed", placed));
+
+    /// <summary>An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42".</summary>
+    public static string ReadNameWeekTile(string title, string time, string chapter) => Fill(Get("ReadNameWeekTile"), ("title", title), ("time", time), ("chapter", chapter));
+
+    /// <summary>An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday".</summary>
+    public static string ReadNameWeekTileTime(string title, string time) => Fill(Get("ReadNameWeekTileTime"), ("title", title), ("time", time));
+
+    /// <summary>The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details".</summary>
+    public static string ReadNameSpotlightArt(string title) => Fill(Get("ReadNameSpotlightArt"), ("title", title));
+
+    /// <summary>A row heading with its side words. As in "New manga, Last 12 months".</summary>
+    public static string ReadNameHeading(string heading, string side) => Fill(Get("ReadNameHeading"), ("heading", heading), ("side", side));
+
+    /// <summary>A row or its heading while its covers load. As in "Trending manga, loading".</summary>
+    public static string ReadNameLoading(string name) => Fill(Get("ReadNameLoading"), ("name", name));
+
+    /// <summary>A row heading with side words while its covers load. As in "New manga, Last 12 months, loading".</summary>
+    public static string ReadNameHeadingLoading(string heading, string side) => Fill(Get("ReadNameHeadingLoading"), ("heading", heading), ("side", side));
+
+    /// <summary>A row's View all link. As in "View all, Trending manga".</summary>
+    public static string ReadNameViewAll(string row) => Fill(Get("ReadNameViewAll"), ("row", row));
+
+    /// <summary>A filter button once set. As in "Format, Manga".</summary>
+    public static string ReadNameFilter(string name, string value) => Fill(Get("ReadNameFilter"), ("name", name), ("value", value));
+
+    /// <summary>A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds".</summary>
+    public static string ReadNameFailure(string line, string reason) => Fill(Get("ReadNameFailure"), ("line", line), ("reason", reason));
+
+    /// <summary>A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder".</summary>
+    public static string ReadNameSource(string source, string kind) => Fill(Get("ReadNameSource"), ("source", source), ("kind", kind));
+
+    /// <summary>A source row's button for its other hits. As in "Show 12 more from Folders".</summary>
+    public static string ReadNameSourceMore(long n, string source) => Fill(GetPlural("ReadNameSourceMore", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("source", source));
 
     /// <summary>Over a first-run page's title: which page of how many.</summary>
     public static string OnboardingStep(long step, long total) => Fill(Get("OnboardingStep"), ("step", step.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -13887,6 +13944,7 @@ public static partial class T
         ["ReadFilterGenresCount_other"] = "{n} genres",
         ["ReadFilterIncluded"] = "Included",
         ["ReadFilterLeftOut"] = "Left out",
+        ["ReadFilterMoreGenres"] = "More genres",
         ["ReadSearchStarted"] = "Started",
         ["ReadSearchSourcesOnly"] = "Your sources only",
         ["ReadSearchFromSources"] = "From your sources",
@@ -13911,6 +13969,25 @@ public static partial class T
         ["ReadSearchSourceKindFolder"] = "Folder",
         ["ReadSearchSourceKindPlugin"] = "Plugin",
         ["ReadSearchSourceMore"] = "Show {n} more",
+        ["ReadSearchLineTotal"] = "{line} · {total}",
+        ["ReadSearchBrowseParts"] = "{list}, {next}",
+        ["ReadCaptionTwo"] = "{first} · {second}",
+        ["ReadFilterShown"] = "{name}: {value}",
+        ["ReadNameTile"] = "{title}, {line}",
+        ["ReadNameTilePlaced"] = "{title}, {line}, {placed}",
+        ["ReadNameTileOnlyPlaced"] = "{title}, {placed}",
+        ["ReadNameWeekTile"] = "{title}, {time}, {chapter}",
+        ["ReadNameWeekTileTime"] = "{title}, {time}",
+        ["ReadNameSpotlightArt"] = "{title}, Details",
+        ["ReadNameHeading"] = "{heading}, {side}",
+        ["ReadNameLoading"] = "{name}, loading",
+        ["ReadNameHeadingLoading"] = "{heading}, {side}, loading",
+        ["ReadNameViewAll"] = "View all, {row}",
+        ["ReadNameFilter"] = "{name}, {value}",
+        ["ReadNameFailure"] = "{line}, {reason}",
+        ["ReadNameSource"] = "{source}, {kind}",
+        ["ReadNameSourceMore_one"] = "Show 1 more from {source}",
+        ["ReadNameSourceMore_other"] = "Show {n} more from {source}",
         ["OnboardingStep"] = "{step} of {total}",
         ["OnboardingWelcomeLine"] = "Keep track of what you watch and read, from your own sources.",
         ["OnboardingWelcomeNote"] = "Your lists and progress stay on your devices. Trackers and sources are yours to add.",

@@ -9677,6 +9677,9 @@ read-filter-included = [Îñçļüðéð~~~]
 # A genre's state: no series with it.
 read-filter-left-out = [Ļéƒţ öüţ~~~]
 
+# The last entry of the Genres menu, which holds the genres the menu has no room for.
+read-filter-more-genres = [Ṁöŕé ĝéñŕéš~~~~]
+
 # A filter of reading's Search: when a series started.
 read-search-started = [Šţàŕţéð~~~]
 
@@ -9747,6 +9750,64 @@ read-search-source-kind-plugin = [Þļüĝîñ~~]
 
 # The button of a source group with more than five hits.
 read-search-source-more = [Šĥöŵ { $n } ɱöŕé~~~~]
+
+# The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList".
+read-search-line-total = [{ $line } · { $total }~~~]
+
+# Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular".
+read-search-browse-parts = [{ $list }, { $next }~~~]
+
+# A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing".
+read-caption-two = [{ $first } · { $second }~~~]
+
+# A filter's button once set, as shown: its name, then the value. As in "Format: Manga".
+read-filter-shown = [{ $name }: { $value }~~~]
+
+# A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan".
+read-name-tile = [{ $title }, { $line }~~~]
+
+# A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders".
+read-name-tile-placed = [{ $title }, { $line }, { $placed }~~~~]
+
+# A tile with only its title and the source that has it. As in "Paper Lantern, In Folders".
+read-name-tile-only-placed = [{ $title }, { $placed }~~~]
+
+# An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42".
+read-name-week-tile = [{ $title }, { $time }, { $chapter }~~~~]
+
+# An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday".
+read-name-week-tile-time = [{ $title }, { $time }~~~]
+
+# The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details".
+read-name-spotlight-art = [{ $title }, Ðéţàîļš~~~~]
+
+# A row heading with its side words. As in "New manga, Last 12 months".
+read-name-heading = [{ $heading }, { $side }~~~]
+
+# A row or its heading while its covers load. As in "Trending manga, loading".
+read-name-loading = [{ $name }, ļöàðîñĝ~~~~]
+
+# A row heading with side words while its covers load. As in "New manga, Last 12 months, loading".
+read-name-heading-loading = [{ $heading }, { $side }, ļöàðîñĝ~~~~~~]
+
+# A row's View all link. As in "View all, Trending manga".
+read-name-view-all = [Ṽîéŵ àļļ, { $row }~~~~]
+
+# A filter button once set. As in "Format, Manga".
+read-name-filter = [{ $name }, { $value }~~~]
+
+# A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds".
+read-name-failure = [{ $line }, { $reason }~~~]
+
+# A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder".
+read-name-source = [{ $source }, { $kind }~~~]
+
+# A source row's button for its other hits. As in "Show 12 more from Folders".
+read-name-source-more =
+    { $n ->
+        [one] [Šĥöŵ 1 ɱöŕé ƒŕöɱ { $source }~~~~~~]
+       *[other] [Šĥöŵ { $n } ɱöŕé ƒŕöɱ { $source }~~~~~~~]
+    }
 
 # Over a first-run page's title: which page of how many.
 onboarding-step = [{ $step } öƒ { $total }~~~]

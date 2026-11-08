@@ -46,7 +46,7 @@ public sealed partial class ReadSearchPage : Page
     readonly TextBlock title = new() { Text = T.NavSearch, Style = Ui.Res<Style>("PageTitleStyle") };
     readonly DropDownButton format = Menu(), origin = Menu(), status = Menu(), genres = Menu(), started = Menu();
     readonly DropDownButton sort = new() { MinHeight = 32 };
-    readonly StackPanel filterRow = new() { Orientation = Orientation.Horizontal, Spacing = 8 };
+    readonly Kaeri.Windows.Player.WrapRow filterRow = new() { Gap = 8 };
     readonly Border rule = new() { Width = 1, Height = 19, Margin = new Thickness(4, 0, 4, 0), VerticalAlignment = VerticalAlignment.Center, Visibility = Visibility.Collapsed };
     readonly ToggleButton sourcesOnly = new() { MinHeight = 32, CornerRadius = new CornerRadius(4), Visibility = Visibility.Collapsed };
     readonly FontIcon sourcesOnlyCheck = new() { Glyph = "", FontSize = 12, Visibility = Visibility.Collapsed };
@@ -60,7 +60,7 @@ public sealed partial class ReadSearchPage : Page
     {
         FontSize = 14,
         LineHeight = 19,
-        Foreground = Ui.Res<Brush>("HazeBrush"),
+        Foreground = LiveBrush.Of("HazeBrush"),
         TextTrimming = TextTrimming.CharacterEllipsis,
         TextWrapping = TextWrapping.NoWrap,
     })
@@ -75,7 +75,7 @@ public sealed partial class ReadSearchPage : Page
     readonly TextBlock sourcesHead = new() { Text = T.ReadSearchFromSources, FontSize = 20, LineHeight = 26, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold };
     readonly StackPanel sourceRows = new() { XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled };
     readonly Dictionary<string, SourceRowView> sourceViews = [];
-    readonly FadeLine nothingWords = new(() => new TextBlock { FontSize = 14, LineHeight = 19, TextWrapping = TextWrapping.Wrap, Foreground = Ui.Res<Brush>("HazeBrush") });
+    readonly FadeLine nothingWords = new(() => new TextBlock { FontSize = 14, LineHeight = 19, TextWrapping = TextWrapping.Wrap, Foreground = LiveBrush.Of("HazeBrush") });
     readonly Border nothingLine = new() { Margin = new Thickness(0, 22, 0, 0), Padding = new Thickness(0, 12, 0, 0), BorderThickness = new Thickness(0, 1, 0, 0), Visibility = Visibility.Collapsed };
     readonly StackPanel moreRow = new() { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(0, 22, 0, 0), Visibility = Visibility.Collapsed };
     readonly Button moreAnilist = new() { Content = T.ReadSearchMoreAnilist, MinHeight = 32 };
@@ -101,7 +101,7 @@ public sealed partial class ReadSearchPage : Page
         FontWeight = Microsoft.UI.Text.FontWeights.Medium,
         Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
         BorderBrush = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
-        Foreground = Ui.Res<Brush>("HazeBrush"),
+        Foreground = LiveBrush.Of("HazeBrush"),
     };
 
     /// <summary>AniList's grid as screen readers meet it: "Series from AniList", each cover's place in it.</summary>
@@ -113,7 +113,7 @@ public sealed partial class ReadSearchPage : Page
 
     public ReadSearchPage()
     {
-        Background = Ui.Res<Brush>("GroundBrush");
+        Background = LiveBrush.Of("GroundBrush");
         NavigationCacheMode = NavigationCacheMode.Enabled;
         var root = new Grid { Padding = new Thickness(36, 20, 0, 0), RowSpacing = 12 };
         root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -126,40 +126,25 @@ public sealed partial class ReadSearchPage : Page
         head.Children.Add(new OfflineLine(reading: true));
         root.Children.Add(head);
 
-        // The scope first, then the filters, which scroll sideways in a narrow window, then Your
-        // sources only after a rule, which stays in view; the sort at the end while browsing.
-        var bar = new Grid { ColumnSpacing = 8, Margin = new Thickness(0, 0, 36, 0) };
-        bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-        bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-        bar.Children.Add(new ScopeSwitch { Place = "search", Reading = true, Margin = new Thickness(0, 0, 12, 0) });
+        // The scope on its own line, as the board draws it, then the filters, then Your sources
+        // only after a rule; the sort at the end while browsing. What does not fit moves to the
+        // next line, filters one by one when even a line of their own is too narrow, so none is
+        // cut off, and setting a filter never moves the scope.
+        var controls = new StackPanel { Spacing = 16, Margin = new Thickness(0, 0, 36, 0) };
+        controls.Children.Add(new ScopeSwitch { Place = "search", Reading = true, HorizontalAlignment = HorizontalAlignment.Left });
+        var bar = new FilterBar { Rule = rule };
+        controls.Children.Add(bar);
         foreach (var button in new[] { format, origin, status, genres, started })
             filterRow.Children.Add(button);
-        rule.Background = Ui.Res<Brush>("RuleBrush");
+        rule.Background = LiveBrush.Of("RuleBrush");
         AutomationProperties.SetAccessibilityView(rule, AccessibilityView.Raw);
         SourcesOnlyLook();
-        var filterScroll = new ScrollViewer
-        {
-            Content = filterRow,
-            HorizontalScrollMode = ScrollMode.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
-            VerticalScrollMode = ScrollMode.Disabled,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-            IsTabStop = false,
-        };
-        HomeShelf.ForwardWheel(filterScroll);
-        Grid.SetColumn(filterScroll, 1);
-        bar.Children.Add(filterScroll);
-        Grid.SetColumn(rule, 2);
+        bar.Children.Add(filterRow);
         bar.Children.Add(rule);
-        Grid.SetColumn(sourcesOnly, 3);
         bar.Children.Add(sourcesOnly);
-        Grid.SetColumn(sort, 4);
         bar.Children.Add(sort);
-        Grid.SetRow(bar, 1);
-        root.Children.Add(bar);
+        Grid.SetRow(controls, 1);
+        root.Children.Add(controls);
         Menus();
 
         // AniList's part: the line, the grid, and the Shows line under them.
@@ -167,7 +152,7 @@ public sealed partial class ReadSearchPage : Page
         anilist.Children.Add(line);
         anilistSlot = new CoverSlot(ReadPlates.Grid(), grid);
         anilist.Children.Add(anilistSlot);
-        other.BorderBrush = Ui.Res<Brush>("FaintRuleBrush");
+        other.BorderBrush = LiveBrush.Of("FaintRuleBrush");
         other.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         other.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var otherLink = new HyperlinkButton
@@ -191,13 +176,13 @@ public sealed partial class ReadSearchPage : Page
         AutomationProperties.SetHeadingLevel(sourcesHead, AutomationHeadingLevel.Level2);
         sources.Children.Add(sourcesHead);
         sources.Children.Add(sourceRows);
-        nothingLine.BorderBrush = Ui.Res<Brush>("FaintRuleBrush");
+        nothingLine.BorderBrush = LiveBrush.Of("FaintRuleBrush");
         nothingLine.Child = nothingWords;
         sources.Children.Add(nothingLine);
 
         // More from AniList: while words are typed, more comes when asked, not on the scroll. The
         // button keeps the focus and stays; a small ring beside it while the page comes.
-        shownWords.Foreground = Ui.Res<Brush>("HazeBrush");
+        shownWords.Foreground = LiveBrush.Of("HazeBrush");
         AutomationProperties.SetAccessibilityView(moreRing, AccessibilityView.Raw);
         moreAnilist.Click += (_, _) =>
         {
@@ -886,11 +871,11 @@ public sealed partial class ReadSearchPage : Page
         var words = new TextBlock { Text = T.ReadSearchSourcesOnly, VerticalAlignment = VerticalAlignment.Center };
         sourcesOnly.Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Children = { sourcesOnlyCheck, words } };
         AutomationProperties.SetName(sourcesOnly, T.ReadSearchSourcesOnly);
-        var haze = Ui.Res<Brush>("HazeBrush");
-        var edge = Ui.Res<Brush>("EdgeBrush");
-        var fill = Ui.Res<Brush>("ControlFillColorSecondaryBrush");
-        var fillOver = Ui.Res<Brush>("ControlFillColorTertiaryBrush");
-        var text = Ui.Res<Brush>("TextFillColorPrimaryBrush");
+        var haze = LiveBrush.Of("HazeBrush");
+        var edge = LiveBrush.Of("EdgeBrush");
+        var fill = LiveBrush.Of("ControlFillColorSecondaryBrush");
+        var fillOver = LiveBrush.Of("ControlFillColorTertiaryBrush");
+        var text = LiveBrush.Of("TextFillColorPrimaryBrush");
         var clear = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
         // i18n-skip: lightweight styling keys of the toggle button
         foreach (var (key, value) in new (string, object)[]
@@ -942,7 +927,7 @@ public sealed partial class ReadSearchPage : Page
         if (Titled is { } titled)
         {
             if (ReadDiscovery.SameAsk(titled.Query, q, f.Sorts.FirstOrDefault()))
-                return total is { } count ? ReadingParts.Joined(titled.Line.Text(), T.ReadSearchTotal(count)) : T.ReadSearchBrowseLine(titled.Line.Text());
+                return total is { } count ? T.ReadSearchLineTotal(titled.Line.Text(), T.ReadSearchTotal(count)) : T.ReadSearchBrowseLine(titled.Line.Text());
             // Asked something else since: the row's line is gone for good.
             Titled = null;
         }
@@ -954,8 +939,8 @@ public sealed partial class ReadSearchPage : Page
         if (ReadDiscovery.StartedSet(q))
             parts.AddRange(Labels([q.Started!], f.Started ?? []));
         parts.Add(SortWords(q.Sort ?? f.Sorts.FirstOrDefault()));
-        var what = string.Join(", ", parts);
-        return total is { } n ? ReadingParts.Joined(what, T.ReadSearchTotal(n)) : T.ReadSearchBrowseLine(what);
+        var what = parts.Count == 0 ? "" : parts.Skip(1).Aggregate(parts[0], T.ReadSearchBrowseParts);
+        return total is { } n ? T.ReadSearchLineTotal(what, T.ReadSearchTotal(n)) : T.ReadSearchBrowseLine(what);
     }
 
     static string SortWords(string? key) => key switch
@@ -992,22 +977,33 @@ public sealed partial class ReadSearchPage : Page
         status.Flyout = statuses;
         Say(status, T.ReadFilterStatus, q.Status is { } s ? Value([s], f.Statuses) : null);
 
-        // Each genre included or left out, never both.
+        // A flat menu: the first genres, any set ones after them, then More genres for the rest.
+        // A click includes a genre or clears it; Left out holds every genre to leave out.
         var genreMenu = new MenuFlyout { Placement = FlyoutPlacementMode.BottomEdgeAlignedLeft };
-        foreach (var genre in f.Genres)
+        var chosen = (q.Genres ?? []).Concat(q.ExcludeGenres ?? []).ToHashSet();
+        var flat = f.Genres.Take(FlatGenres).Concat(f.Genres.Skip(FlatGenres).Where(chosen.Contains)).ToList();
+        foreach (var genre in flat)
+            genreMenu.Items.Add(GenreItem(q, genre));
+        var rest = f.Genres.Where(g => !flat.Contains(g)).ToList();
+        if (rest.Count > 0)
         {
-            var included = (q.Genres ?? []).Contains(genre);
-            var leftOut = (q.ExcludeGenres ?? []).Contains(genre);
-            var sub = new MenuFlyoutSubItem { Text = leftOut ? T.ReadFilterNotGenre(genre) : genre };
-            if (included || leftOut)
-                sub.Icon = new FontIcon { Glyph = included ? "" : "" };
-            var include = new ToggleMenuFlyoutItem { Text = T.ReadFilterIncluded, IsChecked = included };
-            include.Click += (_, _) => Genre(genre, include: !included, exclude: false);
-            var exclude = new ToggleMenuFlyoutItem { Text = T.ReadFilterLeftOut, IsChecked = leftOut };
-            exclude.Click += (_, _) => Genre(genre, include: false, exclude: !leftOut);
-            sub.Items.Add(include);
-            sub.Items.Add(exclude);
-            genreMenu.Items.Add(sub);
+            var more = new MenuFlyoutSubItem { Text = T.ReadFilterMoreGenres };
+            foreach (var genre in rest)
+                more.Items.Add(GenreItem(q, genre));
+            genreMenu.Items.Add(more);
+        }
+        if (f.Genres.Length > 0)
+        {
+            genreMenu.Items.Add(new MenuFlyoutSeparator());
+            var leave = new MenuFlyoutSubItem { Text = T.ReadFilterLeftOut };
+            foreach (var genre in f.Genres)
+            {
+                var leftOut = (q.ExcludeGenres ?? []).Contains(genre);
+                var item = new ToggleMenuFlyoutItem { Text = genre, IsChecked = leftOut };
+                item.Click += (_, _) => Genre(genre, include: false, exclude: !leftOut);
+                leave.Items.Add(item);
+            }
+            genreMenu.Items.Add(leave);
         }
         genres.Flyout = genreMenu;
         var count = (q.Genres?.Length ?? 0) + (q.ExcludeGenres?.Length ?? 0);
@@ -1095,6 +1091,22 @@ public sealed partial class ReadSearchPage : Page
         Run(formats ? Query with { Formats = next } : Query with { Origins = next });
     }
 
+    /// <summary>How many genres the Genres menu shows before More genres.</summary>
+    const int FlatGenres = 10;
+
+    /// <summary>One genre in the Genres menu: checked when included, "Not Horror" with a minus when left out, and a click includes it or clears it.</summary>
+    MenuFlyoutItem GenreItem(ReadSearchQuery q, string genre)
+    {
+        var included = (q.Genres ?? []).Contains(genre);
+        var leftOut = (q.ExcludeGenres ?? []).Contains(genre);
+        var item = new ToggleMenuFlyoutItem { Text = leftOut ? T.ReadFilterNotGenre(genre) : genre, IsChecked = included };
+        if (leftOut)
+            item.Icon = new FontIcon { Glyph = "\uE738" };
+        AutomationProperties.SetHelpText(item, included ? T.ReadFilterIncluded : leftOut ? T.ReadFilterLeftOut : "");
+        item.Click += (_, _) => Genre(genre, include: !included && !leftOut, exclude: false);
+        return item;
+    }
+
     void Genre(string genre, bool include, bool exclude)
     {
         var q = Query;
@@ -1110,11 +1122,11 @@ public sealed partial class ReadSearchPage : Page
     /// <summary>A filter's button: its name in haze until set, then "Format: Manga" in the text colour on the secondary fill.</summary>
     static void Say(DropDownButton button, string name, string? value)
     {
-        var text = value is null ? name : $"{T.ReadFilterSet(name)} {value}";
+        var text = value is null ? name : T.ReadFilterShown(name, value);
         if (button.Content as string != text)
             button.Content = text;
-        AutomationProperties.SetName(button, value is null ? name : $"{name}, {value}");
-        button.Foreground = Ui.Res<Brush>(value is null ? "HazeBrush" : "TextFillColorPrimaryBrush");
-        button.Background = value is null ? new SolidColorBrush(Microsoft.UI.Colors.Transparent) : Ui.Res<Brush>("ControlFillColorSecondaryBrush");
+        AutomationProperties.SetName(button, value is null ? name : T.ReadNameFilter(name, value));
+        button.Foreground = LiveBrush.Of(value is null ? "HazeBrush" : "TextFillColorPrimaryBrush");
+        button.Background = value is null ? new SolidColorBrush(Microsoft.UI.Colors.Transparent) : LiveBrush.Of("ControlFillColorSecondaryBrush");
     }
 }

@@ -249,6 +249,14 @@ pub enum FfiScene {
     /// Reading on and set to Read with nothing added and the reading demo on: the demo is the
     /// only thing to read, as after a first run that added no source.
     ReadingDemo,
+    /// [`Self::ReadingHome`] with a second source, Northwind, a book server that never answers a
+    /// search: reading's Search gives its row placeholders, then after fifteen seconds "Northwind
+    /// didn't answer." with "No answer in 15 s." and Try again, while Folders answers as before.
+    ReadingSourceFailed,
+    /// [`Self::ReadingHome`] with AniList failing every reading request beyond what the device
+    /// kept: Home's discovery rows leave and one notice says so, and reading's Search says
+    /// AniList didn't answer while the sources are still asked.
+    ReadingAnilistFailed,
     /// Reading on and set to Read, e-ink on and the screen in greys.
     EinkGrey,
     /// Reading on and set to Read, e-ink on and the screen unsure: "Is this a colour screen?"
@@ -428,6 +436,8 @@ impl FfiScene {
             | Self::ReaderNovel
             | Self::ReaderMoved
             | Self::ReadingDemo
+            | Self::ReadingSourceFailed
+            | Self::ReadingAnilistFailed
             | Self::EinkGrey
             | Self::EinkKaleidoUnsure => Some(true),
             Self::ReadingDark => Some(false),
@@ -590,6 +600,9 @@ impl FfiEngine {
                         server.fail_operation(operation, Failure::Status(500));
                     }
                 }
+                FfiScene::ReadingAnilistFailed => {
+                    server.fail_operation(Operation::Books, Failure::Status(500));
+                }
                 _ => {}
             }
             let provided = world.as_ref().map(HomeWorld::provided).unwrap_or_default();
@@ -606,7 +619,10 @@ impl FfiEngine {
             if let Some(link) = store_invite {
                 let _ = testing.store_invite.set(link);
             }
-            let options = testing::options(opened, &testing, start, sources)?;
+            let mut options = testing::options(opened, &testing, start, sources)?;
+            if scene == FfiScene::ReadingSourceFailed {
+                options.book_source = Some(Arc::new(Northwind::new()));
+            }
             Ok::<_, FfiError>((Self::launch(options, host).await?, testing))
         });
         let engine = match started {
@@ -626,6 +642,70 @@ impl FfiEngine {
             ));
         }
         Ok(engine)
+    }
+}
+
+/// [`FfiScene::ReadingSourceFailed`]'s second source: a book server named Northwind that has
+/// manga and novels and never answers a search, so reading's Search runs out of time waiting for
+/// it. A server rather than a plugin: the engine keeps only the plugins it loaded itself.
+struct Northwind {
+    manifest: kaeri_core::books::BookSourceManifest,
+}
+
+impl Northwind {
+    fn new() -> Self {
+        use kaeri_core::{books::BookSourceKind, media::Medium};
+        Self {
+            manifest: kaeri_core::books::BookSourceManifest {
+                id: "fixture-northwind".into(),
+                name: "Northwind".into(),
+                version: "1".into(),
+                kind: BookSourceKind::Server,
+                media: vec![Medium::Manga, Medium::Novel],
+                languages: vec!["en".into()],
+                allowed_hosts: Vec::new(),
+                capabilities: Vec::new(),
+            },
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl kaeri_core::traits::BookSource for Northwind {
+    fn manifest(&self) -> &kaeri_core::books::BookSourceManifest {
+        &self.manifest
+    }
+
+    async fn search(
+        &self,
+        _: &str,
+        _: &kaeri_core::books::BookHints,
+    ) -> Result<Vec<kaeri_core::books::SeriesHit>, kaeri_core::ProviderError> {
+        std::future::pending().await
+    }
+
+    async fn series(
+        &self,
+        _: &str,
+        _: &kaeri_core::books::BookHints,
+    ) -> Result<kaeri_core::books::SeriesDetail, kaeri_core::ProviderError> {
+        Err(kaeri_core::ProviderError::NotFound)
+    }
+
+    async fn chapters(
+        &self,
+        _: &str,
+        _: &kaeri_core::books::BookHints,
+    ) -> Result<Vec<kaeri_core::books::SourceChapter>, kaeri_core::ProviderError> {
+        Err(kaeri_core::ProviderError::NotFound)
+    }
+
+    async fn content(
+        &self,
+        _: &str,
+        _: &str,
+    ) -> Result<kaeri_core::books::ChapterContent, kaeri_core::ProviderError> {
+        Err(kaeri_core::ProviderError::NotFound)
     }
 }
 
@@ -841,6 +921,8 @@ fn scene_config(dirs: &FfiDirs, scene: &FfiScene, now: i64) -> Result<(), FfiErr
             "[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n".to_owned()
         }
         FfiScene::ReadingHome
+        | FfiScene::ReadingSourceFailed
+        | FfiScene::ReadingAnilistFailed
         | FfiScene::ReadingSeries
         | FfiScene::ReaderMangaRtl
         | FfiScene::ReaderStrip
@@ -961,6 +1043,8 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::ReadingDark => {}
         FfiScene::ReadingJoinAsk => seed_reading_join(store, now),
         FfiScene::ReadingHome
+        | FfiScene::ReadingSourceFailed
+        | FfiScene::ReadingAnilistFailed
         | FfiScene::ReadingSeries
         | FfiScene::ReadingDownloads
         | FfiScene::ReaderMangaRtl
@@ -1084,6 +1168,8 @@ fn seed_books(store: &Store, data_dir: &std::path::Path, scene: &FfiScene, now: 
     if !matches!(
         scene,
         FfiScene::ReadingHome
+            | FfiScene::ReadingSourceFailed
+            | FfiScene::ReadingAnilistFailed
             | FfiScene::ReadingSeries
             | FfiScene::ReaderMangaRtl
             | FfiScene::ReaderStrip

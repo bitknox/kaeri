@@ -15402,6 +15402,11 @@ pub fn read_filter_left_out() -> String {
     text("read-filter-left-out", &[])
 }
 
+/// The last entry of the Genres menu, which holds the genres the menu has no room for.
+pub fn read_filter_more_genres() -> String {
+    text("read-filter-more-genres", &[])
+}
+
 /// A filter of reading's Search: when a series started.
 pub fn read_search_started() -> String {
     text("read-search-started", &[])
@@ -15513,6 +15518,96 @@ pub fn read_search_source_kind_plugin() -> String {
 /// The button of a source group with more than five hits.
 pub fn read_search_source_more(n: i64) -> String {
     text("read-search-source-more", &[("n", Arg::Int(n))])
+}
+
+/// The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList".
+pub fn read_search_line_total(line: &str, total: &str) -> String {
+    text("read-search-line-total", &[("line", Arg::Text(line)), ("total", Arg::Text(total))])
+}
+
+/// Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular".
+pub fn read_search_browse_parts(list: &str, next: &str) -> String {
+    text("read-search-browse-parts", &[("list", Arg::Text(list)), ("next", Arg::Text(next))])
+}
+
+/// A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing".
+pub fn read_caption_two(first: &str, second: &str) -> String {
+    text("read-caption-two", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// A filter's button once set, as shown: its name, then the value. As in "Format: Manga".
+pub fn read_filter_shown(name: &str, value: &str) -> String {
+    text("read-filter-shown", &[("name", Arg::Text(name)), ("value", Arg::Text(value))])
+}
+
+/// A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan".
+pub fn read_name_tile(title: &str, line: &str) -> String {
+    text("read-name-tile", &[("title", Arg::Text(title)), ("line", Arg::Text(line))])
+}
+
+/// A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders".
+pub fn read_name_tile_placed(title: &str, line: &str, placed: &str) -> String {
+    text("read-name-tile-placed", &[("title", Arg::Text(title)), ("line", Arg::Text(line)), ("placed", Arg::Text(placed))])
+}
+
+/// A tile with only its title and the source that has it. As in "Paper Lantern, In Folders".
+pub fn read_name_tile_only_placed(title: &str, placed: &str) -> String {
+    text("read-name-tile-only-placed", &[("title", Arg::Text(title)), ("placed", Arg::Text(placed))])
+}
+
+/// An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42".
+pub fn read_name_week_tile(title: &str, time: &str, chapter: &str) -> String {
+    text("read-name-week-tile", &[("title", Arg::Text(title)), ("time", Arg::Text(time)), ("chapter", Arg::Text(chapter))])
+}
+
+/// An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday".
+pub fn read_name_week_tile_time(title: &str, time: &str) -> String {
+    text("read-name-week-tile-time", &[("title", Arg::Text(title)), ("time", Arg::Text(time))])
+}
+
+/// The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details".
+pub fn read_name_spotlight_art(title: &str) -> String {
+    text("read-name-spotlight-art", &[("title", Arg::Text(title))])
+}
+
+/// A row heading with its side words. As in "New manga, Last 12 months".
+pub fn read_name_heading(heading: &str, side: &str) -> String {
+    text("read-name-heading", &[("heading", Arg::Text(heading)), ("side", Arg::Text(side))])
+}
+
+/// A row or its heading while its covers load. As in "Trending manga, loading".
+pub fn read_name_loading(name: &str) -> String {
+    text("read-name-loading", &[("name", Arg::Text(name))])
+}
+
+/// A row heading with side words while its covers load. As in "New manga, Last 12 months, loading".
+pub fn read_name_heading_loading(heading: &str, side: &str) -> String {
+    text("read-name-heading-loading", &[("heading", Arg::Text(heading)), ("side", Arg::Text(side))])
+}
+
+/// A row's View all link. As in "View all, Trending manga".
+pub fn read_name_view_all(row: &str) -> String {
+    text("read-name-view-all", &[("row", Arg::Text(row))])
+}
+
+/// A filter button once set. As in "Format, Manga".
+pub fn read_name_filter(name: &str, value: &str) -> String {
+    text("read-name-filter", &[("name", Arg::Text(name)), ("value", Arg::Text(value))])
+}
+
+/// A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds".
+pub fn read_name_failure(line: &str, reason: &str) -> String {
+    text("read-name-failure", &[("line", Arg::Text(line)), ("reason", Arg::Text(reason))])
+}
+
+/// A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder".
+pub fn read_name_source(source: &str, kind: &str) -> String {
+    text("read-name-source", &[("source", Arg::Text(source)), ("kind", Arg::Text(kind))])
+}
+
+/// A source row's button for its other hits. As in "Show 12 more from Folders".
+pub fn read_name_source_more(n: i64, source: &str) -> String {
+    text("read-name-source-more", &[("n", Arg::Int(n)), ("source", Arg::Text(source))])
 }
 
 /// Over a first-run page's title: which page of how many.

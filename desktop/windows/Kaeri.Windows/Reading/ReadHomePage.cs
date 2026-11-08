@@ -57,7 +57,7 @@ public sealed partial class ReadHomePage : Page
 
     public ReadHomePage()
     {
-        Background = Ui.Res<Brush>("GroundBrush");
+        Background = LiveBrush.Of("GroundBrush");
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level1);
         var root = new Grid { Padding = new Thickness(36, 20, 0, 0), RowSpacing = 8 };
         root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -394,7 +394,7 @@ public sealed partial class ReadHomePage : Page
         Margin = new Thickness(0, 40, 0, 0),
         Padding = new Thickness(0, 16, 0, 0),
         BorderThickness = new Thickness(0, 1, 0, 0),
-        BorderBrush = Ui.Res<Brush>("FaintRuleBrush"),
+        BorderBrush = LiveBrush.Of("FaintRuleBrush"),
         Child = new TextBlock { Text = T.ReadHomeOfflineRows, Style = Ui.Res<Style>("HazeCaptionStyle"), FontSize = 12, LineHeight = 16, TextWrapping = TextWrapping.Wrap },
     };
 
@@ -442,7 +442,7 @@ public sealed partial class ReadHomePage : Page
             FontSize = 12,
             LineHeight = 16,
             FontWeight = FontWeights.SemiBold,
-            Foreground = Ui.Res<Brush>(day.Today ? "SilkBrush" : "HazeBrush"),
+            Foreground = LiveBrush.Of(day.Today ? "SilkBrush" : "HazeBrush"),
         };
         AutomationProperties.SetHeadingLevel(label, AutomationHeadingLevel.Level3);
         column.Children.Add(label);
@@ -476,7 +476,7 @@ public sealed partial class ReadHomePage : Page
         {
             when.Children.Add(ReadingParts.WaterDot());
             time = ReadingParts.Clock(at);
-            when.Children.Add(new TextBlock { Text = time, FontSize = 12, LineHeight = 16, FontWeight = FontWeights.SemiBold, Foreground = Ui.Res<Brush>("SilkBrush") });
+            when.Children.Add(new TextBlock { Text = time, FontSize = 12, LineHeight = 16, FontWeight = FontWeights.SemiBold, Foreground = LiveBrush.Of("SilkBrush") });
         }
         else
         {
@@ -502,7 +502,7 @@ public sealed partial class ReadHomePage : Page
         Grid.SetColumn(words, 1);
         row.Children.Add(words);
         var button = new Button { Style = Ui.Res<Style>("HomeCardButtonStyle"), Content = row, HorizontalAlignment = HorizontalAlignment.Stretch };
-        AutomationProperties.SetName(button, ReadingParts.Joined(tile.Title, time, line));
+        AutomationProperties.SetName(button, line is { Length: > 0 } ? T.ReadNameWeekTile(tile.Title, time, line) : T.ReadNameWeekTileTime(tile.Title, time));
         button.Click += (_, _) => ctx.Window.OpenSeries(tile.Work);
         button.ContextFlyout = ReadingParts.DetailsMenu(ctx, tile.Work);
         return button;
@@ -522,7 +522,7 @@ public sealed partial class ReadHomePage : Page
             Margin = new Thickness(0, 40, 0, 0),
             Padding = new Thickness(0, 16, 0, 0),
             BorderThickness = new Thickness(0, 1, 0, 0),
-            BorderBrush = Ui.Res<Brush>("FaintRuleBrush"),
+            BorderBrush = LiveBrush.Of("FaintRuleBrush"),
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };
         block.Children.Add(new TextBlock
@@ -582,7 +582,7 @@ sealed partial class ReadSpotlightView : Grid
         RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-        frame = new Border { CornerRadius = new CornerRadius(16), Background = Ui.Res<Brush>("RaisedBrush") };
+        frame = new Border { CornerRadius = new CornerRadius(16), Background = LiveBrush.Of("RaisedBrush") };
         if (spot.Banner is { } banner)
         {
             var image = new Image { Stretch = Stretch.UniformToFill };
@@ -592,7 +592,7 @@ sealed partial class ReadSpotlightView : Grid
             frame.Child = image;
         }
         art = new Button { Style = Ui.Res<Style>("HomeCardButtonStyle"), Content = frame, CornerRadius = new CornerRadius(16) };
-        AutomationProperties.SetName(art, ReadingParts.Joined(tile.Title, T.HomeDetails));
+        AutomationProperties.SetName(art, T.ReadNameSpotlightArt(tile.Title));
         art.Click += (_, _) => ctx.Window.OpenSeries(tile.Work);
         Children.Add(words);
         Children.Add(art);
@@ -701,7 +701,7 @@ sealed partial class ReadSpotlightWords : StackPanel
             case ReadSpotlightCase.NewChapter when text is not null:
                 row.Spacing = 8;
                 row.Children.Add(ReadingParts.WaterDot());
-                row.Children.Add(new TextBlock { Text = text, Style = Ui.Res<Style>("HazeCaptionStyle"), Foreground = Ui.Res<Brush>("SilkBrush"), TextTrimming = TextTrimming.CharacterEllipsis });
+                row.Children.Add(new TextBlock { Text = text, Style = Ui.Res<Style>("HazeCaptionStyle"), Foreground = LiveBrush.Of("SilkBrush"), TextTrimming = TextTrimming.CharacterEllipsis });
                 return row;
             case ReadSpotlightCase.Continuing when text is not null:
                 row.Spacing = 10;

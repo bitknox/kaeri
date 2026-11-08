@@ -9922,6 +9922,10 @@ object Strings {
     fun readFilterLeftOut(context: Context): String =
         context.getString(R.string.read_filter_left_out)
 
+    /** The last entry of the Genres menu, which holds the genres the menu has no room for. */
+    fun readFilterMoreGenres(context: Context): String =
+        context.getString(R.string.read_filter_more_genres)
+
     /** A filter of reading's Search: when a series started. */
     fun readSearchStarted(context: Context): String =
         context.getString(R.string.read_search_started)
@@ -10011,6 +10015,78 @@ object Strings {
     /** The button of a source group with more than five hits. */
     fun readSearchSourceMore(context: Context, n: Int): String =
         context.getString(R.string.read_search_source_more, n)
+
+    /** The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList". */
+    fun readSearchLineTotal(context: Context, line: String, total: String): String =
+        context.getString(R.string.read_search_line_total, line, total)
+
+    /** Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular". */
+    fun readSearchBrowseParts(context: Context, list: String, next: String): String =
+        context.getString(R.string.read_search_browse_parts, list, next)
+
+    /** A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing". */
+    fun readCaptionTwo(context: Context, first: String, second: String): String =
+        context.getString(R.string.read_caption_two, first, second)
+
+    /** A filter's button once set, as shown: its name, then the value. As in "Format: Manga". */
+    fun readFilterShown(context: Context, name: String, value: String): String =
+        context.getString(R.string.read_filter_shown, name, value)
+
+    /** A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan". */
+    fun readNameTile(context: Context, title: String, line: String): String =
+        context.getString(R.string.read_name_tile, title, line)
+
+    /** A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders". */
+    fun readNameTilePlaced(context: Context, title: String, line: String, placed: String): String =
+        context.getString(R.string.read_name_tile_placed, title, line, placed)
+
+    /** A tile with only its title and the source that has it. As in "Paper Lantern, In Folders". */
+    fun readNameTileOnlyPlaced(context: Context, title: String, placed: String): String =
+        context.getString(R.string.read_name_tile_only_placed, title, placed)
+
+    /** An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42". */
+    fun readNameWeekTile(context: Context, title: String, time: String, chapter: String): String =
+        context.getString(R.string.read_name_week_tile, title, time, chapter)
+
+    /** An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday". */
+    fun readNameWeekTileTime(context: Context, title: String, time: String): String =
+        context.getString(R.string.read_name_week_tile_time, title, time)
+
+    /** The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details". */
+    fun readNameSpotlightArt(context: Context, title: String): String =
+        context.getString(R.string.read_name_spotlight_art, title)
+
+    /** A row heading with its side words. As in "New manga, Last 12 months". */
+    fun readNameHeading(context: Context, heading: String, side: String): String =
+        context.getString(R.string.read_name_heading, heading, side)
+
+    /** A row or its heading while its covers load. As in "Trending manga, loading". */
+    fun readNameLoading(context: Context, name: String): String =
+        context.getString(R.string.read_name_loading, name)
+
+    /** A row heading with side words while its covers load. As in "New manga, Last 12 months, loading". */
+    fun readNameHeadingLoading(context: Context, heading: String, side: String): String =
+        context.getString(R.string.read_name_heading_loading, heading, side)
+
+    /** A row's View all link. As in "View all, Trending manga". */
+    fun readNameViewAll(context: Context, row: String): String =
+        context.getString(R.string.read_name_view_all, row)
+
+    /** A filter button once set. As in "Format, Manga". */
+    fun readNameFilter(context: Context, name: String, value: String): String =
+        context.getString(R.string.read_name_filter, name, value)
+
+    /** A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds". */
+    fun readNameFailure(context: Context, line: String, reason: String): String =
+        context.getString(R.string.read_name_failure, line, reason)
+
+    /** A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder". */
+    fun readNameSource(context: Context, source: String, kind: String): String =
+        context.getString(R.string.read_name_source, source, kind)
+
+    /** A source row's button for its other hits. As in "Show 12 more from Folders". */
+    fun readNameSourceMore(context: Context, n: Int, source: String): String =
+        context.resources.getQuantityString(R.plurals.read_name_source_more, n, n, source)
 
     /** Over a first-run page's title: which page of how many. */
     fun onboardingStep(context: Context, step: Int, total: Int): String =
