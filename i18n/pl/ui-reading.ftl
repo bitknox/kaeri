@@ -6,6 +6,12 @@ home-read-releasing = Aktualnie wydawane
 home-read-checked-on-open = Sprawdzane po otwarciu aplikacji { -app-name }
 home-read-end = To na razie wszystko. Pełne listy znajdziesz w sekcjach Aktualizacje i Szukaj.
 home-read-no-sources = Dodaj folder, serwer lub { -plugin-store }, aby czytać na stronie głównej.
+read-home-offline-rows = Serie na topie i nowości pojawią się, gdy będziesz online.
+read-home-browse = Przeglądaj
+read-home-browse-line = Na topie, nowe i zakończone, według formatu
+read-home-browse-row = { $first }, { $second } i jeszcze { $more }
+read-home-browse-note = Z AniList. Twoje { -source-pl } są odpytywane dopiero po otwarciu serii.
+read-home-browse-kept = Zapisane listy ({ $time }) nadal się otwierają.
 week-usually = Zwykle
 week-nothing-usually = Zwykle nic
 updates-checked = Sprawdzono: { $ago }
@@ -261,7 +267,7 @@ read-search-nothing-line = Spróbuj innych słów lub tytułu w innym języku.
 read-search-nothing-filters-line = Mniej filtrów może dać więcej wyników.
 read-search-clear-filters = Wyczyść filtry
 read-sort-popular = Popularne
-read-sort-trending = Na czasie
+read-sort-trending = Na topie
 read-sort-score = Ocena
 read-sort-newest = Najnowsze
 read-filter-format = Format
@@ -282,6 +288,32 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Uwzględnione
 read-filter-left-out = Pominięte
+read-search-started = Początek wydawania
+read-search-sources-only = Tylko twoje { -source-pl }
+read-search-from-sources = Twoje { -source-pl }
+read-search-asking = { $source }: czekanie na odpowiedź…
+read-search-source-failed = { $source }: brak odpowiedzi.
+read-search-source-timeout = Brak odpowiedzi w ciągu { $seconds } s.
+read-search-source-nothing = Nic nie znaleziono w: { $sources }.
+read-search-in-source = Znaleziono w: { $source }
+read-search-in-sources = { $n ->
+    [one] Twoje { -source-pl } z tą serią: { $n }
+    [few] Twoje { -source-pl } z tą serią: { $n }
+    [many] Twoje { -source-pl } z tą serią: { $n }
+   *[other] Twoje { -source-pl } z tą serią: { $n }
+ }
+read-search-anilist-nothing = AniList nic nie znalazł dla tych słów.
+read-search-anilist-failed = AniList nie odpowiedział.
+read-search-anilist-failed-line = Twoje { -source-pl } zostały mimo to odpytane.
+read-search-sources-nothing = Twoje { -source-pl } też nic nie znalazły.
+read-search-total-unknown = Serie z AniList
+read-search-more-anilist = Więcej z AniList
+read-search-shown = Pokazano { $shown } z { $total }
+read-search-shown-some = Pokazano: { $shown }
+read-search-source-kind-server = Serwer
+read-search-source-kind-folder = Folder
+read-search-source-kind-plugin = { -plugin-cap }
+read-search-source-more = Pokaż jeszcze { $n }
 onboarding-step = { $step } z { $total }
 onboarding-welcome-line = Śledź to, co oglądasz i czytasz. Dostarczają to twoje { -source-pl }.
 onboarding-welcome-note = Twoje listy i postęp zostają przy tobie. { -tracker-cap-pl } i { -source-pl } dodajesz sam.

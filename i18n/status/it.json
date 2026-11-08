@@ -6680,6 +6680,26 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "feed-firewall-body-windows": {
+    "source": "132a836a9009",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"reti private\" and \"reti pubbliche\" should match the Italian Windows firewall prompt's labels."
+    ],
+    "back": "So that the e-readers at home reach the feed, allow Kaeri only on private networks. Leave public networks unchecked."
+  },
+  "feed-firewall-title-windows": {
+    "source": "739ceb3c60d2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: \"chiederà l'accesso alla rete\" reads as Windows itself requesting access, not asking the person about Kaeri."
+    ],
+    "back": "Windows will ask a question about the network"
+  },
   "film-length-hours": {
     "source": "fb12680c5861",
     "state": "draft",
@@ -13652,11 +13672,25 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "opds-paused-none-windows": {
+    "source": "c7d804ecd7d0",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Paused. This PC is not on a local network."
+  },
   "opds-paused-vpn": {
     "source": "427149a54da2",
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
+  },
+  "opds-paused-vpn-windows": {
+    "source": "1928355bd8d0",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Paused. This PC is connected only through a VPN."
   },
   "opds-port": {
     "source": "b354dc19a720",
@@ -18228,11 +18262,175 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-hit-chapters": {
+    "source": "802e9b40d1d9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Chapters from 1 to { $last }"
+  },
+  "read-hit-episodes": {
+    "source": "88dd644debd8",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Episodes from 1 to { $last }"
+  },
+  "read-hit-files": {
+    "source": "31e42ba495f5",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: 1 file | many: { $count } files | other: { $count } files"
+  },
+  "read-hit-files-format": {
+    "source": "770c7a09f6a7",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: 1 file · { $format } | many: { $count } files · { $format } | other: { $count } files · { $format }"
+  },
+  "read-hit-parts": {
+    "source": "ab5de0b28ab1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: 1 part | many: { $count } parts | other: { $count } parts"
+  },
+  "read-home-browse": {
+    "source": "99fa943a22c1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Browse"
+  },
+  "read-home-browse-kept": {
+    "source": "919569641b9c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: \"Le liste di { $time }\" breaks with clock times or dates (needs \"delle\"/\"del\"); depends on time format.",
+      "drafter: \"Le liste di { $time }\" assumes a clock time, as in home-offline."
+    ],
+    "back": "The saved lists ({ $time }) remain available."
+  },
+  "read-home-browse-line": {
+    "source": "c994c5844b1e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Adjectives agree with an implied feminine plural \"serie\"."
+    ],
+    "back": "Trending, new and concluded, by format [feminine plural adjectives]"
+  },
+  "read-home-browse-note": {
+    "source": "565b35fc96d1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "From AniList. Your sources are consulted when you open a series."
+  },
+  "read-home-browse-row": {
+    "source": "5de2127e7f29",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $first }, { $second } and { $more } others"
+  },
+  "read-home-finished-manga": {
+    "source": "ee7c676c85e9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Concluded manga"
+  },
+  "read-home-finished-novels": {
+    "source": "2ddb4e46f24f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Light novel\" treated as feminine (concluse, Nuove), matching \"Tutte le light novel\" elsewhere."
+    ],
+    "back": "Concluded light novels"
+  },
+  "read-home-finished-side": {
+    "source": "faf54e55dd9b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Most popular"
+  },
+  "read-home-finished-webtoons": {
+    "source": "452239b09399",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Concluded webtoons"
+  },
+  "read-home-new-manga": {
+    "source": "4fc30243e1ef",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New manga"
+  },
+  "read-home-new-novels": {
+    "source": "75d2b6cc8397",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New light novels"
+  },
+  "read-home-new-side": {
+    "source": "ee719957657d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Last 12 months"
+  },
+  "read-home-new-webtoons": {
+    "source": "4a84fcb36480",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New webtoons"
+  },
   "read-home-offline-line": {
     "source": "93a502484563",
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
+  },
+  "read-home-offline-rows": {
+    "source": "5c9d955aa514",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending series and new releases appear when you are online."
+  },
+  "read-home-trending-manga": {
+    "source": "7eee43d8f9ae",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending manga"
+  },
+  "read-home-trending-novels": {
+    "source": "4e45bd0a0a99",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending light novels"
+  },
+  "read-home-trending-webtoons": {
+    "source": "7e4405f9d680",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending webtoons"
   },
   "read-library-empty": {
     "source": "d3adf45c142a",
@@ -18312,6 +18510,34 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-search-anilist-failed": {
+    "source": "51697437569f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "AniList did not respond."
+  },
+  "read-search-anilist-failed-line": {
+    "source": "db477b88e688",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Your sources were consulted anyway."
+  },
+  "read-search-anilist-nothing": {
+    "source": "53296c63604b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "AniList found nothing for these words."
+  },
+  "read-search-asking": {
+    "source": "f75b2bc2a054",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Request to { $source }…"
+  },
   "read-search-browse-line": {
     "source": "40af5fd80735",
     "state": "draft",
@@ -18329,6 +18555,34 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "read-search-from-sources": {
+    "source": "4c16421d7b92",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "From your sources"
+  },
+  "read-search-in-source": {
+    "source": "9d6c2ec16e83",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "In { $source }"
+  },
+  "read-search-in-sources": {
+    "source": "4f41affe0f2d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: In { $n } of your sources | many: In { $n } of your sources | other: In { $n } of your sources"
+  },
+  "read-search-more-anilist": {
+    "source": "8c0d4e2b5764",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "More from AniList"
   },
   "read-search-nothing": {
     "source": "76628fdd5e7e",
@@ -18360,11 +18614,132 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-search-shown": {
+    "source": "bc2e24859970",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"mostrati\" agrees with an implied masculine \"risultati\"."
+    ],
+    "back": "{ $shown } of { $total } shown [masculine plural]"
+  },
+  "read-search-shown-some": {
+    "source": "2fa10b6235ca",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $shown } shown [masculine plural]"
+  },
+  "read-search-source-failed": {
+    "source": "f8bd3cfcebc6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $source } did not respond."
+  },
+  "read-search-source-kind-folder": {
+    "source": "9434ea90b6fe",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Folder"
+  },
+  "read-search-source-kind-plugin": {
+    "source": "ff60263da2d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Plugin"
+  },
+  "read-search-source-kind-server": {
+    "source": "5afcaa918bbb",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Server"
+  },
+  "read-search-source-more": {
+    "source": "44dd0514bd9e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Show { $n } more"
+  },
+  "read-search-source-nothing": {
+    "source": "4c0214217083",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Nothing found in { $sources }."
+  },
+  "read-search-source-timeout": {
+    "source": "b95df4187657",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "No response in { $seconds } s."
+  },
+  "read-search-sources-nothing": {
+    "source": "cde3e10ce1c4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Nothing in your sources either."
+  },
+  "read-search-sources-only": {
+    "source": "c20c9edf24b3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Only your sources"
+  },
+  "read-search-started": {
+    "source": "3fd6bd99e3f6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Filter name \"Inizio\"; check it is clear without \"pubblicazione\"."
+    ],
+    "back": "Start (beginning)"
+  },
+  "read-search-started-3-years": {
+    "source": "fca85bdfa141",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Last 3 years"
+  },
+  "read-search-started-any": {
+    "source": "155085305728",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Qualsiasi data\" for the Started filter's Any time; check against \"Ultimi 12 mesi\"."
+    ],
+    "back": "Any date"
+  },
+  "read-search-started-year": {
+    "source": "ee719957657d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Last 12 months"
+  },
   "read-search-total": {
     "source": "8ff253aea036",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "read-search-total-unknown": {
+    "source": "03b29b695e0a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Series from AniList"
   },
   "read-series-downloaded-open": {
     "source": "8a151ce93ce9",
@@ -18819,8 +19194,12 @@
   "reader-end-tracker": {
     "source": "8889ba40058a",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string: plural 'aggiornati' broke with one tracker; now 'update sent to X', as the Windows line."
+    ],
+    "back": "Read · update sent to { $trackers }"
   },
   "reader-end-tracker-offline": {
     "source": "dd54aedecf1f",
@@ -22230,6 +22609,30 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "send-save-failed-windows": {
+    "source": "36709deb1a85",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"lì\" for \"there\" (the folder picked); check it reads naturally."
+    ],
+    "back": "Unable to save the files there. Try another folder."
+  },
+  "send-save-files-windows": {
+    "source": "11bfcbcddd95",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Save the files"
+  },
+  "send-saved-windows": {
+    "source": "3a6e5e0af28e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: File saved | many: { $n } files saved | other: { $n } files saved"
+  },
   "send-share-again": {
     "source": "25a5e97e7ab4",
     "state": "draft",
@@ -22433,6 +22836,13 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "series-read-again-done-windows": {
+    "source": "234105505b8c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Rereading of { $title } from the start"
   },
   "series-read-again-menu": {
     "source": "c548a26cb51a",
@@ -36283,5 +36693,584 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "windows-read-downloads-empty-detail": {
+    "source": "7ead281efe81",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Downloaded chapters open without a connection."
+  },
+  "windows-reader-all-manga-pc": {
+    "source": "b55d1dff2113",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "All the manga on this PC"
+  },
+  "windows-reader-all-novels": {
+    "source": "b2d018bcfb7e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "All the light novels"
+  },
+  "windows-reader-all-strips-pc": {
+    "source": "cfd35af8aa31",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "All the webtoons on this PC"
+  },
+  "windows-reader-back": {
+    "source": "c16e00a7a8b2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Back"
+  },
+  "windows-reader-back-to-series": {
+    "source": "0899c5a1d76f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Back to the series"
+  },
+  "windows-reader-background": {
+    "source": "1efbfc3937d5",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Background"
+  },
+  "windows-reader-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Change"
+  },
+  "windows-reader-chapter-failed": {
+    "source": "b7151743bc09",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Unable to open { $chapter }"
+  },
+  "windows-reader-chapter-pages": {
+    "source": "6facfb38e6ae",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: 1 page | many: { $pages } pages | other: { $pages } pages"
+  },
+  "windows-reader-chapters-tab": {
+    "source": "15733d7d0f6d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Chapters"
+  },
+  "windows-reader-choose-source": {
+    "source": "2e134e8c7be9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Choose a source"
+  },
+  "windows-reader-continue": {
+    "source": "f42f6a6df6bf",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "the Continue reading button"
+  },
+  "windows-reader-crop-borders": {
+    "source": "1b28173e8b92",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Crop the borders"
+  },
+  "windows-reader-end-caught-up-body": {
+    "source": "3ce370affb34",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New chapters appear in Updates when your sources have them."
+  },
+  "windows-reader-end-finished": {
+    "source": "cb7b1474b76f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "End of the series"
+  },
+  "windows-reader-end-finished-body": {
+    "source": "6893412bf017",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "There are no other chapters."
+  },
+  "windows-reader-end-no-source": {
+    "source": "6799149dde6b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } is not yet in your sources"
+  },
+  "windows-reader-end-not-out": {
+    "source": "ea24be349c9e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Reused Apple wording; \"uscito\" assumes a masculine label (Capitolo)."
+    ],
+    "back": "{ $chapter } has not come out yet [masculine agreement]"
+  },
+  "windows-reader-end-not-out-body": {
+    "source": "3ab576b2f95f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Kaeri looks for new chapters in the background and adds them to Updates."
+  },
+  "windows-reader-end-not-read": {
+    "source": "a8555163106b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Not yet marked as read"
+  },
+  "windows-reader-end-of-chapter": {
+    "source": "9dfd61e866b4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "End of { $chapter }"
+  },
+  "windows-reader-end-offline": {
+    "source": "56bcafcd90ca",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } is not downloaded"
+  },
+  "windows-reader-end-offline-body": {
+    "source": "bae4cdd0d59c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "You are offline. It will open here as soon as you are connected. [subject implicit; masculine 'connesso']"
+  },
+  "windows-reader-end-tracker": {
+    "source": "8889ba40058a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: \"aggiornati\" is plural; reads wrongly when only one tracker name fills { $trackers }.",
+      "drafter: Reused Apple \"aggiornati: { $trackers }\"; plural agreement is odd with one tracker."
+    ],
+    "back": "Read · update sent to { $trackers }"
+  },
+  "windows-reader-end-trackers-two": {
+    "source": "2210cc318940",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $first } and { $second }"
+  },
+  "windows-reader-fit": {
+    "source": "f2a69a199c80",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Fit"
+  },
+  "windows-reader-fit-height": {
+    "source": "ffdadf0a576f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Height"
+  },
+  "windows-reader-font": {
+    "source": "079cf7850d93",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Font (character)"
+  },
+  "windows-reader-gap": {
+    "source": "6f8e405853fb",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Space between the images"
+  },
+  "windows-reader-go-back": {
+    "source": "575e795c45e2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Go back"
+  },
+  "windows-reader-grid-page": {
+    "source": "2bd90a7c5733",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page { $page }"
+  },
+  "windows-reader-group-line": {
+    "source": "7abc53e988e9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · page { $page } of { $total }"
+  },
+  "windows-reader-group-line-scroll": {
+    "source": "09d910fab6e2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · { $percent }%"
+  },
+  "windows-reader-group-line-spread": {
+    "source": "09bcdd26d035",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · pages { $first } and { $second }"
+  },
+  "windows-reader-group-line-strip": {
+    "source": "310bc0d31cea",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · image { $image } of { $total }"
+  },
+  "windows-reader-image-label": {
+    "source": "920d0ae9cb75",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Image { $image } of { $count }"
+  },
+  "windows-reader-justify": {
+    "source": "7077a13a0ce2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Justify the text"
+  },
+  "windows-reader-larger": {
+    "source": "8cc0d06745c9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Larger text"
+  },
+  "windows-reader-line-loose": {
+    "source": "80b71fc6f43c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Wide"
+  },
+  "windows-reader-line-normal": {
+    "source": "9ff3121d30f8",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Normal"
+  },
+  "windows-reader-line-spacing": {
+    "source": "04125ff41f4d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Line spacing"
+  },
+  "windows-reader-line-tight": {
+    "source": "1bec74d2c7d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Tight"
+  },
+  "windows-reader-look": {
+    "source": "4efeeeb48a45",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Appearance"
+  },
+  "windows-reader-margins": {
+    "source": "690701565560",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Margins"
+  },
+  "windows-reader-mode-auto": {
+    "source": "36cb8cc9898d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Auto · { $mode }"
+  },
+  "windows-reader-mode-auto-line": {
+    "source": "ca1ebf3103ac",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $way }, from the series details"
+  },
+  "windows-reader-mode-auto-option": {
+    "source": "db73788b3c97",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Auto"
+  },
+  "windows-reader-mode-choice-note": {
+    "source": "46e82bba1964",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Your choice is saved for this series and follows it onto your other devices. [ambiguous 'la segue': follows the series or the choice]"
+  },
+  "windows-reader-mode-detected-note": {
+    "source": "3b693c47d6a6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Detected (feminine, i.e. the mode) from the series details."
+  },
+  "windows-reader-mode-ltr-lower": {
+    "source": "8fc6a6f60382",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "from left to right"
+  },
+  "windows-reader-mode-paged": {
+    "source": "6ac0cf0ddc5c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "By pages"
+  },
+  "windows-reader-mode-rtl-lower": {
+    "source": "a5ca6dc2e9e3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "from right to left"
+  },
+  "windows-reader-mode-scrolled": {
+    "source": "a7698b3d20a6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Scrolling"
+  },
+  "windows-reader-mode-strip-line": {
+    "source": "9e40e6b1cd20",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "For webtoons and long images"
+  },
+  "windows-reader-mode-strip-lower": {
+    "source": "5e6cbcad84fd",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "strip"
+  },
+  "windows-reader-mode-vertical": {
+    "source": "8ed04ce33a3a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Vertical pages"
+  },
+  "windows-reader-mode-vertical-line": {
+    "source": "d7217c9d3bb3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Pages one under the other"
+  },
+  "windows-reader-mode-vertical-lower": {
+    "source": "872251bbca51",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "vertical pages"
+  },
+  "windows-reader-more-settings": {
+    "source": "c807f531ef32",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Shortened to the Linux \"Altre impostazioni lettore\"; the Apple \"del lettore\" form is over the 28-character limit."
+    ],
+    "back": "Other reader settings [telegraphic, missing 'del']"
+  },
+  "windows-reader-note-close": {
+    "source": "15eb1f7cc596",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Close the note"
+  },
+  "windows-reader-opening": {
+    "source": "abe25f4dcf10",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Apertura di { $chapter }\" with a label such as \"Capitolo 12\"; check it reads well."
+    ],
+    "back": "Opening of { $chapter } [nominal: 'Opening of', reads as a status]"
+  },
+  "windows-reader-opening-slow": {
+    "source": "82ab0ba82b73",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Search for a source · { $seconds } s"
+  },
+  "windows-reader-page-failed-hint": {
+    "source": "345a90e5f071",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Turn page to go ahead without [it]. [colloquial dangling 'senza']"
+  },
+  "windows-reader-page-label": {
+    "source": "d07633ff2e7b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page { $page } of { $total }"
+  },
+  "windows-reader-page-layout": {
+    "source": "a9e5d8a7ac94",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Layout of the pages"
+  },
+  "windows-reader-pages-label": {
+    "source": "ed2c0c059f83",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Pages { $first } and { $second } of { $total }"
+  },
+  "windows-reader-pages-tab": {
+    "source": "6ac0c20ddc5c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Pages"
+  },
+  "windows-reader-paper-mode": {
+    "source": "32986ee6814b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Paper Mode"
+  },
+  "windows-reader-paper-mode-note": {
+    "source": "9cab8ac867e0",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Colori carta\" for paper colours; check the phrasing."
+    ],
+    "back": "Paper colours, and the pages turn immediately without anything in the reader moving."
+  },
+  "windows-reader-percent": {
+    "source": "177259baefed",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $percent }%"
+  },
+  "windows-reader-reading-mode": {
+    "source": "566ac8adad81",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Reading mode"
+  },
+  "windows-reader-scrubber": {
+    "source": "2e192b19ed15",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page"
+  },
+  "windows-reader-settings-open": {
+    "source": "89005c87f469",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Settings of the reader"
+  },
+  "windows-reader-smaller": {
+    "source": "b0ca99f72a07",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Smaller text"
+  },
+  "windows-reader-start-over": {
+    "source": "338cca2d2f31",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Start again"
+  },
+  "windows-reader-text-size": {
+    "source": "66da146c9f6b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Shortened to the Linux \"Dimensione testo\"; the Apple form is over the 16-character limit."
+    ],
+    "back": "Text size"
+  },
+  "windows-reader-this-series": {
+    "source": "f902decaf67c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "This series"
+  },
+  "windows-reader-use-default": {
+    "source": "082eda98d60c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Use default"
+  },
+  "windows-reader-volume": {
+    "source": "d4907c64a096",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Volume { $volume }"
   }
 }

@@ -177,6 +177,34 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } delar av { $title } är redo att läsas offline.
  }
 reading-downloads-done-series = Kapitel från { $count } serier är redo att läsas offline.
+read-home-trending-manga = Trendande manga
+read-home-trending-webtoons = Trendande webtoons
+read-home-trending-novels = Trendande light novels
+read-home-new-manga = Nya manga
+read-home-new-webtoons = Nya webtoons
+read-home-new-novels = Nya light novels
+read-home-new-side = Senaste 12 månaderna
+read-home-finished-manga = Avslutade manga
+read-home-finished-webtoons = Avslutade webtoons
+read-home-finished-novels = Avslutade light novels
+read-home-finished-side = Mest populära
+read-search-started-any = När som helst
+read-search-started-year = Senaste 12 månaderna
+read-search-started-3-years = Senaste 3 åren
+read-hit-chapters = Kapitel 1 till { $last }
+read-hit-episodes = Avsnitt 1 till { $last }
+read-hit-parts = { $count ->
+    [one] 1 del
+   *[other] { $count } delar
+ }
+read-hit-files = { $count ->
+    [one] 1 fil
+   *[other] { $count } filer
+ }
+read-hit-files-format = { $count ->
+    [one] 1 fil · { $format }
+   *[other] { $count } filer · { $format }
+ }
 read-source-folders = Mappar
 reading-since-january = sedan januari
 reading-since-february = sedan februari

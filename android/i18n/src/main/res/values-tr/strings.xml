@@ -377,6 +377,34 @@
         <item quantity="other">%1$s: %2$,d kısım çevrimdışı okumaya hazır.</item>
     </plurals>
     <string name="reading_downloads_done_series">%1$,d seriden bölümler çevrimdışı okumaya hazır.</string>
+    <string name="read_home_trending_manga">Gündemdeki mangalar</string>
+    <string name="read_home_trending_webtoons">Gündemdeki webtoonlar</string>
+    <string name="read_home_trending_novels">Gündemdeki hafif romanlar</string>
+    <string name="read_home_new_manga">Yeni mangalar</string>
+    <string name="read_home_new_webtoons">Yeni webtoonlar</string>
+    <string name="read_home_new_novels">Yeni hafif romanlar</string>
+    <string name="read_home_new_side">Son 12 ay</string>
+    <string name="read_home_finished_manga">Tamamlanan mangalar</string>
+    <string name="read_home_finished_webtoons">Tamamlanan webtoonlar</string>
+    <string name="read_home_finished_novels">Tamamlanan hafif romanlar</string>
+    <string name="read_home_finished_side">En popüler</string>
+    <string name="read_search_started_any">Tüm zamanlar</string>
+    <string name="read_search_started_year">Son 12 ay</string>
+    <string name="read_search_started_3_years">Son 3 yıl</string>
+    <string name="read_hit_chapters">Bölüm 1 - %1$d</string>
+    <string name="read_hit_episodes">Bölüm 1 - %1$d</string>
+    <plurals name="read_hit_parts">
+        <item quantity="one">1 kısım</item>
+        <item quantity="other">%1$,d kısım</item>
+    </plurals>
+    <plurals name="read_hit_files">
+        <item quantity="one">1 dosya</item>
+        <item quantity="other">%1$,d dosya</item>
+    </plurals>
+    <plurals name="read_hit_files_format">
+        <item quantity="one">1 dosya · %2$s</item>
+        <item quantity="other">%1$,d dosya · %2$s</item>
+    </plurals>
     <string name="read_source_folders">Klasörler</string>
     <string name="reading_since_january">Ocak\'tan beri</string>
     <string name="reading_since_february">Şubat\'tan beri</string>
@@ -704,7 +732,7 @@
     <string name="reader_mode_set">%1$s için tüm cihazlarınızda ayarlandı.</string>
     <string name="reader_mode_use_default">Varsayılan</string>
     <string name="reader_mode_saved">Seçiminiz bu seri için kaydedilir ve diğer cihazlarınıza da taşınır.</string>
-    <string name="reader_row_fit">Sığdırma</string>
+    <string name="reader_row_fit">Sığdır</string>
     <string name="reader_row_crop">Kenarları kırp</string>
     <string name="reader_row_paper">Kâğıt modu</string>
     <string name="reader_row_text_size">Yazı boyutu</string>
@@ -2511,6 +2539,12 @@
     <string name="home_read_checked_on_open">Kaeri açıldığında kontrol edilir</string>
     <string name="home_read_end">Şimdilik hepsi bu. Tam listeler Güncellemeler ve Arama\'da.</string>
     <string name="home_read_no_sources">Ana sayfadan okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.</string>
+    <string name="read_home_offline_rows">Gündemdeki ve yeni seriler çevrimiçi olduğunuzda görünür.</string>
+    <string name="read_home_browse">Göz at</string>
+    <string name="read_home_browse_line">Biçime göre gündemdeki, yeni ve tamamlanan</string>
+    <string name="read_home_browse_row">%1$s, %2$s ve %3$,d seri daha</string>
+    <string name="read_home_browse_note">AniList\'ten. Bir seriyi açtığınızda kaynaklarınıza sorulur.</string>
+    <string name="read_home_browse_kept">%1$s itibarıyla saklanan listeler yine de açılır.</string>
     <string name="week_usually">Genelde</string>
     <string name="week_nothing_usually">Genelde hiçbir şey</string>
     <string name="updates_checked">Kontrol edildi: %1$s</string>
@@ -2759,6 +2793,30 @@
     </plurals>
     <string name="read_filter_included">Dahil</string>
     <string name="read_filter_left_out">Hariç</string>
+    <string name="read_search_started">Başlangıç</string>
+    <string name="read_search_sources_only">Yalnızca kaynaklarınız</string>
+    <string name="read_search_from_sources">Kaynaklarınızdan</string>
+    <string name="read_search_asking">%1$s bekleniyor…</string>
+    <string name="read_search_source_failed">%1$s yanıt vermedi.</string>
+    <string name="read_search_source_timeout">%1$,d sn içinde yanıt yok.</string>
+    <string name="read_search_source_nothing">Şunlarda bir şey bulunamadı: %1$s.</string>
+    <string name="read_search_in_source">%1$s içinde</string>
+    <plurals name="read_search_in_sources">
+        <item quantity="one">Kaynaklarınızın %1$,d tanesinde</item>
+        <item quantity="other">Kaynaklarınızın %1$,d tanesinde</item>
+    </plurals>
+    <string name="read_search_anilist_nothing">AniList bu sözcüklerle bir şey bulamadı.</string>
+    <string name="read_search_anilist_failed">AniList yanıt vermedi.</string>
+    <string name="read_search_anilist_failed_line">Kaynaklarınıza yine de soruldu.</string>
+    <string name="read_search_sources_nothing">Kaynaklarınızda da bir şey yok.</string>
+    <string name="read_search_total_unknown">AniList\'ten seriler</string>
+    <string name="read_search_more_anilist">AniList\'ten daha fazlası</string>
+    <string name="read_search_shown">%1$,d / %2$,d gösteriliyor</string>
+    <string name="read_search_shown_some">%1$,d gösteriliyor</string>
+    <string name="read_search_source_kind_server">Sunucu</string>
+    <string name="read_search_source_kind_folder">Klasör</string>
+    <string name="read_search_source_kind_plugin">Eklenti</string>
+    <string name="read_search_source_more">%1$,d tane daha göster</string>
     <string name="onboarding_step">%1$,d / %2$,d</string>
     <string name="onboarding_welcome_line">Kendi kaynaklarınızdan izlediklerinizi ve okuduklarınızı takip edin.</string>
     <string name="onboarding_welcome_note">Listeleriniz ve ilerlemeniz cihazlarınızda kalır. Takip hizmetleri ve kaynaklar eklemek size kalmış.</string>

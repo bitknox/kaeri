@@ -203,6 +203,40 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } части «{ $title }» готовы для чтения офлайн.
  }
 reading-downloads-done-series = Главы { $count } серий готовы для чтения офлайн.
+read-home-trending-manga = Манга в тренде
+read-home-trending-webtoons = Вебтуны в тренде
+read-home-trending-novels = Ранобэ в тренде
+read-home-new-manga = Новая манга
+read-home-new-webtoons = Новые вебтуны
+read-home-new-novels = Новые ранобэ
+read-home-new-side = Последние 12 месяцев
+read-home-finished-manga = Завершённая манга
+read-home-finished-webtoons = Завершённые вебтуны
+read-home-finished-novels = Завершённые ранобэ
+read-home-finished-side = Самые популярные
+read-search-started-any = Любое время
+read-search-started-year = Последние 12 месяцев
+read-search-started-3-years = Последние 3 года
+read-hit-chapters = Главы с 1 по { $last }
+read-hit-episodes = Эпизоды с 1 по { $last }
+read-hit-parts = { $count ->
+    [one] { $count } часть
+    [few] { $count } части
+    [many] { $count } частей
+   *[other] { $count } части
+ }
+read-hit-files = { $count ->
+    [one] { $count } файл
+    [few] { $count } файла
+    [many] { $count } файлов
+   *[other] { $count } файла
+ }
+read-hit-files-format = { $count ->
+    [one] { $count } файл · { $format }
+    [few] { $count } файла · { $format }
+    [many] { $count } файлов · { $format }
+   *[other] { $count } файла · { $format }
+ }
 read-source-folders = Папки
 reading-since-january = с января
 reading-since-february = с февраля

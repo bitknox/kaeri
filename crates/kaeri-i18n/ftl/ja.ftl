@@ -999,6 +999,72 @@ reading-downloads-done-parts =
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = { $count }作品の章をオフラインで読めます。
 
+# Row heading on reading's Home: manga that are trending on AniList now.
+read-home-trending-manga = 話題のマンガ
+
+# Row heading on reading's Home: webtoons that are trending on AniList now.
+read-home-trending-webtoons = 話題のウェブトゥーン
+
+# Row heading on reading's Home: light novels that are trending on AniList now.
+read-home-trending-novels = 話題のライトノベル
+
+# Row heading on reading's Home: the most popular manga that started in the last 12 months.
+read-home-new-manga = 新作マンガ
+
+# Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+read-home-new-webtoons = 新作ウェブトゥーン
+
+# Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+read-home-new-novels = 新作ライトノベル
+
+# Side text beside a New row's heading, in a quieter style: what the row covers.
+read-home-new-side = 過去12か月
+
+# Row heading on reading's Home: the most popular manga that have finished.
+read-home-finished-manga = 完結したマンガ
+
+# Row heading on reading's Home: the most popular webtoons that have finished.
+read-home-finished-webtoons = 完結したウェブトゥーン
+
+# Row heading on reading's Home: the most popular light novels that have finished.
+read-home-finished-novels = 完結したライトノベル
+
+# Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+read-home-finished-side = 人気順
+
+# A choice of reading Search's Started filter: series that started at any time.
+read-search-started-any = 指定なし
+
+# A choice of reading Search's Started filter: series that started in the last 12 months.
+read-search-started-year = 過去12か月
+
+# A choice of reading Search's Started filter: series that started in the last 3 years.
+read-search-started-3-years = 過去3年
+
+# Under a source's hit in Search: the chapters it holds, from the first.
+read-hit-chapters = 第1話〜第{ $last }話
+
+# Under a source's hit in Search: a web novel's episodes it holds, from the first.
+read-hit-episodes = 第1話〜第{ $last }話
+
+# Under a source's hit in Search: a light novel's parts it holds.
+read-hit-parts =
+    { $count ->
+       *[other] { $count }部
+    }
+
+# Under a source's hit in Search: the book files it holds.
+read-hit-files =
+    { $count ->
+       *[other] ファイル{ $count }件
+    }
+
+# Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+read-hit-files-format =
+    { $count ->
+       *[other] ファイル{ $count }件 · { $format }
+    }
+
 # The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
 read-source-folders = フォルダ
 
@@ -1741,7 +1807,7 @@ linux-reader-back-to-series = 作品に戻る
 linux-reader-chapter-failed = 章を開けませんでした
 
 # Names of the reader settings in its popover.
-linux-reader-reading-mode = 読み方
+linux-reader-reading-mode = 表示モード
 
 linux-reader-fit = フィット
 
@@ -8780,6 +8846,24 @@ home-read-end = 今はここまでです。全件は「更新」と検索で確�
 # Line at the end of Read with no book sources yet. A button to add one follows it.
 home-read-no-sources = フォルダ、サーバー、またはプラグインストアを追加すると、ホームから読めます。
 
+# In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+read-home-offline-rows = 話題の作品や新作は、オンラインになると表示されます。
+
+# E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+read-home-browse = ブラウズ
+
+# E-ink: the line under Browse on Read's Home.
+read-home-browse-line = 形式別の話題作・新作・完結作
+
+# E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+read-home-browse-row = { $first }、{ $second }ほか{ $more }作品
+
+# E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+read-home-browse-note = AniListの情報です。ソースには、作品を開いたときに問い合わせます。
+
+# E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+read-home-browse-kept = { $time }に保存したリストは引き続き開けます。
+
 # Under a day in Read's week: what usually comes out that day, when the time isn't known.
 week-usually = たいてい
 
@@ -9439,6 +9523,70 @@ read-filter-included = 含める
 
 # A genre's state: no series with it.
 read-filter-left-out = 除外
+
+# A filter of reading's Search: when a series started.
+read-search-started = 開始時期
+
+# The filter bar's chip that searches only the person's own sources, leaving AniList out.
+read-search-sources-only = ソースのみ
+
+# Search's section heading under AniList's results: one group per source of the person's.
+read-search-from-sources = ソースから
+
+# E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+read-search-asking = { $source }に問い合わせています…
+
+# A source group whose source failed to answer. The reason and Try again follow.
+read-search-source-failed = { $source }から応答がありませんでした。
+
+# The reason under it when the source gave no answer in time.
+read-search-source-timeout = { $seconds }秒以内に応答がありませんでした。
+
+# One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+read-search-source-nothing = { $sources }では見つかりませんでした。
+
+# On an AniList result that one of the person's sources has. The source is its name.
+read-search-in-source = { $source }にあり
+
+# On an AniList result that more than one of the person's sources has. Always 2 or more.
+read-search-in-sources =
+    { $n ->
+       *[other] ソースのうち{ $n }件にあり
+    }
+
+# Search, when AniList found nothing but the person's sources did.
+read-search-anilist-nothing = AniListではこの言葉に一致する作品が見つかりませんでした。
+
+# Search, when AniList could not be reached.
+read-search-anilist-failed = AniListからの応答がありませんでした。
+
+# The line under it.
+read-search-anilist-failed-line = ソースには問い合わせ済みです。
+
+# Search, when nothing was found anywhere: under the line saying AniList found nothing.
+read-search-sources-nothing = ソースにも見つかりませんでした。
+
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = AniListの作品
+
+# The link under From your sources that shows the rest of AniList's results.
+read-search-more-anilist = AniListの結果をさらに表示
+
+# Beside More from AniList: how many of AniList's results show.
+read-search-shown = { $total }件中{ $shown }件を表示
+
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+read-search-shown-some = { $shown }件を表示
+
+# Beside a source's name in Search: the kind of source it is.
+read-search-source-kind-server = サーバー
+
+read-search-source-kind-folder = フォルダ
+
+read-search-source-kind-plugin = プラグイン
+
+# The button of a source group with more than five hits.
+read-search-source-more = さらに{ $n }件を表示
 
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step }/{ $total }

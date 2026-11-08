@@ -164,6 +164,31 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } phần của { $title } đã sẵn sàng để đọc ngoại tuyến.
  }
 reading-downloads-done-series = Các chương của { $count } bộ truyện đã sẵn sàng để đọc ngoại tuyến.
+read-home-trending-manga = Manga thịnh hành
+read-home-trending-webtoons = Webtoon thịnh hành
+read-home-trending-novels = Light novel thịnh hành
+read-home-new-manga = Manga mới
+read-home-new-webtoons = Webtoon mới
+read-home-new-novels = Light novel mới
+read-home-new-side = 12 tháng qua
+read-home-finished-manga = Manga đã hoàn thành
+read-home-finished-webtoons = Webtoon đã hoàn thành
+read-home-finished-novels = Light novel đã hoàn thành
+read-home-finished-side = Phổ biến nhất
+read-search-started-any = Mọi thời điểm
+read-search-started-year = 12 tháng qua
+read-search-started-3-years = 3 năm qua
+read-hit-chapters = Chương 1 đến { $last }
+read-hit-episodes = Kỳ 1 đến { $last }
+read-hit-parts = { $count ->
+   *[other] { $count } phần
+ }
+read-hit-files = { $count ->
+   *[other] { $count } tệp
+ }
+read-hit-files-format = { $count ->
+   *[other] { $count } tệp · { $format }
+ }
 read-source-folders = Thư mục
 reading-since-january = từ tháng 1
 reading-since-february = từ tháng 2

@@ -6,6 +6,12 @@ home-read-releasing = Erscheint gerade
 home-read-checked-on-open = Wird geprüft, wenn du { -app-name } öffnest
 home-read-end = Das ist vorerst alles. Updates und Suche zeigen die vollständigen Listen.
 home-read-no-sources = Füge einen Ordner, einen Server oder einen { -plugin-store } hinzu, um von Home aus zu lesen.
+read-home-offline-rows = Serien im Trend und neue Serien erscheinen, sobald du online bist.
+read-home-browse = Stöbern
+read-home-browse-line = Im Trend, neu und abgeschlossen, nach Format
+read-home-browse-row = { $first }, { $second } und { $more } weitere
+read-home-browse-note = Von AniList. Deine { -source-pl } werden gefragt, wenn du eine Serie öffnest.
+read-home-browse-kept = Gespeicherte Listen (Stand { $time }) lassen sich noch öffnen.
 week-usually = Meist
 week-nothing-usually = Meist nichts
 updates-checked = Geprüft: { $ago }
@@ -254,6 +260,30 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Enthalten
 read-filter-left-out = Ausgeschlossen
+read-search-started = Beginn
+read-search-sources-only = Nur deine { -source-pl }
+read-search-from-sources = Aus deinen { -source-pl }
+read-search-asking = { $source } wird gefragt…
+read-search-source-failed = { $source } hat nicht geantwortet.
+read-search-source-timeout = Keine Antwort in { $seconds } s.
+read-search-source-nothing = Nichts gefunden in { $sources }.
+read-search-in-source = Bei { $source }
+read-search-in-sources = { $n ->
+    [one] Bei { $n } deiner { -source-pl }
+   *[other] Bei { $n } deiner { -source-pl }
+ }
+read-search-anilist-nothing = AniList hat für diese Wörter nichts gefunden.
+read-search-anilist-failed = AniList hat nicht geantwortet.
+read-search-anilist-failed-line = Deine { -source-pl } wurden trotzdem gefragt.
+read-search-sources-nothing = Auch in deinen { -source-pl } nichts gefunden.
+read-search-total-unknown = Serien von AniList
+read-search-more-anilist = Mehr von AniList
+read-search-shown = { $shown } von { $total } angezeigt
+read-search-shown-some = { $shown } angezeigt
+read-search-source-kind-server = Server
+read-search-source-kind-folder = Ordner
+read-search-source-kind-plugin = { -plugin-cap }
+read-search-source-more = { $n } weitere anzeigen
 onboarding-step = { $step } von { $total }
 onboarding-welcome-line = Behalte im Blick, was du schaust und liest, aus deinen eigenen { -source-pl }.
 onboarding-welcome-note = Deine Listen und dein Fortschritt bleiben auf deinen { -device-pl }. { -tracker-cap-pl } und { -source-pl } fügst du selbst hinzu.

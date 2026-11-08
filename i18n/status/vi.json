@@ -6680,6 +6680,23 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "feed-firewall-body-windows": {
+    "source": "132a836a9009",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"mạng riêng\" and \"mạng công cộng\" should match the Vietnamese Windows firewall prompt's wording."
+    ],
+    "back": "So the e-reader in your home can reach the feed, allow Kaeri only on private networks. Don't tick public networks."
+  },
+  "feed-firewall-title-windows": {
+    "source": "739ceb3c60d2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Windows will ask about the network"
+  },
   "film-length-hours": {
     "source": "fb12680c5861",
     "state": "draft",
@@ -13648,11 +13665,25 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "opds-paused-none-windows": {
+    "source": "c7d804ecd7d0",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Paused. This PC isn't on any local network."
+  },
   "opds-paused-vpn": {
     "source": "427149a54da2",
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
+  },
+  "opds-paused-vpn-windows": {
+    "source": "1928355bd8d0",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Paused. This PC only connects via VPN."
   },
   "opds-port": {
     "source": "b354dc19a720",
@@ -18220,11 +18251,181 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-hit-chapters": {
+    "source": "802e9b40d1d9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Chapter 1 to { $last }"
+  },
+  "read-hit-episodes": {
+    "source": "88dd644debd8",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Was 'Chương' (the chapter word); now 'Kỳ', the serial instalment word, since 'Tập' means volume. Native check wanted.",
+      "drafter: Web novel \"episodes\" rendered as \"Chương\" because \"Tập\" means volume in the reading screens; this loses the chapter/episode distinction."
+    ],
+    "back": "Installment/issue 1 to { $last }"
+  },
+  "read-hit-files": {
+    "source": "31e42ba495f5",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "other: { $count } files"
+  },
+  "read-hit-files-format": {
+    "source": "770c7a09f6a7",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "other: { $count } files · { $format }"
+  },
+  "read-hit-parts": {
+    "source": "ab5de0b28ab1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "other: { $count } parts"
+  },
+  "read-home-browse": {
+    "source": "99fa943a22c1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Browse"
+  },
+  "read-home-browse-kept": {
+    "source": "919569641b9c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "The list saved from { $time } still opens."
+  },
+  "read-home-browse-line": {
+    "source": "c994c5844b1e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending, new and completed, by format"
+  },
+  "read-home-browse-note": {
+    "source": "565b35fc96d1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Adds \"chỉ\" (only) from the translator comment; English has no \"only\"."
+    ],
+    "back": "From AniList. Your sources are only asked when you open a series."
+  },
+  "read-home-browse-row": {
+    "source": "5de2127e7f29",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"truyện khác\" added as the counted noun after { $more }."
+    ],
+    "back": "{ $first }, { $second } and { $more } other stories"
+  },
+  "read-home-finished-manga": {
+    "source": "ee7c676c85e9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"đã hoàn thành\" follows reading-status-finished; readers may expect \"trọn bộ\" or \"Full\". Same for the webtoon and light novel rows."
+    ],
+    "back": "Completed manga"
+  },
+  "read-home-finished-novels": {
+    "source": "2ddb4e46f24f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Completed light novels"
+  },
+  "read-home-finished-side": {
+    "source": "faf54e55dd9b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Most popular"
+  },
+  "read-home-finished-webtoons": {
+    "source": "452239b09399",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Completed webtoons"
+  },
+  "read-home-new-manga": {
+    "source": "4fc30243e1ef",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New manga"
+  },
+  "read-home-new-novels": {
+    "source": "75d2b6cc8397",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New light novels"
+  },
+  "read-home-new-side": {
+    "source": "ee719957657d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Past 12 months"
+  },
+  "read-home-new-webtoons": {
+    "source": "4a84fcb36480",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New webtoons"
+  },
   "read-home-offline-line": {
     "source": "93a502484563",
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
+  },
+  "read-home-offline-rows": {
+    "source": "5c9d955aa514",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending stories and new stories will show when you have a connection."
+  },
+  "read-home-trending-manga": {
+    "source": "7eee43d8f9ae",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"thịnh hành\" follows the existing Trending sort; same for the webtoon and light novel rows."
+    ],
+    "back": "Trending manga"
+  },
+  "read-home-trending-novels": {
+    "source": "4e45bd0a0a99",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending light novels"
+  },
+  "read-home-trending-webtoons": {
+    "source": "7e4405f9d680",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending webtoons"
   },
   "read-library-empty": {
     "source": "d3adf45c142a",
@@ -18304,6 +18505,34 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-search-anilist-failed": {
+    "source": "51697437569f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "AniList didn't respond."
+  },
+  "read-search-anilist-failed-line": {
+    "source": "db477b88e688",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Your sources are still asked (still being searched)."
+  },
+  "read-search-anilist-nothing": {
+    "source": "53296c63604b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "AniList found nothing for these words."
+  },
+  "read-search-asking": {
+    "source": "f75b2bc2a054",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Asking { $source }…"
+  },
   "read-search-browse-line": {
     "source": "40af5fd80735",
     "state": "draft",
@@ -18321,6 +18550,37 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "read-search-from-sources": {
+    "source": "4c16421d7b92",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "From your sources"
+  },
+  "read-search-in-source": {
+    "source": "9d6c2ec16e83",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "In { $source }"
+  },
+  "read-search-in-sources": {
+    "source": "4f41affe0f2d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "other: In { $n } of your sources (literally 'in { $n } source of yours', Vietnamese has no plural marking)"
+  },
+  "read-search-more-anilist": {
+    "source": "8c0d4e2b5764",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: 'Thêm' alone can read as 'Add'; 'Xem thêm từ AniList' makes it 'More'."
+    ],
+    "back": "See more from AniList"
   },
   "read-search-nothing": {
     "source": "76628fdd5e7e",
@@ -18352,11 +18612,129 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-search-shown": {
+    "source": "bc2e24859970",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Uses the \"x/y\" style the vi reader strings use for counts."
+    ],
+    "back": "Showing { $shown }/{ $total }"
+  },
+  "read-search-shown-some": {
+    "source": "2fa10b6235ca",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Showing { $shown }"
+  },
+  "read-search-source-failed": {
+    "source": "f8bd3cfcebc6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $source } didn't respond."
+  },
+  "read-search-source-kind-folder": {
+    "source": "9434ea90b6fe",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Folder"
+  },
+  "read-search-source-kind-plugin": {
+    "source": "ff60263da2d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Plugin"
+  },
+  "read-search-source-kind-server": {
+    "source": "5afcaa918bbb",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Server"
+  },
+  "read-search-source-more": {
+    "source": "44dd0514bd9e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Show { $n } more"
+  },
+  "read-search-source-nothing": {
+    "source": "4c0214217083",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Found nothing in { $sources }."
+  },
+  "read-search-source-timeout": {
+    "source": "b95df4187657",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "No response after { $seconds } seconds."
+  },
+  "read-search-sources-nothing": {
+    "source": "cde3e10ce1c4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Your sources have nothing either."
+  },
+  "read-search-sources-only": {
+    "source": "c20c9edf24b3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Only your sources"
+  },
+  "read-search-started": {
+    "source": "3fd6bd99e3f6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Ra mắt\" (debuted) used for the Started filter; check it is clear next to its choices."
+    ],
+    "back": "Release (premiere)"
+  },
+  "read-search-started-3-years": {
+    "source": "fca85bdfa141",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Past 3 years"
+  },
+  "read-search-started-any": {
+    "source": "155085305728",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Any time"
+  },
+  "read-search-started-year": {
+    "source": "ee719957657d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Past 12 months"
+  },
   "read-search-total": {
     "source": "8ff253aea036",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "read-search-total-unknown": {
+    "source": "03b29b695e0a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Series from AniList"
   },
   "read-series-downloaded-open": {
     "source": "8a151ce93ce9",
@@ -22218,6 +22596,27 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "send-save-failed-windows": {
+    "source": "36709deb1a85",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Couldn't save the files there. Try another folder."
+  },
+  "send-save-files-windows": {
+    "source": "11bfcbcddd95",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Save files"
+  },
+  "send-saved-windows": {
+    "source": "3a6e5e0af28e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "other: Saved { $n } files"
+  },
   "send-share-again": {
     "source": "25a5e97e7ab4",
     "state": "draft",
@@ -22421,6 +22820,13 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "series-read-again-done-windows": {
+    "source": "234105505b8c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Re-reading { $title } from the beginning"
   },
   "series-read-again-menu": {
     "source": "c548a26cb51a",
@@ -36283,5 +36689,587 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
+  },
+  "windows-read-downloads-empty-detail": {
+    "source": "7ead281efe81",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Downloaded chapters open when there's no connection."
+  },
+  "windows-reader-all-manga-pc": {
+    "source": "b55d1dff2113",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Every manga on this PC"
+  },
+  "windows-reader-all-novels": {
+    "source": "b2d018bcfb7e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Every light novel"
+  },
+  "windows-reader-all-strips-pc": {
+    "source": "cfd35af8aa31",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Every webtoon on this PC"
+  },
+  "windows-reader-back": {
+    "source": "c16e00a7a8b2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Go back"
+  },
+  "windows-reader-back-to-series": {
+    "source": "0899c5a1d76f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Back to the story's page"
+  },
+  "windows-reader-background": {
+    "source": "1efbfc3937d5",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Background"
+  },
+  "windows-reader-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Change (swap)"
+  },
+  "windows-reader-chapter-failed": {
+    "source": "b7151743bc09",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Couldn't open { $chapter }"
+  },
+  "windows-reader-chapter-pages": {
+    "source": "6facfb38e6ae",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "other: { $pages } pages"
+  },
+  "windows-reader-chapters-tab": {
+    "source": "15733d7d0f6d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Chapters"
+  },
+  "windows-reader-choose-source": {
+    "source": "2e134e8c7be9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Choose a source"
+  },
+  "windows-reader-continue": {
+    "source": "f42f6a6df6bf",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Continue reading (button)"
+  },
+  "windows-reader-crop-borders": {
+    "source": "1b28173e8b92",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Crop white borders"
+  },
+  "windows-reader-end-caught-up-body": {
+    "source": "3ce370affb34",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New chapters will show in Updates when your sources have them."
+  },
+  "windows-reader-end-finished": {
+    "source": "cb7b1474b76f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "End of the series"
+  },
+  "windows-reader-end-finished-body": {
+    "source": "6893412bf017",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "There are no more chapters."
+  },
+  "windows-reader-end-no-source": {
+    "source": "6799149dde6b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } isn't in your sources yet"
+  },
+  "windows-reader-end-not-out": {
+    "source": "ea24be349c9e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } isn't out yet"
+  },
+  "windows-reader-end-not-out-body": {
+    "source": "3ab576b2f95f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Kaeri checks for new chapters in background mode and adds them to Updates."
+  },
+  "windows-reader-end-not-read": {
+    "source": "a8555163106b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Not marked as read yet"
+  },
+  "windows-reader-end-of-chapter": {
+    "source": "9dfd61e866b4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "End of { $chapter } (finished { $chapter })"
+  },
+  "windows-reader-end-offline": {
+    "source": "56bcafcd90ca",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } hasn't been downloaded"
+  },
+  "windows-reader-end-offline-body": {
+    "source": "bae4cdd0d59c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "You're offline. The chapter will open here when there's a connection."
+  },
+  "windows-reader-end-tracker": {
+    "source": "8889ba40058a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Read · updated { $trackers }"
+  },
+  "windows-reader-end-trackers-two": {
+    "source": "2210cc318940",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $first } and { $second }"
+  },
+  "windows-reader-fit": {
+    "source": "f2a69a199c80",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Snug fit"
+  },
+  "windows-reader-fit-height": {
+    "source": "ffdadf0a576f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Height"
+  },
+  "windows-reader-font": {
+    "source": "079cf7850d93",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Font"
+  },
+  "windows-reader-gap": {
+    "source": "6f8e405853fb",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Spacing between images"
+  },
+  "windows-reader-go-back": {
+    "source": "575e795c45e2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Go back"
+  },
+  "windows-reader-grid-page": {
+    "source": "2bd90a7c5733",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page { $page }"
+  },
+  "windows-reader-group-line": {
+    "source": "7abc53e988e9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · page { $page }/{ $total }"
+  },
+  "windows-reader-group-line-scroll": {
+    "source": "09d910fab6e2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · { $percent }%"
+  },
+  "windows-reader-group-line-spread": {
+    "source": "09bcdd26d035",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · pages { $first } and { $second }"
+  },
+  "windows-reader-group-line-strip": {
+    "source": "310bc0d31cea",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · image { $image }/{ $total }"
+  },
+  "windows-reader-image-label": {
+    "source": "920d0ae9cb75",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: Spoken label with '/'; 'Ảnh { $image } trên { $count }' reads better aloud."
+    ],
+    "back": "Image { $image } of { $count }"
+  },
+  "windows-reader-justify": {
+    "source": "7077a13a0ce2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Justify both sides"
+  },
+  "windows-reader-larger": {
+    "source": "8cc0d06745c9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Larger text"
+  },
+  "windows-reader-line-loose": {
+    "source": "80b71fc6f43c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Airy"
+  },
+  "windows-reader-line-normal": {
+    "source": "9ff3121d30f8",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Medium"
+  },
+  "windows-reader-line-spacing": {
+    "source": "04125ff41f4d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Line spacing"
+  },
+  "windows-reader-line-tight": {
+    "source": "1bec74d2c7d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Close (tight)"
+  },
+  "windows-reader-look": {
+    "source": "4efeeeb48a45",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Interface (appearance)"
+  },
+  "windows-reader-margins": {
+    "source": "690701565560",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Margins"
+  },
+  "windows-reader-mode-auto": {
+    "source": "36cb8cc9898d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Automatic · { $mode }"
+  },
+  "windows-reader-mode-auto-line": {
+    "source": "ca1ebf3103ac",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $way }, according to the series information"
+  },
+  "windows-reader-mode-auto-option": {
+    "source": "db73788b3c97",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Automatic"
+  },
+  "windows-reader-mode-choice-note": {
+    "source": "46e82bba1964",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: Calque 'theo nó sang' reads awkwardly and ambiguously; 'và được đồng bộ sang' is clearer.",
+      "drafter: Uses { -device-pl } (\"các thiết bị\") where the Apple string types \"các { -device }\"; renders the same."
+    ],
+    "back": "Your choice is saved for this series and synced to your other devices."
+  },
+  "windows-reader-mode-detected-note": {
+    "source": "3b693c47d6a6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Recognised from the series information."
+  },
+  "windows-reader-mode-ltr-lower": {
+    "source": "8fc6a6f60382",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "left to right"
+  },
+  "windows-reader-mode-paged": {
+    "source": "6ac0cf0ddc5c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page turning"
+  },
+  "windows-reader-mode-rtl-lower": {
+    "source": "a5ca6dc2e9e3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "right to left"
+  },
+  "windows-reader-mode-scrolled": {
+    "source": "a7698b3d20a6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Scroll"
+  },
+  "windows-reader-mode-strip-line": {
+    "source": "9e40e6b1cd20",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "For webtoons and long images"
+  },
+  "windows-reader-mode-strip-lower": {
+    "source": "5e6cbcad84fd",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"dải dọc\" follows ui-reader's strip mode; Android e-ink says \"cuộn dọc\"."
+    ],
+    "back": "vertical strip"
+  },
+  "windows-reader-mode-vertical": {
+    "source": "8ed04ce33a3a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Vertical pages"
+  },
+  "windows-reader-mode-vertical-line": {
+    "source": "d7217c9d3bb3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Pages joined one after another vertically"
+  },
+  "windows-reader-mode-vertical-lower": {
+    "source": "872251bbca51",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "vertical pages"
+  },
+  "windows-reader-more-settings": {
+    "source": "c807f531ef32",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "More reader settings"
+  },
+  "windows-reader-note-close": {
+    "source": "15eb1f7cc596",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Close the note (annotation)"
+  },
+  "windows-reader-opening": {
+    "source": "abe25f4dcf10",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Opening { $chapter }"
+  },
+  "windows-reader-opening-slow": {
+    "source": "82ab0ba82b73",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Looking for a source · { $seconds } seconds"
+  },
+  "windows-reader-page-failed-hint": {
+    "source": "345a90e5f071",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Turn the page to go on without needing this page."
+  },
+  "windows-reader-page-label": {
+    "source": "d07633ff2e7b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: Spoken label: '/' may be read as 'slash'; 'Trang { $page } trên { $total }' reads naturally."
+    ],
+    "back": "Page { $page } of { $total }"
+  },
+  "windows-reader-page-layout": {
+    "source": "a9e5d8a7ac94",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page layout"
+  },
+  "windows-reader-pages-label": {
+    "source": "ed2c0c059f83",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: Spoken label with '/'; 'Trang { $first } và { $second } trên { $total }' reads better aloud."
+    ],
+    "back": "Pages { $first } and { $second } of { $total }"
+  },
+  "windows-reader-pages-tab": {
+    "source": "6ac0c20ddc5c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Pages"
+  },
+  "windows-reader-paper-mode": {
+    "source": "32986ee6814b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Paper mode"
+  },
+  "windows-reader-paper-mode-note": {
+    "source": "9cab8ac867e0",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: Ungrammatical: 'mà không gì' needs 'có' ('mà không có gì ... chuyển động')."
+    ],
+    "back": "Paper colours, and pages turn instantly without anything in the reader moving."
+  },
+  "windows-reader-percent": {
+    "source": "177259baefed",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $percent }%"
+  },
+  "windows-reader-reading-mode": {
+    "source": "566ac8adad81",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Reading mode"
+  },
+  "windows-reader-scrubber": {
+    "source": "2e192b19ed15",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page"
+  },
+  "windows-reader-settings-open": {
+    "source": "89005c87f469",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Reader settings"
+  },
+  "windows-reader-smaller": {
+    "source": "b0ca99f72a07",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Smaller text"
+  },
+  "windows-reader-start-over": {
+    "source": "338cca2d2f31",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Read again from the beginning"
+  },
+  "windows-reader-text-size": {
+    "source": "66da146c9f6b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Text size"
+  },
+  "windows-reader-this-series": {
+    "source": "f902decaf67c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "This series"
+  },
+  "windows-reader-use-default": {
+    "source": "082eda98d60c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Use default"
+  },
+  "windows-reader-volume": {
+    "source": "d4907c64a096",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Tập\" for volume as elsewhere in vi reading files; it also means episode on the watching side."
+    ],
+    "back": "Volume { $volume }"
   }
 }

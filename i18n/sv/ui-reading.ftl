@@ -6,6 +6,12 @@ home-read-releasing = Pågår nu
 home-read-checked-on-open = Kontrolleras när du öppnar { -app-name }
 home-read-end = Det var allt för nu. Uppdateringar och Sök har de fullständiga listorna.
 home-read-no-sources = Lägg till en mapp, en server eller en { -plugin-store } för att läsa från startsidan.
+read-home-offline-rows = Trendande och nya serier visas när du är online.
+read-home-browse = Bläddra
+read-home-browse-line = Trendande, nya och avslutade, per format
+read-home-browse-row = { $first }, { $second } och { $more } till
+read-home-browse-note = Från AniList. Dina { -source-pl } tillfrågas när du öppnar en serie.
+read-home-browse-kept = Listor sparade { $time } går fortfarande att öppna.
 week-usually = Oftast
 week-nothing-usually = Oftast inget
 updates-checked = Kontrollerad { $ago }
@@ -254,6 +260,30 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Med
 read-filter-left-out = Utesluten
+read-search-started = Start
+read-search-sources-only = Bara dina { -source-pl }
+read-search-from-sources = Från dina { -source-pl }
+read-search-asking = Frågar { $source }…
+read-search-source-failed = { $source } svarade inte.
+read-search-source-timeout = Inget svar på { $seconds } s.
+read-search-source-nothing = Hittade inget i { $sources }.
+read-search-in-source = Hos { $source }
+read-search-in-sources = { $n ->
+    [one] Hos { $n } av dina { -source-pl }
+   *[other] Hos { $n } av dina { -source-pl }
+ }
+read-search-anilist-nothing = AniList hittade inget för de här orden.
+read-search-anilist-failed = AniList svarade inte.
+read-search-anilist-failed-line = Dina { -source-pl } frågades ändå.
+read-search-sources-nothing = Inget i dina { -source-pl } heller.
+read-search-total-unknown = Serier från AniList
+read-search-more-anilist = Mer från AniList
+read-search-shown = { $shown } av { $total } visas
+read-search-shown-some = { $shown } visas
+read-search-source-kind-server = Server
+read-search-source-kind-folder = Mapp
+read-search-source-kind-plugin = { -plugin-cap }
+read-search-source-more = Visa { $n } till
 onboarding-step = { $step } av { $total }
 onboarding-welcome-line = Håll koll på vad du tittar på och läser, från dina egna { -source-pl }.
 onboarding-welcome-note = Dina listor och ditt förlopp stannar på dina { -device-pl }. { -tracker-cap-pl } och { -source-pl } lägger du till själv.

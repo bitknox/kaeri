@@ -1034,6 +1034,72 @@
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>Kapitel från {count} serier är redo att läsas offline.</value>
   </data>
+  <data name="ReadHomeTrendingManga" xml:space="preserve">
+    <value>Trendande manga</value>
+  </data>
+  <data name="ReadHomeTrendingWebtoons" xml:space="preserve">
+    <value>Trendande webtoons</value>
+  </data>
+  <data name="ReadHomeTrendingNovels" xml:space="preserve">
+    <value>Trendande light novels</value>
+  </data>
+  <data name="ReadHomeNewManga" xml:space="preserve">
+    <value>Nya manga</value>
+  </data>
+  <data name="ReadHomeNewWebtoons" xml:space="preserve">
+    <value>Nya webtoons</value>
+  </data>
+  <data name="ReadHomeNewNovels" xml:space="preserve">
+    <value>Nya light novels</value>
+  </data>
+  <data name="ReadHomeNewSide" xml:space="preserve">
+    <value>Senaste 12 månaderna</value>
+  </data>
+  <data name="ReadHomeFinishedManga" xml:space="preserve">
+    <value>Avslutade manga</value>
+  </data>
+  <data name="ReadHomeFinishedWebtoons" xml:space="preserve">
+    <value>Avslutade webtoons</value>
+  </data>
+  <data name="ReadHomeFinishedNovels" xml:space="preserve">
+    <value>Avslutade light novels</value>
+  </data>
+  <data name="ReadHomeFinishedSide" xml:space="preserve">
+    <value>Mest populära</value>
+  </data>
+  <data name="ReadSearchStartedAny" xml:space="preserve">
+    <value>När som helst</value>
+  </data>
+  <data name="ReadSearchStartedYear" xml:space="preserve">
+    <value>Senaste 12 månaderna</value>
+  </data>
+  <data name="ReadSearchStarted3Years" xml:space="preserve">
+    <value>Senaste 3 åren</value>
+  </data>
+  <data name="ReadHitChapters" xml:space="preserve">
+    <value>Kapitel 1 till {last}</value>
+  </data>
+  <data name="ReadHitEpisodes" xml:space="preserve">
+    <value>Avsnitt 1 till {last}</value>
+  </data>
+  <data name="ReadHitParts_one" xml:space="preserve">
+    <value>1 del</value>
+  </data>
+  <data name="ReadHitParts_other" xml:space="preserve">
+    <value>{count} delar</value>
+  </data>
+  <data name="ReadHitFiles_one" xml:space="preserve">
+    <value>1 fil</value>
+  </data>
+  <data name="ReadHitFiles_other" xml:space="preserve">
+    <value>{count} filer</value>
+  </data>
+  <data name="ReadHitFilesFormat_one" xml:space="preserve">
+    <value>1 fil · {format}</value>
+  </data>
+  <data name="ReadHitFilesFormat_other" xml:space="preserve">
+    <value>{count} filer · {format}</value>
+  </data>
   <data name="ReadSourceFolders" xml:space="preserve">
     <value>Mappar</value>
   </data>
@@ -1774,6 +1840,276 @@
   </data>
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Konto, {state}</value>
+  </data>
+  <data name="WindowsReaderSettingsOpen" xml:space="preserve">
+    <value>Läsarinställningar</value>
+  </data>
+  <data name="WindowsReaderOpening" xml:space="preserve">
+    <value>Öppnar {chapter}</value>
+  </data>
+  <data name="WindowsReaderOpeningSlow" xml:space="preserve">
+    <value>Letar efter en källa · {seconds} s</value>
+  </data>
+  <data name="WindowsReaderChapterFailed" xml:space="preserve">
+    <value>Kunde inte öppna {chapter}</value>
+  </data>
+  <data name="WindowsReaderChooseSource" xml:space="preserve">
+    <value>Välj källa</value>
+  </data>
+  <data name="WindowsReaderPageFailedHint" xml:space="preserve">
+    <value>Bläddra för att gå vidare utan den.</value>
+  </data>
+  <data name="WindowsReaderEndOfChapter" xml:space="preserve">
+    <value>Slut på {chapter}</value>
+  </data>
+  <data name="WindowsReaderEndNotRead" xml:space="preserve">
+    <value>Inte markerat som läst än</value>
+  </data>
+  <data name="WindowsReaderEndTracker" xml:space="preserve">
+    <value>Läst · uppdaterat på {trackers}</value>
+  </data>
+  <data name="WindowsReaderEndTrackersTwo" xml:space="preserve">
+    <value>{first} och {second}</value>
+  </data>
+  <data name="WindowsReaderContinue" xml:space="preserve">
+    <value>Läs vidare</value>
+  </data>
+  <data name="WindowsReaderBackToSeries" xml:space="preserve">
+    <value>Tillbaka till serien</value>
+  </data>
+  <data name="WindowsReaderEndNotOut" xml:space="preserve">
+    <value>{chapter} har inte kommit ut än</value>
+  </data>
+  <data name="WindowsReaderEndNotOutBody" xml:space="preserve">
+    <value>Kaeri söker efter nya kapitel i bakgrunden och lägger till dem i Uppdateringar.</value>
+  </data>
+  <data name="WindowsReaderEndCaughtUpBody" xml:space="preserve">
+    <value>Nya kapitel visas i Uppdateringar när dina källor har dem.</value>
+  </data>
+  <data name="WindowsReaderEndFinished" xml:space="preserve">
+    <value>Slutet på serien</value>
+  </data>
+  <data name="WindowsReaderEndFinishedBody" xml:space="preserve">
+    <value>Det finns inga fler kapitel.</value>
+  </data>
+  <data name="WindowsReaderEndNoSource" xml:space="preserve">
+    <value>{chapter} finns inte hos dina källor än</value>
+  </data>
+  <data name="WindowsReaderEndOffline" xml:space="preserve">
+    <value>{chapter} har inte laddats ner</value>
+  </data>
+  <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
+    <value>Du är offline. Kapitlet öppnas här när du är uppkopplad.</value>
+  </data>
+  <data name="WindowsReaderGroupLine" xml:space="preserve">
+    <value>{chapter} · sida {page} av {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineSpread" xml:space="preserve">
+    <value>{chapter} · sidorna {first} och {second}</value>
+  </data>
+  <data name="WindowsReaderGroupLineStrip" xml:space="preserve">
+    <value>{chapter} · bild {image} av {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineScroll" xml:space="preserve">
+    <value>{chapter} · {percent}%</value>
+  </data>
+  <data name="WindowsReaderPageLabel" xml:space="preserve">
+    <value>Sida {page} av {total}</value>
+  </data>
+  <data name="WindowsReaderPagesLabel" xml:space="preserve">
+    <value>Sidorna {first} och {second} av {total}</value>
+  </data>
+  <data name="WindowsReaderScrubber" xml:space="preserve">
+    <value>Sida</value>
+  </data>
+  <data name="WindowsReaderStartOver" xml:space="preserve">
+    <value>Börja om</value>
+  </data>
+  <data name="WindowsReaderGoBack" xml:space="preserve">
+    <value>Gå tillbaka</value>
+  </data>
+  <data name="WindowsReaderChange" xml:space="preserve">
+    <value>Ändra</value>
+  </data>
+  <data name="WindowsReaderThisSeries" xml:space="preserve">
+    <value>Den här serien</value>
+  </data>
+  <data name="WindowsReaderAllMangaPc" xml:space="preserve">
+    <value>All manga på denna dator</value>
+  </data>
+  <data name="WindowsReaderAllStripsPc" xml:space="preserve">
+    <value>Alla webtoons på denna dator</value>
+  </data>
+  <data name="WindowsReaderAllNovels" xml:space="preserve">
+    <value>Alla light novels</value>
+  </data>
+  <data name="WindowsReaderReadingMode" xml:space="preserve">
+    <value>Läsläge</value>
+  </data>
+  <data name="WindowsReaderModeAuto" xml:space="preserve">
+    <value>Auto · {mode}</value>
+  </data>
+  <data name="WindowsReaderModeAutoOption" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="WindowsReaderModeRtlLower" xml:space="preserve">
+    <value>höger till vänster</value>
+  </data>
+  <data name="WindowsReaderModeLtrLower" xml:space="preserve">
+    <value>vänster till höger</value>
+  </data>
+  <data name="WindowsReaderModeStripLower" xml:space="preserve">
+    <value>remsa</value>
+  </data>
+  <data name="WindowsReaderModeDetectedNote" xml:space="preserve">
+    <value>Upptäckt från seriens detaljer.</value>
+  </data>
+  <data name="WindowsReaderModeChoiceNote" xml:space="preserve">
+    <value>Ditt val sparas för den här serien och följer med till dina andra enheter.</value>
+  </data>
+  <data name="WindowsReaderUseDefault" xml:space="preserve">
+    <value>Använd standard</value>
+  </data>
+  <data name="WindowsReaderModePaged" xml:space="preserve">
+    <value>Sidvis</value>
+  </data>
+  <data name="WindowsReaderModeScrolled" xml:space="preserve">
+    <value>Rullning</value>
+  </data>
+  <data name="WindowsReaderPageLayout" xml:space="preserve">
+    <value>Sidlayout</value>
+  </data>
+  <data name="WindowsReaderFit" xml:space="preserve">
+    <value>Anpassa</value>
+  </data>
+  <data name="WindowsReaderFitHeight" xml:space="preserve">
+    <value>Höjd</value>
+  </data>
+  <data name="WindowsReaderCropBorders" xml:space="preserve">
+    <value>Beskär kanter</value>
+  </data>
+  <data name="WindowsReaderGap" xml:space="preserve">
+    <value>Avstånd mellan bilder</value>
+  </data>
+  <data name="WindowsReaderBackground" xml:space="preserve">
+    <value>Bakgrund</value>
+  </data>
+  <data name="WindowsReaderMoreSettings" xml:space="preserve">
+    <value>Fler läsarinställningar</value>
+  </data>
+  <data name="WindowsReaderPaperMode" xml:space="preserve">
+    <value>Pappersläge</value>
+  </data>
+  <data name="WindowsReaderPaperModeNote" xml:space="preserve">
+    <value>Pappersfärger, och sidor bläddras direkt utan att något i läsaren rör sig.</value>
+  </data>
+  <data name="WindowsReaderFont" xml:space="preserve">
+    <value>Typsnitt</value>
+  </data>
+  <data name="WindowsReaderTextSize" xml:space="preserve">
+    <value>Textstorlek</value>
+  </data>
+  <data name="WindowsReaderLineSpacing" xml:space="preserve">
+    <value>Radavstånd</value>
+  </data>
+  <data name="WindowsReaderLineTight" xml:space="preserve">
+    <value>Tätt</value>
+  </data>
+  <data name="WindowsReaderLineNormal" xml:space="preserve">
+    <value>Normalt</value>
+  </data>
+  <data name="WindowsReaderLineLoose" xml:space="preserve">
+    <value>Luftigt</value>
+  </data>
+  <data name="WindowsReaderMargins" xml:space="preserve">
+    <value>Marginaler</value>
+  </data>
+  <data name="WindowsReaderJustify" xml:space="preserve">
+    <value>Marginaljustera text</value>
+  </data>
+  <data name="WindowsReaderLook" xml:space="preserve">
+    <value>Utseende</value>
+  </data>
+  <data name="WindowsReaderPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="WindowsReaderSmaller" xml:space="preserve">
+    <value>Mindre text</value>
+  </data>
+  <data name="WindowsReaderLarger" xml:space="preserve">
+    <value>Större text</value>
+  </data>
+  <data name="WindowsReaderPagesTab" xml:space="preserve">
+    <value>Sidor</value>
+  </data>
+  <data name="WindowsReaderChaptersTab" xml:space="preserve">
+    <value>Kapitel</value>
+  </data>
+  <data name="WindowsReaderVolume" xml:space="preserve">
+    <value>Volym {volume}</value>
+  </data>
+  <data name="WindowsReaderChapterPages_one" xml:space="preserve">
+    <value>1 sida</value>
+  </data>
+  <data name="WindowsReaderChapterPages_other" xml:space="preserve">
+    <value>{pages} sidor</value>
+  </data>
+  <data name="WindowsReaderGridPage" xml:space="preserve">
+    <value>Sida {page}</value>
+  </data>
+  <data name="WindowsReaderImageLabel" xml:space="preserve">
+    <value>Bild {image} av {count}</value>
+  </data>
+  <data name="WindowsReaderNoteClose" xml:space="preserve">
+    <value>Stäng fotnot</value>
+  </data>
+  <data name="WindowsReaderBack" xml:space="preserve">
+    <value>Tillbaka</value>
+  </data>
+  <data name="WindowsReaderModeVertical" xml:space="preserve">
+    <value>Lodräta sidor</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLower" xml:space="preserve">
+    <value>lodräta sidor</value>
+  </data>
+  <data name="WindowsReaderModeAutoLine" xml:space="preserve">
+    <value>{way}, från seriens detaljer</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLine" xml:space="preserve">
+    <value>Sidorna ligger under varandra</value>
+  </data>
+  <data name="WindowsReaderModeStripLine" xml:space="preserve">
+    <value>För webtoons och långa bilder</value>
+  </data>
+  <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Nedladdade kapitel öppnas utan anslutning.</value>
+  </data>
+  <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
+    <value>Läser {title} igen från början</value>
+  </data>
+  <data name="SendSaveFilesWindows" xml:space="preserve">
+    <value>Spara filer</value>
+  </data>
+  <data name="SendSavedWindows_one" xml:space="preserve">
+    <value>Filen har sparats</value>
+  </data>
+  <data name="SendSavedWindows_other" xml:space="preserve">
+    <value>{n} filer har sparats</value>
+  </data>
+  <data name="SendSaveFailedWindows" xml:space="preserve">
+    <value>Kunde inte spara filerna där. Prova en annan mapp.</value>
+  </data>
+  <data name="OpdsPausedNoneWindows" xml:space="preserve">
+    <value>Pausat. Den här datorn är inte på något lokalt nätverk.</value>
+  </data>
+  <data name="OpdsPausedVpnWindows" xml:space="preserve">
+    <value>Pausat. Den här datorn är bara ansluten via VPN.</value>
+  </data>
+  <data name="FeedFirewallTitleWindows" xml:space="preserve">
+    <value>Windows frågar om nätverksåtkomst</value>
+  </data>
+  <data name="FeedFirewallBodyWindows" xml:space="preserve">
+    <value>Tillåt Kaeri bara i privata nätverk så att e-läsare hemma når flödet. Lämna offentliga nätverk avmarkerade.</value>
   </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>Läser in inställningar</value>
@@ -6023,6 +6359,24 @@
   <data name="HomeReadNoSources" xml:space="preserve">
     <value>Lägg till en mapp, en server eller en tilläggsbutik för att läsa från startsidan.</value>
   </data>
+  <data name="ReadHomeOfflineRows" xml:space="preserve">
+    <value>Trendande och nya serier visas när du är online.</value>
+  </data>
+  <data name="ReadHomeBrowse" xml:space="preserve">
+    <value>Bläddra</value>
+  </data>
+  <data name="ReadHomeBrowseLine" xml:space="preserve">
+    <value>Trendande, nya och avslutade, per format</value>
+  </data>
+  <data name="ReadHomeBrowseRow" xml:space="preserve">
+    <value>{first}, {second} och {more} till</value>
+  </data>
+  <data name="ReadHomeBrowseNote" xml:space="preserve">
+    <value>Från AniList. Dina källor tillfrågas när du öppnar en serie.</value>
+  </data>
+  <data name="ReadHomeBrowseKept" xml:space="preserve">
+    <value>Listor sparade {time} går fortfarande att öppna.</value>
+  </data>
   <data name="WeekUsually" xml:space="preserve">
     <value>Oftast</value>
   </data>
@@ -6682,6 +7036,72 @@
   </data>
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Utesluten</value>
+  </data>
+  <data name="ReadSearchStarted" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="ReadSearchSourcesOnly" xml:space="preserve">
+    <value>Bara dina källor</value>
+  </data>
+  <data name="ReadSearchFromSources" xml:space="preserve">
+    <value>Från dina källor</value>
+  </data>
+  <data name="ReadSearchAsking" xml:space="preserve">
+    <value>Frågar {source}…</value>
+  </data>
+  <data name="ReadSearchSourceFailed" xml:space="preserve">
+    <value>{source} svarade inte.</value>
+  </data>
+  <data name="ReadSearchSourceTimeout" xml:space="preserve">
+    <value>Inget svar på {seconds} s.</value>
+  </data>
+  <data name="ReadSearchSourceNothing" xml:space="preserve">
+    <value>Hittade inget i {sources}.</value>
+  </data>
+  <data name="ReadSearchInSource" xml:space="preserve">
+    <value>Hos {source}</value>
+  </data>
+  <data name="ReadSearchInSources_one" xml:space="preserve">
+    <value>Hos {n} av dina källor</value>
+  </data>
+  <data name="ReadSearchInSources_other" xml:space="preserve">
+    <value>Hos {n} av dina källor</value>
+  </data>
+  <data name="ReadSearchAnilistNothing" xml:space="preserve">
+    <value>AniList hittade inget för de här orden.</value>
+  </data>
+  <data name="ReadSearchAnilistFailed" xml:space="preserve">
+    <value>AniList svarade inte.</value>
+  </data>
+  <data name="ReadSearchAnilistFailedLine" xml:space="preserve">
+    <value>Dina källor frågades ändå.</value>
+  </data>
+  <data name="ReadSearchSourcesNothing" xml:space="preserve">
+    <value>Inget i dina källor heller.</value>
+  </data>
+  <data name="ReadSearchTotalUnknown" xml:space="preserve">
+    <value>Serier från AniList</value>
+  </data>
+  <data name="ReadSearchMoreAnilist" xml:space="preserve">
+    <value>Mer från AniList</value>
+  </data>
+  <data name="ReadSearchShown" xml:space="preserve">
+    <value>{shown} av {total} visas</value>
+  </data>
+  <data name="ReadSearchShownSome" xml:space="preserve">
+    <value>{shown} visas</value>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>Mapp</value>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>Tillägg</value>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>Visa {n} till</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} av {total}</value>

@@ -971,6 +971,63 @@
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>Bab dari {count} seri siap dibaca offline.</value>
   </data>
+  <data name="ReadHomeTrendingManga" xml:space="preserve">
+    <value>Manga sedang tren</value>
+  </data>
+  <data name="ReadHomeTrendingWebtoons" xml:space="preserve">
+    <value>Webtoon sedang tren</value>
+  </data>
+  <data name="ReadHomeTrendingNovels" xml:space="preserve">
+    <value>Light novel sedang tren</value>
+  </data>
+  <data name="ReadHomeNewManga" xml:space="preserve">
+    <value>Manga baru</value>
+  </data>
+  <data name="ReadHomeNewWebtoons" xml:space="preserve">
+    <value>Webtoon baru</value>
+  </data>
+  <data name="ReadHomeNewNovels" xml:space="preserve">
+    <value>Light novel baru</value>
+  </data>
+  <data name="ReadHomeNewSide" xml:space="preserve">
+    <value>12 bulan terakhir</value>
+  </data>
+  <data name="ReadHomeFinishedManga" xml:space="preserve">
+    <value>Manga tamat</value>
+  </data>
+  <data name="ReadHomeFinishedWebtoons" xml:space="preserve">
+    <value>Webtoon tamat</value>
+  </data>
+  <data name="ReadHomeFinishedNovels" xml:space="preserve">
+    <value>Light novel tamat</value>
+  </data>
+  <data name="ReadHomeFinishedSide" xml:space="preserve">
+    <value>Paling populer</value>
+  </data>
+  <data name="ReadSearchStartedAny" xml:space="preserve">
+    <value>Kapan saja</value>
+  </data>
+  <data name="ReadSearchStartedYear" xml:space="preserve">
+    <value>12 bulan terakhir</value>
+  </data>
+  <data name="ReadSearchStarted3Years" xml:space="preserve">
+    <value>3 tahun terakhir</value>
+  </data>
+  <data name="ReadHitChapters" xml:space="preserve">
+    <value>Bab 1 sampai {last}</value>
+  </data>
+  <data name="ReadHitEpisodes" xml:space="preserve">
+    <value>Episode 1 sampai {last}</value>
+  </data>
+  <data name="ReadHitParts_other" xml:space="preserve">
+    <value>{count} bagian</value>
+  </data>
+  <data name="ReadHitFiles_other" xml:space="preserve">
+    <value>{count} berkas</value>
+  </data>
+  <data name="ReadHitFilesFormat_other" xml:space="preserve">
+    <value>{count} berkas · {format}</value>
+  </data>
   <data name="ReadSourceFolders" xml:space="preserve">
     <value>Folder</value>
   </data>
@@ -1678,6 +1735,270 @@
   </data>
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Akun, {state}</value>
+  </data>
+  <data name="WindowsReaderSettingsOpen" xml:space="preserve">
+    <value>Pengaturan pembaca</value>
+  </data>
+  <data name="WindowsReaderOpening" xml:space="preserve">
+    <value>Membuka {chapter}</value>
+  </data>
+  <data name="WindowsReaderOpeningSlow" xml:space="preserve">
+    <value>Mencari sumber · {seconds} d</value>
+  </data>
+  <data name="WindowsReaderChapterFailed" xml:space="preserve">
+    <value>{chapter} tidak bisa dibuka</value>
+  </data>
+  <data name="WindowsReaderChooseSource" xml:space="preserve">
+    <value>Pilih sumber</value>
+  </data>
+  <data name="WindowsReaderPageFailedHint" xml:space="preserve">
+    <value>Balik halaman untuk lanjut tanpa halaman ini.</value>
+  </data>
+  <data name="WindowsReaderEndOfChapter" xml:space="preserve">
+    <value>Akhir {chapter}</value>
+  </data>
+  <data name="WindowsReaderEndNotRead" xml:space="preserve">
+    <value>Belum ditandai dibaca</value>
+  </data>
+  <data name="WindowsReaderEndTracker" xml:space="preserve">
+    <value>Dibaca · {trackers} diperbarui</value>
+  </data>
+  <data name="WindowsReaderEndTrackersTwo" xml:space="preserve">
+    <value>{first} dan {second}</value>
+  </data>
+  <data name="WindowsReaderContinue" xml:space="preserve">
+    <value>Lanjutkan membaca</value>
+  </data>
+  <data name="WindowsReaderBackToSeries" xml:space="preserve">
+    <value>Kembali ke seri</value>
+  </data>
+  <data name="WindowsReaderEndNotOut" xml:space="preserve">
+    <value>{chapter} belum terbit</value>
+  </data>
+  <data name="WindowsReaderEndNotOutBody" xml:space="preserve">
+    <value>Kaeri memeriksa bab baru di latar belakang dan menambahkannya ke Pembaruan.</value>
+  </data>
+  <data name="WindowsReaderEndCaughtUpBody" xml:space="preserve">
+    <value>Bab baru muncul di Pembaruan saat sumber-sumber Anda memilikinya.</value>
+  </data>
+  <data name="WindowsReaderEndFinished" xml:space="preserve">
+    <value>Akhir seri</value>
+  </data>
+  <data name="WindowsReaderEndFinishedBody" xml:space="preserve">
+    <value>Tidak ada bab lagi.</value>
+  </data>
+  <data name="WindowsReaderEndNoSource" xml:space="preserve">
+    <value>Belum ada {chapter} di sumber-sumber Anda</value>
+  </data>
+  <data name="WindowsReaderEndOffline" xml:space="preserve">
+    <value>{chapter} belum diunduh</value>
+  </data>
+  <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
+    <value>Anda offline. Bab ini terbuka di sini setelah tersambung.</value>
+  </data>
+  <data name="WindowsReaderGroupLine" xml:space="preserve">
+    <value>{chapter} · halaman {page} dari {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineSpread" xml:space="preserve">
+    <value>{chapter} · halaman {first} dan {second}</value>
+  </data>
+  <data name="WindowsReaderGroupLineStrip" xml:space="preserve">
+    <value>{chapter} · gambar {image} dari {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineScroll" xml:space="preserve">
+    <value>{chapter} · {percent}%</value>
+  </data>
+  <data name="WindowsReaderPageLabel" xml:space="preserve">
+    <value>Halaman {page} dari {total}</value>
+  </data>
+  <data name="WindowsReaderPagesLabel" xml:space="preserve">
+    <value>Halaman {first} dan {second} dari {total}</value>
+  </data>
+  <data name="WindowsReaderScrubber" xml:space="preserve">
+    <value>Halaman</value>
+  </data>
+  <data name="WindowsReaderStartOver" xml:space="preserve">
+    <value>Mulai ulang</value>
+  </data>
+  <data name="WindowsReaderGoBack" xml:space="preserve">
+    <value>Kembali</value>
+  </data>
+  <data name="WindowsReaderChange" xml:space="preserve">
+    <value>Ubah</value>
+  </data>
+  <data name="WindowsReaderThisSeries" xml:space="preserve">
+    <value>Seri ini</value>
+  </data>
+  <data name="WindowsReaderAllMangaPc" xml:space="preserve">
+    <value>Semua manga di PC ini</value>
+  </data>
+  <data name="WindowsReaderAllStripsPc" xml:space="preserve">
+    <value>Semua webtoon di PC ini</value>
+  </data>
+  <data name="WindowsReaderAllNovels" xml:space="preserve">
+    <value>Semua light novel</value>
+  </data>
+  <data name="WindowsReaderReadingMode" xml:space="preserve">
+    <value>Mode baca</value>
+  </data>
+  <data name="WindowsReaderModeAuto" xml:space="preserve">
+    <value>Otomatis · {mode}</value>
+  </data>
+  <data name="WindowsReaderModeAutoOption" xml:space="preserve">
+    <value>Otomatis</value>
+  </data>
+  <data name="WindowsReaderModeRtlLower" xml:space="preserve">
+    <value>kanan ke kiri</value>
+  </data>
+  <data name="WindowsReaderModeLtrLower" xml:space="preserve">
+    <value>kiri ke kanan</value>
+  </data>
+  <data name="WindowsReaderModeStripLower" xml:space="preserve">
+    <value>strip</value>
+  </data>
+  <data name="WindowsReaderModeDetectedNote" xml:space="preserve">
+    <value>Terdeteksi dari detail seri.</value>
+  </data>
+  <data name="WindowsReaderModeChoiceNote" xml:space="preserve">
+    <value>Pilihan Anda disimpan untuk seri ini dan ikut ke perangkat Anda yang lain.</value>
+  </data>
+  <data name="WindowsReaderUseDefault" xml:space="preserve">
+    <value>Pakai bawaan</value>
+  </data>
+  <data name="WindowsReaderModePaged" xml:space="preserve">
+    <value>Per halaman</value>
+  </data>
+  <data name="WindowsReaderModeScrolled" xml:space="preserve">
+    <value>Gulir</value>
+  </data>
+  <data name="WindowsReaderPageLayout" xml:space="preserve">
+    <value>Tata letak halaman</value>
+  </data>
+  <data name="WindowsReaderFit" xml:space="preserve">
+    <value>Paskan</value>
+  </data>
+  <data name="WindowsReaderFitHeight" xml:space="preserve">
+    <value>Tinggi</value>
+  </data>
+  <data name="WindowsReaderCropBorders" xml:space="preserve">
+    <value>Pangkas tepi</value>
+  </data>
+  <data name="WindowsReaderGap" xml:space="preserve">
+    <value>Jarak antar gambar</value>
+  </data>
+  <data name="WindowsReaderBackground" xml:space="preserve">
+    <value>Latar</value>
+  </data>
+  <data name="WindowsReaderMoreSettings" xml:space="preserve">
+    <value>Pengaturan pembaca lainnya</value>
+  </data>
+  <data name="WindowsReaderPaperMode" xml:space="preserve">
+    <value>Mode kertas</value>
+  </data>
+  <data name="WindowsReaderPaperModeNote" xml:space="preserve">
+    <value>Warna kertas, dan halaman berganti seketika tanpa ada yang bergerak di pembaca.</value>
+  </data>
+  <data name="WindowsReaderFont" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="WindowsReaderTextSize" xml:space="preserve">
+    <value>Ukuran teks</value>
+  </data>
+  <data name="WindowsReaderLineSpacing" xml:space="preserve">
+    <value>Spasi baris</value>
+  </data>
+  <data name="WindowsReaderLineTight" xml:space="preserve">
+    <value>Rapat</value>
+  </data>
+  <data name="WindowsReaderLineNormal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="WindowsReaderLineLoose" xml:space="preserve">
+    <value>Longgar</value>
+  </data>
+  <data name="WindowsReaderMargins" xml:space="preserve">
+    <value>Margin</value>
+  </data>
+  <data name="WindowsReaderJustify" xml:space="preserve">
+    <value>Teks rata kiri-kanan</value>
+  </data>
+  <data name="WindowsReaderLook" xml:space="preserve">
+    <value>Tampilan</value>
+  </data>
+  <data name="WindowsReaderPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="WindowsReaderSmaller" xml:space="preserve">
+    <value>Teks lebih kecil</value>
+  </data>
+  <data name="WindowsReaderLarger" xml:space="preserve">
+    <value>Teks lebih besar</value>
+  </data>
+  <data name="WindowsReaderPagesTab" xml:space="preserve">
+    <value>Halaman</value>
+  </data>
+  <data name="WindowsReaderChaptersTab" xml:space="preserve">
+    <value>Bab</value>
+  </data>
+  <data name="WindowsReaderVolume" xml:space="preserve">
+    <value>Volume {volume}</value>
+  </data>
+  <data name="WindowsReaderChapterPages_other" xml:space="preserve">
+    <value>{pages} halaman</value>
+  </data>
+  <data name="WindowsReaderGridPage" xml:space="preserve">
+    <value>Halaman {page}</value>
+  </data>
+  <data name="WindowsReaderImageLabel" xml:space="preserve">
+    <value>Gambar {image} dari {count}</value>
+  </data>
+  <data name="WindowsReaderNoteClose" xml:space="preserve">
+    <value>Tutup catatan</value>
+  </data>
+  <data name="WindowsReaderBack" xml:space="preserve">
+    <value>Kembali</value>
+  </data>
+  <data name="WindowsReaderModeVertical" xml:space="preserve">
+    <value>Halaman vertikal</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLower" xml:space="preserve">
+    <value>halaman vertikal</value>
+  </data>
+  <data name="WindowsReaderModeAutoLine" xml:space="preserve">
+    <value>{way}, dari detail seri</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLine" xml:space="preserve">
+    <value>Halaman bersusun ke bawah</value>
+  </data>
+  <data name="WindowsReaderModeStripLine" xml:space="preserve">
+    <value>Untuk webtoon dan gambar panjang</value>
+  </data>
+  <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Bab yang diunduh bisa dibuka tanpa koneksi.</value>
+  </data>
+  <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
+    <value>Membaca ulang {title} dari awal</value>
+  </data>
+  <data name="SendSaveFilesWindows" xml:space="preserve">
+    <value>Simpan berkas</value>
+  </data>
+  <data name="SendSavedWindows_other" xml:space="preserve">
+    <value>{n} berkas tersimpan</value>
+  </data>
+  <data name="SendSaveFailedWindows" xml:space="preserve">
+    <value>Berkas tidak bisa disimpan di sana. Coba folder lain.</value>
+  </data>
+  <data name="OpdsPausedNoneWindows" xml:space="preserve">
+    <value>Dijeda. PC ini tidak berada di jaringan lokal.</value>
+  </data>
+  <data name="OpdsPausedVpnWindows" xml:space="preserve">
+    <value>Dijeda. PC ini hanya tersambung lewat VPN.</value>
+  </data>
+  <data name="FeedFirewallTitleWindows" xml:space="preserve">
+    <value>Windows akan bertanya soal jaringan</value>
+  </data>
+  <data name="FeedFirewallBodyWindows" xml:space="preserve">
+    <value>Agar e-reader di rumah bisa menjangkau feed, izinkan Kaeri hanya di jaringan pribadi. Biarkan jaringan publik tidak dicentang.</value>
   </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>Memuat pengaturan</value>
@@ -5810,6 +6131,24 @@
   <data name="HomeReadNoSources" xml:space="preserve">
     <value>Tambahkan folder, server, atau toko plugin untuk membaca dari Beranda.</value>
   </data>
+  <data name="ReadHomeOfflineRows" xml:space="preserve">
+    <value>Seri yang sedang tren dan seri baru muncul setelah Anda online.</value>
+  </data>
+  <data name="ReadHomeBrowse" xml:space="preserve">
+    <value>Jelajahi</value>
+  </data>
+  <data name="ReadHomeBrowseLine" xml:space="preserve">
+    <value>Sedang tren, baru, dan tamat, per format</value>
+  </data>
+  <data name="ReadHomeBrowseRow" xml:space="preserve">
+    <value>{first}, {second}, dan {more} lainnya</value>
+  </data>
+  <data name="ReadHomeBrowseNote" xml:space="preserve">
+    <value>Dari AniList. Sumber-sumber Anda baru dihubungi saat Anda membuka sebuah seri.</value>
+  </data>
+  <data name="ReadHomeBrowseKept" xml:space="preserve">
+    <value>Daftar yang disimpan dari {time} tetap bisa dibuka.</value>
+  </data>
   <data name="WeekUsually" xml:space="preserve">
     <value>Biasanya</value>
   </data>
@@ -6427,6 +6766,69 @@
   </data>
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Dikecualikan</value>
+  </data>
+  <data name="ReadSearchStarted" xml:space="preserve">
+    <value>Mulai terbit</value>
+  </data>
+  <data name="ReadSearchSourcesOnly" xml:space="preserve">
+    <value>Hanya sumber-sumber Anda</value>
+  </data>
+  <data name="ReadSearchFromSources" xml:space="preserve">
+    <value>Dari sumber-sumber Anda</value>
+  </data>
+  <data name="ReadSearchAsking" xml:space="preserve">
+    <value>Menghubungi {source}…</value>
+  </data>
+  <data name="ReadSearchSourceFailed" xml:space="preserve">
+    <value>{source} tidak merespons.</value>
+  </data>
+  <data name="ReadSearchSourceTimeout" xml:space="preserve">
+    <value>Tidak ada respons dalam {seconds} detik.</value>
+  </data>
+  <data name="ReadSearchSourceNothing" xml:space="preserve">
+    <value>Tidak ada hasil di {sources}.</value>
+  </data>
+  <data name="ReadSearchInSource" xml:space="preserve">
+    <value>Ada di {source}</value>
+  </data>
+  <data name="ReadSearchInSources_other" xml:space="preserve">
+    <value>Ada di {n} sumber Anda</value>
+  </data>
+  <data name="ReadSearchAnilistNothing" xml:space="preserve">
+    <value>AniList tidak menemukan apa pun dengan kata-kata ini.</value>
+  </data>
+  <data name="ReadSearchAnilistFailed" xml:space="preserve">
+    <value>AniList tidak merespons.</value>
+  </data>
+  <data name="ReadSearchAnilistFailedLine" xml:space="preserve">
+    <value>Sumber-sumber Anda tetap dihubungi.</value>
+  </data>
+  <data name="ReadSearchSourcesNothing" xml:space="preserve">
+    <value>Di sumber-sumber Anda juga tidak ada.</value>
+  </data>
+  <data name="ReadSearchTotalUnknown" xml:space="preserve">
+    <value>Seri dari AniList</value>
+  </data>
+  <data name="ReadSearchMoreAnilist" xml:space="preserve">
+    <value>Lainnya dari AniList</value>
+  </data>
+  <data name="ReadSearchShown" xml:space="preserve">
+    <value>{shown} dari {total} ditampilkan</value>
+  </data>
+  <data name="ReadSearchShownSome" xml:space="preserve">
+    <value>{shown} ditampilkan</value>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>Plugin</value>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>Tampilkan {n} lagi</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} dari {total}</value>

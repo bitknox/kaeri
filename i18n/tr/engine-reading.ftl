@@ -177,6 +177,34 @@ reading-downloads-done-parts = { $count ->
    *[other] { $title }: { $count } kısım çevrimdışı okumaya hazır.
  }
 reading-downloads-done-series = { $count } seriden bölümler çevrimdışı okumaya hazır.
+read-home-trending-manga = Gündemdeki mangalar
+read-home-trending-webtoons = Gündemdeki webtoonlar
+read-home-trending-novels = Gündemdeki hafif romanlar
+read-home-new-manga = Yeni mangalar
+read-home-new-webtoons = Yeni webtoonlar
+read-home-new-novels = Yeni hafif romanlar
+read-home-new-side = Son 12 ay
+read-home-finished-manga = Tamamlanan mangalar
+read-home-finished-webtoons = Tamamlanan webtoonlar
+read-home-finished-novels = Tamamlanan hafif romanlar
+read-home-finished-side = En popüler
+read-search-started-any = Tüm zamanlar
+read-search-started-year = Son 12 ay
+read-search-started-3-years = Son 3 yıl
+read-hit-chapters = Bölüm 1 - { $last }
+read-hit-episodes = Bölüm 1 - { $last }
+read-hit-parts = { $count ->
+    [one] 1 kısım
+   *[other] { $count } kısım
+ }
+read-hit-files = { $count ->
+    [one] 1 dosya
+   *[other] { $count } dosya
+ }
+read-hit-files-format = { $count ->
+    [one] 1 dosya · { $format }
+   *[other] { $count } dosya · { $format }
+ }
 read-source-folders = Klasörler
 reading-since-january = Ocak'tan beri
 reading-since-february = Şubat'tan beri

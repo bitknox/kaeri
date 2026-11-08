@@ -1062,6 +1062,81 @@ reading-downloads-done-parts =
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = Rozdziały z { $count } serii są gotowe do czytania offline.
 
+# Row heading on reading's Home: manga that are trending on AniList now.
+read-home-trending-manga = Manga na topie
+
+# Row heading on reading's Home: webtoons that are trending on AniList now.
+read-home-trending-webtoons = Webtoony na topie
+
+# Row heading on reading's Home: light novels that are trending on AniList now.
+read-home-trending-novels = Light novel na topie
+
+# Row heading on reading's Home: the most popular manga that started in the last 12 months.
+read-home-new-manga = Nowa manga
+
+# Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+read-home-new-webtoons = Nowe webtoony
+
+# Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+read-home-new-novels = Nowe light novel
+
+# Side text beside a New row's heading, in a quieter style: what the row covers.
+read-home-new-side = Ostatnie 12 miesięcy
+
+# Row heading on reading's Home: the most popular manga that have finished.
+read-home-finished-manga = Zakończona manga
+
+# Row heading on reading's Home: the most popular webtoons that have finished.
+read-home-finished-webtoons = Zakończone webtoony
+
+# Row heading on reading's Home: the most popular light novels that have finished.
+read-home-finished-novels = Zakończone light novel
+
+# Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+read-home-finished-side = Najpopularniejsze
+
+# A choice of reading Search's Started filter: series that started at any time.
+read-search-started-any = Kiedykolwiek
+
+# A choice of reading Search's Started filter: series that started in the last 12 months.
+read-search-started-year = Ostatnie 12 miesięcy
+
+# A choice of reading Search's Started filter: series that started in the last 3 years.
+read-search-started-3-years = Ostatnie 3 lata
+
+# Under a source's hit in Search: the chapters it holds, from the first.
+read-hit-chapters = Rozdziały od 1 do { $last }
+
+# Under a source's hit in Search: a web novel's episodes it holds, from the first.
+read-hit-episodes = Odcinki od 1 do { $last }
+
+# Under a source's hit in Search: a light novel's parts it holds.
+read-hit-parts =
+    { $count ->
+        [one] 1 część
+        [few] { $count } części
+        [many] { $count } części
+       *[other] { $count } części
+    }
+
+# Under a source's hit in Search: the book files it holds.
+read-hit-files =
+    { $count ->
+        [one] 1 plik
+        [few] { $count } pliki
+        [many] { $count } plików
+       *[other] { $count } pliku
+    }
+
+# Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+read-hit-files-format =
+    { $count ->
+        [one] 1 plik · { $format }
+        [few] { $count } pliki · { $format }
+        [many] { $count } plików · { $format }
+       *[other] { $count } pliku · { $format }
+    }
+
 # The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
 read-source-folders = Foldery
 
@@ -9071,6 +9146,24 @@ home-read-end = To na razie wszystko. Pełne listy znajdziesz w sekcjach Aktuali
 # Line at the end of Read with no book sources yet. A button to add one follows it.
 home-read-no-sources = Dodaj folder, serwer lub sklep z wtyczkami, aby czytać na stronie głównej.
 
+# In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+read-home-offline-rows = Serie na topie i nowości pojawią się, gdy będziesz online.
+
+# E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+read-home-browse = Przeglądaj
+
+# E-ink: the line under Browse on Read's Home.
+read-home-browse-line = Na topie, nowe i zakończone, według formatu
+
+# E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+read-home-browse-row = { $first }, { $second } i jeszcze { $more }
+
+# E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+read-home-browse-note = Z AniList. Twoje źródła są odpytywane dopiero po otwarciu serii.
+
+# E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+read-home-browse-kept = Zapisane listy ({ $time }) nadal się otwierają.
+
 # Under a day in Read's week: what usually comes out that day, when the time isn't known.
 week-usually = Zwykle
 
@@ -9720,7 +9813,7 @@ read-search-clear-filters = Wyczyść filtry
 read-sort-popular = Popularne
 
 # A sort of reading's Search, AniList's.
-read-sort-trending = Na czasie
+read-sort-trending = Na topie
 
 # A sort of reading's Search, AniList's.
 read-sort-score = Ocena
@@ -9772,6 +9865,73 @@ read-filter-included = Uwzględnione
 
 # A genre's state: no series with it.
 read-filter-left-out = Pominięte
+
+# A filter of reading's Search: when a series started.
+read-search-started = Początek wydawania
+
+# The filter bar's chip that searches only the person's own sources, leaving AniList out.
+read-search-sources-only = Tylko twoje źródła
+
+# Search's section heading under AniList's results: one group per source of the person's.
+read-search-from-sources = Twoje źródła
+
+# E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+read-search-asking = { $source }: czekanie na odpowiedź…
+
+# A source group whose source failed to answer. The reason and Try again follow.
+read-search-source-failed = { $source }: brak odpowiedzi.
+
+# The reason under it when the source gave no answer in time.
+read-search-source-timeout = Brak odpowiedzi w ciągu { $seconds } s.
+
+# One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+read-search-source-nothing = Nic nie znaleziono w: { $sources }.
+
+# On an AniList result that one of the person's sources has. The source is its name.
+read-search-in-source = Znaleziono w: { $source }
+
+# On an AniList result that more than one of the person's sources has. Always 2 or more.
+read-search-in-sources =
+    { $n ->
+        [one] Twoje źródła z tą serią: { $n }
+        [few] Twoje źródła z tą serią: { $n }
+        [many] Twoje źródła z tą serią: { $n }
+       *[other] Twoje źródła z tą serią: { $n }
+    }
+
+# Search, when AniList found nothing but the person's sources did.
+read-search-anilist-nothing = AniList nic nie znalazł dla tych słów.
+
+# Search, when AniList could not be reached.
+read-search-anilist-failed = AniList nie odpowiedział.
+
+# The line under it.
+read-search-anilist-failed-line = Twoje źródła zostały mimo to odpytane.
+
+# Search, when nothing was found anywhere: under the line saying AniList found nothing.
+read-search-sources-nothing = Twoje źródła też nic nie znalazły.
+
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = Serie z AniList
+
+# The link under From your sources that shows the rest of AniList's results.
+read-search-more-anilist = Więcej z AniList
+
+# Beside More from AniList: how many of AniList's results show.
+read-search-shown = Pokazano { $shown } z { $total }
+
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+read-search-shown-some = Pokazano: { $shown }
+
+# Beside a source's name in Search: the kind of source it is.
+read-search-source-kind-server = Serwer
+
+read-search-source-kind-folder = Folder
+
+read-search-source-kind-plugin = Wtyczka
+
+# The button of a source group with more than five hits.
+read-search-source-more = Pokaż jeszcze { $n }
 
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step } z { $total }

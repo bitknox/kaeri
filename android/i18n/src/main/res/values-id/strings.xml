@@ -356,6 +356,31 @@
         <item quantity="other">%2$,d bagian %1$s siap dibaca offline.</item>
     </plurals>
     <string name="reading_downloads_done_series">Bab dari %1$,d seri siap dibaca offline.</string>
+    <string name="read_home_trending_manga">Manga sedang tren</string>
+    <string name="read_home_trending_webtoons">Webtoon sedang tren</string>
+    <string name="read_home_trending_novels">Light novel sedang tren</string>
+    <string name="read_home_new_manga">Manga baru</string>
+    <string name="read_home_new_webtoons">Webtoon baru</string>
+    <string name="read_home_new_novels">Light novel baru</string>
+    <string name="read_home_new_side">12 bulan terakhir</string>
+    <string name="read_home_finished_manga">Manga tamat</string>
+    <string name="read_home_finished_webtoons">Webtoon tamat</string>
+    <string name="read_home_finished_novels">Light novel tamat</string>
+    <string name="read_home_finished_side">Paling populer</string>
+    <string name="read_search_started_any">Kapan saja</string>
+    <string name="read_search_started_year">12 bulan terakhir</string>
+    <string name="read_search_started_3_years">3 tahun terakhir</string>
+    <string name="read_hit_chapters">Bab 1 sampai %1$d</string>
+    <string name="read_hit_episodes">Episode 1 sampai %1$d</string>
+    <plurals name="read_hit_parts">
+        <item quantity="other">%1$,d bagian</item>
+    </plurals>
+    <plurals name="read_hit_files">
+        <item quantity="other">%1$,d berkas</item>
+    </plurals>
+    <plurals name="read_hit_files_format">
+        <item quantity="other">%1$,d berkas · %2$s</item>
+    </plurals>
     <string name="read_source_folders">Folder</string>
     <string name="reading_since_january">sejak Januari</string>
     <string name="reading_since_february">sejak Februari</string>
@@ -672,7 +697,7 @@
     <string name="reader_mode_set">Diatur untuk %1$s di semua perangkat Anda.</string>
     <string name="reader_mode_use_default">Pakai bawaan</string>
     <string name="reader_mode_saved">Pilihan Anda disimpan untuk seri ini dan ikut ke perangkat Anda yang lain.</string>
-    <string name="reader_row_fit">Pas</string>
+    <string name="reader_row_fit">Paskan</string>
     <string name="reader_row_crop">Pangkas tepi</string>
     <string name="reader_row_paper">Mode kertas</string>
     <string name="reader_row_text_size">Ukuran teks</string>
@@ -2421,6 +2446,12 @@
     <string name="home_read_checked_on_open">Diperiksa saat Anda membuka Kaeri</string>
     <string name="home_read_end">Hanya itu untuk saat ini. Pembaruan dan Cari punya daftar lengkapnya.</string>
     <string name="home_read_no_sources">Tambahkan folder, server, atau toko plugin untuk membaca dari Beranda.</string>
+    <string name="read_home_offline_rows">Seri yang sedang tren dan seri baru muncul setelah Anda online.</string>
+    <string name="read_home_browse">Jelajahi</string>
+    <string name="read_home_browse_line">Sedang tren, baru, dan tamat, per format</string>
+    <string name="read_home_browse_row">%1$s, %2$s, dan %3$,d lainnya</string>
+    <string name="read_home_browse_note">Dari AniList. Sumber-sumber Anda baru dihubungi saat Anda membuka sebuah seri.</string>
+    <string name="read_home_browse_kept">Daftar yang disimpan dari %1$s tetap bisa dibuka.</string>
     <string name="week_usually">Biasanya</string>
     <string name="week_nothing_usually">Biasanya kosong</string>
     <string name="updates_checked">Diperiksa %1$s</string>
@@ -2655,6 +2686,29 @@
     </plurals>
     <string name="read_filter_included">Disertakan</string>
     <string name="read_filter_left_out">Dikecualikan</string>
+    <string name="read_search_started">Mulai terbit</string>
+    <string name="read_search_sources_only">Hanya sumber-sumber Anda</string>
+    <string name="read_search_from_sources">Dari sumber-sumber Anda</string>
+    <string name="read_search_asking">Menghubungi %1$s…</string>
+    <string name="read_search_source_failed">%1$s tidak merespons.</string>
+    <string name="read_search_source_timeout">Tidak ada respons dalam %1$,d detik.</string>
+    <string name="read_search_source_nothing">Tidak ada hasil di %1$s.</string>
+    <string name="read_search_in_source">Ada di %1$s</string>
+    <plurals name="read_search_in_sources">
+        <item quantity="other">Ada di %1$,d sumber Anda</item>
+    </plurals>
+    <string name="read_search_anilist_nothing">AniList tidak menemukan apa pun dengan kata-kata ini.</string>
+    <string name="read_search_anilist_failed">AniList tidak merespons.</string>
+    <string name="read_search_anilist_failed_line">Sumber-sumber Anda tetap dihubungi.</string>
+    <string name="read_search_sources_nothing">Di sumber-sumber Anda juga tidak ada.</string>
+    <string name="read_search_total_unknown">Seri dari AniList</string>
+    <string name="read_search_more_anilist">Lainnya dari AniList</string>
+    <string name="read_search_shown">%1$,d dari %2$,d ditampilkan</string>
+    <string name="read_search_shown_some">%1$,d ditampilkan</string>
+    <string name="read_search_source_kind_server">Server</string>
+    <string name="read_search_source_kind_folder">Folder</string>
+    <string name="read_search_source_kind_plugin">Plugin</string>
+    <string name="read_search_source_more">Tampilkan %1$,d lagi</string>
     <string name="onboarding_step">%1$,d dari %2$,d</string>
     <string name="onboarding_welcome_line">Catat yang Anda tonton dan baca, dari sumber-sumber Anda sendiri.</string>
     <string name="onboarding_welcome_note">Daftar dan kemajuan Anda tetap ada di perangkat Anda. Anda sendiri yang menambahkan Pelacak-pelacak dan sumber-sumber.</string>

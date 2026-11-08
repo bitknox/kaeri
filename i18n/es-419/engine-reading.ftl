@@ -190,6 +190,37 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } partes de { $title } están listas para leer sin conexión.
  }
 reading-downloads-done-series = Hay capítulos de { $count } series listos para leer sin conexión.
+read-home-trending-manga = Manga en tendencia
+read-home-trending-webtoons = Webtoons en tendencia
+read-home-trending-novels = Novelas ligeras en tendencia
+read-home-new-manga = Manga nuevo
+read-home-new-webtoons = Webtoons nuevos
+read-home-new-novels = Novelas ligeras nuevas
+read-home-new-side = Últimos 12 meses
+read-home-finished-manga = Manga finalizado
+read-home-finished-webtoons = Webtoons finalizados
+read-home-finished-novels = Novelas ligeras finalizadas
+read-home-finished-side = Más populares
+read-search-started-any = Cualquier fecha
+read-search-started-year = Últimos 12 meses
+read-search-started-3-years = Últimos 3 años
+read-hit-chapters = Capítulos 1 a { $last }
+read-hit-episodes = Episodios 1 a { $last }
+read-hit-parts = { $count ->
+    [one] 1 parte
+    [many] { $count } partes
+   *[other] { $count } partes
+ }
+read-hit-files = { $count ->
+    [one] 1 archivo
+    [many] { $count } archivos
+   *[other] { $count } archivos
+ }
+read-hit-files-format = { $count ->
+    [one] 1 archivo · { $format }
+    [many] { $count } archivos · { $format }
+   *[other] { $count } archivos · { $format }
+ }
 read-source-folders = Carpetas
 reading-since-january = desde enero
 reading-since-february = desde febrero

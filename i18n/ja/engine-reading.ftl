@@ -164,6 +164,31 @@ reading-downloads-done-parts = { $count ->
    *[other] { $title }の{ $count }パートをオフラインで読めます。
  }
 reading-downloads-done-series = { $count }作品の章をオフラインで読めます。
+read-home-trending-manga = 話題のマンガ
+read-home-trending-webtoons = 話題のウェブトゥーン
+read-home-trending-novels = 話題のライトノベル
+read-home-new-manga = 新作マンガ
+read-home-new-webtoons = 新作ウェブトゥーン
+read-home-new-novels = 新作ライトノベル
+read-home-new-side = 過去12か月
+read-home-finished-manga = 完結したマンガ
+read-home-finished-webtoons = 完結したウェブトゥーン
+read-home-finished-novels = 完結したライトノベル
+read-home-finished-side = 人気順
+read-search-started-any = 指定なし
+read-search-started-year = 過去12か月
+read-search-started-3-years = 過去3年
+read-hit-chapters = 第1話〜第{ $last }話
+read-hit-episodes = 第1話〜第{ $last }話
+read-hit-parts = { $count ->
+   *[other] { $count }部
+ }
+read-hit-files = { $count ->
+   *[other] ファイル{ $count }件
+ }
+read-hit-files-format = { $count ->
+   *[other] ファイル{ $count }件 · { $format }
+ }
 read-source-folders = フォルダ
 reading-since-january = 1月から
 reading-since-february = 2月から
