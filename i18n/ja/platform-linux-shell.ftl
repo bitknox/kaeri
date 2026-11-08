@@ -49,3 +49,4 @@ shell-device-label = Linuxコンピューター
 tv-cast-through-computer = このコンピューターを経由して再生
 tv-cast-inhibit-reason = テレビにエピソードを送信中
 tv-network-group = このネットワーク上
+linux-sidebar-your-sources = あなたの{ -source-pl }

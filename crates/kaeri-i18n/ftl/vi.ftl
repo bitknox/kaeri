@@ -526,7 +526,10 @@ reading-also-a-book = Cũng có bản truyện
 reading-split-chapter = Chương { $chapter } được gửi tới các dịch vụ theo dõi là chương { $whole }.
 
 # A notice over the page when a chapter opens where it was left. It offers Start over.
-reader-resumed = Đọc tiếp từ trang { $page }
+reader-resumed = Mở lại ở trang { $page }
+
+# The same notice in a webtoon strip, which counts images rather than pages.
+reader-resumed-image = Mở lại ở ảnh { $image }
 
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 reader-back-to-page = Quay lại trang { $page }
@@ -661,7 +664,7 @@ reading-on-planning = Trong danh sách dự định của bạn
 reading-spotlight-new-chapter = Chương mới của truyện bạn theo dõi
 
 # Above the big picture at the top of reading's Home: the series the person was reading last.
-reading-spotlight-continue = Tiếp tục đọc
+reading-spotlight-continue = Đọc tiếp
 
 # Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
 reading-spotlight-up-next = Tiếp theo cho bạn
@@ -693,20 +696,38 @@ reading-part-percent = Phần { $part } · { $percent }%
 # Under a cover: a light novel's part came out that the person has not read.
 reading-part-new = Phần { $part } là phần mới
 
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = { $label } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = { $label } là phần mới
+
 # Under a This week cell: a light novel's part that came out that day, with its own title.
 reading-part-titled = Phần { $part } · { $title }
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = { $label } · { $title }
 
 # Under the big picture on reading's Home: a light novel's part that came out today.
 reading-part-out-today = Phần { $part } ra hôm nay
 
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = { $label } ra hôm nay
+
 # Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 reading-part-out-today-titled = Phần { $part }, { $title }, ra hôm nay
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = { $label }, { $title }, ra hôm nay
 
 # Under a Library cover: the chapter the person is at, and the newest chapter there is.
 reading-chapter-of = Chương { $chapter } / { $of }
 
 # Under a Library cover: the volume and part of a light novel the person is at.
 reading-volume-part = Tập { $volume }, phần { $part }
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = Tập { $volume }, { $label }
 
 # A search filter: books from Japan.
 reading-origin-japan = Nhật Bản
@@ -785,6 +806,12 @@ reading-row-page = Trang { $page }
 
 # A novel's chapter row: how far into it the person is.
 reading-row-percent = { $percent }%
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = Đã mở
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = Đã đánh dấu
 
 # A chapter row: how long its pages are, for a file on the device.
 reading-row-pages =
@@ -1164,6 +1191,9 @@ stores-ready-demo-stays = { $store } đã sẵn sàng. Bản demo vẫn nằm cu
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = Bạn có thể đóng thẻ này và quay lại Kaeri.
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = Thiết bị này đã bị xóa khỏi đồng bộ trên một thiết bị khác. Hãy tham gia lại để đồng bộ.
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Đã đăng nhập vào { $tracker }.
 
@@ -1297,7 +1327,7 @@ cause-proxy-address-unusable = Bước kiểm tra proxy không dùng được đ
 cause-server-unreachable = Không kết nối được tới máy chủ.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.
+legal-hosts-no-content = Kaeri không host bất kỳ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Đã lưu { $label }.
@@ -1473,6 +1503,12 @@ title-linux-episode-watched = Tập { $episode } đã xem
 # Line in a day's column when nothing airs that day.
 calendar-linux-day-empty = Không có tập nào chiếu
 
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+linux-read-library-list = Danh sách
+
+# Under No downloads on Downloads, Reading side.
+linux-read-downloads-empty = Chương đã tải mở được khi không có kết nối.
+
 # Accessible label of the line that says how the watch party form is getting on.
 party-status = Trạng thái xem chung
 
@@ -1553,6 +1589,270 @@ discussion-like-named =
     { $count ->
        *[other] Thích, { $count } lượt thích
     }
+
+# Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
+linux-store-invite-chip = Lời mời ••••{ $last }
+
+# How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts".
+linux-store-plugin-hosts =
+    { $count ->
+       *[other] { $count } máy chủ
+    }
+
+# Beside a spinner in the plugin store form while the invite is spent, after 600 ms.
+linux-store-joining = Đang tham gia…
+
+# The Install all button while the plugins install.
+linux-store-installing = Đang cài đặt…
+
+# Third line of a book server's row in Your sources when its sign-in no longer works.
+linux-book-server-signed-out = Đã đăng xuất · đăng nhập lại từ Sửa
+
+# Switch on a book server's page: its series show in Kaeri while it is on.
+linux-book-server-use = Dùng máy chủ này
+
+# Title of the dialog that asks before a book server is removed.
+linux-book-server-remove-title = Xóa { $host }?
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Watch.
+linux-join-medium-line-watch = Xem, như trên { $device }
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Both.
+linux-join-medium-line-both = Xem và đọc, như trên { $device }
+
+# Switch on a book plugin's page: its series show in Kaeri while it is on.
+linux-book-plugin-use = Dùng plugin này
+
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = Cài đặt trình đọc
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = Đang mở chương
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = Chương sau chưa ra
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = Hết bộ truyện
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = Chương sau chưa được tải
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = Chưa có chương sau trong các nguồn của bạn
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = Về trang truyện
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = Không mở được chương
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = Chế độ đọc
+
+linux-reader-fit = Vừa khít
+
+linux-reader-crop-borders = Cắt viền trắng
+
+linux-reader-page-layout = Bố cục trang
+
+linux-reader-background = Nền
+
+linux-reader-look = Giao diện
+
+linux-reader-font = Phông
+
+linux-reader-text-size = Cỡ chữ
+
+linux-reader-margins = Lề
+
+linux-reader-line-spacing = Giãn dòng
+
+linux-reader-justify = Căn đều hai bên
+
+linux-reader-direction = Hướng đọc
+
+linux-reader-spreads = Trang rộng
+
+linux-reader-strip-width = Độ rộng dải
+
+linux-reader-strip-gap = Khoảng cách giữa ảnh
+
+# The fit that fills the window's height.
+linux-reader-fit-height = Chiều cao
+
+# Reading mode names.
+linux-reader-mode-paged = Lật trang
+
+linux-reader-mode-scrolled = Cuộn
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = Gửi tới máy đọc sách
+
+# Button that starts preparing the files.
+linux-send-prepare = Chuẩn bị tệp
+
+# Line while the files are prepared.
+linux-send-progress = Đang chuẩn bị { $done }/{ $total }
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = Lưu vào thư mục
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = Gửi tới máy đọc sách
+
+# Heading when the web view that shows a novel cannot start.
+linux-reader-novel-unavailable = Không mở được light novel ở đây
+
+# Line under it: what a novel needs on this computer.
+linux-reader-novel-needs-webkit = Light novel cần WebKitGTK 6 với sandbox hoạt động.
+
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = Trang { $page }/{ $pages }
+
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+linux-reader-pages = Trang
+
+# Line on the end page for a chapter that has not counted as read yet.
+linux-reader-end-not-read = Chưa đánh dấu đã đọc
+
+# The one amber button of the end page: opens the next chapter.
+linux-reader-continue = Đọc tiếp
+
+# End page text when the next chapter is not out yet.
+linux-reader-end-not-out-body = Kaeri kiểm tra chương mới ở chế độ nền và thêm vào Cập nhật.
+
+# End page text when the reader has caught up with the series.
+linux-reader-end-caught-up-body = Chương mới sẽ hiện trong Cập nhật khi các nguồn của bạn có chúng.
+
+# End page text at the end of a finished series.
+linux-reader-end-finished-body = Không còn chương nào nữa.
+
+# End page text when the next chapter is not downloaded and the computer is offline.
+linux-reader-end-offline-body = Bạn đang ngoại tuyến. Chương sẽ mở tại đây khi có kết nối.
+
+# Hint under a page's error: turning the page goes on past it.
+linux-reader-page-failed-hint = Lật trang để đi tiếp mà không cần trang này.
+
+# Line while a chapter opens, once its number is known.
+linux-reader-opening-number = Đang mở chương { $chapter }
+
+# Line while a chapter opens and a source is asked for the series' chapters.
+linux-reader-finding-source = Đang tìm nguồn
+
+# Button on the Resumed notice.
+linux-reader-start-over = Đọc lại từ đầu
+
+# Button on the Moved notice.
+linux-reader-go-back = Quay lại
+
+# Button on the mode detected notice: opens the reader settings.
+linux-reader-change = Đổi
+
+# Heading in the reader settings over what this series keeps for itself.
+linux-reader-this-series = Bộ truyện này
+
+# Heading in the reader settings over what applies to every manga.
+linux-reader-all-manga = Mọi manga
+
+# Heading in the reader settings over what applies to every manga on this computer.
+linux-reader-all-manga-here = Mọi manga trên máy tính này
+
+# Heading in the reader settings over what applies to every webtoon.
+linux-reader-all-strips = Mọi webtoon
+
+# Heading in the reader settings over what applies to every webtoon on this computer.
+linux-reader-all-strips-here = Mọi webtoon trên máy tính này
+
+# Heading in the reader settings over what applies to every light novel.
+linux-reader-all-novels = Mọi light novel
+
+# The reading mode choice that follows the series' details.
+linux-reader-mode-auto = Tự động
+
+# Under the reading mode when it was guessed.
+linux-reader-mode-detected = Nhận diện từ thông tin bộ truyện.
+
+# Button under the reading mode when the series has a choice of its own: drops it.
+linux-reader-use-default = Dùng mặc định
+
+# Row that opens the rest of the reader settings.
+linux-reader-more-settings = Thêm cài đặt trình đọc
+
+# Line spacing choices.
+linux-reader-line-tight = Sát
+
+linux-reader-line-normal = Vừa
+
+linux-reader-line-loose = Thoáng
+
+# The margins choice between Narrow and Wide.
+linux-reader-margins-normal = Vừa
+
+# Accessible names of the two ends of the text size slider.
+linux-reader-text-smaller = Chữ nhỏ hơn
+
+linux-reader-text-larger = Chữ lớn hơn
+
+# Title of the small popover that jumps to a page, and its shortcut's name.
+linux-reader-go-to-page = Đi tới trang
+
+# Placeholder of the Go to page field.
+linux-reader-go-to-page-field = 1 đến { $total }
+
+# Heading of the reader's keys in the keyboard shortcuts window.
+linux-shortcuts-reader = Trình đọc
+
+# Shortcut: turn the page.
+linux-shortcuts-turn = Lật trang
+
+# Shortcut: the first or last page.
+linux-shortcuts-first-last = Trang đầu hoặc trang cuối
+
+# Shortcut: a novel's text larger, smaller or back to its size.
+linux-shortcuts-text-size = Chữ lớn hơn, nhỏ hơn hoặc mặc định
+
+# Shortcut: back to the page before a jump, or out of the reader.
+linux-shortcuts-reader-back = Về trang trước khi nhảy
+
+# Shortcut: close the reader.
+linux-shortcuts-close-reader = Đóng trình đọc
+
+# Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
+linux-reader-names-and = { $first } và { $last }
+
+# On the plate that holds a page's place while it loads. The page is its number, such as 23.
+linux-reader-page-plate = Trang { $page }
+
+# Heading when a chapter could not open. The chapter is its number, such as 13.
+linux-reader-open-failed = Không mở được chương { $chapter }
+
+# Heading when a chapter with no number could not open.
+linux-reader-open-failed-plain = Không mở được chương này
+
+# Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
+linux-send-next =
+    { $n ->
+       *[other] { $n } chương chưa đọc kế tiếp
+    }
+
+# Choice in Send to e-reader's Chapters row: every chapter not read yet.
+linux-send-all-unread = Mọi chương chưa đọc
+
+# Under Send to e-reader's Chapters row when every chapter is read.
+linux-send-none-unread = Đã đọc hết mọi chương
+
+# Toast after the prepared files were saved to a folder.
+linux-send-saved =
+    { $n ->
+       *[other] Đã lưu { $n } tệp
+    }
+
+# Toast when the prepared files could not be written to the folder picked.
+linux-send-save-failed = Không lưu được các tệp vào thư mục đó
+
+# Tooltip and spoken name of the button on Updates that looks for new chapters now.
+linux-updates-check = Kiểm tra chương mới
 
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Xem trước
@@ -1802,6 +2102,9 @@ tv-cast-inhibit-reason = Đang gửi tập phim đến TV
 
 # The heading over the TVs running Kaeri in Play on TV, once TVs with Chromecast built in are listed below them.
 tv-network-group = Trên mạng này
+
+# The sidebar place that lists your own sources, under the Sources heading.
+linux-sidebar-your-sources = Các nguồn của bạn
 
 # Count of devices on a member's row in the members dialog, and after "Owner ·".
 stores-device-count =
@@ -4636,6 +4939,18 @@ tui-together-not-a-link = Đây không phải liên kết hay mã xem chung.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Tập { $episode } · { $when }
 
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = Đọc truyện trong các ứng dụng
+
+# Line under the title of that page.
+tui-medium-read-line = Terminal không có trình đọc. Manga, webtoon và light novel mở trong các ứng dụng Kaeri, và đồng bộ giữ tiến độ của bạn khớp nhau.
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = Nhấn { $key } để đổi cách dùng Kaeri.
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = { $key } để đổi
+
 # Title of the about page.
 about-title = Giới thiệu
 
@@ -5328,6 +5643,27 @@ pad-button-left-stick = Cần analog trái
 
 # Name of the controller's right stick, in the controller help.
 pad-button-right-stick = Cần analog phải
+
+# Controller help: the D-pad in the reader turns the page, the way the book reads.
+pad-help-turn-page = Lật trang
+
+# Controller help: the left shoulder button in the reader.
+pad-help-previous-chapter = Chương trước
+
+# Controller help: the right shoulder button in the reader.
+pad-help-next-chapter = Chương sau
+
+# Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pad-help-reader-bar = Hiện hoặc ẩn thanh
+
+# Controller help: the menu button in the reader.
+pad-help-reader-settings = Cài đặt trình đọc
+
+# Controller help: the B button in the reader.
+pad-help-close-reader = Đóng trình đọc
+
+# Heading in the controller help for the buttons in the reader.
+pad-help-reader = Trình đọc
 
 # Checkbox of the close question.
 close-dont-ask = Không hỏi lại
@@ -8270,6 +8606,63 @@ demo-story-row = Truyện ngắn · { $author } · { $licence }
 # Primary action on the demo's series page.
 demo-read-chapter = Đọc chương { $number }
 
+# Page between chapters, under the tracker line: the server has the progress.
+progress-server-saved = Đã lưu vào { $server }
+
+# Same place, only after 600 ms without an answer.
+progress-server-sending = Đang gửi tới { $server }…
+
+# Same place, offline: the send waits in the queue.
+progress-server-offline = Sẽ gửi tới { $server } khi bạn có mạng lại
+
+# Same place, the send failed for a reason that can pass.
+progress-server-retrying = { $server } không phản hồi. Kaeri sẽ thử lại.
+
+# Same place, the server said no. Try again follows it.
+progress-server-failed = Chưa lưu vào { $server }: { $reason }.
+
+# Reason: a Kavita key.
+progress-why-key = máy chủ từ chối khóa
+
+# Reason: a Komga or OPDS password.
+progress-why-password = máy chủ từ chối mật khẩu
+
+# Reason.
+progress-why-gone = bộ truyện này không còn trên máy chủ
+
+# Reason, after a day of retries.
+progress-why-gave-up = không có phản hồi trong một ngày
+
+# Your sources, the server's row, second line.
+progress-row-saved = Đã lưu tiến độ { $ago }
+
+# The server's row, after 600 ms without an answer.
+progress-row-sending =
+    { $count ->
+       *[other] Đang gửi { $count } chương…
+    }
+
+# The server's row, offline.
+progress-row-offline =
+    { $count ->
+       *[other] { $count } chương sẽ được gửi khi bạn có mạng lại
+    }
+
+# The server's row, the last try failed for a reason that can pass.
+progress-row-retrying =
+    { $count ->
+       *[other] { $count } chương đang chờ. Kaeri sẽ thử lại.
+    }
+
+# The server's row, the server said no. Try again sits beside it.
+progress-row-failed =
+    { $count ->
+       *[other] { $count } chương chưa được lưu: { $reason }
+    }
+
+# The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+progress-row-off = Tiến độ được giữ trên { $kind } này
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = Xem
 
@@ -8340,16 +8733,25 @@ chapter-updates-open-series-menu = Mở bộ truyện
 action-read-chapter = Đọc chương { $n }
 
 # The main action when a chapter is part read.
-action-continue-chapter = Tiếp tục chương { $n } · trang { $page }
+action-continue-chapter = Đọc tiếp chương { $n } · trang { $page }
 
 # The main action for a light novel part, part read.
-action-continue-part = Tiếp tục phần { $n } · { $percent }%
+action-continue-part = Đọc tiếp phần { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
-action-continue-part-plain = Tiếp tục phần { $n }
+action-continue-part-plain = Đọc tiếp phần { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Đọc phần { $n }
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = Đọc tiếp { $label } · { $percent }%
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = Đọc tiếp { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+action-read-named = Đọc { $label }
 
 # The main action when every chapter is read.
 action-read-again = Đọc lại
@@ -9162,7 +9564,7 @@ settings-counts-read-moving-on-note = Lật qua trang cuối, hoặc mở chươ
 settings-counts-read-marked = Khi bạn đánh dấu
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = Xem tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn
+settings-counts-read-marked-note = Đọc tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Cài đặt bộ truyện đi theo bạn
@@ -9256,6 +9658,225 @@ read-downloads-read = { $n } đã đọc
 
 # Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 read-downloads-delete-read = Xóa chương đã đọc
+
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = Gửi tới máy đọc sách
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = Gửi tới
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = Nội dung
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = Chương
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = { $chapter }
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = { $first } đến { $last }
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = Dung lượng
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = Khoảng { $size }
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = Kaeri không biết bạn đọc tới đâu trên máy đọc sách này. Khi bạn quay lại, trang truyện sẽ hỏi bạn đã dừng ở đâu.
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = Chuẩn bị và chia sẻ
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+       *[other] Đang chuẩn bị chương { $done }/{ $total }
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = Trang được định cỡ cho { $device }
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = Vượt quá { $size }, nên các tệp được chia thành nhiều phần.
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = Không chuẩn bị được chương { $chapter }. { $cause }
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = Không chuẩn bị được các tệp. { $cause }
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = Đang tính
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = Mở
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = Đóng
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = { $percent } phần trăm
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = Gửi tới máy đọc sách
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = chia phần khi quá { $size }
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = Hủy gửi
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+       *[other] { $n } tệp đã sẵn sàng.
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = Chia sẻ lại
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = Đang gửi tới { $device }
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = EPUB bố cục cố định
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = KEPUB
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = EPUB
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = CBZ
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = { $format } · { $width } × { $height }
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = Bạn đã dừng ở đâu?
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = Bạn đã gửi chương tới { $device }. Bạn đã dừng ở đâu?
+
+# Button in that note.
+stop-note-action = Đặt vị trí đọc
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = Chương { $chapter } đã được gửi tới { $device } vào { $date }.
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = Các chương { $first } đến { $last } đã được gửi tới { $device } vào { $date }.
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = Đã đọc xong chương { $chapter }
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = Đặt vị trí đọc
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = Giữ chương { $chapter } · trang { $page }
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = Giữ vị trí hiện tại
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = Máy đọc sách
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = Gửi tới máy đọc sách
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = Feed OPDS
+
+# Line under the Share on this network switch.
+opds-share-note = Danh mục OPDS mà máy đọc sách trong nhà có thể duyệt
+
+# Footnote under the feed settings.
+opds-footer = Feed chỉ chạy khi Kaeri đang mở trên { $device } này. Tiến độ trên các máy đọc sách đó được giữ ở đó.
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = Địa chỉ
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = Bật feed để có địa chỉ.
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = Mật khẩu
+
+# Line under the password row.
+opds-password-note = Máy đọc sách chỉ hỏi một lần
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = Mật khẩu mới
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = Cổng
+
+# Line under the port row when it is empty.
+opds-port-note = Để trống để dùng bất kỳ cổng trống nào, hoặc chọn một cổng từ 1024 đến 65535
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = Cổng { $wanted } đang bận, nên feed dùng cổng { $port }.
+
+# Heading of the group that picks what the feed shares.
+opds-shares = Những gì được chia sẻ
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = Tải xuống
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+       *[other] { $n } chương
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = Thư mục manga
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = Thư mục light novel
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+       *[other] { $n } bộ
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = Máy đã tải
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = Chưa có máy đọc sách nào tải gì.
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = Đang khởi động…
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = Tạm dừng. Máy Mac này không ở trong mạng cục bộ nào.
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = Tạm dừng. Máy Mac này chỉ kết nối qua VPN.
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = Tạo mật khẩu mới?
+
+# Text of that question.
+opds-new-password-warning = Các máy đọc sách đang dùng feed sẽ ngừng hoạt động cho đến khi bạn nhập mật khẩu mới vào từng máy.
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = Yêu cầu gần nhất { $time }
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+       *[other] { $n } tệp
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = Máy đọc sách tại { $address }
 
 # Button that shows the season before.
 seasonal-previous = Mùa trước
@@ -12895,7 +13516,7 @@ accounts-welcome-detail = Đăng nhập vào { $tracker } để đồng bộ dan
 accounts-brings-lists = Lấy danh sách của bạn và điền những tựa đang xem vào mục Xem tiếp.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang đọc.
+accounts-brings-lists-read = Đưa các danh sách của bạn vào và điền vào Đọc tiếp những gì bạn đang đọc.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang xem và đọc.

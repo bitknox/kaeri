@@ -22,10 +22,13 @@ chapter-updates-open-series = Buka { $title }
 chapter-updates-open-chapter-hint = Membuka bab
 chapter-updates-open-series-menu = Buka seri
 action-read-chapter = Baca bab { $n }
-action-continue-chapter = { -proceed-cap } bab { $n } · halaman { $page }
-action-continue-part = { -proceed-cap } bagian { $n } · { $percent }%
-action-continue-part-plain = { -proceed-cap } bagian { $n }
+action-continue-chapter = { -continue-reading-cap } bab { $n } · halaman { $page }
+action-continue-part = { -continue-reading-cap } bagian { $n } · { $percent }%
+action-continue-part-plain = { -continue-reading-cap } bagian { $n }
 action-read-part = Baca bagian { $n }
+action-continue-named = { -continue-reading-cap } { $label } · { $percent }%
+action-continue-named-plain = { -continue-reading-cap } { $label }
+action-read-named = Baca { $label }
 action-read-again = Baca ulang
 series-reading-from = Dibaca dari
 series-change = Ubah
@@ -312,7 +315,7 @@ settings-counts-read-value = Setelah halaman terakhir
 settings-counts-read-moving-on = Saat meninggalkannya
 settings-counts-read-moving-on-note = Membalik lewat halaman terakhir, atau membuka bab selanjutnya
 settings-counts-read-marked = Saat Anda menandainya
-settings-counts-read-marked-note = { -continue-cap } dan { -tracker-pl } Anda mengikuti tanda dari Anda
+settings-counts-read-marked-note = { -continue-reading-cap } dan { -tracker-pl } Anda mengikuti tanda dari Anda
 settings-follow-group = Pengaturan seri yang ikut Anda
 settings-follow-mode = Mode, arah, dan warna
 settings-follow-mode-note = Seri yang Anda ubah dibaca sama di { -device-pl } Anda yang lain
@@ -347,3 +350,81 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = { $n } dibaca
 read-downloads-delete-read = Hapus yang dibaca
+send-title = Kirim ke e-reader
+send-for = Untuk
+send-what = Yang dikirim
+send-chapters = Bab
+send-chapters-one = { $chapter }
+send-chapters-range = { $first } sampai { $last }
+send-size = Ukuran
+send-size-about = Sekitar { $size }
+send-no-place = { -app-name } tidak bisa melihat posisi Anda di e-reader ini. Saat Anda kembali, halaman seri menanyakan di mana Anda berhenti.
+send-prepare = Siapkan dan bagikan
+send-preparing = { $total ->
+   *[other] Menyiapkan { $done } dari { $total } bab
+ }
+send-sized-for = Halaman disesuaikan untuk { $device }
+send-in-parts = Lebih dari { $size }, jadi berkas dikirim dalam beberapa bagian.
+send-failed-chapter = Tidak bisa menyiapkan bab { $chapter }. { $cause }
+send-failed = Tidak bisa menyiapkan berkas. { $cause }
+send-size-working = Sedang dihitung
+send-chapters-open = Terbuka
+send-chapters-closed = Tertutup
+send-progress-spoken = { $percent } persen
+send-chapter-action = Kirim ke e-reader
+send-parts-over = dibagi jika lebih dari { $size }
+send-waiting-cancel = Batalkan pengiriman
+send-ready = { $n ->
+   *[other] { $n } berkas siap.
+ }
+send-share-again = Bagikan lagi
+send-banner = Mengirim ke { $device }
+send-format-fixed-epub = EPUB tata letak tetap
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = Di mana Anda berhenti?
+stop-note = Anda mengirim bab ke { $device }. Di mana Anda berhenti?
+stop-note-action = Atur posisi Anda
+stop-sent-one = Bab { $chapter } dikirim ke { $device } pada { $date }.
+stop-sent-range = Bab { $first } sampai { $last } dikirim ke { $device } pada { $date }.
+stop-finished = Bab { $chapter } selesai dibaca
+stop-set = Atur posisi Anda
+stop-keep = Tetap di bab { $chapter } · halaman { $page }
+stop-keep-plain = Tetap di posisi sekarang
+ereaders-group = E-reader
+ereaders-send-row = Kirim ke e-reader
+ereaders-feed-row = Feed OPDS
+opds-share-note = Katalog OPDS yang bisa dijelajahi e-reader di rumah
+opds-footer = Feed hanya berjalan saat { -app-name } terbuka di { $device } ini. Kemajuan di e-reader tersebut tetap di sana.
+opds-address = Alamat
+opds-address-off = Nyalakan feed untuk mendapatkan alamatnya.
+opds-password = Kata sandi
+opds-password-note = E-reader memintanya sekali
+opds-new-password = Kata sandi baru
+opds-port = Port
+opds-port-note = Kosongkan untuk port bebas mana pun, atau pilih antara 1024 dan 65535
+opds-port-moved = Port { $wanted } sedang dipakai, jadi feed memakai { $port }.
+opds-shares = Yang dibagikan
+opds-share-downloads = Unduhan
+opds-share-downloads-count = { $n ->
+   *[other] { $n } bab
+ }
+opds-share-manga = Folder manga
+opds-share-novels = Folder novel
+opds-share-series-count = { $n ->
+   *[other] { $n } seri
+ }
+opds-fetched-by = Diambil oleh
+opds-fetched-none = Belum ada e-reader yang mengambil apa pun.
+opds-starting = Memulai…
+opds-paused-none = Dijeda. Mac ini tidak berada di jaringan lokal.
+opds-paused-vpn = Dijeda. Mac ini hanya tersambung lewat VPN.
+opds-new-password-title = Buat kata sandi baru?
+opds-new-password-warning = E-reader yang sudah memakai feed berhenti berfungsi sampai Anda mengetik kata sandi baru di masing-masing.
+opds-fetched-time = Terakhir meminta { $time }
+opds-fetched-files = { $n ->
+   *[other] { $n } berkas
+ }
+opds-reader-unnamed = E-reader di { $address }

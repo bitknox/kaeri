@@ -23,10 +23,13 @@ chapter-updates-open-series = { $title } aç
 chapter-updates-open-chapter-hint = Bölümü açar
 chapter-updates-open-series-menu = Seriyi aç
 action-read-chapter = Bölüm { $n } oku
-action-continue-chapter = Okumayı sürdür: bölüm { $n } · sayfa { $page }
-action-continue-part = Okumayı sürdür: kısım { $n } · %{ $percent }
-action-continue-part-plain = Okumayı sürdür: kısım { $n }
+action-continue-chapter = { -continue-reading-cap }: bölüm { $n } · sayfa { $page }
+action-continue-part = { -continue-reading-cap }: kısım { $n } · %{ $percent }
+action-continue-part-plain = { -continue-reading-cap }: kısım { $n }
 action-read-part = Kısım { $n } oku
+action-continue-named = { -continue-reading-cap }: { $label } · %{ $percent }
+action-continue-named-plain = { -continue-reading-cap }: { $label }
+action-read-named = { $label } oku
 action-read-again = Yeniden oku
 series-reading-from = Okunduğu yer
 series-change = Değiştir
@@ -329,7 +332,7 @@ settings-counts-read-value = Son sayfadan sonra
 settings-counts-read-moving-on = Ondan ilerleyince
 settings-counts-read-moving-on-note = Son sayfayı çevirmek ya da sonraki bölümü açmak
 settings-counts-read-marked = Siz işaretleyince
-settings-counts-read-marked-note = { -continue-cap } ve { -tracker-pl } işaretlerinizi izler
+settings-counts-read-marked-note = { -continue-reading-cap } ve { -tracker-pl } işaretlerinizi izler
 settings-follow-group = Size eşlik eden seri ayarları
 settings-follow-mode = Mod, yön ve renk
 settings-follow-mode-note = Değiştirdiğiniz seri diğer { -device-pl }ınızda da aynı okunur
@@ -367,3 +370,86 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = { $n } okundu
 read-downloads-delete-read = Okunanları sil
+send-title = E-okuyucuya gönder
+send-for = Hedef
+send-what = İçerik
+send-chapters = Bölümler
+send-chapters-one = { $chapter }
+send-chapters-range = { $first } ile { $last } arası
+send-size = Boyut
+send-size-about = Yaklaşık { $size }
+send-no-place = { -app-name } bu e-okuyucudaki yerinizi göremez. Döndüğünüzde seri sayfası nerede kaldığınızı sorar.
+send-prepare = Hazırla ve paylaş
+send-preparing = { $total ->
+    [one] Bölüm hazırlanıyor
+   *[other] { $done } / { $total } bölüm hazırlanıyor
+ }
+send-sized-for = Sayfalar { $device } için boyutlandırıldı
+send-in-parts = { $size } boyutunu aşıyor, bu yüzden dosyalar parça parça gider.
+send-failed-chapter = Bölüm { $chapter } hazırlanamadı. { $cause }
+send-failed = Dosyalar hazırlanamadı. { $cause }
+send-size-working = Hesaplanıyor
+send-chapters-open = Açık
+send-chapters-closed = Kapalı
+send-progress-spoken = Yüzde { $percent }
+send-chapter-action = E-okuyucuya gönder
+send-parts-over = { $size } üzerindeyse parçalara bölünür
+send-waiting-cancel = Gönderimi iptal et
+send-ready = { $n ->
+    [one] Bir dosya hazır.
+   *[other] { $n } dosya hazır.
+ }
+send-share-again = Yeniden paylaş
+send-banner = Gönderiliyor: { $device }
+send-format-fixed-epub = Sabit düzenli EPUB
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = Nerede kaldınız?
+stop-note = Bölümleri { $device } e-okuyucusuna gönderdiniz. Nerede kaldınız?
+stop-note-action = Yerinizi belirleyin
+stop-sent-one = Bölüm { $chapter }, { $date } tarihinde { $device } e-okuyucusuna gönderildi.
+stop-sent-range = { $first } ile { $last } arasındaki bölümler { $date } tarihinde { $device } e-okuyucusuna gönderildi.
+stop-finished = Bölüm { $chapter } bitirildi
+stop-set = Yerinizi belirleyin
+stop-keep = Bölüm { $chapter } · sayfa { $page } kalsın
+stop-keep-plain = Mevcut yeri koru
+ereaders-group = E-okuyucular
+ereaders-send-row = E-okuyucuya gönder
+ereaders-feed-row = OPDS akışı
+opds-share-note = Evdeki e-okuyucuların göz atabileceği bir OPDS kataloğu
+opds-footer = Akış yalnızca { -app-name } bu { $device } üzerinde açıkken çalışır. O e-okuyuculardaki ilerleme orada kalır.
+opds-address = Adres
+opds-address-off = Adresini almak için akışı açın.
+opds-password = Parola
+opds-password-note = E-okuyucular bunu bir kez sorar
+opds-new-password = Yeni parola
+opds-port = Port
+opds-port-note = Herhangi bir boş port için boş bırakın ya da 1024 ile 65535 arasından birini seçin
+opds-port-moved = Port { $wanted } doluydu, bu yüzden akış { $port } portunu kullanıyor.
+opds-shares = Neleri paylaşır
+opds-share-downloads = İndirilenler
+opds-share-downloads-count = { $n ->
+    [one] Bir bölüm
+   *[other] { $n } bölüm
+ }
+opds-share-manga = Manga klasörü
+opds-share-novels = Roman klasörü
+opds-share-series-count = { $n ->
+    [one] Bir seri
+   *[other] { $n } seri
+ }
+opds-fetched-by = Alan e-okuyucular
+opds-fetched-none = Henüz hiçbir e-okuyucu bir şey almadı.
+opds-starting = Başlatılıyor…
+opds-paused-none = Duraklatıldı. Bu Mac yerel bir ağda değil.
+opds-paused-vpn = Duraklatıldı. Bu Mac yalnızca bir VPN üzerinden bağlı.
+opds-new-password-title = Yeni parola oluşturulsun mu?
+opds-new-password-warning = Akışı zaten kullanan e-okuyucular, yeni parolayı her birine yazana kadar çalışmaz.
+opds-fetched-time = Son istek: { $time }
+opds-fetched-files = { $n ->
+    [one] Bir dosya
+   *[other] { $n } dosya
+ }
+opds-reader-unnamed = { $address } adresindeki e-okuyucu

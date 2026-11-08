@@ -25,10 +25,13 @@ chapter-updates-open-series = Otwórz: { $title }
 chapter-updates-open-chapter-hint = Otwiera rozdział
 chapter-updates-open-series-menu = Otwórz serię
 action-read-chapter = Czytaj rozdział { $n }
-action-continue-chapter = Wznów rozdział { $n } · strona { $page }
-action-continue-part = Wznów część { $n } · { $percent }%
-action-continue-part-plain = Wznów część { $n }
+action-continue-chapter = { -continue-reading-cap }: rozdział { $n } · strona { $page }
+action-continue-part = { -continue-reading-cap }: część { $n } · { $percent }%
+action-continue-part-plain = { -continue-reading-cap }: część { $n }
 action-read-part = Czytaj część { $n }
+action-continue-named = { -continue-reading-cap }: { $label } · { $percent }%
+action-continue-named-plain = { -continue-reading-cap }: { $label }
+action-read-named = Czytaj: { $label }
 action-read-again = Czytaj ponownie
 series-reading-from = Czytasz z
 series-change = Zmień
@@ -363,7 +366,7 @@ settings-counts-read-value = Po ostatniej stronie
 settings-counts-read-moving-on = Po opuszczeniu rozdziału
 settings-counts-read-moving-on-note = Przewrócenie ostatniej strony albo otwarcie kolejnego rozdziału
 settings-counts-read-marked = Gdy sam oznaczysz
-settings-counts-read-marked-note = { -continue-cap } i { -tracker-cap-pl } idą za twoimi oznaczeniami
+settings-counts-read-marked-note = Sekcja { -continue-reading-cap } i { -tracker-cap-pl } idą za twoimi oznaczeniami
 settings-follow-group = Ustawienia serii, które podążają za tobą
 settings-follow-mode = Tryb, kierunek i kolor
 settings-follow-mode-note = Zmieniona seria czyta się tak samo (pozostałe twoje { -device-pl })
@@ -407,3 +410,96 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = { $n } przeczytanych
 read-downloads-delete-read = Usuń przeczytane
+send-title = Wyślij na e-czytnik
+send-for = Dla
+send-what = Co
+send-chapters = Rozdziały
+send-chapters-one = { $chapter }
+send-chapters-range = Od { $first } do { $last }
+send-size = Rozmiar
+send-size-about = Około { $size }
+send-no-place = { -app-name } nie widzi, w którym miejscu jesteś na tym e-czytniku. Gdy wrócisz, strona serii zapyta, gdzie przerwano czytanie.
+send-prepare = Przygotuj i udostępnij
+send-preparing = { $total ->
+    [one] Przygotowywanie rozdziału
+    [few] Przygotowywanie { $done } z { $total } rozdziałów
+    [many] Przygotowywanie { $done } z { $total } rozdziałów
+   *[other] Przygotowywanie { $done } z { $total } rozdziału
+ }
+send-sized-for = Strony dopasowane do: { $device }
+send-in-parts = Ponad { $size }, więc pliki zostaną podzielone na części.
+send-failed-chapter = Nie udało się przygotować rozdziału { $chapter }. { $cause }
+send-failed = Nie udało się przygotować plików. { $cause }
+send-size-working = Obliczanie
+send-chapters-open = Rozwinięte
+send-chapters-closed = Zwinięte
+send-progress-spoken = { $percent } procent
+send-chapter-action = Wyślij na e-czytnik
+send-parts-over = dzielone na części powyżej { $size }
+send-waiting-cancel = Anuluj wysyłanie
+send-ready = { $n ->
+    [one] Jeden plik jest gotowy.
+    [few] { $n } pliki są gotowe.
+    [many] { $n } plików jest gotowych.
+   *[other] { $n } pliku jest gotowe.
+ }
+send-share-again = Udostępnij ponownie
+send-banner = Wysyłanie na: { $device }
+send-format-fixed-epub = EPUB o stałym układzie
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = Gdzie przerwano czytanie?
+stop-note = Rozdziały trafiły na: { $device }. Gdzie przerwano czytanie?
+stop-note-action = Ustaw miejsce
+stop-sent-one = Rozdział { $chapter } trafił na { $device } dnia { $date }.
+stop-sent-range = Rozdziały od { $first } do { $last } trafiły na { $device } dnia { $date }.
+stop-finished = Przeczytano rozdział { $chapter } do końca
+stop-set = Ustaw miejsce
+stop-keep = Zostaw rozdział { $chapter } · strona { $page }
+stop-keep-plain = Zostaw obecne miejsce
+ereaders-group = E-czytniki
+ereaders-send-row = Wyślij na e-czytnik
+ereaders-feed-row = Kanał OPDS
+opds-share-note = Katalog OPDS, który mogą przeglądać e-czytniki w domu
+opds-footer = Kanał działa tylko wtedy, gdy { -app-name } jest otwarty na tym urządzeniu ({ $device }). Postęp na tych e-czytnikach zostaje na nich.
+opds-address = Adres
+opds-address-off = Włącz kanał, aby zobaczyć jego adres.
+opds-password = Hasło
+opds-password-note = E-czytniki pytają o nie raz
+opds-new-password = Nowe hasło
+opds-port = Port
+opds-port-note = Zostaw puste, aby użyć dowolnego wolnego portu, albo wybierz port od 1024 do 65535
+opds-port-moved = Port { $wanted } był zajęty, więc kanał używa portu { $port }.
+opds-shares = Co udostępnia
+opds-share-downloads = Pobrane
+opds-share-downloads-count = { $n ->
+    [one] Jeden rozdział
+    [few] { $n } rozdziały
+    [many] { $n } rozdziałów
+   *[other] { $n } rozdziału
+ }
+opds-share-manga = Folder mangi
+opds-share-novels = Folder light novel
+opds-share-series-count = { $n ->
+    [one] Jedna seria
+    [few] { $n } serie
+    [many] { $n } serii
+   *[other] { $n } serii
+ }
+opds-fetched-by = Pobrane przez
+opds-fetched-none = Żaden e-czytnik jeszcze niczego nie pobrał.
+opds-starting = Uruchamianie…
+opds-paused-none = Wstrzymano. Ten Mac nie jest w sieci lokalnej.
+opds-paused-vpn = Wstrzymano. Ten Mac łączy się tylko przez VPN.
+opds-new-password-title = Utworzyć nowe hasło?
+opds-new-password-warning = E-czytniki, które już używają kanału, przestaną działać, dopóki nie wpiszesz nowego hasła w każdym z nich.
+opds-fetched-time = Ostatnie żądanie { $time }
+opds-fetched-files = { $n ->
+    [one] Jeden plik
+    [few] { $n } pliki
+    [many] { $n } plików
+   *[other] { $n } pliku
+ }
+opds-reader-unnamed = E-czytnik pod adresem { $address }

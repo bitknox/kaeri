@@ -36,3 +36,5 @@ library-linux-list-count = { $list } { $count }
 title-linux-play-on-tv-help = Putar episode ini di TV dengan { -app-name }
 title-linux-episode-watched = Episode { $episode } sudah ditonton
 calendar-linux-day-empty = Tidak ada yang tayang
+linux-read-library-list = Daftar
+linux-read-downloads-empty = Bab yang diunduh bisa dibuka tanpa koneksi.

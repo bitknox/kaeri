@@ -10,3 +10,7 @@ tui-together-join-prompt = bağlantı ya da kod
 tui-together-chat-hidden-line = Satırlar ve tepkiler hiçbir partide oynatıcıda görünmez.
 tui-together-not-a-link = Bu bir parti bağlantısı ya da kodu değil.
 tui-together-recent-alone = { $episode }. bölüm · { $when }
+tui-medium-read-title = Okuma, uygulamalarda
+tui-medium-read-line = Terminalde okuyucu yok. Manga, webtoon ve hafif romanlar { -app-name } uygulamalarında açılır; eşitleme ilerlemenizi her yerde aynı tutar.
+tui-medium-read-change = { -app-name } uygulamasının ne için kullanılacağını değiştirmek için { $key } tuşuna basın.
+tui-medium-settings-hint = Değiştirmek için { $key }

@@ -563,6 +563,9 @@
   <data name="ReaderResumed" xml:space="preserve">
     <value>Fortsatte på sida {page}</value>
   </data>
+  <data name="ReaderResumedImage" xml:space="preserve">
+    <value>Fortsatte på bild {image}</value>
+  </data>
   <data name="ReaderBackToPage" xml:space="preserve">
     <value>Tillbaka till sida {page}</value>
   </data>
@@ -728,20 +731,38 @@
   <data name="ReadingPartNew" xml:space="preserve">
     <value>Del {part} är ny</value>
   </data>
+  <data name="ReadingLabelPercent" xml:space="preserve">
+    <value>{label} · {percent}%</value>
+  </data>
+  <data name="ReadingLabelNew" xml:space="preserve">
+    <value>{label} har kommit ut</value>
+  </data>
   <data name="ReadingPartTitled" xml:space="preserve">
     <value>Del {part} · {title}</value>
+  </data>
+  <data name="ReadingLabelTitled" xml:space="preserve">
+    <value>{label} · {title}</value>
   </data>
   <data name="ReadingPartOutToday" xml:space="preserve">
     <value>Del {part} kommer ut idag</value>
   </data>
+  <data name="ReadingLabelOutToday" xml:space="preserve">
+    <value>{label} kommer ut idag</value>
+  </data>
   <data name="ReadingPartOutTodayTitled" xml:space="preserve">
     <value>Del {part}, {title}, kommer ut idag</value>
+  </data>
+  <data name="ReadingLabelOutTodayTitled" xml:space="preserve">
+    <value>{label}, {title}, kommer ut idag</value>
   </data>
   <data name="ReadingChapterOf" xml:space="preserve">
     <value>Kapitel {chapter} av {of}</value>
   </data>
   <data name="ReadingVolumePart" xml:space="preserve">
     <value>Volym {volume}, del {part}</value>
+  </data>
+  <data name="ReadingVolumeLabel" xml:space="preserve">
+    <value>Volym {volume}, {label}</value>
   </data>
   <data name="ReadingOriginJapan" xml:space="preserve">
     <value>Japan</value>
@@ -820,6 +841,12 @@
   </data>
   <data name="ReadingRowPercent" xml:space="preserve">
     <value>{percent}%</value>
+  </data>
+  <data name="ReadingRowOpened" xml:space="preserve">
+    <value>Öppnad</value>
+  </data>
+  <data name="ReadingRowBookmarked" xml:space="preserve">
+    <value>Bokmärkt</value>
   </data>
   <data name="ReadingRowPages_one" xml:space="preserve">
     <value>1 sida</value>
@@ -1199,6 +1226,9 @@
   <data name="CloudLoopbackDone" xml:space="preserve">
     <value>Du kan stänga den här fliken och gå tillbaka till Kaeri.</value>
   </data>
+  <data name="SyncDeviceRemoved" xml:space="preserve">
+    <value>Den här enheten togs bort från synk på en annan enhet. Gå med igen för att synka den.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Inloggad på {tracker}.</value>
   </data>
@@ -1332,7 +1362,7 @@
     <value>Det gick inte att nå servern.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.</value>
+    <value>Kaeri är inte värd för några serier eller böcker. Du lägger till dina egna källor.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Sparade {label}.</value>
@@ -1456,6 +1486,39 @@
   </data>
   <data name="FilterPickedMore" xml:space="preserve">
     <value>{first} +{more}</value>
+  </data>
+  <data name="SearchGenreLeftOut" xml:space="preserve">
+    <value>Inte {genre}</value>
+  </data>
+  <data name="SearchFiltersButtonSet" xml:space="preserve">
+    <value>Filter, {count} valda</value>
+  </data>
+  <data name="ShortcutsSearchFilters" xml:space="preserve">
+    <value>Sökfilter</value>
+  </data>
+  <data name="FilterHintClick" xml:space="preserve">
+    <value>Klicka en gång för att ta med, två gånger för att utesluta.</value>
+  </data>
+  <data name="SearchPickInclude" xml:space="preserve">
+    <value>Ta med</value>
+  </data>
+  <data name="SearchPickLeaveOut" xml:space="preserve">
+    <value>Uteslut</value>
+  </data>
+  <data name="SearchRangeFrom" xml:space="preserve">
+    <value>Från</value>
+  </data>
+  <data name="SearchRangeTo" xml:space="preserve">
+    <value>Till</value>
+  </data>
+  <data name="SearchMinutesUnit" xml:space="preserve">
+    <value>min</value>
+  </data>
+  <data name="SearchScoreAny" xml:space="preserve">
+    <value>Valfritt</value>
+  </data>
+  <data name="SearchSuggestFilter" xml:space="preserve">
+    <value>Filtrera på {name}</value>
   </data>
   <data name="TitleSeasonWhen" xml:space="preserve">
     <value>{season} · {when}</value>
@@ -1645,6 +1708,12 @@
   </data>
   <data name="SettingsMotion" xml:space="preserve">
     <value>Rörelse</value>
+  </data>
+  <data name="SettingsSmoothScrolling" xml:space="preserve">
+    <value>Mjuk rullning</value>
+  </data>
+  <data name="SettingsSmoothScrollingDetail" xml:space="preserve">
+    <value>Varje steg på mushjulet glider sidan på plats. Pekplattor och pekskärmar rullar som förut.</value>
   </data>
   <data name="SettingsStartFullscreen" xml:space="preserve">
     <value>Starta i helskärm</value>
@@ -2797,6 +2866,27 @@
   </data>
   <data name="PadButtonRightStick" xml:space="preserve">
     <value>Höger spak</value>
+  </data>
+  <data name="PadHelpTurnPage" xml:space="preserve">
+    <value>Bläddra</value>
+  </data>
+  <data name="PadHelpPreviousChapter" xml:space="preserve">
+    <value>Föregående kapitel</value>
+  </data>
+  <data name="PadHelpNextChapter" xml:space="preserve">
+    <value>Nästa kapitel</value>
+  </data>
+  <data name="PadHelpReaderBar" xml:space="preserve">
+    <value>Visa eller dölj fältet</value>
+  </data>
+  <data name="PadHelpReaderSettings" xml:space="preserve">
+    <value>Läsarinställningar</value>
+  </data>
+  <data name="PadHelpCloseReader" xml:space="preserve">
+    <value>Stäng läsaren</value>
+  </data>
+  <data name="PadHelpReader" xml:space="preserve">
+    <value>Läsare</value>
   </data>
   <data name="CloseDontAsk" xml:space="preserve">
     <value>Fråga inte igen</value>
@@ -5759,6 +5849,63 @@
   <data name="DemoReadChapter" xml:space="preserve">
     <value>Läs kapitel {number}</value>
   </data>
+  <data name="ProgressServerSaved" xml:space="preserve">
+    <value>Sparat på {server}</value>
+  </data>
+  <data name="ProgressServerSending" xml:space="preserve">
+    <value>Skickar till {server}…</value>
+  </data>
+  <data name="ProgressServerOffline" xml:space="preserve">
+    <value>Skickas till {server} när du är online igen</value>
+  </data>
+  <data name="ProgressServerRetrying" xml:space="preserve">
+    <value>{server} svarade inte. Kaeri försöker igen.</value>
+  </data>
+  <data name="ProgressServerFailed" xml:space="preserve">
+    <value>Inte sparat på {server}: {reason}.</value>
+  </data>
+  <data name="ProgressWhyKey" xml:space="preserve">
+    <value>servern godtog inte nyckeln</value>
+  </data>
+  <data name="ProgressWhyPassword" xml:space="preserve">
+    <value>servern godtog inte lösenordet</value>
+  </data>
+  <data name="ProgressWhyGone" xml:space="preserve">
+    <value>serien finns inte längre på servern</value>
+  </data>
+  <data name="ProgressWhyGaveUp" xml:space="preserve">
+    <value>inget svar på ett dygn</value>
+  </data>
+  <data name="ProgressRowSaved" xml:space="preserve">
+    <value>Förlopp sparat {ago}</value>
+  </data>
+  <data name="ProgressRowSending_one" xml:space="preserve">
+    <value>Skickar 1 kapitel…</value>
+  </data>
+  <data name="ProgressRowSending_other" xml:space="preserve">
+    <value>Skickar {count} kapitel…</value>
+  </data>
+  <data name="ProgressRowOffline_one" xml:space="preserve">
+    <value>1 kapitel skickas när du är online igen</value>
+  </data>
+  <data name="ProgressRowOffline_other" xml:space="preserve">
+    <value>{count} kapitel skickas när du är online igen</value>
+  </data>
+  <data name="ProgressRowRetrying_one" xml:space="preserve">
+    <value>1 kapitel väntar. Kaeri försöker igen.</value>
+  </data>
+  <data name="ProgressRowRetrying_other" xml:space="preserve">
+    <value>{count} kapitel väntar. Kaeri försöker igen.</value>
+  </data>
+  <data name="ProgressRowFailed_one" xml:space="preserve">
+    <value>1 kapitel inte sparat: {reason}</value>
+  </data>
+  <data name="ProgressRowFailed_other" xml:space="preserve">
+    <value>{count} kapitel inte sparade: {reason}</value>
+  </data>
+  <data name="ProgressRowOff" xml:space="preserve">
+    <value>Förloppet stannar på den här {kind}</value>
+  </data>
   <data name="NavWatch" xml:space="preserve">
     <value>Titta</value>
   </data>
@@ -5839,6 +5986,15 @@
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Läs del {n}</value>
+  </data>
+  <data name="ActionContinueNamed" xml:space="preserve">
+    <value>Läs vidare på {label} · {percent}%</value>
+  </data>
+  <data name="ActionContinueNamedPlain" xml:space="preserve">
+    <value>Läs vidare på {label}</value>
+  </data>
+  <data name="ActionReadNamed" xml:space="preserve">
+    <value>Läs {label}</value>
   </data>
   <data name="ActionReadAgain" xml:space="preserve">
     <value>Läs igen</value>
@@ -6745,6 +6901,225 @@
   </data>
   <data name="ReadDownloadsDeleteRead" xml:space="preserve">
     <value>Ta bort lästa</value>
+  </data>
+  <data name="SendTitle" xml:space="preserve">
+    <value>Skicka till e-läsare</value>
+  </data>
+  <data name="SendFor" xml:space="preserve">
+    <value>Till</value>
+  </data>
+  <data name="SendWhat" xml:space="preserve">
+    <value>Vad</value>
+  </data>
+  <data name="SendChapters" xml:space="preserve">
+    <value>Kapitel</value>
+  </data>
+  <data name="SendChaptersOne" xml:space="preserve">
+    <value>{chapter}</value>
+  </data>
+  <data name="SendChaptersRange" xml:space="preserve">
+    <value>{first} till {last}</value>
+  </data>
+  <data name="SendSize" xml:space="preserve">
+    <value>Storlek</value>
+  </data>
+  <data name="SendSizeAbout" xml:space="preserve">
+    <value>Cirka {size}</value>
+  </data>
+  <data name="SendNoPlace" xml:space="preserve">
+    <value>Kaeri kan inte se var du är på den här e-läsaren. När du kommer tillbaka frågar seriesidan var du slutade.</value>
+  </data>
+  <data name="SendPrepare" xml:space="preserve">
+    <value>Förbered och dela</value>
+  </data>
+  <data name="SendPreparing_one" xml:space="preserve">
+    <value>Förbereder kapitlet</value>
+  </data>
+  <data name="SendPreparing_other" xml:space="preserve">
+    <value>Förbereder {done} av {total} kapitel</value>
+  </data>
+  <data name="SendSizedFor" xml:space="preserve">
+    <value>Sidorna är anpassade för {device}</value>
+  </data>
+  <data name="SendInParts" xml:space="preserve">
+    <value>Över {size}, så filerna delas upp.</value>
+  </data>
+  <data name="SendFailedChapter" xml:space="preserve">
+    <value>Kunde inte förbereda kapitel {chapter}. {cause}</value>
+  </data>
+  <data name="SendFailed" xml:space="preserve">
+    <value>Kunde inte förbereda filerna. {cause}</value>
+  </data>
+  <data name="SendSizeWorking" xml:space="preserve">
+    <value>Räknar ut</value>
+  </data>
+  <data name="SendChaptersOpen" xml:space="preserve">
+    <value>Öppen</value>
+  </data>
+  <data name="SendChaptersClosed" xml:space="preserve">
+    <value>Stängd</value>
+  </data>
+  <data name="SendProgressSpoken" xml:space="preserve">
+    <value>{percent} procent</value>
+  </data>
+  <data name="SendChapterAction" xml:space="preserve">
+    <value>Skicka till e-läsare</value>
+  </data>
+  <data name="SendPartsOver" xml:space="preserve">
+    <value>i delar över {size}</value>
+  </data>
+  <data name="SendWaitingCancel" xml:space="preserve">
+    <value>Avbryt sändningen</value>
+  </data>
+  <data name="SendReady_one" xml:space="preserve">
+    <value>En fil är klar.</value>
+  </data>
+  <data name="SendReady_other" xml:space="preserve">
+    <value>{n} filer är klara.</value>
+  </data>
+  <data name="SendShareAgain" xml:space="preserve">
+    <value>Dela igen</value>
+  </data>
+  <data name="SendBanner" xml:space="preserve">
+    <value>Skickar till {device}</value>
+  </data>
+  <data name="SendFormatFixedEpub" xml:space="preserve">
+    <value>EPUB med fast layout</value>
+  </data>
+  <data name="SendFormatKepub" xml:space="preserve">
+    <value>KEPUB</value>
+  </data>
+  <data name="SendFormatEpub" xml:space="preserve">
+    <value>EPUB</value>
+  </data>
+  <data name="SendFormatCbz" xml:space="preserve">
+    <value>CBZ</value>
+  </data>
+  <data name="SendTargetLine" xml:space="preserve">
+    <value>{format} · {width} × {height}</value>
+  </data>
+  <data name="StopTitle" xml:space="preserve">
+    <value>Var slutade du?</value>
+  </data>
+  <data name="StopNote" xml:space="preserve">
+    <value>Du skickade kapitel till {device}. Var slutade du?</value>
+  </data>
+  <data name="StopNoteAction" xml:space="preserve">
+    <value>Ange din plats</value>
+  </data>
+  <data name="StopSentOne" xml:space="preserve">
+    <value>Kapitel {chapter} skickades till {device} den {date}.</value>
+  </data>
+  <data name="StopSentRange" xml:space="preserve">
+    <value>Kapitel {first} till {last} skickades till {device} den {date}.</value>
+  </data>
+  <data name="StopFinished" xml:space="preserve">
+    <value>Läste klart kapitel {chapter}</value>
+  </data>
+  <data name="StopSet" xml:space="preserve">
+    <value>Ange din plats</value>
+  </data>
+  <data name="StopKeep" xml:space="preserve">
+    <value>Behåll kapitel {chapter} · sida {page}</value>
+  </data>
+  <data name="StopKeepPlain" xml:space="preserve">
+    <value>Behåll nuvarande plats</value>
+  </data>
+  <data name="EreadersGroup" xml:space="preserve">
+    <value>E-läsare</value>
+  </data>
+  <data name="EreadersSendRow" xml:space="preserve">
+    <value>Skicka till e-läsare</value>
+  </data>
+  <data name="EreadersFeedRow" xml:space="preserve">
+    <value>OPDS-flöde</value>
+  </data>
+  <data name="OpdsShareNote" xml:space="preserve">
+    <value>En OPDS-katalog som e-läsare hemma kan bläddra i</value>
+  </data>
+  <data name="OpdsFooter" xml:space="preserve">
+    <value>Flödet körs bara medan Kaeri är öppet på den här {device}. Förlopp på de e-läsarna stannar där.</value>
+  </data>
+  <data name="OpdsAddress" xml:space="preserve">
+    <value>Adress</value>
+  </data>
+  <data name="OpdsAddressOff" xml:space="preserve">
+    <value>Slå på flödet för att få dess adress.</value>
+  </data>
+  <data name="OpdsPassword" xml:space="preserve">
+    <value>Lösenord</value>
+  </data>
+  <data name="OpdsPasswordNote" xml:space="preserve">
+    <value>E-läsare frågar efter det en gång</value>
+  </data>
+  <data name="OpdsNewPassword" xml:space="preserve">
+    <value>Nytt lösenord</value>
+  </data>
+  <data name="OpdsPort" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="OpdsPortNote" xml:space="preserve">
+    <value>Lämna tomt för valfri ledig port, eller välj en från 1024 till 65535</value>
+  </data>
+  <data name="OpdsPortMoved" xml:space="preserve">
+    <value>Port {wanted} var upptagen, så flödet använder {port}.</value>
+  </data>
+  <data name="OpdsShares" xml:space="preserve">
+    <value>Vad det delar</value>
+  </data>
+  <data name="OpdsShareDownloads" xml:space="preserve">
+    <value>Nedladdningar</value>
+  </data>
+  <data name="OpdsShareDownloadsCount_one" xml:space="preserve">
+    <value>Ett kapitel</value>
+  </data>
+  <data name="OpdsShareDownloadsCount_other" xml:space="preserve">
+    <value>{n} kapitel</value>
+  </data>
+  <data name="OpdsShareManga" xml:space="preserve">
+    <value>Mangamapp</value>
+  </data>
+  <data name="OpdsShareNovels" xml:space="preserve">
+    <value>Romanmapp</value>
+  </data>
+  <data name="OpdsShareSeriesCount_one" xml:space="preserve">
+    <value>En serie</value>
+  </data>
+  <data name="OpdsShareSeriesCount_other" xml:space="preserve">
+    <value>{n} serier</value>
+  </data>
+  <data name="OpdsFetchedBy" xml:space="preserve">
+    <value>Hämtat av</value>
+  </data>
+  <data name="OpdsFetchedNone" xml:space="preserve">
+    <value>Ingen e-läsare har hämtat något än.</value>
+  </data>
+  <data name="OpdsStarting" xml:space="preserve">
+    <value>Startar…</value>
+  </data>
+  <data name="OpdsPausedNone" xml:space="preserve">
+    <value>Pausat. Den här Macen är inte på något lokalt nätverk.</value>
+  </data>
+  <data name="OpdsPausedVpn" xml:space="preserve">
+    <value>Pausat. Den här Macen är bara ansluten via VPN.</value>
+  </data>
+  <data name="OpdsNewPasswordTitle" xml:space="preserve">
+    <value>Skapa ett nytt lösenord?</value>
+  </data>
+  <data name="OpdsNewPasswordWarning" xml:space="preserve">
+    <value>E-läsare som redan använder flödet slutar fungera tills du skriver in det nya lösenordet i var och en.</value>
+  </data>
+  <data name="OpdsFetchedTime" xml:space="preserve">
+    <value>Senaste förfrågan {time}</value>
+  </data>
+  <data name="OpdsFetchedFiles_one" xml:space="preserve">
+    <value>En fil</value>
+  </data>
+  <data name="OpdsFetchedFiles_other" xml:space="preserve">
+    <value>{n} filer</value>
+  </data>
+  <data name="OpdsReaderUnnamed" xml:space="preserve">
+    <value>E-läsare på {address}</value>
   </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Föregående säsong</value>
@@ -10392,7 +10767,7 @@
     <value>Hämtar dina listor och fyller Fortsätt titta med det du tittar på.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Hämtar in dina listor och fyller startsidan med det du läser.</value>
+    <value>Hämtar in dina listor och fyller raden Läs vidare med det du läser.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Hämtar in dina listor och fyller startsidan med det du tittar på och läser.</value>

@@ -563,6 +563,9 @@
   <data name="ReaderResumed" xml:space="preserve">
     <value>{page}. sayfadan açıldı</value>
   </data>
+  <data name="ReaderResumedImage" xml:space="preserve">
+    <value>{image}. görselden açıldı</value>
+  </data>
   <data name="ReaderBackToPage" xml:space="preserve">
     <value>{page}. sayfaya dön</value>
   </data>
@@ -728,20 +731,38 @@
   <data name="ReadingPartNew" xml:space="preserve">
     <value>Kısım {part} yeni</value>
   </data>
+  <data name="ReadingLabelPercent" xml:space="preserve">
+    <value>{label} · %{percent}</value>
+  </data>
+  <data name="ReadingLabelNew" xml:space="preserve">
+    <value>{label} yeni</value>
+  </data>
   <data name="ReadingPartTitled" xml:space="preserve">
     <value>Kısım {part} · {title}</value>
+  </data>
+  <data name="ReadingLabelTitled" xml:space="preserve">
+    <value>{label} · {title}</value>
   </data>
   <data name="ReadingPartOutToday" xml:space="preserve">
     <value>Kısım {part} bugün çıktı</value>
   </data>
+  <data name="ReadingLabelOutToday" xml:space="preserve">
+    <value>{label} bugün çıktı</value>
+  </data>
   <data name="ReadingPartOutTodayTitled" xml:space="preserve">
     <value>Kısım {part}, {title}, bugün çıktı</value>
+  </data>
+  <data name="ReadingLabelOutTodayTitled" xml:space="preserve">
+    <value>{label}, {title}, bugün çıktı</value>
   </data>
   <data name="ReadingChapterOf" xml:space="preserve">
     <value>Bölüm {chapter} / {of}</value>
   </data>
   <data name="ReadingVolumePart" xml:space="preserve">
     <value>Cilt {volume}, kısım {part}</value>
+  </data>
+  <data name="ReadingVolumeLabel" xml:space="preserve">
+    <value>Cilt {volume}, {label}</value>
   </data>
   <data name="ReadingOriginJapan" xml:space="preserve">
     <value>Japonya</value>
@@ -820,6 +841,12 @@
   </data>
   <data name="ReadingRowPercent" xml:space="preserve">
     <value>%{percent}</value>
+  </data>
+  <data name="ReadingRowOpened" xml:space="preserve">
+    <value>Açıldı</value>
+  </data>
+  <data name="ReadingRowBookmarked" xml:space="preserve">
+    <value>Yer imi eklendi</value>
   </data>
   <data name="ReadingRowPages_one" xml:space="preserve">
     <value>1 sayfa</value>
@@ -1199,6 +1226,9 @@
   <data name="CloudLoopbackDone" xml:space="preserve">
     <value>Bu sekmeyi kapatıp Kaeri'ye dönebilirsiniz.</value>
   </data>
+  <data name="SyncDeviceRemoved" xml:space="preserve">
+    <value>Bu cihaz başka bir cihaz üzerinden eşitlemeden çıkarıldı. Eşitlemek için yeniden katılın.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Oturum açıldı: {tracker}.</value>
   </data>
@@ -1457,6 +1487,39 @@
   <data name="FilterPickedMore" xml:space="preserve">
     <value>{first} +{more}</value>
   </data>
+  <data name="SearchGenreLeftOut" xml:space="preserve">
+    <value>{genre} hariç</value>
+  </data>
+  <data name="SearchFiltersButtonSet" xml:space="preserve">
+    <value>Filtreler, {count} ayarlandı</value>
+  </data>
+  <data name="ShortcutsSearchFilters" xml:space="preserve">
+    <value>Arama filtreleri</value>
+  </data>
+  <data name="FilterHintClick" xml:space="preserve">
+    <value>Dahil etmek için bir kez, hariç tutmak için iki kez tıklayın.</value>
+  </data>
+  <data name="SearchPickInclude" xml:space="preserve">
+    <value>Dahil et</value>
+  </data>
+  <data name="SearchPickLeaveOut" xml:space="preserve">
+    <value>Hariç tut</value>
+  </data>
+  <data name="SearchRangeFrom" xml:space="preserve">
+    <value>Başlangıç</value>
+  </data>
+  <data name="SearchRangeTo" xml:space="preserve">
+    <value>Bitiş</value>
+  </data>
+  <data name="SearchMinutesUnit" xml:space="preserve">
+    <value>dk</value>
+  </data>
+  <data name="SearchScoreAny" xml:space="preserve">
+    <value>Herhangi</value>
+  </data>
+  <data name="SearchSuggestFilter" xml:space="preserve">
+    <value>{name} ile filtrele</value>
+  </data>
   <data name="TitleSeasonWhen" xml:space="preserve">
     <value>{season} · {when}</value>
   </data>
@@ -1645,6 +1708,12 @@
   </data>
   <data name="SettingsMotion" xml:space="preserve">
     <value>Hareket</value>
+  </data>
+  <data name="SettingsSmoothScrolling" xml:space="preserve">
+    <value>Yumuşak kaydırma</value>
+  </data>
+  <data name="SettingsSmoothScrollingDetail" xml:space="preserve">
+    <value>Fare tekerleği her döndüğünde sayfa yumuşakça yerine kayar. Dokunmatik yüzey ve dokunmatik ekranda kaydırma değişmez.</value>
   </data>
   <data name="SettingsStartFullscreen" xml:space="preserve">
     <value>Tam ekranda başlat</value>
@@ -2797,6 +2866,27 @@
   </data>
   <data name="PadButtonRightStick" xml:space="preserve">
     <value>Sağ analog çubuk</value>
+  </data>
+  <data name="PadHelpTurnPage" xml:space="preserve">
+    <value>Sayfayı çevir</value>
+  </data>
+  <data name="PadHelpPreviousChapter" xml:space="preserve">
+    <value>Önceki bölüm</value>
+  </data>
+  <data name="PadHelpNextChapter" xml:space="preserve">
+    <value>Sonraki bölüm</value>
+  </data>
+  <data name="PadHelpReaderBar" xml:space="preserve">
+    <value>Çubuğu göster veya gizle</value>
+  </data>
+  <data name="PadHelpReaderSettings" xml:space="preserve">
+    <value>Okuyucu ayarları</value>
+  </data>
+  <data name="PadHelpCloseReader" xml:space="preserve">
+    <value>Okuyucuyu kapat</value>
+  </data>
+  <data name="PadHelpReader" xml:space="preserve">
+    <value>Okuyucu</value>
   </data>
   <data name="CloseDontAsk" xml:space="preserve">
     <value>Bir daha sorma</value>
@@ -5759,6 +5849,63 @@
   <data name="DemoReadChapter" xml:space="preserve">
     <value>{number}. bölümü oku</value>
   </data>
+  <data name="ProgressServerSaved" xml:space="preserve">
+    <value>{server} sunucusuna kaydedildi</value>
+  </data>
+  <data name="ProgressServerSending" xml:space="preserve">
+    <value>{server} sunucusuna gönderiliyor…</value>
+  </data>
+  <data name="ProgressServerOffline" xml:space="preserve">
+    <value>Yeniden çevrimiçi olduğunuzda {server} sunucusuna gönderilecek</value>
+  </data>
+  <data name="ProgressServerRetrying" xml:space="preserve">
+    <value>{server} yanıt vermedi. Kaeri yeniden deneyecek.</value>
+  </data>
+  <data name="ProgressServerFailed" xml:space="preserve">
+    <value>{server} sunucusuna kaydedilmedi: {reason}.</value>
+  </data>
+  <data name="ProgressWhyKey" xml:space="preserve">
+    <value>sunucu anahtarı reddetti</value>
+  </data>
+  <data name="ProgressWhyPassword" xml:space="preserve">
+    <value>sunucu parolayı reddetti</value>
+  </data>
+  <data name="ProgressWhyGone" xml:space="preserve">
+    <value>bu seri artık sunucuda yok</value>
+  </data>
+  <data name="ProgressWhyGaveUp" xml:space="preserve">
+    <value>bir gündür yanıt yok</value>
+  </data>
+  <data name="ProgressRowSaved" xml:space="preserve">
+    <value>İlerleme {ago} kaydedildi</value>
+  </data>
+  <data name="ProgressRowSending_one" xml:space="preserve">
+    <value>1 bölüm gönderiliyor…</value>
+  </data>
+  <data name="ProgressRowSending_other" xml:space="preserve">
+    <value>{count} bölüm gönderiliyor…</value>
+  </data>
+  <data name="ProgressRowOffline_one" xml:space="preserve">
+    <value>1 bölüm, yeniden çevrimiçi olduğunuzda gönderilecek</value>
+  </data>
+  <data name="ProgressRowOffline_other" xml:space="preserve">
+    <value>{count} bölüm, yeniden çevrimiçi olduğunuzda gönderilecek</value>
+  </data>
+  <data name="ProgressRowRetrying_one" xml:space="preserve">
+    <value>1 bölüm bekliyor. Kaeri yeniden deneyecek.</value>
+  </data>
+  <data name="ProgressRowRetrying_other" xml:space="preserve">
+    <value>{count} bölüm bekliyor. Kaeri yeniden deneyecek.</value>
+  </data>
+  <data name="ProgressRowFailed_one" xml:space="preserve">
+    <value>1 bölüm kaydedilmedi: {reason}</value>
+  </data>
+  <data name="ProgressRowFailed_other" xml:space="preserve">
+    <value>{count} bölüm kaydedilmedi: {reason}</value>
+  </data>
+  <data name="ProgressRowOff" xml:space="preserve">
+    <value>İlerleme bu {kind} üzerinde kalır</value>
+  </data>
   <data name="NavWatch" xml:space="preserve">
     <value>İzle</value>
   </data>
@@ -5839,6 +5986,15 @@
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Kısım {n} oku</value>
+  </data>
+  <data name="ActionContinueNamed" xml:space="preserve">
+    <value>Okumayı sürdür: {label} · %{percent}</value>
+  </data>
+  <data name="ActionContinueNamedPlain" xml:space="preserve">
+    <value>Okumayı sürdür: {label}</value>
+  </data>
+  <data name="ActionReadNamed" xml:space="preserve">
+    <value>{label} oku</value>
   </data>
   <data name="ActionReadAgain" xml:space="preserve">
     <value>Yeniden oku</value>
@@ -6651,7 +6807,7 @@
     <value>Siz işaretleyince</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>İzlemeye devam et ve takip hizmetleri işaretlerinizi izler</value>
+    <value>Okumayı sürdür ve takip hizmetleri işaretlerinizi izler</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Size eşlik eden seri ayarları</value>
@@ -6745,6 +6901,225 @@
   </data>
   <data name="ReadDownloadsDeleteRead" xml:space="preserve">
     <value>Okunanları sil</value>
+  </data>
+  <data name="SendTitle" xml:space="preserve">
+    <value>E-okuyucuya gönder</value>
+  </data>
+  <data name="SendFor" xml:space="preserve">
+    <value>Hedef</value>
+  </data>
+  <data name="SendWhat" xml:space="preserve">
+    <value>İçerik</value>
+  </data>
+  <data name="SendChapters" xml:space="preserve">
+    <value>Bölümler</value>
+  </data>
+  <data name="SendChaptersOne" xml:space="preserve">
+    <value>{chapter}</value>
+  </data>
+  <data name="SendChaptersRange" xml:space="preserve">
+    <value>{first} ile {last} arası</value>
+  </data>
+  <data name="SendSize" xml:space="preserve">
+    <value>Boyut</value>
+  </data>
+  <data name="SendSizeAbout" xml:space="preserve">
+    <value>Yaklaşık {size}</value>
+  </data>
+  <data name="SendNoPlace" xml:space="preserve">
+    <value>Kaeri bu e-okuyucudaki yerinizi göremez. Döndüğünüzde seri sayfası nerede kaldığınızı sorar.</value>
+  </data>
+  <data name="SendPrepare" xml:space="preserve">
+    <value>Hazırla ve paylaş</value>
+  </data>
+  <data name="SendPreparing_one" xml:space="preserve">
+    <value>Bölüm hazırlanıyor</value>
+  </data>
+  <data name="SendPreparing_other" xml:space="preserve">
+    <value>{done} / {total} bölüm hazırlanıyor</value>
+  </data>
+  <data name="SendSizedFor" xml:space="preserve">
+    <value>Sayfalar {device} için boyutlandırıldı</value>
+  </data>
+  <data name="SendInParts" xml:space="preserve">
+    <value>{size} boyutunu aşıyor, bu yüzden dosyalar parça parça gider.</value>
+  </data>
+  <data name="SendFailedChapter" xml:space="preserve">
+    <value>Bölüm {chapter} hazırlanamadı. {cause}</value>
+  </data>
+  <data name="SendFailed" xml:space="preserve">
+    <value>Dosyalar hazırlanamadı. {cause}</value>
+  </data>
+  <data name="SendSizeWorking" xml:space="preserve">
+    <value>Hesaplanıyor</value>
+  </data>
+  <data name="SendChaptersOpen" xml:space="preserve">
+    <value>Açık</value>
+  </data>
+  <data name="SendChaptersClosed" xml:space="preserve">
+    <value>Kapalı</value>
+  </data>
+  <data name="SendProgressSpoken" xml:space="preserve">
+    <value>Yüzde {percent}</value>
+  </data>
+  <data name="SendChapterAction" xml:space="preserve">
+    <value>E-okuyucuya gönder</value>
+  </data>
+  <data name="SendPartsOver" xml:space="preserve">
+    <value>{size} üzerindeyse parçalara bölünür</value>
+  </data>
+  <data name="SendWaitingCancel" xml:space="preserve">
+    <value>Gönderimi iptal et</value>
+  </data>
+  <data name="SendReady_one" xml:space="preserve">
+    <value>Bir dosya hazır.</value>
+  </data>
+  <data name="SendReady_other" xml:space="preserve">
+    <value>{n} dosya hazır.</value>
+  </data>
+  <data name="SendShareAgain" xml:space="preserve">
+    <value>Yeniden paylaş</value>
+  </data>
+  <data name="SendBanner" xml:space="preserve">
+    <value>Gönderiliyor: {device}</value>
+  </data>
+  <data name="SendFormatFixedEpub" xml:space="preserve">
+    <value>Sabit düzenli EPUB</value>
+  </data>
+  <data name="SendFormatKepub" xml:space="preserve">
+    <value>KEPUB</value>
+  </data>
+  <data name="SendFormatEpub" xml:space="preserve">
+    <value>EPUB</value>
+  </data>
+  <data name="SendFormatCbz" xml:space="preserve">
+    <value>CBZ</value>
+  </data>
+  <data name="SendTargetLine" xml:space="preserve">
+    <value>{format} · {width} × {height}</value>
+  </data>
+  <data name="StopTitle" xml:space="preserve">
+    <value>Nerede kaldınız?</value>
+  </data>
+  <data name="StopNote" xml:space="preserve">
+    <value>Bölümleri {device} e-okuyucusuna gönderdiniz. Nerede kaldınız?</value>
+  </data>
+  <data name="StopNoteAction" xml:space="preserve">
+    <value>Yerinizi belirleyin</value>
+  </data>
+  <data name="StopSentOne" xml:space="preserve">
+    <value>Bölüm {chapter}, {date} tarihinde {device} e-okuyucusuna gönderildi.</value>
+  </data>
+  <data name="StopSentRange" xml:space="preserve">
+    <value>{first} ile {last} arasındaki bölümler {date} tarihinde {device} e-okuyucusuna gönderildi.</value>
+  </data>
+  <data name="StopFinished" xml:space="preserve">
+    <value>Bölüm {chapter} bitirildi</value>
+  </data>
+  <data name="StopSet" xml:space="preserve">
+    <value>Yerinizi belirleyin</value>
+  </data>
+  <data name="StopKeep" xml:space="preserve">
+    <value>Bölüm {chapter} · sayfa {page} kalsın</value>
+  </data>
+  <data name="StopKeepPlain" xml:space="preserve">
+    <value>Mevcut yeri koru</value>
+  </data>
+  <data name="EreadersGroup" xml:space="preserve">
+    <value>E-okuyucular</value>
+  </data>
+  <data name="EreadersSendRow" xml:space="preserve">
+    <value>E-okuyucuya gönder</value>
+  </data>
+  <data name="EreadersFeedRow" xml:space="preserve">
+    <value>OPDS akışı</value>
+  </data>
+  <data name="OpdsShareNote" xml:space="preserve">
+    <value>Evdeki e-okuyucuların göz atabileceği bir OPDS kataloğu</value>
+  </data>
+  <data name="OpdsFooter" xml:space="preserve">
+    <value>Akış yalnızca Kaeri bu {device} üzerinde açıkken çalışır. O e-okuyuculardaki ilerleme orada kalır.</value>
+  </data>
+  <data name="OpdsAddress" xml:space="preserve">
+    <value>Adres</value>
+  </data>
+  <data name="OpdsAddressOff" xml:space="preserve">
+    <value>Adresini almak için akışı açın.</value>
+  </data>
+  <data name="OpdsPassword" xml:space="preserve">
+    <value>Parola</value>
+  </data>
+  <data name="OpdsPasswordNote" xml:space="preserve">
+    <value>E-okuyucular bunu bir kez sorar</value>
+  </data>
+  <data name="OpdsNewPassword" xml:space="preserve">
+    <value>Yeni parola</value>
+  </data>
+  <data name="OpdsPort" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="OpdsPortNote" xml:space="preserve">
+    <value>Herhangi bir boş port için boş bırakın ya da 1024 ile 65535 arasından birini seçin</value>
+  </data>
+  <data name="OpdsPortMoved" xml:space="preserve">
+    <value>Port {wanted} doluydu, bu yüzden akış {port} portunu kullanıyor.</value>
+  </data>
+  <data name="OpdsShares" xml:space="preserve">
+    <value>Neleri paylaşır</value>
+  </data>
+  <data name="OpdsShareDownloads" xml:space="preserve">
+    <value>İndirilenler</value>
+  </data>
+  <data name="OpdsShareDownloadsCount_one" xml:space="preserve">
+    <value>Bir bölüm</value>
+  </data>
+  <data name="OpdsShareDownloadsCount_other" xml:space="preserve">
+    <value>{n} bölüm</value>
+  </data>
+  <data name="OpdsShareManga" xml:space="preserve">
+    <value>Manga klasörü</value>
+  </data>
+  <data name="OpdsShareNovels" xml:space="preserve">
+    <value>Roman klasörü</value>
+  </data>
+  <data name="OpdsShareSeriesCount_one" xml:space="preserve">
+    <value>Bir seri</value>
+  </data>
+  <data name="OpdsShareSeriesCount_other" xml:space="preserve">
+    <value>{n} seri</value>
+  </data>
+  <data name="OpdsFetchedBy" xml:space="preserve">
+    <value>Alan e-okuyucular</value>
+  </data>
+  <data name="OpdsFetchedNone" xml:space="preserve">
+    <value>Henüz hiçbir e-okuyucu bir şey almadı.</value>
+  </data>
+  <data name="OpdsStarting" xml:space="preserve">
+    <value>Başlatılıyor…</value>
+  </data>
+  <data name="OpdsPausedNone" xml:space="preserve">
+    <value>Duraklatıldı. Bu Mac yerel bir ağda değil.</value>
+  </data>
+  <data name="OpdsPausedVpn" xml:space="preserve">
+    <value>Duraklatıldı. Bu Mac yalnızca bir VPN üzerinden bağlı.</value>
+  </data>
+  <data name="OpdsNewPasswordTitle" xml:space="preserve">
+    <value>Yeni parola oluşturulsun mu?</value>
+  </data>
+  <data name="OpdsNewPasswordWarning" xml:space="preserve">
+    <value>Akışı zaten kullanan e-okuyucular, yeni parolayı her birine yazana kadar çalışmaz.</value>
+  </data>
+  <data name="OpdsFetchedTime" xml:space="preserve">
+    <value>Son istek: {time}</value>
+  </data>
+  <data name="OpdsFetchedFiles_one" xml:space="preserve">
+    <value>Bir dosya</value>
+  </data>
+  <data name="OpdsFetchedFiles_other" xml:space="preserve">
+    <value>{n} dosya</value>
+  </data>
+  <data name="OpdsReaderUnnamed" xml:space="preserve">
+    <value>{address} adresindeki e-okuyucu</value>
   </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Önceki sezon</value>
@@ -10392,7 +10767,7 @@
     <value>Listelerinizi getirir ve izlediklerinizle İzlemeye devam et satırını doldurur.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Listelerinizi getirir ve İzlemeye devam et bölümünü okuduklarınızla doldurur.</value>
+    <value>Listelerinizi getirir ve Okumayı sürdür bölümünü okuduklarınızla doldurur.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Listelerinizi getirir ve İzlemeye devam et bölümünü izlediğiniz ve okuduğunuz şeylerle doldurur.</value>

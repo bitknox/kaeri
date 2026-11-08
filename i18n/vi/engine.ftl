@@ -1,4 +1,4 @@
-legal-hosts-no-content = { -app-name } không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm { -source-pl } của mình.
+legal-hosts-no-content = { -app-name } không host bất kỳ bộ phim hay cuốn sách nào. Bạn tự thêm { -source-pl } của mình.
 notice-saved = Đã lưu { $label }.
 notice-not-saved = Không lưu được cài đặt đó. { $reason }
 notice-title-load-failed = Không tải được chi tiết của bộ phim này. Hãy kiểm tra kết nối rồi thử lại.

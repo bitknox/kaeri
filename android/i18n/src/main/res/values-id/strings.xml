@@ -187,6 +187,7 @@
     <string name="reading_also_a_book">Ada versi bukunya</string>
     <string name="reading_split_chapter">Bab %1$s dikirim ke pelacak-pelacak sebagai %2$s.</string>
     <string name="reader_resumed">Lanjut di halaman %1$d</string>
+    <string name="reader_resumed_image">Lanjut di gambar %1$d</string>
     <string name="reader_back_to_page">Kembali ke halaman %1$d</string>
     <string name="reader_moved">Pindah ke %1$s, halaman %2$d, tempat %3$s berhenti</string>
     <string name="reader_moved_number">Pindah ke bab %1$s, halaman %2$d, tempat %3$s berhenti</string>
@@ -233,7 +234,7 @@
     </plurals>
     <string name="reading_on_planning">Ada di daftar Direncanakan Anda</string>
     <string name="reading_spotlight_new_chapter">Bab baru di seri yang Anda ikuti</string>
-    <string name="reading_spotlight_continue">Lanjut membaca</string>
+    <string name="reading_spotlight_continue">Lanjutkan membaca</string>
     <string name="reading_spotlight_up_next">Berikutnya untuk Anda</string>
     <string name="reading_spotlight_popular">Populer, masih terbit</string>
     <string name="reading_out_today">Bab %1$s terbit hari ini</string>
@@ -244,11 +245,17 @@
     <string name="reading_next_part">Bagian %1$s</string>
     <string name="reading_part_percent">Bagian %1$s · %2$d%%</string>
     <string name="reading_part_new">Bagian %1$s baru</string>
+    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_new">%1$s baru</string>
     <string name="reading_part_titled">Bagian %1$s · %2$s</string>
+    <string name="reading_label_titled">%1$s · %2$s</string>
     <string name="reading_part_out_today">Bagian %1$s terbit hari ini</string>
+    <string name="reading_label_out_today">%1$s terbit hari ini</string>
     <string name="reading_part_out_today_titled">Bagian %1$s, %2$s, terbit hari ini</string>
+    <string name="reading_label_out_today_titled">%1$s, %2$s, terbit hari ini</string>
     <string name="reading_chapter_of">Bab %1$s dari %2$s</string>
     <string name="reading_volume_part">Volume %1$s, bagian %2$s</string>
+    <string name="reading_volume_label">Volume %1$s, %2$s</string>
     <string name="reading_origin_japan">Jepang</string>
     <string name="reading_origin_korea">Korea</string>
     <string name="reading_origin_china">Tiongkok</string>
@@ -276,6 +283,8 @@
     <string name="reading_row_page_of">Hal. %1$d dari %2$d</string>
     <string name="reading_row_page">Hal. %1$d</string>
     <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_opened">Dibuka</string>
+    <string name="reading_row_bookmarked">Ditandai</string>
     <plurals name="reading_row_pages">
         <item quantity="other">%1$d hal.</item>
     </plurals>
@@ -415,6 +424,7 @@
     <string name="sources_demo_removed">Demo dihapus</string>
     <string name="stores_ready_demo_stays">%1$s siap. Demo tetap di urutan terakhir di Sumber-sumber Anda.</string>
     <string name="cloud_loopback_done">Anda bisa menutup tab ini dan kembali ke Kaeri.</string>
+    <string name="sync_device_removed">Perangkat ini dihapus dari sinkronisasi di perangkat lain. Gabung lagi untuk menyinkronkannya.</string>
     <string name="notice_signed_in">Berhasil masuk ke %1$s.</string>
     <string name="notice_signed_in_keychain">Berhasil masuk ke %1$s. Token disimpan di rantai kunci sistem.</string>
     <string name="notice_signed_in_file">Berhasil masuk ke %1$s. Rantai kunci tidak tersedia, jadi token disimpan dalam berkas pribadi di perangkat ini.</string>
@@ -535,6 +545,14 @@
     <string name="cast_settings_tvs_note">Muncul di bawah Chromecast pada Putar di TV. perangkat ini mengirimkan episode ke TV tersebut.</string>
     <string name="cast_settings_torrents">Torrent saat transmisi</string>
     <string name="cast_settings_torrents_note">TV dengan Chromecast bawaan lalu bisa memutar torrent. Perangkat ini mengirim episode selama TV masih memutarnya.</string>
+    <string name="book_server_keystore_android">keystore Android</string>
+    <string name="store_invite_chip">Undangan ••••%1$s</string>
+    <plurals name="store_plugin_hosts">
+        <item quantity="other">%1$d host</item>
+    </plurals>
+    <string name="join_medium_line_watch">Menonton, seperti di %1$s</string>
+    <string name="join_medium_line_both">Menonton dan membaca, seperti di %1$s</string>
+    <string name="join_key_store">keystore Android</string>
     <string name="reader_page_failed_swipe">Geser untuk lanjut tanpa halaman ini.</string>
     <string name="reader_skip_page">Lewati halaman</string>
     <string name="reader_page_of">Halaman %1$d dari %2$d</string>
@@ -568,9 +586,9 @@
     <string name="eink_reads_ltr">kiri ke kanan</string>
     <string name="eink_reads_strip">strip panjang</string>
     <string name="eink_on_device">di perangkat ini</string>
-    <string name="eink_continue_to">Lanjutkan ke bab %1$s</string>
+    <string name="eink_continue_to">Lanjutkan membaca bab %1$s</string>
     <string name="eink_back_to_series">Kembali ke seri</string>
-    <string name="eink_turn_to_continue">Balik halaman untuk lanjutkan</string>
+    <string name="eink_turn_to_continue">Balik halaman untuk melanjutkan membaca</string>
     <string name="eink_next_missing">Bab %1$s belum ada di sumber-sumber Anda</string>
     <string name="eink_next_not_out">Bab selanjutnya belum terbit</string>
     <string name="eink_caught_up">Anda sudah menyusul</string>
@@ -698,6 +716,42 @@
     <string name="reader_opening_waited">%1$s · %2$d d</string>
     <string name="reader_sources_title">Baca bab ini dari</string>
     <string name="reader_paper_parts">Yang diubahnya</string>
+    <string name="read_home_offline_line">Beranda Baca perlu koneksi saat pertama kali dibuka. Bab yang diunduh tetap bisa dibuka.</string>
+    <string name="channel_chapters_name">Bab baru</string>
+    <string name="channel_chapters_description">Saat seri di daftar Membaca Anda punya bab baru.</string>
+    <string name="channel_downloads_finished_name">Unduhan selesai</string>
+    <string name="channel_downloads_finished_description">Saat semua bab yang Anda minta untuk diunduh sudah selesai.</string>
+    <string name="notif_chapter_new">%1$s sudah keluar.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="other">%1$d bab baru</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Bab baru</string>
+    <string name="notif_chapter_read">Baca</string>
+    <plurals name="downloads_notice_chapters">
+        <item quantity="other">Mengunduh %1$d bab</item>
+    </plurals>
+    <plurals name="read_series_downloaded_open">
+        <item quantity="other">%1$d bab yang diunduh tetap bisa dibuka.</item>
+    </plurals>
+    <string name="read_downloads_empty_detail">Bab yang diunduh bisa dibuka tanpa koneksi.</string>
+    <string name="read_downloads_empty_both">Episode dan bab yang diunduh bisa dibuka tanpa koneksi.</string>
+    <string name="settings_summary_chapters_on">Bab baru aktif</string>
+    <string name="settings_summary_chapters_off">Bab baru nonaktif</string>
+    <plurals name="settings_summary_book_folders">
+        <item quantity="other">%1$d folder</item>
+    </plurals>
+    <plurals name="settings_summary_book_servers">
+        <item quantity="other">%1$d server</item>
+    </plurals>
+    <plurals name="settings_summary_book_plugins">
+        <item quantity="other">%1$d plugin</item>
+    </plurals>
+    <string name="settings_book_sources">Sumber buku</string>
+    <plurals name="book_matches_line">
+        <item quantity="other">Kaeri mencocokkan %1$d berdasarkan detailnya. %2$d seri ini perlu diperiksa.</item>
+    </plurals>
+    <string name="book_folder_failed">Folder itu tidak bisa ditambahkan. Coba folder lain.</string>
+    <string name="book_server_note_device">Kaeri mengirim kemajuan baca Anda kembali ke server ini. Kata sandi tetap di perangkat ini.</string>
     <string name="tv_pair_request_held">%1$s ingin dipasangkan. Kode %2$s</string>
     <string name="tv_add_store_to_play">Tambahkan toko plugin untuk memutar</string>
     <string name="tv_title_page">Halaman judul</string>
@@ -1284,6 +1338,13 @@
     <string name="pad_button_view">View</string>
     <string name="pad_button_left_stick">Stik kiri</string>
     <string name="pad_button_right_stick">Stik kanan</string>
+    <string name="pad_help_turn_page">Balik halaman</string>
+    <string name="pad_help_previous_chapter">Bab sebelumnya</string>
+    <string name="pad_help_next_chapter">Bab selanjutnya</string>
+    <string name="pad_help_reader_bar">Tampilkan atau sembunyikan bilah</string>
+    <string name="pad_help_reader_settings">Pengaturan pembaca</string>
+    <string name="pad_help_close_reader">Tutup pembaca</string>
+    <string name="pad_help_reader">Pembaca</string>
     <string name="close_dont_ask">Jangan tanyakan lagi</string>
     <string name="close_keep_going">Biarkan berjalan</string>
     <string name="party_looking_sources">Sedang memeriksa sumber-sumber Anda…</string>
@@ -2298,6 +2359,29 @@
     </plurals>
     <string name="demo_story_row">Cerita · %1$s · %2$s</string>
     <string name="demo_read_chapter">Baca bab %1$s</string>
+    <string name="progress_server_saved">Tersimpan di %1$s</string>
+    <string name="progress_server_sending">Mengirim ke %1$s…</string>
+    <string name="progress_server_offline">Akan dikirim ke %1$s saat Anda kembali online</string>
+    <string name="progress_server_retrying">%1$s tidak menjawab. Kaeri akan mencoba lagi.</string>
+    <string name="progress_server_failed">Tidak tersimpan di %1$s: %2$s.</string>
+    <string name="progress_why_key">server menolak kuncinya</string>
+    <string name="progress_why_password">server menolak kata sandinya</string>
+    <string name="progress_why_gone">seri ini sudah tidak ada di server</string>
+    <string name="progress_why_gave_up">tidak ada jawaban selama sehari</string>
+    <string name="progress_row_saved">Kemajuan disimpan %1$s</string>
+    <plurals name="progress_row_sending">
+        <item quantity="other">Mengirim %1$d bab…</item>
+    </plurals>
+    <plurals name="progress_row_offline">
+        <item quantity="other">%1$d bab akan dikirim saat Anda kembali online</item>
+    </plurals>
+    <plurals name="progress_row_retrying">
+        <item quantity="other">%1$d bab menunggu. Kaeri akan mencoba lagi.</item>
+    </plurals>
+    <plurals name="progress_row_failed">
+        <item quantity="other">%1$d bab tidak tersimpan: %2$s</item>
+    </plurals>
+    <string name="progress_row_off">Kemajuan tetap di %1$s ini</string>
     <string name="nav_watch">Tonton</string>
     <string name="nav_read">Baca</string>
     <string name="nav_updates">Pembaruan</string>
@@ -2322,10 +2406,13 @@
     <string name="chapter_updates_open_chapter_hint">Membuka bab</string>
     <string name="chapter_updates_open_series_menu">Buka seri</string>
     <string name="action_read_chapter">Baca bab %1$s</string>
-    <string name="action_continue_chapter">Lanjutkan bab %1$s · halaman %2$d</string>
-    <string name="action_continue_part">Lanjutkan bagian %1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">Lanjutkan bagian %1$s</string>
+    <string name="action_continue_chapter">Lanjutkan membaca bab %1$s · halaman %2$d</string>
+    <string name="action_continue_part">Lanjutkan membaca bagian %1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">Lanjutkan membaca bagian %1$s</string>
     <string name="action_read_part">Baca bagian %1$s</string>
+    <string name="action_continue_named">Lanjutkan membaca %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">Lanjutkan membaca %1$s</string>
+    <string name="action_read_named">Baca %1$s</string>
     <string name="action_read_again">Baca ulang</string>
     <string name="series_reading_from">Dibaca dari</string>
     <string name="series_change">Ubah</string>
@@ -2612,7 +2699,7 @@
     <string name="settings_counts_read_moving_on">Saat meninggalkannya</string>
     <string name="settings_counts_read_moving_on_note">Membalik lewat halaman terakhir, atau membuka bab selanjutnya</string>
     <string name="settings_counts_read_marked">Saat Anda menandainya</string>
-    <string name="settings_counts_read_marked_note">Lanjutkan menonton dan pelacak-pelacak Anda mengikuti tanda dari Anda</string>
+    <string name="settings_counts_read_marked_note">Lanjutkan membaca dan pelacak-pelacak Anda mengikuti tanda dari Anda</string>
     <string name="settings_follow_group">Pengaturan seri yang ikut Anda</string>
     <string name="settings_follow_mode">Mode, arah, dan warna</string>
     <string name="settings_follow_mode_note">Seri yang Anda ubah dibaca sama di perangkat Anda yang lain</string>
@@ -2647,6 +2734,84 @@
     </plurals>
     <string name="read_downloads_read">%1$d dibaca</string>
     <string name="read_downloads_delete_read">Hapus yang dibaca</string>
+    <string name="send_title">Kirim ke e-reader</string>
+    <string name="send_for">Untuk</string>
+    <string name="send_what">Yang dikirim</string>
+    <string name="send_chapters">Bab</string>
+    <string name="send_chapters_one">%1$s</string>
+    <string name="send_chapters_range">%1$s sampai %2$s</string>
+    <string name="send_size">Ukuran</string>
+    <string name="send_size_about">Sekitar %1$s</string>
+    <string name="send_no_place">Kaeri tidak bisa melihat posisi Anda di e-reader ini. Saat Anda kembali, halaman seri menanyakan di mana Anda berhenti.</string>
+    <string name="send_prepare">Siapkan dan bagikan</string>
+    <plurals name="send_preparing">
+        <item quantity="other">Menyiapkan %1$d dari %2$d bab</item>
+    </plurals>
+    <string name="send_sized_for">Halaman disesuaikan untuk %1$s</string>
+    <string name="send_in_parts">Lebih dari %1$s, jadi berkas dikirim dalam beberapa bagian.</string>
+    <string name="send_failed_chapter">Tidak bisa menyiapkan bab %1$s. %2$s</string>
+    <string name="send_failed">Tidak bisa menyiapkan berkas. %1$s</string>
+    <string name="send_size_working">Sedang dihitung</string>
+    <string name="send_chapters_open">Terbuka</string>
+    <string name="send_chapters_closed">Tertutup</string>
+    <string name="send_progress_spoken">%1$d persen</string>
+    <string name="send_chapter_action">Kirim ke e-reader</string>
+    <string name="send_parts_over">dibagi jika lebih dari %1$s</string>
+    <string name="send_waiting_cancel">Batalkan pengiriman</string>
+    <plurals name="send_ready">
+        <item quantity="other">%1$d berkas siap.</item>
+    </plurals>
+    <string name="send_share_again">Bagikan lagi</string>
+    <string name="send_banner">Mengirim ke %1$s</string>
+    <string name="send_format_fixed_epub">EPUB tata letak tetap</string>
+    <string name="send_format_kepub">KEPUB</string>
+    <string name="send_format_epub">EPUB</string>
+    <string name="send_format_cbz">CBZ</string>
+    <string name="send_target_line">%1$s · %2$s × %3$s</string>
+    <string name="stop_title">Di mana Anda berhenti?</string>
+    <string name="stop_note">Anda mengirim bab ke %1$s. Di mana Anda berhenti?</string>
+    <string name="stop_note_action">Atur posisi Anda</string>
+    <string name="stop_sent_one">Bab %1$s dikirim ke %2$s pada %3$s.</string>
+    <string name="stop_sent_range">Bab %1$s sampai %2$s dikirim ke %3$s pada %4$s.</string>
+    <string name="stop_finished">Bab %1$s selesai dibaca</string>
+    <string name="stop_set">Atur posisi Anda</string>
+    <string name="stop_keep">Tetap di bab %1$s · halaman %2$d</string>
+    <string name="stop_keep_plain">Tetap di posisi sekarang</string>
+    <string name="ereaders_group">E-reader</string>
+    <string name="ereaders_send_row">Kirim ke e-reader</string>
+    <string name="ereaders_feed_row">Feed OPDS</string>
+    <string name="opds_share_note">Katalog OPDS yang bisa dijelajahi e-reader di rumah</string>
+    <string name="opds_footer">Feed hanya berjalan saat Kaeri terbuka di %1$s ini. Kemajuan di e-reader tersebut tetap di sana.</string>
+    <string name="opds_address">Alamat</string>
+    <string name="opds_address_off">Nyalakan feed untuk mendapatkan alamatnya.</string>
+    <string name="opds_password">Kata sandi</string>
+    <string name="opds_password_note">E-reader memintanya sekali</string>
+    <string name="opds_new_password">Kata sandi baru</string>
+    <string name="opds_port">Port</string>
+    <string name="opds_port_note">Kosongkan untuk port bebas mana pun, atau pilih antara 1024 dan 65535</string>
+    <string name="opds_port_moved">Port %1$d sedang dipakai, jadi feed memakai %2$d.</string>
+    <string name="opds_shares">Yang dibagikan</string>
+    <string name="opds_share_downloads">Unduhan</string>
+    <plurals name="opds_share_downloads_count">
+        <item quantity="other">%1$d bab</item>
+    </plurals>
+    <string name="opds_share_manga">Folder manga</string>
+    <string name="opds_share_novels">Folder novel</string>
+    <plurals name="opds_share_series_count">
+        <item quantity="other">%1$d seri</item>
+    </plurals>
+    <string name="opds_fetched_by">Diambil oleh</string>
+    <string name="opds_fetched_none">Belum ada e-reader yang mengambil apa pun.</string>
+    <string name="opds_starting">Memulai…</string>
+    <string name="opds_paused_none">Dijeda. Mac ini tidak berada di jaringan lokal.</string>
+    <string name="opds_paused_vpn">Dijeda. Mac ini hanya tersambung lewat VPN.</string>
+    <string name="opds_new_password_title">Buat kata sandi baru?</string>
+    <string name="opds_new_password_warning">E-reader yang sudah memakai feed berhenti berfungsi sampai Anda mengetik kata sandi baru di masing-masing.</string>
+    <string name="opds_fetched_time">Terakhir meminta %1$s</string>
+    <plurals name="opds_fetched_files">
+        <item quantity="other">%1$d berkas</item>
+    </plurals>
+    <string name="opds_reader_unnamed">E-reader di %1$s</string>
     <string name="seasonal_previous">Musim sebelumnya</string>
     <string name="seasonal_next">Musim berikutnya</string>
     <string name="seasonal_loading">Memuat musim ini</string>
@@ -3897,7 +4062,7 @@
     <string name="accounts_other_trackers_note">pelacak-pelacak lainnya ada di Akun.</string>
     <string name="accounts_welcome_detail">Masuk ke %1$s untuk menyinkronkan daftar Anda dan tempat Anda berhenti.</string>
     <string name="accounts_brings_lists">Mengambil daftar Anda dan mengisi Lanjutkan menonton dengan judul yang sedang Anda tonton.</string>
-    <string name="accounts_brings_lists_read">Membawa masuk daftar Anda dan mengisi Lanjutkan menonton dengan yang sedang Anda baca.</string>
+    <string name="accounts_brings_lists_read">Membawa masuk daftar Anda dan mengisi Lanjutkan membaca dengan yang sedang Anda baca.</string>
     <string name="accounts_brings_lists_both">Membawa masuk daftar Anda dan mengisi Lanjutkan menonton dengan yang sedang Anda tonton dan baca.</string>
     <string name="accounts_tracker_lists">Daftar dan kemajuan</string>
     <string name="accounts_tracker_reading_lists">Daftar baca dan kemajuan</string>

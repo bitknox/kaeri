@@ -24,10 +24,13 @@ chapter-updates-open-series = Apri { $title }
 chapter-updates-open-chapter-hint = Apre il capitolo
 chapter-updates-open-series-menu = Apri la serie
 action-read-chapter = Leggi il capitolo { $n }
-action-continue-chapter = Riprendi il capitolo { $n } · pagina { $page }
-action-continue-part = Riprendi la parte { $n } · { $percent }%
-action-continue-part-plain = Riprendi la parte { $n }
+action-continue-chapter = { -continue-reading-cap } il capitolo { $n } · pagina { $page }
+action-continue-part = { -continue-reading-cap } la parte { $n } · { $percent }%
+action-continue-part-plain = { -continue-reading-cap } la parte { $n }
 action-read-part = Leggi la parte { $n }
+action-continue-named = { -continue-reading-cap } { $label } · { $percent }%
+action-continue-named-plain = { -continue-reading-cap } { $label }
+action-read-named = Leggi { $label }
 action-read-again = Rileggi
 series-reading-from = Lettura da
 series-change = Cambia
@@ -346,7 +349,7 @@ settings-counts-read-value = Dopo l'ultima pagina
 settings-counts-read-moving-on = Andando oltre
 settings-counts-read-moving-on-note = Girando oltre l'ultima pagina, o aprendo il capitolo successivo
 settings-counts-read-marked = Quando lo segni
-settings-counts-read-marked-note = { -continue-cap } e i tuoi { -tracker-pl } seguono i tuoi segni
+settings-counts-read-marked-note = { -continue-reading-cap } e i tuoi { -tracker-pl } seguono i tuoi segni
 settings-follow-group = Impostazioni della serie che ti seguono
 settings-follow-mode = Modalità, direzione e colore
 settings-follow-mode-note = Una serie che cambi si legge allo stesso modo sugli altri tuoi { -device-pl }
@@ -387,3 +390,91 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = { $n } letti
 read-downloads-delete-read = Elimina i letti
+send-title = Invia all'e-reader
+send-for = Per
+send-what = Cosa
+send-chapters = Capitoli
+send-chapters-one = { $chapter }
+send-chapters-range = Da { $first } a { $last }
+send-size = Dimensione
+send-size-about = Circa { $size }
+send-no-place = { -app-name } non vede a che punto sei su questo e-reader. Quando torni, la pagina della serie ti chiede dove ti sei fermato.
+send-prepare = Prepara e condividi
+send-preparing = { $total ->
+    [one] Preparazione del capitolo
+    [many] Preparazione di { $done } capitoli su { $total }
+   *[other] Preparazione di { $done } capitoli su { $total }
+ }
+send-sized-for = Pagine dimensionate per { $device }
+send-in-parts = Oltre { $size }, quindi i file vengono divisi in parti.
+send-failed-chapter = Impossibile preparare il capitolo { $chapter }. { $cause }
+send-failed = Impossibile preparare i file. { $cause }
+send-size-working = Calcolo in corso
+send-chapters-open = Aperto
+send-chapters-closed = Chiuso
+send-progress-spoken = { $percent } percento
+send-chapter-action = Invia all'e-reader
+send-parts-over = in parti oltre { $size }
+send-waiting-cancel = Annulla invio
+send-ready = { $n ->
+    [one] Un file è pronto.
+    [many] { $n } file sono pronti.
+   *[other] { $n } file sono pronti.
+ }
+send-share-again = Condividi di nuovo
+send-banner = Invio a { $device }
+send-format-fixed-epub = EPUB a layout fisso
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = Dove ti sei fermato?
+stop-note = Hai inviato dei capitoli a { $device }. Dove ti sei fermato?
+stop-note-action = Indica il punto
+stop-sent-one = Il capitolo { $chapter } è andato a { $device } il { $date }.
+stop-sent-range = I capitoli da { $first } a { $last } sono andati a { $device } il { $date }.
+stop-finished = Capitolo { $chapter } finito
+stop-set = Indica il punto
+stop-keep = Mantieni capitolo { $chapter } · pagina { $page }
+stop-keep-plain = Mantieni il punto attuale
+ereaders-group = E-reader
+ereaders-send-row = Invia all'e-reader
+ereaders-feed-row = Feed OPDS
+opds-share-note = Un catalogo OPDS che gli e-reader di casa possono sfogliare
+opds-footer = Il feed funziona solo mentre { -app-name } è aperto su questo { $device }. I progressi su quegli e-reader restano lì.
+opds-address = Indirizzo
+opds-address-off = Attiva il feed per avere il suo indirizzo.
+opds-password = Password
+opds-password-note = Gli e-reader la chiedono una volta sola
+opds-new-password = Nuova password
+opds-port = Porta
+opds-port-note = Lascia vuoto per una porta libera qualsiasi, o scegline una da 1024 a 65535
+opds-port-moved = La porta { $wanted } era occupata, quindi il feed usa la { $port }.
+opds-shares = Cosa condivide
+opds-share-downloads = Download
+opds-share-downloads-count = { $n ->
+    [one] Un capitolo
+    [many] { $n } capitoli
+   *[other] { $n } capitoli
+ }
+opds-share-manga = Cartella manga
+opds-share-novels = Cartella light novel
+opds-share-series-count = { $n ->
+    [one] Una serie
+    [many] { $n } serie
+   *[other] { $n } serie
+ }
+opds-fetched-by = Scaricato da
+opds-fetched-none = Nessun e-reader ha ancora scaricato nulla.
+opds-starting = Avvio…
+opds-paused-none = In pausa. Questo Mac non è su una rete locale.
+opds-paused-vpn = In pausa. Questo Mac è connesso solo tramite una VPN.
+opds-new-password-title = Creare una nuova password?
+opds-new-password-warning = Gli e-reader che usano già il feed smettono di funzionare finché non inserisci la nuova password in ciascuno.
+opds-fetched-time = Ultima richiesta { $time }
+opds-fetched-files = { $n ->
+    [one] Un file
+    [many] { $n } file
+   *[other] { $n } file
+ }
+opds-reader-unnamed = E-reader a { $address }

@@ -24,10 +24,13 @@ chapter-updates-open-series = Abrir { $title }
 chapter-updates-open-chapter-hint = Abre el capítulo
 chapter-updates-open-series-menu = Abrir serie
 action-read-chapter = Leer el capítulo { $n }
-action-continue-chapter = Seguir con el capítulo { $n } · pág. { $page }
-action-continue-part = Seguir con la parte { $n } · { $percent }%
-action-continue-part-plain = Seguir con la parte { $n }
+action-continue-chapter = { -continue-reading-cap } el capítulo { $n } · pág. { $page }
+action-continue-part = { -continue-reading-cap } la parte { $n } · { $percent }%
+action-continue-part-plain = { -continue-reading-cap } la parte { $n }
 action-read-part = Leer la parte { $n }
+action-continue-named = { -continue-reading-cap } { $label } · { $percent }%
+action-continue-named-plain = { -continue-reading-cap } { $label }
+action-read-named = Leer { $label }
 action-read-again = Leer de nuevo
 series-reading-from = Leyendo desde
 series-change = Cambiar
@@ -209,7 +212,7 @@ book-sources-not-a-book-server = Esta dirección responde, pero no como servidor
 book-sources-no-match = Sin coincidencia
 book-sources-keep = Dejar sin coincidencia
 book-sources-find = Buscar
-book-sources-unmatched-note = Puedes seguir leyendo las series sin coincidencia desde la carpeta. No tienen progreso en un { -tracker } hasta que tengan coincidencia.
+book-sources-unmatched-note = Las series sin coincidencia se pueden leer igual desde la carpeta. No tienen progreso en un { -tracker } hasta que tengan coincidencia.
 library-scope-label = Series o Lectura
 library-scope-shows = Series
 library-scope-reading = Lectura
@@ -346,7 +349,7 @@ settings-counts-read-value = Tras la última página
 settings-counts-read-moving-on = Al avanzar
 settings-counts-read-moving-on-note = Pasar la última página o abrir el capítulo que sigue
 settings-counts-read-marked = Cuando lo marcas
-settings-counts-read-marked-note = { -continue-cap } y tus { -tracker-pl } siguen tus marcas
+settings-counts-read-marked-note = { -continue-reading-cap } y tus { -tracker-pl } siguen tus marcas
 settings-follow-group = Ajustes de serie que te siguen
 settings-follow-mode = Modo, dirección y color
 settings-follow-mode-note = Una serie que cambies se lee igual en tus otros { -device-pl }
@@ -387,3 +390,91 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = { $n } leídos
 read-downloads-delete-read = Eliminar leídos
+send-title = Enviar al lector electrónico
+send-for = Para
+send-what = Qué se envía
+send-chapters = Capítulos
+send-chapters-one = { $chapter }
+send-chapters-range = { $first } a { $last }
+send-size = Tamaño
+send-size-about = Unos { $size }
+send-no-place = { -app-name } no puede ver por dónde vas en este lector electrónico. Cuando vuelvas, la página de la serie te preguntará dónde te quedaste.
+send-prepare = Preparar y compartir
+send-preparing = { $total ->
+    [one] Preparando el capítulo
+    [many] Preparando { $done } de { $total } capítulos
+   *[other] Preparando { $done } de { $total } capítulos
+ }
+send-sized-for = Páginas ajustadas para { $device }
+send-in-parts = Más de { $size }, así que los archivos van en partes.
+send-failed-chapter = No se pudo preparar el capítulo { $chapter }. { $cause }
+send-failed = No se pudieron preparar los archivos. { $cause }
+send-size-working = Calculando
+send-chapters-open = Abierta
+send-chapters-closed = Cerrada
+send-progress-spoken = { $percent } por ciento
+send-chapter-action = Enviar al lector electrónico
+send-parts-over = en partes si supera { $size }
+send-waiting-cancel = Cancelar envío
+send-ready = { $n ->
+    [one] Un archivo está listo.
+    [many] { $n } archivos están listos.
+   *[other] { $n } archivos están listos.
+ }
+send-share-again = Compartir de nuevo
+send-banner = Enviando a { $device }
+send-format-fixed-epub = EPUB de diseño fijo
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = ¿Dónde te quedaste?
+stop-note = Enviaste capítulos a { $device }. ¿Dónde te quedaste?
+stop-note-action = Indicar dónde vas
+stop-sent-one = El capítulo { $chapter } se envió a { $device } el { $date }.
+stop-sent-range = Los capítulos { $first } a { $last } se enviaron a { $device } el { $date }.
+stop-finished = Capítulo { $chapter } terminado
+stop-set = Indicar dónde vas
+stop-keep = Mantener capítulo { $chapter } · página { $page }
+stop-keep-plain = Mantener la posición actual
+ereaders-group = Lectores electrónicos
+ereaders-send-row = Enviar al lector electrónico
+ereaders-feed-row = Catálogo OPDS
+opds-share-note = Un catálogo OPDS que pueden explorar los lectores electrónicos de tu casa
+opds-footer = El catálogo solo funciona mientras { -app-name } está abierto en este { $device }. El progreso en esos lectores electrónicos se queda allí.
+opds-address = Dirección
+opds-address-off = Activa el catálogo para obtener su dirección.
+opds-password = Contraseña
+opds-password-note = Los lectores electrónicos la piden una vez
+opds-new-password = Contraseña nueva
+opds-port = Puerto
+opds-port-note = Déjalo vacío para usar cualquier puerto libre, o elige uno de 1024 a 65535
+opds-port-moved = El puerto { $wanted } estaba ocupado, así que el catálogo usa el { $port }.
+opds-shares = Qué comparte
+opds-share-downloads = Descargas
+opds-share-downloads-count = { $n ->
+    [one] Un capítulo
+    [many] { $n } capítulos
+   *[other] { $n } capítulos
+ }
+opds-share-manga = Carpeta de manga
+opds-share-novels = Carpeta de novelas
+opds-share-series-count = { $n ->
+    [one] Una serie
+    [many] { $n } series
+   *[other] { $n } series
+ }
+opds-fetched-by = Descargado por
+opds-fetched-none = Ningún lector electrónico ha descargado nada todavía.
+opds-starting = Iniciando…
+opds-paused-none = En pausa. Esta Mac no está en una red local.
+opds-paused-vpn = En pausa. Esta Mac solo está conectada a través de una VPN.
+opds-new-password-title = ¿Crear una contraseña nueva?
+opds-new-password-warning = Los lectores electrónicos que ya usan el catálogo dejan de funcionar hasta que escribas la contraseña nueva en cada uno.
+opds-fetched-time = Última solicitud: { $time }
+opds-fetched-files = { $n ->
+    [one] Un archivo
+    [many] { $n } archivos
+   *[other] { $n } archivos
+ }
+opds-reader-unnamed = Lector electrónico en { $address }

@@ -196,6 +196,7 @@
     <string name="reading_also_a_book">Aynı zamanda kitap</string>
     <string name="reading_split_chapter">Bölüm %1$s, takip hizmetlerine %2$s olarak bildirilir.</string>
     <string name="reader_resumed">%1$d. sayfadan açıldı</string>
+    <string name="reader_resumed_image">%1$d. görselden açıldı</string>
     <string name="reader_back_to_page">%1$d. sayfaya dön</string>
     <string name="reader_moved">%1$s, sayfa %2$d konumuna geçildi: %3$s burada kaldı</string>
     <string name="reader_moved_number">Bölüm %1$s, sayfa %2$d konumuna geçildi: %3$s burada kaldı</string>
@@ -255,11 +256,17 @@
     <string name="reading_next_part">Kısım %1$s</string>
     <string name="reading_part_percent">Kısım %1$s · %%%2$d</string>
     <string name="reading_part_new">Kısım %1$s yeni</string>
+    <string name="reading_label_percent">%1$s · %%%2$d</string>
+    <string name="reading_label_new">%1$s yeni</string>
     <string name="reading_part_titled">Kısım %1$s · %2$s</string>
+    <string name="reading_label_titled">%1$s · %2$s</string>
     <string name="reading_part_out_today">Kısım %1$s bugün çıktı</string>
+    <string name="reading_label_out_today">%1$s bugün çıktı</string>
     <string name="reading_part_out_today_titled">Kısım %1$s, %2$s, bugün çıktı</string>
+    <string name="reading_label_out_today_titled">%1$s, %2$s, bugün çıktı</string>
     <string name="reading_chapter_of">Bölüm %1$s / %2$s</string>
     <string name="reading_volume_part">Cilt %1$s, kısım %2$s</string>
+    <string name="reading_volume_label">Cilt %1$s, %2$s</string>
     <string name="reading_origin_japan">Japonya</string>
     <string name="reading_origin_korea">Kore</string>
     <string name="reading_origin_china">Çin</string>
@@ -288,6 +295,8 @@
     <string name="reading_row_page_of">Sayfa %1$d / %2$d</string>
     <string name="reading_row_page">Sayfa %1$d</string>
     <string name="reading_row_percent">%%%1$d</string>
+    <string name="reading_row_opened">Açıldı</string>
+    <string name="reading_row_bookmarked">Yer imi eklendi</string>
     <plurals name="reading_row_pages">
         <item quantity="one">1 sayfa</item>
         <item quantity="other">%1$d sayfa</item>
@@ -440,6 +449,7 @@
     <string name="sources_demo_removed">Demo kaldırıldı</string>
     <string name="stores_ready_demo_stays">%1$s hazır. Demo, Kaynaklarınızın sonunda kalır.</string>
     <string name="cloud_loopback_done">Bu sekmeyi kapatıp Kaeri\'ye dönebilirsiniz.</string>
+    <string name="sync_device_removed">Bu cihaz başka bir cihaz üzerinden eşitlemeden çıkarıldı. Eşitlemek için yeniden katılın.</string>
     <string name="notice_signed_in">Oturum açıldı: %1$s.</string>
     <string name="notice_signed_in_keychain">Oturum açıldı: %1$s. Erişim jetonu işletim sistemi anahtarlığında saklanıyor.</string>
     <string name="notice_signed_in_file">Oturum açıldı: %1$s. Anahtarlık yok. Erişim jetonu bu cihaz üzerinde, yalnızca bu kullanıcının okuyabildiği özel bir dosyada.</string>
@@ -564,6 +574,15 @@
     <string name="cast_settings_tvs_note">Bunlar TV\'de oynat ekranında Chromecast başlığı altında görünür. Bölümü bu cihaz onlara gönderir.</string>
     <string name="cast_settings_torrents">Yayın sırasında torrentler</string>
     <string name="cast_settings_torrents_note">Böylece yerleşik Chromecast\'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu cihaz gönderir.</string>
+    <string name="book_server_keystore_android">Android anahtar deposu</string>
+    <string name="store_invite_chip">Davet ••••%1$s</string>
+    <plurals name="store_plugin_hosts">
+        <item quantity="one">%1$d sunucu</item>
+        <item quantity="other">%1$d sunucu</item>
+    </plurals>
+    <string name="join_medium_line_watch">%1$s gibi izleme</string>
+    <string name="join_medium_line_both">%1$s gibi izleme ve okuma</string>
+    <string name="join_key_store">Android anahtar deposu</string>
     <string name="reader_page_failed_swipe">Onsuz ilerlemek için kaydırın.</string>
     <string name="reader_skip_page">Sayfayı atla</string>
     <string name="reader_page_of">Sayfa %1$d / %2$d</string>
@@ -729,6 +748,49 @@
     <string name="reader_opening_waited">%1$s · %2$d sn</string>
     <string name="reader_sources_title">Bu bölümü şuradan oku</string>
     <string name="reader_paper_parts">Neleri değiştirir</string>
+    <string name="read_home_offline_line">Okuma ana sayfası ilk açılışta bağlantı ister. İndirilen bölümler yine de açılır.</string>
+    <string name="channel_chapters_name">Yeni bölümler</string>
+    <string name="channel_chapters_description">Okunan listenizdeki bir serinin yeni bölümü çıktığında.</string>
+    <string name="channel_downloads_finished_name">Tamamlanan indirmeler</string>
+    <string name="channel_downloads_finished_description">İndirmek istediğiniz bölümlerin hepsi bittiğinde.</string>
+    <string name="notif_chapter_new">%1$s çıktı.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Yeni bir bölüm</item>
+        <item quantity="other">%1$d yeni bölüm</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Yeni bölüm</string>
+    <string name="notif_chapter_read">Oku</string>
+    <plurals name="downloads_notice_chapters">
+        <item quantity="one">Bir bölüm indiriliyor</item>
+        <item quantity="other">%1$d bölüm indiriliyor</item>
+    </plurals>
+    <plurals name="read_series_downloaded_open">
+        <item quantity="one">İndirilmiş bir bölüm yine de açılır.</item>
+        <item quantity="other">İndirilmiş %1$d bölüm yine de açılır.</item>
+    </plurals>
+    <string name="read_downloads_empty_detail">İndirilen bölümler bağlantı olmadan açılır.</string>
+    <string name="read_downloads_empty_both">İzlemek ve okumak için indirilen bölümler bağlantı olmadan açılır.</string>
+    <string name="settings_summary_chapters_on">Yeni bölümler açık</string>
+    <string name="settings_summary_chapters_off">Yeni bölümler kapalı</string>
+    <plurals name="settings_summary_book_folders">
+        <item quantity="one">1 klasör</item>
+        <item quantity="other">%1$d klasör</item>
+    </plurals>
+    <plurals name="settings_summary_book_servers">
+        <item quantity="one">1 sunucu</item>
+        <item quantity="other">%1$d sunucu</item>
+    </plurals>
+    <plurals name="settings_summary_book_plugins">
+        <item quantity="one">1 eklenti</item>
+        <item quantity="other">%1$d eklenti</item>
+    </plurals>
+    <string name="settings_book_sources">Kitap kaynakları</string>
+    <plurals name="book_matches_line">
+        <item quantity="one">Kaeri, %1$d seriyi ayrıntılarına göre eşleştirdi. Şu seriye bir bakmak gerekiyor.</item>
+        <item quantity="other">Kaeri, %1$d seriyi ayrıntılarına göre eşleştirdi. Şu %2$d seriye bir bakmak gerekiyor.</item>
+    </plurals>
+    <string name="book_folder_failed">Bu klasör eklenemedi. Başka bir klasör deneyin.</string>
+    <string name="book_server_note_device">Kaeri okuma ilerlemenizi bu sunucuya geri gönderir. Parola bu cihazda kalır.</string>
     <string name="tv_pair_request_held">%1$s eşleşmek istiyor. Kod %2$s</string>
     <string name="tv_add_store_to_play">Oynatmak için bir eklenti mağazası ekleyin</string>
     <string name="tv_title_page">Başlık sayfası</string>
@@ -1336,6 +1398,13 @@
     <string name="pad_button_view">Görünüm</string>
     <string name="pad_button_left_stick">Sol analog çubuk</string>
     <string name="pad_button_right_stick">Sağ analog çubuk</string>
+    <string name="pad_help_turn_page">Sayfayı çevir</string>
+    <string name="pad_help_previous_chapter">Önceki bölüm</string>
+    <string name="pad_help_next_chapter">Sonraki bölüm</string>
+    <string name="pad_help_reader_bar">Çubuğu göster veya gizle</string>
+    <string name="pad_help_reader_settings">Okuyucu ayarları</string>
+    <string name="pad_help_close_reader">Okuyucuyu kapat</string>
+    <string name="pad_help_reader">Okuyucu</string>
     <string name="close_dont_ask">Bir daha sorma</string>
     <string name="close_keep_going">Arka planda sürdür</string>
     <string name="party_looking_sources">Kaynaklarınız taranıyor…</string>
@@ -2376,6 +2445,33 @@
     </plurals>
     <string name="demo_story_row">Hikâye · %1$s · %2$s</string>
     <string name="demo_read_chapter">%1$s. bölümü oku</string>
+    <string name="progress_server_saved">%1$s sunucusuna kaydedildi</string>
+    <string name="progress_server_sending">%1$s sunucusuna gönderiliyor…</string>
+    <string name="progress_server_offline">Yeniden çevrimiçi olduğunuzda %1$s sunucusuna gönderilecek</string>
+    <string name="progress_server_retrying">%1$s yanıt vermedi. Kaeri yeniden deneyecek.</string>
+    <string name="progress_server_failed">%1$s sunucusuna kaydedilmedi: %2$s.</string>
+    <string name="progress_why_key">sunucu anahtarı reddetti</string>
+    <string name="progress_why_password">sunucu parolayı reddetti</string>
+    <string name="progress_why_gone">bu seri artık sunucuda yok</string>
+    <string name="progress_why_gave_up">bir gündür yanıt yok</string>
+    <string name="progress_row_saved">İlerleme %1$s kaydedildi</string>
+    <plurals name="progress_row_sending">
+        <item quantity="one">1 bölüm gönderiliyor…</item>
+        <item quantity="other">%1$d bölüm gönderiliyor…</item>
+    </plurals>
+    <plurals name="progress_row_offline">
+        <item quantity="one">1 bölüm, yeniden çevrimiçi olduğunuzda gönderilecek</item>
+        <item quantity="other">%1$d bölüm, yeniden çevrimiçi olduğunuzda gönderilecek</item>
+    </plurals>
+    <plurals name="progress_row_retrying">
+        <item quantity="one">1 bölüm bekliyor. Kaeri yeniden deneyecek.</item>
+        <item quantity="other">%1$d bölüm bekliyor. Kaeri yeniden deneyecek.</item>
+    </plurals>
+    <plurals name="progress_row_failed">
+        <item quantity="one">1 bölüm kaydedilmedi: %2$s</item>
+        <item quantity="other">%1$d bölüm kaydedilmedi: %2$s</item>
+    </plurals>
+    <string name="progress_row_off">İlerleme bu %1$s üzerinde kalır</string>
     <string name="nav_watch">İzle</string>
     <string name="nav_read">Oku</string>
     <string name="nav_updates">Güncellemeler</string>
@@ -2405,6 +2501,9 @@
     <string name="action_continue_part">Okumayı sürdür: kısım %1$s · %%%2$d</string>
     <string name="action_continue_part_plain">Okumayı sürdür: kısım %1$s</string>
     <string name="action_read_part">Kısım %1$s oku</string>
+    <string name="action_continue_named">Okumayı sürdür: %1$s · %%%2$d</string>
+    <string name="action_continue_named_plain">Okumayı sürdür: %1$s</string>
+    <string name="action_read_named">%1$s oku</string>
     <string name="action_read_again">Yeniden oku</string>
     <string name="series_reading_from">Okunduğu yer</string>
     <string name="series_change">Değiştir</string>
@@ -2707,7 +2806,7 @@
     <string name="settings_counts_read_moving_on">Ondan ilerleyince</string>
     <string name="settings_counts_read_moving_on_note">Son sayfayı çevirmek ya da sonraki bölümü açmak</string>
     <string name="settings_counts_read_marked">Siz işaretleyince</string>
-    <string name="settings_counts_read_marked_note">İzlemeye devam et ve takip hizmetleri işaretlerinizi izler</string>
+    <string name="settings_counts_read_marked_note">Okumayı sürdür ve takip hizmetleri işaretlerinizi izler</string>
     <string name="settings_follow_group">Size eşlik eden seri ayarları</string>
     <string name="settings_follow_mode">Mod, yön ve renk</string>
     <string name="settings_follow_mode_note">Değiştirdiğiniz seri diğer cihazlarınızda da aynı okunur</string>
@@ -2745,6 +2844,89 @@
     </plurals>
     <string name="read_downloads_read">%1$d okundu</string>
     <string name="read_downloads_delete_read">Okunanları sil</string>
+    <string name="send_title">E-okuyucuya gönder</string>
+    <string name="send_for">Hedef</string>
+    <string name="send_what">İçerik</string>
+    <string name="send_chapters">Bölümler</string>
+    <string name="send_chapters_one">%1$s</string>
+    <string name="send_chapters_range">%1$s ile %2$s arası</string>
+    <string name="send_size">Boyut</string>
+    <string name="send_size_about">Yaklaşık %1$s</string>
+    <string name="send_no_place">Kaeri bu e-okuyucudaki yerinizi göremez. Döndüğünüzde seri sayfası nerede kaldığınızı sorar.</string>
+    <string name="send_prepare">Hazırla ve paylaş</string>
+    <plurals name="send_preparing">
+        <item quantity="one">Bölüm hazırlanıyor</item>
+        <item quantity="other">%1$d / %2$d bölüm hazırlanıyor</item>
+    </plurals>
+    <string name="send_sized_for">Sayfalar %1$s için boyutlandırıldı</string>
+    <string name="send_in_parts">%1$s boyutunu aşıyor, bu yüzden dosyalar parça parça gider.</string>
+    <string name="send_failed_chapter">Bölüm %1$s hazırlanamadı. %2$s</string>
+    <string name="send_failed">Dosyalar hazırlanamadı. %1$s</string>
+    <string name="send_size_working">Hesaplanıyor</string>
+    <string name="send_chapters_open">Açık</string>
+    <string name="send_chapters_closed">Kapalı</string>
+    <string name="send_progress_spoken">Yüzde %1$d</string>
+    <string name="send_chapter_action">E-okuyucuya gönder</string>
+    <string name="send_parts_over">%1$s üzerindeyse parçalara bölünür</string>
+    <string name="send_waiting_cancel">Gönderimi iptal et</string>
+    <plurals name="send_ready">
+        <item quantity="one">Bir dosya hazır.</item>
+        <item quantity="other">%1$d dosya hazır.</item>
+    </plurals>
+    <string name="send_share_again">Yeniden paylaş</string>
+    <string name="send_banner">Gönderiliyor: %1$s</string>
+    <string name="send_format_fixed_epub">Sabit düzenli EPUB</string>
+    <string name="send_format_kepub">KEPUB</string>
+    <string name="send_format_epub">EPUB</string>
+    <string name="send_format_cbz">CBZ</string>
+    <string name="send_target_line">%1$s · %2$s × %3$s</string>
+    <string name="stop_title">Nerede kaldınız?</string>
+    <string name="stop_note">Bölümleri %1$s e-okuyucusuna gönderdiniz. Nerede kaldınız?</string>
+    <string name="stop_note_action">Yerinizi belirleyin</string>
+    <string name="stop_sent_one">Bölüm %1$s, %3$s tarihinde %2$s e-okuyucusuna gönderildi.</string>
+    <string name="stop_sent_range">%1$s ile %2$s arasındaki bölümler %4$s tarihinde %3$s e-okuyucusuna gönderildi.</string>
+    <string name="stop_finished">Bölüm %1$s bitirildi</string>
+    <string name="stop_set">Yerinizi belirleyin</string>
+    <string name="stop_keep">Bölüm %1$s · sayfa %2$d kalsın</string>
+    <string name="stop_keep_plain">Mevcut yeri koru</string>
+    <string name="ereaders_group">E-okuyucular</string>
+    <string name="ereaders_send_row">E-okuyucuya gönder</string>
+    <string name="ereaders_feed_row">OPDS akışı</string>
+    <string name="opds_share_note">Evdeki e-okuyucuların göz atabileceği bir OPDS kataloğu</string>
+    <string name="opds_footer">Akış yalnızca Kaeri bu %1$s üzerinde açıkken çalışır. O e-okuyuculardaki ilerleme orada kalır.</string>
+    <string name="opds_address">Adres</string>
+    <string name="opds_address_off">Adresini almak için akışı açın.</string>
+    <string name="opds_password">Parola</string>
+    <string name="opds_password_note">E-okuyucular bunu bir kez sorar</string>
+    <string name="opds_new_password">Yeni parola</string>
+    <string name="opds_port">Port</string>
+    <string name="opds_port_note">Herhangi bir boş port için boş bırakın ya da 1024 ile 65535 arasından birini seçin</string>
+    <string name="opds_port_moved">Port %1$d doluydu, bu yüzden akış %2$d portunu kullanıyor.</string>
+    <string name="opds_shares">Neleri paylaşır</string>
+    <string name="opds_share_downloads">İndirilenler</string>
+    <plurals name="opds_share_downloads_count">
+        <item quantity="one">Bir bölüm</item>
+        <item quantity="other">%1$d bölüm</item>
+    </plurals>
+    <string name="opds_share_manga">Manga klasörü</string>
+    <string name="opds_share_novels">Roman klasörü</string>
+    <plurals name="opds_share_series_count">
+        <item quantity="one">Bir seri</item>
+        <item quantity="other">%1$d seri</item>
+    </plurals>
+    <string name="opds_fetched_by">Alan e-okuyucular</string>
+    <string name="opds_fetched_none">Henüz hiçbir e-okuyucu bir şey almadı.</string>
+    <string name="opds_starting">Başlatılıyor…</string>
+    <string name="opds_paused_none">Duraklatıldı. Bu Mac yerel bir ağda değil.</string>
+    <string name="opds_paused_vpn">Duraklatıldı. Bu Mac yalnızca bir VPN üzerinden bağlı.</string>
+    <string name="opds_new_password_title">Yeni parola oluşturulsun mu?</string>
+    <string name="opds_new_password_warning">Akışı zaten kullanan e-okuyucular, yeni parolayı her birine yazana kadar çalışmaz.</string>
+    <string name="opds_fetched_time">Son istek: %1$s</string>
+    <plurals name="opds_fetched_files">
+        <item quantity="one">Bir dosya</item>
+        <item quantity="other">%1$d dosya</item>
+    </plurals>
+    <string name="opds_reader_unnamed">%1$s adresindeki e-okuyucu</string>
     <string name="seasonal_previous">Önceki sezon</string>
     <string name="seasonal_next">Sonraki sezon</string>
     <string name="seasonal_loading">Bu sezon yükleniyor</string>
@@ -4029,7 +4211,7 @@
     <string name="accounts_other_trackers_note">Diğer takip hizmetleri Hesaplar\'da.</string>
     <string name="accounts_welcome_detail">Listenizi ve kaldığınız yeri eşitlemek için %1$s üzerinde oturum açın.</string>
     <string name="accounts_brings_lists">Listelerinizi getirir ve izlediklerinizle İzlemeye devam et satırını doldurur.</string>
-    <string name="accounts_brings_lists_read">Listelerinizi getirir ve İzlemeye devam et bölümünü okuduklarınızla doldurur.</string>
+    <string name="accounts_brings_lists_read">Listelerinizi getirir ve Okumayı sürdür bölümünü okuduklarınızla doldurur.</string>
     <string name="accounts_brings_lists_both">Listelerinizi getirir ve İzlemeye devam et bölümünü izlediğiniz ve okuduğunuz şeylerle doldurur.</string>
     <string name="accounts_tracker_lists">Listeler ve ilerleme</string>
     <string name="accounts_tracker_reading_lists">Okuma listeleri ve ilerleme</string>

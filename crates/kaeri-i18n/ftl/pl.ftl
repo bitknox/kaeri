@@ -555,6 +555,9 @@ reading-split-chapter = Trackery zapiszą rozdział { $chapter } jako { $whole }
 # A notice over the page when a chapter opens where it was left. It offers Start over.
 reader-resumed = Wznowiono na stronie { $page }
 
+# The same notice in a webtoon strip, which counts images rather than pages.
+reader-resumed-image = Wznowiono od obrazu { $image }
+
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 reader-back-to-page = Wróć do strony { $page }
 
@@ -694,7 +697,7 @@ reading-on-planning = Na liście planowanych
 reading-spotlight-new-chapter = Nowy rozdział w serii, którą czytasz
 
 # Above the big picture at the top of reading's Home: the series the person was reading last.
-reading-spotlight-continue = Wróć do czytania
+reading-spotlight-continue = Czytaj dalej
 
 # Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
 reading-spotlight-up-next = Następna lektura dla ciebie
@@ -726,20 +729,38 @@ reading-part-percent = Część { $part } · { $percent }%
 # Under a cover: a light novel's part came out that the person has not read.
 reading-part-new = Nowa część: { $part }
 
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = { $label } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = Nowe: { $label }
+
 # Under a This week cell: a light novel's part that came out that day, with its own title.
 reading-part-titled = Część { $part } · { $title }
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = { $label } · { $title }
 
 # Under the big picture on reading's Home: a light novel's part that came out today.
 reading-part-out-today = Część { $part } wyszła dziś
 
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = Ukazało się dziś: { $label }
+
 # Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 reading-part-out-today-titled = Część { $part }, { $title }, wyszła dziś
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = Ukazało się dziś: { $label }, { $title }
 
 # Under a Library cover: the chapter the person is at, and the newest chapter there is.
 reading-chapter-of = Rozdział { $chapter } z { $of }
 
 # Under a Library cover: the volume and part of a light novel the person is at.
 reading-volume-part = Tom { $volume }, część { $part }
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = Tom { $volume }, { $label }
 
 # A search filter: books from Japan.
 reading-origin-japan = Japonia
@@ -821,6 +842,12 @@ reading-row-page = Strona { $page }
 
 # A novel's chapter row: how far into it the person is.
 reading-row-percent = { $percent }%
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = Otwarty
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = Z zakładką
 
 # A chapter row: how long its pages are, for a file on the device.
 reading-row-pages =
@@ -1239,6 +1266,9 @@ stores-ready-demo-stays = { $store } jest gotowy. Demo zostaje na końcu listy: 
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = Możesz zamknąć tę kartę i wrócić do Kaeri.
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = Inne urządzenie usunęło to urządzenie z synchronizacji. Dołącz ponownie, aby je synchronizować.
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Zalogowano do { $tracker }.
 
@@ -1378,7 +1408,7 @@ cause-proxy-address-unusable = Sprawdzenie proxy nie może użyć tego adresu.
 cause-server-unreachable = Nie udało się połączyć z serwerem.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri nie udostępnia żadnych seriali ani książek. Źródła dodajesz samodzielnie.
+legal-hosts-no-content = Kaeri nie hostuje żadnych seriali ani książek. Źródła dodajesz samodzielnie.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Zapisano: { $label }.
@@ -1566,6 +1596,12 @@ title-linux-episode-watched = Odcinek { $episode } obejrzany
 # Line in a day's column when nothing airs that day.
 calendar-linux-day-empty = Nic nie jest emitowane
 
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+linux-read-library-list = Lista
+
+# Under No downloads on Downloads, Reading side.
+linux-read-downloads-empty = Pobrane rozdziały otwierają się bez połączenia.
+
 # Accessible label of the line that says how the watch party form is getting on.
 party-status = Stan: Wspólne oglądanie
 
@@ -1655,6 +1691,279 @@ discussion-like-named =
         [many] Polub, { $count } polubień
        *[other] Polub, { $count } polubienia
     }
+
+# Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
+linux-store-invite-chip = Zaproszenie ••••{ $last }
+
+# How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts".
+linux-store-plugin-hosts =
+    { $count ->
+        [one] { $count } hostem
+        [few] { $count } hostami
+        [many] { $count } hostami
+       *[other] { $count } hosta
+    }
+
+# Beside a spinner in the plugin store form while the invite is spent, after 600 ms.
+linux-store-joining = Dołączanie…
+
+# The Install all button while the plugins install.
+linux-store-installing = Instalowanie…
+
+# Third line of a book server's row in Your sources when its sign-in no longer works.
+linux-book-server-signed-out = Wylogowano · zaloguj się ponownie przez Edytuj
+
+# Switch on a book server's page: its series show in Kaeri while it is on.
+linux-book-server-use = Używaj tego serwera
+
+# Title of the dialog that asks before a book server is removed.
+linux-book-server-remove-title = Usunąć { $host }?
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Watch.
+linux-join-medium-line-watch = Oglądanie, jak na { $device }
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Both.
+linux-join-medium-line-both = Oglądanie i czytanie, jak na { $device }
+
+# Switch on a book plugin's page: its series show in Kaeri while it is on.
+linux-book-plugin-use = Wtyczka włączona
+
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = Ustawienia czytnika
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = Otwieranie rozdziału
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = Kolejny rozdział jeszcze nie wyszedł
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = Koniec serii
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = Kolejny rozdział nie jest pobrany
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = Twoje źródła nie mają kolejnego rozdziału
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = Wróć do serii
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = Nie udało się otworzyć rozdziału
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = Tryb czytania
+
+linux-reader-fit = Dopasowanie
+
+linux-reader-crop-borders = Przytnij marginesy
+
+linux-reader-page-layout = Układ stron
+
+linux-reader-background = Tło
+
+linux-reader-look = Wygląd
+
+linux-reader-font = Czcionka
+
+linux-reader-text-size = Rozmiar tekstu
+
+linux-reader-margins = Marginesy
+
+linux-reader-line-spacing = Interlinia
+
+linux-reader-justify = Wyjustuj tekst
+
+linux-reader-direction = Kierunek
+
+linux-reader-spreads = Szerokie strony
+
+linux-reader-strip-width = Szerokość paska
+
+linux-reader-strip-gap = Odstęp między obrazami
+
+# The fit that fills the window's height.
+linux-reader-fit-height = Wysokość
+
+# Reading mode names.
+linux-reader-mode-paged = Strony
+
+linux-reader-mode-scrolled = Przewijanie
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = Wyślij na e-czytnik
+
+# Button that starts preparing the files.
+linux-send-prepare = Przygotuj pliki
+
+# Line while the files are prepared.
+linux-send-progress = Przygotowywanie { $done } z { $total }
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = Zapisz w folderze
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = Wyślij na e-czytnik
+
+# Heading when the web view that shows a novel cannot start.
+linux-reader-novel-unavailable = Light novel nie otwierają się tutaj
+
+# Line under it: what a novel needs on this computer.
+linux-reader-novel-needs-webkit = Light novel wymagają WebKitGTK 6 z działającą piaskownicą.
+
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = Strona { $page } z { $pages }
+
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+linux-reader-pages = Strony
+
+# Line on the end page for a chapter that has not counted as read yet.
+linux-reader-end-not-read = Nie oznaczono jako przeczytane
+
+# The one amber button of the end page: opens the next chapter.
+linux-reader-continue = Czytaj dalej
+
+# End page text when the next chapter is not out yet.
+linux-reader-end-not-out-body = Kaeri sprawdza nowe rozdziały w tle i dodaje je w sekcji Aktualizacje.
+
+# End page text when the reader has caught up with the series.
+linux-reader-end-caught-up-body = Nowe rozdziały pojawią się w sekcji Aktualizacje, gdy twoje źródła je mają.
+
+# End page text at the end of a finished series.
+linux-reader-end-finished-body = Nie ma więcej rozdziałów.
+
+# End page text when the next chapter is not downloaded and the computer is offline.
+linux-reader-end-offline-body = Jesteś offline. Otworzy się tutaj po połączeniu z siecią.
+
+# Hint under a page's error: turning the page goes on past it.
+linux-reader-page-failed-hint = Przewróć stronę, aby ją pominąć.
+
+# Line while a chapter opens, once its number is known.
+linux-reader-opening-number = Otwieranie rozdziału { $chapter }
+
+# Line while a chapter opens and a source is asked for the series' chapters.
+linux-reader-finding-source = Wyszukiwanie: źródło
+
+# Button on the Resumed notice.
+linux-reader-start-over = Zacznij od nowa
+
+# Button on the Moved notice.
+linux-reader-go-back = Wróć
+
+# Button on the mode detected notice: opens the reader settings.
+linux-reader-change = Zmień
+
+# Heading in the reader settings over what this series keeps for itself.
+linux-reader-this-series = Ta seria
+
+# Heading in the reader settings over what applies to every manga.
+linux-reader-all-manga = Cała manga
+
+# Heading in the reader settings over what applies to every manga on this computer.
+linux-reader-all-manga-here = Cała manga na tym komputerze
+
+# Heading in the reader settings over what applies to every webtoon.
+linux-reader-all-strips = Wszystkie webtoony
+
+# Heading in the reader settings over what applies to every webtoon on this computer.
+linux-reader-all-strips-here = Wszystkie webtoony na tym komputerze
+
+# Heading in the reader settings over what applies to every light novel.
+linux-reader-all-novels = Wszystkie light novel
+
+# The reading mode choice that follows the series' details.
+linux-reader-mode-auto = Auto
+
+# Under the reading mode when it was guessed.
+linux-reader-mode-detected = Wykryto na podstawie danych serii.
+
+# Button under the reading mode when the series has a choice of its own: drops it.
+linux-reader-use-default = Użyj domyślnych
+
+# Row that opens the rest of the reader settings.
+linux-reader-more-settings = Więcej ustawień czytnika
+
+# Line spacing choices.
+linux-reader-line-tight = Ciasna
+
+linux-reader-line-normal = Normalna
+
+linux-reader-line-loose = Luźna
+
+# The margins choice between Narrow and Wide.
+linux-reader-margins-normal = Normalne
+
+# Accessible names of the two ends of the text size slider.
+linux-reader-text-smaller = Mniejszy tekst
+
+linux-reader-text-larger = Większy tekst
+
+# Title of the small popover that jumps to a page, and its shortcut's name.
+linux-reader-go-to-page = Przejdź do strony
+
+# Placeholder of the Go to page field.
+linux-reader-go-to-page-field = od 1 do { $total }
+
+# Heading of the reader's keys in the keyboard shortcuts window.
+linux-shortcuts-reader = Czytnik
+
+# Shortcut: turn the page.
+linux-shortcuts-turn = Przewróć stronę
+
+# Shortcut: the first or last page.
+linux-shortcuts-first-last = Pierwsza lub ostatnia strona
+
+# Shortcut: a novel's text larger, smaller or back to its size.
+linux-shortcuts-text-size = Większy, mniejszy lub domyślny tekst
+
+# Shortcut: back to the page before a jump, or out of the reader.
+linux-shortcuts-reader-back = Wróć do strony sprzed skoku
+
+# Shortcut: close the reader.
+linux-shortcuts-close-reader = Zamknij czytnik
+
+# Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
+linux-reader-names-and = { $first } i { $last }
+
+# On the plate that holds a page's place while it loads. The page is its number, such as 23.
+linux-reader-page-plate = Strona { $page }
+
+# Heading when a chapter could not open. The chapter is its number, such as 13.
+linux-reader-open-failed = Nie udało się otworzyć rozdziału { $chapter }
+
+# Heading when a chapter with no number could not open.
+linux-reader-open-failed-plain = Nie udało się otworzyć tego rozdziału
+
+# Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
+linux-send-next =
+    { $n ->
+        [one] Kolejny nieprzeczytany
+        [few] Kolejne nieprzeczytane: { $n }
+        [many] Kolejne nieprzeczytane: { $n }
+       *[other] Kolejne nieprzeczytane: { $n }
+    }
+
+# Choice in Send to e-reader's Chapters row: every chapter not read yet.
+linux-send-all-unread = Wszystkie nieprzeczytane
+
+# Under Send to e-reader's Chapters row when every chapter is read.
+linux-send-none-unread = Wszystkie rozdziały są przeczytane
+
+# Toast after the prepared files were saved to a folder.
+linux-send-saved =
+    { $n ->
+        [one] Zapisano plik
+        [few] Zapisano { $n } pliki
+        [many] Zapisano { $n } plików
+       *[other] Zapisano { $n } pliku
+    }
+
+# Toast when the prepared files could not be written to the folder picked.
+linux-send-save-failed = Nie udało się zapisać plików w tym folderze
+
+# Tooltip and spoken name of the button on Updates that looks for new chapters now.
+linux-updates-check = Sprawdź nowe rozdziały
 
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Podgląd
@@ -1916,6 +2225,9 @@ tv-cast-inhibit-reason = Wysyłanie odcinka do telewizora
 
 # The heading over the TVs running Kaeri in Play on TV, once TVs with Chromecast built in are listed below them.
 tv-network-group = W tej sieci
+
+# The sidebar place that lists your own sources, under the Sources heading.
+linux-sidebar-your-sources = Twoje źródła
 
 # Count of devices on a member's row in the members dialog, and after "Owner ·".
 stores-device-count =
@@ -4822,6 +5134,18 @@ tui-together-not-a-link = To nie jest link ani kod pokoju.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Odcinek { $episode } · { $when }
 
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = Czytanie jest w aplikacjach
+
+# Line under the title of that page.
+tui-medium-read-line = Terminal nie ma czytnika. Manga, webtoony i light novel otwierają się w aplikacjach Kaeri, a synchronizacja utrzymuje twój postęp na bieżąco.
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = Naciśnij { $key }, aby zmienić, do czego służy Kaeri.
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = { $key }: zmień
+
 # Title of the about page.
 about-title = O aplikacji
 
@@ -5520,6 +5844,27 @@ pad-button-left-stick = Lewy drążek
 
 # Name of the controller's right stick, in the controller help.
 pad-button-right-stick = Prawy drążek
+
+# Controller help: the D-pad in the reader turns the page, the way the book reads.
+pad-help-turn-page = Przewróć stronę
+
+# Controller help: the left shoulder button in the reader.
+pad-help-previous-chapter = Poprzedni rozdział
+
+# Controller help: the right shoulder button in the reader.
+pad-help-next-chapter = Kolejny rozdział
+
+# Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pad-help-reader-bar = Pokaż lub ukryj pasek
+
+# Controller help: the menu button in the reader.
+pad-help-reader-settings = Ustawienia czytnika
+
+# Controller help: the B button in the reader.
+pad-help-close-reader = Zamknij czytnik
+
+# Heading in the controller help for the buttons in the reader.
+pad-help-reader = Czytnik
 
 # Checkbox of the close question.
 close-dont-ask = Nie pytaj ponownie
@@ -8540,6 +8885,75 @@ demo-story-row = Opowiadanie · { $author } · { $licence }
 # Primary action on the demo's series page.
 demo-read-chapter = Czytaj rozdział { $number }
 
+# Page between chapters, under the tracker line: the server has the progress.
+progress-server-saved = Zapisano na serwerze { $server }
+
+# Same place, only after 600 ms without an answer.
+progress-server-sending = Wysyłanie na serwer { $server }…
+
+# Same place, offline: the send waits in the queue.
+progress-server-offline = Zostanie wysłane na serwer { $server }, gdy wrócisz do sieci
+
+# Same place, the send failed for a reason that can pass.
+progress-server-retrying = Serwer { $server } nie odpowiedział. Kaeri spróbuje ponownie.
+
+# Same place, the server said no. Try again follows it.
+progress-server-failed = Nie zapisano na serwerze { $server }: { $reason }.
+
+# Reason: a Kavita key.
+progress-why-key = serwer odrzucił klucz
+
+# Reason: a Komga or OPDS password.
+progress-why-password = serwer odrzucił hasło
+
+# Reason.
+progress-why-gone = tej serii nie ma już na serwerze
+
+# Reason, after a day of retries.
+progress-why-gave-up = brak odpowiedzi przez dobę
+
+# Your sources, the server's row, second line.
+progress-row-saved = Postęp zapisano { $ago }
+
+# The server's row, after 600 ms without an answer.
+progress-row-sending =
+    { $count ->
+        [one] Wysyłanie 1 rozdziału…
+        [few] Wysyłanie { $count } rozdziałów…
+        [many] Wysyłanie { $count } rozdziałów…
+       *[other] Wysyłanie { $count } rozdziału…
+    }
+
+# The server's row, offline.
+progress-row-offline =
+    { $count ->
+        [one] 1 rozdział zostanie wysłany, gdy wrócisz do sieci
+        [few] { $count } rozdziały zostaną wysłane, gdy wrócisz do sieci
+        [many] { $count } rozdziałów zostanie wysłanych, gdy wrócisz do sieci
+       *[other] { $count } rozdziału zostanie wysłane, gdy wrócisz do sieci
+    }
+
+# The server's row, the last try failed for a reason that can pass.
+progress-row-retrying =
+    { $count ->
+        [one] 1 rozdział czeka. Kaeri spróbuje ponownie.
+        [few] { $count } rozdziały czekają. Kaeri spróbuje ponownie.
+        [many] { $count } rozdziałów czeka. Kaeri spróbuje ponownie.
+       *[other] { $count } rozdziału czeka. Kaeri spróbuje ponownie.
+    }
+
+# The server's row, the server said no. Try again sits beside it.
+progress-row-failed =
+    { $count ->
+        [one] Nie zapisano 1 rozdziału: { $reason }
+        [few] Nie zapisano { $count } rozdziałów: { $reason }
+        [many] Nie zapisano { $count } rozdziałów: { $reason }
+       *[other] Nie zapisano { $count } rozdziału: { $reason }
+    }
+
+# The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+progress-row-off = Postęp zostaje na tym urządzeniu ({ $kind })
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = Oglądaj
 
@@ -8613,16 +9027,25 @@ chapter-updates-open-series-menu = Otwórz serię
 action-read-chapter = Czytaj rozdział { $n }
 
 # The main action when a chapter is part read.
-action-continue-chapter = Wznów rozdział { $n } · strona { $page }
+action-continue-chapter = Czytaj dalej: rozdział { $n } · strona { $page }
 
 # The main action for a light novel part, part read.
-action-continue-part = Wznów część { $n } · { $percent }%
+action-continue-part = Czytaj dalej: część { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
-action-continue-part-plain = Wznów część { $n }
+action-continue-part-plain = Czytaj dalej: część { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Czytaj część { $n }
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = Czytaj dalej: { $label } · { $percent }%
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = Czytaj dalej: { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+action-read-named = Czytaj: { $label }
 
 # The main action when every chapter is read.
 action-read-again = Czytaj ponownie
@@ -9483,7 +9906,7 @@ settings-counts-read-moving-on-note = Przewrócenie ostatniej strony albo otwarc
 settings-counts-read-marked = Gdy sam oznaczysz
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = Kontynuuj oglądanie i Trackery idą za twoimi oznaczeniami
+settings-counts-read-marked-note = Sekcja Czytaj dalej i Trackery idą za twoimi oznaczeniami
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Ustawienia serii, które podążają za tobą
@@ -9586,6 +10009,240 @@ read-downloads-read = { $n } przeczytanych
 
 # Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 read-downloads-delete-read = Usuń przeczytane
+
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = Wyślij na e-czytnik
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = Dla
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = Co
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = Rozdziały
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = { $chapter }
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = Od { $first } do { $last }
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = Rozmiar
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = Około { $size }
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = Kaeri nie widzi, w którym miejscu jesteś na tym e-czytniku. Gdy wrócisz, strona serii zapyta, gdzie przerwano czytanie.
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = Przygotuj i udostępnij
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+        [one] Przygotowywanie rozdziału
+        [few] Przygotowywanie { $done } z { $total } rozdziałów
+        [many] Przygotowywanie { $done } z { $total } rozdziałów
+       *[other] Przygotowywanie { $done } z { $total } rozdziału
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = Strony dopasowane do: { $device }
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = Ponad { $size }, więc pliki zostaną podzielone na części.
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = Nie udało się przygotować rozdziału { $chapter }. { $cause }
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = Nie udało się przygotować plików. { $cause }
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = Obliczanie
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = Rozwinięte
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = Zwinięte
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = { $percent } procent
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = Wyślij na e-czytnik
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = dzielone na części powyżej { $size }
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = Anuluj wysyłanie
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+        [one] Jeden plik jest gotowy.
+        [few] { $n } pliki są gotowe.
+        [many] { $n } plików jest gotowych.
+       *[other] { $n } pliku jest gotowe.
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = Udostępnij ponownie
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = Wysyłanie na: { $device }
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = EPUB o stałym układzie
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = KEPUB
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = EPUB
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = CBZ
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = { $format } · { $width } × { $height }
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = Gdzie przerwano czytanie?
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = Rozdziały trafiły na: { $device }. Gdzie przerwano czytanie?
+
+# Button in that note.
+stop-note-action = Ustaw miejsce
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = Rozdział { $chapter } trafił na { $device } dnia { $date }.
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = Rozdziały od { $first } do { $last } trafiły na { $device } dnia { $date }.
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = Przeczytano rozdział { $chapter } do końca
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = Ustaw miejsce
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = Zostaw rozdział { $chapter } · strona { $page }
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = Zostaw obecne miejsce
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = E-czytniki
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = Wyślij na e-czytnik
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = Kanał OPDS
+
+# Line under the Share on this network switch.
+opds-share-note = Katalog OPDS, który mogą przeglądać e-czytniki w domu
+
+# Footnote under the feed settings.
+opds-footer = Kanał działa tylko wtedy, gdy Kaeri jest otwarty na tym urządzeniu ({ $device }). Postęp na tych e-czytnikach zostaje na nich.
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = Adres
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = Włącz kanał, aby zobaczyć jego adres.
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = Hasło
+
+# Line under the password row.
+opds-password-note = E-czytniki pytają o nie raz
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = Nowe hasło
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = Port
+
+# Line under the port row when it is empty.
+opds-port-note = Zostaw puste, aby użyć dowolnego wolnego portu, albo wybierz port od 1024 do 65535
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = Port { $wanted } był zajęty, więc kanał używa portu { $port }.
+
+# Heading of the group that picks what the feed shares.
+opds-shares = Co udostępnia
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = Pobrane
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+        [one] Jeden rozdział
+        [few] { $n } rozdziały
+        [many] { $n } rozdziałów
+       *[other] { $n } rozdziału
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = Folder mangi
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = Folder light novel
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+        [one] Jedna seria
+        [few] { $n } serie
+        [many] { $n } serii
+       *[other] { $n } serii
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = Pobrane przez
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = Żaden e-czytnik jeszcze niczego nie pobrał.
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = Uruchamianie…
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = Wstrzymano. Ten Mac nie jest w sieci lokalnej.
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = Wstrzymano. Ten Mac łączy się tylko przez VPN.
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = Utworzyć nowe hasło?
+
+# Text of that question.
+opds-new-password-warning = E-czytniki, które już używają kanału, przestaną działać, dopóki nie wpiszesz nowego hasła w każdym z nich.
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = Ostatnie żądanie { $time }
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+        [one] Jeden plik
+        [few] { $n } pliki
+        [many] { $n } plików
+       *[other] { $n } pliku
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = E-czytnik pod adresem { $address }
 
 # Button that shows the season before.
 seasonal-previous = Poprzedni sezon
@@ -13327,7 +13984,7 @@ accounts-welcome-detail = Zaloguj się w { $tracker }, aby synchronizować list�
 accounts-brings-lists = Importuje listy i uzupełnia Kontynuuj oglądanie tytułami, które oglądasz.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Wczytuje twoje listy i wypełnia sekcję Kontynuuj oglądanie tym, co czytasz.
+accounts-brings-lists-read = Wczytuje twoje listy i wypełnia sekcję Czytaj dalej tym, co czytasz.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Wczytuje twoje listy i wypełnia sekcję Kontynuuj oglądanie tym, co oglądasz i czytasz.

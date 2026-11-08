@@ -49,3 +49,4 @@ shell-device-label = Máy tính Linux
 tv-cast-through-computer = Phát qua máy tính này
 tv-cast-inhibit-reason = Đang gửi tập phim đến TV
 tv-network-group = Trên mạng này
+linux-sidebar-your-sources = { -source-cap-pl } của bạn

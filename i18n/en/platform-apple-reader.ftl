@@ -72,7 +72,7 @@ reader-end-not-read = Not marked read yet
 # Small label above the next chapter's title on the end page.
 
 # The one amber button of the end page: opens the next chapter.
-reader-continue = { -continue-cap }
+reader-continue = { -continue-reading-cap }
 
 # Button on the end page that goes back to the series page.
 reader-back-to-series = Back to the series
