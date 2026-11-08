@@ -241,7 +241,7 @@ fn grouped<const SEP: char, const FROM: usize, M>(
         out.push('-');
     }
     for (at, digit) in digits.chars().enumerate() {
-        if at > 0 && (digits.len() - at) % 3 == 0 {
+        if at > 0 && (digits.len() - at).is_multiple_of(3) {
             out.push(SEP);
         }
         out.push(digit);
