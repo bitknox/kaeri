@@ -6,12 +6,15 @@ use std::rc::Rc;
 
 use adw::prelude::*;
 use kaeri_core::books::WorkId;
-use kaeri_model::reader::ReaderSettingKey;
+use kaeri_model::{
+    input::{Direction, ReaderPad},
+    reader::ReaderSettingKey,
+};
 
-use crate::{pages::Dest, window::Shell};
+use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 24] = [
+pub const NAMES: [&str; 36] = [
     "read",
     "read-updates",
     "read-library",
@@ -28,7 +31,19 @@ pub const NAMES: [&str; 24] = [
     "read-paged-single",
     "read-paged-width",
     "read-paged-settings",
+    "read-end",
+    "read-end-none",
+    "read-end-plate",
+    "read-plate",
+    "read-open-failed",
+    "read-mode",
+    "read-turn-a",
+    "read-turn-b",
     "read-strip",
+    "read-strip-end",
+    "read-strip-slide-a",
+    "read-strip-slide-b",
+    "read-strip-mode",
     "read-strip-light",
     "read-chapters",
     "read-chapters-list",
@@ -48,6 +63,14 @@ fn read(shell: &Rc<Shell>, work: &str, chapter: &str) {
         "win.read",
         Some(&(work, chapter).to_variant()),
     );
+}
+
+/// Do `what` with the reader `ms` after the stage, once the chapter has opened.
+fn later(shell: &Rc<Shell>, ms: u64, what: impl FnOnce(&Rc<Reader>) + 'static) {
+    let reader = Rc::clone(&shell.reader);
+    gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(ms), move || {
+        what(&reader)
+    });
 }
 
 fn series(shell: &Rc<Shell>, work: &str) {
@@ -140,9 +163,59 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             );
             4.5
         }
+        // The page between chapters: on to chapter 14, and after the last chapter.
+        "read-end" | "read-end-none" => {
+            read(shell, MANGA, if shot == "read-end" { "13" } else { "15" });
+            later(shell, 2500, |reader| reader.shot_end());
+            4.0
+        }
+        // The end page with no first page to show: the plate with the chapter's number.
+        "read-end-plate" => {
+            read(shell, MANGA, "13");
+            later(shell, 2500, |reader| reader.shot_end_plate());
+            4.0
+        }
+        // A page still loading after 4 s: its plate, number and line.
+        "read-plate" => {
+            read(shell, MANGA, "13");
+            later(shell, 2500, |reader| reader.shot_plate());
+            4.0
+        }
+        // A chapter that could not open: a series no source has.
+        "read-open-failed" => {
+            read(shell, "a:900399", "1");
+            4.0
+        }
+        // Aa with Reading mode's list pushed, on a manga and on a strip.
+        "read-mode" | "read-strip-mode" => {
+            if shot == "read-mode" {
+                read(shell, MANGA, "13");
+            } else {
+                read(shell, STRIP, "2");
+            }
+            later(shell, 2500, |reader| reader.shot_mode_list());
+            4.5
+        }
+        // A page turn 60 ms and 140 ms in: the page under the one that fades away.
+        "read-turn-a" | "read-turn-b" => {
+            read(shell, MANGA, "13");
+            later(shell, 3000, |reader| reader.pad(ReaderPad::Turn(Direction::Down)));
+            if shot == "read-turn-a" { 3.0 + 0.06 } else { 3.0 + 0.14 }
+        }
         "read-strip" => {
             read(shell, STRIP, "2");
             4.0
+        }
+        "read-strip-end" => {
+            read(shell, STRIP, "2");
+            later(shell, 2500, |reader| reader.shot_end());
+            4.0
+        }
+        // Space in a strip 60 ms and 140 ms in: the slide on the quick spring.
+        "read-strip-slide-a" | "read-strip-slide-b" => {
+            read(shell, STRIP, "2");
+            later(shell, 3000, |reader| reader.pad(ReaderPad::Turn(Direction::Down)));
+            if shot == "read-strip-slide-a" { 3.0 + 0.06 } else { 3.0 + 0.14 }
         }
         "read-strip-light" => {
             shell.reader.shot_setting(ReaderSettingKey::Background, "white");

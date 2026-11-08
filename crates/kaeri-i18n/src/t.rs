@@ -2600,11 +2600,6 @@ pub fn linux_send_title() -> String {
     text("linux-send-title", &[])
 }
 
-/// Line under that title.
-pub fn linux_send_line() -> String {
-    text("linux-send-line", &[])
-}
-
 /// Button that starts preparing the files.
 pub fn linux_send_prepare() -> String {
     text("linux-send-prepare", &[])
@@ -2643,6 +2638,233 @@ pub fn linux_reader_page_of(page: i64, pages: i64) -> String {
 /// Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
 pub fn linux_reader_pages() -> String {
     text("linux-reader-pages", &[])
+}
+
+/// Line on the end page for a chapter that has not counted as read yet.
+pub fn linux_reader_end_not_read() -> String {
+    text("linux-reader-end-not-read", &[])
+}
+
+/// The one amber button of the end page: opens the next chapter.
+pub fn linux_reader_continue() -> String {
+    text("linux-reader-continue", &[])
+}
+
+/// End page text when the next chapter is not out yet.
+pub fn linux_reader_end_not_out_body() -> String {
+    text("linux-reader-end-not-out-body", &[])
+}
+
+/// End page text when the reader has caught up with the series.
+pub fn linux_reader_end_caught_up_body() -> String {
+    text("linux-reader-end-caught-up-body", &[])
+}
+
+/// End page text at the end of a finished series.
+pub fn linux_reader_end_finished_body() -> String {
+    text("linux-reader-end-finished-body", &[])
+}
+
+/// End page text when the next chapter is not downloaded and the computer is offline.
+pub fn linux_reader_end_offline_body() -> String {
+    text("linux-reader-end-offline-body", &[])
+}
+
+/// Hint under a page's error: turning the page goes on past it.
+pub fn linux_reader_page_failed_hint() -> String {
+    text("linux-reader-page-failed-hint", &[])
+}
+
+/// Line while a chapter opens, once its number is known.
+pub fn linux_reader_opening_number(chapter: &str) -> String {
+    text("linux-reader-opening-number", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Line while a chapter opens and a source is asked for the series' chapters.
+pub fn linux_reader_finding_source() -> String {
+    text("linux-reader-finding-source", &[])
+}
+
+/// Button on the Resumed notice.
+pub fn linux_reader_start_over() -> String {
+    text("linux-reader-start-over", &[])
+}
+
+/// Button on the Moved notice.
+pub fn linux_reader_go_back() -> String {
+    text("linux-reader-go-back", &[])
+}
+
+/// Button on the mode detected notice: opens the reader settings.
+pub fn linux_reader_change() -> String {
+    text("linux-reader-change", &[])
+}
+
+/// Heading in the reader settings over what this series keeps for itself.
+pub fn linux_reader_this_series() -> String {
+    text("linux-reader-this-series", &[])
+}
+
+/// Heading in the reader settings over what applies to every manga.
+pub fn linux_reader_all_manga() -> String {
+    text("linux-reader-all-manga", &[])
+}
+
+/// Heading in the reader settings over what applies to every manga on this computer.
+pub fn linux_reader_all_manga_here() -> String {
+    text("linux-reader-all-manga-here", &[])
+}
+
+/// Heading in the reader settings over what applies to every webtoon.
+pub fn linux_reader_all_strips() -> String {
+    text("linux-reader-all-strips", &[])
+}
+
+/// Heading in the reader settings over what applies to every webtoon on this computer.
+pub fn linux_reader_all_strips_here() -> String {
+    text("linux-reader-all-strips-here", &[])
+}
+
+/// Heading in the reader settings over what applies to every light novel.
+pub fn linux_reader_all_novels() -> String {
+    text("linux-reader-all-novels", &[])
+}
+
+/// The reading mode choice that follows the series' details.
+pub fn linux_reader_mode_auto() -> String {
+    text("linux-reader-mode-auto", &[])
+}
+
+/// Under the reading mode when it was guessed.
+pub fn linux_reader_mode_detected() -> String {
+    text("linux-reader-mode-detected", &[])
+}
+
+/// Button under the reading mode when the series has a choice of its own: drops it.
+pub fn linux_reader_use_default() -> String {
+    text("linux-reader-use-default", &[])
+}
+
+/// Row that opens the rest of the reader settings.
+pub fn linux_reader_more_settings() -> String {
+    text("linux-reader-more-settings", &[])
+}
+
+/// Line spacing choices.
+pub fn linux_reader_line_tight() -> String {
+    text("linux-reader-line-tight", &[])
+}
+
+pub fn linux_reader_line_normal() -> String {
+    text("linux-reader-line-normal", &[])
+}
+
+pub fn linux_reader_line_loose() -> String {
+    text("linux-reader-line-loose", &[])
+}
+
+/// The margins choice between Narrow and Wide.
+pub fn linux_reader_margins_normal() -> String {
+    text("linux-reader-margins-normal", &[])
+}
+
+/// Accessible names of the two ends of the text size slider.
+pub fn linux_reader_text_smaller() -> String {
+    text("linux-reader-text-smaller", &[])
+}
+
+pub fn linux_reader_text_larger() -> String {
+    text("linux-reader-text-larger", &[])
+}
+
+/// Title of the small popover that jumps to a page, and its shortcut's name.
+pub fn linux_reader_go_to_page() -> String {
+    text("linux-reader-go-to-page", &[])
+}
+
+/// Placeholder of the Go to page field.
+pub fn linux_reader_go_to_page_field(total: i64) -> String {
+    text("linux-reader-go-to-page-field", &[("total", Arg::Int(total))])
+}
+
+/// Heading of the reader's keys in the keyboard shortcuts window.
+pub fn linux_shortcuts_reader() -> String {
+    text("linux-shortcuts-reader", &[])
+}
+
+/// Shortcut: turn the page.
+pub fn linux_shortcuts_turn() -> String {
+    text("linux-shortcuts-turn", &[])
+}
+
+/// Shortcut: the first or last page.
+pub fn linux_shortcuts_first_last() -> String {
+    text("linux-shortcuts-first-last", &[])
+}
+
+/// Shortcut: a novel's text larger, smaller or back to its size.
+pub fn linux_shortcuts_text_size() -> String {
+    text("linux-shortcuts-text-size", &[])
+}
+
+/// Shortcut: back to the page before a jump, or out of the reader.
+pub fn linux_shortcuts_reader_back() -> String {
+    text("linux-shortcuts-reader-back", &[])
+}
+
+/// Shortcut: close the reader.
+pub fn linux_shortcuts_close_reader() -> String {
+    text("linux-shortcuts-close-reader", &[])
+}
+
+/// Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
+pub fn linux_reader_names_and(first: &str, last: &str) -> String {
+    text("linux-reader-names-and", &[("first", Arg::Text(first)), ("last", Arg::Text(last))])
+}
+
+/// On the plate that holds a page's place while it loads. The page is its number, such as 23.
+pub fn linux_reader_page_plate(page: i64) -> String {
+    text("linux-reader-page-plate", &[("page", Arg::Int(page))])
+}
+
+/// Heading when a chapter could not open. The chapter is its number, such as 13.
+pub fn linux_reader_open_failed(chapter: &str) -> String {
+    text("linux-reader-open-failed", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Heading when a chapter with no number could not open.
+pub fn linux_reader_open_failed_plain() -> String {
+    text("linux-reader-open-failed-plain", &[])
+}
+
+/// Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
+pub fn linux_send_next(n: i64) -> String {
+    text("linux-send-next", &[("n", Arg::Int(n))])
+}
+
+/// Choice in Send to e-reader's Chapters row: every chapter not read yet.
+pub fn linux_send_all_unread() -> String {
+    text("linux-send-all-unread", &[])
+}
+
+/// Under Send to e-reader's Chapters row when every chapter is read.
+pub fn linux_send_none_unread() -> String {
+    text("linux-send-none-unread", &[])
+}
+
+/// Toast after the prepared files were saved to a folder.
+pub fn linux_send_saved(n: i64) -> String {
+    text("linux-send-saved", &[("n", Arg::Int(n))])
+}
+
+/// Toast when the prepared files could not be written to the folder picked.
+pub fn linux_send_save_failed() -> String {
+    text("linux-send-save-failed", &[])
+}
+
+/// Tooltip and spoken name of the button on Updates that looks for new chapters now.
+pub fn linux_updates_check() -> String {
+    text("linux-updates-check", &[])
 }
 
 /// Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
@@ -3038,6 +3260,11 @@ pub fn tv_cast_inhibit_reason() -> String {
 /// The heading over the TVs running Kaeri in Play on TV, once TVs with Chromecast built in are listed below them.
 pub fn tv_network_group() -> String {
     text("tv-network-group", &[])
+}
+
+/// Heading in the sidebar over the places that hold your own sources.
+pub fn linux_sidebar_your_sources() -> String {
+    text("linux-sidebar-your-sources", &[])
 }
 
 /// Count of devices on a member's row in the members dialog, and after "Owner ·".

@@ -96,7 +96,6 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_start(&crate::window::tv_session_button(ctx));
-    header.pack_end(&crate::reading::scope(ctx, super::Dest::Search, false));
     header.pack_end(&toggle);
 
     let filters = Filters::new();
@@ -225,6 +224,8 @@ pub fn build(ctx: &Rc<Ctx>) -> SearchPage {
 
     let column = gtk::Box::new(gtk::Orientation::Vertical, 6);
     column.append(&bar);
+    // Shows or Reading leads the content bar, where Library has it.
+    filters.row.prepend(&crate::reading::scope(ctx, super::Dest::Search, false));
     column.append(&filters.row);
     column.append(&filters.chips);
     let demo_line = widgets::haze(&t::search_demo_only(), "caption");

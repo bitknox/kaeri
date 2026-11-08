@@ -258,7 +258,7 @@ pub fn shortcuts(ctx: &Ctx) {
         return;
     }
     let page = adw::PreferencesPage::new();
-    let groups: [(String, Vec<(String, &str)>); 3] = [
+    let groups: [(String, Vec<(String, &str)>); 4] = [
         (
             t::settings_group_general(),
             vec![
@@ -307,6 +307,18 @@ pub fn shortcuts(ctx: &Ctx) {
                 (t::player_stats(), "i"),              // i18n-skip
                 (t::shortcuts_answer_card(), "Return"), // i18n-skip
                 (t::shortcuts_escape(), "Escape"),     // i18n-skip
+            ],
+        ),
+        (
+            t::linux_shortcuts_reader(),
+            vec![
+                (t::linux_shortcuts_turn(), "Left Right space"), // i18n-skip
+                (t::linux_shortcuts_first_last(), "Home End"),   // i18n-skip
+                (t::linux_reader_go_to_page(), "g"),             // i18n-skip
+                (t::linux_shortcuts_text_size(), "<Control>plus <Control>minus <Control>0"), // i18n-skip
+                (t::player_fullscreen(), "F11 f"), // i18n-skip
+                (t::linux_shortcuts_reader_back(), "<Alt>Left"), // i18n-skip
+                (t::linux_shortcuts_close_reader(), "Escape <Control>w"), // i18n-skip
             ],
         ),
     ];

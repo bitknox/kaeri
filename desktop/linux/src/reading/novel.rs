@@ -23,9 +23,10 @@ use libloading::Library;
 
 use crate::window::Ctx;
 
-/// Room under the text for the reader's bottom group: its 80 px, the 20 px under it and a gap
-/// of 12. The engine's own foot is for a page with nothing over it.
-const CHROME_ROOM: u32 = 112;
+/// Room over the text for the reader's header bar: its 46 px and the reader board's gap of 32
+/// to the first line (its Linux novel frame). The engine's top is for a Mac window, whose title
+/// bar is thinner. The foot is the engine's, which counts this group already.
+const HEAD_ROOM: u32 = 78;
 
 type Object = *mut gobject_ffi::GObject;
 
@@ -336,7 +337,7 @@ impl NovelView {
         // SAFETY: the view is alive; the string is copied.
         unsafe { (api.load_uri)(view.as_ptr(), uri.as_ptr()) };
         if !open.style.is_empty() {
-            this.style(&open.style, &open.count_key, &open.counted);
+            this.style(&open.style);
         }
         Ok(this)
     }
@@ -358,12 +359,12 @@ impl NovelView {
         }
     }
 
-    /// Hand the paginator the engine's style for the person's choices, with the page's foot
-    /// kept clear of the reader's bottom group, as the reader board's Linux novel frame has it:
-    /// the text stops above the group whether it shows or not, so no line sits under it.
-    pub fn style(&self, style: &str, _count_key: &str, _counted: &[u32]) {
+    /// Hand the paginator the engine's style for the person's choices, with the first line
+    /// kept clear of the header bar, as the reader board's Linux novel frame has it: the text
+    /// starts below the header whether it shows or not.
+    pub fn style(&self, style: &str) {
         if !style.is_empty() {
-            let room = format!("{{bottom: {CHROME_ROOM}}}"); // i18n-skip
+            let room = format!("{{top: {HEAD_ROOM}}}"); // i18n-skip
             self.call(&format!(
                 "window.kaeriReader && window.kaeriReader.configure(Object.assign({style}, {room}))" // i18n-skip
             ));

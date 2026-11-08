@@ -150,9 +150,11 @@ pub fn draw(ctx: &Rc<Ctx>, details: &gtk::Box, memo: &Memo) {
         list.append(&line);
     } else if !tracking.is_empty() {
         let all: Vec<&TrackerReadRow> = tracking.iter().collect();
+        // The line already asks; the whole row is the one action that answers it.
         let line = row(&names(&all), &t::series_tracker_ask());
-        let button = change_button(&t::series_change());
-        button.connect_clicked({
+        line.set_activatable(true);
+        line.add_suffix(&gtk::Image::from_icon_name("go-next-symbolic"));
+        line.connect_activated({
             let (ctx, work, shown) = (Rc::downgrade(ctx), view.work.clone(), view.clone());
             move |_| {
                 if let Some(ctx) = ctx.upgrade() {
@@ -160,7 +162,6 @@ pub fn draw(ctx: &Rc<Ctx>, details: &gtk::Box, memo: &Memo) {
                 }
             }
         });
-        line.add_suffix(&button);
         list.append(&line);
     }
     if let Some(label) = view.edition.as_ref().and_then(|e| e.version_label.clone())
@@ -190,9 +191,14 @@ pub fn draw(ctx: &Rc<Ctx>, details: &gtk::Box, memo: &Memo) {
 
 /// The sheet that lists the sources with the series, picks one, and searches the others.
 pub fn read_from(ctx: &Rc<Ctx>, work: &WorkId, title: &str) {
+    read_from_then(ctx, work, title, None);
+}
+
+/// [`read_from`], running `chosen` once a source is picked and the sheet has closed.
+pub fn read_from_then(ctx: &Rc<Ctx>, work: &WorkId, title: &str, chosen: Option<Rc<dyn Fn()>>) {
     let dialog = adw::Dialog::new();
     dialog.set_title(&t::series_read_from_title());
-    dialog.set_content_width(460);
+    dialog.set_content_width(560);
     dialog.set_follows_content_size(true);
     let column = gtk::Box::new(gtk::Orientation::Vertical, 12);
     column.set_margin_top(12);
@@ -215,6 +221,14 @@ pub fn read_from(ctx: &Rc<Ctx>, work: &WorkId, title: &str) {
     dialog.set_child(Some(&toolbar));
 
     let found: Rc<RefCell<Found>> = Rc::default();
+    if let Some(chosen) = chosen {
+        let picked = Rc::clone(&found.borrow().picked);
+        dialog.connect_closed(move |_| {
+            if picked.get() {
+                chosen();
+            }
+        });
+    }
     let redraw: Rc<dyn Fn()> = Rc::new({
         let (ctx, work, body, found, dialog, title) = (
             Rc::downgrade(ctx),
@@ -278,6 +292,8 @@ struct Found {
     searched: Option<(String, Vec<SourceSeriesChoice>)>,
     failure: Option<String>,
     redraw: Option<std::rc::Weak<dyn Fn()>>,
+    /// A source was picked before the sheet closed.
+    picked: Rc<std::cell::Cell<bool>>,
 }
 
 fn draw_read_from(
@@ -301,10 +317,16 @@ fn draw_read_from(
             } else {
                 line.set_activatable(true);
                 line.connect_activated({
-                    let (ctx, work, edition, dialog) =
-                        (Rc::downgrade(ctx), work.clone(), edition.clone(), dialog.downgrade());
+                    let (ctx, work, edition, dialog, picked) = (
+                        Rc::downgrade(ctx),
+                        work.clone(),
+                        edition.clone(),
+                        dialog.downgrade(),
+                        Rc::clone(&state.picked),
+                    );
                     move |_| {
                         let Some(ctx) = ctx.upgrade() else { return };
+                        picked.set(true);
                         send(
                             &ctx.hub,
                             ReadingCommand::ChooseEdition {
@@ -487,15 +509,17 @@ fn search_there(
             text.set_ellipsize(gtk::pango::EllipsizeMode::End);
             button.set_child(Some(&text));
             button.connect_clicked({
-                let (ctx, work, source, series_ref, dialog) = (
+                let (ctx, work, source, series_ref, dialog, picked) = (
                     Rc::downgrade(ctx),
                     work.clone(),
                     miss.source_id.clone(),
                     choice.series_ref.clone(),
                     dialog.downgrade(),
+                    Rc::clone(&state.picked),
                 );
                 move |_| {
                     let Some(ctx) = ctx.upgrade() else { return };
+                    picked.set(true);
                     sources(
                         &ctx.hub,
                         BookSourceCommand::ChooseSourceSeries {

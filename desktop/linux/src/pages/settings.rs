@@ -57,7 +57,6 @@ enum Group {
     Mpv,
     Subtitles,
     Crashes,
-    Reading,
     Feed,
 }
 
@@ -81,7 +80,6 @@ impl Group {
             // The player's own name.
             Self::Subtitles => t::settings_group_subtitles(),
             Self::Crashes => t::settings_group_crashes(),
-            Self::Reading => t::settings_group_reading(),
             Self::Feed => t::settings_opds_feed(),
             Self::Mpv => "mpv".to_owned(), // i18n-skip
         }
@@ -147,10 +145,8 @@ const PANES: [Pane; 13] = [
         name: "reading",
         icon: "accessories-dictionary-symbolic", // i18n-skip
         groups: &[
-            (
-                Group::Reading,
-                &[K::KeepChaptersReady, K::ChapterDownloadsOnCellular, K::DeleteAfterReading],
-            ),
+            // The pane is Reading already, so its downloads group says what it is about.
+            (Group::Ahead, &[K::KeepChaptersReady, K::DeleteAfterReading]),
             (Group::Feed, &[K::OpdsFeed, K::OpdsPort, K::OpdsPassword]),
         ],
     },
