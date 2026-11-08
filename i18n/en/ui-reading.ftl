@@ -128,12 +128,12 @@ action-continue-part-plain = { -continue-reading-cap } part { $n }
 # The main action for a light novel part the source calls a chapter, part read.
 # @arg n: text
 # @arg percent: int
-action-continue-chapter-percent = { -continue-cap } chapter { $n } · { $percent }%
+action-continue-chapter-percent = { -continue-reading-cap } chapter { $n } · { $percent }%
 
 # The main action for a light novel part the source calls a chapter, part read, when how far is
 # not known.
 # @arg n: text
-action-continue-chapter-plain = { -continue-cap } chapter { $n }
+action-continue-chapter-plain = { -continue-reading-cap } chapter { $n }
 
 # The main action for a light novel part not opened yet.
 # @arg n: text

@@ -1240,6 +1240,18 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "action-continue-chapter-percent": {
+    "source": "0cb95262ddc5",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "action-continue-chapter-plain": {
+    "source": "859655a932e6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
   "action-continue-named": {
     "source": "0b193cf28ffc",
     "state": "draft",
@@ -1250,18 +1262,6 @@
     "source": "33645a671e3d",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-08"
-  },
-  "action-continue-chapter-percent": {
-    "source": "ec9886fdc568",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-08"
-  },
-  "action-continue-chapter-plain": {
-    "source": "4bc140d1eb7b",
-    "state": "draft",
-    "by": "agent",
     "at": "2026-11-08"
   },
   "action-continue-part": {

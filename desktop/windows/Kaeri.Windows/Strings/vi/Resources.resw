@@ -6207,10 +6207,10 @@
     <value>Đọc tiếp phần {n}</value>
   </data>
   <data name="ActionContinueChapterPercent" xml:space="preserve">
-    <value>Tiếp tục chương {n} · {percent}%</value>
+    <value>Đọc tiếp chương {n} · {percent}%</value>
   </data>
   <data name="ActionContinueChapterPlain" xml:space="preserve">
-    <value>Tiếp tục chương {n}</value>
+    <value>Đọc tiếp chương {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Đọc phần {n}</value>

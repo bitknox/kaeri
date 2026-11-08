@@ -6207,10 +6207,10 @@
     <value>続きを読む パート{n}</value>
   </data>
   <data name="ActionContinueChapterPercent" xml:space="preserve">
-    <value>続きを見る 第{n}話 · {percent}%</value>
+    <value>続きを読む 第{n}話 · {percent}%</value>
   </data>
   <data name="ActionContinueChapterPlain" xml:space="preserve">
-    <value>続きを見る 第{n}話</value>
+    <value>続きを読む 第{n}話</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>パート{n}を読む</value>

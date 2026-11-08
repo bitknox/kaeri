@@ -11868,49 +11868,49 @@
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seguir con el capítulo %1$@ · %2$lld%%"
+            "value" : "Seguir leyendo el capítulo %1$@ · %2$lld%%"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reprendre le chapitre %1$@ · %2$lld %%"
+            "value" : "Poursuivre le chapitre %1$@ · %2$lld %%"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lanjutkan bab %1$@ · %2$lld%%"
+            "value" : "Lanjutkan membaca bab %1$@ · %2$lld%%"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Riprendi il capitolo %1$@ · %2$lld%%"
+            "value" : "Continua a leggere il capitolo %1$@ · %2$lld%%"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "続きを見る 第%1$@話 · %2$lld%%"
+            "value" : "続きを読む 第%1$@話 · %2$lld%%"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wznów rozdział %1$@ · %2$lld%%"
+            "value" : "Czytaj dalej: rozdział %1$@ · %2$lld%%"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Retomar o capítulo %1$@ · %2$lld%%"
+            "value" : "Continuar lendo o capítulo %1$@ · %2$lld%%"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Продолжить: глава %1$@ · %2$lld%%"
+            "value" : "Читать дальше: глава %1$@ · %2$lld%%"
           }
         },
         "sv" : {
@@ -11928,7 +11928,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tiếp tục chương %1$@ · %2$lld%%"
+            "value" : "Đọc tiếp chương %1$@ · %2$lld%%"
           }
         }
       }
@@ -11952,49 +11952,49 @@
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seguir con el capítulo %1$@"
+            "value" : "Seguir leyendo el capítulo %1$@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Reprendre le chapitre %1$@"
+            "value" : "Poursuivre le chapitre %1$@"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lanjutkan bab %1$@"
+            "value" : "Lanjutkan membaca bab %1$@"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Riprendi il capitolo %1$@"
+            "value" : "Continua a leggere il capitolo %1$@"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "続きを見る 第%1$@話"
+            "value" : "続きを読む 第%1$@話"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wznów rozdział %1$@"
+            "value" : "Czytaj dalej: rozdział %1$@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Retomar o capítulo %1$@"
+            "value" : "Continuar lendo o capítulo %1$@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Продолжить: глава %1$@"
+            "value" : "Читать дальше: глава %1$@"
           }
         },
         "sv" : {
@@ -12012,7 +12012,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tiếp tục chương %1$@"
+            "value" : "Đọc tiếp chương %1$@"
           }
         }
       }

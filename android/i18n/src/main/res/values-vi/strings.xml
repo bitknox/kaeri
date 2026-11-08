@@ -2474,8 +2474,8 @@
     <string name="action_continue_chapter">Đọc tiếp chương %1$s · trang %2$d</string>
     <string name="action_continue_part">Đọc tiếp phần %1$s · %2$,d%%</string>
     <string name="action_continue_part_plain">Đọc tiếp phần %1$s</string>
-    <string name="action_continue_chapter_percent">Tiếp tục chương %1$s · %2$,d%%</string>
-    <string name="action_continue_chapter_plain">Tiếp tục chương %1$s</string>
+    <string name="action_continue_chapter_percent">Đọc tiếp chương %1$s · %2$,d%%</string>
+    <string name="action_continue_chapter_plain">Đọc tiếp chương %1$s</string>
     <string name="action_read_part">Đọc phần %1$s</string>
     <string name="action_continue_named">Đọc tiếp %1$s · %2$,d%%</string>
     <string name="action_continue_named_plain">Đọc tiếp %1$s</string>

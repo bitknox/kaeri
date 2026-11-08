@@ -8925,10 +8925,10 @@ action-continue-part = Đọc tiếp phần { $n } · { $percent }%
 action-continue-part-plain = Đọc tiếp phần { $n }
 
 # The main action for a light novel part the source calls a chapter, part read.
-action-continue-chapter-percent = Tiếp tục chương { $n } · { $percent }%
+action-continue-chapter-percent = Đọc tiếp chương { $n } · { $percent }%
 
 # The main action for a light novel part the source calls a chapter, part read, when how far is not known.
-action-continue-chapter-plain = Tiếp tục chương { $n }
+action-continue-chapter-plain = Đọc tiếp chương { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Đọc phần { $n }

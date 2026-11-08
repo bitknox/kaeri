@@ -8925,10 +8925,10 @@ action-continue-part = 続きを読む パート{ $n } · { $percent }%
 action-continue-part-plain = 続きを読む パート{ $n }
 
 # The main action for a light novel part the source calls a chapter, part read.
-action-continue-chapter-percent = 続きを見る 第{ $n }話 · { $percent }%
+action-continue-chapter-percent = 続きを読む 第{ $n }話 · { $percent }%
 
 # The main action for a light novel part the source calls a chapter, part read, when how far is not known.
-action-continue-chapter-plain = 続きを見る 第{ $n }話
+action-continue-chapter-plain = 続きを読む 第{ $n }話
 
 # The main action for a light novel part not opened yet.
 action-read-part = パート{ $n }を読む

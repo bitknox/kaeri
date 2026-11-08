@@ -9228,10 +9228,10 @@ action-continue-part = Читать дальше: часть { $n } · { $percen
 action-continue-part-plain = Читать дальше: часть { $n }
 
 # The main action for a light novel part the source calls a chapter, part read.
-action-continue-chapter-percent = Продолжить: глава { $n } · { $percent }%
+action-continue-chapter-percent = Читать дальше: глава { $n } · { $percent }%
 
 # The main action for a light novel part the source calls a chapter, part read, when how far is not known.
-action-continue-chapter-plain = Продолжить: глава { $n }
+action-continue-chapter-plain = Читать дальше: глава { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Читать часть { $n }

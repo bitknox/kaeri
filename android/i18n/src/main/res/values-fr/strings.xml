@@ -2662,8 +2662,8 @@
     <string name="action_continue_chapter">Poursuivre le chapitre %1$s · page %2$d</string>
     <string name="action_continue_part">Poursuivre la partie %1$s · %2$,d %%</string>
     <string name="action_continue_part_plain">Poursuivre la partie %1$s</string>
-    <string name="action_continue_chapter_percent">Reprendre le chapitre %1$s · %2$,d %%</string>
-    <string name="action_continue_chapter_plain">Reprendre le chapitre %1$s</string>
+    <string name="action_continue_chapter_percent">Poursuivre le chapitre %1$s · %2$,d %%</string>
+    <string name="action_continue_chapter_plain">Poursuivre le chapitre %1$s</string>
     <string name="action_read_part">Lire la partie %1$s</string>
     <string name="action_continue_named">Poursuivre %1$s · %2$,d %%</string>
     <string name="action_continue_named_plain">Poursuivre %1$s</string>

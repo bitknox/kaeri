@@ -6207,10 +6207,10 @@
     <value>Lanjutkan membaca bagian {n}</value>
   </data>
   <data name="ActionContinueChapterPercent" xml:space="preserve">
-    <value>Lanjutkan bab {n} · {percent}%</value>
+    <value>Lanjutkan membaca bab {n} · {percent}%</value>
   </data>
   <data name="ActionContinueChapterPlain" xml:space="preserve">
-    <value>Lanjutkan bab {n}</value>
+    <value>Lanjutkan membaca bab {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Baca bagian {n}</value>

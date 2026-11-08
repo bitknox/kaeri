@@ -6669,10 +6669,10 @@
     <value>Seguir leyendo la parte {n}</value>
   </data>
   <data name="ActionContinueChapterPercent" xml:space="preserve">
-    <value>Seguir con el capítulo {n} · {percent}%</value>
+    <value>Seguir leyendo el capítulo {n} · {percent}%</value>
   </data>
   <data name="ActionContinueChapterPlain" xml:space="preserve">
-    <value>Seguir con el capítulo {n}</value>
+    <value>Seguir leyendo el capítulo {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Leer la parte {n}</value>

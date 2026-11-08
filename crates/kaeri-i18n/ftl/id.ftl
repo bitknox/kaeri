@@ -8925,10 +8925,10 @@ action-continue-part = Lanjutkan membaca bagian { $n } · { $percent }%
 action-continue-part-plain = Lanjutkan membaca bagian { $n }
 
 # The main action for a light novel part the source calls a chapter, part read.
-action-continue-chapter-percent = Lanjutkan bab { $n } · { $percent }%
+action-continue-chapter-percent = Lanjutkan membaca bab { $n } · { $percent }%
 
 # The main action for a light novel part the source calls a chapter, part read, when how far is not known.
-action-continue-chapter-plain = Lanjutkan bab { $n }
+action-continue-chapter-plain = Lanjutkan membaca bab { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Baca bagian { $n }

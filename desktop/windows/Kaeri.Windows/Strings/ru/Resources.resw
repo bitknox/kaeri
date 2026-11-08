@@ -6900,10 +6900,10 @@
     <value>Читать дальше: часть {n}</value>
   </data>
   <data name="ActionContinueChapterPercent" xml:space="preserve">
-    <value>Продолжить: глава {n} · {percent}%</value>
+    <value>Читать дальше: глава {n} · {percent}%</value>
   </data>
   <data name="ActionContinueChapterPlain" xml:space="preserve">
-    <value>Продолжить: глава {n}</value>
+    <value>Читать дальше: глава {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Читать часть {n}</value>
