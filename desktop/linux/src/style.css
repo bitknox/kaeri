@@ -5,6 +5,8 @@
   --ground: #161A2E;
   --raised: #222638;
   --raised-selected: #343A57;
+  /* A plate raised over raised: the title plate of a work with no cover. */
+  --raised-high: #2A2F45;
   --faint-rule: #2F3242;
   --rule: #434653;
   --edge: #727892;
@@ -347,7 +349,7 @@ progressbar.read-track progress { min-height: 3px; border-radius: 2px; backgroun
    for a work with no cover, and the sources' part of Search. */
 .read-poster, .read-poster-plate { border-radius: 12px; }
 .read-no-cover {
-  background: #2A2F45; border-radius: 12px; padding: 12px;
+  background: var(--raised-high); border-radius: 12px; padding: 12px;
   box-shadow: inset 0 0 0 1px var(--glass-rule);
 }
 .read-no-cover-title { font-size: 14px; line-height: 18px; color: var(--silk); }
@@ -355,8 +357,8 @@ progressbar.read-track progress { min-height: 3px; border-radius: 2px; backgroun
 .read-row-side, .read-demo-line { font-size: 13px; }
 .read-filter-rule { min-width: 1px; min-height: 20px; margin: 0 4px; background: var(--rule); }
 togglebutton.read-sources-only, button.read-sources-only {
-  min-height: 32px; padding: 0 12px; border-radius: 16px; font-size: 14px; font-weight: 500;
-  color: var(--haze); background: none; box-shadow: inset 0 0 0 1px var(--rule);
+  min-height: 32px; padding: 0 12px; border-radius: 8px; font-size: 14px; font-weight: 500;
+  color: var(--haze); background: none; box-shadow: inset 0 0 0 1px var(--edge);
 }
 button.read-sources-only:hover { background: alpha(currentColor, 0.07); }
 button.read-sources-only:checked {

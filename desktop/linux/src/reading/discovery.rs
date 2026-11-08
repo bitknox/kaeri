@@ -12,9 +12,12 @@ use std::{
 use adw::prelude::*;
 use gtk::glib;
 use kaeri_i18n::t;
-use kaeri_model::reading::WorkTile;
+use kaeri_model::{
+    Msg, ReadingMsg,
+    reading::{ReadRowKind, WorkTile},
+};
 
-use crate::{hub::Hub, motion, say, states, widgets};
+use crate::{hub::Hub, motion, say, squeeze::Squeeze, states, widgets};
 
 /// A poster's cover: 128 by 192.
 pub const POSTER: i32 = 128;
@@ -28,17 +31,82 @@ const PLACEHOLDERS: usize = 8;
 /// The most posters a grid row holds, in the widest window.
 const GRID_PLACEHOLDERS_ACROSS: i32 = 20;
 
-/// What the line under a poster's title is made of, where it shows.
+/// What the line under a poster's title is made of, where it shows. A line never holds more than
+/// two facts; the screen reader label says them all.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Caption {
-    /// The facts as the engine gives them: "Manga · Releasing".
+    /// The facts as the engine gives them, on the person's own sections: "Manga · Releasing".
     Facts,
-    /// On a row or a list of one format: the origin in place of the format, "Korea · Releasing".
-    OriginFirst,
+    /// Trending rows and a browse of one format: "Korea · Releasing".
+    OriginStatus,
+    /// New rows: "Japan · since March", or the status until the start month is known.
+    OriginStarted,
+    /// Finished rows, whose heading already says finished: "Japan · 112 chapters".
+    OriginCount,
+    /// Rows of mixed formats and a browse of several: "Manga · Finished".
+    FormatStatus,
     /// An AniList result for typed words: "Light novel · Japan".
     FormatOrigin,
     /// A source's hit: how much of it the source holds, "2 volumes", or nothing.
     Amount,
+}
+
+impl Caption {
+    /// The caption a Home row of `kind` takes.
+    pub fn row(kind: ReadRowKind) -> Self {
+        match kind {
+            ReadRowKind::Trending => Self::OriginStatus,
+            ReadRowKind::New => Self::OriginStarted,
+            ReadRowKind::Finished => Self::OriginCount,
+            ReadRowKind::Because | ReadRowKind::MoreGenre => Self::FormatStatus,
+        }
+    }
+}
+
+/// A tile's facts by what they say: its format, its status and how long it is.
+#[derive(Default)]
+struct Facts {
+    format: Option<String>,
+    status: Option<String>,
+    count: Option<String>,
+    origin: Option<String>,
+    started: Option<String>,
+}
+
+fn facts_of(tile: &WorkTile) -> Facts {
+    let mut facts = Facts {
+        origin: tile.origin.as_ref().map(say::msg).filter(|w| !w.is_empty()),
+        started: started_of(tile),
+        ..Facts::default()
+    };
+    for (at, fact) in tile.facts.iter().enumerate() {
+        let words = say::msg(fact);
+        if words.is_empty() {
+            continue;
+        }
+        let place = match fact {
+            Msg::Reading(
+                ReadingMsg::ReadingStatusReleasing
+                | ReadingMsg::ReadingStatusFinished
+                | ReadingMsg::ReadingStatusHiatus
+                | ReadingMsg::ReadingStatusCancelled
+                | ReadingMsg::ReadingStatusNotYet,
+            ) => &mut facts.status,
+            Msg::Reading(
+                ReadingMsg::ReadingChapters { .. } | ReadingMsg::ReadingVolumes { .. },
+            ) => &mut facts.count,
+            // The engine puts the format first.
+            _ if at == 0 => &mut facts.format,
+            _ => continue,
+        };
+        place.get_or_insert(words);
+    }
+    facts
+}
+
+/// When a New row's series started, once the engine says.
+fn started_of(_tile: &WorkTile) -> Option<String> {
+    None
 }
 
 /// The parts of the line under a poster's title: Not found in your sources once a row's series
@@ -50,24 +118,19 @@ fn parts(tile: &WorkTile, caption: Caption) -> Vec<String> {
     if let Some(next) = &tile.next {
         return vec![say::msg(next)];
     }
-    let facts = || tile.facts.iter().map(say::msg).collect::<Vec<_>>();
-    let origin = tile.origin.as_ref().map(say::msg);
-    let words = match (caption, origin) {
-        (Caption::Facts, _) | (Caption::OriginFirst, None) => facts(),
-        (Caption::OriginFirst, Some(origin)) => {
-            let mut words = facts();
-            match words.first_mut() {
-                Some(format) => *format = origin,
-                None => words.push(origin),
-            }
-            words
-        }
-        (Caption::FormatOrigin, origin) => {
-            tile.facts.first().map(say::msg).into_iter().chain(origin).collect()
-        }
-        (Caption::Amount, _) => tile.amount.iter().map(say::msg).collect(),
+    let Facts { format, status, count, origin, started } = facts_of(tile);
+    let pair = |first: Option<String>, second: Option<String>| {
+        first.into_iter().chain(second).collect::<Vec<_>>()
     };
-    words.into_iter().filter(|w| !w.is_empty()).collect()
+    match caption {
+        Caption::Facts => tile.facts.iter().map(say::msg).filter(|w| !w.is_empty()).collect(),
+        Caption::OriginStatus => pair(origin.or(format), status),
+        Caption::OriginStarted => pair(origin.or(format), started.or(status)),
+        Caption::OriginCount => pair(origin.or(format), count.or(status)),
+        Caption::FormatStatus => pair(format, status),
+        Caption::FormatOrigin => pair(format, origin),
+        Caption::Amount => tile.amount.iter().map(say::msg).filter(|w| !w.is_empty()).collect(),
+    }
 }
 
 /// The line under a poster's title.
@@ -75,10 +138,21 @@ pub fn line_of(tile: &WorkTile, caption: Caption) -> String {
     parts(tile, caption).join(" \u{b7} ") // i18n-skip
 }
 
-/// What a screen reader says for a poster: "Title. Manga, Releasing." and, after a miss, "Title.
-/// Not found in your sources." A joined result adds where it is: "In Home library."
+/// Everything a screen reader hears about a poster under its title, whatever its line shows:
+/// "Manga, Japan, Releasing, 112 chapters".
+fn spoken_parts(tile: &WorkTile, caption: Caption) -> Vec<String> {
+    if tile.not_in_sources || tile.next.is_some() || caption == Caption::Amount {
+        return parts(tile, caption);
+    }
+    let Facts { format, status, count, origin, started } = facts_of(tile);
+    let started = if caption == Caption::OriginStarted { started } else { None };
+    [format, origin, status, started, count].into_iter().flatten().collect()
+}
+
+/// What a screen reader says for a poster: "Title. Manga, Japan, Releasing." and, after a miss,
+/// "Title. Not found in your sources." A joined result adds where it is: "In Home library."
 pub fn spoken(tile: &WorkTile, caption: Caption, joined: Option<&str>) -> String {
-    let line = parts(tile, caption).join(", "); // i18n-skip
+    let line = spoken_parts(tile, caption).join(", "); // i18n-skip
     let mut said = tile.title.clone();
     for part in [Some(line.as_str()), joined].into_iter().flatten().filter(|p| !p.is_empty()) {
         said = format!("{said}. {part}"); // i18n-skip
@@ -141,12 +215,14 @@ fn cover(hub: &Hub, tile: &WorkTile) -> gtk::Widget {
 
 /// One series as a poster: the cover, the track when it is being read, the title on one line
 /// and the line under it, with `joined` in silk under that when one of the person's sources has
-/// it. Opens the series; right-click opens its menu.
+/// it. Opens the series; right-click opens its menu. A discovery poster (`plan`) offers Add to
+/// Planning there and on Ctrl+D; the person's own series and a source's hits offer Details only.
 pub fn poster(
     hub: &Hub,
     tile: &WorkTile,
     caption: Caption,
     joined: Option<&str>,
+    plan: bool,
 ) -> gtk::Button {
     let inner = gtk::Box::new(gtk::Orientation::Vertical, 0);
     inner.set_size_request(POSTER, -1);
@@ -217,20 +293,25 @@ pub fn poster(
     button.set_hexpand(false);
     button.set_action_target_value(Some(&tile.work.0.to_variant()));
     button.set_action_name(Some("win.open-series"));
-    button.update_property(&[
-        gtk::accessible::Property::Label(&spoken(tile, caption, joined)),
-        gtk::accessible::Property::KeyShortcuts(PLAN_KEYS_SPOKEN),
-    ]);
+    button.update_property(&[gtk::accessible::Property::Label(&spoken(tile, caption, joined))]);
+    if !plan {
+        // The person's own series and a source's hits: Details only, never Add to Planning.
+        let menu = gtk::gio::Menu::new();
+        menu.append_item(&widgets::menu_item(&t::home_details(), "win.open-series", &tile.work.0));
+        widgets::context_menu(&button, &menu);
+        return button;
+    }
+    button.update_property(&[gtk::accessible::Property::KeyShortcuts(PLAN_KEYS_SPOKEN)]);
     super::work_menu(&button, &tile.work, Some((t::library_add_planning(), PLAN.to_owned())));
     // Add to Planning without the menu: GTK has no custom screen reader actions, so the poster
     // names its key for them.
     let keys = gtk::ShortcutController::new();
-    let plan = gtk::Shortcut::new(
+    let shortcut = gtk::Shortcut::new(
         gtk::ShortcutTrigger::parse_string(PLAN_KEYS),
         Some(gtk::NamedAction::new(PLAN)),
     );
-    plan.set_arguments(Some(&tile.work.0.to_variant()));
-    keys.add_shortcut(plan);
+    shortcut.set_arguments(Some(&tile.work.0.to_variant()));
+    keys.add_shortcut(shortcut);
     button.add_controller(keys);
     button
 }
@@ -442,11 +523,13 @@ pub fn strip(posters: &[gtk::Button], name: &str) -> gtk::Widget {
 
 /// A place whose part is on its way: nothing for 600 ms, then placeholders at final size, held at
 /// least 0.3 s, then what landed fades in over them in 200 ms and they fade out under it in
-/// 300 ms. A failure that lands there crossfades the same way, then the place closes to the
-/// failure's height on the standard spring. Under Reduce Animation the crossfade stays and the
-/// height changes at once.
+/// 300 ms. The place keeps its height through the crossfade, then eases to what landed on the
+/// standard spring, so a short answer or a failure never drops in one cut. Under Reduce
+/// Animation the crossfade stays and the height changes at once.
 pub struct Landing {
-    pub widget: gtk::Overlay,
+    /// The place, holding its height while what it shows changes.
+    pub widget: Squeeze,
+    overlay: gtk::Overlay,
     make: Box<dyn Fn() -> gtk::Widget>,
     /// The placeholders on show, and since when.
     shown_placeholders: RefCell<Option<(gtk::Widget, Instant)>>,
@@ -454,17 +537,20 @@ pub struct Landing {
     timer: RefCell<Option<glib::SourceId>>,
     /// What lands once the placeholders have been held long enough.
     held: RefCell<Option<glib::SourceId>>,
-    /// Told the first time the place has something to show.
+    /// Told each time the place has something to show after showing nothing.
     on_visible: RefCell<Option<Box<dyn Fn()>>>,
     visible: Cell<bool>,
 }
 
 impl Landing {
     pub fn new(make: impl Fn() -> gtk::Widget + 'static) -> Rc<Self> {
-        let widget = gtk::Overlay::new();
+        let overlay = gtk::Overlay::new();
+        overlay.set_valign(gtk::Align::Start);
+        let widget = Squeeze::new(&overlay, gtk::Orientation::Vertical, 0);
         widget.set_valign(gtk::Align::Start);
         Rc::new(Self {
             widget,
+            overlay,
             make: Box::new(make),
             shown_placeholders: RefCell::default(),
             content: RefCell::default(),
@@ -475,7 +561,7 @@ impl Landing {
         })
     }
 
-    /// Run `f` the first time the place has something to show.
+    /// Run `f` when the place has something to show after showing nothing.
     pub fn on_visible(&self, f: impl Fn() + 'static) {
         self.on_visible.replace(Some(Box::new(f)));
     }
@@ -485,17 +571,32 @@ impl Landing {
         self.visible.get()
     }
 
-    /// Whether placeholders are showing or due.
-    pub fn is_waiting(&self) -> bool {
-        self.timer.borrow().is_some()
-            || (self.shown_placeholders.borrow().is_some() && self.held.borrow().is_none())
-    }
-
     fn seen(&self) {
         if !self.visible.replace(true)
             && let Some(f) = self.on_visible.borrow().as_ref()
         {
             f();
+        }
+    }
+
+    /// Back to showing nothing, once the place has closed: the next part to land is told to
+    /// [`Self::on_visible`] again.
+    pub fn reset(&self) {
+        self.stop();
+        self.visible.set(false);
+        self.content.take();
+        self.shown_placeholders.take();
+        self.overlay.set_child(None::<&gtk::Widget>);
+    }
+
+    /// `change` swaps what shows, crossfaded in place, and the height eases to the new one.
+    fn swap(&self, change: impl FnOnce()) {
+        if self.overlay.is_mapped() {
+            self.widget.hold();
+            motion::ghost(&self.overlay, &self.overlay, true, change);
+            self.widget.release();
+        } else {
+            change();
         }
     }
 
@@ -523,13 +624,15 @@ impl Landing {
     fn show_placeholders(&self) {
         let placeholders = (self.make)();
         match self.content.take() {
-            Some(old) if self.widget.is_mapped() => {
-                motion::ghost(&self.widget, &self.widget, true, || {
-                    self.widget.set_child(Some(&placeholders));
-                });
-                drop(old);
+            Some(_) => self.swap(|| self.overlay.set_child(Some(&placeholders))),
+            None => {
+                // In a place already on screen they fade in; a part's place fades as it shows.
+                let fade = self.overlay.is_mapped();
+                self.overlay.set_child(Some(&placeholders));
+                if fade {
+                    motion::fade_in(&placeholders);
+                }
             }
-            _ => self.widget.set_child(Some(&placeholders)),
         }
         self.shown_placeholders.replace(Some((placeholders, Instant::now())));
         self.seen();
@@ -545,9 +648,8 @@ impl Landing {
         }
     }
 
-    /// What the part brought: posters or a failure. `failure` closes the place to its height
-    /// after the crossfade.
-    pub fn land(self: &Rc<Self>, content: &impl IsA<gtk::Widget>, failure: bool) {
+    /// What the part brought: posters or a failure.
+    pub fn land(self: &Rc<Self>, content: &impl IsA<gtk::Widget>) {
         let content = content.as_ref().clone();
         if let Some(id) = self.timer.take() {
             id.remove();
@@ -559,62 +661,60 @@ impl Landing {
         if let Some(since) = since {
             let left = states::AT_LEAST.saturating_sub(since.elapsed());
             if left.is_zero() {
-                self.crossfade(content, failure);
+                self.crossfade(content);
             } else {
                 let weak = Rc::downgrade(self);
                 let id = glib::timeout_add_local_once(left, move || {
                     if let Some(landing) = weak.upgrade() {
                         landing.held.take();
-                        landing.crossfade(content, failure);
+                        landing.crossfade(content);
                     }
                 });
                 self.held.replace(Some(id));
             }
             return;
         }
-        let had = self.content.borrow().is_some();
-        if had && self.widget.is_mapped() {
+        if self.content.borrow().is_some() {
             // An answer over an answer: crossfaded in place.
-            motion::ghost(&self.widget, &self.widget, true, || {
-                self.widget.set_child(Some(&content));
-            });
+            self.swap(|| self.overlay.set_child(Some(&content)));
         } else {
-            self.widget.set_child(Some(&content));
+            let fade = self.overlay.is_mapped();
+            self.overlay.set_child(Some(&content));
+            if fade {
+                motion::fade_in(&content);
+            }
         }
         self.content.replace(Some(content));
         self.seen();
     }
 
-    /// Fade `content` in over the placeholders, then them out under it.
-    fn crossfade(self: &Rc<Self>, content: gtk::Widget, failure: bool) {
+    /// Fade `content` in over the placeholders, then them out under it, then ease the height.
+    fn crossfade(self: &Rc<Self>, content: gtk::Widget) {
         let Some((placeholders, _)) = self.shown_placeholders.take() else {
-            self.widget.set_child(Some(&content));
+            self.overlay.set_child(Some(&content));
             self.content.replace(Some(content));
             return;
         };
         self.content.replace(Some(content.clone()));
-        if !self.widget.is_mapped() {
-            self.widget.set_child(Some(&content));
+        if !self.overlay.is_mapped() {
+            self.overlay.set_child(Some(&content));
             return;
         }
+        self.widget.hold();
         content.set_valign(gtk::Align::Start);
         content.set_opacity(0.0);
-        self.widget.add_overlay(&content);
-        self.widget.set_measure_overlay(&content, true);
+        self.overlay.add_overlay(&content);
+        self.overlay.set_measure_overlay(&content, true);
         let fade_in = timed(&content, 0.0, 1.0, 200, adw::Easing::EaseOutCubic);
         let weak = Rc::downgrade(self);
         fade_in.connect_done(move |_| {
             let Some(landing) = weak.upgrade() else { return };
             let fade_out = timed(&placeholders, 1.0, 0.0, 300, adw::Easing::EaseInCubic);
             let (weak, content) = (Rc::downgrade(&landing), content.clone());
-            let height = placeholders.height();
             fade_out.connect_done(move |_| {
                 let Some(landing) = weak.upgrade() else { return };
-                if failure {
-                    landing.close_to(&content, height);
-                } else {
-                    landing.settle(&content);
-                }
+                landing.settle(&content);
+                landing.widget.release();
             });
             fade_out.play();
         });
@@ -624,38 +724,145 @@ impl Landing {
     /// The content takes the place's child, out of the overlay.
     /// A newer answer that landed meanwhile has the place already: this one only leaves.
     fn settle(&self, content: &gtk::Widget) {
-        if content.parent().as_ref() == Some(self.widget.upcast_ref())
-            && self.widget.child().as_ref() != Some(content)
+        if content.parent().as_ref() == Some(self.overlay.upcast_ref())
+            && self.overlay.child().as_ref() != Some(content)
         {
-            self.widget.remove_overlay(content);
+            self.overlay.remove_overlay(content);
         }
         content.set_opacity(1.0);
         if self.content.borrow().as_ref() == Some(content) {
-            self.widget.set_child(Some(content));
+            self.overlay.set_child(Some(content));
         }
     }
+}
 
-    /// The placeholders' height closes to the content's on the standard spring.
-    fn close_to(self: &Rc<Self>, content: &gtk::Widget, from: i32) {
-        if self.content.borrow().as_ref() != Some(content) {
-            self.settle(content);
-            return;
-        }
-        let room = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        room.set_size_request(-1, from);
-        self.widget.set_child(Some(&room));
-        let target = adw::CallbackAnimationTarget::new({
-            let room = room.clone();
-            move |v| room.set_size_request(-1, v.round() as i32)
+/// A part's place in a column: it fades in when something shows there after nothing did, and
+/// opens its room on the standard spring when it comes back or would push what shows after it;
+/// it leaves by fading, then closing its gap.
+pub struct Part {
+    pub place: Squeeze,
+    pub inner: gtk::Box,
+    pub landing: Rc<Landing>,
+    fade: RefCell<Option<adw::TimedAnimation>>,
+}
+
+impl Part {
+    /// `inner` holds the part's heading and `landing`; `shown` runs each time it shows.
+    pub fn new(inner: gtk::Box, landing: Rc<Landing>, shown: impl Fn() + 'static) -> Rc<Self> {
+        let place = Squeeze::new(&inner, gtk::Orientation::Vertical, 0);
+        place.set_visible(false);
+        let part = Rc::new(Self {
+            place,
+            inner,
+            landing: Rc::clone(&landing),
+            fade: RefCell::default(),
         });
-        let spring = motion::standard(&room, f64::from(from), 0.0, target);
-        let (weak, content) = (Rc::downgrade(self), content.clone());
-        spring.connect_done(move |_| {
-            if let Some(landing) = weak.upgrade() {
-                landing.settle(&content);
+        landing.on_visible({
+            let part = Rc::downgrade(&part);
+            move || {
+                if let Some(part) = part.upgrade() {
+                    part.reveal();
+                    shown();
+                }
             }
         });
-        spring.play();
+        part
+    }
+
+    /// Whether it shows and is not on its way out.
+    pub fn is_shown(&self) -> bool {
+        self.place.is_visible() && !self.place.is_closing()
+    }
+
+    /// Whether something on screen comes after it, in its column or the one holding that.
+    fn pushes(&self) -> bool {
+        let after = |mut next: Option<gtk::Widget>| {
+            while let Some(widget) = next {
+                if widget.is_visible() && widget.is_mapped() && widget.height() > 0 {
+                    return true;
+                }
+                next = widget.next_sibling();
+            }
+            false
+        };
+        after(self.place.next_sibling())
+            || self.place.parent().is_some_and(|column| after(column.next_sibling()))
+    }
+
+    fn fade_to(&self, to: f64, done: impl Fn() + 'static) {
+        if let Some(old) = self.fade.take() {
+            old.pause();
+        }
+        let from = self.inner.opacity();
+        let ms = if to > from { 200 } else { 300 };
+        let animation =
+            adw::TimedAnimation::new(&self.inner, from, to, ms, motion::opacity(&self.inner));
+        animation.set_easing(if to > from {
+            adw::Easing::EaseOutCubic
+        } else {
+            adw::Easing::EaseInCubic
+        });
+        animation.connect_done(move |_| done());
+        animation.play();
+        self.fade.replace(Some(animation));
+    }
+
+    /// Show the part: it fades in from wherever it was, opening on the spring when it was
+    /// closing or closed, or when it would push what shows after it. One not placed yet starts
+    /// once it is on screen.
+    pub fn reveal(self: &Rc<Self>) {
+        if self.is_shown() {
+            return;
+        }
+        let hidden = !self.place.is_visible();
+        let closing = self.place.is_closing();
+        if hidden {
+            self.inner.set_opacity(0.0);
+        }
+        let open = closing || (hidden && self.pushes());
+        if hidden && open && !closing {
+            self.place.set_closed();
+        }
+        self.place.set_visible(true);
+        let part = Rc::downgrade(self);
+        motion::once_mapped(&self.place, move || {
+            let Some(part) = part.upgrade() else { return };
+            if open || part.place.is_closing() {
+                part.place.open(|| {});
+            }
+            part.fade_to(1.0, || {});
+        });
+    }
+
+    /// The part goes: it fades out, its gap closes, and its landing starts over. Off screen it
+    /// goes at once.
+    pub fn leave(self: &Rc<Self>, done: impl Fn() + 'static) {
+        self.landing.stop();
+        if self.place.is_closing() || !self.place.is_visible() {
+            return;
+        }
+        let part = Rc::downgrade(self);
+        let gone = move || {
+            if let Some(part) = part.upgrade() {
+                part.place.set_visible(false);
+                part.inner.set_opacity(1.0);
+                part.landing.reset();
+                done();
+            }
+        };
+        if !self.place.is_mapped() {
+            self.place.mark_closing();
+            self.place.set_closed();
+            gone();
+            return;
+        }
+        self.place.mark_closing();
+        let part = Rc::downgrade(self);
+        let gone = Rc::new(gone);
+        self.fade_to(0.0, move || {
+            let (Some(part), gone) = (part.upgrade(), Rc::clone(&gone)) else { return };
+            part.place.close(move || gone());
+        });
     }
 }
 
@@ -743,15 +950,40 @@ mod tests {
         ];
         tile.origin = Some(reading(ReadingMsg::ReadingOriginJapan));
         assert_eq!(line_of(&tile, Caption::Facts), "Light novel \u{b7} Releasing");
-        assert_eq!(line_of(&tile, Caption::OriginFirst), "Japan \u{b7} Releasing");
+        assert_eq!(line_of(&tile, Caption::OriginStatus), "Japan \u{b7} Releasing");
         assert_eq!(line_of(&tile, Caption::FormatOrigin), "Light novel \u{b7} Japan");
         assert_eq!(line_of(&tile, Caption::Amount), "");
         assert_eq!(
             spoken(&tile, Caption::FormatOrigin, None),
-            "Lantern Street Notes. Light novel, Japan."
+            "Lantern Street Notes. Light novel, Japan, Releasing."
         );
         tile.origin = None;
-        assert_eq!(line_of(&tile, Caption::OriginFirst), "Light novel \u{b7} Releasing");
+        assert_eq!(line_of(&tile, Caption::OriginStatus), "Light novel \u{b7} Releasing");
         assert_eq!(line_of(&tile, Caption::FormatOrigin), "Light novel");
+    }
+
+    #[test]
+    fn a_row_caption_holds_two_facts_and_the_label_all() {
+        let mut tile = tile();
+        tile.facts = vec![
+            reading(ReadingMsg::ReadingKindManga),
+            reading(ReadingMsg::ReadingStatusFinished),
+            reading(ReadingMsg::ReadingChapters { count: 112 }),
+        ];
+        tile.origin = Some(reading(ReadingMsg::ReadingOriginJapan));
+        let finished = Caption::row(ReadRowKind::Finished);
+        let line = line_of(&tile, finished);
+        assert_eq!(line.split(" \u{b7} ").count(), 2);
+        assert!(line.starts_with("Japan \u{b7} ") && line.contains("112"), "{line}");
+        assert_eq!(
+            line_of(&tile, Caption::row(ReadRowKind::Trending)),
+            "Japan \u{b7} Finished"
+        );
+        assert_eq!(line_of(&tile, Caption::row(ReadRowKind::Because)), "Manga \u{b7} Finished");
+        let said = spoken(&tile, finished, None);
+        assert!(said.starts_with("Lantern Street Notes. Manga, Japan, Finished, "), "{said}");
+        // A light novel with no count keeps its status on a Finished row.
+        tile.facts.truncate(2);
+        assert_eq!(line_of(&tile, finished), "Japan \u{b7} Finished");
     }
 }

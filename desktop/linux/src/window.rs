@@ -85,6 +85,8 @@ pub struct Ctx {
     pub read_view_all: RefCell<Option<ReadViewAll>>,
     /// Reading's Search is on screen from View all: its Back returns to Read.
     pub read_from_home: Cell<bool>,
+    /// The View all that opened it, for focus to return to on Back.
+    pub read_view_all_from: RefCell<Option<glib::WeakRef<gtk::Widget>>>,
 }
 
 /// Opens reading's Search on a query.
@@ -398,6 +400,7 @@ impl Shell {
             main_menu: RefCell::default(),
             pick: RefCell::default(),
             read_view_all: RefCell::default(),
+            read_view_all_from: RefCell::default(),
             read_from_home: Cell::new(false),
         });
 
@@ -759,6 +762,14 @@ impl Shell {
     pub fn read_back_home(&self) {
         self.ctx.read_from_home.set(false);
         self.slide(Dest::Read, false);
+        // Focus goes back to the View all that was pressed, as a pop would leave it.
+        if let Some(button) = self.ctx.read_view_all_from.take().and_then(|w| w.upgrade()) {
+            glib::idle_add_local_once(move || {
+                if button.is_mapped() {
+                    button.grab_focus();
+                }
+            });
+        }
     }
 
     fn breakpoints(self: &Rc<Self>) {

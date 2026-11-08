@@ -18,17 +18,17 @@ use kaeri_model::{
     event::Event,
     medium::KaeriIsFor,
     reading::{
-        ReadHomeEnd, ReadHomeRow, ReadRowKind, ReadSearchQuery, ReadingCommand, ReadingEvent,
-        ReadingHomeView, WorkTile,
+        ReadHomeEnd, ReadHomePart, ReadHomeRow, ReadRowKind, ReadSearchQuery, ReadingCommand,
+        ReadingEvent, ReadingHomeView, WorkTile,
     },
 };
 
 use super::{
     Place, action_chapter, cover,
-    discovery::{self, Caption, Landing},
+    discovery::{self, Caption, Landing, Part},
     listen, place, read_button, send,
 };
-use crate::{motion, pages::Dest, say, squeeze::Squeeze, states::Shape, widgets, window::Ctx};
+use crate::{motion, pages::Dest, say, states::Shape, widgets, window::Ctx};
 
 /// Between one row and the next.
 const BETWEEN: i32 = 36;
@@ -44,19 +44,25 @@ struct RowSlot {
     id: String,
     /// What it shows, to leave it be when a send changes nothing in it.
     signature: RefCell<String>,
-    place: Squeeze,
-    inner: gtk::Box,
+    part: Rc<Part>,
     title: gtk::Label,
     side: gtk::Label,
     all: gtk::Button,
-    landing: Rc<Landing>,
     query: Rc<RefCell<Option<ReadSearchQuery>>>,
+}
+
+/// The spotlight's or one of the person's own sections' slot.
+struct OwnSlot {
+    part: Rc<Part>,
+    title: String,
+    signature: RefCell<String>,
 }
 
 struct Home {
     ctx: Weak<Ctx>,
     own: gtk::Box,
-    own_signature: RefCell<String>,
+    /// The spotlight, then Continue, This week and Up next for you.
+    own_slots: RefCell<Vec<OwnSlot>>,
     rows: gtk::Box,
     end: gtk::Box,
     end_signature: RefCell<String>,
@@ -93,7 +99,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     capsule.append(&capsule_text);
     capsule.set_visible(false);
     header.pack_end(&capsule);
-    let own = gtk::Box::new(gtk::Orientation::Vertical, BETWEEN);
+    let own = gtk::Box::new(gtk::Orientation::Vertical, 0);
     let rows = gtk::Box::new(gtk::Orientation::Vertical, 0);
     let end = gtk::Box::new(gtk::Orientation::Vertical, 0);
     column.append(&own);
@@ -102,7 +108,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let home = Rc::new(Home {
         ctx: Rc::downgrade(ctx),
         own,
-        own_signature: RefCell::default(),
+        own_slots: RefCell::default(),
         rows,
         end,
         end_signature: RefCell::default(),
@@ -113,6 +119,18 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         capsule_spin,
         activity: RefCell::default(),
     });
+    home.own_slots.replace(
+        [
+            Landing::new(spotlight_placeholder),
+            Landing::new(discovery::row_placeholders),
+            Landing::new(discovery::row_placeholders),
+            Landing::new(discovery::row_placeholders),
+        ]
+        .into_iter()
+        .enumerate()
+        .map(|(at, landing)| home.own_slot(at, landing))
+        .collect(),
+    );
     states.loading(None);
     states.on_retry({
         let hub = Rc::downgrade(&ctx.hub);
@@ -209,43 +227,93 @@ impl Home {
         self.activity.replace(Some(id));
     }
 
-    /// The spotlight and the person's own rows, drawn again only when they changed.
-    fn draw_own(&self, ctx: &Rc<Ctx>, view: &ReadingHomeView, demo: bool) {
-        let signature = format!(
-            "{demo}{:?}{:?}{:?}{:?}{:?}", // i18n-skip
-            view.spotlight, view.spot, view.continue_reading, view.this_week, view.up_next
-        );
-        if *self.own_signature.borrow() == signature {
-            return;
+    /// A slot under `own`: the spotlight at 0, else a section with its heading.
+    fn own_slot(self: &Rc<Self>, at: usize, landing: Rc<Landing>) -> OwnSlot {
+        let inner = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let title = match at {
+            0 => String::new(),
+            1 => t::home_continue(),
+            2 => t::home_this_week(),
+            _ => t::home_up_next(),
+        };
+        if !title.is_empty() {
+            inner.append(&heading(&title).0);
         }
-        self.own_signature.replace(signature);
-        super::clear(&self.own);
-        if demo {
+        inner.append(&landing.widget);
+        let part = Part::new(inner, landing, {
+            let home = Rc::downgrade(self);
+            move || {
+                if let Some(home) = home.upgrade() {
+                    home.first_gap();
+                }
+            }
+        });
+        self.own.append(&part.place);
+        OwnSlot { part, title, signature: RefCell::default() }
+    }
+
+    /// The spotlight and the person's own sections, each in its own slot and drawn again only
+    /// when it changed: a new pick crossfades in place, a section that arrives fades in, one
+    /// that empties fades and closes its gap.
+    fn draw_own(&self, ctx: &Rc<Ctx>, view: &ReadingHomeView, demo: bool) {
+        let slots = self.own_slots.borrow();
+        let Some((spot_slot, sections)) = slots.split_first() else { return };
+
+        let signature = format!("{demo}{:?}{:?}", view.spotlight, view.spot); // i18n-skip
+        let card: Option<gtk::Widget> = if demo {
             let top = gtk::Box::new(gtk::Orientation::Vertical, DEMO_LINE);
             if let Some(card) = super::demo::spotlight(ctx) {
                 top.append(&card);
             }
             top.append(&demo_line());
-            self.own.append(&top);
+            Some(top.upcast())
         } else if let Some(spot) = &view.spot
             && let Some(tile) = &view.spotlight
         {
-            self.own.append(&spotlight(ctx, tile, spot));
+            Some(spotlight(ctx, tile, spot).upcast())
+        } else {
+            None
+        };
+        match card {
+            Some(card) => {
+                if *spot_slot.signature.borrow() != signature || !spot_slot.part.is_shown() {
+                    spot_slot.signature.replace(signature);
+                    spot_slot.part.landing.land(&card);
+                    spot_slot.part.reveal();
+                }
+            }
+            None => {
+                spot_slot.signature.replace(String::new());
+                // On a cold load the popular pick comes with the Trending rows: its place is
+                // held at final size from 600 ms so it never pushes the rows down.
+                let coming = view.pending.contains(&ReadHomePart::Yours)
+                    || view.rows.iter().any(|r| r.pending && r.kind == ReadRowKind::Trending);
+                if coming && !view.offline {
+                    spot_slot.part.landing.wait(false);
+                } else {
+                    spot_slot.part.leave(|| {});
+                }
+            }
         }
-        for (title, tiles) in [
-            (t::home_continue(), &view.continue_reading),
-            (t::home_this_week(), &view.this_week),
-            (t::home_up_next(), &view.up_next),
-        ] {
+
+        for (slot, tiles) in
+            sections.iter().zip([&view.continue_reading, &view.this_week, &view.up_next])
+        {
             if tiles.is_empty() {
+                slot.signature.replace(String::new());
+                slot.part.leave(|| {});
                 continue;
             }
-            let section = gtk::Box::new(gtk::Orientation::Vertical, 0);
-            let (head, _, _, _) = heading(&title);
-            section.append(&head);
-            section.append(&discovery::strip(&posters(ctx, tiles, Caption::Facts), &title));
-            self.own.append(&section);
+            let signature = format!("{tiles:?}");
+            if *slot.signature.borrow() == signature && slot.part.is_shown() {
+                continue;
+            }
+            slot.signature.replace(signature);
+            let posters = posters(ctx, tiles, Caption::Facts, false);
+            slot.part.landing.land(&discovery::strip(&posters, &slot.title));
+            slot.part.reveal();
         }
+        drop(slots);
         self.first_gap();
     }
 
@@ -264,32 +332,30 @@ impl Home {
         }
         // Rows that left: those on show fade and close their gap; the rest go at once.
         for slot in old {
-            if slot.place.is_closing() {
+            let place = slot.part.place.clone();
+            if place.is_closing() {
                 continue;
             }
-            if slot.place.is_visible() && slot.place.is_mapped() {
-                slot.place.mark_closing();
-                let (rows, place) = (self.rows.clone(), slot.place.clone());
-                motion::fade_away(&slot.inner, move || {
-                    let (rows, gone) = (rows.clone(), place.clone());
-                    place.close(move || {
-                        if gone.parent().is_some() {
-                            rows.remove(&gone);
-                        }
-                    });
+            if place.is_visible() {
+                let rows = self.rows.clone();
+                slot.part.leave(move || {
+                    if place.parent().is_some() {
+                        rows.remove(&place);
+                    }
                 });
             } else {
-                self.rows.remove(&slot.place);
+                self.rows.remove(&place);
             }
         }
         let mut previous: Option<gtk::Widget> = None;
         for slot in &live {
-            if slot.place.parent().as_ref() == Some(self.rows.upcast_ref()) {
-                self.rows.reorder_child_after(&slot.place, previous.as_ref());
+            let place = &slot.part.place;
+            if place.parent().as_ref() == Some(self.rows.upcast_ref()) {
+                self.rows.reorder_child_after(place, previous.as_ref());
             } else {
-                self.rows.insert_child_after(&slot.place, previous.as_ref());
+                self.rows.insert_child_after(place, previous.as_ref());
             }
-            previous = Some(slot.place.clone().upcast());
+            previous = Some(place.clone().upcast());
         }
         self.slots.replace(live);
         self.first_gap();
@@ -302,21 +368,18 @@ impl Home {
         let query: Rc<RefCell<Option<ReadSearchQuery>>> = Rc::default();
         all.connect_clicked({
             let (ctx, query) = (Rc::downgrade(ctx), Rc::clone(&query));
-            move |_| {
+            move |all| {
                 if let (Some(ctx), Some(query)) = (ctx.upgrade(), query.borrow().clone()) {
-                    view_all(&ctx, query);
+                    view_all(&ctx, query, all);
                 }
             }
         });
         inner.append(&head);
         let landing = Landing::new(discovery::row_placeholders);
         inner.append(&landing.widget);
-        let place = Squeeze::new(&inner, gtk::Orientation::Vertical, 0);
-        place.set_visible(false);
-        landing.on_visible({
-            let (place, home) = (place.clone(), Rc::downgrade(self));
+        let part = Part::new(inner, landing, {
+            let home = Rc::downgrade(self);
             move || {
-                place.set_visible(true);
                 if let Some(home) = home.upgrade() {
                     home.first_gap();
                 }
@@ -325,12 +388,10 @@ impl Home {
         Rc::new(RowSlot {
             id: row.id.clone(),
             signature: RefCell::default(),
-            place,
-            inner,
+            part,
             title,
             side,
             all,
-            landing,
             query,
         })
     }
@@ -351,36 +412,32 @@ impl Home {
             slot.title.update_property(&[gtk::accessible::Property::Label(
                 &t::read_linux_row_loading(&title),
             )]);
-            slot.landing.wait(true);
+            slot.part.landing.wait(true);
             return;
         }
         slot.title.update_property(&[gtk::accessible::Property::Label(&title)]);
         let signature = format!("{:?}", row.tiles);
-        if *slot.signature.borrow() == signature && slot.landing.is_visible() {
+        if *slot.signature.borrow() == signature && slot.part.landing.is_visible() {
             return;
         }
         slot.signature.replace(signature);
-        // A row of one format names each title's origin in place of the format; a mixed row
-        // leads with it.
-        let caption = if row.format.is_some() { Caption::OriginFirst } else { Caption::Facts };
-        let strip = discovery::strip(&posters(ctx, &row.tiles, caption), &title);
-        let fresh = !slot.landing.is_visible() && !slot.landing.is_waiting();
-        slot.landing.land(&strip, false);
-        // A row that lands whole after Home was drawn, with no placeholders before it, fades in.
-        if fresh && self.drawn.get() {
-            let inner = slot.inner.clone();
-            motion::once_mapped(&slot.inner, move || {
-                motion::fade_in(&inner);
-            });
-        }
+        // Two facts under each title, chosen by what the row is about.
+        let strip =
+            discovery::strip(&posters(ctx, &row.tiles, Caption::row(row.kind), true), &title);
+        // One that lands whole with nothing shown before fades in as it shows.
+        slot.part.landing.land(&strip);
     }
 
     /// The first thing on the page starts at the top: a row with nothing above it takes no gap.
     fn first_gap(&self) {
-        let mut above = self.own.first_child().is_some();
+        let mut above = false;
+        for slot in self.own_slots.borrow().iter() {
+            slot.part.inner.set_margin_top(if above { BETWEEN } else { 0 });
+            above |= slot.part.place.is_visible();
+        }
         for slot in self.slots.borrow().iter() {
-            slot.inner.set_margin_top(if above { BETWEEN } else { 0 });
-            above |= slot.place.is_visible();
+            slot.part.inner.set_margin_top(if above { BETWEEN } else { 0 });
+            above |= slot.part.place.is_visible();
         }
     }
 
@@ -449,8 +506,10 @@ impl Home {
     }
 }
 
-/// View all: Search on the Reading side, with the row's exact filters and order.
-fn view_all(ctx: &Rc<Ctx>, query: ReadSearchQuery) {
+/// View all: Search on the Reading side, with the row's exact filters and order. Back returns
+/// focus to `from`.
+fn view_all(ctx: &Rc<Ctx>, query: ReadSearchQuery, from: &gtk::Button) {
+    ctx.read_view_all_from.replace(Some(from.upcast_ref::<gtk::Widget>().downgrade()));
     let open = ctx.read_view_all.borrow().clone();
     if let Some(open) = open {
         open(query);
@@ -458,9 +517,33 @@ fn view_all(ctx: &Rc<Ctx>, query: ReadSearchQuery) {
     let _ = WidgetExt::activate_action(&ctx.window, "win.read-view-all", None);
 }
 
-/// Posters for `tiles`.
-fn posters(ctx: &Rc<Ctx>, tiles: &[WorkTile], caption: Caption) -> Vec<gtk::Button> {
-    tiles.iter().map(|tile| discovery::poster(&ctx.hub, tile, caption, None)).collect()
+/// Posters for `tiles`; `plan` offers Add to Planning on each, for discovery rows only.
+fn posters(
+    ctx: &Rc<Ctx>,
+    tiles: &[WorkTile],
+    caption: Caption,
+    plan: bool,
+) -> Vec<gtk::Button> {
+    tiles.iter().map(|tile| discovery::poster(&ctx.hub, tile, caption, None, plan)).collect()
+}
+
+/// The spotlight's place while the popular pick is on its way: the cover's plate and bars for
+/// its words, at the spotlight's size.
+fn spotlight_placeholder() -> gtk::Widget {
+    let card = gtk::Box::new(gtk::Orientation::Horizontal, 20);
+    card.add_css_class("read-spotlight");
+    card.set_accessible_role(gtk::AccessibleRole::Presentation);
+    card.append(&crate::states::plate(160, 240, "read-poster-plate"));
+    let text = gtk::Box::new(gtk::Orientation::Vertical, 10);
+    text.set_valign(gtk::Align::Center);
+    text.set_hexpand(true);
+    for (width, height) in [(120, 12), (300, 28), (180, 12), (320, 12), (300, 12), (240, 12)] {
+        let bar = crate::states::plate(width, height, "bar");
+        bar.set_halign(gtk::Align::Start);
+        text.append(&bar);
+    }
+    card.append(&text);
+    card.upcast()
 }
 
 /// A row's heading: its title (a heading for screen readers), the side text and View all.
@@ -472,6 +555,7 @@ fn heading(title: &str) -> (gtk::Box, gtk::Label, gtk::Label, gtk::Button) {
     label.set_xalign(0.0);
     label.set_ellipsize(gtk::pango::EllipsizeMode::End);
     label.set_accessible_role(gtk::AccessibleRole::Heading);
+    label.update_property(&[gtk::accessible::Property::Level(2)]);
     head.append(&label);
     let aside = gtk::Label::new(None);
     aside.add_css_class("haze");
@@ -560,10 +644,31 @@ fn spotlight(
     }
     let buttons = gtk::Box::new(gtk::Orientation::Horizontal, 8);
     buttons.set_margin_top(6);
+    // One amber action: read or go on, or Add to Planning for a series no source was checked
+    // for yet. Details beside it, or On your Planning list once it is planned.
     if let Some((chapter, label)) = spot.action.as_ref().and_then(action_chapter) {
         buttons.append(&read_button(&label, &tile.work, &chapter));
+    } else if spot.action.is_none() && !spot.planned {
+        let plan = gtk::Button::with_label(&t::library_add_planning());
+        plan.add_css_class("pill");
+        plan.add_css_class("suggested-action");
+        plan.set_action_target_value(Some(&tile.work.0.to_variant()));
+        plan.set_action_name(Some("win.read-plan"));
+        buttons.append(&plan);
     }
-    let open = gtk::Button::with_label(&t::chapter_updates_open_series_menu());
+    let open = if spot.planned {
+        let words = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        let check = gtk::Image::from_icon_name("object-select-symbolic");
+        check.set_accessible_role(gtk::AccessibleRole::Presentation);
+        words.append(&check);
+        words.append(&gtk::Label::new(Some(&t::reading_on_planning())));
+        let button = gtk::Button::new();
+        button.set_child(Some(&words));
+        button.update_property(&[gtk::accessible::Property::Label(&t::reading_on_planning())]);
+        button
+    } else {
+        gtk::Button::with_label(&t::home_details())
+    };
     open.add_css_class("pill");
     open.set_action_target_value(Some(&tile.work.0.to_variant()));
     open.set_action_name(Some("win.open-series"));

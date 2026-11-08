@@ -1742,6 +1742,19 @@ read-linux-search-done = [{ $anilist } ƒŕöɱ ÅñîĻîšţ, { $sources } ƒ�
 # Said once by screen readers when every source has answered, with Your sources only on.
 read-linux-search-done-sources = [{ $sources } ƒŕöɱ ýöüŕ šöüŕçéš.~~~~~~~]
 
+# Screen reader name of a source's row heading while the source is being asked. The source's name and kind come first: "Northwind, Plugin".
+read-linux-source-searching = [{ $source }, šéàŕçĥîñĝ~~~~~]
+
+# Screen reader name of the reason under a source that gave no answer in time, where the screen shows "No answer in 15 s."
+read-linux-source-timeout =
+    { $seconds ->
+        [one] [Ñö àñšŵéŕ îñ 1 šéçöñð.~~~~~~~]
+       *[other] [Ñö àñšŵéŕ îñ { $seconds } šéçöñðš.~~~~~~~~]
+    }
+
+# Screen reader name of Try again under a source that didn't answer, with the source's name, so each of several reads on its own.
+read-linux-try-again-source = [Ţŕý àĝàîñ, { $source }~~~~~]
+
 # Tooltip of the reader toolbar's settings button.
 linux-reader-settings-open = [Ŕéàðéŕ šéţţîñĝš~~~~~]
 

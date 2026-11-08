@@ -21,7 +21,7 @@ use kaeri_model::{
 use crate::{hub::ReadAnswer, pages::Dest, window::Shell};
 
 /// Every discovery shot, in the order a run takes them.
-pub const NAMES: [&str; 15] = [
+pub const NAMES: [&str; 30] = [
     "read-disc-home-first",
     "read-disc-home-first-end",
     "read-disc-home-history",
@@ -37,6 +37,22 @@ pub const NAMES: [&str; 15] = [
     "read-disc-search-loading",
     "read-disc-view-all",
     "read-disc-poster-menu",
+    "read-disc-poster-menu-own",
+    "read-disc-home-demo",
+    "read-disc-home-loading-history",
+    "read-disc-home-offline",
+    "read-disc-home-offline-first",
+    "read-disc-home-failed",
+    "read-disc-home-long",
+    "read-disc-search-anilist-failed",
+    "read-disc-search-anilist-nothing",
+    "read-disc-search-mine-nothing",
+    "read-disc-search-long",
+    "read-disc-view-all-new",
+    // Recordings: the scenes play out over a few seconds.
+    "read-disc-rec-rows",
+    "read-disc-rec-sources",
+    "read-disc-rec-mine",
 ];
 
 const HOME_LIBRARY: &str = "shot-home-library";
@@ -246,11 +262,29 @@ fn row(
     side: Option<Msg>,
     books: &[Book],
 ) -> ReadHomeRow {
-    let view_all = (kind != ReadRowKind::Because).then(|| ReadSearchQuery {
-        formats: format.map(ReadRowFormat::search_formats).unwrap_or_default(),
-        sort: Some("trending".into()),
+    // As the engine asks: its sort keys, and New's start and Finished's status.
+    let formats = format.map(ReadRowFormat::search_formats).unwrap_or_default();
+    let sorted = |sort: &str| ReadSearchQuery {
+        formats: formats.clone(),
+        sort: Some(sort.into()),
         ..ReadSearchQuery::default()
-    });
+    };
+    let view_all = match kind {
+        ReadRowKind::Trending => Some(sorted("TRENDING_DESC")),
+        ReadRowKind::New => Some(ReadSearchQuery {
+            started: Some("12-months".into()),
+            ..sorted("POPULARITY_DESC")
+        }),
+        ReadRowKind::Finished => Some(ReadSearchQuery {
+            status: Some("finished".into()),
+            ..sorted("POPULARITY_DESC")
+        }),
+        ReadRowKind::MoreGenre => Some(ReadSearchQuery {
+            genres: vec!["Fantasy".into()],
+            ..sorted("POPULARITY_DESC")
+        }),
+        ReadRowKind::Because => None,
+    };
     ReadHomeRow {
         id: id.into(),
         kind,
@@ -340,6 +374,16 @@ fn first_run() -> ReadingHomeView {
         rows: first_run_rows(),
         end: Some(ReadHomeEnd::Everything),
         ..ReadingHomeView::default()
+    }
+}
+
+/// A first run with only the demo on: the demo's spotlight and its line, then the rows.
+fn first_run_demo() -> ReadingHomeView {
+    ReadingHomeView {
+        spotlight: None,
+        spot: None,
+        end: Some(ReadHomeEnd::NoSources),
+        ..first_run()
     }
 }
 
@@ -445,6 +489,73 @@ fn loading() -> ReadingHomeView {
     view
 }
 
+/// Rows on their way under the person's own sections: the history view with every row waiting.
+fn loading_history() -> ReadingHomeView {
+    let mut view = with_history();
+    for row in &mut view.rows {
+        row.tiles.clear();
+        row.pending = true;
+    }
+    view.end = None;
+    view
+}
+
+/// AniList out of reach: what was kept shows, and the banner says since when.
+fn offline() -> ReadingHomeView {
+    ReadingHomeView { offline: true, offline_since: Some(1_762_560_000), ..with_history() }
+}
+
+/// A first run with no connection and nothing kept: the line saying the rows come once online.
+fn offline_first() -> ReadingHomeView {
+    ReadingHomeView {
+        rows: Vec::new(),
+        spotlight: None,
+        spot: None,
+        offline: true,
+        end: Some(ReadHomeEnd::Everything),
+        ..ReadingHomeView::default()
+    }
+}
+
+/// AniList failed with nothing kept: the rows leave and the notice offers Try again.
+fn failed() -> ReadingHomeView {
+    let mut view = with_history();
+    view.rows.clear();
+    view.failed = true;
+    view
+}
+
+/// A long title in a Because heading.
+fn long() -> ReadingHomeView {
+    let mut view = with_history();
+    for row in &mut view.rows {
+        if row.kind == ReadRowKind::Because {
+            row.title = Msg::HomeBecause {
+                title: "The Unhurried Chronicle of the Lantern Ferry and Its Seven Patient \
+                        Passengers"
+                    .into(),
+            };
+        }
+    }
+    view
+}
+
+/// View all's answer: the row's titles first, in its order, then the rest.
+fn view_all_answer(query: &ReadSearchQuery) -> Vec<WorkTile> {
+    let rows = first_run_rows();
+    let mut tiles: Vec<WorkTile> = rows
+        .iter()
+        .find(|row| row.view_all.as_ref() == Some(query))
+        .map(|row| row.tiles.clone())
+        .unwrap_or_default();
+    for tile in thirty() {
+        if tiles.len() < 30 && !tiles.iter().any(|t| t.work == tile.work) {
+            tiles.push(tile);
+        }
+    }
+    tiles
+}
+
 // Search.
 
 const LANTERN: [Book; 4] = [
@@ -537,11 +648,18 @@ fn sources_part(query: &ReadSearchQuery, moment: Moment) -> ReadSourceSearch {
             group(NORTHWIND, "Northwind", northwind, Vec::new()),
             group(DEMO, "Demo", ReadSourceState::Nothing, Vec::new()),
         ],
-        joins: vec![ReadSourceJoin {
-            work: WorkId(format!("a:{}", LANTERN[0].art)),
-            source_ids: vec![HOME_LIBRARY.into()],
-            source_names: vec!["Home library".into()],
-        }],
+        joins: vec![
+            ReadSourceJoin {
+                work: WorkId(format!("a:{}", LANTERN[0].art)),
+                source_ids: vec![HOME_LIBRARY.into()],
+                source_names: vec!["Home library".into()],
+            },
+            ReadSourceJoin {
+                work: WorkId(format!("a:{}", LANTERN[3].art)),
+                source_ids: vec![HOME_LIBRARY.into(), COMICS_FOLDER.into()],
+                source_names: vec!["Home library".into(), "Comics folder".into()],
+            },
+        ],
         done: moment == Moment::Failed,
     }
 }
@@ -666,13 +784,123 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
         "read-disc-home-first" | "read-disc-home-first-end" | "read-disc-poster-menu" => {
             home(first_run)
         }
-        "read-disc-view-all" => Rc::new(|command| match command {
+        "read-disc-view-all" | "read-disc-view-all-new" => Rc::new(|command| match command {
             ReadingCommand::LoadHome { .. } => {
                 Some(vec![(0, Event::Reading(ReadingEvent::Home(Box::new(first_run()))))])
             }
             ReadingCommand::Search { query } => {
-                Some(vec![(100, search_event(query, 0, thirty(), true))])
+                Some(vec![(900, search_event(query, 0, view_all_answer(query), true))])
             }
+            _ => None,
+        }),
+        "read-disc-home-demo" => home(first_run_demo),
+        "read-disc-home-loading-history" => home(loading_history),
+        "read-disc-home-offline" => home(offline),
+        "read-disc-home-offline-first" => home(offline_first),
+        "read-disc-home-long" => home(long),
+        // The rows wait, then AniList fails with nothing kept.
+        "read-disc-home-failed" => Rc::new(|command| match command {
+            ReadingCommand::LoadHome { .. } => Some(vec![
+                (0, Event::Reading(ReadingEvent::Home(Box::new(loading_history())))),
+                (1500, Event::Reading(ReadingEvent::Home(Box::new(failed())))),
+            ]),
+            _ => None,
+        }),
+        // The rows wait past 600 ms, then land.
+        "read-disc-rec-rows" => Rc::new(|command| match command {
+            ReadingCommand::LoadHome { .. } => Some(vec![
+                (0, Event::Reading(ReadingEvent::Home(Box::new(loading_history())))),
+                (1800, Event::Reading(ReadingEvent::Home(Box::new(with_history())))),
+            ]),
+            _ => None,
+        }),
+        "read-disc-search-anilist-failed" => Rc::new(|command| match command {
+            ReadingCommand::Search { query } if !query.text.is_empty() => Some(vec![
+                (100, source_event(sources_part(query, Moment::Failed))),
+                (
+                    200,
+                    Event::Reading(ReadingEvent::Failed {
+                        about: kaeri_model::reading::ReadingAbout::Search,
+                        failure: kaeri_model::reading::ReadingFailure::Offline,
+                    }),
+                ),
+            ]),
+            ReadingCommand::Search { .. } => Some(Vec::new()),
+            _ => None,
+        }),
+        "read-disc-search-anilist-nothing" => Rc::new(|command| match command {
+            ReadingCommand::Search { query } if !query.text.is_empty() => {
+                let mut part = sources_part(query, Moment::Failed);
+                part.joins.clear();
+                Some(vec![
+                    (100, source_event(part)),
+                    (200, search_event(query, 0, Vec::new(), false)),
+                ])
+            }
+            ReadingCommand::Search { .. } => Some(Vec::new()),
+            _ => None,
+        }),
+        "read-disc-search-mine-nothing" => Rc::new(|command| match command {
+            ReadingCommand::Search { query } if query.sources_only => {
+                let mut part = nothing_part(query);
+                part.anilist = ReadAnilistState::Skipped;
+                Some(vec![(200, source_event(part))])
+            }
+            ReadingCommand::Search { query } if !query.text.is_empty() => Some(vec![
+                (100, source_event(sources_part(query, Moment::Failed))),
+                (150, search_event(query, 0, LANTERN.iter().map(tile).collect(), false)),
+            ]),
+            ReadingCommand::Search { .. } => Some(Vec::new()),
+            _ => None,
+        }),
+        "read-disc-search-long" => Rc::new(|command| match command {
+            ReadingCommand::Search { query } if !query.text.is_empty() => {
+                let mut part = sources_part(query, Moment::Failed);
+                part.groups[2].source_name =
+                    "Northwind Community Reading Room and Lending Archive".into();
+                Some(vec![
+                    (100, source_event(part)),
+                    (150, search_event(query, 0, LANTERN.iter().map(tile).collect(), false)),
+                ])
+            }
+            ReadingCommand::Search { .. } => Some(Vec::new()),
+            _ => None,
+        }),
+        // Sources and AniList past 600 ms: the placeholders show, then the rows land and one
+        // source fails. New words then keep the rows while they are asked again.
+        "read-disc-rec-sources" => Rc::new(|command| match command {
+            ReadingCommand::Search { query } if !query.text.is_empty() => {
+                let mut asking = sources_part(query, Moment::Mid);
+                asking.anilist = ReadAnilistState::Asking;
+                for g in &mut asking.groups {
+                    g.state = ReadSourceState::Asking;
+                    g.tiles.clear();
+                }
+                asking.joins.clear();
+                let tiles: Vec<WorkTile> = if query.text == "night" {
+                    NIGHT.iter().map(tile).collect()
+                } else {
+                    LANTERN.iter().map(tile).collect()
+                };
+                Some(vec![
+                    (0, source_event(asking)),
+                    (1300, source_event(sources_part(query, Moment::Mid))),
+                    (1350, search_event(query, 0, tiles, false)),
+                    (2600, source_event(sources_part(query, Moment::Failed))),
+                ])
+            }
+            ReadingCommand::Search { .. } => Some(Vec::new()),
+            _ => None,
+        }),
+        "read-disc-rec-mine" => Rc::new(|command| match command {
+            ReadingCommand::Search { query } if query.sources_only => {
+                Some(vec![(200, source_event(sources_only_part(query)))])
+            }
+            ReadingCommand::Search { query } if !query.text.is_empty() => Some(vec![
+                (100, source_event(sources_part(query, Moment::Failed))),
+                (150, search_event(query, 0, LANTERN.iter().map(tile).collect(), false)),
+            ]),
+            ReadingCommand::Search { .. } => Some(Vec::new()),
             _ => None,
         }),
         // Nothing answers: AniList's grid and every source wait on their placeholders.
@@ -690,7 +918,9 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
             ReadingCommand::Search { .. } => Some(Vec::new()),
             _ => None,
         }),
-        "read-disc-home-history" | "read-disc-home-history-end" => home(with_history),
+        "read-disc-home-history" | "read-disc-home-history-end" | "read-disc-poster-menu-own" => {
+            home(with_history)
+        }
         "read-disc-home-loading" => home(loading),
         "read-disc-search-mid" | "read-disc-search-mid-end" | "read-disc-search-failed" => {
             let failed = shot == "read-disc-search-failed";
@@ -779,6 +1009,28 @@ fn type_query(shell: &Rc<Shell>, query: &'static str, mine: bool) {
     });
 }
 
+/// Type `query` over what the field holds, `ms` after the stage.
+fn type_later(shell: &Rc<Shell>, query: &'static str, ms: u64) {
+    let window = shell.ctx.window.clone();
+    gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(ms), move || {
+        if let Some(entry) = find::<gtk::SearchEntry>(window.upcast_ref(), "") {
+            entry.set_text(query);
+        }
+    });
+}
+
+/// Set Your sources only to `on`, `ms` after the stage.
+fn toggle_later(shell: &Rc<Shell>, on: bool, ms: u64) {
+    let window = shell.ctx.window.clone();
+    gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(ms), move || {
+        if let Some(toggle) =
+            find::<gtk::ToggleButton>(window.upcast_ref(), "read-sources-only")
+        {
+            toggle.set_active(on);
+        }
+    });
+}
+
 /// The first mapped `T` under `widget`, with `class` when one is named.
 fn find<T: IsA<gtk::Widget>>(widget: &gtk::Widget, class: &str) -> Option<T> {
     if widget.is_mapped()
@@ -797,12 +1049,34 @@ fn find<T: IsA<gtk::Widget>>(widget: &gtk::Widget, class: &str) -> Option<T> {
     None
 }
 
-/// Press the first button with `class` on screen 1.5 s after the stage, or with `action`, run
+/// Every mapped `T` under `widget` with `class`, in order.
+fn find_all<T: IsA<gtk::Widget>>(widget: &gtk::Widget, class: &str, found: &mut Vec<T>) {
+    if widget.is_mapped()
+        && widget.has_css_class(class)
+        && let Some(one) = widget.downcast_ref::<T>()
+    {
+        found.push(one.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        find_all(&next, class, found);
+        child = next.next_sibling();
+    }
+}
+
+/// Press the `nth` button with `class` on screen 1.5 s after the stage, or with `action`, run
 /// that action on it instead.
-fn press_later(shell: &Rc<Shell>, class: &'static str, action: Option<&'static str>) {
+fn press_later(
+    shell: &Rc<Shell>,
+    class: &'static str,
+    nth: usize,
+    action: Option<&'static str>,
+) {
     let window = shell.ctx.window.clone();
     gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(1500), move || {
-        let Some(button) = find::<gtk::Button>(window.upcast_ref(), class) else { return };
+        let mut found = Vec::new();
+        find_all::<gtk::Button>(window.upcast_ref(), class, &mut found);
+        let Some(button) = found.into_iter().nth(nth) else { return };
         match action {
             Some(action) => {
                 button.grab_focus();
@@ -840,19 +1114,21 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
     let hub = Rc::clone(&shell.ctx.hub);
     *hub.read_answer.borrow_mut() = Some(Rc::clone(&answer));
     if shot.starts_with("read-disc-home")
-        || shot == "read-disc-view-all"
-        || shot == "read-disc-poster-menu"
+        || shot.starts_with("read-disc-view-all")
+        || shot.starts_with("read-disc-poster-menu")
+        || shot == "read-disc-rec-rows"
     {
-        let events: Vec<Event> = answer(&ReadingCommand::LoadHome { refresh: false })
-            .unwrap_or_default()
-            .into_iter()
-            .map(|(_, e)| e)
-            .collect();
+        let mut events =
+            answer(&ReadingCommand::LoadHome { refresh: false }).unwrap_or_default();
+        if shot == "read-disc-home-demo" {
+            hub.known.borrow_mut().demo.only_books = true;
+        }
         if shot == "read-disc-home-loading" {
             // The engine's own rows leave first, so every row starts out on its way.
             let bare = ReadingHomeView { rows: Vec::new(), ..loading() };
             hub.show_instead(vec![Event::Reading(ReadingEvent::Home(Box::new(bare)))]);
             let later = Rc::clone(&hub);
+            let events: Vec<Event> = events.into_iter().map(|(_, e)| e).collect();
             gtk::glib::timeout_add_local_once(
                 std::time::Duration::from_millis(1200),
                 move || {
@@ -860,20 +1136,38 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
                 },
             );
         } else {
-            hub.show_instead(events);
+            // The first view at once, the rest when the scene says.
+            let first = if events.is_empty() { Vec::new() } else { vec![events.remove(0).1] };
+            hub.show_instead(first);
+            for (ms, event) in events {
+                let later = Rc::clone(&hub);
+                gtk::glib::timeout_add_local_once(
+                    std::time::Duration::from_millis(ms),
+                    move || later.show_instead(vec![event]),
+                );
+            }
         }
         shell.go(Dest::Read);
         if shot.ends_with("-end") {
             scroll_to_end_later(shell, 2500);
         }
         match shot {
-            "read-disc-view-all" => press_later(shell, "home-all", None),
-            "read-disc-poster-menu" => press_later(shell, "home-card", Some("context.popup")),
+            "read-disc-view-all" => press_later(shell, "home-all", 0, None),
+            // The New row's View all: its list starts this year.
+            "read-disc-view-all-new" => press_later(shell, "home-all", 3, None),
+            // A Trending poster's menu, and a Continue poster's: Details only.
+            "read-disc-poster-menu" | "read-disc-poster-menu-own" => {
+                press_later(shell, "home-card", 0, Some("context.popup"))
+            }
             _ => {}
         }
         return Some(match shot {
             // Loading suggestions comes in 4 s after the rows start waiting, at 1.2 s.
             "read-disc-home-loading" => 6.0,
+            // The placeholders under the own sections, past 600 ms.
+            "read-disc-home-loading-history" => 2.0,
+            "read-disc-home-failed" => 3.5,
+            "read-disc-rec-rows" => 4.5,
             s if s.ends_with("-end") => 4.0,
             _ => 3.5,
         });
@@ -886,9 +1180,23 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         );
     }
     Some(match shot {
-        "read-disc-search-mine" | "read-disc-search-mine-end" => {
+        "read-disc-search-mine"
+        | "read-disc-search-mine-end"
+        | "read-disc-search-mine-nothing" => {
             type_query(shell, "lantern", true);
             5.0
+        }
+        // Lantern lands past its placeholders and Northwind fails; then night is typed over it.
+        "read-disc-rec-sources" => {
+            type_query(shell, "lantern", false);
+            type_later(shell, "night", 5600);
+            9.5
+        }
+        // Your sources only on, then off again.
+        "read-disc-rec-mine" => {
+            type_query(shell, "lantern", true);
+            toggle_later(shell, false, 4600);
+            7.0
         }
         "read-disc-search-nothing" => {
             type_query(shell, "lantren", false);
@@ -917,6 +1225,7 @@ pub fn unstage(shell: &Rc<Shell>, shot: &str) {
     }
     let hub = Rc::clone(&shell.ctx.hub);
     hub.read_answer.replace(None);
+    hub.known.borrow_mut().demo.only_books = false;
     hub.release(&["read-home", "read-search", "read-source-search"]);
     if let Some(entry) = find::<gtk::SearchEntry>(shell.ctx.window.upcast_ref(), "") {
         entry.set_text("");

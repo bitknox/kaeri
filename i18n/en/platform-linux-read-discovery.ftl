@@ -30,3 +30,24 @@ read-linux-search-done = { $anilist } from AniList, { $sources } from your { -so
 # @only linux
 # @arg sources: int
 read-linux-search-done-sources = { $sources } from your { -source-pl }.
+
+# Screen reader name of a source's row heading while the source is being asked. The source's
+# name and kind come first: "Northwind, Plugin".
+# @only linux
+# @arg source: text
+read-linux-source-searching = { $source }, searching
+
+# Screen reader name of the reason under a source that gave no answer in time, where the screen
+# shows "No answer in 15 s."
+# @only linux
+# @arg seconds: int
+read-linux-source-timeout = { $seconds ->
+    [one] No answer in 1 second.
+   *[other] No answer in { $seconds } seconds.
+ }
+
+# Screen reader name of Try again under a source that didn't answer, with the source's name, so
+# each of several reads on its own.
+# @only linux
+# @arg source: text
+read-linux-try-again-source = Try again, { $source }

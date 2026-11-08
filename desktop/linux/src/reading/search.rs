@@ -31,7 +31,7 @@ use kaeri_model::{
 
 use super::{
     Dest,
-    discovery::{self, Caption, Landing},
+    discovery::{self, Caption, Landing, Part},
     listen, scope, send,
 };
 use crate::{
@@ -72,6 +72,19 @@ fn labels(keys: &[String], choices: &[ReadFilterChoice]) -> Vec<String> {
         .collect()
 }
 
+/// The formats' words, with a row's formats read as the one they make: manga with one-shots is
+/// Manga.
+fn format_labels(keys: &[String], choices: &[ReadFilterChoice]) -> Vec<String> {
+    let mut keys = keys.to_vec();
+    for format in ReadRowFormat::ALL {
+        let group = format.search_formats();
+        if group.len() > 1 && group.iter().all(|k| keys.contains(k)) {
+            keys.retain(|k| !group[1..].contains(k));
+        }
+    }
+    labels(&keys, choices)
+}
+
 /// "Manga", or "Manga +1" when more than one is chosen.
 fn many(words: &[String]) -> Option<String> {
     let first = words.first()?;
@@ -89,7 +102,7 @@ fn started_of(query: &ReadSearchQuery) -> Option<&str> {
 
 /// What a browse shows: the filters set, or the order with none.
 fn browse_line(query: &ReadSearchQuery, filters: &ReadFilters, total: Option<u32>) -> String {
-    let mut parts = labels(&query.formats, &filters.formats);
+    let mut parts = format_labels(&query.formats, &filters.formats);
     parts.extend(labels(&query.origins, &filters.origins));
     if let Some(status) = &query.status {
         parts.extend(labels(std::slice::from_ref(status), &filters.statuses));
@@ -98,13 +111,11 @@ fn browse_line(query: &ReadSearchQuery, filters: &ReadFilters, total: Option<u32
         parts.extend(labels(&[started.to_owned()], &filters.started));
     }
     parts.extend(query.genres.iter().map(|g| say::genre(g)));
-    let what = if parts.is_empty() {
-        sort_name(
-            query.sort.as_deref().or(filters.sorts.first().map(String::as_str)).unwrap_or(""),
-        )
-    } else {
-        parts.join(", ") // i18n-skip
-    };
+    // The order follows what is set: "Manga, Trending".
+    parts.push(sort_name(
+        query.sort.as_deref().or(filters.sorts.first().map(String::as_str)).unwrap_or(""),
+    ));
+    let what = parts.join(", "); // i18n-skip
     match total {
         Some(n) => format!("{what} \u{b7} {}", t::read_search_total(i64::from(n))), // i18n-skip
         None => t::read_search_browse_line(&what),
@@ -138,15 +149,22 @@ fn nothing_names(groups: &[ReadSourceGroup]) -> Vec<String> {
 }
 
 /// The one polite announcement once a search has settled: "4 from AniList, 2 from your
-/// sources." with each source that didn't answer after it.
-fn settled_words(anilist: Option<usize>, groups: &[ReadSourceGroup]) -> String {
+/// sources." with each source that didn't answer after it. `anilist` is `None` when AniList
+/// wasn't asked, and holds `None` when it didn't answer.
+fn settled_words(anilist: Option<Option<usize>>, groups: &[ReadSourceGroup]) -> String {
     let found: usize = groups
         .iter()
         .filter(|g| g.state == ReadSourceState::Hits)
         .map(|g| g.tiles.len() + g.joined as usize)
         .sum();
     let mut said = match anilist {
-        Some(n) => t::read_linux_search_done(n as i64, found as i64),
+        Some(Some(n)) => t::read_linux_search_done(n as i64, found as i64),
+        // AniList was asked and didn't answer: said first, as the failed sources are after.
+        Some(None) => format!(
+            "{} {}", // i18n-skip
+            t::read_search_anilist_failed(),
+            t::read_linux_search_done_sources(found as i64)
+        ),
         None => t::read_linux_search_done_sources(found as i64),
     };
     for group in groups {
@@ -385,7 +403,7 @@ impl Filters {
             menu.append(Some(&say::msg(&choice.label)), Some(&format!("rfilter.{name}")));
         }
         button.set_menu_model(Some(&menu));
-        let words = labels(picked, list);
+        let words = if origin { labels(picked, list) } else { format_labels(picked, list) };
         set_label(button, &many(&words).unwrap_or(title), !words.is_empty());
     }
 
@@ -560,35 +578,37 @@ fn add_posters(
 ) {
     for tile in tiles {
         let line = joined.get(&tile.work.0).map(String::as_str);
-        grid.append(&discovery::item(&discovery::poster(hub, tile, caption, line)));
+        grid.append(&discovery::item(&discovery::poster(hub, tile, caption, line, true)));
     }
 }
 
 /// The captions AniList's results take: Format · Origin for typed words; browsing one format, as
-/// View all on a row does, the origin in its place; anything else, the facts.
+/// View all on a row does, the origin in its place (and the start month on a New row's list);
+/// several formats, the format and status.
 fn caption_for(query: &ReadSearchQuery) -> Caption {
     let one_format = ReadRowFormat::ALL.iter().any(|format| {
         let formats = format.search_formats();
         !query.formats.is_empty() && query.formats.iter().all(|f| formats.contains(f))
     });
+    let started = query.started.as_deref().is_some_and(|s| !s.is_empty() && s != "any"); // i18n-skip
     if !query.text.is_empty() {
         Caption::FormatOrigin
+    } else if one_format && started {
+        Caption::OriginStarted
     } else if one_format {
-        Caption::OriginFirst
+        Caption::OriginStatus
     } else {
-        Caption::Facts
+        Caption::FormatStatus
     }
 }
 
 /// One source's row in From your sources.
 struct GroupSlot {
     id: String,
-    place: Squeeze,
-    inner: gtk::Box,
+    part: Rc<Part>,
     name: gtk::Label,
     kind: gtk::Label,
     spinner: adw::Spinner,
-    landing: Rc<Landing>,
     signature: RefCell<String>,
     /// Its failure is on show: asked again, placeholders take its place after 600 ms.
     failed: Cell<bool>,
@@ -643,6 +663,10 @@ struct Search {
     source: RefCell<Option<ReadSourceSearch>>,
     joined: RefCell<HashMap<String, String>>,
     announced: Cell<bool>,
+    /// Back to Read, while View all has Search over it.
+    back: gtk::Button,
+    /// Opened by View all: the first result takes focus once it lands.
+    focus_first: Cell<bool>,
 }
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
@@ -657,8 +681,16 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     other.set_visible(false);
     other.append(&other_words);
     other.append(&show_them);
-    let anilist_landing =
-        Landing::new(|| discovery::grid_placeholders(ANILIST_PLACEHOLDER_ROWS));
+    // The placeholders keep the line's room over them, so the covers land where they wait.
+    let anilist_landing = Landing::new(|| {
+        let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        column.set_accessible_role(gtk::AccessibleRole::Presentation);
+        let room = widgets::haze("", "read-search-total");
+        room.set_accessible_role(gtk::AccessibleRole::Presentation);
+        column.append(&room);
+        column.append(&discovery::grid_placeholders(ANILIST_PLACEHOLDER_ROWS));
+        column.upcast()
+    });
     let anilist = gtk::Box::new(gtk::Orientation::Vertical, 0);
     anilist.append(&anilist_landing.widget);
     let anilist_place = Squeeze::new(&anilist, gtk::Orientation::Vertical, 0);
@@ -815,6 +847,8 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         source: RefCell::default(),
         joined: RefCell::default(),
         announced: Cell::new(false),
+        back: back.clone(),
+        focus_first: Cell::new(false),
     });
 
     filters.on_change({
@@ -910,6 +944,14 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                 search.entry.set_text("");
                 search.filters.set_words(false);
                 search.ask(true);
+                // Focus waits on Back until the list lands, then takes its first result.
+                search.focus_first.set(true);
+                let back = search.back.clone();
+                glib::idle_add_local_once(move || {
+                    if back.is_mapped() {
+                        back.grab_focus();
+                    }
+                });
             }
         }
     })));
@@ -944,6 +986,7 @@ impl Search {
             return;
         }
         self.asked.set(true);
+        self.focus_first.set(false);
         let words = !query.text.is_empty();
         let same_words = words && before.text == query.text && self.source.borrow().is_some();
         *self.at.borrow_mut() = (query.clone(), 0);
@@ -959,15 +1002,18 @@ impl Search {
         self.later.set_visible(false);
         super::clear(&self.later);
         self.nothing.set_visible(false);
-        // The same words with Your sources only flipped keep the sources' rows where they are
-        // until their new answers land; other words start the section again.
+        // New words keep the sources' rows where they are until their new answers land, as
+        // AniList's grid is kept; a browse has no sources' part and starts it again.
         if !same_words {
             self.source.replace(None);
             self.joined.borrow_mut().clear();
-            for slot in self.slots.take() {
-                self.groups.remove(&slot.place);
+            if !words {
+                for slot in self.slots.take() {
+                    self.groups.remove(&slot.part.place);
+                }
+                self.sources.set_visible(false);
+                self.nothing_line.set_visible(false);
             }
-            self.sources.set_visible(false);
         }
         self.show_anilist(!query.sources_only);
         if words {
@@ -1138,7 +1184,7 @@ impl Search {
             if only_demo {
                 if let Some(ctx) = self.ctx.upgrade() {
                     let rows = super::demo::search_results(&ctx, &self.tiles.borrow());
-                    self.anilist_landing.land(&rows, false);
+                    self.anilist_landing.land(&rows);
                 }
             } else {
                 self.draw_anilist();
@@ -1225,8 +1271,17 @@ impl Search {
         add_posters(&hub, &grid, &tiles, self.caption(), &self.joined.borrow());
         grid.set_visible(!tiles.is_empty());
         part.append(&grid);
-        self.grid.replace(grid);
-        self.anilist_landing.land(&part, failure);
+        self.grid.replace(grid.clone());
+        self.anilist_landing.land(&part);
+        // Opened by View all: the first result takes focus from Back, unless it has moved on.
+        if self.focus_first.replace(false) && !tiles.is_empty() {
+            let (back, first) = (self.back.clone(), grid.clone());
+            motion::once_mapped(&grid, move || {
+                if back.has_focus() || !back.is_mapped() {
+                    first.child_focus(gtk::DirectionType::TabForward);
+                }
+            });
+        }
     }
 
     /// More from AniList, with how many show, and of how many once AniList's count is exact.
@@ -1269,26 +1324,46 @@ impl Search {
             self.fill_group(&hub, &slot, group, &query);
             live.push(slot);
         }
+        // Sources gone from the answer fade and close their gap.
         for slot in old {
-            self.groups.remove(&slot.place);
+            let (groups, place) = (self.groups.clone(), slot.part.place.clone());
+            let search = Rc::downgrade(self);
+            let gone = move || {
+                if place.parent().is_some() {
+                    groups.remove(&place);
+                }
+                if let Some(search) = search.upgrade() {
+                    search.show_sources();
+                }
+            };
+            if slot.part.is_shown() {
+                slot.part.leave(gone);
+            } else if !slot.part.place.is_closing() {
+                gone();
+            }
         }
         let mut previous: Option<gtk::Widget> = None;
         for slot in &live {
-            if slot.place.parent().as_ref() == Some(self.groups.upcast_ref()) {
-                self.groups.reorder_child_after(&slot.place, previous.as_ref());
+            let place = &slot.part.place;
+            if place.parent().as_ref() == Some(self.groups.upcast_ref()) {
+                self.groups.reorder_child_after(place, previous.as_ref());
             } else {
-                self.groups.insert_child_after(&slot.place, previous.as_ref());
+                self.groups.insert_child_after(place, previous.as_ref());
             }
-            previous = Some(slot.place.clone().upcast());
+            previous = Some(place.clone().upcast());
         }
         self.slots.replace(live);
         self.first_group_gap();
 
         let names = nothing_names(&search.groups);
         self.nothing_line.set_label(&t::read_search_source_nothing(&discovery::names(&names)));
-        self.nothing_line.set_visible(!names.is_empty());
-        let any_shown = self.slots.borrow().iter().any(|s| s.place.is_visible());
-        self.sources.set_visible(any_shown || !names.is_empty());
+        if names.is_empty() {
+            self.nothing_line.set_visible(false);
+        } else if !self.nothing_line.is_visible() {
+            self.nothing_line.set_visible(true);
+            motion::fade_in(&self.nothing_line);
+        }
+        self.show_sources();
 
         // Nothing anywhere: AniList found nothing (or wasn't asked) and every source nothing.
         let anilist_nothing = query.sources_only
@@ -1297,25 +1372,38 @@ impl Search {
                 && self.first_page.borrow().is_empty());
         let all_nothing = search.groups.iter().all(|g| g.state == ReadSourceState::Nothing);
         let nowhere = search.done && anilist_nothing && all_nothing;
-        if nowhere {
-            self.nothing_title.set_label(&t::read_search_nothing(&query.text));
-            self.nothing_line_one.set_label(&t::read_search_nothing_line());
-            self.nothing_line_two.set_label(&t::read_search_sources_nothing());
-            self.nothing_line_two.set_visible(!query.sources_only && !search.groups.is_empty());
-            self.nothing.set_visible(true);
-            self.anilist_place.set_visible(false);
-            self.sources.set_visible(false);
-        } else {
-            self.nothing.set_visible(false);
-            if !query.sources_only && !self.anilist_place.is_closing() {
-                self.anilist_place.set_visible(true);
+        let switch = || {
+            if nowhere {
+                self.nothing_title.set_label(&t::read_search_nothing(&query.text));
+                self.nothing_line_one.set_label(&t::read_search_nothing_line());
+                self.nothing_line_two.set_label(&t::read_search_sources_nothing());
+                self.nothing_line_two
+                    .set_visible(!query.sources_only && !search.groups.is_empty());
+                self.nothing.set_visible(true);
+                self.anilist_place.set_visible(false);
+                self.sources.set_visible(false);
+            } else {
+                self.nothing.set_visible(false);
+                if !query.sources_only && !self.anilist_place.is_closing() {
+                    self.anilist_place.set_visible(true);
+                }
+                self.show_sources();
             }
+        };
+        // Nothing anywhere takes the page's place, or gives it back, in one crossfade.
+        match self.veil.child() {
+            Some(body) if self.nothing.is_visible() != nowhere && self.page.is_mapped() => {
+                motion::ghost(&self.veil, &body, true, switch);
+            }
+            _ => switch(),
         }
         self.draw_more();
 
         if search.done && !self.announced.replace(true) {
-            let anilist = (!query.sources_only && !self.anilist_failed.get()).then(|| {
-                self.total.get().map_or(self.first_page.borrow().len(), |n| n as usize)
+            let anilist = (!query.sources_only).then(|| {
+                (!self.anilist_failed.get()).then(|| {
+                    self.total.get().map_or(self.first_page.borrow().len(), |n| n as usize)
+                })
             });
             let words = if nowhere {
                 t::read_search_nothing(&query.text)
@@ -1332,8 +1420,29 @@ impl Search {
     fn first_group_gap(&self) {
         let mut first = true;
         for slot in self.slots.borrow().iter() {
-            slot.inner.set_margin_top(if first { 12 } else { ABOVE_SOURCE });
-            first &= !slot.place.is_visible();
+            slot.part.inner.set_margin_top(if first { 12 } else { ABOVE_SOURCE });
+            first &= !slot.part.place.is_visible();
+        }
+    }
+
+    /// From your sources shows while a row or the line of sources that found nothing does,
+    /// fading in when it comes and out when it goes; never over Nothing anywhere.
+    fn show_sources(&self) {
+        let rows = self.slots.borrow().iter().any(|s| s.part.place.is_visible());
+        let show = !self.nothing.is_visible() && (rows || self.nothing_line.is_visible());
+        let shown = self.sources.is_visible();
+        if show && !shown {
+            // The heading fades in; the rows and the line under it fade on their own.
+            self.sources.set_visible(true);
+            if self.page.is_mapped() {
+                motion::fade_in(&self.sources_head);
+            }
+        } else if !show && shown {
+            if self.page.is_mapped() {
+                motion::fade_out(&self.sources);
+            } else {
+                self.sources.set_visible(false);
+            }
         }
     }
 
@@ -1343,11 +1452,18 @@ impl Search {
         let name = gtk::Label::new(Some(&group.source_name));
         name.add_css_class("read-source-name");
         name.set_xalign(0.0);
+        // A long name ends in an ellipsis rather than widening the page; the kind after it
+        // shrinks first.
+        name.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        name.set_width_chars(4);
+        name.set_tooltip_text(Some(&group.source_name));
         name.set_accessible_role(gtk::AccessibleRole::Heading);
         name.update_property(&[gtk::accessible::Property::Level(3)]);
         head.append(&name);
         let kind = widgets::haze("", "read-source-kind");
         kind.set_wrap(false);
+        kind.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        kind.set_width_chars(2);
         kind.set_accessible_role(gtk::AccessibleRole::Presentation);
         head.append(&kind);
         let spinner = adw::Spinner::new();
@@ -1362,28 +1478,21 @@ impl Search {
         inner.append(&head);
         let landing = Landing::new(|| discovery::placeholders(SOURCE_PLACEHOLDERS));
         inner.append(&landing.widget);
-        let place = Squeeze::new(&inner, gtk::Orientation::Vertical, 0);
-        place.set_visible(false);
-        landing.on_visible({
-            let (place, search) = (place.clone(), Rc::downgrade(self));
+        let part = Part::new(inner, landing, {
+            let search = Rc::downgrade(self);
             move || {
-                place.set_visible(true);
                 if let Some(search) = search.upgrade() {
                     search.first_group_gap();
-                    if !search.nothing.is_visible() {
-                        search.sources.set_visible(true);
-                    }
+                    search.show_sources();
                 }
             }
         });
         Rc::new(GroupSlot {
             id: group.source_id.clone(),
-            place,
-            inner,
+            part,
             name,
             kind,
             spinner,
-            landing,
             signature: RefCell::default(),
             failed: Cell::new(false),
         })
@@ -1411,14 +1520,13 @@ impl Search {
         };
         let asking = group.state == ReadSourceState::Asking;
         slot.spinner.set_visible(asking);
-        slot.landing.widget.update_state(&[gtk::accessible::State::Busy(asking)]);
+        slot.part.landing.widget.update_state(&[gtk::accessible::State::Busy(asking)]);
         if asking {
-            slot.name.update_property(&[gtk::accessible::Property::Label(&format!(
-                "{heading}, {}", // i18n-skip
-                t::read_search_asking(&group.source_name)
-            ))]);
+            slot.name.update_property(&[gtk::accessible::Property::Label(
+                &t::read_linux_source_searching(&heading),
+            )]);
             slot.signature.replace(String::new());
-            slot.landing.wait(!slot.failed.get());
+            slot.part.landing.wait(!slot.failed.get());
             return;
         }
         slot.name.update_property(&[gtk::accessible::Property::Label(&heading)]);
@@ -1433,36 +1541,36 @@ impl Search {
                 let posters: Vec<gtk::Button> = group
                     .tiles
                     .iter()
-                    .map(|tile| discovery::poster(hub, tile, Caption::Amount, None))
+                    .map(|tile| discovery::poster(hub, tile, Caption::Amount, None, false))
                     .collect();
                 let strip = discovery::strip(&posters, &group.source_name);
-                slot.landing.land(&strip, false);
+                slot.part.landing.land(&strip);
+                slot.part.reveal();
             }
             ReadSourceState::Failed { failure } => {
                 slot.failed.set(true);
-                let block = self.failure(group, &super::failure(failure), query);
-                slot.landing.land(&block, true);
+                let block = self.failure(group, &super::failure(failure), None, query);
+                slot.part.landing.land(&block);
+                slot.part.reveal();
             }
             ReadSourceState::TimedOut { seconds } => {
                 slot.failed.set(true);
                 let reason = t::read_search_source_timeout(i64::from(*seconds));
-                let block = self.failure(group, &reason, query);
-                slot.landing.land(&block, true);
+                let spoken = t::read_linux_source_timeout(i64::from(*seconds));
+                let block = self.failure(group, &reason, Some(&spoken), query);
+                slot.part.landing.land(&block);
+                slot.part.reveal();
             }
             // Nothing, or every hit joined an AniList result: the row goes.
             _ => {
                 slot.failed.set(false);
-                slot.landing.stop();
-                if slot.place.is_visible() && slot.place.is_mapped() && !slot.place.is_closing()
-                {
-                    let place = slot.place.clone();
-                    motion::fade_away(&slot.inner, move || {
-                        let gone = place.clone();
-                        place.close(move || gone.set_visible(false));
-                    });
-                } else if !slot.place.is_closing() {
-                    slot.place.set_visible(false);
-                }
+                let search = Rc::downgrade(self);
+                slot.part.leave(move || {
+                    if let Some(search) = search.upgrade() {
+                        search.first_group_gap();
+                        search.show_sources();
+                    }
+                });
             }
         }
     }
@@ -1472,6 +1580,7 @@ impl Search {
         &self,
         group: &ReadSourceGroup,
         reason: &str,
+        spoken: Option<&str>,
         query: &ReadSearchQuery,
     ) -> gtk::Box {
         let block = gtk::Box::new(gtk::Orientation::Horizontal, 8);
@@ -1489,12 +1598,19 @@ impl Search {
         line.set_wrap(true);
         words.append(&line);
         let why = widgets::haze(reason, "read-fail-reason");
+        if let Some(spoken) = spoken {
+            why.update_property(&[gtk::accessible::Property::Label(spoken)]);
+        }
         why.set_margin_top(2);
         why.set_margin_bottom(10);
         words.append(&why);
         let again = gtk::Button::with_label(&t::home_try_again());
         again.add_css_class("home-sec");
         again.set_halign(gtk::Align::Start);
+        // Several sources may fail: each Try again is named with its own.
+        again.update_property(&[gtk::accessible::Property::Label(
+            &t::read_linux_try_again_source(&group.source_name),
+        )]);
         again.connect_clicked({
             let (hub, query, id) = (self.hub.clone(), query.clone(), group.source_id.clone());
             move |_| {
@@ -1561,7 +1677,10 @@ pub fn shot_filters(shell: &Rc<crate::window::Shell>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kaeri_model::reading::{ReadAnilistState, ReadSourceJoin, ReadingFailure};
+    use kaeri_model::{
+        Msg, ReadingMsg,
+        reading::{ReadAnilistState, ReadSourceJoin, ReadingFailure},
+    };
 
     fn group(name: &str, state: ReadSourceState, hits: usize, joined: u32) -> ReadSourceGroup {
         let tile = WorkTile {
@@ -1595,11 +1714,14 @@ mod tests {
         let mut query = ReadSearchQuery { text: "lantern".into(), ..Default::default() };
         assert_eq!(caption_for(&query), Caption::FormatOrigin);
         query.text.clear();
-        assert_eq!(caption_for(&query), Caption::Facts);
+        assert_eq!(caption_for(&query), Caption::FormatStatus);
         query.formats = ReadRowFormat::Manga.search_formats();
-        assert_eq!(caption_for(&query), Caption::OriginFirst);
+        assert_eq!(caption_for(&query), Caption::OriginStatus);
+        query.started = Some("12-months".into());
+        assert_eq!(caption_for(&query), Caption::OriginStarted);
+        query.started = None;
         query.formats.push("webtoon".into());
-        assert_eq!(caption_for(&query), Caption::Facts);
+        assert_eq!(caption_for(&query), Caption::FormatStatus);
     }
 
     #[test]
@@ -1625,10 +1747,32 @@ mod tests {
             ),
         ];
         assert_eq!(
-            settled_words(Some(4), &groups),
+            settled_words(Some(Some(4)), &groups),
             "4 from AniList, 3 from your sources. Northwind didn't answer. Eastport didn't answer."
         );
         assert_eq!(settled_words(None, &groups[..1]), "3 from your sources.");
+        assert_eq!(
+            settled_words(Some(None), &groups[..1]),
+            "AniList didn't answer. 3 from your sources."
+        );
+    }
+
+    #[test]
+    fn a_rows_formats_read_as_one() {
+        let choice = |key: &str, label: ReadingMsg| ReadFilterChoice {
+            key: key.into(),
+            label: Msg::Reading(label),
+        };
+        let choices = [
+            choice("manga", ReadingMsg::ReadingKindManga),
+            choice("one-shot", ReadingMsg::ReadingKindOneShot),
+        ];
+        let manga = ReadRowFormat::Manga.search_formats();
+        assert_eq!(format_labels(&manga, &choices), [say::msg(&choices[0].label)]);
+        assert_eq!(
+            format_labels(&["one-shot".into()], &choices),
+            [say::msg(&choices[1].label)]
+        );
     }
 
     #[test]

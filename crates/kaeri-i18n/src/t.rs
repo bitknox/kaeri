@@ -2655,6 +2655,21 @@ pub fn read_linux_search_done_sources(sources: i64) -> String {
     text("read-linux-search-done-sources", &[("sources", Arg::Int(sources))])
 }
 
+/// Screen reader name of a source's row heading while the source is being asked. The source's name and kind come first: "Northwind, Plugin".
+pub fn read_linux_source_searching(source: &str) -> String {
+    text("read-linux-source-searching", &[("source", Arg::Text(source))])
+}
+
+/// Screen reader name of the reason under a source that gave no answer in time, where the screen shows "No answer in 15 s."
+pub fn read_linux_source_timeout(seconds: i64) -> String {
+    text("read-linux-source-timeout", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Screen reader name of Try again under a source that didn't answer, with the source's name, so each of several reads on its own.
+pub fn read_linux_try_again_source(source: &str) -> String {
+    text("read-linux-try-again-source", &[("source", Arg::Text(source))])
+}
+
 /// Tooltip of the reader toolbar's settings button.
 pub fn linux_reader_settings_open() -> String {
     text("linux-reader-settings-open", &[])

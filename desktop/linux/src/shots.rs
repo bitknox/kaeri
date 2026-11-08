@@ -2059,7 +2059,7 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 | "read-chapters-list"
                 | "read-novel-paper" => open_popover(&window),
                 #[cfg(feature = "fixtures")]
-                "read-disc-poster-menu" => context_menu(&window),
+                "read-disc-poster-menu" | "read-disc-poster-menu-own" => context_menu(&window),
                 party if party.starts_with("party-") => player.shot_party_popover(),
                 _ => None,
             };
