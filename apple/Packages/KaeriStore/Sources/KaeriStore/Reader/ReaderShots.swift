@@ -87,6 +87,25 @@ extension ReaderModel {
             }
             try? await Task.sleep(for: .milliseconds(900))
         }
+        // `-KaeriContinueAfter <ms>`: Continue on the end page that many milliseconds after the
+        // scene is ready, for a recording of the move into the next chapter. With
+        // `-KaeriSlowPages <ms>` the next chapter's pages take that long to arrive.
+        if let at = arguments.firstIndex(of: "-KaeriContinueAfter"), arguments.indices.contains(at + 1),
+           let wait = Int(arguments[at + 1]) {
+            let slow = arguments.firstIndex(of: "-KaeriSlowPages").flatMap { at in
+                arguments.indices.contains(at + 1) ? Int(arguments[at + 1]) : nil
+            }
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(wait))
+                guard let self, let next = end?.next ?? view?.next else { return }
+                if slow != nil { holdPages = true }
+                openChapter(next.id)
+                if let slow {
+                    try? await Task.sleep(for: .milliseconds(slow))
+                    holdPages = false
+                }
+            }
+        }
         _ = shown
         return true
     }

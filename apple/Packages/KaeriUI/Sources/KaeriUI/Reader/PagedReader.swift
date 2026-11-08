@@ -185,16 +185,43 @@ struct ReaderEndPage: View {
     @Bindable var model: ReaderModel
     let theme: ReaderTheme
     let size: CGSize
+    /// The end page as it was when the chapter was left, held over the next one while it opens.
+    var held: ReaderModel.HeldEnd?
     @Environment(\.readerClose) private var closeReader
     @Environment(Navigator.self) private var navigator
     @Environment(AppStore.self) private var store
     @Environment(\.dynamicTypeSize) private var type
 
     /// One more swipe opens the next chapter: in the paged reader, not a strip's foot or a novel.
-    private var swipes: Bool { model.novel == nil && model.view?.mode != .strip }
+    private var swipes: Bool { held != nil || (model.novel == nil && model.view?.mode != .strip) }
+
+    // What the page shows: the held chapter's, or the open one's.
+    private var view: ReaderView? { held?.view ?? model.view }
+    private var end: ReaderEnd? { held == nil ? model.end : held?.end }
+    private var read: Bool { held?.read ?? model.read }
+    private var readTrackers: [String] { held?.readTrackers ?? model.readTrackers }
+    private var medium: Medium { view?.medium ?? .manga }
+
+    private func previewFile(_ id: ChapterId) -> PageFile? {
+        if let held { return held.previews[id] }
+        return model.previews[id]
+    }
+
+    /// Continue, or while the held page waits on a slow first page, a small spinner in its place.
+    private func continueLabel(_ id: ChapterId) -> some View {
+        let waiting = held?.slow == true && held?.to == id
+        return Text(L.readerContinue)
+            .opacity(waiting ? 0 : 1)
+            .overlay {
+                if waiting {
+                    ProgressView().controlSize(.small).tint(theme.onAmber).transition(.opacity)
+                }
+            }
+            .animation(.fadeIn, value: waiting)
+    }
 
     var body: some View {
-        if model.view?.demoCredit != nil {
+        if view?.demoCredit != nil {
             demoEnd
         } else {
             standard
@@ -205,7 +232,7 @@ struct ReaderEndPage: View {
     /// and back to page 1. The reader's close button leads back to the series.
     private var demoEnd: some View {
         VStack(spacing: 0) {
-            if let cover = model.view?.demoCredit?.cover {
+            if let cover = view?.demoCredit?.cover {
                 BookCover(url: cover, width: Device.isMac ? 40 : 48)
                     .padding(.bottom, 14)
             }
@@ -249,7 +276,7 @@ struct ReaderEndPage: View {
     /// next chapter with its facts and its first page, and Continue. On a phone the buttons are
     /// pinned at the foot; wider, the column is centred with the buttons under it.
     private var standard: some View {
-        let next = model.end?.next ?? model.view?.next
+        let next = end?.next ?? view?.next
         let phone = size.width < 600
         // At the largest sizes nothing is pinned: the buttons follow the column in the scroll.
         let pinned = phone && !type.isAccessibilitySize
@@ -294,7 +321,7 @@ struct ReaderEndPage: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 10)
                 }
-                Button(L.readerContinue) { model.openChapter(next.id) }
+                Button { model.openChapter(next.id) } label: { continueLabel(next.id) }
                     .buttonStyle(ReaderAmberStyle(theme: theme))
                 Button(L.readerBackToSeries) { closeReader() }
                     .font(.ui(15, weight: .semibold))
@@ -312,13 +339,13 @@ struct ReaderEndPage: View {
 
     @ViewBuilder
     private func column(_ next: ChapterRow?, phone: Bool) -> some View {
-        let chapter = model.view?.chapter
+        let chapter = view?.chapter
         VStack(alignment: .leading, spacing: 0) {
             Text(L.readerEndOfChapterNumber(chapter: chapter.map { $0.number ?? $0.label } ?? ""))
                 .font(.ui(15)).foregroundStyle(theme.haze)
             Text(readLine).font(.ui(13)).foregroundStyle(theme.haze)
                 .padding(.top, 4)
-            if let work = model.view?.work, let chapterId = chapter?.id,
+            if let work = view?.work, let chapterId = chapter?.id,
                store.serverProgress.holds(work: work, chapter: chapterId) {
                 ReaderServerLine(line: store.serverProgress.lines[chapterId], theme: theme) {
                     store.serverProgress.retry(chapter: chapterId)
@@ -334,7 +361,7 @@ struct ReaderEndPage: View {
                     .foregroundStyle(theme.silk)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 4)
-                let facts = Self.facts(next, model: model)
+                let facts = Self.facts(next, end: end)
                 if !facts.isEmpty {
                     Text(facts).font(.ui(14)).foregroundStyle(theme.haze)
                         .fixedSize(horizontal: false, vertical: true)
@@ -342,11 +369,11 @@ struct ReaderEndPage: View {
                 }
                 // The next chapter's first page once the engine made it, its plate until then. A
                 // novel's chapter has no page to show.
-                if model.medium != .novel {
+                if medium != .novel {
                     preview(next, width: phone ? 150 : 180)
                         .padding(.top, 18)
                 }
-            } else if let why = model.end?.why {
+            } else if let why = end?.why {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title(why, chapter?.label ?? ""))
                         .font(.showTitle(size: 22, relativeTo: .title2)).fontWeight(.semibold)
@@ -359,7 +386,7 @@ struct ReaderEndPage: View {
                 let row = Group {
                     if let next {
                         Button { model.openChapter(next.id) } label: {
-                            Text(L.readerContinue).padding(.horizontal, 18)
+                            continueLabel(next.id).padding(.horizontal, 18)
                         }
                         .buttonStyle(ReaderAmberStyle(theme: theme, height: Device.isMac ? 28 : 44))
                     }
@@ -387,7 +414,7 @@ struct ReaderEndPage: View {
             Text(verbatim: next.number ?? next.label)
                 .font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
                 .lineLimit(2).multilineTextAlignment(.center).padding(8)
-            if let file = model.previews[next.id] {
+            if let file = previewFile(next.id) {
                 PageImage(file: file, longest: height * 3, fill: true)
             }
         }
@@ -400,7 +427,7 @@ struct ReaderEndPage: View {
 
     /// "Chapter 13 · 34 pages · from books.home.example": the chapter's number when it has a
     /// title of its own, its length, and the source it came from.
-    static func facts(_ next: ChapterRow, model: ReaderModel) -> String {
+    static func facts(_ next: ChapterRow, end: ReaderEnd?) -> String {
         let chapter = next.title.map { _ in next.number ?? next.label }
         let pages = next.pages.flatMap { $0 > 0 ? L.readerEndPages(count: Int($0)) : nil }
         let facts: String? = switch (chapter, pages) {
@@ -408,7 +435,7 @@ struct ReaderEndPage: View {
         case (let chapter?, nil): L.readerChapterLine(chapter: chapter)
         case (nil, let pages): pages
         }
-        let source = model.end?.next?.id == next.id ? model.end?.nextSource : nil
+        let source = end?.next?.id == next.id ? end?.nextSource : nil
         switch (facts, source) {
         case (let facts?, let source?): return L.readerDividerFactsSource(facts: facts, source: source)
         case (nil, let source?): return L.readerEndFrom(source: source)
@@ -418,9 +445,9 @@ struct ReaderEndPage: View {
 
     /// "Read · AniList updated", or Read alone when no tracker took it.
     private var readLine: String {
-        guard model.read else { return L.readerEndNotRead }
-        guard !model.readTrackers.isEmpty else { return L.readerEndRead }
-        return L.readerEndTracker(trackers: model.readTrackers.formatted(.list(type: .and).locale(AirTime.locale)))
+        guard read else { return L.readerEndNotRead }
+        guard !readTrackers.isEmpty else { return L.readerEndRead }
+        return L.readerEndTracker(trackers: readTrackers.formatted(.list(type: .and).locale(AirTime.locale)))
     }
 
     private func title(_ why: NoNext, _ chapter: String) -> String {
