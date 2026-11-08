@@ -2605,6 +2605,46 @@ pub fn linux_book_plugin_use() -> String {
     text("linux-book-plugin-use", &[])
 }
 
+/// Screen reader name of a discovery row's View all button: the row's heading follows, so a list of links makes sense on its own.
+pub fn read_linux_view_all_row(row: &str) -> String {
+    text("read-linux-view-all-row", &[("row", Arg::Text(row))])
+}
+
+/// Screen reader name of a discovery row's heading while its covers are on their way.
+pub fn read_linux_row_loading(row: &str) -> String {
+    text("read-linux-row-loading", &[("row", Arg::Text(row))])
+}
+
+/// Beside a source's name over its row of covers: what kind of source it is.
+pub fn read_linux_source_folder() -> String {
+    text("read-linux-source-folder", &[])
+}
+
+/// Beside a source's name over its row of covers: a book server.
+pub fn read_linux_source_server() -> String {
+    text("read-linux-source-server", &[])
+}
+
+/// Beside a source's name over its row of covers: a plugin.
+pub fn read_linux_source_plugin() -> String {
+    text("read-linux-source-plugin", &[])
+}
+
+/// Said once by screen readers when Your sources only turns on.
+pub fn read_linux_anilist_hidden() -> String {
+    text("read-linux-anilist-hidden", &[])
+}
+
+/// Said once by screen readers when every part of a search has answered. Sources that failed follow, each in its own sentence.
+pub fn read_linux_search_done(anilist: i64, sources: i64) -> String {
+    text("read-linux-search-done", &[("anilist", Arg::Int(anilist)), ("sources", Arg::Int(sources))])
+}
+
+/// Said once by screen readers when every source has answered, with Your sources only on.
+pub fn read_linux_search_done_sources(sources: i64) -> String {
+    text("read-linux-search-done-sources", &[("sources", Arg::Int(sources))])
+}
+
 /// Tooltip of the reader toolbar's settings button.
 pub fn linux_reader_settings_open() -> String {
     text("linux-reader-settings-open", &[])

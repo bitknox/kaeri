@@ -1,0 +1,654 @@
+//! Reading's discovery parts, shared by Read and Search: a poster (the cover at 128 by 192 with
+//! corners of 12, its title and one line under it), its placeholder at the same size, a sideways
+//! row of posters that Tab leaves in one step, and the slot that holds placeholders while its
+//! part is on its way and crossfades into what lands.
+
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+    time::Instant,
+};
+
+use adw::prelude::*;
+use gtk::glib;
+use kaeri_i18n::t;
+use kaeri_model::reading::WorkTile;
+
+use crate::{hub::Hub, motion, say, states, widgets};
+
+/// A poster's cover: 128 by 192.
+pub const POSTER: i32 = 128;
+pub const POSTER_HEIGHT: i32 = 192;
+/// Between posters in a row, and between columns of a grid.
+pub const GAP: i32 = 16;
+/// Between rows of a grid.
+pub const GRID_ROW_GAP: i32 = 24;
+/// Placeholders a row holds while it waits.
+const PLACEHOLDERS: usize = 8;
+
+/// The line under a poster's title: Not found in your sources once a row's series was opened and
+/// no source had it, else what comes next, else the facts.
+pub fn line_of(tile: &WorkTile) -> String {
+    if tile.not_in_sources {
+        return t::home_not_found();
+    }
+    match &tile.next {
+        Some(next) => say::msg(next),
+        None => super::dotted(&tile.facts),
+    }
+}
+
+/// What a screen reader says for a poster: "Title. Manga, Releasing." and, after a miss, "Title.
+/// Not found in your sources." A joined result adds where it is: "In Home library."
+pub fn spoken(tile: &WorkTile, joined: Option<&str>) -> String {
+    let line = if tile.not_in_sources || tile.next.is_some() {
+        line_of(tile)
+    } else {
+        tile.facts.iter().map(say::msg).filter(|s| !s.is_empty()).collect::<Vec<_>>().join(", ") // i18n-skip
+    };
+    let mut said = tile.title.clone();
+    for part in [Some(line.as_str()), joined].into_iter().flatten().filter(|p| !p.is_empty()) {
+        said = format!("{said}. {part}"); // i18n-skip
+    }
+    if tile.new_chapter {
+        said = format!("{said}. {}", t::chapter_state_new()); // i18n-skip
+    }
+    format!("{said}.") // i18n-skip
+}
+
+/// `names` as one list: "Comics folder, Northwind and Demo".
+pub fn names(names: &[String]) -> String {
+    match names {
+        [] => String::new(),
+        [one] => one.clone(),
+        [rest @ .., last] => t::linux_reader_names_and(&rest.join(", "), last), // i18n-skip
+    }
+}
+
+/// A cover with no art: a raised plate with the title set in it and a book at its foot. The plate
+/// and its words are hidden from screen readers, which hear the caption once.
+fn no_cover(title: &str) -> gtk::Box {
+    let plate = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    plate.add_css_class("read-no-cover");
+    plate.set_size_request(POSTER, POSTER_HEIGHT);
+    plate.set_overflow(gtk::Overflow::Hidden);
+    plate.set_accessible_role(gtk::AccessibleRole::Presentation);
+    let words = widgets::show_title(title, "read-no-cover-title");
+    words.set_lines(5);
+    words.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    words.set_width_chars(1);
+    words.set_max_width_chars(1);
+    words.set_valign(gtk::Align::Start);
+    words.set_vexpand(true);
+    words.set_accessible_role(gtk::AccessibleRole::Presentation);
+    plate.append(&words);
+    let book = gtk::Image::from_icon_name("kaeri-book-symbolic");
+    book.set_pixel_size(16);
+    book.add_css_class("haze");
+    book.set_halign(gtk::Align::Start);
+    book.set_accessible_role(gtk::AccessibleRole::Presentation);
+    plate.append(&book);
+    plate
+}
+
+/// A poster's cover: the art at 128 by 192, or the plate with the title when there is none.
+fn cover(hub: &Hub, tile: &WorkTile) -> gtk::Widget {
+    match tile.cover.as_deref().filter(|u| !u.is_empty()) {
+        Some(url) => {
+            let (frame, _) = widgets::art(hub, Some(url), None, "read-poster");
+            let fit = crate::fit::Fit::new(&frame, 2.0 / 3.0, POSTER, true, 0);
+            fit.set_halign(gtk::Align::Start);
+            fit.set_valign(gtk::Align::Start);
+            fit.set_accessible_role(gtk::AccessibleRole::Presentation);
+            fit.upcast()
+        }
+        None => no_cover(&tile.title).upcast(),
+    }
+}
+
+/// One series as a poster: the cover, the track when it is being read, the title on one line
+/// and the line under it, with `joined` in silk under that when one of the person's sources has
+/// it. Opens the series; right-click opens its menu.
+pub fn poster(hub: &Hub, tile: &WorkTile, joined: Option<&str>) -> gtk::Button {
+    let inner = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    inner.set_size_request(POSTER, -1);
+    inner.append(&cover(hub, tile));
+    let reading = tile.progress.is_some();
+    if let Some(progress) = tile.progress {
+        let bar = super::track(progress, POSTER);
+        bar.set_margin_top(6);
+        inner.append(&bar);
+    }
+    let title = widgets::show_title(&tile.title, "home-poster-title");
+    title.set_wrap(false);
+    title.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    title.set_width_chars(1);
+    title.set_max_width_chars(1);
+    title.set_margin_top(if reading { 6 } else { 8 });
+    title.set_tooltip_text(Some(&tile.title));
+    inner.append(&title);
+
+    let sub = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    if tile.new_chapter {
+        let dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        dot.add_css_class("home-new");
+        dot.set_valign(gtk::Align::Center);
+        sub.append(&dot);
+    }
+    let text = if tile.new_chapter && tile.next.is_none() {
+        t::chapter_state_new()
+    } else {
+        line_of(tile)
+    };
+    let line = gtk::Label::new(Some(&text));
+    line.add_css_class("haze");
+    line.add_css_class("home-sub");
+    line.set_xalign(0.0);
+    line.set_width_chars(1);
+    line.set_max_width_chars(1);
+    line.set_hexpand(true);
+    // Its one line is held even when empty, so the row's captions line up. A miss may take two.
+    line.set_size_request(-1, 16);
+    if tile.not_in_sources {
+        line.set_wrap(true);
+        line.set_lines(2);
+    } else {
+        line.set_single_line_mode(true);
+    }
+    line.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    sub.append(&line);
+    inner.append(&sub);
+
+    if let Some(joined) = joined {
+        let label = gtk::Label::new(Some(joined));
+        label.add_css_class("read-joined");
+        label.set_xalign(0.0);
+        label.set_wrap(true);
+        label.set_width_chars(1);
+        label.set_max_width_chars(1);
+        label.set_margin_top(2);
+        inner.append(&label);
+    }
+
+    let button = gtk::Button::new();
+    button.set_child(Some(&inner));
+    button.add_css_class("flat");
+    button.add_css_class("home-card");
+    button.set_halign(gtk::Align::Start);
+    button.set_valign(gtk::Align::Start);
+    button.set_hexpand(false);
+    button.set_action_target_value(Some(&tile.work.0.to_variant()));
+    button.set_action_name(Some("win.open-series"));
+    button.update_property(&[gtk::accessible::Property::Label(&spoken(tile, joined))]);
+    super::work_menu(&button, &tile.work, None);
+    button
+}
+
+/// A poster as an item of a list, for the row or the grid that holds it.
+pub fn item(poster: &impl IsA<gtk::Widget>) -> gtk::Box {
+    let item = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    item.set_accessible_role(gtk::AccessibleRole::ListItem);
+    item.set_halign(gtk::Align::Start);
+    item.set_valign(gtk::Align::Start);
+    item.append(poster);
+    item
+}
+
+/// A poster's placeholder at its final size: the plate where the cover lands and two bars for its
+/// words.
+pub fn placeholder() -> gtk::Box {
+    let card = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    card.set_size_request(POSTER, -1);
+    card.append(&states::plate(POSTER, POSTER_HEIGHT, "read-poster-plate"));
+    let title = states::plate(POSTER * 8 / 10, 12, "bar");
+    title.set_margin_top(8);
+    card.append(&title);
+    let line = states::plate(POSTER / 2, 10, "bar");
+    line.set_margin_top(8);
+    // The caption's two lines take 34 px; the bars, 30.
+    line.set_margin_bottom(4);
+    card.append(&line);
+    card
+}
+
+/// `n` placeholders in a row, clipped where the row ends: they ask for no width of their own.
+pub fn placeholders(n: usize) -> gtk::Widget {
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, GAP);
+    for _ in 0..n {
+        row.append(&placeholder());
+    }
+    let clip = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::External)
+        .vscrollbar_policy(gtk::PolicyType::Never)
+        .propagate_natural_height(true)
+        .child(&row)
+        .build();
+    clip.set_can_target(false);
+    clip.set_can_focus(false);
+    clip.set_accessible_role(gtk::AccessibleRole::Presentation);
+    clip.upcast()
+}
+
+/// The placeholders of a Home row.
+pub fn row_placeholders() -> gtk::Widget {
+    placeholders(PLACEHOLDERS)
+}
+
+/// A paging button over a row's covers, centred on them. Hidden from Tab and screen readers: the
+/// arrow keys and the scroll bar do the same work.
+fn arrow(icon: &str, tip: &str, side: gtk::Align) -> gtk::Button {
+    let button = gtk::Button::from_icon_name(icon);
+    button.add_css_class("circular");
+    button.add_css_class("home-arrow");
+    button.set_halign(side);
+    button.set_valign(gtk::Align::Start);
+    button.set_margin_top(POSTER_HEIGHT / 2 - 18);
+    button.set_size_request(36, 36);
+    button.set_focusable(false);
+    button.set_can_focus(false);
+    button.set_tooltip_text(Some(tip));
+    button.set_visible(false);
+    button.set_accessible_role(gtk::AccessibleRole::Presentation);
+    button
+}
+
+/// Page a row by the whole posters that fit, landing on a poster's edge, on the standard token.
+fn page_by(adj: &gtk::Adjustment, host: &gtk::ScrolledWindow, direction: i32) {
+    let pitch = f64::from(POSTER + GAP);
+    let fit = ((adj.page_size() + f64::from(GAP)) / pitch).floor().max(1.0);
+    let at = (adj.value() / pitch).round();
+    let end = (adj.upper() - adj.page_size()).max(adj.lower());
+    let to = ((at + f64::from(direction) * fit) * pitch).clamp(adj.lower(), end);
+    let target = adw::CallbackAnimationTarget::new({
+        let adj = adj.clone();
+        move |v| adj.set_value(v)
+    });
+    motion::standard(host, adj.value(), to, target).play();
+}
+
+/// A row of posters that scrolls sideways, named `name` as a list for screen readers. Arrows
+/// move through it and keep the focused poster in view; Tab and Shift+Tab leave it in one step.
+/// The paging buttons fade in while the pointer is over it.
+pub fn strip(posters: &[gtk::Button], name: &str) -> gtk::Widget {
+    let cards = gtk::Box::new(gtk::Orientation::Horizontal, GAP);
+    cards.set_accessible_role(gtk::AccessibleRole::List);
+    cards.update_property(&[gtk::accessible::Property::Label(name)]);
+    for poster in posters {
+        cards.append(&item(poster));
+    }
+    let viewport = gtk::Viewport::new(gtk::Adjustment::NONE, gtk::Adjustment::NONE);
+    viewport.set_child(Some(&cards));
+    viewport.set_scroll_to_focus(true);
+    let scroll = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::External)
+        .vscrollbar_policy(gtk::PolicyType::Never)
+        .propagate_natural_height(true)
+        .child(&viewport)
+        .build();
+    let layers = gtk::Overlay::new();
+    layers.set_child(Some(&scroll));
+    let prev = arrow("go-previous-symbolic", &t::home_previous(), gtk::Align::Start);
+    let next = arrow("go-next-symbolic", &t::home_next(), gtk::Align::End);
+    layers.add_overlay(&prev);
+    layers.add_overlay(&next);
+
+    let hadj = scroll.hadjustment();
+    let over = Rc::new(Cell::new(false));
+    let fade = Rc::new((motion::Fader::default(), motion::Fader::default()));
+    let refresh = {
+        let (hadj, prev, next, over, fade) =
+            (hadj.clone(), prev.clone(), next.clone(), Rc::clone(&over), Rc::clone(&fade));
+        Rc::new(move || {
+            let back = hadj.value() > 1.0;
+            let forward = hadj.value() + hadj.page_size() < hadj.upper() - 1.0;
+            fade.0.set(&prev, over.get() && back);
+            fade.1.set(&next, over.get() && forward);
+        })
+    };
+    hadj.connect_changed({
+        let refresh = Rc::clone(&refresh);
+        move |_| refresh()
+    });
+    hadj.connect_value_changed({
+        let refresh = Rc::clone(&refresh);
+        move |_| refresh()
+    });
+    let hover = gtk::EventControllerMotion::new();
+    hover.connect_enter({
+        let (over, refresh) = (Rc::clone(&over), Rc::clone(&refresh));
+        move |_, _, _| {
+            over.set(true);
+            refresh();
+        }
+    });
+    hover.connect_leave({
+        let (over, refresh) = (Rc::clone(&over), Rc::clone(&refresh));
+        move |_| {
+            over.set(false);
+            refresh();
+        }
+    });
+    layers.add_controller(hover);
+    prev.connect_clicked({
+        let (hadj, scroll) = (hadj.clone(), scroll.clone());
+        move |_| page_by(&hadj, &scroll, -1)
+    });
+    next.connect_clicked({
+        let (hadj, scroll) = (hadj.clone(), scroll.clone());
+        move |_| page_by(&hadj, &scroll, 1)
+    });
+
+    // Tab leaves the row: the focus goes to the row's last poster (its first, going back) with
+    // nothing scrolled, and GTK moves it on from there to whatever follows the row.
+    let keys = gtk::EventControllerKey::new();
+    keys.set_propagation_phase(gtk::PropagationPhase::Capture);
+    keys.connect_key_pressed({
+        let (cards, viewport) = (cards.clone(), viewport.clone());
+        move |_, key, _, state| {
+            use gtk::gdk::Key;
+            if !matches!(key, Key::Tab | Key::ISO_Left_Tab | Key::KP_Tab) {
+                return glib::Propagation::Proceed;
+            }
+            let back =
+                key == Key::ISO_Left_Tab || state.contains(gtk::gdk::ModifierType::SHIFT_MASK);
+            let edge = if back { cards.first_child() } else { cards.last_child() };
+            if let Some(poster) = edge.and_then(|item| item.first_child()) {
+                viewport.set_scroll_to_focus(false);
+                poster.grab_focus();
+                let viewport = viewport.clone();
+                glib::idle_add_local_once(move || viewport.set_scroll_to_focus(true));
+            }
+            glib::Propagation::Proceed
+        }
+    });
+    cards.add_controller(keys);
+    widgets::keep(&layers, (fade, refresh, over));
+    layers.upcast()
+}
+
+/// A place whose part is on its way: nothing for 600 ms, then placeholders at final size, held at
+/// least 0.3 s, then what landed fades in over them in 200 ms and they fade out under it in
+/// 300 ms. A failure that lands there crossfades the same way, then the place closes to the
+/// failure's height on the standard spring. Under Reduce Animation the crossfade stays and the
+/// height changes at once.
+pub struct Landing {
+    pub widget: gtk::Overlay,
+    make: Box<dyn Fn() -> gtk::Widget>,
+    /// The placeholders on show, and since when.
+    shown_placeholders: RefCell<Option<(gtk::Widget, Instant)>>,
+    content: RefCell<Option<gtk::Widget>>,
+    timer: RefCell<Option<glib::SourceId>>,
+    /// What lands once the placeholders have been held long enough.
+    held: RefCell<Option<glib::SourceId>>,
+    /// Told the first time the place has something to show.
+    on_visible: RefCell<Option<Box<dyn Fn()>>>,
+    visible: Cell<bool>,
+}
+
+impl Landing {
+    pub fn new(make: impl Fn() -> gtk::Widget + 'static) -> Rc<Self> {
+        let widget = gtk::Overlay::new();
+        widget.set_valign(gtk::Align::Start);
+        Rc::new(Self {
+            widget,
+            make: Box::new(make),
+            shown_placeholders: RefCell::default(),
+            content: RefCell::default(),
+            timer: RefCell::default(),
+            held: RefCell::default(),
+            on_visible: RefCell::default(),
+            visible: Cell::new(false),
+        })
+    }
+
+    /// Run `f` the first time the place has something to show.
+    pub fn on_visible(&self, f: impl Fn() + 'static) {
+        self.on_visible.replace(Some(Box::new(f)));
+    }
+
+    /// Whether anything shows yet.
+    pub fn is_visible(&self) -> bool {
+        self.visible.get()
+    }
+
+    /// Whether placeholders are showing or due.
+    pub fn is_waiting(&self) -> bool {
+        self.timer.borrow().is_some()
+            || (self.shown_placeholders.borrow().is_some() && self.held.borrow().is_none())
+    }
+
+    fn seen(&self) {
+        if !self.visible.replace(true)
+            && let Some(f) = self.on_visible.borrow().as_ref()
+        {
+            f();
+        }
+    }
+
+    /// The part is on its way. With `keep`, what shows stays until the answer lands.
+    pub fn wait(self: &Rc<Self>, keep: bool) {
+        if let Some(id) = self.held.take() {
+            id.remove();
+        }
+        if self.timer.borrow().is_some() || self.shown_placeholders.borrow().is_some() {
+            return;
+        }
+        if keep && self.content.borrow().is_some() {
+            return;
+        }
+        let weak = Rc::downgrade(self);
+        let id = glib::timeout_add_local_once(states::SILENT, move || {
+            if let Some(landing) = weak.upgrade() {
+                landing.timer.take();
+                landing.show_placeholders();
+            }
+        });
+        self.timer.replace(Some(id));
+    }
+
+    fn show_placeholders(&self) {
+        let placeholders = (self.make)();
+        match self.content.take() {
+            Some(old) if self.widget.is_mapped() => {
+                motion::ghost(&self.widget, &self.widget, true, || {
+                    self.widget.set_child(Some(&placeholders));
+                });
+                drop(old);
+            }
+            _ => self.widget.set_child(Some(&placeholders)),
+        }
+        self.shown_placeholders.replace(Some((placeholders, Instant::now())));
+        self.seen();
+    }
+
+    /// Nothing is on its way any more, as when the row goes: what was due is not shown.
+    pub fn stop(&self) {
+        if let Some(id) = self.timer.take() {
+            id.remove();
+        }
+        if let Some(id) = self.held.take() {
+            id.remove();
+        }
+    }
+
+    /// What the part brought: posters or a failure. `failure` closes the place to its height
+    /// after the crossfade.
+    pub fn land(self: &Rc<Self>, content: &impl IsA<gtk::Widget>, failure: bool) {
+        let content = content.as_ref().clone();
+        if let Some(id) = self.timer.take() {
+            id.remove();
+        }
+        if let Some(id) = self.held.take() {
+            id.remove();
+        }
+        let since = self.shown_placeholders.borrow().as_ref().map(|(_, at)| *at);
+        if let Some(since) = since {
+            let left = states::AT_LEAST.saturating_sub(since.elapsed());
+            if left.is_zero() {
+                self.crossfade(content, failure);
+            } else {
+                let weak = Rc::downgrade(self);
+                let id = glib::timeout_add_local_once(left, move || {
+                    if let Some(landing) = weak.upgrade() {
+                        landing.held.take();
+                        landing.crossfade(content, failure);
+                    }
+                });
+                self.held.replace(Some(id));
+            }
+            return;
+        }
+        let had = self.content.borrow().is_some();
+        if had && self.widget.is_mapped() {
+            // An answer over an answer: crossfaded in place.
+            motion::ghost(&self.widget, &self.widget, true, || {
+                self.widget.set_child(Some(&content));
+            });
+        } else {
+            self.widget.set_child(Some(&content));
+        }
+        self.content.replace(Some(content));
+        self.seen();
+    }
+
+    /// Fade `content` in over the placeholders, then them out under it.
+    fn crossfade(self: &Rc<Self>, content: gtk::Widget, failure: bool) {
+        let Some((placeholders, _)) = self.shown_placeholders.take() else {
+            self.widget.set_child(Some(&content));
+            self.content.replace(Some(content));
+            return;
+        };
+        self.content.replace(Some(content.clone()));
+        if !self.widget.is_mapped() {
+            self.widget.set_child(Some(&content));
+            return;
+        }
+        content.set_valign(gtk::Align::Start);
+        content.set_opacity(0.0);
+        self.widget.add_overlay(&content);
+        self.widget.set_measure_overlay(&content, true);
+        let fade_in = timed(&content, 0.0, 1.0, 200, adw::Easing::EaseOutCubic);
+        let weak = Rc::downgrade(self);
+        fade_in.connect_done(move |_| {
+            let Some(landing) = weak.upgrade() else { return };
+            let fade_out = timed(&placeholders, 1.0, 0.0, 300, adw::Easing::EaseInCubic);
+            let (weak, content) = (Rc::downgrade(&landing), content.clone());
+            let height = placeholders.height();
+            fade_out.connect_done(move |_| {
+                let Some(landing) = weak.upgrade() else { return };
+                if failure {
+                    landing.close_to(&content, height);
+                } else {
+                    landing.settle(&content);
+                }
+            });
+            fade_out.play();
+        });
+        fade_in.play();
+    }
+
+    /// The content takes the place's child, out of the overlay.
+    /// A newer answer that landed meanwhile has the place already: this one only leaves.
+    fn settle(&self, content: &gtk::Widget) {
+        if content.parent().as_ref() == Some(self.widget.upcast_ref())
+            && self.widget.child().as_ref() != Some(content)
+        {
+            self.widget.remove_overlay(content);
+        }
+        content.set_opacity(1.0);
+        if self.content.borrow().as_ref() == Some(content) {
+            self.widget.set_child(Some(content));
+        }
+    }
+
+    /// The placeholders' height closes to the content's on the standard spring.
+    fn close_to(self: &Rc<Self>, content: &gtk::Widget, from: i32) {
+        if self.content.borrow().as_ref() != Some(content) {
+            self.settle(content);
+            return;
+        }
+        let room = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        room.set_size_request(-1, from);
+        self.widget.set_child(Some(&room));
+        let target = adw::CallbackAnimationTarget::new({
+            let room = room.clone();
+            move |v| room.set_size_request(-1, v.round() as i32)
+        });
+        let spring = motion::standard(&room, f64::from(from), 0.0, target);
+        let (weak, content) = (Rc::downgrade(self), content.clone());
+        spring.connect_done(move |_| {
+            if let Some(landing) = weak.upgrade() {
+                landing.settle(&content);
+            }
+        });
+        spring.play();
+    }
+}
+
+/// A timed fade on `widget`'s opacity that plays under Reduce Animation too, where the crossfade
+/// is what reduced motion keeps.
+fn timed(
+    widget: &impl IsA<gtk::Widget>,
+    from: f64,
+    to: f64,
+    ms: u32,
+    easing: adw::Easing,
+) -> adw::TimedAnimation {
+    widget.as_ref().set_opacity(from);
+    let animation = adw::TimedAnimation::new(widget, from, to, ms, motion::opacity(widget));
+    animation.set_easing(easing);
+    animation.set_follow_enable_animations_setting(false);
+    animation
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn names_are_one_list() {
+        assert_eq!(names(&[]), "");
+        assert_eq!(names(&["Demo".into()]), "Demo");
+        assert_eq!(
+            names(&["Comics folder".into(), "Northwind".into(), "Demo".into()]),
+            "Comics folder, Northwind and Demo"
+        );
+    }
+
+    fn tile() -> WorkTile {
+        WorkTile {
+            work: kaeri_core::books::WorkId("a:1".into()),
+            title: "Lantern Street Notes".into(),
+            medium: kaeri_core::media::Medium::Manga,
+            cover: None,
+            format_label: None,
+            progress: None,
+            next: None,
+            new_chapter: false,
+            adult: false,
+            facts: Vec::new(),
+            demo: false,
+            not_in_sources: false,
+        }
+    }
+
+    #[test]
+    fn a_miss_is_said_in_place_of_the_facts() {
+        let mut tile = tile();
+        tile.not_in_sources = true;
+        assert_eq!(line_of(&tile), t::home_not_found());
+        assert_eq!(
+            spoken(&tile, None),
+            format!("Lantern Street Notes. {}.", t::home_not_found())
+        );
+    }
+
+    #[test]
+    fn a_joined_result_says_where_it_is() {
+        let tile = tile();
+        assert_eq!(
+            spoken(&tile, Some("In Home library")),
+            "Lantern Street Notes. In Home library."
+        );
+    }
+}

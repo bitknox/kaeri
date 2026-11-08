@@ -117,6 +117,7 @@ fn rules(platform: Platform) -> Rules {
                 "shots.rs",
                 "shots_reading.rs",
                 "shots_prelaunch.rs",
+                "shots_read_discovery.rs",
                 "showcase.rs",
                 "fixtures.rs",
                 "fixtures_reading.rs",

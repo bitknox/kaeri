@@ -369,6 +369,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         return settle;
     }
     #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_read_discovery::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
     if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
         return settle;
     }
@@ -1373,6 +1377,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
     #[cfg(feature = "fixtures")]
     crate::shots_reading::unstage(shell, shot);
     #[cfg(feature = "fixtures")]
+    crate::shots_read_discovery::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
     crate::shots_prelaunch::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
@@ -2108,6 +2114,10 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 #[cfg(feature = "fixtures")]
                 "reading" => {
                     crate::shots_reading::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "reading-discovery" => {
+                    crate::shots_read_discovery::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
                 #[cfg(feature = "fixtures")]
                 "prelaunch" => {

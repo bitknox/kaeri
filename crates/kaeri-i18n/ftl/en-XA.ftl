@@ -1700,6 +1700,30 @@ linux-join-medium-line-both = [Ŵàţçĥîñĝ àñð ŕéàðîñĝ, àš öñ
 # Switch on a book plugin's page: its series show in Kaeri while it is on.
 linux-book-plugin-use = [Ûšé ţĥîš þļüĝîñ~~~~~]
 
+# Screen reader name of a discovery row's View all button: the row's heading follows, so a list of links makes sense on its own.
+read-linux-view-all-row = [Ṽîéŵ àļļ, { $row }~~~~]
+
+# Screen reader name of a discovery row's heading while its covers are on their way.
+read-linux-row-loading = [{ $row }, ļöàðîñĝ~~~~]
+
+# Beside a source's name over its row of covers: what kind of source it is.
+read-linux-source-folder = [Ƒöļðéŕ~~]
+
+# Beside a source's name over its row of covers: a book server.
+read-linux-source-server = [Šéŕṽéŕ~~]
+
+# Beside a source's name over its row of covers: a plugin.
+read-linux-source-plugin = [Þļüĝîñ~~]
+
+# Said once by screen readers when Your sources only turns on.
+read-linux-anilist-hidden = [ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ.~~~~~~~~~]
+
+# Said once by screen readers when every part of a search has answered. Sources that failed follow, each in its own sentence.
+read-linux-search-done = [{ $anilist } ƒŕöɱ ÅñîĻîšţ, { $sources } ƒŕöɱ ýöüŕ šöüŕçéš.~~~~~~~~~~~~]
+
+# Said once by screen readers when every source has answered, with Your sources only on.
+read-linux-search-done-sources = [{ $sources } ƒŕöɱ ýöüŕ šöüŕçéš.~~~~~~~]
+
 # Tooltip of the reader toolbar's settings button.
 linux-reader-settings-open = [Ŕéàðéŕ šéţţîñĝš~~~~~]
 

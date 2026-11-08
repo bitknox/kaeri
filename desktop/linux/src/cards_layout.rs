@@ -1,5 +1,5 @@
-//! Cards in rows: as many columns of one width as fit, left-aligned with one gap both ways, the
-//! room left over staying at the end of each row. GtkFlowBox spreads that room between its
+//! Cards in rows: as many columns of one width as fit, left-aligned with a gap across and one
+//! down (the same unless set apart), the room left over staying at the end of each row. GtkFlowBox spreads that room between its
 //! children, so a grid of covers would drift apart as the window widens.
 
 use std::cell::Cell;
@@ -15,8 +15,10 @@ mod imp {
     pub struct CardsLayout {
         /// Each card's width.
         pub card: Cell<i32>,
-        /// The gap between cards, across and down.
+        /// The gap between cards across.
         pub gap: Cell<i32>,
+        /// The gap between rows of cards.
+        pub row_gap: Cell<i32>,
     }
 
     #[glib::object_subclass]
@@ -39,18 +41,18 @@ mod imp {
             orientation: gtk::Orientation,
             for_size: i32,
         ) -> (i32, i32, i32, i32) {
-            let (card, gap) = (self.card.get(), self.gap.get());
+            let (card, gap, row_gap) = (self.card.get(), self.gap.get(), self.row_gap.get());
             if orientation == gtk::Orientation::Horizontal {
                 return (card, card * 4 + gap * 3, -1, -1);
             }
             let columns = if for_size < 0 { 4 } else { self.columns(for_size) };
             let rows = self.rows(widget, columns);
-            let height = rows.iter().sum::<i32>() + gap * (rows.len() as i32 - 1).max(0);
+            let height = rows.iter().sum::<i32>() + row_gap * (rows.len() as i32 - 1).max(0);
             (height, height, -1, -1)
         }
 
         fn allocate(&self, widget: &gtk::Widget, width: i32, _height: i32, _baseline: i32) {
-            let (card, gap) = (self.card.get(), self.gap.get());
+            let (card, gap, row_gap) = (self.card.get(), self.gap.get(), self.row_gap.get());
             let columns = self.columns(width);
             let rows = self.rows(widget, columns);
             let mut child = widget.first_child();
@@ -62,7 +64,7 @@ mod imp {
                 }
                 let (column, row) = (at % columns, (at / columns) as usize);
                 if column == 0 && row > 0 {
-                    y += rows[row - 1] + gap;
+                    y += rows[row - 1] + row_gap;
                 }
                 let x = column * (card + gap);
                 c.size_allocate(&gtk::Allocation::new(x, y, card, rows[row]), -1);
@@ -108,9 +110,15 @@ glib::wrapper! {
 impl CardsLayout {
     /// Cards `card` px wide, `gap` px apart.
     pub fn new(card: i32, gap: i32) -> Self {
+        Self::apart(card, gap, gap)
+    }
+
+    /// Cards `card` px wide, `gap` px apart across and `row_gap` px down.
+    pub fn apart(card: i32, gap: i32, row_gap: i32) -> Self {
         let layout: Self = glib::Object::new();
         layout.imp().card.set(card);
         layout.imp().gap.set(gap);
+        layout.imp().row_gap.set(row_gap);
         layout
     }
 }

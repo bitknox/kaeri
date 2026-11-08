@@ -45,6 +45,9 @@ pub fn active() -> bool {
 /// The engine's runtime, for the scene's party server to run on.
 static RUNTIME: std::sync::OnceLock<tokio::runtime::Handle> = std::sync::OnceLock::new();
 
+/// Where the fake AniList serves its art, `http://…/art/`, for shots that draw covers of their own.
+pub static ART_BASE: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+
 /// Keep `handle`, the engine's runtime, for [`FakeParty::start`].
 pub fn keep_runtime(handle: tokio::runtime::Handle) {
     ACTIVE.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -305,6 +308,7 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     server.set_now(now);
     server.add_titles(fixtures::long_franchise());
     server.serve_art();
+    let _ = ART_BASE.set(server.art_base());
     if !scene.demo && matches!(scene.home, HomeScene::Reading | HomeScene::ReadingDownloads) {
         crate::fixtures_reading::keep_books(&store, &server.art_base(), now);
     }

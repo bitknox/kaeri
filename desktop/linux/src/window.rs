@@ -78,7 +78,12 @@ pub struct Ctx {
     main_menu: RefCell<Option<gtk::MenuButton>>,
     /// The pick the title page on screen was opened by (Surprise me or Another), for its Another.
     pub pick: RefCell<Option<Pick>>,
+    /// Reading's Search, opened by a Read row's View all with the row's filters and order.
+    pub read_view_all: RefCell<Option<ReadViewAll>>,
 }
+
+/// Opens reading's Search on a query.
+pub type ReadViewAll = Rc<dyn Fn(kaeri_model::reading::ReadSearchQuery)>;
 
 /// A title opened by Surprise me: where it was picked from, and whether that pool has another.
 #[derive(Debug, Clone)]
@@ -380,6 +385,7 @@ impl Shell {
             content_focus: RefCell::default(),
             main_menu: RefCell::default(),
             pick: RefCell::default(),
+            read_view_all: RefCell::default(),
         });
 
         // The offline scene is offline before Home first asks, as a device without a network
@@ -961,6 +967,17 @@ impl Shell {
                 {
                     s.ctx.hub.send(Command::RestoreUpNext { id: AnilistId::new(id) });
                 }
+            }),
+        );
+        // Read's Couldn't load suggestions notice: Try again.
+        add(
+            "read-home-reload",
+            None,
+            Box::new(move |s, _| {
+                crate::reading::send(
+                    &s.ctx.hub,
+                    kaeri_model::reading::ReadingCommand::LoadHome { refresh: true },
+                );
             }),
         );
         add(

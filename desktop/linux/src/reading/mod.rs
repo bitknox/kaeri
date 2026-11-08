@@ -6,6 +6,7 @@
 pub mod came_in;
 pub mod chapters;
 pub mod demo;
+pub mod discovery;
 pub mod downloads;
 pub mod export;
 //pub mod feed;
@@ -37,7 +38,6 @@ use kaeri_model::{
 use crate::{
     fit::Fit,
     hub::Hub,
-    motion,
     pages::Dest,
     say,
     states::{Shape, States},
@@ -226,30 +226,6 @@ pub fn work_card(hub: &Hub, tile: &WorkTile, width: i32) -> gtk::Box {
     column
 }
 
-/// A work as a row, for a query's results: the cover, the title and what comes next or its
-/// facts. The row opens the series; right-click opens the work's menu.
-pub fn work_row(hub: &Hub, tile: &WorkTile) -> adw::ActionRow {
-    let line = match &tile.next {
-        Some(next) => say::msg(next),
-        None => dotted(&tile.facts),
-    };
-    let row = adw::ActionRow::builder()
-        .title(glib::markup_escape_text(&tile.title))
-        .subtitle(glib::markup_escape_text(&line))
-        .activatable(true)
-        .build();
-    row.set_title_lines(2);
-    row.set_subtitle_lines(1);
-    row.add_prefix(&cover(hub, tile.cover.as_deref(), &tile.title, 40));
-    if tile.new_chapter {
-        row.add_suffix(&new_words());
-    }
-    row.set_action_name(Some("win.open-series"));
-    row.set_action_target_value(Some(&tile.work.0.to_variant()));
-    work_menu(&row, &tile.work, None);
-    row
-}
-
 /// The gap between cards in a grid, both ways, as the board draws it.
 const GRID_GAP: i32 = 16;
 
@@ -282,137 +258,6 @@ impl WorkGrid {
             self.widget.append(&card);
         }
     }
-}
-
-/// A heading with an aside and, at the end, a silk link to another place.
-pub fn heading_row(title: &str, aside: Option<&str>, link: Option<(&str, Dest)>) -> gtk::Box {
-    let head = gtk::Box::new(gtk::Orientation::Horizontal, 10);
-    let label = gtk::Label::new(Some(title));
-    label.add_css_class("home-heading");
-    label.set_xalign(0.0);
-    label.set_ellipsize(gtk::pango::EllipsizeMode::End);
-    label.set_accessible_role(gtk::AccessibleRole::Heading);
-    head.append(&label);
-    if let Some(aside) = aside {
-        let aside = gtk::Label::new(Some(aside));
-        aside.add_css_class("haze");
-        aside.add_css_class("home-aside");
-        head.append(&aside);
-    }
-    let spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-    spacer.set_hexpand(true);
-    head.append(&spacer);
-    if let Some((text, dest)) = link {
-        let words = gtk::Label::new(Some(text));
-        let chevron = gtk::Image::from_icon_name("go-next-symbolic");
-        chevron.set_pixel_size(12);
-        let inner = gtk::Box::new(gtk::Orientation::Horizontal, 4);
-        inner.append(&words);
-        inner.append(&chevron);
-        let button = gtk::Button::new();
-        button.set_child(Some(&inner));
-        button.add_css_class("flat");
-        button.add_css_class("home-all");
-        button.set_valign(gtk::Align::Center);
-        button.set_action_target_value(Some(&dest.name().to_variant()));
-        button.set_action_name(Some("win.go"));
-        head.append(&button);
-    }
-    head
-}
-
-/// A row of covers that scrolls sideways, with paging buttons that show while the pointer is
-/// over it.
-pub fn shelf(cards: &[gtk::Widget], gap: i32) -> gtk::Widget {
-    let row = gtk::Box::new(gtk::Orientation::Horizontal, gap);
-    for card in cards {
-        row.append(card);
-    }
-    let scroll = gtk::ScrolledWindow::builder()
-        .hscrollbar_policy(gtk::PolicyType::External)
-        .vscrollbar_policy(gtk::PolicyType::Never)
-        .child(&row)
-        .build();
-    scroll.set_propagate_natural_height(true);
-    let layers = gtk::Overlay::new();
-    layers.set_child(Some(&scroll));
-    let arrows = [
-        ("go-previous-symbolic", t::home_previous(), gtk::Align::Start, -1),
-        ("go-next-symbolic", t::home_next(), gtk::Align::End, 1),
-    ];
-    let buttons: Vec<gtk::Button> = arrows
-        .into_iter()
-        .map(|(icon, tip, side, by)| {
-            let button = gtk::Button::from_icon_name(icon);
-            button.add_css_class("circular");
-            button.add_css_class("home-arrow");
-            button.set_halign(side);
-            button.set_valign(gtk::Align::Start);
-            button.set_margin_top(COVER_WIDTH * 3 / 4 - 18);
-            button.set_focusable(false);
-            button.set_tooltip_text(Some(&tip));
-            button.set_visible(false);
-            button.update_property(&[gtk::accessible::Property::Label(&tip)]);
-            button.connect_clicked({
-                let scroll = scroll.clone();
-                move |_| page_by(&scroll, by, f64::from(COVER_WIDTH + gap))
-            });
-            layers.add_overlay(&button);
-            button
-        })
-        .collect();
-    let over = Rc::new(Cell::new(false));
-    let refresh = {
-        let hadj = scroll.hadjustment();
-        let (back, forward) = (buttons[0].clone(), buttons[1].clone());
-        let over = Rc::clone(&over);
-        Rc::new(move || {
-            back.set_visible(over.get() && hadj.value() > 1.0);
-            forward.set_visible(
-                over.get() && hadj.value() + hadj.page_size() < hadj.upper() - 1.0,
-            );
-        })
-    };
-    let hadj = scroll.hadjustment();
-    hadj.connect_changed({
-        let refresh = Rc::clone(&refresh);
-        move |_| refresh()
-    });
-    hadj.connect_value_changed({
-        let refresh = Rc::clone(&refresh);
-        move |_| refresh()
-    });
-    let motion_ctl = gtk::EventControllerMotion::new();
-    motion_ctl.connect_enter({
-        let (over, refresh) = (Rc::clone(&over), Rc::clone(&refresh));
-        move |_, _, _| {
-            over.set(true);
-            refresh();
-        }
-    });
-    motion_ctl.connect_leave({
-        let (over, refresh) = (Rc::clone(&over), Rc::clone(&refresh));
-        move |_| {
-            over.set(false);
-            refresh();
-        }
-    });
-    layers.add_controller(motion_ctl);
-    layers.upcast()
-}
-
-/// Page a shelf by the whole cards that fit, on the standard token.
-fn page_by(host: &gtk::ScrolledWindow, direction: i32, pitch: f64) {
-    let adj = host.hadjustment();
-    let fit = ((adj.page_size() + pitch - f64::from(COVER_WIDTH)) / pitch).floor().max(1.0);
-    let at = (adj.value() / pitch).round();
-    let end = (adj.upper() - adj.page_size()).max(adj.lower());
-    let to = ((at + f64::from(direction) * fit) * pitch).clamp(adj.lower(), end);
-    let target = adw::CallbackAnimationTarget::new({
-        let adj = adj.clone();
-        move |v| adj.set_value(v)
-    });
-    motion::standard(host, adj.value(), to, target).play();
 }
 
 /// A day as the updates and the week say it: Today, Yesterday, or the day's name and date.
@@ -619,4 +464,5 @@ pub fn is_blank(view: &kaeri_model::reading::ReadingHomeView) -> bool {
         && view.releasing.is_empty()
         && view.because.is_empty()
         && view.genre_shelf.is_empty()
+        && view.rows.is_empty()
 }

@@ -231,18 +231,6 @@ pub fn spotlight(ctx: &Rc<Ctx>) -> Option<gtk::Widget> {
     Some(overlay.upcast())
 }
 
-/// Under the demo's spotlight: that only the demo is on, and Add a source.
-pub fn home_end() -> gtk::Box {
-    let column = gtk::Box::new(gtk::Orientation::Vertical, 10);
-    column.set_margin_top(4);
-    column.append(&widgets::haze(&t::home_demo_only_books(), ""));
-    let add = gtk::Button::with_label(&t::sources_add_title());
-    add.set_halign(gtk::Align::Start);
-    add.connect_clicked(add_a_source);
-    column.append(&add);
-    column
-}
-
 // ---------------------------------------------------------------------------------------------
 // The series page
 
