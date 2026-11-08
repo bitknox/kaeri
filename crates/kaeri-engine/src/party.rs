@@ -104,6 +104,12 @@ fn going(engine: &EngineState) -> Option<&Running> {
     engine.party.as_ref().filter(|running| running.going())
 }
 
+/// A new room's seed: at random, or the stopped moment when a scene recording stopped the clock,
+/// so that the recording names the same room every time.
+fn room_seed() -> u64 {
+    crate::clock::stopped().map_or_else(rand::random::<u64>, |at| at as u64)
+}
+
 /// What the form that starts a party opens with.
 pub fn form(engine: &EngineState, tx: &Outbox) {
     let syncplay = &engine.config.effective().syncplay;
@@ -113,7 +119,7 @@ pub fn form(engine: &EngineState, tx: &Outbox) {
         recent_servers: recent,
         suggested_server: SUGGESTED_SERVER.into(),
         suggested_run_by: SUGGESTED_SERVER_RUN_BY.into(),
-        room: room_name(rand::random::<u64>()),
+        room: room_name(room_seed()),
         name: syncplay.name.clone(),
     }));
 }
@@ -242,7 +248,7 @@ pub fn join_for_play(
     let room = room
         .or_else(|| current.filter(|_| same_server).map(|(_, room)| room))
         .or_else(|| named(syncplay.room.clone()))
-        .unwrap_or_else(|| room_name(rand::random::<u64>()));
+        .unwrap_or_else(|| room_name(room_seed()));
     join(&server, &room, name.as_deref(), engine, services, tx)
 }
 

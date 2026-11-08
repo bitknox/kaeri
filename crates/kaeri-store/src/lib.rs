@@ -313,8 +313,54 @@ impl Store {
     }
 }
 
-/// Seconds since the Unix epoch.
+/// The moment a scene recording stopped the clock at, in seconds since the Unix epoch: nought
+/// while it runs. Only a build with the `testing` feature can stop it.
+static STOPPED: std::sync::atomic::AtomicI64 = std::sync::atomic::AtomicI64::new(0);
+
+/// Stop the clock at `at`, in seconds since the Unix epoch, for the rest of the process: [`now`],
+/// the engine's own now and every age the metadata cache counts read that moment, so that the
+/// apps' scenes are recorded the same on every run. Nought starts it again.
+#[cfg(feature = "testing")]
+pub fn stop_clock_at(at: i64) {
+    STOPPED.store(at, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// The moment a scene recording stopped the clock at ([`stop_clock_at`]), if one did.
+pub fn stopped() -> Option<i64> {
+    let at = STOPPED.load(std::sync::atomic::Ordering::Relaxed);
+    (at != 0).then_some(at)
+}
+
+/// Now on the monotonic clock: one moment for the rest of the process once a scene recording has
+/// stopped the clock ([`stop_clock_at`]), so that the ages and waits counted from it stay what they
+/// were and every run comes out the same.
+pub fn instant_now() -> std::time::Instant {
+    static AT: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    if stopped().is_some() {
+        *AT.get_or_init(std::time::Instant::now)
+    } else {
+        std::time::Instant::now()
+    }
+}
+
+/// How long it has been since `since`, taken from [`instant_now`]: nothing once a scene recording
+/// has stopped the clock, so the latencies a recording shows are the same on every run.
+pub fn elapsed(since: std::time::Instant) -> std::time::Duration {
+    instant_now().saturating_duration_since(since)
+}
+
+/// The system's clock, or the moment a scene recording stopped it at.
+pub fn system_now() -> std::time::SystemTime {
+    stopped().map_or_else(std::time::SystemTime::now, |at| {
+        std::time::UNIX_EPOCH + std::time::Duration::from_secs(at.unsigned_abs())
+    })
+}
+
+/// Seconds since the Unix epoch, or the moment the clock was stopped at.
 pub fn now() -> i64 {
+    if let Some(at) = stopped() {
+        return at;
+    }
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)

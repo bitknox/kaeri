@@ -310,6 +310,16 @@ fn home_world_asked() -> bool {
     std::env::var(HOME_WORLD_VAR).is_ok_and(|v| v == "1")
 }
 
+/// The environment variable that stops the engine's clock at a moment, in seconds since the Unix
+/// epoch, when a scene starts: for recording the apps' scenes, which must come out the same on
+/// every run, whatever the day. The recorder sets it; the apps' Fixtures builds do not.
+pub const SCENES_AT_VAR: &str = "KAERI_SCENES_AT";
+
+/// The moment the environment stops the clock at, if it does.
+fn scenes_at() -> Option<i64> {
+    std::env::var(SCENES_AT_VAR).ok()?.trim().parse().ok().filter(|at| *at > 0)
+}
+
 /// What Check this server shows for a made-up server at home whose certificate this device
 /// does not trust: the host, the address to pass back with Allow this certificate, and the
 /// fingerprint in groups of four. For the apps' fixture shots of that step, which no scene can
@@ -451,6 +461,9 @@ impl FfiEngine {
         start: FfiStart,
     ) -> Result<Arc<Self>, FfiError> {
         let world = home_world_asked();
+        if let Some(at) = scenes_at() {
+            kaeri_engine::clock::stop_at(at);
+        }
         Self::start_scene_from(dirs, host, scene, &start, Clock::default(), world)
     }
 }

@@ -49,9 +49,14 @@ KaeriSdk.engines.forEach { (flavour, engine) ->
         environment("KAERI_TOKEN_STORAGE", "file")
         // Home's invented world, for the run that records its scenes.
         providers.environmentVariable("KAERI_FIXTURES_HOME_WORLD").orNull?.let { environment("KAERI_FIXTURES_HOME_WORLD", it) }
-        // android/scripts/scenes.sh: record the scenes into the test kit, every time it is run.
-        if (providers.gradleProperty("kaeri.scenes").isPresent) {
-            systemProperty("kaeri.scenes.out", rootDir.resolve("testkit/src/main/resources/app/kaeri/testkit/scenes").path)
+        // android/scripts/scenes.sh: record the scenes into the test kit, every time it is run, or
+        // into the directory the property names (-Pkaeri.scenes=/some/dir), to compare two runs.
+        providers.gradleProperty("kaeri.scenes").orNull?.let { into ->
+            val kit = rootDir.resolve("testkit/src/main/resources/app/kaeri/testkit/scenes")
+            systemProperty("kaeri.scenes.out", if (into.isBlank() || into == "true") kit.path else File(into).path)
+            // The engine's clock stopped at one moment, a Wednesday morning, so that every run
+            // records the same scenes whatever the day it runs on.
+            environment("KAERI_SCENES_AT", "1793782800")
             outputs.upToDateWhen { false }
         }
         doFirst {

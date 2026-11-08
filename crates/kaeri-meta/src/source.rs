@@ -410,7 +410,7 @@ impl Meta {
         let weather = self.weather.lock().map(|w| (w.anilist.clone(), w.tenrai.clone()));
         let (anilist_err, tenrai_err) = weather.unwrap_or((None, None));
 
-        let now = Instant::now();
+        let now = kaeri_store::instant_now();
         let (anilist_rest, tenrai_rest) = self
             .breakers
             .lock()
@@ -434,7 +434,7 @@ impl Meta {
                 Some(_) => Some(anilist_err.unwrap_or_else(|| "failing".into())),
                 None => anilist_err,
             },
-            retry_at: anilist_rest.map(|wait| SystemTime::now() + wait),
+            retry_at: anilist_rest.map(|wait| kaeri_store::system_now() + wait),
         });
         rows.push(match &self.tenrai {
             None => SourceHealth {
@@ -459,7 +459,7 @@ impl Meta {
                     Some(_) => Some(tenrai_err.unwrap_or_else(|| "failing".into())),
                     None => tenrai_err,
                 },
-                retry_at: tenrai_rest.map(|wait| SystemTime::now() + wait),
+                retry_at: tenrai_rest.map(|wait| kaeri_store::system_now() + wait),
             },
         });
         let cached = self.store.cached_media_count().unwrap_or(0);
@@ -498,7 +498,9 @@ impl Meta {
     fn resting(&self, source: &str) -> bool {
         self.breakers
             .lock()
-            .map(|mut b| self.breaker(&mut b, source).resting_for(Instant::now()).is_some())
+            .map(|mut b| {
+                self.breaker(&mut b, source).resting_for(kaeri_store::instant_now()).is_some()
+            })
             .unwrap_or(false)
     }
 
@@ -552,7 +554,7 @@ impl Meta {
 
     /// How long a source still has to rest, or `None` to go ahead (claiming the probe).
     fn skip(&self, source: &str) -> Option<Duration> {
-        let now = Instant::now();
+        let now = kaeri_store::instant_now();
         let mut breakers = self.breakers.lock().ok()?;
         let breaker = self.breaker(&mut breakers, source);
         if breaker.allows(now) { None } else { breaker.resting_for(now) }
@@ -561,9 +563,9 @@ impl Meta {
     fn trip(&self, source: &str) {
         if let Ok(mut breakers) = self.breakers.lock() {
             let breaker = self.breaker(&mut breakers, source);
-            let was_open = breaker.resting_for(Instant::now()).is_some();
-            breaker.failed(Instant::now());
-            if !was_open && breaker.resting_for(Instant::now()).is_some() {
+            let was_open = breaker.resting_for(kaeri_store::instant_now()).is_some();
+            breaker.failed(kaeri_store::instant_now());
+            if !was_open && breaker.resting_for(kaeri_store::instant_now()).is_some() {
                 tracing::warn!(source, cooldown = ?breaker.cooldown(), "failing repeatedly; skipping it for a while");
             }
         }
@@ -684,11 +686,11 @@ impl Meta {
             .get_or_init(|| {
                 lane.run(async {
                     let (outcome, fresh) = self.ask_media(id).await;
-                    Answered { at: Instant::now(), outcome, fresh, signed_in }
+                    Answered { at: kaeri_store::instant_now(), outcome, fresh, signed_in }
                 })
             })
             .await;
-        answered.as_of(Instant::now()).map(|media| (media, answered.fresh))
+        answered.as_of(kaeri_store::instant_now()).map(|media| (media, answered.fresh))
     }
 
     /// The covers a screen shows, with what each one's episode table needs, at low priority and
@@ -697,7 +699,7 @@ impl Meta {
     /// Titles kept or asked already are not asked again. AniList only: the cache and Tenrai have
     /// none of the listings, and a failure leaves each table to be asked when it is wanted.
     pub async fn media_tables(&self, ids: &[AnilistId]) -> Vec<Media> {
-        let now = Instant::now();
+        let now = kaeri_store::instant_now();
         let (done, word) = tokio::sync::watch::channel(false);
         let (wanted, mut found) = {
             let Ok(mut tables) = self.tables.lock() else { return Vec::new() };
@@ -724,7 +726,7 @@ impl Meta {
             match self.ask_anilist(asked).await {
                 Ok(list) => {
                     self.went(FRESH);
-                    let at = Instant::now();
+                    let at = kaeri_store::instant_now();
                     for (media, whole) in list {
                         self.remember(&media);
                         if whole && let Ok(mut tables) = self.tables.lock() {
@@ -761,7 +763,7 @@ impl Meta {
             if let Some(mut word) = word {
                 let _ = word.wait_for(|done| *done).await;
             }
-            let now = Instant::now();
+            let now = kaeri_store::instant_now();
             let kept = self.tables.lock().ok().and_then(|tables| {
                 let (at, media) = tables.kept.get(&id)?;
                 table_serves(*at, media, now)
@@ -779,7 +781,7 @@ impl Meta {
     async fn gather_table(&self, id: AnilistId) {
         let word = {
             let Ok(mut tables) = self.tables.lock() else { return };
-            let now = Instant::now();
+            let now = kaeri_store::instant_now();
             let served =
                 tables.kept.get(&id).is_some_and(|(at, media)| table_serves(*at, media, now));
             if served || tables.asking.contains_key(&id) || crate::demo::is_demo(id) {
@@ -809,7 +811,7 @@ impl Meta {
 
     /// Whether an ask for title `id`'s page is under way, or its answer still serves.
     fn detail_under_way(&self, id: AnilistId) -> bool {
-        let now = Instant::now();
+        let now = kaeri_store::instant_now();
         let signed_in = self.anilist.is_authenticated();
         self.recent.lock().is_ok_and(|recent| {
             recent.titles.get(&id).is_some_and(|flight| {
@@ -871,7 +873,7 @@ impl Meta {
         if crate::demo::is_demo(id) {
             return Vec::new();
         }
-        let now = Instant::now();
+        let now = kaeri_store::instant_now();
         let Some(seasons) = franchise::lock(&self.relations).seasons_known(id, now) else {
             return Vec::new();
         };
@@ -903,7 +905,7 @@ impl Meta {
                 }
             }
         }
-        let now = Instant::now();
+        let now = kaeri_store::instant_now();
         let relations = franchise::lock(&self.relations);
         others
             .iter()
@@ -925,7 +927,8 @@ impl Meta {
                 for media in &found {
                     self.remember(media);
                 }
-                franchise::lock(&self.relations).learn_headers(&found, Instant::now());
+                franchise::lock(&self.relations)
+                    .learn_headers(&found, kaeri_store::instant_now());
             }
             Err(e) => tracing::debug!(error = %e, "the seasons' headers were not asked"),
         }
@@ -942,7 +945,7 @@ impl Meta {
         if self.answered(id) || crate::demo::is_demo(id) {
             return None;
         }
-        let now = Instant::now();
+        let now = kaeri_store::instant_now();
         let relations = franchise::lock(&self.relations);
         let (media, at) = relations.header(id, now)?;
         if !header_serves(at, &media, now) {
@@ -954,7 +957,7 @@ impl Meta {
 
     /// Whether AniList's answer for title `id`'s page is in and still serves.
     fn answered(&self, id: AnilistId) -> bool {
-        let now = Instant::now();
+        let now = kaeri_store::instant_now();
         let signed_in = self.anilist.is_authenticated();
         self.recent.lock().is_ok_and(|recent| {
             recent
@@ -968,7 +971,7 @@ impl Meta {
     /// The ask for `id` to join: one under way, or an answer that still serves, or else a
     /// new one. Answers that serve no longer are let go on the way.
     fn flight(&self, id: AnilistId) -> Flight {
-        let now = Instant::now();
+        let now = kaeri_store::instant_now();
         let signed_in = self.anilist.is_authenticated();
         let Ok(mut recent) = self.recent.lock() else { return Flight::default() };
         recent.titles.retain(|_, flight| {
