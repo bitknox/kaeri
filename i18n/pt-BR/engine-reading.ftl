@@ -66,7 +66,7 @@ reading-volumes = { $count ->
  }
 reading-on-planning = Na sua lista Planejando
 reading-spotlight-new-chapter = Capítulo novo em uma série que você segue
-reading-spotlight-continue = Retomar a leitura
+reading-spotlight-continue = { -continue-reading-cap }
 reading-spotlight-up-next = Próxima leitura para você
 reading-spotlight-popular = Popular, em lançamento agora
 reading-out-today = O capítulo { $chapter } saiu hoje

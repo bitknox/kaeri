@@ -765,7 +765,7 @@
     <value>Новая глава в серии, за которой вы следите</value>
   </data>
   <data name="ReadingSpotlightContinue" xml:space="preserve">
-    <value>Продолжить чтение</value>
+    <value>Читать дальше</value>
   </data>
   <data name="ReadingSpotlightUpNext" xml:space="preserve">
     <value>Далее для вас</value>
@@ -6408,22 +6408,22 @@
     <value>Читать главу {n}</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>Продолжить: глава {n} · стр. {page}</value>
+    <value>Читать дальше: глава {n} · стр. {page}</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>Продолжить: часть {n} · {percent}%</value>
+    <value>Читать дальше: часть {n} · {percent}%</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>Продолжить: часть {n}</value>
+    <value>Читать дальше: часть {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Читать часть {n}</value>
   </data>
   <data name="ActionContinueNamed" xml:space="preserve">
-    <value>Продолжить: {label} · {percent}%</value>
+    <value>Читать дальше: {label} · {percent}%</value>
   </data>
   <data name="ActionContinueNamedPlain" xml:space="preserve">
-    <value>Продолжить: {label}</value>
+    <value>Читать дальше: {label}</value>
   </data>
   <data name="ActionReadNamed" xml:space="preserve">
     <value>Читать: {label}</value>
@@ -7335,7 +7335,7 @@
     <value>Когда вы отметите</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>«Продолжить» и ваши трекеры следуют за вашими отметками</value>
+    <value>«Читать дальше» и ваши трекеры следуют за вашими отметками</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Настройки серий, которые следуют за вами</value>
@@ -11547,7 +11547,7 @@
     <value>Импортирует ваши списки и заполняет «Продолжить просмотр» тем, что вы смотрите.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Подтягивает ваши списки и наполняет «Продолжить» тем, что вы читаете.</value>
+    <value>Подтягивает ваши списки и наполняет «Читать дальше» тем, что вы читаете.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Подтягивает ваши списки и наполняет «Продолжить» тем, что вы смотрите и читаете.</value>

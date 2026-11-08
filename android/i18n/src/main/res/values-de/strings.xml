@@ -2806,7 +2806,7 @@
     <string name="settings_counts_read_moving_on">Beim Verlassen</string>
     <string name="settings_counts_read_moving_on_note">Über die letzte Seite hinaus blättern oder das nächste Kapitel öffnen</string>
     <string name="settings_counts_read_marked">Wenn du es markierst</string>
-    <string name="settings_counts_read_marked_note">Weiterschauen und deine Tracker folgen deinen Markierungen</string>
+    <string name="settings_counts_read_marked_note">Weiterlesen und deine Tracker folgen deinen Markierungen</string>
     <string name="settings_follow_group">Serieneinstellungen, die dir folgen</string>
     <string name="settings_follow_mode">Modus, Richtung und Farbe</string>
     <string name="settings_follow_mode_note">Eine geänderte Serie liest sich auf deinen anderen Geräte genauso</string>
@@ -4211,7 +4211,7 @@
     <string name="accounts_other_trackers_note">Weitere Tracker stehen unter Konten.</string>
     <string name="accounts_welcome_detail">Melde dich bei %1$s an, damit deine Listen und dein Fortschritt abgeglichen werden.</string>
     <string name="accounts_brings_lists">Lädt deine Listen und füllt Weiterschauen mit dem, was du gerade schaust.</string>
-    <string name="accounts_brings_lists_read">Holt deine Listen und füllt Weiterschauen mit dem, was du liest.</string>
+    <string name="accounts_brings_lists_read">Holt deine Listen und füllt Weiterlesen mit dem, was du liest.</string>
     <string name="accounts_brings_lists_both">Holt deine Listen und füllt Weiterschauen mit dem, was du schaust und liest.</string>
     <string name="accounts_tracker_lists">Listen und Fortschritt</string>
     <string name="accounts_tracker_reading_lists">Leselisten und Fortschritt</string>

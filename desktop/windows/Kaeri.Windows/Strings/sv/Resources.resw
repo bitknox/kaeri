@@ -1362,7 +1362,7 @@
     <value>Det gick inte att nå servern.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.</value>
+    <value>Kaeri är inte värd för några serier eller böcker. Du lägger till dina egna källor.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Sparade {label}.</value>
@@ -10767,7 +10767,7 @@
     <value>Hämtar dina listor och fyller Fortsätt titta med det du tittar på.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Hämtar in dina listor och fyller startsidan med det du läser.</value>
+    <value>Hämtar in dina listor och fyller raden Läs vidare med det du läser.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Hämtar in dina listor och fyller startsidan med det du tittar på och läser.</value>

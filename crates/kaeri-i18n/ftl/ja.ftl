@@ -664,7 +664,7 @@ reading-on-planning = 「予定」リストに入っています
 reading-spotlight-new-chapter = フォロー中の作品に新しい話があります
 
 # Above the big picture at the top of reading's Home: the series the person was reading last.
-reading-spotlight-continue = 続きから読む
+reading-spotlight-continue = 続きを読む
 
 # Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
 reading-spotlight-up-next = 次に読む作品
@@ -1717,7 +1717,7 @@ linux-reader-pages = ページ
 linux-reader-end-not-read = まだ既読になっていません
 
 # The one amber button of the end page: opens the next chapter.
-linux-reader-continue = 続きを見る
+linux-reader-continue = 次の章へ
 
 # End page text when the next chapter is not out yet.
 linux-reader-end-not-out-body = Kaeriはバックグラウンドで新しい章を確認し、「更新」に追加します。
@@ -8733,22 +8733,22 @@ chapter-updates-open-series-menu = 作品を開く
 action-read-chapter = 第{ $n }話を読む
 
 # The main action when a chapter is part read.
-action-continue-chapter = 続きを見る 第{ $n }話 · { $page }ページ
+action-continue-chapter = 続きを読む 第{ $n }話 · { $page }ページ
 
 # The main action for a light novel part, part read.
-action-continue-part = 続きを見る パート{ $n } · { $percent }%
+action-continue-part = 続きを読む パート{ $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
-action-continue-part-plain = 続きを見る パート{ $n }
+action-continue-part-plain = 続きを読む パート{ $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = パート{ $n }を読む
 
 # The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
-action-continue-named = 続きを見る { $label } · { $percent }%
+action-continue-named = 続きを読む { $label } · { $percent }%
 
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
-action-continue-named-plain = 続きを見る { $label }
+action-continue-named-plain = 続きを読む { $label }
 
 # The main action for a light novel part not opened yet, named in the source's own words.
 action-read-named = { $label }を読む
@@ -9564,7 +9564,7 @@ settings-counts-read-moving-on-note = 最後のページをめくったとき、
 settings-counts-read-marked = 自分で付けたとき
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = 続きを見ると連携サービスは、あなたが付けた記録に従います
+settings-counts-read-marked-note = 続きを読むと連携サービスは、あなたが付けた記録に従います
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = 引き継がれる作品設定
@@ -13516,7 +13516,7 @@ accounts-welcome-detail = { $tracker }にサインインすると、リストと
 accounts-brings-lists = リストを読み込み、続きを見るに視聴中の作品を表示します。
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = リストを取り込み、読んでいる作品を続きを見るに表示します。
+accounts-brings-lists-read = リストを取り込み、読んでいる作品を続きを読むに表示します。
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = リストを取り込み、視聴中と読書中の作品を続きを見るに表示します。

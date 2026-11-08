@@ -1354,7 +1354,7 @@ cause-proxy-address-unusable = Proxykontrollen kan inte använda den här adress
 cause-server-unreachable = Det gick inte att nå servern.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.
+legal-hosts-no-content = Kaeri är inte värd för några serier eller böcker. Du lägger till dina egna källor.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Sparade { $label }.
@@ -1752,7 +1752,7 @@ linux-reader-pages = Sidor
 linux-reader-end-not-read = Inte markerat som läst än
 
 # The one amber button of the end page: opens the next chapter.
-linux-reader-continue = Fortsätt
+linux-reader-continue = Läs vidare
 
 # End page text when the next chapter is not out yet.
 linux-reader-end-not-out-body = Kaeri söker efter nya kapitel i bakgrunden och lägger till dem i Uppdateringar.
@@ -13672,7 +13672,7 @@ accounts-welcome-detail = Logga in på { $tracker } för att synka din lista och
 accounts-brings-lists = Hämtar dina listor och fyller Fortsätt titta med det du tittar på.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Hämtar in dina listor och fyller startsidan med det du läser.
+accounts-brings-lists-read = Hämtar in dina listor och fyller raden Läs vidare med det du läser.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Hämtar in dina listor och fyller startsidan med det du tittar på och läser.

@@ -29,7 +29,7 @@ reading-failed-not-found = Этого больше нет в этом { -source 
 reading-failed-blocked = { $source } отклонил запрос. { $reason }
 reading-failed-parse = { -app-name } не смог прочитать ответ { $source }. Возможно, нужно обновить { -plugin }.
 reading-failed-page = Страница не загрузилась (ошибка { $status }). Повторите попытку.
-reading-failed-sign-in = Войдите в { $what } снова, чтобы читать дальше.
+reading-failed-sign-in = Войдите в { $what } снова, чтобы { -continue-reading }.
 reading-failed-file-missing = { $path } больше нет на месте. Если файл на диске, подключите его и повторите попытку.
 reading-failed-unreadable = Не удалось прочитать { $path } как { $format }. Возможно, файл повреждён.
 reading-failed-unsupported = { -app-name } не читает файлы { $kind }.
@@ -69,7 +69,7 @@ reading-volumes = { $count ->
  }
 reading-on-planning = В вашем списке «Запланировано»
 reading-spotlight-new-chapter = Новая глава в серии, за которой вы следите
-reading-spotlight-continue = { -proceed-cap } чтение
+reading-spotlight-continue = { -continue-reading-cap }
 reading-spotlight-up-next = { -up-next-cap } для вас
 reading-spotlight-popular = Популярное, выходит сейчас
 reading-out-today = Глава { $chapter } вышла сегодня

@@ -267,7 +267,7 @@
     </plurals>
     <string name="reading_on_planning">В вашем списке «Запланировано»</string>
     <string name="reading_spotlight_new_chapter">Новая глава в серии, за которой вы следите</string>
-    <string name="reading_spotlight_continue">Продолжить чтение</string>
+    <string name="reading_spotlight_continue">Читать дальше</string>
     <string name="reading_spotlight_up_next">Далее для вас</string>
     <string name="reading_spotlight_popular">Популярное, выходит сейчас</string>
     <string name="reading_out_today">Глава %1$s вышла сегодня</string>
@@ -684,7 +684,7 @@
     <string name="eink_on_device">хранится здесь</string>
     <string name="eink_continue_to">Перейти к главе %1$s</string>
     <string name="eink_back_to_series">К серии</string>
-    <string name="eink_turn_to_continue">Перелистните, чтобы продолжить</string>
+    <string name="eink_turn_to_continue">Перелистните, чтобы читать дальше</string>
     <string name="eink_next_missing">Ни у одного источника пока нет главы %1$s</string>
     <string name="eink_next_not_out">Следующая глава ещё не вышла</string>
     <string name="eink_caught_up">Вы всё прочитали</string>
@@ -719,7 +719,7 @@
     <string name="reader_minutes_left">%1$d мин</string>
     <string name="reader_zone_next">Следующая страница</string>
     <string name="reader_grid_title">Страницы</string>
-    <string name="reader_end_continue">Продолжить</string>
+    <string name="reader_end_continue">Читать дальше</string>
     <string name="reader_end_series">Назад к серии</string>
     <string name="reader_end_again">Прочитать заново</string>
     <string name="reader_opening_chapter">Открывается глава %1$s</string>
@@ -2679,12 +2679,12 @@
     <string name="chapter_updates_open_chapter_hint">Открывает главу</string>
     <string name="chapter_updates_open_series_menu">Открыть серию</string>
     <string name="action_read_chapter">Читать главу %1$s</string>
-    <string name="action_continue_chapter">Продолжить: глава %1$s · стр. %2$d</string>
-    <string name="action_continue_part">Продолжить: часть %1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">Продолжить: часть %1$s</string>
+    <string name="action_continue_chapter">Читать дальше: глава %1$s · стр. %2$d</string>
+    <string name="action_continue_part">Читать дальше: часть %1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">Читать дальше: часть %1$s</string>
     <string name="action_read_part">Читать часть %1$s</string>
-    <string name="action_continue_named">Продолжить: %1$s · %2$d%%</string>
-    <string name="action_continue_named_plain">Продолжить: %1$s</string>
+    <string name="action_continue_named">Читать дальше: %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">Читать дальше: %1$s</string>
     <string name="action_read_named">Читать: %1$s</string>
     <string name="action_read_again">Прочитать заново</string>
     <string name="series_reading_from">Читается из</string>
@@ -3020,7 +3020,7 @@
     <string name="settings_counts_read_moving_on">При переходе дальше</string>
     <string name="settings_counts_read_moving_on_note">Перелистывание последней страницы или открытие следующей главы</string>
     <string name="settings_counts_read_marked">Когда вы отметите</string>
-    <string name="settings_counts_read_marked_note">«Продолжить» и ваши трекеры следуют за вашими отметками</string>
+    <string name="settings_counts_read_marked_note">«Читать дальше» и ваши трекеры следуют за вашими отметками</string>
     <string name="settings_follow_group">Настройки серий, которые следуют за вами</string>
     <string name="settings_follow_mode">Режим, направление и цвет</string>
     <string name="settings_follow_mode_note">Изменённая серия читается так же, остальные устройства это подхватят</string>
@@ -4509,7 +4509,7 @@
     <string name="accounts_other_trackers_note">Другие трекеры находятся в разделе «Аккаунты».</string>
     <string name="accounts_welcome_detail">Войдите в %1$s, чтобы синхронизировать список и место, где вы остановились.</string>
     <string name="accounts_brings_lists">Импортирует ваши списки и заполняет «Продолжить просмотр» тем, что вы смотрите.</string>
-    <string name="accounts_brings_lists_read">Подтягивает ваши списки и наполняет «Продолжить» тем, что вы читаете.</string>
+    <string name="accounts_brings_lists_read">Подтягивает ваши списки и наполняет «Читать дальше» тем, что вы читаете.</string>
     <string name="accounts_brings_lists_both">Подтягивает ваши списки и наполняет «Продолжить» тем, что вы смотрите и читаете.</string>
     <string name="accounts_tracker_lists">Списки и прогресс</string>
     <string name="accounts_tracker_reading_lists">Списки чтения и прогресс</string>

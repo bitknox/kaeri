@@ -2588,12 +2588,12 @@
     <string name="chapter_updates_open_chapter_hint">Abre el capítulo</string>
     <string name="chapter_updates_open_series_menu">Abrir serie</string>
     <string name="action_read_chapter">Leer el capítulo %1$s</string>
-    <string name="action_continue_chapter">Seguir con el capítulo %1$s · pág. %2$d</string>
-    <string name="action_continue_part">Seguir con la parte %1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">Seguir con la parte %1$s</string>
+    <string name="action_continue_chapter">Seguir leyendo el capítulo %1$s · pág. %2$d</string>
+    <string name="action_continue_part">Seguir leyendo la parte %1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">Seguir leyendo la parte %1$s</string>
     <string name="action_read_part">Leer la parte %1$s</string>
-    <string name="action_continue_named">Seguir con %1$s · %2$d%%</string>
-    <string name="action_continue_named_plain">Seguir con %1$s</string>
+    <string name="action_continue_named">Seguir leyendo %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">Seguir leyendo %1$s</string>
     <string name="action_read_named">Leer %1$s</string>
     <string name="action_read_again">Leer de nuevo</string>
     <string name="series_reading_from">Leyendo desde</string>
@@ -2776,7 +2776,7 @@
     <string name="book_sources_no_match">Sin coincidencia</string>
     <string name="book_sources_keep">Dejar sin coincidencia</string>
     <string name="book_sources_find">Buscar</string>
-    <string name="book_sources_unmatched_note">Puedes seguir leyendo las series sin coincidencia desde la carpeta. No tienen progreso en un servicio de seguimiento hasta que tengan coincidencia.</string>
+    <string name="book_sources_unmatched_note">Las series sin coincidencia se pueden leer igual desde la carpeta. No tienen progreso en un servicio de seguimiento hasta que tengan coincidencia.</string>
     <string name="library_scope_label">Series o Lectura</string>
     <string name="library_scope_shows">Series</string>
     <string name="library_scope_reading">Lectura</string>
@@ -2913,7 +2913,7 @@
     <string name="settings_counts_read_moving_on">Al avanzar</string>
     <string name="settings_counts_read_moving_on_note">Pasar la última página o abrir el capítulo que sigue</string>
     <string name="settings_counts_read_marked">Cuando lo marcas</string>
-    <string name="settings_counts_read_marked_note">Continuar viendo y tus servicios de seguimiento siguen tus marcas</string>
+    <string name="settings_counts_read_marked_note">Seguir leyendo y tus servicios de seguimiento siguen tus marcas</string>
     <string name="settings_follow_group">Ajustes de serie que te siguen</string>
     <string name="settings_follow_mode">Modo, dirección y color</string>
     <string name="settings_follow_mode_note">Una serie que cambies se lee igual en tus otros dispositivos</string>
@@ -4360,7 +4360,7 @@
     <string name="accounts_other_trackers_note">Los otros servicios de seguimiento están en Cuentas.</string>
     <string name="accounts_welcome_detail">Inicia sesión en %1$s para sincronizar tu lista y el punto donde te quedaste.</string>
     <string name="accounts_brings_lists">Trae tus listas y llena Continuar viendo con lo que estás viendo.</string>
-    <string name="accounts_brings_lists_read">Trae tus listas y llena Continuar viendo con lo que estás leyendo.</string>
+    <string name="accounts_brings_lists_read">Trae tus listas y llena Seguir leyendo con lo que estás leyendo.</string>
     <string name="accounts_brings_lists_both">Trae tus listas y llena Continuar viendo con lo que estás viendo y leyendo.</string>
     <string name="accounts_tracker_lists">Listas y progreso</string>
     <string name="accounts_tracker_reading_lists">Listas de lectura y progreso</string>

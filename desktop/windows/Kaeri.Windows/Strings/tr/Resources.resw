@@ -6807,7 +6807,7 @@
     <value>Siz işaretleyince</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>İzlemeye devam et ve takip hizmetleri işaretlerinizi izler</value>
+    <value>Okumayı sürdür ve takip hizmetleri işaretlerinizi izler</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Size eşlik eden seri ayarları</value>
@@ -10767,7 +10767,7 @@
     <value>Listelerinizi getirir ve izlediklerinizle İzlemeye devam et satırını doldurur.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Listelerinizi getirir ve İzlemeye devam et bölümünü okuduklarınızla doldurur.</value>
+    <value>Listelerinizi getirir ve Okumayı sürdür bölümünü okuduklarınızla doldurur.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Listelerinizi getirir ve İzlemeye devam et bölümünü izlediğiniz ve okuduğunuz şeylerle doldurur.</value>

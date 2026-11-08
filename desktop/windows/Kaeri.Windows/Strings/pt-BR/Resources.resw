@@ -732,7 +732,7 @@
     <value>Capítulo novo em uma série que você segue</value>
   </data>
   <data name="ReadingSpotlightContinue" xml:space="preserve">
-    <value>Retomar a leitura</value>
+    <value>Continuar lendo</value>
   </data>
   <data name="ReadingSpotlightUpNext" xml:space="preserve">
     <value>Próxima leitura para você</value>
@@ -6192,22 +6192,22 @@
     <value>Ler o capítulo {n}</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>Retomar o capítulo {n} · página {page}</value>
+    <value>Continuar lendo o capítulo {n} · página {page}</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>Retomar a parte {n} · {percent}%</value>
+    <value>Continuar lendo a parte {n} · {percent}%</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>Retomar a parte {n}</value>
+    <value>Continuar lendo a parte {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Ler a parte {n}</value>
   </data>
   <data name="ActionContinueNamed" xml:space="preserve">
-    <value>Retomar {label} · {percent}%</value>
+    <value>Continuar lendo {label} · {percent}%</value>
   </data>
   <data name="ActionContinueNamedPlain" xml:space="preserve">
-    <value>Retomar {label}</value>
+    <value>Continuar lendo {label}</value>
   </data>
   <data name="ActionReadNamed" xml:space="preserve">
     <value>Ler {label}</value>
@@ -7071,7 +7071,7 @@
     <value>Quando você marca</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>Continuar assistindo e seus serviços de acompanhamento seguem as suas marcas</value>
+    <value>Continuar lendo e seus serviços de acompanhamento seguem as suas marcas</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Ajustes de série que seguem você</value>
@@ -11157,7 +11157,7 @@
     <value>Traz suas listas e preenche Continuar assistindo com o que você está assistindo.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Traz suas listas e preenche Continuar assistindo com o que você está lendo.</value>
+    <value>Traz suas listas e preenche Continuar lendo com o que você está lendo.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Traz suas listas e preenche Continuar assistindo com o que você está assistindo e lendo.</value>

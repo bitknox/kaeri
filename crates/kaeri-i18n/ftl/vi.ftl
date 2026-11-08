@@ -526,10 +526,10 @@ reading-also-a-book = Cũng có bản truyện
 reading-split-chapter = Chương { $chapter } được gửi tới các dịch vụ theo dõi là chương { $whole }.
 
 # A notice over the page when a chapter opens where it was left. It offers Start over.
-reader-resumed = Đọc tiếp từ trang { $page }
+reader-resumed = Mở lại ở trang { $page }
 
 # The same notice in a webtoon strip, which counts images rather than pages.
-reader-resumed-image = Đọc tiếp từ ảnh { $image }
+reader-resumed-image = Mở lại ở ảnh { $image }
 
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 reader-back-to-page = Quay lại trang { $page }
@@ -664,7 +664,7 @@ reading-on-planning = Trong danh sách dự định của bạn
 reading-spotlight-new-chapter = Chương mới của truyện bạn theo dõi
 
 # Above the big picture at the top of reading's Home: the series the person was reading last.
-reading-spotlight-continue = Tiếp tục đọc
+reading-spotlight-continue = Đọc tiếp
 
 # Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
 reading-spotlight-up-next = Tiếp theo cho bạn
@@ -1327,7 +1327,7 @@ cause-proxy-address-unusable = Bước kiểm tra proxy không dùng được đ
 cause-server-unreachable = Không kết nối được tới máy chủ.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.
+legal-hosts-no-content = Kaeri không host bất kỳ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Đã lưu { $label }.
@@ -1717,7 +1717,7 @@ linux-reader-pages = Trang
 linux-reader-end-not-read = Chưa đánh dấu đã đọc
 
 # The one amber button of the end page: opens the next chapter.
-linux-reader-continue = Tiếp tục
+linux-reader-continue = Đọc tiếp
 
 # End page text when the next chapter is not out yet.
 linux-reader-end-not-out-body = Kaeri kiểm tra chương mới ở chế độ nền và thêm vào Cập nhật.
@@ -8733,22 +8733,22 @@ chapter-updates-open-series-menu = Mở bộ truyện
 action-read-chapter = Đọc chương { $n }
 
 # The main action when a chapter is part read.
-action-continue-chapter = Tiếp tục chương { $n } · trang { $page }
+action-continue-chapter = Đọc tiếp chương { $n } · trang { $page }
 
 # The main action for a light novel part, part read.
-action-continue-part = Tiếp tục phần { $n } · { $percent }%
+action-continue-part = Đọc tiếp phần { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
-action-continue-part-plain = Tiếp tục phần { $n }
+action-continue-part-plain = Đọc tiếp phần { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Đọc phần { $n }
 
 # The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
-action-continue-named = Tiếp tục { $label } · { $percent }%
+action-continue-named = Đọc tiếp { $label } · { $percent }%
 
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
-action-continue-named-plain = Tiếp tục { $label }
+action-continue-named-plain = Đọc tiếp { $label }
 
 # The main action for a light novel part not opened yet, named in the source's own words.
 action-read-named = Đọc { $label }
@@ -9564,7 +9564,7 @@ settings-counts-read-moving-on-note = Lật qua trang cuối, hoặc mở chươ
 settings-counts-read-marked = Khi bạn đánh dấu
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = Xem tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn
+settings-counts-read-marked-note = Đọc tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Cài đặt bộ truyện đi theo bạn
@@ -13516,7 +13516,7 @@ accounts-welcome-detail = Đăng nhập vào { $tracker } để đồng bộ dan
 accounts-brings-lists = Lấy danh sách của bạn và điền những tựa đang xem vào mục Xem tiếp.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang đọc.
+accounts-brings-lists-read = Đưa các danh sách của bạn vào và điền vào Đọc tiếp những gì bạn đang đọc.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang xem và đọc.

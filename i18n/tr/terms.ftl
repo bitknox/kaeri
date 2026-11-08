@@ -43,7 +43,6 @@
 -watch-together-cap = Birlikte izle
 
 # Where releases are looked up.
-
 # One downloadable file in a torrent index. Not a place episodes come from.
 -release = sürüm
 -release-cap = Sürüm
@@ -63,6 +62,10 @@
 # The button that resumes the show.
 -continue = izlemeye devam et
 -continue-cap = İzlemeye devam et
+
+# The button that resumes a book, manga or webtoon: reading's own form of { -continue }. English says continue for both; a language whose { -continue } means "continue watching" says "keep reading" here.
+-continue-reading = okumayı sürdür
+-continue-reading-cap = Okumayı sürdür
 
 # The button that goes on to the next step of a flow, such as setup. Not the button that resumes a
 # show; that is { -continue }.

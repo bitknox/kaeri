@@ -9678,7 +9678,7 @@ settings-counts-read-moving-on-note = Über die letzte Seite hinaus blättern od
 settings-counts-read-marked = Wenn du es markierst
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = Weiterschauen und deine Tracker folgen deinen Markierungen
+settings-counts-read-marked-note = Weiterlesen und deine Tracker folgen deinen Markierungen
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Serieneinstellungen, die dir folgen
@@ -13672,7 +13672,7 @@ accounts-welcome-detail = Melde dich bei { $tracker } an, damit deine Listen und
 accounts-brings-lists = Lädt deine Listen und füllt Weiterschauen mit dem, was du gerade schaust.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Holt deine Listen und füllt Weiterschauen mit dem, was du liest.
+accounts-brings-lists-read = Holt deine Listen und füllt Weiterlesen mit dem, was du liest.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Holt deine Listen und füllt Weiterschauen mit dem, was du schaust und liest.

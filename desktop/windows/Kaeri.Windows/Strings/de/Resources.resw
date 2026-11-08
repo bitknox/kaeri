@@ -6807,7 +6807,7 @@
     <value>Wenn du es markierst</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>Weiterschauen und deine Tracker folgen deinen Markierungen</value>
+    <value>Weiterlesen und deine Tracker folgen deinen Markierungen</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Serieneinstellungen, die dir folgen</value>
@@ -10767,7 +10767,7 @@
     <value>Lädt deine Listen und füllt Weiterschauen mit dem, was du gerade schaust.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Holt deine Listen und füllt Weiterschauen mit dem, was du liest.</value>
+    <value>Holt deine Listen und füllt Weiterlesen mit dem, was du liest.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Holt deine Listen und füllt Weiterschauen mit dem, was du schaust und liest.</value>

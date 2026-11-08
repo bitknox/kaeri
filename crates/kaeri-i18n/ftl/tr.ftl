@@ -9678,7 +9678,7 @@ settings-counts-read-moving-on-note = Son sayfayı çevirmek ya da sonraki böl�
 settings-counts-read-marked = Siz işaretleyince
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = İzlemeye devam et ve takip hizmetleri işaretlerinizi izler
+settings-counts-read-marked-note = Okumayı sürdür ve takip hizmetleri işaretlerinizi izler
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Size eşlik eden seri ayarları
@@ -13672,7 +13672,7 @@ accounts-welcome-detail = Listenizi ve kaldığınız yeri eşitlemek için { $t
 accounts-brings-lists = Listelerinizi getirir ve izlediklerinizle İzlemeye devam et satırını doldurur.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Listelerinizi getirir ve İzlemeye devam et bölümünü okuduklarınızla doldurur.
+accounts-brings-lists-read = Listelerinizi getirir ve Okumayı sürdür bölümünü okuduklarınızla doldurur.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Listelerinizi getirir ve İzlemeye devam et bölümünü izlediğiniz ve okuduğunuz şeylerle doldurur.

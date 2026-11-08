@@ -664,7 +664,7 @@ reading-on-planning = Ada di daftar Direncanakan Anda
 reading-spotlight-new-chapter = Bab baru di seri yang Anda ikuti
 
 # Above the big picture at the top of reading's Home: the series the person was reading last.
-reading-spotlight-continue = Lanjut membaca
+reading-spotlight-continue = Lanjutkan membaca
 
 # Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
 reading-spotlight-up-next = Berikutnya untuk Anda
@@ -1717,7 +1717,7 @@ linux-reader-pages = Halaman
 linux-reader-end-not-read = Belum ditandai dibaca
 
 # The one amber button of the end page: opens the next chapter.
-linux-reader-continue = Lanjutkan
+linux-reader-continue = Lanjutkan membaca
 
 # End page text when the next chapter is not out yet.
 linux-reader-end-not-out-body = Kaeri memeriksa bab baru di latar belakang dan menambahkannya ke Pembaruan.
@@ -8733,22 +8733,22 @@ chapter-updates-open-series-menu = Buka seri
 action-read-chapter = Baca bab { $n }
 
 # The main action when a chapter is part read.
-action-continue-chapter = Lanjutkan bab { $n } · halaman { $page }
+action-continue-chapter = Lanjutkan membaca bab { $n } · halaman { $page }
 
 # The main action for a light novel part, part read.
-action-continue-part = Lanjutkan bagian { $n } · { $percent }%
+action-continue-part = Lanjutkan membaca bagian { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
-action-continue-part-plain = Lanjutkan bagian { $n }
+action-continue-part-plain = Lanjutkan membaca bagian { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Baca bagian { $n }
 
 # The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
-action-continue-named = Lanjutkan { $label } · { $percent }%
+action-continue-named = Lanjutkan membaca { $label } · { $percent }%
 
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
-action-continue-named-plain = Lanjutkan { $label }
+action-continue-named-plain = Lanjutkan membaca { $label }
 
 # The main action for a light novel part not opened yet, named in the source's own words.
 action-read-named = Baca { $label }
@@ -9564,7 +9564,7 @@ settings-counts-read-moving-on-note = Membalik lewat halaman terakhir, atau memb
 settings-counts-read-marked = Saat Anda menandainya
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = Lanjutkan menonton dan pelacak-pelacak Anda mengikuti tanda dari Anda
+settings-counts-read-marked-note = Lanjutkan membaca dan pelacak-pelacak Anda mengikuti tanda dari Anda
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Pengaturan seri yang ikut Anda
@@ -13516,7 +13516,7 @@ accounts-welcome-detail = Masuk ke { $tracker } untuk menyinkronkan daftar Anda 
 accounts-brings-lists = Mengambil daftar Anda dan mengisi Lanjutkan menonton dengan judul yang sedang Anda tonton.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Membawa masuk daftar Anda dan mengisi Lanjutkan menonton dengan yang sedang Anda baca.
+accounts-brings-lists-read = Membawa masuk daftar Anda dan mengisi Lanjutkan membaca dengan yang sedang Anda baca.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Membawa masuk daftar Anda dan mengisi Lanjutkan menonton dengan yang sedang Anda tonton dan baca.

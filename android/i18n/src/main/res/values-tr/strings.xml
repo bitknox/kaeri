@@ -2806,7 +2806,7 @@
     <string name="settings_counts_read_moving_on">Ondan ilerleyince</string>
     <string name="settings_counts_read_moving_on_note">Son sayfayı çevirmek ya da sonraki bölümü açmak</string>
     <string name="settings_counts_read_marked">Siz işaretleyince</string>
-    <string name="settings_counts_read_marked_note">İzlemeye devam et ve takip hizmetleri işaretlerinizi izler</string>
+    <string name="settings_counts_read_marked_note">Okumayı sürdür ve takip hizmetleri işaretlerinizi izler</string>
     <string name="settings_follow_group">Size eşlik eden seri ayarları</string>
     <string name="settings_follow_mode">Mod, yön ve renk</string>
     <string name="settings_follow_mode_note">Değiştirdiğiniz seri diğer cihazlarınızda da aynı okunur</string>
@@ -4211,7 +4211,7 @@
     <string name="accounts_other_trackers_note">Diğer takip hizmetleri Hesaplar\'da.</string>
     <string name="accounts_welcome_detail">Listenizi ve kaldığınız yeri eşitlemek için %1$s üzerinde oturum açın.</string>
     <string name="accounts_brings_lists">Listelerinizi getirir ve izlediklerinizle İzlemeye devam et satırını doldurur.</string>
-    <string name="accounts_brings_lists_read">Listelerinizi getirir ve İzlemeye devam et bölümünü okuduklarınızla doldurur.</string>
+    <string name="accounts_brings_lists_read">Listelerinizi getirir ve Okumayı sürdür bölümünü okuduklarınızla doldurur.</string>
     <string name="accounts_brings_lists_both">Listelerinizi getirir ve İzlemeye devam et bölümünü izlediğiniz ve okuduğunuz şeylerle doldurur.</string>
     <string name="accounts_tracker_lists">Listeler ve ilerleme</string>
     <string name="accounts_tracker_reading_lists">Okuma listeleri ve ilerleme</string>

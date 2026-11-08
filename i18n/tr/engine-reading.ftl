@@ -63,7 +63,7 @@ reading-volumes = { $count ->
  }
 reading-on-planning = Planlananlar listenizde
 reading-spotlight-new-chapter = Takip ettiğiniz bir seride yeni bölüm
-reading-spotlight-continue = Okumayı sürdür
+reading-spotlight-continue = { -continue-reading-cap }
 reading-spotlight-up-next = Senin için { -up-next }
 reading-spotlight-popular = Popüler, şu an çıkıyor
 reading-out-today = Bölüm { $chapter } bugün çıktı

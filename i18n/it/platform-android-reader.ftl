@@ -37,7 +37,7 @@ eink-reads-strip = striscia lunga
 eink-on-device = sul { -device }
 eink-continue-to = Vai al capitolo { $chapter }
 eink-back-to-series = Torna alla serie
-eink-turn-to-continue = Gira pagina per proseguire
+eink-turn-to-continue = Gira pagina per { -continue-reading }
 eink-next-missing = Il capitolo { $chapter } non è ancora nelle tue { -source-pl }
 eink-next-not-out = Il capitolo successivo non è ancora uscito
 eink-caught-up = Sei in pari
@@ -68,13 +68,11 @@ reader-notice-start-over = Ricomincia
 reader-notice-go-back = Torna indietro
 reader-notice-change = Cambia
 reader-settings = Impostazioni del lettore
-reader-chapter-line-titled = Capitolo { $chapter } · { $title }
 reader-novel-line-scroll = Capitolo { $chapter } · scorrimento
 reader-minutes-left = { $minutes } min
 reader-zone-next = Pagina successiva
 reader-grid-title = Pagine
 reader-end-continue = Prosegui
-reader-end-swipe = Scorri per proseguire
 reader-end-series = Torna alla serie
 reader-end-again = Rileggi dall'inizio
 reader-opening-chapter = Apertura del capitolo { $chapter }
@@ -164,11 +162,6 @@ reader-value-off = Disattivo
 reader-row-strip-gap = Spazio tra le immagini
 reader-paper-look = Aspetto Carta di giorno
 reader-paper-dim = Attenua la pagina
-reader-divider-images = { $count ->
-    [one] Un'immagine
-    [many] { $count } immagini
-   *[other] { $count } immagini
- }
 reader-opening-waited = { $line } · { $seconds } s
 reader-sources-title = Leggi questo capitolo da
 reader-paper-parts = Cosa cambia

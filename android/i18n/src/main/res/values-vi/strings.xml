@@ -186,8 +186,8 @@
     <string name="reading_also_a_show">Cũng có bản phim</string>
     <string name="reading_also_a_book">Cũng có bản truyện</string>
     <string name="reading_split_chapter">Chương %1$s được gửi tới các dịch vụ theo dõi là chương %2$s.</string>
-    <string name="reader_resumed">Đọc tiếp từ trang %1$d</string>
-    <string name="reader_resumed_image">Đọc tiếp từ ảnh %1$d</string>
+    <string name="reader_resumed">Mở lại ở trang %1$d</string>
+    <string name="reader_resumed_image">Mở lại ở ảnh %1$d</string>
     <string name="reader_back_to_page">Quay lại trang %1$d</string>
     <string name="reader_moved">Đã chuyển tới %1$s, trang %2$d, nơi %3$s dừng lại</string>
     <string name="reader_moved_number">Đã chuyển tới chương %1$s, trang %2$d, nơi %3$s dừng lại</string>
@@ -234,7 +234,7 @@
     </plurals>
     <string name="reading_on_planning">Trong danh sách dự định của bạn</string>
     <string name="reading_spotlight_new_chapter">Chương mới của truyện bạn theo dõi</string>
-    <string name="reading_spotlight_continue">Tiếp tục đọc</string>
+    <string name="reading_spotlight_continue">Đọc tiếp</string>
     <string name="reading_spotlight_up_next">Tiếp theo cho bạn</string>
     <string name="reading_spotlight_popular">Phổ biến, đang ra</string>
     <string name="reading_out_today">Chương %1$s ra hôm nay</string>
@@ -471,7 +471,7 @@
     <string name="cause_proxy_needs_address">Proxy cần có máy chủ và cổng.</string>
     <string name="cause_proxy_address_unusable">Bước kiểm tra proxy không dùng được địa chỉ này.</string>
     <string name="cause_server_unreachable">Không kết nối được tới máy chủ.</string>
-    <string name="legal_hosts_no_content">Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</string>
+    <string name="legal_hosts_no_content">Kaeri không host bất kỳ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</string>
     <string name="notice_saved">Đã lưu %1$s.</string>
     <string name="notice_not_saved">Không lưu được cài đặt đó. %1$s</string>
     <string name="notice_title_load_failed">Không tải được chi tiết của bộ phim này. Hãy kiểm tra kết nối rồi thử lại.</string>
@@ -586,9 +586,9 @@
     <string name="eink_reads_ltr">trái sang phải</string>
     <string name="eink_reads_strip">cuộn dọc</string>
     <string name="eink_on_device">có trên thiết bị này</string>
-    <string name="eink_continue_to">Tiếp tục sang chương %1$s</string>
+    <string name="eink_continue_to">Đọc tiếp chương %1$s</string>
     <string name="eink_back_to_series">Về trang truyện</string>
-    <string name="eink_turn_to_continue">Lật trang để tiếp tục</string>
+    <string name="eink_turn_to_continue">Lật trang để đọc tiếp</string>
     <string name="eink_next_missing">Chương %1$s chưa có trong các nguồn của bạn</string>
     <string name="eink_next_not_out">Chương sau chưa ra</string>
     <string name="eink_caught_up">Bạn đã đọc kịp</string>
@@ -623,7 +623,7 @@
     <string name="reader_minutes_left">%1$d phút</string>
     <string name="reader_zone_next">Trang sau</string>
     <string name="reader_grid_title">Trang</string>
-    <string name="reader_end_continue">Tiếp tục</string>
+    <string name="reader_end_continue">Đọc tiếp</string>
     <string name="reader_end_series">Về trang truyện</string>
     <string name="reader_end_again">Đọc lại từ đầu</string>
     <string name="reader_opening_chapter">Đang mở chương %1$s</string>
@@ -2406,12 +2406,12 @@
     <string name="chapter_updates_open_chapter_hint">Mở chương</string>
     <string name="chapter_updates_open_series_menu">Mở bộ truyện</string>
     <string name="action_read_chapter">Đọc chương %1$s</string>
-    <string name="action_continue_chapter">Tiếp tục chương %1$s · trang %2$d</string>
-    <string name="action_continue_part">Tiếp tục phần %1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">Tiếp tục phần %1$s</string>
+    <string name="action_continue_chapter">Đọc tiếp chương %1$s · trang %2$d</string>
+    <string name="action_continue_part">Đọc tiếp phần %1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">Đọc tiếp phần %1$s</string>
     <string name="action_read_part">Đọc phần %1$s</string>
-    <string name="action_continue_named">Tiếp tục %1$s · %2$d%%</string>
-    <string name="action_continue_named_plain">Tiếp tục %1$s</string>
+    <string name="action_continue_named">Đọc tiếp %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">Đọc tiếp %1$s</string>
     <string name="action_read_named">Đọc %1$s</string>
     <string name="action_read_again">Đọc lại</string>
     <string name="series_reading_from">Đang đọc từ</string>
@@ -2699,7 +2699,7 @@
     <string name="settings_counts_read_moving_on">Khi rời khỏi chương</string>
     <string name="settings_counts_read_moving_on_note">Lật qua trang cuối, hoặc mở chương sau</string>
     <string name="settings_counts_read_marked">Khi bạn đánh dấu</string>
-    <string name="settings_counts_read_marked_note">Xem tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn</string>
+    <string name="settings_counts_read_marked_note">Đọc tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn</string>
     <string name="settings_follow_group">Cài đặt bộ truyện đi theo bạn</string>
     <string name="settings_follow_mode">Chế độ, hướng đọc và màu</string>
     <string name="settings_follow_mode_note">Bộ truyện bạn đổi sẽ đọc giống nhau trên các thiết bị khác</string>
@@ -4062,7 +4062,7 @@
     <string name="accounts_other_trackers_note">Các dịch vụ theo dõi khác nằm trong Tài khoản.</string>
     <string name="accounts_welcome_detail">Đăng nhập vào %1$s để đồng bộ danh sách và chỗ bạn xem dở.</string>
     <string name="accounts_brings_lists">Lấy danh sách của bạn và điền những tựa đang xem vào mục Xem tiếp.</string>
-    <string name="accounts_brings_lists_read">Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang đọc.</string>
+    <string name="accounts_brings_lists_read">Đưa các danh sách của bạn vào và điền vào Đọc tiếp những gì bạn đang đọc.</string>
     <string name="accounts_brings_lists_both">Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang xem và đọc.</string>
     <string name="accounts_tracker_lists">Danh sách và tiến độ</string>
     <string name="accounts_tracker_reading_lists">Danh sách đọc và tiến độ</string>

@@ -13,7 +13,7 @@ close-seeding = { $count ->
     [many] { $count } épisodes sont en cours de partage.
    *[other] { $count } épisodes sont en cours de partage.
  }
-close-ask = Les laisser se poursuivre après la fermeture de la fenêtre, ou les arrêter ?
+close-ask = Les laisser continuer après la fermeture de la fenêtre, ou les arrêter ?
 close-stop = Arrêter et fermer
 toast-open-stores = Ouvrir les { -plugin-store-pl }
 toast-titled = { $title } : { $body }

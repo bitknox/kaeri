@@ -765,7 +765,7 @@
     <value>Nowy rozdział w serii, którą czytasz</value>
   </data>
   <data name="ReadingSpotlightContinue" xml:space="preserve">
-    <value>Wróć do czytania</value>
+    <value>Czytaj dalej</value>
   </data>
   <data name="ReadingSpotlightUpNext" xml:space="preserve">
     <value>Następna lektura dla ciebie</value>
@@ -1524,7 +1524,7 @@
     <value>Nie udało się połączyć z serwerem.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri nie udostępnia żadnych seriali ani książek. Źródła dodajesz samodzielnie.</value>
+    <value>Kaeri nie hostuje żadnych seriali ani książek. Źródła dodajesz samodzielnie.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Zapisano: {label}.</value>
@@ -6408,22 +6408,22 @@
     <value>Czytaj rozdział {n}</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>Wznów rozdział {n} · strona {page}</value>
+    <value>Czytaj dalej: rozdział {n} · strona {page}</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>Wznów część {n} · {percent}%</value>
+    <value>Czytaj dalej: część {n} · {percent}%</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>Wznów część {n}</value>
+    <value>Czytaj dalej: część {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Czytaj część {n}</value>
   </data>
   <data name="ActionContinueNamed" xml:space="preserve">
-    <value>Wznów: {label} · {percent}%</value>
+    <value>Czytaj dalej: {label} · {percent}%</value>
   </data>
   <data name="ActionContinueNamedPlain" xml:space="preserve">
-    <value>Wznów: {label}</value>
+    <value>Czytaj dalej: {label}</value>
   </data>
   <data name="ActionReadNamed" xml:space="preserve">
     <value>Czytaj: {label}</value>
@@ -7335,7 +7335,7 @@
     <value>Gdy sam oznaczysz</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>Kontynuuj oglądanie i Trackery idą za twoimi oznaczeniami</value>
+    <value>Sekcja Czytaj dalej i Trackery idą za twoimi oznaczeniami</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Ustawienia serii, które podążają za tobą</value>
@@ -11547,7 +11547,7 @@
     <value>Importuje listy i uzupełnia Kontynuuj oglądanie tytułami, które oglądasz.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Wczytuje twoje listy i wypełnia sekcję Kontynuuj oglądanie tym, co czytasz.</value>
+    <value>Wczytuje twoje listy i wypełnia sekcję Czytaj dalej tym, co czytasz.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Wczytuje twoje listy i wypełnia sekcję Kontynuuj oglądanie tym, co oglądasz i czytasz.</value>

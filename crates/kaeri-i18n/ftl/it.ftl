@@ -686,7 +686,7 @@ reading-on-planning = Nella tua lista In programma
 reading-spotlight-new-chapter = Nuovo capitolo in una serie che segui
 
 # Above the big picture at the top of reading's Home: the series the person was reading last.
-reading-spotlight-continue = Riprendi la lettura
+reading-spotlight-continue = Continua a leggere
 
 # Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
 reading-spotlight-up-next = Prossimo per te
@@ -1787,7 +1787,7 @@ linux-reader-pages = Pagine
 linux-reader-end-not-read = Non ancora segnato come letto
 
 # The one amber button of the end page: opens the next chapter.
-linux-reader-continue = Capitolo successivo
+linux-reader-continue = Continua a leggere
 
 # End page text when the next chapter is not out yet.
 linux-reader-end-not-out-body = Kaeri cerca nuovi capitoli in background e li aggiunge ad Aggiornamenti.
@@ -8929,22 +8929,22 @@ chapter-updates-open-series-menu = Apri la serie
 action-read-chapter = Leggi il capitolo { $n }
 
 # The main action when a chapter is part read.
-action-continue-chapter = Riprendi il capitolo { $n } · pagina { $page }
+action-continue-chapter = Continua a leggere il capitolo { $n } · pagina { $page }
 
 # The main action for a light novel part, part read.
-action-continue-part = Riprendi la parte { $n } · { $percent }%
+action-continue-part = Continua a leggere la parte { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
-action-continue-part-plain = Riprendi la parte { $n }
+action-continue-part-plain = Continua a leggere la parte { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Leggi la parte { $n }
 
 # The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
-action-continue-named = Riprendi { $label } · { $percent }%
+action-continue-named = Continua a leggere { $label } · { $percent }%
 
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
-action-continue-named-plain = Riprendi { $label }
+action-continue-named-plain = Continua a leggere { $label }
 
 # The main action for a light novel part not opened yet, named in the source's own words.
 action-read-named = Leggi { $label }
@@ -9792,7 +9792,7 @@ settings-counts-read-moving-on-note = Girando oltre l'ultima pagina, o aprendo i
 settings-counts-read-marked = Quando lo segni
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = Continua a guardare e i tuoi tracker seguono i tuoi segni
+settings-counts-read-marked-note = Continua a leggere e i tuoi tracker seguono i tuoi segni
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Impostazioni della serie che ti seguono
@@ -13828,7 +13828,7 @@ accounts-welcome-detail = Accedi a { $tracker } per sincronizzare la tua lista e
 accounts-brings-lists = Importa le tue liste e riempie Continua a guardare con quello che stai guardando.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Importa le tue liste e riempie Continua a guardare con ciò che stai leggendo.
+accounts-brings-lists-read = Importa le tue liste e riempie Continua a leggere con ciò che stai leggendo.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Importa le tue liste e riempie Continua a guardare con ciò che stai guardando e leggendo.

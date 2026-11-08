@@ -296,10 +296,10 @@
     "at": "2026-11-07"
   },
   "accounts-brings-lists-read": {
-    "source": "5edb7fb16aab",
+    "source": "56ba6c0207fe",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "accounts-browser-failed": {
     "source": "508548dd067f",
@@ -1228,42 +1228,34 @@
     "back": "Connect"
   },
   "action-continue-chapter": {
-    "source": "57ef2d085981",
+    "source": "9b47c38aa51f",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "action-continue-named": {
-    "source": "e4ad72aba32d",
+    "source": "0b193cf28ffc",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-08",
-    "flags": [
-      "-continue term means 'continue watching'; used 'Seguir con' as earlier reading drafts do"
-    ],
-    "back": "Go on with {label} · {percent}%"
+    "at": "2026-11-08"
   },
   "action-continue-named-plain": {
-    "source": "e7d94df065b1",
+    "source": "33645a671e3d",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-08",
-    "flags": [
-      "-continue term means 'continue watching'; used 'Seguir con'"
-    ],
-    "back": "Go on with {label}"
+    "at": "2026-11-08"
   },
   "action-continue-part": {
-    "source": "38f1f9ab1e06",
+    "source": "7e29b4f60faf",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "action-continue-part-plain": {
-    "source": "8530db75900e",
+    "source": "91040a1b83a6",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "action-copied": {
     "source": "f4de3bfbfaca",
@@ -2025,7 +2017,7 @@
     "source": "18ef6ac38c86",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-07"
+    "at": "2026-11-08"
   },
   "book-sources-use": {
     "source": "e698b1e80eef",
@@ -6162,10 +6154,10 @@
     "at": "2026-11-07"
   },
   "eink-continue-to": {
-    "source": "f8e12f37a15b",
+    "source": "989f90b64440",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "eink-counted-read": {
     "source": "b46e4b0b2ed2",
@@ -6318,10 +6310,10 @@
     "at": "2026-11-07"
   },
   "eink-turn-to-continue": {
-    "source": "da7f5727e06a",
+    "source": "c3d82ba03295",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "eink-zone-next-ltr": {
     "source": "4c6d52ca601f",
@@ -10867,14 +10859,10 @@
     "at": "2026-11-08"
   },
   "linux-reader-continue": {
-    "source": "86c7e142d926",
+    "source": "f42f6a6df6bf",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-08",
-    "flags": [
-      "-continue term means 'continue watching'; matches apple reader-continue draft"
-    ],
-    "back": "Keep reading"
+    "at": "2026-11-08"
   },
   "linux-reader-crop-borders": {
     "source": "1b28173e8b92",
@@ -20168,10 +20156,10 @@
     "at": "2026-11-07"
   },
   "reader-continue": {
-    "source": "86c7e142d926",
+    "source": "f42f6a6df6bf",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "reader-crop-borders": {
     "source": "1b28173e8b92",
@@ -20258,10 +20246,10 @@
     "at": "2026-11-07"
   },
   "reader-end-continue": {
-    "source": "86c7e142d926",
+    "source": "f42f6a6df6bf",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "reader-end-facts": {
     "source": "2c8a9ee4f2f8",
@@ -20392,8 +20380,8 @@
   "reader-end-swipe": {
     "source": "ae13414ecd6f",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "reader-end-tracker": {
     "source": "8889ba40058a",
@@ -22046,8 +22034,8 @@
   "reading-failed-sign-in": {
     "source": "60eb04781d66",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "reading-failed-source-down": {
     "source": "7035a7df5f53",
@@ -22394,10 +22382,10 @@
     "at": "2026-11-07"
   },
   "reading-spotlight-continue": {
-    "source": "9668aa073457",
+    "source": "3f4bd948eba7",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "reading-spotlight-new-chapter": {
     "source": "b6d1bb9c57af",
@@ -25108,10 +25096,10 @@
     "at": "2026-11-07"
   },
   "settings-counts-read-marked-note": {
-    "source": "b6cc9a8d14c0",
+    "source": "21be075aba8f",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08"
   },
   "settings-counts-read-moving-on": {
     "source": "eab538e765e7",

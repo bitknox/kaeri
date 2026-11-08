@@ -28,7 +28,7 @@ reading-failed-not-found = Questa { -source } non lo ha più. Prova un'altra { -
 reading-failed-blocked = { $source } ha rifiutato la richiesta. { $reason }
 reading-failed-parse = { -app-name } non è riuscito a leggere ciò che ha inviato { $source }. Il suo { -plugin } potrebbe aver bisogno di un aggiornamento.
 reading-failed-page = Questa pagina non si è caricata (errore { $status }). Riprova.
-reading-failed-sign-in = Accedi di nuovo a { $what } per continuare a leggere.
+reading-failed-sign-in = Accedi di nuovo a { $what } per { -continue-reading }.
 reading-failed-file-missing = { $path } non c'è più. Se è su un'unità, collegala e riprova.
 reading-failed-unreadable = { $path } non può essere letto come { $format }. Il file potrebbe essere danneggiato.
 reading-failed-unsupported = { -app-name } non legge i file { $kind }.
@@ -66,7 +66,7 @@ reading-volumes = { $count ->
  }
 reading-on-planning = Nella tua lista In programma
 reading-spotlight-new-chapter = Nuovo capitolo in una serie che segui
-reading-spotlight-continue = Riprendi la lettura
+reading-spotlight-continue = { -continue-reading-cap }
 reading-spotlight-up-next = { -up-next-cap } per te
 reading-spotlight-popular = Popolare, in corso ora
 reading-out-today = Il capitolo { $chapter } è uscito oggi

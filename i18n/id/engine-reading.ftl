@@ -60,7 +60,7 @@ reading-volumes = { $count ->
  }
 reading-on-planning = Ada di daftar Direncanakan Anda
 reading-spotlight-new-chapter = Bab baru di seri yang Anda ikuti
-reading-spotlight-continue = Lanjut membaca
+reading-spotlight-continue = { -continue-reading-cap }
 reading-spotlight-up-next = { -up-next-cap } untuk Anda
 reading-spotlight-popular = Populer, masih terbit
 reading-out-today = Bab { $chapter } terbit hari ini

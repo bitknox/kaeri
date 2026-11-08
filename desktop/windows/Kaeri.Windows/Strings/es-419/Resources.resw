@@ -6192,22 +6192,22 @@
     <value>Leer el capítulo {n}</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>Seguir con el capítulo {n} · pág. {page}</value>
+    <value>Seguir leyendo el capítulo {n} · pág. {page}</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>Seguir con la parte {n} · {percent}%</value>
+    <value>Seguir leyendo la parte {n} · {percent}%</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>Seguir con la parte {n}</value>
+    <value>Seguir leyendo la parte {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Leer la parte {n}</value>
   </data>
   <data name="ActionContinueNamed" xml:space="preserve">
-    <value>Seguir con {label} · {percent}%</value>
+    <value>Seguir leyendo {label} · {percent}%</value>
   </data>
   <data name="ActionContinueNamedPlain" xml:space="preserve">
-    <value>Seguir con {label}</value>
+    <value>Seguir leyendo {label}</value>
   </data>
   <data name="ActionReadNamed" xml:space="preserve">
     <value>Leer {label}</value>
@@ -6702,7 +6702,7 @@
     <value>Buscar</value>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>Puedes seguir leyendo las series sin coincidencia desde la carpeta. No tienen progreso en un servicio de seguimiento hasta que tengan coincidencia.</value>
+    <value>Las series sin coincidencia se pueden leer igual desde la carpeta. No tienen progreso en un servicio de seguimiento hasta que tengan coincidencia.</value>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
     <value>Series o Lectura</value>
@@ -7071,7 +7071,7 @@
     <value>Cuando lo marcas</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>Continuar viendo y tus servicios de seguimiento siguen tus marcas</value>
+    <value>Seguir leyendo y tus servicios de seguimiento siguen tus marcas</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Ajustes de serie que te siguen</value>
@@ -11157,7 +11157,7 @@
     <value>Trae tus listas y llena Continuar viendo con lo que estás viendo.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Trae tus listas y llena Continuar viendo con lo que estás leyendo.</value>
+    <value>Trae tus listas y llena Seguir leyendo con lo que estás leyendo.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Trae tus listas y llena Continuar viendo con lo que estás viendo y leyendo.</value>

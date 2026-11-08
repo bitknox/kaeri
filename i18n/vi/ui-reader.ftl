@@ -3,6 +3,7 @@ reader-page-failed = Không tải được trang { $page }
 reader-try-again = Thử lại
 reader-close = Đóng
 reader-end-read = Đã đọc
+reader-end-tracker = Đã đọc · đã cập nhật { $trackers }
 reader-end-next = Kế tiếp
 reader-mode-rtl = Phải sang trái
 reader-mode-ltr = Trái sang phải
@@ -38,14 +39,16 @@ reader-end-caught-up = Bạn đã đọc kịp
 reader-gap-none = Không
 reader-gap-small = Nhỏ
 reader-look-system = Theo hệ thống
-reader-end-tracker = Đã đọc · đã cập nhật { $trackers }
 reader-end-of-chapter-number = Hết chương { $chapter }
 reader-end-facts = Chương { $chapter } · { $facts }
 reader-end-pages = { $count ->
    *[other] { $count } trang
  }
 reader-end-from = Từ { $source }
-
 reader-chapter-line = Chương { $chapter }
-
 reader-divider-facts-source = { $facts } · từ { $source }
+reader-end-swipe = Vuốt để { -continue-reading }
+reader-divider-images = { $count ->
+   *[other] { $count } ảnh
+ }
+reader-chapter-line-titled = Chương { $chapter } · { $title }

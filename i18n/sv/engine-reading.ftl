@@ -63,7 +63,7 @@ reading-volumes = { $count ->
  }
 reading-on-planning = På din planeringslista
 reading-spotlight-new-chapter = Nytt kapitel i en serie du följer
-reading-spotlight-continue = Läs vidare
+reading-spotlight-continue = { -continue-reading-cap }
 reading-spotlight-up-next = { -up-next-cap } för dig
 reading-spotlight-popular = Populärt, pågår nu
 reading-out-today = Kapitel { $chapter } kommer ut idag

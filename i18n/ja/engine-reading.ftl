@@ -60,7 +60,7 @@ reading-volumes = { $count ->
  }
 reading-on-planning = 「予定」リストに入っています
 reading-spotlight-new-chapter = フォロー中の作品に新しい話があります
-reading-spotlight-continue = 続きから読む
+reading-spotlight-continue = { -continue-reading-cap }
 reading-spotlight-up-next = 次に読む作品
 reading-spotlight-popular = 人気の連載中作品
 reading-out-today = 第{ $chapter }話が今日公開

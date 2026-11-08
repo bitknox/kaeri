@@ -176,7 +176,7 @@ linux-reader-end-not-read = Not marked read yet
 # The one amber button of the end page: opens the next chapter.
 # @only linux
 # @max 20
-linux-reader-continue = { -continue-cap }
+linux-reader-continue = { -continue-reading-cap }
 
 # End page text when the next chapter is not out yet.
 # @only linux

@@ -732,7 +732,7 @@
     <value>Nouveau chapitre d'une série suivie</value>
   </data>
   <data name="ReadingSpotlightContinue" xml:space="preserve">
-    <value>Reprendre la lecture</value>
+    <value>Poursuivre la lecture</value>
   </data>
   <data name="ReadingSpotlightUpNext" xml:space="preserve">
     <value>À suivre pour vous</value>
@@ -1989,7 +1989,7 @@
     <value>{count} épisodes sont en cours de partage.</value>
   </data>
   <data name="CloseAsk" xml:space="preserve">
-    <value>Les laisser se poursuivre après la fermeture de la fenêtre, ou les arrêter ?</value>
+    <value>Les laisser continuer après la fermeture de la fenêtre, ou les arrêter ?</value>
   </data>
   <data name="CloseStop" xml:space="preserve">
     <value>Arrêter et fermer</value>
@@ -6192,22 +6192,22 @@
     <value>Lire le chapitre {n}</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>Reprendre le chapitre {n} · page {page}</value>
+    <value>Poursuivre le chapitre {n} · page {page}</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>Reprendre la partie {n} · {percent} %</value>
+    <value>Poursuivre la partie {n} · {percent} %</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>Reprendre la partie {n}</value>
+    <value>Poursuivre la partie {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Lire la partie {n}</value>
   </data>
   <data name="ActionContinueNamed" xml:space="preserve">
-    <value>Reprendre {label} · {percent} %</value>
+    <value>Poursuivre {label} · {percent} %</value>
   </data>
   <data name="ActionContinueNamedPlain" xml:space="preserve">
-    <value>Reprendre {label}</value>
+    <value>Poursuivre {label}</value>
   </data>
   <data name="ActionReadNamed" xml:space="preserve">
     <value>Lire {label}</value>
@@ -7071,7 +7071,7 @@
     <value>Quand vous le marquez</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>Reprendre et vos services de suivi suivent vos marques</value>
+    <value>« Poursuivre » et vos services de suivi suivent vos marques</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Réglages de série qui vous suivent</value>
@@ -11157,7 +11157,7 @@
     <value>Importe vos listes et remplit Reprendre avec ce que vous regardez.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Importe vos listes et remplit « Reprendre » avec ce que vous lisez.</value>
+    <value>Importe vos listes et remplit « Poursuivre » avec ce que vous lisez.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Importe vos listes et remplit « Reprendre » avec ce que vous regardez et lisez.</value>

@@ -666,7 +666,7 @@
     <value>Bab baru di seri yang Anda ikuti</value>
   </data>
   <data name="ReadingSpotlightContinue" xml:space="preserve">
-    <value>Lanjut membaca</value>
+    <value>Lanjutkan membaca</value>
   </data>
   <data name="ReadingSpotlightUpNext" xml:space="preserve">
     <value>Berikutnya untuk Anda</value>
@@ -5760,22 +5760,22 @@
     <value>Baca bab {n}</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>Lanjutkan bab {n} · halaman {page}</value>
+    <value>Lanjutkan membaca bab {n} · halaman {page}</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>Lanjutkan bagian {n} · {percent}%</value>
+    <value>Lanjutkan membaca bagian {n} · {percent}%</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>Lanjutkan bagian {n}</value>
+    <value>Lanjutkan membaca bagian {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Baca bagian {n}</value>
   </data>
   <data name="ActionContinueNamed" xml:space="preserve">
-    <value>Lanjutkan {label} · {percent}%</value>
+    <value>Lanjutkan membaca {label} · {percent}%</value>
   </data>
   <data name="ActionContinueNamedPlain" xml:space="preserve">
-    <value>Lanjutkan {label}</value>
+    <value>Lanjutkan membaca {label}</value>
   </data>
   <data name="ActionReadNamed" xml:space="preserve">
     <value>Baca {label}</value>
@@ -6543,7 +6543,7 @@
     <value>Saat Anda menandainya</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>Lanjutkan menonton dan pelacak-pelacak Anda mengikuti tanda dari Anda</value>
+    <value>Lanjutkan membaca dan pelacak-pelacak Anda mengikuti tanda dari Anda</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Pengaturan seri yang ikut Anda</value>
@@ -10377,7 +10377,7 @@
     <value>Mengambil daftar Anda dan mengisi Lanjutkan menonton dengan judul yang sedang Anda tonton.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Membawa masuk daftar Anda dan mengisi Lanjutkan menonton dengan yang sedang Anda baca.</value>
+    <value>Membawa masuk daftar Anda dan mengisi Lanjutkan membaca dengan yang sedang Anda baca.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Membawa masuk daftar Anda dan mengisi Lanjutkan menonton dengan yang sedang Anda tonton dan baca.</value>

@@ -8929,22 +8929,22 @@ chapter-updates-open-series-menu = Abrir serie
 action-read-chapter = Leer el capítulo { $n }
 
 # The main action when a chapter is part read.
-action-continue-chapter = Seguir con el capítulo { $n } · pág. { $page }
+action-continue-chapter = Seguir leyendo el capítulo { $n } · pág. { $page }
 
 # The main action for a light novel part, part read.
-action-continue-part = Seguir con la parte { $n } · { $percent }%
+action-continue-part = Seguir leyendo la parte { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
-action-continue-part-plain = Seguir con la parte { $n }
+action-continue-part-plain = Seguir leyendo la parte { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Leer la parte { $n }
 
 # The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
-action-continue-named = Seguir con { $label } · { $percent }%
+action-continue-named = Seguir leyendo { $label } · { $percent }%
 
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
-action-continue-named-plain = Seguir con { $label }
+action-continue-named-plain = Seguir leyendo { $label }
 
 # The main action for a light novel part not opened yet, named in the source's own words.
 action-read-named = Leer { $label }
@@ -9430,7 +9430,7 @@ book-sources-keep = Dejar sin coincidencia
 book-sources-find = Buscar
 
 # Footnote of the Check matches sheet.
-book-sources-unmatched-note = Puedes seguir leyendo las series sin coincidencia desde la carpeta. No tienen progreso en un servicio de seguimiento hasta que tengan coincidencia.
+book-sources-unmatched-note = Las series sin coincidencia se pueden leer igual desde la carpeta. No tienen progreso en un servicio de seguimiento hasta que tengan coincidencia.
 
 # Accessibility label of the control that sets Shows or Reading in the Library and Search.
 library-scope-label = Series o Lectura
@@ -9792,7 +9792,7 @@ settings-counts-read-moving-on-note = Pasar la última página o abrir el capít
 settings-counts-read-marked = Cuando lo marcas
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = Continuar viendo y tus servicios de seguimiento siguen tus marcas
+settings-counts-read-marked-note = Seguir leyendo y tus servicios de seguimiento siguen tus marcas
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Ajustes de serie que te siguen
@@ -13828,7 +13828,7 @@ accounts-welcome-detail = Inicia sesión en { $tracker } para sincronizar tu lis
 accounts-brings-lists = Trae tus listas y llena Continuar viendo con lo que estás viendo.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Trae tus listas y llena Continuar viendo con lo que estás leyendo.
+accounts-brings-lists-read = Trae tus listas y llena Seguir leyendo con lo que estás leyendo.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Trae tus listas y llena Continuar viendo con lo que estás viendo y leyendo.

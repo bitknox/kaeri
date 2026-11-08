@@ -697,7 +697,7 @@ reading-on-planning = Na liście planowanych
 reading-spotlight-new-chapter = Nowy rozdział w serii, którą czytasz
 
 # Above the big picture at the top of reading's Home: the series the person was reading last.
-reading-spotlight-continue = Wróć do czytania
+reading-spotlight-continue = Czytaj dalej
 
 # Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
 reading-spotlight-up-next = Następna lektura dla ciebie
@@ -1408,7 +1408,7 @@ cause-proxy-address-unusable = Sprawdzenie proxy nie może użyć tego adresu.
 cause-server-unreachable = Nie udało się połączyć z serwerem.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri nie udostępnia żadnych seriali ani książek. Źródła dodajesz samodzielnie.
+legal-hosts-no-content = Kaeri nie hostuje żadnych seriali ani książek. Źródła dodajesz samodzielnie.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Zapisano: { $label }.
@@ -1822,7 +1822,7 @@ linux-reader-pages = Strony
 linux-reader-end-not-read = Nie oznaczono jako przeczytane
 
 # The one amber button of the end page: opens the next chapter.
-linux-reader-continue = Kontynuuj czytanie
+linux-reader-continue = Czytaj dalej
 
 # End page text when the next chapter is not out yet.
 linux-reader-end-not-out-body = Kaeri sprawdza nowe rozdziały w tle i dodaje je w sekcji Aktualizacje.
@@ -9027,22 +9027,22 @@ chapter-updates-open-series-menu = Otwórz serię
 action-read-chapter = Czytaj rozdział { $n }
 
 # The main action when a chapter is part read.
-action-continue-chapter = Wznów rozdział { $n } · strona { $page }
+action-continue-chapter = Czytaj dalej: rozdział { $n } · strona { $page }
 
 # The main action for a light novel part, part read.
-action-continue-part = Wznów część { $n } · { $percent }%
+action-continue-part = Czytaj dalej: część { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
-action-continue-part-plain = Wznów część { $n }
+action-continue-part-plain = Czytaj dalej: część { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Czytaj część { $n }
 
 # The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
-action-continue-named = Wznów: { $label } · { $percent }%
+action-continue-named = Czytaj dalej: { $label } · { $percent }%
 
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
-action-continue-named-plain = Wznów: { $label }
+action-continue-named-plain = Czytaj dalej: { $label }
 
 # The main action for a light novel part not opened yet, named in the source's own words.
 action-read-named = Czytaj: { $label }
@@ -9906,7 +9906,7 @@ settings-counts-read-moving-on-note = Przewrócenie ostatniej strony albo otwarc
 settings-counts-read-marked = Gdy sam oznaczysz
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = Kontynuuj oglądanie i Trackery idą za twoimi oznaczeniami
+settings-counts-read-marked-note = Sekcja Czytaj dalej i Trackery idą za twoimi oznaczeniami
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Ustawienia serii, które podążają za tobą
@@ -13984,7 +13984,7 @@ accounts-welcome-detail = Zaloguj się w { $tracker }, aby synchronizować list�
 accounts-brings-lists = Importuje listy i uzupełnia Kontynuuj oglądanie tytułami, które oglądasz.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Wczytuje twoje listy i wypełnia sekcję Kontynuuj oglądanie tym, co czytasz.
+accounts-brings-lists-read = Wczytuje twoje listy i wypełnia sekcję Czytaj dalej tym, co czytasz.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Wczytuje twoje listy i wypełnia sekcję Kontynuuj oglądanie tym, co oglądasz i czytasz.

@@ -64,13 +64,11 @@ reader-notice-start-over = 最初から
 reader-notice-go-back = 戻る
 reader-notice-change = 変更
 reader-settings = リーダーの設定
-reader-chapter-line-titled = 第{ $chapter }話 · { $title }
 reader-novel-line-scroll = 第{ $chapter }話 · スクロール
 reader-minutes-left = 残り{ $minutes }分
 reader-zone-next = 次のページ
 reader-grid-title = ページ
 reader-end-continue = 次の章へ
-reader-end-swipe = スワイプして読み進める
 reader-end-series = 作品に戻る
 reader-end-again = 最初から読み直す
 reader-opening-chapter = 第{ $chapter }話を開いています
@@ -160,9 +158,6 @@ reader-value-off = オフ
 reader-row-strip-gap = 画像の間隔
 reader-paper-look = 昼のペーパー表示
 reader-paper-dim = ページを暗くする
-reader-divider-images = { $count ->
-   *[other] { $count }枚の画像
- }
 reader-opening-waited = { $line } · { $seconds }秒
 reader-sources-title = この章を読める{ -source }
 reader-paper-parts = 変更される項目

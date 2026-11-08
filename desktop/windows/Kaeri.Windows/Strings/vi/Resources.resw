@@ -534,10 +534,10 @@
     <value>Chương {chapter} được gửi tới các dịch vụ theo dõi là chương {whole}.</value>
   </data>
   <data name="ReaderResumed" xml:space="preserve">
-    <value>Đọc tiếp từ trang {page}</value>
+    <value>Mở lại ở trang {page}</value>
   </data>
   <data name="ReaderResumedImage" xml:space="preserve">
-    <value>Đọc tiếp từ ảnh {image}</value>
+    <value>Mở lại ở ảnh {image}</value>
   </data>
   <data name="ReaderBackToPage" xml:space="preserve">
     <value>Quay lại trang {page}</value>
@@ -666,7 +666,7 @@
     <value>Chương mới của truyện bạn theo dõi</value>
   </data>
   <data name="ReadingSpotlightContinue" xml:space="preserve">
-    <value>Tiếp tục đọc</value>
+    <value>Đọc tiếp</value>
   </data>
   <data name="ReadingSpotlightUpNext" xml:space="preserve">
     <value>Tiếp theo cho bạn</value>
@@ -1281,7 +1281,7 @@
     <value>Không kết nối được tới máy chủ.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</value>
+    <value>Kaeri không host bất kỳ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Đã lưu {label}.</value>
@@ -5760,22 +5760,22 @@
     <value>Đọc chương {n}</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>Tiếp tục chương {n} · trang {page}</value>
+    <value>Đọc tiếp chương {n} · trang {page}</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>Tiếp tục phần {n} · {percent}%</value>
+    <value>Đọc tiếp phần {n} · {percent}%</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>Tiếp tục phần {n}</value>
+    <value>Đọc tiếp phần {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Đọc phần {n}</value>
   </data>
   <data name="ActionContinueNamed" xml:space="preserve">
-    <value>Tiếp tục {label} · {percent}%</value>
+    <value>Đọc tiếp {label} · {percent}%</value>
   </data>
   <data name="ActionContinueNamedPlain" xml:space="preserve">
-    <value>Tiếp tục {label}</value>
+    <value>Đọc tiếp {label}</value>
   </data>
   <data name="ActionReadNamed" xml:space="preserve">
     <value>Đọc {label}</value>
@@ -6543,7 +6543,7 @@
     <value>Khi bạn đánh dấu</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>Xem tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn</value>
+    <value>Đọc tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Cài đặt bộ truyện đi theo bạn</value>
@@ -10377,7 +10377,7 @@
     <value>Lấy danh sách của bạn và điền những tựa đang xem vào mục Xem tiếp.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang đọc.</value>
+    <value>Đưa các danh sách của bạn vào và điền vào Đọc tiếp những gì bạn đang đọc.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang xem và đọc.</value>

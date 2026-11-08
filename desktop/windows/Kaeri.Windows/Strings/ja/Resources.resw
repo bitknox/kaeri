@@ -666,7 +666,7 @@
     <value>フォロー中の作品に新しい話があります</value>
   </data>
   <data name="ReadingSpotlightContinue" xml:space="preserve">
-    <value>続きから読む</value>
+    <value>続きを読む</value>
   </data>
   <data name="ReadingSpotlightUpNext" xml:space="preserve">
     <value>次に読む作品</value>
@@ -5760,22 +5760,22 @@
     <value>第{n}話を読む</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>続きを見る 第{n}話 · {page}ページ</value>
+    <value>続きを読む 第{n}話 · {page}ページ</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>続きを見る パート{n} · {percent}%</value>
+    <value>続きを読む パート{n} · {percent}%</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>続きを見る パート{n}</value>
+    <value>続きを読む パート{n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>パート{n}を読む</value>
   </data>
   <data name="ActionContinueNamed" xml:space="preserve">
-    <value>続きを見る {label} · {percent}%</value>
+    <value>続きを読む {label} · {percent}%</value>
   </data>
   <data name="ActionContinueNamedPlain" xml:space="preserve">
-    <value>続きを見る {label}</value>
+    <value>続きを読む {label}</value>
   </data>
   <data name="ActionReadNamed" xml:space="preserve">
     <value>{label}を読む</value>
@@ -6543,7 +6543,7 @@
     <value>自分で付けたとき</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>続きを見ると連携サービスは、あなたが付けた記録に従います</value>
+    <value>続きを読むと連携サービスは、あなたが付けた記録に従います</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>引き継がれる作品設定</value>
@@ -10377,7 +10377,7 @@
     <value>リストを読み込み、続きを見るに視聴中の作品を表示します。</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>リストを取り込み、読んでいる作品を続きを見るに表示します。</value>
+    <value>リストを取り込み、読んでいる作品を続きを読むに表示します。</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>リストを取り込み、視聴中と読書中の作品を続きを見るに表示します。</value>

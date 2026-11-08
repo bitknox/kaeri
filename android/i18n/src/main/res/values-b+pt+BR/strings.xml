@@ -256,7 +256,7 @@
     </plurals>
     <string name="reading_on_planning">Na sua lista Planejando</string>
     <string name="reading_spotlight_new_chapter">Capítulo novo em uma série que você segue</string>
-    <string name="reading_spotlight_continue">Retomar a leitura</string>
+    <string name="reading_spotlight_continue">Continuar lendo</string>
     <string name="reading_spotlight_up_next">Próxima leitura para você</string>
     <string name="reading_spotlight_popular">Popular, em lançamento agora</string>
     <string name="reading_out_today">O capítulo %1$s saiu hoje</string>
@@ -652,7 +652,7 @@
     <string name="eink_on_device">neste dispositivo</string>
     <string name="eink_continue_to">Ir ao capítulo %1$s</string>
     <string name="eink_back_to_series">Voltar à série</string>
-    <string name="eink_turn_to_continue">Vire a página para seguir</string>
+    <string name="eink_turn_to_continue">Vire a página para continuar lendo</string>
     <string name="eink_next_missing">O capítulo %1$s ainda não está nas suas fontes</string>
     <string name="eink_next_not_out">O capítulo seguinte ainda não saiu</string>
     <string name="eink_caught_up">Você está em dia</string>
@@ -687,7 +687,7 @@
     <string name="reader_minutes_left">%1$d min</string>
     <string name="reader_zone_next">Próxima página</string>
     <string name="reader_grid_title">Páginas</string>
-    <string name="reader_end_continue">Seguir lendo</string>
+    <string name="reader_end_continue">Continuar lendo</string>
     <string name="reader_end_series">Voltar à série</string>
     <string name="reader_end_again">Reler desde o início</string>
     <string name="reader_opening_chapter">Abrindo o capítulo %1$s</string>
@@ -2588,12 +2588,12 @@
     <string name="chapter_updates_open_chapter_hint">Abre o capítulo</string>
     <string name="chapter_updates_open_series_menu">Abrir série</string>
     <string name="action_read_chapter">Ler o capítulo %1$s</string>
-    <string name="action_continue_chapter">Retomar o capítulo %1$s · página %2$d</string>
-    <string name="action_continue_part">Retomar a parte %1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">Retomar a parte %1$s</string>
+    <string name="action_continue_chapter">Continuar lendo o capítulo %1$s · página %2$d</string>
+    <string name="action_continue_part">Continuar lendo a parte %1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">Continuar lendo a parte %1$s</string>
     <string name="action_read_part">Ler a parte %1$s</string>
-    <string name="action_continue_named">Retomar %1$s · %2$d%%</string>
-    <string name="action_continue_named_plain">Retomar %1$s</string>
+    <string name="action_continue_named">Continuar lendo %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">Continuar lendo %1$s</string>
     <string name="action_read_named">Ler %1$s</string>
     <string name="action_read_again">Ler de novo</string>
     <string name="series_reading_from">Lendo de</string>
@@ -2913,7 +2913,7 @@
     <string name="settings_counts_read_moving_on">Ao seguir adiante</string>
     <string name="settings_counts_read_moving_on_note">Virar além da última página ou abrir o capítulo seguinte</string>
     <string name="settings_counts_read_marked">Quando você marca</string>
-    <string name="settings_counts_read_marked_note">Continuar assistindo e seus serviços de acompanhamento seguem as suas marcas</string>
+    <string name="settings_counts_read_marked_note">Continuar lendo e seus serviços de acompanhamento seguem as suas marcas</string>
     <string name="settings_follow_group">Ajustes de série que seguem você</string>
     <string name="settings_follow_mode">Modo, direção e cor</string>
     <string name="settings_follow_mode_note">Uma série que você muda é lida igual nos seus outros dispositivos</string>
@@ -4360,7 +4360,7 @@
     <string name="accounts_other_trackers_note">Outros serviços de acompanhamento ficam em Contas.</string>
     <string name="accounts_welcome_detail">Entre em %1$s para sincronizar sua lista e o ponto em que você parou.</string>
     <string name="accounts_brings_lists">Traz suas listas e preenche Continuar assistindo com o que você está assistindo.</string>
-    <string name="accounts_brings_lists_read">Traz suas listas e preenche Continuar assistindo com o que você está lendo.</string>
+    <string name="accounts_brings_lists_read">Traz suas listas e preenche Continuar lendo com o que você está lendo.</string>
     <string name="accounts_brings_lists_both">Traz suas listas e preenche Continuar assistindo com o que você está assistindo e lendo.</string>
     <string name="accounts_tracker_lists">Listas e progresso</string>
     <string name="accounts_tracker_reading_lists">Listas de leitura e progresso</string>

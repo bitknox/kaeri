@@ -234,7 +234,7 @@
     </plurals>
     <string name="reading_on_planning">「予定」リストに入っています</string>
     <string name="reading_spotlight_new_chapter">フォロー中の作品に新しい話があります</string>
-    <string name="reading_spotlight_continue">続きから読む</string>
+    <string name="reading_spotlight_continue">続きを読む</string>
     <string name="reading_spotlight_up_next">次に読む作品</string>
     <string name="reading_spotlight_popular">人気の連載中作品</string>
     <string name="reading_out_today">第%1$s話が今日公開</string>
@@ -2406,12 +2406,12 @@
     <string name="chapter_updates_open_chapter_hint">この章を開きます</string>
     <string name="chapter_updates_open_series_menu">作品を開く</string>
     <string name="action_read_chapter">第%1$s話を読む</string>
-    <string name="action_continue_chapter">続きを見る 第%1$s話 · %2$dページ</string>
-    <string name="action_continue_part">続きを見る パート%1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">続きを見る パート%1$s</string>
+    <string name="action_continue_chapter">続きを読む 第%1$s話 · %2$dページ</string>
+    <string name="action_continue_part">続きを読む パート%1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">続きを読む パート%1$s</string>
     <string name="action_read_part">パート%1$sを読む</string>
-    <string name="action_continue_named">続きを見る %1$s · %2$d%%</string>
-    <string name="action_continue_named_plain">続きを見る %1$s</string>
+    <string name="action_continue_named">続きを読む %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">続きを読む %1$s</string>
     <string name="action_read_named">%1$sを読む</string>
     <string name="action_read_again">もう一度読む</string>
     <string name="series_reading_from">読み込み元</string>
@@ -2699,7 +2699,7 @@
     <string name="settings_counts_read_moving_on">先へ進んだとき</string>
     <string name="settings_counts_read_moving_on_note">最後のページをめくったとき、または次の章を開いたとき</string>
     <string name="settings_counts_read_marked">自分で付けたとき</string>
-    <string name="settings_counts_read_marked_note">続きを見ると連携サービスは、あなたが付けた記録に従います</string>
+    <string name="settings_counts_read_marked_note">続きを読むと連携サービスは、あなたが付けた記録に従います</string>
     <string name="settings_follow_group">引き継がれる作品設定</string>
     <string name="settings_follow_mode">表示モード、読む向き、色</string>
     <string name="settings_follow_mode_note">変更した作品は、ほかのデバイスでも同じ読み方になります</string>
@@ -4062,7 +4062,7 @@
     <string name="accounts_other_trackers_note">その他の連携サービスはアカウントにあります。</string>
     <string name="accounts_welcome_detail">%1$sにサインインすると、リストと再生位置を同期できます。</string>
     <string name="accounts_brings_lists">リストを読み込み、続きを見るに視聴中の作品を表示します。</string>
-    <string name="accounts_brings_lists_read">リストを取り込み、読んでいる作品を続きを見るに表示します。</string>
+    <string name="accounts_brings_lists_read">リストを取り込み、読んでいる作品を続きを読むに表示します。</string>
     <string name="accounts_brings_lists_both">リストを取り込み、視聴中と読書中の作品を続きを見るに表示します。</string>
     <string name="accounts_tracker_lists">リストと進捗</string>
     <string name="accounts_tracker_reading_lists">読書リストと進捗</string>
