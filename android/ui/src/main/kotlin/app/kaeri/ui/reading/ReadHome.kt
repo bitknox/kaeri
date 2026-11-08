@@ -270,6 +270,7 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
     // While the demo is the only thing to read, its own spotlight and end, as the demo's board draws them.
     val demo by store.demo.collectAsStateWithLifecycle()
     val viewAll = rememberViewAll()
+    val eink = LocalEinkLayout.current
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = top, bottom = 24.dp)) {
         // The spotlight changes in place, a crossfade when its series or case moves.
         item(key = "spotlight", contentType = "spotlight") {
@@ -317,7 +318,6 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
         }
         // Discovery: the engine's rows in its order, each landing in place over its placeholders.
         // While only the demo is on they show too, as the first run's catalogue to browse.
-        val eink = LocalEinkLayout.current
         val rows = home.rows.filter { it.tiles.isNotEmpty() || it.pending }
         if (eink != null && rows.isNotEmpty()) {
             // E-ink keeps Home short: one Browse row opens the list of rows, or the list itself

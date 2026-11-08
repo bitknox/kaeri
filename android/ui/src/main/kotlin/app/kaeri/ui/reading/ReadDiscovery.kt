@@ -262,7 +262,7 @@ internal fun TileStrip(tiles: List<WorkTile>, from: String, rowKey: String, plan
         horizontalArrangement = Arrangement.spacedBy(cardGap()),
     ) {
         items(tiles, key = { "$rowKey-${it.work}" }, contentType = { "cover" }) { tile ->
-            ReadTile(tile, posterWidth(), from = from, lines = 2, reserveLine = true, planning = planning)
+            ReadTile(tile, posterWidth(), from = from, lines = 1, reserveLine = true, planning = planning)
         }
     }
 }

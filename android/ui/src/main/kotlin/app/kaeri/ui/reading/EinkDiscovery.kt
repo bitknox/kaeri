@@ -182,7 +182,8 @@ private fun BrowseLink(title: String, line: String, colourHome: Boolean, onClick
 /** A page on paper: "‹ Back to", the title with an optional link at its end, then [content]. */
 @Composable
 private fun PaperPage(
-    back: String,
+    /** The back line's words; null on a tab's own page, which has none. */
+    back: String?,
     title: String,
     link: String? = null,
     onLink: () -> Unit = {},
@@ -198,12 +199,14 @@ private fun PaperPage(
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .padding(horizontal = Side),
         ) {
-            Text(
-                "‹ $back", // i18n-skip
-                style = EinkType.Label,
-                modifier = Modifier.heightIn(min = 48.dp).einkClick { navigator.back() }.padding(top = 14.dp),
-            )
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (back != null) {
+                Text(
+                    "‹ $back", // i18n-skip
+                    style = EinkType.Label,
+                    modifier = Modifier.heightIn(min = 48.dp).einkClick { navigator.back() }.padding(top = 14.dp),
+                )
+            }
+            Row(Modifier.fillMaxWidth().padding(top = if (back != null) 8.dp else 22.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(title, style = EinkType.PageTitle, modifier = Modifier.weight(1f).semantics { heading() })
                 if (link != null) EinkTextButton(link, onLink, underline = true, modifier = Modifier.padding(start = 8.dp))
             }
@@ -271,6 +274,8 @@ internal fun EinkBrowsePage() {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     val home by store.reading.home.collectAsStateWithLifecycle()
+    // Opened with Home not held, as after the process was let go: ask for it.
+    LaunchedEffect(Unit) { if (store.reading.home.value == null) store.reading.loadHome() }
     var page by rememberSaveable { mutableIntStateOf(0) }
     val view = home
     val rows = view?.rows.orEmpty().filter { it.tiles.isNotEmpty() }
@@ -304,6 +309,7 @@ internal fun EinkRowPage(id: String) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     val home by store.reading.home.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { if (store.reading.home.value == null) store.reading.loadHome() }
     var page by rememberSaveable(id) { mutableIntStateOf(0) }
     val row = home?.rows?.firstOrNull { it.id == id } ?: return
     val query = row.viewAll
@@ -371,6 +377,26 @@ private sealed interface Found {
     data class Note(val text: String, val ruled: Boolean = false) : Found
     data class AnilistFailed(val query: ReadSearchQuery) : Found
     data object More : Found
+    /** Headings with the line under them, so a page never ends on a heading. */
+    data class Together(val lines: List<Found>) : Found
+}
+
+/** Each run of headings joined to the line after it, as one item to page. */
+private fun keepHeadingsWithNext(lines: List<Found>): List<Found> {
+    val out = mutableListOf<Found>()
+    val heads = mutableListOf<Found>()
+    for (line in lines) {
+        if (line is Found.Heading || line is Found.Source) {
+            heads += line
+        } else if (heads.isNotEmpty()) {
+            out += Found.Together(heads + line)
+            heads.clear()
+        } else {
+            out += line
+        }
+    }
+    out += heads
+    return out
 }
 
 /** The search as lines, in the colour apps' order and states. */
@@ -410,7 +436,7 @@ private fun foundLines(context: android.content.Context, search: ReadSearchState
     val nothing = groups.filter { it.state is ReadSourceState.Nothing }
     if (nothing.isNotEmpty()) add(Found.Note(Strings.readSearchSourceNothing(context, joinedNames(context, nothing.map { it.sourceName })), ruled = true))
     if (!query.sourcesOnly && search.hasMore) add(Found.More)
-}
+}.let(::keepHeadingsWithNext)
 
 /**
  * E-ink Search: the field, Your sources only as a check box beside Filters, and a paged list:
@@ -419,7 +445,10 @@ private fun foundLines(context: android.content.Context, search: ReadSearchState
  */
 @OptIn(FlowPreview::class)
 @Composable
-internal fun EinkSearchPage() {
+internal fun EinkSearchPage(
+    /** The Search tab itself on an e-ink panel, rather than a page pushed over Home. */
+    tab: Boolean = false,
+) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val search by store.reading.search.collectAsStateWithLifecycle()
@@ -437,7 +466,7 @@ internal fun EinkSearchPage() {
     }
     // A new search starts at its first page.
     LaunchedEffect(search.query) { page = 0 }
-    PaperPage(back = Strings.einkBack(context), title = Strings.navSearch(context)) {
+    PaperPage(back = if (tab) null else Strings.einkBack(context), title = Strings.navSearch(context)) {
         BasicTextField(
             state = text,
             textStyle = EinkType.Body,
@@ -505,6 +534,7 @@ private fun FoundLine(line: Found) {
             Text(line.text, style = EinkType.Secondary, modifier = Modifier.padding(vertical = 8.dp))
         }
         Found.More -> EinkTextButton(Strings.readSearchMoreAnilist(context), { store.reading.searchMore() }, underline = true)
+        is Found.Together -> Column { line.lines.forEach { FoundLine(it) } }
     }
 }
 

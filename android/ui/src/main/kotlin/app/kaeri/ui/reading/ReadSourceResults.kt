@@ -139,17 +139,20 @@ internal fun LazyGridScope.wordsResults(search: ReadSearchState, both: Boolean, 
     }
 
     if (shown.isNotEmpty()) {
-        item(span = { GridItemSpan(maxLineSpan) }, key = "from-sources", contentType = "heading") {
-            val context = LocalContext.current
-            Text(
-                Strings.readSearchFromSources(context),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                modifier = searchMotion().padding(top = if (sourcesOnly) 0.dp else 16.dp).semantics { heading() },
-            )
-        }
-        for (group in shown) {
+        // The heading rides with the first source's row, so the grid's gap does not stand between them.
+        shown.forEachIndexed { index, group ->
             item(span = { GridItemSpan(maxLineSpan) }, key = "src-${group.sourceId}", contentType = "source") {
-                Box(searchMotion()) { SourceGroupRow(group) }
+                Column(searchMotion()) {
+                    if (index == 0) {
+                        val context = LocalContext.current
+                        Text(
+                            Strings.readSearchFromSources(context),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            modifier = Modifier.padding(top = if (sourcesOnly) 0.dp else 16.dp, bottom = 4.dp).semantics { heading() },
+                        )
+                    }
+                    SourceGroupRow(group)
+                }
             }
         }
     }
@@ -220,7 +223,8 @@ private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?) {
             tile,
             maxWidth,
             from = "read-search",
-            lines = if (wideWindow()) 1 else 2,
+            // The board's two-line caption: the title, then one line.
+            lines = 1,
             reserveLine = true,
             onLongClick = { menu = true },
             extra = extra,
@@ -244,11 +248,11 @@ private fun SourceGroupRow(group: ReadSourceGroup) {
     val asking = group.state is ReadSourceState.Asking
     val reduced = rememberSystemReducedMotion()
     val label = if (asking) Strings.readSearchAsking(context, group.sourceName) else listOfNotNull(group.sourceName, kind).joinToString(", ") // i18n-skip
-    Column(Modifier.padding(top = 12.dp)) {
+    Column {
         Row(
             Modifier
                 .fillMaxWidth()
-                .heightIn(min = 40.dp)
+                .heightIn(min = 32.dp)
                 .semantics(mergeDescendants = true) {
                     heading()
                     contentDescription = label

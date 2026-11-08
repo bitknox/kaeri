@@ -308,6 +308,7 @@ fun AppRoot(
     val context = androidx.compose.ui.platform.LocalContext.current
     val snackbars = remember { Snackbars(SnackbarHostState(), scope, context) }
     val wide = wideWindow()
+    val eink = app.kaeri.ui.reading.LocalEinkLayout.current != null
     val mediumView by store.medium.view.collectAsStateWithLifecycle()
     val answer = mediumView?.answer ?: KaeriIsFor.WATCH
 
@@ -413,7 +414,10 @@ fun AppRoot(
                     if (!onPlayer) CastNowPlayingBar()
                     // Watch together's bar, above the navigation bar while a party is on.
                     if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
-                    if (!wide && !onPage && !onPlayer && !sheets.barHidden) PhoneBar(current ?: start, answer, navigator::go)
+                    if (!wide && !onPage && !onPlayer && !sheets.barHidden) {
+                        // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
+                        if (eink) EinkTabBar(current ?: start, answer, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
+                    }
                 }
             },
         ) { padding ->
@@ -522,7 +526,11 @@ private fun DestinationScreen(
         Destination.Calendar -> CalendarScreen()
         Destination.Seasonal -> SeasonalScreen()
         Destination.Library -> LibraryScreen(actions)
-        Destination.Search -> SearchScreen(startSearch, startFilters = startSheet == "filters", open = searchOpening, opened = searchOpened)
+        Destination.Search -> when {
+            // On an e-ink panel, reading's Search tab is the paper Search of the e-ink boards.
+            answer == KaeriIsFor.READ && app.kaeri.ui.reading.LocalEinkLayout.current != null -> app.kaeri.ui.reading.EinkSearchPage(tab = true)
+            else -> SearchScreen(startSearch, startFilters = startSheet == "filters", open = searchOpening, opened = searchOpened)
+        }
     }
 }
 

@@ -280,6 +280,10 @@ internal fun ReadFilterRow(
     fun chipWords(context: android.content.Context, name: String, value: String?): String =
         if (onlySet && value != null) value else app.kaeri.ui.reading.chipWords(context, name, value)
     val row = rememberLazyListState()
+    // Your sources only joins at the start once there are words: the row goes back to it rather
+    // than keeping Format first.
+    val sourcesChip = !browsing && !onlySet
+    androidx.compose.runtime.LaunchedEffect(sourcesChip) { if (sourcesChip) row.scrollToItem(0) }
     LazyRow(
         state = row,
         contentPadding = PaddingValues(horizontal = 16.dp),

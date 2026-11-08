@@ -17,7 +17,9 @@ import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.WorkTile
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 object ReadDiscoveryStage {
@@ -41,10 +43,8 @@ object ReadDiscoveryStage {
         val query = ReadingModel.EMPTY_QUERY.copy(text = WORDS, sourcesOnly = state == "rd-search-sources-only")
         store.reading.runSearch(query)
         // The engine's own answer first, so the staged one is the last word.
-        withTimeoutOrNull(10_000) {
-            while (store.reading.search.value.let { it.loading || (it.sources != null && !it.sources.done) }) delay(50)
-        }
-        delay(300)
+        waitFor { store.reading.search.value.let { !it.loading && (it.sources == null || it.sources.done) } }
+        withContext(Dispatchers.Default) { delay(300) }
         val art = art(store)
         if (art.isEmpty()) return false
         fun tile(i: Int, title: String) = art[i % art.size].copy(title = title, notInSources = false)
@@ -139,7 +139,7 @@ object ReadDiscoveryStage {
     /** Series the engine already has, for their covers: Home's rows and lists, else Search's. */
     private suspend fun art(store: AppStore): List<WorkTile> {
         if (store.reading.home.value == null) store.reading.loadHome()
-        withTimeoutOrNull(10_000) { while (store.reading.home.value == null) delay(50) }
+        waitFor { store.reading.home.value != null }
         val home = store.reading.home.value
         val tiles = buildList {
             home?.rows?.forEach { addAll(it.tiles) }
@@ -147,6 +147,14 @@ object ReadDiscoveryStage {
             home?.upNext?.let(::addAll)
         }.filter { it.cover != null }.distinctBy { it.work }
         return tiles.ifEmpty { store.reading.search.value.tiles }
+    }
+
+    /**
+     * Wait up to ten seconds for [done], on real time: under Robolectric the main looper's clock
+     * stands still, so a delay on the main dispatcher would never end.
+     */
+    private suspend fun waitFor(done: () -> Boolean) = withContext(Dispatchers.Default) {
+        withTimeoutOrNull(10_000) { while (!done()) delay(50) }
     }
 
     /** The query the states search, for tests that wait on it. */

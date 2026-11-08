@@ -61,6 +61,8 @@ import app.kaeri.ui.AppLink
 import app.kaeri.ui.AppRoot
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
+import app.kaeri.ui.reading.LocalEinkLayout
+import app.kaeri.eink.EinkLook
 import app.kaeri.reader.phone.ReaderLauncher
 import app.kaeri.reader.phone.ReaderRequest
 import app.kaeri.reader.phone.SettingsPane
@@ -246,8 +248,8 @@ class MainActivity : ComponentActivity() {
             KaeriTheme {
                 // On an e-ink panel, reading's discovery draws its paper pages and Home's Browse row.
                 val einkState by app.eink.state.collectAsState()
-                val einkLayout = if (einkState.eink) app.kaeri.eink.EinkLook(colour = einkState.amber) else null
-                CompositionLocalProvider(app.kaeri.ui.reading.LocalEinkLayout provides einkLayout) {
+                val einkLayout = if (einkState.eink) EinkLook(colour = einkState.amber) else null
+                CompositionLocalProvider(LocalEinkLayout provides einkLayout) {
                 ReaderHost(app.store, app.eink) { AppRoot(
                     app.store,
                     if (search != null) Destination.Search else start,
