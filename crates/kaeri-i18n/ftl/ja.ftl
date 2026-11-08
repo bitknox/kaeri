@@ -156,8 +156,62 @@ home-trending = いま話題
 # Heading over recommendations from one show the person finished and rated well. The title is that show.
 home-because = { $title }を観終えたあなたに
 
-# Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+# Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
 home-more-genre = もっと見る:{ $genre }
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-action = もっと見る:アクション
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-adventure = もっと見る:アドベンチャー
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-comedy = もっと見る:コメディ
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-drama = もっと見る:ドラマ
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-ecchi = もっと見る:お色気
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-fantasy = もっと見る:ファンタジー
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-horror = もっと見る:ホラー
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mahou-shoujo = もっと見る:魔法少女
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mecha = もっと見る:メカ
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-music = もっと見る:音楽
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mystery = もっと見る:ミステリー
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-psychological = もっと見る:心理
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-romance = もっと見る:恋愛
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sci-fi = もっと見る:SF
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-slice-of-life = もっと見る:日常
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sports = もっと見る:スポーツ
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-supernatural = もっと見る:超自然
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-thriller = もっと見る:スリラー
 
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = デモ版(自由に共有OK)
@@ -917,6 +971,45 @@ reading-downloads-done-parts =
 
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = { $count }作品の章をオフラインで読めます。
+
+# The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+read-source-folders = フォルダ
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+reading-since-january = 1月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+reading-since-february = 2月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+reading-since-march = 3月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+reading-since-april = 4月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+reading-since-may = 5月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+reading-since-june = 6月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+reading-since-july = 7月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+reading-since-august = 8月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+reading-since-september = 9月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+reading-since-october = 10月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+reading-since-november = 11月から
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+reading-since-december = 12月から
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = { $store }に{ $member }として参加しました。

@@ -28,28 +28,28 @@ home-spotlight-recommended = Recommended for you
 home-spotlight-popular = Popular this season
 
 # Line under the spotlight's title, and under a { -continue-cap } card, for an episode part way through: the episode and the minutes left in it.
-# @arg episode: int
+# @arg episode: plain
 # @arg minutes: int
 # @max 40
 home-time-left = Episode { $episode } · { $minutes } min left
 
 # Line under the spotlight's title, and under a { -continue-cap } card, for a show still airing whose next episode is its newest one out.
-# @arg episode: int
+# @arg episode: plain
 # @max 32
 home-episode-out = Episode { $episode } is out
 
 # Line under the spotlight's title, and under a { -continue-cap } card, for the next episode of a show part way through when it is not the newest one out, such as any episode of a show that finished airing.
-# @arg episode: int
+# @arg episode: plain
 # @max 32
 home-episode-next = Episode { $episode } next
 
 # Line under a { -continue-cap } card whose next episode came out today.
-# @arg episode: int
+# @arg episode: plain
 # @max 32
 home-episode-out-today = Episode { $episode } · out today
 
 # Line under a poster on This season: the newest episode out.
-# @arg episode: int
+# @arg episode: plain
 # @max 28
 home-episode-out-short = Episode { $episode } out
 
@@ -115,10 +115,101 @@ home-trending = Trending now
 # @max 60
 home-because = Because you finished { $title }
 
-# Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+# Heading over popular titles of the genre the person finished most of, for a genre that has no
+# heading of its own below. The genre is AniList's name as it writes it.
 # @arg genre: text
 # @max 40
 home-more-genre = More { $genre }
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-action = More action
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-adventure = More adventure
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-comedy = More comedy
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-drama = More drama
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-ecchi = More ecchi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-fantasy = More fantasy
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-horror = More horror
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-mahou-shoujo = More mahou shoujo
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-mecha = More mecha
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-music = More music
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-mystery = More mystery
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-psychological = More psychological
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-romance = More romance
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-sci-fi = More sci-fi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-slice-of-life = More slice of life
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-sports = More sports
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-supernatural = More supernatural
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads
+# inside a sentence in this language.
+# @max 40
+home-more-genre-thriller = More thriller
 
 # Line over the spotlight's title when it is the built-in demo.
 # @max 32

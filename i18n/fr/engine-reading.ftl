@@ -181,3 +181,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } parties de { $title } sont prêtes à lire hors ligne.
  }
 reading-downloads-done-series = Des chapitres de { $count } séries sont prêts à lire hors ligne.
+read-source-folders = Dossiers
+reading-since-january = depuis janvier
+reading-since-february = depuis février
+reading-since-march = depuis mars
+reading-since-april = depuis avril
+reading-since-may = depuis mai
+reading-since-june = depuis juin
+reading-since-july = depuis juillet
+reading-since-august = depuis août
+reading-since-september = depuis septembre
+reading-since-october = depuis octobre
+reading-since-november = depuis novembre
+reading-since-december = depuis décembre

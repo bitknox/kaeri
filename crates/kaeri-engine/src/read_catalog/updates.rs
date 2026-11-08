@@ -159,6 +159,7 @@ fn tile_of(kit: &Kit, work: &str) -> Option<WorkTile> {
         not_in_sources: false,
         origin: None,
         amount: None,
+        started: None,
     };
     tiles::mark(&mut tile, &kit.store, &kit.sources);
     Some(tile)

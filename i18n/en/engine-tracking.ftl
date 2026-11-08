@@ -162,7 +162,7 @@ notice-mapping-data-failed = Couldn't refresh the mapping data ({ $datasets }). 
 
 # Toast, and desktop notification, for one episode that aired while the app was closed.
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 notice-episode-aired = { $title }, episode { $episode }, aired while you were away.
 
 # Toast, and desktop notification, for several episodes that aired while the app was closed.

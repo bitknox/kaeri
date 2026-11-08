@@ -156,8 +156,62 @@ home-trending = Сейчас в тренде
 # Heading over recommendations from one show the person finished and rated well. The title is that show.
 home-because = Потому что вы досмотрели { $title }
 
-# Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+# Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
 home-more-genre = Ещё: { $genre }
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-action = Ещё: экшен
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-adventure = Ещё: приключения
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-comedy = Ещё: комедия
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-drama = Ещё: драма
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-ecchi = Ещё: этти
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-fantasy = Ещё: фэнтези
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-horror = Ещё: ужасы
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mahou-shoujo = Ещё: махо-сёдзё
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mecha = Ещё: меха
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-music = Ещё: музыка
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mystery = Ещё: детектив
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-psychological = Ещё: психологическое
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-romance = Ещё: романтика
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sci-fi = Ещё: фантастика
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-slice-of-life = Ещё: повседневность
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sports = Ещё: спорт
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-supernatural = Ещё: сверхъестественное
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-thriller = Ещё: триллер
 
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Демо, можно делиться
@@ -980,6 +1034,45 @@ reading-downloads-done-parts =
 
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = Главы { $count } серий готовы для чтения офлайн.
+
+# The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+read-source-folders = Папки
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+reading-since-january = с января
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+reading-since-february = с февраля
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+reading-since-march = с марта
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+reading-since-april = с апреля
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+reading-since-may = с мая
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+reading-since-june = с июня
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+reading-since-july = с июля
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+reading-since-august = с августа
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+reading-since-september = с сентября
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+reading-since-october = с октября
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+reading-since-november = с ноября
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+reading-since-december = с декабря
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Подключено к { $store } как { $member }.

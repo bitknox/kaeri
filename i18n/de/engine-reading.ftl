@@ -168,3 +168,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } Teile von { $title } sind offline lesbar.
  }
 reading-downloads-done-series = Kapitel von { $count } Serien sind offline lesbar.
+read-source-folders = Ordner
+reading-since-january = seit Januar
+reading-since-february = seit Februar
+reading-since-march = seit März
+reading-since-april = seit April
+reading-since-may = seit Mai
+reading-since-june = seit Juni
+reading-since-july = seit Juli
+reading-since-august = seit August
+reading-since-september = seit September
+reading-since-october = seit Oktober
+reading-since-november = seit November
+reading-since-december = seit Dezember

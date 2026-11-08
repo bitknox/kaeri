@@ -16,15 +16,15 @@
     <string name="notice_cast_no_device">Ese televisor ya no está en la red.</string>
     <string name="notice_cast_unavailable">Esta versión de Kaeri no puede transmitir a televisores.</string>
     <string name="cast_phase_starting">Iniciando en %1$s</string>
-    <string name="cast_phase_starting_for">Iniciando en %1$s · %2$d s</string>
-    <string name="cast_phase_waiting">Esperando a %1$s · %2$d s</string>
-    <string name="cast_phase_preparing">Preparando la transmisión · %1$d s</string>
+    <string name="cast_phase_starting_for">Iniciando en %1$s · %2$,d s</string>
+    <string name="cast_phase_waiting">Esperando a %1$s · %2$,d s</string>
+    <string name="cast_phase_preparing">Preparando la transmisión · %1$,d s</string>
     <string name="discussion_age_now">ahora</string>
-    <string name="discussion_age_minutes">%1$d min</string>
-    <string name="discussion_age_hours">%1$d h</string>
-    <string name="discussion_age_days">%1$d d</string>
-    <string name="discussion_age_weeks">%1$d sem</string>
-    <string name="discussion_age_years">%1$d a</string>
+    <string name="discussion_age_minutes">%1$,d min</string>
+    <string name="discussion_age_hours">%1$,d h</string>
+    <string name="discussion_age_days">%1$,d d</string>
+    <string name="discussion_age_weeks">%1$,d sem</string>
+    <string name="discussion_age_years">%1$,d a</string>
     <string name="notice_comment_like_failed">No se pudo dar me gusta al comentario. Inténtalo de nuevo.</string>
     <string name="notice_comment_delete_failed">No se pudo borrar el comentario. Inténtalo de nuevo.</string>
     <string name="notice_discussion_sign_in">Inicia sesión con AniList para dar me gusta y responder.</string>
@@ -34,7 +34,7 @@
     <string name="home_spotlight_because">Porque terminaste %1$s</string>
     <string name="home_spotlight_recommended">Recomendado para ti</string>
     <string name="home_spotlight_popular">Popular esta temporada</string>
-    <string name="home_time_left">Episodio %1$d · quedan %2$d min</string>
+    <string name="home_time_left">Episodio %1$d · quedan %2$,d min</string>
     <string name="home_episode_out">Ya salió el episodio %1$d</string>
     <string name="home_episode_next">Sigue el episodio %1$d</string>
     <string name="home_episode_out_today">Episodio %1$d · sale hoy</string>
@@ -55,6 +55,24 @@
     <string name="home_trending">Tendencias ahora</string>
     <string name="home_because">Porque terminaste %1$s</string>
     <string name="home_more_genre">Más de %1$s</string>
+    <string name="home_more_genre_action">Más de acción</string>
+    <string name="home_more_genre_adventure">Más de aventura</string>
+    <string name="home_more_genre_comedy">Más de comedia</string>
+    <string name="home_more_genre_drama">Más de drama</string>
+    <string name="home_more_genre_ecchi">Más de ecchi</string>
+    <string name="home_more_genre_fantasy">Más de fantasía</string>
+    <string name="home_more_genre_horror">Más de terror</string>
+    <string name="home_more_genre_mahou_shoujo">Más de mahou shoujo</string>
+    <string name="home_more_genre_mecha">Más de mecha</string>
+    <string name="home_more_genre_music">Más de música</string>
+    <string name="home_more_genre_mystery">Más de misterio</string>
+    <string name="home_more_genre_psychological">Más de psicológico</string>
+    <string name="home_more_genre_romance">Más de romance</string>
+    <string name="home_more_genre_sci_fi">Más de ciencia ficción</string>
+    <string name="home_more_genre_slice_of_life">Más de vida cotidiana</string>
+    <string name="home_more_genre_sports">Más de deportes</string>
+    <string name="home_more_genre_supernatural">Más de sobrenatural</string>
+    <string name="home_more_genre_thriller">Más de suspenso</string>
     <string name="home_spotlight_demo">Demo, libre de compartir</string>
     <string name="licensed_return">¿Viste el episodio %1$d en %2$s?</string>
     <string name="licensed_marked">Episodio %1$d marcado como visto.</string>
@@ -67,8 +85,8 @@
     <string name="cause_airs_tomorrow">mañana a las %1$s</string>
     <plurals name="cause_airs_in_days">
         <item quantity="one">dentro de un día a las %2$s</item>
-        <item quantity="many">dentro de %1$d días a las %2$s</item>
-        <item quantity="other">dentro de %1$d días a las %2$s</item>
+        <item quantity="many">dentro de %1$,d días a las %2$s</item>
+        <item quantity="other">dentro de %1$,d días a las %2$s</item>
     </plurals>
     <string name="cause_airs_on_date">el %1$s a las %2$s</string>
     <string name="cause_no_playable_stream">La fuente respondió, pero no tiene nada que reproducir. Prueba con otra.</string>
@@ -81,14 +99,14 @@
     <string name="cause_no_source_could_list_show">Ninguna fuente pudo listar esta serie, así que no se puede descargar.</string>
     <plurals name="cause_subtitles_merged">
         <item quantity="one">Se añadió una pista de subtítulos al video.</item>
-        <item quantity="many">Se añadieron %1$d pistas de subtítulos al video.</item>
-        <item quantity="other">Se añadieron %1$d pistas de subtítulos al video.</item>
+        <item quantity="many">Se añadieron %1$,d pistas de subtítulos al video.</item>
+        <item quantity="other">Se añadieron %1$,d pistas de subtítulos al video.</item>
     </plurals>
     <string name="cause_subtitles_left_apart">Los subtítulos quedan como archivos separados. %1$s</string>
     <plurals name="cause_already_in_downloads">
         <item quantity="one">Un episodio ya está en descargas.</item>
-        <item quantity="many">%1$d episodios ya están en descargas.</item>
-        <item quantity="other">%1$d episodios ya están en descargas.</item>
+        <item quantity="many">%1$,d episodios ya están en descargas.</item>
+        <item quantity="other">%1$,d episodios ya están en descargas.</item>
     </plurals>
     <string name="status_looking_up_title">Buscando el título…</string>
     <string name="status_loading_sources">Cargando fuentes…</string>
@@ -101,10 +119,10 @@
     <string name="start_buffering">Almacenando en búfer</string>
     <string name="status_searching_sources">Buscando fuentes del episodio %1$s…</string>
     <string name="notice_player_failed_to_start">No se pudo iniciar mpv. Comprueba que mpv se abra por sí solo. (%1$s)</string>
-    <string name="notice_stream_no_video">Esa transmisión no muestra video. Probando la transmisión %1$d de %2$d.</string>
+    <string name="notice_stream_no_video">Esa transmisión no muestra video. Probando la transmisión %1$,d de %2$,d.</string>
     <string name="notice_player_could_not_play">mpv no pudo reproducir esto. %1$s</string>
     <string name="notice_player_exited_silently">mpv se cerró sin reproducir nada ni dar un motivo. Prueba con otra fuente.</string>
-    <string name="notice_player_not_playing">mpv no empezó a reproducir después de %1$d s. La fuente puede no tener datos. Comprueba que mpv reproduzca un archivo por sí solo.</string>
+    <string name="notice_player_not_playing">mpv no empezó a reproducir después de %1$,d s. La fuente puede no tener datos. Comprueba que mpv reproduzca un archivo por sí solo.</string>
     <string name="notice_no_player">Esta versión de Kaeri no puede reproducir video.</string>
     <string name="notice_mpv_missing">No se encontró %1$s. Instala mpv para reproducir episodios.</string>
     <string name="notice_mpv_old">mpv %1$s puede reproducir, pero el reproductor de Kaeri necesita mpv 0.36 o más reciente para su botón de saltar, la tarjeta Siguiente, los menús y las miniaturas.</string>
@@ -147,13 +165,13 @@
     <string name="notice_download_removed">Descarga quitada.</string>
     <plurals name="notice_downloads_cleared">
         <item quantity="one">Se quitó una descarga terminada.</item>
-        <item quantity="many">Se quitaron %1$d descargas terminadas.</item>
-        <item quantity="other">Se quitaron %1$d descargas terminadas.</item>
+        <item quantity="many">Se quitaron %1$,d descargas terminadas.</item>
+        <item quantity="other">Se quitaron %1$,d descargas terminadas.</item>
     </plurals>
     <plurals name="notice_skip_marks_cleared">
         <item quantity="one">Se borró el tiempo de salto que marcaste.</item>
-        <item quantity="many">Se borraron %1$d tiempos de salto que marcaste.</item>
-        <item quantity="other">Se borraron %1$d tiempos de salto que marcaste.</item>
+        <item quantity="many">Se borraron %1$,d tiempos de salto que marcaste.</item>
+        <item quantity="other">Se borraron %1$,d tiempos de salto que marcaste.</item>
     </plurals>
     <string name="notice_skip_marks_none">No has marcado ningún tiempo de salto.</string>
     <string name="notice_skip_marks_not_cleared">No se pudieron borrar tus tiempos de salto. %1$s</string>
@@ -166,18 +184,18 @@
     <string name="notice_downloads_none_new_stopped">No se añadió nada nuevo a la cola. %1$s %2$s</string>
     <plurals name="notice_episodes_queued_existing">
         <item quantity="one">Se añadió un episodio a la cola. %2$s</item>
-        <item quantity="many">Se añadieron %1$d episodios a la cola. %2$s</item>
-        <item quantity="other">Se añadieron %1$d episodios a la cola. %2$s</item>
+        <item quantity="many">Se añadieron %1$,d episodios a la cola. %2$s</item>
+        <item quantity="other">Se añadieron %1$,d episodios a la cola. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_stopped">
         <item quantity="one">Se añadió un episodio a la cola y luego se detuvo. %2$s</item>
-        <item quantity="many">Se añadieron %1$d episodios a la cola y luego se detuvo. %2$s</item>
-        <item quantity="other">Se añadieron %1$d episodios a la cola y luego se detuvo. %2$s</item>
+        <item quantity="many">Se añadieron %1$,d episodios a la cola y luego se detuvo. %2$s</item>
+        <item quantity="other">Se añadieron %1$,d episodios a la cola y luego se detuvo. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_existing_stopped">
         <item quantity="one">Se añadió un episodio a la cola y luego se detuvo. %2$s %3$s</item>
-        <item quantity="many">Se añadieron %1$d episodios a la cola y luego se detuvo. %2$s %3$s</item>
-        <item quantity="other">Se añadieron %1$d episodios a la cola y luego se detuvo. %2$s %3$s</item>
+        <item quantity="many">Se añadieron %1$,d episodios a la cola y luego se detuvo. %2$s %3$s</item>
+        <item quantity="other">Se añadieron %1$,d episodios a la cola y luego se detuvo. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">No hay suficiente espacio libre para mantener descargados los siguientes episodios. Libera espacio para descargar más.</string>
     <string name="party_needs_server">Primero elige un servidor para la watch party, en el ajuste syncplay.server. %1$s es operado por %2$s.</string>
@@ -198,8 +216,8 @@
     <string name="reading_usually_sundays">Normalmente los domingos</string>
     <plurals name="reading_about_every_weeks">
         <item quantity="one">Cada semana, aprox.</item>
-        <item quantity="many">Cada %1$d semanas, aprox.</item>
-        <item quantity="other">Cada %1$d semanas, aprox.</item>
+        <item quantity="many">Cada %1$,d semanas, aprox.</item>
+        <item quantity="other">Cada %1$,d semanas, aprox.</item>
     </plurals>
     <string name="reading_also_a_show">También es una serie</string>
     <string name="reading_also_a_book">También es un libro</string>
@@ -245,13 +263,13 @@
     <string name="reading_status_not_yet">Aún no sale</string>
     <plurals name="reading_chapters">
         <item quantity="one">1 capítulo</item>
-        <item quantity="many">%1$d capítulos</item>
-        <item quantity="other">%1$d capítulos</item>
+        <item quantity="many">%1$,d capítulos</item>
+        <item quantity="other">%1$,d capítulos</item>
     </plurals>
     <plurals name="reading_volumes">
         <item quantity="one">1 volumen</item>
-        <item quantity="many">%1$d volúmenes</item>
-        <item quantity="other">%1$d volúmenes</item>
+        <item quantity="many">%1$,d volúmenes</item>
+        <item quantity="other">%1$,d volúmenes</item>
     </plurals>
     <string name="reading_on_planning">En tu lista Pendiente</string>
     <string name="reading_spotlight_new_chapter">Capítulo nuevo de una serie que sigues</string>
@@ -261,10 +279,10 @@
     <string name="reading_out_today">El capítulo %1$s sale hoy</string>
     <string name="reading_out_today_titled">Capítulo %1$s, %2$s, sale hoy</string>
     <string name="reading_chapter_page">Capítulo %1$s · pág. %2$d</string>
-    <string name="reading_chapter_percent">Capítulo %1$s · %2$d%%</string>
+    <string name="reading_chapter_percent">Capítulo %1$s · %2$,d%%</string>
     <string name="reading_chapter_new">El capítulo %1$s es nuevo</string>
     <string name="reading_next_part">Parte %1$s</string>
-    <string name="reading_part_percent">Parte %1$s · %2$d%%</string>
+    <string name="reading_part_percent">Parte %1$s · %2$,d%%</string>
     <string name="reading_part_new">La parte %1$s es nueva</string>
     <string name="reading_part_titled">Parte %1$s · %2$s</string>
     <string name="reading_part_out_today">La parte %1$s sale hoy</string>
@@ -283,8 +301,8 @@
     <string name="export_chapter">Capítulo %1$s</string>
     <plurals name="export_waits_for_wifi">
         <item quantity="one">Un capítulo aún no está descargado, así que este envío espera al Wi-Fi y sigue por sí solo.</item>
-        <item quantity="many">%1$d capítulos aún no están descargados, así que este envío espera al Wi-Fi y sigue por sí solo.</item>
-        <item quantity="other">%1$d capítulos aún no están descargados, así que este envío espera al Wi-Fi y sigue por sí solo.</item>
+        <item quantity="many">%1$,d capítulos aún no están descargados, así que este envío espera al Wi-Fi y sigue por sí solo.</item>
+        <item quantity="other">%1$,d capítulos aún no están descargados, así que este envío espera al Wi-Fi y sigue por sí solo.</item>
     </plurals>
     <string name="reading_chapter_titled">Capítulo %1$s · %2$s</string>
     <string name="reading_row_read">Leído</string>
@@ -295,44 +313,44 @@
     <string name="reading_row_on_device">En este dispositivo</string>
     <string name="reading_row_queued">En cola</string>
     <string name="reading_row_waits_wifi">En cola · espera Wi-Fi</string>
-    <string name="reading_row_downloading">Descargando · %1$d de %2$d págs.</string>
+    <string name="reading_row_downloading">Descargando · %1$,d de %2$,d págs.</string>
     <string name="reading_row_failed">No se pudo descargar</string>
     <string name="reading_row_page_of">Página %1$d de %2$d</string>
     <string name="reading_row_page">Página %1$d</string>
-    <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_percent">%1$,d%%</string>
     <plurals name="reading_row_pages">
         <item quantity="one">1 página</item>
-        <item quantity="many">%1$d páginas</item>
-        <item quantity="other">%1$d páginas</item>
+        <item quantity="many">%1$,d páginas</item>
+        <item quantity="other">%1$,d páginas</item>
     </plurals>
     <plurals name="reading_row_versions">
         <item quantity="one">1 versión</item>
-        <item quantity="many">%1$d versiones</item>
-        <item quantity="other">%1$d versiones</item>
+        <item quantity="many">%1$,d versiones</item>
+        <item quantity="other">%1$,d versiones</item>
     </plurals>
     <string name="reading_ago_now">justo ahora</string>
-    <string name="reading_ago_minutes">hace %1$d min</string>
+    <string name="reading_ago_minutes">hace %1$,d min</string>
     <string name="reading_ago_today">hoy</string>
     <string name="reading_ago_yesterday">ayer</string>
     <plurals name="reading_ago_days">
         <item quantity="one">hace 1 día</item>
-        <item quantity="many">hace %1$d días</item>
-        <item quantity="other">hace %1$d días</item>
+        <item quantity="many">hace %1$,d días</item>
+        <item quantity="other">hace %1$,d días</item>
     </plurals>
     <plurals name="reading_ago_weeks">
         <item quantity="one">hace 1 semana</item>
-        <item quantity="many">hace %1$d semanas</item>
-        <item quantity="other">hace %1$d semanas</item>
+        <item quantity="many">hace %1$,d semanas</item>
+        <item quantity="other">hace %1$,d semanas</item>
     </plurals>
     <plurals name="reading_ago_months">
         <item quantity="one">hace 1 mes</item>
-        <item quantity="many">hace %1$d meses</item>
-        <item quantity="other">hace %1$d meses</item>
+        <item quantity="many">hace %1$,d meses</item>
+        <item quantity="other">hace %1$,d meses</item>
     </plurals>
     <plurals name="reading_ago_years">
         <item quantity="one">hace 1 año</item>
-        <item quantity="many">hace %1$d años</item>
-        <item quantity="other">hace %1$d años</item>
+        <item quantity="many">hace %1$,d años</item>
+        <item quantity="other">hace %1$,d años</item>
     </plurals>
     <string name="reading_removed_from">Quitado de %1$s</string>
     <string name="reading_removed_not_there">No estaba en tu lista de %1$s</string>
@@ -344,15 +362,15 @@
     <string name="reading_miss_down">No responde</string>
     <plurals name="reading_dl_parts">
         <item quantity="one">1 parte</item>
-        <item quantity="many">%1$d partes</item>
-        <item quantity="other">%1$d partes</item>
+        <item quantity="many">%1$,d partes</item>
+        <item quantity="other">%1$,d partes</item>
     </plurals>
     <string name="reading_dl_size">%1$s</string>
-    <string name="reading_dl_read">%1$d leídos</string>
+    <string name="reading_dl_read">%1$,d leídos</string>
     <string name="reading_dl_chapter">Capítulo %1$s</string>
-    <string name="reading_dl_pages">%1$d de %2$d páginas</string>
-    <string name="reading_dl_more_queued">%1$d más en cola</string>
-    <string name="reading_dl_queued">%1$d en cola</string>
+    <string name="reading_dl_pages">%1$,d de %2$,d páginas</string>
+    <string name="reading_dl_more_queued">%1$,d más en cola</string>
+    <string name="reading_dl_queued">%1$,d en cola</string>
     <string name="reading_dl_waits_wifi">espera Wi-Fi</string>
     <string name="reading_dl_failed">No se pudo descargar el capítulo %1$s</string>
     <string name="reading_estimate_size">Aprox. %1$s</string>
@@ -362,15 +380,28 @@
     <string name="reading_downloads_done_title">Descargas terminadas</string>
     <plurals name="reading_downloads_done_chapters">
         <item quantity="one">Un capítulo de %1$s está listo para leer sin conexión.</item>
-        <item quantity="many">%2$d capítulos de %1$s están listos para leer sin conexión.</item>
-        <item quantity="other">%2$d capítulos de %1$s están listos para leer sin conexión.</item>
+        <item quantity="many">%2$,d capítulos de %1$s están listos para leer sin conexión.</item>
+        <item quantity="other">%2$,d capítulos de %1$s están listos para leer sin conexión.</item>
     </plurals>
     <plurals name="reading_downloads_done_parts">
         <item quantity="one">Una parte de %1$s está lista para leer sin conexión.</item>
-        <item quantity="many">%2$d partes de %1$s están listas para leer sin conexión.</item>
-        <item quantity="other">%2$d partes de %1$s están listas para leer sin conexión.</item>
+        <item quantity="many">%2$,d partes de %1$s están listas para leer sin conexión.</item>
+        <item quantity="other">%2$,d partes de %1$s están listas para leer sin conexión.</item>
     </plurals>
-    <string name="reading_downloads_done_series">Hay capítulos de %1$d series listos para leer sin conexión.</string>
+    <string name="reading_downloads_done_series">Hay capítulos de %1$,d series listos para leer sin conexión.</string>
+    <string name="read_source_folders">Carpetas</string>
+    <string name="reading_since_january">desde enero</string>
+    <string name="reading_since_february">desde febrero</string>
+    <string name="reading_since_march">desde marzo</string>
+    <string name="reading_since_april">desde abril</string>
+    <string name="reading_since_may">desde mayo</string>
+    <string name="reading_since_june">desde junio</string>
+    <string name="reading_since_july">desde julio</string>
+    <string name="reading_since_august">desde agosto</string>
+    <string name="reading_since_september">desde septiembre</string>
+    <string name="reading_since_october">desde octubre</string>
+    <string name="reading_since_november">desde noviembre</string>
+    <string name="reading_since_december">desde diciembre</string>
     <string name="store_joined">Te uniste a %1$s como %2$s.</string>
     <string name="store_joined_unnamed">Te uniste a %1$s sin nombre.</string>
     <string name="store_left">Saliste de %1$s. Sus complementos siguen instalados.</string>
@@ -379,15 +410,15 @@
     <string name="store_invite_cancelled">Invitación cancelada. El enlace ya no funciona.</string>
     <plurals name="store_invite_cancelled_kept">
         <item quantity="one">Invitación cancelada. La persona que se unió sigue siendo miembro.</item>
-        <item quantity="many">Invitación cancelada. Las %1$d personas que se unieron siguen siendo miembros.</item>
-        <item quantity="other">Invitación cancelada. Las %1$d personas que se unieron siguen siendo miembros.</item>
+        <item quantity="many">Invitación cancelada. Las %1$,d personas que se unieron siguen siendo miembros.</item>
+        <item quantity="other">Invitación cancelada. Las %1$,d personas que se unieron siguen siendo miembros.</item>
     </plurals>
     <string name="store_open_join_on">Cualquiera con el enlace de la tienda de complementos puede unirse ahora. Cópialo desde la pantalla de miembros.</string>
     <string name="store_open_join_off">Ahora solo pueden unirse las personas a las que invitas.</string>
     <plurals name="store_open_join_off_devices">
         <item quantity="one">Ahora solo pueden unirse las personas a las que invitas. El dispositivo que se unió con el enlace sigue funcionando hasta que lo quites.</item>
-        <item quantity="many">Ahora solo pueden unirse las personas a las que invitas. Los %1$d dispositivos que se unieron con el enlace siguen funcionando hasta que los quites.</item>
-        <item quantity="other">Ahora solo pueden unirse las personas a las que invitas. Los %1$d dispositivos que se unieron con el enlace siguen funcionando hasta que los quites.</item>
+        <item quantity="many">Ahora solo pueden unirse las personas a las que invitas. Los %1$,d dispositivos que se unieron con el enlace siguen funcionando hasta que los quites.</item>
+        <item quantity="other">Ahora solo pueden unirse las personas a las que invitas. Los %1$,d dispositivos que se unieron con el enlace siguen funcionando hasta que los quites.</item>
     </plurals>
     <string name="store_device_removed">Ese dispositivo ya no funciona con esta tienda de complementos.</string>
     <string name="store_devices_removed">Se quitaron todos los dispositivos que se unieron con el enlace.</string>
@@ -402,8 +433,8 @@
     <string name="plugin_installed_outdated">Se instaló %1$s, pero se hizo para una versión anterior de Kaeri y hay que actualizarlo. Pide una versión nueva a su autor.</string>
     <plurals name="plugins_outdated">
         <item quantity="one">Un complemento se hizo para una versión anterior de Kaeri y hay que actualizarlo: %2$s.</item>
-        <item quantity="many">%1$d complementos se hicieron para una versión anterior de Kaeri y hay que actualizarlos: %2$s.</item>
-        <item quantity="other">%1$d complementos se hicieron para una versión anterior de Kaeri y hay que actualizarlos: %2$s.</item>
+        <item quantity="many">%1$,d complementos se hicieron para una versión anterior de Kaeri y hay que actualizarlos: %2$s.</item>
+        <item quantity="other">%1$,d complementos se hicieron para una versión anterior de Kaeri y hay que actualizarlos: %2$s.</item>
     </plurals>
     <plurals name="plugin_updates_ready">
         <item quantity="one">Actualización de Complemento lista: %2$s.</item>
@@ -491,8 +522,8 @@
     <string name="notice_signed_out">Sesión cerrada en %1$s.</string>
     <plurals name="notice_signed_out_queue">
         <item quantity="one">Sesión cerrada en %1$s. Un cambio en cola se conserva para el próximo inicio de sesión.</item>
-        <item quantity="many">Sesión cerrada en %1$s. %2$d cambios en cola se conservan para el próximo inicio de sesión.</item>
-        <item quantity="other">Sesión cerrada en %1$s. %2$d cambios en cola se conservan para el próximo inicio de sesión.</item>
+        <item quantity="many">Sesión cerrada en %1$s. %2$,d cambios en cola se conservan para el próximo inicio de sesión.</item>
+        <item quantity="other">Sesión cerrada en %1$s. %2$,d cambios en cola se conservan para el próximo inicio de sesión.</item>
     </plurals>
     <string name="notice_sign_out_failed">No se pudo cerrar la sesión en %1$s. Inténtalo de nuevo. %2$s</string>
     <string name="notice_not_saved_because">No se pudo guardar esa configuración. %1$s</string>
@@ -508,8 +539,8 @@
     <string name="notice_episode_aired">%1$s, episodio %2$d, salió al aire mientras no estabas.</string>
     <plurals name="notice_episodes_aired">
         <item quantity="one">Salió al aire un episodio nuevo de una serie que ves. El calendario lo tiene.</item>
-        <item quantity="many">Salieron al aire %1$d episodios nuevos de series que ves. El calendario los tiene.</item>
-        <item quantity="other">Salieron al aire %1$d episodios nuevos de series que ves. El calendario los tiene.</item>
+        <item quantity="many">Salieron al aire %1$,d episodios nuevos de series que ves. El calendario los tiene.</item>
+        <item quantity="other">Salieron al aire %1$,d episodios nuevos de series que ves. El calendario los tiene.</item>
     </plurals>
     <string name="notice_update_available">Ya está disponible %1$s. Ejecuta kaeri --update para instalarlo.</string>
     <string name="cause_proxy_needs_address">Un proxy necesita un host y un puerto.</string>
@@ -532,8 +563,8 @@
     <string name="start_failed_player">El reproductor no pudo iniciarse. %1$s</string>
     <plurals name="notice_episodes_queued">
         <item quantity="one">Se puso un episodio en cola.</item>
-        <item quantity="many">Se pusieron %1$d episodios en cola.</item>
-        <item quantity="other">Se pusieron %1$d episodios en cola.</item>
+        <item quantity="many">Se pusieron %1$,d episodios en cola.</item>
+        <item quantity="other">Se pusieron %1$,d episodios en cola.</item>
     </plurals>
     <string name="settings_subs_reset_done">Estilo de subtítulos restablecido</string>
     <string name="crash_notice">Kaeri se cerró por un problema.</string>
@@ -562,20 +593,20 @@
     <string name="discussion_video_host">Video · %1$s</string>
     <plurals name="player_more_discussion_note">
         <item quantity="one">Un comentario · pausa</item>
-        <item quantity="many">%1$d comentarios · pausa</item>
-        <item quantity="other">%1$d comentarios · pausa</item>
+        <item quantity="many">%1$,d comentarios · pausa</item>
+        <item quantity="other">%1$,d comentarios · pausa</item>
     </plurals>
     <string name="player_more_discussion_pauses">Pausa el video</string>
     <string name="search_pill_set">%1$s, %2$s</string>
     <string name="search_pill_any">%1$s, cualquiera</string>
-    <string name="search_pill_all_set">Todos los filtros, %1$d aplicados</string>
+    <string name="search_pill_all_set">Todos los filtros, %1$,d aplicados</string>
     <string name="search_pill_clear">Borrar todos los filtros</string>
     <string name="cast_sheet_group">Chromecast</string>
     <string name="cast_sheet_through_phone">Se reproduce desde este teléfono</string>
     <string name="cast_sheet_through_tablet">Se reproduce desde esta tableta</string>
     <string name="cast_sheet_chromecast_too">Las TVs con Chromecast integrado también aparecen aquí.</string>
     <string name="cast_sheet_local_network">Permite que Kaeri encuentre dispositivos en tu red local</string>
-    <string name="cast_card_up_next_in">Siguiente · se reproduce en %1$d s</string>
+    <string name="cast_card_up_next_in">Siguiente · se reproduce en %1$,d s</string>
     <string name="cast_card_up_next">Siguiente</string>
     <string name="cast_card_up_next_cancel">Cancelar</string>
     <string name="cast_card_up_next_play">Reproducir ahora</string>
@@ -611,8 +642,8 @@
     <string name="eink_back">Atrás</string>
     <plurals name="eink_pages_left">
         <item quantity="one">Queda una página del capítulo</item>
-        <item quantity="many">Quedan %1$d páginas del capítulo</item>
-        <item quantity="other">Quedan %1$d páginas del capítulo</item>
+        <item quantity="many">Quedan %1$,d páginas del capítulo</item>
+        <item quantity="other">Quedan %1$,d páginas del capítulo</item>
     </plurals>
     <string name="eink_next_chapter">Avanzar capítulo</string>
     <string name="eink_previous_chapter">Capítulo anterior</string>
@@ -623,8 +654,8 @@
     <string name="eink_end_next">A continuación</string>
     <plurals name="eink_end_pages">
         <item quantity="one">Una página</item>
-        <item quantity="many">%1$d páginas</item>
-        <item quantity="other">%1$d páginas</item>
+        <item quantity="many">%1$,d páginas</item>
+        <item quantity="other">%1$,d páginas</item>
     </plurals>
     <string name="eink_reads_rtl">derecha a izquierda</string>
     <string name="eink_reads_ltr">izquierda a derecha</string>
@@ -665,7 +696,7 @@
     <string name="reader_settings">Ajustes del lector</string>
     <string name="reader_chapter_line_titled">Capítulo %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Capítulo %1$s · desplazamiento</string>
-    <string name="reader_minutes_left">%1$d min</string>
+    <string name="reader_minutes_left">%1$,d min</string>
     <string name="reader_zone_next">Avanzar página</string>
     <string name="reader_grid_title">Páginas</string>
     <string name="reader_end_continue">Seguir leyendo</string>
@@ -761,10 +792,10 @@
     <string name="reader_paper_dim">Atenuar la página</string>
     <plurals name="reader_divider_images">
         <item quantity="one">Una imagen</item>
-        <item quantity="many">%1$d imágenes</item>
-        <item quantity="other">%1$d imágenes</item>
+        <item quantity="many">%1$,d imágenes</item>
+        <item quantity="other">%1$,d imágenes</item>
     </plurals>
-    <string name="reader_opening_waited">%1$s · %2$d s</string>
+    <string name="reader_opening_waited">%1$s · %2$,d s</string>
     <string name="reader_sources_title">Leer este capítulo desde</string>
     <string name="reader_paper_parts">Qué cambia</string>
     <string name="tv_pair_request_held">%1$s quiere emparejarse. Código %2$s</string>
@@ -783,8 +814,8 @@
     <string name="tv_connect_tracker">Conecta un servicio de seguimiento</string>
     <string name="tv_change_status">Cambiar estado</string>
     <string name="tv_add_to_planning">Agregar a Planeado</string>
-    <string name="tv_progress_of">%1$d / %2$d</string>
-    <string name="tv_progress_unknown">%1$d / ?</string>
+    <string name="tv_progress_of">%1$,d / %2$,d</string>
+    <string name="tv_progress_unknown">%1$,d / ?</string>
     <string name="tv_calendar_signed_out_note">Inicia sesión para ver solo tus series</string>
     <string name="tv_calendar_time_was">%1$s (antes %2$s)</string>
     <string name="tv_player_undo_pill">%1$s · Deshacer</string>
@@ -798,11 +829,11 @@
     <string name="tv_search_space">Espacio</string>
     <string name="tv_search_season_in">Temporada de %1$d</string>
     <string name="tv_search_genres_offline">Los géneros se cargan cuando el televisor tenga conexión.</string>
-    <string name="tv_seasons_position">%1$d de %2$d</string>
+    <string name="tv_seasons_position">%1$,d de %2$,d</string>
     <plurals name="tv_seasons_count">
-        <item quantity="one">%1$d temporada</item>
-        <item quantity="many">%1$d temporadas</item>
-        <item quantity="other">%1$d temporadas</item>
+        <item quantity="one">%1$,d temporada</item>
+        <item quantity="many">%1$,d temporadas</item>
+        <item quantity="other">%1$,d temporadas</item>
     </plurals>
     <string name="tv_episode_mark_up_to_here">Marcar como visto hasta aquí</string>
     <string name="tv_card_label_watched">%1$s, visto</string>
@@ -831,14 +862,14 @@
     <string name="tv_update_auto_check">Buscar actualizaciones automáticamente</string>
     <string name="tv_update_auto_check_detail">Una vez al día, desde los lanzamientos de Kaeri</string>
     <plurals name="tv_phone_used_days">
-        <item quantity="one">Usado hace %1$d día</item>
-        <item quantity="many">Usado hace %1$d días</item>
-        <item quantity="other">Usado hace %1$d días</item>
+        <item quantity="one">Usado hace %1$,d día</item>
+        <item quantity="many">Usado hace %1$,d días</item>
+        <item quantity="other">Usado hace %1$,d días</item>
     </plurals>
     <plurals name="tv_phone_paired_days">
-        <item quantity="one">Emparejado hace %1$d día</item>
-        <item quantity="many">Emparejado hace %1$d días</item>
-        <item quantity="other">Emparejado hace %1$d días</item>
+        <item quantity="one">Emparejado hace %1$,d día</item>
+        <item quantity="many">Emparejado hace %1$,d días</item>
+        <item quantity="other">Emparejado hace %1$,d días</item>
     </plurals>
     <string name="tv_update_installed">Este televisor tiene la v%1$s</string>
     <string name="tv_page_not_found_text">Esta página ya no existe. Escanea otra vez el código del televisor.</string>
@@ -868,7 +899,7 @@
     <string name="tv_field_password_optional">Contraseña, si la piden</string>
     <string name="tv_qr_label_link">Código QR de la página para el enlace</string>
     <string name="tv_preview_key">Clave %1$s</string>
-    <string name="tv_preview_more">y %1$d más</string>
+    <string name="tv_preview_more">y %1$,d más</string>
     <string name="tv_already_joined">Ya te uniste</string>
     <string name="tv_joining">Uniéndose</string>
     <string name="tv_signin_done_as">Sesión iniciada en %1$s como %2$s</string>
@@ -886,13 +917,13 @@
     <string name="tv_discussion_footer">Para responder, abre esta discusión en tu teléfono.</string>
     <plurals name="tv_discussion_count_read_only">
         <item quantity="one">Un comentario · Solo lectura</item>
-        <item quantity="many">%1$d comentarios · Solo lectura</item>
-        <item quantity="other">%1$d comentarios · Solo lectura</item>
+        <item quantity="many">%1$,d comentarios · Solo lectura</item>
+        <item quantity="other">%1$,d comentarios · Solo lectura</item>
     </plurals>
     <plurals name="tv_discussion_likes">
         <item quantity="one">Un me gusta</item>
-        <item quantity="many">%1$d me gusta</item>
-        <item quantity="other">%1$d me gusta</item>
+        <item quantity="many">%1$,d me gusta</item>
+        <item quantity="other">%1$,d me gusta</item>
     </plurals>
     <string name="tv_discussion_select_spoiler">Selecciona para mostrar el spoiler</string>
     <string name="updates_unknown_sources_path">Configuración › Apps › Seguridad y restricciones › Orígenes desconocidos</string>
@@ -901,8 +932,8 @@
     <string name="episode_long_dubbed">Episodio %1$d · Doblado</string>
     <plurals name="downloads_live_paused">
         <item quantity="one">Un episodio en pausa</item>
-        <item quantity="many">%1$d episodios en pausa</item>
-        <item quantity="other">%1$d episodios en pausa</item>
+        <item quantity="many">%1$,d episodios en pausa</item>
+        <item quantity="other">%1$,d episodios en pausa</item>
     </plurals>
     <string name="downloads_live_lead">%1$s E%2$d</string>
     <string name="downloads_live_left">%1$s restantes</string>
@@ -929,8 +960,8 @@
     <string name="media_dates_range">%1$s a %2$s</string>
     <plurals name="title_also_on_more">
         <item quantity="one">%1$s y uno más</item>
-        <item quantity="many">%1$s y %2$d más</item>
-        <item quantity="other">%1$s y %2$d más</item>
+        <item quantity="many">%1$s y %2$,d más</item>
+        <item quantity="other">%1$s y %2$,d más</item>
     </plurals>
     <string name="title_adult_mark">18+</string>
     <string name="downloads_storage_used_free">%1$s usados · %2$s libres</string>
@@ -941,8 +972,8 @@
     <string name="downloads_ratio_of">%1$s de %2$s</string>
     <plurals name="downloads_group_summary">
         <item quantity="one">Un episodio · %2$s</item>
-        <item quantity="many">%1$d episodios · %2$s</item>
-        <item quantity="other">%1$d episodios · %2$s</item>
+        <item quantity="many">%1$,d episodios · %2$s</item>
+        <item quantity="other">%1$,d episodios · %2$s</item>
     </plurals>
     <string name="episode_menu_download">Descargar</string>
     <string name="episode_menu_download_paused">Descarga en pausa</string>
@@ -960,18 +991,18 @@
     <string name="country_korea">Corea del Sur</string>
     <plurals name="search_genres_picked">
         <item quantity="one">Un género</item>
-        <item quantity="many">%1$d géneros</item>
-        <item quantity="other">%1$d géneros</item>
+        <item quantity="many">%1$,d géneros</item>
+        <item quantity="other">%1$,d géneros</item>
     </plurals>
     <plurals name="search_formats_picked">
         <item quantity="one">Un formato</item>
-        <item quantity="many">%1$d formatos</item>
-        <item quantity="other">%1$d formatos</item>
+        <item quantity="many">%1$,d formatos</item>
+        <item quantity="other">%1$,d formatos</item>
     </plurals>
     <plurals name="search_statuses_picked">
         <item quantity="one">Un estado</item>
-        <item quantity="many">%1$d estados</item>
-        <item quantity="other">%1$d estados</item>
+        <item quantity="many">%1$,d estados</item>
+        <item quantity="other">%1$,d estados</item>
     </plurals>
     <string name="filter_score_any">Cualquiera</string>
     <string name="filter_years_from">Desde %1$s</string>
@@ -999,8 +1030,8 @@
     <string name="reason_source_unreachable">No se pudo contactar.</string>
     <plurals name="stores_updates_waiting">
         <item quantity="one">Una actualización</item>
-        <item quantity="many">%1$d actualizaciones</item>
-        <item quantity="other">%1$d actualizaciones</item>
+        <item quantity="many">%1$,d actualizaciones</item>
+        <item quantity="other">%1$,d actualizaciones</item>
     </plurals>
     <string name="stores_checked_ago">revisada %1$s</string>
     <string name="stores_preview_key_link">La clave coincide con el enlace</string>
@@ -1019,8 +1050,8 @@
     <string name="settings_summary_notify_off">Nuevos episodios desactivados</string>
     <plurals name="settings_summary_sources">
         <item quantity="one">Una fuente</item>
-        <item quantity="many">%1$d fuentes</item>
-        <item quantity="other">%1$d fuentes</item>
+        <item quantity="many">%1$,d fuentes</item>
+        <item quantity="other">%1$,d fuentes</item>
     </plurals>
     <string name="settings_summary_no_sources">Sin fuentes todavía</string>
     <string name="settings_summary_torrents_on">torrents activados</string>
@@ -1045,19 +1076,19 @@
     <string name="settings_titles_note_english_missing">%1$s no tiene título en inglés en AniList, así que conserva su título en romaji.</string>
     <string name="settings_titles_note_english">Títulos en inglés como los lista AniList, y romaji cuando no hay.</string>
     <string name="settings_titles_note_romaji">Títulos japoneses escritos con letras latinas, como los lista AniList.</string>
-    <string name="settings_stores_with_updates">%1$d · %2$s</string>
+    <string name="settings_stores_with_updates">%1$,d · %2$s</string>
     <string name="settings_seeding_best_effort">Este dispositivo solo comparte mientras Kaeri está abierta.</string>
     <plurals name="settings_downloads_count">
         <item quantity="one">Un episodio</item>
-        <item quantity="many">%1$d episodios</item>
-        <item quantity="other">%1$d episodios</item>
+        <item quantity="many">%1$,d episodios</item>
+        <item quantity="other">%1$,d episodios</item>
     </plurals>
     <string name="settings_anilist_footer">Los avances y los cambios de lista se sincronizan con AniList. Biblioteca muestra tus listas de AniList.</string>
     <string name="accounts_sign_in_again_button">Volver a iniciar sesión</string>
     <plurals name="accounts_review_differences">
         <item quantity="one">Revisa una diferencia</item>
-        <item quantity="many">Revisa %1$d diferencias</item>
-        <item quantity="other">Revisa %1$d diferencias</item>
+        <item quantity="many">Revisa %1$,d diferencias</item>
+        <item quantity="other">Revisa %1$,d diferencias</item>
     </plurals>
     <string name="settings_licence_title">Licencia</string>
     <string name="settings_licence_value">MIT, código abierto y no comercial</string>
@@ -1096,7 +1127,7 @@
     <string name="tv_sheet_volume">Volumen de la TV</string>
     <string name="tv_sheet_volume_down">Bajar volumen</string>
     <string name="tv_sheet_volume_up">Subir volumen</string>
-    <string name="tv_sheet_volume_value">%1$d de 100</string>
+    <string name="tv_sheet_volume_value">%1$,d de 100</string>
     <string name="tv_sheet_nothing_playing">Nada en reproducción</string>
     <string name="tv_sheet_position">Posición en la TV</string>
     <string name="tv_sheet_position_state">%1$s de %2$s</string>
@@ -1120,8 +1151,8 @@
     <string name="player_dual_audio">Subtitulado y doblado</string>
     <plurals name="notif_new_episodes">
         <item quantity="one">Un episodio nuevo</item>
-        <item quantity="many">%1$d episodios nuevos</item>
-        <item quantity="other">%1$d episodios nuevos</item>
+        <item quantity="many">%1$,d episodios nuevos</item>
+        <item quantity="other">%1$,d episodios nuevos</item>
     </plurals>
     <string name="notif_hidden_text">Episodio nuevo</string>
     <string name="notif_episode_out">Ya salió el episodio %1$d.</string>
@@ -1132,7 +1163,7 @@
     <string name="device_name_tablet">Tableta Android</string>
     <string name="tv_session_starting">Iniciando en %1$s</string>
     <string name="tv_session_line">%1$s · %2$s</string>
-    <string name="widget_line_left">%1$s · faltan %2$d min</string>
+    <string name="widget_line_left">%1$s · faltan %2$,d min</string>
     <string name="widget_line_of">E%1$d de %2$d</string>
     <string name="widget_continue_title">Continuar viendo</string>
     <string name="widget_caught_up_title">Al día</string>
@@ -1151,8 +1182,8 @@
     <string name="channel_downloads_name">Descargas</string>
     <plurals name="release_seeders">
         <item quantity="one">1 semilla</item>
-        <item quantity="many">%1$d semillas</item>
-        <item quantity="other">%1$d semillas</item>
+        <item quantity="many">%1$,d semillas</item>
+        <item quantity="other">%1$,d semillas</item>
     </plurals>
     <string name="trailer_failed">No se pudo abrir el tráiler</string>
     <string name="engine_down_title">Kaeri se detuvo</string>
@@ -1252,7 +1283,7 @@
     <string name="cast_torrents_note_mac">Una TV con Chromecast integrado puede entonces reproducir torrents. Esta Mac envía el episodio mientras se reproduce.</string>
     <string name="cast_torrents_note_iphone">Una TV con Chromecast integrado puede entonces reproducir torrents. Este iPhone envía el episodio mientras se reproduce.</string>
     <string name="cast_torrents_note_ipad">Una TV con Chromecast integrado puede entonces reproducir torrents. Este iPad envía el episodio mientras se reproduce.</string>
-    <string name="cast_up_next_plays_in">Siguiente · se reproduce en %1$d s</string>
+    <string name="cast_up_next_plays_in">Siguiente · se reproduce en %1$,d s</string>
     <string name="cast_couldnt_start">No se pudo iniciar en %1$s</string>
     <string name="cast_stopped">Transmisión detenida</string>
     <string name="cast_play_here">Reproducir aquí</string>
@@ -1262,12 +1293,12 @@
     <string name="action_cancel">Cancelar</string>
     <string name="action_go">Ir</string>
     <string name="action_not_now">Ahora no</string>
-    <string name="duration_days">%1$d d</string>
-    <string name="duration_hours_minutes">%1$d h %2$d min</string>
-    <string name="duration_hours">%1$d h</string>
-    <string name="duration_minutes">%1$d min</string>
-    <string name="duration_minutes_seconds">%1$d min %2$s s</string>
-    <string name="duration_seconds">%1$d s</string>
+    <string name="duration_days">%1$,d d</string>
+    <string name="duration_hours_minutes">%1$,d h %2$,d min</string>
+    <string name="duration_hours">%1$,d h</string>
+    <string name="duration_minutes">%1$,d min</string>
+    <string name="duration_minutes_seconds">%1$,d min %2$s s</string>
+    <string name="duration_seconds">%1$,d s</string>
     <string name="size_byte">%1$s B</string>
     <string name="size_kilobyte">%1$s kB</string>
     <string name="size_megabyte">%1$s MB</string>
@@ -1327,8 +1358,8 @@
     <string name="day_yesterday">Ayer</string>
     <string name="time_ago">Hace %1$s</string>
     <string name="time_in">En %1$s</string>
-    <string name="time_minutes_left">Quedan %1$d min</string>
-    <string name="time_minutes">%1$d min</string>
+    <string name="time_minutes_left">Quedan %1$,d min</string>
+    <string name="time_minutes">%1$,d min</string>
     <string name="time_now_inline">ahora</string>
     <string name="time_just_now_inline">hace un momento</string>
     <string name="when_today">hoy %1$s</string>
@@ -1363,13 +1394,13 @@
     <string name="pad_help_page_down">Bajar una página</string>
     <plurals name="pad_help_seek_back">
         <item quantity="one">Retroceder un segundo</item>
-        <item quantity="many">Retroceder %1$d segundos</item>
-        <item quantity="other">Retroceder %1$d segundos</item>
+        <item quantity="many">Retroceder %1$,d segundos</item>
+        <item quantity="other">Retroceder %1$,d segundos</item>
     </plurals>
     <plurals name="pad_help_seek_forward">
         <item quantity="one">Avanzar un segundo</item>
-        <item quantity="many">Avanzar %1$d segundos</item>
-        <item quantity="other">Avanzar %1$d segundos</item>
+        <item quantity="many">Avanzar %1$,d segundos</item>
+        <item quantity="other">Avanzar %1$,d segundos</item>
     </plurals>
     <string name="pad_help_skip">Saltar</string>
     <string name="pad_help_play_now">Reproducir ahora</string>
@@ -1417,7 +1448,7 @@
     <string name="tv_problem_version">La TV tiene otra versión de Kaeri. Actualiza ambas a la misma.</string>
     <string name="tv_problem_wrong_code">Ese código no coincide. Revisa el código en la TV e inténtalo de nuevo.</string>
     <string name="tv_volume_down">Bajar volumen</string>
-    <string name="tv_volume_of">%1$d de 100</string>
+    <string name="tv_volume_of">%1$,d de 100</string>
     <string name="tv_volume_up">Subir volumen</string>
     <string name="updates_download">Descargar actualización</string>
     <string name="updates_restart">Reiniciar y actualizar</string>
@@ -1430,20 +1461,20 @@
     <string name="discussion_title_episode">Discusión del episodio %1$d</string>
     <plurals name="discussion_row">
         <item quantity="one">Discusión · un comentario</item>
-        <item quantity="many">Discusión · %1$d comentarios</item>
-        <item quantity="other">Discusión · %1$d comentarios</item>
+        <item quantity="many">Discusión · %1$,d comentarios</item>
+        <item quantity="other">Discusión · %1$,d comentarios</item>
     </plurals>
     <plurals name="discussion_count">
         <item quantity="one">Un comentario</item>
-        <item quantity="many">%1$d comentarios</item>
-        <item quantity="other">%1$d comentarios</item>
+        <item quantity="many">%1$,d comentarios</item>
+        <item quantity="other">%1$,d comentarios</item>
     </plurals>
     <string name="discussion_like">Me gusta</string>
     <string name="discussion_reply">Responder</string>
     <plurals name="discussion_more_replies">
         <item quantity="one">Una respuesta más</item>
-        <item quantity="many">%1$d respuestas más</item>
-        <item quantity="other">%1$d respuestas más</item>
+        <item quantity="many">%1$,d respuestas más</item>
+        <item quantity="other">%1$,d respuestas más</item>
     </plurals>
     <string name="discussion_spoiler">Spoiler</string>
     <string name="discussion_image">Imagen</string>
@@ -1530,8 +1561,8 @@
     <string name="downloads_notice_done_detail">%1$s · listo para ver sin conexión</string>
     <plurals name="downloads_notice_running">
         <item quantity="one">Descargando un episodio</item>
-        <item quantity="many">Descargando %1$d episodios</item>
-        <item quantity="other">Descargando %1$d episodios</item>
+        <item quantity="many">Descargando %1$,d episodios</item>
+        <item quantity="other">Descargando %1$,d episodios</item>
     </plurals>
     <string name="downloads_notice_episode_left">Episodio %1$d · faltan %2$s</string>
     <string name="downloads_notice_starting">Iniciando</string>
@@ -1572,14 +1603,14 @@
     <string name="home_remove_continue">Quitar de Continuar viendo</string>
     <plurals name="home_continue_count">
         <item quantity="one">1 serie</item>
-        <item quantity="many">%1$d series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="many">%1$,d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
     <string name="home_view_all">Ver todo</string>
     <string name="home_full_calendar">Calendario completo</string>
     <string name="home_today">Hoy</string>
     <string name="home_nothing_airing">No se emite nada</string>
-    <string name="home_day_more">%1$d más</string>
+    <string name="home_day_more">%1$,d más</string>
     <string name="home_seasonal">De temporada</string>
     <string name="home_search">Buscar</string>
     <string name="home_end">Eso es todo por ahora. De temporada y Calendario tienen las listas completas.</string>
@@ -1605,20 +1636,20 @@
     <string name="home_synced">AniList sincronizado</string>
     <plurals name="queue_episodes_left">
         <item quantity="one">Queda un episodio de %2$s</item>
-        <item quantity="many">Quedan %1$d episodios de %2$s</item>
-        <item quantity="other">Quedan %1$d episodios de %2$s</item>
+        <item quantity="many">Quedan %1$,d episodios de %2$s</item>
+        <item quantity="other">Quedan %1$,d episodios de %2$s</item>
     </plurals>
     <plurals name="episodes_count">
-        <item quantity="one">%1$d episodio</item>
-        <item quantity="many">%1$d episodios</item>
-        <item quantity="other">%1$d episodios</item>
+        <item quantity="one">%1$,d episodio</item>
+        <item quantity="many">%1$,d episodios</item>
+        <item quantity="other">%1$,d episodios</item>
     </plurals>
     <plurals name="progress_episodes">
-        <item quantity="one">%1$d de %2$d episodio</item>
-        <item quantity="many">%1$d de %2$d episodios</item>
-        <item quantity="other">%1$d de %2$d episodios</item>
+        <item quantity="one">%1$,d de %2$,d episodio</item>
+        <item quantity="many">%1$,d de %2$,d episodios</item>
+        <item quantity="other">%1$,d de %2$,d episodios</item>
     </plurals>
-    <string name="duration_days_hours">%1$d d %2$d h</string>
+    <string name="duration_days_hours">%1$,d d %2$,d h</string>
     <string name="group_in_progress">En curso</string>
     <string name="group_new_this_week">Nuevos esta semana</string>
     <string name="continue_empty_title">Nada visto todavía</string>
@@ -1663,8 +1694,8 @@
     <string name="library_added_planning">Añadido a Pendiente.</string>
     <string name="library_on_your_list">En tu lista</string>
     <string name="library_in_your_list">En tu lista</string>
-    <string name="progress_episodes_short">E%1$d de %2$d</string>
-    <string name="progress_episode_short">E%1$d</string>
+    <string name="progress_episodes_short">E%1$,d de %2$,d</string>
+    <string name="progress_episode_short">E%1$,d</string>
     <string name="continue_row_start_aired_dubbed">Ver E%1$d doblado · salió hace %2$s</string>
     <string name="up_next_starts">Empieza %1$s</string>
     <string name="up_next_reason_new_season">Nueva temporada</string>
@@ -1681,23 +1712,23 @@
     <string name="up_next_out">salió hace %1$s</string>
     <plurals name="library_row_scanning">
         <item quantity="one">Escaneando · 1 archivo encontrado</item>
-        <item quantity="many">Escaneando · %1$d archivos encontrados</item>
-        <item quantity="other">Escaneando · %1$d archivos encontrados</item>
+        <item quantity="many">Escaneando · %1$,d archivos encontrados</item>
+        <item quantity="other">Escaneando · %1$,d archivos encontrados</item>
     </plurals>
-    <string name="library_row_matching">Buscando coincidencias · %1$d de %2$d series</string>
-    <string name="library_row_waiting">Esperando a AniList · %1$d s</string>
+    <string name="library_row_matching">Buscando coincidencias · %1$,d de %2$,d series</string>
+    <string name="library_row_waiting">Esperando a AniList · %1$,d s</string>
     <string name="library_row_summary">%1$s de %2$s</string>
     <plurals name="library_episodes">
         <item quantity="one">1 episodio</item>
-        <item quantity="many">%1$d episodios</item>
-        <item quantity="other">%1$d episodios</item>
+        <item quantity="many">%1$,d episodios</item>
+        <item quantity="other">%1$,d episodios</item>
     </plurals>
     <plurals name="library_series">
         <item quantity="one">1 serie</item>
-        <item quantity="many">%1$d series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="many">%1$,d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
-    <string name="library_row_needs_look">%1$d requieren revisión</string>
+    <string name="library_row_needs_look">%1$,d requieren revisión</string>
     <string name="library_row_drive_offline">Unidad no conectada</string>
     <string name="library_row_missing">No se encontró la carpeta</string>
     <string name="library_row_no_access">Kaeri ya no puede abrir esta carpeta</string>
@@ -1710,29 +1741,29 @@
     <string name="library_remove_folder">Quitar carpeta</string>
     <string name="library_needs_look">Requieren revisión</string>
     <string name="library_not_matched">Sin coincidencia</string>
-    <string name="library_matched">%1$d series con coincidencia</string>
-    <string name="library_best_guess">Mejor opción: %1$s · %2$d%% de coincidencia</string>
+    <string name="library_matched">%1$,d series con coincidencia</string>
+    <string name="library_best_guess">Mejor opción: %1$s · %2$,d%% de coincidencia</string>
     <string name="library_picker_prompt">Agregar carpeta</string>
     <string name="library_picker_message">Elige una carpeta con tus episodios.</string>
-    <string name="library_fix_confidence">%1$d%% de coincidencia</string>
+    <string name="library_fix_confidence">%1$,d%% de coincidencia</string>
     <string name="library_open_folder">Abrir carpeta</string>
-    <string name="library_matched_count">%1$d series con coincidencia</string>
+    <string name="library_matched_count">%1$,d series con coincidencia</string>
     <plurals name="library_row_series">
         <item quantity="one">1 serie</item>
-        <item quantity="many">%1$d series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="many">%1$,d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
     <plurals name="library_row_files">
         <item quantity="one">1 archivo</item>
-        <item quantity="many">%1$d archivos</item>
-        <item quantity="other">%1$d archivos</item>
+        <item quantity="many">%1$,d archivos</item>
+        <item quantity="other">%1$,d archivos</item>
     </plurals>
     <string name="library_show_finder">Mostrar en el Finder</string>
     <string name="library_remove_line">Tus archivos se quedan donde están.</string>
     <plurals name="library_files">
         <item quantity="one">1 archivo</item>
-        <item quantity="many">%1$d archivos</item>
-        <item quantity="other">%1$d archivos</item>
+        <item quantity="many">%1$,d archivos</item>
+        <item quantity="other">%1$,d archivos</item>
     </plurals>
     <string name="library_reason_no_episode">No hay número de episodio en el nombre</string>
     <string name="library_reason_no_title">No se encontró un título en AniList</string>
@@ -1745,7 +1776,7 @@
     <string name="library_fix_search">Buscar en AniList</string>
     <string name="library_fix_hint">Busca el título con el que se asociarán estos archivos.</string>
     <string name="library_connect_drive">Conecta la unidad para reproducir</string>
-    <string name="library_fix_count_mismatch">Tiene %1$d episodios, esta carpeta tiene %2$d</string>
+    <string name="library_fix_count_mismatch">Tiene %1$,d episodios, esta carpeta tiene %2$,d</string>
     <string name="library_leave_unmatched">Dejar sin coincidencia</string>
     <string name="library_episode_title">¿Qué episodio es este archivo?</string>
     <string name="library_season">Temporada</string>
@@ -1762,13 +1793,13 @@
     <string name="library_fix_none">No se encontraron títulos</string>
     <string name="library_fix_offline">No se pudo conectar con AniList. Inténtalo de nuevo cuando tengas conexión.</string>
     <string name="library_removed">%1$s quitada</string>
-    <string name="library_match_percent">%1$d%% de coincidencia</string>
+    <string name="library_match_percent">%1$,d%% de coincidencia</string>
     <string name="licensed_title">Servicios con licencia</string>
     <string name="licensed_body">Kaeri puede abrir títulos en los servicios de streaming que pagas. Nunca los reproduce por sí misma. Los enlaces vienen de AniList.</string>
     <string name="licensed_region">Región</string>
     <string name="licensed_region_line">Los enlaces que AniList marca para otros países se ocultan. La mayoría no indica país, así que elige también tus servicios.</string>
     <string name="licensed_yours">Tus servicios</string>
-    <string name="licensed_show_all">Mostrar los %1$d</string>
+    <string name="licensed_show_all">Mostrar los %1$,d</string>
     <string name="licensed_region_system">Seguir este dispositivo</string>
     <string name="licensed_region_device">Región de este dispositivo</string>
     <string name="licensed_show_others">Mostrar otros servicios en las páginas de títulos</string>
@@ -1824,9 +1855,9 @@
     <string name="media_streaming_on">Disponible en</string>
     <string name="media_streaming_region_note">La disponibilidad depende de tu región.</string>
     <string name="media_link_language">Sitio en %1$s</string>
-    <string name="film_length_hours_minutes">%1$d h %2$d min</string>
-    <string name="film_length_hours">%1$d h</string>
-    <string name="film_length_minutes">%1$d min</string>
+    <string name="film_length_hours_minutes">%1$,d h %2$,d min</string>
+    <string name="film_length_hours">%1$,d h</string>
+    <string name="film_length_minutes">%1$,d min</string>
     <string name="country_japan">Japón</string>
     <string name="country_china">China</string>
     <string name="country_south_korea">Corea del Sur</string>
@@ -1970,11 +2001,11 @@
     <string name="party_wait_you">La reproducción empieza cuando marques como listo.</string>
     <string name="party_wait_one">La reproducción empieza cuando %1$s esté listo.</string>
     <string name="party_wait_two">La reproducción empieza cuando %1$s y %2$s estén listos.</string>
-    <string name="party_wait_many">La reproducción empieza cuando %1$d más estén listos.</string>
-    <string name="party_connection_lost">Conexión perdida. Reintentando, %1$d de %2$d</string>
+    <string name="party_wait_many">La reproducción empieza cuando %1$,d más estén listos.</string>
+    <string name="party_connection_lost">Conexión perdida. Reintentando, %1$,d de %2$,d</string>
     <string name="party_connected_encrypted">Conectado, cifrado</string>
     <string name="party_connected_plain">Conectado, sin cifrar</string>
-    <string name="party_connected_latency">%1$s · %2$d ms</string>
+    <string name="party_connected_latency">%1$s · %2$,d ms</string>
     <string name="party_invite_after_play">El enlace de invitación aparece cuando se reproduce un episodio.</string>
     <string name="party_invite_detail">Incluye la sala y el episodio. Cada amigo lo reproduce desde sus propias fuentes.</string>
     <string name="party_in_room_idle">Estás en la sala %1$s (%2$s), sin nada reproduciéndose.</string>
@@ -1994,11 +2025,11 @@
     <string name="party_nosource_unaired_plain">Tus fuentes no lo tendrán antes de entonces. Se reproduce con la sala cuando una de ellas lo tenga.</string>
     <plurals name="party_sources_found">
         <item quantity="one">Una fuente lo tiene</item>
-        <item quantity="many">%1$d fuentes lo tienen</item>
-        <item quantity="other">%1$d fuentes lo tienen</item>
+        <item quantity="many">%1$,d fuentes lo tienen</item>
+        <item quantity="other">%1$,d fuentes lo tienen</item>
     </plurals>
     <string name="party_sources_label">Fuentes para este episodio</string>
-    <string name="party_source_seeders">%1$d semillas</string>
+    <string name="party_source_seeders">%1$,d semillas</string>
     <string name="party_no_source_lists">Ninguna fuente lista el episodio %1$s. Las fuentes vienen de complementos que se instalan desde una tienda de complementos.</string>
     <string name="party_play_with">Reproducir con la watch party</string>
     <string name="together_title">Ver juntos</string>
@@ -2012,7 +2043,7 @@
     <string name="together_paste">Pegar</string>
     <string name="together_join_action">Unirse</string>
     <string name="together_in_party">En una watch party</string>
-    <string name="together_in_party_line">Episodio %1$s · %2$d en la sala · %3$d listos</string>
+    <string name="together_in_party_line">Episodio %1$s · %2$,d en la sala · %3$,d listos</string>
     <string name="together_open_lobby">Abrir la sala de espera</string>
     <string name="together_open_player">Abrir el reproductor</string>
     <string name="together_recent">Salas recientes</string>
@@ -2030,8 +2061,8 @@
     <string name="together_server_suggested">Sugerido · operado por %1$s</string>
     <plurals name="together_server_used">
         <item quantity="one">Usado en 1 sala</item>
-        <item quantity="many">Usado en %1$d salas</item>
-        <item quantity="other">Usado en %1$d salas</item>
+        <item quantity="many">Usado en %1$,d salas</item>
+        <item quantity="other">Usado en %1$,d salas</item>
     </plurals>
     <string name="together_add_server">Agregar un servidor</string>
     <string name="together_paste_shortcut_hint">Pega un enlace o código en cualquier parte de esta página.</string>
@@ -2044,7 +2075,7 @@
     <string name="party_lobby_sources_missing">Aún no está en tus fuentes</string>
     <string name="party_lobby_out_on">Sale el %1$s</string>
     <string name="party_still_in_room">Sigues en la sala.</string>
-    <string name="party_lobby_count">En la sala · %1$d de %2$d listos</string>
+    <string name="party_lobby_count">En la sala · %1$,d de %2$,d listos</string>
     <string name="party_invited_by">%1$s te invitó</string>
     <string name="party_looking_in">Echando un vistazo</string>
     <string name="party_looking_in_note">Al abrir una sala apareces en ella por un momento.</string>
@@ -2059,7 +2090,7 @@
     <string name="party_invite_copied">Enlace de invitación copiado</string>
     <string name="party_starts_line">Empieza en 0:00 cuando todos estén listos</string>
     <string name="party_start_anyway">Empezar de todos modos</string>
-    <string name="party_starting">Empieza en %1$d</string>
+    <string name="party_starting">Empieza en %1$,d</string>
     <string name="party_change_episode">Cambiar episodio</string>
     <string name="party_change_server">Cambiar servidor</string>
     <string name="party_room_watching">La sala está viendo</string>
@@ -2079,14 +2110,14 @@
     <string name="party_code_wait">Esperar aquí</string>
     <string name="party_code_other_server">Los códigos funcionan en %1$s. Para otro servidor, pide el enlace de invitación.</string>
     <string name="party_bar_title">%1$s · Episodio %2$s</string>
-    <string name="party_bar_line">%1$d en la sala · %2$d listos</string>
+    <string name="party_bar_line">%1$,d en la sala · %2$,d listos</string>
     <string name="party_bar_idle">En la sala · nada se reproduce para ti</string>
     <string name="party_bar_pick">Presiona Reproducir en cualquier episodio para verlo con la sala</string>
     <string name="party_paused_by">Pausado por %1$s</string>
     <string name="party_played_by">Reproducido por %1$s</string>
     <string name="party_seeked_by">%1$s fue a %2$s</string>
-    <string name="party_next_line">Todos avanzan en %1$d s</string>
-    <string name="party_next_waiting">Esperando a %1$s · %2$d s</string>
+    <string name="party_next_line">Todos avanzan en %1$,d s</string>
+    <string name="party_next_waiting">Esperando a %1$s · %2$,d s</string>
     <string name="party_next_joined_at">%1$s se unió en %2$s</string>
     <string name="party_next_off">La sala avanza junta al final.</string>
     <string name="party_last_out">Ese fue el último episodio disponible.</string>
@@ -2107,19 +2138,19 @@
     <string name="party_ready_on_device">Listo en %1$s</string>
     <string name="party_leave_on_device">Salir de la watch party en %1$s</string>
     <string name="party_in_the_room">En la sala</string>
-    <string name="party_here_count">%1$d aquí</string>
+    <string name="party_here_count">%1$,d aquí</string>
     <string name="together_recent_note">Las últimas diez, guardadas en este dispositivo</string>
     <string name="party_pick_continue">Continuar</string>
     <string name="party_chat_field">Di algo</string>
     <string name="party_chat_send">Enviar</string>
     <string name="party_chat_title">Chat</string>
-    <string name="party_chat_wait">Espera %1$d s</string>
+    <string name="party_chat_wait">Espera %1$,d s</string>
     <plurals name="party_chat_wait_spoken">
         <item quantity="one">Espera un segundo</item>
-        <item quantity="many">Espera %1$d de segundos</item>
-        <item quantity="other">Espera %1$d segundos</item>
+        <item quantity="many">Espera %1$,d de segundos</item>
+        <item quantity="other">Espera %1$,d segundos</item>
     </plurals>
-    <string name="party_chat_more">%1$d más en el chat</string>
+    <string name="party_chat_more">%1$,d más en el chat</string>
     <string name="party_chat_off">El servidor de esta sala tiene el chat desactivado</string>
     <string name="party_chat_privacy">Los mensajes pasan por el servidor de la sala. Kaeri no guarda ninguno.</string>
     <string name="party_chat_hidden">El chat está oculto</string>
@@ -2146,20 +2177,20 @@
     <string name="party_reacted_at">%1$s a los %2$s</string>
     <string name="party_names_two">%1$s y %2$s</string>
     <string name="party_names_three">%1$s, %2$s y %3$s</string>
-    <string name="party_names_others">%1$s, %2$s y %3$d más</string>
+    <string name="party_names_others">%1$s, %2$s y %3$,d más</string>
     <string name="party_chat_you">Tú</string>
     <string name="party_sends_as">Envía como %1$s</string>
     <string name="party_tick_label">%1$s · %2$s</string>
     <string name="party_chat_announce">%1$s dice %2$s</string>
     <plurals name="party_chat_left">
-        <item quantity="one">Queda %1$d carácter</item>
-        <item quantity="many">Quedan %1$d de caracteres</item>
-        <item quantity="other">Quedan %1$d caracteres</item>
+        <item quantity="one">Queda %1$,d carácter</item>
+        <item quantity="many">Quedan %1$,d de caracteres</item>
+        <item quantity="other">Quedan %1$,d caracteres</item>
     </plurals>
     <string name="player_up_next">Siguiente</string>
     <string name="title_based_on">Basado en</string>
     <string name="player_starting">Iniciando el episodio %1$d</string>
-    <string name="player_finding_source">Buscando una fuente · %1$d s</string>
+    <string name="player_finding_source">Buscando una fuente · %1$,d s</string>
     <string name="player_finding_source_plain">Buscando una fuente</string>
     <string name="player_failed_title">No se pudo reproducir el episodio %1$d</string>
     <string name="player_failed_detail">Ninguna fuente tuvo una transmisión que se pudiera reproducir. Prueba con otra.</string>
@@ -2168,7 +2199,7 @@
     <string name="player_choose_another_source">Elegir otra fuente</string>
     <string name="player_add_plugin_store">Agregar tienda</string>
     <string name="player_buffering">Cargando</string>
-    <string name="player_start_place">%1$d de %2$d fuentes</string>
+    <string name="player_start_place">%1$,d de %2$,d fuentes</string>
     <string name="player_start_pinned">Tu elección para esta serie</string>
     <string name="player_start_miss_no_match">%1$s no tiene esta serie</string>
     <string name="player_start_miss_no_episode">%1$s no tiene el episodio %2$s</string>
@@ -2179,11 +2210,11 @@
     <string name="player_start_resting">Omitida por fallas recientes</string>
     <string name="player_start_from">De %1$s</string>
     <string name="player_start_no_video">El primero no mostró video</string>
-    <string name="player_start_stream_place">Transmisión %1$d de %2$d</string>
+    <string name="player_start_stream_place">Transmisión %1$,d de %2$,d</string>
     <plurals name="player_start_peers">
         <item quantity="one">Un par</item>
-        <item quantity="many">%1$d pares</item>
-        <item quantity="other">%1$d pares</item>
+        <item quantity="many">%1$,d pares</item>
+        <item quantity="other">%1$,d pares</item>
     </plurals>
     <string name="player_start_speed">%1$s/s</string>
     <string name="player_start_buffering_percent">Almacenando en búfer · %1$s</string>
@@ -2198,7 +2229,7 @@
     <string name="player_start_fix_match">Corregir coincidencia</string>
     <string name="player_start_translation">Audio y subtítulos</string>
     <string name="player_start_looked_up">Título encontrado</string>
-    <string name="player_start_seconds">%1$d s</string>
+    <string name="player_start_seconds">%1$,d s</string>
     <string name="player_start_still_starting">Aún iniciando. Puedes elegir otra fuente.</string>
     <string name="player_start_announce">Iniciando el episodio %1$s, %2$s</string>
     <string name="player_start_failed_announce">%1$s. %2$s</string>
@@ -2212,11 +2243,11 @@
     <string name="player_start_row_skipped">Omitida</string>
     <string name="player_start_asked">Se consultó a %1$s.</string>
     <string name="player_start_subtitled">Con subtítulos</string>
-    <string name="player_stall_title">La fuente se está cargando · %1$d s</string>
+    <string name="player_stall_title">La fuente se está cargando · %1$,d s</string>
     <string name="player_stall_detail">Otra transmisión puede reproducirse sin esperar.</string>
     <string name="player_switch_source">Cambiar de fuente</string>
     <string name="player_keep_waiting">Seguir esperando</string>
-    <string name="player_plays_in">Se reproduce en %1$d s</string>
+    <string name="player_plays_in">Se reproduce en %1$,d s</string>
     <string name="player_skip_opening">Saltar apertura</string>
     <string name="player_skip_ending">Saltar créditos</string>
     <string name="player_skipped_opening">Apertura saltada</string>
@@ -2297,8 +2328,8 @@
     <string name="player_still_watching">¿Sigues viendo?</string>
     <plurals name="player_still_watching_detail">
         <item quantity="one">Pausado después de un episodio seguido.</item>
-        <item quantity="many">Pausado después de %1$d episodios seguidos.</item>
-        <item quantity="other">Pausado después de %1$d episodios seguidos.</item>
+        <item quantity="many">Pausado después de %1$,d episodios seguidos.</item>
+        <item quantity="other">Pausado después de %1$,d episodios seguidos.</item>
     </plurals>
     <string name="player_still_watching_continue">Continuar viendo</string>
     <string name="player_ends_at">Termina a las %1$s</string>
@@ -2357,7 +2388,7 @@
     <string name="player_scrub_quarter">Búsqueda a un cuarto de velocidad</string>
     <string name="player_starting_text">Iniciando el episodio %1$s</string>
     <string name="player_track_n">Pista %1$d</string>
-    <string name="player_wait_note">%1$s · %2$d s</string>
+    <string name="player_wait_note">%1$s · %2$,d s</string>
     <string name="player_command_failed">Eso no funcionó. Inténtalo de nuevo.</string>
     <string name="player_subs_style">Estilo</string>
     <string name="player_subs_larger">Subtítulos más grandes</string>
@@ -2400,8 +2431,8 @@
     <string name="reader_chapters">Capítulos</string>
     <plurals name="reader_pages_left">
         <item quantity="one">Queda una página en este capítulo</item>
-        <item quantity="many">Quedan %1$d páginas en este capítulo</item>
-        <item quantity="other">Quedan %1$d páginas en este capítulo</item>
+        <item quantity="many">Quedan %1$,d páginas en este capítulo</item>
+        <item quantity="other">Quedan %1$,d páginas en este capítulo</item>
     </plurals>
     <string name="reader_chapters_loading">Cargando capítulos</string>
     <string name="reader_background_theme">Tema</string>
@@ -2415,8 +2446,8 @@
     <string name="reader_end_facts">Capítulo %1$s · %2$s</string>
     <plurals name="reader_end_pages">
         <item quantity="one">Una página</item>
-        <item quantity="many">%1$d páginas</item>
-        <item quantity="other">%1$d páginas</item>
+        <item quantity="many">%1$,d páginas</item>
+        <item quantity="other">%1$,d páginas</item>
     </plurals>
     <string name="reader_end_from">De %1$s</string>
     <string name="reader_chapter_line">Capítulo %1$s</string>
@@ -2428,8 +2459,8 @@
     <string name="home_spotlight_read">Leer</string>
     <plurals name="demo_series_facts">
         <item quantity="one">Demo · Cómic · una página</item>
-        <item quantity="many">Demo · Cómic · %1$d de páginas</item>
-        <item quantity="other">Demo · Cómic · %1$d páginas</item>
+        <item quantity="many">Demo · Cómic · %1$,d de páginas</item>
+        <item quantity="other">Demo · Cómic · %1$,d páginas</item>
     </plurals>
     <string name="demo_credit_book">%1$s de %2$s. Con licencia %3$s. Se lee desde Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s de %2$s. Dominio público. Viene con la app.</string>
@@ -2449,8 +2480,8 @@
     <string name="demo_credits">Créditos</string>
     <plurals name="demo_pages">
         <item quantity="one">Una página</item>
-        <item quantity="many">%1$d de páginas</item>
-        <item quantity="other">%1$d páginas</item>
+        <item quantity="many">%1$,d de páginas</item>
+        <item quantity="other">%1$,d páginas</item>
     </plurals>
     <string name="demo_story_row">Cuento · %1$s · %2$s</string>
     <string name="demo_read_chapter">Leer el capítulo %1$s</string>
@@ -2473,15 +2504,15 @@
     <string name="chapter_updates_yesterday">Ayer</string>
     <plurals name="chapter_updates_versions">
         <item quantity="one">1 versión</item>
-        <item quantity="many">%1$d versiones</item>
-        <item quantity="other">%1$d versiones</item>
+        <item quantity="many">%1$,d versiones</item>
+        <item quantity="other">%1$,d versiones</item>
     </plurals>
     <string name="chapter_updates_open_series">Abrir %1$s</string>
     <string name="chapter_updates_open_chapter_hint">Abre el capítulo</string>
     <string name="chapter_updates_open_series_menu">Abrir serie</string>
     <string name="action_read_chapter">Leer el capítulo %1$s</string>
     <string name="action_continue_chapter">Seguir con el capítulo %1$s · pág. %2$d</string>
-    <string name="action_continue_part">Seguir con la parte %1$s · %2$d%%</string>
+    <string name="action_continue_part">Seguir con la parte %1$s · %2$,d%%</string>
     <string name="action_continue_part_plain">Seguir con la parte %1$s</string>
     <string name="action_read_part">Leer la parte %1$s</string>
     <string name="action_read_again">Leer de nuevo</string>
@@ -2489,20 +2520,20 @@
     <string name="series_change">Cambiar</string>
     <plurals name="series_sources_more">
         <item quantity="one">1 más</item>
-        <item quantity="many">%1$d más</item>
-        <item quantity="other">%1$d más</item>
+        <item quantity="many">%1$,d más</item>
+        <item quantity="other">%1$,d más</item>
     </plurals>
     <string name="series_tracker_ask">¿Qué serie es esta? Elegir</string>
     <string name="series_preferred_group">Tu grupo preferido aquí</string>
     <plurals name="series_tracker_chapters_of">
-        <item quantity="one">%1$d de %2$d capítulo</item>
-        <item quantity="many">%1$d de %2$d capítulos</item>
-        <item quantity="other">%1$d de %2$d capítulos</item>
+        <item quantity="one">%1$,d de %2$,d capítulo</item>
+        <item quantity="many">%1$,d de %2$,d capítulos</item>
+        <item quantity="other">%1$,d de %2$,d capítulos</item>
     </plurals>
     <plurals name="series_tracker_chapters">
         <item quantity="one">1 capítulo</item>
-        <item quantity="many">%1$d capítulos</item>
-        <item quantity="other">%1$d capítulos</item>
+        <item quantity="many">%1$,d capítulos</item>
+        <item quantity="other">%1$,d capítulos</item>
     </plurals>
     <string name="series_tracker_with_volume">%1$s · volumen %2$d</string>
     <string name="series_tracker_volumes">Volumen %1$d de %2$d</string>
@@ -2515,8 +2546,8 @@
     <string name="series_removed_title">Tus listas</string>
     <plurals name="series_chosen">
         <item quantity="one">1 capítulo</item>
-        <item quantity="many">%1$d capítulos</item>
-        <item quantity="other">%1$d capítulos</item>
+        <item quantity="many">%1$,d capítulos</item>
+        <item quantity="other">%1$,d capítulos</item>
     </plurals>
     <string name="series_choose_all_unread">Todos los no leídos</string>
     <string name="read_from_not_found">No se encontró en</string>
@@ -2552,8 +2583,8 @@
     <string name="series_remove_bookmark">Quitar marcador</string>
     <plurals name="series_versions">
         <item quantity="one">1 versión</item>
-        <item quantity="many">%1$d versiones</item>
-        <item quantity="other">%1$d versiones</item>
+        <item quantity="many">%1$,d versiones</item>
+        <item quantity="other">%1$,d versiones</item>
     </plurals>
     <string name="series_versions_loading">Buscando versiones…</string>
     <string name="series_version_in_use">%1$s en uso</string>
@@ -2561,7 +2592,7 @@
     <string name="chapter_state_downloaded">Descargado</string>
     <string name="chapter_state_queued">En cola</string>
     <string name="chapter_state_wifi">En cola · espera Wi-Fi</string>
-    <string name="chapter_state_downloading">Descargando · %1$d de %2$d páginas</string>
+    <string name="chapter_state_downloading">Descargando · %1$,d de %2$,d páginas</string>
     <string name="chapter_state_failed">No se pudo descargar. %1$s</string>
     <string name="chapter_state_page_of">Página %1$d de %2$d</string>
     <string name="chapter_state_page">Página %1$d</string>
@@ -2570,19 +2601,19 @@
     <string name="chapter_download_stop">Detener descarga</string>
     <string name="chapter_retry">Reintentar</string>
     <string name="chapter_download_delete">Eliminar descarga</string>
-    <string name="download_next">Los próximos %1$d sin leer</string>
+    <string name="download_next">Los próximos %1$,d sin leer</string>
     <string name="download_unread">Todos los capítulos sin leer</string>
     <plurals name="download_volume_count">
         <item quantity="one">%1$s · 1 capítulo</item>
-        <item quantity="many">%1$s · %2$d capítulos</item>
-        <item quantity="other">%1$s · %2$d capítulos</item>
+        <item quantity="many">%1$s · %2$,d capítulos</item>
+        <item quantity="other">%1$s · %2$,d capítulos</item>
     </plurals>
     <string name="download_choose">Elegir capítulos…</string>
     <string name="download_delete_series">Eliminar las descargas de esta serie</string>
     <plurals name="download_chapters">
         <item quantity="one">Descargar 1 capítulo</item>
-        <item quantity="many">Descargar %1$d capítulos</item>
-        <item quantity="other">Descargar %1$d capítulos</item>
+        <item quantity="many">Descargar %1$,d capítulos</item>
+        <item quantity="other">Descargar %1$,d capítulos</item>
     </plurals>
     <string name="download_over_wifi">Por Wi-Fi</string>
     <string name="read_again_title">¿Leer %1$s de nuevo desde el inicio?</string>
@@ -2600,8 +2631,8 @@
     <string name="series_tracker_connect">Conéctate en Ajustes para seguir esta serie</string>
     <string name="series_tracker_not_there">Sin coincidencia en este servicio de seguimiento</string>
     <string name="series_tracker_looking">Buscando esta serie…</string>
-    <string name="series_tracker_behind">Tiene el capítulo %1$d. Pasa al %2$d en la próxima sincronización.</string>
-    <string name="series_tracker_ahead">Tiene el capítulo %1$d, más adelante que Kaeri.</string>
+    <string name="series_tracker_behind">Tiene el capítulo %1$,d. Pasa al %2$,d en la próxima sincronización.</string>
+    <string name="series_tracker_ahead">Tiene el capítulo %1$,d, más adelante que Kaeri.</string>
     <string name="series_tracker_score">%1$s / 10</string>
     <string name="series_tracker_keep_kaeri">Mantener el avance de Kaeri</string>
     <string name="series_tracker_take_theirs">Usar el avance de %1$s</string>
@@ -2635,8 +2666,8 @@
     <string name="sources_found_server">Se encontró un servidor %1$s</string>
     <plurals name="sources_found_server_series">
         <item quantity="one">Se encontró un servidor %1$s con 1 serie</item>
-        <item quantity="many">Se encontró un servidor %1$s con %2$d series</item>
-        <item quantity="other">Se encontró un servidor %1$s con %2$d series</item>
+        <item quantity="many">Se encontró un servidor %1$s con %2$,d series</item>
+        <item quantity="other">Se encontró un servidor %1$s con %2$,d series</item>
     </plurals>
     <string name="book_server_looking">Revisando esta dirección…</string>
     <string name="book_server_note">Kaeri envía tu progreso de lectura a este servidor. La contraseña se queda en el Llavero.</string>
@@ -2646,17 +2677,17 @@
     <string name="book_sources_plugins_footer">Los Complementos vienen de las tiendas de complementos a las que te unes.</string>
     <plurals name="book_sources_series">
         <item quantity="one">1 serie</item>
-        <item quantity="many">%1$d series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="many">%1$,d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
-    <string name="book_sources_scanning">Revisando · %1$d encontradas</string>
+    <string name="book_sources_scanning">Revisando · %1$,d encontradas</string>
     <string name="book_sources_missing">No se encontró. ¿La unidad está conectada?</string>
     <string name="book_sources_off">Desactivado</string>
     <string name="book_sources_progress_back">el progreso vuelve al servidor</string>
     <string name="book_sources_opds">Catálogo OPDS</string>
     <string name="book_sources_from_store">De %1$s</string>
     <string name="book_sources_version">versión %1$s</string>
-    <string name="book_sources_check_matches">Revisar coincidencias · %1$d</string>
+    <string name="book_sources_check_matches">Revisar coincidencias · %1$,d</string>
     <string name="book_sources_check_matches_title">Revisar coincidencias</string>
     <string name="book_sources_scan">Revisar de nuevo</string>
     <string name="book_sources_report_progress">Enviar el progreso al servidor</string>
@@ -2672,8 +2703,8 @@
     <string name="read_sort_last_read">Leído hace poco</string>
     <plurals name="read_library_list_value">
         <item quantity="one">%1$s, 1 serie</item>
-        <item quantity="many">%1$s, %2$d series</item>
-        <item quantity="other">%1$s, %2$d series</item>
+        <item quantity="many">%1$s, %2$,d series</item>
+        <item quantity="other">%1$s, %2$,d series</item>
     </plurals>
     <string name="read_library_empty">Aún no hay nada en %1$s</string>
     <string name="read_library_empty_line">Las series que agregues desde Buscar o desde la página de una serie aparecen aquí.</string>
@@ -2683,15 +2714,15 @@
     <string name="read_search_placeholder">Buscar lectura</string>
     <plurals name="search_other_scope">
         <item quantity="one">1 coincidencia en %2$s</item>
-        <item quantity="many">%1$d coincidencias en %2$s</item>
-        <item quantity="other">%1$d coincidencias en %2$s</item>
+        <item quantity="many">%1$,d coincidencias en %2$s</item>
+        <item quantity="other">%1$,d coincidencias en %2$s</item>
     </plurals>
     <string name="search_show_them">Mostrarlas</string>
     <string name="read_search_browse_line">%1$s · de AniList</string>
     <plurals name="read_search_total">
         <item quantity="one">1 serie de AniList</item>
-        <item quantity="many">%1$d series de AniList</item>
-        <item quantity="other">%1$d series de AniList</item>
+        <item quantity="many">%1$,d series de AniList</item>
+        <item quantity="other">%1$,d series de AniList</item>
     </plurals>
     <string name="read_search_failed">No se pudo buscar</string>
     <string name="read_search_nothing">No se encontró nada para %1$s</string>
@@ -2711,16 +2742,16 @@
     <string name="read_filter_reset">Restablecer</string>
     <string name="read_filter_any">Cualquiera</string>
     <string name="read_filter_set">%1$s:</string>
-    <string name="read_filter_many">%1$s y %2$d más</string>
+    <string name="read_filter_many">%1$s y %2$,d más</string>
     <string name="read_filter_not_genre">Sin %1$s</string>
     <plurals name="read_filter_genres_count">
         <item quantity="one">1 género</item>
-        <item quantity="many">%1$d géneros</item>
-        <item quantity="other">%1$d géneros</item>
+        <item quantity="many">%1$,d géneros</item>
+        <item quantity="other">%1$,d géneros</item>
     </plurals>
     <string name="read_filter_included">Incluido</string>
     <string name="read_filter_left_out">Excluido</string>
-    <string name="onboarding_step">%1$d de %2$d</string>
+    <string name="onboarding_step">%1$,d de %2$,d</string>
     <string name="onboarding_welcome_line">Lleva el registro de lo que ves y lees, desde tus propias fuentes.</string>
     <string name="onboarding_welcome_note">Tus listas y tu progreso se quedan en tus dispositivos. Agregar servicios de seguimiento y fuentes depende de ti.</string>
     <string name="onboarding_medium_title">¿Ver, leer o ambos?</string>
@@ -2750,7 +2781,7 @@
     <string name="onboarding_both_books">Libros</string>
     <string name="onboarding_both_shows_folder_line">Archivos de video en este %1$s</string>
     <string name="onboarding_both_shows_server_line">Tu servidor Jellyfin</string>
-    <string name="medium_choice_position">%1$d de %2$d</string>
+    <string name="medium_choice_position">%1$,d de %2$,d</string>
     <string name="medium_change_later">Puedes cambiarlo en Ajustes.</string>
     <string name="medium_update_line">Kaeri ahora puede leer manga, webtoons y novelas ligeras de tus fuentes. Elige para qué sirve Kaeri en este %1$s.</string>
     <plurals name="medium_join_title_watch">
@@ -2824,24 +2855,24 @@
     <string name="accounts_mangaupdates_credit">Kaeri se conecta con MangaUpdates a través de su API pública.</string>
     <string name="accounts_username">Nombre de usuario</string>
     <plurals name="read_downloads_total">
-        <item quantity="one">%1$d capítulo · %2$s</item>
-        <item quantity="many">%1$d capítulos · %2$s</item>
-        <item quantity="other">%1$d capítulos · %2$s</item>
+        <item quantity="one">%1$,d capítulo · %2$s</item>
+        <item quantity="many">%1$,d capítulos · %2$s</item>
+        <item quantity="other">%1$,d capítulos · %2$s</item>
     </plurals>
-    <string name="read_downloads_active">%1$s · %2$d de %3$d páginas</string>
-    <string name="read_downloads_more_queued">%1$d más en cola</string>
+    <string name="read_downloads_active">%1$s · %2$,d de %3$,d páginas</string>
+    <string name="read_downloads_more_queued">%1$,d más en cola</string>
     <plurals name="read_downloads_queued">
-        <item quantity="one">%1$d capítulo en cola</item>
-        <item quantity="many">%1$d capítulos en cola</item>
-        <item quantity="other">%1$d capítulos en cola</item>
+        <item quantity="one">%1$,d capítulo en cola</item>
+        <item quantity="many">%1$,d capítulos en cola</item>
+        <item quantity="other">%1$,d capítulos en cola</item>
     </plurals>
     <string name="read_downloads_failed">No se pudo descargar %1$s. %2$s</string>
     <plurals name="read_downloads_kept">
-        <item quantity="one">%1$d capítulo</item>
-        <item quantity="many">%1$d capítulos</item>
-        <item quantity="other">%1$d capítulos</item>
+        <item quantity="one">%1$,d capítulo</item>
+        <item quantity="many">%1$,d capítulos</item>
+        <item quantity="other">%1$,d capítulos</item>
     </plurals>
-    <string name="read_downloads_read">%1$d leídos</string>
+    <string name="read_downloads_read">%1$,d leídos</string>
     <string name="read_downloads_delete_read">Eliminar leídos</string>
     <string name="seasonal_previous">Temporada anterior</string>
     <string name="seasonal_next">Próxima temporada</string>
@@ -2880,7 +2911,7 @@
     <string name="search_loading_more">Cargando más títulos</string>
     <string name="filters_title">Filtros</string>
     <string name="filters_close">Cerrar filtros</string>
-    <string name="filters_button_count">Todos los filtros · %1$d</string>
+    <string name="filters_button_count">Todos los filtros · %1$,d</string>
     <string name="filters_button">Todos los filtros</string>
     <string name="filter_genre">Género</string>
     <string name="filter_genres">Géneros</string>
@@ -2937,18 +2968,18 @@
     <string name="search_line_service">En %1$s</string>
     <plurals name="count_episodes">
         <item quantity="one">Un episodio</item>
-        <item quantity="many">%1$d de episodios</item>
-        <item quantity="other">%1$d episodios</item>
+        <item quantity="many">%1$,d de episodios</item>
+        <item quantity="other">%1$,d episodios</item>
     </plurals>
-    <string name="count_episodes_short">%1$d ep.</string>
-    <string name="count_out_of">%1$d de %2$d emitidos</string>
-    <string name="count_out_of_short">%1$d de %2$d</string>
+    <string name="count_episodes_short">%1$,d ep.</string>
+    <string name="count_out_of">%1$,d de %2$,d emitidos</string>
+    <string name="count_out_of_short">%1$,d de %2$,d</string>
     <plurals name="count_out">
         <item quantity="one">Un episodio emitido</item>
-        <item quantity="many">%1$d de eps. emitidos</item>
-        <item quantity="other">%1$d eps. emitidos</item>
+        <item quantity="many">%1$,d de eps. emitidos</item>
+        <item quantity="other">%1$,d eps. emitidos</item>
     </plurals>
-    <string name="count_out_short">%1$d emit.</string>
+    <string name="count_out_short">%1$,d emit.</string>
     <string name="count_starts">Empieza el %1$s</string>
     <string name="count_not_out">Aún no sale</string>
     <string name="count_next_of">Ep. %1$d de %2$d</string>
@@ -2956,14 +2987,14 @@
     <string name="count_dub_through">Dob. %1$d</string>
     <plurals name="count_spoken_episodes">
         <item quantity="one">Un episodio</item>
-        <item quantity="many">%1$d de episodios</item>
-        <item quantity="other">%1$d episodios</item>
+        <item quantity="many">%1$,d de episodios</item>
+        <item quantity="other">%1$,d episodios</item>
     </plurals>
-    <string name="count_spoken_out_of">%1$d de %2$d episodios emitidos</string>
+    <string name="count_spoken_out_of">%1$,d de %2$,d episodios emitidos</string>
     <plurals name="count_spoken_out">
         <item quantity="one">Un episodio emitido</item>
-        <item quantity="many">%1$d de episodios emitidos</item>
-        <item quantity="other">%1$d episodios emitidos</item>
+        <item quantity="many">%1$,d de episodios emitidos</item>
+        <item quantity="other">%1$,d episodios emitidos</item>
     </plurals>
     <string name="count_spoken_starts">Empieza el %1$s</string>
     <string name="count_spoken_next_of">Episodio %1$d de %2$d</string>
@@ -3033,27 +3064,27 @@
     <string name="servers_qc_new_code">Obtener un código nuevo</string>
     <string name="servers_libraries_title">Elegir bibliotecas</string>
     <string name="servers_libraries_body">Las series se asocian con AniList para que aparezcan en Inicio, tus listas y Búsqueda.</string>
-    <string name="servers_library_line">%1$s · %2$d series</string>
+    <string name="servers_library_line">%1$s · %2$,d series</string>
     <string name="servers_report">Informar a Jellyfin lo que ves</string>
     <string name="servers_report_line">Los puntos de reanudación y las marcas de visto siguen lo que reproduces aquí.</string>
     <string name="servers_add">Agregar servidor</string>
-    <string name="servers_row_matching">Buscando coincidencias · %1$d de %2$d series</string>
+    <string name="servers_row_matching">Buscando coincidencias · %1$,d de %2$,d series</string>
     <plurals name="servers_row_summary">
-        <item quantity="one">1 biblioteca · %2$d series</item>
-        <item quantity="many">%1$d bibliotecas · %2$d series</item>
-        <item quantity="other">%1$d bibliotecas · %2$d series</item>
+        <item quantity="one">1 biblioteca · %2$,d series</item>
+        <item quantity="many">%1$,d bibliotecas · %2$,d series</item>
+        <item quantity="other">%1$,d bibliotecas · %2$,d series</item>
     </plurals>
     <plurals name="servers_row_libraries">
         <item quantity="one">1 biblioteca</item>
-        <item quantity="many">%1$d bibliotecas</item>
-        <item quantity="other">%1$d bibliotecas</item>
+        <item quantity="many">%1$,d bibliotecas</item>
+        <item quantity="other">%1$,d bibliotecas</item>
     </plurals>
     <plurals name="servers_row_series">
         <item quantity="one">1 serie</item>
-        <item quantity="many">%1$d series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="many">%1$,d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
-    <string name="servers_row_needs_look">%1$d requieren revisión</string>
+    <string name="servers_row_needs_look">%1$,d requieren revisión</string>
     <string name="servers_page_line">%1$s · Jellyfin %2$s · sesión iniciada como %3$s</string>
     <string name="servers_sign_out">Cerrar sesión</string>
     <string name="servers_remove">Quitar servidor</string>
@@ -3081,7 +3112,7 @@
     <string name="servers_quick_connect">Quick Connect</string>
     <string name="servers_libraries_heading">Bibliotecas</string>
     <string name="servers_refresh">Asociar de nuevo</string>
-    <string name="servers_needs_look">%1$d sin coincidencia segura en AniList</string>
+    <string name="servers_needs_look">%1$,d sin coincidencia segura en AniList</string>
     <string name="servers_kind_films">Películas</string>
     <string name="servers_error_certificate">%1$s usa un certificado en el que este dispositivo no confía. Usa una dirección https:// con un certificado de confianza.</string>
     <string name="servers_row_signed_out_here">Sesión cerrada</string>
@@ -3150,8 +3181,8 @@
     <string name="settings_system_captions_detail">Los subtítulos simples usan tus preferencias de subtítulos de Accesibilidad. Los subtítulos con estilo mantienen su propio aspecto.</string>
     <plurals name="settings_overridden">
         <item quantity="one">Cambiado para una serie</item>
-        <item quantity="many">Cambiado para %1$d series</item>
-        <item quantity="other">Cambiado para %1$d series</item>
+        <item quantity="many">Cambiado para %1$,d series</item>
+        <item quantity="other">Cambiado para %1$,d series</item>
     </plurals>
     <string name="settings_new_downloads">Nuevas descargas</string>
     <string name="settings_keep_next">Conservar los siguientes episodios</string>
@@ -3235,8 +3266,8 @@
     <string name="widget_resume_dubbed_label">Reanudar el episodio %1$d, doblado, de %2$s</string>
     <plurals name="accounts_changes_waiting">
         <item quantity="one">Un cambio pendiente de sincronizar</item>
-        <item quantity="many">%1$d cambios pendientes de sincronizar</item>
-        <item quantity="other">%1$d cambios pendientes de sincronizar</item>
+        <item quantity="many">%1$,d cambios pendientes de sincronizar</item>
+        <item quantity="other">%1$,d cambios pendientes de sincronizar</item>
     </plurals>
     <string name="settings_quality_higher">Alta</string>
     <string name="settings_quality_standard">Estándar</string>
@@ -3275,7 +3306,7 @@
     <string name="settings_subs_system_change">Cambiar en los ajustes de Accesibilidad</string>
     <string name="settings_subs_system_value">Del sistema</string>
     <string name="settings_subs_size">Tamaño</string>
-    <string name="settings_subs_size_value">%1$d%%</string>
+    <string name="settings_subs_size_value">%1$,d%%</string>
     <string name="settings_subs_font">Fuente</string>
     <string name="settings_subs_font_default">Predeterminada</string>
     <string name="settings_subs_font_serif">Con serifa</string>
@@ -3299,7 +3330,7 @@
     <string name="settings_subs_background_all">Detrás de todas las líneas</string>
     <string name="settings_subs_opacity">Opacidad</string>
     <string name="settings_subs_raise">Subir subtítulos</string>
-    <string name="settings_subs_raise_value">%1$d%% de la imagen</string>
+    <string name="settings_subs_raise_value">%1$,d%% de la imagen</string>
     <string name="settings_subs_styled">Subtítulos con estilo</string>
     <string name="settings_subs_styled_keep">Mantener su aspecto</string>
     <string name="settings_subs_styled_keep_detail">Los subtítulos con estilo conservan las fuentes, colores y posición de los letreros que les dieron sus autores. El tamaño y Subir siguen aplicándose.</string>
@@ -3317,12 +3348,12 @@
     <string name="book_server_key_kept">Kaeri guarda la clave en %1$s y solo muestra sus últimos cuatro caracteres.</string>
     <string name="book_server_key">Clave ••••%1$s</string>
     <plurals name="book_server_found_title">
-        <item quantity="one">Se encontraron %1$d series</item>
-        <item quantity="many">Se encontraron %1$d series en %2$d de bibliotecas</item>
-        <item quantity="other">Se encontraron %1$d series en %2$d bibliotecas</item>
+        <item quantity="one">Se encontraron %1$,d series</item>
+        <item quantity="many">Se encontraron %1$,d series en %2$,d de bibliotecas</item>
+        <item quantity="other">Se encontraron %1$,d series en %2$,d bibliotecas</item>
     </plurals>
     <string name="book_server_found_line">%1$s en %2$s. Elige las bibliotecas que quieres agregar.</string>
-    <string name="book_server_library_line">%1$d series</string>
+    <string name="book_server_library_line">%1$,d series</string>
     <string name="book_server_sync_progress">Enviar el progreso al servidor</string>
     <string name="book_server_sync_progress_line">Las páginas que leas aquí vuelven a %1$s, y su progreso llega aquí.</string>
     <string name="book_server_username">Usuario</string>
@@ -3338,18 +3369,18 @@
     <string name="book_server_empty_recheck">Puedes agregarlo ahora. Kaeri vuelve a revisar cada 30 minutos.</string>
     <string name="book_server_not_books_line">Kaeri lee catálogos de Komga, Kavita y OPDS.</string>
     <plurals name="book_folder_found">
-        <item quantity="one">Se encontraron %1$d series en un archivo</item>
-        <item quantity="many">Se encontraron %1$d series en %2$d de archivos</item>
-        <item quantity="other">Se encontraron %1$d series en %2$d archivos</item>
+        <item quantity="one">Se encontraron %1$,d series en un archivo</item>
+        <item quantity="many">Se encontraron %1$,d series en %2$,d de archivos</item>
+        <item quantity="other">Se encontraron %1$,d series en %2$,d archivos</item>
     </plurals>
-    <string name="book_folder_found_line">%1$s. Kaeri identificó %2$d de ellas por sus datos.</string>
+    <string name="book_folder_found_line">%1$s. Kaeri identificó %2$,d de ellas por sus datos.</string>
     <plurals name="book_folder_unsupported">
         <item quantity="one">Un archivo que Kaeri no puede abrir</item>
-        <item quantity="many">%1$d de archivos que Kaeri no puede abrir</item>
-        <item quantity="other">%1$d archivos que Kaeri no puede abrir</item>
+        <item quantity="many">%1$,d de archivos que Kaeri no puede abrir</item>
+        <item quantity="other">%1$,d archivos que Kaeri no puede abrir</item>
     </plurals>
     <string name="book_folder_unsupported_line">%1$s. Se quedan en la carpeta tal como están.</string>
-    <string name="book_folder_drm">%1$d EPUB bloqueados con DRM</string>
+    <string name="book_folder_drm">%1$,d EPUB bloqueados con DRM</string>
     <string name="book_folder_opens">Kaeri abre archivos CBZ, CBR, EPUB y PDF, y carpetas de imágenes.</string>
     <string name="book_folder_show_files">Mostrar archivos</string>
     <string name="book_folder_add">Agregar carpeta</string>
@@ -3357,8 +3388,8 @@
     <string name="book_folder_empty">No hay nada en %1$s que Kaeri pueda abrir</string>
     <plurals name="book_folder_empty_line">
         <item quantity="one">Tiene un archivo, que no es CBZ, CBR, EPUB, PDF ni una imagen.</item>
-        <item quantity="many">Tiene %1$d de archivos, ninguno CBZ, CBR, EPUB, PDF ni imágenes.</item>
-        <item quantity="other">Tiene %1$d archivos, ninguno CBZ, CBR, EPUB, PDF ni imágenes.</item>
+        <item quantity="many">Tiene %1$,d de archivos, ninguno CBZ, CBR, EPUB, PDF ni imágenes.</item>
+        <item quantity="other">Tiene %1$,d archivos, ninguno CBZ, CBR, EPUB, PDF ni imágenes.</item>
     </plurals>
     <string name="book_folder_choose_other">Elegir otra carpeta</string>
     <string name="store_join_title">Unirse a una tienda de complementos</string>
@@ -3366,8 +3397,8 @@
     <string name="store_joined_title">Te uniste a %1$s</string>
     <plurals name="store_joined_line">
         <item quantity="one">%1$s ofrece un complemento. Unirte no instala nada; instálalo aquí o más tarde.</item>
-        <item quantity="many">%1$s ofrece %2$d de complementos. Unirte no instala nada; elige los que quieras aquí o más tarde.</item>
-        <item quantity="other">%1$s ofrece %2$d complementos. Unirte no instala nada; elige los que quieras aquí o más tarde.</item>
+        <item quantity="many">%1$s ofrece %2$,d de complementos. Unirte no instala nada; elige los que quieras aquí o más tarde.</item>
+        <item quantity="other">%1$s ofrece %2$,d complementos. Unirte no instala nada; elige los que quieras aquí o más tarde.</item>
     </plurals>
     <string name="store_group_reading">Para leer</string>
     <string name="store_group_watching">Para ver</string>
@@ -3376,8 +3407,8 @@
     <string name="store_install_all_reading">Instalar todos para leer</string>
     <plurals name="store_installed">
         <item quantity="one">Se instaló un complemento. Está en Tus fuentes.</item>
-        <item quantity="many">Se instalaron %1$d de complementos. Están en Tus fuentes.</item>
-        <item quantity="other">Se instalaron %1$d complementos. Están en Tus fuentes.</item>
+        <item quantity="many">Se instalaron %1$,d de complementos. Están en Tus fuentes.</item>
+        <item quantity="other">Se instalaron %1$,d complementos. Están en Tus fuentes.</item>
     </plurals>
     <string name="store_other_medium">Cada complemento de %1$s es para ver</string>
     <string name="store_other_medium_line">La opción de ver está desactivada en este dispositivo, así que ninguno aparece en Tus fuentes.</string>
@@ -3388,37 +3419,37 @@
     <string name="store_err_unreachable_line">La invitación parece correcta, pero la tienda no responde. Inténtalo más tarde o pregunta a %1$s si está en marcha.</string>
     <plurals name="store_other_medium_more">
         <item quantity="one">Otro es para ver, y eso está desactivado en este dispositivo.</item>
-        <item quantity="many">Otros %1$d de son para ver, y eso está desactivado en este dispositivo.</item>
-        <item quantity="other">Otros %1$d son para ver, y eso está desactivado en este dispositivo.</item>
+        <item quantity="many">Otros %1$,d de son para ver, y eso está desactivado en este dispositivo.</item>
+        <item quantity="other">Otros %1$,d son para ver, y eso está desactivado en este dispositivo.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
         <item quantity="one">Otro es para leer, algo que esta TV no hace.</item>
-        <item quantity="many">Otros %1$d de son para leer, algo que esta TV no hace.</item>
-        <item quantity="other">Otros %1$d son para leer, algo que esta TV no hace.</item>
+        <item quantity="many">Otros %1$,d de son para leer, algo que esta TV no hace.</item>
+        <item quantity="other">Otros %1$,d son para leer, algo que esta TV no hace.</item>
     </plurals>
     <string name="store_tv_all_reading">Cada complemento de %1$s es para leer, algo que esta TV no hace.</string>
     <string name="store_plugin_row">Versión %1$s · puede contactar a %2$s</string>
-    <string name="source_added">Se agregó %1$s · %2$d series</string>
+    <string name="source_added">Se agregó %1$s · %2$,d series</string>
     <plurals name="source_added_plugins">
         <item quantity="one">Se instaló un complemento de %2$s</item>
-        <item quantity="many">Se instalaron %1$d de complementos de %2$s</item>
-        <item quantity="other">Se instalaron %1$d complementos de %2$s</item>
+        <item quantity="many">Se instalaron %1$,d de complementos de %2$s</item>
+        <item quantity="other">Se instalaron %1$,d complementos de %2$s</item>
     </plurals>
     <plurals name="source_row_server">
-        <item quantity="one">%1$s · %2$d series en %3$d biblioteca · agregado ahora mismo</item>
-        <item quantity="many">%1$s · %2$d series en %3$d de bibliotecas · agregado ahora mismo</item>
-        <item quantity="other">%1$s · %2$d series en %3$d bibliotecas · agregado ahora mismo</item>
+        <item quantity="one">%1$s · %2$,d series en %3$,d biblioteca · agregado ahora mismo</item>
+        <item quantity="many">%1$s · %2$,d series en %3$,d de bibliotecas · agregado ahora mismo</item>
+        <item quantity="other">%1$s · %2$,d series en %3$,d bibliotecas · agregado ahora mismo</item>
     </plurals>
     <plurals name="source_row_server_series">
-        <item quantity="one">%1$s · %2$d series en %3$d biblioteca</item>
-        <item quantity="many">%1$s · %2$d series en %3$d de bibliotecas</item>
-        <item quantity="other">%1$s · %2$d series en %3$d bibliotecas</item>
+        <item quantity="one">%1$s · %2$,d series en %3$,d biblioteca</item>
+        <item quantity="many">%1$s · %2$,d series en %3$,d de bibliotecas</item>
+        <item quantity="other">%1$s · %2$,d series en %3$,d bibliotecas</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · aún sin series · vuelve a revisar en 30 minutos</string>
     <plurals name="source_row_folder">
-        <item quantity="one">%1$s · %2$d series · un archivo omitido</item>
-        <item quantity="many">%1$s · %2$d series · %3$d de archivos omitidos</item>
-        <item quantity="other">%1$s · %2$d series · %3$d archivos omitidos</item>
+        <item quantity="one">%1$s · %2$,d series · un archivo omitido</item>
+        <item quantity="many">%1$s · %2$,d series · %3$,d de archivos omitidos</item>
+        <item quantity="other">%1$s · %2$,d series · %3$,d archivos omitidos</item>
     </plurals>
     <string name="source_row_plugin">De %1$s · %2$s · versión %3$s</string>
     <string name="sources_title">Fuentes</string>
@@ -3428,9 +3459,9 @@
     <string name="source_picker_automatic">Automática</string>
     <string name="source_picker_automatic_detail">Cada episodio de la primera fuente que lo tenga</string>
     <plurals name="source_picker_coverage">
-        <item quantity="one">%1$d de %2$d episodio</item>
-        <item quantity="many">%1$d de %2$d episodios</item>
-        <item quantity="other">%1$d de %2$d episodios</item>
+        <item quantity="one">%1$,d de %2$,d episodio</item>
+        <item quantity="many">%1$,d de %2$,d episodios</item>
+        <item quantity="other">%1$,d de %2$,d episodios</item>
     </plurals>
     <string name="source_note_off">Desactivada</string>
     <string name="source_note_resting">No responde, se reintentará pronto</string>
@@ -3479,16 +3510,16 @@
     <string name="sources_contacts_one">Se conecta a %1$s</string>
     <plurals name="sources_contacts_line">
         <item quantity="one">Se conecta a %1$s y uno más</item>
-        <item quantity="many">Se conecta a %1$s y %2$d más</item>
-        <item quantity="other">Se conecta a %1$s y %2$d más</item>
+        <item quantity="many">Se conecta a %1$s y %2$,d más</item>
+        <item quantity="other">Se conecta a %1$s y %2$,d más</item>
     </plurals>
     <string name="sources_contacts_none">No lista hosts a los que se conecte</string>
     <string name="sources_no_hosts">Sin hosts</string>
     <string name="sources_update_contacts_one">Esta actualización también se conecta a %1$s.</string>
     <plurals name="sources_update_contacts">
         <item quantity="one">Esta actualización también se conecta a %1$s y uno más.</item>
-        <item quantity="many">Esta actualización también se conecta a %1$s y %2$d más.</item>
-        <item quantity="other">Esta actualización también se conecta a %1$s y %2$d más.</item>
+        <item quantity="many">Esta actualización también se conecta a %1$s y %2$,d más.</item>
+        <item quantity="other">Esta actualización también se conecta a %1$s y %2$,d más.</item>
     </plurals>
     <string name="sources_update_title">¿Actualizar %1$s?</string>
     <string name="sources_replace_title">¿Reemplazar %1$s?</string>
@@ -3499,13 +3530,13 @@
     <string name="sources_source_order_row">Orden de la fuente</string>
     <string name="sources_torrents_note">Los torrents forman parte de Kaeri, no de un complemento. El proxy y compartir se configuran en Ajustes, en Fuentes.</string>
     <string name="sources_rebuilding">Configurando las fuentes de nuevo</string>
-    <string name="sources_response_ms">%1$d ms</string>
+    <string name="sources_response_ms">%1$,d ms</string>
     <string name="match_fix">Corregir esta coincidencia</string>
     <string name="match_choose">Elegir la coincidencia</string>
     <plurals name="match_uncertain">
         <item quantity="one">%2$s tiene un título que podría ser este. Elígelo para reproducir sus episodios.</item>
-        <item quantity="many">%2$s tiene %1$d títulos que podrían ser este. Elige uno para reproducir sus episodios.</item>
-        <item quantity="other">%2$s tiene %1$d títulos que podrían ser este. Elige uno para reproducir sus episodios.</item>
+        <item quantity="many">%2$s tiene %1$,d títulos que podrían ser este. Elige uno para reproducir sus episodios.</item>
+        <item quantity="other">%2$s tiene %1$,d títulos que podrían ser este. Elige uno para reproducir sus episodios.</item>
     </plurals>
     <string name="match_uncertain_none">%1$s no tiene ningún título que coincida con este. Elige uno de todos modos o busca.</string>
     <string name="match_source_picker_row">¿Título incorrecto? Corregir</string>
@@ -3666,8 +3697,8 @@
     <string name="stores_owner_devices">Propietario · %1$s</string>
     <plurals name="stores_member_devices">
         <item quantity="one">Su único dispositivo</item>
-        <item quantity="many">Sus %1$d dispositivos</item>
-        <item quantity="other">Sus %1$d dispositivos</item>
+        <item quantity="many">Sus %1$,d dispositivos</item>
+        <item quantity="other">Sus %1$,d dispositivos</item>
     </plurals>
     <string name="stores_invite_for">¿Para quién es? (opcional)</string>
     <string name="stores_their_name">Su nombre</string>
@@ -3694,8 +3725,8 @@
     <string name="stores_invite_lasts_forever">Sin fecha de fin</string>
     <string name="stores_invite_group_name">Un nombre para esta invitación (opcional)</string>
     <string name="stores_invite_group_detail">Cada persona agrega su propio nombre al unirse.</string>
-    <string name="stores_invite_works_times">Funciona %1$d veces, hasta el %2$s.</string>
-    <string name="stores_invite_works_times_forever">Funciona %1$d veces, hasta que la canceles.</string>
+    <string name="stores_invite_works_times">Funciona %1$,d veces, hasta el %2$s.</string>
+    <string name="stores_invite_works_times_forever">Funciona %1$,d veces, hasta que la canceles.</string>
     <string name="stores_invite_works_any">Cualquiera que tenga este enlace puede unirse, hasta el %1$s.</string>
     <string name="stores_invite_works_any_forever">Cualquiera que tenga este enlace puede unirse hasta que lo canceles.</string>
     <string name="stores_invite_once_until">Funciona una vez, para la persona a la que se la envíes, hasta el %1$s.</string>
@@ -3706,10 +3737,10 @@
     <string name="stores_invite_not_used">Aún sin usar</string>
     <plurals name="stores_invite_used">
         <item quantity="one">Usada una vez</item>
-        <item quantity="many">Usada %1$d veces</item>
-        <item quantity="other">Usada %1$d veces</item>
+        <item quantity="many">Usada %1$,d veces</item>
+        <item quantity="other">Usada %1$,d veces</item>
     </plurals>
-    <string name="stores_invite_used_of">Usada %1$d de %2$d</string>
+    <string name="stores_invite_used_of">Usada %1$,d de %2$,d</string>
     <string name="stores_invites_ended">Terminadas en los últimos 30 días</string>
     <string name="stores_invite_used_up">Agotada %1$s</string>
     <string name="stores_invite_ran_out">Terminó %1$s</string>
@@ -3718,8 +3749,8 @@
     <string name="stores_invite_joined">%1$s · se unió %2$s</string>
     <plurals name="stores_cancel_invite_detail">
         <item quantity="one">Nadie más podrá unirse con ella. La persona que se unió sigue siendo miembro.</item>
-        <item quantity="many">Nadie más podrá unirse con ella. Las %1$d personas que se unieron siguen siendo miembros.</item>
-        <item quantity="other">Nadie más podrá unirse con ella. Las %1$d personas que se unieron siguen siendo miembros.</item>
+        <item quantity="many">Nadie más podrá unirse con ella. Las %1$,d personas que se unieron siguen siendo miembros.</item>
+        <item quantity="other">Nadie más podrá unirse con ella. Las %1$,d personas que se unieron siguen siendo miembros.</item>
     </plurals>
     <string name="stores_join_your_name">Tu nombre (opcional)</string>
     <string name="stores_join_your_name_detail">Los dueños de la tienda ven este nombre en la lista de miembros.</string>
@@ -3732,11 +3763,11 @@
     <string name="stores_only_invited">Solo personas que invites</string>
     <plurals name="stores_devices_joined">
         <item quantity="one">Un dispositivo se unió con el enlace</item>
-        <item quantity="many">%1$d dispositivos se unieron con el enlace</item>
-        <item quantity="other">%1$d dispositivos se unieron con el enlace</item>
+        <item quantity="many">%1$,d dispositivos se unieron con el enlace</item>
+        <item quantity="other">%1$,d dispositivos se unieron con el enlace</item>
     </plurals>
     <string name="stores_device_joined_at">Se unió %1$s</string>
-    <string name="stores_newest_listed">Se muestran los %1$d más recientes.</string>
+    <string name="stores_newest_listed">Se muestran los %1$,d más recientes.</string>
     <string name="stores_server_older">El servidor de esta tienda de complementos es más antiguo y solo deja entrar a personas que invites. Al actualizarlo se agrega esta opción.</string>
     <string name="stores_remove_devices_title">¿Quitar los dispositivos que se unieron con el enlace?</string>
     <string name="stores_remove_devices_detail">Dejan de funcionar con %1$s de inmediato. Los complementos ya instalados en ellos se quedan.</string>
@@ -3747,8 +3778,8 @@
     <string name="stores_copy_link">Copiar enlace</string>
     <plurals name="stores_offers_plugins">
         <item quantity="one">Un complemento</item>
-        <item quantity="many">%1$d complementos</item>
-        <item quantity="other">%1$d complementos</item>
+        <item quantity="many">%1$,d complementos</item>
+        <item quantity="other">%1$,d complementos</item>
     </plurals>
     <string name="notice_open_stores">Abrir tiendas de complementos</string>
     <string name="stores_what_is">Una tienda de complementos es un servidor pequeño que guarda complementos firmados y da a cada dispositivo su propio token. Sus complementos agregan fuentes. Kaeri no administra tiendas de complementos ni lista ninguna, así que te unes a una con un enlace de invitación de su propietario.</string>
@@ -3803,7 +3834,7 @@
     <string name="devices_only_this">Solo este dispositivo</string>
     <string name="devices_only_this_line">Vincula otro dispositivo para compartir dónde te quedaste, tu historial y tus ajustes.</string>
     <string name="devices_add">Añadir un dispositivo</string>
-    <string name="devices_not_seen">Sin verse desde hace %1$d días</string>
+    <string name="devices_not_seen">Sin verse desde hace %1$,d días</string>
     <string name="devices_remote_only">Solo control remoto</string>
     <string name="devices_also_sync">Sincronizar también con %1$s</string>
     <string name="devices_paired_tvs_foot">Vinculado para Reproducir en el televisor. Un televisor vinculado como control remoto nunca recibe tu historial.</string>
@@ -3880,9 +3911,9 @@
     <string name="rkey_new_foot">La clave anterior deja de funcionar, y tus dispositivos cambian a la nueva la próxima vez que se sincronicen.</string>
     <string name="rkey_enter_title">Ingresa tu clave de recuperación</string>
     <plurals name="rkey_enter_line">
-        <item quantity="one">%1$s guarda el historial de %2$d dispositivo. La clave que guardaste al activar la sincronización lo abre.</item>
-        <item quantity="many">%1$s guarda el historial de %2$d dispositivos. La clave que guardaste al activar la sincronización lo abre.</item>
-        <item quantity="other">%1$s guarda el historial de %2$d dispositivos. La clave que guardaste al activar la sincronización lo abre.</item>
+        <item quantity="one">%1$s guarda el historial de %2$,d dispositivo. La clave que guardaste al activar la sincronización lo abre.</item>
+        <item quantity="many">%1$s guarda el historial de %2$,d dispositivos. La clave que guardaste al activar la sincronización lo abre.</item>
+        <item quantity="other">%1$s guarda el historial de %2$,d dispositivos. La clave que guardaste al activar la sincronización lo abre.</item>
     </plurals>
     <string name="rkey_enter_note">24 letras y dígitos, en grupos de cuatro. Los espacios y las mayúsculas no importan.</string>
     <string name="rkey_wrong">Esa clave no abre esta carpeta. Revisa cada grupo de cuatro y vuelve a intentarlo.</string>
@@ -3947,8 +3978,8 @@
     <string name="cloud_app_password_note">Crea una en Nextcloud, en Ajustes, Seguridad. Se guarda en este dispositivo (%1$s).</string>
     <plurals name="devices_tvs_for_play">
         <item quantity="one">Un televisor para Reproducir en el televisor</item>
-        <item quantity="many">%1$d de televisores para Reproducir en el televisor</item>
-        <item quantity="other">%1$d televisores para Reproducir en el televisor</item>
+        <item quantity="many">%1$,d de televisores para Reproducir en el televisor</item>
+        <item quantity="other">%1$,d televisores para Reproducir en el televisor</item>
     </plurals>
     <string name="devices_paired_today">Vinculado hoy</string>
     <string name="tv_devices_add_line">Muestra un código para ingresar en tu teléfono</string>
@@ -4027,17 +4058,17 @@
     <string name="episode_synopsis_hidden">Sinopsis oculta por la protección contra spoilers</string>
     <string name="episode_synopsis_show">Mostrar sinopsis</string>
     <string name="episode_synopsis_show_hint">Muestra la imagen y la sinopsis de este episodio</string>
-    <string name="episode_facts">%1$d min · Emitido el %2$s</string>
-    <string name="episode_facts_length">%1$d min</string>
-    <string name="episode_facts_left">Quedan %1$d min</string>
+    <string name="episode_facts">%1$,d min · Emitido el %2$s</string>
+    <string name="episode_facts_length">%1$,d min</string>
+    <string name="episode_facts_left">Quedan %1$,d min</string>
     <string name="episode_protection_line">La protección contra spoilers oculta lo que viene después del episodio %1$d.</string>
     <string name="episode_protection_line_short">Oculto después del episodio %1$d</string>
     <string name="episode_range">Episodios %1$d a %2$d</string>
     <string name="episode_range_label">Rango de episodios</string>
     <plurals name="episode_fold">
         <item quantity="one">Un episodio visto</item>
-        <item quantity="many">%1$d episodios vistos</item>
-        <item quantity="other">%1$d episodios vistos</item>
+        <item quantity="many">%1$,d episodios vistos</item>
+        <item quantity="other">%1$,d episodios vistos</item>
     </plurals>
     <string name="episode_short">E%1$d</string>
     <string name="episode_aired">Emitido el %1$s</string>
@@ -4069,7 +4100,7 @@
     <string name="more_rankings">Clasificaciones</string>
     <string name="more_following">Personas que sigues</string>
     <string name="more_following_note">Desde AniList</string>
-    <string name="more_followed_score">%1$d/10</string>
+    <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Títulos similares</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList todavía no tiene reparto, equipo ni recomendaciones para este título.</string>
@@ -4077,8 +4108,8 @@
     <string name="more_hide_spoiler_tags">Ocultar etiquetas de spoiler</string>
     <plurals name="more_show_spoiler_tags">
         <item quantity="one">Mostrar una etiqueta de spoiler</item>
-        <item quantity="many">Mostrar %1$d etiquetas de spoiler</item>
-        <item quantity="other">Mostrar %1$d etiquetas de spoiler</item>
+        <item quantity="many">Mostrar %1$,d etiquetas de spoiler</item>
+        <item quantity="other">Mostrar %1$,d etiquetas de spoiler</item>
     </plurals>
     <string name="episode_line_dubbed">%1$s · Doblado</string>
     <string name="title_button_play_dubbed">Reproducir episodio %1$d · Doblado</string>
@@ -4090,7 +4121,7 @@
     <string name="title_fact_after">Después del episodio %1$d</string>
     <string name="title_fact_now">En emisión</string>
     <string name="title_fact_tba">Por anunciar</string>
-    <string name="more_following_line">%1$s · %2$d/10</string>
+    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Ir al episodio…</string>
     <string name="episode_go_to_title">Ir al episodio</string>
     <string name="episode_go_to_go">Ir</string>
@@ -4177,8 +4208,8 @@
     <string name="accounts_state_signed_in">Sesión iniciada en %1$s como %2$s</string>
     <plurals name="accounts_state_signed_in_waiting">
         <item quantity="one">Sesión iniciada en %1$s como %2$s · un cambio en espera</item>
-        <item quantity="many">Sesión iniciada en %1$s como %2$s · %3$d cambios en espera</item>
-        <item quantity="other">Sesión iniciada en %1$s como %2$s · %3$d cambios en espera</item>
+        <item quantity="many">Sesión iniciada en %1$s como %2$s · %3$,d cambios en espera</item>
+        <item quantity="other">Sesión iniciada en %1$s como %2$s · %3$,d cambios en espera</item>
     </plurals>
     <string name="accounts_state_expired">%1$s necesita que vuelvas a iniciar sesión</string>
     <string name="accounts_state_expired_short">Vuelve a iniciar sesión para seguir sincronizando</string>
@@ -4300,7 +4331,7 @@
     <string name="tv_volume">Volumen del televisor</string>
     <string name="tv_cast_group">Chromecast</string>
     <string name="tv_cast_none_found">Las TVs con Chromecast integrado también aparecen aquí.</string>
-    <string name="tv_cast_counting">%1$s · %2$d s</string>
+    <string name="tv_cast_counting">%1$s · %2$,d s</string>
     <string name="tv_cast_couldnt_start">No se pudo iniciar en %1$s</string>
     <string name="tv_cast_stopped">Transmisión detenida</string>
     <string name="tv_cast_play_here">Reproducir aquí</string>
@@ -4308,7 +4339,7 @@
     <string name="tv_cast_mute">Silenciar</string>
     <string name="tv_cast_unmute">Activar sonido</string>
     <string name="tv_cast_volume_on_tv">Se ajusta en la TV</string>
-    <string name="tv_cast_up_next_in">Siguiente · se reproduce en %1$d s</string>
+    <string name="tv_cast_up_next_in">Siguiente · se reproduce en %1$,d s</string>
     <string name="tv_forget_note">Si olvidas un televisor aquí, él también olvida este dispositivo.</string>
     <string name="updates_title">Actualizaciones</string>
     <string name="updates_checking">Buscando una versión más nueva…</string>

@@ -181,3 +181,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } parti di { $title } sono pronte da leggere offline.
  }
 reading-downloads-done-series = I capitoli di { $count } serie sono pronti da leggere offline.
+read-source-folders = Cartelle
+reading-since-january = da gennaio
+reading-since-february = da febbraio
+reading-since-march = da marzo
+reading-since-april = da aprile
+reading-since-may = da maggio
+reading-since-june = da giugno
+reading-since-july = da luglio
+reading-since-august = da agosto
+reading-since-september = da settembre
+reading-since-october = da ottobre
+reading-since-november = da novembre
+reading-since-december = da dicembre

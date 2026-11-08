@@ -156,8 +156,62 @@ home-trending = Em alta agora
 # Heading over recommendations from one show the person finished and rated well. The title is that show.
 home-because = Porque você terminou { $title }
 
-# Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+# Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
 home-more-genre = Mais { $genre }
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-action = Mais ação
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-adventure = Mais aventura
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-comedy = Mais comédia
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-drama = Mais drama
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-ecchi = Mais ecchi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-fantasy = Mais fantasia
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-horror = Mais terror
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mahou-shoujo = Mais mahou shoujo
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mecha = Mais mecha
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-music = Mais música
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mystery = Mais mistério
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-psychological = Mais psicológico
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-romance = Mais romance
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sci-fi = Mais ficção científica
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-slice-of-life = Mais slice of life
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sports = Mais esportes
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-supernatural = Mais sobrenatural
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-thriller = Mais suspense
 
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, livre para compartilhar
@@ -959,6 +1013,45 @@ reading-downloads-done-parts =
 
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = Há capítulos de { $count } séries prontos para ler offline.
+
+# The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+read-source-folders = Pastas
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+reading-since-january = desde janeiro
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+reading-since-february = desde fevereiro
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+reading-since-march = desde março
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+reading-since-april = desde abril
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+reading-since-may = desde maio
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+reading-since-june = desde junho
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+reading-since-july = desde julho
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+reading-since-august = desde agosto
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+reading-since-september = desde setembro
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+reading-since-october = desde outubro
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+reading-since-november = desde novembro
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+reading-since-december = desde dezembro
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Entrou em { $store } como { $member }.

@@ -111,7 +111,10 @@ impl Size {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Text(String),
+    /// A count, grouped the language's way: "1,920".
     Int(i64),
+    /// A number that names something, never grouped: a year, an episode or chapter number.
+    Plain(i64),
     Float(f64),
     Span(Span),
     Size(Size),
@@ -186,7 +189,7 @@ fn render(loc: &Localizer, id: &str, values: &[(&'static str, Value)]) -> String
             Value::Span(s) => Some(span_text(loc, *s)),
             Value::Size(s) => Some(size_text(loc, *s)),
             Value::Cause(c) => Some(c.text(loc)),
-            Value::Int(_) | Value::Float(_) => None,
+            Value::Int(_) | Value::Plain(_) | Value::Float(_) => None,
         })
         .collect();
     let args: Vec<(&str, Arg<'_>)> = values
@@ -195,6 +198,7 @@ fn render(loc: &Localizer, id: &str, values: &[(&'static str, Value)]) -> String
         .map(|((name, v), text)| {
             let arg = match (v, text) {
                 (Value::Int(n), _) => Arg::Int(*n),
+                (Value::Plain(n), _) => Arg::Plain(*n),
                 (Value::Float(f), _) => Arg::Float(*f),
                 (_, Some(t)) => Arg::Text(t),
                 (_, None) => Arg::Text(""),

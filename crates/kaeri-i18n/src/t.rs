@@ -167,27 +167,27 @@ pub fn home_spotlight_popular() -> String {
 
 /// Line under the spotlight's title, and under a { -continue-cap } card, for an episode part way through: the episode and the minutes left in it.
 pub fn home_time_left(episode: i64, minutes: i64) -> String {
-    text("home-time-left", &[("episode", Arg::Int(episode)), ("minutes", Arg::Int(minutes))])
+    text("home-time-left", &[("episode", Arg::Plain(episode)), ("minutes", Arg::Int(minutes))])
 }
 
 /// Line under the spotlight's title, and under a { -continue-cap } card, for a show still airing whose next episode is its newest one out.
 pub fn home_episode_out(episode: i64) -> String {
-    text("home-episode-out", &[("episode", Arg::Int(episode))])
+    text("home-episode-out", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line under the spotlight's title, and under a { -continue-cap } card, for the next episode of a show part way through when it is not the newest one out, such as any episode of a show that finished airing.
 pub fn home_episode_next(episode: i64) -> String {
-    text("home-episode-next", &[("episode", Arg::Int(episode))])
+    text("home-episode-next", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line under a { -continue-cap } card whose next episode came out today.
 pub fn home_episode_out_today(episode: i64) -> String {
-    text("home-episode-out-today", &[("episode", Arg::Int(episode))])
+    text("home-episode-out-today", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line under a poster on This season: the newest episode out.
 pub fn home_episode_out_short(episode: i64) -> String {
-    text("home-episode-out-short", &[("episode", Arg::Int(episode))])
+    text("home-episode-out-short", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line under a This week or Airing today card whose episode is already out today. The time is worded as a span, such as 2h 5m.
@@ -265,9 +265,99 @@ pub fn home_because(title: &str) -> String {
     text("home-because", &[("title", Arg::Text(title))])
 }
 
-/// Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+/// Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
 pub fn home_more_genre(genre: &str) -> String {
     text("home-more-genre", &[("genre", Arg::Text(genre))])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_action() -> String {
+    text("home-more-genre-action", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_adventure() -> String {
+    text("home-more-genre-adventure", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_comedy() -> String {
+    text("home-more-genre-comedy", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_drama() -> String {
+    text("home-more-genre-drama", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_ecchi() -> String {
+    text("home-more-genre-ecchi", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_fantasy() -> String {
+    text("home-more-genre-fantasy", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_horror() -> String {
+    text("home-more-genre-horror", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_mahou_shoujo() -> String {
+    text("home-more-genre-mahou-shoujo", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_mecha() -> String {
+    text("home-more-genre-mecha", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_music() -> String {
+    text("home-more-genre-music", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_mystery() -> String {
+    text("home-more-genre-mystery", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_psychological() -> String {
+    text("home-more-genre-psychological", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_romance() -> String {
+    text("home-more-genre-romance", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_sci_fi() -> String {
+    text("home-more-genre-sci-fi", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_slice_of_life() -> String {
+    text("home-more-genre-slice-of-life", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_sports() -> String {
+    text("home-more-genre-sports", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_supernatural() -> String {
+    text("home-more-genre-supernatural", &[])
+}
+
+/// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+pub fn home_more_genre_thriller() -> String {
+    text("home-more-genre-thriller", &[])
 }
 
 /// Line over the spotlight's title when it is the built-in demo.
@@ -277,12 +367,12 @@ pub fn home_spotlight_demo() -> String {
 
 /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
 pub fn licensed_return(episode: i64, service: &str) -> String {
-    text("licensed-return", &[("episode", Arg::Int(episode)), ("service", Arg::Text(service))])
+    text("licensed-return", &[("episode", Arg::Plain(episode)), ("service", Arg::Text(service))])
 }
 
 /// Notice after Mark as watched on the return notice. It holds Undo.
 pub fn licensed_marked(episode: i64) -> String {
-    text("licensed-marked", &[("episode", Arg::Int(episode))])
+    text("licensed-marked", &[("episode", Arg::Plain(episode))])
 }
 
 /// A reason on its own, as a toast or a failed play's explanation. The reason is one of the engine's own reasons, so it is translated.
@@ -302,12 +392,12 @@ pub fn cause_no_connection() -> String {
 
 /// A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
 pub fn notice_not_aired(episode: i64, when: &str) -> String {
-    text("notice-not-aired", &[("episode", Arg::Int(episode)), ("when", Arg::Text(when))])
+    text("notice-not-aired", &[("episode", Arg::Plain(episode)), ("when", Arg::Text(when))])
 }
 
 /// A play's explanation: the episode is after the next one to air. The "when" says when that one airs.
 pub fn notice_not_aired_yet(episode: i64, next: i64, when: &str) -> String {
-    text("notice-not-aired-yet", &[("episode", Arg::Int(episode)), ("next", Arg::Int(next)), ("when", Arg::Text(when))])
+    text("notice-not-aired-yet", &[("episode", Arg::Plain(episode)), ("next", Arg::Plain(next)), ("when", Arg::Text(when))])
 }
 
 /// Part of an air time: the broadcast is later today. The time is the viewer's local time.
@@ -837,22 +927,22 @@ pub fn reading_split_chapter(chapter: &str, whole: &str) -> String {
 
 /// A notice over the page when a chapter opens where it was left. It offers Start over.
 pub fn reader_resumed(page: i64) -> String {
-    text("reader-resumed", &[("page", Arg::Int(page))])
+    text("reader-resumed", &[("page", Arg::Plain(page))])
 }
 
 /// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 pub fn reader_back_to_page(page: i64) -> String {
-    text("reader-back-to-page", &[("page", Arg::Int(page))])
+    text("reader-back-to-page", &[("page", Arg::Plain(page))])
 }
 
 /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
 pub fn reader_moved(chapter: &str, page: i64, device: &str) -> String {
-    text("reader-moved", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page)), ("device", Arg::Text(device))])
+    text("reader-moved", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page)), ("device", Arg::Text(device))])
 }
 
 /// The same notice for a chapter known only by its number, such as 14 or 14.5.
 pub fn reader_moved_number(chapter: &str, page: i64, device: &str) -> String {
-    text("reader-moved-number", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page)), ("device", Arg::Text(device))])
+    text("reader-moved-number", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page)), ("device", Arg::Text(device))])
 }
 
 /// A notice the first time a series opens with its reading direction guessed. It offers Change.
@@ -897,7 +987,7 @@ pub fn reading_failed_parse(source: &str) -> String {
 
 /// Why one page did not load. The status is the server's HTTP status code, such as 404.
 pub fn reading_failed_page(status: i64) -> String {
-    text("reading-failed-page", &[("status", Arg::Int(status))])
+    text("reading-failed-page", &[("status", Arg::Plain(status))])
 }
 
 /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
@@ -932,7 +1022,7 @@ pub fn reading_failed_disk_full() -> String {
 
 /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
 pub fn reading_failed_webview(version: i64) -> String {
-    text("reading-failed-webview", &[("version", Arg::Int(version))])
+    text("reading-failed-webview", &[("version", Arg::Plain(version))])
 }
 
 /// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
@@ -1077,7 +1167,7 @@ pub fn reading_out_today_titled(chapter: &str, title: &str) -> String {
 
 /// Under a cover or the big picture: the page the person stopped on in a chapter.
 pub fn reading_chapter_page(chapter: &str, page: i64) -> String {
-    text("reading-chapter-page", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page))])
+    text("reading-chapter-page", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page))])
 }
 
 /// Under a cover or the big picture: how far into a novel's chapter the person is.
@@ -1272,12 +1362,12 @@ pub fn reading_row_failed() -> String {
 
 /// A chapter row's state: the page the person stopped on, of how many.
 pub fn reading_row_page_of(page: i64, of: i64) -> String {
-    text("reading-row-page-of", &[("page", Arg::Int(page)), ("of", Arg::Int(of))])
+    text("reading-row-page-of", &[("page", Arg::Plain(page)), ("of", Arg::Plain(of))])
 }
 
 /// A chapter row's state: the page the person stopped on, when the length isn't known.
 pub fn reading_row_page(page: i64) -> String {
-    text("reading-row-page", &[("page", Arg::Int(page))])
+    text("reading-row-page", &[("page", Arg::Plain(page))])
 }
 
 /// A novel's chapter row: how far into it the person is.
@@ -1542,12 +1632,12 @@ pub fn read_search_started_3_years() -> String {
 
 /// Under a source's hit in Search: the chapters it holds, from the first.
 pub fn read_hit_chapters(last: i64) -> String {
-    text("read-hit-chapters", &[("last", Arg::Int(last))])
+    text("read-hit-chapters", &[("last", Arg::Plain(last))])
 }
 
 /// Under a source's hit in Search: a web novel's episodes it holds, from the first.
 pub fn read_hit_episodes(last: i64) -> String {
-    text("read-hit-episodes", &[("last", Arg::Int(last))])
+    text("read-hit-episodes", &[("last", Arg::Plain(last))])
 }
 
 /// Under a source's hit in Search: a light novel's parts it holds.
@@ -1563,6 +1653,121 @@ pub fn read_hit_files(count: i64) -> String {
 /// Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
 pub fn read_hit_files_format(count: i64, format: &str) -> String {
     text("read-hit-files-format", &[("count", Arg::Int(count)), ("format", Arg::Text(format))])
+}
+
+/// The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+pub fn read_source_folders() -> String {
+    text("read-source-folders", &[])
+}
+
+/// A section of the feed that e-readers fetch from: the chapters downloaded on this device.
+pub fn read_feed_downloads() -> String {
+    text("read-feed-downloads", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+pub fn reading_since_january() -> String {
+    text("reading-since-january", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+pub fn reading_since_february() -> String {
+    text("reading-since-february", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+pub fn reading_since_march() -> String {
+    text("reading-since-march", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+pub fn reading_since_april() -> String {
+    text("reading-since-april", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+pub fn reading_since_may() -> String {
+    text("reading-since-may", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+pub fn reading_since_june() -> String {
+    text("reading-since-june", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+pub fn reading_since_july() -> String {
+    text("reading-since-july", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+pub fn reading_since_august() -> String {
+    text("reading-since-august", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+pub fn reading_since_september() -> String {
+    text("reading-since-september", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+pub fn reading_since_october() -> String {
+    text("reading-since-october", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+pub fn reading_since_november() -> String {
+    text("reading-since-november", &[])
+}
+
+/// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+pub fn reading_since_december() -> String {
+    text("reading-since-december", &[])
+}
+
+/// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList".
+pub fn read_view_all_trending_manga() -> String {
+    text("read-view-all-trending-manga", &[])
+}
+
+/// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList".
+pub fn read_view_all_trending_webtoons() -> String {
+    text("read-view-all-trending-webtoons", &[])
+}
+
+/// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList".
+pub fn read_view_all_trending_novels() -> String {
+    text("read-view-all-trending-novels", &[])
+}
+
+/// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList".
+pub fn read_view_all_new_manga() -> String {
+    text("read-view-all-new-manga", &[])
+}
+
+/// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".
+pub fn read_view_all_new_webtoons() -> String {
+    text("read-view-all-new-webtoons", &[])
+}
+
+/// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList".
+pub fn read_view_all_new_novels() -> String {
+    text("read-view-all-new-novels", &[])
+}
+
+/// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList".
+pub fn read_view_all_finished_manga() -> String {
+    text("read-view-all-finished-manga", &[])
+}
+
+/// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList".
+pub fn read_view_all_finished_webtoons() -> String {
+    text("read-view-all-finished-webtoons", &[])
+}
+
+/// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList".
+pub fn read_view_all_finished_novels() -> String {
+    text("read-view-all-finished-novels", &[])
 }
 
 /// Toast after joining a plugin store with an invite that names this device's owner.
@@ -2142,7 +2347,7 @@ pub fn notice_mapping_data_failed(datasets: &str, wait: &str, cause: &str) -> St
 
 /// Toast, and desktop notification, for one episode that aired while the app was closed.
 pub fn notice_episode_aired(title: &str, episode: i64) -> String {
-    text("notice-episode-aired", &[("title", Arg::Text(title)), ("episode", Arg::Int(episode))])
+    text("notice-episode-aired", &[("title", Arg::Text(title)), ("episode", Arg::Plain(episode))])
 }
 
 /// Toast, and desktop notification, for several episodes that aired while the app was closed.
@@ -2437,7 +2642,7 @@ pub fn title_linux_play_on_tv_help() -> String {
 
 /// Description read by a screen reader on an episode's watched check box.
 pub fn title_linux_episode_watched(episode: i64) -> String {
-    text("title-linux-episode-watched", &[("episode", Arg::Int(episode))])
+    text("title-linux-episode-watched", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line in a day's column when nothing airs that day.
@@ -2472,7 +2677,7 @@ pub fn party_choose_a_source() -> String {
 
 /// Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 pub fn party_sources_none_listed(episode: i64) -> String {
-    text("party-sources-none-listed", &[("episode", Arg::Int(episode))])
+    text("party-sources-none-listed", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line above the list of sources that have the watch party's episode.
@@ -2732,7 +2937,7 @@ pub fn linux_reader_novel_needs_webkit() -> String {
 
 /// The reader's scrubber as a screen reader says it: the page showing and how many there are.
 pub fn linux_reader_page_of(page: i64, pages: i64) -> String {
-    text("linux-reader-page-of", &[("page", Arg::Int(page)), ("pages", Arg::Int(pages))])
+    text("linux-reader-page-of", &[("page", Arg::Plain(page)), ("pages", Arg::Plain(pages))])
 }
 
 /// Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
@@ -3347,12 +3552,12 @@ pub fn spoken_seconds(count: i64) -> String {
 
 /// Continue row: nothing new to watch, and the next episode airs at a known time. The time is already worded: "in 2d 3h".
 pub fn continue_row_caught_up_airs(episode: i64, when: &str) -> String {
-    text("continue-row-caught-up-airs", &[("episode", Arg::Int(episode)), ("when", Arg::Text(when))])
+    text("continue-row-caught-up-airs", &[("episode", Arg::Plain(episode)), ("when", Arg::Text(when))])
 }
 
 /// Continue row: nothing new to watch, and the next episode has no date.
 pub fn continue_row_caught_up_not_out(episode: i64) -> String {
-    text("continue-row-caught-up-not-out", &[("episode", Arg::Int(episode))])
+    text("continue-row-caught-up-not-out", &[("episode", Arg::Plain(episode))])
 }
 
 /// Name of a language, in a list of subtitle languages.
@@ -3527,7 +3732,7 @@ pub fn overlays_window_position(from: i64, to: i64, total: i64) -> String {
 
 /// Heading of the help overlay when its table does not fit on one page.
 pub fn overlays_help_page(page: i64, pages: i64) -> String {
-    text("overlays-help-page", &[("page", Arg::Int(page)), ("pages", Arg::Int(pages))])
+    text("overlays-help-page", &[("page", Arg::Plain(page)), ("pages", Arg::Plain(pages))])
 }
 
 /// The log overlay, when nothing has been logged this session.
@@ -3687,7 +3892,7 @@ pub fn tui_config_problem(file: &str, what: &str) -> String {
 
 /// Same, when the problem is on a known line.
 pub fn tui_config_problem_at_line(file: &str, line: i64, what: &str) -> String {
-    text("tui-config-problem-at-line", &[("file", Arg::Text(file)), ("line", Arg::Int(line)), ("what", Arg::Text(what))])
+    text("tui-config-problem-at-line", &[("file", Arg::Text(file)), ("line", Arg::Plain(line)), ("what", Arg::Text(what))])
 }
 
 /// Log line for the same problem. The path is the whole path of the config file.
@@ -3697,7 +3902,7 @@ pub fn tui_config_problem_logged(path: &str, problem: &str) -> String {
 
 /// The status line at the foot of the screen when nothing is being said: the source in use, the audio and the quality.
 pub fn chrome_status_state(source: &str, audio: &str, quality: i64) -> String {
-    text("chrome-status-state", &[("source", Arg::Text(source)), ("audio", Arg::Text(audio)), ("quality", Arg::Int(quality))])
+    text("chrome-status-state", &[("source", Arg::Text(source)), ("audio", Arg::Text(audio)), ("quality", Arg::Plain(quality))])
 }
 
 /// Heading of the title page when no title is highlighted.
@@ -3857,7 +4062,7 @@ pub fn title_rating_1() -> String {
 
 /// Place of a title in the watch order: the nth season of its franchise. Sits in a narrow column.
 pub fn title_season(number: i64) -> String {
-    text("title-season", &[("number", Arg::Int(number))])
+    text("title-season", &[("number", Arg::Plain(number))])
 }
 
 /// Place of a title in the watch order: it comes before this one.
@@ -3897,7 +4102,7 @@ pub fn title_available_on(services: &str) -> String {
 
 /// Beside the progress meter on the title page: the episode that follows what has been watched.
 pub fn title_up_next(next: i64) -> String {
-    text("title-up-next", &[("next", Arg::Int(next))])
+    text("title-up-next", &[("next", Arg::Plain(next))])
 }
 
 /// Beside the progress meter when the watched count is against the episodes that have aired so far.
@@ -3992,7 +4197,7 @@ pub fn episodes_showing_no_filler() -> String {
 
 /// Top right of the episode table: how far the dub goes, for a dub that stops short of what has aired.
 pub fn episodes_dub_through(through: i64) -> String {
-    text("episodes-dub-through", &[("through", Arg::Int(through))])
+    text("episodes-dub-through", &[("through", Arg::Plain(through))])
 }
 
 /// Top right of the episode table: the dub has every episode.
@@ -4027,7 +4232,7 @@ pub fn episodes_empty_unaired() -> String {
 
 /// Under the heading when the title has not aired yet. The span is short, such as 2d 3h.
 pub fn episodes_empty_unaired_hint(episode: i64, span: &str) -> String {
-    text("episodes-empty-unaired-hint", &[("episode", Arg::Int(episode)), ("span", Arg::Text(span))])
+    text("episodes-empty-unaired-hint", &[("episode", Arg::Plain(episode)), ("span", Arg::Text(span))])
 }
 
 /// Heading of the empty episode table when a { -source } matched the title and listed nothing.
@@ -5622,7 +5827,7 @@ pub fn lists_count_soon() -> String {
 
 /// A search result's count at the end of its row, for a title not out yet: the day and month it starts, such as "9 Jan". The month is the short month name.
 pub fn lists_count_starts(day: i64, month: &str) -> String {
-    text("lists-count-starts", &[("day", Arg::Int(day)), ("month", Arg::Text(month))])
+    text("lists-count-starts", &[("day", Arg::Plain(day)), ("month", Arg::Text(month))])
 }
 
 /// After a search result's count, for a title a source said has a dub that does not say how far it goes. Lower case, like the other words in the column.
@@ -5632,7 +5837,7 @@ pub fn lists_count_dub() -> String {
 
 /// After a search result's count: how far the dub goes, as "d12" for a dub to episode 12. The column is narrow, so it is one letter and the number.
 pub fn lists_count_dub_through(through: i64) -> String {
-    text("lists-count-dub-through", &[("through", Arg::Int(through))])
+    text("lists-count-dub-through", &[("through", Arg::Plain(through))])
 }
 
 /// Column heading above search results' episode counts, from 100 columns wide. Short for episodes.
@@ -8070,12 +8275,12 @@ pub fn calendar_load_failed() -> String {
 
 /// Row: episode number and the time it airs.
 pub fn calendar_row_time(episode: i64, time: &str) -> String {
-    text("calendar-row-time", &[("episode", Arg::Int(episode)), ("time", Arg::Text(time))])
+    text("calendar-row-time", &[("episode", Arg::Plain(episode)), ("time", Arg::Text(time))])
 }
 
 /// Row: episode number, dubbed, and the time it airs.
 pub fn calendar_row_time_dubbed(episode: i64, time: &str) -> String {
-    text("calendar-row-time-dubbed", &[("episode", Arg::Int(episode)), ("time", Arg::Text(time))])
+    text("calendar-row-time-dubbed", &[("episode", Arg::Plain(episode)), ("time", Arg::Text(time))])
 }
 
 /// Note on a row whose episode moved to a later time.
@@ -8095,7 +8300,7 @@ pub fn calendar_out(ago: &str) -> String {
 
 /// Row in a small widget: the episode is out.
 pub fn calendar_episode_out(episode: i64) -> String {
-    text("calendar-episode-out", &[("episode", Arg::Int(episode))])
+    text("calendar-episode-out", &[("episode", Arg::Plain(episode))])
 }
 
 /// Accessibility word for an aired episode that the person has not watched.
@@ -8105,12 +8310,12 @@ pub fn calendar_out_unwatched() -> String {
 
 /// Line saying when an episode airs. The time is already worded: "in 1h 30m", "Thursday 16:30".
 pub fn episode_airs(episode: i64, when: &str) -> String {
-    text("episode-airs", &[("episode", Arg::Int(episode)), ("when", Arg::Text(when))])
+    text("episode-airs", &[("episode", Arg::Plain(episode)), ("when", Arg::Text(when))])
 }
 
 /// Line for an episode that has not aired and has no date yet.
 pub fn episode_not_out(episode: i64) -> String {
-    text("episode-not-out", &[("episode", Arg::Int(episode))])
+    text("episode-not-out", &[("episode", Arg::Plain(episode))])
 }
 
 /// Header of the list of episodes that air in the next seven days.
@@ -9100,7 +9305,7 @@ pub fn discussion_open() -> String {
 
 /// Title of the discussion window or sheet when the thread has no title yet.
 pub fn discussion_title_episode(episode: i64) -> String {
-    text("discussion-title-episode", &[("episode", Arg::Int(episode))])
+    text("discussion-title-episode", &[("episode", Arg::Plain(episode))])
 }
 
 /// Quiet line under an episode that opens its discussion.
@@ -9330,7 +9535,7 @@ pub fn downloads_folder_failed() -> String {
 
 /// Name of a row.
 pub fn downloads_episode_name(episode: i64) -> String {
-    text("downloads-episode-name", &[("episode", Arg::Int(episode))])
+    text("downloads-episode-name", &[("episode", Arg::Plain(episode))])
 }
 
 /// Row caption: waiting for a free place.
@@ -9435,7 +9640,7 @@ pub fn downloads_resume_one() -> String {
 
 /// Accessibility label: play one downloaded episode.
 pub fn downloads_play_episode(episode: i64) -> String {
-    text("downloads-play-episode", &[("episode", Arg::Int(episode))])
+    text("downloads-play-episode", &[("episode", Arg::Plain(episode))])
 }
 
 /// Title of the confirmation.
@@ -9535,7 +9740,7 @@ pub fn downloads_quality() -> String {
 
 /// Title of the notification when an episode finished.
 pub fn downloads_notice_done(episode: i64) -> String {
-    text("downloads-notice-done", &[("episode", Arg::Int(episode))])
+    text("downloads-notice-done", &[("episode", Arg::Plain(episode))])
 }
 
 /// Body of that notification.
@@ -9550,7 +9755,7 @@ pub fn downloads_notice_running(count: i64) -> String {
 
 /// Notification text: first line of one running download.
 pub fn downloads_notice_episode_left(episode: i64, left: &str) -> String {
-    text("downloads-notice-episode-left", &[("episode", Arg::Int(episode)), ("left", Arg::Text(left))])
+    text("downloads-notice-episode-left", &[("episode", Arg::Plain(episode)), ("left", Arg::Text(left))])
 }
 
 /// Notification text: a download is starting.
@@ -9560,7 +9765,7 @@ pub fn downloads_notice_starting() -> String {
 
 /// Button on a title page to download one episode.
 pub fn episode_download_one(episode: i64) -> String {
-    text("episode-download-one", &[("episode", Arg::Int(episode))])
+    text("episode-download-one", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line under that button while it waits.
@@ -9590,7 +9795,7 @@ pub fn episode_download_done() -> String {
 
 /// Line under that button after a failure.
 pub fn episode_download_failed(episode: i64) -> String {
-    text("episode-download-failed", &[("episode", Arg::Int(episode))])
+    text("episode-download-failed", &[("episode", Arg::Plain(episode))])
 }
 
 /// First run, page 2 of 5.
@@ -9695,12 +9900,12 @@ pub fn home_title() -> String {
 
 /// Main action for an episode part way through.
 pub fn home_resume_episode(episode: i64) -> String {
-    text("home-resume-episode", &[("episode", Arg::Int(episode))])
+    text("home-resume-episode", &[("episode", Arg::Plain(episode))])
 }
 
 /// Main action for an episode not started.
 pub fn home_play_episode(episode: i64) -> String {
-    text("home-play-episode", &[("episode", Arg::Int(episode))])
+    text("home-play-episode", &[("episode", Arg::Plain(episode))])
 }
 
 /// Shown in place of Add to Planning while it saves, after a moment.
@@ -9720,12 +9925,12 @@ pub fn home_more() -> String {
 
 /// Action in the spotlight's More menu for a show part way through.
 pub fn home_mark_watched(episode: i64) -> String {
-    text("home-mark-watched", &[("episode", Arg::Int(episode))])
+    text("home-mark-watched", &[("episode", Arg::Plain(episode))])
 }
 
 /// Notice after the action above. It has an Undo button.
 pub fn home_marked_watched(episode: i64) -> String {
-    text("home-marked-watched", &[("episode", Arg::Int(episode))])
+    text("home-marked-watched", &[("episode", Arg::Plain(episode))])
 }
 
 /// Action on a { -continue-cap } card and in the spotlight's More menu.
@@ -9950,32 +10155,32 @@ pub fn continue_more_for(title: &str) -> String {
 
 /// Row caption: resumes this episode where it stopped. The clock is the stored position.
 pub fn continue_row_resume(episode: i64, clock: &str) -> String {
-    text("continue-row-resume", &[("episode", Arg::Int(episode)), ("clock", Arg::Text(clock))])
+    text("continue-row-resume", &[("episode", Arg::Plain(episode)), ("clock", Arg::Text(clock))])
 }
 
 /// Row caption: resumes this episode where it stopped, dubbed.
 pub fn continue_row_resume_dubbed(episode: i64, clock: &str) -> String {
-    text("continue-row-resume-dubbed", &[("episode", Arg::Int(episode)), ("clock", Arg::Text(clock))])
+    text("continue-row-resume-dubbed", &[("episode", Arg::Plain(episode)), ("clock", Arg::Text(clock))])
 }
 
 /// Row caption: the next unwatched episode.
 pub fn continue_row_start(episode: i64) -> String {
-    text("continue-row-start", &[("episode", Arg::Int(episode))])
+    text("continue-row-start", &[("episode", Arg::Plain(episode))])
 }
 
 /// Row caption: the next unwatched episode, dubbed.
 pub fn continue_row_start_dubbed(episode: i64) -> String {
-    text("continue-row-start-dubbed", &[("episode", Arg::Int(episode))])
+    text("continue-row-start-dubbed", &[("episode", Arg::Plain(episode))])
 }
 
 /// Row caption: the next unwatched episode, which came out a while ago.
 pub fn continue_row_start_aired(episode: i64, ago: &str) -> String {
-    text("continue-row-start-aired", &[("episode", Arg::Int(episode)), ("ago", Arg::Text(ago))])
+    text("continue-row-start-aired", &[("episode", Arg::Plain(episode)), ("ago", Arg::Text(ago))])
 }
 
 /// Row caption: nothing new to watch. The time is when the next episode airs.
 pub fn continue_row_caught_up(episode: i64, when: &str) -> String {
-    text("continue-row-caught-up", &[("episode", Arg::Int(episode)), ("when", Arg::Text(when))])
+    text("continue-row-caught-up", &[("episode", Arg::Plain(episode)), ("when", Arg::Text(when))])
 }
 
 /// Row caption: nothing new to watch and no date for the next episode.
@@ -9995,12 +10200,12 @@ pub fn continue_caught_up() -> String {
 
 /// Main button of the title page when the episode is part-watched. The time is where it stopped, already formatted.
 pub fn title_button_resume(episode: i64, time: &str) -> String {
-    text("title-button-resume", &[("episode", Arg::Int(episode)), ("time", Arg::Text(time))])
+    text("title-button-resume", &[("episode", Arg::Plain(episode)), ("time", Arg::Text(time))])
 }
 
 /// Main button of the title page otherwise: plays the next unwatched episode from the start.
 pub fn title_button_play(episode: i64) -> String {
-    text("title-button-play", &[("episode", Arg::Int(episode))])
+    text("title-button-play", &[("episode", Arg::Plain(episode))])
 }
 
 /// Main button of the title page when there is no { -source } to play from.
@@ -10130,7 +10335,7 @@ pub fn progress_episode_short(done: i64) -> String {
 
 /// Row caption: the next unwatched episode, dubbed, which came out a while ago.
 pub fn continue_row_start_aired_dubbed(episode: i64, ago: &str) -> String {
-    text("continue-row-start-aired-dubbed", &[("episode", Arg::Int(episode)), ("ago", Arg::Text(ago))])
+    text("continue-row-start-aired-dubbed", &[("episode", Arg::Plain(episode)), ("ago", Arg::Text(ago))])
 }
 
 /// Line on a suggestion that has not started airing. The date is written out already, such as "9 January".
@@ -10190,7 +10395,7 @@ pub fn up_next_hidden_until_airs(title: &str) -> String {
 
 /// Line under a show that airs today: its episode, then the time or how long ago it came out. The time is worded already.
 pub fn up_next_broadcast(episode: i64, when: &str) -> String {
-    text("up-next-broadcast", &[("episode", Arg::Int(episode)), ("when", Arg::Text(when))])
+    text("up-next-broadcast", &[("episode", Arg::Plain(episode)), ("when", Arg::Text(when))])
 }
 
 /// The time of an episode that came out earlier today. The span is already worded, such as "2h ago".
@@ -10630,7 +10835,7 @@ pub fn licensed_choose_services() -> String {
 
 /// Line of a Continue card for a title watched on a service.
 pub fn licensed_continue_line(episode: i64, service: &str) -> String {
-    text("licensed-continue-line", &[("episode", Arg::Int(episode)), ("service", Arg::Text(service))])
+    text("licensed-continue-line", &[("episode", Arg::Plain(episode)), ("service", Arg::Text(service))])
 }
 
 /// Line under a title's buttons naming services the viewer has not chosen that list the title.
@@ -10785,7 +10990,7 @@ pub fn media_hiatus_since(date: &str) -> String {
 
 /// Date line of a show that was cancelled: the last episode that aired.
 pub fn media_cancelled_after(episode: i64) -> String {
-    text("media-cancelled-after", &[("episode", Arg::Int(episode))])
+    text("media-cancelled-after", &[("episode", Arg::Plain(episode))])
 }
 
 /// Heading of the list of official services that stream a show, in the sheet of more about it.
@@ -10995,7 +11200,7 @@ pub fn relation_line(relation: &str, format: &str, year: &str) -> String {
 
 /// Ranking line, such as "#4 Highest rated, Autumn 2026". The label is already worded.
 pub fn ranking_line(rank: i64, label: &str) -> String {
-    text("ranking-line", &[("rank", Arg::Int(rank)), ("label", Arg::Text(label))])
+    text("ranking-line", &[("rank", Arg::Plain(rank)), ("label", Arg::Text(label))])
 }
 
 /// Label of a ranking by score within a period.
@@ -11445,12 +11650,12 @@ pub fn party_form_pick_later() -> String {
 
 /// Line naming the episode of the form.
 pub fn party_form_episode_of(episode: i64, title: &str) -> String {
-    text("party-form-episode-of", &[("episode", Arg::Int(episode)), ("title", Arg::Text(title))])
+    text("party-form-episode-of", &[("episode", Arg::Plain(episode)), ("title", Arg::Text(title))])
 }
 
 /// Line naming the episode of the form when the show has no name.
 pub fn party_form_episode(episode: i64) -> String {
-    text("party-form-episode", &[("episode", Arg::Int(episode))])
+    text("party-form-episode", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line on the form when the party could not begin.
@@ -11635,7 +11840,7 @@ pub fn party_nosource_missing_detail(why: &str, what: &str) -> String {
 
 /// Line under a title that says the episode has not aired.
 pub fn party_nosource_unaired(episode: i64) -> String {
-    text("party-nosource-unaired", &[("episode", Arg::Int(episode))])
+    text("party-nosource-unaired", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line under a title that says the episode has not aired and no date is known.
@@ -12375,7 +12580,7 @@ pub fn title_based_on() -> String {
 
 /// Line on the starting screen, from the moment the player is asked to play until the first frame.
 pub fn player_starting(episode: i64) -> String {
-    text("player-starting", &[("episode", Arg::Int(episode))])
+    text("player-starting", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line on the starting screen after a few seconds: the app is looking for a stream.
@@ -12390,7 +12595,7 @@ pub fn player_finding_source_plain() -> String {
 
 /// Title of the card shown when an episode could not play.
 pub fn player_failed_title(episode: i64) -> String {
-    text("player-failed-title", &[("episode", Arg::Int(episode))])
+    text("player-failed-title", &[("episode", Arg::Plain(episode))])
 }
 
 /// Line under the failure title when every { -source } was tried.
@@ -12898,7 +13103,7 @@ pub fn player_found_ask_ending() -> String {
 
 /// Line under that prompt, in a quieter colour. $episode is the episode's number.
 pub fn player_found_ask_share(episode: i64) -> String {
-    text("player-found-ask-share", &[("episode", Arg::Int(episode))])
+    text("player-found-ask-share", &[("episode", Arg::Plain(episode))])
 }
 
 /// Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
@@ -12912,7 +13117,7 @@ pub fn player_found_adjust() -> String {
 
 /// What the prompt says after Yes. $episode is the episode's number.
 pub fn player_found_saved(episode: i64) -> String {
-    text("player-found-saved", &[("episode", Arg::Int(episode))])
+    text("player-found-saved", &[("episode", Arg::Plain(episode))])
 }
 
 /// What the prompt says after Don't ask again, with the line below it.
@@ -13252,12 +13457,12 @@ pub fn player_track_unnamed() -> String {
 
 /// Name of an audio track the file does not describe.
 pub fn player_audio_track_n(id: i64) -> String {
-    text("player-audio-track-n", &[("id", Arg::Int(id))])
+    text("player-audio-track-n", &[("id", Arg::Plain(id))])
 }
 
 /// Name of a subtitle track the file does not describe.
 pub fn player_subtitle_track_n(id: i64) -> String {
-    text("player-subtitle-track-n", &[("id", Arg::Int(id))])
+    text("player-subtitle-track-n", &[("id", Arg::Plain(id))])
 }
 
 /// Line in the track list before the file has told which tracks it has.
@@ -13302,7 +13507,7 @@ pub fn player_starting_text(episode: &str) -> String {
 
 /// Name of an audio or subtitle track that has no language or title.
 pub fn player_track_n(id: i64) -> String {
-    text("player-track-n", &[("id", Arg::Int(id))])
+    text("player-track-n", &[("id", Arg::Plain(id))])
 }
 
 /// Line while an episode starts after a few seconds: what the wait is on, and for how long.
@@ -13362,12 +13567,12 @@ pub fn player_subs_more() -> String {
 
 /// Under a page that is still loading after four seconds.
 pub fn reader_page_loading(page: i64) -> String {
-    text("reader-page-loading", &[("page", Arg::Int(page))])
+    text("reader-page-loading", &[("page", Arg::Plain(page))])
 }
 
 /// Heading where a page could not be loaded.
 pub fn reader_page_failed(page: i64) -> String {
-    text("reader-page-failed", &[("page", Arg::Int(page))])
+    text("reader-page-failed", &[("page", Arg::Plain(page))])
 }
 
 /// Button that loads a failed page again.
@@ -13927,7 +14132,7 @@ pub fn action_read_chapter(n: &str) -> String {
 
 /// The main action when a chapter is part read.
 pub fn action_continue_chapter(n: &str, page: i64) -> String {
-    text("action-continue-chapter", &[("n", Arg::Text(n)), ("page", Arg::Int(page))])
+    text("action-continue-chapter", &[("n", Arg::Text(n)), ("page", Arg::Plain(page))])
 }
 
 /// The main action for a light novel part, part read.
@@ -14002,12 +14207,12 @@ pub fn series_tracker_chapters(n: i64) -> String {
 
 /// A tracker's progress in chapters, then the volume.
 pub fn series_tracker_with_volume(chapters: &str, volume: i64) -> String {
-    text("series-tracker-with-volume", &[("chapters", Arg::Text(chapters)), ("volume", Arg::Int(volume))])
+    text("series-tracker-with-volume", &[("chapters", Arg::Text(chapters)), ("volume", Arg::Plain(volume))])
 }
 
 /// A light novel tracker's progress in volumes.
 pub fn series_tracker_volumes(volume: i64, total: i64) -> String {
-    text("series-tracker-volumes", &[("volume", Arg::Int(volume)), ("total", Arg::Int(total))])
+    text("series-tracker-volumes", &[("volume", Arg::Plain(volume)), ("total", Arg::Plain(total))])
 }
 
 /// Main place when the source can't be read from.
@@ -14257,12 +14462,12 @@ pub fn chapter_state_failed(reason: &str) -> String {
 
 /// A part-read chapter.
 pub fn chapter_state_page_of(page: i64, of: i64) -> String {
-    text("chapter-state-page-of", &[("page", Arg::Int(page)), ("of", Arg::Int(of))])
+    text("chapter-state-page-of", &[("page", Arg::Plain(page)), ("of", Arg::Plain(of))])
 }
 
 /// A part-read chapter whose length isn't known.
 pub fn chapter_state_page(page: i64) -> String {
-    text("chapter-state-page", &[("page", Arg::Int(page))])
+    text("chapter-state-page", &[("page", Arg::Plain(page))])
 }
 
 /// A read chapter.
@@ -15665,7 +15870,7 @@ pub fn stop_set() -> String {
 
 /// The other button of the sheet: leaves the place as it is, with the place named.
 pub fn stop_keep(chapter: &str, page: i64) -> String {
-    text("stop-keep", &[("chapter", Arg::Text(chapter)), ("page", Arg::Int(page))])
+    text("stop-keep", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page))])
 }
 
 /// The other button of the sheet when the place is not a page.
@@ -15735,7 +15940,7 @@ pub fn opds_port_note() -> String {
 
 /// Line under the port row when the port asked for was taken and another is used.
 pub fn opds_port_moved(wanted: i64, port: i64) -> String {
-    text("opds-port-moved", &[("wanted", Arg::Int(wanted)), ("port", Arg::Int(port))])
+    text("opds-port-moved", &[("wanted", Arg::Plain(wanted)), ("port", Arg::Plain(port))])
 }
 
 /// Heading of the group that picks what the feed shares.
@@ -16320,7 +16525,7 @@ pub fn count_not_out() -> String {
 
 /// The count line of a show the viewer is part way through, in the library: the next episode and the total.
 pub fn count_next_of(episode: i64, total: i64) -> String {
-    text("count-next-of", &[("episode", Arg::Int(episode)), ("total", Arg::Int(total))])
+    text("count-next-of", &[("episode", Arg::Plain(episode)), ("total", Arg::Plain(total))])
 }
 
 /// The dub part of a count line when a source has a dub and does not say how far it goes.
@@ -16330,7 +16535,7 @@ pub fn count_dub() -> String {
 
 /// The dub part of a count line: the last episode the dub has.
 pub fn count_dub_through(through: i64) -> String {
-    text("count-dub-through", &[("through", Arg::Int(through))])
+    text("count-dub-through", &[("through", Arg::Plain(through))])
 }
 
 /// What a screen reader says for a count line: the long form of a finished show.
@@ -16355,12 +16560,12 @@ pub fn count_spoken_starts(date: &str) -> String {
 
 /// What a screen reader says for a show the viewer is part way through.
 pub fn count_spoken_next_of(episode: i64, total: i64) -> String {
-    text("count-spoken-next-of", &[("episode", Arg::Int(episode)), ("total", Arg::Int(total))])
+    text("count-spoken-next-of", &[("episode", Arg::Plain(episode)), ("total", Arg::Plain(total))])
 }
 
 /// What a screen reader says after the count when the dub goes to an episode.
 pub fn count_spoken_dub_through(through: i64) -> String {
-    text("count-spoken-dub-through", &[("through", Arg::Int(through))])
+    text("count-spoken-dub-through", &[("through", Arg::Plain(through))])
 }
 
 /// What a screen reader says after the count when a source has a dub and does not say how far it goes.
@@ -17595,17 +17800,17 @@ pub fn widget_connect() -> String {
 
 /// Accessibility label of a widget row: continue an episode.
 pub fn widget_resume_label(episode: i64, title: &str) -> String {
-    text("widget-resume-label", &[("episode", Arg::Int(episode)), ("title", Arg::Text(title))])
+    text("widget-resume-label", &[("episode", Arg::Plain(episode)), ("title", Arg::Text(title))])
 }
 
 /// Accessibility label of a widget row: start an episode.
 pub fn widget_start_label(episode: i64, title: &str) -> String {
-    text("widget-start-label", &[("episode", Arg::Int(episode)), ("title", Arg::Text(title))])
+    text("widget-start-label", &[("episode", Arg::Plain(episode)), ("title", Arg::Text(title))])
 }
 
 /// Accessibility label of a widget row: continue a dubbed episode.
 pub fn widget_resume_dubbed_label(episode: i64, title: &str) -> String {
-    text("widget-resume-dubbed-label", &[("episode", Arg::Int(episode)), ("title", Arg::Text(title))])
+    text("widget-resume-dubbed-label", &[("episode", Arg::Plain(episode)), ("title", Arg::Text(title))])
 }
 
 /// Line under a signed-in account while changes wait to be sent.
@@ -20505,7 +20710,7 @@ pub fn pair_also_sync_foot(device: &str) -> String {
 
 /// Continue, for a day.
 pub fn continue_from_device(n: i64, time: &str, device: &str) -> String {
-    text("continue-from-device", &[("n", Arg::Int(n)), ("time", Arg::Text(time)), ("device", Arg::Text(device))])
+    text("continue-from-device", &[("n", Arg::Plain(n)), ("time", Arg::Text(time)), ("device", Arg::Text(device))])
 }
 
 /// Player, 6 s, with Start over.
@@ -20530,7 +20735,7 @@ pub fn sync_notes() -> String {
 
 /// Sync note.
 pub fn sync_note_kept_watched(n: i64, title: &str, other: &str, device: &str) -> String {
-    text("sync-note-kept-watched", &[("n", Arg::Int(n)), ("title", Arg::Text(title)), ("other", Arg::Text(other)), ("device", Arg::Text(device))])
+    text("sync-note-kept-watched", &[("n", Arg::Plain(n)), ("title", Arg::Text(title)), ("other", Arg::Text(other)), ("device", Arg::Text(device))])
 }
 
 /// Sync note action.
@@ -20942,7 +21147,7 @@ pub fn title_seasons() -> String {
 
 /// Name of one season of a show, such as "Season 2".
 pub fn season_number(number: i64) -> String {
-    text("season-number", &[("number", Arg::Int(number))])
+    text("season-number", &[("number", Arg::Plain(number))])
 }
 
 /// Heading of the list of episodes.
@@ -20982,7 +21187,7 @@ pub fn title_synopsis_hint() -> String {
 
 /// Label under a season: which episodes are dubbed so far.
 pub fn title_dubbed_to(episode: i64) -> String {
-    text("title-dubbed-to", &[("episode", Arg::Int(episode))])
+    text("title-dubbed-to", &[("episode", Arg::Plain(episode))])
 }
 
 /// State of a title with no episodes listed yet.
@@ -21022,27 +21227,27 @@ pub fn state_collapsed() -> String {
 
 /// Row that stands for several watched episodes in a row, such as "Episodes 1 to 5 watched".
 pub fn title_watched_range(first: i64, last: i64) -> String {
-    text("title-watched-range", &[("first", Arg::Int(first)), ("last", Arg::Int(last))])
+    text("title-watched-range", &[("first", Arg::Plain(first)), ("last", Arg::Plain(last))])
 }
 
 /// Name of an episode, such as "Episode 7".
 pub fn episode_number(number: i64) -> String {
-    text("episode-number", &[("number", Arg::Int(number))])
+    text("episode-number", &[("number", Arg::Plain(number))])
 }
 
 /// Short name of an episode, for tight spaces.
 pub fn episode_number_short(number: i64) -> String {
-    text("episode-number-short", &[("number", Arg::Int(number))])
+    text("episode-number-short", &[("number", Arg::Plain(number))])
 }
 
 /// An episode and its name.
 pub fn episode_with_title(number: i64, title: &str) -> String {
-    text("episode-with-title", &[("number", Arg::Int(number)), ("title", Arg::Text(title))])
+    text("episode-with-title", &[("number", Arg::Plain(number)), ("title", Arg::Text(title))])
 }
 
 /// An episode, dubbed, and its name.
 pub fn episode_with_title_dubbed(number: i64, title: &str) -> String {
-    text("episode-with-title-dubbed", &[("number", Arg::Int(number)), ("title", Arg::Text(title))])
+    text("episode-with-title-dubbed", &[("number", Arg::Plain(number)), ("title", Arg::Text(title))])
 }
 
 /// Badge on an episode the person has watched.
@@ -21102,17 +21307,17 @@ pub fn episode_facts_left(minutes: i64) -> String {
 
 /// One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
 pub fn episode_protection_line(episode: i64) -> String {
-    text("episode-protection-line", &[("episode", Arg::Int(episode))])
+    text("episode-protection-line", &[("episode", Arg::Plain(episode))])
 }
 
 /// The same line on phones.
 pub fn episode_protection_line_short(episode: i64) -> String {
-    text("episode-protection-line-short", &[("episode", Arg::Int(episode))])
+    text("episode-protection-line-short", &[("episode", Arg::Plain(episode))])
 }
 
 /// Label of an episode range of a long series, in the range menu.
 pub fn episode_range(from: i64, to: i64) -> String {
-    text("episode-range", &[("from", Arg::Int(from)), ("to", Arg::Int(to))])
+    text("episode-range", &[("from", Arg::Plain(from)), ("to", Arg::Plain(to))])
 }
 
 /// Label of the control that picks an episode range.
@@ -21127,7 +21332,7 @@ pub fn episode_fold(count: i64) -> String {
 
 /// An episode's number in a facts line on phones and in narrow desktop windows.
 pub fn episode_short(episode: i64) -> String {
-    text("episode-short", &[("episode", Arg::Int(episode))])
+    text("episode-short", &[("episode", Arg::Plain(episode))])
 }
 
 /// Part of an episode's facts line: when it aired. The date is already formatted.
@@ -21152,12 +21357,12 @@ pub fn episode_protection_hide() -> String {
 
 /// The line where spoiler protection starts, once the rows after it are shown.
 pub fn episode_protection_shown(episode: i64) -> String {
-    text("episode-protection-shown", &[("episode", Arg::Int(episode))])
+    text("episode-protection-shown", &[("episode", Arg::Plain(episode))])
 }
 
 /// The same line on phones.
 pub fn episode_protection_shown_short(episode: i64) -> String {
-    text("episode-protection-shown-short", &[("episode", Arg::Int(episode))])
+    text("episode-protection-shown-short", &[("episode", Arg::Plain(episode))])
 }
 
 /// An episode range in the range menu: the first and the last episode.
@@ -21192,22 +21397,22 @@ pub fn episode_mark_previous_watched() -> String {
 
 /// Menu item that marks every episode up to a given one as watched.
 pub fn episode_mark_up_to(episode: i64) -> String {
-    text("episode-mark-up-to", &[("episode", Arg::Int(episode))])
+    text("episode-mark-up-to", &[("episode", Arg::Plain(episode))])
 }
 
 /// Menu item that marks one numbered episode as watched.
 pub fn episode_mark_n_watched(episode: i64) -> String {
-    text("episode-mark-n-watched", &[("episode", Arg::Int(episode))])
+    text("episode-mark-n-watched", &[("episode", Arg::Plain(episode))])
 }
 
 /// Menu item that marks one numbered episode as not watched.
 pub fn episode_mark_n_unwatched(episode: i64) -> String {
-    text("episode-mark-n-unwatched", &[("episode", Arg::Int(episode))])
+    text("episode-mark-n-unwatched", &[("episode", Arg::Plain(episode))])
 }
 
 /// Notice after an episode was marked watched.
 pub fn episode_marked_watched(episode: i64) -> String {
-    text("episode-marked-watched", &[("episode", Arg::Int(episode))])
+    text("episode-marked-watched", &[("episode", Arg::Plain(episode))])
 }
 
 /// Menu item that starts an episode from the beginning.
@@ -21217,7 +21422,7 @@ pub fn episode_play_from_beginning() -> String {
 
 /// Menu item that downloads one numbered episode.
 pub fn episode_download_n(episode: i64) -> String {
-    text("episode-download-n", &[("episode", Arg::Int(episode))])
+    text("episode-download-n", &[("episode", Arg::Plain(episode))])
 }
 
 /// Menu item that downloads every episode not yet watched.
@@ -21317,12 +21522,12 @@ pub fn episode_line_dubbed(line: &str) -> String {
 
 /// Main button of the title page for a dubbed episode that has not been started.
 pub fn title_button_play_dubbed(episode: i64) -> String {
-    text("title-button-play-dubbed", &[("episode", Arg::Int(episode))])
+    text("title-button-play-dubbed", &[("episode", Arg::Plain(episode))])
 }
 
 /// Main button of the title page when a dubbed episode is part-watched. The time is where it stopped, already formatted.
 pub fn title_button_resume_dubbed(episode: i64, time: &str) -> String {
-    text("title-button-resume-dubbed", &[("episode", Arg::Int(episode)), ("time", Arg::Text(time))])
+    text("title-button-resume-dubbed", &[("episode", Arg::Plain(episode)), ("time", Arg::Text(time))])
 }
 
 /// Label of a fact: the genres, joined in its value.
@@ -21347,7 +21552,7 @@ pub fn title_fact_range(from: &str, to: &str) -> String {
 
 /// Value of the fact on a cancelled show: the last episode that aired.
 pub fn title_fact_after(episode: i64) -> String {
-    text("title-fact-after", &[("episode", Arg::Int(episode))])
+    text("title-fact-after", &[("episode", Arg::Plain(episode))])
 }
 
 /// Value of the fact on a show that is airing and has no known start.
@@ -21382,22 +21587,22 @@ pub fn episode_go_to_go() -> String {
 
 /// Placeholder of the Go to episode field: the first and last episode of the show.
 pub fn episode_go_to_hint(first: i64, last: i64) -> String {
-    text("episode-go-to-hint", &[("first", Arg::Int(first)), ("last", Arg::Int(last))])
+    text("episode-go-to-hint", &[("first", Arg::Plain(first)), ("last", Arg::Plain(last))])
 }
 
 /// Accessibility label of the Go to episode field.
 pub fn episode_go_to_label(first: i64, last: i64) -> String {
-    text("episode-go-to-label", &[("first", Arg::Int(first)), ("last", Arg::Int(last))])
+    text("episode-go-to-label", &[("first", Arg::Plain(first)), ("last", Arg::Plain(last))])
 }
 
 /// Shown when the number typed is not an episode of the show.
 pub fn episode_go_to_none(number: i64, last: i64) -> String {
-    text("episode-go-to-none", &[("number", Arg::Int(number)), ("last", Arg::Int(last))])
+    text("episode-go-to-none", &[("number", Arg::Plain(number)), ("last", Arg::Plain(last))])
 }
 
 /// Shown when the number typed is an episode with no date that has not come out.
 pub fn episode_go_to_not_out(number: i64, latest: i64) -> String {
-    text("episode-go-to-not-out", &[("number", Arg::Int(number)), ("latest", Arg::Int(latest))])
+    text("episode-go-to-not-out", &[("number", Arg::Plain(number)), ("latest", Arg::Plain(latest))])
 }
 
 /// Title of the settings group and the screen.
@@ -22307,7 +22512,7 @@ pub fn tv_type_search() -> String {
 
 /// Name of a track that has no name.
 pub fn tv_track_n(id: i64) -> String {
-    text("tv-track-n", &[("id", Arg::Int(id))])
+    text("tv-track-n", &[("id", Arg::Plain(id))])
 }
 
 /// Title of the screen on the TV that waits for a phone.
@@ -22647,7 +22852,7 @@ pub fn updates_saved_replace_plain(version: &str) -> String {
 
 /// The server refused. The code is a number.
 pub fn updates_why_server(code: i64) -> String {
-    text("updates-why-server", &[("code", Arg::Int(code))])
+    text("updates-why-server", &[("code", Arg::Plain(code))])
 }
 
 /// The connection broke.

@@ -6,8 +6,8 @@
 reader-settings-open = Reader settings
 
 # Spoken label of a page in the reader.
-# @arg page: int
-# @arg total: int
+# @arg page: plain
+# @arg total: plain
 # @arg title: text
 reader-page-label = Page { $page } of { $total }, { $title }
 
@@ -15,8 +15,8 @@ reader-page-label = Page { $page } of { $total }, { $title }
 reader-scrubber = Page
 
 # The scrubber's value, spoken.
-# @arg page: int
-# @arg total: int
+# @arg page: plain
+# @arg total: plain
 reader-scrubber-value = Page { $page } of { $total }
 
 # Title of the row that picks the look: paper, light, sepia, dark or the system's.
@@ -27,26 +27,26 @@ reader-text-label = Aa
 
 # The control group's line under the title. The chapter label comes from the source.
 # @arg chapter: text
-# @arg page: int
-# @arg total: int
+# @arg page: plain
+# @arg total: plain
 reader-group-line = { $chapter } · page { $page } of { $total }
 
 # The control group's line when a spread shows two pages.
 # @arg chapter: text
-# @arg first: int
-# @arg second: int
+# @arg first: plain
+# @arg second: plain
 reader-group-line-spread = { $chapter } · pages { $first } and { $second }
 
 # The control group's line for a strip.
 # @arg chapter: text
-# @arg image: int
-# @arg total: int
+# @arg image: plain
+# @arg total: plain
 reader-group-line-strip = { $chapter } · image { $image } of { $total }
 
 # The control group's line for a novel, paged.
 # @arg chapter: text
-# @arg page: int
-# @arg total: int
+# @arg page: plain
+# @arg total: plain
 reader-group-line-novel = { $chapter } · page { $page } of { $total }
 
 # The control group's line for a novel in one long scroll.
@@ -255,8 +255,8 @@ reader-chapters-tab = Chapters
 reader-volume = Volume { $volume }
 
 # Chapters sheet: a chapter's state line.
-# @arg page: int
-# @arg total: int
+# @arg page: plain
+# @arg total: plain
 reader-chapter-in-progress = Page { $page } of { $total }
 reader-chapter-read = Read
 reader-chapter-new = new
@@ -282,7 +282,7 @@ reader-menu-zoom-out = Zoom Out
 reader-menu-zoom-fit = Fit to Window
 
 # Mac menu item: back to where the person was before a jump.
-# @arg page: int
+# @arg page: plain
 reader-menu-back-to-page = Back to Page { $page }
 
 # Mac menu item when there is no place to go back to.

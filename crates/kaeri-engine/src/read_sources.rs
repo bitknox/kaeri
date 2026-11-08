@@ -104,12 +104,23 @@ pub struct FolderSource {
     store: Store,
 }
 
+/// The folders' name as a source, in the language `tag` names: "Folders". The name says what
+/// they are, so no kind is drawn beside it.
+pub fn folders_name(tag: &str) -> String {
+    kaeri_model::Msg::from(kaeri_model::ReadingMsg::ReadSourceFolders).text_in(tag)
+}
+
 impl FolderSource {
+    /// Named in English until [`BookSources::set_language`] names it in the app's language.
     pub fn new(store: Store) -> Self {
+        Self::named(store, folders_name("en"))
+    }
+
+    fn named(store: Store, name: String) -> Self {
         Self {
             manifest: BookSourceManifest {
                 id: FOLDERS.into(),
-                name: "Folders".into(),
+                name,
                 version: String::new(),
                 kind: BookSourceKind::Folder,
                 media: vec![Medium::Manga, Medium::Novel],
@@ -745,6 +756,7 @@ pub(crate) fn demo_tile(work: &kaeri_core::reading_demo::DemoWork) -> WorkTile {
         not_in_sources: false,
         origin: None,
         amount: None,
+        started: None,
     }
 }
 
@@ -1119,6 +1131,14 @@ async fn sign_in(
 }
 
 impl BookSources {
+    /// Name what the engine names in the language the app speaks (a tag from
+    /// `kaeri_i18n::languages()`): the folders as a source, and the feed's sections.
+    pub fn set_language(&self, tag: &str) {
+        self.registry.put(Arc::new(FolderSource::named(self.store.clone(), folders_name(tag))));
+        #[cfg(feature = "opds-feed")]
+        self.feed.use_language(tag);
+    }
+
     /// A source's name as its manifest gives it, or its id when it is no longer loaded.
     pub fn source_name(&self, id: &str) -> String {
         self.registry.manifest(id).map_or_else(|| id.to_owned(), |m| m.name)
@@ -1280,6 +1300,7 @@ impl BookSources {
             not_in_sources: false,
             origin,
             amount,
+            started: None,
         })
     }
 

@@ -156,8 +156,62 @@ home-trending = [Ţŕéñðîñĝ ñöŵ~~~~]
 # Heading over recommendations from one show the person finished and rated well. The title is that show.
 home-because = [Ɓéçàüšé ýöü ƒîñîšĥéð { $title }~~~~~~~~]
 
-# Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+# Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
 home-more-genre = [Ṁöŕé { $genre }~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-action = [Ṁöŕé àçţîöñ~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-adventure = [Ṁöŕé àðṽéñţüŕé~~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-comedy = [Ṁöŕé çöɱéðý~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-drama = [Ṁöŕé ðŕàɱà~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-ecchi = [Ṁöŕé éççĥî~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-fantasy = [Ṁöŕé ƒàñţàšý~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-horror = [Ṁöŕé ĥöŕŕöŕ~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mahou-shoujo = [Ṁöŕé ɱàĥöü šĥöüĵö~~~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mecha = [Ṁöŕé ɱéçĥà~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-music = [Ṁöŕé ɱüšîç~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mystery = [Ṁöŕé ɱýšţéŕý~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-psychological = [Ṁöŕé þšýçĥöļöĝîçàļ~~~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-romance = [Ṁöŕé ŕöɱàñçé~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sci-fi = [Ṁöŕé šçî-ƒî~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-slice-of-life = [Ṁöŕé šļîçé öƒ ļîƒé~~~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sports = [Ṁöŕé šþöŕţš~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-supernatural = [Ṁöŕé šüþéŕñàţüŕàļ~~~~~~]
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-thriller = [Ṁöŕé ţĥŕîļļéŕ~~~~]
 
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = [Ðéɱö, ƒŕéé ţö šĥàŕé~~~~~~]
@@ -1031,6 +1085,75 @@ read-hit-files-format =
         [one] [1 ƒîļé · { $format }~~~~]
        *[other] [{ $count } ƒîļéš · { $format }~~~~~]
     }
+
+# The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+read-source-folders = [Ƒöļðéŕš~~~]
+
+# A section of the feed that e-readers fetch from: the chapters downloaded on this device.
+read-feed-downloads = [Ðöŵñļöàðš~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+reading-since-january = [šîñçé Ĵàñüàŕý~~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+reading-since-february = [šîñçé Ƒéƀŕüàŕý~~~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+reading-since-march = [šîñçé Ṁàŕçĥ~~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+reading-since-april = [šîñçé Åþŕîļ~~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+reading-since-may = [šîñçé Ṁàý~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+reading-since-june = [šîñçé Ĵüñé~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+reading-since-july = [šîñçé Ĵüļý~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+reading-since-august = [šîñçé Åüĝüšţ~~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+reading-since-september = [šîñçé Šéþţéɱƀéŕ~~~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+reading-since-october = [šîñçé Öçţöƀéŕ~~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+reading-since-november = [šîñçé Ñöṽéɱƀéŕ~~~~~]
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+reading-since-december = [šîñçé Ðéçéɱƀéŕ~~~~~]
+
+# The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList".
+read-view-all-trending-manga = [Ṁàñĝà, ţŕéñðîñĝ~~~~~]
+
+# The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList".
+read-view-all-trending-webtoons = [Ŵéƀţööñš, ţŕéñðîñĝ~~~~~~]
+
+# The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList".
+read-view-all-trending-novels = [Ļîĝĥţ ñöṽéļš, ţŕéñðîñĝ~~~~~~~]
+
+# The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList".
+read-view-all-new-manga = [Ṁàñĝà šţàŕţéð îñ ţĥé ļàšţ 12 ɱöñţĥš~~~~~~~~~~~]
+
+# The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".
+read-view-all-new-webtoons = [Ŵéƀţööñš šţàŕţéð îñ ţĥé ļàšţ 12 ɱöñţĥš~~~~~~~~~~~~]
+
+# The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList".
+read-view-all-new-novels = [Ļîĝĥţ ñöṽéļš šţàŕţéð îñ ţĥé ļàšţ 12 ɱöñţĥš~~~~~~~~~~~~~]
+
+# The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList".
+read-view-all-finished-manga = [Ƒîñîšĥéð ɱàñĝà, ɱöšţ þöþüļàŕ~~~~~~~~~]
+
+# The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList".
+read-view-all-finished-webtoons = [Ƒîñîšĥéð ŵéƀţööñš, ɱöšţ þöþüļàŕ~~~~~~~~~~]
+
+# The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList".
+read-view-all-finished-novels = [Ƒîñîšĥéð ļîĝĥţ ñöṽéļš, ɱöšţ þöþüļàŕ~~~~~~~~~~~]
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]

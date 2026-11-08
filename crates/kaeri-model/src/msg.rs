@@ -115,8 +115,44 @@ pub enum Msg {
     HomeTrending,
     /// Heading over recommendations from one show the person finished and rated well. The title is that show.
     HomeBecause { title: String },
-    /// Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+    /// Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
     HomeMoreGenre { genre: String },
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreAction,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreAdventure,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreComedy,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreDrama,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreEcchi,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreFantasy,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreHorror,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreMahouShoujo,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreMecha,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreMusic,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreMystery,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenrePsychological,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreRomance,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreSciFi,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreSliceOfLife,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreSports,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreSupernatural,
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    HomeMoreGenreThriller,
     /// Line over the spotlight's title when it is the built-in demo.
     HomeSpotlightDemo,
     /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
@@ -478,6 +514,24 @@ impl Msg {
             Self::HomeTrending => "home-trending",
             Self::HomeBecause { .. } => "home-because",
             Self::HomeMoreGenre { .. } => "home-more-genre",
+            Self::HomeMoreGenreAction => "home-more-genre-action",
+            Self::HomeMoreGenreAdventure => "home-more-genre-adventure",
+            Self::HomeMoreGenreComedy => "home-more-genre-comedy",
+            Self::HomeMoreGenreDrama => "home-more-genre-drama",
+            Self::HomeMoreGenreEcchi => "home-more-genre-ecchi",
+            Self::HomeMoreGenreFantasy => "home-more-genre-fantasy",
+            Self::HomeMoreGenreHorror => "home-more-genre-horror",
+            Self::HomeMoreGenreMahouShoujo => "home-more-genre-mahou-shoujo",
+            Self::HomeMoreGenreMecha => "home-more-genre-mecha",
+            Self::HomeMoreGenreMusic => "home-more-genre-music",
+            Self::HomeMoreGenreMystery => "home-more-genre-mystery",
+            Self::HomeMoreGenrePsychological => "home-more-genre-psychological",
+            Self::HomeMoreGenreRomance => "home-more-genre-romance",
+            Self::HomeMoreGenreSciFi => "home-more-genre-sci-fi",
+            Self::HomeMoreGenreSliceOfLife => "home-more-genre-slice-of-life",
+            Self::HomeMoreGenreSports => "home-more-genre-sports",
+            Self::HomeMoreGenreSupernatural => "home-more-genre-supernatural",
+            Self::HomeMoreGenreThriller => "home-more-genre-thriller",
             Self::HomeSpotlightDemo => "home-spotlight-demo",
             Self::LicensedReturn { .. } => "licensed-return",
             Self::LicensedMarked { .. } => "licensed-marked",
@@ -667,11 +721,11 @@ impl Msg {
             Self::HomeSpotlightBecause { title } => vec![("title", Value::Text(title.clone()))],
             Self::HomeSpotlightRecommended => Vec::new(),
             Self::HomeSpotlightPopular => Vec::new(),
-            Self::HomeTimeLeft { episode, minutes } => vec![("episode", Value::Int(*episode)), ("minutes", Value::Int(*minutes))],
-            Self::HomeEpisodeOut { episode } => vec![("episode", Value::Int(*episode))],
-            Self::HomeEpisodeNext { episode } => vec![("episode", Value::Int(*episode))],
-            Self::HomeEpisodeOutToday { episode } => vec![("episode", Value::Int(*episode))],
-            Self::HomeEpisodeOutShort { episode } => vec![("episode", Value::Int(*episode))],
+            Self::HomeTimeLeft { episode, minutes } => vec![("episode", Value::Plain(*episode)), ("minutes", Value::Int(*minutes))],
+            Self::HomeEpisodeOut { episode } => vec![("episode", Value::Plain(*episode))],
+            Self::HomeEpisodeNext { episode } => vec![("episode", Value::Plain(*episode))],
+            Self::HomeEpisodeOutToday { episode } => vec![("episode", Value::Plain(*episode))],
+            Self::HomeEpisodeOutShort { episode } => vec![("episode", Value::Plain(*episode))],
             Self::HomeOutAgo { ago } => vec![("ago", Value::Span(*ago))],
             Self::HomeReasonNewSeason => Vec::new(),
             Self::HomeReasonPlanning => Vec::new(),
@@ -688,12 +742,30 @@ impl Msg {
             Self::HomeTrending => Vec::new(),
             Self::HomeBecause { title } => vec![("title", Value::Text(title.clone()))],
             Self::HomeMoreGenre { genre } => vec![("genre", Value::Text(genre.clone()))],
+            Self::HomeMoreGenreAction => Vec::new(),
+            Self::HomeMoreGenreAdventure => Vec::new(),
+            Self::HomeMoreGenreComedy => Vec::new(),
+            Self::HomeMoreGenreDrama => Vec::new(),
+            Self::HomeMoreGenreEcchi => Vec::new(),
+            Self::HomeMoreGenreFantasy => Vec::new(),
+            Self::HomeMoreGenreHorror => Vec::new(),
+            Self::HomeMoreGenreMahouShoujo => Vec::new(),
+            Self::HomeMoreGenreMecha => Vec::new(),
+            Self::HomeMoreGenreMusic => Vec::new(),
+            Self::HomeMoreGenreMystery => Vec::new(),
+            Self::HomeMoreGenrePsychological => Vec::new(),
+            Self::HomeMoreGenreRomance => Vec::new(),
+            Self::HomeMoreGenreSciFi => Vec::new(),
+            Self::HomeMoreGenreSliceOfLife => Vec::new(),
+            Self::HomeMoreGenreSports => Vec::new(),
+            Self::HomeMoreGenreSupernatural => Vec::new(),
+            Self::HomeMoreGenreThriller => Vec::new(),
             Self::HomeSpotlightDemo => Vec::new(),
-            Self::LicensedReturn { episode, service } => vec![("episode", Value::Int(*episode)), ("service", Value::Text(service.clone()))],
-            Self::LicensedMarked { episode } => vec![("episode", Value::Int(*episode))],
+            Self::LicensedReturn { episode, service } => vec![("episode", Value::Plain(*episode)), ("service", Value::Text(service.clone()))],
+            Self::LicensedMarked { episode } => vec![("episode", Value::Plain(*episode))],
             Self::NoticeReason { reason } => vec![("reason", Value::Cause(reason.clone()))],
-            Self::NoticeNotAired { episode, when } => vec![("episode", Value::Int(*episode)), ("when", Value::Cause(when.clone()))],
-            Self::NoticeNotAiredYet { episode, next, when } => vec![("episode", Value::Int(*episode)), ("next", Value::Int(*next)), ("when", Value::Cause(when.clone()))],
+            Self::NoticeNotAired { episode, when } => vec![("episode", Value::Plain(*episode)), ("when", Value::Cause(when.clone()))],
+            Self::NoticeNotAiredYet { episode, next, when } => vec![("episode", Value::Plain(*episode)), ("next", Value::Plain(*next)), ("when", Value::Cause(when.clone()))],
             Self::StatusLookingUpTitle => Vec::new(),
             Self::StatusLoadingSources => Vec::new(),
             Self::StartLookingUpTitle => Vec::new(),
@@ -810,7 +882,7 @@ impl Msg {
             Self::NoticeShowNoSuchSubtitles => Vec::new(),
             Self::NoticeMappingDataRefreshed => Vec::new(),
             Self::NoticeMappingDataFailed { datasets, wait, cause } => vec![("datasets", Value::Text(datasets.clone())), ("wait", Value::Span(*wait)), ("cause", Value::Cause(cause.clone()))],
-            Self::NoticeEpisodeAired { title, episode } => vec![("title", Value::Text(title.clone())), ("episode", Value::Int(*episode))],
+            Self::NoticeEpisodeAired { title, episode } => vec![("title", Value::Text(title.clone())), ("episode", Value::Plain(*episode))],
             Self::NoticeEpisodesAired { count } => vec![("count", Value::Int(*count))],
             Self::NoticeUpdateAvailable { tag } => vec![("tag", Value::Text(tag.clone()))],
             Self::LegalHostsNoContent => Vec::new(),
@@ -1503,6 +1575,52 @@ pub enum ReadingMsg {
     ReadHitFiles { count: i64 },
     /// Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
     ReadHitFilesFormat { count: i64, format: String },
+    /// The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+    ReadSourceFolders,
+    /// A section of the feed that e-readers fetch from: the chapters downloaded on this device.
+    ReadFeedDownloads,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+    ReadingSinceJanuary,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+    ReadingSinceFebruary,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+    ReadingSinceMarch,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+    ReadingSinceApril,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+    ReadingSinceMay,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+    ReadingSinceJune,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+    ReadingSinceJuly,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+    ReadingSinceAugust,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+    ReadingSinceSeptember,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+    ReadingSinceOctober,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+    ReadingSinceNovember,
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+    ReadingSinceDecember,
+    /// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList".
+    ReadViewAllTrendingManga,
+    /// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList".
+    ReadViewAllTrendingWebtoons,
+    /// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList".
+    ReadViewAllTrendingNovels,
+    /// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList".
+    ReadViewAllNewManga,
+    /// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".
+    ReadViewAllNewWebtoons,
+    /// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList".
+    ReadViewAllNewNovels,
+    /// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList".
+    ReadViewAllFinishedManga,
+    /// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList".
+    ReadViewAllFinishedWebtoons,
+    /// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList".
+    ReadViewAllFinishedNovels,
 }
 
 impl ReadingMsg {
@@ -1667,6 +1785,29 @@ impl ReadingMsg {
             Self::ReadHitParts { .. } => "read-hit-parts",
             Self::ReadHitFiles { .. } => "read-hit-files",
             Self::ReadHitFilesFormat { .. } => "read-hit-files-format",
+            Self::ReadSourceFolders => "read-source-folders",
+            Self::ReadFeedDownloads => "read-feed-downloads",
+            Self::ReadingSinceJanuary => "reading-since-january",
+            Self::ReadingSinceFebruary => "reading-since-february",
+            Self::ReadingSinceMarch => "reading-since-march",
+            Self::ReadingSinceApril => "reading-since-april",
+            Self::ReadingSinceMay => "reading-since-may",
+            Self::ReadingSinceJune => "reading-since-june",
+            Self::ReadingSinceJuly => "reading-since-july",
+            Self::ReadingSinceAugust => "reading-since-august",
+            Self::ReadingSinceSeptember => "reading-since-september",
+            Self::ReadingSinceOctober => "reading-since-october",
+            Self::ReadingSinceNovember => "reading-since-november",
+            Self::ReadingSinceDecember => "reading-since-december",
+            Self::ReadViewAllTrendingManga => "read-view-all-trending-manga",
+            Self::ReadViewAllTrendingWebtoons => "read-view-all-trending-webtoons",
+            Self::ReadViewAllTrendingNovels => "read-view-all-trending-novels",
+            Self::ReadViewAllNewManga => "read-view-all-new-manga",
+            Self::ReadViewAllNewWebtoons => "read-view-all-new-webtoons",
+            Self::ReadViewAllNewNovels => "read-view-all-new-novels",
+            Self::ReadViewAllFinishedManga => "read-view-all-finished-manga",
+            Self::ReadViewAllFinishedWebtoons => "read-view-all-finished-webtoons",
+            Self::ReadViewAllFinishedNovels => "read-view-all-finished-novels",
         }
     }
 
@@ -1685,10 +1826,10 @@ impl ReadingMsg {
             Self::ReadingAlsoAShow => Vec::new(),
             Self::ReadingAlsoABook => Vec::new(),
             Self::ReadingSplitChapter { chapter, whole } => vec![("chapter", Value::Text(chapter.clone())), ("whole", Value::Text(whole.clone()))],
-            Self::ReaderResumed { page } => vec![("page", Value::Int(*page))],
-            Self::ReaderBackToPage { page } => vec![("page", Value::Int(*page))],
-            Self::ReaderMoved { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page)), ("device", Value::Text(device.clone()))],
-            Self::ReaderMovedNumber { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page)), ("device", Value::Text(device.clone()))],
+            Self::ReaderResumed { page } => vec![("page", Value::Plain(*page))],
+            Self::ReaderBackToPage { page } => vec![("page", Value::Plain(*page))],
+            Self::ReaderMoved { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page)), ("device", Value::Text(device.clone()))],
+            Self::ReaderMovedNumber { chapter, page, device } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page)), ("device", Value::Text(device.clone()))],
             Self::ReaderDetectedRightToLeft => Vec::new(),
             Self::ReaderDetectedLeftToRight => Vec::new(),
             Self::ReaderDetectedStrip => Vec::new(),
@@ -1697,14 +1838,14 @@ impl ReadingMsg {
             Self::ReadingFailedNotFound => Vec::new(),
             Self::ReadingFailedBlocked { source, reason } => vec![("source", Value::Text(source.clone())), ("reason", Value::Text(reason.clone()))],
             Self::ReadingFailedParse { source } => vec![("source", Value::Text(source.clone()))],
-            Self::ReadingFailedPage { status } => vec![("status", Value::Int(*status))],
+            Self::ReadingFailedPage { status } => vec![("status", Value::Plain(*status))],
             Self::ReadingFailedSignIn { what } => vec![("what", Value::Text(what.clone()))],
             Self::ReadingFailedFileMissing { path } => vec![("path", Value::Text(path.clone()))],
             Self::ReadingFailedUnreadable { path, format } => vec![("path", Value::Text(path.clone())), ("format", Value::Text(format.clone()))],
             Self::ReadingFailedUnsupported { kind } => vec![("kind", Value::Text(kind.clone()))],
             Self::ReadingFailedProtected => Vec::new(),
             Self::ReadingFailedDiskFull => Vec::new(),
-            Self::ReadingFailedWebview { version } => vec![("version", Value::Int(*version))],
+            Self::ReadingFailedWebview { version } => vec![("version", Value::Plain(*version))],
             Self::ReadingFailedNeedsNewer { world } => vec![("world", Value::Text(world.clone()))],
             Self::ReadingFailedOff => Vec::new(),
             Self::ReadingFailedOther { reason } => vec![("reason", Value::Text(reason.clone()))],
@@ -1733,7 +1874,7 @@ impl ReadingMsg {
             Self::ReadingSpotlightPopular => Vec::new(),
             Self::ReadingOutToday { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
             Self::ReadingOutTodayTitled { chapter, title } => vec![("chapter", Value::Text(chapter.clone())), ("title", Value::Text(title.clone()))],
-            Self::ReadingChapterPage { chapter, page } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Int(*page))],
+            Self::ReadingChapterPage { chapter, page } => vec![("chapter", Value::Text(chapter.clone())), ("page", Value::Plain(*page))],
             Self::ReadingChapterPercent { chapter, percent } => vec![("chapter", Value::Text(chapter.clone())), ("percent", Value::Int(*percent))],
             Self::ReadingChapterNew { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
             Self::ReadingNextPart { part } => vec![("part", Value::Text(part.clone()))],
@@ -1772,8 +1913,8 @@ impl ReadingMsg {
             Self::ReadingRowWaitsWifi => Vec::new(),
             Self::ReadingRowDownloading { done, total } => vec![("done", Value::Int(*done)), ("total", Value::Int(*total))],
             Self::ReadingRowFailed => Vec::new(),
-            Self::ReadingRowPageOf { page, of } => vec![("page", Value::Int(*page)), ("of", Value::Int(*of))],
-            Self::ReadingRowPage { page } => vec![("page", Value::Int(*page))],
+            Self::ReadingRowPageOf { page, of } => vec![("page", Value::Plain(*page)), ("of", Value::Plain(*of))],
+            Self::ReadingRowPage { page } => vec![("page", Value::Plain(*page))],
             Self::ReadingRowPercent { percent } => vec![("percent", Value::Int(*percent))],
             Self::ReadingRowOpened => Vec::new(),
             Self::ReadingRowBookmarked => Vec::new(),
@@ -1826,11 +1967,34 @@ impl ReadingMsg {
             Self::ReadSearchStartedAny => Vec::new(),
             Self::ReadSearchStartedYear => Vec::new(),
             Self::ReadSearchStarted3Years => Vec::new(),
-            Self::ReadHitChapters { last } => vec![("last", Value::Int(*last))],
-            Self::ReadHitEpisodes { last } => vec![("last", Value::Int(*last))],
+            Self::ReadHitChapters { last } => vec![("last", Value::Plain(*last))],
+            Self::ReadHitEpisodes { last } => vec![("last", Value::Plain(*last))],
             Self::ReadHitParts { count } => vec![("count", Value::Int(*count))],
             Self::ReadHitFiles { count } => vec![("count", Value::Int(*count))],
             Self::ReadHitFilesFormat { count, format } => vec![("count", Value::Int(*count)), ("format", Value::Text(format.clone()))],
+            Self::ReadSourceFolders => Vec::new(),
+            Self::ReadFeedDownloads => Vec::new(),
+            Self::ReadingSinceJanuary => Vec::new(),
+            Self::ReadingSinceFebruary => Vec::new(),
+            Self::ReadingSinceMarch => Vec::new(),
+            Self::ReadingSinceApril => Vec::new(),
+            Self::ReadingSinceMay => Vec::new(),
+            Self::ReadingSinceJune => Vec::new(),
+            Self::ReadingSinceJuly => Vec::new(),
+            Self::ReadingSinceAugust => Vec::new(),
+            Self::ReadingSinceSeptember => Vec::new(),
+            Self::ReadingSinceOctober => Vec::new(),
+            Self::ReadingSinceNovember => Vec::new(),
+            Self::ReadingSinceDecember => Vec::new(),
+            Self::ReadViewAllTrendingManga => Vec::new(),
+            Self::ReadViewAllTrendingWebtoons => Vec::new(),
+            Self::ReadViewAllTrendingNovels => Vec::new(),
+            Self::ReadViewAllNewManga => Vec::new(),
+            Self::ReadViewAllNewWebtoons => Vec::new(),
+            Self::ReadViewAllNewNovels => Vec::new(),
+            Self::ReadViewAllFinishedManga => Vec::new(),
+            Self::ReadViewAllFinishedWebtoons => Vec::new(),
+            Self::ReadViewAllFinishedNovels => Vec::new(),
         }
     }
 }
