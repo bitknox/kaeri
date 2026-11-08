@@ -39,3 +39,4 @@ reader-end-caught-up = Du bist auf dem Stand
 reader-gap-none = Keiner
 reader-gap-small = Klein
 reader-look-system = System
+reader-end-tracker = Gelesen · { $trackers } aktualisiert

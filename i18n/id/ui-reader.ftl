@@ -38,3 +38,4 @@ reader-end-caught-up = Anda sudah menyusul
 reader-gap-none = Tanpa jarak
 reader-gap-small = Kecil
 reader-look-system = Sistem
+reader-end-tracker = Dibaca · { $trackers } diperbarui

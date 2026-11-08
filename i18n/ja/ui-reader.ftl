@@ -38,3 +38,4 @@ reader-end-caught-up = 最新話まで読みました
 reader-gap-none = なし
 reader-gap-small = 小
 reader-look-system = システム
+reader-end-tracker = 既読 · { $trackers }を更新しました

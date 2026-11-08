@@ -731,7 +731,6 @@
     <string name="reader_grid_page">Aller à la page %1$d</string>
     <string name="reader_scrubber_in_chapter">Page dans le chapitre</string>
     <string name="reader_failed_novel">Impossible d\'afficher ce chapitre</string>
-    <string name="reader_end_tracker">Lu · %1$s à jour</string>
     <string name="reader_end_tracker_offline">Lu · %1$s se mettra à jour une fois en ligne</string>
     <string name="reader_end_none">Pas de chapitre %1$s dans vos sources</string>
     <string name="reader_end_none_line">Kaeri cherche de nouveaux chapitres en arrière-plan et les ajoute à Mises à jour.</string>
@@ -2384,6 +2383,7 @@
     <string name="reader_try_again">Réessayer</string>
     <string name="reader_close">Fermer</string>
     <string name="reader_end_read">Lu</string>
+    <string name="reader_end_tracker">Lu · %1$s à jour</string>
     <string name="reader_end_next">Suivant</string>
     <string name="reader_mode_rtl">De droite à gauche</string>
     <string name="reader_mode_ltr">De gauche à droite</string>

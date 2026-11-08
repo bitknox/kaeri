@@ -188350,13 +188350,13 @@
       }
     },
     "progress-row-off" : {
-      "comment" : "The server's row, when Send progress to the server is off.",
+      "comment" : "The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. Argument 1: kind (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Progress stays on this device"
+            "value" : "Progress stays on this %1$@"
           }
         }
       }
@@ -199695,6 +199695,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã đọc"
+          }
+        }
+      }
+    },
+    "reader-end-tracker" : {
+      "comment" : "Under the end of chapter line, naming the trackers the read went to. Argument 1: trackers (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gelesen · %1$@ aktualisiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read · %1$@ updated"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leído · %1$@ actualizado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lu · %1$@ à jour"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dibaca · %1$@ diperbarui"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letto · aggiornati: %1$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "既読 · %1$@を更新しました"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przeczytano · zaktualizowano: %1$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lido · %1$@ atualizado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прочитано · обновлено: %1$@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läst · uppdaterat på %1$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okundu · %1$@ güncellendi"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã đọc · đã cập nhật %1$@"
           }
         }
       }
@@ -290239,6 +290323,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · chưa có bộ nào · sẽ kiểm tra lại sau 30 phút"
+          }
+        }
+      }
+    },
+    "source-row-server-series" : {
+      "comment" : "A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS. Argument 1: kind (Text). Argument 2: series (Int). Argument 3: libraries (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@libraries@"
+          },
+          "substitutions" : {
+            "libraries" : {
+              "argNum" : 3,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ · %2$lld series"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ · %2$lld series in %3$lld libraries"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

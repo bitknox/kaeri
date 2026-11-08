@@ -8051,6 +8051,9 @@ reader-close = 閉じる
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = 既読
 
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = 既読 · { $trackers }を更新しました
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = 次の章
 

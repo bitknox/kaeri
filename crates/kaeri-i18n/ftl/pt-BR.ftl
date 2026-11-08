@@ -8221,6 +8221,9 @@ reader-close = Fechar
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = Lido
 
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = Lido · { $trackers } atualizado
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Seguinte
 

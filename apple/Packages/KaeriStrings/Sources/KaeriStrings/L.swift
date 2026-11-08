@@ -8011,6 +8011,11 @@ public enum L {
     /// Under the top line of the page between chapters, once the chapter counts as read.
     public static var readerEndRead: String { string("reader-end-read", fallback: "Read") }
 
+    /// Under the end of chapter line, naming the trackers the read went to.
+    public static func readerEndTracker(trackers: String) -> String {
+        Self.format("reader-end-tracker", fallback: "Read · %1$@ updated", trackers)
+    }
+
     /// Small heading above the next chapter on the page between chapters.
     public static var readerEndNext: String { string("reader-end-next", fallback: "Next") }
 
@@ -8265,8 +8270,10 @@ public enum L {
         Self.format("progress-row-failed", fallback: "%1$lld chapters not saved: %2$@", count, reason)
     }
 
-    /// The server's row, when Send progress to the server is off.
-    public static var progressRowOff: String { string("progress-row-off", fallback: "Progress stays on this device") }
+    /// The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+    public static func progressRowOff(kind: String) -> String {
+        Self.format("progress-row-off", fallback: "Progress stays on this %1$@", kind)
+    }
 
     /// Sidebar and tab label: the shows' Home when both media are on.
     public static var navWatch: String { string("nav-watch", fallback: "Watch") }
@@ -11282,6 +11289,11 @@ public enum L {
     /// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
     public static func sourceRowServer(kind: String, series: Int, libraries: Int) -> String {
         Self.format("source-row-server", fallback: "%1$@ · %2$lld series in %3$lld libraries · added just now", kind, series, libraries)
+    }
+
+    /// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+    public static func sourceRowServerSeries(kind: String, series: Int, libraries: Int) -> String {
+        Self.format("source-row-server-series", fallback: "%1$@ · %2$lld series in %3$lld libraries", kind, series, libraries)
     }
 
     /// A server's row in Your sources while it shows no series.

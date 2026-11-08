@@ -8175,6 +8175,9 @@ reader-close = [Çļöšé~~]
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = [Ŕéàð~~]
 
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = [Ŕéàð · { $trackers } üþðàţéð~~~~~~]
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = [Ñéẋţ~~]
 
@@ -8419,8 +8422,8 @@ progress-row-failed =
        *[other] [{ $count } çĥàþţéŕš ñöţ šàṽéð: { $reason }~~~~~~~~~]
     }
 
-# The server's row, when Send progress to the server is off.
-progress-row-off = [Þŕöĝŕéšš šţàýš öñ ţĥîš ðéṽîçé~~~~~~~~~]
+# The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+progress-row-off = [Þŕöĝŕéšš šţàýš öñ ţĥîš { $kind }~~~~~~~~]
 
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = [Ŵàţçĥ~~]
@@ -11206,6 +11209,13 @@ source-row-server =
     { $libraries ->
         [one] [{ $kind } · { $series } šéŕîéš · àððéð ĵüšţ ñöŵ~~~~~~~~~~]
        *[other] [{ $kind } · { $series } šéŕîéš îñ { $libraries } ļîƀŕàŕîéš · àððéð ĵüšţ ñöŵ~~~~~~~~~~~~~~~]
+    }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+source-row-server-series =
+    { $libraries ->
+        [one] [{ $kind } · { $series } šéŕîéš~~~~~]
+       *[other] [{ $kind } · { $series } šéŕîéš îñ { $libraries } ļîƀŕàŕîéš~~~~~~~~~~]
     }
 
 # A server's row in Your sources while it shows no series.

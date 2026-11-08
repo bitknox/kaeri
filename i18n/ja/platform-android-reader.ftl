@@ -132,7 +132,6 @@ reader-paper-line = ページは即座にめくれ、リーダー内の動きは
 reader-grid-page = { $page }ページへ移動
 reader-scrubber-in-chapter = 章内のページ
 reader-failed-novel = この章を表示できませんでした
-reader-end-tracker = 既読 · { $trackers }を更新しました
 reader-end-tracker-offline = 既読 · { $tracker }はオンラインに戻ると更新されます
 reader-end-none = 第{ $chapter }話は{ -source-pl }にまだありません
 reader-end-none-line = { -app-name }はバックグラウンドで新しい章を確認し、「更新」に追加します。

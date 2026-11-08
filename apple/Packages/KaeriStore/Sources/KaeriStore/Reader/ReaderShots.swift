@@ -20,6 +20,10 @@ extension ReaderModel {
         case "readermangartl", "readermoved": return "a:900301"
         case "readernovel": return "a:900302"
         case "readerstrip": return "a:900303"
+        // The reading demo's comic, for its reader and its end (prelaunch=demo-reader, demo-end).
+        case "readingdemo":
+            guard let scene = PrelaunchScene.named(in: arguments), scene == .demoReader || scene == .demoEnd else { return nil }
+            return readingDemoInfo().works.first { !$0.novel }?.work
         default: return nil
         }
     }
@@ -55,7 +59,8 @@ extension ReaderModel {
             case "settings": chromeShown = true; sheet = .settings
             case "chapters": chromeShown = true; sheet = .chapters
             case "ask": chromeShown = true; askingPage = true
-            case "end": requestJump(max(leaves.count - 1, 0))
+            // The end page is reached by reading on, by which time the resume notice has gone.
+            case "end": notice = nil; requestJump(max(leaves.count - 1, 0))
             case "scrub": chromeShown = true; shotScrub = max(leaves.count / 4, 1)
             case "pill": backTo = ReaderNoticeLine(id: bump(), text: L.readerBackToPage(page: 9), action: .backTo)
             case "opening": hold(.opening)

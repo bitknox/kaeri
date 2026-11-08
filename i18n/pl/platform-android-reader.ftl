@@ -138,7 +138,6 @@ reader-paper-line = Strony zmieniają się od razu i nic w czytniku się nie rus
 reader-grid-page = Przejdź do strony { $page }
 reader-scrubber-in-chapter = Strona w rozdziale
 reader-failed-novel = Nie udało się wyświetlić rozdziału
-reader-end-tracker = Przeczytano · zaktualizowano: { $trackers }
 reader-end-tracker-offline = Przeczytano · { $tracker } zaktualizuje się po powrocie online
 reader-end-none = Twoje { -source-pl } nie mają jeszcze rozdziału { $chapter }
 reader-end-none-line = { -app-name } sprawdza nowe rozdziały w tle i dodaje je w sekcji Aktualizacje.

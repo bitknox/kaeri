@@ -142,9 +142,20 @@ struct SeriesPage: View {
                         PhoneSeriesHeader(series: series, choosing: $choosing)
                     }
                     if case .send? = navigator.seriesSheet {} else { SendStatusRows(work: work) }
-                    SeriesChapters(series: series, chapters: store.reading.chapters[work],
-                                   choosing: $choosing, newestFirst: $newestFirst)
-                        .padding(.top, wide ? 32 : 24)
+                    if let demo = series.demo {
+                        // The demo's one chapter on its own row: no volumes, order or choosing.
+                        DemoChapter(work: work, demo: demo, chapters: store.reading.chapters[work])
+                            .padding(.top, wide ? 32 : 24)
+                    } else {
+                        SeriesChapters(series: series, chapters: store.reading.chapters[work],
+                                       choosing: $choosing, newestFirst: $newestFirst)
+                            .padding(.top, wide ? 32 : 24)
+                    }
+                    if let demo = series.demo, let other = series.demoOther,
+                       let info = store.demo.reading.works.first(where: { $0.id != demo.id }) {
+                        DemoAlso(id: other, info: info)
+                            .padding(.top, wide ? 32 : 24)
+                    }
                 } else if let failure = store.reading.failures[.series] {
                     ScreenFailed(title: L.titleLoadFailed, reason: failure.words) { store.reading.loadSeries(work) }
                 } else {
@@ -292,6 +303,7 @@ private struct WideSeriesHeader: View {
     let series: SeriesView
     @Binding var choosing: Set<String>?
     @State private var width: CGFloat = 0
+    private var demo: Bool { series.demo != nil }
 
     /// Cover, a text column of about 340 and the panel, with the gaps between.
     private var panelBeside: Bool { Device.isMac || width >= 940 }
@@ -306,12 +318,12 @@ private struct WideSeriesHeader: View {
                         .padding(.top, 20)
                 }
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                if panelBeside {
+                if panelBeside, !demo {
                     SeriesPanel(series: series)
                         .frame(width: Device.isMac ? 300 : 320)
                 }
             }
-            if !panelBeside {
+            if !panelBeside, !demo {
                 SeriesPanel(series: series)
             }
         }
@@ -321,6 +333,7 @@ private struct WideSeriesHeader: View {
 
 /// The iPhone: the cover beside the title and facts, the actions across, then the panel's rows.
 private struct PhoneSeriesHeader: View {
+    @Environment(AppStore.self) private var store
     let series: SeriesView
     @Binding var choosing: Set<String>?
 
@@ -331,16 +344,25 @@ private struct PhoneSeriesHeader: View {
                 SeriesTitleBlock(series: series, compact: true)
             }
             SeriesActions(series: series, stretch: true, choosing: $choosing)
-            SeriesPanel(series: series)
+            if series.demo == nil { SeriesPanel(series: series) }
         }
     }
 }
 
 private struct SeriesTitleBlock: View {
+    @Environment(AppStore.self) private var store
     let series: SeriesView
     let compact: Bool
 
     var body: some View {
+        if let demo = series.demo {
+            DemoSeriesTitle(series: series, demo: demo, compact: compact)
+        } else {
+            standard
+        }
+    }
+
+    private var standard: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(series.titles.display)
                 .font(.showTitle(size: compact ? 22 : (Device.isMac ? 30 : 34), relativeTo: .largeTitle))
@@ -412,7 +434,10 @@ private struct SeriesActions: View {
 
     var body: some View {
         Group {
-            if stretch {
+            if series.demo != nil {
+                // The demo is for trying the reader: no lists, tracking or downloads.
+                main
+            } else if stretch {
                 VStack(spacing: 12) {
                     main
                     HStack(spacing: 12) {

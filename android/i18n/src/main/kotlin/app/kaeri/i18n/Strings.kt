@@ -2489,10 +2489,6 @@ object Strings {
     fun readerFailedNovel(context: Context): String =
         context.getString(R.string.reader_failed_novel)
 
-    /** Under the end of chapter line, naming the trackers the read went to. */
-    fun readerEndTracker(context: Context, trackers: String): String =
-        context.getString(R.string.reader_end_tracker, trackers)
-
     /** Under the end of chapter line when the phone is offline. */
     fun readerEndTrackerOffline(context: Context, tracker: String): String =
         context.getString(R.string.reader_end_tracker_offline, tracker)
@@ -8462,6 +8458,10 @@ object Strings {
     fun readerEndRead(context: Context): String =
         context.getString(R.string.reader_end_read)
 
+    /** Under the end of chapter line, naming the trackers the read went to. */
+    fun readerEndTracker(context: Context, trackers: String): String =
+        context.getString(R.string.reader_end_tracker, trackers)
+
     /** Small heading above the next chapter on the page between chapters. */
     fun readerEndNext(context: Context): String =
         context.getString(R.string.reader_end_next)
@@ -8750,9 +8750,9 @@ object Strings {
     fun progressRowFailed(context: Context, count: Int, reason: String): String =
         context.resources.getQuantityString(R.plurals.progress_row_failed, count, count, reason)
 
-    /** The server's row, when Send progress to the server is off. */
-    fun progressRowOff(context: Context): String =
-        context.getString(R.string.progress_row_off)
+    /** The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. */
+    fun progressRowOff(context: Context, kind: String): String =
+        context.getString(R.string.progress_row_off, kind)
 
     /** Sidebar and tab label: the shows' Home when both media are on. */
     fun navWatch(context: Context): String =
@@ -12233,6 +12233,10 @@ object Strings {
     /** A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS. */
     fun sourceRowServer(context: Context, kind: String, series: Int, libraries: Int): String =
         context.resources.getQuantityString(R.plurals.source_row_server, libraries, kind, series, libraries)
+
+    /** A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS. */
+    fun sourceRowServerSeries(context: Context, kind: String, series: Int, libraries: Int): String =
+        context.resources.getQuantityString(R.plurals.source_row_server_series, libraries, kind, series, libraries)
 
     /** A server's row in Your sources while it shows no series. */
     fun sourceRowServerEmpty(context: Context, kind: String): String =

@@ -134,7 +134,6 @@ reader-paper-line = Sidor bläddras direkt och inget i läsaren rör sig. Ändra
 reader-grid-page = Gå till sida { $page }
 reader-scrubber-in-chapter = Sida i kapitlet
 reader-failed-novel = Kunde inte visa kapitlet
-reader-end-tracker = Läst · uppdaterat på { $trackers }
 reader-end-tracker-offline = Läst · { $tracker } uppdateras när du är online igen
 reader-end-none = Inget kapitel { $chapter } hos dina { -source-pl } än
 reader-end-none-line = { -app-name } söker efter nya kapitel i bakgrunden och lägger till dem i Uppdateringar.

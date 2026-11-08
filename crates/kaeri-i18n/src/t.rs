@@ -13080,6 +13080,11 @@ pub fn reader_end_read() -> String {
     text("reader-end-read", &[])
 }
 
+/// Under the end of chapter line, naming the trackers the read went to.
+pub fn reader_end_tracker(trackers: &str) -> String {
+    text("reader-end-tracker", &[("trackers", Arg::Text(trackers))])
+}
+
 /// Small heading above the next chapter on the page between chapters.
 pub fn reader_end_next() -> String {
     text("reader-end-next", &[])
@@ -13440,9 +13445,9 @@ pub fn progress_row_failed(count: i64, reason: &str) -> String {
     text("progress-row-failed", &[("count", Arg::Int(count)), ("reason", Arg::Text(reason))])
 }
 
-/// The server's row, when Send progress to the server is off.
-pub fn progress_row_off() -> String {
-    text("progress-row-off", &[])
+/// The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+pub fn progress_row_off(kind: &str) -> String {
+    text("progress-row-off", &[("kind", Arg::Text(kind))])
 }
 
 /// Sidebar and tab label: the shows' Home when both media are on.
@@ -17793,6 +17798,11 @@ pub fn source_added_plugins(count: i64, store: &str) -> String {
 /// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
 pub fn source_row_server(kind: &str, series: i64, libraries: i64) -> String {
     text("source-row-server", &[("kind", Arg::Text(kind)), ("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
+}
+
+/// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+pub fn source_row_server_series(kind: &str, series: i64, libraries: i64) -> String {
+    text("source-row-server-series", &[("kind", Arg::Text(kind)), ("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
 }
 
 /// A server's row in Your sources while it shows no series.

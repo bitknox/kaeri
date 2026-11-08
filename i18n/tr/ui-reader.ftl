@@ -39,3 +39,4 @@ reader-end-caught-up = Güncelsiniz
 reader-gap-none = Yok
 reader-gap-small = Küçük
 reader-look-system = Sistem
+reader-end-tracker = Okundu · { $trackers } güncellendi

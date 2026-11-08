@@ -1338,8 +1338,6 @@
     <string name="reader_scrubber_in_chapter">Page in chapter</string>
     <!-- Heading when a novel could not be shown. -->
     <string name="reader_failed_novel">Couldn\'t show this chapter</string>
-    <!-- Under the end of chapter line, naming the trackers the read went to. -->
-    <string name="reader_end_tracker">Read · %1$s updated</string>
     <!-- Under the end of chapter line when the phone is offline. -->
     <string name="reader_end_tracker_offline">Read · %1$s updates when you\'re back online</string>
     <!-- Title of the end page when no source has the next chapter. -->
@@ -4466,6 +4464,8 @@
     <string name="reader_close">Close</string>
     <!-- Under the top line of the page between chapters, once the chapter counts as read. -->
     <string name="reader_end_read">Read</string>
+    <!-- Under the end of chapter line, naming the trackers the read went to. -->
+    <string name="reader_end_tracker">Read · %1$s updated</string>
     <!-- Small heading above the next chapter on the page between chapters. -->
     <string name="reader_end_next">Next</string>
     <!-- A reading mode, and a reading direction. -->
@@ -4631,8 +4631,8 @@
         <item quantity="one">1 chapter not saved: %2$s</item>
         <item quantity="other">%1$d chapters not saved: %2$s</item>
     </plurals>
-    <!-- The server's row, when Send progress to the server is off. -->
-    <string name="progress_row_off">Progress stays on this device</string>
+    <!-- The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. -->
+    <string name="progress_row_off">Progress stays on this %1$s</string>
     <!-- Sidebar and tab label: the shows' Home when both media are on. -->
     <string name="nav_watch">Watch</string>
     <!-- Sidebar and tab label: reading's Home. -->
@@ -6504,6 +6504,11 @@
     <plurals name="source_row_server">
         <item quantity="one">%1$s · %2$d series · added just now</item>
         <item quantity="other">%1$s · %2$d series in %3$d libraries · added just now</item>
+    </plurals>
+    <!-- A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS. -->
+    <plurals name="source_row_server_series">
+        <item quantity="one">%1$s · %2$d series</item>
+        <item quantity="other">%1$s · %2$d series in %3$d libraries</item>
     </plurals>
     <!-- A server's row in Your sources while it shows no series. -->
     <string name="source_row_server_empty">%1$s · no series yet · looks again in 30 minutes</string>

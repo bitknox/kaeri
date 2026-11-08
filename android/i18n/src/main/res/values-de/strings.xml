@@ -700,7 +700,6 @@
     <string name="reader_grid_page">Zu Seite %1$d</string>
     <string name="reader_scrubber_in_chapter">Seite im Kapitel</string>
     <string name="reader_failed_novel">Kapitel konnte nicht angezeigt werden</string>
-    <string name="reader_end_tracker">Gelesen · %1$s aktualisiert</string>
     <string name="reader_end_tracker_offline">Gelesen · %1$s aktualisiert, sobald du wieder online bist</string>
     <string name="reader_end_none">Kein Kapitel %1$s in deinen Quellen</string>
     <string name="reader_end_none_line">Kaeri prüft im Hintergrund auf neue Kapitel und legt sie unter Updates ab.</string>
@@ -2309,6 +2308,7 @@
     <string name="reader_try_again">Erneut versuchen</string>
     <string name="reader_close">Schließen</string>
     <string name="reader_end_read">Gelesen</string>
+    <string name="reader_end_tracker">Gelesen · %1$s aktualisiert</string>
     <string name="reader_end_next">Nächstes</string>
     <string name="reader_mode_rtl">Rechts nach links</string>
     <string name="reader_mode_ltr">Links nach rechts</string>

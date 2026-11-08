@@ -237,7 +237,19 @@ struct ReaderNotices: View {
     var body: some View {
         ZStack {
             VStack {
-                if let notice = model.notice { capsule(notice).transition(.opacity) }
+                if let notice = model.notice {
+                    capsule(notice).transition(.opacity)
+                } else if let credit = model.view?.demoCredit, model.position.index == 0 {
+                    // The demo's credit on page 1, where its licence asks for it.
+                    Text(L.readerDemoCredit(title: credit.series, author: credit.author, licence: credit.licence ?? ""))
+                        .font(.ui(15)).foregroundStyle(theme.silk).lineLimit(2)
+                        .padding(.horizontal, 18)
+                        .frame(minHeight: 44)
+                        .background(theme.glassSolid, in: .capsule)
+                        .glassEffect(.regular, in: .capsule)
+                        .padding(.horizontal, 16)
+                        .transition(.opacity)
+                }
                 Spacer()
             }
             .padding(.top, 62)
@@ -251,6 +263,7 @@ struct ReaderNotices: View {
             }
         }
         .animation(paper ? nil : (model.notice == nil ? .fadeOut : .fadeIn), value: model.notice?.id)
+        .animation(paper ? nil : .fadeOut, value: model.position.index == 0)
         .animation(paper ? nil : (model.backTo == nil ? .fadeOut : .fadeIn), value: model.backTo?.id)
     }
 

@@ -7396,6 +7396,10 @@
     <value>Read</value>
     <comment>Under the top line of the page between chapters, once the chapter counts as read.</comment>
   </data>
+  <data name="ReaderEndTracker" xml:space="preserve">
+    <value>Read · {trackers} updated</value>
+    <comment>Under the end of chapter line, naming the trackers the read went to.</comment>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Next</value>
     <comment>Small heading above the next chapter on the page between chapters.</comment>
@@ -7713,8 +7717,8 @@
     <comment>The server's row, the server said no. Try again sits beside it.</comment>
   </data>
   <data name="ProgressRowOff" xml:space="preserve">
-    <value>Progress stays on this device</value>
-    <comment>The server's row, when Send progress to the server is off.</comment>
+    <value>Progress stays on this {kind}</value>
+    <comment>The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</comment>
   </data>
   <data name="NavWatch" xml:space="preserve">
     <value>Watch</value>
@@ -11371,6 +11375,14 @@
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · {series} series in {libraries} libraries · added just now</value>
     <comment>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</comment>
+  </data>
+  <data name="SourceRowServerSeries_one" xml:space="preserve">
+    <value>{kind} · {series} series</value>
+    <comment>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.</comment>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · {series} series in {libraries} libraries</value>
+    <comment>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.</comment>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · no series yet · looks again in 30 minutes</value>
