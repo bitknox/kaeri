@@ -16,7 +16,7 @@ settings-coming-up-dubbed = { $count ->
 settings-coming-up-switched-off = { $count ->
    *[other] { $names } は、各作品の設定で通知がオフになっています。
  }
-settings-coming-up-opens = 作品の設定を開きます
+settings-coming-up-opens = 作品をタップすると設定が開きます。
 torrents-proxy-as = { $user } として
 title-facts-aired = { $dates }放送
 title-facts-airing = { $date }から放送中
@@ -127,7 +127,7 @@ settings-titles-note-english-missing = { $title }にはAniListで英語のタイ
 settings-titles-note-english = AniListに登録されている英語のタイトルを表示します。英語がない場合はローマ字を表示します。
 settings-titles-note-romaji = AniListに登録されている日本語のタイトルを、ローマ字で表示します。
 settings-stores-with-updates = { $stores }件 · { $updates }
-settings-seeding-best-effort = この{ -device }ではベストエフォートです。シーディングは{ -app-name }を開いている間だけ行われます。
+settings-seeding-best-effort = この{ -device }は{ -app-name }を開いている間だけシーディングします。
 settings-downloads-count = { $count ->
    *[other] { $count }エピソード
  }
@@ -142,7 +142,7 @@ settings-typefaces-value = Roboto Flex と Zen Kaku Gothic New。SIL Open Font L
 settings-libraries-value = JNA、AndroidX（Apache License 2.0）
 settings-report-bug-value = ブラウザでGitHubを開きます
 downloads-storage-share-description = ダウンロードが { $size } を使用しています
-settings-aside-notifications = フォローしている作品に新しいエピソードが公開されると、通知が1件届きます。通知には作品名と話数が含まれ、エピソードのタイトルは含まれません。作品ごとの設定で通知をオフにできます。
+settings-aside-notifications = フォローしている作品に新しいエピソードが公開されると、通知が1件届きます。通知には作品名と話数が含まれ、エピソードのタイトルは含まれません。作品ごとの通知は、その作品の設定でオフにできます。
 settings-aside-downloads = ダウンロードは、この{ -device }の{ -app-name }専用の領域に保存され、他のアプリからは読み取れません。アプリを削除すると、ダウンロードも削除されます。
 settings-aside-sources = { -source-cap-pl }は上から順番に試されます。作品ごとに、作品ページで選んだ{ -source }を使うこともできます。
 settings-upscaling-description = 同じ静止画です。左半分は元の480p、右半分は{ $mode }です。

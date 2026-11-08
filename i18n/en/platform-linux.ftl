@@ -203,7 +203,7 @@ library-row-summary-linux = { $episodes ->
 library-page-watching-linux = Watched for changes
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Looked at again when { -app-name } starts
+library-page-no-watch-linux = Checked for changes when { -app-name } starts
 
 # Heading over the matched series.
 library-matched-linux = Matched

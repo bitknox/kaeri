@@ -7261,7 +7261,7 @@ object Strings {
     fun partyMemberWatchingFrom(context: Context, time: String): String =
         context.getString(R.string.party_member_watching_from, time)
 
-    /** Label of the I'm ready button once you are ready. */
+    /** Label of the Ready to watch button once you are ready. */
     fun partyReadyOn(context: Context): String =
         context.getString(R.string.party_ready_on)
 

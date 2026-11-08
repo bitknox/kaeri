@@ -6,5 +6,5 @@ release-seeders = { $count ->
  }
 trailer-failed = Impossible d'ouvrir la bande-annonce
 engine-down-title = { -app-name } ne fonctionne plus
-engine-down-stopped = Le moteur de l'application s'est arrêté. Réessayez, ou quittez l'application et ouvrez-la à nouveau.
+engine-down-stopped = Rien de nouveau ne se charge avant son redémarrage. Réessayez, ou quittez l'application et rouvrez-la.
 engine-down-quit = Quitter

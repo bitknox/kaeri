@@ -72,7 +72,7 @@
     <comment>Someone started something else on the TV, which ends the cast. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.</comment>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>This device isn't on the network {name} is on, or reaches it through a VPN. Casting needs both on the same network.</value>
+    <value>This device isn't on the network {name} is on, or reaches it through a VPN. Connect both to the same network to cast.</value>
     <comment>This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.</comment>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
@@ -488,7 +488,7 @@
     <comment>Toast when a chosen match still left the title undecided.</comment>
   </data>
   <data name="NoticeSourceSearchEmpty" xml:space="preserve">
-    <value>Nothing found for “{query}”. Try a different search.</value>
+    <value>Nothing found for "{query}". Try a different search.</value>
     <comment>Toast when a search of the sources for a title found nothing.</comment>
   </data>
   <data name="MatchRuledOutFormat" xml:space="preserve">
@@ -512,7 +512,7 @@
     <comment>Why a search of a source for a show's match failed: the source isn't installed or switched on.</comment>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>{source} will be used for this title.</value>
+    <value>This title now plays from {source}.</value>
     <comment>Toast after the person picked a source for one title.</comment>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
@@ -752,15 +752,15 @@
     <comment>The same notice for a chapter known only by its number, such as 14 or 14.5.</comment>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>Right to left, detected</value>
+    <value>Looks like right to left</value>
     <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>Left to right, detected</value>
+    <value>Looks like left to right</value>
     <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>Long strip, detected</value>
+    <value>Looks like a long strip</value>
     <comment>A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.</comment>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
@@ -1436,7 +1436,7 @@
     <comment>Error: the server at a link's address could not prove it is the store the invite named.</comment>
   </data>
   <data name="StoreTokenNotKept" xml:space="preserve">
-    <value>Couldn't keep the token for this plugin store. {reason}</value>
+    <value>Couldn't save the token for this plugin store. {reason}</value>
     <comment>Error: the token for a joined store could not be saved on this device. The reason comes from the system.</comment>
   </data>
   <data name="StoreInviteUnusable" xml:space="preserve">
@@ -1524,7 +1524,7 @@
     <comment>Error: the store's server is too old for joining with a link.</comment>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>{name} is off. It is skipped when looking for episodes.</value>
+    <value>{name} is off. Kaeri skips it when looking for episodes.</value>
     <comment>Toast after a source (plugin) is switched off. It is skipped when looking for episodes.</comment>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
@@ -1536,7 +1536,7 @@
     <comment>Error: a command named a plugin that is not loaded.</comment>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>{name} will be used for this title.</value>
+    <value>This title now uses {name}.</value>
     <comment>Toast after a release is chosen for a title. The name is the release's title.</comment>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
@@ -1660,11 +1660,11 @@
     <comment>Toast when no browser could be opened for a sign-in. The reason comes from the system.</comment>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>No sign-in to {tracker} is waiting for that. Start the sign-in again.</value>
+    <value>A sign-in reply from {tracker} arrived, but no sign-in was waiting for it. Start the sign-in again.</value>
     <comment>Toast when a sign-in redirect arrives and no sign-in is waiting for it.</comment>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>That sign-in to {tracker} didn't come back from this request. Start the sign-in again.</value>
+    <value>The sign-in reply from {tracker} doesn't match the request. Start the sign-in again.</value>
     <comment>Toast when a sign-in redirect does not match the request that was made.</comment>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
@@ -1792,7 +1792,7 @@
     <comment>The reason a proxy was refused: it has no host or no port.</comment>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>The proxy's address is not one a check can use.</value>
+    <value>The proxy check can't use this address.</value>
     <comment>The reason a proxy could not be checked: its address is not one the check can use.</comment>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
@@ -1824,7 +1824,7 @@
     <comment>Toast when something went wrong inside the engine and it carried on.</comment>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>The database was damaged, so Kaeri started a new one. The old file is kept at {path}. Your trackers bring back what they hold at the next sync.</value>
+    <value>The database was damaged, so Kaeri started a new one. The old file is kept at {path}. What your trackers hold comes back at the next sync.</value>
     <comment>Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.</comment>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
@@ -1844,7 +1844,7 @@
     <comment>Message when Kaeri could not start because its database could not be opened. The path is the database file, the reason comes from the system.</comment>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Kaeri couldn't set up its network connection from the network settings in config.toml. {reason}</value>
+    <value>Kaeri couldn't connect with the network settings in config.toml. Check them, then try again. {reason}</value>
     <comment>Message when Kaeri could not start its network connection from the network settings.</comment>
   </data>
   <data name="StartFailed" xml:space="preserve">
@@ -1888,11 +1888,11 @@
     <comment>Toast: Surprise me on the Planning list, which has nothing on it to pick.</comment>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>Offline. Search picks need AniList.</value>
+    <value>You're offline. Surprise me needs AniList to pick a title.</value>
     <comment>Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.</comment>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>Couldn't pick a title right now. Try again in a moment.</value>
+    <value>Couldn't reach AniList to pick a title. Try again in a moment.</value>
     <comment>Toast: Surprise me on the filters, and AniList could not be asked.</comment>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
@@ -2248,7 +2248,7 @@
     <comment>Under the setting for what closing the window does while episodes download.</comment>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>The cover, a progress bar and a link to the show on {tracker}. Needs the title shown.</value>
+    <value>The cover, a progress bar and a link to the show on {tracker}. It works only while the title is shown.</value>
     <comment>Under the rich presence switch: what Discord shows. The tracker is the site the link goes to.</comment>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
@@ -2408,7 +2408,7 @@
     <comment>Note under the Show TVs with Chromecast built in setting, in the Play on TV group.</comment>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.</value>
+    <value>A TV with Chromecast built in can then play torrents. This PC sends the episode for as long as it plays.</value>
     <comment>Note under the Torrents while casting setting, shown while torrents are on.</comment>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
@@ -2432,7 +2432,7 @@
     <comment>The box at the top of Settings that finds a setting by its name.</comment>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>Higher takes the best version a source offers, and more space.</value>
+    <value>Higher picks the best version a source has. It takes more space.</value>
     <comment>Note under the download quality row.</comment>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
@@ -2444,7 +2444,7 @@
     <comment>Note under the keep seeding row.</comment>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>Reads the comments on AniList's forum thread for episodes you have watched.</value>
+    <value>Comments come from AniList's forum thread, once you've watched the episode.</value>
     <comment>Note under the switch for episode discussions.</comment>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
@@ -2632,7 +2632,7 @@
     <comment>Title of the window shown instead of the app when the engine stopped while the app was open.</comment>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>The part of the app that does the work has stopped. Open Kaeri again to carry on.</value>
+    <value>Downloads and sync stopped with it. Open Kaeri again to carry on.</value>
     <comment>Line under that title: what happened and what to do.</comment>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
@@ -2772,7 +2772,7 @@
     <comment>Name read by a screen reader for that switch.</comment>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>It stops being tried for episodes. You can install it again from its plugin store.</value>
+    <value>Kaeri won't try it for episodes any more. You can install it again from its plugin store.</value>
     <comment>Under the title of the dialog that asks before a { -plugin } is removed from the { -source-cap-pl } page.</comment>
   </data>
   <data name="StoresUpdatesCount_one" xml:space="preserve">
@@ -3032,7 +3032,7 @@
     <comment>Switch that turns saving crash reports on this device on or off.</comment>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>When this is on, Kaeri keeps a short record of each crash on this device, with titles, addresses and names removed, so you can add it to Report a bug. Nothing is sent by itself.</value>
+    <value>Kaeri keeps a short record of each crash on this device for Report a bug, with titles, addresses and names removed. Nothing is sent by itself.</value>
     <comment>Line under that switch.</comment>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
@@ -3040,7 +3040,7 @@
     <comment>Switch that turns the notice after a crash on or off.</comment>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>Shows a notice at the next launch with Report…</value>
+    <value>Kaeri shows a notice with Report… the next time it opens.</value>
     <comment>Line under that switch.</comment>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
@@ -3080,7 +3080,7 @@
     <comment>Button that deletes every saved crash report.</comment>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>Crash reports stay on this device. Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.</value>
+    <value>Crash reports stay on this device, and Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.</value>
     <comment>Footnote of the Crash reports group.</comment>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
@@ -3248,15 +3248,15 @@
     <comment>Note under the Settings row that shows TVs with Chromecast built in, on an iPad.</comment>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Lets a TV with Chromecast built in play torrents. This Mac sends the episode for as long as it plays.</value>
+    <value>A TV with Chromecast built in can then play torrents. This Mac sends the episode for as long as it plays.</value>
     <comment>Note under the Settings row that lets a cast play torrents, on a Mac.</comment>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Lets a TV with Chromecast built in play torrents. This iPhone sends the episode for as long as it plays.</value>
+    <value>A TV with Chromecast built in can then play torrents. This iPhone sends the episode for as long as it plays.</value>
     <comment>Note under the Settings row that lets a cast play torrents, on an iPhone.</comment>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Lets a TV with Chromecast built in play torrents. This iPad sends the episode for as long as it plays.</value>
+    <value>A TV with Chromecast built in can then play torrents. This iPad sends the episode for as long as it plays.</value>
     <comment>Note under the Settings row that lets a cast play torrents, on an iPad.</comment>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
@@ -4256,7 +4256,7 @@
     <comment>Title of the confirmation on a phone.</comment>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>It plays again only with a connection, or once you download it again.</value>
+    <value>After this, the episode needs a connection to play, unless you download it again.</value>
     <comment>Line under it: what you lose.</comment>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
@@ -4272,7 +4272,7 @@
     <comment>Heading of the seeding group on the downloads screen.</comment>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>Watched episodes are shared back while Kaeri is open, until the ratio or the time limit set in Settings, under Sources, is reached.</value>
+    <value>Watched episodes are shared back while Kaeri is open. Sharing stops at the ratio or time limit you set in Settings, under Sources.</value>
     <comment>Line under the seeding heading.</comment>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
@@ -4376,11 +4376,11 @@
     <comment>First run, page 2 of 5.</comment>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>Pair with it and this device gets your sources, trackers and history. The steps after this are then done.</value>
+    <value>Pair with it and this device gets your sources, trackers and history, and the rest of setup is done for you.</value>
     <comment>Under the title.</comment>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>Shows a code to enter on that device. Both need the same Wi-Fi.</value>
+    <value>You get a code to enter on that device. Both need the same Wi-Fi.</value>
     <comment>Line under the pair row.</comment>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
@@ -4432,7 +4432,7 @@
     <comment>Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.</comment>
   </data>
   <data name="FirstJoinFolders" xml:space="preserve">
-    <value>Folders stay on {device}. Add this device’s own folders in Your sources.</value>
+    <value>Folders stay on {device}. Add this device's own folders in Your sources.</value>
     <comment>Note under the list.</comment>
   </data>
   <data name="FirstJoinStepsDone" xml:space="preserve">
@@ -4440,7 +4440,7 @@
     <comment>Note when the setup answered the remaining pages.</comment>
   </data>
   <data name="FirstJoinStoreRefused" xml:space="preserve">
-    <value>{store} didn’t let this device in. {owner} can send you an invite.</value>
+    <value>{store} didn't let this device in. {owner} can send you an invite.</value>
     <comment>Row error when a plugin store refused this device.</comment>
   </data>
   <data name="FirstJoinSyncing" xml:space="preserve">
@@ -4532,7 +4532,7 @@
     <comment>Button in the closing line when no { -tracker } is signed in.</comment>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>Add a source to play from Home. Plugin stores has some to choose from.</value>
+    <value>Add a source to play from Home. Plugins come from Plugin stores.</value>
     <comment>The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.</comment>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
@@ -5104,7 +5104,7 @@
     <comment>Line on a folder's page, under Remove folder.</comment>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>Couldn't ask AniList. It is tried again at the next scan.</value>
+    <value>Couldn't reach AniList. The next scan tries again.</value>
     <comment>Why a group of files is not matched: AniList could not be asked.</comment>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
@@ -5148,7 +5148,7 @@
     <comment>Label of the region menu.</comment>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>Hides links AniList marks for other countries. Most links name no country, so choose your services too.</value>
+    <value>Links AniList marks for other countries are hidden. Most links name no country, so choose your services too.</value>
     <comment>Line under the region menu.</comment>
   </data>
   <data name="LicensedYours" xml:space="preserve">
@@ -5740,7 +5740,7 @@
     <comment>Heading of the group that joins a store with an invite.</comment>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.</value>
+    <value>Plugins come from plugin stores. Each one is signed and gives every device its own token, which is why you join with an invite link from its owner.</value>
     <comment>Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.</comment>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
@@ -5796,7 +5796,7 @@
     <comment>Label of the leave button while it works.</comment>
   </data>
   <data name="PartyReadyAction" xml:space="preserve">
-    <value>I'm ready</value>
+    <value>Ready to watch</value>
     <comment>Label of the button that marks you as ready.</comment>
   </data>
   <data name="PartyCopyInvite" xml:space="preserve">
@@ -5816,7 +5816,7 @@
     <comment>Button on the invite card that is not accepted now.</comment>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>Getting things ready…</value>
+    <value>Loading suggestions…</value>
     <comment>Line while the form fetches its suggestions.</comment>
   </data>
   <data name="PartyServer" xml:space="preserve">
@@ -5860,7 +5860,7 @@
     <comment>Line under the server field when something else is typed.</comment>
   </data>
   <data name="PartyServerInvited" xml:space="preserve">
-    <value>A server the person who invited you chose. Kaeri doesn't run it.</value>
+    <value>The person who invited you chose this server. Kaeri doesn't run it.</value>
     <comment>Line under an invite's room when the server is not the public one.</comment>
   </data>
   <data name="PartyServerShape" xml:space="preserve">
@@ -6140,7 +6140,7 @@
     <comment>Line of a recent room under its title. The names are who was there; the time is already formatted, such as Tuesday.</comment>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>Rooms you join show here, the last ten.</value>
+    <value>The last ten rooms you join show here.</value>
     <comment>Line shown when no recent rooms are kept yet.</comment>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
@@ -6253,7 +6253,7 @@
   </data>
   <data name="PartyReadyOn" xml:space="preserve">
     <value>Ready</value>
-    <comment>Label of the I'm ready button once you are ready.</comment>
+    <comment>Label of the Ready to watch button once you are ready.</comment>
   </data>
   <data name="PartyInvite" xml:space="preserve">
     <value>Invite</value>
@@ -6540,7 +6540,7 @@
     <comment>Settings switch that hides chat in every watch party on this device.</comment>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.</value>
+    <value>Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.</value>
     <comment>Line under that switch.</comment>
   </data>
   <data name="PartyMute" xml:space="preserve">
@@ -7349,11 +7349,11 @@
     <comment>Notice when the file chooser could not open.</comment>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>Couldn't load that subtitle file. Check that it is a subtitle file.</value>
+    <value>Couldn't load that file as subtitles. Choose a subtitle file, such as .srt or .ass.</value>
     <comment>Notice when a chosen subtitle file could not be loaded.</comment>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>Couldn't load that audio file. Check that it is an audio file.</value>
+    <value>Couldn't load that file as audio. Choose an audio file, such as .mka or .flac.</value>
     <comment>Notice when a chosen audio file could not be loaded.</comment>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
@@ -7641,7 +7641,7 @@
     <comment>Button in the first run that opens the reading demo.</comment>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>The demo reads a short comic and a short story their makers share under Creative Commons.</value>
+    <value>One short comic and one short story, shared by their makers under Creative Commons.</value>
     <comment>Under the first run's demo heading when the device is for reading.</comment>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
@@ -7673,7 +7673,7 @@
     <comment>The story's credit in About the demo.</comment>
   </data>
   <data name="DemoCreditCover" xml:space="preserve">
-    <value>Cover: “{title}” by {artist}, {year}. Public domain. It comes with the app.</value>
+    <value>Cover: "{title}" by {artist}, {year}. Public domain. It comes with the app.</value>
     <comment>The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.</comment>
   </data>
   <data name="ReaderDemoCredit" xml:space="preserve">
@@ -7689,7 +7689,7 @@
     <comment>Search, under the demo results, when only the demo is on.</comment>
   </data>
   <data name="ReaderDemoEnd" xml:space="preserve">
-    <value>That’s the end of the demo</value>
+    <value>That's the end of the demo</value>
     <comment>Title of the card after the demo's last page.</comment>
   </data>
   <data name="ReaderDemoEndLine" xml:space="preserve">
@@ -7709,7 +7709,7 @@
     <comment>The demo row's line in Your sources when reading is on.</comment>
   </data>
   <data name="SourcesDemoBooksWhat" xml:space="preserve">
-    <value>Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn’t a source to keep.</value>
+    <value>Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn't a source to keep.</value>
     <comment>About the demo, first line, when reading is on.</comment>
   </data>
   <data name="SourcesDemoBooksPrivate" xml:space="preserve">
@@ -8557,7 +8557,7 @@
     <comment>Button: search for the match by hand.</comment>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>Unmatched series still read from the folder. They have no tracker progress until matched.</value>
+    <value>You can still read unmatched series from the folder. They get no tracker progress until they're matched.</value>
     <comment>Footnote of the Check matches sheet.</comment>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
@@ -8773,15 +8773,15 @@
     <comment>Line under AniList's name on the first-run page.</comment>
   </data>
   <data name="OnboardingListsLaterWatch" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, Simkl and Trakt can be added later in Settings, under Accounts.</value>
+    <value>You can add MyAnimeList, Kitsu, Simkl and Trakt later in Settings, under Accounts.</value>
     <comment>Under AniList on the first-run page after Watch: the other trackers, for later.</comment>
   </data>
   <data name="OnboardingListsLaterRead" xml:space="preserve">
-    <value>MyAnimeList, Kitsu and MangaUpdates can be added later in Settings, under Accounts.</value>
+    <value>You can add MyAnimeList, Kitsu and MangaUpdates later in Settings, under Accounts.</value>
     <comment>Under AniList on the first-run page after Read: the other trackers, for later.</comment>
   </data>
   <data name="OnboardingListsLaterBoth" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt can be added later in Settings, under Accounts.</value>
+    <value>You can add MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt later in Settings, under Accounts.</value>
     <comment>Under AniList on the first-run page after Both: the other trackers, for later.</comment>
   </data>
   <data name="OnboardingConnect" xml:space="preserve">
@@ -9093,11 +9093,11 @@
     <comment>Line under Downloads finished.</comment>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>Chapters have their own system channel, so they can be silenced on their own.</value>
+    <value>Chapters have their own system channel, so you can silence them and keep the rest.</value>
     <comment>Under New chapters.</comment>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>MangaUpdates is reached through its public API.</value>
+    <value>Kaeri talks to MangaUpdates through its public API.</value>
     <comment>Credit under the trackers with reading on.</comment>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
@@ -9285,7 +9285,7 @@
     <comment>Note on a series page after chapters were sent: opens the question.</comment>
   </data>
   <data name="StopNoteAction" xml:space="preserve">
-    <value>Set my place</value>
+    <value>Set your place</value>
     <comment>Button in that note.</comment>
   </data>
   <data name="StopSentOne" xml:space="preserve">
@@ -9297,11 +9297,11 @@
     <comment>First line of the sheet when several chapters were sent, from the first to the last.</comment>
   </data>
   <data name="StopFinished" xml:space="preserve">
-    <value>I finished chapter {chapter}</value>
+    <value>Finished chapter {chapter}</value>
     <comment>Switch in the sheet: the last chapter sent was read to its end.</comment>
   </data>
   <data name="StopSet" xml:space="preserve">
-    <value>Set my place</value>
+    <value>Set your place</value>
     <comment>The main button of the sheet: keeps the chapter chosen as the place.</comment>
   </data>
   <data name="StopKeep" xml:space="preserve">
@@ -9309,7 +9309,7 @@
     <comment>The other button of the sheet: leaves the place as it is, with the place named.</comment>
   </data>
   <data name="StopKeepPlain" xml:space="preserve">
-    <value>Keep my place</value>
+    <value>Keep current place</value>
     <comment>The other button of the sheet when the place is not a page.</comment>
   </data>
   <data name="EreadersGroup" xml:space="preserve">
@@ -9329,7 +9329,7 @@
     <comment>Line under the Share on this network switch.</comment>
   </data>
   <data name="OpdsFooter" xml:space="preserve">
-    <value>Only while Kaeri is open on this {device}. Progress on those e-readers stays there.</value>
+    <value>The feed runs only while Kaeri is open on this {device}. Progress on those e-readers stays there.</value>
     <comment>Footnote under the feed settings.</comment>
   </data>
   <data name="OpdsAddress" xml:space="preserve">
@@ -9357,7 +9357,7 @@
     <comment>Row in the feed settings: the port the feed listens on.</comment>
   </data>
   <data name="OpdsPortNote" xml:space="preserve">
-    <value>Leave it empty to pick a free port, or use 1024 to 65535</value>
+    <value>Leave it empty for any free port, or pick one from 1024 to 65535</value>
     <comment>Line under the port row when it is empty.</comment>
   </data>
   <data name="OpdsPortMoved" xml:space="preserve">
@@ -9477,7 +9477,7 @@
     <comment>Button that opens the season in Search, where filters narrow it.</comment>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>This season in Search, where every filter narrows it</value>
+    <value>Opens this season in Search, where every filter works</value>
     <comment>Tooltip of the Filter in Search button.</comment>
   </data>
   <data name="SortPopularity" xml:space="preserve">
@@ -9513,11 +9513,11 @@
     <comment>Accessibility label of the button that empties the search field.</comment>
   </data>
   <data name="SearchSearching" xml:space="preserve">
-    <value>Searching for “{query}”</value>
+    <value>Searching for "{query}"</value>
     <comment>Row under the field while a search runs. The query is what the person typed.</comment>
   </data>
   <data name="SearchResultsFor" xml:space="preserve">
-    <value>Results for “{query}”</value>
+    <value>Results for "{query}"</value>
     <comment>Heading over the results of a search.</comment>
   </data>
   <data name="SearchBrowse" xml:space="preserve">
@@ -9525,7 +9525,7 @@
     <comment>Heading over the titles shown when nothing was typed.</comment>
   </data>
   <data name="SearchNothingFound" xml:space="preserve">
-    <value>Nothing found for “{query}”</value>
+    <value>Nothing found for "{query}"</value>
     <comment>Title of the state when a search finds nothing.</comment>
   </data>
   <data name="SearchNothingFoundDetail" xml:space="preserve">
@@ -9537,7 +9537,7 @@
     <comment>Title of the state when filters leave nothing.</comment>
   </data>
   <data name="SearchNothingFoundWithFilters" xml:space="preserve">
-    <value>Nothing found for “{query}” with these filters</value>
+    <value>Nothing found for "{query}" with these filters</value>
     <comment>Title of the state when a search and its filters leave nothing.</comment>
   </data>
   <data name="SearchTryFewerFilters" xml:space="preserve">
@@ -9665,7 +9665,7 @@
     <comment>Filter name: only shows with a legal licence.</comment>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>Titles on my list</value>
+    <value>Titles on your list</value>
     <comment>Filter name: how titles already on the person's list are treated.</comment>
   </data>
   <data name="FilterShow" xml:space="preserve">
@@ -10325,7 +10325,7 @@
     <comment>Line on a server's row and page after Sign out.</comment>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>Ends this device's sign-in on the server. The server and your downloads stay as they are.</value>
+    <value>Signing out ends this device's session on the server. The server and your downloads stay as they are.</value>
     <comment>Line under it: what signing out does.</comment>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
@@ -10749,7 +10749,7 @@
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.</value>
+    <value>You get one notification when an episode of a show you follow comes out. It names the show and the episode's number, never the episode's title. A show can turn its own off in its settings.</value>
     <comment>Line explaining what a notification says.</comment>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
@@ -10765,7 +10765,7 @@
     <comment>Line under it on Android.</comment>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>Opens System Settings, where the banner style, sound and badges are set.</value>
+    <value>Opens System Settings, where you set the banner style, sound and badges.</value>
     <comment>Line under it on Apple.</comment>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
@@ -10821,7 +10821,7 @@
     <comment>Line under the subtitles row.</comment>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>Chosen in the player. Following Settings › Playback.</value>
+    <value>Chosen in the player. Until then, Settings › Playback applies.</value>
     <comment>Line under the subtitles row, when nothing is remembered.</comment>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
@@ -10933,7 +10933,7 @@
     <comment>Settings row: whether a cover the pointer rests on grows into a card with the title's details and trailer.</comment>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>Shows a larger card with the trailer when you rest the pointer on a cover.</value>
+    <value>Resting the pointer on a cover opens a larger card with its trailer.</value>
     <comment>Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.</comment>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
@@ -11257,7 +11257,7 @@
     <comment>Field label.</comment>
   </data>
   <data name="BookServerErrUnreachable" xml:space="preserve">
-    <value>Couldn’t reach {host}</value>
+    <value>Couldn't reach {host}</value>
     <comment>Error title when the server could not be reached.</comment>
   </data>
   <data name="BookServerErrUnreachableLine" xml:space="preserve">
@@ -11265,7 +11265,7 @@
     <comment>Line under it.</comment>
   </data>
   <data name="BookServerErrPassword" xml:space="preserve">
-    <value>{host} didn’t accept that password</value>
+    <value>{host} didn't accept that password</value>
     <comment>Error title when the server turned the password down.</comment>
   </data>
   <data name="BookServerErrPasswordLine" xml:space="preserve">
@@ -11273,11 +11273,11 @@
     <comment>Line under it. The kind is Komga, Kavita or OPDS.</comment>
   </data>
   <data name="BookServerErrKey" xml:space="preserve">
-    <value>{host} didn’t accept that key</value>
+    <value>{host} didn't accept that key</value>
     <comment>Error title when Kavita turned the key in an OPDS link down.</comment>
   </data>
   <data name="BookServerErrKeyLine" xml:space="preserve">
-    <value>The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.</value>
+    <value>The key changes when it's reset in Kavita. Copy the OPDS link again from your account settings there.</value>
     <comment>Line under it.</comment>
   </data>
   <data name="BookServerEmpty" xml:space="preserve">
@@ -11309,11 +11309,11 @@
     <comment>Line under it: the folder's path, then how many series were matched by their own details.</comment>
   </data>
   <data name="BookFolderUnsupported_one" xml:space="preserve">
-    <value>One file Kaeri can’t open</value>
+    <value>One file Kaeri can't open</value>
     <comment>Row in the folder result: files that are books in formats Kaeri can't open.</comment>
   </data>
   <data name="BookFolderUnsupported_other" xml:space="preserve">
-    <value>{count} files Kaeri can’t open</value>
+    <value>{count} files Kaeri can't open</value>
     <comment>Row in the folder result: files that are books in formats Kaeri can't open.</comment>
   </data>
   <data name="BookFolderUnsupportedLine" xml:space="preserve">
@@ -11345,7 +11345,7 @@
     <comment>Title when a folder holds nothing Kaeri can open.</comment>
   </data>
   <data name="BookFolderEmptyLine_one" xml:space="preserve">
-    <value>It holds one file, which isn’t CBZ, CBR, EPUB, PDF or an image.</value>
+    <value>It holds one file, which isn't CBZ, CBR, EPUB, PDF or an image.</value>
     <comment>Line under it.</comment>
   </data>
   <data name="BookFolderEmptyLine_other" xml:space="preserve">
@@ -11397,11 +11397,11 @@
     <comment>Primary action when two or more plugins are for reading.</comment>
   </data>
   <data name="StoreInstalled_one" xml:space="preserve">
-    <value>One plugin installed. It’s in Your sources.</value>
+    <value>One plugin installed. It's in Your sources.</value>
     <comment>Result after installing.</comment>
   </data>
   <data name="StoreInstalled_other" xml:space="preserve">
-    <value>{count} plugins installed. They’re in Your sources.</value>
+    <value>{count} plugins installed. They're in Your sources.</value>
     <comment>Result after installing.</comment>
   </data>
   <data name="StoreOtherMedium" xml:space="preserve">
@@ -11421,15 +11421,15 @@
     <comment>Info title when a store has no plugins.</comment>
   </data>
   <data name="StoreEmptyLine" xml:space="preserve">
-    <value>You’re a member, so new plugins show in Plugin stores when {owner} adds them.</value>
+    <value>You're a member, so new plugins show in Plugin stores when {owner} adds them.</value>
     <comment>Line under it.</comment>
   </data>
   <data name="StoreErrUnreachable" xml:space="preserve">
-    <value>Couldn’t reach {host}</value>
+    <value>Couldn't reach {host}</value>
     <comment>Error title when the store doesn't answer.</comment>
   </data>
   <data name="StoreErrUnreachableLine" xml:space="preserve">
-    <value>The invite looks right, but the store isn’t answering. Try again later, or ask {owner} if it’s running.</value>
+    <value>The invite looks right, but the store isn't answering. Try again later, or ask {owner} if it's running.</value>
     <comment>Line under it.</comment>
   </data>
   <data name="StoreOtherMediumMore_one" xml:space="preserve">
@@ -11441,15 +11441,15 @@
     <comment>Under the reading group: plugins for watching while watching is off here.</comment>
   </data>
   <data name="StoreTvReadingOnly_one" xml:space="preserve">
-    <value>One more is for reading, which this TV doesn’t do.</value>
+    <value>One more is for reading, which this TV doesn't do.</value>
     <comment>On a TV, under the list: plugins for reading, which a TV doesn't do.</comment>
   </data>
   <data name="StoreTvReadingOnly_other" xml:space="preserve">
-    <value>{count} more are for reading, which this TV doesn’t do.</value>
+    <value>{count} more are for reading, which this TV doesn't do.</value>
     <comment>On a TV, under the list: plugins for reading, which a TV doesn't do.</comment>
   </data>
   <data name="StoreTvAllReading" xml:space="preserve">
-    <value>Every plugin in {store} is for reading, which this TV doesn’t do.</value>
+    <value>Every plugin in {store} is for reading, which this TV doesn't do.</value>
     <comment>On a TV, info title when every plugin in a store is for reading.</comment>
   </data>
   <data name="StorePluginRow" xml:space="preserve">
@@ -11773,7 +11773,7 @@
     <comment>Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.</comment>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
-    <value>Sources are being set up again</value>
+    <value>Setting up sources again</value>
     <comment>Over the { -source } list while the { -source-pl } are set up again after a change.</comment>
   </data>
   <data name="SourcesResponseMs" xml:space="preserve">
@@ -11833,11 +11833,11 @@
     <comment>Placeholder of the search field in the sheet.</comment>
   </data>
   <data name="MatchSearching" xml:space="preserve">
-    <value>Searching {source} for “{query}”</value>
+    <value>Searching {source} for "{query}"</value>
     <comment>While a search of the source runs.</comment>
   </data>
   <data name="MatchSearchEmpty" xml:space="preserve">
-    <value>Nothing on {source} for “{query}”.</value>
+    <value>Nothing on {source} for "{query}".</value>
     <comment>A search of the source that found nothing.</comment>
   </data>
   <data name="MatchSearchEmptyHint" xml:space="preserve">
@@ -11917,7 +11917,7 @@
     <comment>Item in the Add menu: join a plugin store.</comment>
   </data>
   <data name="SourcesEmptyBody" xml:space="preserve">
-    <value>Sources are where episodes come from: folders on this device, your media server, and plugins from stores you join.</value>
+    <value>Sources are where episodes come from: folders on this device, your media server, and plugins from plugin stores you join.</value>
     <comment>Line under the empty state's title on a computer.</comment>
   </data>
   <data name="SourcesEmptyMore" xml:space="preserve">
@@ -11973,7 +11973,7 @@
     <comment>Link to the makers' site, in the credit block.</comment>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wikimedia.org.</value>
+    <value>The demo reaches only Wikimedia Commons: upload.wikimedia.org and commons.wikimedia.org.</value>
     <comment>Line on the demo page that names the only two hosts the demo reaches.</comment>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
@@ -12065,7 +12065,7 @@
     <comment>Line under the join form's confirmation: who answers for the store. Shown before Join.</comment>
   </data>
   <data name="StoresNoPlugins" xml:space="preserve">
-    <value>This plugin store offers no plugins yet.</value>
+    <value>This plugin store has no plugins yet.</value>
     <comment>Line when the store has no plugins.</comment>
   </data>
   <data name="StoresPlugins" xml:space="preserve">
@@ -12113,7 +12113,7 @@
     <comment>Line on a row where the store is gone from the device.</comment>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>Offline: {reason}. The plugins below are the last list that was checked.</value>
+    <value>Offline: {reason}. Showing the last list it sent.</value>
     <comment>Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.</comment>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
@@ -12253,7 +12253,7 @@
     <comment>Title of the remove confirmation.</comment>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>It is deleted from this device. The plugin store can install it again.</value>
+    <value>It's deleted from this device. You can install it again from the plugin store.</value>
     <comment>Line under it.</comment>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
@@ -12281,7 +12281,7 @@
     <comment>Line under the form title.</comment>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>Paste the invite link a plugin store's owner sent you. You see what the plugin store offers before anything is joined or installed.</value>
+    <value>Paste the invite link a plugin store's owner sent you. You see what the plugin store has before you join or install anything.</value>
     <comment>Line under the form title on desktop, where nothing happens before the check.</comment>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
@@ -12337,7 +12337,7 @@
     <comment>Line when the key in the link matches the store. The key is shown beside it.</comment>
   </data>
   <data name="StoresAnyoneNote" xml:space="preserve">
-    <value>You join without a name. Another device joins with the same link.</value>
+    <value>You join without a name. Another device can join with the same link.</value>
     <comment>Line when the link is open to anyone.</comment>
   </data>
   <data name="StoresAlreadyJoinedNote" xml:space="preserve">
@@ -12540,7 +12540,7 @@
     <comment>The same with no end date.</comment>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>Works once, for the person you send it to. Until {until}.</value>
+    <value>Works once, for the person you send it to, until {until}.</value>
     <comment>Line under a single-use invite with an end date. Replaces stores-invite-once.</comment>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
@@ -12704,7 +12704,7 @@
     <comment>Button of a notice that opens the plugin stores page.</comment>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</value>
+    <value>A plugin store is a small server that holds signed plugins and gives each device its own token. Its plugins add sources. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</value>
     <comment>Explainer on the empty plugin stores page.</comment>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
@@ -12732,7 +12732,7 @@
     <comment>Button that opens the system share sheet for the invite link.</comment>
   </data>
   <data name="CloudBrowserLine" xml:space="preserve">
-    <value>Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.</value>
+    <value>Your browser opened {service}'s page. Allow access there, and Kaeri carries on by itself.</value>
     <comment>Windows and Linux dialog line while the browser is open for a cloud sign-in.</comment>
   </data>
   <data name="CloudBrowserTitle" xml:space="preserve">
@@ -12740,7 +12740,7 @@
     <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
   </data>
   <data name="CloudCloseCarriesOn" xml:space="preserve">
-    <value>You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.</value>
+    <value>You can close this. Kaeri carries on, and opens the next step by itself when it's ready.</value>
     <comment>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</comment>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
@@ -12888,7 +12888,7 @@
     <comment>Road sheet row.</comment>
   </data>
   <data name="SyncRoadCloudLine" xml:space="preserve">
-    <value>A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.</value>
+    <value>A cloud drive you already use, or your own server. It works while your devices are apart and keeps a backup.</value>
     <comment>Road sheet row line. Names no service, since a build may hide some (decision 14).</comment>
   </data>
   <data name="SyncRoadLater" xml:space="preserve">
@@ -12968,7 +12968,7 @@
     <comment>Group heading.</comment>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.</value>
+    <value>The folder keeps your devices in step while they are apart, and holds a sealed backup. Only your devices can read it.</value>
     <comment>Group footer.</comment>
   </data>
   <data name="CloudAdd" xml:space="preserve">
@@ -13424,7 +13424,7 @@
     <comment>iPad switch.</comment>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>Off by default. For an iPad the household shares. The account row switches profiles at any time.</value>
+    <value>Off by default. Turn it on for an iPad the whole household shares. You can switch profiles from the account row at any time.</value>
     <comment>iPad footer.</comment>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
@@ -14465,7 +14465,7 @@
     <comment>Title of the form.</comment>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>Your password goes to {tracker} once, for a token kept on this device.</value>
+    <value>Your password goes to {tracker} once, in exchange for a token that stays on this device.</value>
     <comment>Line under the title: where the password goes.</comment>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
@@ -14561,7 +14561,7 @@
     <comment>Menu item on the title page, as the title is listed there.</comment>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker} didn't answer.</value>
+    <value>{tracker} didn't answer. Try again in a moment.</value>
     <comment>Line when the tracker did not answer.</comment>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
@@ -14645,7 +14645,7 @@
     <comment>Line telling where to open the app on the TV.</comment>
   </data>
   <data name="TvTypeCode" xml:space="preserve">
-    <value>Type the six digits {name} shows. After this, this device connects by itself.</value>
+    <value>Type the six digits {name} shows. From then on, this device connects by itself.</value>
     <comment>Line telling what to type.</comment>
   </data>
   <data name="TvPairingMoment" xml:space="preserve">
@@ -15045,7 +15045,7 @@
     <comment>The server refused. The code is a number.</comment>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>The download stopped: the connection was lost.</value>
+    <value>The download stopped: the connection was lost. Try again.</value>
     <comment>The connection broke.</comment>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">

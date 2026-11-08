@@ -82,7 +82,7 @@ settings-coming-up-switched-off = { $count ->
 
 # Footer under the week's notifications: what a row does.
 # @only android
-settings-coming-up-opens = A show opens its settings.
+settings-coming-up-opens = Tap a show to open its settings.
 
 # Part of a proxy's line: the user it lets in.
 # @only android
@@ -560,7 +560,7 @@ settings-stores-with-updates = { $stores } · { $updates }
 
 # Settings, Sources: the note under the seeding group.
 # @only android
-settings-seeding-best-effort = Best effort on this { -device }: seeding runs only while { -app-name } is open.
+settings-seeding-best-effort = This { -device } seeds only while { -app-name } is open.
 
 # Settings, Downloads: the count of downloaded episodes.
 # @only android
@@ -615,7 +615,7 @@ downloads-storage-share-description = Downloads take { $size }
 
 # Settings aside on a tablet, New episodes: what a notification carries.
 # @only android
-settings-aside-notifications = One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.
+settings-aside-notifications = One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. You can turn a show's notifications off in its settings.
 
 # Settings aside on a tablet, Downloads: where downloads live.
 # @only android

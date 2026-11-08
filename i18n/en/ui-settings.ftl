@@ -326,7 +326,7 @@ settings-new-episodes = New episodes
 settings-new-episodes-detail = Shows on your Watching list
 
 # Line explaining what a notification says.
-settings-notify-detail = One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.
+settings-notify-detail = You get one notification when an episode of a show you follow comes out. It names the show and the episode's number, never the episode's title. A show can turn its own off in its settings.
 
 # Row: the coming-up digest.
 settings-coming-up = Coming up · next 7 days
@@ -338,7 +338,7 @@ settings-system-notifications = Notification settings
 settings-system-notifications-detail = Sound, vibration and the lock screen
 
 # Line under it on Apple.
-settings-system-notifications-apple = Opens System Settings, where the banner style, sound and badges are set.
+settings-system-notifications-apple = Opens System Settings, where you set the banner style, sound and badges.
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = Off: the system isn't allowing notifications for { -app-name }
@@ -382,7 +382,7 @@ show-settings-never = Never
 show-settings-subs-remembered = Remembered from your last episode.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Chosen in the player. Following Settings › Playback.
+show-settings-subs-follow = Chosen in the player. Until then, Settings › Playback applies.
 
 # Row: the source for this show.
 show-settings-source = { -source-cap }
@@ -488,7 +488,7 @@ settings-label-hover-cards = Expand covers on hover
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
 # @max 110
-settings-hover-cards-note = Shows a larger card with the trailer when you rest the pointer on a cover.
+settings-hover-cards-note = Resting the pointer on a cover opens a larger card with its trailer.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Faithful line work and texture, nothing restyled.

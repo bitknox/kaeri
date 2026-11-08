@@ -288,7 +288,7 @@ eink-colour-hint = If they look like four greys, choose Only greys. You can chan
 # The answer for a colour screen.
 # @only android
 # @max 20
-eink-colour-yes = I see colour
+eink-colour-yes = Yes, colour
 
 # The answer for a grey screen.
 # @only android
@@ -303,12 +303,12 @@ eink-colour-skip = Skip
 # Shown after the colour question was skipped.
 # @only android
 # @max 90
-eink-colour-skipped = Skipped, pictures stay in colour, which a grey screen shows as greys.
+eink-colour-skipped = Skipped. Pictures stay in colour. A grey screen shows them as greys.
 
 # A one-line hint on e-readers whose page buttons may be set to something other than Volume.
 # @only android
 # @max 100
-eink-page-keys-hint = Set the page buttons to Volume in the { -device }'s settings to turn pages.
+eink-page-keys-hint = To turn pages with the buttons, set them to Volume in the { -device }'s settings.
 
 # Beside a dot on a chapter or series that is new since it was last opened.
 # @only android

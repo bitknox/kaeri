@@ -30,7 +30,7 @@ seasonal-empty-format-detail = Try all formats.
 seasonal-filter-in-search = Filter in Search
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = This season in Search, where every filter narrows it
+seasonal-filter-help = Opens this season in Search, where every filter works
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = Popularity
@@ -62,18 +62,18 @@ search-clear = Clear search
 
 # Row under the field while a search runs. The query is what the person typed.
 # @arg query: text
-search-searching = Searching for “{ $query }”
+search-searching = Searching for "{ $query }"
 
 # Heading over the results of a search.
 # @arg query: text
-search-results-for = Results for “{ $query }”
+search-results-for = Results for "{ $query }"
 
 # Heading over the titles shown when nothing was typed.
 search-browse = Browse
 
 # Title of the state when a search finds nothing.
 # @arg query: text
-search-nothing-found = Nothing found for “{ $query }”
+search-nothing-found = Nothing found for "{ $query }"
 
 # Line under the title when a search finds nothing.
 search-nothing-found-detail = Check the spelling, or try the English or Japanese title.
@@ -83,7 +83,7 @@ search-nothing-with-filters = Nothing found with these filters
 
 # Title of the state when a search and its filters leave nothing.
 # @arg query: text
-search-nothing-found-with-filters = Nothing found for “{ $query }” with these filters
+search-nothing-found-with-filters = Nothing found for "{ $query }" with these filters
 
 # Line under a state that filters emptied.
 search-try-fewer-filters = Try fewer filters.
@@ -183,7 +183,7 @@ filter-where-to-watch = Where to watch
 filter-licensed-only = Licensed only
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = Titles on my list
+filter-my-list = Titles on your list
 
 # Value of a three-way filter: include the titles.
 filter-show = Show

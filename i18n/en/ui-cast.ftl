@@ -28,13 +28,13 @@ cast-tvs-note-iphone = They appear under Chromecast in Play on TV. This iPhone s
 cast-tvs-note-ipad = They appear under Chromecast in Play on TV. This iPad sends them the episode.
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Lets a TV with Chromecast built in play torrents. This Mac sends the episode for as long as it plays.
+cast-torrents-note-mac = A TV with Chromecast built in can then play torrents. This Mac sends the episode for as long as it plays.
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Lets a TV with Chromecast built in play torrents. This iPhone sends the episode for as long as it plays.
+cast-torrents-note-iphone = A TV with Chromecast built in can then play torrents. This iPhone sends the episode for as long as it plays.
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Lets a TV with Chromecast built in play torrents. This iPad sends the episode for as long as it plays.
+cast-torrents-note-ipad = A TV with Chromecast built in can then play torrents. This iPad sends the episode for as long as it plays.
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 # @arg seconds: int

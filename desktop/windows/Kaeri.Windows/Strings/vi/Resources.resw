@@ -63,7 +63,7 @@
     <value>Một thiết bị khác vừa bắt đầu phát trên {name}, nên việc chiếu đã dừng.</value>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>thiết bị này không nằm trong mạng mà {name} đang dùng, hoặc đi qua VPN. Chiếu cần cả hai cùng một mạng.</value>
+    <value>Thiết bị này không ở cùng mạng với {name}, hoặc đang kết nối qua VPN. Hãy kết nối cả hai vào cùng một mạng để chiếu.</value>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Mất kết nối với {name}, nên việc chiếu đã dừng.</value>
@@ -384,7 +384,7 @@
     <value>Chưa được bật.</value>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>{source} sẽ được dùng cho tựa này.</value>
+    <value>Tựa này giờ phát từ {source}.</value>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
     <value>Quay lại chọn nguồn tự động.</value>
@@ -546,13 +546,13 @@
     <value>Đã chuyển tới chương {chapter}, trang {page}, nơi {device} dừng lại</value>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>Phải sang trái (tự nhận diện)</value>
+    <value>Có vẻ đọc từ phải sang trái</value>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>Trái sang phải (tự nhận diện)</value>
+    <value>Có vẻ đọc từ trái sang phải</value>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>Cuộn dọc (tự nhận diện)</value>
+    <value>Có vẻ là truyện cuộn dọc</value>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
     <value>Bạn đang ngoại tuyến. Các chương đã tải vẫn mở được.</value>
@@ -1053,7 +1053,7 @@
     <value>Máy chủ của {store} cũ hơn và không thể cho phép ai tham gia bằng liên kết. Hãy cập nhật trước.</value>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>{name} đã tắt và sẽ bị bỏ qua khi tìm tập.</value>
+    <value>{name} đã tắt. Kaeri bỏ qua nó khi tìm tập.</value>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
     <value>{name} đã bật.</value>
@@ -1062,7 +1062,7 @@
     <value>{id} chưa được tải. Hãy kiểm tra plugin đã được cài trong mục Các nguồn chưa.</value>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>{name} sẽ được dùng cho tựa này.</value>
+    <value>Tựa này giờ dùng {name}.</value>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Không lưu được lựa chọn đó. {reason}</value>
@@ -1152,10 +1152,10 @@
     <value>Không mở được trình duyệt để đăng nhập. Hãy kiểm tra xem đã cài trình duyệt chưa rồi thử lại. {reason}</value>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>Không có phiên đăng nhập vào {tracker} nào đang chờ phản hồi này. Hãy bắt đầu đăng nhập lại.</value>
+    <value>Đã nhận phản hồi đăng nhập từ {tracker}, nhưng không có lần đăng nhập nào đang chờ. Hãy bắt đầu đăng nhập lại.</value>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>Phiên đăng nhập vào {tracker} này không trả về từ yêu cầu đã gửi. Hãy bắt đầu đăng nhập lại.</value>
+    <value>Phản hồi đăng nhập từ {tracker} không khớp với yêu cầu. Hãy bắt đầu đăng nhập lại.</value>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
     <value>Phiên đăng nhập vào {tracker} trả về mà không có mã. Hãy thử lại.</value>
@@ -1245,7 +1245,7 @@
     <value>Proxy cần có máy chủ và cổng.</value>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>Không kiểm tra được địa chỉ proxy này.</value>
+    <value>Bước kiểm tra proxy không dùng được địa chỉ này.</value>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Không kết nối được tới máy chủ.</value>
@@ -1269,7 +1269,7 @@
     <value>Có lỗi xảy ra bên trong Kaeri. Ứng dụng vẫn chạy tiếp, nhưng nếu màn hình có vẻ bị treo, hãy thoát rồi mở lại.</value>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>Cơ sở dữ liệu bị hỏng, nên Kaeri đã tạo một cơ sở dữ liệu mới. Tệp cũ được giữ tại {path}. các dịch vụ theo dõi sẽ khôi phục dữ liệu mà chúng đang giữ ở lần đồng bộ sau.</value>
+    <value>Cơ sở dữ liệu bị hỏng, nên Kaeri đã tạo một cơ sở dữ liệu mới. Tệp cũ được giữ tại {path}. Dữ liệu trên các dịch vụ theo dõi của bạn sẽ trở lại ở lần đồng bộ sau.</value>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
     <value>Kaeri không tạo được thư mục {path}. Hãy kiểm tra xem ổ đĩa còn chỗ trống và thư mục có ghi được không, rồi thử lại. {reason}</value>
@@ -1284,7 +1284,7 @@
     <value>Kaeri không mở được cơ sở dữ liệu tại {path}. Nếu có ứng dụng Kaeri khác đang mở thư mục này, hãy thoát ứng dụng đó rồi thử lại. {reason}</value>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Kaeri không thiết lập được kết nối mạng theo các cài đặt mạng trong config.toml. {reason}</value>
+    <value>Kaeri không kết nối được với các cài đặt mạng trong config.toml. Hãy kiểm tra chúng rồi thử lại. {reason}</value>
   </data>
   <data name="StartFailed" xml:space="preserve">
     <value>Kaeri không khởi động được. Hãy thoát rồi mở lại. {reason}</value>
@@ -1314,10 +1314,10 @@
     <value>Danh sách Dự định xem đang trống.</value>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>Đang ngoại tuyến. Gợi ý ngẫu nhiên trong tìm kiếm cần AniList.</value>
+    <value>Bạn đang ngoại tuyến. Gợi ý ngẫu nhiên cần AniList để chọn một tựa.</value>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>Lúc này chưa chọn được tựa nào. Hãy thử lại sau ít phút.</value>
+    <value>Không kết nối được với AniList để chọn một tựa. Hãy thử lại sau giây lát.</value>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Xem tiếp</value>
@@ -1539,7 +1539,7 @@
     <value>Tiếp tục tải xuống sẽ giữ Kaeri trong khay thông báo cho đến khi xong.</value>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>Ảnh bìa, thanh tiến trình và liên kết tới tựa trên {tracker}. Cần bật hiển thị tựa.</value>
+    <value>Ảnh bìa, thanh tiến trình và liên kết tới tựa trên {tracker}. Chỉ hoạt động khi tên tựa được hiển thị.</value>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
     <value>TV khác</value>
@@ -1650,7 +1650,7 @@
     <value>Chúng xuất hiện trong mục Chromecast ở Phát trên TV. PC này sẽ gửi tập phim cho chúng.</value>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Cho phép TV có Chromecast tích hợp phát torrent. PC này gửi tập phim trong suốt thời gian phát.</value>
+    <value>Khi đó, TV có Chromecast tích hợp sẽ phát được torrent. PC này gửi tập phim trong suốt thời gian phát.</value>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
     <value>Khởi động lại</value>
@@ -1665,7 +1665,7 @@
     <value>Tìm cài đặt</value>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>Mức cao hơn lấy bản tốt nhất mà nguồn cung cấp, và tốn nhiều dung lượng hơn.</value>
+    <value>Mức cao hơn chọn bản tốt nhất mà nguồn có. Bản này tốn nhiều dung lượng hơn.</value>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
     <value>Phụ đề đi cùng tập phim dù tệp được chuyển đi đâu.</value>
@@ -1674,7 +1674,7 @@
     <value>Bản tải đang tiếp tục chia sẻ nằm trong bộ nhớ đệm của Kaeri, không nằm trong thư mục tải xuống.</value>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>Đọc bình luận trên chủ đề diễn đàn của AniList cho các tập bạn đã xem.</value>
+    <value>Bình luận lấy từ chủ đề diễn đàn AniList, sau khi bạn đã xem tập đó.</value>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
     <value>Mỗi ảnh được tải từ trang lưu trữ nó, và trang đó thấy địa chỉ IP của bạn.</value>
@@ -1806,7 +1806,7 @@
     <value>Kaeri đã ngừng hoạt động</value>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>Phần xử lý công việc của ứng dụng đã dừng. Hãy mở lại Kaeri để tiếp tục.</value>
+    <value>Việc tải xuống và đồng bộ cũng đã dừng theo. Hãy mở lại Kaeri để làm tiếp.</value>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
     <value>Mở lại</value>
@@ -1911,7 +1911,7 @@
     <value>{name}: bật</value>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>Nguồn này sẽ không còn được dùng để tìm tập. Bạn có thể cài lại từ cửa hàng plugin.</value>
+    <value>Kaeri sẽ không dùng nó để tìm tập nữa. Bạn có thể cài lại từ cửa hàng plugin của nó.</value>
   </data>
   <data name="StoresUpdatesCount_other" xml:space="preserve">
     <value>{count} cần cập nhật</value>
@@ -2100,13 +2100,13 @@
     <value>Lưu báo cáo sự cố trên thiết bị này</value>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>Khi bật, Kaeri giữ một bản ghi ngắn về mỗi sự cố trên thiết bị này, đã xóa tựa phim, địa chỉ và tên, để bạn thêm vào Báo lỗi. Không có gì tự động được gửi đi.</value>
+    <value>Kaeri giữ một bản ghi ngắn về mỗi sự cố trên thiết bị này để dùng cho Báo lỗi, đã xóa tựa, địa chỉ và tên. Không có gì tự động được gửi đi.</value>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
     <value>Hỏi sau khi có sự cố</value>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>Hiện thông báo ở lần mở sau, kèm nút Báo cáo…</value>
+    <value>Kaeri hiện một thông báo kèm nút Báo cáo… ở lần mở sau.</value>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
     <value>Do {system} giữ</value>
@@ -2136,7 +2136,7 @@
     <value>Xóa tất cả</value>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>Báo cáo sự cố ở lại trên thiết bị này. Kaeri không tự gửi gì cả. Báo cáo chỉ rời đi khi bạn mở nó trên GitHub từ Báo lỗi. Báo cáo bị xóa sau 30 ngày.</value>
+    <value>Báo cáo sự cố ở lại trên thiết bị này, và Kaeri không tự gửi gì cả. Báo cáo chỉ rời đi khi bạn mở nó trên GitHub từ Báo lỗi. Báo cáo bị xóa sau 30 ngày.</value>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
     <value>Tuần trước</value>
@@ -2262,13 +2262,13 @@
     <value>Chúng xuất hiện trong mục Chromecast ở Phát trên TV. iPad này sẽ gửi tập phim đến chúng.</value>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Cho phép TV có Chromecast tích hợp sẵn phát torrent. Mac này gửi tập phim trong suốt thời gian phát.</value>
+    <value>Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. Mac này gửi tập phim trong suốt thời gian phát.</value>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Cho phép TV có Chromecast tích hợp sẵn phát torrent. iPhone này gửi tập phim trong suốt thời gian phát.</value>
+    <value>Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. iPhone này gửi tập phim trong suốt thời gian phát.</value>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Cho phép TV có Chromecast tích hợp sẵn phát torrent. iPad này gửi tập phim trong suốt thời gian phát.</value>
+    <value>Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. iPad này gửi tập phim trong suốt thời gian phát.</value>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
     <value>Tiếp theo · phát sau {seconds} giây</value>
@@ -2982,7 +2982,7 @@
     <value>Xóa lượt tải</value>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>Tập chỉ phát lại khi có mạng, hoặc sau khi tải lại.</value>
+    <value>Sau đó, tập này cần kết nối mạng để phát, trừ khi bạn tải lại.</value>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
     <value>Xóa các tệp đã xem</value>
@@ -2994,7 +2994,7 @@
     <value>Chia sẻ lại sau khi xem</value>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>Các tập đã xem được chia sẻ lại khi Kaeri đang mở, cho đến khi đạt tỉ lệ hoặc thời gian đặt trong Cài đặt, mục Các nguồn.</value>
+    <value>Các tập đã xem được chia sẻ lại khi Kaeri đang mở. Việc chia sẻ dừng khi đạt tỉ lệ hoặc thời gian bạn đặt trong Cài đặt, mục Các nguồn.</value>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
     <value>Khi cửa sổ đóng lúc đang tải</value>
@@ -3069,10 +3069,10 @@
     <value>Bạn đã dùng Kaeri trên thiết bị khác?</value>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>Hãy ghép nối, và thiết bị này sẽ nhận các nguồn, các dịch vụ theo dõi và lịch sử của bạn. Các bước sau đó cũng xong.</value>
+    <value>Ghép nối với nó, thiết bị này sẽ nhận các nguồn, các dịch vụ theo dõi và lịch sử của bạn, và các bước thiết lập còn lại được làm sẵn cho bạn.</value>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>Hiện một mã để nhập trên thiết bị kia. Cả hai cần cùng một mạng Wi-Fi.</value>
+    <value>Bạn sẽ nhận một mã để nhập trên thiết bị kia. Cả hai cần cùng một mạng Wi-Fi.</value>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
     <value>Khôi phục từ thư mục đám mây</value>
@@ -3111,7 +3111,7 @@
     <value>{kind} · đăng nhập bằng khóa từ {device}, lưu trong {store}</value>
   </data>
   <data name="FirstJoinFolders" xml:space="preserve">
-    <value>Thư mục vẫn ở trên {device}. Hãy thêm thư mục riêng của thiết bị này trong “các nguồn”.</value>
+    <value>Thư mục vẫn ở trên {device}. Hãy thêm thư mục riêng của thiết bị này trong mục Các nguồn của bạn.</value>
   </data>
   <data name="FirstJoinStepsDone" xml:space="preserve">
     <value>Danh sách và các nguồn đã được thiết lập, nên lần chạy đầu kết thúc tại đây. Bạn có thể đổi chúng trong Cài đặt.</value>
@@ -3183,7 +3183,7 @@
     <value>Đăng nhập AniList</value>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>Thêm nguồn để phát từ Trang chủ. Có vài cái để chọn ở Các cửa hàng plugin.</value>
+    <value>Thêm nguồn để phát từ Trang chủ. Các plugin đến từ Các cửa hàng plugin.</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>Không có trong các nguồn của bạn</value>
@@ -3585,7 +3585,7 @@
     <value>Tệp của bạn vẫn ở nguyên chỗ cũ.</value>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>Không hỏi được AniList. Sẽ thử lại ở lần quét sau.</value>
+    <value>Không kết nối được với AniList. Lần quét sau sẽ thử lại.</value>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
     <value>Chọn kết quả khớp</value>
@@ -3618,7 +3618,7 @@
     <value>Khu vực</value>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>Ẩn các liên kết AniList đánh dấu cho nước khác. Hầu hết liên kết không ghi nước nào, nên hãy chọn cả dịch vụ của bạn.</value>
+    <value>Các liên kết AniList đánh dấu cho nước khác sẽ bị ẩn. Hầu hết liên kết không ghi nước nào, nên hãy chọn cả dịch vụ của bạn.</value>
   </data>
   <data name="LicensedYours" xml:space="preserve">
     <value>Dịch vụ của bạn</value>
@@ -4062,7 +4062,7 @@
     <value>Có liên kết mời?</value>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin được ký xác thực và cấp cho mỗi thiết bị một token riêng, nên bạn tham gia bằng liên kết mời từ chủ của nó.</value>
+    <value>Các plugin đến từ các cửa hàng plugin. Mỗi cửa hàng plugin được ký và cấp cho từng thiết bị một token riêng, nên bạn tham gia bằng liên kết mời từ chủ của nó.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Dùng thử ngay</value>
@@ -4104,7 +4104,7 @@
     <value>Đang rời…</value>
   </data>
   <data name="PartyReadyAction" xml:space="preserve">
-    <value>Tôi đã sẵn sàng</value>
+    <value>Sẵn sàng xem</value>
   </data>
   <data name="PartyCopyInvite" xml:space="preserve">
     <value>Sao chép liên kết mời</value>
@@ -4119,7 +4119,7 @@
     <value>Để sau</value>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>Đang chuẩn bị…</value>
+    <value>Đang tải gợi ý…</value>
   </data>
   <data name="PartyServer" xml:space="preserve">
     <value>Máy chủ</value>
@@ -4152,7 +4152,7 @@
     <value>Chưa có máy chủ riêng? {server} là máy chủ công cộng, do {operator} vận hành.</value>
   </data>
   <data name="PartyServerInvited" xml:space="preserve">
-    <value>Máy chủ do người mời bạn chọn. Kaeri không vận hành máy chủ này.</value>
+    <value>Người mời bạn đã chọn máy chủ này. Kaeri không vận hành nó.</value>
   </data>
   <data name="PartyServerShape" xml:space="preserve">
     <value>Nhập máy chủ dưới dạng tên máy và cổng, ví dụ party.example:8999.</value>
@@ -4359,7 +4359,7 @@
     <value>Tập {episode} · với {names} · {when}</value>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>Các phòng bạn vào sẽ hiện ở đây, tối đa mười phòng.</value>
+    <value>Mười phòng gần nhất bạn tham gia sẽ hiện ở đây.</value>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
     <value>Vào lại</value>
@@ -4650,7 +4650,7 @@
     <value>Ẩn trò chuyện trong các buổi xem chung</value>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>Tin nhắn, biểu cảm và các vạch đánh dấu trên thanh tua không hiện trên video, và ô nhập cũng biến mất. Danh sách thành viên vẫn cho biết ai đang trong phòng.</value>
+    <value>Tin nhắn, biểu cảm và các vạch của chúng trên thanh tua không hiện trên video, và ô trò chuyện cũng biến mất. Danh sách người tham gia vẫn cho biết ai đang trong phòng.</value>
   </data>
   <data name="PartyMute" xml:space="preserve">
     <value>Tắt tiếng {name}</value>
@@ -5265,10 +5265,10 @@
     <value>Không mở được hộp chọn tệp. Hãy thử lại.</value>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>Không tải được tệp phụ đề đó. Hãy kiểm tra xem đây có phải tệp phụ đề không.</value>
+    <value>Không tải được tệp đó làm phụ đề. Hãy chọn một tệp phụ đề, chẳng hạn .srt hoặc .ass.</value>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>Không tải được tệp âm thanh đó. Hãy kiểm tra xem đây có phải tệp âm thanh không.</value>
+    <value>Không tải được tệp đó làm âm thanh. Hãy chọn một tệp âm thanh, chẳng hạn .mka hoặc .flac.</value>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
     <value>Rãnh chưa đặt tên</value>
@@ -5478,7 +5478,7 @@
     <value>Đọc bản demo</value>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>Bản demo có một truyện tranh ngắn và một truyện ngắn mà tác giả chia sẻ theo Creative Commons.</value>
+    <value>Một truyện tranh ngắn và một truyện ngắn, do tác giả chia sẻ theo Creative Commons.</value>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
     <value>Một tập ngắn và một truyện tranh ngắn, do tác giả chia sẻ theo Creative Commons.</value>
@@ -5511,7 +5511,7 @@
     <value>Chỉ có bản demo đang bật. Các tựa khác sẽ hiện khi bạn thêm nguồn.</value>
   </data>
   <data name="ReaderDemoEnd" xml:space="preserve">
-    <value>Bản demo kết thúc ở đây</value>
+    <value>Bản demo đến đây là hết</value>
   </data>
   <data name="ReaderDemoEndLine" xml:space="preserve">
     <value>Để đọc sách của bạn, hãy thêm thư mục, máy chủ hoặc cửa hàng plugin.</value>
@@ -6063,7 +6063,7 @@
     <value>Tìm</value>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>Các bộ truyện chưa khớp vẫn đọc được từ thư mục. Chúng chưa có tiến độ dịch vụ theo dõi cho đến khi được khớp.</value>
+    <value>Bạn vẫn đọc được các bộ truyện chưa khớp từ thư mục. Chúng chưa có tiến độ dịch vụ theo dõi cho đến khi được khớp.</value>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
     <value>Phim hoặc Truyện</value>
@@ -6444,10 +6444,10 @@
     <value>Khi các chương đang tải đều xong</value>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>Chương có kênh hệ thống riêng, nên có thể tắt tiếng riêng.</value>
+    <value>Chương có kênh hệ thống riêng, nên bạn có thể tắt tiếng chúng mà vẫn giữ các thông báo khác.</value>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>MangaUpdates được truy cập qua API công khai của nó.</value>
+    <value>Kaeri kết nối với MangaUpdates qua API công khai của dịch vụ này.</value>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
     <value>Tên người dùng</value>
@@ -6504,7 +6504,7 @@
     <value>Lọc trong Tìm kiếm</value>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>Mùa này trong Tìm kiếm, nơi mọi bộ lọc có thể thu hẹp kết quả</value>
+    <value>Mở mùa này trong Tìm kiếm, nơi mọi bộ lọc đều dùng được</value>
   </data>
   <data name="SortPopularity" xml:space="preserve">
     <value>Phổ biến nhất</value>
@@ -6645,7 +6645,7 @@
     <value>Chỉ bản có giấy phép</value>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>Tựa trong danh sách</value>
+    <value>Tựa trong danh sách của bạn</value>
   </data>
   <data name="FilterShow" xml:space="preserve">
     <value>Hiện</value>
@@ -7119,7 +7119,7 @@
     <value>Đã đăng xuất</value>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>Kết thúc phiên đăng nhập của thiết bị này trên máy chủ. Máy chủ và các tập đã tải vẫn như cũ.</value>
+    <value>Đăng xuất sẽ kết thúc phiên của thiết bị này trên máy chủ. Máy chủ và các tập đã tải vẫn giữ nguyên.</value>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
     <value>Ngôn ngữ</value>
@@ -7434,7 +7434,7 @@
     <value>Cho các tựa trong danh sách Đang xem của bạn</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>Một thông báo khi tập của tựa bạn theo dõi ra mắt: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tắt thông báo trong cài đặt riêng.</value>
+    <value>Bạn nhận một thông báo khi tập của tựa bạn theo dõi ra mắt. Thông báo ghi tên tựa và số tập, không bao giờ ghi tên tập. Mỗi tựa có thể tắt thông báo riêng trong cài đặt của nó.</value>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
     <value>Sắp ra mắt · 7 ngày tới</value>
@@ -7446,7 +7446,7 @@
     <value>Âm thanh, rung và màn hình khóa</value>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>Mở Cài đặt hệ thống, nơi đặt kiểu biểu ngữ, âm thanh và huy hiệu.</value>
+    <value>Mở Cài đặt hệ thống, nơi bạn đặt kiểu biểu ngữ, âm thanh và huy hiệu.</value>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
     <value>Tắt: hệ thống không cho phép thông báo của Kaeri</value>
@@ -7488,7 +7488,7 @@
     <value>Ghi nhớ từ tập gần nhất của bạn.</value>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>Chọn trong trình phát. Theo Cài đặt › Phát.</value>
+    <value>Chọn trong trình phát. Trước đó, áp dụng Cài đặt › Phát.</value>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
     <value>Nguồn</value>
@@ -7569,7 +7569,7 @@
     <value>Phóng to ảnh bìa khi trỏ chuột</value>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>Hiện thẻ lớn hơn có trailer khi bạn trỏ chuột vào ảnh bìa.</value>
+    <value>Đặt con trỏ lên ảnh bìa sẽ mở một thẻ lớn hơn có trailer.</value>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
     <value>Giữ nguyên nét và chất liệu, không vẽ lại.</value>
@@ -7902,7 +7902,7 @@
     <value>Cài tất cả để đọc</value>
   </data>
   <data name="StoreInstalled_other" xml:space="preserve">
-    <value>Đã cài, các plugin: {count}. Chúng nằm trong mục “các nguồn”.</value>
+    <value>Đã cài {count} plugin. Chúng nằm trong mục Các nguồn của bạn.</value>
   </data>
   <data name="StoreOtherMedium" xml:space="preserve">
     <value>Mọi plugin trong {store} đều để xem</value>
@@ -7917,7 +7917,7 @@
     <value>{store} chưa có các plugin</value>
   </data>
   <data name="StoreEmptyLine" xml:space="preserve">
-    <value>Bạn là thành viên, nên các plugin mới sẽ hiện trong “Các cửa hàng plugin” khi {owner} thêm chúng.</value>
+    <value>Bạn là thành viên, nên các plugin mới sẽ hiện trong Các cửa hàng plugin khi {owner} thêm chúng.</value>
   </data>
   <data name="StoreErrUnreachable" xml:space="preserve">
     <value>Không kết nối được với {host}</value>
@@ -7929,10 +7929,10 @@
     <value>Còn {count} cái để xem, nhưng xem đang tắt trên thiết bị này.</value>
   </data>
   <data name="StoreTvReadingOnly_other" xml:space="preserve">
-    <value>Còn {count} cái để đọc, nhưng TV này không hỗ trợ đọc.</value>
+    <value>Còn {count} plugin khác dành cho việc đọc, mà TV này không hỗ trợ.</value>
   </data>
   <data name="StoreTvAllReading" xml:space="preserve">
-    <value>Mọi plugin trong {store} đều để đọc, nhưng TV này không hỗ trợ đọc.</value>
+    <value>Mọi plugin trong {store} đều dành cho việc đọc, mà TV này không hỗ trợ.</value>
   </data>
   <data name="StorePluginRow" xml:space="preserve">
     <value>Phiên bản {version} · có thể kết nối tới {hosts}</value>
@@ -8154,7 +8154,7 @@
     <value>Torrent là một phần của Kaeri, không phải plugin. Proxy và việc seed được đặt trong Cài đặt, mục Các nguồn.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
-    <value>Các nguồn đang được thiết lập lại</value>
+    <value>Đang thiết lập lại các nguồn</value>
   </data>
   <data name="SourcesResponseMs" xml:space="preserve">
     <value>{ms} ms</value>
@@ -8196,10 +8196,10 @@
     <value>Tìm trên {source}</value>
   </data>
   <data name="MatchSearching" xml:space="preserve">
-    <value>Đang tìm trên {source} “{query}”</value>
+    <value>Đang tìm “{query}” trên {source}</value>
   </data>
   <data name="MatchSearchEmpty" xml:space="preserve">
-    <value>Không có gì trên {source} cho “{query}”.</value>
+    <value>Không có gì cho “{query}” trên {source}.</value>
   </data>
   <data name="MatchSearchEmptyHint" xml:space="preserve">
     <value>Thử ít từ hơn, hoặc tên tựa bằng ngôn ngữ khác.</value>
@@ -8259,7 +8259,7 @@
     <value>Tham gia một cửa hàng plugin…</value>
   </data>
   <data name="SourcesEmptyBody" xml:space="preserve">
-    <value>Các nguồn là nơi các tập phim đến từ: thư mục trên thiết bị này, máy chủ media của bạn, và các plugin từ các cửa hàng plugin bạn tham gia.</value>
+    <value>Các nguồn là nơi các tập phim đến: thư mục trên thiết bị này, máy chủ media của bạn, và các plugin từ các cửa hàng plugin bạn tham gia.</value>
   </data>
   <data name="SourcesEmptyMore" xml:space="preserve">
     <value>Hoặc {join}.</value>
@@ -8301,7 +8301,7 @@
     <value>OPAP-JP</value>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>Chỉ kết nối tới Wikimedia Commons: upload.wikimedia.org và commons.wikimedia.org.</value>
+    <value>Bản demo chỉ kết nối tới Wikimedia Commons: upload.wikimedia.org và commons.wikimedia.org.</value>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
     <value>Bản demo không bao giờ đăng nhập ở đâu và không bao giờ ghi vào AniList.</value>
@@ -8370,7 +8370,7 @@
     <value>{owner} vận hành cửa hàng plugin này và chọn các các plugin của nó. Kaeri không tạo, xét duyệt hay chấp thuận chúng.</value>
   </data>
   <data name="StoresNoPlugins" xml:space="preserve">
-    <value>cửa hàng plugin này chưa cung cấp các plugin nào.</value>
+    <value>Cửa hàng plugin này chưa có các plugin nào.</value>
   </data>
   <data name="StoresPlugins" xml:space="preserve">
     <value>Các plugin</value>
@@ -8406,7 +8406,7 @@
     <value>Không còn tham gia cửa hàng plugin này.</value>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>Ngoại tuyến: {reason}. Danh sách các plugin bên dưới là bản được kiểm tra gần nhất.</value>
+    <value>Ngoại tuyến: {reason}. Đang hiện danh sách gần nhất mà nó gửi.</value>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
     <value>Ngoại tuyến. Đang hiển thị danh sách gần nhất mà nó đã gửi.</value>
@@ -8511,7 +8511,7 @@
     <value>Gỡ {name}?</value>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>Nó bị xóa khỏi thiết bị này, và cửa hàng plugin có thể cài đặt lại.</value>
+    <value>Nó sẽ bị xóa khỏi thiết bị này. Bạn có thể cài lại từ cửa hàng plugin.</value>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
     <value>Kết nối thêm</value>
@@ -8532,7 +8532,7 @@
     <value>Dán liên kết mà chủ cửa hàng plugin đã gửi cho bạn.</value>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>Dán liên kết mời mà chủ cửa hàng plugin đã gửi cho bạn. Bạn sẽ thấy cửa hàng plugin cung cấp gì trước khi tham gia hoặc cài đặt bất cứ thứ gì.</value>
+    <value>Dán liên kết mời mà chủ của một cửa hàng plugin đã gửi cho bạn. Bạn sẽ thấy cửa hàng plugin có gì trước khi tham gia hoặc cài đặt bất cứ thứ gì.</value>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
     <value>Dán liên kết mà chủ cửa hàng plugin đã gửi cho bạn. Liên kết mời Kaeri:// mở từ Tin nhắn sẽ điền trực tiếp vào bảng này.</value>
@@ -8727,7 +8727,7 @@
     <value>Ai có liên kết này đều tham gia được, cho đến khi bạn hủy.</value>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>Dùng được một lần, cho người bạn gửi tới. Đến {until}.</value>
+    <value>Dùng được một lần, cho người bạn gửi tới, đến {until}.</value>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
     <value>Dùng được một lần, cho người bạn gửi tới, cho đến khi bạn hủy.</value>
@@ -8838,7 +8838,7 @@
     <value>Mở các cửa hàng plugin</value>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>Cửa hàng plugin là một máy chủ nhỏ giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành các cửa hàng plugin nào và cũng không liệt kê cái nào, nên bạn tham gia bằng liên kết mời từ chủ của nó.</value>
+    <value>Cửa hàng plugin là một máy chủ nhỏ giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Các plugin của nó thêm các nguồn. Kaeri không vận hành cửa hàng plugin nào và cũng không liệt kê cái nào, nên bạn tham gia một cửa hàng plugin bằng liên kết mời từ chủ của nó.</value>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Cửa hàng plugin là gì?</value>
@@ -8976,7 +8976,7 @@
     <value>Qua thư mục đám mây</value>
   </data>
   <data name="SyncRoadCloudLine" xml:space="preserve">
-    <value>Một ổ đám mây bạn đã dùng, hoặc máy chủ của riêng bạn. Dùng được khi các các thiết bị ở xa nhau, và giữ một bản sao lưu.</value>
+    <value>Một ổ đám mây bạn đã dùng, hoặc máy chủ của riêng bạn. Nó hoạt động khi các các thiết bị của bạn ở xa nhau và giữ một bản sao lưu.</value>
   </data>
   <data name="SyncRoadLater" xml:space="preserve">
     <value>Bạn có thể thêm cách còn lại sau. Hầu hết mọi người dùng cả hai.</value>
@@ -9036,7 +9036,7 @@
     <value>Thư mục đám mây</value>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>Bổ sung khi các các thiết bị của bạn ở xa nhau, và giữ một bản sao lưu đã niêm phong. Chỉ các các thiết bị của bạn đọc được.</value>
+    <value>Thư mục này giữ các các thiết bị của bạn đồng bộ khi chúng ở xa nhau, và giữ một bản sao lưu đã niêm phong. Chỉ các các thiết bị của bạn đọc được nó.</value>
   </data>
   <data name="CloudAdd" xml:space="preserve">
     <value>Thêm thư mục đám mây</value>
@@ -9375,7 +9375,7 @@
     <value>Hỏi ai đang xem khi mở ứng dụng</value>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>Mặc định tắt. Dành cho iPad cả nhà dùng chung. Hàng tài khoản cho phép đổi hồ sơ bất cứ lúc nào.</value>
+    <value>Mặc định tắt. Hãy bật cho iPad mà cả nhà dùng chung. Bạn có thể đổi hồ sơ từ hàng tài khoản bất cứ lúc nào.</value>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
     <value>Đổi hồ sơ</value>
@@ -10146,7 +10146,7 @@
     <value>Đăng nhập vào {tracker}</value>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>Mật khẩu của bạn chỉ được gửi tới {tracker} một lần, để lấy mã đăng nhập lưu trên thiết bị này.</value>
+    <value>Mật khẩu của bạn chỉ được gửi tới {tracker} một lần, để đổi lấy một token lưu trên thiết bị này.</value>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
     <value>Email hoặc tên người dùng</value>
@@ -10218,7 +10218,7 @@
     <value>Được liệt kê bởi {tracker}</value>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker} không phản hồi.</value>
+    <value>{tracker} không phản hồi. Hãy thử lại sau giây lát.</value>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
     <value>{tracker} chưa có diễn viên, đội sản xuất hay gợi ý cho tựa này.</value>
@@ -10281,7 +10281,7 @@
     <value>Mở Kaeri trên TV. TV cần cùng mạng Wi-Fi với thiết bị này.</value>
   </data>
   <data name="TvTypeCode" xml:space="preserve">
-    <value>Nhập sáu chữ số mà {name} hiển thị. Sau đó thiết bị này sẽ tự kết nối.</value>
+    <value>Nhập sáu chữ số mà {name} hiển thị. Từ đó trở đi, thiết bị này sẽ tự kết nối.</value>
   </data>
   <data name="TvPairingMoment" xml:space="preserve">
     <value>Việc này mất một lúc.</value>
@@ -10581,7 +10581,7 @@
     <value>Việc tải về đã dừng: máy chủ từ chối ({code}). Thử lại sau.</value>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>Việc tải về đã dừng: kết nối bị gián đoạn.</value>
+    <value>Việc tải về đã dừng: mất kết nối. Hãy thử lại.</value>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">
     <value>Không lưu được bản tải về: {reason}</value>

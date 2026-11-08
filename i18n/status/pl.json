@@ -396,22 +396,22 @@
     "at": "2026-10-31"
   },
   "accounts-conflict-keep-mine": {
-    "source": "6fb8d8a859a5",
+    "source": "ab77a67b0618",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "accounts-conflict-keep-theirs": {
-    "source": "f71efd97144b",
+    "source": "7c670395191f",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "accounts-conflict-row": {
-    "source": "8b3b983631ba",
+    "source": "2702549f9c55",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "accounts-conflicts-found": {
     "source": "003d92eca01a",
@@ -438,10 +438,10 @@
     "at": "2026-11-01"
   },
   "accounts-did-not-answer": {
-    "source": "729226b8619c",
+    "source": "19c8f42bd6a9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "accounts-empty-heading": {
     "source": "8a6a67ad8340",
@@ -498,10 +498,10 @@
     "at": "2026-10-31"
   },
   "accounts-form-detail": {
-    "source": "d46b38a2a40b",
+    "source": "53839c185b16",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "accounts-form-title": {
     "source": "2a50cf84c90d",
@@ -558,9 +558,9 @@
     "at": "2026-10-31"
   },
   "accounts-mangaupdates-credit": {
-    "source": "1903178a1ed6",
+    "source": "fdf1d7cc72e0",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "accounts-needs-sign-in": {
@@ -678,10 +678,10 @@
     "at": "2026-10-31"
   },
   "accounts-row-queued-held": {
-    "source": "37e4e7ee424c",
+    "source": "81f5ec667417",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "accounts-row-signed-in-as": {
     "source": "183bc7265f15",
@@ -1464,9 +1464,9 @@
     "at": "2026-11-07"
   },
   "book-folder-empty-line": {
-    "source": "d0a6c22d58be",
+    "source": "0990532093bf",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "book-folder-found": {
@@ -1494,9 +1494,9 @@
     "at": "2026-11-07"
   },
   "book-folder-unsupported": {
-    "source": "d3d7e97d79d7",
+    "source": "d4ed9a46a285",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "book-folder-unsupported-line": {
@@ -1536,21 +1536,21 @@
     "at": "2026-11-07"
   },
   "book-server-err-key": {
-    "source": "ef7b78529590",
+    "source": "059985c7dd9c",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "book-server-err-key-line": {
-    "source": "db6d111ec52f",
+    "source": "b2e270eab45c",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "book-server-err-password": {
-    "source": "fea30568622b",
+    "source": "2363d9e91d9c",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "book-server-err-password-line": {
@@ -1560,9 +1560,9 @@
     "at": "2026-11-07"
   },
   "book-server-err-unreachable": {
-    "source": "0bd12e306551",
+    "source": "49d58ccd3429",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "book-server-err-unreachable-line": {
@@ -1764,9 +1764,9 @@
     "at": "2026-11-07"
   },
   "book-sources-unmatched-note": {
-    "source": "f1f9c2cd9ccf",
+    "source": "18ef6ac38c86",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "book-sources-use": {
@@ -2400,10 +2400,10 @@
     "at": "2026-11-01"
   },
   "cast-settings-torrents-note": {
-    "source": "4b783efb62fc",
+    "source": "70679622613f",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "cast-settings-tvs": {
     "source": "42106f4b4112",
@@ -2466,22 +2466,22 @@
     "at": "2026-11-01"
   },
   "cast-torrents-note-ipad": {
-    "source": "544abb947053",
+    "source": "324d8f897bb9",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "cast-torrents-note-iphone": {
-    "source": "32971a76bb22",
+    "source": "a4bfcacfacf5",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "cast-torrents-note-mac": {
-    "source": "fe36f3fe04da",
+    "source": "b09d7b179e52",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "cast-tvs-label": {
     "source": "42106f4b4112",
@@ -2580,10 +2580,10 @@
     "at": "2026-10-31"
   },
   "cause-proxy-address-unusable": {
-    "source": "2661edba1699",
+    "source": "1182b8d11052",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "cause-proxy-needs-address": {
     "source": "3b6f34bbd26f",
@@ -2898,10 +2898,10 @@
     "at": "2026-11-05"
   },
   "cloud-browser-line": {
-    "source": "f7b440672516",
+    "source": "24ef57c9bde7",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "cloud-browser-title": {
     "source": "107dd4c20b8e",
@@ -2916,9 +2916,9 @@
     "at": "2026-11-05"
   },
   "cloud-close-carries-on": {
-    "source": "aa3ca06aec90",
+    "source": "98351b1ee129",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "cloud-connect": {
@@ -3060,10 +3060,10 @@
     "at": "2026-11-05"
   },
   "cloud-foot": {
-    "source": "6a1b1a20cc39",
+    "source": "8c15b4a0ba35",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "cloud-google-line": {
     "source": "d402b358b094",
@@ -3906,9 +3906,9 @@
     "at": "2026-11-07"
   },
   "demo-credit-cover": {
-    "source": "18ad9d46211b",
+    "source": "a0b89c239ba3",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "demo-credit-story": {
@@ -4806,10 +4806,10 @@
     "at": "2026-10-31"
   },
   "downloads-delete-one-detail": {
-    "source": "9901c437f6f4",
+    "source": "c50600ea928e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "downloads-delete-one-title": {
     "source": "23e4b9ddd758",
@@ -4884,10 +4884,10 @@
     "at": "2026-10-31"
   },
   "downloads-empty-hint": {
-    "source": "b64f4f393b6d",
+    "source": "1514e6fbb6d9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "downloads-empty-title": {
     "source": "f7f71bdac0fb",
@@ -5232,10 +5232,10 @@
     "at": "2026-10-31"
   },
   "downloads-seeding-note": {
-    "source": "050f90584549",
+    "source": "4b2c761ea94a",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "downloads-seeding-open-only": {
     "source": "752d81351898",
@@ -5502,9 +5502,9 @@
     "at": "2026-11-07"
   },
   "eink-colour-skipped": {
-    "source": "dbf2a2c9b6f5",
+    "source": "e135c92b17fc",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "eink-colour-squares": {
@@ -5520,9 +5520,9 @@
     "at": "2026-11-07"
   },
   "eink-colour-yes": {
-    "source": "2b11a7f3c9f5",
+    "source": "720aa3425569",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "eink-contents": {
@@ -5646,9 +5646,9 @@
     "at": "2026-11-07"
   },
   "eink-page-keys-hint": {
-    "source": "c636193f61ae",
+    "source": "e8c649cfb338",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "eink-pages-left": {
@@ -5718,10 +5718,10 @@
     "at": "2026-10-31"
   },
   "engine-down-stopped": {
-    "source": "6ad90d9643a9",
+    "source": "f556c1dbb896",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "engine-down-title": {
     "source": "148ad2c21f2d",
@@ -5730,9 +5730,9 @@
     "at": "2026-10-31"
   },
   "engine-stopped-detail": {
-    "source": "cd79e4b0b22a",
+    "source": "b534c0ebf6c9",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "engine-stopped-open-again": {
@@ -6449,10 +6449,10 @@
     "at": "2026-10-31"
   },
   "episodes-no-releases": {
-    "source": "5f301b819981",
+    "source": "7d66f775cd0d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "episodes-queueing": {
     "source": "627da44c48e1",
@@ -6851,10 +6851,10 @@
     "at": "2026-10-31"
   },
   "filter-my-list": {
-    "source": "690c1fbdcd72",
+    "source": "e32cd664395c",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "filter-only": {
     "source": "31badbc06c5f",
@@ -7061,9 +7061,9 @@
     "at": "2026-10-31"
   },
   "first-join-folders": {
-    "source": "cb0e192d0bd6",
+    "source": "26bb46f57288",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "first-join-group": {
@@ -7127,9 +7127,9 @@
     "at": "2026-11-05"
   },
   "first-join-store-refused": {
-    "source": "7ad69a98c0d2",
+    "source": "8855a04bff2e",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "first-join-syncing": {
@@ -7145,9 +7145,9 @@
     "at": "2026-11-05"
   },
   "first-other-line": {
-    "source": "04376ff96c5f",
+    "source": "e71c56ae9867",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "first-other-no": {
@@ -7157,9 +7157,9 @@
     "at": "2026-11-07"
   },
   "first-other-pair-line": {
-    "source": "2393234778ec",
+    "source": "f65e380e02aa",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "first-other-restore": {
@@ -7439,10 +7439,10 @@
     "at": "2026-11-01"
   },
   "home-end-no-sources": {
-    "source": "67e01f86f4e9",
+    "source": "967cee65e98b",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "home-end-signed-out": {
     "source": "f58baff19a5d",
@@ -8269,28 +8269,28 @@
     "at": "2026-10-31"
   },
   "keys-error-bad-key": {
-    "source": "f378d51214ea",
+    "source": "cdab6041ca8c",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "keys-error-key-taken": {
-    "source": "9756e6026b2c",
+    "source": "2aa0958c0f92",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "keys-error-key-twice": {
-    "source": "625572f65ecc",
+    "source": "e0c7a921d5a2",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "keys-error-unknown-action": {
-    "source": "10c3d3ffc4bb",
+    "source": "2364405020e5",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "keys-help-jump-section": {
     "source": "0e6fd31b1477",
@@ -8731,10 +8731,10 @@
     "at": "2026-10-31"
   },
   "keys-unbound": {
-    "source": "93bceaed52a9",
+    "source": "7d91c4e6bef9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "keys-where-downloads": {
     "source": "caa608c9f851",
@@ -9181,10 +9181,10 @@
     "at": "2026-11-01"
   },
   "library-page-no-watch-linux": {
-    "source": "2916c1632846",
+    "source": "6b4cae51231b",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "library-page-watching": {
     "source": "8d1e97ff36d6",
@@ -9241,10 +9241,10 @@
     "at": "2026-11-01"
   },
   "library-reason-offline": {
-    "source": "6c5df0eaea00",
+    "source": "8cd150954382",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "library-remove-detail": {
     "source": "cad46b45832f",
@@ -9577,10 +9577,10 @@
     "at": "2026-11-01"
   },
   "licensed-region-line": {
-    "source": "77d68c7d95a8",
+    "source": "723e38f0ced1",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "licensed-region-system": {
     "source": "3e4b35aba506",
@@ -9685,10 +9685,10 @@
     "at": "2026-10-31"
   },
   "list-refresh-failed": {
-    "source": "158608fe21ff",
+    "source": "5808fb0a30ef",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "lists-column-dub": {
     "source": "e06d561991ed",
@@ -9775,10 +9775,10 @@
     "at": "2026-10-31"
   },
   "lists-empty-browse-popular": {
-    "source": "53287cc0e58a",
+    "source": "cc80ef7720f0",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "lists-empty-fewer-filters": {
     "source": "c90eb85daff7",
@@ -10309,10 +10309,10 @@
     "at": "2026-11-01"
   },
   "match-search-empty": {
-    "source": "7a7c766dfb22",
+    "source": "03b531e4f116",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "match-search-empty-hint": {
     "source": "906bc34a2a5b",
@@ -10345,10 +10345,10 @@
     "at": "2026-11-01"
   },
   "match-searching": {
-    "source": "1f727b85e7ae",
+    "source": "1272b62daca0",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "match-section-source": {
     "source": "16a80c5dc315",
@@ -11617,10 +11617,10 @@
     "at": "2026-10-31"
   },
   "notice-cast-not-same-network": {
-    "source": "704302fd6770",
+    "source": "7ba69080c7db",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "notice-cast-refused": {
     "source": "3bcac9609f31",
@@ -11683,10 +11683,10 @@
     "at": "2026-10-31"
   },
   "notice-database-set-aside": {
-    "source": "914eb7bbc27c",
+    "source": "47a55de83da6",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "notice-discussion-sign-in": {
     "source": "24a51edbfa76",
@@ -12145,10 +12145,10 @@
     "at": "2026-10-31"
   },
   "notice-sign-in-not-waiting": {
-    "source": "c8cd8d2647c2",
+    "source": "8da159608c6a",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "notice-sign-in-stopped": {
     "source": "42f5f7fad35a",
@@ -12163,10 +12163,10 @@
     "at": "2026-10-31"
   },
   "notice-sign-in-wrong-request": {
-    "source": "8039bf1dcb55",
+    "source": "6ea7acbc05ef",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "notice-sign-out-failed": {
     "source": "9f87082b5020",
@@ -12241,16 +12241,16 @@
     "at": "2026-10-31"
   },
   "notice-source-pinned": {
-    "source": "b1e8eceafce0",
+    "source": "a6c42a4d58cd",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "notice-source-search-empty": {
-    "source": "6eabde1c2e46",
+    "source": "68b2aea82d41",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "notice-stream-no-video": {
     "source": "efc8d720effe",
@@ -12283,16 +12283,16 @@
     "at": "2026-11-05"
   },
   "notice-surprise-failed": {
-    "source": "e5d4abf5078d",
+    "source": "249e4f1428f7",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "notice-surprise-offline": {
-    "source": "abe1cab32756",
+    "source": "2896a337b2b9",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "notice-title-load-failed": {
     "source": "8fa0673280a9",
@@ -12505,9 +12505,9 @@
     "at": "2026-11-01"
   },
   "onboarding-demo-books-detail": {
-    "source": "0a8cf8238b1b",
+    "source": "c930c8fa9485",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "onboarding-demo-both-detail": {
@@ -12565,21 +12565,21 @@
     "at": "2026-11-07"
   },
   "onboarding-lists-later-both": {
-    "source": "66d513c1f7e1",
+    "source": "f5db9a647fdc",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "onboarding-lists-later-read": {
-    "source": "14944faec082",
+    "source": "5740f618ed4f",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "onboarding-lists-later-watch": {
-    "source": "457f28123c49",
+    "source": "1a786df14173",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "onboarding-lists-line-both": {
@@ -12727,10 +12727,10 @@
     "at": "2026-11-01"
   },
   "onboarding-where-stores": {
-    "source": "830854395a83",
+    "source": "7dda6741483b",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "onboarding-where-title": {
     "source": "1d1053c30f7a",
@@ -13447,10 +13447,10 @@
     "at": "2026-10-31"
   },
   "palette-search-for": {
-    "source": "aaf551071cc2",
+    "source": "1f3ca5693050",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "palette-show-settings-detail": {
     "source": "281912d2a6c4",
@@ -13747,10 +13747,10 @@
     "at": "2026-11-07"
   },
   "party-getting-ready": {
-    "source": "f9dd4d33ccb7",
+    "source": "e2d35573ea05",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "party-here-count": {
     "source": "ab2d7fb06700",
@@ -14329,10 +14329,10 @@
     "at": "2026-11-05"
   },
   "party-ready-action": {
-    "source": "ffe788febf11",
+    "source": "04f26cc6a6f1",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "party-ready-on": {
     "source": "9c13a2548d25",
@@ -14473,10 +14473,10 @@
     "at": "2026-10-31"
   },
   "party-server-invited": {
-    "source": "816cc3f4bc70",
+    "source": "af05bf0969bc",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "party-server-lost": {
     "source": "7be517418a8f",
@@ -14551,10 +14551,10 @@
     "at": "2026-10-31"
   },
   "party-sources-none-listed": {
-    "source": "a94b0ab2b83c",
+    "source": "af6d260288c0",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "party-start": {
     "source": "5d8926648423",
@@ -14725,10 +14725,10 @@
     "at": "2026-10-31"
   },
   "pin-unavailable": {
-    "source": "a59dca2bf44c",
+    "source": "72e70b8f354e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "playback-detached": {
     "source": "8f3eedb7c803",
@@ -14917,10 +14917,10 @@
     "at": "2026-10-31"
   },
   "player-audio-file-failed": {
-    "source": "38c989e584c9",
+    "source": "94a32f022900",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "player-audio-track-n": {
     "source": "80ddc2fe145b",
@@ -16333,10 +16333,10 @@
     "at": "2026-11-01"
   },
   "player-subtitle-file-failed": {
-    "source": "2958a2bc4653",
+    "source": "b4153b97f5d7",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "player-subtitle-track-n": {
     "source": "a836b1ba8fe2",
@@ -16669,10 +16669,10 @@
     "at": "2026-11-05"
   },
   "profiles-ask-foot": {
-    "source": "57accfbeb675",
+    "source": "2a8d535ff70b",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "profiles-avatar-desc": {
     "source": "0758266a2dbf",
@@ -17449,9 +17449,9 @@
     "at": "2026-11-07"
   },
   "reader-demo-end": {
-    "source": "f9aeb29d6391",
+    "source": "c12e30720d06",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "reader-demo-end-line": {
@@ -17461,21 +17461,21 @@
     "at": "2026-11-07"
   },
   "reader-detected-left-to-right": {
-    "source": "e66f58953d6b",
+    "source": "19673df0ed6d",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "reader-detected-right-to-left": {
-    "source": "f0713de5593a",
+    "source": "e282dc30ce72",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "reader-detected-strip": {
-    "source": "e4c1875322a4",
+    "source": "06f96725bb32",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "reader-divider-facts-source": {
@@ -19851,10 +19851,10 @@
     "at": "2026-10-31"
   },
   "release-pinned": {
-    "source": "bb5b5c38cef0",
+    "source": "c6b09d516745",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "release-seeders": {
     "source": "1677647285b7",
@@ -20007,10 +20007,10 @@
     "at": "2026-11-05"
   },
   "rkey-lock-linux": {
-    "source": "189816bcb9e9",
+    "source": "4b5aaa23a79f",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "rkey-lock-reason": {
     "source": "5e165116c191",
@@ -20349,10 +20349,10 @@
     "at": "2026-10-31"
   },
   "search-nothing-found": {
-    "source": "1f47d6f99962",
+    "source": "df86c421aa35",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "search-nothing-found-detail": {
     "source": "2aa7bdecfb39",
@@ -20361,10 +20361,10 @@
     "at": "2026-10-31"
   },
   "search-nothing-found-with-filters": {
-    "source": "f471390492f7",
+    "source": "22c77880f2da",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "search-nothing-with-filters": {
     "source": "d3f5e90d80c8",
@@ -20469,16 +20469,16 @@
     "at": "2026-11-01"
   },
   "search-results-for": {
-    "source": "d08c72abe89d",
+    "source": "eec6344826d3",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "search-searching": {
-    "source": "2841bcf0e7ac",
+    "source": "060455974486",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "search-searching-browse": {
     "source": "0817328e8b00",
@@ -20637,10 +20637,10 @@
     "at": "2026-10-31"
   },
   "seasonal-filter-help": {
-    "source": "bbfab96b7416",
+    "source": "e4bb5490c700",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "seasonal-filter-in-search": {
     "source": "95796e79b7cc",
@@ -21453,10 +21453,10 @@
     "at": "2026-11-01"
   },
   "servers-sign-out-line": {
-    "source": "174e2d425ea8",
+    "source": "1ca4e944618c",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "servers-token-note": {
     "source": "4762b940be83",
@@ -21561,10 +21561,10 @@
     "at": "2026-10-31"
   },
   "settings-apple-discussions-note": {
-    "source": "45164d7b39f8",
+    "source": "ff2e1d0d24a0",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-artwork": {
     "source": "37dc3d6e67c9",
@@ -21615,10 +21615,10 @@
     "at": "2026-10-31"
   },
   "settings-aside-notifications": {
-    "source": "f5d6708dc6ee",
+    "source": "c2efd486271e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-aside-reading": {
     "source": "85173953b34d",
@@ -21753,9 +21753,9 @@
     "at": "2026-11-07"
   },
   "settings-chapter-notifications-footer": {
-    "source": "78bbc7d72492",
+    "source": "e7187c7dd609",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "settings-chapter-notifications-note": {
@@ -21819,10 +21819,10 @@
     "at": "2026-10-31"
   },
   "settings-coming-up-opens": {
-    "source": "5dfe98b46c51",
+    "source": "a127aac72f46",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-coming-up-switched-off": {
     "source": "e9b8d76c8bf4",
@@ -21921,10 +21921,10 @@
     "at": "2026-11-01"
   },
   "settings-crash-ask-detail": {
-    "source": "170ea4f4e532",
+    "source": "3ab54188c58b",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-crash-delete": {
     "source": "dc673e73b5c1",
@@ -21939,10 +21939,10 @@
     "at": "2026-11-01"
   },
   "settings-crash-footnote": {
-    "source": "655718722a1c",
+    "source": "5b6de1e213e6",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-crash-none": {
     "source": "6c5b4eb62d2a",
@@ -21981,10 +21981,10 @@
     "at": "2026-11-01"
   },
   "settings-crash-save-detail": {
-    "source": "4e849b234e15",
+    "source": "1d75e51f6efc",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-crash-saved": {
     "source": "903cff89bf28",
@@ -22083,15 +22083,15 @@
     "at": "2026-10-31"
   },
   "settings-discussions-note": {
-    "source": "45164d7b39f8",
+    "source": "8367a12daa0b",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-discussions-note-windows": {
-    "source": "45164d7b39f8",
+    "source": "ff2e1d0d24a0",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "settings-download-cellular": {
@@ -22371,10 +22371,10 @@
     "at": "2026-11-05"
   },
   "settings-hide-chat-line": {
-    "source": "8fa7bad3fdb6",
+    "source": "707c7e2f8cf2",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-hook-command": {
     "source": "8bea2885ff2d",
@@ -22383,10 +22383,10 @@
     "at": "2026-10-31"
   },
   "settings-hover-cards-note": {
-    "source": "0bfc17f53fde",
+    "source": "afad323e6fd6",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-kaeri-is-for": {
     "source": "d133e2baf4c0",
@@ -22461,10 +22461,10 @@
     "at": "2026-11-01"
   },
   "settings-label-calendar-mine": {
-    "source": "b50f5b2db607",
+    "source": "ef17e279edcc",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-label-cast-tvs": {
     "source": "42106f4b4112",
@@ -23031,22 +23031,22 @@
     "at": "2026-10-31"
   },
   "settings-note-presence-needs-client": {
-    "source": "8cf45dae9428",
+    "source": "e32eaed28fec",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-note-presence-rich": {
-    "source": "2fcb0938f76f",
+    "source": "953b8eb8a39d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-note-presence-title": {
-    "source": "757ceae31616",
+    "source": "6653d9373515",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-note-seed-hours": {
     "source": "bcfe4e07034b",
@@ -23115,16 +23115,16 @@
     "at": "2026-11-05"
   },
   "settings-note-torrents-while-casting-computer": {
-    "source": "9e3ee4d6ec93",
+    "source": "8dabd4d70df9",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-note-torrents-while-casting-pc": {
-    "source": "d61de429cb36",
+    "source": "005f210eaa3f",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-note-trailers": {
     "source": "b83a10eb6e6c",
@@ -23181,10 +23181,10 @@
     "at": "2026-10-31"
   },
   "settings-notify-detail": {
-    "source": "f5d6708dc6ee",
+    "source": "4cbd7fbb7399",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-notify-explain-off": {
     "source": "2960a9c54d55",
@@ -23193,10 +23193,10 @@
     "at": "2026-10-31"
   },
   "settings-notify-explain-on": {
-    "source": "24247ef7a488",
+    "source": "dc7b0e090b45",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-notify-not-allowed": {
     "source": "f92d72440485",
@@ -23205,16 +23205,16 @@
     "at": "2026-10-31"
   },
   "settings-notify-note-off": {
-    "source": "2960a9c54d55",
+    "source": "81f54e456c18",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-notify-note-on": {
-    "source": "24247ef7a488",
+    "source": "453a2fb24691",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-notify-permission": {
     "source": "3b66e18bcbfe",
@@ -23397,10 +23397,10 @@
     "at": "2026-10-31"
   },
   "settings-presence-note": {
-    "source": "a4b3a7537642",
+    "source": "39f089781ff4",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-presence-note-off": {
     "source": "52cecb563047",
@@ -23439,10 +23439,10 @@
     "at": "2026-10-31"
   },
   "settings-presence-rich-detail": {
-    "source": "65423dac5672",
+    "source": "2f9e77c32954",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-presence-title": {
     "source": "752bfc395951",
@@ -23529,15 +23529,15 @@
     "at": "2026-10-31"
   },
   "settings-quality-detail": {
-    "source": "670170eea1d3",
+    "source": "e3b292a7abbd",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-quality-detail-windows": {
-    "source": "670170eea1d3",
+    "source": "e3b292a7abbd",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "settings-quality-higher": {
@@ -23721,10 +23721,10 @@
     "at": "2026-10-31"
   },
   "settings-seeding-best-effort": {
-    "source": "f9505c68c261",
+    "source": "7f8eeacb613f",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-seeding-open-only": {
     "source": "752d81351898",
@@ -24313,10 +24313,10 @@
     "at": "2026-10-31"
   },
   "settings-system-notifications-apple": {
-    "source": "e854f0493e08",
+    "source": "853b63033de2",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "settings-system-notifications-detail": {
     "source": "1fd5ab760a41",
@@ -24961,10 +24961,10 @@
     "at": "2026-10-31"
   },
   "shell-engine-stopped-body": {
-    "source": "a40dee94cd5d",
+    "source": "c7f44b7aa533",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "shell-less": {
     "source": "a5ef80b4bb9b",
@@ -25003,10 +25003,10 @@
     "at": "2026-10-31"
   },
   "shell-not-a-store": {
-    "source": "cbc73b18770d",
+    "source": "5aba00fb214b",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "shell-nothing-running": {
     "source": "e12d45939620",
@@ -25457,10 +25457,10 @@
     "back": "Hides stills and synopses after the next episode."
   },
   "show-settings-subs-follow": {
-    "source": "59bcda084151",
+    "source": "5b8e1f576ce9",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "show-settings-subs-remembered": {
     "source": "cfd1daeabef7",
@@ -25715,10 +25715,10 @@
     "at": "2026-11-07"
   },
   "source-switched-off": {
-    "source": "55e6488ce17f",
+    "source": "64ff32054741",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "source-switched-on": {
     "source": "b4bd13c48885",
@@ -25853,9 +25853,9 @@
     "at": "2026-11-07"
   },
   "sources-demo-books-what": {
-    "source": "adcafbedcdf1",
+    "source": "cd180803d237",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "sources-demo-credit": {
@@ -25865,10 +25865,10 @@
     "at": "2026-11-01"
   },
   "sources-demo-hosts": {
-    "source": "8e6f35cfa0b6",
+    "source": "fb0afb0cf878",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "sources-demo-line": {
     "source": "22f121728bd5",
@@ -25985,10 +25985,10 @@
     "at": "2026-10-31"
   },
   "sources-empty-body": {
-    "source": "75f47994d7e9",
+    "source": "6628de6873eb",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "sources-empty-body-mobile": {
     "source": "ce6cb81ea6cf",
@@ -26321,10 +26321,10 @@
     "at": "2026-11-05"
   },
   "sources-rebuilding": {
-    "source": "be0d1d76baaa",
+    "source": "5cd43e8848b6",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "sources-reloaded-torrents-checking": {
     "source": "c4ca0bb5b976",
@@ -26339,16 +26339,16 @@
     "at": "2026-10-31"
   },
   "sources-remove-detail": {
-    "source": "7dca9d3569a3",
+    "source": "a5fb574c5787",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "sources-remove-detail-device": {
-    "source": "67f1405556ed",
+    "source": "d4197f385109",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "sources-remove-title": {
     "source": "aa3005ebf3af",
@@ -26735,10 +26735,10 @@
     "at": "2026-10-31"
   },
   "start-failed-network": {
-    "source": "3555abf329ed",
+    "source": "6e6a39584de2",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "start-failed-open-folder": {
     "source": "3cf4aa81e6b6",
@@ -26939,21 +26939,21 @@
     "at": "2026-11-07"
   },
   "store-empty-line": {
-    "source": "381369a31b4f",
+    "source": "fdafcb41e812",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "store-err-unreachable": {
-    "source": "0bd12e306551",
+    "source": "49d58ccd3429",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "store-err-unreachable-line": {
-    "source": "3fcee85ce2f2",
+    "source": "a653861e789f",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "store-group-reading": {
@@ -26981,9 +26981,9 @@
     "at": "2026-11-07"
   },
   "store-installed": {
-    "source": "152caddbcf8c",
+    "source": "00f90ffa8438",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "store-installed-row": {
@@ -27209,10 +27209,10 @@
     "at": "2026-10-31"
   },
   "store-token-not-kept": {
-    "source": "98268098805f",
+    "source": "c10609989105",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "store-turn-on-watching": {
     "source": "4e71420589ed",
@@ -27221,15 +27221,15 @@
     "at": "2026-11-07"
   },
   "store-tv-all-reading": {
-    "source": "b659f57eb110",
+    "source": "41e7d75f39cc",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "store-tv-reading-only": {
-    "source": "24c6a17fdbef",
+    "source": "0f18eb65f7eb",
     "state": "draft",
-    "by": "agent",
+    "by": "opus",
     "at": "2026-11-07"
   },
   "store-unreachable": {
@@ -27383,10 +27383,10 @@
     "at": "2026-10-31"
   },
   "stores-anyone-note": {
-    "source": "7a96c646775f",
+    "source": "4cbfd19e73b4",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-anyone-short": {
     "source": "f81e857c8116",
@@ -27473,10 +27473,10 @@
     "at": "2026-10-31"
   },
   "stores-choice-remove": {
-    "source": "8058649c7c9f",
+    "source": "f665e88c98ff",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-choice-replace": {
     "source": "d8ff7d754d83",
@@ -27683,10 +27683,10 @@
     "at": "2026-10-31"
   },
   "stores-device-not-seen": {
-    "source": "fecabdaf2cd0",
+    "source": "c0833b586a8d",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-device-seen": {
     "source": "392cd1fc119f",
@@ -27815,16 +27815,16 @@
     "at": "2026-10-31"
   },
   "stores-footer-leave": {
-    "source": "b44b54f84b13",
+    "source": "f72edd18f350",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-footer-link-device": {
-    "source": "a55dec8cb16f",
+    "source": "0c0859180f0e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-footer-may-contact": {
     "source": "b6f3728f97a7",
@@ -27833,10 +27833,10 @@
     "at": "2026-10-31"
   },
   "stores-footer-members": {
-    "source": "5dd6a734c9b1",
+    "source": "fe49772b38d1",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-footer-offline": {
     "source": "0a7f4da32205",
@@ -28037,10 +28037,10 @@
     "at": "2026-11-01"
   },
   "stores-invite-once-until": {
-    "source": "4a9d23317686",
+    "source": "517f635a4271",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-invite-owner-once": {
     "source": "6ff471e7279b",
@@ -28199,10 +28199,10 @@
     "at": "2026-10-31"
   },
   "stores-join-anonymous": {
-    "source": "a36433a12ce6",
+    "source": "59ca63d35428",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-join-button": {
     "source": "ad9af6f94e21",
@@ -28223,10 +28223,10 @@
     "at": "2026-10-31"
   },
   "stores-join-detail-desktop": {
-    "source": "450ac3c314c8",
+    "source": "68ac07242d33",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-join-detail-opened": {
     "source": "f1c7c87cce48",
@@ -28409,10 +28409,10 @@
     "at": "2026-10-31"
   },
   "stores-leave-plugins": {
-    "source": "6f6593e791f3",
+    "source": "555b9565722b",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-leave-rejoin": {
     "source": "2ca152939c72",
@@ -28475,10 +28475,10 @@
     "at": "2026-10-31"
   },
   "stores-link-copied": {
-    "source": "1b1b5908cf0a",
+    "source": "9bf73dcfe22c",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-link-device": {
     "source": "9ec62b1ec141",
@@ -28631,10 +28631,10 @@
     "at": "2026-10-31"
   },
   "stores-no-plugins": {
-    "source": "737914983b9e",
+    "source": "63b478784aca",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-none-joined": {
     "source": "ade88dc7a2dd",
@@ -28727,10 +28727,10 @@
     "at": "2026-10-31"
   },
   "stores-offline-last-list": {
-    "source": "c3e1d772f23b",
+    "source": "3875b110dc31",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-offline-last-list-plain": {
     "source": "71fd4d284aea",
@@ -28775,16 +28775,16 @@
     "at": "2026-10-31"
   },
   "stores-open-join-off-detail": {
-    "source": "5e0305582e51",
+    "source": "a8b9c192efe6",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-open-join-on-detail": {
-    "source": "9687a789d3bb",
+    "source": "f108d9f0b664",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-open-keep-working": {
     "source": "7bede1a3b64f",
@@ -28835,10 +28835,10 @@
     "at": "2026-10-31"
   },
   "stores-open-off-detail": {
-    "source": "5e0305582e51",
+    "source": "a8b9c192efe6",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-open-on-detail": {
     "source": "9687a789d3bb",
@@ -28865,10 +28865,10 @@
     "at": "2026-10-31"
   },
   "stores-owner-link-offline": {
-    "source": "561cc8fb11e7",
+    "source": "27b473825432",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-owner-needs-connection": {
     "source": "4071c7661b57",
@@ -29111,10 +29111,10 @@
     "at": "2026-10-31"
   },
   "stores-publish-offered": {
-    "source": "5321aa38fe2b",
+    "source": "d99a7a619162",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-publish-published": {
     "source": "6d3b5b0561ba",
@@ -29225,10 +29225,10 @@
     "at": "2026-10-31"
   },
   "stores-remove-member-plugins": {
-    "source": "dcce094f0560",
+    "source": "a5ab83b7ec3e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-remove-member-title": {
     "source": "aa3005ebf3af",
@@ -29237,10 +29237,10 @@
     "at": "2026-10-31"
   },
   "stores-remove-plugin-detail": {
-    "source": "d66abe291180",
+    "source": "9375a6db023a",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-remove-plugin-title": {
     "source": "aa3005ebf3af",
@@ -29375,10 +29375,10 @@
     "at": "2026-10-31"
   },
   "stores-store-offers": {
-    "source": "5321aa38fe2b",
+    "source": "d99a7a619162",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-their-name": {
     "source": "b66c04904bdf",
@@ -29489,10 +29489,10 @@
     "at": "2026-10-31"
   },
   "stores-what-is": {
-    "source": "58a35d6bdd14",
+    "source": "a20ec9baba18",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "stores-what-is-link": {
     "source": "52f721d7f536",
@@ -29645,10 +29645,10 @@
     "at": "2026-11-05"
   },
   "sync-road-cloud-line": {
-    "source": "69625c5842c0",
+    "source": "6646e2e64834",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "sync-road-later": {
     "source": "5eb272d034a0",
@@ -29735,10 +29735,10 @@
     "at": "2026-11-05"
   },
   "sync-tui-browser-line": {
-    "source": "f7b440672516",
+    "source": "24ef57c9bde7",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "sync-tui-code": {
     "source": "3643189d1abb",
@@ -29765,10 +29765,10 @@
     "at": "2026-11-05"
   },
   "sync-tui-err-unavailable": {
-    "source": "296d42ede8eb",
+    "source": "0dbce45751a9",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "sync-tui-folder-path": {
     "source": "9434ea90b6fe",
@@ -29861,10 +29861,10 @@
     "at": "2026-11-05"
   },
   "sync-tui-profile-restart": {
-    "source": "557ca5020e96",
+    "source": "9cc819335d35",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-05"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "sync-tui-qr-no-room": {
     "source": "9be0040edadf",
@@ -29993,10 +29993,10 @@
     "at": "2026-10-31"
   },
   "title-all-watched": {
-    "source": "fb7c1f4dd086",
+    "source": "46539def969b",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "title-also-on": {
     "source": "7147a4c7daea",
@@ -30347,10 +30347,10 @@
     "at": "2026-10-31"
   },
   "title-no-sources-yet": {
-    "source": "d670c21a95a2",
+    "source": "03a116199fea",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "title-no-trailer": {
     "source": "05a7057a7ef2",
@@ -30935,10 +30935,10 @@
     "at": "2026-11-01"
   },
   "together-recent-empty": {
-    "source": "a35b40bff55e",
+    "source": "05cad69f80dd",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "together-recent-note": {
     "source": "029d2d32d0c7",
@@ -32801,10 +32801,10 @@
     "at": "2026-10-31"
   },
   "tv-seeding-note": {
-    "source": "268c24a870ae",
+    "source": "6a864caf843e",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "tv-seen-just-now": {
     "source": "84126fa92f00",
@@ -33119,10 +33119,10 @@
     "at": "2026-10-31"
   },
   "tv-type-code": {
-    "source": "4f3217979e71",
+    "source": "f00654b27252",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "tv-type-it": {
     "source": "ff9281494c29",
@@ -33815,10 +33815,10 @@
     "at": "2026-10-31"
   },
   "updates-why-connection": {
-    "source": "64d8178b5ca2",
+    "source": "b869be7f4219",
     "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
+    "by": "opus",
+    "at": "2026-11-07"
   },
   "updates-why-download": {
     "source": "58f14bf0ac25",

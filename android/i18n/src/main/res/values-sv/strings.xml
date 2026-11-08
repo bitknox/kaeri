@@ -11,7 +11,7 @@
     <string name="notice_cast_never_fetches">%1$s började inte läsa strömmen. Ett VPN eller en brandvägg på den här enheten kan stå i vägen.</string>
     <string name="notice_cast_refused">%1$s kunde inte spela den här strömmen. Prova en annan källa.</string>
     <string name="notice_cast_taken_over">En annan enhet startade något på %1$s, så castingen avbröts.</string>
-    <string name="notice_cast_not_same_network">Den här enheten är inte på samma nätverk som %1$s eller når den via ett VPN. Casting kräver att båda är på samma nätverk.</string>
+    <string name="notice_cast_not_same_network">Den här enheten är inte på samma nätverk som %1$s, eller når det via ett VPN. Anslut båda till samma nätverk för att casta.</string>
     <string name="notice_cast_lost">Tappade kontakten med %1$s, så castingen avbröts.</string>
     <string name="notice_cast_no_device">Den TV:n finns inte längre på nätverket.</string>
     <string name="notice_cast_unavailable">Den här versionen av Kaeri kan inte skicka till TV:ar.</string>
@@ -121,13 +121,13 @@
     <string name="notice_match_reset_failed">Det gick inte att återställa matchningen. %1$s</string>
     <string name="notice_match_save_failed">Det gick inte att spara matchningen. %1$s</string>
     <string name="notice_match_did_not_stick">Matchningen höll inte. Den källa kan ha ändrats. Försök välja den igen.</string>
-    <string name="notice_source_search_empty">Inget hittades för “%1$s”. Prova en annan sökning.</string>
+    <string name="notice_source_search_empty">Inget hittades för ”%1$s”. Prova en annan sökning.</string>
     <string name="match_ruled_out_format">Annat format</string>
     <string name="match_ruled_out_episodes">Fler avsnitt än den här titeln</string>
     <string name="match_ruled_out_year">Annat år</string>
     <string name="match_search_timed_out">Den svarade inte i tid.</string>
     <string name="match_search_source_off">Den är inte påslagen.</string>
-    <string name="notice_source_pinned">%1$s används för den här titeln.</string>
+    <string name="notice_source_pinned">Den här titeln spelas nu från %1$s.</string>
     <string name="notice_source_automatic">Tillbaka till automatiskt val av källa.</string>
     <string name="notice_source_choice_failed">Det gick inte att spara valet. %1$s</string>
     <string name="notice_no_source_could_list">Ingen källa kunde lista den här serien: %1$s</string>
@@ -199,9 +199,9 @@
     <string name="reader_back_to_page">Tillbaka till sida %1$d</string>
     <string name="reader_moved">Flyttade till %1$s, sida %2$d, där %3$s slutade</string>
     <string name="reader_moved_number">Flyttade till kapitel %1$s, sida %2$d, där %3$s slutade</string>
-    <string name="reader_detected_right_to_left">Höger till vänster, upptäckt</string>
-    <string name="reader_detected_left_to_right">Vänster till höger, upptäckt</string>
-    <string name="reader_detected_strip">Lång remsa, upptäckt</string>
+    <string name="reader_detected_right_to_left">Verkar vara höger till vänster</string>
+    <string name="reader_detected_left_to_right">Verkar vara vänster till höger</string>
+    <string name="reader_detected_strip">Verkar vara en lång remsa</string>
     <string name="reading_failed_offline">Du är offline. Nedladdade kapitel går fortfarande att öppna.</string>
     <string name="reading_failed_source_down">%1$s svarar inte. Försök igen senare.</string>
     <string name="reading_failed_not_found">Den här källan har inte kvar det. Prova en annan källa.</string>
@@ -416,10 +416,10 @@
     <string name="store_admin_missing">%1$s har ingen administrationssida. Dess server kan vara äldre.</string>
     <string name="store_admin_link_foreign">%1$s skickade en administrationslänk för en annan adress.</string>
     <string name="store_open_join_unsupported">Servern för %1$s är äldre och kan inte släppa in någon med en länk. Uppdatera den först.</string>
-    <string name="source_switched_off">%1$s är av. Den hoppas över när avsnitt söks.</string>
+    <string name="source_switched_off">%1$s är av. Kaeri hoppar över den när avsnitt söks.</string>
     <string name="source_switched_on">%1$s är på.</string>
     <string name="plugin_not_loaded">%1$s är inte inläst. Kontrollera att den är installerad under Källor.</string>
-    <string name="release_pinned">%1$s används för den här titeln.</string>
+    <string name="release_pinned">Den här titeln använder nu %1$s.</string>
     <string name="notice_choice_not_saved">Det gick inte att spara valet. %1$s</string>
     <string name="torrent_proxy_waiting">Proxykontrollen misslyckades. Torrenter startar när den godkänns.</string>
     <string name="torrent_proxy_unchecked">Torrenter startar när proxykontrollen godkänns.</string>
@@ -449,8 +449,8 @@
     <string name="notice_sign_in_stopped">Inloggningen på %1$s avbröts innan den var klar. Försök igen. %2$s</string>
     <string name="notice_token_exchange_failed">Det gick inte att få en token från %1$s. Försök logga in igen. %2$s</string>
     <string name="notice_browser_not_opened">Det gick inte att öppna en webbläsare för inloggningen. Kontrollera att en är installerad och försök igen. %1$s</string>
-    <string name="notice_sign_in_not_waiting">Ingen inloggning till %1$s väntar på det. Starta inloggningen igen.</string>
-    <string name="notice_sign_in_wrong_request">Inloggningen till %1$s kom inte tillbaka från den här begäran. Starta inloggningen igen.</string>
+    <string name="notice_sign_in_not_waiting">Ett inloggningssvar från %1$s kom, men ingen inloggning väntade på det. Starta inloggningen igen.</string>
+    <string name="notice_sign_in_wrong_request">Inloggningssvaret från %1$s stämmer inte med begäran. Starta inloggningen igen.</string>
     <string name="notice_sign_in_no_token">Inloggningen till %1$s kom tillbaka utan token. Försök igen.</string>
     <string name="notice_mal_client_missing_build">Det gick inte att slutföra inloggningen till MyAnimeList: den här versionen har ingen klient för det.</string>
     <string name="notice_kitsu_signs_in_on_accounts">Kitsu loggar in från skärmen Konton.</string>
@@ -486,7 +486,7 @@
     </plurals>
     <string name="notice_update_available">%1$s är ute. Kör kaeri --update för att installera den.</string>
     <string name="cause_proxy_needs_address">En proxy behöver en värd och en port.</string>
-    <string name="cause_proxy_address_unusable">Proxyns adress kan inte användas för en kontroll.</string>
+    <string name="cause_proxy_address_unusable">Proxykontrollen kan inte använda den här adressen.</string>
     <string name="cause_server_unreachable">Det gick inte att nå servern.</string>
     <string name="legal_hosts_no_content">Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.</string>
     <string name="notice_saved">Sparade %1$s.</string>
@@ -494,12 +494,12 @@
     <string name="notice_title_load_failed">Det gick inte att läsa in titeln. Kontrollera anslutningen och försök igen.</string>
     <string name="notice_playback_failed">Uppspelningen misslyckades. Prova en annan källa.</string>
     <string name="notice_engine_fault">Något gick fel i Kaeri. Appen fortsatte, men om en skärm verkar fast avslutar du och öppnar den igen.</string>
-    <string name="notice_database_set_aside">Databasen var skadad, så Kaeri startade en ny. Den gamla filen sparas på %1$s. Dina trackers hämtar tillbaka det de har när synken körs igen.</string>
+    <string name="notice_database_set_aside">Databasen var skadad, så Kaeri startade en ny. Den gamla filen sparas på %1$s. Det dina trackers har kommer tillbaka när synken körs igen.</string>
     <string name="start_failed_folder">Kaeri kunde inte skapa mappen %1$s. Kontrollera att disken har plats och att mappen går att skriva i, och försök igen. %2$s</string>
     <string name="start_failed_config">%1$s har en inställning som Kaeri inte kan använda: %2$s. Rätta till den eller ta bort den och försök igen.</string>
     <string name="config_reset_failed">Kaeri kunde inte flytta undan %1$s för att återställa inställningarna. %2$s</string>
     <string name="start_failed_database">Kaeri kunde inte öppna sin databas på %1$s. Om en annan app från Kaeri är öppen i den här mappen avslutar du den och försöker igen. %2$s</string>
-    <string name="start_failed_network">Kaeri kunde inte skapa sin nätverksanslutning med nätverksinställningarna i config.toml. %1$s</string>
+    <string name="start_failed_network">Kaeri kunde inte ansluta med nätverksinställningarna i config.toml. Kontrollera dem och försök igen. %1$s</string>
     <string name="start_failed">Kaeri kunde inte starta. Avsluta och öppna den igen. %1$s</string>
     <string name="start_failed_remote">Fjärrkontrollen kunde inte starta. %1$s</string>
     <string name="start_failed_player">Spelaren kunde inte starta. %1$s</string>
@@ -512,8 +512,8 @@
     <string name="crash_notice_tv">Kaeri stängdes efter ett fel. Du kan rapportera det under Inställningar, Om.</string>
     <string name="notice_surprise_empty_filters">Inga titlar matchar de här filtren.</string>
     <string name="notice_surprise_empty_planning">Planerar är tom.</string>
-    <string name="notice_surprise_offline">Offline. Slumpval från sökningen kräver AniList.</string>
-    <string name="notice_surprise_failed">Det gick inte att välja en titel just nu. Försök igen om en stund.</string>
+    <string name="notice_surprise_offline">Du är offline. Överraska mig behöver AniList för att välja en titel.</string>
+    <string name="notice_surprise_failed">Det gick inte att nå AniList för att välja en titel. Försök igen om en stund.</string>
     <string name="account_button_named">%1$s, konton och inställningar</string>
     <string name="calendar_empty_mine_ahead">Inget på din lista sänds de kommande fyra veckorna.</string>
     <string name="calendar_floor_line">Kalendern går tillbaka 3 månader.</string>
@@ -526,7 +526,7 @@
     <string name="calendar_show_all_airing">Visa alla som sänds</string>
     <string name="calendar_now_label">Nu, %1$s</string>
     <string name="settings_discussions_label">Avsnittsdiskussioner</string>
-    <string name="settings_discussions_note">Läser kommentarerna i AniLists forumtråd för avsnitt du har sett.</string>
+    <string name="settings_discussions_note">Du kan läsa kommentarerna i AniLists forumtråd för avsnitt du har sett.</string>
     <string name="settings_discussion_images_label">Läs in bilder i kommentarer</string>
     <string name="settings_discussion_images_note">Varje bild laddas från webbplatsen som är värd för den, som ser din IP-adress.</string>
     <string name="discussion_waiting">Väntar på AniList · %1$s</string>
@@ -563,7 +563,7 @@
     <string name="cast_settings_tvs">Visa TV-apparater med inbyggd Chromecast</string>
     <string name="cast_settings_tvs_note">De visas under Chromecast i Spela på TV. Den här enheten skickar avsnittet till dem.</string>
     <string name="cast_settings_torrents">Torrents vid casting</string>
-    <string name="cast_settings_torrents_note">Låter en TV med inbyggd Chromecast spela torrents. Den här enheten skickar avsnittet så länge det spelas.</string>
+    <string name="cast_settings_torrents_note">Då kan en TV med inbyggd Chromecast spela torrents. Den här enheten skickar avsnittet så länge det spelas.</string>
     <string name="reader_page_failed_swipe">Svep för att gå vidare utan den.</string>
     <string name="reader_skip_page">Hoppa över sida</string>
     <string name="reader_page_of">Sida %1$d av %2$d</string>
@@ -622,11 +622,11 @@
     <string name="eink_colour_body">Kaeri kunde inte avgöra det på den här enheten. Titta på de fyra rutorna.</string>
     <string name="eink_colour_squares">Fyra rutor: röd, grön, blå och bärnsten</string>
     <string name="eink_colour_hint">Om de ser ut som fyra gråtoner, välj Bara gråtoner. Du kan ändra det i Inställningar › Skärm.</string>
-    <string name="eink_colour_yes">Jag ser färg</string>
+    <string name="eink_colour_yes">Ja, färg</string>
     <string name="eink_colour_no">Bara gråtoner</string>
     <string name="eink_colour_skip">Hoppa över</string>
-    <string name="eink_colour_skipped">Överhoppat. Bilderna förblir i färg, som en gråskärm visar i gråtoner.</string>
-    <string name="eink_page_keys_hint">Ställ in sidknapparna på Volym i enhetens inställningar för att bläddra.</string>
+    <string name="eink_colour_skipped">Överhoppat. Bilderna förblir i färg. En gråskalig skärm visar dem i gråtoner.</string>
+    <string name="eink_page_keys_hint">Ställ in knapparna på Volym i enhetens inställningar för att bläddra med dem.</string>
     <string name="eink_new">Ny</string>
     <string name="reader_notice_start_over">Börja om</string>
     <string name="reader_notice_go_back">Gå tillbaka</string>
@@ -777,7 +777,7 @@
     <string name="tv_info_from">Från</string>
     <string name="tv_info_state">Status</string>
     <string name="tv_store_revoked">Släpper inte längre in den här TV:n</string>
-    <string name="tv_seeding_note">Efter bästa förmåga på den här TV:n: seedning körs bara medan Kaeri är öppen.</string>
+    <string name="tv_seeding_note">Den här TV:n seedar bara medan Kaeri är öppen.</string>
     <string name="tv_sign_out_title">Logga ut från %1$s?</string>
     <string name="tv_account_not_signed_in">Inte inloggad</string>
     <string name="tv_account_signed_in_as">Inloggad som %1$s</string>
@@ -881,7 +881,7 @@
         <item quantity="one">%1$s är avstängd i sina egna inställningar.</item>
         <item quantity="other">%1$s är avstängda i sina egna inställningar.</item>
     </plurals>
-    <string name="settings_coming_up_opens">En serie öppnar sina inställningar.</string>
+    <string name="settings_coming_up_opens">Tryck på en serie för att öppna dess inställningar.</string>
     <string name="torrents_proxy_as">som %1$s</string>
     <string name="title_facts_aired">Sändes %1$s</string>
     <string name="title_facts_airing">Sänds sedan %1$s</string>
@@ -999,7 +999,7 @@
     <string name="settings_titles_note_english">Engelska titlar som AniList anger, och romaji där det inte finns någon.</string>
     <string name="settings_titles_note_romaji">Japanska titlar skrivna med latinska bokstäver, som AniList anger dem.</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
-    <string name="settings_seeding_best_effort">Bästa möjliga på den här enheten: seeding körs bara medan Kaeri är öppen.</string>
+    <string name="settings_seeding_best_effort">Den här enheten seedar bara medan Kaeri är öppen.</string>
     <plurals name="settings_downloads_count">
         <item quantity="one">Ett avsnitt</item>
         <item quantity="other">%1$d avsnitt</item>
@@ -1016,7 +1016,7 @@
     <string name="settings_libraries_value">JNA och AndroidX, under Apache License 2.0</string>
     <string name="settings_report_bug_value">Öppnar GitHub i din webbläsare</string>
     <string name="downloads_storage_share_description">Nedladdningarna tar %1$s</string>
-    <string name="settings_aside_notifications">En avisering när ett avsnitt av en serie du följer kommer ut, med serien och avsnittsnumret men aldrig avsnittets titel. En serie kan stänga av sina egna i sina inställningar.</string>
+    <string name="settings_aside_notifications">En avisering när ett avsnitt av en serie du följer kommer ut: serien och avsnittets nummer, aldrig dess titel. Du kan stänga av en series aviseringar i dess inställningar.</string>
     <string name="settings_aside_downloads">Nedladdningar ligger i Kaeris eget utrymme på den här enheten, som andra appar inte kan läsa. Tar du bort appen tas de bort.</string>
     <string name="settings_aside_sources">Källor testas i ordning, uppifrån och ned. En serie kan ha sin egen källa, vald från dess titelsida.</string>
     <string name="settings_upscaling_description">Samma bild: vänstra halvan är originalet i 480p, högra halvan med %1$s</string>
@@ -1105,7 +1105,7 @@
     </plurals>
     <string name="trailer_failed">Det gick inte att öppna trailern</string>
     <string name="engine_down_title">Kaeri har stannat</string>
-    <string name="engine_down_stopped">Delen som gör jobbet har stannat. Försök igen, eller avsluta och öppna appen en gång till.</string>
+    <string name="engine_down_stopped">Inget nytt laddas förrän den startar igen. Försök igen, eller avsluta och öppna appen en gång till.</string>
     <string name="engine_down_quit">Avsluta</string>
     <string name="about_title">Om</string>
     <string name="about_title_app">Om Kaeri</string>
@@ -1144,9 +1144,9 @@
     <string name="report_crash_settings">Kraschrapportinställningar</string>
     <string name="settings_group_crashes">Kraschrapporter</string>
     <string name="settings_crash_save">Spara kraschrapporter på den här enheten</string>
-    <string name="settings_crash_save_detail">När det här är på sparar Kaeri en kort logg över varje krasch på den här enheten, utan titlar, adresser och namn, så att du kan lägga till den i Rapportera ett fel. Inget skickas av sig självt.</string>
+    <string name="settings_crash_save_detail">Kaeri sparar en kort logg över varje krasch på den här enheten för Rapportera ett fel, utan titlar, adresser och namn. Inget skickas av sig självt.</string>
     <string name="settings_crash_ask">Fråga efter en krasch</string>
-    <string name="settings_crash_ask_detail">Visar en notis vid starten efter en krasch, med Rapportera…</string>
+    <string name="settings_crash_ask_detail">Kaeri visar en notis med Rapportera… när den öppnas igen.</string>
     <string name="settings_crash_os_heading">Sparat av %1$s</string>
     <string name="settings_crash_os_detail">%1$s sparade de här kraschorna från innan du slog på det här. Inget av dem sparas hos oss om du inte lägger till det.</string>
     <string name="settings_crash_os_item">Krasch · %1$s</string>
@@ -1156,7 +1156,7 @@
     <string name="settings_crash_view">Visa</string>
     <string name="settings_crash_delete">Ta bort</string>
     <string name="settings_crash_delete_all">Ta bort alla</string>
-    <string name="settings_crash_footnote">Kraschrapporter stannar på den här enheten. Kaeri skickar inget av sig självt. En rapport lämnar enheten först när du öppnar den på GitHub från Rapportera ett fel. Rapporter tas bort efter 30 dagar.</string>
+    <string name="settings_crash_footnote">Kraschrapporter stannar på den här enheten, och Kaeri skickar inget av sig självt. En rapport skickas bara när du öppnar den på GitHub från Rapportera ett fel. Rapporter tas bort efter 30 dagar.</string>
     <string name="calendar_previous_week">Föregående vecka</string>
     <string name="calendar_next_week">Nästa vecka</string>
     <string name="calendar_this_week">Den här veckan</string>
@@ -1198,9 +1198,9 @@
     <string name="cast_tvs_note_mac">De visas under Chromecast i Spela på TV. Den här Macen skickar avsnittet till dem.</string>
     <string name="cast_tvs_note_iphone">De visas under Chromecast i Spela på TV. Den här iPhonen skickar avsnittet till dem.</string>
     <string name="cast_tvs_note_ipad">De visas under Chromecast i Spela på TV. Den här iPaden skickar avsnittet till dem.</string>
-    <string name="cast_torrents_note_mac">Låter en TV med inbyggd Chromecast spela torrents. Den här Macen skickar avsnittet så länge det spelas.</string>
-    <string name="cast_torrents_note_iphone">Låter en TV med inbyggd Chromecast spela torrents. Den här iPhonen skickar avsnittet så länge det spelas.</string>
-    <string name="cast_torrents_note_ipad">Låter en TV med inbyggd Chromecast spela torrents. Den här iPaden skickar avsnittet så länge det spelas.</string>
+    <string name="cast_torrents_note_mac">Då kan en TV med inbyggd Chromecast spela torrents. Den här Macen skickar avsnittet så länge det spelas.</string>
+    <string name="cast_torrents_note_iphone">Då kan en TV med inbyggd Chromecast spela torrents. Den här iPhonen skickar avsnittet så länge det spelas.</string>
+    <string name="cast_torrents_note_ipad">Då kan en TV med inbyggd Chromecast spela torrents. Den här iPaden skickar avsnittet så länge det spelas.</string>
     <string name="cast_up_next_plays_in">Nästa · spelas om %1$d s</string>
     <string name="cast_couldnt_start">Kunde inte starta på %1$s</string>
     <string name="cast_stopped">Castingen stoppades</string>
@@ -1453,11 +1453,11 @@
     <string name="downloads_delete_title">Ta bort %1$s?</string>
     <string name="downloads_delete_detail">Filen tas bort från den här enheten.</string>
     <string name="downloads_delete_one_title">Ta bort nedladdningen</string>
-    <string name="downloads_delete_one_detail">Den spelas bara upp igen med en anslutning, eller när du laddar ner den på nytt.</string>
+    <string name="downloads_delete_one_detail">Efter det här behöver avsnittet en anslutning för att spelas, om du inte laddar ner det igen.</string>
     <string name="downloads_delete_watched">Ta bort sedda nedladdningar</string>
     <string name="downloads_seeding_title">Delning</string>
     <string name="downloads_seeding_after_watching">Delning efter visning</string>
-    <string name="downloads_seeding_note">Sedda avsnitt delas tillbaka medan Kaeri är öppen, tills kvoten eller tidsgränsen som satts i inställningarna under Källor nås.</string>
+    <string name="downloads_seeding_note">Sedda avsnitt delas tillbaka medan Kaeri är öppen. Delningen slutar vid den kvot eller tidsgräns du anger i Inställningar, under Källor.</string>
     <string name="downloads_seeding_open_only">Delning sker bara medan Kaeri är öppen.</string>
     <string name="downloads_background_title">När fönstret stängs med pågående nedladdningar</string>
     <string name="downloads_background_keep">Fortsätt ladda ner</string>
@@ -1486,8 +1486,8 @@
     <string name="episode_download_done">Nedladdad</string>
     <string name="episode_download_failed">Det gick inte att ladda ner avsnitt %1$d. Försök igen.</string>
     <string name="first_other_title">Använder du redan Kaeri på en annan enhet?</string>
-    <string name="first_other_line">Parkoppla med den, så får denna enhet dina källor, trackers och din historik. Stegen efter detta är då klara.</string>
-    <string name="first_other_pair_line">Visar en kod att skriva in på en annan enhet. Båda behöver samma Wi-Fi.</string>
+    <string name="first_other_line">Parkoppla med den, så får den här enheten dina källor, trackers och din historik, och resten av konfigurationen görs åt dig.</string>
+    <string name="first_other_pair_line">Du får en kod att skriva in på den enheten. Båda behöver samma Wi-Fi.</string>
     <string name="first_other_restore">Återställ från en molnmapp</string>
     <string name="first_other_restore_line">Använder återställningsnyckeln du sparade</string>
     <string name="first_other_no">Nej, börja här</string>
@@ -1500,9 +1500,9 @@
     <string name="first_join_signins_line">%1$s</string>
     <string name="first_join_server">Lägg till %1$s</string>
     <string name="first_join_server_line">%1$s · loggar in med nyckeln från %2$s, sparad i %3$s</string>
-    <string name="first_join_folders">Mappar stannar på %1$s. Lägg till egna mappar för denna enhet i Dina källor.</string>
+    <string name="first_join_folders">Mappar stannar på %1$s. Lägg till den här enhetens egna mappar i Dina källor.</string>
     <string name="first_join_steps_done">Listor och källor är klara, så första starten slutar här. Du kan ändra dem i Inställningar.</string>
-    <string name="first_join_store_refused">%1$s släppte inte in denna enhet. %2$s kan skicka en inbjudan till dig.</string>
+    <string name="first_join_store_refused">%1$s släppte inte in den här enheten. %2$s kan skicka en inbjudan till dig.</string>
     <string name="first_join_syncing">Synkar med %1$s</string>
     <string name="home_title">Hem</string>
     <string name="home_resume_episode">Fortsätt avsnitt %1$d</string>
@@ -1527,7 +1527,7 @@
     <string name="home_end">Det var allt för nu. Säsong och Kalender har de fullständiga listorna.</string>
     <string name="home_end_signed_out">Logga in på AniList för att hämta din lista och Planering.</string>
     <string name="home_sign_in">Logga in på AniList</string>
-    <string name="home_end_no_sources">Lägg till en källa för att spela från Hem. Tilläggsbutiker har några att välja bland.</string>
+    <string name="home_end_no_sources">Lägg till en källa för att spela från Hem. Tillägg kommer från Tilläggsbutiker.</string>
     <string name="home_not_found">Finns inte i dina källor</string>
     <string name="home_failed">Kunde inte läsa in förslag</string>
     <string name="home_try_again">Försök igen</string>
@@ -1688,7 +1688,7 @@
     <string name="title_connect_drive">Anslut enheten för att spela</string>
     <string name="library_picker_title">Välj en mapp med dina avsnitt.</string>
     <string name="library_remove_detail">Dina filer ligger kvar där de är.</string>
-    <string name="library_reason_offline">Kunde inte fråga AniList. Det prövas igen vid en ny genomsökning.</string>
+    <string name="library_reason_offline">Det gick inte att nå AniList. Ett nytt försök görs vid kommande genomsökning.</string>
     <string name="library_choose_match">Välj matchning</string>
     <string name="library_kept_line">Behålls som en egen titel</string>
     <string name="library_fix_match">Rätta matchningen</string>
@@ -1699,7 +1699,7 @@
     <string name="licensed_title">Licensierade tjänster</string>
     <string name="licensed_body">Kaeri kan öppna titlar i streamingtjänster du betalar för. Den spelar dem aldrig själv. Länkarna kommer från AniList.</string>
     <string name="licensed_region">Region</string>
-    <string name="licensed_region_line">Döljer länkar som AniList markerat för andra länder. De flesta länkar anger inget land, så välj även dina tjänster.</string>
+    <string name="licensed_region_line">Länkar som AniList markerat för andra länder döljs. De flesta länkar anger inget land, så välj även dina tjänster.</string>
     <string name="licensed_yours">Dina tjänster</string>
     <string name="licensed_show_all">Visa alla %1$d</string>
     <string name="licensed_region_system">Följ den här enheten</string>
@@ -1847,7 +1847,7 @@
     <string name="onboarding_where_hosts">Kaeri spelar det du redan har: filer på den här enheten, din Jellyfin-server och tillägg från de tilläggsbutiker du går med i.</string>
     <string name="onboarding_own_heading">Har du egna media?</string>
     <string name="onboarding_invite_heading">Har du en inbjudningslänk?</string>
-    <string name="onboarding_where_stores">Tillägg kommer från tilläggsbutiker. En tilläggsbutik är signerad och ger varje enhet sin egen token, så du går med via en inbjudningslänk från ägaren.</string>
+    <string name="onboarding_where_stores">Tillägg kommer från tilläggsbutiker. Var och en är signerad och ger varje enhet sin egen token, och därför går du med via en inbjudningslänk från ägaren.</string>
     <string name="onboarding_demo_heading">Prova direkt</string>
     <string name="onboarding_demo_detail">Demon spelar こうしす！, en serie som skaparna delar under CC BY 4.0, från Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Spela demon</string>
@@ -1861,12 +1861,12 @@
     <string name="party_join">Gå med i watch party</string>
     <string name="party_leave">Lämna watch party</string>
     <string name="party_leaving">Lämnar…</string>
-    <string name="party_ready_action">Jag är redo</string>
+    <string name="party_ready_action">Redo att titta</string>
     <string name="party_copy_invite">Kopiera inbjudningslänk</string>
     <string name="party_stay">Stanna</string>
     <string name="party_leave_and_close">Lämna och stäng</string>
     <string name="party_not_now">Inte nu</string>
-    <string name="party_getting_ready">Förbereder…</string>
+    <string name="party_getting_ready">Laddar förslag…</string>
     <string name="party_server">Server</string>
     <string name="party_server_hint">värd:port</string>
     <string name="party_recent_servers">Senast använda servrar</string>
@@ -1877,7 +1877,7 @@
     <string name="party_your_name">Ditt namn i rummet</string>
     <string name="party_server_public">En publik server som drivs av %1$s, inte av Kaeri.</string>
     <string name="party_server_suggest">Ingen egen server? %1$s är en publik server, driven av %2$s.</string>
-    <string name="party_server_invited">En server som personen som bjöd in dig valde. Kaeri driver den inte.</string>
+    <string name="party_server_invited">Personen som bjöd in dig valde den här servern. Kaeri driver den inte.</string>
     <string name="party_server_shape">Skriv servern som en värd och en port, till exempel party.example:8999.</string>
     <string name="party_privacy">Servern ser ditt namn, rummet och när någon spelar, pausar eller spolar. Var och en spelar avsnittet från sina egna källor.</string>
     <string name="party_room_hint">Den som känner till rummets namn kan gå med i det. Inbjudningslänken innehåller det, så ingen behöver läsa upp det.</string>
@@ -1949,7 +1949,7 @@
     <string name="together_open_player">Öppna spelaren</string>
     <string name="together_recent">Senaste rum</string>
     <string name="together_recent_row">Avsnitt %1$s · med %2$s · %3$s</string>
-    <string name="together_recent_empty">Rum du går med i visas här, de tio senaste.</string>
+    <string name="together_recent_empty">De tio senaste rummen du går med i visas här.</string>
     <string name="together_rejoin">Gå med igen</string>
     <string name="together_forget_room">Ta bort från senaste rum</string>
     <plurals name="together_someone_here">
@@ -2055,7 +2055,7 @@
     <string name="party_chat_hidden_line">Dölj chatt är på i Inställningar, under Uppspelning.</string>
     <string name="party_chat_show">Visa chatten</string>
     <string name="settings_hide_chat">Dölj chatten i watch partyn</string>
-    <string name="settings_hide_chat_line">Rader, reaktioner och deras markeringar i sökfältet hålls borta från videon, och fältet försvinner. Personlistan visar fortfarande vem som är i rummet.</string>
+    <string name="settings_hide_chat_line">Chattrader, reaktioner och deras markeringar på tidslinjen hålls borta från videon, och chattfältet försvinner. Personlistan visar fortfarande vem som är i rummet.</string>
     <string name="party_mute">Tysta %1$s</string>
     <string name="party_unmute">Avtysta %1$s</string>
     <string name="party_unmute_short">Avtysta</string>
@@ -2269,8 +2269,8 @@
     <string name="player_load_subtitle_file">Läs in undertextfil…</string>
     <string name="player_load_audio_file">Läs in ljudfil…</string>
     <string name="player_file_picker_failed">Det gick inte att öppna filväljaren. Försök igen.</string>
-    <string name="player_subtitle_file_failed">Det gick inte att läsa in undertextfilen. Kontrollera att det är en undertextfil.</string>
-    <string name="player_audio_file_failed">Det gick inte att läsa in ljudfilen. Kontrollera att det är en ljudfil.</string>
+    <string name="player_subtitle_file_failed">Det gick inte att läsa in filen som undertexter. Välj en undertextfil, till exempel .srt eller .ass.</string>
+    <string name="player_audio_file_failed">Det gick inte att läsa in filen som ljud. Välj en ljudfil, till exempel .mka eller .flac.</string>
     <string name="player_track_unnamed">Namnlöst spår</string>
     <string name="player_audio_track_n">Ljud %1$d</string>
     <string name="player_subtitle_track_n">Undertexter %1$d</string>
@@ -2346,7 +2346,7 @@
     <string name="reader_chapter_line">Kapitel %1$s</string>
     <string name="reader_divider_facts_source">%1$s · från %2$s</string>
     <string name="onboarding_read_demo">Läs demon</string>
-    <string name="onboarding_demo_books_detail">Demon innehåller en kort tecknad serie och en kort novell som upphovspersonerna delar under Creative Commons.</string>
+    <string name="onboarding_demo_books_detail">En kort tecknad serie och en kort berättelse, som upphovspersonerna delar under Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Ett kort avsnitt och en kort tecknad serie, delade av upphovspersonerna under Creative Commons.</string>
     <string name="home_demo_only_books">Bara demon är på. Lägg till en mapp, en server eller en tilläggsbutik för att läsa dina egna böcker.</string>
     <string name="home_spotlight_read">Läs</string>
@@ -2360,7 +2360,7 @@
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Demo · Läsbar nu</string>
     <string name="search_demo_only_books">Bara demon är på. Andra titlar visas när du lägger till en källa.</string>
-    <string name="reader_demo_end">Det här är slutet på demon</string>
+    <string name="reader_demo_end">Det var slutet på demon</string>
     <string name="reader_demo_end_line">För att läsa dina egna böcker, lägg till en mapp, en server eller en tilläggsbutik.</string>
     <string name="reader_demo_add_source">Lägg till en källa</string>
     <string name="reader_demo_again">Tillbaka till sida 1</string>
@@ -2577,7 +2577,7 @@
     <string name="book_sources_no_match">Ingen träff</string>
     <string name="book_sources_keep">Behåll omatchade</string>
     <string name="book_sources_find">Hitta</string>
-    <string name="book_sources_unmatched_note">Omatchade serier läses fortfarande från mappen. De har inget förlopp hos någon tracker förrän de matchats.</string>
+    <string name="book_sources_unmatched_note">Du kan fortfarande läsa omatchade serier från mappen. De får inget förlopp hos någon tracker förrän de matchats.</string>
     <string name="library_scope_label">Serier eller Läsning</string>
     <string name="library_scope_shows">Serier</string>
     <string name="library_scope_reading">Läsning</string>
@@ -2639,9 +2639,9 @@
     <string name="onboarding_lists_line_read">Kaeri håller ditt läsande i synk med %1$s.</string>
     <string name="onboarding_lists_line_both">Kaeri håller ditt läsande och tittande i synk med %1$s.</string>
     <string name="onboarding_lists_anilist_line">Listor, förlopp och förslag</string>
-    <string name="onboarding_lists_later_watch">MyAnimeList, Kitsu, Simkl och Trakt kan läggas till senare i Inställningar, under Konton.</string>
-    <string name="onboarding_lists_later_read">MyAnimeList, Kitsu och MangaUpdates kan läggas till senare i Inställningar, under Konton.</string>
-    <string name="onboarding_lists_later_both">MyAnimeList, Kitsu, MangaUpdates, Simkl och Trakt kan läggas till senare i Inställningar, under Konton.</string>
+    <string name="onboarding_lists_later_watch">Du kan lägga till MyAnimeList, Kitsu, Simkl och Trakt senare i Inställningar, under Konton.</string>
+    <string name="onboarding_lists_later_read">Du kan lägga till MyAnimeList, Kitsu och MangaUpdates senare i Inställningar, under Konton.</string>
+    <string name="onboarding_lists_later_both">Du kan lägga till MyAnimeList, Kitsu, MangaUpdates, Simkl och Trakt senare i Inställningar, under Konton.</string>
     <string name="onboarding_connect">Anslut %1$s</string>
     <string name="onboarding_books_title">Varifrån dina böcker kommer</string>
     <string name="onboarding_books_line">Kaeri levereras utan böcker. Lägg till det du redan har, eller gå med i en tilläggsbutik med en inbjudan från dess ägare.</string>
@@ -2725,8 +2725,8 @@
     <string name="settings_delete_after_reading_note">Kapitel med bokmärke behålls</string>
     <string name="settings_chapter_notifications_note">Serier på din Läslista</string>
     <string name="settings_downloads_finished_note">När alla kapitel som laddas ner är klara</string>
-    <string name="settings_chapter_notifications_footer">Kapitel har en egen systemkanal, så de kan tystas för sig.</string>
-    <string name="accounts_mangaupdates_credit">MangaUpdates nås via sitt öppna API.</string>
+    <string name="settings_chapter_notifications_footer">Kapitel har en egen systemkanal, så du kan tysta dem och behålla resten.</string>
+    <string name="accounts_mangaupdates_credit">Kaeri kommunicerar med MangaUpdates via dess öppna API.</string>
     <string name="accounts_username">Användarnamn</string>
     <plurals name="read_downloads_total">
         <item quantity="one">%1$d kapitel · %2$s</item>
@@ -2754,7 +2754,7 @@
     <string name="seasonal_empty_format">Inga titlar i det här formatet</string>
     <string name="seasonal_empty_format_detail">Prova alla format.</string>
     <string name="seasonal_filter_in_search">Filtrera i sök</string>
-    <string name="seasonal_filter_help">Den här säsongen i sök, där varje filter begränsar den</string>
+    <string name="seasonal_filter_help">Öppnar den här säsongen i Sök, där alla filter fungerar</string>
     <string name="sort_popularity">Popularitet</string>
     <string name="sort_score">Poäng</string>
     <string name="sort_air_day">Sändningsdag</string>
@@ -2763,13 +2763,13 @@
     <string name="sort_label">Sortera efter %1$s</string>
     <string name="search_placeholder">Sök titlar</string>
     <string name="search_clear">Rensa sökningen</string>
-    <string name="search_searching">Söker efter “%1$s”</string>
-    <string name="search_results_for">Resultat för “%1$s”</string>
+    <string name="search_searching">Söker efter ”%1$s”</string>
+    <string name="search_results_for">Resultat för ”%1$s”</string>
     <string name="search_browse">Bläddra</string>
-    <string name="search_nothing_found">Inget hittades för “%1$s”</string>
+    <string name="search_nothing_found">Inget hittades för ”%1$s”</string>
     <string name="search_nothing_found_detail">Kontrollera stavningen, eller prova den engelska eller japanska titeln.</string>
     <string name="search_nothing_with_filters">Inget hittades med de här filtren</string>
-    <string name="search_nothing_found_with_filters">Inget hittades för “%1$s” med de här filtren</string>
+    <string name="search_nothing_found_with_filters">Inget hittades för ”%1$s” med de här filtren</string>
     <string name="search_try_fewer_filters">Prova färre filter.</string>
     <string name="search_clear_filters">Rensa filter</string>
     <string name="search_failed">Det gick inte att söka</string>
@@ -2801,7 +2801,7 @@
     <string name="filter_released">Utgivning</string>
     <string name="filter_where_to_watch">Var du kan titta</string>
     <string name="filter_licensed_only">Endast licensierade</string>
-    <string name="filter_my_list">Titlar på min lista</string>
+    <string name="filter_my_list">Titlar på din lista</string>
     <string name="filter_show">Visa</string>
     <string name="filter_hide">Dölj</string>
     <string name="filter_only">Endast</string>
@@ -2980,7 +2980,7 @@
     <string name="servers_kind_films">Filmer</string>
     <string name="servers_error_certificate">%1$s använder ett certifikat som den här enheten inte litar på. Använd en https://-adress med ett certifikat den litar på.</string>
     <string name="servers_row_signed_out_here">Utloggad</string>
-    <string name="servers_sign_out_line">Avslutar den här enhetens inloggning på servern. Servern och dina nedladdningar förblir som de är.</string>
+    <string name="servers_sign_out_line">Utloggning avslutar den här enhetens session på servern. Servern och dina nedladdningar förblir som de är.</string>
     <string name="settings_language">Språk</string>
     <string name="settings_language_app">Appspråk</string>
     <string name="language_follow_system">Följ systemspråket</string>
@@ -3088,11 +3088,11 @@
     <string name="settings_artwork_detail">Upphovsangivelser finns i appens notiser</string>
     <string name="settings_new_episodes">Nya avsnitt</string>
     <string name="settings_new_episodes_detail">Serier på din Tittlista</string>
-    <string name="settings_notify_detail">En avisering när ett avsnitt av en serie du följer kommer ut: serien och avsnittets nummer, aldrig dess namn. En serie kan stänga av sina egna i sina inställningar.</string>
+    <string name="settings_notify_detail">Du får en avisering när ett avsnitt av en serie du följer kommer ut. Den anger serien och avsnittets nummer, aldrig avsnittets titel. En serie kan stänga av sina egna aviseringar i sina inställningar.</string>
     <string name="settings_coming_up">Kommer snart · nästa 7 dagar</string>
     <string name="settings_system_notifications">Aviseringsinställningar</string>
     <string name="settings_system_notifications_detail">Ljud, vibration och låsskärmen</string>
-    <string name="settings_system_notifications_apple">Öppnar Systeminställningar, där bannerstil, ljud och märken ställs in.</string>
+    <string name="settings_system_notifications_apple">Öppnar Systeminställningar, där du ställer in bannerstil, ljud och märken.</string>
     <string name="settings_notifications_blocked">Av: systemet tillåter inte aviseringar för Kaeri</string>
     <string name="settings_notifications_show_on">På i den här seriens inställningar</string>
     <string name="settings_notify_show">När ett avsnitt av den här serien kommer ut</string>
@@ -3106,7 +3106,7 @@
     <string name="show_settings_always">Alltid</string>
     <string name="show_settings_never">Aldrig</string>
     <string name="show_settings_subs_remembered">Sparat från ditt senaste avsnitt.</string>
-    <string name="show_settings_subs_follow">Väljs i spelaren. Följer Inställningar › Uppspelning.</string>
+    <string name="show_settings_subs_follow">Väljs i spelaren. Fram till dess gäller Inställningar › Uppspelning.</string>
     <string name="show_settings_source">Källa</string>
     <string name="show_settings_source_detail">Automatiskt provar dina källor i ordning.</string>
     <string name="show_settings_reset">Återställ till standard</string>
@@ -3136,7 +3136,7 @@
     <string name="settings_upload_unlimited">Obegränsad</string>
     <string name="settings_upscaling_natural">Naturlig · ArtCNN</string>
     <string name="settings_label_hover_cards">Expandera omslag vid hovring</string>
-    <string name="settings_hover_cards_note">Visar ett större kort med trailern när du låter pekaren vila på ett omslag.</string>
+    <string name="settings_hover_cards_note">Om pekaren vilar på ett omslag öppnas ett större kort med trailern.</string>
     <string name="settings_upscaling_note_natural">Trogen linjeföring och textur, inget omritat.</string>
     <string name="settings_upscaling_note_sharp">Skarpare linjer och starkare kanter, på bekostnad av texturen.</string>
     <string name="settings_after_download">Efter varje hämtning</string>
@@ -3272,7 +3272,7 @@
     <string name="store_empty">%1$s har inga tillägg än</string>
     <string name="store_empty_line">Du är medlem, så nya tillägg visas i Tilläggsbutiker när %1$s lägger till dem.</string>
     <string name="store_err_unreachable">Det gick inte att nå %1$s</string>
-    <string name="store_err_unreachable_line">Inbjudan ser rätt ut, men ingen butik svarar. Försök igen senare, eller fråga %1$s om den är igång.</string>
+    <string name="store_err_unreachable_line">Inbjudan ser rätt ut, men butiken svarar inte. Försök igen senare, eller fråga %1$s om den är igång.</string>
     <plurals name="store_other_medium_more">
         <item quantity="one">Ett till är för tittande, vilket är avstängt på denna enhet.</item>
         <item quantity="other">%1$d till är för tittande, vilket är avstängt på denna enhet.</item>
@@ -3394,8 +3394,8 @@
     <string name="match_similarity">%1$s match</string>
     <string name="match_search_field">Sök på %1$s</string>
     <string name="match_search_another">Sök efter en annan titel</string>
-    <string name="match_searching">Söker på %1$s efter “%2$s”</string>
-    <string name="match_search_empty">Inget på %1$s för “%2$s”.</string>
+    <string name="match_searching">Söker på %1$s efter ”%2$s”</string>
+    <string name="match_search_empty">Inget på %1$s för ”%2$s”.</string>
     <string name="match_search_empty_hint">Prova färre ord, eller titeln på ett annat språk.</string>
     <string name="match_search_failed">Kunde inte söka på %1$s.</string>
     <string name="match_picking">Matchar</string>
@@ -3429,7 +3429,7 @@
     <string name="sources_demo_link_licence">Licens</string>
     <string name="sources_demo_link_commons">Wikimedia Commons</string>
     <string name="sources_demo_link_maker">OPAP-JP</string>
-    <string name="sources_demo_hosts">Når bara Wikimedia Commons: upload.wikimedia.org och commons.wikimedia.org.</string>
+    <string name="sources_demo_hosts">Demon når bara Wikimedia Commons: upload.wikimedia.org och commons.wikimedia.org.</string>
     <string name="sources_demo_private">Demon loggar aldrig in någonstans och skriver aldrig till AniList.</string>
     <string name="sources_demo_remove">Ta bort demon</string>
     <string name="sources_demo_add">Lägg till demon</string>
@@ -3464,7 +3464,7 @@
     <string name="stores_access_ended_detail">tilläggsbutikens ägare har avslutat din åtkomst. Installerade tillägg fungerar fortfarande, men ingen uppdateras.</string>
     <string name="stores_access_ended_page">Den här tilläggsbutiken släpper inte in den här enheten längre. Installerade tillägg finns kvar tills du tar bort dem.</string>
     <string name="stores_no_longer_joined">Den här tilläggsbutiken är inte längre ansluten.</string>
-    <string name="stores_offline_last_list">Offline: %1$s. De tillägg nedan är den senaste listan som kontrollerades.</string>
+    <string name="stores_offline_last_list">Offline: %1$s. Visar den senaste listan den skickade.</string>
     <string name="stores_offline_last_list_plain">Offline. Visar den senaste listan den skickade.</string>
     <string name="stores_key_line">Butiksnyckel %1$s · %2$s</string>
     <string name="stores_device_joined_as">Ansluten som %1$s</string>
@@ -3499,14 +3499,14 @@
     <string name="stores_install_label">Installera %1$s</string>
     <string name="stores_replace_label">Ersätt kopian av %1$s som lades till för hand</string>
     <string name="stores_remove_plugin_title">Ta bort %1$s?</string>
-    <string name="stores_remove_plugin_detail">Det tas bort från den här enheten. tilläggsbutiken kan installera det igen.</string>
+    <string name="stores_remove_plugin_detail">Det raderas från den här enheten. Du kan installera det igen från tilläggsbutiken.</string>
     <string name="stores_newly_contacts">Kontaktar nu</string>
     <string name="stores_update_contacts">Den här uppdateringen kontaktar också %1$s.</string>
     <string name="stores_new_in">Nytt i %1$s</string>
     <string name="stores_join_title">Gå med i en tilläggsbutik</string>
     <string name="stores_add_title">Lägg till en tilläggsbutik</string>
     <string name="stores_join_detail">Klistra in länken som tilläggsbutikens ägare skickade till dig.</string>
-    <string name="stores_join_detail_desktop">Klistra in inbjudningslänken som ägaren till en tilläggsbutik skickade till dig. Du ser vad tilläggsbutiken erbjuder innan något ansluts eller installeras.</string>
+    <string name="stores_join_detail_desktop">Klistra in inbjudningslänken som ägaren till en tilläggsbutik skickade till dig. Du ser vad tilläggsbutiken har innan du går med eller installerar något.</string>
     <string name="stores_join_detail_opened">Klistra in länken som tilläggsbutikens ägare skickade till dig. En Kaeri://-inbjudningslänk som öppnas från Meddelanden fyller i det här bladet direkt.</string>
     <string name="stores_invite_link">Inbjudningslänk</string>
     <string name="stores_invite_link_hint">https://…/join/…</string>
@@ -3520,7 +3520,7 @@
     <string name="stores_join_confirm_title">Gå med i %1$s?</string>
     <string name="stores_join_installs_nothing">Att gå med installerar inget. Du väljer vilka tillägg som ska installeras, och varje tillägg frågar efter de värdar den kontaktar.</string>
     <string name="stores_key_matches">Nyckeln %1$s stämmer med tilläggsbutiken.</string>
-    <string name="stores_anyone_note">Du ansluter utan namn. En annan enhet ansluter med samma länk.</string>
+    <string name="stores_anyone_note">Du ansluter utan namn. En annan enhet kan ansluta med samma länk.</string>
     <string name="stores_already_joined_note">Den här enheten är redan med i den här tilläggsbutiken.</string>
     <string name="stores_device_name">Enhetsnamn</string>
     <string name="stores_device_name_detail">tilläggsbutikens ägare ser den här enheten under det här namnet.</string>
@@ -3574,7 +3574,7 @@
     <string name="stores_invite_works_times_forever">Gäller %1$d gånger, tills du avbryter den.</string>
     <string name="stores_invite_works_any">Alla som har den här länken kan gå med, till och med %1$s.</string>
     <string name="stores_invite_works_any_forever">Alla som har den här länken kan gå med tills du avbryter den.</string>
-    <string name="stores_invite_once_until">Gäller en gång, för personen du skickar den till. Till och med %1$s.</string>
+    <string name="stores_invite_once_until">Gäller en gång, för personen du skickar den till, till och med %1$s.</string>
     <string name="stores_invite_once_forever">Gäller en gång, för personen du skickar den till, tills du avbryter den.</string>
     <string name="stores_invite_contact_needed">Lägg först till en kontakt för den här butik. En länk som gäller obegränsat många gånger kan skickas vidare, precis som butikens egen länk.</string>
     <string name="stores_invite_owner_once">Ägarinbjudningar gäller en gång.</string>
@@ -3623,16 +3623,16 @@
         <item quantity="other">%1$d tillägg</item>
     </plurals>
     <string name="notice_open_stores">Öppna tilläggsbutiker</string>
-    <string name="stores_what_is">En tilläggsbutik är en liten server som innehåller signerade tillägg och ger varje enhet sin egen token. Den erbjuder källor som tillägg. Kaeri driver inga tilläggsbutiker och listar inga, så du går med via en inbjudningslänk från ägaren.</string>
+    <string name="stores_what_is">En tilläggsbutik är en liten server som innehåller signerade tillägg och ger varje enhet sin egen token. Dess tillägg lägger till källor. Kaeri driver inga tilläggsbutiker och listar inga, så du går med i en via en inbjudningslänk från ägaren.</string>
     <string name="stores_what_is_link">Vad är en tilläggsbutik?</string>
     <string name="stores_invite_rules">En inbjudningslänk gäller en gång, för en person, och i sju dagar. Be tilläggsbutikens ägare om en ny om din har gått ut.</string>
     <string name="stores_qr_label">QR-kod för inbjudningslänken</string>
     <string name="stores_qr_warning">Alla som skannar den här koden kan använda inbjudan. Den gäller en gång och i sju dagar.</string>
     <string name="stores_qr_warning_device">Skanna den här med den enhet du vill länka. Den gäller en gång och i sju dagar.</string>
     <string name="stores_share">Dela…</string>
-    <string name="cloud_browser_line">Din webbläsare öppnade sidan för %1$s. Tillåt åtkomst där, så sköter Kaeri resten själv.</string>
+    <string name="cloud_browser_line">Din webbläsare öppnade sidan för %1$s. Tillåt åtkomst där, så fortsätter Kaeri av sig själv.</string>
     <string name="cloud_browser_title">Logga in på %1$s i webbläsaren</string>
-    <string name="cloud_close_carries_on">Du kan stänga det här. Kaeri fortsätter och går vidare till steget efter av sig självt när det är klart.</string>
+    <string name="cloud_close_carries_on">Du kan stänga det här. Kaeri fortsätter och öppnar följande steg av sig själv när det är klart.</string>
     <string name="device_kind_computer">datorn</string>
     <string name="devices_enter_code">Ange en kod</string>
     <string name="devices_show_key">Visa</string>
@@ -3669,7 +3669,7 @@
     <string name="sync_road_nearby">Med en enhet i närheten</string>
     <string name="sync_road_nearby_line">Parkoppla med en annan enhet på samma Wi-Fi. Inget sparas någon annanstans.</string>
     <string name="sync_road_cloud">Via en molnmapp</string>
-    <string name="sync_road_cloud_line">En molndisk du redan använder, eller din egen server. Fungerar medan dina enheter är långt ifrån varandra och håller en säkerhetskopia.</string>
+    <string name="sync_road_cloud_line">En molndisk du redan använder, eller din egen server. Den fungerar medan dina enheter är ifrån varandra och håller en säkerhetskopia.</string>
     <string name="sync_road_later">Du kan lägga till det andra sättet senare. De flesta använder båda.</string>
     <string name="devices_yours">Dina enheter</string>
     <string name="devices_only_this">Bara den här enheten</string>
@@ -3689,7 +3689,7 @@
     <string name="sync_turn_off_alert">Stänga av synk på %1$s?</string>
     <string name="sync_turn_off_alert_line">Den här %1$s slutar dela med dina andra enheter. Allt den har finns kvar här.</string>
     <string name="cloud_group">Molnmapp</string>
-    <string name="cloud_foot">Fyller på medan dina enheter är långt ifrån varandra och håller en förseglad säkerhetskopia. Bara dina enheter kan läsa den.</string>
+    <string name="cloud_foot">Mappen håller dina enheter i takt medan de är ifrån varandra och har en förseglad säkerhetskopia. Bara dina enheter kan läsa den.</string>
     <string name="cloud_add">Lägg till en molnmapp</string>
     <string name="cloud_pick_title">Välj en molnmapp</string>
     <string name="cloud_google_line">En dold mapp för Kaeri i din Drive</string>
@@ -3805,7 +3805,7 @@
     <string name="profiles_delete_alert_line">Historiken och inloggningarna för %1$s tas bort från den här enheten. Enheter som synkar med %1$s behåller sina.</string>
     <string name="profiles_picker">Vem tittar?</string>
     <string name="profiles_ask_at_launch">Fråga vem som tittar vid start</string>
-    <string name="profiles_ask_foot">Av som standard. För en iPad som hushållet delar. Kontoraden byter profil när som helst.</string>
+    <string name="profiles_ask_foot">Av som standard. Slå på det för en iPad som hela hushållet delar. Du kan byta profil från kontoraden när som helst.</string>
     <string name="profiles_switch">Byt profil</string>
     <string name="profiles_manage">Hantera profiler</string>
     <string name="first_setup_other">Ställ in från en annan enhet</string>
@@ -4074,7 +4074,7 @@
     <string name="accounts_tokens_file">Inloggningstokens sparas i en fil på den här enheten, som bara du kan läsa.</string>
     <string name="accounts_tokens_keystore">Inloggningstokens sparas på den här enheten, låsta med en nyckel i nyckellagret.</string>
     <string name="accounts_form_title">Logga in på %1$s</string>
-    <string name="accounts_form_detail">Ditt lösenord skickas till %1$s en gång, för en token som sparas på den här enheten.</string>
+    <string name="accounts_form_detail">Ditt lösenord skickas till %1$s en gång, i utbyte mot en token som sparas på den här enheten.</string>
     <string name="accounts_user_or_email">E-post eller användarnamn</string>
     <string name="accounts_password">Lösenord</string>
     <string name="accounts_signing_in_action">Loggar in</string>
@@ -4098,7 +4098,7 @@
     <string name="accounts_keep_theirs">Behåll %1$ss</string>
     <string name="accounts_open_on">Öppna på %1$s</string>
     <string name="accounts_listed_by">Listad av %1$s</string>
-    <string name="accounts_did_not_answer">%1$s svarade inte.</string>
+    <string name="accounts_did_not_answer">%1$s svarade inte. Försök igen om en stund.</string>
     <string name="accounts_no_extras">%1$s har ännu ingen rollista, personal eller rekommendationer för titeln.</string>
     <string name="accounts_episodes_from">Avsnitt från %1$s. Lägg till en källa för att spela dem.</string>
     <string name="accounts_adds_season">%1$s lägger till titlar för en säsong när de annonseras.</string>
@@ -4219,7 +4219,7 @@
     <string name="updates_saved_replace">Version %1$s sparad i Hämtade filer. Ersätt den gamla filen, %2$s, med den för att uppdatera.</string>
     <string name="updates_saved_replace_plain">Version %1$s sparad i Hämtade filer. Ersätt den gamla filen med den för att uppdatera.</string>
     <string name="updates_why_server">Nedladdningen stoppades: servern nekade den (%1$d). Försök igen senare.</string>
-    <string name="updates_why_connection">Nedladdningen stoppades: anslutningen bröts.</string>
+    <string name="updates_why_connection">Nedladdningen stoppades: anslutningen bröts. Försök igen.</string>
     <string name="updates_why_save">Nedladdningen kunde inte sparas: %1$s</string>
     <string name="updates_why_size">Nedladdningen är %1$s, inte de %2$s som anges för den här versionen.</string>
     <string name="updates_why_checksum">Nedladdningen stämmer inte med kontrollsumman för den här versionen.</string>

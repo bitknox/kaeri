@@ -89,7 +89,7 @@ home-end-signed-out = Sign in to AniList to bring in your list and Planning.
 home-sign-in = Sign in to AniList
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Add a { -source } to play from Home. { -plugin-store-cap-pl } has some to choose from.
+home-end-no-sources = Add a { -source } to play from Home. { -plugin-cap-pl } come from { -plugin-store-cap-pl }.
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 # @max 36

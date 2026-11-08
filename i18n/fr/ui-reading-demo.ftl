@@ -1,5 +1,5 @@
 onboarding-read-demo = Lire la démo
-onboarding-demo-books-detail = La démo propose une courte bande dessinée et une courte nouvelle que leurs auteurs partagent sous Creative Commons.
+onboarding-demo-books-detail = Une courte bande dessinée et une courte nouvelle, partagées par leurs auteurs sous Creative Commons.
 onboarding-demo-both-detail = Un court épisode et une courte bande dessinée, partagés par leurs auteurs sous Creative Commons.
 home-demo-only-books = Seule la démo est active. Ajoutez un dossier, un serveur ou une { -plugin-store } pour lire vos propres livres.
 home-spotlight-read = Lire

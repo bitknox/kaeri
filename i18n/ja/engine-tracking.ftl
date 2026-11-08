@@ -7,8 +7,8 @@ notice-sign-in-failed = { $tracker }にサインインできませんでした�
 notice-sign-in-stopped = { $tracker }へのサインインが完了する前に中断されました。もう一度試してください。{ $reason }
 notice-token-exchange-failed = { $tracker }からトークンを取得できませんでした。もう一度サインインしてください。{ $reason }
 notice-browser-not-opened = サインイン用のブラウザを開けませんでした。ブラウザがインストールされているか確認して、もう一度試してください。{ $reason }
-notice-sign-in-not-waiting = 待機中の{ $tracker }のサインインはありません。サインインを最初からやり直してください。
-notice-sign-in-wrong-request = { $tracker }から戻ったサインイン情報が、今回の要求のものではありません。サインインを最初からやり直してください。
+notice-sign-in-not-waiting = { $tracker }からサインインの応答が届きましたが、待機中のサインインはありません。サインインを最初からやり直してください。
+notice-sign-in-wrong-request = { $tracker }からのサインインの応答が、要求と一致しません。サインインを最初からやり直してください。
 notice-sign-in-no-token = { $tracker }へのサインインがトークンなしで戻ってきました。もう一度試してください。
 notice-mal-client-missing-build = MyAnimeListへのサインインを完了できませんでした。このビルドにはMyAnimeList用のクライアントが含まれていません。
 notice-kitsu-signs-in-on-accounts = Kitsuへのサインインは、アカウント画面から行います。
@@ -42,5 +42,5 @@ notice-episodes-aired = { $count ->
  }
 notice-update-available = { $tag }が公開されました。kaeri --updateを実行するとインストールできます。
 cause-proxy-needs-address = プロキシにはホストとポートが必要です。
-cause-proxy-address-unusable = プロキシのアドレスは、確認に使えないアドレスです。
+cause-proxy-address-unusable = プロキシの確認では、このアドレスを使えません。
 cause-server-unreachable = サーバーに接続できませんでした。

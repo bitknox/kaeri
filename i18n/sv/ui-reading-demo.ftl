@@ -1,5 +1,5 @@
 onboarding-read-demo = Läs demon
-onboarding-demo-books-detail = Demon innehåller en kort tecknad serie och en kort novell som upphovspersonerna delar under Creative Commons.
+onboarding-demo-books-detail = En kort tecknad serie och en kort berättelse, som upphovspersonerna delar under Creative Commons.
 onboarding-demo-both-detail = Ett kort avsnitt och en kort tecknad serie, delade av upphovspersonerna under Creative Commons.
 home-demo-only-books = Bara demon är på. Lägg till en mapp, en server eller en { -plugin-store } för att läsa dina egna böcker.
 home-spotlight-read = Läs
@@ -13,7 +13,7 @@ demo-credit-cover = Omslag: ”{ $title }” av { $artist }, { $year }. Allmän 
 reader-demo-credit = { $title } · { $author } · { $licence }
 search-demo-reads = Demo · Läsbar nu
 search-demo-only-books = Bara demon är på. Andra titlar visas när du lägger till en { -source }.
-reader-demo-end = Det här är slutet på demon
+reader-demo-end = Det var slutet på demon
 reader-demo-end-line = För att läsa dina egna böcker, lägg till en mapp, en server eller en { -plugin-store }.
 reader-demo-add-source = Lägg till en { -source }
 reader-demo-again = Tillbaka till sida 1

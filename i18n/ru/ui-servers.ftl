@@ -79,4 +79,4 @@ servers-needs-look = Не сопоставлено с AniList: { $count }
 servers-kind-films = Фильмы
 servers-error-certificate = { $host } использует сертификат, которому это { -device } не доверяет. Используйте адрес https:// с сертификатом, которому оно доверяет.
 servers-row-signed-out-here = Вход не выполнен
-servers-sign-out-line = Завершает вход в приложении на сервере. Сам сервер и ваши загрузки остаются как есть.
+servers-sign-out-line = Выход завершает сеанс, который это { -device } открыло на сервере. Сам сервер и ваши загрузки остаются как есть.

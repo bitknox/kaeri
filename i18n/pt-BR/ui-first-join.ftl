@@ -1,6 +1,6 @@
 first-other-title = Você já usa o { -app-name } em outro { -device }?
-first-other-line = Se você parear com ele, este { -device } recebe suas { -source-pl }, seus { -tracker-pl } e seu histórico. Os passos seguintes já ficam resolvidos.
-first-other-pair-line = Mostra um código para digitar nesse { -device }. Os dois precisam estar na mesma rede Wi-Fi.
+first-other-line = Pareie com ele e este { -device } recebe suas { -source-pl }, seus { -tracker-pl } e seu histórico, e o resto da configuração é feito para você.
+first-other-pair-line = Você recebe um código para digitar nesse { -device }. Os dois precisam estar na mesma rede Wi-Fi.
 first-other-restore = Restaurar de uma pasta na nuvem
 first-other-restore-line = Usa a chave de recuperação que você salvou
 first-other-no = Não, começar aqui

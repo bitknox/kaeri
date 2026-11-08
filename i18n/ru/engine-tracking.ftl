@@ -7,8 +7,8 @@ notice-sign-in-failed = Не удалось войти в { $tracker }. Попр
 notice-sign-in-stopped = Вход в { $tracker } остановился до завершения. Попробуйте ещё раз. { $reason }
 notice-token-exchange-failed = Не удалось получить токен от { $tracker }. Попробуйте войти снова. { $reason }
 notice-browser-not-opened = Не удалось открыть браузер для входа. Проверьте, что он установлен, и попробуйте ещё раз. { $reason }
-notice-sign-in-not-waiting = Вход в { $tracker } сейчас не ожидает ответа. Начните вход заново.
-notice-sign-in-wrong-request = Вход в { $tracker } не вернулся с этого запроса. Начните вход заново.
+notice-sign-in-not-waiting = Пришёл ответ на вход из { $tracker }, но никакой вход его не ждал. Начните вход заново.
+notice-sign-in-wrong-request = Ответ на вход из { $tracker } не совпадает с запросом. Начните вход заново.
 notice-sign-in-no-token = Вход в { $tracker } вернулся без токена. Попробуйте ещё раз.
 notice-mal-client-missing-build = Не удалось завершить вход в MyAnimeList: в этой сборке нет клиента для него.
 notice-kitsu-signs-in-on-accounts = Kitsu входит через экран «Аккаунты».
@@ -48,5 +48,5 @@ notice-episodes-aired = { $count ->
  }
 notice-update-available = Вышла версия { $tag }. Чтобы установить её, выполните kaeri --update.
 cause-proxy-needs-address = Для прокси нужны хост и порт.
-cause-proxy-address-unusable = Адрес прокси не подходит для проверки.
+cause-proxy-address-unusable = Проверка прокси не может использовать этот адрес.
 cause-server-unreachable = Не удалось связаться с сервером.

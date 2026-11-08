@@ -4,7 +4,7 @@ downloads-column-title = Başlık
 downloads-column-state = Durum
 downloads-column-progress = İlerleme
 downloads-empty-heading = Kuyrukta bir şey yok
-downloads-empty-hint = Çevrimdışı izlemek için bir başlık ya da bölümde { $key } tuşuna basın.
+downloads-empty-hint = İndirmek için bir başlık ya da bölümde { $key } tuşuna basın.
 downloads-row-episode = B{ $episode }
 downloads-row-episode-ahead = B{ $episode } · önden
 downloads-note-sizes = { $downloaded } / { $total }
@@ -68,10 +68,10 @@ accounts-row-queued = { $count ->
     [one] { $count } değişiklik bekliyor
    *[other] { $count } değişiklik bekliyor
  }
-accounts-row-queued-held = { $queued } değişiklik bekliyor, { $held } tanesi kimlik eşleştirmesi bekliyor
-accounts-conflict-keep-mine = Bende kalsın
-accounts-conflict-keep-theirs = Onlarınkini tut
-accounts-conflict-row = { $title }  ·  { $field }: bende { $local } / onlarda { $remote }
+accounts-row-queued-held = { $queued } sırada, { $held } tanesi eşleşme bekliyor
+accounts-conflict-keep-mine = Yerel kalsın
+accounts-conflict-keep-theirs = Uzaktaki kalsın
+accounts-conflict-row = { $title }  ·  { $field }: yerel { $local } / { -tracker } { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Başlıkları yalnızca { -continue-cap } listesinden gizleyebilirsiniz.
 lists-continue-removed = { $title } { -continue-cap } listesinden gizlendi. Yeniden izlediğinizde geri gelir.
@@ -82,7 +82,7 @@ lists-loading = Yükleniyor…
 lists-empty-press-enter = Aramak için ↵ tuşuna basın
 lists-empty-type-to-search = Aramak için yazın
 lists-empty-browse-filtered = Bu filtrelerle göz atmak için ↵ tuşuna basın.
-lists-empty-browse-popular = En popülerlere göz atmak için ↵ tuşuna basın.
+lists-empty-browse-popular = En popüler başlıklara göz atmak için ↵ tuşuna basın.
 lists-empty-no-matches = Eşleşme yok
 lists-empty-fewer-filters = Daha az filtre deneyin.
 lists-empty-shorter-query = Daha kısa bir sorgu ya da romaji başlığı deneyin.

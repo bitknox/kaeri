@@ -1,5 +1,5 @@
 onboarding-read-demo = Baca demo
-onboarding-demo-books-detail = Demo berisi komik pendek dan cerita pendek yang dibagikan pembuatnya di bawah Creative Commons.
+onboarding-demo-books-detail = Satu komik pendek dan satu cerita pendek, dibagikan pembuatnya di bawah Creative Commons.
 onboarding-demo-both-detail = Satu episode pendek dan satu komik pendek, dibagikan pembuatnya di bawah Creative Commons.
 home-demo-only-books = Hanya demo yang aktif. Tambahkan folder, server, atau { -plugin-store } untuk membaca buku Anda sendiri.
 home-spotlight-read = Baca

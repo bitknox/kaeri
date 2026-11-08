@@ -20,7 +20,7 @@ book-server-err-unreachable-line = Проверьте адрес, а также 
 book-server-err-password = { $host } не принял этот пароль
 book-server-err-password-line = Введите имя пользователя и пароль, которые вы используете для { $kind } в браузере.
 book-server-err-key = { $host } не принял этот ключ
-book-server-err-key-line = Ключ меняется при сбросе в Kavita. Скопируйте ссылку OPDS заново в настройках своей учётной записи там.
+book-server-err-key-line = Ключ меняется, когда его сбрасывают в Kavita. Снова скопируйте ссылку OPDS из настроек своей учётной записи там.
 book-server-empty = { $host } не показывает для этой учётной записи ни одной серии
 book-server-empty-line = Вход выполнен, но сервер может ещё сканировать библиотеки, или у этой учётной записи нет доступа к его книгам.
 book-server-empty-recheck = Вы можете добавить его сейчас. { -app-name } проверяет снова каждые 30 минут.
@@ -36,7 +36,7 @@ book-folder-unsupported = { $count ->
     [one] { $count } файл, который { -app-name } не может открыть
     [few] { $count } файла, которые { -app-name } не может открыть
     [many] { $count } файлов, которые { -app-name } не может открыть
-   *[other] { $count } файлов, которые { -app-name } не может открыть
+   *[other] { $count } файла, которые { -app-name } не может открыть
  }
 book-folder-unsupported-line = { $kinds }. Они остаются в папке как есть.
 book-folder-drm = Файлов EPUB с защитой DRM: { $count }
@@ -46,10 +46,10 @@ book-folder-add = Добавить папку
 book-folder-change = Изменить
 book-folder-empty = В папке { $folder } нет ничего, что { -app-name } может открыть
 book-folder-empty-line = { $files ->
-    [one] В ней { $files } файл, и он не CBZ, CBR, EPUB, PDF и не изображение.
+    [one] В ней { $files } файл, и это не CBZ, CBR, EPUB, PDF и не изображение.
     [few] В ней { $files } файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
     [many] В ней { $files } файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
-   *[other] В ней { $files } файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
+   *[other] В ней { $files } файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
  }
 book-folder-choose-other = Выбрать другую папку
 store-join-title = Подключение: { -plugin-store }
@@ -67,16 +67,16 @@ store-install = Установить
 store-installed-row = Установлено
 store-install-all-reading = Установить всё для чтения
 store-installed = { $count ->
-    [one] Установлен { $count } { -plugin }. Он в списке «Ваши { -source-pl }».
-    [few] Установлено, { -plugin-pl }: { $count }. Они в списке «Ваши { -source-pl }».
-    [many] Установлено, { -plugin-pl }: { $count }. Они в списке «Ваши { -source-pl }».
-   *[other] Установлено, { -plugin-pl }: { $count }. Они в списке «Ваши { -source-pl }».
+    [one] Установлен { $count } { -plugin }. Он в разделе «Ваши { -source-pl }».
+    [few] Установлено, { -plugin-pl }: { $count }. Они в разделе «Ваши { -source-pl }».
+    [many] Установлено, { -plugin-pl }: { $count }. Они в разделе «Ваши { -source-pl }».
+   *[other] Установлено, { -plugin-pl }: { $count }. Они в разделе «Ваши { -source-pl }».
  }
 store-other-medium = Каждый { -plugin } в { $store } предназначен для просмотра
 store-other-medium-line = Это { -device }: просмотр выключен, поэтому ни один из них не показан в списке «Ваши { -source-pl }».
 store-turn-on-watching = Включить просмотр
 store-empty = { $store }: { -plugin-pl } пока нет
-store-empty-line = Вы участник, поэтому, когда { $owner } добавит новые { -plugin-pl }, они появятся в разделе «{ -plugin-store-cap-pl }».
+store-empty-line = Вы участник, поэтому новые { -plugin-pl } появятся в разделе «{ -plugin-store-cap-pl }», когда { $owner } их добавит.
 store-err-unreachable = Не удалось подключиться к { $host }
 store-err-unreachable-line = Приглашение выглядит верным, но { -store } не отвечает. Повторите попытку позже или спросите у { $owner }, работает ли он.
 store-other-medium-more = { $count ->
@@ -86,12 +86,12 @@ store-other-medium-more = { $count ->
    *[other] Ещё { $count } для просмотра. Это { -device }: просмотр выключен.
  }
 store-tv-reading-only = { $count ->
-    [one] Ещё { $count } для чтения, а телевизор этого не умеет.
-    [few] Ещё { $count } для чтения, а телевизор этого не умеет.
-    [many] Ещё { $count } для чтения, а телевизор этого не умеет.
-   *[other] Ещё { $count } для чтения, а телевизор этого не умеет.
+    [one] Ещё { $count } предназначен для чтения, а на этом телевизоре чтения нет.
+    [few] Ещё { $count } предназначены для чтения, а на этом телевизоре чтения нет.
+    [many] Ещё { $count } предназначены для чтения, а на этом телевизоре чтения нет.
+   *[other] Ещё { $count } предназначены для чтения, а на этом телевизоре чтения нет.
  }
-store-tv-all-reading = Каждый { -plugin } в { $store } предназначен для чтения, а телевизор этого не умеет.
+store-tv-all-reading = Все { -plugin-pl } в { $store } предназначены для чтения, а на этом телевизоре чтения нет.
 store-plugin-row = Версия { $version } · может обращаться к { $hosts }
 source-added = Добавлено: { $name } · серий: { $series }
 source-added-plugins = { $count ->

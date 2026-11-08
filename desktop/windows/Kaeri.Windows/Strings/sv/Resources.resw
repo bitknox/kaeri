@@ -63,7 +63,7 @@
     <value>En annan enhet startade något på {name}, så castingen avbröts.</value>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>Den här enheten är inte på samma nätverk som {name} eller når den via ett VPN. Casting kräver att båda är på samma nätverk.</value>
+    <value>Den här enheten är inte på samma nätverk som {name}, eller når det via ett VPN. Anslut båda till samma nätverk för att casta.</value>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Tappade kontakten med {name}, så castingen avbröts.</value>
@@ -375,7 +375,7 @@
     <value>Matchningen höll inte. Den källa kan ha ändrats. Försök välja den igen.</value>
   </data>
   <data name="NoticeSourceSearchEmpty" xml:space="preserve">
-    <value>Inget hittades för “{query}”. Prova en annan sökning.</value>
+    <value>Inget hittades för ”{query}”. Prova en annan sökning.</value>
   </data>
   <data name="MatchRuledOutFormat" xml:space="preserve">
     <value>Annat format</value>
@@ -393,7 +393,7 @@
     <value>Den är inte påslagen.</value>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>{source} används för den här titeln.</value>
+    <value>Den här titeln spelas nu från {source}.</value>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
     <value>Tillbaka till automatiskt val av källa.</value>
@@ -573,13 +573,13 @@
     <value>Flyttade till kapitel {chapter}, sida {page}, där {device} slutade</value>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>Höger till vänster, upptäckt</value>
+    <value>Verkar vara höger till vänster</value>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>Vänster till höger, upptäckt</value>
+    <value>Verkar vara vänster till höger</value>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>Lång remsa, upptäckt</value>
+    <value>Verkar vara en lång remsa</value>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
     <value>Du är offline. Nedladdade kapitel går fortfarande att öppna.</value>
@@ -1128,7 +1128,7 @@
     <value>Servern för {store} är äldre och kan inte släppa in någon med en länk. Uppdatera den först.</value>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>{name} är av. Den hoppas över när avsnitt söks.</value>
+    <value>{name} är av. Kaeri hoppar över den när avsnitt söks.</value>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
     <value>{name} är på.</value>
@@ -1137,7 +1137,7 @@
     <value>{id} är inte inläst. Kontrollera att den är installerad under Källor.</value>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>{name} används för den här titeln.</value>
+    <value>Den här titeln använder nu {name}.</value>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Det gick inte att spara valet. {reason}</value>
@@ -1227,10 +1227,10 @@
     <value>Det gick inte att öppna en webbläsare för inloggningen. Kontrollera att en är installerad och försök igen. {reason}</value>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>Ingen inloggning till {tracker} väntar på det. Starta inloggningen igen.</value>
+    <value>Ett inloggningssvar från {tracker} kom, men ingen inloggning väntade på det. Starta inloggningen igen.</value>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>Inloggningen till {tracker} kom inte tillbaka från den här begäran. Starta inloggningen igen.</value>
+    <value>Inloggningssvaret från {tracker} stämmer inte med begäran. Starta inloggningen igen.</value>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
     <value>Inloggningen till {tracker} kom tillbaka utan token. Försök igen.</value>
@@ -1326,7 +1326,7 @@
     <value>En proxy behöver en värd och en port.</value>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>Proxyns adress kan inte användas för en kontroll.</value>
+    <value>Proxykontrollen kan inte använda den här adressen.</value>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Det gick inte att nå servern.</value>
@@ -1350,7 +1350,7 @@
     <value>Något gick fel i Kaeri. Appen fortsatte, men om en skärm verkar fast avslutar du och öppnar den igen.</value>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>Databasen var skadad, så Kaeri startade en ny. Den gamla filen sparas på {path}. Dina trackers hämtar tillbaka det de har när synken körs igen.</value>
+    <value>Databasen var skadad, så Kaeri startade en ny. Den gamla filen sparas på {path}. Det dina trackers har kommer tillbaka när synken körs igen.</value>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
     <value>Kaeri kunde inte skapa mappen {path}. Kontrollera att disken har plats och att mappen går att skriva i, och försök igen. {reason}</value>
@@ -1365,7 +1365,7 @@
     <value>Kaeri kunde inte öppna sin databas på {path}. Om en annan app från Kaeri är öppen i den här mappen avslutar du den och försöker igen. {reason}</value>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Kaeri kunde inte skapa sin nätverksanslutning med nätverksinställningarna i config.toml. {reason}</value>
+    <value>Kaeri kunde inte ansluta med nätverksinställningarna i config.toml. Kontrollera dem och försök igen. {reason}</value>
   </data>
   <data name="StartFailed" xml:space="preserve">
     <value>Kaeri kunde inte starta. Avsluta och öppna den igen. {reason}</value>
@@ -1398,10 +1398,10 @@
     <value>Planerar är tom.</value>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>Offline. Slumpval från sökningen kräver AniList.</value>
+    <value>Du är offline. Överraska mig behöver AniList för att välja en titel.</value>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>Det gick inte att välja en titel just nu. Försök igen om en stund.</value>
+    <value>Det gick inte att nå AniList för att välja en titel. Försök igen om en stund.</value>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Fortsätt titta</value>
@@ -1635,7 +1635,7 @@
     <value>Med fortsatt nedladdning ligger Kaeri kvar i aviseringsområdet tills de är klara.</value>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>Omslaget, en förloppsindikator och en länk till titeln på {tracker}. Kräver att titeln visas.</value>
+    <value>Omslaget, en förloppsindikator och en länk till serien på {tracker}. Det fungerar bara medan titeln visas.</value>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
     <value>En annan TV</value>
@@ -1749,7 +1749,7 @@
     <value>De visas under Chromecast i Spela på TV. Den här datorn skickar avsnittet till dem.</value>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Låter en TV med inbyggd Chromecast spela torrents. Den här datorn skickar avsnittet så länge det spelas.</value>
+    <value>Då kan en TV med inbyggd Chromecast spela torrents. Den här datorn skickar avsnittet så länge det spelas.</value>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
     <value>Starta om</value>
@@ -1767,7 +1767,7 @@
     <value>Sök i inställningar</value>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>Högre tar den bästa versionen som en källa erbjuder, och tar mer plats.</value>
+    <value>Högre väljer den bästa versionen som en källa har. Det tar mer plats.</value>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
     <value>Undertexterna följer med avsnittet vart filen än hamnar.</value>
@@ -1776,7 +1776,7 @@
     <value>En nedladdning som fortsätter dela ligger kvar i Kaeris cache, inte i nedladdningsmappen.</value>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>Läser kommentarerna i AniLists forumtråd för avsnitt du har sett.</value>
+    <value>Kommentarerna kommer från AniLists forumtråd när du har sett avsnittet.</value>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
     <value>Varje bild laddas från sajten som lagrar den, som ser din IP-adress.</value>
@@ -1917,7 +1917,7 @@
     <value>Kaeri slutade fungera</value>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>Den del av appen som gör jobbet har stoppat. Öppna Kaeri igen för att fortsätta.</value>
+    <value>Nedladdningar och synk stannade också. Öppna Kaeri igen för att fortsätta.</value>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
     <value>Öppna igen</value>
@@ -2022,7 +2022,7 @@
     <value>{name} på</value>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>Det slutar användas för avsnitt. Du kan installera det igen från sin tilläggsbutik.</value>
+    <value>Kaeri provar det inte längre för avsnitt. Du kan installera det igen från dess tilläggsbutik.</value>
   </data>
   <data name="StoresUpdatesCount_one" xml:space="preserve">
     <value>En att uppdatera</value>
@@ -2217,13 +2217,13 @@
     <value>Spara kraschrapporter på den här enheten</value>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>När det här är på sparar Kaeri en kort logg över varje krasch på den här enheten, utan titlar, adresser och namn, så att du kan lägga till den i Rapportera ett fel. Inget skickas av sig självt.</value>
+    <value>Kaeri sparar en kort logg över varje krasch på den här enheten för Rapportera ett fel, utan titlar, adresser och namn. Inget skickas av sig självt.</value>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
     <value>Fråga efter en krasch</value>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>Visar en notis vid starten efter en krasch, med Rapportera…</value>
+    <value>Kaeri visar en notis med Rapportera… när den öppnas igen.</value>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
     <value>Sparat av {system}</value>
@@ -2253,7 +2253,7 @@
     <value>Ta bort alla</value>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>Kraschrapporter stannar på den här enheten. Kaeri skickar inget av sig självt. En rapport lämnar enheten först när du öppnar den på GitHub från Rapportera ett fel. Rapporter tas bort efter 30 dagar.</value>
+    <value>Kraschrapporter stannar på den här enheten, och Kaeri skickar inget av sig självt. En rapport skickas bara när du öppnar den på GitHub från Rapportera ett fel. Rapporter tas bort efter 30 dagar.</value>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
     <value>Föregående vecka</value>
@@ -2379,13 +2379,13 @@
     <value>De visas under Chromecast i Spela på TV. Den här iPaden skickar avsnittet till dem.</value>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Låter en TV med inbyggd Chromecast spela torrents. Den här Macen skickar avsnittet så länge det spelas.</value>
+    <value>Då kan en TV med inbyggd Chromecast spela torrents. Den här Macen skickar avsnittet så länge det spelas.</value>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Låter en TV med inbyggd Chromecast spela torrents. Den här iPhonen skickar avsnittet så länge det spelas.</value>
+    <value>Då kan en TV med inbyggd Chromecast spela torrents. Den här iPhonen skickar avsnittet så länge det spelas.</value>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Låter en TV med inbyggd Chromecast spela torrents. Den här iPaden skickar avsnittet så länge det spelas.</value>
+    <value>Då kan en TV med inbyggd Chromecast spela torrents. Den här iPaden skickar avsnittet så länge det spelas.</value>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
     <value>Nästa · spelas om {seconds} s</value>
@@ -3114,7 +3114,7 @@
     <value>Ta bort nedladdningen</value>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>Den spelas bara upp igen med en anslutning, eller när du laddar ner den på nytt.</value>
+    <value>Efter det här behöver avsnittet en anslutning för att spelas, om du inte laddar ner det igen.</value>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
     <value>Ta bort sedda nedladdningar</value>
@@ -3126,7 +3126,7 @@
     <value>Delning efter visning</value>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>Sedda avsnitt delas tillbaka medan Kaeri är öppen, tills kvoten eller tidsgränsen som satts i inställningarna under Källor nås.</value>
+    <value>Sedda avsnitt delas tillbaka medan Kaeri är öppen. Delningen slutar vid den kvot eller tidsgräns du anger i Inställningar, under Källor.</value>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
     <value>När fönstret stängs med pågående nedladdningar</value>
@@ -3204,10 +3204,10 @@
     <value>Använder du redan Kaeri på en annan enhet?</value>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>Parkoppla med den, så får denna enhet dina källor, trackers och din historik. Stegen efter detta är då klara.</value>
+    <value>Parkoppla med den, så får den här enheten dina källor, trackers och din historik, och resten av konfigurationen görs åt dig.</value>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>Visar en kod att skriva in på en annan enhet. Båda behöver samma Wi-Fi.</value>
+    <value>Du får en kod att skriva in på den enheten. Båda behöver samma Wi-Fi.</value>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
     <value>Återställ från en molnmapp</value>
@@ -3246,13 +3246,13 @@
     <value>{kind} · loggar in med nyckeln från {device}, sparad i {store}</value>
   </data>
   <data name="FirstJoinFolders" xml:space="preserve">
-    <value>Mappar stannar på {device}. Lägg till egna mappar för denna enhet i Dina källor.</value>
+    <value>Mappar stannar på {device}. Lägg till den här enhetens egna mappar i Dina källor.</value>
   </data>
   <data name="FirstJoinStepsDone" xml:space="preserve">
     <value>Listor och källor är klara, så första starten slutar här. Du kan ändra dem i Inställningar.</value>
   </data>
   <data name="FirstJoinStoreRefused" xml:space="preserve">
-    <value>{store} släppte inte in denna enhet. {owner} kan skicka en inbjudan till dig.</value>
+    <value>{store} släppte inte in den här enheten. {owner} kan skicka en inbjudan till dig.</value>
   </data>
   <data name="FirstJoinSyncing" xml:space="preserve">
     <value>Synkar med {device}</value>
@@ -3321,7 +3321,7 @@
     <value>Logga in på AniList</value>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>Lägg till en källa för att spela från Hem. Tilläggsbutiker har några att välja bland.</value>
+    <value>Lägg till en källa för att spela från Hem. Tillägg kommer från Tilläggsbutiker.</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>Finns inte i dina källor</value>
@@ -3750,7 +3750,7 @@
     <value>Dina filer ligger kvar där de är.</value>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>Kunde inte fråga AniList. Det prövas igen vid en ny genomsökning.</value>
+    <value>Det gick inte att nå AniList. Ett nytt försök görs vid kommande genomsökning.</value>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
     <value>Välj matchning</value>
@@ -3783,7 +3783,7 @@
     <value>Region</value>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>Döljer länkar som AniList markerat för andra länder. De flesta länkar anger inget land, så välj även dina tjänster.</value>
+    <value>Länkar som AniList markerat för andra länder döljs. De flesta länkar anger inget land, så välj även dina tjänster.</value>
   </data>
   <data name="LicensedYours" xml:space="preserve">
     <value>Dina tjänster</value>
@@ -4227,7 +4227,7 @@
     <value>Har du en inbjudningslänk?</value>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Tillägg kommer från tilläggsbutiker. En tilläggsbutik är signerad och ger varje enhet sin egen token, så du går med via en inbjudningslänk från ägaren.</value>
+    <value>Tillägg kommer från tilläggsbutiker. Var och en är signerad och ger varje enhet sin egen token, och därför går du med via en inbjudningslänk från ägaren.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Prova direkt</value>
@@ -4269,7 +4269,7 @@
     <value>Lämnar…</value>
   </data>
   <data name="PartyReadyAction" xml:space="preserve">
-    <value>Jag är redo</value>
+    <value>Redo att titta</value>
   </data>
   <data name="PartyCopyInvite" xml:space="preserve">
     <value>Kopiera inbjudningslänk</value>
@@ -4284,7 +4284,7 @@
     <value>Inte nu</value>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>Förbereder…</value>
+    <value>Laddar förslag…</value>
   </data>
   <data name="PartyServer" xml:space="preserve">
     <value>Server</value>
@@ -4317,7 +4317,7 @@
     <value>Ingen egen server? {server} är en publik server, driven av {operator}.</value>
   </data>
   <data name="PartyServerInvited" xml:space="preserve">
-    <value>En server som personen som bjöd in dig valde. Kaeri driver den inte.</value>
+    <value>Personen som bjöd in dig valde den här servern. Kaeri driver den inte.</value>
   </data>
   <data name="PartyServerShape" xml:space="preserve">
     <value>Skriv servern som en värd och en port, till exempel party.example:8999.</value>
@@ -4527,7 +4527,7 @@
     <value>Avsnitt {episode} · med {names} · {when}</value>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>Rum du går med i visas här, de tio senaste.</value>
+    <value>De tio senaste rummen du går med i visas här.</value>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
     <value>Gå med igen</value>
@@ -4827,7 +4827,7 @@
     <value>Dölj chatten i watch partyn</value>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>Rader, reaktioner och deras markeringar i sökfältet hålls borta från videon, och fältet försvinner. Personlistan visar fortfarande vem som är i rummet.</value>
+    <value>Chattrader, reaktioner och deras markeringar på tidslinjen hålls borta från videon, och chattfältet försvinner. Personlistan visar fortfarande vem som är i rummet.</value>
   </data>
   <data name="PartyMute" xml:space="preserve">
     <value>Tysta {name}</value>
@@ -5451,10 +5451,10 @@
     <value>Det gick inte att öppna filväljaren. Försök igen.</value>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>Det gick inte att läsa in undertextfilen. Kontrollera att det är en undertextfil.</value>
+    <value>Det gick inte att läsa in filen som undertexter. Välj en undertextfil, till exempel .srt eller .ass.</value>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>Det gick inte att läsa in ljudfilen. Kontrollera att det är en ljudfil.</value>
+    <value>Det gick inte att läsa in filen som ljud. Välj en ljudfil, till exempel .mka eller .flac.</value>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
     <value>Namnlöst spår</value>
@@ -5670,7 +5670,7 @@
     <value>Läs demon</value>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>Demon innehåller en kort tecknad serie och en kort novell som upphovspersonerna delar under Creative Commons.</value>
+    <value>En kort tecknad serie och en kort berättelse, som upphovspersonerna delar under Creative Commons.</value>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
     <value>Ett kort avsnitt och en kort tecknad serie, delade av upphovspersonerna under Creative Commons.</value>
@@ -5706,7 +5706,7 @@
     <value>Bara demon är på. Andra titlar visas när du lägger till en källa.</value>
   </data>
   <data name="ReaderDemoEnd" xml:space="preserve">
-    <value>Det här är slutet på demon</value>
+    <value>Det var slutet på demon</value>
   </data>
   <data name="ReaderDemoEndLine" xml:space="preserve">
     <value>För att läsa dina egna böcker, lägg till en mapp, en server eller en tilläggsbutik.</value>
@@ -6291,7 +6291,7 @@
     <value>Hitta</value>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>Omatchade serier läses fortfarande från mappen. De har inget förlopp hos någon tracker förrän de matchats.</value>
+    <value>Du kan fortfarande läsa omatchade serier från mappen. De får inget förlopp hos någon tracker förrän de matchats.</value>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
     <value>Serier eller Läsning</value>
@@ -6453,13 +6453,13 @@
     <value>Listor, förlopp och förslag</value>
   </data>
   <data name="OnboardingListsLaterWatch" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, Simkl och Trakt kan läggas till senare i Inställningar, under Konton.</value>
+    <value>Du kan lägga till MyAnimeList, Kitsu, Simkl och Trakt senare i Inställningar, under Konton.</value>
   </data>
   <data name="OnboardingListsLaterRead" xml:space="preserve">
-    <value>MyAnimeList, Kitsu och MangaUpdates kan läggas till senare i Inställningar, under Konton.</value>
+    <value>Du kan lägga till MyAnimeList, Kitsu och MangaUpdates senare i Inställningar, under Konton.</value>
   </data>
   <data name="OnboardingListsLaterBoth" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, MangaUpdates, Simkl och Trakt kan läggas till senare i Inställningar, under Konton.</value>
+    <value>Du kan lägga till MyAnimeList, Kitsu, MangaUpdates, Simkl och Trakt senare i Inställningar, under Konton.</value>
   </data>
   <data name="OnboardingConnect" xml:space="preserve">
     <value>Anslut {tracker}</value>
@@ -6693,10 +6693,10 @@
     <value>När alla kapitel som laddas ner är klara</value>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>Kapitel har en egen systemkanal, så de kan tystas för sig.</value>
+    <value>Kapitel har en egen systemkanal, så du kan tysta dem och behålla resten.</value>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>MangaUpdates nås via sitt öppna API.</value>
+    <value>Kaeri kommunicerar med MangaUpdates via dess öppna API.</value>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
     <value>Användarnamn</value>
@@ -6762,7 +6762,7 @@
     <value>Filtrera i sök</value>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>Den här säsongen i sök, där varje filter begränsar den</value>
+    <value>Öppnar den här säsongen i Sök, där alla filter fungerar</value>
   </data>
   <data name="SortPopularity" xml:space="preserve">
     <value>Popularitet</value>
@@ -6789,16 +6789,16 @@
     <value>Rensa sökningen</value>
   </data>
   <data name="SearchSearching" xml:space="preserve">
-    <value>Söker efter “{query}”</value>
+    <value>Söker efter ”{query}”</value>
   </data>
   <data name="SearchResultsFor" xml:space="preserve">
-    <value>Resultat för “{query}”</value>
+    <value>Resultat för ”{query}”</value>
   </data>
   <data name="SearchBrowse" xml:space="preserve">
     <value>Bläddra</value>
   </data>
   <data name="SearchNothingFound" xml:space="preserve">
-    <value>Inget hittades för “{query}”</value>
+    <value>Inget hittades för ”{query}”</value>
   </data>
   <data name="SearchNothingFoundDetail" xml:space="preserve">
     <value>Kontrollera stavningen, eller prova den engelska eller japanska titeln.</value>
@@ -6807,7 +6807,7 @@
     <value>Inget hittades med de här filtren</value>
   </data>
   <data name="SearchNothingFoundWithFilters" xml:space="preserve">
-    <value>Inget hittades för “{query}” med de här filtren</value>
+    <value>Inget hittades för ”{query}” med de här filtren</value>
   </data>
   <data name="SearchTryFewerFilters" xml:space="preserve">
     <value>Prova färre filter.</value>
@@ -6903,7 +6903,7 @@
     <value>Endast licensierade</value>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>Titlar på min lista</value>
+    <value>Titlar på din lista</value>
   </data>
   <data name="FilterShow" xml:space="preserve">
     <value>Visa</value>
@@ -7398,7 +7398,7 @@
     <value>Utloggad</value>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>Avslutar den här enhetens inloggning på servern. Servern och dina nedladdningar förblir som de är.</value>
+    <value>Utloggning avslutar den här enhetens session på servern. Servern och dina nedladdningar förblir som de är.</value>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
     <value>Språk</value>
@@ -7716,7 +7716,7 @@
     <value>Serier på din Tittlista</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>En avisering när ett avsnitt av en serie du följer kommer ut: serien och avsnittets nummer, aldrig dess namn. En serie kan stänga av sina egna i sina inställningar.</value>
+    <value>Du får en avisering när ett avsnitt av en serie du följer kommer ut. Den anger serien och avsnittets nummer, aldrig avsnittets titel. En serie kan stänga av sina egna aviseringar i sina inställningar.</value>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
     <value>Kommer snart · nästa 7 dagar</value>
@@ -7728,7 +7728,7 @@
     <value>Ljud, vibration och låsskärmen</value>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>Öppnar Systeminställningar, där bannerstil, ljud och märken ställs in.</value>
+    <value>Öppnar Systeminställningar, där du ställer in bannerstil, ljud och märken.</value>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
     <value>Av: systemet tillåter inte aviseringar för Kaeri</value>
@@ -7770,7 +7770,7 @@
     <value>Sparat från ditt senaste avsnitt.</value>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>Väljs i spelaren. Följer Inställningar › Uppspelning.</value>
+    <value>Väljs i spelaren. Fram till dess gäller Inställningar › Uppspelning.</value>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
     <value>Källa</value>
@@ -7854,7 +7854,7 @@
     <value>Expandera omslag vid hovring</value>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>Visar ett större kort med trailern när du låter pekaren vila på ett omslag.</value>
+    <value>Om pekaren vilar på ett omslag öppnas ett större kort med trailern.</value>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
     <value>Trogen linjeföring och textur, inget omritat.</value>
@@ -8226,7 +8226,7 @@
     <value>Det gick inte att nå {host}</value>
   </data>
   <data name="StoreErrUnreachableLine" xml:space="preserve">
-    <value>Inbjudan ser rätt ut, men ingen butik svarar. Försök igen senare, eller fråga {owner} om den är igång.</value>
+    <value>Inbjudan ser rätt ut, men butiken svarar inte. Försök igen senare, eller fråga {owner} om den är igång.</value>
   </data>
   <data name="StoreOtherMediumMore_one" xml:space="preserve">
     <value>Ett till är för tittande, vilket är avstängt på denna enhet.</value>
@@ -8529,10 +8529,10 @@
     <value>Sök på {source}</value>
   </data>
   <data name="MatchSearching" xml:space="preserve">
-    <value>Söker på {source} efter “{query}”</value>
+    <value>Söker på {source} efter ”{query}”</value>
   </data>
   <data name="MatchSearchEmpty" xml:space="preserve">
-    <value>Inget på {source} för “{query}”.</value>
+    <value>Inget på {source} för ”{query}”.</value>
   </data>
   <data name="MatchSearchEmptyHint" xml:space="preserve">
     <value>Prova färre ord, eller titeln på ett annat språk.</value>
@@ -8634,7 +8634,7 @@
     <value>OPAP-JP</value>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>Når bara Wikimedia Commons: upload.wikimedia.org och commons.wikimedia.org.</value>
+    <value>Demon når bara Wikimedia Commons: upload.wikimedia.org och commons.wikimedia.org.</value>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
     <value>Demon loggar aldrig in någonstans och skriver aldrig till AniList.</value>
@@ -8739,7 +8739,7 @@
     <value>Den här tilläggsbutiken är inte längre ansluten.</value>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>Offline: {reason}. De tillägg nedan är den senaste listan som kontrollerades.</value>
+    <value>Offline: {reason}. Visar den senaste listan den skickade.</value>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
     <value>Offline. Visar den senaste listan den skickade.</value>
@@ -8844,7 +8844,7 @@
     <value>Ta bort {name}?</value>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>Det tas bort från den här enheten. tilläggsbutiken kan installera det igen.</value>
+    <value>Det raderas från den här enheten. Du kan installera det igen från tilläggsbutiken.</value>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
     <value>Kontaktar nu</value>
@@ -8865,7 +8865,7 @@
     <value>Klistra in länken som tilläggsbutikens ägare skickade till dig.</value>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>Klistra in inbjudningslänken som ägaren till en tilläggsbutik skickade till dig. Du ser vad tilläggsbutiken erbjuder innan något ansluts eller installeras.</value>
+    <value>Klistra in inbjudningslänken som ägaren till en tilläggsbutik skickade till dig. Du ser vad tilläggsbutiken har innan du går med eller installerar något.</value>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
     <value>Klistra in länken som tilläggsbutikens ägare skickade till dig. En Kaeri://-inbjudningslänk som öppnas från Meddelanden fyller i det här bladet direkt.</value>
@@ -8907,7 +8907,7 @@
     <value>Nyckeln {key} stämmer med tilläggsbutiken.</value>
   </data>
   <data name="StoresAnyoneNote" xml:space="preserve">
-    <value>Du ansluter utan namn. En annan enhet ansluter med samma länk.</value>
+    <value>Du ansluter utan namn. En annan enhet kan ansluta med samma länk.</value>
   </data>
   <data name="StoresAlreadyJoinedNote" xml:space="preserve">
     <value>Den här enheten är redan med i den här tilläggsbutiken.</value>
@@ -9063,7 +9063,7 @@
     <value>Alla som har den här länken kan gå med tills du avbryter den.</value>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>Gäller en gång, för personen du skickar den till. Till och med {until}.</value>
+    <value>Gäller en gång, för personen du skickar den till, till och med {until}.</value>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
     <value>Gäller en gång, för personen du skickar den till, tills du avbryter den.</value>
@@ -9186,7 +9186,7 @@
     <value>Öppna tilläggsbutiker</value>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>En tilläggsbutik är en liten server som innehåller signerade tillägg och ger varje enhet sin egen token. Den erbjuder källor som tillägg. Kaeri driver inga tilläggsbutiker och listar inga, så du går med via en inbjudningslänk från ägaren.</value>
+    <value>En tilläggsbutik är en liten server som innehåller signerade tillägg och ger varje enhet sin egen token. Dess tillägg lägger till källor. Kaeri driver inga tilläggsbutiker och listar inga, så du går med i en via en inbjudningslänk från ägaren.</value>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Vad är en tilläggsbutik?</value>
@@ -9207,13 +9207,13 @@
     <value>Dela…</value>
   </data>
   <data name="CloudBrowserLine" xml:space="preserve">
-    <value>Din webbläsare öppnade sidan för {service}. Tillåt åtkomst där, så sköter Kaeri resten själv.</value>
+    <value>Din webbläsare öppnade sidan för {service}. Tillåt åtkomst där, så fortsätter Kaeri av sig själv.</value>
   </data>
   <data name="CloudBrowserTitle" xml:space="preserve">
     <value>Logga in på {service} i webbläsaren</value>
   </data>
   <data name="CloudCloseCarriesOn" xml:space="preserve">
-    <value>Du kan stänga det här. Kaeri fortsätter och går vidare till steget efter av sig självt när det är klart.</value>
+    <value>Du kan stänga det här. Kaeri fortsätter och öppnar följande steg av sig själv när det är klart.</value>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>datorn</value>
@@ -9324,7 +9324,7 @@
     <value>Via en molnmapp</value>
   </data>
   <data name="SyncRoadCloudLine" xml:space="preserve">
-    <value>En molndisk du redan använder, eller din egen server. Fungerar medan dina enheter är långt ifrån varandra och håller en säkerhetskopia.</value>
+    <value>En molndisk du redan använder, eller din egen server. Den fungerar medan dina enheter är ifrån varandra och håller en säkerhetskopia.</value>
   </data>
   <data name="SyncRoadLater" xml:space="preserve">
     <value>Du kan lägga till det andra sättet senare. De flesta använder båda.</value>
@@ -9384,7 +9384,7 @@
     <value>Molnmapp</value>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>Fyller på medan dina enheter är långt ifrån varandra och håller en förseglad säkerhetskopia. Bara dina enheter kan läsa den.</value>
+    <value>Mappen håller dina enheter i takt medan de är ifrån varandra och har en förseglad säkerhetskopia. Bara dina enheter kan läsa den.</value>
   </data>
   <data name="CloudAdd" xml:space="preserve">
     <value>Lägg till en molnmapp</value>
@@ -9726,7 +9726,7 @@
     <value>Fråga vem som tittar vid start</value>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>Av som standard. För en iPad som hushållet delar. Kontoraden byter profil när som helst.</value>
+    <value>Av som standard. Slå på det för en iPad som hela hushållet delar. Du kan byta profil från kontoraden när som helst.</value>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
     <value>Byt profil</value>
@@ -10509,7 +10509,7 @@
     <value>Logga in på {tracker}</value>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>Ditt lösenord skickas till {tracker} en gång, för en token som sparas på den här enheten.</value>
+    <value>Ditt lösenord skickas till {tracker} en gång, i utbyte mot en token som sparas på den här enheten.</value>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
     <value>E-post eller användarnamn</value>
@@ -10581,7 +10581,7 @@
     <value>Listad av {tracker}</value>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker} svarade inte.</value>
+    <value>{tracker} svarade inte. Försök igen om en stund.</value>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
     <value>{tracker} har ännu ingen rollista, personal eller rekommendationer för titeln.</value>
@@ -10944,7 +10944,7 @@
     <value>Nedladdningen stoppades: servern nekade den ({code}). Försök igen senare.</value>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>Nedladdningen stoppades: anslutningen bröts.</value>
+    <value>Nedladdningen stoppades: anslutningen bröts. Försök igen.</value>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">
     <value>Nedladdningen kunde inte sparas: {reason}</value>

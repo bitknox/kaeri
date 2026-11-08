@@ -20,4 +20,4 @@ cast-card-stop = Yayını durdur
 cast-settings-tvs = Chromecast özellikli TV'leri göster
 cast-settings-tvs-note = Bunlar TV'de oynat ekranında Chromecast başlığı altında görünür. Bölümü bu { -device } onlara gönderir.
 cast-settings-torrents = Yayın sırasında torrentler
-cast-settings-torrents-note = Chromecast özellikli bir TV'nin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu { -device } gönderir.
+cast-settings-torrents-note = Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu { -device } gönderir.

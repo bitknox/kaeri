@@ -1,5 +1,5 @@
 onboarding-read-demo = デモを読む
-onboarding-demo-books-detail = デモでは、作者がCreative Commonsで共有している短いコミックと短い物語を読めます。
+onboarding-demo-books-detail = 短いコミックと短い物語が1つずつ。作者がCreative Commonsで共有しています。
 onboarding-demo-both-detail = 作者がCreative Commonsで共有している、短いエピソードと短いコミックが1つずつあります。
 home-demo-only-books = デモだけがオンです。自分の本を読むには、フォルダー、サーバー、または{ -plugin-store }を追加してください。
 home-spotlight-read = 読む

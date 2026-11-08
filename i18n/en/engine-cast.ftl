@@ -46,7 +46,7 @@ notice-cast-taken-over = Another { -device } started something on { $name }, so 
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
 # @arg name: text
-notice-cast-not-same-network = This { -device } isn't on the network { $name } is on, or reaches it through a VPN. Casting needs both on the same network.
+notice-cast-not-same-network = This { -device } isn't on the network { $name } is on, or reaches it through a VPN. Connect both to the same network to cast.
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 # @arg name: text

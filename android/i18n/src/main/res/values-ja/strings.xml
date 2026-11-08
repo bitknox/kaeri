@@ -11,7 +11,7 @@
     <string name="notice_cast_never_fetches">%1$sがストリームの読み込みを始めませんでした。このデバイスのVPNやファイアウォールが原因かもしれません。</string>
     <string name="notice_cast_refused">%1$sでこのストリームを再生できませんでした。別のソースをお試しください。</string>
     <string name="notice_cast_taken_over">別のデバイスが%1$sで再生を始めたため、キャストを終了しました。</string>
-    <string name="notice_cast_not_same_network">このデバイスは%1$sと同じネットワークにないか、VPN経由で接続しています。キャストには同じネットワークが必要です。</string>
+    <string name="notice_cast_not_same_network">このデバイスは%1$sと同じネットワークにないか、VPN経由で接続しています。キャストするには両方を同じネットワークに接続してください。</string>
     <string name="notice_cast_lost">%1$sとの接続が切れたため、キャストを終了しました。</string>
     <string name="notice_cast_no_device">キャスト先のテレビがネットワーク上にもうありません。</string>
     <string name="notice_cast_unavailable">このバージョンのKaeriでは、テレビへのキャストはできません。</string>
@@ -124,7 +124,7 @@
     <string name="match_ruled_out_year">年が違います</string>
     <string name="match_search_timed_out">時間内に応答がありませんでした。</string>
     <string name="match_search_source_off">オンになっていません。</string>
-    <string name="notice_source_pinned">このタイトルには%1$sを使います。</string>
+    <string name="notice_source_pinned">このタイトルは今後%1$sから再生します。</string>
     <string name="notice_source_automatic">ソースの自動選択に戻しました。</string>
     <string name="notice_source_choice_failed">その選択を保存できませんでした。%1$s</string>
     <string name="notice_no_source_could_list">どのソースもこの作品のエピソードを見つけられませんでした：%1$s</string>
@@ -190,9 +190,9 @@
     <string name="reader_back_to_page">%1$dページに戻る</string>
     <string name="reader_moved">%3$sが止まった第%1$s話の%2$dページに移動しました</string>
     <string name="reader_moved_number">%3$sが止まった第%1$s話の%2$dページに移動しました</string>
-    <string name="reader_detected_right_to_left">右から左に自動判定しました</string>
-    <string name="reader_detected_left_to_right">左から右に自動判定しました</string>
-    <string name="reader_detected_strip">縦スクロールに自動判定しました</string>
+    <string name="reader_detected_right_to_left">右から左のようです</string>
+    <string name="reader_detected_left_to_right">左から右のようです</string>
+    <string name="reader_detected_strip">縦スクロールのようです</string>
     <string name="reading_failed_offline">オフラインです。ダウンロード済みの章は開けます。</string>
     <string name="reading_failed_source_down">%1$sから応答がありません。しばらくしてからもう一度お試しください。</string>
     <string name="reading_failed_not_found">このソースにはもうありません。別のソースをお試しください。</string>
@@ -391,10 +391,10 @@
     <string name="store_admin_missing">%1$sには管理ページがありません。サーバーが古い可能性があります。</string>
     <string name="store_admin_link_foreign">%1$sから、別のアドレスを指す管理リンクが送られました。</string>
     <string name="store_open_join_unsupported">%1$sのサーバーは古く、リンクで誰でも参加できるようにはできません。先に更新してください。</string>
-    <string name="source_switched_off">%1$sをオフにしました。エピソードを探すときは飛ばされます。</string>
+    <string name="source_switched_off">%1$sをオフにしました。Kaeriはエピソードを探すときにこれを飛ばします。</string>
     <string name="source_switched_on">%1$sをオンにしました。</string>
     <string name="plugin_not_loaded">%1$sは読み込まれていません。ソースの下にインストールされているか確認してください。</string>
-    <string name="release_pinned">このタイトルには%1$sを使います。</string>
+    <string name="release_pinned">このタイトルは今後%1$sを使います。</string>
     <string name="notice_choice_not_saved">その選択を保存できませんでした。%1$s</string>
     <string name="torrent_proxy_waiting">プロキシの確認に失敗しました。確認に通ると、トレントが開始されます。</string>
     <string name="torrent_proxy_unchecked">プロキシの確認に通ると、トレントが開始されます。</string>
@@ -424,8 +424,8 @@
     <string name="notice_sign_in_stopped">%1$sへのサインインが完了する前に中断されました。もう一度試してください。%2$s</string>
     <string name="notice_token_exchange_failed">%1$sからトークンを取得できませんでした。もう一度サインインしてください。%2$s</string>
     <string name="notice_browser_not_opened">サインイン用のブラウザを開けませんでした。ブラウザがインストールされているか確認して、もう一度試してください。%1$s</string>
-    <string name="notice_sign_in_not_waiting">待機中の%1$sのサインインはありません。サインインを最初からやり直してください。</string>
-    <string name="notice_sign_in_wrong_request">%1$sから戻ったサインイン情報が、今回の要求のものではありません。サインインを最初からやり直してください。</string>
+    <string name="notice_sign_in_not_waiting">%1$sからサインインの応答が届きましたが、待機中のサインインはありません。サインインを最初からやり直してください。</string>
+    <string name="notice_sign_in_wrong_request">%1$sからのサインインの応答が、要求と一致しません。サインインを最初からやり直してください。</string>
     <string name="notice_sign_in_no_token">%1$sへのサインインがトークンなしで戻ってきました。もう一度試してください。</string>
     <string name="notice_mal_client_missing_build">MyAnimeListへのサインインを完了できませんでした。このビルドにはMyAnimeList用のクライアントが含まれていません。</string>
     <string name="notice_kitsu_signs_in_on_accounts">Kitsuへのサインインは、アカウント画面から行います。</string>
@@ -459,7 +459,7 @@
     </plurals>
     <string name="notice_update_available">%1$sが公開されました。kaeri --updateを実行するとインストールできます。</string>
     <string name="cause_proxy_needs_address">プロキシにはホストとポートが必要です。</string>
-    <string name="cause_proxy_address_unusable">プロキシのアドレスは、確認に使えないアドレスです。</string>
+    <string name="cause_proxy_address_unusable">プロキシの確認では、このアドレスを使えません。</string>
     <string name="cause_server_unreachable">サーバーに接続できませんでした。</string>
     <string name="legal_hosts_no_content">Kaeriは作品も本もホストしていません。ソースはご自身で追加します。</string>
     <string name="notice_saved">%1$sを保存しました。</string>
@@ -467,12 +467,12 @@
     <string name="notice_title_load_failed">この作品の詳細を読み込めませんでした。接続を確認して、もう一度お試しください。</string>
     <string name="notice_playback_failed">再生に失敗しました。別のソースをお試しください。</string>
     <string name="notice_engine_fault">Kaeriの内部で問題が発生しました。処理は続行されましたが、画面が止まっているように見える場合は、終了してから開き直してください。</string>
-    <string name="notice_database_set_aside">データベースが破損していたため、Kaeriは新しいデータベースを作成しました。古いファイルは%1$sに残されています。連携サービスの情報は、次回の同期で戻ります。</string>
+    <string name="notice_database_set_aside">データベースが破損していたため、Kaeriは新しいデータベースを作成しました。古いファイルは%1$sに残っています。連携サービスにある情報は、次回の同期で戻ります。</string>
     <string name="start_failed_folder">Kaeriはフォルダ %1$sを作成できませんでした。ディスクに空きがあり、フォルダに書き込めることを確認してから、もう一度お試しください。%2$s</string>
     <string name="start_failed_config">%1$sに、Kaeriでは使用できない設定があります: %2$s。修正するか削除してから、もう一度お試しください。</string>
     <string name="config_reset_failed">設定をリセットするため%1$sを移動しようとしましたが、Kaeriでは移動できませんでした。%2$s</string>
     <string name="start_failed_database">Kaeriは%1$sのデータベースを開けませんでした。同じフォルダで別のKaeriアプリが開いている場合は、終了してからもう一度お試しください。%2$s</string>
-    <string name="start_failed_network">Kaeriは、config.tomlのネットワーク設定から接続を設定できませんでした。%1$s</string>
+    <string name="start_failed_network">Kaeriは、config.tomlのネットワーク設定で接続できませんでした。設定を確認してから、もう一度お試しください。%1$s</string>
     <string name="start_failed">Kaeriを起動できませんでした。一度終了してから、開き直してください。%1$s</string>
     <string name="start_failed_remote">リモコン機能を開始できませんでした。%1$s</string>
     <string name="start_failed_player">プレーヤーを開始できませんでした。%1$s</string>
@@ -484,8 +484,8 @@
     <string name="crash_notice_tv">問題が発生したため、Kaeriを終了しました。設定の「情報」から報告できます。</string>
     <string name="notice_surprise_empty_filters">この条件に合う作品がありません。</string>
     <string name="notice_surprise_empty_planning">「計画中」リストが空です。</string>
-    <string name="notice_surprise_offline">オフラインです。検索からのおまかせにはAniListが必要です。</string>
-    <string name="notice_surprise_failed">いまは作品を選べませんでした。しばらくしてからもう一度お試しください。</string>
+    <string name="notice_surprise_offline">オフラインです。おまかせで作品を選ぶにはAniListが必要です。</string>
+    <string name="notice_surprise_failed">AniListに接続できず、作品を選べませんでした。しばらくしてからもう一度お試しください。</string>
     <string name="account_button_named">%1$s、アカウントと設定</string>
     <string name="calendar_empty_mine_ahead">今後4週間に、リストの作品の放送はありません。</string>
     <string name="calendar_floor_line">カレンダーは3か月前までです。</string>
@@ -498,7 +498,7 @@
     <string name="calendar_show_all_airing">放送中の作品をすべて表示</string>
     <string name="calendar_now_label">現在、%1$s</string>
     <string name="settings_discussions_label">エピソードのディスカッション</string>
-    <string name="settings_discussions_note">視聴済みのエピソードについて、AniListのフォーラムのコメントを読みます。</string>
+    <string name="settings_discussions_note">視聴済みのエピソードについて、AniListのフォーラムのコメントを読めます。</string>
     <string name="settings_discussion_images_label">コメントの画像を読み込む</string>
     <string name="settings_discussion_images_note">画像はそれをホストしているサイトから読み込まれ、そのサイトはIPアドレスを確認できます。</string>
     <string name="discussion_waiting">AniListの応答待ち · %1$s</string>
@@ -534,7 +534,7 @@
     <string name="cast_settings_tvs">Chromecast内蔵のテレビを表示</string>
     <string name="cast_settings_tvs_note">「テレビで再生」のChromecastの下に表示されます。このデバイスがエピソードを送信します。</string>
     <string name="cast_settings_torrents">キャスト中のトレント</string>
-    <string name="cast_settings_torrents_note">Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのデバイスがエピソードを送信します。</string>
+    <string name="cast_settings_torrents_note">これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのデバイスがエピソードを送信します。</string>
     <string name="reader_page_failed_swipe">スワイプすると、このページを飛ばして進みます。</string>
     <string name="reader_skip_page">ページを飛ばす</string>
     <string name="reader_page_of">%1$d/%2$dページ</string>
@@ -591,11 +591,11 @@
     <string name="eink_colour_body">このデバイスからは判別できませんでした。4つの四角を見てください。</string>
     <string name="eink_colour_squares">4つの四角:赤、緑、青、琥珀色</string>
     <string name="eink_colour_hint">4つとも灰色に見える場合は「グレーのみ」を選んでください。「設定」›「画面」であとから変更できます。</string>
-    <string name="eink_colour_yes">色が見える</string>
+    <string name="eink_colour_yes">はい、カラーです</string>
     <string name="eink_colour_no">グレーのみ</string>
     <string name="eink_colour_skip">スキップ</string>
-    <string name="eink_colour_skipped">スキップしました。画像はカラーのままで、グレー画面では灰色で表示されます。</string>
-    <string name="eink_page_keys_hint">ページ送りには、デバイスの設定でページボタンを「音量」にしてください。</string>
+    <string name="eink_colour_skipped">スキップしました。画像はカラーのままです。グレーの画面では灰色で表示されます。</string>
+    <string name="eink_page_keys_hint">ボタンでページをめくるには、デバイスの設定でボタンを「音量」にしてください。</string>
     <string name="eink_new">新着</string>
     <string name="reader_notice_start_over">最初から</string>
     <string name="reader_notice_go_back">戻る</string>
@@ -744,7 +744,7 @@
     <string name="tv_info_from">取得元</string>
     <string name="tv_info_state">状態</string>
     <string name="tv_store_revoked">このテレビは、もう受け入れられていません。</string>
-    <string name="tv_seeding_note">このテレビではベストエフォートです。シーディングはKaeriを開いている間だけ行われます。</string>
+    <string name="tv_seeding_note">このテレビはKaeriを開いている間だけシーディングします。</string>
     <string name="tv_sign_out_title">%1$sからサインアウトしますか？</string>
     <string name="tv_account_not_signed_in">サインインしていません</string>
     <string name="tv_account_signed_in_as">%1$sとしてサインイン中</string>
@@ -841,7 +841,7 @@
     <plurals name="settings_coming_up_switched_off">
         <item quantity="other">%1$s は、各作品の設定で通知がオフになっています。</item>
     </plurals>
-    <string name="settings_coming_up_opens">作品の設定を開きます</string>
+    <string name="settings_coming_up_opens">作品をタップすると設定が開きます。</string>
     <string name="torrents_proxy_as">%1$s として</string>
     <string name="title_facts_aired">%1$s放送</string>
     <string name="title_facts_airing">%1$sから放送中</string>
@@ -952,7 +952,7 @@
     <string name="settings_titles_note_english">AniListに登録されている英語のタイトルを表示します。英語がない場合はローマ字を表示します。</string>
     <string name="settings_titles_note_romaji">AniListに登録されている日本語のタイトルを、ローマ字で表示します。</string>
     <string name="settings_stores_with_updates">%1$d件 · %2$s</string>
-    <string name="settings_seeding_best_effort">このデバイスではベストエフォートです。シーディングはKaeriを開いている間だけ行われます。</string>
+    <string name="settings_seeding_best_effort">このデバイスはKaeriを開いている間だけシーディングします。</string>
     <plurals name="settings_downloads_count">
         <item quantity="other">%1$dエピソード</item>
     </plurals>
@@ -967,7 +967,7 @@
     <string name="settings_libraries_value">JNA、AndroidX（Apache License 2.0）</string>
     <string name="settings_report_bug_value">ブラウザでGitHubを開きます</string>
     <string name="downloads_storage_share_description">ダウンロードが %1$s を使用しています</string>
-    <string name="settings_aside_notifications">フォローしている作品に新しいエピソードが公開されると、通知が1件届きます。通知には作品名と話数が含まれ、エピソードのタイトルは含まれません。作品ごとの設定で通知をオフにできます。</string>
+    <string name="settings_aside_notifications">フォローしている作品に新しいエピソードが公開されると、通知が1件届きます。通知には作品名と話数が含まれ、エピソードのタイトルは含まれません。作品ごとの通知は、その作品の設定でオフにできます。</string>
     <string name="settings_aside_downloads">ダウンロードは、このデバイスのKaeri専用の領域に保存され、他のアプリからは読み取れません。アプリを削除すると、ダウンロードも削除されます。</string>
     <string name="settings_aside_sources">ソースは上から順番に試されます。作品ごとに、作品ページで選んだソースを使うこともできます。</string>
     <string name="settings_upscaling_description">同じ静止画です。左半分は元の480p、右半分は%1$sです。</string>
@@ -1054,7 +1054,7 @@
     </plurals>
     <string name="trailer_failed">予告編を開けませんでした</string>
     <string name="engine_down_title">Kaeriが停止しました</string>
-    <string name="engine_down_stopped">処理を行う部分が停止しました。もう一度試すか、アプリを終了してから開き直してください。</string>
+    <string name="engine_down_stopped">再び動き出すまで、新しい内容は読み込まれません。もう一度試すか、アプリを終了してから開き直してください。</string>
     <string name="engine_down_quit">終了</string>
     <string name="about_title">概要</string>
     <string name="about_title_app">Kaeriについて</string>
@@ -1093,9 +1093,9 @@
     <string name="report_crash_settings">クラッシュレポートの設定</string>
     <string name="settings_group_crashes">クラッシュレポート</string>
     <string name="settings_crash_save">このデバイスにクラッシュレポートを保存</string>
-    <string name="settings_crash_save_detail">オンにすると、Kaeriはクラッシュのたびに、タイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。バグ報告に追加できます。自動では何も送信されません。</string>
+    <string name="settings_crash_save_detail">Kaeriはバグ報告用に、クラッシュのたびにタイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。自動では何も送信されません。</string>
     <string name="settings_crash_ask">クラッシュ後に確認する</string>
-    <string name="settings_crash_ask_detail">次回の起動時に「報告…」付きの通知を表示します。</string>
+    <string name="settings_crash_ask_detail">次にKaeriを開いたとき、「報告…」付きの通知を表示します。</string>
     <string name="settings_crash_os_heading">%1$sが保持</string>
     <string name="settings_crash_os_detail">%1$sが、オンにする前のクラッシュを保持しています。追加しない限り、何も保存されません。</string>
     <string name="settings_crash_os_item">クラッシュ · %1$s</string>
@@ -1105,7 +1105,7 @@
     <string name="settings_crash_view">表示</string>
     <string name="settings_crash_delete">削除</string>
     <string name="settings_crash_delete_all">すべて削除</string>
-    <string name="settings_crash_footnote">クラッシュレポートはこのデバイスに残ります。Kaeriが自動で送信することはありません。バグ報告からGitHubで開いたときだけ、レポートが外部に送られます。レポートは30日後に削除されます。</string>
+    <string name="settings_crash_footnote">クラッシュレポートはこのデバイスに残り、Kaeriが自動で送信することはありません。バグ報告からGitHubで開いたときだけ、レポートが外部に送られます。レポートは30日後に削除されます。</string>
     <string name="calendar_previous_week">前の週</string>
     <string name="calendar_next_week">次の週</string>
     <string name="calendar_this_week">今週</string>
@@ -1147,9 +1147,9 @@
     <string name="cast_tvs_note_mac">「テレビで再生」のChromecastの下に表示されます。このMacがエピソードを送信します。</string>
     <string name="cast_tvs_note_iphone">「テレビで再生」のChromecastの下に表示されます。このiPhoneがエピソードを送信します。</string>
     <string name="cast_tvs_note_ipad">「テレビで再生」のChromecastの下に表示されます。このiPadがエピソードを送信します。</string>
-    <string name="cast_torrents_note_mac">Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのMacがエピソードを送信します。</string>
-    <string name="cast_torrents_note_iphone">Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPhoneがエピソードを送信します。</string>
-    <string name="cast_torrents_note_ipad">Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPadがエピソードを送信します。</string>
+    <string name="cast_torrents_note_mac">これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのMacがエピソードを送信します。</string>
+    <string name="cast_torrents_note_iphone">これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPhoneがエピソードを送信します。</string>
+    <string name="cast_torrents_note_ipad">これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPadがエピソードを送信します。</string>
     <string name="cast_up_next_plays_in">次のエピソード · %1$d秒後に再生</string>
     <string name="cast_couldnt_start">%1$sで開始できませんでした</string>
     <string name="cast_stopped">キャストを停止しました</string>
@@ -1397,11 +1397,11 @@
     <string name="downloads_delete_title">%1$sを削除しますか？</string>
     <string name="downloads_delete_detail">ファイルがこのデバイスから削除されます。</string>
     <string name="downloads_delete_one_title">ダウンロードを削除</string>
-    <string name="downloads_delete_one_detail">再び再生するには、接続するか、もう一度ダウンロードしてください。</string>
+    <string name="downloads_delete_one_detail">削除後は、もう一度ダウンロードしない限り、再生には接続が必要です。</string>
     <string name="downloads_delete_watched">視聴済みのダウンロードを削除</string>
     <string name="downloads_seeding_title">シーディング</string>
     <string name="downloads_seeding_after_watching">視聴後のシーディング</string>
-    <string name="downloads_seeding_note">視聴済みのエピソードは、Kaeriを開いている間に共有されます。設定のソースで指定した比率か時間の上限に達するまで続きます。</string>
+    <string name="downloads_seeding_note">視聴済みのエピソードは、Kaeriを開いている間に共有されます。設定のソースで指定した比率か時間の上限に達すると、共有は止まります。</string>
     <string name="downloads_seeding_open_only">シーディングはKaeriを開いている間だけ行われます。</string>
     <string name="downloads_background_title">ウィンドウを閉じるときにダウンロード中の場合</string>
     <string name="downloads_background_keep">ダウンロードを続ける</string>
@@ -1429,8 +1429,8 @@
     <string name="episode_download_done">ダウンロード済み</string>
     <string name="episode_download_failed">第%1$d話をダウンロードできませんでした。もう一度お試しください。</string>
     <string name="first_other_title">ほかのデバイスですでにKaeriを使っていますか？</string>
-    <string name="first_other_line">ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれます。この後の手順は完了します。</string>
-    <string name="first_other_pair_line">そのデバイスに入力するコードを表示します。どちらも同じWi-Fiに接続している必要があります。</string>
+    <string name="first_other_line">ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれ、残りの設定も完了します。</string>
+    <string name="first_other_pair_line">そのデバイスに入力するコードが表示されます。どちらも同じWi-Fiに接続している必要があります。</string>
     <string name="first_other_restore">クラウドフォルダーから復元</string>
     <string name="first_other_restore_line">保存した復元キーを使います</string>
     <string name="first_other_no">いいえ、ここから始める</string>
@@ -1469,7 +1469,7 @@
     <string name="home_end">今のところは以上です。すべての一覧は「今期」と「カレンダー」で見られます。</string>
     <string name="home_end_signed_out">AniListにサインインして、リストと視聴予定を取り込みましょう。</string>
     <string name="home_sign_in">AniListにサインイン</string>
-    <string name="home_end_no_sources">ホームから再生するにはソースを追加してください。プラグインストアから選べます。</string>
+    <string name="home_end_no_sources">ホームから再生するにはソースを追加してください。プラグインはプラグインストアから入手します。</string>
     <string name="home_not_found">あなたのソースには見つかりません</string>
     <string name="home_failed">おすすめを読み込めませんでした</string>
     <string name="home_try_again">再試行</string>
@@ -1621,7 +1621,7 @@
     <string name="title_connect_drive">ドライブを接続して再生</string>
     <string name="library_picker_title">エピソードが入ったフォルダーを選んでください。</string>
     <string name="library_remove_detail">ファイルは元の場所に残ります。</string>
-    <string name="library_reason_offline">AniListに問い合わせられませんでした。次回のスキャンで再試行します。</string>
+    <string name="library_reason_offline">AniListに接続できませんでした。次回のスキャンで再試行します。</string>
     <string name="library_choose_match">照合先を選ぶ</string>
     <string name="library_kept_line">独立した作品として保持</string>
     <string name="library_fix_match">この照合を修正</string>
@@ -1632,7 +1632,7 @@
     <string name="licensed_title">ライセンスサービス</string>
     <string name="licensed_body">Kaeriでは、あなたが契約している配信サービスで作品を開けます。再生はKaeri自体では行いません。リンクはAniListから取得します。</string>
     <string name="licensed_region">地域</string>
-    <string name="licensed_region_line">AniListが他の国向けとしているリンクを非表示にします。国が指定されていないリンクも多いので、利用中のサービスも選んでください。</string>
+    <string name="licensed_region_line">AniListが他の国向けとしているリンクは非表示になります。国が指定されていないリンクも多いので、利用中のサービスも選んでください。</string>
     <string name="licensed_yours">利用中のサービス</string>
     <string name="licensed_show_all">%1$d件すべて表示</string>
     <string name="licensed_region_system">このデバイスに合わせる</string>
@@ -1780,7 +1780,7 @@
     <string name="onboarding_where_hosts">Kaeriは、お手元にあるもの(このデバイス内のファイル、Jellyfinサーバー、参加したストアのプラグイン)を再生します。</string>
     <string name="onboarding_own_heading">自分のメディアがありますか?</string>
     <string name="onboarding_invite_heading">招待リンクをお持ちですか?</string>
-    <string name="onboarding_where_stores">プラグインはプラグインストアから入手します。プラグインストアは署名付きで、デバイスごとに専用のトークンを発行します。参加するには、運営者からの招待リンクを使います。</string>
+    <string name="onboarding_where_stores">プラグインはプラグインストアから入手します。どれも署名付きで、デバイスごとに専用のトークンを発行します。そのため、参加には運営者からの招待リンクが必要です。</string>
     <string name="onboarding_demo_heading">今すぐ試す</string>
     <string name="onboarding_demo_detail">デモでは、制作者がCC BY 4.0で公開しているシリーズ「こうしす！」をWikimedia Commonsから再生します。</string>
     <string name="onboarding_play_demo">デモを再生</string>
@@ -1799,7 +1799,7 @@
     <string name="party_stay">残る</string>
     <string name="party_leave_and_close">退出して閉じる</string>
     <string name="party_not_now">今はしない</string>
-    <string name="party_getting_ready">準備しています…</string>
+    <string name="party_getting_ready">候補を読み込んでいます…</string>
     <string name="party_server">サーバー</string>
     <string name="party_server_hint">host:port</string>
     <string name="party_recent_servers">最近使ったサーバー</string>
@@ -1881,7 +1881,7 @@
     <string name="together_open_player">プレーヤーを開く</string>
     <string name="together_recent">最近のルーム</string>
     <string name="together_recent_row">エピソード %1$s · %2$sと · %3$s</string>
-    <string name="together_recent_empty">参加したルームが直近10件ここに表示されます。</string>
+    <string name="together_recent_empty">参加したルームのうち、直近10件がここに表示されます。</string>
     <string name="together_rejoin">再参加</string>
     <string name="together_forget_room">最近のルームから削除</string>
     <plurals name="together_someone_here">
@@ -1984,7 +1984,7 @@
     <string name="party_chat_hidden_line">設定の「再生」で、チャットの非表示がオンになっています。</string>
     <string name="party_chat_show">チャットを表示</string>
     <string name="settings_hide_chat">同時視聴でチャットを非表示</string>
-    <string name="settings_hide_chat_line">メッセージ、リアクション、シークバー上の目印は映像に表示されず、入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。</string>
+    <string name="settings_hide_chat_line">チャットのメッセージ、リアクション、シークバー上の目印は映像に表示されず、チャットの入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。</string>
     <string name="party_mute">%1$sをミュート</string>
     <string name="party_unmute">%1$sのミュートを解除</string>
     <string name="party_unmute_short">解除</string>
@@ -2195,8 +2195,8 @@
     <string name="player_load_subtitle_file">字幕ファイルを読み込む…</string>
     <string name="player_load_audio_file">音声ファイルを読み込む…</string>
     <string name="player_file_picker_failed">ファイル選択を開けませんでした。もう一度お試しください。</string>
-    <string name="player_subtitle_file_failed">その字幕ファイルを読み込めませんでした。字幕ファイルかどうか確認してください。</string>
-    <string name="player_audio_file_failed">その音声ファイルを読み込めませんでした。音声ファイルかどうか確認してください。</string>
+    <string name="player_subtitle_file_failed">そのファイルを字幕として読み込めませんでした。.srtや.assなどの字幕ファイルを選んでください。</string>
+    <string name="player_audio_file_failed">そのファイルを音声として読み込めませんでした。.mkaや.flacなどの音声ファイルを選んでください。</string>
     <string name="player_track_unnamed">名称なしのトラック</string>
     <string name="player_audio_track_n">音声%1$d</string>
     <string name="player_subtitle_track_n">字幕%1$d</string>
@@ -2270,7 +2270,7 @@
     <string name="reader_chapter_line">第%1$s話</string>
     <string name="reader_divider_facts_source">%1$s · %2$sから</string>
     <string name="onboarding_read_demo">デモを読む</string>
-    <string name="onboarding_demo_books_detail">デモでは、作者がCreative Commonsで共有している短いコミックと短い物語を読めます。</string>
+    <string name="onboarding_demo_books_detail">短いコミックと短い物語が1つずつ。作者がCreative Commonsで共有しています。</string>
     <string name="onboarding_demo_both_detail">作者がCreative Commonsで共有している、短いエピソードと短いコミックが1つずつあります。</string>
     <string name="home_demo_only_books">デモだけがオンです。自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。</string>
     <string name="home_spotlight_read">読む</string>
@@ -2630,8 +2630,8 @@
     <string name="settings_delete_after_reading_note">しおり付きの章は残ります</string>
     <string name="settings_chapter_notifications_note">「読書中」リストの作品</string>
     <string name="settings_downloads_finished_note">ダウンロード中の章がすべて終わったとき</string>
-    <string name="settings_chapter_notifications_footer">章の通知は独自のシステムチャンネルを使うため、単独で消音できます。</string>
-    <string name="accounts_mangaupdates_credit">MangaUpdates は公開 API 経由で利用します。</string>
+    <string name="settings_chapter_notifications_footer">章の通知は独自のシステムチャンネルを使うため、ほかの通知はそのままで章だけを消音できます。</string>
+    <string name="accounts_mangaupdates_credit">Kaeriは公開APIでMangaUpdatesに接続します。</string>
     <string name="accounts_username">ユーザー名</string>
     <plurals name="read_downloads_total">
         <item quantity="other">%1$d話 · %2$s</item>
@@ -2656,7 +2656,7 @@
     <string name="seasonal_empty_format">このシーズンには、この形式の作品がありません</string>
     <string name="seasonal_empty_format_detail">すべての形式を試してください。</string>
     <string name="seasonal_filter_in_search">検索で絞り込む</string>
-    <string name="seasonal_filter_help">このシーズンを検索で開き、どのフィルターでも絞り込めます。</string>
+    <string name="seasonal_filter_help">このシーズンを検索で開き、すべてのフィルターを使えます</string>
     <string name="sort_popularity">人気</string>
     <string name="sort_score">スコア</string>
     <string name="sort_air_day">放送曜日</string>
@@ -2703,7 +2703,7 @@
     <string name="filter_released">放送時期</string>
     <string name="filter_where_to_watch">視聴先</string>
     <string name="filter_licensed_only">正規ライセンスのみ</string>
-    <string name="filter_my_list">マイリストの作品</string>
+    <string name="filter_my_list">自分のリストにある作品</string>
     <string name="filter_show">表示</string>
     <string name="filter_hide">非表示</string>
     <string name="filter_only">限定</string>
@@ -2875,7 +2875,7 @@
     <string name="servers_kind_films">映画</string>
     <string name="servers_error_certificate">%1$sは、このデバイスが信頼していない証明書を使っています。信頼される証明書を持つ https:// のアドレスを使ってください。</string>
     <string name="servers_row_signed_out_here">サインアウト済み</string>
-    <string name="servers_sign_out_line">このデバイスのサーバーへのサインインを終了します。サーバーとダウンロードはそのまま残ります。</string>
+    <string name="servers_sign_out_line">サインアウトすると、このデバイスのサーバー上のセッションが終了します。サーバーとダウンロードはそのまま残ります。</string>
     <string name="settings_language">言語</string>
     <string name="settings_language_app">アプリの言語</string>
     <string name="language_follow_system">システムの言語に従う</string>
@@ -2982,11 +2982,11 @@
     <string name="settings_artwork_detail">表記はアプリ内のお知らせに記載しています。</string>
     <string name="settings_new_episodes">新しいエピソード</string>
     <string name="settings_new_episodes_detail">「視聴中」リストの作品が対象です</string>
-    <string name="settings_notify_detail">フォローしている作品のエピソードが公開されると、作品名とエピソード番号を一度通知します。エピソード名は表示しません。作品の設定でオフにできます。</string>
+    <string name="settings_notify_detail">フォローしている作品のエピソードが公開されると、1件通知が届きます。通知には作品名とエピソード番号だけが表示され、エピソード名は表示されません。作品ごとの設定でオフにできます。</string>
     <string name="settings_coming_up">今後7日間の放送</string>
     <string name="settings_system_notifications">通知の設定</string>
     <string name="settings_system_notifications_detail">サウンド、バイブレーション、ロック画面</string>
-    <string name="settings_system_notifications_apple">システム設定を開きます。バナーの表示、サウンド、バッジの設定はそこで行います。</string>
+    <string name="settings_system_notifications_apple">システム設定を開きます。バナーのスタイル、サウンド、バッジはそこで設定します。</string>
     <string name="settings_notifications_blocked">オフ：システムでKaeriの通知が許可されていません</string>
     <string name="settings_notifications_show_on">この作品の設定でオン</string>
     <string name="settings_notify_show">この作品のエピソードが公開されたとき</string>
@@ -3000,7 +3000,7 @@
     <string name="show_settings_always">常に</string>
     <string name="show_settings_never">しない</string>
     <string name="show_settings_subs_remembered">最後に見たエピソードの設定を記憶しています。</string>
-    <string name="show_settings_subs_follow">プレーヤーで選択します。設定 › 再生に従います。</string>
+    <string name="show_settings_subs_follow">プレーヤーで選びます。それまでは 設定 › 再生 が適用されます。</string>
     <string name="show_settings_source">ソース</string>
     <string name="show_settings_source_detail">自動では、登録したソースを順番に試します。</string>
     <string name="show_settings_reset">初期設定に戻す</string>
@@ -3029,7 +3029,7 @@
     <string name="settings_upload_unlimited">無制限</string>
     <string name="settings_upscaling_natural">自然 · ArtCNN</string>
     <string name="settings_label_hover_cards">ホバーでカバーを拡大</string>
-    <string name="settings_hover_cards_note">カバーにポインターを重ねると、予告編付きの大きなカードを表示します。</string>
+    <string name="settings_hover_cards_note">カバーにポインターを置くと、予告編付きの大きなカードが開きます。</string>
     <string name="settings_upscaling_note_natural">線と質感を忠実に保ち、見た目は変えません。</string>
     <string name="settings_upscaling_note_sharp">線をくっきりさせ、輪郭を強めます。その分、質感は少し失われます。</string>
     <string name="settings_after_download">ダウンロード後に実行</string>
@@ -3306,7 +3306,7 @@
     <string name="sources_demo_link_licence">ライセンス</string>
     <string name="sources_demo_link_commons">Wikimedia Commons</string>
     <string name="sources_demo_link_maker">OPAP-JP</string>
-    <string name="sources_demo_hosts">接続先はWikimedia Commonsのみです(upload.wikimedia.org と commons.wikimedia.org)。</string>
+    <string name="sources_demo_hosts">デモの接続先はWikimedia Commonsだけです(upload.wikimedia.org と commons.wikimedia.org)。</string>
     <string name="sources_demo_private">デモはどこにもサインインせず、AniListに書き込むこともありません。</string>
     <string name="sources_demo_remove">デモを削除</string>
     <string name="sources_demo_add">デモを追加</string>
@@ -3341,7 +3341,7 @@
     <string name="stores_access_ended_detail">このプラグインストアの運営者がアクセスを終了しました。インストール済みのプラグインは引き続き動作しますが、更新は行われません。</string>
     <string name="stores_access_ended_page">このプラグインストアは、このデバイスの参加をもう受け付けていません。プラグインは、削除するまでインストールされたままです。</string>
     <string name="stores_no_longer_joined">このプラグインストアには、もう参加していません。</string>
-    <string name="stores_offline_last_list">オフラインです（%1$s）。下のプラグインは、最後に確認できた一覧です。</string>
+    <string name="stores_offline_last_list">オフラインです（%1$s）。最後に送られてきた一覧を表示しています。</string>
     <string name="stores_offline_last_list_plain">オフラインです。最後に受け取った一覧を表示しています。</string>
     <string name="stores_key_line">ストアのキー %1$s · %2$s</string>
     <string name="stores_device_joined_as">%1$sとして参加</string>
@@ -3376,14 +3376,14 @@
     <string name="stores_install_label">%1$sをインストール</string>
     <string name="stores_replace_label">手動で追加した%1$sのコピーを置き換え</string>
     <string name="stores_remove_plugin_title">%1$sを削除しますか？</string>
-    <string name="stores_remove_plugin_detail">このデバイスから削除されます。プラグインストアからは再びインストールできます。</string>
+    <string name="stores_remove_plugin_detail">このデバイスから削除されます。プラグインストアからもう一度インストールできます。</string>
     <string name="stores_newly_contacts">新たに接続するホスト</string>
     <string name="stores_update_contacts">この更新では、さらに%1$sに接続します。</string>
     <string name="stores_new_in">%1$sの変更点</string>
     <string name="stores_join_title">プラグインストアに参加</string>
     <string name="stores_add_title">プラグインストアを追加</string>
     <string name="stores_join_detail">プラグインストアの運営者から届いたリンクを貼り付けてください。</string>
-    <string name="stores_join_detail_desktop">プラグインストアの運営者から届いた招待リンクを貼り付けてください。参加やインストールの前に、プラグインストアが提供する内容を確認できます。</string>
+    <string name="stores_join_detail_desktop">プラグインストアの運営者から届いた招待リンクを貼り付けます。参加やインストールの前に、プラグインストアの内容を確認できます。</string>
     <string name="stores_join_detail_opened">プラグインストアの運営者から届いたリンクを貼り付けてください。メッセージアプリから開いたKaeri://の招待リンクは、このシートに直接入力されます。</string>
     <string name="stores_invite_link">招待リンク</string>
     <string name="stores_invite_link_hint">https://…/join/…</string>
@@ -3450,7 +3450,7 @@
     <string name="stores_invite_works_times_forever">%1$d回使えます。取り消すまで有効です。</string>
     <string name="stores_invite_works_any">このリンクを持っている人は誰でも、%1$sまで参加できます。</string>
     <string name="stores_invite_works_any_forever">このリンクを持っている人は、取り消すまで誰でも参加できます。</string>
-    <string name="stores_invite_once_until">送った相手1人が1回だけ使えます。%1$sまで。</string>
+    <string name="stores_invite_once_until">送った相手1人が%1$sまで1回だけ使えます。</string>
     <string name="stores_invite_once_forever">送った相手1人が1回だけ使えます。取り消すまで有効です。</string>
     <string name="stores_invite_contact_needed">先にこのストアの連絡先を追加してください。回数無制限のリンクは、ストア自体のリンクと同じように、他の人に渡される可能性があります。</string>
     <string name="stores_invite_owner_once">所有者の招待は1回だけ使えます。</string>
@@ -3495,7 +3495,7 @@
         <item quantity="other">提供しているプラグイン（%1$d件）</item>
     </plurals>
     <string name="notice_open_stores">プラグインストアを開く</string>
-    <string name="stores_what_is">プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。</string>
+    <string name="stores_what_is">プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。そのプラグインがソースを追加します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加します。</string>
     <string name="stores_what_is_link">プラグインストアとは?</string>
     <string name="stores_invite_rules">招待リンクは、1人が1回だけ使え、7日間有効です。期限が切れた場合は、プラグインストアの所有者に新しいリンクを依頼してください。</string>
     <string name="stores_qr_label">招待リンクのQRコード</string>
@@ -3541,7 +3541,7 @@
     <string name="sync_road_nearby">近くのデバイスと</string>
     <string name="sync_road_nearby_line">同じWi-Fi上の別のデバイスとペアリングします。ほかの場所には何も保存されません。</string>
     <string name="sync_road_cloud">クラウドフォルダ経由</string>
-    <string name="sync_road_cloud_line">すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても使え、バックアップも残ります。</string>
+    <string name="sync_road_cloud_line">すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても動作し、バックアップも残ります。</string>
     <string name="sync_road_later">もう一方の方法は、あとから追加できます。ほとんどの人は両方使っています。</string>
     <string name="devices_yours">あなたのデバイス</string>
     <string name="devices_only_this">このデバイスのみ</string>
@@ -3561,7 +3561,7 @@
     <string name="sync_turn_off_alert">%1$sの同期をオフにしますか?</string>
     <string name="sync_turn_off_alert_line">この%1$sは、ほかのデバイスとの共有をやめます。保存済みの内容はここに残ります。</string>
     <string name="cloud_group">クラウドフォルダ</string>
-    <string name="cloud_foot">デバイスが離れている間の同期を補い、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。</string>
+    <string name="cloud_foot">このフォルダーが、離れている間もデバイスの状態をそろえ、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。</string>
     <string name="cloud_add">クラウドフォルダを追加</string>
     <string name="cloud_pick_title">クラウドフォルダを選択</string>
     <string name="cloud_google_line">Googleドライブ内のKaeriの非表示フォルダ</string>
@@ -3676,7 +3676,7 @@
     <string name="profiles_delete_alert_line">このデバイスにある%1$sの履歴とサインインは削除されます。%1$sと同期しているデバイスには、そのまま残ります。</string>
     <string name="profiles_picker">誰が見ますか?</string>
     <string name="profiles_ask_at_launch">起動時に「誰が見ますか?」を表示</string>
-    <string name="profiles_ask_foot">初期設定ではオフです。家族で共有するiPad向けです。アカウントの行から、いつでもプロファイルを切り替えられます。</string>
+    <string name="profiles_ask_foot">初期設定ではオフです。家族全員で共有するiPadではオンにしてください。プロファイルは、アカウントの行からいつでも切り替えられます。</string>
     <string name="profiles_switch">プロファイルを切り替え</string>
     <string name="profiles_manage">プロファイルを管理</string>
     <string name="first_setup_other">別のデバイスから設定</string>
@@ -3941,7 +3941,7 @@
     <string name="accounts_tokens_file">サインイン用のトークンは、このデバイス上のファイルに保存され、読み取れるのはあなただけです。</string>
     <string name="accounts_tokens_keystore">サインイン用のトークンは、このデバイスのキーストアにある鍵で保護されて保存されます。</string>
     <string name="accounts_form_title">%1$sにサインイン</string>
-    <string name="accounts_form_detail">パスワードは一度だけ%1$sに送信され、トークンがこのデバイスに保存されます。</string>
+    <string name="accounts_form_detail">パスワードは一度だけ%1$sに送信され、代わりに受け取るトークンがこのデバイスに残ります。</string>
     <string name="accounts_user_or_email">メールアドレスまたはユーザー名</string>
     <string name="accounts_password">パスワード</string>
     <string name="accounts_signing_in_action">サインイン中</string>
@@ -3965,7 +3965,7 @@
     <string name="accounts_keep_theirs">%1$sの値を残す</string>
     <string name="accounts_open_on">%1$sで開く</string>
     <string name="accounts_listed_by">%1$sに掲載</string>
-    <string name="accounts_did_not_answer">%1$sから応答がありませんでした。</string>
+    <string name="accounts_did_not_answer">%1$sから応答がありませんでした。少し待ってからもう一度お試しください。</string>
     <string name="accounts_no_extras">%1$sには、この作品のキャスト、スタッフ、おすすめがまだありません。</string>
     <string name="accounts_episodes_from">エピソードは%1$sから取得されます。再生するにはソースを追加してください。</string>
     <string name="accounts_adds_season">%1$sには、そのシーズンの作品が発表され次第、追加されます。</string>
@@ -3986,7 +3986,7 @@
     <string name="tv_choose_another">別のテレビを選択…</string>
     <string name="tv_pairing_code">ペアリングコード</string>
     <string name="tv_open_on_tv">テレビでKaeriを開いてください。このデバイスと同じWi-Fiに接続しておく必要があります。</string>
-    <string name="tv_type_code">%1$sに表示される6桁の数字を入力してください。その後、このデバイスは自動で接続されます。</string>
+    <string name="tv_type_code">%1$sに表示される6桁の数字を入力してください。以後、このデバイスは自動で接続されます。</string>
     <string name="tv_pairing_moment">少し時間がかかります。</string>
     <string name="tv_looking">このネットワーク上のテレビを探しています</string>
     <string name="tv_none_found">テレビが見つかりません</string>
@@ -4086,7 +4086,7 @@
     <string name="updates_saved_replace">バージョン %1$sをダウンロードフォルダに保存しました。更新するには、古いファイル %2$sをこれで置き換えてください。</string>
     <string name="updates_saved_replace_plain">バージョン %1$sをダウンロードフォルダに保存しました。更新するには、古いファイルをこれで置き換えてください。</string>
     <string name="updates_why_server">サーバーがダウンロードを拒否したため、中断されました（%1$d）。しばらくしてからもう一度お試しください。</string>
-    <string name="updates_why_connection">ダウンロードが中断されました。接続が切れました。</string>
+    <string name="updates_why_connection">ダウンロードが中断されました。接続が切れました。もう一度お試しください。</string>
     <string name="updates_why_save">ダウンロードを保存できませんでした: %1$s</string>
     <string name="updates_why_size">ダウンロードは%1$sですが、このバージョンに記載されている%2$sではありません。</string>
     <string name="updates_why_checksum">ダウンロードが、このバージョンに記載のチェックサムと一致しません。</string>

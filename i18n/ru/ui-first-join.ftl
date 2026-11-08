@@ -1,6 +1,6 @@
 first-other-title = Есть другое { -device } с { -app-name }?
-first-other-line = Выполните сопряжение, и это { -device } получит ваши { -source-pl }, { -tracker-pl } и историю. Остальные шаги тогда не нужны.
-first-other-pair-line = Покажет код, который нужно ввести на другом. Другое { -device } и это должны быть в одной сети Wi-Fi.
+first-other-line = Выполните сопряжение, и это { -device } получит ваши { -source-pl }, { -tracker-pl } и историю, а остальная настройка пройдёт сама.
+first-other-pair-line = Вы получите код, который нужно ввести на том устройстве. Оба должны быть в одной сети Wi-Fi.
 first-other-restore = Восстановить из облачной папки
 first-other-restore-line = Используется сохранённый вами ключ восстановления
 first-other-no = Нет, начать здесь
@@ -13,7 +13,7 @@ first-join-medium-line = Чтение, как на { $device }
 first-join-signins-line = { $trackers }
 first-join-server = Добавить { $host }
 first-join-server-line = { $kind } · вход по ключу с { $device }, он хранится в { $store }
-first-join-folders = Папки остаются на { $device }. Это { -device }: свои папки добавьте в «Ваши { -source-pl }».
+first-join-folders = Папки остаются на { $device }. Чтобы добавить папки отсюда, откройте «Ваши { -source-pl }».
 first-join-steps-done = Списки и { -source-pl } настроены, поэтому первый запуск завершён. Их можно изменить в настройках.
 first-join-store-refused = { $store } не пустил это { -device }. { $owner } может прислать вам приглашение.
 first-join-syncing = Синхронизация с { $device }

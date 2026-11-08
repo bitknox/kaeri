@@ -28,7 +28,7 @@ notice-cast-refused = [{ $name } çöüļðñ'ţ þļàý ţĥîš šţŕéàɱ.
 notice-cast-taken-over = [Åñöţĥéŕ ðéṽîçé šţàŕţéð šöɱéţĥîñĝ öñ { $name }, šö çàšţîñĝ šţöþþéð.~~~~~~~~~~~~~~~~~~]
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = [Ţĥîš ðéṽîçé îšñ'ţ öñ ţĥé ñéţŵöŕķ { $name } îš öñ, öŕ ŕéàçĥéš îţ ţĥŕöüĝĥ à ṼÞÑ. Çàšţîñĝ ñééðš ƀöţĥ öñ ţĥé šàɱé ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+notice-cast-not-same-network = [Ţĥîš ðéṽîçé îšñ'ţ öñ ţĥé ñéţŵöŕķ { $name } îš öñ, öŕ ŕéàçĥéš îţ ţĥŕöüĝĥ à ṼÞÑ. Çöññéçţ ƀöţĥ ţö ţĥé šàɱé ñéţŵöŕķ ţö çàšţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = [Ļöšţ { $name }, šö çàšţîñĝ šţöþþéð.~~~~~~~~~]
@@ -343,7 +343,7 @@ notice-match-save-failed = [Çöüļðñ'ţ šàṽé ţĥàţ ɱàţçĥ. { $re
 notice-match-did-not-stick = [Ţĥàţ ɱàţçĥ ðîðñ'ţ šţîçķ. Ţĥé šöüŕçé ɱàý ĥàṽé çĥàñĝéð. Ţŕý çĥööšîñĝ îţ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Toast when a search of the sources for a title found nothing.
-notice-source-search-empty = [Ñöţĥîñĝ ƒöüñð ƒöŕ “{ $query }”. Ţŕý à ðîƒƒéŕéñţ šéàŕçĥ.~~~~~~~~~~~~~~~]
+notice-source-search-empty = [Ñöţĥîñĝ ƒöüñð ƒöŕ "{ $query }". Ţŕý à ðîƒƒéŕéñţ šéàŕçĥ.~~~~~~~~~~~~~~~]
 
 # In the list of titles a source offers for a show, in place of how close a title is: it was ruled out because its format cannot be the show's, as an OVA for a TV series.
 match-ruled-out-format = [Ðîƒƒéŕéñţ ƒöŕɱàţ~~~~~]
@@ -361,7 +361,7 @@ match-search-timed-out = [Îţ ðîðñ'ţ àñšŵéŕ îñ ţîɱé.~~~~~~~~]
 match-search-source-off = [Îţ îšñ'ţ šŵîţçĥéð öñ.~~~~~~~]
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = [{ $source } ŵîļļ ƀé üšéð ƒöŕ ţĥîš ţîţļé.~~~~~~~~~~]
+notice-source-pinned = [Ţĥîš ţîţļé ñöŵ þļàýš ƒŕöɱ { $source }.~~~~~~~~~]
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = [Ɓàçķ ţö àüţöɱàţîç šöüŕçé šéļéçţîöñ.~~~~~~~~~~~]
@@ -547,13 +547,13 @@ reader-moved = [Ṁöṽéð ţö { $chapter }, þàĝé { $page }, ŵĥéŕé {
 reader-moved-number = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, þàĝé { $page }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~~~]
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-right-to-left = [Ŕîĝĥţ ţö ļéƒţ, ðéţéçţéð~~~~~~~]
+reader-detected-right-to-left = [Ļööķš ļîķé ŕîĝĥţ ţö ļéƒţ~~~~~~~~]
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-left-to-right = [Ļéƒţ ţö ŕîĝĥţ, ðéţéçţéð~~~~~~~]
+reader-detected-left-to-right = [Ļööķš ļîķé ļéƒţ ţö ŕîĝĥţ~~~~~~~~]
 
 # A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
-reader-detected-strip = [Ļöñĝ šţŕîþ, ðéţéçţéð~~~~~~]
+reader-detected-strip = [Ļööķš ļîķé à ļöñĝ šţŕîþ~~~~~~~]
 
 # Why a chapter or a list could not load: there is no connection.
 reading-failed-offline = [Ýöü'ŕé öƒƒļîñé. Ðöŵñļöàðéð çĥàþţéŕš šţîļļ öþéñ.~~~~~~~~~~~~~~~]
@@ -1076,7 +1076,7 @@ store-join-would-unname = [Ýöü ĵöîñéð { $store } àš { $member }. Ţĥ
 store-not-the-invited = [{ $url } îš ñöţ ţĥé þļüĝîñ šţöŕé îñ ţĥé îñṽîţé ({ $reason }). Ñöţĥîñĝ ŵàš ĵöîñéð.~~~~~~~~~~~~~~~~~~~~~]
 
 # Error: the token for a joined store could not be saved on this device. The reason comes from the system.
-store-token-not-kept = [Çöüļðñ'ţ ķééþ ţĥé ţöķéñ ƒöŕ ţĥîš þļüĝîñ šţöŕé. { $reason }~~~~~~~~~~~~~~~]
+store-token-not-kept = [Çöüļðñ'ţ šàṽé ţĥé ţöķéñ ƒöŕ ţĥîš þļüĝîñ šţöŕé. { $reason }~~~~~~~~~~~~~~~]
 
 # Error: an invite that cannot be used any more.
 store-invite-unusable = [Ţĥàţ îñṽîţé ŵàš àļŕéàðý üšéð, ŵàš çàñçéļļéð öŕ ĥàš éẋþîŕéð. Åšķ ƒöŕ à ñéŵ öñé.~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -1142,7 +1142,7 @@ store-admin-link-foreign = [{ $store } šéñţ àñ àðɱîñ ļîñķ ƒöŕ 
 store-open-join-unsupported = [{ $store }'š šéŕṽéŕ îš öļðéŕ àñð çàñ'ţ ļéţ àñýöñé ĵöîñ ŵîţĥ à ļîñķ. Ûþðàţé îţ ƒîŕšţ.~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = [{ $name } îš öƒƒ. Îţ îš šķîþþéð ŵĥéñ ļööķîñĝ ƒöŕ éþîšöðéš.~~~~~~~~~~~~~~~~]
+source-switched-off = [{ $name } îš öƒƒ. Ķàéŕî šķîþš îţ ŵĥéñ ļööķîñĝ ƒöŕ éþîšöðéš.~~~~~~~~~~~~~~~~]
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = [{ $name } îš öñ.~~~]
@@ -1151,7 +1151,7 @@ source-switched-on = [{ $name } îš öñ.~~~]
 plugin-not-loaded = [{ $id } îšñ'ţ ļöàðéð. Çĥéçķ ţĥàţ îţ'š îñšţàļļéð üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~]
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = [{ $name } ŵîļļ ƀé üšéð ƒöŕ ţĥîš ţîţļé.~~~~~~~~~~]
+release-pinned = [Ţĥîš ţîţļé ñöŵ üšéš { $name }.~~~~~~~~]
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = [Çöüļðñ'ţ šàṽé ţĥàţ çĥöîçé. { $reason }~~~~~~~~~]
@@ -1244,10 +1244,10 @@ notice-token-exchange-failed = [Çöüļðñ'ţ ĝéţ à ţöķéñ ƒŕöɱ { 
 notice-browser-not-opened = [Çöüļðñ'ţ öþéñ à ƀŕöŵšéŕ ƒöŕ ţĥé šîĝñ-îñ. Çĥéçķ ţĥàţ öñé îš îñšţàļļéð àñð ţŕý àĝàîñ. { $reason }~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = [Ñö šîĝñ-îñ ţö { $tracker } îš ŵàîţîñĝ ƒöŕ ţĥàţ. Šţàŕţ ţĥé šîĝñ-îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~]
+notice-sign-in-not-waiting = [Å šîĝñ-îñ ŕéþļý ƒŕöɱ { $tracker } àŕŕîṽéð, ƀüţ ñö šîĝñ-îñ ŵàš ŵàîţîñĝ ƒöŕ îţ. Šţàŕţ ţĥé šîĝñ-îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = [Ţĥàţ šîĝñ-îñ ţö { $tracker } ðîðñ'ţ çöɱé ƀàçķ ƒŕöɱ ţĥîš ŕéƣüéšţ. Šţàŕţ ţĥé šîĝñ-îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~]
+notice-sign-in-wrong-request = [Ţĥé šîĝñ-îñ ŕéþļý ƒŕöɱ { $tracker } ðöéšñ'ţ ɱàţçĥ ţĥé ŕéƣüéšţ. Šţàŕţ ţĥé šîĝñ-îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = [Ţĥé šîĝñ-îñ ţö { $tracker } çàɱé ƀàçķ ŵîţĥöüţ à ţöķéñ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~]
@@ -1345,7 +1345,7 @@ notice-update-available = [{ $tag } îš öüţ. Ŕüñ ķàéŕî --üþðàţ�
 cause-proxy-needs-address = [Å þŕöẋý ñééðš à ĥöšţ àñð à þöŕţ.~~~~~~~~~~]
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = [Ţĥé þŕöẋý'š àððŕéšš îš ñöţ öñé à çĥéçķ çàñ üšé.~~~~~~~~~~~~~~~]
+cause-proxy-address-unusable = [Ţĥé þŕöẋý çĥéçķ çàñ'ţ üšé ţĥîš àððŕéšš.~~~~~~~~~~~~]
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = [Ţĥé šéŕṽéŕ çöüļðñ'ţ ƀé ŕéàçĥéð.~~~~~~~~~~]
@@ -1369,7 +1369,7 @@ notice-playback-failed = [Þļàýƀàçķ ƒàîļéð. Ţŕý àñöţĥéŕ �
 notice-engine-fault = [Šöɱéţĥîñĝ ŵéñţ ŵŕöñĝ îñšîðé Ķàéŕî. Îţ çàŕŕîéð öñ, ƀüţ îƒ à šçŕééñ ļööķš šţüçķ, ƣüîţ àñð öþéñ îţ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = [Ţĥé ðàţàƀàšé ŵàš ðàɱàĝéð, šö Ķàéŕî šţàŕţéð à ñéŵ öñé. Ţĥé öļð ƒîļé îš ķéþţ àţ { $path }. Ýöüŕ ţŕàçķéŕš ƀŕîñĝ ƀàçķ ŵĥàţ ţĥéý ĥöļð àţ ţĥé ñéẋţ šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+notice-database-set-aside = [Ţĥé ðàţàƀàšé ŵàš ðàɱàĝéð, šö Ķàéŕî šţàŕţéð à ñéŵ öñé. Ţĥé öļð ƒîļé îš ķéþţ àţ { $path }. Ŵĥàţ ýöüŕ ţŕàçķéŕš ĥöļð çöɱéš ƀàçķ àţ ţĥé ñéẋţ šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = [Ķàéŕî çöüļðñ'ţ çŕéàţé ţĥé ƒöļðéŕ { $path }. Çĥéçķ ţĥàţ ţĥé ðîšķ ĥàš ŕööɱ àñð ţĥé ƒöļðéŕ çàñ ƀé ŵŕîţţéñ ţö, ţĥéñ ţŕý àĝàîñ. { $reason }~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -1384,7 +1384,7 @@ config-reset-failed = [Ķàéŕî çöüļðñ'ţ ɱöṽé { $path } àšîðé
 start-failed-database = [Ķàéŕî çöüļðñ'ţ öþéñ îţš ðàţàƀàšé àţ { $path }. Îƒ àñöţĥéŕ Ķàéŕî àþþ îš öþéñ öñ ţĥîš ƒöļðéŕ, ƣüîţ îţ àñð ţŕý àĝàîñ. { $reason }~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = [Ķàéŕî çöüļðñ'ţ šéţ üþ îţš ñéţŵöŕķ çöññéçţîöñ ƒŕöɱ ţĥé ñéţŵöŕķ šéţţîñĝš îñ çöñƒîĝ.ţöɱļ. { $reason }~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+start-failed-network = [Ķàéŕî çöüļðñ'ţ çöññéçţ ŵîţĥ ţĥé ñéţŵöŕķ šéţţîñĝš îñ çöñƒîĝ.ţöɱļ. Çĥéçķ ţĥéɱ, ţĥéñ ţŕý àĝàîñ. { $reason }~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = [Ķàéŕî çöüļðñ'ţ šţàŕţ. Ǫüîţ àñð öþéñ îţ àĝàîñ. { $reason }~~~~~~~~~~~~~~~]
@@ -1418,10 +1418,10 @@ notice-surprise-empty-filters = [Ñö ţîţļéš ɱàţçĥ ţĥéšé ƒîļ�
 notice-surprise-empty-planning = [Þļàññîñĝ îš éɱþţý.~~~~~~]
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = [Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]
+notice-surprise-offline = [Ýöü'ŕé öƒƒļîñé. Šüŕþŕîšé ɱé ñééðš ÅñîĻîšţ ţö þîçķ à ţîţļé.~~~~~~~~~~~~~~~~~~]
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = [Çöüļðñ'ţ þîçķ à ţîţļé ŕîĝĥţ ñöŵ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~]
+notice-surprise-failed = [Çöüļðñ'ţ ŕéàçĥ ÅñîĻîšţ ţö þîçķ à ţîţļé. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~~~]
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = [Éðîţ þŕöẋý~~~]
@@ -1547,7 +1547,7 @@ party-members = [Ṁéɱƀéŕš~~~]
 party-choose-a-source = [Çĥööšé à šöüŕçé~~~~~]
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = [Ñö šöüŕçé ļîšţš éþîšöðé { $episode }. Šöüŕçéš çöɱé ƒŕöɱ þļüĝîñš, ŵĥîçĥ à þļüĝîñ šţöŕé àððš.~~~~~~~~~~~~~~~~~~~~~~~~~]
+party-sources-none-listed = [Ñö šöüŕçé ļîšţš éþîšöðé { $episode }. Šöüŕçéš çöɱé ƒŕöɱ þļüĝîñš, ŵĥîçĥ ýöü àðð ƒŕöɱ à þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
@@ -1739,10 +1739,10 @@ settings-caption-sample = [Ţĥé ļàñţéŕñ ŕöàð ŕüñš öñ þàšţ
 settings-caption-note = [Þļàîñ šüƀţîţļéš ļööķ ļîķé ţĥîš, îñ { $language } ŵĥéñ àñ éþîšöðé ĥàš ţĥéɱ. Šţýļéð šüƀţîţļéš ķééþ ţĥéîŕ öŵñ ļööķ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = [Öñé ñöţîƒîçàţîöñ ŵĥéñ àñ éþîšöðé öƒ à šĥöŵ îñ ýöüŕ Ŵàţçĥîñĝ ļîšţ çöɱéš öüţ, àţ ţĥé ţîɱé { $tracker } ĝîṽéš. Å šĥöŵ'š öŵñ šéţţîñĝ çöɱéš ƒîŕšţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-notify-note-on = [Ýöü ĝéţ öñé ñöţîƒîçàţîöñ ŵĥéñ àñ éþîšöðé öƒ à šĥöŵ öñ ýöüŕ Ŵàţçĥîñĝ ļîšţ çöɱéš öüţ, àţ ţĥé ţîɱé { $tracker } ĝîṽéš. Å šĥöŵ'š öŵñ šéţţîñĝ öṽéŕŕîðéš ţĥîš öñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = [Öƒƒ. Öñļý šĥöŵš ţüŕñéð öñ îñ ţĥéîŕ öŵñ šéţţîñĝš ñöţîƒý.~~~~~~~~~~~~~~~~~]
+settings-notify-note-off = [Öƒƒ. Öñļý šĥöŵš ýöü ţüŕñéð öñ îñ ţĥéîŕ öŵñ šéţţîñĝš šéñð ñöţîƒîçàţîöñš.~~~~~~~~~~~~~~~~~~~~~~]
 
 # Preview note beside the accounts settings.
 settings-accounts-note = [Ķàéŕî ŵöŕķš ŵîţĥöüţ àñ àççöüñţ. Ýöüŕ ŵàţçĥ ĥîšţöŕý šţàýš öñ ţĥîš çöɱþüţéŕ ŵĥéñ ýöü šîĝñ öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -1818,7 +1818,7 @@ controller-help-buttons = [Çöñţŕöļļéŕ ƀüţţöñš~~~~~~]
 settings-note-cast-tvs-computer = [Ţĥéý àþþéàŕ üñðéŕ Çĥŕöɱéçàšţ îñ Þļàý öñ ŢṼ. Ţĥîš çöɱþüţéŕ šéñðš ţĥéɱ ţĥé éþîšöðé.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = [Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš çöɱþüţéŕ šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-note-torrents-while-casting-computer = [Ŵîţĥ ţĥîš öñ, à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ çàñ þļàý ţöŕŕéñţš. Ţĥîš çöɱþüţéŕ šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = [Öþéñ þļüĝîñ šţöŕéš~~~~~~]
@@ -1993,7 +1993,7 @@ stores-owner-needs-connection = [Ţĥé þļüĝîñ šţöŕé ñééðš à ç
 stores-owner-needs-connection-detail = [Ţŕý àĝàîñ öñçé ţĥîš ðéṽîçé îš ƀàçķ öñļîñé.~~~~~~~~~~~~~]
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = [Ṁàķîñĝ à ļîñķ ñééðš à çöññéçţîöñ ţö ţĥé þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~]
+stores-owner-link-offline = [Çàñ'ţ ɱàķé à ļîñķ ŵĥîļé ţĥîš ðéṽîçé îš öƒƒļîñé.~~~~~~~~~~~~~~~]
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = [Šéñð ţĥîš ļîñķ. Îţ ŵöŕķš öñçé, üñţîļ { $until }.~~~~~~~~~~~~~]
@@ -2002,7 +2002,7 @@ stores-send-link-until = [Šéñð ţĥîš ļîñķ. Îţ ŵöŕķš öñçé, 
 stores-open-on-detail = [Ţĥéý ĵöîñ ŵîţĥöüţ à ñàɱé. Ţüŕñîñĝ ţĥîš öƒƒ šţöþš ţĥé ļîñķ; ţüŕñîñĝ îţ öñ àĝàîñ ɱàķéš à ñéŵ öñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = [Öñļý þéöþļé ýöü îñṽîţé çàñ ĵöîñ. Ţüŕñéð öñ, àñýöñé ŵîţĥ ţĥé ļîñķ ĵöîñš, ŵîţĥöüţ à ñàɱé.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+stores-open-off-detail = [Öñļý þéöþļé ýöü îñṽîţé çàñ ĵöîñ. Ţüŕñ ţĥîš öñ àñð àñýöñé ŵîţĥ ţĥé ļîñķ çàñ ĵöîñ, ŵîţĥöüţ à ñàɱé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = [Ñö ñàɱéš àŕé ķéþţ.~~~~~~]
@@ -2026,7 +2026,7 @@ stores-publish-none-hint = [Å þļüĝîñ ýöü ƀüîļð öŕ îñšţàļ�
 stores-not-published = [Ñöţ îñ ţĥé þļüĝîñ šţöŕé ýéţ~~~~~~~~~]
 
 # Line under a plugin in the publish dialog that the store has in another version.
-stores-store-offers = [Ţĥé þļüĝîñ šţöŕé öƒƒéŕš { $version }~~~~~~~~~]
+stores-store-offers = [Ţĥé þļüĝîñ šţöŕé ĥàš { $version }~~~~~~~~]
 
 # Line under a plugin in the publish dialog whose version the store already has.
 stores-published-current = [Ûþ ţö ðàţé îñ ţĥé þļüĝîñ šţöŕé~~~~~~~~~]
@@ -2038,7 +2038,7 @@ stores-published-state = [Þüƀļîšĥéð~~~]
 stores-publish-label = [Þüƀļîšĥ { $name } { $version }~~~~~]
 
 # Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
-rkey-lock-linux = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, àƒţéŕ ýöüŕ àççöüñţ þàššŵöŕð.~~~~~~~~~~~~~~~~~~~~~~]
+rkey-lock-linux = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝš, Ðéṽîçéš, öñçé ýöü éñţéŕ ýöüŕ àççöüñţ þàššŵöŕð.~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = [Šĥöŵ ţĥé Ķàéŕî ŕéçöṽéŕý ķéý~~~~~~~~~]
@@ -2199,7 +2199,7 @@ library-row-summary-linux =
 library-page-watching-linux = [Ŵàţçĥéð ƒöŕ çĥàñĝéš~~~~~~]
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = [Ļööķéð àţ àĝàîñ ŵĥéñ Ķàéŕî šţàŕţš~~~~~~~~~~]
+library-page-no-watch-linux = [Çĥéçķéð ƒöŕ çĥàñĝéš ŵĥéñ Ķàéŕî šţàŕţš~~~~~~~~~~~~]
 
 # Heading over the matched series.
 library-matched-linux = [Ṁàţçĥéð~~~]
@@ -2365,7 +2365,7 @@ title-no-seasons = [Ñö çöññéçţéð šéàšöñš àŕé ķñöŵñ ƒ�
 title-pin-off-page = [Öþéñ ţĥé ţîţļé'š þàĝé ţö þîçķ à šöüŕçé ƒöŕ îţ.~~~~~~~~~~~~~~]
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = [Ñö šöüŕçéš àŕé ŕéĝîšţéŕéð ýéţ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~]
+title-no-sources-yet = [Ţĥé šöüŕçéš àŕé šţîļļ ļöàðîñĝ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~]
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = [Ýöüŕ ļîšţ šţàţüš îš ķéþţ öñ à ţŕàçķéŕ, àñð ñöñé îš šîĝñéð îñ. Ûšé :àççöüñţš ţö šîĝñ îñ ţö öñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -2539,7 +2539,7 @@ episodes-empty-none-listed = [Ñö éþîšöðéš ļîšţéð~~~~~~]
 episodes-empty-none-listed-hint = [Ţĥé šöüŕçé ļîšţéð ñö éþîšöðéš ƒöŕ ţĥîš ţîţļé. Þŕéšš { $search } ţö šéàŕçĥ ƒöŕ ţĥé ŕîĝĥţ ɱàţçĥ, öŕ { $pick } ţö þîçķ àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Toast when an episode has no { -release } to pick from.
-episodes-no-releases = [Ñö ŕéļéàšéš àŕé àṽàîļàƀļé ţö þîçķ ƒŕöɱ ƒöŕ ţĥîš éþîšöðé.~~~~~~~~~~~~~~~~~]
+episodes-no-releases = [Ţĥîš éþîšöðé ĥàš ñö ŕéļéàšéš ţö þîçķ ƒŕöɱ.~~~~~~~~~~~~~]
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 episodes-add-source-to-download = [Åðð à šöüŕçé ƀéƒöŕé ðöŵñļöàðîñĝ. Þŕéšš { $key } ţö öþéñ ţĥé Šöüŕçéš šçŕééñ.~~~~~~~~~~~~~~~~~~~~~]
@@ -3039,19 +3039,19 @@ keys-where-elsewhere = [öñ àñöţĥéŕ šçŕééñ~~~~~~]
 keys-where-surprise = [öñ Šéàŕçĥ'š ƀŕöŵšé àñð öñ Þļàññîñĝ~~~~~~~~~~~]
 
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
-keys-unbound = [“{ $action }” îñ ţĥé þàļéţţé~~~~~~]
+keys-unbound = ["{ $action }" îñ ţĥé þàļéţţé~~~~~~]
 
 # Config problem shown at start-up: a [keys] entry names an action that does not exist. The action is the name as typed.
-keys-error-unknown-action = [Ûñķñöŵñ àçţîöñ “{ $action }”.~~~~~~~]
+keys-error-unknown-action = [Ûñķñöŵñ àçţîöñ "{ $action }".~~~~~~~]
 
 # Config problem shown at start-up: a [keys] entry has a key that can't be parsed.
-keys-error-bad-key = [Çàñ'ţ ŕéàð ţĥé ķéý “{ $key }” ƒöŕ { $action }.~~~~~~~~~~]
+keys-error-bad-key = [Çàñ'ţ ŕéàð ţĥé ķéý "{ $key }" ƒöŕ { $action }.~~~~~~~~~~]
 
 # Config problem shown at start-up: two [keys] entries ask for the same key. Both names are action names as typed.
-keys-error-key-twice = [“{ $key }” îš ĝîṽéñ ţö ƀöţĥ { $first } àñð { $second }.~~~~~~~~~~~]
+keys-error-key-twice = ["{ $key }" îš ĝîṽéñ ţö ƀöţĥ { $first } àñð { $second }.~~~~~~~~~~~]
 
 # Config problem shown at start-up: a [keys] entry asks for a key another action keeps.
-keys-error-key-taken = [“{ $key }” ƒöŕ { $action } îš àļŕéàðý ƀöüñð ţö { $holder }.~~~~~~~~~~~~]
+keys-error-key-taken = ["{ $key }" ƒöŕ { $action } îš àļŕéàðý ƀöüñð ţö { $holder }.~~~~~~~~~~~~]
 
 # Label of the one help row that stands for every section jump key.
 keys-help-jump-section = [Ĝö ţö šéçţîöñ~~~~]
@@ -3204,7 +3204,7 @@ downloads-column-progress = [Þŕöĝŕéšš~~~]
 downloads-empty-heading = [Ñöţĥîñĝ ƣüéüéð~~~~~]
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = [Þŕéšš { $key } öñ à ţîţļé öŕ éþîšöðé ţö ƣüéüé îţ ƒöŕ öƒƒļîñé.~~~~~~~~~~~~~~~~~]
+downloads-empty-hint = [Þŕéšš { $key } öñ à ţîţļé öŕ éþîšöðé ţö ðöŵñļöàð îţ.~~~~~~~~~~~~~~~]
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = [É{ $episode }~~]
@@ -3386,16 +3386,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = [{ $queued } ƣüéüéð, { $held } ŵàîţîñĝ ƒöŕ àñ îð ɱàþþîñĝ~~~~~~~~~~~~~]
+accounts-row-queued-held = [{ $queued } ƣüéüéð, { $held } ŵàîţîñĝ ƒöŕ à ɱàţçĥ~~~~~~~~~~~]
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = [Ķééþ ɱîñé~~~]
+accounts-conflict-keep-mine = [Ûšé ļöçàļ~~~]
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = [Ķééþ ţĥéîŕš~~~~]
+accounts-conflict-keep-theirs = [Ûšé ţŕàçķéŕ~~~~]
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = [{ $title }  ·  { $field }: ɱîñé { $local } / ţĥéîŕš { $remote }~~~~~~~~~~~]
+accounts-conflict-row = [{ $title }  ·  { $field }: ļöçàļ { $local } / ţŕàçķéŕ { $remote }~~~~~~~~~~~]
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = [Ļîƀŕàŕý~~~]
@@ -3428,7 +3428,7 @@ lists-empty-type-to-search = [Ţýþé ţö šéàŕçĥ~~~~~]
 lists-empty-browse-filtered = [Þŕéšš ↵ ţö ƀŕöŵšé ŵîţĥ ţĥéšé ƒîļţéŕš.~~~~~~~~~~~~]
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
-lists-empty-browse-popular = [Þŕéšš ↵ ţö ƀŕöŵšé ţĥé ɱöšţ þöþüļàŕ.~~~~~~~~~~~]
+lists-empty-browse-popular = [Þŕéšš ↵ ţö ƀŕöŵšé ţĥé ɱöšţ þöþüļàŕ ţîţļéš.~~~~~~~~~~~~~]
 
 # Heading when a search or a browse found nothing.
 lists-empty-no-matches = [Ñö ɱàţçĥéš~~~]
@@ -4096,7 +4096,7 @@ settings-label-episode-discussions = [Éþîšöðé ðîšçüššîöñš~~~~~
 settings-label-comment-images = [Ļöàð îɱàĝéš îñ çöɱɱéñţš~~~~~~~]
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = [Çàļéñðàŕ šĥöŵš öñļý ɱý ļîšţ~~~~~~~~~]
+settings-label-calendar-mine = [Çàļéñðàŕ šĥöŵš öñļý ýöüŕ ļîšţ~~~~~~~~~]
 
 # Note under the titles row.
 settings-note-titles = [ÅñîĻîšţ'š çĥöîçé ƒöļļöŵš ýöüŕ ÅñîĻîšţ àççöüñţ, àñð îš Éñĝļîšĥ ŵĥéñ ýöü'ŕé šîĝñéð öüţ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -4153,13 +4153,13 @@ settings-note-update-check = [Öñé çàçĥéð ŕéƣüéšţ à ðàý, ɱà
 settings-note-presence = [Ţàķéš éƒƒéçţ öñ ţĥé ñéẋţ éþîšöðé.~~~~~~~~~~]
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = [Ñééðš à çļîéñţ ÎÐ. Ŕéĝîšţéŕ àñ àþþ àţ ðîšçöŕð.çöɱ/ðéṽéļöþéŕš.~~~~~~~~~~~~~~~~~~~]
+settings-note-presence-needs-client = [Šéţ à çļîéñţ ÎÐ ƒîŕšţ. Ŕéĝîšţéŕ àñ àþþ àţ ðîšçöŕð.çöɱ/ðéṽéļöþéŕš ţö ĝéţ öñé.~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the presence title row. The quoted text is what Discord shows.
-settings-note-presence-title = [Öƒƒ šĥöŵš “Ŵàţçĥîñĝ àñîɱé” ŵîţĥöüţ ñàɱîñĝ ţĥé šĥöŵ.~~~~~~~~~~~~~~~~]
+settings-note-presence-title = [Öƒƒ šĥöŵš "Ŵàţçĥîñĝ àñîɱé" ŵîţĥöüţ ñàɱîñĝ ţĥé šĥöŵ.~~~~~~~~~~~~~~~~]
 
 # Note under the rich presence row.
-settings-note-presence-rich = [Åððš ţĥé çöṽéŕ, à þŕöĝŕéšš ƀàŕ àñð àñ ÅñîĻîšţ ļîñķ. Ñééðš ţĥé ţîţļé šĥöŵñ.~~~~~~~~~~~~~~~~~~~~~~~]
+settings-note-presence-rich = [Åððš ţĥé çöṽéŕ, à þŕöĝŕéšš ƀàŕ àñð àñ ÅñîĻîšţ ļîñķ, àš ļöñĝ àš ţĥé ţîţļé îš šĥöŵñ.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the torrent playback row.
 settings-note-torrents = [Öƒƒ ƀý ðéƒàüļţ. Ţàķéš éƒƒéçţ îɱɱéðîàţéļý.~~~~~~~~~~~~~]
@@ -4316,13 +4316,13 @@ stores-footer-update-hosts = [Ţĥé üþðàţé àļšö ŵàñţš ţö çö�
 stores-footer-may-contact = [Ṁàý çöñţàçţ { $hosts }~~~~~]
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = [Å öñé-ţîɱé ļîñķ ţĥàţ ĵöîñš àñöţĥéŕ öƒ ýöüŕ çöɱþüţéŕš àš ýöü~~~~~~~~~~~~~~~~~~]
+stores-footer-link-device = [Å öñé-ţîɱé ļîñķ ţĥàţ ĵöîñš àñöţĥéŕ öƒ ýöüŕ ðéṽîçéš àš ýöü~~~~~~~~~~~~~~~~~~]
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = [Å öñé-ţîɱé ļîñķ ƒöŕ šöɱéöñé ñéŵ~~~~~~~~~~]
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = [Ŵĥö ĥàš ĵöîñéð, àñð ŕéɱöṽîñĝ šöɱéöñé'š àççéšš~~~~~~~~~~~~~~]
+stores-footer-members = [Šéé ŵĥö ĥàš ĵöîñéð, àñð ŕéɱöṽé šöɱéöñé'š àççéšš~~~~~~~~~~~~~~~]
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = [↵ Öñļý ļéţ þéöþļé ýöü îñṽîţé ĵöîñ, àñð šţöþ ţĥé ļîñķ~~~~~~~~~~~~~~~~]
@@ -4337,7 +4337,7 @@ stores-footer-publish = [Öƒƒéŕ à þļüĝîñ ƒŕöɱ ţĥîš ɱàçĥî
 stores-footer-admin = [Ṁàñàĝé ɱéɱƀéŕš, îñṽîţéš àñð þļüĝîñš îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~~~~~~~~]
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = [Þļüĝîñš îñšţàļļéð ƒŕöɱ îţ šţàý öñ ţĥîš ɱàçĥîñé àñð šţöþ üþðàţîñĝ~~~~~~~~~~~~~~~~~~~~]
+stores-footer-leave = [Þļüĝîñš îñšţàļļéð ƒŕöɱ îţ šţàý öñ ţĥîš ðéṽîçé àñð šţöþ üþðàţîñĝ~~~~~~~~~~~~~~~~~~~]
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = [Åñýöñé ŵîţĥ ţĥé ļîñķ~~~~~~]
@@ -4511,7 +4511,7 @@ stores-footer-remove-anonymous = [↵ Ŕéɱöṽé ţĥîš ðéṽîçé, ķñ
 stores-footer-remove-all-anonymous = [↵ Ŕéɱöṽé éṽéŕý ðéṽîçé ţĥàţ ĵöîñéð ŵîţĥ ţĥé ļîñķ~~~~~~~~~~~~~~~]
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = [Çöþîéð ţö ţĥé çļîþƀöàŕð ŵĥéŕé ţĥé ţéŕɱîñàļ àļļöŵš îţ, öŕ šéļéçţ îţ ţö çöþý.~~~~~~~~~~~~~~~~~~~~~~~]
+stores-link-copied = [Çöþîéð, îƒ ţĥîš ţéŕɱîñàļ àļļöŵš îţ. Îƒ ñöţ, šéļéçţ ţĥé ļîñķ ţö çöþý îţ.~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = [Šéļéçţ îţ ţö çöþý.~~~~~~]
@@ -4584,7 +4584,7 @@ stores-key-matches-invite = [{ $fingerprint }  (ɱàţçĥéš ţĥé îñṽî�
 stores-join-open = [Åñýöñé ŵîţĥ ţĥé ļîñķ çàñ ĵöîñ.~~~~~~~~~]
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = [Ýöü ĵöîñ ŵîţĥöüţ à ñàɱé, àñð àñöţĥéŕ ðéṽîçé ĵöîñš ŵîţĥ ţĥé šàɱé ļîñķ.~~~~~~~~~~~~~~~~~~~~~]
+stores-join-anonymous = [Ýöü ĵöîñ ŵîţĥöüţ à ñàɱé. Åñý öţĥéŕ ðéṽîçé çàñ ĵöîñ ŵîţĥ ţĥé šàɱé ļîñķ.~~~~~~~~~~~~~~~~~~~~~]
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = [Åļŕéàðý ĵöîñéð. Ĵöîñîñĝ àĝàîñ ĝîṽéš ţĥîš ðéṽîçé à ñéŵ ţöķéñ.~~~~~~~~~~~~~~~~~~]
@@ -4593,7 +4593,7 @@ stores-join-already = [Åļŕéàðý ĵöîñéð. Ĵöîñîñĝ àĝàîñ ĝ
 stores-join-device-note = [Ţĥé šţöŕé'š öŵñéŕ šééš ţĥîš ñàɱé. Ţýþé ţö çĥàñĝé îţ.~~~~~~~~~~~~~~~~]
 
 # Lines of the leave confirmation.
-stores-leave-plugins = [Þļüĝîñš îñšţàļļéð ƒŕöɱ îţ šţàý öñ ţĥîš ɱàçĥîñé àñð šţöþ üþðàţîñĝ.~~~~~~~~~~~~~~~~~~~~]
+stores-leave-plugins = [Þļüĝîñš îñšţàļļéð ƒŕöɱ îţ šţàý öñ ţĥîš ðéṽîçé àñð šţöþ üþðàţîñĝ.~~~~~~~~~~~~~~~~~~~~]
 
 # Lines of the leave confirmation.
 stores-leave-revoked = [Ţĥîš ðéṽîçé'š àççéšš ţö ţĥé šţöŕé îš ŕéṽöķéð.~~~~~~~~~~~~~~]
@@ -4606,7 +4606,7 @@ stores-remove-member-devices =
     }
 
 # Line of the remove member confirmation.
-stores-remove-member-plugins = [Þļüĝîñš ţĥéý àļŕéàðý îñšţàļļéð šţàý öñ ţĥéîŕ ɱàçĥîñéš.~~~~~~~~~~~~~~~~~]
+stores-remove-member-plugins = [Þļüĝîñš ţĥéý àļŕéàðý îñšţàļļéð šţàý öñ ţĥéîŕ ðéṽîçéš.~~~~~~~~~~~~~~~~]
 
 # Line of the cancel invite confirmation.
 stores-cancel-invite-link = [Ţĥé ļîñķ šţöþš ŵöŕķîñĝ.~~~~~~~]
@@ -4666,7 +4666,7 @@ stores-choice-update = [Ûþðàţé ţö { $version }~~~~]
 stores-choice-replace = [Ŕéþļàçé ţĥé çöþý àððéð ƀý ĥàñð~~~~~~~~~]
 
 # Choice in the plugin overlay: delete the plugin from this machine.
-stores-choice-remove = [Ŕéɱöṽé ƒŕöɱ ţĥîš ɱàçĥîñé~~~~~~~~]
+stores-choice-remove = [Ŕéɱöṽé ƒŕöɱ ţĥîš ðéṽîçé~~~~~~~]
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 stores-choice-unpublish = [Šţöþ öƒƒéŕîñĝ îţ îñ ţĥîš šţöŕé~~~~~~~~~]
@@ -4708,7 +4708,7 @@ sync-tui-device-never = [Ñöţ šýñçéð ýéţ~~~~~]
 sync-tui-profile-in-use = [Îñ üšé~~]
 
 # The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
-sync-tui-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }’š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+sync-tui-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }'š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Under Open the page again: the page's address follows on the next line, for a browser that did not open.
 sync-tui-browser-address = [Öŕ ĝö ţö ţĥîš àððŕéšš ýöüŕšéļƒ:~~~~~~~~~~]
@@ -4765,13 +4765,13 @@ sync-tui-rkey-again = [Ýöü çàñ šéé îţ àĝàîñ îñ Šéţţîñĝ�
 sync-tui-add-kids = [Åðð àš à ķîðš þŕöƒîļé~~~~~~~]
 
 # Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
-sync-tui-profile-restart = [Šţàŕţ Ķàéŕî àĝàîñ ţö üšé { $name }’š þŕöƒîļé.~~~~~~~~~~~~]
+sync-tui-profile-restart = [Šţàŕţ Ķàéŕî àĝàîñ ţö üšé { $name }'š þŕöƒîļé.~~~~~~~~~~~~]
 
 # A sync problem: the folder holds nothing to join.
 sync-tui-err-no-group = [Ţĥîš ƒöļðéŕ ĥöļðš ñö ĥîšţöŕý ţö ĵöîñ. Çĥööšé àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~~~~]
 
 # A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
-sync-tui-err-unavailable = [{ $service } îšñ’ţ àṽàîļàƀļé öñ ţĥîš ðéṽîçé.~~~~~~~~~~~]
+sync-tui-err-unavailable = [{ $service } îšñ'ţ àṽàîļàƀļé öñ ţĥîš ðéṽîçé.~~~~~~~~~~~]
 
 # Status line hint: Enter removes the highlighted { -device } from sync, after a question.
 sync-tui-hint-remove = [Ŕéɱöṽé~~]
@@ -4807,7 +4807,7 @@ party-no-source-still-in = [{ $reason } Ýöü'ŕé šţîļļ îñ ţĥé ŵà�
 status-reloading-sources = [Ŕéļöàðîñĝ šöüŕçéš…~~~~~~]
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = [{ $name } îš þîññéð ƒöŕ ţĥîš ţîţļé ƀüţ îšñ'ţ àṽàîļàƀļé, šö ţĥé öţĥéŕ šöüŕçéš àŕé üšéð.~~~~~~~~~~~~~~~~~~~~~~~~]
+pin-unavailable = [{ $name } îš þîññéð ƒöŕ ţĥîš ţîţļé ƀüţ îšñ'ţ àṽàîļàƀļé. Ţŕýîñĝ ţĥé öţĥéŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = [Ţöĝéţĥéŕ~~~]
@@ -4828,7 +4828,7 @@ tui-together-recent-alone = [Éþîšöðé { $episode } · { $when }~~~~~~]
 tui-medium-read-title = [Ŕéàðîñĝ îš îñ ţĥé àþþš~~~~~~~]
 
 # Line under the title of that page.
-tui-medium-read-line = [Ţĥé ţéŕɱîñàļ ĥàš ñö ŕéàðéŕ. Ṁàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš àŕé ŕéàð îñ ţĥé Ķàéŕî àþþš, àñð ýöüŕ ŕéàðîñĝ šţàýš îñ šţéþ ţĥŕöüĝĥ šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+tui-medium-read-line = [Ţĥé ţéŕɱîñàļ ĥàš ñö ŕéàðéŕ. Ṁàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš öþéñ îñ ţĥé Ķàéŕî àþþš, àñð šýñç ķééþš ýöüŕ þŕöĝŕéšš îñ šţéþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
 tui-medium-read-change = [Þŕéšš { $key } ţö çĥàñĝé ŵĥàţ Ķàéŕî îš ƒöŕ.~~~~~~~~~~~~]
@@ -4948,13 +4948,13 @@ settings-group-crashes = [Çŕàšĥ ŕéþöŕţš~~~~]
 settings-crash-save = [Šàṽé çŕàšĥ ŕéþöŕţš öñ ţĥîš ðéṽîçé~~~~~~~~~~]
 
 # Line under that switch.
-settings-crash-save-detail = [Ŵĥéñ ţĥîš îš öñ, Ķàéŕî ķééþš à šĥöŕţ ŕéçöŕð öƒ éàçĥ çŕàšĥ öñ ţĥîš ðéṽîçé, ŵîţĥ ţîţļéš, àððŕéššéš àñð ñàɱéš ŕéɱöṽéð, šö ýöü çàñ àðð îţ ţö Ŕéþöŕţ à ƀüĝ. Ñöţĥîñĝ îš šéñţ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-crash-save-detail = [Ķàéŕî ķééþš à šĥöŕţ ŕéçöŕð öƒ éàçĥ çŕàšĥ öñ ţĥîš ðéṽîçé ƒöŕ Ŕéþöŕţ à ƀüĝ, ŵîţĥ ţîţļéš, àððŕéššéš àñð ñàɱéš ŕéɱöṽéð. Ñöţĥîñĝ îš šéñţ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = [Åšķ àƒţéŕ à çŕàšĥ~~~~~~]
 
 # Line under that switch.
-settings-crash-ask-detail = [Šĥöŵš à ñöţîçé àţ ţĥé ñéẋţ ļàüñçĥ ŵîţĥ Ŕéþöŕţ…~~~~~~~~~~~~~~]
+settings-crash-ask-detail = [Ķàéŕî šĥöŵš à ñöţîçé ŵîţĥ Ŕéþöŕţ… ţĥé ñéẋţ ţîɱé îţ öþéñš.~~~~~~~~~~~~~~~~~~]
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = [Ķéþţ ƀý { $system }~~~~]
@@ -4984,7 +4984,7 @@ settings-crash-delete = [Ðéļéţé~~]
 settings-crash-delete-all = [Ðéļéţé àļļ~~~]
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = [Çŕàšĥ ŕéþöŕţš šţàý öñ ţĥîš ðéṽîçé. Ķàéŕî šéñðš ñöţĥîñĝ ƀý îţšéļƒ. Å ŕéþöŕţ ļéàṽéš öñļý ŵĥéñ ýöü öþéñ îţ öñ ĜîţĤüƀ ƒŕöɱ Ŕéþöŕţ à ƀüĝ. Ŕéþöŕţš àŕé ðéļéţéð àƒţéŕ 30 ðàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-crash-footnote = [Çŕàšĥ ŕéþöŕţš šţàý öñ ţĥîš ðéṽîçé, àñð Ķàéŕî šéñðš ñöţĥîñĝ ƀý îţšéļƒ. Å ŕéþöŕţ ļéàṽéš öñļý ŵĥéñ ýöü öþéñ îţ öñ ĜîţĤüƀ ƒŕöɱ Ŕéþöŕţ à ƀüĝ. Ŕéþöŕţš àŕé ðéļéţéð àƒţéŕ 30 ðàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Button that shows the week before.
 calendar-previous-week = [Þŕéṽîöüš ŵééķ~~~~]
@@ -5110,13 +5110,13 @@ cast-tvs-note-iphone = [Ţĥéý àþþéàŕ üñðéŕ Çĥŕöɱéçàšţ î
 cast-tvs-note-ipad = [Ţĥéý àþþéàŕ üñðéŕ Çĥŕöɱéçàšţ îñ Þļàý öñ ŢṼ. Ţĥîš îÞàð šéñðš ţĥéɱ ţĥé éþîšöðé.~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = [Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš Ṁàç šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+cast-torrents-note-mac = [Å ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ çàñ ţĥéñ þļàý ţöŕŕéñţš. Ţĥîš Ṁàç šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = [Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš îÞĥöñé šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+cast-torrents-note-iphone = [Å ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ çàñ ţĥéñ þļàý ţöŕŕéñţš. Ţĥîš îÞĥöñé šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = [Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš îÞàð šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+cast-torrents-note-ipad = [Å ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ çàñ ţĥéñ þļàý ţöŕŕéñţš. Ţĥîš îÞàð šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = [Ûþ ñéẋţ · þļàýš îñ { $seconds } š~~~~~~~~]
@@ -5874,7 +5874,7 @@ downloads-delete-detail = [Ţĥé ƒîļé îš ŕéɱöṽéð ƒŕöɱ ţĥî�
 downloads-delete-one-title = [Ðéļéţé ðöŵñļöàð~~~~~]
 
 # Line under it: what you lose.
-downloads-delete-one-detail = [Îţ þļàýš àĝàîñ öñļý ŵîţĥ à çöññéçţîöñ, öŕ öñçé ýöü ðöŵñļöàð îţ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
+downloads-delete-one-detail = [Åƒţéŕ ţĥîš, ţĥé éþîšöðé ñééðš à çöññéçţîöñ ţö þļàý, üñļéšš ýöü ðöŵñļöàð îţ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = [Ðéļéţé ŵàţçĥéð ðöŵñļöàðš~~~~~~~~]
@@ -5886,7 +5886,7 @@ downloads-seeding-title = [Šééðîñĝ~~~]
 downloads-seeding-after-watching = [Šééðîñĝ àƒţéŕ ŵàţçĥîñĝ~~~~~~~]
 
 # Line under the seeding heading.
-downloads-seeding-note = [Ŵàţçĥéð éþîšöðéš àŕé šĥàŕéð ƀàçķ ŵĥîļé Ķàéŕî îš öþéñ, üñţîļ ţĥé ŕàţîö öŕ ţĥé ţîɱé ļîɱîţ šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš, îš ŕéàçĥéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+downloads-seeding-note = [Ŵàţçĥéð éþîšöðéš àŕé šĥàŕéð ƀàçķ ŵĥîļé Ķàéŕî îš öþéñ. Šĥàŕîñĝ šţöþš àţ ţĥé ŕàţîö öŕ ţîɱé ļîɱîţ ýöü šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = [Ŵĥéñ ţĥé ŵîñðöŵ çļöšéš ŵîţĥ ðöŵñļöàðš ŕüññîñĝ~~~~~~~~~~~~~~]
@@ -5965,10 +5965,10 @@ episode-download-failed = [Çöüļðñ'ţ ðöŵñļöàð éþîšöðé { $ep
 first-other-title = [Åļŕéàðý üšé Ķàéŕî öñ àñöţĥéŕ ðéṽîçé?~~~~~~~~~~~]
 
 # Under the title.
-first-other-line = [Þàîŕ ŵîţĥ îţ àñð ţĥîš ðéṽîçé ĝéţš ýöüŕ šöüŕçéš, ţŕàçķéŕš àñð ĥîšţöŕý. Ţĥé šţéþš àƒţéŕ ţĥîš àŕé ţĥéñ ðöñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+first-other-line = [Þàîŕ ŵîţĥ îţ àñð ţĥîš ðéṽîçé ĝéţš ýöüŕ šöüŕçéš, ţŕàçķéŕš àñð ĥîšţöŕý, àñð ţĥé ŕéšţ öƒ šéţüþ îš ðöñé ƒöŕ ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line under the pair row.
-first-other-pair-line = [Šĥöŵš à çöðé ţö éñţéŕ öñ ţĥàţ ðéṽîçé. Ɓöţĥ ñééð ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~~~]
+first-other-pair-line = [Ýöü ĝéţ à çöðé ţö éñţéŕ öñ ţĥàţ ðéṽîçé. Ɓöţĥ ñééð ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~~~~]
 
 # Row that restores from a sync folder.
 first-other-restore = [Ŕéšţöŕé ƒŕöɱ à çļöüð ƒöļðéŕ~~~~~~~~~]
@@ -6007,13 +6007,13 @@ first-join-server = [Åðð { $host }~~~]
 first-join-server-line = [{ $kind } · šîĝñš îñ ŵîţĥ ţĥé ķéý ƒŕöɱ { $device }, ķéþţ îñ { $store }~~~~~~~~~~~~~~~]
 
 # Note under the list.
-first-join-folders = [Ƒöļðéŕš šţàý öñ { $device }. Åðð ţĥîš ðéṽîçé’š öŵñ ƒöļðéŕš îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]
+first-join-folders = [Ƒöļðéŕš šţàý öñ { $device }. Åðð ţĥîš ðéṽîçé'š öŵñ ƒöļðéŕš îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]
 
 # Note when the setup answered the remaining pages.
 first-join-steps-done = [Ļîšţš àñð šöüŕçéš àŕé šéţ üþ, šö ƒîŕšţ ŕüñ éñðš ĥéŕé. Ýöü çàñ çĥàñĝé ţĥéɱ îñ Šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Row error when a plugin store refused this device.
-first-join-store-refused = [{ $store } ðîðñ’ţ ļéţ ţĥîš ðéṽîçé îñ. { $owner } çàñ šéñð ýöü àñ îñṽîţé.~~~~~~~~~~~~~~~~~~]
+first-join-store-refused = [{ $store } ðîðñ'ţ ļéţ ţĥîš ðéṽîçé îñ. { $owner } çàñ šéñð ýöü àñ îñṽîţé.~~~~~~~~~~~~~~~~~~]
 
 # Notice on Home, for 4 seconds.
 first-join-syncing = [Šýñçîñĝ ŵîţĥ { $device }~~~~~]
@@ -6083,7 +6083,7 @@ home-end-signed-out = [Šîĝñ îñ ţö ÅñîĻîšţ ţö ƀŕîñĝ îñ ý
 home-sign-in = [Šîĝñ îñ ţö ÅñîĻîšţ~~~~~~]
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = [Åðð à šöüŕçé ţö þļàý ƒŕöɱ Ĥöɱé. Þļüĝîñ šţöŕéš ĥàš šöɱé ţö çĥööšé ƒŕöɱ.~~~~~~~~~~~~~~~~~~~~~]
+home-end-no-sources = [Åðð à šöüŕçé ţö þļàý ƒŕöɱ Ĥöɱé. Þļüĝîñš çöɱé ƒŕöɱ Þļüĝîñ šţöŕéš.~~~~~~~~~~~~~~~~~~~~]
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = [Ñöţ ƒöüñð îñ ýöüŕ šöüŕçéš~~~~~~~~]
@@ -6521,7 +6521,7 @@ library-picker-title = [Çĥööšé à ƒöļðéŕ ŵîţĥ ýöüŕ éþîš�
 library-remove-detail = [Ýöüŕ ƒîļéš šţàý ŵĥéŕé ţĥéý àŕé.~~~~~~~~~~]
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = [Çöüļðñ'ţ àšķ ÅñîĻîšţ. Îţ îš ţŕîéð àĝàîñ àţ ţĥé ñéẋţ šçàñ.~~~~~~~~~~~~~~~~~~]
+library-reason-offline = [Çöüļðñ'ţ ŕéàçĥ ÅñîĻîšţ. Ţĥé ñéẋţ šçàñ ţŕîéš àĝàîñ.~~~~~~~~~~~~~~~]
 
 # Button that opens the match picker for a group.
 library-choose-match = [Çĥööšé ţĥé ɱàţçĥ~~~~~]
@@ -6554,7 +6554,7 @@ licensed-body = [Ķàéŕî çàñ öþéñ ţîţļéš îñ šţŕéàɱîñĝ
 licensed-region = [Ŕéĝîöñ~~]
 
 # Line under the region menu.
-licensed-region-line = [Ĥîðéš ļîñķš ÅñîĻîšţ ɱàŕķš ƒöŕ öţĥéŕ çöüñţŕîéš. Ṁöšţ ļîñķš ñàɱé ñö çöüñţŕý, šö çĥööšé ýöüŕ šéŕṽîçéš ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+licensed-region-line = [Ļîñķš ÅñîĻîšţ ɱàŕķš ƒöŕ öţĥéŕ çöüñţŕîéš àŕé ĥîððéñ. Ṁöšţ ļîñķš ñàɱé ñö çöüñţŕý, šö çĥööšé ýöüŕ šéŕṽîçéš ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Heading over the services the viewer pays for.
 licensed-yours = [Ýöüŕ šéŕṽîçéš~~~~]
@@ -6998,7 +6998,7 @@ onboarding-own-heading = [Ĥàṽé ýöüŕ öŵñ ɱéðîà?~~~~~~]
 onboarding-invite-heading = [Ĥàṽé àñ îñṽîţé ļîñķ?~~~~~~]
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = [Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš šîĝñéð àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+onboarding-where-stores = [Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Éàçĥ öñé îš šîĝñéð àñð ĝîṽéš éṽéŕý ðéṽîçé îţš öŵñ ţöķéñ, ŵĥîçĥ îš ŵĥý ýöü ĵöîñ ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = [Ţŕý îţ ñöŵ~~~]
@@ -7040,7 +7040,7 @@ party-leave = [Ļéàṽé ŵàţçĥ þàŕţý~~~~~~]
 party-leaving = [Ļéàṽîñĝ…~~~]
 
 # Label of the button that marks you as ready.
-party-ready-action = [Î'ɱ ŕéàðý~~~]
+party-ready-action = [Ŕéàðý ţö ŵàţçĥ~~~~~]
 
 # Button that copies the link to invite someone.
 party-copy-invite = [Çöþý îñṽîţé ļîñķ~~~~~]
@@ -7055,7 +7055,7 @@ party-leave-and-close = [Ļéàṽé àñð çļöšé~~~~~]
 party-not-now = [Ñöţ ñöŵ~~~]
 
 # Line while the form fetches its suggestions.
-party-getting-ready = [Ĝéţţîñĝ ţĥîñĝš ŕéàðý…~~~~~~~]
+party-getting-ready = [Ļöàðîñĝ šüĝĝéšţîöñš…~~~~~~]
 
 # Label of the server field.
 party-server = [Šéŕṽéŕ~~]
@@ -7088,7 +7088,7 @@ party-server-public = [Å þüƀļîç šéŕṽéŕ ŕüñ ƀý { $operator }, 
 party-server-suggest = [Ñö šéŕṽéŕ öƒ ýöüŕ öŵñ? { $server } îš à þüƀļîç öñé, ŕüñ ƀý { $operator }.~~~~~~~~~~~~~~~~~]
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = [Å šéŕṽéŕ ţĥé þéŕšöñ ŵĥö îñṽîţéð ýöü çĥöšé. Ķàéŕî ðöéšñ'ţ ŕüñ îţ.~~~~~~~~~~~~~~~~~~~~]
+party-server-invited = [Ţĥé þéŕšöñ ŵĥö îñṽîţéð ýöü çĥöšé ţĥîš šéŕṽéŕ. Ķàéŕî ðöéšñ'ţ ŕüñ îţ.~~~~~~~~~~~~~~~~~~~~~]
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = [Ŵŕîţé ţĥé šéŕṽéŕ àš à ĥöšţ àñð à þöŕţ, ļîķé þàŕţý.éẋàɱþļé:8999.~~~~~~~~~~~~~~~~~~~]
@@ -7299,7 +7299,7 @@ together-recent = [Ŕéçéñţ ŕööɱš~~~~]
 together-recent-row = [Éþîšöðé { $episode } · ŵîţĥ { $names } · { $when }~~~~~~~~~]
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = [Ŕööɱš ýöü ĵöîñ šĥöŵ ĥéŕé, ţĥé ļàšţ ţéñ.~~~~~~~~~~~~]
+together-recent-empty = [Ţĥé ļàšţ ţéñ ŕööɱš ýöü ĵöîñ šĥöŵ ĥéŕé.~~~~~~~~~~~~]
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = [Ŕéĵöîñ~~]
@@ -7384,7 +7384,7 @@ party-member-finding = [Ƒîñðîñĝ à šöüŕçé~~~~~]
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = [Ŵàţçĥîñĝ ƒŕöɱ { $time }~~~~~~]
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = [Ŕéàðý~~]
 
 # Heading of the invite block in the lobby.
@@ -7602,7 +7602,7 @@ party-chat-show = [Šĥöŵ çĥàţ~~~]
 settings-hide-chat = [Ĥîðé çĥàţ îñ ŵàţçĥ þàŕţîéš~~~~~~~~]
 
 # Line under that switch.
-settings-hide-chat-line = [Ļîñéš, ŕéàçţîöñš àñð ţĥéîŕ ţîçķš öñ ţĥé šééķ ƀàŕ šţàý öƒƒ ţĥé ṽîðéö, àñð ţĥé ƒîéļð îš ĝöñé. Ţĥé þéöþļé ļîšţ šţîļļ šĥöŵš ŵĥö îš îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-hide-chat-line = [Çĥàţ ļîñéš, ŕéàçţîöñš àñð ţĥéîŕ ţîçķš öñ ţĥé šééķ ƀàŕ šţàý öƒƒ ţĥé ṽîðéö, àñð ţĥé çĥàţ ƒîéļð îš ĝöñé. Ţĥé þéöþļé ļîšţ šţîļļ šĥöŵš ŵĥö îš îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = [Ṁüţé { $name }~~~]
@@ -8206,10 +8206,10 @@ player-load-audio-file = [Ļöàð àüðîö ƒîļé…~~~~~]
 player-file-picker-failed = [Çöüļðñ'ţ öþéñ ţĥé ƒîļé çĥööšéŕ. Ţŕý àĝàîñ.~~~~~~~~~~~~~]
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = [Çöüļðñ'ţ ļöàð ţĥàţ šüƀţîţļé ƒîļé. Çĥéçķ ţĥàţ îţ îš à šüƀţîţļé ƒîļé.~~~~~~~~~~~~~~~~~~~~~]
+player-subtitle-file-failed = [Çöüļðñ'ţ ļöàð ţĥàţ ƒîļé àš šüƀţîţļéš. Çĥööšé à šüƀţîţļé ƒîļé, šüçĥ àš .šŕţ öŕ .àšš.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = [Çöüļðñ'ţ ļöàð ţĥàţ àüðîö ƒîļé. Çĥéçķ ţĥàţ îţ îš àñ àüðîö ƒîļé.~~~~~~~~~~~~~~~~~~~]
+player-audio-file-failed = [Çöüļðñ'ţ ļöàð ţĥàţ ƒîļé àš àüðîö. Çĥööšé àñ àüðîö ƒîļé, šüçĥ àš .ɱķà öŕ .ƒļàç.~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Name of a track that has no name or language.
 player-track-unnamed = [Ûññàɱéð ţŕàçķ~~~~]
@@ -8427,7 +8427,7 @@ reader-divider-facts-source = [{ $facts } · ƒŕöɱ { $source }~~~~~]
 onboarding-read-demo = [Ŕéàð ţĥé ðéɱö~~~~]
 
 # Under the first run's demo heading when the device is for reading.
-onboarding-demo-books-detail = [Ţĥé ðéɱö ŕéàðš à šĥöŕţ çöɱîç àñð à šĥöŕţ šţöŕý ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+onboarding-demo-books-detail = [Öñé šĥöŕţ çöɱîç àñð öñé šĥöŕţ šţöŕý, šĥàŕéð ƀý ţĥéîŕ ɱàķéŕš üñðéŕ Çŕéàţîṽé Çöɱɱöñš.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Under the first run's demo heading when the device is for both.
 onboarding-demo-both-detail = [Öñé šĥöŕţ éþîšöðé àñð öñé šĥöŕţ çöɱîç, šĥàŕéð ƀý ţĥéîŕ ɱàķéŕš üñðéŕ Çŕéàţîṽé Çöɱɱöñš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -8452,7 +8452,7 @@ demo-credit-book = [{ $title } ƀý { $author }. Ļîçéñšéð { $licence }. 
 demo-credit-story = [{ $title } ƀý { $author }. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~]
 
 # The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
-demo-credit-cover = [Çöṽéŕ: “{ $title }” ƀý { $artist }, { $year }. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~~~~~]
+demo-credit-cover = [Çöṽéŕ: "{ $title }" ƀý { $artist }, { $year }. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~~~~~]
 
 # Credit capsule in the reader's top bar on page 1.
 reader-demo-credit = [{ $title } · { $author } · { $licence }~~~~~]
@@ -8464,7 +8464,7 @@ search-demo-reads = [Ðéɱö · Ŕéàðš ñöŵ~~~~~]
 search-demo-only-books = [Öñļý ţĥé ðéɱö îš öñ. Öţĥéŕ ţîţļéš àþþéàŕ öñçé ýöü àðð à šöüŕçé.~~~~~~~~~~~~~~~~~~~]
 
 # Title of the card after the demo's last page.
-reader-demo-end = [Ţĥàţ’š ţĥé éñð öƒ ţĥé ðéɱö~~~~~~~~]
+reader-demo-end = [Ţĥàţ'š ţĥé éñð öƒ ţĥé ðéɱö~~~~~~~~]
 
 # Line under it.
 reader-demo-end-line = [Ţö ŕéàð ýöüŕ öŵñ ƀööķš, àðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~~~~~]
@@ -8479,7 +8479,7 @@ reader-demo-again = [Ɓàçķ ţö þàĝé 1~~~~~]
 sources-demo-books-line = [Å çöɱîç àñð à šţöŕý · ÇÇ ƁÝ 4.0 àñð þüƀļîç ðöɱàîñ~~~~~~~~~~~~~~~]
 
 # About the demo, first line, when reading is on.
-sources-demo-books-what = [Ŵöŕķš ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš, šö ýöü çàñ ţŕý Ķàéŕî ƀéƒöŕé àððîñĝ à šöüŕçé. Îţ îšñ’ţ à šöüŕçé ţö ķééþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+sources-demo-books-what = [Ŵöŕķš ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš, šö ýöü çàñ ţŕý Ķàéŕî ƀéƒöŕé àððîñĝ à šöüŕçé. Îţ îšñ'ţ à šöüŕçé ţö ķééþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # About the demo, in place of sources-demo-private when reading is on.
 sources-demo-books-private = [Ţĥé ðéɱö ñéṽéŕ šîĝñš îñ àñýŵĥéŕé àñð ñéṽéŕ ŵŕîţéš ţö à ţŕàçķéŕ.~~~~~~~~~~~~~~~~~~~]
@@ -9130,7 +9130,7 @@ book-sources-keep = [Ķééþ üñɱàţçĥéð~~~~~]
 book-sources-find = [Ƒîñð~~]
 
 # Footnote of the Check matches sheet.
-book-sources-unmatched-note = [Ûñɱàţçĥéð šéŕîéš šţîļļ ŕéàð ƒŕöɱ ţĥé ƒöļðéŕ. Ţĥéý ĥàṽé ñö ţŕàçķéŕ þŕöĝŕéšš üñţîļ ɱàţçĥéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+book-sources-unmatched-note = [Ýöü çàñ šţîļļ ŕéàð üñɱàţçĥéð šéŕîéš ƒŕöɱ ţĥé ƒöļðéŕ. Ţĥéý ĝéţ ñö ţŕàçķéŕ þŕöĝŕéšš üñţîļ ţĥéý'ŕé ɱàţçĥéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Accessibility label of the control that sets Shows or Reading in the Library and Search.
 library-scope-label = [Šĥöŵš öŕ Ŕéàðîñĝ~~~~~]
@@ -9296,13 +9296,13 @@ onboarding-lists-line-both = [Ķàéŕî ķééþš ýöüŕ ŕéàðîñĝ àñ
 onboarding-lists-anilist-line = [Ļîšţš, þŕöĝŕéšš àñð šüĝĝéšţîöñš~~~~~~~~~~]
 
 # Under AniList on the first-run page after Watch: the other trackers, for later.
-onboarding-lists-later-watch = [ṀýÅñîɱéĻîšţ, Ķîţšü, Šîɱķļ àñð Ţŕàķţ çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]
+onboarding-lists-later-watch = [Ýöü çàñ àðð ṀýÅñîɱéĻîšţ, Ķîţšü, Šîɱķļ àñð Ţŕàķţ ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Under AniList on the first-run page after Read: the other trackers, for later.
-onboarding-lists-later-read = [ṀýÅñîɱéĻîšţ, Ķîţšü àñð ṀàñĝàÛþðàţéš çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]
+onboarding-lists-later-read = [Ýöü çàñ àðð ṀýÅñîɱéĻîšţ, Ķîţšü àñð ṀàñĝàÛþðàţéš ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Under AniList on the first-run page after Both: the other trackers, for later.
-onboarding-lists-later-both = [ṀýÅñîɱéĻîšţ, Ķîţšü, ṀàñĝàÛþðàţéš, Šîɱķļ àñð Ţŕàķţ çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+onboarding-lists-later-both = [Ýöü çàñ àðð ṀýÅñîɱéĻîšţ, Ķîţšü, ṀàñĝàÛþðàţéš, Šîɱķļ àñð Ţŕàķţ ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # The first-run page's main button: sign in to the tracker.
 onboarding-connect = [Çöññéçţ { $tracker }~~~~]
@@ -9539,10 +9539,10 @@ settings-chapter-notifications-note = [Šéŕîéš öñ ýöüŕ Ŕéàðîñĝ
 settings-downloads-finished-note = [Ŵĥéñ ţĥé çĥàþţéŕš ðöŵñļöàðîñĝ àŕé àļļ ðöñé~~~~~~~~~~~~~]
 
 # Under New chapters.
-settings-chapter-notifications-footer = [Çĥàþţéŕš ĥàṽé ţĥéîŕ öŵñ šýšţéɱ çĥàññéļ, šö ţĥéý çàñ ƀé šîļéñçéð öñ ţĥéîŕ öŵñ.~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-chapter-notifications-footer = [Çĥàþţéŕš ĥàṽé ţĥéîŕ öŵñ šýšţéɱ çĥàññéļ, šö ýöü çàñ šîļéñçé ţĥéɱ àñð ķééþ ţĥé ŕéšţ.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Credit under the trackers with reading on.
-accounts-mangaupdates-credit = [ṀàñĝàÛþðàţéš îš ŕéàçĥéð ţĥŕöüĝĥ îţš þüƀļîç ÅÞÎ.~~~~~~~~~~~~~~~]
+accounts-mangaupdates-credit = [Ķàéŕî ţàļķš ţö ṀàñĝàÛþðàţéš ţĥŕöüĝĥ îţš þüƀļîç ÅÞÎ.~~~~~~~~~~~~~~~~]
 
 # Placeholder of the user name field when signing in to MangaUpdates.
 accounts-username = [Ûšéŕ ñàɱé~~~]
@@ -9688,7 +9688,7 @@ stop-title = [Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~]
 stop-note = [Ýöü šéñţ çĥàþţéŕš ţö { $device }. Ŵĥéŕé ðîð ýöü šţöþ?~~~~~~~~~~~~~~]
 
 # Button in that note.
-stop-note-action = [Šéţ ɱý þļàçé~~~~]
+stop-note-action = [Šéţ ýöüŕ þļàçé~~~~~]
 
 # First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
 stop-sent-one = [Çĥàþţéŕ { $chapter } ŵéñţ ţö { $device } öñ { $date }.~~~~~~~~~~]
@@ -9697,16 +9697,16 @@ stop-sent-one = [Çĥàþţéŕ { $chapter } ŵéñţ ţö { $device } öñ { $d
 stop-sent-range = [Çĥàþţéŕš { $first } ţö { $last } ŵéñţ ţö { $device } öñ { $date }.~~~~~~~~~~~~]
 
 # Switch in the sheet: the last chapter sent was read to its end.
-stop-finished = [Î ƒîñîšĥéð çĥàþţéŕ { $chapter }~~~~~~~]
+stop-finished = [Ƒîñîšĥéð çĥàþţéŕ { $chapter }~~~~~~]
 
 # The main button of the sheet: keeps the chapter chosen as the place.
-stop-set = [Šéţ ɱý þļàçé~~~~]
+stop-set = [Šéţ ýöüŕ þļàçé~~~~~]
 
 # The other button of the sheet: leaves the place as it is, with the place named.
 stop-keep = [Ķééþ çĥàþţéŕ { $chapter } · þàĝé { $page }~~~~~~~~~]
 
 # The other button of the sheet when the place is not a page.
-stop-keep-plain = [Ķééþ ɱý þļàçé~~~~]
+stop-keep-plain = [Ķééþ çüŕŕéñţ þļàçé~~~~~~]
 
 # Heading of the E-readers group in the Reading settings.
 ereaders-group = [É-ŕéàðéŕš~~~]
@@ -9721,7 +9721,7 @@ ereaders-feed-row = [ÖÞÐŠ ƒééð~~~]
 opds-share-note = [Åñ ÖÞÐŠ çàţàļöĝüé é-ŕéàðéŕš àţ ĥöɱé çàñ ƀŕöŵšé~~~~~~~~~~~~~~]
 
 # Footnote under the feed settings.
-opds-footer = [Öñļý ŵĥîļé Ķàéŕî îš öþéñ öñ ţĥîš { $device }. Þŕöĝŕéšš öñ ţĥöšé é-ŕéàðéŕš šţàýš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~]
+opds-footer = [Ţĥé ƒééð ŕüñš öñļý ŵĥîļé Ķàéŕî îš öþéñ öñ ţĥîš { $device }. Þŕöĝŕéšš öñ ţĥöšé é-ŕéàðéŕš šţàýš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Row in the feed settings: the web address e-readers are given, with a button that copies it.
 opds-address = [Åððŕéšš~~~]
@@ -9742,7 +9742,7 @@ opds-new-password = [Ñéŵ þàššŵöŕð~~~~]
 opds-port = [Þöŕţ~~]
 
 # Line under the port row when it is empty.
-opds-port-note = [Ļéàṽé îţ éɱþţý ţö þîçķ à ƒŕéé þöŕţ, öŕ üšé 1024 ţö 65535~~~~~~~~~~~~~~~~~]
+opds-port-note = [Ļéàṽé îţ éɱþţý ƒöŕ àñý ƒŕéé þöŕţ, öŕ þîçķ öñé ƒŕöɱ 1024 ţö 65535~~~~~~~~~~~~~~~~~~~~]
 
 # Line under the port row when the port asked for was taken and another is used.
 opds-port-moved = [Þöŕţ { $wanted } ŵàš ƀüšý, šö ţĥé ƒééð üšéš { $port }.~~~~~~~~~~~~]
@@ -9835,7 +9835,7 @@ seasonal-empty-format-detail = [Ţŕý àļļ ƒöŕɱàţš.~~~~~]
 seasonal-filter-in-search = [Ƒîļţéŕ îñ Šéàŕçĥ~~~~~]
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = [Ţĥîš šéàšöñ îñ Šéàŕçĥ, ŵĥéŕé éṽéŕý ƒîļţéŕ ñàŕŕöŵš îţ~~~~~~~~~~~~~~~~]
+seasonal-filter-help = [Öþéñš ţĥîš šéàšöñ îñ Šéàŕçĥ, ŵĥéŕé éṽéŕý ƒîļţéŕ ŵöŕķš~~~~~~~~~~~~~~~~]
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = [Þöþüļàŕîţý~~~]
@@ -9862,16 +9862,16 @@ search-placeholder = [Šéàŕçĥ ţîţļéš~~~~]
 search-clear = [Çļéàŕ šéàŕçĥ~~~~]
 
 # Row under the field while a search runs. The query is what the person typed.
-search-searching = [Šéàŕçĥîñĝ ƒöŕ “{ $query }”~~~~~~]
+search-searching = [Šéàŕçĥîñĝ ƒöŕ "{ $query }"~~~~~~]
 
 # Heading over the results of a search.
-search-results-for = [Ŕéšüļţš ƒöŕ “{ $query }”~~~~~~]
+search-results-for = [Ŕéšüļţš ƒöŕ "{ $query }"~~~~~~]
 
 # Heading over the titles shown when nothing was typed.
 search-browse = [Ɓŕöŵšé~~]
 
 # Title of the state when a search finds nothing.
-search-nothing-found = [Ñöţĥîñĝ ƒöüñð ƒöŕ “{ $query }”~~~~~~~]
+search-nothing-found = [Ñöţĥîñĝ ƒöüñð ƒöŕ "{ $query }"~~~~~~~]
 
 # Line under the title when a search finds nothing.
 search-nothing-found-detail = [Çĥéçķ ţĥé šþéļļîñĝ, öŕ ţŕý ţĥé Éñĝļîšĥ öŕ Ĵàþàñéšé ţîţļé.~~~~~~~~~~~~~~~~~~]
@@ -9880,7 +9880,7 @@ search-nothing-found-detail = [Çĥéçķ ţĥé šþéļļîñĝ, öŕ ţŕý �
 search-nothing-with-filters = [Ñöţĥîñĝ ƒöüñð ŵîţĥ ţĥéšé ƒîļţéŕš~~~~~~~~~~]
 
 # Title of the state when a search and its filters leave nothing.
-search-nothing-found-with-filters = [Ñöţĥîñĝ ƒöüñð ƒöŕ “{ $query }” ŵîţĥ ţĥéšé ƒîļţéŕš~~~~~~~~~~~~~]
+search-nothing-found-with-filters = [Ñöţĥîñĝ ƒöüñð ƒöŕ "{ $query }" ŵîţĥ ţĥéšé ƒîļţéŕš~~~~~~~~~~~~~]
 
 # Line under a state that filters emptied.
 search-try-fewer-filters = [Ţŕý ƒéŵéŕ ƒîļţéŕš.~~~~~~]
@@ -9976,7 +9976,7 @@ filter-where-to-watch = [Ŵĥéŕé ţö ŵàţçĥ~~~~~]
 filter-licensed-only = [Ļîçéñšéð öñļý~~~~]
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = [Ţîţļéš öñ ɱý ļîšţ~~~~~~]
+filter-my-list = [Ţîţļéš öñ ýöüŕ ļîšţ~~~~~~]
 
 # Value of a three-way filter: include the titles.
 filter-show = [Šĥöŵ~~]
@@ -10478,7 +10478,7 @@ servers-error-certificate = [{ $host } üšéš à çéŕţîƒîçàţé ţĥî
 servers-row-signed-out-here = [Šîĝñéð öüţ~~~]
 
 # Line under it: what signing out does.
-servers-sign-out-line = [Éñðš ţĥîš ðéṽîçé'š šîĝñ-îñ öñ ţĥé šéŕṽéŕ. Ţĥé šéŕṽéŕ àñð ýöüŕ ðöŵñļöàðš šţàý àš ţĥéý àŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+servers-sign-out-line = [Šîĝñîñĝ öüţ éñðš ţĥîš ðéṽîçé'š šéššîöñ öñ ţĥé šéŕṽéŕ. Ţĥé šéŕṽéŕ àñð ýöüŕ ðöŵñļöàðš šţàý àš ţĥéý àŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Settings group and row title for choosing a language.
 settings-language = [Ļàñĝüàĝé~~~]
@@ -10797,7 +10797,7 @@ settings-new-episodes = [Ñéŵ éþîšöðéš~~~~]
 settings-new-episodes-detail = [Šĥöŵš öñ ýöüŕ Ŵàţçĥîñĝ ļîšţ~~~~~~~~~]
 
 # Line explaining what a notification says.
-settings-notify-detail = [Öñé ñöţîƒîçàţîöñ ŵĥéñ àñ éþîšöðé öƒ à šĥöŵ ýöü ƒöļļöŵ çöɱéš öüţ: ţĥé šĥöŵ àñð ţĥé éþîšöðé'š ñüɱƀéŕ, ñéṽéŕ îţš ñàɱé. Å šĥöŵ çàñ ţüŕñ îţš öŵñ öƒƒ îñ îţš šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+settings-notify-detail = [Ýöü ĝéţ öñé ñöţîƒîçàţîöñ ŵĥéñ àñ éþîšöðé öƒ à šĥöŵ ýöü ƒöļļöŵ çöɱéš öüţ. Îţ ñàɱéš ţĥé šĥöŵ àñð ţĥé éþîšöðé'š ñüɱƀéŕ, ñéṽéŕ ţĥé éþîšöðé'š ţîţļé. Å šĥöŵ çàñ ţüŕñ îţš öŵñ öƒƒ îñ îţš šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Row: the coming-up digest.
 settings-coming-up = [Çöɱîñĝ üþ · ñéẋţ 7 ðàýš~~~~~~~]
@@ -10809,7 +10809,7 @@ settings-system-notifications = [Ñöţîƒîçàţîöñ šéţţîñĝš~~~~~~
 settings-system-notifications-detail = [Šöüñð, ṽîƀŕàţîöñ àñð ţĥé ļöçķ šçŕééñ~~~~~~~~~~~]
 
 # Line under it on Apple.
-settings-system-notifications-apple = [Öþéñš Šýšţéɱ Šéţţîñĝš, ŵĥéŕé ţĥé ƀàññéŕ šţýļé, šöüñð àñð ƀàðĝéš àŕé šéţ.~~~~~~~~~~~~~~~~~~~~~~]
+settings-system-notifications-apple = [Öþéñš Šýšţéɱ Šéţţîñĝš, ŵĥéŕé ýöü šéţ ţĥé ƀàññéŕ šţýļé, šöüñð àñð ƀàðĝéš.~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = [Öƒƒ: ţĥé šýšţéɱ îšñ'ţ àļļöŵîñĝ ñöţîƒîçàţîöñš ƒöŕ Ķàéŕî~~~~~~~~~~~~~~~~~]
@@ -10851,7 +10851,7 @@ show-settings-never = [Ñéṽéŕ~~]
 show-settings-subs-remembered = [Ŕéɱéɱƀéŕéð ƒŕöɱ ýöüŕ ļàšţ éþîšöðé.~~~~~~~~~~~]
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = [Çĥöšéñ îñ ţĥé þļàýéŕ. Ƒöļļöŵîñĝ Šéţţîñĝš › Þļàýƀàçķ.~~~~~~~~~~~~~~~~]
+show-settings-subs-follow = [Çĥöšéñ îñ ţĥé þļàýéŕ. Ûñţîļ ţĥéñ, Šéţţîñĝš › Þļàýƀàçķ àþþļîéš.~~~~~~~~~~~~~~~~~~~]
 
 # Row: the source for this show.
 show-settings-source = [Šöüŕçé~~]
@@ -10936,7 +10936,7 @@ settings-upscaling-natural = [Ñàţüŕàļ · ÅŕţÇÑÑ~~~~~]
 settings-label-hover-cards = [Éẋþàñð çöṽéŕš öñ ĥöṽéŕ~~~~~~~]
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = [Šĥöŵš à ļàŕĝéŕ çàŕð ŵîţĥ ţĥé ţŕàîļéŕ ŵĥéñ ýöü ŕéšţ ţĥé þöîñţéŕ öñ à çöṽéŕ.~~~~~~~~~~~~~~~~~~~~~~~]
+settings-hover-cards-note = [Ŕéšţîñĝ ţĥé þöîñţéŕ öñ à çöṽéŕ öþéñš à ļàŕĝéŕ çàŕð ŵîţĥ îţš ţŕàîļéŕ.~~~~~~~~~~~~~~~~~~~~~]
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = [Ƒàîţĥƒüļ ļîñé ŵöŕķ àñð ţéẋţüŕé, ñöţĥîñĝ ŕéšţýļéð.~~~~~~~~~~~~~~~]
@@ -11180,22 +11180,22 @@ book-server-username = [Ûšéŕñàɱé~~~]
 book-server-password = [Þàššŵöŕð~~~]
 
 # Error title when the server could not be reached.
-book-server-err-unreachable = [Çöüļðñ’ţ ŕéàçĥ { $host }~~~~~~]
+book-server-err-unreachable = [Çöüļðñ'ţ ŕéàçĥ { $host }~~~~~~]
 
 # Line under it.
 book-server-err-unreachable-line = [Çĥéçķ ţĥé àððŕéšš, àñð ţĥàţ ţĥé šéŕṽéŕ îš öñ àñð öñ ţĥîš ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~]
 
 # Error title when the server turned the password down.
-book-server-err-password = [{ $host } ðîðñ’ţ àççéþţ ţĥàţ þàššŵöŕð~~~~~~~~~~]
+book-server-err-password = [{ $host } ðîðñ'ţ àççéþţ ţĥàţ þàššŵöŕð~~~~~~~~~~]
 
 # Line under it. The kind is Komga, Kavita or OPDS.
 book-server-err-password-line = [Ûšé ţĥé üšéŕñàɱé àñð þàššŵöŕð ýöü üšé ƒöŕ { $kind } îñ à ƀŕöŵšéŕ.~~~~~~~~~~~~~~~~~~]
 
 # Error title when Kavita turned the key in an OPDS link down.
-book-server-err-key = [{ $host } ðîðñ’ţ àççéþţ ţĥàţ ķéý~~~~~~~~]
+book-server-err-key = [{ $host } ðîðñ'ţ àççéþţ ţĥàţ ķéý~~~~~~~~]
 
 # Line under it.
-book-server-err-key-line = [Ţĥé ķéý çĥàñĝéš ŵĥéñ îţ’š ŕéšéţ îñ Ķàṽîţà. Çöþý ţĥé ÖÞÐŠ ļîñķ àĝàîñ ƒŕöɱ ýöüŕ àççöüñţ šéţţîñĝš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+book-server-err-key-line = [Ţĥé ķéý çĥàñĝéš ŵĥéñ îţ'š ŕéšéţ îñ Ķàṽîţà. Çöþý ţĥé ÖÞÐŠ ļîñķ àĝàîñ ƒŕöɱ ýöüŕ àççöüñţ šéţţîñĝš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Title when the server lets the account in and shows it no series.
 book-server-empty = [{ $host } šĥöŵš ţĥîš àççöüñţ ñö šéŕîéš~~~~~~~~~~]
@@ -11222,8 +11222,8 @@ book-folder-found-line = [{ $path }. Ķàéŕî ɱàţçĥéð { $matched } öƒ
 # Row in the folder result: files that are books in formats Kaeri can't open.
 book-folder-unsupported =
     { $count ->
-        [one] [Öñé ƒîļé Ķàéŕî çàñ’ţ öþéñ~~~~~~~~]
-       *[other] [{ $count } ƒîļéš Ķàéŕî çàñ’ţ öþéñ~~~~~~~~]
+        [one] [Öñé ƒîļé Ķàéŕî çàñ'ţ öþéñ~~~~~~~~]
+       *[other] [{ $count } ƒîļéš Ķàéŕî çàñ'ţ öþéñ~~~~~~~~]
     }
 
 # Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
@@ -11250,7 +11250,7 @@ book-folder-empty = [Ñöţĥîñĝ îñ { $folder } ţĥàţ Ķàéŕî çàñ 
 # Line under it.
 book-folder-empty-line =
     { $files ->
-        [one] [Îţ ĥöļðš öñé ƒîļé, ŵĥîçĥ îšñ’ţ ÇƁŽ, ÇƁŔ, ÉÞÛƁ, ÞÐƑ öŕ àñ îɱàĝé.~~~~~~~~~~~~~~~~~~~]
+        [one] [Îţ ĥöļðš öñé ƒîļé, ŵĥîçĥ îšñ'ţ ÇƁŽ, ÇƁŔ, ÉÞÛƁ, ÞÐƑ öŕ àñ îɱàĝé.~~~~~~~~~~~~~~~~~~~]
        *[other] [Îţ ĥöļðš { $files } ƒîļéš, ñöñé öƒ ţĥéɱ ÇƁŽ, ÇƁŔ, ÉÞÛƁ, ÞÐƑ öŕ îɱàĝéš.~~~~~~~~~~~~~~~~~~~]
     }
 
@@ -11291,8 +11291,8 @@ store-install-all-reading = [Îñšţàļļ àļļ ƒöŕ ŕéàðîñĝ~~~~~~~]
 # Result after installing.
 store-installed =
     { $count ->
-        [one] [Öñé þļüĝîñ îñšţàļļéð. Îţ’š îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~]
-       *[other] [{ $count } þļüĝîñš îñšţàļļéð. Ţĥéý’ŕé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~]
+        [one] [Öñé þļüĝîñ îñšţàļļéð. Îţ'š îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~]
+       *[other] [{ $count } þļüĝîñš îñšţàļļéð. Ţĥéý'ŕé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~]
     }
 
 # Info title when every plugin in a store is for watching, and watching is off here.
@@ -11308,13 +11308,13 @@ store-turn-on-watching = [Ţüŕñ öñ ŵàţçĥîñĝ~~~~~]
 store-empty = [{ $store } ĥàš ñö þļüĝîñš ýéţ~~~~~~~]
 
 # Line under it.
-store-empty-line = [Ýöü’ŕé à ɱéɱƀéŕ, šö ñéŵ þļüĝîñš šĥöŵ îñ Þļüĝîñ šţöŕéš ŵĥéñ { $owner } àððš ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~]
+store-empty-line = [Ýöü'ŕé à ɱéɱƀéŕ, šö ñéŵ þļüĝîñš šĥöŵ îñ Þļüĝîñ šţöŕéš ŵĥéñ { $owner } àððš ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~]
 
 # Error title when the store doesn't answer.
-store-err-unreachable = [Çöüļðñ’ţ ŕéàçĥ { $host }~~~~~~]
+store-err-unreachable = [Çöüļðñ'ţ ŕéàçĥ { $host }~~~~~~]
 
 # Line under it.
-store-err-unreachable-line = [Ţĥé îñṽîţé ļööķš ŕîĝĥţ, ƀüţ ţĥé šţöŕé îšñ’ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ, öŕ àšķ { $owner } îƒ îţ’š ŕüññîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+store-err-unreachable-line = [Ţĥé îñṽîţé ļööķš ŕîĝĥţ, ƀüţ ţĥé šţöŕé îšñ'ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ, öŕ àšķ { $owner } îƒ îţ'š ŕüññîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Under the reading group: plugins for watching while watching is off here.
 store-other-medium-more =
@@ -11326,12 +11326,12 @@ store-other-medium-more =
 # On a TV, under the list: plugins for reading, which a TV doesn't do.
 store-tv-reading-only =
     { $count ->
-        [one] [Öñé ɱöŕé îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~]
-       *[other] [{ $count } ɱöŕé àŕé ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~~]
+        [one] [Öñé ɱöŕé îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ'ţ ðö.~~~~~~~~~~~~~~~]
+       *[other] [{ $count } ɱöŕé àŕé ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ'ţ ðö.~~~~~~~~~~~~~~~~]
     }
 
 # On a TV, info title when every plugin in a store is for reading.
-store-tv-all-reading = [Éṽéŕý þļüĝîñ îñ { $store } îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~~~~~]
+store-tv-all-reading = [Éṽéŕý þļüĝîñ îñ { $store } îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ'ţ ðö.~~~~~~~~~~~~~~~~~~~]
 
 # Plugin row in an invite's result.
 store-plugin-row = [Ṽéŕšîöñ { $version } · ɱàý çöñţàçţ { $hosts }~~~~~~~~~]
@@ -11581,7 +11581,7 @@ sources-source-order-row = [Šöüŕçé öŕðéŕ~~~~]
 sources-torrents-note = [Ţöŕŕéñţš àŕé þàŕţ öƒ Ķàéŕî, ñöţ à þļüĝîñ. Ţĥé þŕöẋý àñð šééðîñĝ àŕé šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
-sources-rebuilding = [Šöüŕçéš àŕé ƀéîñĝ šéţ üþ àĝàîñ~~~~~~~~~]
+sources-rebuilding = [Šéţţîñĝ üþ šöüŕçéš àĝàîñ~~~~~~~~]
 
 # Value of a plugin's response time, in milliseconds.
 sources-response-ms = [{ $ms } ɱš~~]
@@ -11627,10 +11627,10 @@ match-similarity = [{ $similarity } ɱàţçĥ~~~]
 match-search-field = [Šéàŕçĥ { $source }~~~]
 
 # While a search of the source runs.
-match-searching = [Šéàŕçĥîñĝ { $source } ƒöŕ “{ $query }”~~~~~~~]
+match-searching = [Šéàŕçĥîñĝ { $source } ƒöŕ "{ $query }"~~~~~~~]
 
 # A search of the source that found nothing.
-match-search-empty = [Ñöţĥîñĝ öñ { $source } ƒöŕ “{ $query }”.~~~~~~~~]
+match-search-empty = [Ñöţĥîñĝ öñ { $source } ƒöŕ "{ $query }".~~~~~~~~]
 
 # Under match-search-empty: what to try.
 match-search-empty-hint = [Ţŕý ƒéŵéŕ ŵöŕðš, öŕ ţĥé ţîţļé îñ àñöţĥéŕ ļàñĝüàĝé.~~~~~~~~~~~~~~~]
@@ -11690,7 +11690,7 @@ sources-add-server = [Ṁéðîà šéŕṽéŕ…~~~~]
 sources-add-store = [Ĵöîñ à þļüĝîñ šţöŕé…~~~~~~]
 
 # Line under the empty state's title on a computer.
-sources-empty-body = [Šöüŕçéš àŕé ŵĥéŕé éþîšöðéš çöɱé ƒŕöɱ: ƒöļðéŕš öñ ţĥîš ðéṽîçé, ýöüŕ ɱéðîà šéŕṽéŕ, àñð þļüĝîñš ƒŕöɱ šţöŕéš ýöü ĵöîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+sources-empty-body = [Šöüŕçéš àŕé ŵĥéŕé éþîšöðéš çöɱé ƒŕöɱ: ƒöļðéŕš öñ ţĥîš ðéṽîçé, ýöüŕ ɱéðîà šéŕṽéŕ, àñð þļüĝîñš ƒŕöɱ þļüĝîñ šţöŕéš ýöü ĵöîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line under the empty state's buttons. The link is "join a plugin store".
 sources-empty-more = [Öŕ { $join }.~~~]
@@ -11732,7 +11732,7 @@ sources-demo-link-commons = [Ŵîķîɱéðîà Çöɱɱöñš~~~~~~]
 sources-demo-link-maker = [ÖÞÅÞ-ĴÞ~~~]
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = [Ŕéàçĥéš Ŵîķîɱéðîà Çöɱɱöñš öñļý: üþļöàð.ŵîķîɱéðîà.öŕĝ àñð çöɱɱöñš.ŵîķîɱéðîà.öŕĝ.~~~~~~~~~~~~~~~~~~~~~~~~]
+sources-demo-hosts = [Ţĥé ðéɱö ŕéàçĥéš öñļý Ŵîķîɱéðîà Çöɱɱöñš: üþļöàð.ŵîķîɱéðîà.öŕĝ àñð çöɱɱöñš.ŵîķîɱéðîà.öŕĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = [Ţĥé ðéɱö ñéṽéŕ šîĝñš îñ àñýŵĥéŕé àñð ñéṽéŕ ŵŕîţéš ţö ÅñîĻîšţ.~~~~~~~~~~~~~~~~~~~]
@@ -11801,7 +11801,7 @@ stores-not-from-app = [Þļüĝîñš çöɱé ƒŕöɱ ţĥé þļüĝîñ šţ
 stores-join-owner-responsible = [{ $owner } ŕüñš ţĥîš þļüĝîñ šţöŕé àñð çĥöšé îţš þļüĝîñš. Ķàéŕî ðîð ñöţ ɱàķé, ŕéṽîéŵ öŕ àþþŕöṽé ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line when the store has no plugins.
-stores-no-plugins = [Ţĥîš þļüĝîñ šţöŕé öƒƒéŕš ñö þļüĝîñš ýéţ.~~~~~~~~~~~~]
+stores-no-plugins = [Ţĥîš þļüĝîñ šţöŕé ĥàš ñö þļüĝîñš ýéţ.~~~~~~~~~~~~]
 
 # Heading of the plugin list of a store.
 stores-plugins = [Þļüĝîñš~~~]
@@ -11837,7 +11837,7 @@ stores-access-ended-page = [Ţĥîš þļüĝîñ šţöŕé ñö ļöñĝéŕ �
 stores-no-longer-joined = [Ţĥîš þļüĝîñ šţöŕé îš ñö ļöñĝéŕ ĵöîñéð.~~~~~~~~~~~~]
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = [Öƒƒļîñé: { $reason }. Ţĥé þļüĝîñš ƀéļöŵ àŕé ţĥé ļàšţ ļîšţ ţĥàţ ŵàš çĥéçķéð.~~~~~~~~~~~~~~~~~~~~~]
+stores-offline-last-list = [Öƒƒļîñé: { $reason }. Šĥöŵîñĝ ţĥé ļàšţ ļîšţ îţ šéñţ.~~~~~~~~~~~~~~]
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = [Öƒƒļîñé. Šĥöŵîñĝ ţĥé ļàšţ ļîšţ îţ šéñţ.~~~~~~~~~~~~]
@@ -11942,7 +11942,7 @@ stores-replace-label = [Ŕéþļàçé ţĥé çöþý öƒ { $name } àððéð
 stores-remove-plugin-title = [Ŕéɱöṽé { $name }?~~~~]
 
 # Line under it.
-stores-remove-plugin-detail = [Îţ îš ðéļéţéð ƒŕöɱ ţĥîš ðéṽîçé. Ţĥé þļüĝîñ šţöŕé çàñ îñšţàļļ îţ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
+stores-remove-plugin-detail = [Îţ'š ðéļéţéð ƒŕöɱ ţĥîš ðéṽîçé. Ýöü çàñ îñšţàļļ îţ àĝàîñ ƒŕöɱ ţĥé þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = [Ñéŵļý çöñţàçţš~~~~~]
@@ -11963,7 +11963,7 @@ stores-add-title = [Åðð à þļüĝîñ šţöŕé~~~~~~]
 stores-join-detail = [Þàšţé ţĥé ļîñķ ţĥé þļüĝîñ šţöŕé'š öŵñéŕ šéñţ ýöü.~~~~~~~~~~~~~~~]
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = [Þàšţé ţĥé îñṽîţé ļîñķ à þļüĝîñ šţöŕé'š öŵñéŕ šéñţ ýöü. Ýöü šéé ŵĥàţ ţĥé þļüĝîñ šţöŕé öƒƒéŕš ƀéƒöŕé àñýţĥîñĝ îš ĵöîñéð öŕ îñšţàļļéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+stores-join-detail-desktop = [Þàšţé ţĥé îñṽîţé ļîñķ à þļüĝîñ šţöŕé'š öŵñéŕ šéñţ ýöü. Ýöü šéé ŵĥàţ ţĥé þļüĝîñ šţöŕé ĥàš ƀéƒöŕé ýöü ĵöîñ öŕ îñšţàļļ àñýţĥîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = [Þàšţé ţĥé ļîñķ ţĥé þļüĝîñ šţöŕé'š öŵñéŕ šéñţ ýöü. Å Ķàéŕî:// îñṽîţé ļîñķ öþéñéð ƒŕöɱ Ṁéššàĝéš ƒîļļš ţĥîš šĥééţ îñ ðîŕéçţļý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -12005,7 +12005,7 @@ stores-join-installs-nothing = [Ĵöîñîñĝ îñšţàļļš ñöţĥîñĝ. 
 stores-key-matches = [Ķéý { $key } ɱàţçĥéš ţĥé þļüĝîñ šţöŕé.~~~~~~~~~~]
 
 # Line when the link is open to anyone.
-stores-anyone-note = [Ýöü ĵöîñ ŵîţĥöüţ à ñàɱé. Åñöţĥéŕ ðéṽîçé ĵöîñš ŵîţĥ ţĥé šàɱé ļîñķ.~~~~~~~~~~~~~~~~~~~~]
+stores-anyone-note = [Ýöü ĵöîñ ŵîţĥöüţ à ñàɱé. Åñöţĥéŕ ðéṽîçé çàñ ĵöîñ ŵîţĥ ţĥé šàɱé ļîñķ.~~~~~~~~~~~~~~~~~~~~~]
 
 # Line when the device joined this store already.
 stores-already-joined-note = [Ţĥîš ðéṽîçé ĥàš ĵöîñéð ţĥîš þļüĝîñ šţöŕé àļŕéàðý.~~~~~~~~~~~~~~~]
@@ -12157,7 +12157,7 @@ stores-invite-works-any = [Åñýöñé ŵĥö ĥàš ţĥîš ļîñķ çàñ �
 stores-invite-works-any-forever = [Åñýöñé ŵĥö ĥàš ţĥîš ļîñķ çàñ ĵöîñ üñţîļ ýöü çàñçéļ îţ.~~~~~~~~~~~~~~~~~]
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = [Ŵöŕķš öñçé, ƒöŕ ţĥé þéŕšöñ ýöü šéñð îţ ţö. Ûñţîļ { $until }.~~~~~~~~~~~~~~~~]
+stores-invite-once-until = [Ŵöŕķš öñçé, ƒöŕ ţĥé þéŕšöñ ýöü šéñð îţ ţö, üñţîļ { $until }.~~~~~~~~~~~~~~~~]
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = [Ŵöŕķš öñçé, ƒöŕ ţĥé þéŕšöñ ýöü šéñð îţ ţö, üñţîļ ýöü çàñçéļ îţ.~~~~~~~~~~~~~~~~~~~]
@@ -12284,7 +12284,7 @@ stores-offers-plugins =
 notice-open-stores = [Öþéñ þļüĝîñ šţöŕéš~~~~~~]
 
 # Explainer on the empty plugin stores page.
-stores-what-is = [Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ ţĥàţ ĥöļðš šîĝñéð þļüĝîñš àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+stores-what-is = [Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ ţĥàţ ĥöļðš šîĝñéð þļüĝîñš àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Îţš þļüĝîñš àðð šöüŕçéš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = [Ŵĥàţ îš à þļüĝîñ šţöŕé?~~~~~~~]
@@ -12305,13 +12305,13 @@ stores-qr-warning-device = [Šçàñ ţĥîš ŵîţĥ ţĥé ðéṽîçé ýö
 stores-share = [Šĥàŕé…~~]
 
 # Windows and Linux dialog line while the browser is open for a cloud sign-in.
-cloud-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }’š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]
+cloud-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }'š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = [Šîĝñ îñ ţö { $service } îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~]
 
 # Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
-cloud-close-carries-on = [Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ’š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+cloud-close-carries-on = [Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ'š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = [çöɱþüţéŕ~~~]
@@ -12422,7 +12422,7 @@ sync-road-nearby-line = [Þàîŕ ŵîţĥ àñöţĥéŕ ðéṽîçé öñ ţ�
 sync-road-cloud = [Ţĥŕöüĝĥ à çļöüð ƒöļðéŕ~~~~~~~]
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = [Å çļöüð ðŕîṽé ýöü àļŕéàðý üšé, öŕ ýöüŕ öŵñ šéŕṽéŕ. Ŵöŕķš ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à ƀàçķüþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+sync-road-cloud-line = [Å çļöüð ðŕîṽé ýöü àļŕéàðý üšé, öŕ ýöüŕ öŵñ šéŕṽéŕ. Îţ ŵöŕķš ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ àñð ķééþš à ƀàçķüþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Road sheet footer.
 sync-road-later = [Ýöü çàñ àðð ţĥé öţĥéŕ ŵàý ļàţéŕ. Ṁöšţ þéöþļé üšé ƀöţĥ.~~~~~~~~~~~~~~~~~]
@@ -12482,7 +12482,7 @@ sync-turn-off-alert-line = [Ţĥîš { $kind } šţöþš šĥàŕîñĝ ŵîţ�
 cloud-group = [Çļöüð ƒöļðéŕ~~~~]
 
 # Group footer.
-cloud-foot = [Ƒîļļš îñ ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à šéàļéð ƀàçķüþ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+cloud-foot = [Ţĥé ƒöļðéŕ ķééþš ýöüŕ ðéṽîçéš îñ šţéþ ŵĥîļé ţĥéý àŕé àþàŕţ, àñð ĥöļðš à šéàļéð ƀàçķüþ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Row when only the nearby road is set.
 cloud-add = [Åðð à çļöüð ƒöļðéŕ~~~~~~]
@@ -12825,7 +12825,7 @@ profiles-picker = [Ŵĥö’š ŵàţçĥîñĝ?~~~~~]
 profiles-ask-at-launch = [Åšķ ŵĥö’š ŵàţçĥîñĝ àţ ļàüñçĥ~~~~~~~~~]
 
 # iPad footer.
-profiles-ask-foot = [Öƒƒ ƀý ðéƒàüļţ. Ƒöŕ àñ îÞàð ţĥé ĥöüšéĥöļð šĥàŕéš. Ţĥé àççöüñţ ŕöŵ šŵîţçĥéš þŕöƒîļéš àţ àñý ţîɱé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+profiles-ask-foot = [Öƒƒ ƀý ðéƒàüļţ. Ţüŕñ îţ öñ ƒöŕ àñ îÞàð ţĥé ŵĥöļé ĥöüšéĥöļð šĥàŕéš. Ýöü çàñ šŵîţçĥ þŕöƒîļéš ƒŕöɱ ţĥé àççöüñţ ŕöŵ àţ àñý ţîɱé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # TV Settings.
 profiles-switch = [Šŵîţçĥ þŕöƒîļé~~~~~]
@@ -13609,7 +13609,7 @@ accounts-tokens-keystore = [Šîĝñ-îñ ţöķéñš àŕé ķéþţ öñ ţĥ
 accounts-form-title = [Šîĝñ îñ ţö { $tracker }~~~~~]
 
 # Line under the title: where the password goes.
-accounts-form-detail = [Ýöüŕ þàššŵöŕð ĝöéš ţö { $tracker } öñçé, ƒöŕ à ţöķéñ ķéþţ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~]
+accounts-form-detail = [Ýöüŕ þàššŵöŕð ĝöéš ţö { $tracker } öñçé, îñ éẋçĥàñĝé ƒöŕ à ţöķéñ ţĥàţ šţàýš öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Label of the name field.
 accounts-user-or-email = [Éɱàîļ öŕ üšéŕ ñàɱé~~~~~~]
@@ -13681,7 +13681,7 @@ accounts-open-on = [Öþéñ öñ { $tracker }~~~~]
 accounts-listed-by = [Ļîšţéð ƀý { $tracker }~~~~]
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = [{ $tracker } ðîðñ'ţ àñšŵéŕ.~~~~~~]
+accounts-did-not-answer = [{ $tracker } ðîðñ'ţ àñšŵéŕ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~]
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = [{ $tracker } ĥàš ñö çàšţ, šţàƒƒ öŕ ŕéçöɱɱéñðàţîöñš ƒöŕ ţĥîš šĥöŵ ýéţ.~~~~~~~~~~~~~~~~~~]
@@ -13744,7 +13744,7 @@ tv-pairing-code = [Þàîŕîñĝ çöðé~~~~]
 tv-open-on-tv = [Öþéñ Ķàéŕî öñ ţĥé ŢṼ. Îţ ñééðš ţö ƀé öñ ţĥé šàɱé Ŵî-Ƒî àš ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~]
 
 # Line telling what to type.
-tv-type-code = [Ţýþé ţĥé šîẋ ðîĝîţš { $name } šĥöŵš. Åƒţéŕ ţĥîš, ţĥîš ðéṽîçé çöññéçţš ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~]
+tv-type-code = [Ţýþé ţĥé šîẋ ðîĝîţš { $name } šĥöŵš. Ƒŕöɱ ţĥéñ öñ, ţĥîš ðéṽîçé çöññéçţš ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Line while pairing is under way.
 tv-pairing-moment = [Ţĥîš ţàķéš à ɱöɱéñţ.~~~~~~]
@@ -14044,7 +14044,7 @@ updates-saved-replace-plain = [Ṽéŕšîöñ { $version } šàṽéð ţö Ð�
 updates-why-server = [Ţĥé ðöŵñļöàð šţöþþéð: ţĥé šéŕṽéŕ ŕéƒüšéð îţ ({ $code }). Ţŕý àĝàîñ ļàţéŕ.~~~~~~~~~~~~~~~~~~~~~]
 
 # The connection broke.
-updates-why-connection = [Ţĥé ðöŵñļöàð šţöþþéð: ţĥé çöññéçţîöñ ŵàš ļöšţ.~~~~~~~~~~~~~~]
+updates-why-connection = [Ţĥé ðöŵñļöàð šţöþþéð: ţĥé çöññéçţîöñ ŵàš ļöšţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~]
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = [Ţĥé ðöŵñļöàð çöüļðñ'ţ ƀé šàṽéð: { $reason }~~~~~~~~~~~]

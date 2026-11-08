@@ -21,7 +21,7 @@
     <!-- Someone started something else on the TV, which ends the cast. The card closes and this shows for 8 seconds with Play here. The name is the TV's own. -->
     <string name="notice_cast_taken_over">Another device started something on %1$s, so casting stopped.</string>
     <!-- This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own. -->
-    <string name="notice_cast_not_same_network">This device isn\'t on the network %1$s is on, or reaches it through a VPN. Casting needs both on the same network.</string>
+    <string name="notice_cast_not_same_network">This device isn\'t on the network %1$s is on, or reaches it through a VPN. Connect both to the same network to cast.</string>
     <!-- The TV stopped answering mid-cast. The name is the TV's own. -->
     <string name="notice_cast_lost">Lost %1$s, so casting stopped.</string>
     <!-- The TV picked to cast to has left the network. -->
@@ -232,7 +232,7 @@
     <!-- Toast when a chosen match still left the title undecided. -->
     <string name="notice_match_did_not_stick">That match didn\'t stick. The source may have changed. Try choosing it again.</string>
     <!-- Toast when a search of the sources for a title found nothing. -->
-    <string name="notice_source_search_empty">Nothing found for “%1$s”. Try a different search.</string>
+    <string name="notice_source_search_empty">Nothing found for \"%1$s\". Try a different search.</string>
     <!-- In the list of titles a source offers for a show, in place of how close a title is: it was ruled out because its format cannot be the show's, as an OVA for a TV series. -->
     <string name="match_ruled_out_format">Different format</string>
     <!-- In the list of titles a source offers for a show, in place of how close a title is: it was ruled out because it lists more episodes than the show has. -->
@@ -244,7 +244,7 @@
     <!-- Why a search of a source for a show's match failed: the source isn't installed or switched on. -->
     <string name="match_search_source_off">It isn\'t switched on.</string>
     <!-- Toast after the person picked a source for one title. -->
-    <string name="notice_source_pinned">%1$s will be used for this title.</string>
+    <string name="notice_source_pinned">This title now plays from %1$s.</string>
     <!-- Toast after the person went back to automatic source selection for one title. -->
     <string name="notice_source_automatic">Back to automatic source selection.</string>
     <!-- Toast when the source choice for a title could not be saved. The reason comes from the system. -->
@@ -370,11 +370,11 @@
     <!-- The same notice for a chapter known only by its number, such as 14 or 14.5. -->
     <string name="reader_moved_number">Moved to chapter %1$s, page %2$d, where %3$s stopped</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->
-    <string name="reader_detected_right_to_left">Right to left, detected</string>
+    <string name="reader_detected_right_to_left">Looks like right to left</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->
-    <string name="reader_detected_left_to_right">Left to right, detected</string>
+    <string name="reader_detected_left_to_right">Looks like left to right</string>
     <!-- A notice the first time a series opens as one long strip, guessed from its pages. It offers Change. -->
-    <string name="reader_detected_strip">Long strip, detected</string>
+    <string name="reader_detected_strip">Looks like a long strip</string>
     <!-- Why a chapter or a list could not load: there is no connection. -->
     <string name="reading_failed_offline">You\'re offline. Downloaded chapters still open.</string>
     <!-- Why a chapter or a list could not load: the source did not answer. The source is its name. -->
@@ -728,7 +728,7 @@
     <!-- Error: the server at a link's address could not prove it is the store the invite named. -->
     <string name="store_not_the_invited">%1$s is not the plugin store in the invite (%2$s). Nothing was joined.</string>
     <!-- Error: the token for a joined store could not be saved on this device. The reason comes from the system. -->
-    <string name="store_token_not_kept">Couldn\'t keep the token for this plugin store. %1$s</string>
+    <string name="store_token_not_kept">Couldn\'t save the token for this plugin store. %1$s</string>
     <!-- Error: an invite that cannot be used any more. -->
     <string name="store_invite_unusable">That invite was already used, was cancelled or has expired. Ask for a new one.</string>
     <!-- Error: the invite was used as many times as it allows. -->
@@ -772,13 +772,13 @@
     <!-- Error: the store's server is too old for joining with a link. -->
     <string name="store_open_join_unsupported">%1$s\'s server is older and can\'t let anyone join with a link. Update it first.</string>
     <!-- Toast after a source (plugin) is switched off. It is skipped when looking for episodes. -->
-    <string name="source_switched_off">%1$s is off. It is skipped when looking for episodes.</string>
+    <string name="source_switched_off">%1$s is off. Kaeri skips it when looking for episodes.</string>
     <!-- Toast after a source (plugin) is switched on. -->
     <string name="source_switched_on">%1$s is on.</string>
     <!-- Error: a command named a plugin that is not loaded. -->
     <string name="plugin_not_loaded">%1$s isn\'t loaded. Check that it\'s installed under Sources.</string>
     <!-- Toast after a release is chosen for a title. The name is the release's title. -->
-    <string name="release_pinned">%1$s will be used for this title.</string>
+    <string name="release_pinned">This title now uses %1$s.</string>
     <!-- Toast when the chosen source or release for a title could not be saved. The reason comes from the database. -->
     <string name="notice_choice_not_saved">Couldn\'t save that choice. %1$s</string>
     <!-- Note on the sources screen: the proxy for torrent traffic failed its check, so torrents wait. -->
@@ -840,9 +840,9 @@
     <!-- Toast when no browser could be opened for a sign-in. The reason comes from the system. -->
     <string name="notice_browser_not_opened">Couldn\'t open a browser for the sign-in. Check that one is installed and try again. %1$s</string>
     <!-- Toast when a sign-in redirect arrives and no sign-in is waiting for it. -->
-    <string name="notice_sign_in_not_waiting">No sign-in to %1$s is waiting for that. Start the sign-in again.</string>
+    <string name="notice_sign_in_not_waiting">A sign-in reply from %1$s arrived, but no sign-in was waiting for it. Start the sign-in again.</string>
     <!-- Toast when a sign-in redirect does not match the request that was made. -->
-    <string name="notice_sign_in_wrong_request">That sign-in to %1$s didn\'t come back from this request. Start the sign-in again.</string>
+    <string name="notice_sign_in_wrong_request">The sign-in reply from %1$s doesn\'t match the request. Start the sign-in again.</string>
     <!-- Toast when a tracker sent the person back without a token. -->
     <string name="notice_sign_in_no_token">The sign-in to %1$s came back without a token. Try again.</string>
     <!-- Toast when this build has no MyAnimeList client to finish a sign-in with. -->
@@ -908,7 +908,7 @@
     <!-- The reason a proxy was refused: it has no host or no port. -->
     <string name="cause_proxy_needs_address">A proxy needs a host and a port.</string>
     <!-- The reason a proxy could not be checked: its address is not one the check can use. -->
-    <string name="cause_proxy_address_unusable">The proxy\'s address is not one a check can use.</string>
+    <string name="cause_proxy_address_unusable">The proxy check can\'t use this address.</string>
     <!-- The reason a request failed: it never reached the server. -->
     <string name="cause_server_unreachable">The server couldn\'t be reached.</string>
     <!-- The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it. -->
@@ -924,7 +924,7 @@
     <!-- Toast when something went wrong inside the engine and it carried on. -->
     <string name="notice_engine_fault">Something went wrong inside Kaeri. It carried on, but if a screen looks stuck, quit and open it again.</string>
     <!-- Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync. -->
-    <string name="notice_database_set_aside">The database was damaged, so Kaeri started a new one. The old file is kept at %1$s. Your trackers bring back what they hold at the next sync.</string>
+    <string name="notice_database_set_aside">The database was damaged, so Kaeri started a new one. The old file is kept at %1$s. What your trackers hold comes back at the next sync.</string>
     <!-- Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system. -->
     <string name="start_failed_folder">Kaeri couldn\'t create the folder %1$s. Check that the disk has room and the folder can be written to, then try again. %2$s</string>
     <!-- Message when Kaeri could not start because the config file has a setting it can't use. The path is the file; the problem names the line where it can. -->
@@ -934,7 +934,7 @@
     <!-- Message when Kaeri could not start because its database could not be opened. The path is the database file, the reason comes from the system. -->
     <string name="start_failed_database">Kaeri couldn\'t open its database at %1$s. If another Kaeri app is open on this folder, quit it and try again. %2$s</string>
     <!-- Message when Kaeri could not start its network connection from the network settings. -->
-    <string name="start_failed_network">Kaeri couldn\'t set up its network connection from the network settings in config.toml. %1$s</string>
+    <string name="start_failed_network">Kaeri couldn\'t connect with the network settings in config.toml. Check them, then try again. %1$s</string>
     <!-- Message when Kaeri itself could not start. The reason comes from the system or the engine. -->
     <string name="start_failed">Kaeri couldn\'t start. Quit and open it again. %1$s</string>
     <!-- Message when the TV remote could not start listening or could not forget a phone. -->
@@ -957,9 +957,9 @@
     <!-- Toast: Surprise me on the Planning list, which has nothing on it to pick. -->
     <string name="notice_surprise_empty_planning">Planning is empty.</string>
     <!-- Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked. -->
-    <string name="notice_surprise_offline">Offline. Search picks need AniList.</string>
+    <string name="notice_surprise_offline">You\'re offline. Surprise me needs AniList to pick a title.</string>
     <!-- Toast: Surprise me on the filters, and AniList could not be asked. -->
-    <string name="notice_surprise_failed">Couldn\'t pick a title right now. Try again in a moment.</string>
+    <string name="notice_surprise_failed">Couldn\'t reach AniList to pick a title. Try again in a moment.</string>
     <!-- Accessibility label of the account button in the top bar when someone is signed in. -->
     <string name="account_button_named">%1$s, accounts and settings</string>
     <!-- Line under Today in the calendar when My list is chosen and nothing on it airs in the next four weeks. -->
@@ -985,7 +985,7 @@
     <!-- Settings row: whether an episode's AniList discussion can be opened. -->
     <string name="settings_discussions_label">Episode discussions</string>
     <!-- Note under the Episode discussions setting. -->
-    <string name="settings_discussions_note">Reads the comments on AniList\'s forum thread for episodes you have watched.</string>
+    <string name="settings_discussions_note">You can read the comments on AniList\'s forum thread for episodes you have watched.</string>
     <!-- Settings row: whether images in comments load inline. -->
     <string name="settings_discussion_images_label">Load images in comments</string>
     <!-- Note under the Load images in comments setting. -->
@@ -1056,7 +1056,7 @@
     <!-- Settings, Sources: whether a cast to a TV plays from torrents, which this device serves meanwhile. -->
     <string name="cast_settings_torrents">Torrents while casting</string>
     <!-- Settings, Sources: under the row above. -->
-    <string name="cast_settings_torrents_note">Lets a TV with Chromecast built in play torrents. This device sends the episode for as long as it plays.</string>
+    <string name="cast_settings_torrents_note">A TV with Chromecast built in can then play torrents. This device sends the episode for as long as it plays.</string>
     <!-- Where Android keeps a Kavita key, filling { $store } in "Kaeri keeps the key in … and shows only its last four characters." -->
     <string name="book_server_keystore_android">Android’s keystore</string>
     <!-- Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters. -->
@@ -1183,15 +1183,15 @@
     <!-- Line under the squares. -->
     <string name="eink_colour_hint">If they look like four greys, choose Only greys. You can change this in Settings › Screen.</string>
     <!-- The answer for a colour screen. -->
-    <string name="eink_colour_yes">I see colour</string>
+    <string name="eink_colour_yes">Yes, colour</string>
     <!-- The answer for a grey screen. -->
     <string name="eink_colour_no">Only greys</string>
     <!-- Leaves the colour question unanswered. -->
     <string name="eink_colour_skip">Skip</string>
     <!-- Shown after the colour question was skipped. -->
-    <string name="eink_colour_skipped">Skipped, pictures stay in colour, which a grey screen shows as greys.</string>
+    <string name="eink_colour_skipped">Skipped. Pictures stay in colour. A grey screen shows them as greys.</string>
     <!-- A one-line hint on e-readers whose page buttons may be set to something other than Volume. -->
-    <string name="eink_page_keys_hint">Set the page buttons to Volume in the device\'s settings to turn pages.</string>
+    <string name="eink_page_keys_hint">To turn pages with the buttons, set them to Volume in the device\'s settings.</string>
     <!-- Beside a dot on a chapter or series that is new since it was last opened. -->
     <string name="eink_new">New</string>
     <!-- The action on the notice that says a chapter opened where it was left: back to its first page. -->
@@ -1552,7 +1552,7 @@
     <!-- Line under a plugin store on the TV that has ended this device's access -->
     <string name="tv_store_revoked">No longer lets this TV in</string>
     <!-- Note under the seeding rows in TV settings -->
-    <string name="tv_seeding_note">Best effort on this TV: seeding runs only while Kaeri is open.</string>
+    <string name="tv_seeding_note">This TV seeds only while Kaeri is open.</string>
     <!-- Title of the TV sign-out confirmation -->
     <string name="tv_sign_out_title">Sign out of %1$s?</string>
     <!-- Line under a tracker on the TV when nobody is signed in -->
@@ -1739,7 +1739,7 @@
         <item quantity="other">%1$s are off in their own settings.</item>
     </plurals>
     <!-- Footer under the week's notifications: what a row does. -->
-    <string name="settings_coming_up_opens">A show opens its settings.</string>
+    <string name="settings_coming_up_opens">Tap a show to open its settings.</string>
     <!-- Part of a proxy's line: the user it lets in. -->
     <string name="torrents_proxy_as">as %1$s</string>
     <!-- Title facts: a finished title and when it aired. The dates are already formatted. -->
@@ -1954,7 +1954,7 @@
     <!-- Settings, Sources: how many plugin stores, and how many updates wait in them. -->
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
     <!-- Settings, Sources: the note under the seeding group. -->
-    <string name="settings_seeding_best_effort">Best effort on this device: seeding runs only while Kaeri is open.</string>
+    <string name="settings_seeding_best_effort">This device seeds only while Kaeri is open.</string>
     <!-- Settings, Downloads: the count of downloaded episodes. -->
     <plurals name="settings_downloads_count">
         <item quantity="one">One episode</item>
@@ -1982,7 +1982,7 @@
     <!-- Settings, Downloads: what a screen reader says for the bar of how much the downloads take. -->
     <string name="downloads_storage_share_description">Downloads take %1$s</string>
     <!-- Settings aside on a tablet, New episodes: what a notification carries. -->
-    <string name="settings_aside_notifications">One notification when an episode of a show you follow comes out: the show and the episode\'s number, never its name. A show can turn its own off in its settings.</string>
+    <string name="settings_aside_notifications">One notification when an episode of a show you follow comes out: the show and the episode\'s number, never its name. You can turn a show\'s notifications off in its settings.</string>
     <!-- Settings aside on a tablet, Downloads: where downloads live. -->
     <string name="settings_aside_downloads">Downloads stay in Kaeri\'s own space on this device, which other apps cannot read. Removing the app removes them.</string>
     <!-- Settings aside on a tablet, Sources: how sources are tried. -->
@@ -2154,7 +2154,7 @@
     <!-- Heading on the screen that covers the app when its engine did not start or has stopped. -->
     <string name="engine_down_title">Kaeri stopped</string>
     <!-- Line under it when the engine stopped while the app was open, so lists would sit empty. -->
-    <string name="engine_down_stopped">The part that does the work has stopped. Try again, or quit and open the app once more.</string>
+    <string name="engine_down_stopped">Nothing new will load until it starts again. Try again, or quit and open the app once more.</string>
     <!-- Button on that screen that closes the app. -->
     <string name="engine_down_quit">Quit</string>
     <!-- Title of the about page. -->
@@ -2232,11 +2232,11 @@
     <!-- Switch that turns saving crash reports on this device on or off. -->
     <string name="settings_crash_save">Save crash reports on this device</string>
     <!-- Line under that switch. -->
-    <string name="settings_crash_save_detail">When this is on, Kaeri keeps a short record of each crash on this device, with titles, addresses and names removed, so you can add it to Report a bug. Nothing is sent by itself.</string>
+    <string name="settings_crash_save_detail">Kaeri keeps a short record of each crash on this device for Report a bug, with titles, addresses and names removed. Nothing is sent by itself.</string>
     <!-- Switch that turns the notice after a crash on or off. -->
     <string name="settings_crash_ask">Ask after a crash</string>
     <!-- Line under that switch. -->
-    <string name="settings_crash_ask_detail">Shows a notice at the next launch with Report…</string>
+    <string name="settings_crash_ask_detail">Kaeri shows a notice with Report… the next time it opens.</string>
     <!-- Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android. -->
     <string name="settings_crash_os_heading">Kept by %1$s</string>
     <!-- Line under that heading. -->
@@ -2256,7 +2256,7 @@
     <!-- Button that deletes every saved crash report. -->
     <string name="settings_crash_delete_all">Delete all</string>
     <!-- Footnote of the Crash reports group. -->
-    <string name="settings_crash_footnote">Crash reports stay on this device. Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.</string>
+    <string name="settings_crash_footnote">Crash reports stay on this device, and Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.</string>
     <!-- Button that shows the week before. -->
     <string name="calendar_previous_week">Previous week</string>
     <!-- Button that shows the week after. -->
@@ -2340,11 +2340,11 @@
     <!-- Note under the Settings row that shows TVs with Chromecast built in, on an iPad. -->
     <string name="cast_tvs_note_ipad">They appear under Chromecast in Play on TV. This iPad sends them the episode.</string>
     <!-- Note under the Settings row that lets a cast play torrents, on a Mac. -->
-    <string name="cast_torrents_note_mac">Lets a TV with Chromecast built in play torrents. This Mac sends the episode for as long as it plays.</string>
+    <string name="cast_torrents_note_mac">A TV with Chromecast built in can then play torrents. This Mac sends the episode for as long as it plays.</string>
     <!-- Note under the Settings row that lets a cast play torrents, on an iPhone. -->
-    <string name="cast_torrents_note_iphone">Lets a TV with Chromecast built in play torrents. This iPhone sends the episode for as long as it plays.</string>
+    <string name="cast_torrents_note_iphone">A TV with Chromecast built in can then play torrents. This iPhone sends the episode for as long as it plays.</string>
     <!-- Note under the Settings row that lets a cast play torrents, on an iPad. -->
-    <string name="cast_torrents_note_ipad">Lets a TV with Chromecast built in play torrents. This iPad sends the episode for as long as it plays.</string>
+    <string name="cast_torrents_note_ipad">A TV with Chromecast built in can then play torrents. This iPad sends the episode for as long as it plays.</string>
     <!-- Line on the casting card while the next episode counts down. The seconds are whole. -->
     <string name="cast_up_next_plays_in">Up next · plays in %1$d s</string>
     <!-- The card's line when a cast never started. The name is the TV's. -->
@@ -2849,7 +2849,7 @@
     <!-- Title of the confirmation on a phone. -->
     <string name="downloads_delete_one_title">Delete download</string>
     <!-- Line under it: what you lose. -->
-    <string name="downloads_delete_one_detail">It plays again only with a connection, or once you download it again.</string>
+    <string name="downloads_delete_one_detail">After this, the episode needs a connection to play, unless you download it again.</string>
     <!-- Button on the settings page that removes watched files. -->
     <string name="downloads_delete_watched">Delete watched downloads</string>
     <!-- Heading of the seeding group. -->
@@ -2857,7 +2857,7 @@
     <!-- Heading of the seeding group on the downloads screen. -->
     <string name="downloads_seeding_after_watching">Seeding after watching</string>
     <!-- Line under the seeding heading. -->
-    <string name="downloads_seeding_note">Watched episodes are shared back while Kaeri is open, until the ratio or the time limit set in Settings, under Sources, is reached.</string>
+    <string name="downloads_seeding_note">Watched episodes are shared back while Kaeri is open. Sharing stops at the ratio or time limit you set in Settings, under Sources.</string>
     <!-- Line under the seeding heading where seeding cannot run in the background. -->
     <string name="downloads_seeding_open_only">Seeding runs only while Kaeri is open.</string>
     <!-- Heading of the setting. Shown on desktop only. -->
@@ -2912,9 +2912,9 @@
     <!-- First run, page 2 of 5. -->
     <string name="first_other_title">Already use Kaeri on another device?</string>
     <!-- Under the title. -->
-    <string name="first_other_line">Pair with it and this device gets your sources, trackers and history. The steps after this are then done.</string>
+    <string name="first_other_line">Pair with it and this device gets your sources, trackers and history, and the rest of setup is done for you.</string>
     <!-- Line under the pair row. -->
-    <string name="first_other_pair_line">Shows a code to enter on that device. Both need the same Wi-Fi.</string>
+    <string name="first_other_pair_line">You get a code to enter on that device. Both need the same Wi-Fi.</string>
     <!-- Row that restores from a sync folder. -->
     <string name="first_other_restore">Restore from a cloud folder</string>
     <!-- Line under it. -->
@@ -2940,11 +2940,11 @@
     <!-- Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore. -->
     <string name="first_join_server_line">%1$s · signs in with the key from %2$s, kept in %3$s</string>
     <!-- Note under the list. -->
-    <string name="first_join_folders">Folders stay on %1$s. Add this device’s own folders in Your sources.</string>
+    <string name="first_join_folders">Folders stay on %1$s. Add this device\'s own folders in Your sources.</string>
     <!-- Note when the setup answered the remaining pages. -->
     <string name="first_join_steps_done">Lists and sources are set up, so first run ends here. You can change them in Settings.</string>
     <!-- Row error when a plugin store refused this device. -->
-    <string name="first_join_store_refused">%1$s didn’t let this device in. %2$s can send you an invite.</string>
+    <string name="first_join_store_refused">%1$s didn\'t let this device in. %2$s can send you an invite.</string>
     <!-- Notice on Home, for 4 seconds. -->
     <string name="first_join_syncing">Syncing with %1$s</string>
     <!-- Name of the Home section in the sidebar, the tab bar and the window title. -->
@@ -2991,7 +2991,7 @@
     <!-- Button in the closing line when no { -tracker } is signed in. -->
     <string name="home_sign_in">Sign in to AniList</string>
     <!-- The closing line at the end of Home when no { -source } is installed. Plugin stores is a link. -->
-    <string name="home_end_no_sources">Add a source to play from Home. Plugin stores has some to choose from.</string>
+    <string name="home_end_no_sources">Add a source to play from Home. Plugins come from Plugin stores.</string>
     <!-- Line on a title that no installed { -source } has. The main action becomes Add to Planning. -->
     <string name="home_not_found">Not found in your sources</string>
     <!-- Notice when part of Home could not be loaded. It has a Try again button. -->
@@ -3286,7 +3286,7 @@
     <!-- Line on a folder's page, under Remove folder. -->
     <string name="library_remove_detail">Your files stay where they are.</string>
     <!-- Why a group of files is not matched: AniList could not be asked. -->
-    <string name="library_reason_offline">Couldn\'t ask AniList. It is tried again at the next scan.</string>
+    <string name="library_reason_offline">Couldn\'t reach AniList. The next scan tries again.</string>
     <!-- Button that opens the match picker for a group. -->
     <string name="library_choose_match">Choose the match</string>
     <!-- Row line for files kept as a title of their own. -->
@@ -3308,7 +3308,7 @@
     <!-- Label of the region menu. -->
     <string name="licensed_region">Region</string>
     <!-- Line under the region menu. -->
-    <string name="licensed_region_line">Hides links AniList marks for other countries. Most links name no country, so choose your services too.</string>
+    <string name="licensed_region_line">Links AniList marks for other countries are hidden. Most links name no country, so choose your services too.</string>
     <!-- Heading over the services the viewer pays for. -->
     <string name="licensed_yours">Your services</string>
     <!-- Row that shows the rest of the services. -->
@@ -3604,7 +3604,7 @@
     <!-- Heading of the group that joins a store with an invite. -->
     <string name="onboarding_invite_heading">Have an invite link?</string>
     <!-- Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link. -->
-    <string name="onboarding_where_stores">Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.</string>
+    <string name="onboarding_where_stores">Plugins come from plugin stores. Each one is signed and gives every device its own token, which is why you join with an invite link from its owner.</string>
     <!-- Heading above the Play the demo button on the welcome page. -->
     <string name="onboarding_demo_heading">Try it now</string>
     <!-- Line under that heading. Names the demo work and its licence. -->
@@ -3632,7 +3632,7 @@
     <!-- Label of the leave button while it works. -->
     <string name="party_leaving">Leaving…</string>
     <!-- Label of the button that marks you as ready. -->
-    <string name="party_ready_action">I\'m ready</string>
+    <string name="party_ready_action">Ready to watch</string>
     <!-- Button that copies the link to invite someone. -->
     <string name="party_copy_invite">Copy invite link</string>
     <!-- Button in the leave confirmation that ignores it. -->
@@ -3642,7 +3642,7 @@
     <!-- Button on the invite card that is not accepted now. -->
     <string name="party_not_now">Not now</string>
     <!-- Line while the form fetches its suggestions. -->
-    <string name="party_getting_ready">Getting things ready…</string>
+    <string name="party_getting_ready">Loading suggestions…</string>
     <!-- Label of the server field. -->
     <string name="party_server">Server</string>
     <!-- Hint inside the empty server field. -->
@@ -3664,7 +3664,7 @@
     <!-- Line under the server field when something else is typed. -->
     <string name="party_server_suggest">No server of your own? %1$s is a public one, run by %2$s.</string>
     <!-- Line under an invite's room when the server is not the public one. -->
-    <string name="party_server_invited">A server the person who invited you chose. Kaeri doesn\'t run it.</string>
+    <string name="party_server_invited">The person who invited you chose this server. Kaeri doesn\'t run it.</string>
     <!-- Line when the server was typed in a shape that cannot be used. -->
     <string name="party_server_shape">Write the server as a host and a port, like party.example:8999.</string>
     <!-- Line under the form: what the server learns and what each person plays. -->
@@ -3805,7 +3805,7 @@
     <!-- Line of a recent room under its title. The names are who was there; the time is already formatted, such as Tuesday. -->
     <string name="together_recent_row">Episode %1$s · with %2$s · %3$s</string>
     <!-- Line shown when no recent rooms are kept yet. -->
-    <string name="together_recent_empty">Rooms you join show here, the last ten.</string>
+    <string name="together_recent_empty">The last ten rooms you join show here.</string>
     <!-- Button on a recent room that goes straight to its lobby with the next episode. -->
     <string name="together_rejoin">Rejoin</string>
     <!-- Menu item that removes a recent room from the list. -->
@@ -3862,7 +3862,7 @@
     <string name="party_member_finding">Finding a source</string>
     <!-- State of a member who is watching. The time is already formatted, such as 2:14. -->
     <string name="party_member_watching_from">Watching from %1$s</string>
-    <!-- Label of the I'm ready button once you are ready. -->
+    <!-- Label of the Ready to watch button once you are ready. -->
     <string name="party_ready_on">Ready</string>
     <!-- Heading of the invite block in the lobby. -->
     <string name="party_invite">Invite</string>
@@ -4008,7 +4008,7 @@
     <!-- Settings switch that hides chat in every watch party on this device. -->
     <string name="settings_hide_chat">Hide chat in watch parties</string>
     <!-- Line under that switch. -->
-    <string name="settings_hide_chat_line">Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.</string>
+    <string name="settings_hide_chat_line">Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.</string>
     <!-- Member menu item and accessibility action that hides a member's lines and reactions for this party. -->
     <string name="party_mute">Mute %1$s</string>
     <!-- Member menu item and accessibility action that shows a muted member's lines again. -->
@@ -4404,9 +4404,9 @@
     <!-- Notice when the file chooser could not open. -->
     <string name="player_file_picker_failed">Couldn\'t open the file chooser. Try again.</string>
     <!-- Notice when a chosen subtitle file could not be loaded. -->
-    <string name="player_subtitle_file_failed">Couldn\'t load that subtitle file. Check that it is a subtitle file.</string>
+    <string name="player_subtitle_file_failed">Couldn\'t load that file as subtitles. Choose a subtitle file, such as .srt or .ass.</string>
     <!-- Notice when a chosen audio file could not be loaded. -->
-    <string name="player_audio_file_failed">Couldn\'t load that audio file. Check that it is an audio file.</string>
+    <string name="player_audio_file_failed">Couldn\'t load that file as audio. Choose an audio file, such as .mka or .flac.</string>
     <!-- Name of a track that has no name or language. -->
     <string name="player_track_unnamed">Unnamed track</string>
     <!-- Name of an audio track the file does not describe. -->
@@ -4552,7 +4552,7 @@
     <!-- Button in the first run that opens the reading demo. -->
     <string name="onboarding_read_demo">Read the demo</string>
     <!-- Under the first run's demo heading when the device is for reading. -->
-    <string name="onboarding_demo_books_detail">The demo reads a short comic and a short story their makers share under Creative Commons.</string>
+    <string name="onboarding_demo_books_detail">One short comic and one short story, shared by their makers under Creative Commons.</string>
     <!-- Under the first run's demo heading when the device is for both. -->
     <string name="onboarding_demo_both_detail">One short episode and one short comic, shared by their makers under Creative Commons.</string>
     <!-- Home, under the spotlight, when the demo is the only thing to read. -->
@@ -4569,7 +4569,7 @@
     <!-- The story's credit in About the demo. -->
     <string name="demo_credit_story">%1$s by %2$s. Public domain. It comes with the app.</string>
     <!-- The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904. -->
-    <string name="demo_credit_cover">Cover: “%1$s” by %2$s, %3$s. Public domain. It comes with the app.</string>
+    <string name="demo_credit_cover">Cover: \"%1$s\" by %2$s, %3$s. Public domain. It comes with the app.</string>
     <!-- Credit capsule in the reader's top bar on page 1. -->
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <!-- A demo result's line in Search. -->
@@ -4577,7 +4577,7 @@
     <!-- Search, under the demo results, when only the demo is on. -->
     <string name="search_demo_only_books">Only the demo is on. Other titles appear once you add a source.</string>
     <!-- Title of the card after the demo's last page. -->
-    <string name="reader_demo_end">That’s the end of the demo</string>
+    <string name="reader_demo_end">That\'s the end of the demo</string>
     <!-- Line under it. -->
     <string name="reader_demo_end_line">To read your own books, add a folder, a server or a plugin store.</string>
     <!-- The card's primary action. -->
@@ -4587,7 +4587,7 @@
     <!-- The demo row's line in Your sources when reading is on. -->
     <string name="sources_demo_books_line">A comic and a story · CC BY 4.0 and public domain</string>
     <!-- About the demo, first line, when reading is on. -->
-    <string name="sources_demo_books_what">Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn’t a source to keep.</string>
+    <string name="sources_demo_books_what">Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn\'t a source to keep.</string>
     <!-- About the demo, in place of sources-demo-private when reading is on. -->
     <string name="sources_demo_books_private">The demo never signs in anywhere and never writes to a tracker.</string>
     <!-- Group on the demo's series page. -->
@@ -5026,7 +5026,7 @@
     <!-- Button: search for the match by hand. -->
     <string name="book_sources_find">Find</string>
     <!-- Footnote of the Check matches sheet. -->
-    <string name="book_sources_unmatched_note">Unmatched series still read from the folder. They have no tracker progress until matched.</string>
+    <string name="book_sources_unmatched_note">You can still read unmatched series from the folder. They get no tracker progress until they\'re matched.</string>
     <!-- Accessibility label of the control that sets Shows or Reading in the Library and Search. -->
     <string name="library_scope_label">Shows or Reading</string>
     <!-- A side of that control. -->
@@ -5138,11 +5138,11 @@
     <!-- Line under AniList's name on the first-run page. -->
     <string name="onboarding_lists_anilist_line">Lists, progress and suggestions</string>
     <!-- Under AniList on the first-run page after Watch: the other trackers, for later. -->
-    <string name="onboarding_lists_later_watch">MyAnimeList, Kitsu, Simkl and Trakt can be added later in Settings, under Accounts.</string>
+    <string name="onboarding_lists_later_watch">You can add MyAnimeList, Kitsu, Simkl and Trakt later in Settings, under Accounts.</string>
     <!-- Under AniList on the first-run page after Read: the other trackers, for later. -->
-    <string name="onboarding_lists_later_read">MyAnimeList, Kitsu and MangaUpdates can be added later in Settings, under Accounts.</string>
+    <string name="onboarding_lists_later_read">You can add MyAnimeList, Kitsu and MangaUpdates later in Settings, under Accounts.</string>
     <!-- Under AniList on the first-run page after Both: the other trackers, for later. -->
-    <string name="onboarding_lists_later_both">MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt can be added later in Settings, under Accounts.</string>
+    <string name="onboarding_lists_later_both">You can add MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt later in Settings, under Accounts.</string>
     <!-- The first-run page's main button: sign in to the tracker. -->
     <string name="onboarding_connect">Connect %1$s</string>
     <!-- Title of the last first-run page after Read or Both. -->
@@ -5301,9 +5301,9 @@
     <!-- Line under Downloads finished. -->
     <string name="settings_downloads_finished_note">When the chapters downloading are all done</string>
     <!-- Under New chapters. -->
-    <string name="settings_chapter_notifications_footer">Chapters have their own system channel, so they can be silenced on their own.</string>
+    <string name="settings_chapter_notifications_footer">Chapters have their own system channel, so you can silence them and keep the rest.</string>
     <!-- Credit under the trackers with reading on. -->
-    <string name="accounts_mangaupdates_credit">MangaUpdates is reached through its public API.</string>
+    <string name="accounts_mangaupdates_credit">Kaeri talks to MangaUpdates through its public API.</string>
     <!-- Placeholder of the user name field when signing in to MangaUpdates. -->
     <string name="accounts_username">User name</string>
     <!-- Beside the Reading heading in Downloads: how many chapters are kept and their size. -->
@@ -5402,19 +5402,19 @@
     <!-- Note on a series page after chapters were sent: opens the question. -->
     <string name="stop_note">You sent chapters to %1$s. Where did you stop?</string>
     <!-- Button in that note. -->
-    <string name="stop_note_action">Set my place</string>
+    <string name="stop_note_action">Set your place</string>
     <!-- First line of the sheet when one chapter was sent. The date is already written out (such as "2 November"). -->
     <string name="stop_sent_one">Chapter %1$s went to %2$s on %3$s.</string>
     <!-- First line of the sheet when several chapters were sent, from the first to the last. -->
     <string name="stop_sent_range">Chapters %1$s to %2$s went to %3$s on %4$s.</string>
     <!-- Switch in the sheet: the last chapter sent was read to its end. -->
-    <string name="stop_finished">I finished chapter %1$s</string>
+    <string name="stop_finished">Finished chapter %1$s</string>
     <!-- The main button of the sheet: keeps the chapter chosen as the place. -->
-    <string name="stop_set">Set my place</string>
+    <string name="stop_set">Set your place</string>
     <!-- The other button of the sheet: leaves the place as it is, with the place named. -->
     <string name="stop_keep">Keep chapter %1$s · page %2$d</string>
     <!-- The other button of the sheet when the place is not a page. -->
-    <string name="stop_keep_plain">Keep my place</string>
+    <string name="stop_keep_plain">Keep current place</string>
     <!-- Heading of the E-readers group in the Reading settings. -->
     <string name="ereaders_group">E-readers</string>
     <!-- Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name. -->
@@ -5424,7 +5424,7 @@
     <!-- Line under the Share on this network switch. -->
     <string name="opds_share_note">An OPDS catalogue e-readers at home can browse</string>
     <!-- Footnote under the feed settings. -->
-    <string name="opds_footer">Only while Kaeri is open on this %1$s. Progress on those e-readers stays there.</string>
+    <string name="opds_footer">The feed runs only while Kaeri is open on this %1$s. Progress on those e-readers stays there.</string>
     <!-- Row in the feed settings: the web address e-readers are given, with a button that copies it. -->
     <string name="opds_address">Address</string>
     <!-- Shown in place of the address while the feed is off or has no password. -->
@@ -5438,7 +5438,7 @@
     <!-- Row in the feed settings: the port the feed listens on. -->
     <string name="opds_port">Port</string>
     <!-- Line under the port row when it is empty. -->
-    <string name="opds_port_note">Leave it empty to pick a free port, or use 1024 to 65535</string>
+    <string name="opds_port_note">Leave it empty for any free port, or pick one from 1024 to 65535</string>
     <!-- Line under the port row when the port asked for was taken and another is used. -->
     <string name="opds_port_moved">Port %1$d was busy, so the feed uses %2$d.</string>
     <!-- Heading of the group that picks what the feed shares. -->
@@ -5501,7 +5501,7 @@
     <!-- Button that opens the season in Search, where filters narrow it. -->
     <string name="seasonal_filter_in_search">Filter in Search</string>
     <!-- Tooltip of the Filter in Search button. -->
-    <string name="seasonal_filter_help">This season in Search, where every filter narrows it</string>
+    <string name="seasonal_filter_help">Opens this season in Search, where every filter works</string>
     <!-- Sort option on Seasonal and Search: most popular first. -->
     <string name="sort_popularity">Popularity</string>
     <!-- Sort option on Seasonal and Search: highest score first. -->
@@ -5519,19 +5519,19 @@
     <!-- Accessibility label of the button that empties the search field. -->
     <string name="search_clear">Clear search</string>
     <!-- Row under the field while a search runs. The query is what the person typed. -->
-    <string name="search_searching">Searching for “%1$s”</string>
+    <string name="search_searching">Searching for \"%1$s\"</string>
     <!-- Heading over the results of a search. -->
-    <string name="search_results_for">Results for “%1$s”</string>
+    <string name="search_results_for">Results for \"%1$s\"</string>
     <!-- Heading over the titles shown when nothing was typed. -->
     <string name="search_browse">Browse</string>
     <!-- Title of the state when a search finds nothing. -->
-    <string name="search_nothing_found">Nothing found for “%1$s”</string>
+    <string name="search_nothing_found">Nothing found for \"%1$s\"</string>
     <!-- Line under the title when a search finds nothing. -->
     <string name="search_nothing_found_detail">Check the spelling, or try the English or Japanese title.</string>
     <!-- Title of the state when filters leave nothing. -->
     <string name="search_nothing_with_filters">Nothing found with these filters</string>
     <!-- Title of the state when a search and its filters leave nothing. -->
-    <string name="search_nothing_found_with_filters">Nothing found for “%1$s” with these filters</string>
+    <string name="search_nothing_found_with_filters">Nothing found for \"%1$s\" with these filters</string>
     <!-- Line under a state that filters emptied. -->
     <string name="search_try_fewer_filters">Try fewer filters.</string>
     <!-- Button that removes every filter. -->
@@ -5595,7 +5595,7 @@
     <!-- Filter name: only shows with a legal licence. -->
     <string name="filter_licensed_only">Licensed only</string>
     <!-- Filter name: how titles already on the person's list are treated. -->
-    <string name="filter_my_list">Titles on my list</string>
+    <string name="filter_my_list">Titles on your list</string>
     <!-- Value of a three-way filter: include the titles. -->
     <string name="filter_show">Show</string>
     <!-- Value of a three-way filter: leave the titles out. -->
@@ -5932,7 +5932,7 @@
     <!-- Line on a server's row and page after Sign out. -->
     <string name="servers_row_signed_out_here">Signed out</string>
     <!-- Line under it: what signing out does. -->
-    <string name="servers_sign_out_line">Ends this device\'s sign-in on the server. The server and your downloads stay as they are.</string>
+    <string name="servers_sign_out_line">Signing out ends this device\'s session on the server. The server and your downloads stay as they are.</string>
     <!-- Settings group and row title for choosing a language. -->
     <string name="settings_language">Language</string>
     <!-- Settings row for the language of the app's own text. -->
@@ -6145,7 +6145,7 @@
     <!-- Line under it. -->
     <string name="settings_new_episodes_detail">Shows on your Watching list</string>
     <!-- Line explaining what a notification says. -->
-    <string name="settings_notify_detail">One notification when an episode of a show you follow comes out: the show and the episode\'s number, never its name. A show can turn its own off in its settings.</string>
+    <string name="settings_notify_detail">You get one notification when an episode of a show you follow comes out. It names the show and the episode\'s number, never the episode\'s title. A show can turn its own off in its settings.</string>
     <!-- Row: the coming-up digest. -->
     <string name="settings_coming_up">Coming up · next 7 days</string>
     <!-- Row: the system's notification settings. -->
@@ -6153,7 +6153,7 @@
     <!-- Line under it on Android. -->
     <string name="settings_system_notifications_detail">Sound, vibration and the lock screen</string>
     <!-- Line under it on Apple. -->
-    <string name="settings_system_notifications_apple">Opens System Settings, where the banner style, sound and badges are set.</string>
+    <string name="settings_system_notifications_apple">Opens System Settings, where you set the banner style, sound and badges.</string>
     <!-- Line when the system blocks notifications. -->
     <string name="settings_notifications_blocked">Off: the system isn\'t allowing notifications for Kaeri</string>
     <!-- Line when the show turned notifications on. -->
@@ -6181,7 +6181,7 @@
     <!-- Line under the subtitles row. -->
     <string name="show_settings_subs_remembered">Remembered from your last episode.</string>
     <!-- Line under the subtitles row, when nothing is remembered. -->
-    <string name="show_settings_subs_follow">Chosen in the player. Following Settings › Playback.</string>
+    <string name="show_settings_subs_follow">Chosen in the player. Until then, Settings › Playback applies.</string>
     <!-- Row: the source for this show. -->
     <string name="show_settings_source">Source</string>
     <!-- Line under it. -->
@@ -6238,7 +6238,7 @@
     <!-- Settings row: whether a cover the pointer rests on grows into a card with the title's details and trailer. -->
     <string name="settings_label_hover_cards">Expand covers on hover</string>
     <!-- Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it. -->
-    <string name="settings_hover_cards_note">Shows a larger card with the trailer when you rest the pointer on a cover.</string>
+    <string name="settings_hover_cards_note">Resting the pointer on a cover opens a larger card with its trailer.</string>
     <!-- Preview note under the upscaling frame for the natural look. -->
     <string name="settings_upscaling_note_natural">Faithful line work and texture, nothing restyled.</string>
     <!-- Preview note under the upscaling frame for the sharp look. -->
@@ -6401,17 +6401,17 @@
     <!-- Field label. -->
     <string name="book_server_password">Password</string>
     <!-- Error title when the server could not be reached. -->
-    <string name="book_server_err_unreachable">Couldn’t reach %1$s</string>
+    <string name="book_server_err_unreachable">Couldn\'t reach %1$s</string>
     <!-- Line under it. -->
     <string name="book_server_err_unreachable_line">Check the address, and that the server is on and on this network.</string>
     <!-- Error title when the server turned the password down. -->
-    <string name="book_server_err_password">%1$s didn’t accept that password</string>
+    <string name="book_server_err_password">%1$s didn\'t accept that password</string>
     <!-- Line under it. The kind is Komga, Kavita or OPDS. -->
     <string name="book_server_err_password_line">Use the username and password you use for %1$s in a browser.</string>
     <!-- Error title when Kavita turned the key in an OPDS link down. -->
-    <string name="book_server_err_key">%1$s didn’t accept that key</string>
+    <string name="book_server_err_key">%1$s didn\'t accept that key</string>
     <!-- Line under it. -->
-    <string name="book_server_err_key_line">The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.</string>
+    <string name="book_server_err_key_line">The key changes when it\'s reset in Kavita. Copy the OPDS link again from your account settings there.</string>
     <!-- Title when the server lets the account in and shows it no series. -->
     <string name="book_server_empty">%1$s shows this account no series</string>
     <!-- Line under it. -->
@@ -6429,8 +6429,8 @@
     <string name="book_folder_found_line">%1$s. Kaeri matched %2$d of them by their details.</string>
     <!-- Row in the folder result: files that are books in formats Kaeri can't open. -->
     <plurals name="book_folder_unsupported">
-        <item quantity="one">One file Kaeri can’t open</item>
-        <item quantity="other">%1$d files Kaeri can’t open</item>
+        <item quantity="one">One file Kaeri can\'t open</item>
+        <item quantity="other">%1$d files Kaeri can\'t open</item>
     </plurals>
     <!-- Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3". -->
     <string name="book_folder_unsupported_line">%1$s. They stay in the folder as they are.</string>
@@ -6448,7 +6448,7 @@
     <string name="book_folder_empty">Nothing in %1$s that Kaeri can open</string>
     <!-- Line under it. -->
     <plurals name="book_folder_empty_line">
-        <item quantity="one">It holds one file, which isn’t CBZ, CBR, EPUB, PDF or an image.</item>
+        <item quantity="one">It holds one file, which isn\'t CBZ, CBR, EPUB, PDF or an image.</item>
         <item quantity="other">It holds %1$d files, none of them CBZ, CBR, EPUB, PDF or images.</item>
     </plurals>
     <!-- Primary action after an empty folder. -->
@@ -6476,8 +6476,8 @@
     <string name="store_install_all_reading">Install all for reading</string>
     <!-- Result after installing. -->
     <plurals name="store_installed">
-        <item quantity="one">One plugin installed. It’s in Your sources.</item>
-        <item quantity="other">%1$d plugins installed. They’re in Your sources.</item>
+        <item quantity="one">One plugin installed. It\'s in Your sources.</item>
+        <item quantity="other">%1$d plugins installed. They\'re in Your sources.</item>
     </plurals>
     <!-- Info title when every plugin in a store is for watching, and watching is off here. -->
     <string name="store_other_medium">Every plugin in %1$s is for watching</string>
@@ -6488,11 +6488,11 @@
     <!-- Info title when a store has no plugins. -->
     <string name="store_empty">%1$s has no plugins yet</string>
     <!-- Line under it. -->
-    <string name="store_empty_line">You’re a member, so new plugins show in Plugin stores when %1$s adds them.</string>
+    <string name="store_empty_line">You\'re a member, so new plugins show in Plugin stores when %1$s adds them.</string>
     <!-- Error title when the store doesn't answer. -->
-    <string name="store_err_unreachable">Couldn’t reach %1$s</string>
+    <string name="store_err_unreachable">Couldn\'t reach %1$s</string>
     <!-- Line under it. -->
-    <string name="store_err_unreachable_line">The invite looks right, but the store isn’t answering. Try again later, or ask %1$s if it’s running.</string>
+    <string name="store_err_unreachable_line">The invite looks right, but the store isn\'t answering. Try again later, or ask %1$s if it\'s running.</string>
     <!-- Under the reading group: plugins for watching while watching is off here. -->
     <plurals name="store_other_medium_more">
         <item quantity="one">One more is for watching, which is off on this device.</item>
@@ -6500,11 +6500,11 @@
     </plurals>
     <!-- On a TV, under the list: plugins for reading, which a TV doesn't do. -->
     <plurals name="store_tv_reading_only">
-        <item quantity="one">One more is for reading, which this TV doesn’t do.</item>
-        <item quantity="other">%1$d more are for reading, which this TV doesn’t do.</item>
+        <item quantity="one">One more is for reading, which this TV doesn\'t do.</item>
+        <item quantity="other">%1$d more are for reading, which this TV doesn\'t do.</item>
     </plurals>
     <!-- On a TV, info title when every plugin in a store is for reading. -->
-    <string name="store_tv_all_reading">Every plugin in %1$s is for reading, which this TV doesn’t do.</string>
+    <string name="store_tv_all_reading">Every plugin in %1$s is for reading, which this TV doesn\'t do.</string>
     <!-- Plugin row in an invite's result. -->
     <string name="store_plugin_row">Version %1$s · may contact %2$s</string>
     <!-- Notice after a server or folder is added, for 4 seconds. -->
@@ -6673,7 +6673,7 @@
     <!-- Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin. -->
     <string name="sources_torrents_note">Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.</string>
     <!-- Over the { -source } list while the { -source-pl } are set up again after a change. -->
-    <string name="sources_rebuilding">Sources are being set up again</string>
+    <string name="sources_rebuilding">Setting up sources again</string>
     <!-- Value of a plugin's response time, in milliseconds. -->
     <string name="sources_response_ms">%1$d ms</string>
     <!-- Menu, palette and source picker entry that opens the sheet. -->
@@ -6706,9 +6706,9 @@
     <!-- A TV row that opens the search screen from the sheet's panel. -->
     <string name="match_search_another">Search for another title</string>
     <!-- While a search of the source runs. -->
-    <string name="match_searching">Searching %1$s for “%2$s”</string>
+    <string name="match_searching">Searching %1$s for \"%2$s\"</string>
     <!-- A search of the source that found nothing. -->
-    <string name="match_search_empty">Nothing on %1$s for “%2$s”.</string>
+    <string name="match_search_empty">Nothing on %1$s for \"%2$s\".</string>
     <!-- Under match-search-empty: what to try. -->
     <string name="match_search_empty_hint">Try fewer words, or the title in another language.</string>
     <!-- A search of the source that failed. The reason follows on its own line. -->
@@ -6748,7 +6748,7 @@
     <!-- Item in the Add menu: join a plugin store. -->
     <string name="sources_add_store">Join a plugin store…</string>
     <!-- Line under the empty state's title on a computer. -->
-    <string name="sources_empty_body">Sources are where episodes come from: folders on this device, your media server, and plugins from stores you join.</string>
+    <string name="sources_empty_body">Sources are where episodes come from: folders on this device, your media server, and plugins from plugin stores you join.</string>
     <!-- Line under the empty state's buttons. The link is "join a plugin store". -->
     <string name="sources_empty_more">Or %1$s.</string>
     <!-- Link in the empty state's last line. -->
@@ -6776,7 +6776,7 @@
     <!-- Link to the makers' site, in the credit block. -->
     <string name="sources_demo_link_maker">OPAP-JP</string>
     <!-- Line on the demo page that names the only two hosts the demo reaches. -->
-    <string name="sources_demo_hosts">Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wikimedia.org.</string>
+    <string name="sources_demo_hosts">The demo reaches only Wikimedia Commons: upload.wikimedia.org and commons.wikimedia.org.</string>
     <!-- Line on the demo page about accounts and trackers. -->
     <string name="sources_demo_private">The demo never signs in anywhere and never writes to AniList.</string>
     <!-- Button on the demo page that removes the demo from the sources. -->
@@ -6822,7 +6822,7 @@
     <!-- Line under the join form's confirmation: who answers for the store. Shown before Join. -->
     <string name="stores_join_owner_responsible">%1$s runs this plugin store and chose its plugins. Kaeri did not make, review or approve them.</string>
     <!-- Line when the store has no plugins. -->
-    <string name="stores_no_plugins">This plugin store offers no plugins yet.</string>
+    <string name="stores_no_plugins">This plugin store has no plugins yet.</string>
     <!-- Heading of the plugin list of a store. -->
     <string name="stores_plugins">Plugins</string>
     <!-- Line under the plugin list: what a plugin may do. -->
@@ -6846,7 +6846,7 @@
     <!-- Line on a row where the store is gone from the device. -->
     <string name="stores_no_longer_joined">This plugin store is no longer joined.</string>
     <!-- Line when the store cannot be reached but a list was kept. The reason is a sentence fragment. -->
-    <string name="stores_offline_last_list">Offline: %1$s. The plugins below are the last list that was checked.</string>
+    <string name="stores_offline_last_list">Offline: %1$s. Showing the last list it sent.</string>
     <!-- Line when offline, without a reason. -->
     <string name="stores_offline_last_list_plain">Offline. Showing the last list it sent.</string>
     <!-- Line with the store's key and how this device joined. -->
@@ -6916,7 +6916,7 @@
     <!-- Title of the remove confirmation. -->
     <string name="stores_remove_plugin_title">Remove %1$s?</string>
     <!-- Line under it. -->
-    <string name="stores_remove_plugin_detail">It is deleted from this device. The plugin store can install it again.</string>
+    <string name="stores_remove_plugin_detail">It\'s deleted from this device. You can install it again from the plugin store.</string>
     <!-- Label before the hosts a new version also contacts. -->
     <string name="stores_newly_contacts">Newly contacts</string>
     <!-- Line in the update sheet: the hosts the new version adds. The hosts are a list already joined. -->
@@ -6930,7 +6930,7 @@
     <!-- Line under the form title. -->
     <string name="stores_join_detail">Paste the link the plugin store\'s owner sent you.</string>
     <!-- Line under the form title on desktop, where nothing happens before the check. -->
-    <string name="stores_join_detail_desktop">Paste the invite link a plugin store\'s owner sent you. You see what the plugin store offers before anything is joined or installed.</string>
+    <string name="stores_join_detail_desktop">Paste the invite link a plugin store\'s owner sent you. You see what the plugin store has before you join or install anything.</string>
     <!-- Line under the field on a phone when a link was opened from another app. -->
     <string name="stores_join_detail_opened">Paste the link the plugin store\'s owner sent you. A Kaeri:// invite link opened from Messages fills this sheet in directly.</string>
     <!-- Label and hint of the link field. -->
@@ -6958,7 +6958,7 @@
     <!-- Line when the key in the link matches the store. The key is shown beside it. -->
     <string name="stores_key_matches">Key %1$s matches the plugin store.</string>
     <!-- Line when the link is open to anyone. -->
-    <string name="stores_anyone_note">You join without a name. Another device joins with the same link.</string>
+    <string name="stores_anyone_note">You join without a name. Another device can join with the same link.</string>
     <!-- Line when the device joined this store already. -->
     <string name="stores_already_joined_note">This device has joined this plugin store already.</string>
     <!-- Label of the device name field. -->
@@ -7058,7 +7058,7 @@
     <!-- The same with no end date. -->
     <string name="stores_invite_works_any_forever">Anyone who has this link can join until you cancel it.</string>
     <!-- Line under a single-use invite with an end date. Replaces stores-invite-once. -->
-    <string name="stores_invite_once_until">Works once, for the person you send it to. Until %1$s.</string>
+    <string name="stores_invite_once_until">Works once, for the person you send it to, until %1$s.</string>
     <!-- Line under a single-use invite with no end date. -->
     <string name="stores_invite_once_forever">Works once, for the person you send it to, until you cancel it.</string>
     <!-- Line when Any number of times is picked and the store has no contact. -->
@@ -7144,7 +7144,7 @@
     <!-- Button of a notice that opens the plugin stores page. -->
     <string name="notice_open_stores">Open plugin stores</string>
     <!-- Explainer on the empty plugin stores page. -->
-    <string name="stores_what_is">A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</string>
+    <string name="stores_what_is">A plugin store is a small server that holds signed plugins and gives each device its own token. Its plugins add sources. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.</string>
     <!-- Button on the empty plugin stores page that opens the docs page in the browser. -->
     <string name="stores_what_is_link">What is a plugin store?</string>
     <!-- Line above the invite field in the Join sheet. -->
@@ -7158,11 +7158,11 @@
     <!-- Button that opens the system share sheet for the invite link. -->
     <string name="stores_share">Share…</string>
     <!-- Windows and Linux dialog line while the browser is open for a cloud sign-in. -->
-    <string name="cloud_browser_line">Your browser opened %1$s’s page. Allow access there, and Kaeri carries on by itself.</string>
+    <string name="cloud_browser_line">Your browser opened %1$s\'s page. Allow access there, and Kaeri carries on by itself.</string>
     <!-- Windows and Linux dialog title while the browser is open for a cloud sign-in. -->
     <string name="cloud_browser_title">Sign in to %1$s in your browser</string>
     <!-- Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running. -->
-    <string name="cloud_close_carries_on">You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.</string>
+    <string name="cloud_close_carries_on">You can close this. Kaeri carries on, and opens the next step by itself when it\'s ready.</string>
     <!-- Word for this device in sentences such as “Turn off sync on this computer”. -->
     <string name="device_kind_computer">computer</string>
     <!-- Button on the Devices page that opens the box for a code another device shows. -->
@@ -7236,7 +7236,7 @@
     <!-- Road sheet row. -->
     <string name="sync_road_cloud">Through a cloud folder</string>
     <!-- Road sheet row line. Names no service, since a build may hide some (decision 14). -->
-    <string name="sync_road_cloud_line">A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.</string>
+    <string name="sync_road_cloud_line">A cloud drive you already use, or your own server. It works while your devices are apart and keeps a backup.</string>
     <!-- Road sheet footer. -->
     <string name="sync_road_later">You can add the other way later. Most people use both.</string>
     <!-- Group heading. -->
@@ -7276,7 +7276,7 @@
     <!-- Group heading. -->
     <string name="cloud_group">Cloud folder</string>
     <!-- Group footer. -->
-    <string name="cloud_foot">Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.</string>
+    <string name="cloud_foot">The folder keeps your devices in step while they are apart, and holds a sealed backup. Only your devices can read it.</string>
     <!-- Row when only the nearby road is set. -->
     <string name="cloud_add">Add a cloud folder</string>
     <!-- Picker title. -->
@@ -7505,7 +7505,7 @@
     <!-- iPad switch. -->
     <string name="profiles_ask_at_launch">Ask who’s watching at launch</string>
     <!-- iPad footer. -->
-    <string name="profiles_ask_foot">Off by default. For an iPad the household shares. The account row switches profiles at any time.</string>
+    <string name="profiles_ask_foot">Off by default. Turn it on for an iPad the whole household shares. You can switch profiles from the account row at any time.</string>
     <!-- TV Settings. -->
     <string name="profiles_switch">Switch profile</string>
     <!-- Account sheet and menus. -->
@@ -8028,7 +8028,7 @@
     <!-- Title of the form. -->
     <string name="accounts_form_title">Sign in to %1$s</string>
     <!-- Line under the title: where the password goes. -->
-    <string name="accounts_form_detail">Your password goes to %1$s once, for a token kept on this device.</string>
+    <string name="accounts_form_detail">Your password goes to %1$s once, in exchange for a token that stays on this device.</string>
     <!-- Label of the name field. -->
     <string name="accounts_user_or_email">Email or user name</string>
     <!-- Label of the password field. -->
@@ -8076,7 +8076,7 @@
     <!-- Menu item on the title page, as the title is listed there. -->
     <string name="accounts_listed_by">Listed by %1$s</string>
     <!-- Line when the tracker did not answer. -->
-    <string name="accounts_did_not_answer">%1$s didn\'t answer.</string>
+    <string name="accounts_did_not_answer">%1$s didn\'t answer. Try again in a moment.</string>
     <!-- Line when the tracker has nothing for the show. -->
     <string name="accounts_no_extras">%1$s has no cast, staff or recommendations for this show yet.</string>
     <!-- Line when episodes come from the tracker only. -->
@@ -8118,7 +8118,7 @@
     <!-- Line telling where to open the app on the TV. -->
     <string name="tv_open_on_tv">Open Kaeri on the TV. It needs to be on the same Wi-Fi as this device.</string>
     <!-- Line telling what to type. -->
-    <string name="tv_type_code">Type the six digits %1$s shows. After this, this device connects by itself.</string>
+    <string name="tv_type_code">Type the six digits %1$s shows. From then on, this device connects by itself.</string>
     <!-- Line while pairing is under way. -->
     <string name="tv_pairing_moment">This takes a moment.</string>
     <!-- Line while the app looks for TVs. -->
@@ -8318,7 +8318,7 @@
     <!-- The server refused. The code is a number. -->
     <string name="updates_why_server">The download stopped: the server refused it (%1$d). Try again later.</string>
     <!-- The connection broke. -->
-    <string name="updates_why_connection">The download stopped: the connection was lost.</string>
+    <string name="updates_why_connection">The download stopped: the connection was lost. Try again.</string>
     <!-- The file could not be saved. The reason is a sentence fragment. -->
     <string name="updates_why_save">The download couldn\'t be saved: %1$s</string>
     <!-- The file has the wrong size. Sizes are already formatted. -->

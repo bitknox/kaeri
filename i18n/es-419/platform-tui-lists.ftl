@@ -70,10 +70,10 @@ accounts-row-queued = { $count ->
     [many] { $count } en cola
    *[other] { $count } en cola
  }
-accounts-row-queued-held = { $queued } en cola, { $held } esperando una asociación de ID
-accounts-conflict-keep-mine = Usar el mío
-accounts-conflict-keep-theirs = Usar el remoto
-accounts-conflict-row = { $title }  ·  { $field }: mío { $local } / remoto { $remote }
+accounts-row-queued-held = { $queued } en cola, { $held } esperando una coincidencia
+accounts-conflict-keep-mine = Usar local
+accounts-conflict-keep-theirs = Usar remoto
+accounts-conflict-row = { $title }  ·  { $field }: local { $local } / remoto { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Solo puedes ocultar títulos de la lista { -continue-cap }.
 lists-continue-removed = { $title } se ocultó de { -continue-cap }. Al volver a verlo, regresa.
@@ -84,7 +84,7 @@ lists-loading = Cargando…
 lists-empty-press-enter = Pulsa ↵ para buscar
 lists-empty-type-to-search = Escribe para buscar
 lists-empty-browse-filtered = Pulsa ↵ para explorar con estos filtros.
-lists-empty-browse-popular = Pulsa ↵ para explorar los más populares.
+lists-empty-browse-popular = Pulsa ↵ para explorar los títulos más populares.
 lists-empty-no-matches = Sin resultados
 lists-empty-fewer-filters = Prueba con menos filtros.
 lists-empty-shorter-query = Prueba con una búsqueda más corta o con el título en romaji.

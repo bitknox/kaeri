@@ -50,7 +50,7 @@ public enum L {
 
     /// This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
     public static func noticeCastNotSameNetwork(name: String) -> String {
-        Self.format("notice-cast-not-same-network", fallback: "This device isn't on the network %1$@ is on, or reaches it through a VPN. Casting needs both on the same network.", name)
+        Self.format("notice-cast-not-same-network", fallback: "This device isn't on the network %1$@ is on, or reaches it through a VPN. Connect both to the same network to cast.", name)
     }
 
     /// The TV stopped answering mid-cast. The name is the TV's own.
@@ -455,7 +455,7 @@ public enum L {
 
     /// Toast when a search of the sources for a title found nothing.
     public static func noticeSourceSearchEmpty(query: String) -> String {
-        Self.format("notice-source-search-empty", fallback: "Nothing found for “%1$@”. Try a different search.", query)
+        Self.format("notice-source-search-empty", fallback: "Nothing found for \"%1$@\". Try a different search.", query)
     }
 
     /// In the list of titles a source offers for a show, in place of how close a title is: it was ruled out because its format cannot be the show's, as an OVA for a TV series.
@@ -475,7 +475,7 @@ public enum L {
 
     /// Toast after the person picked a source for one title.
     public static func noticeSourcePinned(source: String) -> String {
-        Self.format("notice-source-pinned", fallback: "%1$@ will be used for this title.", source)
+        Self.format("notice-source-pinned", fallback: "This title now plays from %1$@.", source)
     }
 
     /// Toast after the person went back to automatic source selection for one title.
@@ -700,13 +700,13 @@ public enum L {
     }
 
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
-    public static var readerDetectedRightToLeft: String { string("reader-detected-right-to-left", fallback: "Right to left, detected") }
+    public static var readerDetectedRightToLeft: String { string("reader-detected-right-to-left", fallback: "Looks like right to left") }
 
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
-    public static var readerDetectedLeftToRight: String { string("reader-detected-left-to-right", fallback: "Left to right, detected") }
+    public static var readerDetectedLeftToRight: String { string("reader-detected-left-to-right", fallback: "Looks like left to right") }
 
     /// A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
-    public static var readerDetectedStrip: String { string("reader-detected-strip", fallback: "Long strip, detected") }
+    public static var readerDetectedStrip: String { string("reader-detected-strip", fallback: "Looks like a long strip") }
 
     /// Why a chapter or a list could not load: there is no connection.
     public static var readingFailedOffline: String { string("reading-failed-offline", fallback: "You're offline. Downloaded chapters still open.") }
@@ -1348,7 +1348,7 @@ public enum L {
 
     /// Error: the token for a joined store could not be saved on this device. The reason comes from the system.
     public static func storeTokenNotKept(reason: String) -> String {
-        Self.format("store-token-not-kept", fallback: "Couldn't keep the token for this plugin store. %1$@", reason)
+        Self.format("store-token-not-kept", fallback: "Couldn't save the token for this plugin store. %1$@", reason)
     }
 
     /// Error: an invite that cannot be used any more.
@@ -1452,7 +1452,7 @@ public enum L {
 
     /// Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
     public static func sourceSwitchedOff(name: String) -> String {
-        Self.format("source-switched-off", fallback: "%1$@ is off. It is skipped when looking for episodes.", name)
+        Self.format("source-switched-off", fallback: "%1$@ is off. Kaeri skips it when looking for episodes.", name)
     }
 
     /// Toast after a source (plugin) is switched on.
@@ -1467,7 +1467,7 @@ public enum L {
 
     /// Toast after a release is chosen for a title. The name is the release's title.
     public static func releasePinned(name: String) -> String {
-        Self.format("release-pinned", fallback: "%1$@ will be used for this title.", name)
+        Self.format("release-pinned", fallback: "This title now uses %1$@.", name)
     }
 
     /// Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
@@ -1592,12 +1592,12 @@ public enum L {
 
     /// Toast when a sign-in redirect arrives and no sign-in is waiting for it.
     public static func noticeSignInNotWaiting(tracker: String) -> String {
-        Self.format("notice-sign-in-not-waiting", fallback: "No sign-in to %1$@ is waiting for that. Start the sign-in again.", tracker)
+        Self.format("notice-sign-in-not-waiting", fallback: "A sign-in reply from %1$@ arrived, but no sign-in was waiting for it. Start the sign-in again.", tracker)
     }
 
     /// Toast when a sign-in redirect does not match the request that was made.
     public static func noticeSignInWrongRequest(tracker: String) -> String {
-        Self.format("notice-sign-in-wrong-request", fallback: "That sign-in to %1$@ didn't come back from this request. Start the sign-in again.", tracker)
+        Self.format("notice-sign-in-wrong-request", fallback: "The sign-in reply from %1$@ doesn't match the request. Start the sign-in again.", tracker)
     }
 
     /// Toast when a tracker sent the person back without a token.
@@ -1728,7 +1728,7 @@ public enum L {
     public static var causeProxyNeedsAddress: String { string("cause-proxy-needs-address", fallback: "A proxy needs a host and a port.") }
 
     /// The reason a proxy could not be checked: its address is not one the check can use.
-    public static var causeProxyAddressUnusable: String { string("cause-proxy-address-unusable", fallback: "The proxy's address is not one a check can use.") }
+    public static var causeProxyAddressUnusable: String { string("cause-proxy-address-unusable", fallback: "The proxy check can't use this address.") }
 
     /// The reason a request failed: it never reached the server.
     public static var causeServerUnreachable: String { string("cause-server-unreachable", fallback: "The server couldn't be reached.") }
@@ -1757,7 +1757,7 @@ public enum L {
 
     /// Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
     public static func noticeDatabaseSetAside(path: String) -> String {
-        Self.format("notice-database-set-aside", fallback: "The database was damaged, so Kaeri started a new one. The old file is kept at %1$@. Your trackers bring back what they hold at the next sync.", path)
+        Self.format("notice-database-set-aside", fallback: "The database was damaged, so Kaeri started a new one. The old file is kept at %1$@. What your trackers hold comes back at the next sync.", path)
     }
 
     /// Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
@@ -1782,7 +1782,7 @@ public enum L {
 
     /// Message when Kaeri could not start its network connection from the network settings.
     public static func startFailedNetwork(reason: String) -> String {
-        Self.format("start-failed-network", fallback: "Kaeri couldn't set up its network connection from the network settings in config.toml. %1$@", reason)
+        Self.format("start-failed-network", fallback: "Kaeri couldn't connect with the network settings in config.toml. Check them, then try again. %1$@", reason)
     }
 
     /// Message when Kaeri itself could not start. The reason comes from the system or the engine.
@@ -1821,10 +1821,10 @@ public enum L {
     public static var noticeSurpriseEmptyPlanning: String { string("notice-surprise-empty-planning", fallback: "Planning is empty.") }
 
     /// Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-    public static var noticeSurpriseOffline: String { string("notice-surprise-offline", fallback: "Offline. Search picks need AniList.") }
+    public static var noticeSurpriseOffline: String { string("notice-surprise-offline", fallback: "You're offline. Surprise me needs AniList to pick a title.") }
 
     /// Toast: Surprise me on the filters, and AniList could not be asked.
-    public static var noticeSurpriseFailed: String { string("notice-surprise-failed", fallback: "Couldn't pick a title right now. Try again in a moment.") }
+    public static var noticeSurpriseFailed: String { string("notice-surprise-failed", fallback: "Couldn't reach AniList to pick a title. Try again in a moment.") }
 
     /// VoiceOver: a title that is up to date and whose next episode airs later. The time is already worded.
     public static func accessCaughtUpAirs(episode: Int, when: String) -> String {
@@ -2119,7 +2119,7 @@ public enum L {
     public static var settingsAppleDiscussions: String { string("settings-apple-discussions", fallback: "Episode discussions") }
 
     /// Note under the switch for episode discussions.
-    public static var settingsAppleDiscussionsNote: String { string("settings-apple-discussions-note", fallback: "Reads the comments on AniList's forum thread for episodes you have watched.") }
+    public static var settingsAppleDiscussionsNote: String { string("settings-apple-discussions-note", fallback: "Comments come from AniList's forum thread, once you've watched the episode.") }
 
     /// Name of the Settings switch that loads images in comments.
     public static var settingsAppleCommentImages: String { string("settings-apple-comment-images", fallback: "Load images in comments") }
@@ -2168,7 +2168,7 @@ public enum L {
     }
 
     /// Notice when a list could not be refreshed and the rows already on screen stay.
-    public static var listRefreshFailed: String { string("list-refresh-failed", fallback: "Couldn't refresh. Showing what was loaded.") }
+    public static var listRefreshFailed: String { string("list-refresh-failed", fallback: "Couldn't refresh. You're seeing what loaded last time.") }
 
     /// Notice when the browser sign-in for a tracker failed, as opposed to being closed by the person.
     public static func signInFailed(tracker: String) -> String {
@@ -2189,7 +2189,7 @@ public enum L {
 
     /// Line of the command palette when nothing matches. Return runs the search.
     public static func paletteSearchFor(query: String) -> String {
-        Self.format("palette-search-for", fallback: "Return searches for “%1$@”", query)
+        Self.format("palette-search-for", fallback: "Return searches for \"%1$@\"", query)
     }
 
     /// Hint at the foot of the command palette: what Return does.
@@ -2843,7 +2843,7 @@ public enum L {
     public static var settingsAsideAdvanced: String { string("settings-aside-advanced", fallback: "An option here can undo a Playback setting, such as upscaling or night mode. Most people never need this pane.") }
 
     /// Note under the download quality row.
-    public static var settingsQualityDetail: String { string("settings-quality-detail", fallback: "Higher takes the best version a source offers, and more space.") }
+    public static var settingsQualityDetail: String { string("settings-quality-detail", fallback: "Higher picks the best version a source has. It takes more space.") }
 
     /// Note under the merge subtitles row.
     public static var settingsMergeSubtitlesDetail: String { string("settings-merge-subtitles-detail", fallback: "Subtitles stay with the episode wherever the file goes.") }
@@ -2947,7 +2947,7 @@ public enum L {
 
     /// Footnote of the Discord group.
     public static func settingsPresenceNote(tracker: String) -> String {
-        Self.format("settings-presence-note", fallback: "Rich presence shows the cover, a progress bar and a link to the show on %1$@. Discord fetches the cover from %1$@ itself. It needs the title shown.", tracker)
+        Self.format("settings-presence-note", fallback: "Rich presence shows the cover, a progress bar and a link to the show on %1$@. It works only while the title is shown. Discord loads the cover from %1$@ itself.", tracker)
     }
 
     /// Preview of the Discord presence: the label of the cover drawing.
@@ -3045,7 +3045,7 @@ public enum L {
 
     /// Under the notification preview while New episodes is on.
     public static func settingsNotifyExplainOn(tracker: String) -> String {
-        Self.format("settings-notify-explain-on", fallback: "One notification when an episode of a show in your Watching list comes out, at the time %1$@ gives. A show's own setting comes first.", tracker)
+        Self.format("settings-notify-explain-on", fallback: "You get one notification when an episode of a show in your Watching list comes out, at the time %1$@ lists. A show's own setting comes first.", tracker)
     }
 
     /// Under the notification preview while New episodes is off.
@@ -3347,7 +3347,7 @@ public enum L {
     }
 
     /// Error when a link that was pasted or opened is not a plugin store's invite.
-    public static var shellNotAStore: String { string("shell-not-a-store", fallback: "This link doesn't lead to a plugin store. Ask the plugin store's owner for a new invite.") }
+    public static var shellNotAStore: String { string("shell-not-a-store", fallback: "This link doesn't lead to a plugin store. Ask the person who sent it for a new invite.") }
 
     /// Context menu item that carries on with an episode that was left part-way.
     public static func shellResumeEpisode(episode: Int) -> String {
@@ -3385,7 +3385,7 @@ public enum L {
     public static var shellEngineStopped: String { string("shell-engine-stopped", fallback: "Kaeri stopped working") }
 
     /// Plain line under the title of the page shown when the engine stopped while the app was open.
-    public static var shellEngineStoppedBody: String { string("shell-engine-stopped-body", fallback: "The part of the app that does the work has stopped. Start it again to carry on.") }
+    public static var shellEngineStoppedBody: String { string("shell-engine-stopped-body", fallback: "Downloads and sync stopped with it. Start Kaeri again to carry on.") }
 
     /// Title menu item that queues every unwatched episode that is not downloaded yet.
     public static var shellDownloadUnwatched: String { string("shell-download-unwatched", fallback: "Download unwatched") }
@@ -3437,10 +3437,10 @@ public enum L {
     }
 
     /// Line under the switch of the who-can-join sheet while anyone with the link can join.
-    public static var storesOpenJoinOnDetail: String { string("stores-open-join-on-detail", fallback: "They join without a name. Turning this off stops the link; turning it on again makes a new one.") }
+    public static var storesOpenJoinOnDetail: String { string("stores-open-join-on-detail", fallback: "People join without a name. Turn this off and the link stops working. Turn it on again for a new link.") }
 
     /// Line under the switch of the who-can-join sheet while only invited people can join.
-    public static var storesOpenJoinOffDetail: String { string("stores-open-join-off-detail", fallback: "Only people you invite can join. Turned on, anyone with the link joins, without a name.") }
+    public static var storesOpenJoinOffDetail: String { string("stores-open-join-off-detail", fallback: "Only people you invite can join. Turn this on and anyone with the link can join, without a name.") }
 
     /// Line under the count of devices that joined with the link, while the link is open.
     public static var storesOpenJoinNoNames: String { string("stores-open-join-no-names", fallback: "No names are kept.") }
@@ -3454,11 +3454,11 @@ public enum L {
     }
 
     /// Line of a device that joined with the link and was never seen again.
-    public static var storesDeviceNotSeen: String { string("stores-device-not-seen", fallback: "Not seen since") }
+    public static var storesDeviceNotSeen: String { string("stores-device-not-seen", fallback: "Not seen since joining") }
 
     /// Line of a plugin in the publish sheet: the version the plugin store offers.
     public static func storesPublishOffered(version: String) -> String {
-        Self.format("stores-publish-offered", fallback: "The plugin store offers %1$@", version)
+        Self.format("stores-publish-offered", fallback: "The plugin store has %1$@", version)
     }
 
     /// Line of a plugin in the publish sheet that the plugin store does not have yet.
@@ -3577,7 +3577,7 @@ public enum L {
     }
 
     /// Detail of the confirmation that removes a plugin.
-    public static var sourcesRemoveDetailDevice: String { string("sources-remove-detail-device", fallback: "It is deleted from this device. A plugin store can install it again.") }
+    public static var sourcesRemoveDetailDevice: String { string("sources-remove-detail-device", fallback: "It's deleted from this device. You can install it again from a plugin store.") }
 
     /// Heading of the list of matched file groups in a folder of Your media.
     public static var libraryMatchedApple: String { string("library-matched-apple", fallback: "Matched") }
@@ -3701,7 +3701,7 @@ public enum L {
     }
 
     /// Line in the episode list of a title when the list is filtered to unwatched episodes and there are none.
-    public static var titleAllWatched: String { string("title-all-watched", fallback: "Every episode is watched") }
+    public static var titleAllWatched: String { string("title-all-watched", fallback: "You've watched every episode") }
 
     /// Line on the title page when the detail did not arrive in time. A Try again button follows.
     public static var titleNoAnswerShort: String { string("title-no-answer-short", fallback: "AniList didn't answer.") }
@@ -4189,13 +4189,13 @@ public enum L {
     public static var settingsCrashSave: String { string("settings-crash-save", fallback: "Save crash reports on this device") }
 
     /// Line under that switch.
-    public static var settingsCrashSaveDetail: String { string("settings-crash-save-detail", fallback: "When this is on, Kaeri keeps a short record of each crash on this device, with titles, addresses and names removed, so you can add it to Report a bug. Nothing is sent by itself.") }
+    public static var settingsCrashSaveDetail: String { string("settings-crash-save-detail", fallback: "Kaeri keeps a short record of each crash on this device for Report a bug, with titles, addresses and names removed. Nothing is sent by itself.") }
 
     /// Switch that turns the notice after a crash on or off.
     public static var settingsCrashAsk: String { string("settings-crash-ask", fallback: "Ask after a crash") }
 
     /// Line under that switch.
-    public static var settingsCrashAskDetail: String { string("settings-crash-ask-detail", fallback: "Shows a notice at the next launch with Report…") }
+    public static var settingsCrashAskDetail: String { string("settings-crash-ask-detail", fallback: "Kaeri shows a notice with Report… the next time it opens.") }
 
     /// Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
     public static func settingsCrashOsHeading(system: String) -> String {
@@ -4231,7 +4231,7 @@ public enum L {
     public static var settingsCrashDeleteAll: String { string("settings-crash-delete-all", fallback: "Delete all") }
 
     /// Footnote of the Crash reports group.
-    public static var settingsCrashFootnote: String { string("settings-crash-footnote", fallback: "Crash reports stay on this device. Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.") }
+    public static var settingsCrashFootnote: String { string("settings-crash-footnote", fallback: "Crash reports stay on this device, and Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.") }
 
     /// Button that shows the week before.
     public static var calendarPreviousWeek: String { string("calendar-previous-week", fallback: "Previous week") }
@@ -4379,13 +4379,13 @@ public enum L {
     public static var castTvsNoteIpad: String { string("cast-tvs-note-ipad", fallback: "They appear under Chromecast in Play on TV. This iPad sends them the episode.") }
 
     /// Note under the Settings row that lets a cast play torrents, on a Mac.
-    public static var castTorrentsNoteMac: String { string("cast-torrents-note-mac", fallback: "Lets a TV with Chromecast built in play torrents. This Mac sends the episode for as long as it plays.") }
+    public static var castTorrentsNoteMac: String { string("cast-torrents-note-mac", fallback: "A TV with Chromecast built in can then play torrents. This Mac sends the episode for as long as it plays.") }
 
     /// Note under the Settings row that lets a cast play torrents, on an iPhone.
-    public static var castTorrentsNoteIphone: String { string("cast-torrents-note-iphone", fallback: "Lets a TV with Chromecast built in play torrents. This iPhone sends the episode for as long as it plays.") }
+    public static var castTorrentsNoteIphone: String { string("cast-torrents-note-iphone", fallback: "A TV with Chromecast built in can then play torrents. This iPhone sends the episode for as long as it plays.") }
 
     /// Note under the Settings row that lets a cast play torrents, on an iPad.
-    public static var castTorrentsNoteIpad: String { string("cast-torrents-note-ipad", fallback: "Lets a TV with Chromecast built in play torrents. This iPad sends the episode for as long as it plays.") }
+    public static var castTorrentsNoteIpad: String { string("cast-torrents-note-ipad", fallback: "A TV with Chromecast built in can then play torrents. This iPad sends the episode for as long as it plays.") }
 
     /// Line on the casting card while the next episode counts down. The seconds are whole.
     public static func castUpNextPlaysIn(seconds: Int) -> String {
@@ -5214,7 +5214,7 @@ public enum L {
     public static var downloadsDeleteOneTitle: String { string("downloads-delete-one-title", fallback: "Delete download") }
 
     /// Line under it: what you lose.
-    public static var downloadsDeleteOneDetail: String { string("downloads-delete-one-detail", fallback: "It plays again only with a connection, or once you download it again.") }
+    public static var downloadsDeleteOneDetail: String { string("downloads-delete-one-detail", fallback: "After this, the episode needs a connection to play, unless you download it again.") }
 
     /// Button on the settings page that removes watched files.
     public static var downloadsDeleteWatched: String { string("downloads-delete-watched", fallback: "Delete watched downloads") }
@@ -5226,7 +5226,7 @@ public enum L {
     public static var downloadsSeedingAfterWatching: String { string("downloads-seeding-after-watching", fallback: "Seeding after watching") }
 
     /// Line under the seeding heading.
-    public static var downloadsSeedingNote: String { string("downloads-seeding-note", fallback: "Watched episodes are shared back while Kaeri is open, until the ratio or the time limit set in Settings, under Sources, is reached.") }
+    public static var downloadsSeedingNote: String { string("downloads-seeding-note", fallback: "Watched episodes are shared back while Kaeri is open. Sharing stops at the ratio or time limit you set in Settings, under Sources.") }
 
     /// Heading of the setting. Shown on desktop only.
     public static var downloadsBackgroundTitle: String { string("downloads-background-title", fallback: "When the window closes with downloads running") }
@@ -5317,10 +5317,10 @@ public enum L {
     public static var firstOtherTitle: String { string("first-other-title", fallback: "Already use Kaeri on another device?") }
 
     /// Under the title.
-    public static var firstOtherLine: String { string("first-other-line", fallback: "Pair with it and this device gets your sources, trackers and history. The steps after this are then done.") }
+    public static var firstOtherLine: String { string("first-other-line", fallback: "Pair with it and this device gets your sources, trackers and history, and the rest of setup is done for you.") }
 
     /// Line under the pair row.
-    public static var firstOtherPairLine: String { string("first-other-pair-line", fallback: "Shows a code to enter on that device. Both need the same Wi-Fi.") }
+    public static var firstOtherPairLine: String { string("first-other-pair-line", fallback: "You get a code to enter on that device. Both need the same Wi-Fi.") }
 
     /// Row that restores from a sync folder.
     public static var firstOtherRestore: String { string("first-other-restore", fallback: "Restore from a cloud folder") }
@@ -5372,7 +5372,7 @@ public enum L {
 
     /// Note under the list.
     public static func firstJoinFolders(device: String) -> String {
-        Self.format("first-join-folders", fallback: "Folders stay on %1$@. Add this device’s own folders in Your sources.", device)
+        Self.format("first-join-folders", fallback: "Folders stay on %1$@. Add this device's own folders in Your sources.", device)
     }
 
     /// Note when the setup answered the remaining pages.
@@ -5380,7 +5380,7 @@ public enum L {
 
     /// Row error when a plugin store refused this device.
     public static func firstJoinStoreRefused(store: String, owner: String) -> String {
-        Self.format("first-join-store-refused", fallback: "%1$@ didn’t let this device in. %2$@ can send you an invite.", store, owner)
+        Self.format("first-join-store-refused", fallback: "%1$@ didn't let this device in. %2$@ can send you an invite.", store, owner)
     }
 
     /// Notice on Home, for 4 seconds.
@@ -5461,7 +5461,7 @@ public enum L {
     public static var homeSignIn: String { string("home-sign-in", fallback: "Sign in to AniList") }
 
     /// The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-    public static var homeEndNoSources: String { string("home-end-no-sources", fallback: "Add a source to play from Home. Plugin stores has some to choose from.") }
+    public static var homeEndNoSources: String { string("home-end-no-sources", fallback: "Add a source to play from Home. Plugins come from Plugin stores.") }
 
     /// Line on a title that no installed { -source } has. The main action becomes Add to Planning.
     public static var homeNotFound: String { string("home-not-found", fallback: "Not found in your sources") }
@@ -5957,7 +5957,7 @@ public enum L {
     public static var libraryRemoveDetail: String { string("library-remove-detail", fallback: "Your files stay where they are.") }
 
     /// Why a group of files is not matched: AniList could not be asked.
-    public static var libraryReasonOffline: String { string("library-reason-offline", fallback: "Couldn't ask AniList. It is tried again at the next scan.") }
+    public static var libraryReasonOffline: String { string("library-reason-offline", fallback: "Couldn't reach AniList. The next scan tries again.") }
 
     /// Button that opens the match picker for a group.
     public static var libraryChooseMatch: String { string("library-choose-match", fallback: "Choose the match") }
@@ -5994,7 +5994,7 @@ public enum L {
     public static var licensedRegion: String { string("licensed-region", fallback: "Region") }
 
     /// Line under the region menu.
-    public static var licensedRegionLine: String { string("licensed-region-line", fallback: "Hides links AniList marks for other countries. Most links name no country, so choose your services too.") }
+    public static var licensedRegionLine: String { string("licensed-region-line", fallback: "Links AniList marks for other countries are hidden. Most links name no country, so choose your services too.") }
 
     /// Heading over the services the viewer pays for.
     public static var licensedYours: String { string("licensed-yours", fallback: "Your services") }
@@ -6498,7 +6498,7 @@ public enum L {
     public static var onboardingInviteHeading: String { string("onboarding-invite-heading", fallback: "Have an invite link?") }
 
     /// Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-    public static var onboardingWhereStores: String { string("onboarding-where-stores", fallback: "Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.") }
+    public static var onboardingWhereStores: String { string("onboarding-where-stores", fallback: "Plugins come from plugin stores. Each one is signed and gives every device its own token, which is why you join with an invite link from its owner.") }
 
     /// Heading above the Play the demo button on the welcome page.
     public static var onboardingDemoHeading: String { string("onboarding-demo-heading", fallback: "Try it now") }
@@ -6540,7 +6540,7 @@ public enum L {
     public static var partyLeaving: String { string("party-leaving", fallback: "Leaving…") }
 
     /// Label of the button that marks you as ready.
-    public static var partyReadyAction: String { string("party-ready-action", fallback: "I'm ready") }
+    public static var partyReadyAction: String { string("party-ready-action", fallback: "Ready to watch") }
 
     /// Button that copies the link to invite someone.
     public static var partyCopyInvite: String { string("party-copy-invite", fallback: "Copy invite link") }
@@ -6555,7 +6555,7 @@ public enum L {
     public static var partyNotNow: String { string("party-not-now", fallback: "Not now") }
 
     /// Line while the form fetches its suggestions.
-    public static var partyGettingReady: String { string("party-getting-ready", fallback: "Getting things ready…") }
+    public static var partyGettingReady: String { string("party-getting-ready", fallback: "Loading suggestions…") }
 
     /// Label of the server field.
     public static var partyServer: String { string("party-server", fallback: "Server") }
@@ -6594,7 +6594,7 @@ public enum L {
     }
 
     /// Line under an invite's room when the server is not the public one.
-    public static var partyServerInvited: String { string("party-server-invited", fallback: "A server the person who invited you chose. Kaeri doesn't run it.") }
+    public static var partyServerInvited: String { string("party-server-invited", fallback: "The person who invited you chose this server. Kaeri doesn't run it.") }
 
     /// Line when the server was typed in a shape that cannot be used.
     public static var partyServerShape: String { string("party-server-shape", fallback: "Write the server as a host and a port, like party.example:8999.") }
@@ -6843,7 +6843,7 @@ public enum L {
     }
 
     /// Line shown when no recent rooms are kept yet.
-    public static var togetherRecentEmpty: String { string("together-recent-empty", fallback: "Rooms you join show here, the last ten.") }
+    public static var togetherRecentEmpty: String { string("together-recent-empty", fallback: "The last ten rooms you join show here.") }
 
     /// Button on a recent room that goes straight to its lobby with the next episode.
     public static var togetherRejoin: String { string("together-rejoin", fallback: "Rejoin") }
@@ -6936,7 +6936,7 @@ public enum L {
         Self.format("party-member-watching-from", fallback: "Watching from %1$@", time)
     }
 
-    /// Label of the I'm ready button once you are ready.
+    /// Label of the Ready to watch button once you are ready.
     public static var partyReadyOn: String { string("party-ready-on", fallback: "Ready") }
 
     /// Heading of the invite block in the lobby.
@@ -7206,7 +7206,7 @@ public enum L {
     public static var settingsHideChat: String { string("settings-hide-chat", fallback: "Hide chat in watch parties") }
 
     /// Line under that switch.
-    public static var settingsHideChatLine: String { string("settings-hide-chat-line", fallback: "Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.") }
+    public static var settingsHideChatLine: String { string("settings-hide-chat-line", fallback: "Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.") }
 
     /// Member menu item and accessibility action that hides a member's lines and reactions for this party.
     public static func partyMute(name: String) -> String {
@@ -7914,10 +7914,10 @@ public enum L {
     public static var playerFilePickerFailed: String { string("player-file-picker-failed", fallback: "Couldn't open the file chooser. Try again.") }
 
     /// Notice when a chosen subtitle file could not be loaded.
-    public static var playerSubtitleFileFailed: String { string("player-subtitle-file-failed", fallback: "Couldn't load that subtitle file. Check that it is a subtitle file.") }
+    public static var playerSubtitleFileFailed: String { string("player-subtitle-file-failed", fallback: "Couldn't load that file as subtitles. Choose a subtitle file, such as .srt or .ass.") }
 
     /// Notice when a chosen audio file could not be loaded.
-    public static var playerAudioFileFailed: String { string("player-audio-file-failed", fallback: "Couldn't load that audio file. Check that it is an audio file.") }
+    public static var playerAudioFileFailed: String { string("player-audio-file-failed", fallback: "Couldn't load that file as audio. Choose an audio file, such as .mka or .flac.") }
 
     /// Name of a track that has no name or language.
     public static var playerTrackUnnamed: String { string("player-track-unnamed", fallback: "Unnamed track") }
@@ -8159,7 +8159,7 @@ public enum L {
     public static var onboardingReadDemo: String { string("onboarding-read-demo", fallback: "Read the demo") }
 
     /// Under the first run's demo heading when the device is for reading.
-    public static var onboardingDemoBooksDetail: String { string("onboarding-demo-books-detail", fallback: "The demo reads a short comic and a short story their makers share under Creative Commons.") }
+    public static var onboardingDemoBooksDetail: String { string("onboarding-demo-books-detail", fallback: "One short comic and one short story, shared by their makers under Creative Commons.") }
 
     /// Under the first run's demo heading when the device is for both.
     public static var onboardingDemoBothDetail: String { string("onboarding-demo-both-detail", fallback: "One short episode and one short comic, shared by their makers under Creative Commons.") }
@@ -8187,7 +8187,7 @@ public enum L {
 
     /// The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
     public static func demoCreditCover(title: String, artist: String, year: String) -> String {
-        Self.format("demo-credit-cover", fallback: "Cover: “%1$@” by %2$@, %3$@. Public domain. It comes with the app.", title, artist, year)
+        Self.format("demo-credit-cover", fallback: "Cover: \"%1$@\" by %2$@, %3$@. Public domain. It comes with the app.", title, artist, year)
     }
 
     /// Credit capsule in the reader's top bar on page 1.
@@ -8202,7 +8202,7 @@ public enum L {
     public static var searchDemoOnlyBooks: String { string("search-demo-only-books", fallback: "Only the demo is on. Other titles appear once you add a source.") }
 
     /// Title of the card after the demo's last page.
-    public static var readerDemoEnd: String { string("reader-demo-end", fallback: "That’s the end of the demo") }
+    public static var readerDemoEnd: String { string("reader-demo-end", fallback: "That's the end of the demo") }
 
     /// Line under it.
     public static var readerDemoEndLine: String { string("reader-demo-end-line", fallback: "To read your own books, add a folder, a server or a plugin store.") }
@@ -8217,7 +8217,7 @@ public enum L {
     public static var sourcesDemoBooksLine: String { string("sources-demo-books-line", fallback: "A comic and a story · CC BY 4.0 and public domain") }
 
     /// About the demo, first line, when reading is on.
-    public static var sourcesDemoBooksWhat: String { string("sources-demo-books-what", fallback: "Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn’t a source to keep.") }
+    public static var sourcesDemoBooksWhat: String { string("sources-demo-books-what", fallback: "Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn't a source to keep.") }
 
     /// About the demo, in place of sources-demo-private when reading is on.
     public static var sourcesDemoBooksPrivate: String { string("sources-demo-books-private", fallback: "The demo never signs in anywhere and never writes to a tracker.") }
@@ -8936,7 +8936,7 @@ public enum L {
     public static var bookSourcesFind: String { string("book-sources-find", fallback: "Find") }
 
     /// Footnote of the Check matches sheet.
-    public static var bookSourcesUnmatchedNote: String { string("book-sources-unmatched-note", fallback: "Unmatched series still read from the folder. They have no tracker progress until matched.") }
+    public static var bookSourcesUnmatchedNote: String { string("book-sources-unmatched-note", fallback: "You can still read unmatched series from the folder. They get no tracker progress until they're matched.") }
 
     /// Accessibility label of the control that sets Shows or Reading in the Library and Search.
     public static var libraryScopeLabel: String { string("library-scope-label", fallback: "Shows or Reading") }
@@ -9114,13 +9114,13 @@ public enum L {
     public static var onboardingListsAnilistLine: String { string("onboarding-lists-anilist-line", fallback: "Lists, progress and suggestions") }
 
     /// Under AniList on the first-run page after Watch: the other trackers, for later.
-    public static var onboardingListsLaterWatch: String { string("onboarding-lists-later-watch", fallback: "MyAnimeList, Kitsu, Simkl and Trakt can be added later in Settings, under Accounts.") }
+    public static var onboardingListsLaterWatch: String { string("onboarding-lists-later-watch", fallback: "You can add MyAnimeList, Kitsu, Simkl and Trakt later in Settings, under Accounts.") }
 
     /// Under AniList on the first-run page after Read: the other trackers, for later.
-    public static var onboardingListsLaterRead: String { string("onboarding-lists-later-read", fallback: "MyAnimeList, Kitsu and MangaUpdates can be added later in Settings, under Accounts.") }
+    public static var onboardingListsLaterRead: String { string("onboarding-lists-later-read", fallback: "You can add MyAnimeList, Kitsu and MangaUpdates later in Settings, under Accounts.") }
 
     /// Under AniList on the first-run page after Both: the other trackers, for later.
-    public static var onboardingListsLaterBoth: String { string("onboarding-lists-later-both", fallback: "MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt can be added later in Settings, under Accounts.") }
+    public static var onboardingListsLaterBoth: String { string("onboarding-lists-later-both", fallback: "You can add MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt later in Settings, under Accounts.") }
 
     /// The first-run page's main button: sign in to the tracker.
     public static func onboardingConnect(tracker: String) -> String {
@@ -9369,10 +9369,10 @@ public enum L {
     public static var settingsDownloadsFinishedNote: String { string("settings-downloads-finished-note", fallback: "When the chapters downloading are all done") }
 
     /// Under New chapters.
-    public static var settingsChapterNotificationsFooter: String { string("settings-chapter-notifications-footer", fallback: "Chapters have their own system channel, so they can be silenced on their own.") }
+    public static var settingsChapterNotificationsFooter: String { string("settings-chapter-notifications-footer", fallback: "Chapters have their own system channel, so you can silence them and keep the rest.") }
 
     /// Credit under the trackers with reading on.
-    public static var accountsMangaupdatesCredit: String { string("accounts-mangaupdates-credit", fallback: "MangaUpdates is reached through its public API.") }
+    public static var accountsMangaupdatesCredit: String { string("accounts-mangaupdates-credit", fallback: "Kaeri talks to MangaUpdates through its public API.") }
 
     /// Placeholder of the user name field when signing in to MangaUpdates.
     public static var accountsUsername: String { string("accounts-username", fallback: "User name") }
@@ -9540,7 +9540,7 @@ public enum L {
     }
 
     /// Button in that note.
-    public static var stopNoteAction: String { string("stop-note-action", fallback: "Set my place") }
+    public static var stopNoteAction: String { string("stop-note-action", fallback: "Set your place") }
 
     /// First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
     public static func stopSentOne(chapter: String, device: String, date: String) -> String {
@@ -9554,11 +9554,11 @@ public enum L {
 
     /// Switch in the sheet: the last chapter sent was read to its end.
     public static func stopFinished(chapter: String) -> String {
-        Self.format("stop-finished", fallback: "I finished chapter %1$@", chapter)
+        Self.format("stop-finished", fallback: "Finished chapter %1$@", chapter)
     }
 
     /// The main button of the sheet: keeps the chapter chosen as the place.
-    public static var stopSet: String { string("stop-set", fallback: "Set my place") }
+    public static var stopSet: String { string("stop-set", fallback: "Set your place") }
 
     /// The other button of the sheet: leaves the place as it is, with the place named.
     public static func stopKeep(chapter: String, page: Int) -> String {
@@ -9566,7 +9566,7 @@ public enum L {
     }
 
     /// The other button of the sheet when the place is not a page.
-    public static var stopKeepPlain: String { string("stop-keep-plain", fallback: "Keep my place") }
+    public static var stopKeepPlain: String { string("stop-keep-plain", fallback: "Keep current place") }
 
     /// Heading of the E-readers group in the Reading settings.
     public static var ereadersGroup: String { string("ereaders-group", fallback: "E-readers") }
@@ -9582,7 +9582,7 @@ public enum L {
 
     /// Footnote under the feed settings.
     public static func opdsFooter(device: String) -> String {
-        Self.format("opds-footer", fallback: "Only while Kaeri is open on this %1$@. Progress on those e-readers stays there.", device)
+        Self.format("opds-footer", fallback: "The feed runs only while Kaeri is open on this %1$@. Progress on those e-readers stays there.", device)
     }
 
     /// Row in the feed settings: the web address e-readers are given, with a button that copies it.
@@ -9604,7 +9604,7 @@ public enum L {
     public static var opdsPort: String { string("opds-port", fallback: "Port") }
 
     /// Line under the port row when it is empty.
-    public static var opdsPortNote: String { string("opds-port-note", fallback: "Leave it empty to pick a free port, or use 1024 to 65535") }
+    public static var opdsPortNote: String { string("opds-port-note", fallback: "Leave it empty for any free port, or pick one from 1024 to 65535") }
 
     /// Line under the port row when the port asked for was taken and another is used.
     public static func opdsPortMoved(wanted: Int, port: Int) -> String {
@@ -9699,7 +9699,7 @@ public enum L {
     public static var seasonalFilterInSearch: String { string("seasonal-filter-in-search", fallback: "Filter in Search") }
 
     /// Tooltip of the Filter in Search button.
-    public static var seasonalFilterHelp: String { string("seasonal-filter-help", fallback: "This season in Search, where every filter narrows it") }
+    public static var seasonalFilterHelp: String { string("seasonal-filter-help", fallback: "Opens this season in Search, where every filter works") }
 
     /// Sort option on Seasonal and Search: most popular first.
     public static var sortPopularity: String { string("sort-popularity", fallback: "Popularity") }
@@ -9731,12 +9731,12 @@ public enum L {
 
     /// Row under the field while a search runs. The query is what the person typed.
     public static func searchSearching(query: String) -> String {
-        Self.format("search-searching", fallback: "Searching for “%1$@”", query)
+        Self.format("search-searching", fallback: "Searching for \"%1$@\"", query)
     }
 
     /// Heading over the results of a search.
     public static func searchResultsFor(query: String) -> String {
-        Self.format("search-results-for", fallback: "Results for “%1$@”", query)
+        Self.format("search-results-for", fallback: "Results for \"%1$@\"", query)
     }
 
     /// Heading over the titles shown when nothing was typed.
@@ -9744,7 +9744,7 @@ public enum L {
 
     /// Title of the state when a search finds nothing.
     public static func searchNothingFound(query: String) -> String {
-        Self.format("search-nothing-found", fallback: "Nothing found for “%1$@”", query)
+        Self.format("search-nothing-found", fallback: "Nothing found for \"%1$@\"", query)
     }
 
     /// Line under the title when a search finds nothing.
@@ -9755,7 +9755,7 @@ public enum L {
 
     /// Title of the state when a search and its filters leave nothing.
     public static func searchNothingFoundWithFilters(query: String) -> String {
-        Self.format("search-nothing-found-with-filters", fallback: "Nothing found for “%1$@” with these filters", query)
+        Self.format("search-nothing-found-with-filters", fallback: "Nothing found for \"%1$@\" with these filters", query)
     }
 
     /// Line under a state that filters emptied.
@@ -9856,7 +9856,7 @@ public enum L {
     public static var filterLicensedOnly: String { string("filter-licensed-only", fallback: "Licensed only") }
 
     /// Filter name: how titles already on the person's list are treated.
-    public static var filterMyList: String { string("filter-my-list", fallback: "Titles on my list") }
+    public static var filterMyList: String { string("filter-my-list", fallback: "Titles on your list") }
 
     /// Value of a three-way filter: include the titles.
     public static var filterShow: String { string("filter-show", fallback: "Show") }
@@ -10408,7 +10408,7 @@ public enum L {
     public static var serversRowSignedOutHere: String { string("servers-row-signed-out-here", fallback: "Signed out") }
 
     /// Line under it: what signing out does.
-    public static var serversSignOutLine: String { string("servers-sign-out-line", fallback: "Ends this device's sign-in on the server. The server and your downloads stay as they are.") }
+    public static var serversSignOutLine: String { string("servers-sign-out-line", fallback: "Signing out ends this device's session on the server. The server and your downloads stay as they are.") }
 
     /// Settings group and row title for choosing a language.
     public static var settingsLanguage: String { string("settings-language", fallback: "Language") }
@@ -10729,7 +10729,7 @@ public enum L {
     public static var settingsNewEpisodesDetail: String { string("settings-new-episodes-detail", fallback: "Shows on your Watching list") }
 
     /// Line explaining what a notification says.
-    public static var settingsNotifyDetail: String { string("settings-notify-detail", fallback: "One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.") }
+    public static var settingsNotifyDetail: String { string("settings-notify-detail", fallback: "You get one notification when an episode of a show you follow comes out. It names the show and the episode's number, never the episode's title. A show can turn its own off in its settings.") }
 
     /// Row: the coming-up digest.
     public static var settingsComingUp: String { string("settings-coming-up", fallback: "Coming up · next 7 days") }
@@ -10741,7 +10741,7 @@ public enum L {
     public static var settingsSystemNotificationsDetail: String { string("settings-system-notifications-detail", fallback: "Sound, vibration and the lock screen") }
 
     /// Line under it on Apple.
-    public static var settingsSystemNotificationsApple: String { string("settings-system-notifications-apple", fallback: "Opens System Settings, where the banner style, sound and badges are set.") }
+    public static var settingsSystemNotificationsApple: String { string("settings-system-notifications-apple", fallback: "Opens System Settings, where you set the banner style, sound and badges.") }
 
     /// Line when the system blocks notifications.
     public static var settingsNotificationsBlocked: String { string("settings-notifications-blocked", fallback: "Off: the system isn't allowing notifications for Kaeri") }
@@ -10783,7 +10783,7 @@ public enum L {
     public static var showSettingsSubsRemembered: String { string("show-settings-subs-remembered", fallback: "Remembered from your last episode.") }
 
     /// Line under the subtitles row, when nothing is remembered.
-    public static var showSettingsSubsFollow: String { string("show-settings-subs-follow", fallback: "Chosen in the player. Following Settings › Playback.") }
+    public static var showSettingsSubsFollow: String { string("show-settings-subs-follow", fallback: "Chosen in the player. Until then, Settings › Playback applies.") }
 
     /// Row: the source for this show.
     public static var showSettingsSource: String { string("show-settings-source", fallback: "Source") }
@@ -10878,7 +10878,7 @@ public enum L {
     public static var settingsLabelHoverCards: String { string("settings-label-hover-cards", fallback: "Expand covers on hover") }
 
     /// Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-    public static var settingsHoverCardsNote: String { string("settings-hover-cards-note", fallback: "Shows a larger card with the trailer when you rest the pointer on a cover.") }
+    public static var settingsHoverCardsNote: String { string("settings-hover-cards-note", fallback: "Resting the pointer on a cover opens a larger card with its trailer.") }
 
     /// Preview note under the upscaling frame for the natural look.
     public static var settingsUpscalingNoteNatural: String { string("settings-upscaling-note-natural", fallback: "Faithful line work and texture, nothing restyled.") }
@@ -11139,7 +11139,7 @@ public enum L {
 
     /// Error title when the server could not be reached.
     public static func bookServerErrUnreachable(host: String) -> String {
-        Self.format("book-server-err-unreachable", fallback: "Couldn’t reach %1$@", host)
+        Self.format("book-server-err-unreachable", fallback: "Couldn't reach %1$@", host)
     }
 
     /// Line under it.
@@ -11147,7 +11147,7 @@ public enum L {
 
     /// Error title when the server turned the password down.
     public static func bookServerErrPassword(host: String) -> String {
-        Self.format("book-server-err-password", fallback: "%1$@ didn’t accept that password", host)
+        Self.format("book-server-err-password", fallback: "%1$@ didn't accept that password", host)
     }
 
     /// Line under it. The kind is Komga, Kavita or OPDS.
@@ -11157,11 +11157,11 @@ public enum L {
 
     /// Error title when Kavita turned the key in an OPDS link down.
     public static func bookServerErrKey(host: String) -> String {
-        Self.format("book-server-err-key", fallback: "%1$@ didn’t accept that key", host)
+        Self.format("book-server-err-key", fallback: "%1$@ didn't accept that key", host)
     }
 
     /// Line under it.
-    public static var bookServerErrKeyLine: String { string("book-server-err-key-line", fallback: "The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.") }
+    public static var bookServerErrKeyLine: String { string("book-server-err-key-line", fallback: "The key changes when it's reset in Kavita. Copy the OPDS link again from your account settings there.") }
 
     /// Title when the server lets the account in and shows it no series.
     public static func bookServerEmpty(host: String) -> String {
@@ -11189,7 +11189,7 @@ public enum L {
 
     /// Row in the folder result: files that are books in formats Kaeri can't open.
     public static func bookFolderUnsupported(count: Int) -> String {
-        Self.format("book-folder-unsupported", fallback: "%1$lld files Kaeri can’t open", count)
+        Self.format("book-folder-unsupported", fallback: "%1$lld files Kaeri can't open", count)
     }
 
     /// Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
@@ -11260,7 +11260,7 @@ public enum L {
 
     /// Result after installing.
     public static func storeInstalled(count: Int) -> String {
-        Self.format("store-installed", fallback: "%1$lld plugins installed. They’re in Your sources.", count)
+        Self.format("store-installed", fallback: "%1$lld plugins installed. They're in Your sources.", count)
     }
 
     /// Info title when every plugin in a store is for watching, and watching is off here.
@@ -11281,17 +11281,17 @@ public enum L {
 
     /// Line under it.
     public static func storeEmptyLine(owner: String) -> String {
-        Self.format("store-empty-line", fallback: "You’re a member, so new plugins show in Plugin stores when %1$@ adds them.", owner)
+        Self.format("store-empty-line", fallback: "You're a member, so new plugins show in Plugin stores when %1$@ adds them.", owner)
     }
 
     /// Error title when the store doesn't answer.
     public static func storeErrUnreachable(host: String) -> String {
-        Self.format("store-err-unreachable", fallback: "Couldn’t reach %1$@", host)
+        Self.format("store-err-unreachable", fallback: "Couldn't reach %1$@", host)
     }
 
     /// Line under it.
     public static func storeErrUnreachableLine(owner: String) -> String {
-        Self.format("store-err-unreachable-line", fallback: "The invite looks right, but the store isn’t answering. Try again later, or ask %1$@ if it’s running.", owner)
+        Self.format("store-err-unreachable-line", fallback: "The invite looks right, but the store isn't answering. Try again later, or ask %1$@ if it's running.", owner)
     }
 
     /// Under the reading group: plugins for watching while watching is off here.
@@ -11301,12 +11301,12 @@ public enum L {
 
     /// On a TV, under the list: plugins for reading, which a TV doesn't do.
     public static func storeTvReadingOnly(count: Int) -> String {
-        Self.format("store-tv-reading-only", fallback: "%1$lld more are for reading, which this TV doesn’t do.", count)
+        Self.format("store-tv-reading-only", fallback: "%1$lld more are for reading, which this TV doesn't do.", count)
     }
 
     /// On a TV, info title when every plugin in a store is for reading.
     public static func storeTvAllReading(store: String) -> String {
-        Self.format("store-tv-all-reading", fallback: "Every plugin in %1$@ is for reading, which this TV doesn’t do.", store)
+        Self.format("store-tv-all-reading", fallback: "Every plugin in %1$@ is for reading, which this TV doesn't do.", store)
     }
 
     /// Plugin row in an invite's result.
@@ -11571,7 +11571,7 @@ public enum L {
     public static var sourcesTorrentsNote: String { string("sources-torrents-note", fallback: "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.") }
 
     /// Over the { -source } list while the { -source-pl } are set up again after a change.
-    public static var sourcesRebuilding: String { string("sources-rebuilding", fallback: "Sources are being set up again") }
+    public static var sourcesRebuilding: String { string("sources-rebuilding", fallback: "Setting up sources again") }
 
     /// Value of a plugin's response time, in milliseconds.
     public static func sourcesResponseMs(ms: Int) -> String {
@@ -11628,12 +11628,12 @@ public enum L {
 
     /// While a search of the source runs.
     public static func matchSearching(source: String, query: String) -> String {
-        Self.format("match-searching", fallback: "Searching %1$@ for “%2$@”", source, query)
+        Self.format("match-searching", fallback: "Searching %1$@ for \"%2$@\"", source, query)
     }
 
     /// A search of the source that found nothing.
     public static func matchSearchEmpty(source: String, query: String) -> String {
-        Self.format("match-search-empty", fallback: "Nothing on %1$@ for “%2$@”.", source, query)
+        Self.format("match-search-empty", fallback: "Nothing on %1$@ for \"%2$@\".", source, query)
     }
 
     /// Under match-search-empty: what to try.
@@ -11702,7 +11702,7 @@ public enum L {
     public static var sourcesAddStore: String { string("sources-add-store", fallback: "Join a plugin store…") }
 
     /// Line under the empty state's title on a computer.
-    public static var sourcesEmptyBody: String { string("sources-empty-body", fallback: "Sources are where episodes come from: folders on this device, your media server, and plugins from stores you join.") }
+    public static var sourcesEmptyBody: String { string("sources-empty-body", fallback: "Sources are where episodes come from: folders on this device, your media server, and plugins from plugin stores you join.") }
 
     /// Line under the empty state's buttons. The link is "join a plugin store".
     public static func sourcesEmptyMore(join: String) -> String {
@@ -11748,7 +11748,7 @@ public enum L {
     public static var sourcesDemoLinkMaker: String { string("sources-demo-link-maker", fallback: "OPAP-JP") }
 
     /// Line on the demo page that names the only two hosts the demo reaches.
-    public static var sourcesDemoHosts: String { string("sources-demo-hosts", fallback: "Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wikimedia.org.") }
+    public static var sourcesDemoHosts: String { string("sources-demo-hosts", fallback: "The demo reaches only Wikimedia Commons: upload.wikimedia.org and commons.wikimedia.org.") }
 
     /// Line on the demo page about accounts and trackers.
     public static var sourcesDemoPrivate: String { string("sources-demo-private", fallback: "The demo never signs in anywhere and never writes to AniList.") }
@@ -11823,7 +11823,7 @@ public enum L {
     }
 
     /// Line when the store has no plugins.
-    public static var storesNoPlugins: String { string("stores-no-plugins", fallback: "This plugin store offers no plugins yet.") }
+    public static var storesNoPlugins: String { string("stores-no-plugins", fallback: "This plugin store has no plugins yet.") }
 
     /// Heading of the plugin list of a store.
     public static var storesPlugins: String { string("stores-plugins", fallback: "Plugins") }
@@ -11864,7 +11864,7 @@ public enum L {
 
     /// Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
     public static func storesOfflineLastList(reason: String) -> String {
-        Self.format("stores-offline-last-list", fallback: "Offline: %1$@. The plugins below are the last list that was checked.", reason)
+        Self.format("stores-offline-last-list", fallback: "Offline: %1$@. Showing the last list it sent.", reason)
     }
 
     /// Line when offline, without a reason.
@@ -11992,7 +11992,7 @@ public enum L {
     }
 
     /// Line under it.
-    public static var storesRemovePluginDetail: String { string("stores-remove-plugin-detail", fallback: "It is deleted from this device. The plugin store can install it again.") }
+    public static var storesRemovePluginDetail: String { string("stores-remove-plugin-detail", fallback: "It's deleted from this device. You can install it again from the plugin store.") }
 
     /// Label before the hosts a new version also contacts.
     public static var storesNewlyContacts: String { string("stores-newly-contacts", fallback: "Newly contacts") }
@@ -12017,7 +12017,7 @@ public enum L {
     public static var storesJoinDetail: String { string("stores-join-detail", fallback: "Paste the link the plugin store's owner sent you.") }
 
     /// Line under the form title on desktop, where nothing happens before the check.
-    public static var storesJoinDetailDesktop: String { string("stores-join-detail-desktop", fallback: "Paste the invite link a plugin store's owner sent you. You see what the plugin store offers before anything is joined or installed.") }
+    public static var storesJoinDetailDesktop: String { string("stores-join-detail-desktop", fallback: "Paste the invite link a plugin store's owner sent you. You see what the plugin store has before you join or install anything.") }
 
     /// Line under the field on a phone when a link was opened from another app.
     public static var storesJoinDetailOpened: String { string("stores-join-detail-opened", fallback: "Paste the link the plugin store's owner sent you. A Kaeri:// invite link opened from Messages fills this sheet in directly.") }
@@ -12063,7 +12063,7 @@ public enum L {
     }
 
     /// Line when the link is open to anyone.
-    public static var storesAnyoneNote: String { string("stores-anyone-note", fallback: "You join without a name. Another device joins with the same link.") }
+    public static var storesAnyoneNote: String { string("stores-anyone-note", fallback: "You join without a name. Another device can join with the same link.") }
 
     /// Line when the device joined this store already.
     public static var storesAlreadyJoinedNote: String { string("stores-already-joined-note", fallback: "This device has joined this plugin store already.") }
@@ -12232,7 +12232,7 @@ public enum L {
 
     /// Line under a single-use invite with an end date. Replaces stores-invite-once.
     public static func storesInviteOnceUntil(until: String) -> String {
-        Self.format("stores-invite-once-until", fallback: "Works once, for the person you send it to. Until %1$@.", until)
+        Self.format("stores-invite-once-until", fallback: "Works once, for the person you send it to, until %1$@.", until)
     }
 
     /// Line under a single-use invite with no end date.
@@ -12376,7 +12376,7 @@ public enum L {
     public static var noticeOpenStores: String { string("notice-open-stores", fallback: "Open plugin stores") }
 
     /// Explainer on the empty plugin stores page.
-    public static var storesWhatIs: String { string("stores-what-is", fallback: "A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.") }
+    public static var storesWhatIs: String { string("stores-what-is", fallback: "A plugin store is a small server that holds signed plugins and gives each device its own token. Its plugins add sources. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.") }
 
     /// Button on the empty plugin stores page that opens the docs page in the browser.
     public static var storesWhatIsLink: String { string("stores-what-is-link", fallback: "What is a plugin store?") }
@@ -12398,7 +12398,7 @@ public enum L {
 
     /// Windows and Linux dialog line while the browser is open for a cloud sign-in.
     public static func cloudBrowserLine(service: String) -> String {
-        Self.format("cloud-browser-line", fallback: "Your browser opened %1$@’s page. Allow access there, and Kaeri carries on by itself.", service)
+        Self.format("cloud-browser-line", fallback: "Your browser opened %1$@'s page. Allow access there, and Kaeri carries on by itself.", service)
     }
 
     /// Windows and Linux dialog title while the browser is open for a cloud sign-in.
@@ -12407,7 +12407,7 @@ public enum L {
     }
 
     /// Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
-    public static var cloudCloseCarriesOn: String { string("cloud-close-carries-on", fallback: "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.") }
+    public static var cloudCloseCarriesOn: String { string("cloud-close-carries-on", fallback: "You can close this. Kaeri carries on, and opens the next step by itself when it's ready.") }
 
     /// Word for this device in sentences such as “Turn off sync on this computer”.
     public static var deviceKindComputer: String { string("device-kind-computer", fallback: "computer") }
@@ -12530,7 +12530,7 @@ public enum L {
     public static var syncRoadCloud: String { string("sync-road-cloud", fallback: "Through a cloud folder") }
 
     /// Road sheet row line. Names no service, since a build may hide some (decision 14).
-    public static var syncRoadCloudLine: String { string("sync-road-cloud-line", fallback: "A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.") }
+    public static var syncRoadCloudLine: String { string("sync-road-cloud-line", fallback: "A cloud drive you already use, or your own server. It works while your devices are apart and keeps a backup.") }
 
     /// Road sheet footer.
     public static var syncRoadLater: String { string("sync-road-later", fallback: "You can add the other way later. Most people use both.") }
@@ -12606,7 +12606,7 @@ public enum L {
     public static var cloudGroup: String { string("cloud-group", fallback: "Cloud folder") }
 
     /// Group footer.
-    public static var cloudFoot: String { string("cloud-foot", fallback: "Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.") }
+    public static var cloudFoot: String { string("cloud-foot", fallback: "The folder keeps your devices in step while they are apart, and holds a sealed backup. Only your devices can read it.") }
 
     /// Row when only the nearby road is set.
     public static var cloudAdd: String { string("cloud-add", fallback: "Add a cloud folder") }
@@ -13009,7 +13009,7 @@ public enum L {
     public static var profilesAskAtLaunch: String { string("profiles-ask-at-launch", fallback: "Ask who’s watching at launch") }
 
     /// iPad footer.
-    public static var profilesAskFoot: String { string("profiles-ask-foot", fallback: "Off by default. For an iPad the household shares. The account row switches profiles at any time.") }
+    public static var profilesAskFoot: String { string("profiles-ask-foot", fallback: "Off by default. Turn it on for an iPad the whole household shares. You can switch profiles from the account row at any time.") }
 
     /// TV Settings.
     public static var profilesSwitch: String { string("profiles-switch", fallback: "Switch profile") }
@@ -13938,7 +13938,7 @@ public enum L {
 
     /// Line under the title: where the password goes.
     public static func accountsFormDetail(tracker: String) -> String {
-        Self.format("accounts-form-detail", fallback: "Your password goes to %1$@ once, for a token kept on this device.", tracker)
+        Self.format("accounts-form-detail", fallback: "Your password goes to %1$@ once, in exchange for a token that stays on this device.", tracker)
     }
 
     /// Label of the name field.
@@ -14040,7 +14040,7 @@ public enum L {
 
     /// Line when the tracker did not answer.
     public static func accountsDidNotAnswer(tracker: String) -> String {
-        Self.format("accounts-did-not-answer", fallback: "%1$@ didn't answer.", tracker)
+        Self.format("accounts-did-not-answer", fallback: "%1$@ didn't answer. Try again in a moment.", tracker)
     }
 
     /// Line when the tracker has nothing for the show.
@@ -14123,7 +14123,7 @@ public enum L {
 
     /// Line telling what to type.
     public static func tvTypeCode(name: String) -> String {
-        Self.format("tv-type-code", fallback: "Type the six digits %1$@ shows. After this, this device connects by itself.", name)
+        Self.format("tv-type-code", fallback: "Type the six digits %1$@ shows. From then on, this device connects by itself.", name)
     }
 
     /// Line while pairing is under way.
@@ -14510,7 +14510,7 @@ public enum L {
     }
 
     /// The connection broke.
-    public static var updatesWhyConnection: String { string("updates-why-connection", fallback: "The download stopped: the connection was lost.") }
+    public static var updatesWhyConnection: String { string("updates-why-connection", fallback: "The download stopped: the connection was lost. Try again.") }
 
     /// The file could not be saved. The reason is a sentence fragment.
     public static func updatesWhySave(reason: String) -> String {

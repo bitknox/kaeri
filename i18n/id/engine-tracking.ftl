@@ -7,8 +7,8 @@ notice-sign-in-failed = Tidak dapat masuk ke { $tracker }. Coba lagi. { $reason 
 notice-sign-in-stopped = Proses masuk ke { $tracker } berhenti sebelum selesai. Coba lagi. { $reason }
 notice-token-exchange-failed = Tidak dapat memperoleh token dari { $tracker }. Coba masuk lagi. { $reason }
 notice-browser-not-opened = Tidak dapat membuka peramban untuk masuk. Pastikan ada peramban yang terpasang, lalu coba lagi. { $reason }
-notice-sign-in-not-waiting = Tidak ada proses masuk ke { $tracker } yang menunggu itu. Mulai masuk lagi.
-notice-sign-in-wrong-request = Masuk ke { $tracker } itu tidak kembali dari permintaan ini. Mulai masuk lagi.
+notice-sign-in-not-waiting = Balasan masuk dari { $tracker } tiba, tetapi tidak ada proses masuk yang menunggunya. Mulai masuk lagi.
+notice-sign-in-wrong-request = Balasan masuk dari { $tracker } tidak cocok dengan permintaannya. Mulai masuk lagi.
 notice-sign-in-no-token = Proses masuk ke { $tracker } kembali tanpa token. Coba lagi.
 notice-mal-client-missing-build = Tidak dapat menyelesaikan masuk ke MyAnimeList: build ini tidak punya klien untuk itu.
 notice-kitsu-signs-in-on-accounts = Kitsu masuk dari layar Akun.
@@ -42,5 +42,5 @@ notice-episodes-aired = { $count ->
  }
 notice-update-available = { $tag } sudah tersedia. Jalankan kaeri --update untuk memasangnya.
 cause-proxy-needs-address = Proxy memerlukan host dan port.
-cause-proxy-address-unusable = Alamat proxy tidak dapat diperiksa.
+cause-proxy-address-unusable = Pemeriksaan proxy tidak bisa memakai alamat ini.
 cause-server-unreachable = Server tidak dapat dihubungi.

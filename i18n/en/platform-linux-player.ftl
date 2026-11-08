@@ -17,7 +17,7 @@ party-choose-a-source = Choose a { -source }
 # @only linux
 # @arg episode: int
 # @max 120
-party-sources-none-listed = No { -source } lists episode { $episode }. { -source-cap-pl } come from { -plugin-pl }, which a { -plugin-store } adds.
+party-sources-none-listed = No { -source } lists episode { $episode }. { -source-cap-pl } come from { -plugin-pl }, which you add from a { -plugin-store }.
 
 # Line above the list of sources that have the watch party's episode.
 # @only linux

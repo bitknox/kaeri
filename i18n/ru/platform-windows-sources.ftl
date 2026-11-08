@@ -22,7 +22,7 @@ sources-status-working = Готов
 sources-version-ready = Версия { $version } готова к установке
 sources-use-this = Использовать этот { -source }
 sources-use-name = { $name }, включено
-sources-remove-detail = Больше не будет использоваться для серий. Его можно установить снова из { -store }а { -plugin }ов.
+sources-remove-detail = { -app-name } больше не будет искать в нём эпизоды. Его можно снова установить через тот же { -plugin-store }.
 stores-updates-count = { $count ->
     [one] Одно обновление
     [few] { $count } к обновлению

@@ -504,7 +504,7 @@ settings-label-episode-discussions = Episode discussions
 settings-label-comment-images = Load images in comments
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = Calendar shows only my list
+settings-label-calendar-mine = Calendar shows only your list
 
 ## Settings: the note under the selected row
 
@@ -567,13 +567,13 @@ settings-note-update-check = One cached request a day, made at startup.
 settings-note-presence = Takes effect on the next episode.
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = Needs a client ID. Register an app at discord.com/developers.
+settings-note-presence-needs-client = Set a client ID first. Register an app at discord.com/developers to get one.
 
 # Note under the presence title row. The quoted text is what Discord shows.
-settings-note-presence-title = Off shows “Watching anime” without naming the show.
+settings-note-presence-title = Off shows "Watching anime" without naming the show.
 
 # Note under the rich presence row.
-settings-note-presence-rich = Adds the cover, a progress bar and an AniList link. Needs the title shown.
+settings-note-presence-rich = Adds the cover, a progress bar and an AniList link, as long as the title is shown.
 
 # Note under the torrent playback row.
 settings-note-torrents = Off by default. Takes effect immediately.

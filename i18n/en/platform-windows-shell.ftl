@@ -194,7 +194,7 @@ engine-stopped-title = { -app-name } stopped working
 # Line under that title: what happened and what to do.
 # @only windows
 # @allow proceed
-engine-stopped-detail = The part of the app that does the work has stopped. Open { -app-name } again to carry on.
+engine-stopped-detail = Downloads and sync stopped with it. Open { -app-name } again to carry on.
 
 # Button in that window: opens the app again.
 # @only windows

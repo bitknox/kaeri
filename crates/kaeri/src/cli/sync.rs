@@ -16,7 +16,7 @@ pub async fn sync_once(
 ) -> Result<()> {
     let sync = tracking::Sync::build(config, paths, store, http);
     if sync.trackers.is_empty() {
-        println!("no tracker enabled — set trackers.enabled in your config");
+        println!("no tracker enabled; set trackers.enabled in your config");
         return Ok(());
     }
 
@@ -26,7 +26,7 @@ pub async fn sync_once(
         println!("  authenticated  {}", tracker.is_authenticated());
         println!("  queued         {}", store.outbox_depth(Some(id)).unwrap_or(0));
         if !tracker.is_authenticated() {
-            println!("  ▲ not signed in — run: kaeri --login-url");
+            println!("  ▲ not signed in; run kaeri --login-url");
             continue;
         }
 
@@ -39,7 +39,7 @@ pub async fn sync_once(
                 report.remaining,
                 match store.outbox_deferred(id).unwrap_or(0) {
                     0 => String::new(),
-                    held => format!(" · {held} waiting for an id mapping"),
+                    held => format!(" · {held} waiting for a match"),
                 },
                 if report.needs_reauth { " · NEEDS RE-AUTH" } else { "" }
             ),

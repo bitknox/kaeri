@@ -1345,10 +1345,10 @@ public class UpdateTests
             var stall = TimeSpan.FromMilliseconds(300);
             var midway = await Updates.Fetch(new HttpClient(new Hang(Body, 1000)), asset, "0.11.0", dir, _ => { }, default, stall);
             Assert.Equal(UpdateStep.Failed, midway.Step);
-            Assert.Equal("The download stopped: the connection was lost.", midway.Reason);
+            Assert.Equal("The download stopped: the connection was lost. Try again.", midway.Reason);
             Assert.Empty(Directory.GetFiles(dir));
             var never = await Updates.Fetch(new HttpClient(new Hang(Body, 0, silent: true)) { Timeout = Timeout.InfiniteTimeSpan }, asset, "0.11.0", dir, _ => { }, default, stall);
-            Assert.Equal("The download stopped: the connection was lost.", never.Reason);
+            Assert.Equal("The download stopped: the connection was lost. Try again.", never.Reason);
             // Cancelled by the person: no failure to show.
             using var cancel = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
             Assert.Equal(UpdateStep.Idle, (await Updates.Fetch(new HttpClient(new Hang(Body, 1000)), asset, "0.11.0", dir, _ => { }, cancel.Token, TimeSpan.FromSeconds(30))).Step);

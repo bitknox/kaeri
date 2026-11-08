@@ -22,7 +22,7 @@ sources-status-working = Sẵn sàng
 sources-version-ready = Phiên bản { $version } đã sẵn sàng
 sources-use-this = Dùng { -source } này
 sources-use-name = { $name }: bật
-sources-remove-detail = { -source-cap } này sẽ không còn được dùng để tìm tập. Bạn có thể cài lại từ { -plugin-store }.
+sources-remove-detail = { -app-name } sẽ không dùng nó để tìm tập nữa. Bạn có thể cài lại từ { -plugin-store } của nó.
 stores-updates-count = { $count ->
    *[other] { $count } cần cập nhật
  }

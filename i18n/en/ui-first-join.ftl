@@ -5,10 +5,10 @@
 first-other-title = Already use { -app-name } on another { -device }?
 
 # Under the title.
-first-other-line = Pair with it and this { -device } gets your { -source-pl }, { -tracker-pl } and history. The steps after this are then done.
+first-other-line = Pair with it and this { -device } gets your { -source-pl }, { -tracker-pl } and history, and the rest of setup is done for you.
 
 # Line under the pair row.
-first-other-pair-line = Shows a code to enter on that { -device }. Both need the same Wi-Fi.
+first-other-pair-line = You get a code to enter on that { -device }. Both need the same Wi-Fi.
 
 # Row that restores from a sync folder.
 first-other-restore = Restore from a cloud folder
@@ -57,7 +57,7 @@ first-join-server-line = { $kind } · signs in with the key from { $device }, ke
 
 # Note under the list.
 # @arg device: text
-first-join-folders = Folders stay on { $device }. Add this { -device }’s own folders in Your { -source-pl }.
+first-join-folders = Folders stay on { $device }. Add this { -device }'s own folders in Your { -source-pl }.
 
 # Note when the setup answered the remaining pages.
 first-join-steps-done = Lists and { -source-pl } are set up, so first run ends here. You can change them in Settings.
@@ -65,7 +65,7 @@ first-join-steps-done = Lists and { -source-pl } are set up, so first run ends h
 # Row error when a plugin store refused this device.
 # @arg store: text
 # @arg owner: text
-first-join-store-refused = { $store } didn’t let this { -device } in. { $owner } can send you an invite.
+first-join-store-refused = { $store } didn't let this { -device } in. { $owner } can send you an invite.
 
 # Notice on Home, for 4 seconds.
 # @arg device: text

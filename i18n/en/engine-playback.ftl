@@ -213,7 +213,7 @@ notice-match-did-not-stick = That match didn't stick. The { -source } may have c
 
 # Toast when a search of the sources for a title found nothing.
 # @arg query: text
-notice-source-search-empty = Nothing found for “{ $query }”. Try a different search.
+notice-source-search-empty = Nothing found for "{ $query }". Try a different search.
 
 # In the list of titles a source offers for a show, in place of how close a title is: it was
 # ruled out because its format cannot be the show's, as an OVA for a TV series.
@@ -239,7 +239,7 @@ match-search-source-off = It isn't switched on.
 
 # Toast after the person picked a source for one title.
 # @arg source: text
-notice-source-pinned = { $source } will be used for this title.
+notice-source-pinned = This title now plays from { $source }.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Back to automatic { -source } selection.

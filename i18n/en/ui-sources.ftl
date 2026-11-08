@@ -242,7 +242,7 @@ sources-source-order-row = { -source-cap } order
 sources-torrents-note = Torrents are part of { -app-name }, not a { -plugin }. The proxy and seeding are set in Settings, under { -source-cap-pl }.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
-sources-rebuilding = { -source-cap-pl } are being set up again
+sources-rebuilding = Setting up { -source-pl } again
 
 # Value of a plugin's response time, in milliseconds.
 # @arg ms: int
@@ -313,12 +313,12 @@ match-search-another = Search for another title
 # While a search of the source runs.
 # @arg source: text
 # @arg query: text
-match-searching = Searching { $source } for “{ $query }”
+match-searching = Searching { $source } for "{ $query }"
 
 # A search of the source that found nothing.
 # @arg source: text
 # @arg query: text
-match-search-empty = Nothing on { $source } for “{ $query }”.
+match-search-empty = Nothing on { $source } for "{ $query }".
 
 # Under match-search-empty: what to try.
 match-search-empty-hint = Try fewer words, or the title in another language.
@@ -391,7 +391,7 @@ sources-add-server = Media server…
 sources-add-store = Join a { -plugin-store }…
 
 # Line under the empty state's title on a computer.
-sources-empty-body = { -source-cap-pl } are where episodes come from: folders on this { -device }, your media server, and { -plugin-pl } from stores you join.
+sources-empty-body = { -source-cap-pl } are where episodes come from: folders on this { -device }, your media server, and { -plugin-pl } from { -plugin-store-pl } you join.
 
 # Line under the empty state's buttons. The link is "join a plugin store".
 # @arg join: text
@@ -436,7 +436,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wikimedia.org.
+sources-demo-hosts = The demo reaches only Wikimedia Commons: upload.wikimedia.org and commons.wikimedia.org.
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = The demo never signs in anywhere and never writes to AniList.

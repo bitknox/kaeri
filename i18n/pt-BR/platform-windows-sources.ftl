@@ -22,7 +22,7 @@ sources-status-working = Pronta
 sources-version-ready = { -release-cap } { $version } está pronta
 sources-use-this = Usar esta { -source }
 sources-use-name = { $name } ativado
-sources-remove-detail = Ele deixa de ser usado nos episódios. Você pode instalá-lo de novo pela { -plugin-store } de origem.
+sources-remove-detail = O { -app-name } não vai mais usá-lo para buscar episódios. Você pode instalá-lo de novo pela { -plugin-store } de origem.
 stores-updates-count = { $count ->
     [one] 1 atualização
     [many] { $count } atualizações

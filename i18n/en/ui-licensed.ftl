@@ -10,7 +10,7 @@ licensed-body = { -app-name } can open titles in streaming services you pay for.
 licensed-region = Region
 
 # Line under the region menu.
-licensed-region-line = Hides links AniList marks for other countries. Most links name no country, so choose your services too.
+licensed-region-line = Links AniList marks for other countries are hidden. Most links name no country, so choose your services too.
 
 # Heading over the services the viewer pays for.
 licensed-yours = Your services

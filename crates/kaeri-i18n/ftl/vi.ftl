@@ -28,7 +28,7 @@ notice-cast-refused = { $name } không phát được luồng này. Hãy thử n
 notice-cast-taken-over = Một thiết bị khác vừa bắt đầu phát trên { $name }, nên việc chiếu đã dừng.
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = thiết bị này không nằm trong mạng mà { $name } đang dùng, hoặc đi qua VPN. Chiếu cần cả hai cùng một mạng.
+notice-cast-not-same-network = Thiết bị này không ở cùng mạng với { $name }, hoặc đang kết nối qua VPN. Hãy kết nối cả hai vào cùng một mạng để chiếu.
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Mất kết nối với { $name }, nên việc chiếu đã dừng.
@@ -358,7 +358,7 @@ match-search-timed-out = Không phản hồi kịp thời.
 match-search-source-off = Chưa được bật.
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = { $source } sẽ được dùng cho tựa này.
+notice-source-pinned = Tựa này giờ phát từ { $source }.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Quay lại chọn nguồn tự động.
@@ -538,13 +538,13 @@ reader-moved = Đã chuyển tới { $chapter }, trang { $page }, nơi { $device
 reader-moved-number = Đã chuyển tới chương { $chapter }, trang { $page }, nơi { $device } dừng lại
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-right-to-left = Phải sang trái (tự nhận diện)
+reader-detected-right-to-left = Có vẻ đọc từ phải sang trái
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-left-to-right = Trái sang phải (tự nhận diện)
+reader-detected-left-to-right = Có vẻ đọc từ trái sang phải
 
 # A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
-reader-detected-strip = Cuộn dọc (tự nhận diện)
+reader-detected-strip = Có vẻ là truyện cuộn dọc
 
 # Why a chapter or a list could not load: there is no connection.
 reading-failed-offline = Bạn đang ngoại tuyến. Các chương đã tải vẫn mở được.
@@ -1093,7 +1093,7 @@ store-admin-link-foreign = { $store } gửi một liên kết quản trị dẫn
 store-open-join-unsupported = Máy chủ của { $store } cũ hơn và không thể cho phép ai tham gia bằng liên kết. Hãy cập nhật trước.
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = { $name } đã tắt và sẽ bị bỏ qua khi tìm tập.
+source-switched-off = { $name } đã tắt. Kaeri bỏ qua nó khi tìm tập.
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = { $name } đã bật.
@@ -1102,7 +1102,7 @@ source-switched-on = { $name } đã bật.
 plugin-not-loaded = { $id } chưa được tải. Hãy kiểm tra plugin đã được cài trong mục Các nguồn chưa.
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = { $name } sẽ được dùng cho tựa này.
+release-pinned = Tựa này giờ dùng { $name }.
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Không lưu được lựa chọn đó. { $reason }
@@ -1192,10 +1192,10 @@ notice-token-exchange-failed = Không nhận được mã từ { $tracker }. Hã
 notice-browser-not-opened = Không mở được trình duyệt để đăng nhập. Hãy kiểm tra xem đã cài trình duyệt chưa rồi thử lại. { $reason }
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = Không có phiên đăng nhập vào { $tracker } nào đang chờ phản hồi này. Hãy bắt đầu đăng nhập lại.
+notice-sign-in-not-waiting = Đã nhận phản hồi đăng nhập từ { $tracker }, nhưng không có lần đăng nhập nào đang chờ. Hãy bắt đầu đăng nhập lại.
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = Phiên đăng nhập vào { $tracker } này không trả về từ yêu cầu đã gửi. Hãy bắt đầu đăng nhập lại.
+notice-sign-in-wrong-request = Phản hồi đăng nhập từ { $tracker } không khớp với yêu cầu. Hãy bắt đầu đăng nhập lại.
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = Phiên đăng nhập vào { $tracker } trả về mà không có mã. Hãy thử lại.
@@ -1291,7 +1291,7 @@ notice-update-available = Đã có bản { $tag }. Chạy kaeri --update để c
 cause-proxy-needs-address = Proxy cần có máy chủ và cổng.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = Không kiểm tra được địa chỉ proxy này.
+cause-proxy-address-unusable = Bước kiểm tra proxy không dùng được địa chỉ này.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Không kết nối được tới máy chủ.
@@ -1315,7 +1315,7 @@ notice-playback-failed = Không phát được. Hãy thử nguồn khác.
 notice-engine-fault = Có lỗi xảy ra bên trong Kaeri. Ứng dụng vẫn chạy tiếp, nhưng nếu màn hình có vẻ bị treo, hãy thoát rồi mở lại.
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = Cơ sở dữ liệu bị hỏng, nên Kaeri đã tạo một cơ sở dữ liệu mới. Tệp cũ được giữ tại { $path }. các dịch vụ theo dõi sẽ khôi phục dữ liệu mà chúng đang giữ ở lần đồng bộ sau.
+notice-database-set-aside = Cơ sở dữ liệu bị hỏng, nên Kaeri đã tạo một cơ sở dữ liệu mới. Tệp cũ được giữ tại { $path }. Dữ liệu trên các dịch vụ theo dõi của bạn sẽ trở lại ở lần đồng bộ sau.
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = Kaeri không tạo được thư mục { $path }. Hãy kiểm tra xem ổ đĩa còn chỗ trống và thư mục có ghi được không, rồi thử lại. { $reason }
@@ -1330,7 +1330,7 @@ config-reset-failed = Kaeri không di chuyển được { $path } đi chỗ khá
 start-failed-database = Kaeri không mở được cơ sở dữ liệu tại { $path }. Nếu có ứng dụng Kaeri khác đang mở thư mục này, hãy thoát ứng dụng đó rồi thử lại. { $reason }
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = Kaeri không thiết lập được kết nối mạng theo các cài đặt mạng trong config.toml. { $reason }
+start-failed-network = Kaeri không kết nối được với các cài đặt mạng trong config.toml. Hãy kiểm tra chúng rồi thử lại. { $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = Kaeri không khởi động được. Hãy thoát rồi mở lại. { $reason }
@@ -1363,10 +1363,10 @@ notice-surprise-empty-filters = Không có tựa nào khớp với các bộ l�
 notice-surprise-empty-planning = Danh sách Dự định xem đang trống.
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = Đang ngoại tuyến. Gợi ý ngẫu nhiên trong tìm kiếm cần AniList.
+notice-surprise-offline = Bạn đang ngoại tuyến. Gợi ý ngẫu nhiên cần AniList để chọn một tựa.
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = Lúc này chưa chọn được tựa nào. Hãy thử lại sau ít phút.
+notice-surprise-failed = Không kết nối được với AniList để chọn một tựa. Hãy thử lại sau giây lát.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Sửa proxy
@@ -1483,7 +1483,7 @@ party-members = Thành viên
 party-choose-a-source = Chọn một nguồn
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = Không nguồn nào có tập { $episode }. Các nguồn đến từ các plugin, do một cửa hàng plugin thêm vào.
+party-sources-none-listed = Không nguồn nào có tập { $episode }. Các nguồn đến từ các plugin bạn thêm từ một cửa hàng plugin.
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
@@ -1579,10 +1579,10 @@ settings-caption-sample = Con đường đèn lồng kéo dài qua thị trấn 
 settings-caption-note = Phụ đề thường trông như thế này, bằng { $language } khi tập có phụ đề. Phụ đề có kiểu riêng giữ kiểu đó.
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = Một thông báo khi tập mới của phim trong danh sách Đang xem ra mắt, vào giờ mà { $tracker } cung cấp. Cài đặt riêng của từng phim được ưu tiên trước.
+settings-notify-note-on = Bạn nhận một thông báo khi một tập của phim trong danh sách Đang xem ra mắt, vào giờ mà { $tracker } đưa ra. Cài đặt riêng của từng phim sẽ ghi đè cài đặt này.
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = Tắt. Chỉ những phim được bật trong cài đặt riêng mới gửi thông báo.
+settings-notify-note-off = Tắt. Chỉ những phim bạn đã bật trong cài đặt riêng mới gửi thông báo.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri hoạt động không cần tài khoản. Lịch sử xem của bạn vẫn ở trên máy tính này khi bạn đăng xuất.
@@ -1657,7 +1657,7 @@ controller-help-buttons = Nút tay cầm
 settings-note-cast-tvs-computer = Các TV này xuất hiện dưới Chromecast trong Phát trên TV. Máy tính này gửi tập phim đến chúng.
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = Cho phép TV có Chromecast tích hợp phát torrent. Máy tính này gửi tập phim trong suốt thời gian phát.
+settings-note-torrents-while-casting-computer = Khi bật, TV có Chromecast tích hợp sẽ phát được torrent. Máy tính này gửi tập phim trong suốt thời gian phát.
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = Mở các cửa hàng plugin
@@ -1828,7 +1828,7 @@ stores-owner-needs-connection = Cửa hàng plugin cần kết nối
 stores-owner-needs-connection-detail = Thử lại khi thiết bị này trở lại trực tuyến.
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = Tạo liên kết cần kết nối đến cửa hàng plugin.
+stores-owner-link-offline = Không tạo được liên kết khi thiết bị này đang ngoại tuyến.
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = Gửi liên kết này. Liên kết chỉ dùng được một lần, đến { $until }.
@@ -1837,7 +1837,7 @@ stores-send-link-until = Gửi liên kết này. Liên kết chỉ dùng đượ
 stores-open-on-detail = Họ tham gia mà không cần tên. Tắt tùy chọn này sẽ dừng liên kết; bật lại sẽ tạo liên kết mới.
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = Chỉ những người bạn mời mới tham gia được. Khi bật, bất kỳ ai có liên kết đều tham gia, không cần tên.
+stores-open-off-detail = Chỉ những người bạn mời mới tham gia được. Bật mục này thì bất kỳ ai có liên kết đều tham gia được, không cần tên.
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = Không lưu tên nào.
@@ -1861,7 +1861,7 @@ stores-publish-none-hint = Một plugin bạn xây dựng hoặc cài đặt s�
 stores-not-published = Chưa có trong cửa hàng plugin
 
 # Line under a plugin in the publish dialog that the store has in another version.
-stores-store-offers = Cửa hàng plugin có phiên bản { $version }.
+stores-store-offers = Cửa hàng plugin có { $version }
 
 # Line under a plugin in the publish dialog whose version the store already has.
 stores-published-current = Đã cập nhật trong cửa hàng plugin
@@ -2029,7 +2029,7 @@ library-row-summary-linux =
 library-page-watching-linux = Theo dõi thay đổi
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Quét lại khi Kaeri khởi động
+library-page-no-watch-linux = Kiểm tra thay đổi khi Kaeri khởi động
 
 # Heading over the matched series.
 library-matched-linux = Đã khớp
@@ -2194,7 +2194,7 @@ title-no-seasons = Chưa biết mùa liên quan nào của phim này.
 title-pin-off-page = Mở trang của phim để chọn nguồn cho phim này.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = Chưa có các nguồn nào được đăng ký. Thử lại sau ít phút.
+title-no-sources-yet = Các nguồn vẫn đang tải. Hãy thử lại sau giây lát.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = Trạng thái danh sách của bạn được lưu trên dịch vụ theo dõi, và chưa có dịch vụ nào đăng nhập. Dùng :accounts để đăng nhập.
@@ -2368,7 +2368,7 @@ episodes-empty-none-listed = Chưa có tập nào được liệt kê
 episodes-empty-none-listed-hint = Nguồn không liệt kê tập nào cho phim này. Nhấn { $search } để tìm đúng kết quả, hoặc { $pick } để chọn nguồn khác.
 
 # Toast when an episode has no { -release } to pick from.
-episodes-no-releases = Không có các bản phát hành nào để chọn cho tập này.
+episodes-no-releases = Tập này không có các bản phát hành nào để chọn.
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 episodes-add-source-to-download = Thêm một nguồn trước khi tải xuống. Nhấn { $key } để mở màn hình Các nguồn.
@@ -3031,7 +3031,7 @@ downloads-column-progress = Tiến độ
 downloads-empty-heading = Chưa có gì trong hàng chờ
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = Nhấn { $key } trên một tựa hoặc tập để đưa vào hàng chờ tải xuống.
+downloads-empty-hint = Nhấn { $key } trên một tựa hoặc tập để tải xuống.
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = Tập { $episode }
@@ -3211,16 +3211,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = { $queued } đang chờ, { $held } tạm giữ chờ ghép mã định danh
+accounts-row-queued-held = { $queued } trong hàng chờ, { $held } đang chờ khớp
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = Giữ bản này
+accounts-conflict-keep-mine = Dùng cục bộ
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = Giữ bản kia
+accounts-conflict-keep-theirs = Dùng bản từ xa
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = { $title }  ·  { $field }: bản này { $local } / dịch vụ theo dõi { $remote }
+accounts-conflict-row = { $title }  ·  { $field }: cục bộ { $local } / dịch vụ theo dõi { $remote }
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = Thư viện
@@ -3917,7 +3917,7 @@ settings-label-episode-discussions = Thảo luận từng tập
 settings-label-comment-images = Tải ảnh trong bình luận
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = Lịch chỉ hiện mục trong danh sách của bạn
+settings-label-calendar-mine = Lịch chỉ hiện danh sách của bạn
 
 # Note under the titles row.
 settings-note-titles = Theo AniList làm theo tài khoản AniList của bạn; khi chưa đăng nhập thì dùng tiếng Anh.
@@ -3974,13 +3974,13 @@ settings-note-update-check = Một yêu cầu được lưu vào bộ nhớ đ�
 settings-note-presence = Có hiệu lực từ tập tiếp theo.
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = Cần mã ứng dụng (client ID). Đăng ký ứng dụng tại discord.com/developers.
+settings-note-presence-needs-client = Hãy đặt mã ứng dụng (client ID) trước. Đăng ký một ứng dụng tại discord.com/developers để lấy mã.
 
 # Note under the presence title row. The quoted text is what Discord shows.
-settings-note-presence-title = Tắt sẽ hiện “Đang xem anime” mà không nêu tên phim.
+settings-note-presence-title = Khi tắt, sẽ hiện “Đang xem anime” mà không nêu tên phim.
 
 # Note under the rich presence row.
-settings-note-presence-rich = Thêm ảnh bìa, thanh tiến độ và liên kết AniList. Cần bật hiện tên phim.
+settings-note-presence-rich = Thêm ảnh bìa, thanh tiến độ và liên kết AniList, miễn là tên phim được hiển thị.
 
 # Note under the torrent playback row.
 settings-note-torrents = Mặc định tắt. Có hiệu lực ngay.
@@ -4136,13 +4136,13 @@ stores-footer-update-hosts = Bản cập nhật cũng muốn kết nối tới {
 stores-footer-may-contact = Có thể kết nối tới { $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = Liên kết dùng một lần để tham gia từ máy tính khác của bạn, dưới tên của bạn
+stores-footer-link-device = Liên kết dùng một lần để một thiết bị khác của bạn tham gia dưới tên bạn
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = Liên kết dùng một lần cho người mới
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = Ai đã tham gia và gỡ quyền truy cập của người khác
+stores-footer-members = Xem ai đã tham gia, và gỡ quyền truy cập của một người
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = ↵ Chỉ cho người bạn mời tham gia, và ngừng liên kết
@@ -4157,7 +4157,7 @@ stores-footer-publish = Phát hành một plugin từ thư mục plugin trên m�
 stores-footer-admin = Quản lý thành viên, lời mời và các plugin trong trình duyệt
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = Các plugin đã cài từ đây vẫn ở trên máy này và ngừng cập nhật
+stores-footer-leave = Các plugin đã cài từ đây vẫn ở trên thiết bị này và ngừng cập nhật
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = Ai có liên kết
@@ -4325,7 +4325,7 @@ stores-footer-remove-anonymous = ↵ Gỡ thiết bị này, chỉ biết thời
 stores-footer-remove-all-anonymous = ↵ Gỡ mọi thiết bị đã tham gia bằng liên kết
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = Đã sao chép vào bộ nhớ tạm khi terminal cho phép, hoặc chọn để sao chép.
+stores-link-copied = Đã sao chép, nếu terminal này cho phép. Nếu không, hãy chọn liên kết để sao chép.
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = Chọn để sao chép.
@@ -4397,7 +4397,7 @@ stores-key-matches-invite = { $fingerprint }  (khớp với lời mời)
 stores-join-open = Ai có liên kết đều có thể tham gia.
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = Bạn tham gia không cần tên, và một thiết bị khác cũng tham gia bằng cùng liên kết.
+stores-join-anonymous = Bạn tham gia mà không cần tên. Bất kỳ thiết bị nào khác cũng tham gia được bằng cùng liên kết.
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = Đã tham gia rồi. Tham gia lại sẽ cấp cho thiết bị này một mã mới.
@@ -4406,7 +4406,7 @@ stores-join-already = Đã tham gia rồi. Tham gia lại sẽ cấp cho thiết
 stores-join-device-note = Chủ sở hữu của cửa hàng sẽ thấy tên này. Nhập để đổi tên.
 
 # Lines of the leave confirmation.
-stores-leave-plugins = Các plugin đã cài từ đây vẫn ở trên máy này và ngừng cập nhật.
+stores-leave-plugins = Các plugin đã cài từ đây vẫn ở trên thiết bị này và ngừng cập nhật.
 
 # Lines of the leave confirmation.
 stores-leave-revoked = Quyền truy cập của thiết bị này vào cửa hàng đã bị thu hồi.
@@ -4418,7 +4418,7 @@ stores-remove-member-devices =
     }
 
 # Line of the remove member confirmation.
-stores-remove-member-plugins = Các plugin họ đã cài sẽ vẫn ở trên máy của họ.
+stores-remove-member-plugins = Các plugin họ đã cài vẫn ở trên các thiết bị của họ.
 
 # Line of the cancel invite confirmation.
 stores-cancel-invite-link = Liên kết sẽ ngừng hoạt động.
@@ -4478,7 +4478,7 @@ stores-choice-update = Cập nhật lên { $version }
 stores-choice-replace = Thay bản đã thêm thủ công
 
 # Choice in the plugin overlay: delete the plugin from this machine.
-stores-choice-remove = Gỡ khỏi máy này
+stores-choice-remove = Gỡ khỏi thiết bị này
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 stores-choice-unpublish = Ngừng phát hành trong cửa hàng này
@@ -4583,7 +4583,7 @@ sync-tui-profile-restart = Hãy mở lại Kaeri để dùng hồ sơ của { $n
 sync-tui-err-no-group = Thư mục này không có lịch sử nào để tham gia. Hãy chọn thư mục khác.
 
 # A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
-sync-tui-err-unavailable = { $service } không dùng được trên thiết bị này.
+sync-tui-err-unavailable = { $service } không có trên thiết bị này.
 
 # Status line hint: Enter removes the highlighted { -device } from sync, after a question.
 sync-tui-hint-remove = Gỡ
@@ -4619,7 +4619,7 @@ party-no-source-still-in = { $reason } Bạn vẫn đang tham gia xem chung.
 status-reloading-sources = Đang tải lại các nguồn…
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = { $name } được ghim cho tựa này nhưng không khả dụng, nên các nguồn khác được dùng.
+pin-unavailable = { $name } được ghim cho tựa này nhưng không khả dụng. Đang thử các nguồn khác.
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Cùng xem
@@ -4748,13 +4748,13 @@ settings-group-crashes = Báo cáo sự cố
 settings-crash-save = Lưu báo cáo sự cố trên thiết bị này
 
 # Line under that switch.
-settings-crash-save-detail = Khi bật, Kaeri giữ một bản ghi ngắn về mỗi sự cố trên thiết bị này, đã xóa tựa phim, địa chỉ và tên, để bạn thêm vào Báo lỗi. Không có gì tự động được gửi đi.
+settings-crash-save-detail = Kaeri giữ một bản ghi ngắn về mỗi sự cố trên thiết bị này để dùng cho Báo lỗi, đã xóa tựa, địa chỉ và tên. Không có gì tự động được gửi đi.
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = Hỏi sau khi có sự cố
 
 # Line under that switch.
-settings-crash-ask-detail = Hiện thông báo ở lần mở sau, kèm nút Báo cáo…
+settings-crash-ask-detail = Kaeri hiện một thông báo kèm nút Báo cáo… ở lần mở sau.
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = Do { $system } giữ
@@ -4784,7 +4784,7 @@ settings-crash-delete = Xóa
 settings-crash-delete-all = Xóa tất cả
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = Báo cáo sự cố ở lại trên thiết bị này. Kaeri không tự gửi gì cả. Báo cáo chỉ rời đi khi bạn mở nó trên GitHub từ Báo lỗi. Báo cáo bị xóa sau 30 ngày.
+settings-crash-footnote = Báo cáo sự cố ở lại trên thiết bị này, và Kaeri không tự gửi gì cả. Báo cáo chỉ rời đi khi bạn mở nó trên GitHub từ Báo lỗi. Báo cáo bị xóa sau 30 ngày.
 
 # Button that shows the week before.
 calendar-previous-week = Tuần trước
@@ -4910,13 +4910,13 @@ cast-tvs-note-iphone = Chúng xuất hiện trong mục Chromecast ở Phát tr�
 cast-tvs-note-ipad = Chúng xuất hiện trong mục Chromecast ở Phát trên TV. iPad này sẽ gửi tập phim đến chúng.
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Cho phép TV có Chromecast tích hợp sẵn phát torrent. Mac này gửi tập phim trong suốt thời gian phát.
+cast-torrents-note-mac = Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. Mac này gửi tập phim trong suốt thời gian phát.
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Cho phép TV có Chromecast tích hợp sẵn phát torrent. iPhone này gửi tập phim trong suốt thời gian phát.
+cast-torrents-note-iphone = Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. iPhone này gửi tập phim trong suốt thời gian phát.
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Cho phép TV có Chromecast tích hợp sẵn phát torrent. iPad này gửi tập phim trong suốt thời gian phát.
+cast-torrents-note-ipad = Khi đó, TV có Chromecast tích hợp sẵn sẽ phát được torrent. iPad này gửi tập phim trong suốt thời gian phát.
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = Tiếp theo · phát sau { $seconds } giây
@@ -5648,7 +5648,7 @@ downloads-delete-detail = Tệp sẽ bị xóa khỏi thiết bị này.
 downloads-delete-one-title = Xóa lượt tải
 
 # Line under it: what you lose.
-downloads-delete-one-detail = Tập chỉ phát lại khi có mạng, hoặc sau khi tải lại.
+downloads-delete-one-detail = Sau đó, tập này cần kết nối mạng để phát, trừ khi bạn tải lại.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = Xóa các tệp đã xem
@@ -5660,7 +5660,7 @@ downloads-seeding-title = Chia sẻ lại
 downloads-seeding-after-watching = Chia sẻ lại sau khi xem
 
 # Line under the seeding heading.
-downloads-seeding-note = Các tập đã xem được chia sẻ lại khi Kaeri đang mở, cho đến khi đạt tỉ lệ hoặc thời gian đặt trong Cài đặt, mục Các nguồn.
+downloads-seeding-note = Các tập đã xem được chia sẻ lại khi Kaeri đang mở. Việc chia sẻ dừng khi đạt tỉ lệ hoặc thời gian bạn đặt trong Cài đặt, mục Các nguồn.
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = Khi cửa sổ đóng lúc đang tải
@@ -5738,10 +5738,10 @@ episode-download-failed = Không tải được tập { $episode }. Hãy thử l
 first-other-title = Bạn đã dùng Kaeri trên thiết bị khác?
 
 # Under the title.
-first-other-line = Hãy ghép nối, và thiết bị này sẽ nhận các nguồn, các dịch vụ theo dõi và lịch sử của bạn. Các bước sau đó cũng xong.
+first-other-line = Ghép nối với nó, thiết bị này sẽ nhận các nguồn, các dịch vụ theo dõi và lịch sử của bạn, và các bước thiết lập còn lại được làm sẵn cho bạn.
 
 # Line under the pair row.
-first-other-pair-line = Hiện một mã để nhập trên thiết bị kia. Cả hai cần cùng một mạng Wi-Fi.
+first-other-pair-line = Bạn sẽ nhận một mã để nhập trên thiết bị kia. Cả hai cần cùng một mạng Wi-Fi.
 
 # Row that restores from a sync folder.
 first-other-restore = Khôi phục từ thư mục đám mây
@@ -5780,7 +5780,7 @@ first-join-server = Thêm { $host }
 first-join-server-line = { $kind } · đăng nhập bằng khóa từ { $device }, lưu trong { $store }
 
 # Note under the list.
-first-join-folders = Thư mục vẫn ở trên { $device }. Hãy thêm thư mục riêng của thiết bị này trong “các nguồn”.
+first-join-folders = Thư mục vẫn ở trên { $device }. Hãy thêm thư mục riêng của thiết bị này trong mục Các nguồn của bạn.
 
 # Note when the setup answered the remaining pages.
 first-join-steps-done = Danh sách và các nguồn đã được thiết lập, nên lần chạy đầu kết thúc tại đây. Bạn có thể đổi chúng trong Cài đặt.
@@ -5855,7 +5855,7 @@ home-end-signed-out = Đăng nhập AniList để đưa danh sách và mục K�
 home-sign-in = Đăng nhập AniList
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Thêm nguồn để phát từ Trang chủ. Có vài cái để chọn ở Các cửa hàng plugin.
+home-end-no-sources = Thêm nguồn để phát từ Trang chủ. Các plugin đến từ Các cửa hàng plugin.
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = Không có trong các nguồn của bạn
@@ -6284,7 +6284,7 @@ library-picker-title = Chọn thư mục chứa các tập của bạn.
 library-remove-detail = Tệp của bạn vẫn ở nguyên chỗ cũ.
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = Không hỏi được AniList. Sẽ thử lại ở lần quét sau.
+library-reason-offline = Không kết nối được với AniList. Lần quét sau sẽ thử lại.
 
 # Button that opens the match picker for a group.
 library-choose-match = Chọn kết quả khớp
@@ -6317,7 +6317,7 @@ licensed-body = Kaeri có thể mở tựa phim trong các dịch vụ phát tr�
 licensed-region = Khu vực
 
 # Line under the region menu.
-licensed-region-line = Ẩn các liên kết AniList đánh dấu cho nước khác. Hầu hết liên kết không ghi nước nào, nên hãy chọn cả dịch vụ của bạn.
+licensed-region-line = Các liên kết AniList đánh dấu cho nước khác sẽ bị ẩn. Hầu hết liên kết không ghi nước nào, nên hãy chọn cả dịch vụ của bạn.
 
 # Heading over the services the viewer pays for.
 licensed-yours = Dịch vụ của bạn
@@ -6761,7 +6761,7 @@ onboarding-own-heading = Có phim của riêng bạn?
 onboarding-invite-heading = Có liên kết mời?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Các plugin đến từ các cửa hàng plugin. Một cửa hàng plugin được ký xác thực và cấp cho mỗi thiết bị một token riêng, nên bạn tham gia bằng liên kết mời từ chủ của nó.
+onboarding-where-stores = Các plugin đến từ các cửa hàng plugin. Mỗi cửa hàng plugin được ký và cấp cho từng thiết bị một token riêng, nên bạn tham gia bằng liên kết mời từ chủ của nó.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Dùng thử ngay
@@ -6803,7 +6803,7 @@ party-leave = Rời xem chung
 party-leaving = Đang rời…
 
 # Label of the button that marks you as ready.
-party-ready-action = Tôi đã sẵn sàng
+party-ready-action = Sẵn sàng xem
 
 # Button that copies the link to invite someone.
 party-copy-invite = Sao chép liên kết mời
@@ -6818,7 +6818,7 @@ party-leave-and-close = Rời và đóng
 party-not-now = Để sau
 
 # Line while the form fetches its suggestions.
-party-getting-ready = Đang chuẩn bị…
+party-getting-ready = Đang tải gợi ý…
 
 # Label of the server field.
 party-server = Máy chủ
@@ -6851,7 +6851,7 @@ party-server-public = Máy chủ công cộng do { $operator } vận hành, khô
 party-server-suggest = Chưa có máy chủ riêng? { $server } là máy chủ công cộng, do { $operator } vận hành.
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = Máy chủ do người mời bạn chọn. Kaeri không vận hành máy chủ này.
+party-server-invited = Người mời bạn đã chọn máy chủ này. Kaeri không vận hành nó.
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = Nhập máy chủ dưới dạng tên máy và cổng, ví dụ party.example:8999.
@@ -7061,7 +7061,7 @@ together-recent = Phòng gần đây
 together-recent-row = Tập { $episode } · với { $names } · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = Các phòng bạn vào sẽ hiện ở đây, tối đa mười phòng.
+together-recent-empty = Mười phòng gần nhất bạn tham gia sẽ hiện ở đây.
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = Vào lại
@@ -7144,7 +7144,7 @@ party-member-finding = Đang tìm nguồn
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = Đang xem từ { $time }
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = Sẵn sàng
 
 # Heading of the invite block in the lobby.
@@ -7361,7 +7361,7 @@ party-chat-show = Hiện trò chuyện
 settings-hide-chat = Ẩn trò chuyện trong các buổi xem chung
 
 # Line under that switch.
-settings-hide-chat-line = Tin nhắn, biểu cảm và các vạch đánh dấu trên thanh tua không hiện trên video, và ô nhập cũng biến mất. Danh sách thành viên vẫn cho biết ai đang trong phòng.
+settings-hide-chat-line = Tin nhắn, biểu cảm và các vạch của chúng trên thanh tua không hiện trên video, và ô trò chuyện cũng biến mất. Danh sách người tham gia vẫn cho biết ai đang trong phòng.
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = Tắt tiếng { $name }
@@ -7962,10 +7962,10 @@ player-load-audio-file = Tải tệp âm thanh…
 player-file-picker-failed = Không mở được hộp chọn tệp. Hãy thử lại.
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = Không tải được tệp phụ đề đó. Hãy kiểm tra xem đây có phải tệp phụ đề không.
+player-subtitle-file-failed = Không tải được tệp đó làm phụ đề. Hãy chọn một tệp phụ đề, chẳng hạn .srt hoặc .ass.
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = Không tải được tệp âm thanh đó. Hãy kiểm tra xem đây có phải tệp âm thanh không.
+player-audio-file-failed = Không tải được tệp đó làm âm thanh. Hãy chọn một tệp âm thanh, chẳng hạn .mka hoặc .flac.
 
 # Name of a track that has no name or language.
 player-track-unnamed = Rãnh chưa đặt tên
@@ -8181,7 +8181,7 @@ reader-divider-facts-source = { $facts } · từ { $source }
 onboarding-read-demo = Đọc bản demo
 
 # Under the first run's demo heading when the device is for reading.
-onboarding-demo-books-detail = Bản demo có một truyện tranh ngắn và một truyện ngắn mà tác giả chia sẻ theo Creative Commons.
+onboarding-demo-books-detail = Một truyện tranh ngắn và một truyện ngắn, do tác giả chia sẻ theo Creative Commons.
 
 # Under the first run's demo heading when the device is for both.
 onboarding-demo-both-detail = Một tập ngắn và một truyện tranh ngắn, do tác giả chia sẻ theo Creative Commons.
@@ -8217,7 +8217,7 @@ search-demo-reads = Demo · Đọc được ngay
 search-demo-only-books = Chỉ có bản demo đang bật. Các tựa khác sẽ hiện khi bạn thêm nguồn.
 
 # Title of the card after the demo's last page.
-reader-demo-end = Bản demo kết thúc ở đây
+reader-demo-end = Bản demo đến đây là hết
 
 # Line under it.
 reader-demo-end-line = Để đọc sách của bạn, hãy thêm thư mục, máy chủ hoặc cửa hàng plugin.
@@ -8802,7 +8802,7 @@ book-sources-keep = Giữ chưa khớp
 book-sources-find = Tìm
 
 # Footnote of the Check matches sheet.
-book-sources-unmatched-note = Các bộ truyện chưa khớp vẫn đọc được từ thư mục. Chúng chưa có tiến độ dịch vụ theo dõi cho đến khi được khớp.
+book-sources-unmatched-note = Bạn vẫn đọc được các bộ truyện chưa khớp từ thư mục. Chúng chưa có tiến độ dịch vụ theo dõi cho đến khi được khớp.
 
 # Accessibility label of the control that sets Shows or Reading in the Library and Search.
 library-scope-label = Phim hoặc Truyện
@@ -9204,10 +9204,10 @@ settings-chapter-notifications-note = Bộ truyện trong danh sách Đang đọ
 settings-downloads-finished-note = Khi các chương đang tải đều xong
 
 # Under New chapters.
-settings-chapter-notifications-footer = Chương có kênh hệ thống riêng, nên có thể tắt tiếng riêng.
+settings-chapter-notifications-footer = Chương có kênh hệ thống riêng, nên bạn có thể tắt tiếng chúng mà vẫn giữ các thông báo khác.
 
 # Credit under the trackers with reading on.
-accounts-mangaupdates-credit = MangaUpdates được truy cập qua API công khai của nó.
+accounts-mangaupdates-credit = Kaeri kết nối với MangaUpdates qua API công khai của dịch vụ này.
 
 # Placeholder of the user name field when signing in to MangaUpdates.
 accounts-username = Tên người dùng
@@ -9273,7 +9273,7 @@ seasonal-empty-format-detail = Thử tất cả định dạng.
 seasonal-filter-in-search = Lọc trong Tìm kiếm
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = Mùa này trong Tìm kiếm, nơi mọi bộ lọc có thể thu hẹp kết quả
+seasonal-filter-help = Mở mùa này trong Tìm kiếm, nơi mọi bộ lọc đều dùng được
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = Phổ biến nhất
@@ -9414,7 +9414,7 @@ filter-where-to-watch = Xem ở đâu
 filter-licensed-only = Chỉ bản có giấy phép
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = Tựa trong danh sách
+filter-my-list = Tựa trong danh sách của bạn
 
 # Value of a three-way filter: include the titles.
 filter-show = Hiện
@@ -9909,7 +9909,7 @@ servers-error-certificate = { $host } dùng một chứng chỉ mà thiết bị
 servers-row-signed-out-here = Đã đăng xuất
 
 # Line under it: what signing out does.
-servers-sign-out-line = Kết thúc phiên đăng nhập của thiết bị này trên máy chủ. Máy chủ và các tập đã tải vẫn như cũ.
+servers-sign-out-line = Đăng xuất sẽ kết thúc phiên của thiết bị này trên máy chủ. Máy chủ và các tập đã tải vẫn giữ nguyên.
 
 # Settings group and row title for choosing a language.
 settings-language = Ngôn ngữ
@@ -10227,7 +10227,7 @@ settings-new-episodes = Tập mới
 settings-new-episodes-detail = Cho các tựa trong danh sách Đang xem của bạn
 
 # Line explaining what a notification says.
-settings-notify-detail = Một thông báo khi tập của tựa bạn theo dõi ra mắt: tên tựa và số tập, không có tên tập. Mỗi tựa có thể tắt thông báo trong cài đặt riêng.
+settings-notify-detail = Bạn nhận một thông báo khi tập của tựa bạn theo dõi ra mắt. Thông báo ghi tên tựa và số tập, không bao giờ ghi tên tập. Mỗi tựa có thể tắt thông báo riêng trong cài đặt của nó.
 
 # Row: the coming-up digest.
 settings-coming-up = Sắp ra mắt · 7 ngày tới
@@ -10239,7 +10239,7 @@ settings-system-notifications = Cài đặt thông báo
 settings-system-notifications-detail = Âm thanh, rung và màn hình khóa
 
 # Line under it on Apple.
-settings-system-notifications-apple = Mở Cài đặt hệ thống, nơi đặt kiểu biểu ngữ, âm thanh và huy hiệu.
+settings-system-notifications-apple = Mở Cài đặt hệ thống, nơi bạn đặt kiểu biểu ngữ, âm thanh và huy hiệu.
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = Tắt: hệ thống không cho phép thông báo của Kaeri
@@ -10281,7 +10281,7 @@ show-settings-never = Không bao giờ
 show-settings-subs-remembered = Ghi nhớ từ tập gần nhất của bạn.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Chọn trong trình phát. Theo Cài đặt › Phát.
+show-settings-subs-follow = Chọn trong trình phát. Trước đó, áp dụng Cài đặt › Phát.
 
 # Row: the source for this show.
 show-settings-source = Nguồn
@@ -10365,7 +10365,7 @@ settings-upscaling-natural = Tự nhiên · ArtCNN
 settings-label-hover-cards = Phóng to ảnh bìa khi trỏ chuột
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = Hiện thẻ lớn hơn có trailer khi bạn trỏ chuột vào ảnh bìa.
+settings-hover-cards-note = Đặt con trỏ lên ảnh bìa sẽ mở một thẻ lớn hơn có trailer.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Giữ nguyên nét và chất liệu, không vẽ lại.
@@ -10715,7 +10715,7 @@ store-install-all-reading = Cài tất cả để đọc
 # Result after installing.
 store-installed =
     { $count ->
-       *[other] Đã cài, các plugin: { $count }. Chúng nằm trong mục “các nguồn”.
+       *[other] Đã cài { $count } plugin. Chúng nằm trong mục Các nguồn của bạn.
     }
 
 # Info title when every plugin in a store is for watching, and watching is off here.
@@ -10731,7 +10731,7 @@ store-turn-on-watching = Bật xem
 store-empty = { $store } chưa có các plugin
 
 # Line under it.
-store-empty-line = Bạn là thành viên, nên các plugin mới sẽ hiện trong “Các cửa hàng plugin” khi { $owner } thêm chúng.
+store-empty-line = Bạn là thành viên, nên các plugin mới sẽ hiện trong Các cửa hàng plugin khi { $owner } thêm chúng.
 
 # Error title when the store doesn't answer.
 store-err-unreachable = Không kết nối được với { $host }
@@ -10748,11 +10748,11 @@ store-other-medium-more =
 # On a TV, under the list: plugins for reading, which a TV doesn't do.
 store-tv-reading-only =
     { $count ->
-       *[other] Còn { $count } cái để đọc, nhưng TV này không hỗ trợ đọc.
+       *[other] Còn { $count } plugin khác dành cho việc đọc, mà TV này không hỗ trợ.
     }
 
 # On a TV, info title when every plugin in a store is for reading.
-store-tv-all-reading = Mọi plugin trong { $store } đều để đọc, nhưng TV này không hỗ trợ đọc.
+store-tv-all-reading = Mọi plugin trong { $store } đều dành cho việc đọc, mà TV này không hỗ trợ.
 
 # Plugin row in an invite's result.
 store-plugin-row = Phiên bản { $version } · có thể kết nối tới { $hosts }
@@ -10995,7 +10995,7 @@ sources-source-order-row = Thứ tự ưu tiên
 sources-torrents-note = Torrent là một phần của Kaeri, không phải plugin. Proxy và việc seed được đặt trong Cài đặt, mục Các nguồn.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
-sources-rebuilding = Các nguồn đang được thiết lập lại
+sources-rebuilding = Đang thiết lập lại các nguồn
 
 # Value of a plugin's response time, in milliseconds.
 sources-response-ms = { $ms } ms
@@ -11040,10 +11040,10 @@ match-similarity = { $similarity } khớp
 match-search-field = Tìm trên { $source }
 
 # While a search of the source runs.
-match-searching = Đang tìm trên { $source } “{ $query }”
+match-searching = Đang tìm “{ $query }” trên { $source }
 
 # A search of the source that found nothing.
-match-search-empty = Không có gì trên { $source } cho “{ $query }”.
+match-search-empty = Không có gì cho “{ $query }” trên { $source }.
 
 # Under match-search-empty: what to try.
 match-search-empty-hint = Thử ít từ hơn, hoặc tên tựa bằng ngôn ngữ khác.
@@ -11103,7 +11103,7 @@ sources-add-server = Máy chủ media…
 sources-add-store = Tham gia một cửa hàng plugin…
 
 # Line under the empty state's title on a computer.
-sources-empty-body = Các nguồn là nơi các tập phim đến từ: thư mục trên thiết bị này, máy chủ media của bạn, và các plugin từ các cửa hàng plugin bạn tham gia.
+sources-empty-body = Các nguồn là nơi các tập phim đến: thư mục trên thiết bị này, máy chủ media của bạn, và các plugin từ các cửa hàng plugin bạn tham gia.
 
 # Line under the empty state's buttons. The link is "join a plugin store".
 sources-empty-more = Hoặc { $join }.
@@ -11145,7 +11145,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = Chỉ kết nối tới Wikimedia Commons: upload.wikimedia.org và commons.wikimedia.org.
+sources-demo-hosts = Bản demo chỉ kết nối tới Wikimedia Commons: upload.wikimedia.org và commons.wikimedia.org.
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = Bản demo không bao giờ đăng nhập ở đâu và không bao giờ ghi vào AniList.
@@ -11214,7 +11214,7 @@ stores-not-from-app = Các plugin đến từ chủ của cửa hàng plugin, kh
 stores-join-owner-responsible = { $owner } vận hành cửa hàng plugin này và chọn các các plugin của nó. Kaeri không tạo, xét duyệt hay chấp thuận chúng.
 
 # Line when the store has no plugins.
-stores-no-plugins = cửa hàng plugin này chưa cung cấp các plugin nào.
+stores-no-plugins = Cửa hàng plugin này chưa có các plugin nào.
 
 # Heading of the plugin list of a store.
 stores-plugins = Các plugin
@@ -11250,7 +11250,7 @@ stores-access-ended-page = cửa hàng plugin này không còn cho thiết bị 
 stores-no-longer-joined = Không còn tham gia cửa hàng plugin này.
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = Ngoại tuyến: { $reason }. Danh sách các plugin bên dưới là bản được kiểm tra gần nhất.
+stores-offline-last-list = Ngoại tuyến: { $reason }. Đang hiện danh sách gần nhất mà nó gửi.
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = Ngoại tuyến. Đang hiển thị danh sách gần nhất mà nó đã gửi.
@@ -11355,7 +11355,7 @@ stores-replace-label = Thay thế bản { $name } đã thêm thủ công
 stores-remove-plugin-title = Gỡ { $name }?
 
 # Line under it.
-stores-remove-plugin-detail = Nó bị xóa khỏi thiết bị này, và cửa hàng plugin có thể cài đặt lại.
+stores-remove-plugin-detail = Nó sẽ bị xóa khỏi thiết bị này. Bạn có thể cài lại từ cửa hàng plugin.
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = Kết nối thêm
@@ -11376,7 +11376,7 @@ stores-add-title = Thêm cửa hàng plugin
 stores-join-detail = Dán liên kết mà chủ cửa hàng plugin đã gửi cho bạn.
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = Dán liên kết mời mà chủ cửa hàng plugin đã gửi cho bạn. Bạn sẽ thấy cửa hàng plugin cung cấp gì trước khi tham gia hoặc cài đặt bất cứ thứ gì.
+stores-join-detail-desktop = Dán liên kết mời mà chủ của một cửa hàng plugin đã gửi cho bạn. Bạn sẽ thấy cửa hàng plugin có gì trước khi tham gia hoặc cài đặt bất cứ thứ gì.
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = Dán liên kết mà chủ cửa hàng plugin đã gửi cho bạn. Liên kết mời Kaeri:// mở từ Tin nhắn sẽ điền trực tiếp vào bảng này.
@@ -11569,7 +11569,7 @@ stores-invite-works-any = Ai có liên kết này đều tham gia được, đ�
 stores-invite-works-any-forever = Ai có liên kết này đều tham gia được, cho đến khi bạn hủy.
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = Dùng được một lần, cho người bạn gửi tới. Đến { $until }.
+stores-invite-once-until = Dùng được một lần, cho người bạn gửi tới, đến { $until }.
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = Dùng được một lần, cho người bạn gửi tới, cho đến khi bạn hủy.
@@ -11692,7 +11692,7 @@ stores-offers-plugins =
 notice-open-stores = Mở các cửa hàng plugin
 
 # Explainer on the empty plugin stores page.
-stores-what-is = Cửa hàng plugin là một máy chủ nhỏ giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Nó cung cấp các nguồn dưới dạng các plugin. Kaeri không vận hành các cửa hàng plugin nào và cũng không liệt kê cái nào, nên bạn tham gia bằng liên kết mời từ chủ của nó.
+stores-what-is = Cửa hàng plugin là một máy chủ nhỏ giữ các các plugin đã ký và cấp cho mỗi thiết bị một token riêng. Các plugin của nó thêm các nguồn. Kaeri không vận hành cửa hàng plugin nào và cũng không liệt kê cái nào, nên bạn tham gia một cửa hàng plugin bằng liên kết mời từ chủ của nó.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Cửa hàng plugin là gì?
@@ -11830,7 +11830,7 @@ sync-road-nearby-line = Ghép nối với một thiết bị khác trong cùng m
 sync-road-cloud = Qua thư mục đám mây
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = Một ổ đám mây bạn đã dùng, hoặc máy chủ của riêng bạn. Dùng được khi các các thiết bị ở xa nhau, và giữ một bản sao lưu.
+sync-road-cloud-line = Một ổ đám mây bạn đã dùng, hoặc máy chủ của riêng bạn. Nó hoạt động khi các các thiết bị của bạn ở xa nhau và giữ một bản sao lưu.
 
 # Road sheet footer.
 sync-road-later = Bạn có thể thêm cách còn lại sau. Hầu hết mọi người dùng cả hai.
@@ -11890,7 +11890,7 @@ sync-turn-off-alert-line = { $kind } này ngừng chia sẻ với các các thi�
 cloud-group = Thư mục đám mây
 
 # Group footer.
-cloud-foot = Bổ sung khi các các thiết bị của bạn ở xa nhau, và giữ một bản sao lưu đã niêm phong. Chỉ các các thiết bị của bạn đọc được.
+cloud-foot = Thư mục này giữ các các thiết bị của bạn đồng bộ khi chúng ở xa nhau, và giữ một bản sao lưu đã niêm phong. Chỉ các các thiết bị của bạn đọc được nó.
 
 # Row when only the nearby road is set.
 cloud-add = Thêm thư mục đám mây
@@ -12232,7 +12232,7 @@ profiles-picker = Ai đang xem?
 profiles-ask-at-launch = Hỏi ai đang xem khi mở ứng dụng
 
 # iPad footer.
-profiles-ask-foot = Mặc định tắt. Dành cho iPad cả nhà dùng chung. Hàng tài khoản cho phép đổi hồ sơ bất cứ lúc nào.
+profiles-ask-foot = Mặc định tắt. Hãy bật cho iPad mà cả nhà dùng chung. Bạn có thể đổi hồ sơ từ hàng tài khoản bất cứ lúc nào.
 
 # TV Settings.
 profiles-switch = Đổi hồ sơ
@@ -13012,7 +13012,7 @@ accounts-tokens-keystore = Mã đăng nhập được lưu trên thiết bị n�
 accounts-form-title = Đăng nhập vào { $tracker }
 
 # Line under the title: where the password goes.
-accounts-form-detail = Mật khẩu của bạn chỉ được gửi tới { $tracker } một lần, để lấy mã đăng nhập lưu trên thiết bị này.
+accounts-form-detail = Mật khẩu của bạn chỉ được gửi tới { $tracker } một lần, để đổi lấy một token lưu trên thiết bị này.
 
 # Label of the name field.
 accounts-user-or-email = Email hoặc tên người dùng
@@ -13084,7 +13084,7 @@ accounts-open-on = Mở trên { $tracker }
 accounts-listed-by = Được liệt kê bởi { $tracker }
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = { $tracker } không phản hồi.
+accounts-did-not-answer = { $tracker } không phản hồi. Hãy thử lại sau giây lát.
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = { $tracker } chưa có diễn viên, đội sản xuất hay gợi ý cho tựa này.
@@ -13147,7 +13147,7 @@ tv-pairing-code = Mã ghép nối
 tv-open-on-tv = Mở Kaeri trên TV. TV cần cùng mạng Wi-Fi với thiết bị này.
 
 # Line telling what to type.
-tv-type-code = Nhập sáu chữ số mà { $name } hiển thị. Sau đó thiết bị này sẽ tự kết nối.
+tv-type-code = Nhập sáu chữ số mà { $name } hiển thị. Từ đó trở đi, thiết bị này sẽ tự kết nối.
 
 # Line while pairing is under way.
 tv-pairing-moment = Việc này mất một lúc.
@@ -13447,7 +13447,7 @@ updates-saved-replace-plain = Đã lưu phiên bản { $version } vào Tải xu�
 updates-why-server = Việc tải về đã dừng: máy chủ từ chối ({ $code }). Thử lại sau.
 
 # The connection broke.
-updates-why-connection = Việc tải về đã dừng: kết nối bị gián đoạn.
+updates-why-connection = Việc tải về đã dừng: mất kết nối. Hãy thử lại.
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = Không lưu được bản tải về: { $reason }

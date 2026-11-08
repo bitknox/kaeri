@@ -145,7 +145,7 @@ pub async fn preview(
                 run.dispatch(task);
                 run.settle(&mut app).await?;
             } else {
-                eprintln!("[title: nothing on Home to open — watch something first]");
+                eprintln!("[title: nothing on Home to open; watch something first]");
             }
             if screen == PreviewScreen::Episodes {
                 run.press(&mut app, Action::ShowEpisodes).await;

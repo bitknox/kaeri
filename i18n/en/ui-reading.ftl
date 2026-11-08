@@ -645,7 +645,7 @@ book-sources-keep = Keep unmatched
 book-sources-find = Find
 
 # Footnote of the Check matches sheet.
-book-sources-unmatched-note = Unmatched series still read from the folder. They have no { -tracker } progress until matched.
+book-sources-unmatched-note = You can still read unmatched series from the folder. They get no { -tracker } progress until they're matched.
 
 ## The reading library
 
@@ -831,13 +831,13 @@ onboarding-lists-line-both = { -app-name } keeps your reading and watching in st
 onboarding-lists-anilist-line = Lists, progress and suggestions
 
 # Under AniList on the first-run page after Watch: the other trackers, for later.
-onboarding-lists-later-watch = MyAnimeList, Kitsu, Simkl and Trakt can be added later in Settings, under Accounts.
+onboarding-lists-later-watch = You can add MyAnimeList, Kitsu, Simkl and Trakt later in Settings, under Accounts.
 
 # Under AniList on the first-run page after Read: the other trackers, for later.
-onboarding-lists-later-read = MyAnimeList, Kitsu and MangaUpdates can be added later in Settings, under Accounts.
+onboarding-lists-later-read = You can add MyAnimeList, Kitsu and MangaUpdates later in Settings, under Accounts.
 
 # Under AniList on the first-run page after Both: the other trackers, for later.
-onboarding-lists-later-both = MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt can be added later in Settings, under Accounts.
+onboarding-lists-later-both = You can add MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt later in Settings, under Accounts.
 
 # The first-run page's main button: sign in to the tracker.
 # @arg tracker: text
@@ -1093,10 +1093,10 @@ settings-chapter-notifications-note = Series on your Reading list
 settings-downloads-finished-note = When the chapters downloading are all done
 
 # Under New chapters.
-settings-chapter-notifications-footer = Chapters have their own system channel, so they can be silenced on their own.
+settings-chapter-notifications-footer = Chapters have their own system channel, so you can silence them and keep the rest.
 
 # Credit under the trackers with reading on.
-accounts-mangaupdates-credit = MangaUpdates is reached through its public API.
+accounts-mangaupdates-credit = { -app-name } talks to MangaUpdates through its public API.
 
 # Placeholder of the user name field when signing in to MangaUpdates.
 accounts-username = User name
@@ -1273,7 +1273,7 @@ stop-title = Where did you stop?
 stop-note = You sent chapters to { $device }. Where did you stop?
 
 # Button in that note.
-stop-note-action = Set my place
+stop-note-action = Set your place
 
 # First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
 # @arg chapter: text
@@ -1290,10 +1290,10 @@ stop-sent-range = Chapters { $first } to { $last } went to { $device } on { $dat
 
 # Switch in the sheet: the last chapter sent was read to its end.
 # @arg chapter: text
-stop-finished = I finished chapter { $chapter }
+stop-finished = Finished chapter { $chapter }
 
 # The main button of the sheet: keeps the chapter chosen as the place.
-stop-set = Set my place
+stop-set = Set your place
 
 # The other button of the sheet: leaves the place as it is, with the place named.
 # @arg chapter: text
@@ -1301,7 +1301,7 @@ stop-set = Set my place
 stop-keep = Keep chapter { $chapter } · page { $page }
 
 # The other button of the sheet when the place is not a page.
-stop-keep-plain = Keep my place
+stop-keep-plain = Keep current place
 
 ## The e-readers settings and the feed
 
@@ -1319,7 +1319,7 @@ opds-share-note = An OPDS catalogue e-readers at home can browse
 
 # Footnote under the feed settings.
 # @arg device: text
-opds-footer = Only while { -app-name } is open on this { $device }. Progress on those e-readers stays there.
+opds-footer = The feed runs only while { -app-name } is open on this { $device }. Progress on those e-readers stays there.
 
 # Row in the feed settings: the web address e-readers are given, with a button that copies it.
 opds-address = Address
@@ -1340,7 +1340,7 @@ opds-new-password = New password
 opds-port = Port
 
 # Line under the port row when it is empty.
-opds-port-note = Leave it empty to pick a free port, or use 1024 to 65535
+opds-port-note = Leave it empty for any free port, or pick one from 1024 to 65535
 
 # Line under the port row when the port asked for was taken and another is used.
 # @arg wanted: int

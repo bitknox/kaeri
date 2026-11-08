@@ -71,9 +71,9 @@ accounts-row-queued = { $count ->
    *[other] { $count } en file
  }
 accounts-row-queued-held = { $queued } en file, { $held } en attente de correspondance
-accounts-conflict-keep-mine = Garder ici
-accounts-conflict-keep-theirs = Garder le leur
-accounts-conflict-row = { $title }  ·  { $field } : ici { $local } / là-bas { $remote }
+accounts-conflict-keep-mine = Garder local
+accounts-conflict-keep-theirs = Garder distant
+accounts-conflict-row = { $title }  ·  { $field } : local { $local } / distant { $remote }
 lists-library-title = { -library-cap }
 lists-remove-wrong-list = Vous ne pouvez masquer des titres que dans la liste { -continue-cap }.
 lists-continue-removed = { $title } masqué de la liste { -continue-cap }. Le regarder à nouveau le fait réapparaître.
@@ -84,7 +84,7 @@ lists-loading = Chargement…
 lists-empty-press-enter = Appuyez sur ↵ pour rechercher
 lists-empty-type-to-search = Saisissez pour rechercher
 lists-empty-browse-filtered = Appuyez sur ↵ pour parcourir avec ces filtres.
-lists-empty-browse-popular = Appuyez sur ↵ pour parcourir les plus populaires.
+lists-empty-browse-popular = Appuyez sur ↵ pour parcourir les titres les plus populaires.
 lists-empty-no-matches = Aucun résultat
 lists-empty-fewer-filters = Essayez avec moins de filtres.
 lists-empty-shorter-query = Essayez une recherche plus courte, ou le titre en romaji.

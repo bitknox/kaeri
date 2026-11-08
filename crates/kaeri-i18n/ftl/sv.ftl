@@ -28,7 +28,7 @@ notice-cast-refused = { $name } kunde inte spela den här strömmen. Prova en an
 notice-cast-taken-over = En annan enhet startade något på { $name }, så castingen avbröts.
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = Den här enheten är inte på samma nätverk som { $name } eller når den via ett VPN. Casting kräver att båda är på samma nätverk.
+notice-cast-not-same-network = Den här enheten är inte på samma nätverk som { $name }, eller når det via ett VPN. Anslut båda till samma nätverk för att casta.
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Tappade kontakten med { $name }, så castingen avbröts.
@@ -343,7 +343,7 @@ notice-match-save-failed = Det gick inte att spara matchningen. { $reason }
 notice-match-did-not-stick = Matchningen höll inte. Den källa kan ha ändrats. Försök välja den igen.
 
 # Toast when a search of the sources for a title found nothing.
-notice-source-search-empty = Inget hittades för “{ $query }”. Prova en annan sökning.
+notice-source-search-empty = Inget hittades för ”{ $query }”. Prova en annan sökning.
 
 # In the list of titles a source offers for a show, in place of how close a title is: it was ruled out because its format cannot be the show's, as an OVA for a TV series.
 match-ruled-out-format = Annat format
@@ -361,7 +361,7 @@ match-search-timed-out = Den svarade inte i tid.
 match-search-source-off = Den är inte påslagen.
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = { $source } används för den här titeln.
+notice-source-pinned = Den här titeln spelas nu från { $source }.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Tillbaka till automatiskt val av källa.
@@ -547,13 +547,13 @@ reader-moved = Flyttade till { $chapter }, sida { $page }, där { $device } slut
 reader-moved-number = Flyttade till kapitel { $chapter }, sida { $page }, där { $device } slutade
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-right-to-left = Höger till vänster, upptäckt
+reader-detected-right-to-left = Verkar vara höger till vänster
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-left-to-right = Vänster till höger, upptäckt
+reader-detected-left-to-right = Verkar vara vänster till höger
 
 # A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
-reader-detected-strip = Lång remsa, upptäckt
+reader-detected-strip = Verkar vara en lång remsa
 
 # Why a chapter or a list could not load: there is no connection.
 reading-failed-offline = Du är offline. Nedladdade kapitel går fortfarande att öppna.
@@ -1118,7 +1118,7 @@ store-admin-link-foreign = { $store } skickade en administrationslänk för en a
 store-open-join-unsupported = Servern för { $store } är äldre och kan inte släppa in någon med en länk. Uppdatera den först.
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = { $name } är av. Den hoppas över när avsnitt söks.
+source-switched-off = { $name } är av. Kaeri hoppar över den när avsnitt söks.
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = { $name } är på.
@@ -1127,7 +1127,7 @@ source-switched-on = { $name } är på.
 plugin-not-loaded = { $id } är inte inläst. Kontrollera att den är installerad under Källor.
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = { $name } används för den här titeln.
+release-pinned = Den här titeln använder nu { $name }.
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Det gick inte att spara valet. { $reason }
@@ -1217,10 +1217,10 @@ notice-token-exchange-failed = Det gick inte att få en token från { $tracker }
 notice-browser-not-opened = Det gick inte att öppna en webbläsare för inloggningen. Kontrollera att en är installerad och försök igen. { $reason }
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = Ingen inloggning till { $tracker } väntar på det. Starta inloggningen igen.
+notice-sign-in-not-waiting = Ett inloggningssvar från { $tracker } kom, men ingen inloggning väntade på det. Starta inloggningen igen.
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = Inloggningen till { $tracker } kom inte tillbaka från den här begäran. Starta inloggningen igen.
+notice-sign-in-wrong-request = Inloggningssvaret från { $tracker } stämmer inte med begäran. Starta inloggningen igen.
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = Inloggningen till { $tracker } kom tillbaka utan token. Försök igen.
@@ -1318,7 +1318,7 @@ notice-update-available = { $tag } är ute. Kör kaeri --update för att install
 cause-proxy-needs-address = En proxy behöver en värd och en port.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = Proxyns adress kan inte användas för en kontroll.
+cause-proxy-address-unusable = Proxykontrollen kan inte använda den här adressen.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Det gick inte att nå servern.
@@ -1342,7 +1342,7 @@ notice-playback-failed = Uppspelningen misslyckades. Prova en annan källa.
 notice-engine-fault = Något gick fel i Kaeri. Appen fortsatte, men om en skärm verkar fast avslutar du och öppnar den igen.
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = Databasen var skadad, så Kaeri startade en ny. Den gamla filen sparas på { $path }. Dina trackers hämtar tillbaka det de har när synken körs igen.
+notice-database-set-aside = Databasen var skadad, så Kaeri startade en ny. Den gamla filen sparas på { $path }. Det dina trackers har kommer tillbaka när synken körs igen.
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = Kaeri kunde inte skapa mappen { $path }. Kontrollera att disken har plats och att mappen går att skriva i, och försök igen. { $reason }
@@ -1357,7 +1357,7 @@ config-reset-failed = Kaeri kunde inte flytta undan { $path } för att återstä
 start-failed-database = Kaeri kunde inte öppna sin databas på { $path }. Om en annan app från Kaeri är öppen i den här mappen avslutar du den och försöker igen. { $reason }
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = Kaeri kunde inte skapa sin nätverksanslutning med nätverksinställningarna i config.toml. { $reason }
+start-failed-network = Kaeri kunde inte ansluta med nätverksinställningarna i config.toml. Kontrollera dem och försök igen. { $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = Kaeri kunde inte starta. Avsluta och öppna den igen. { $reason }
@@ -1391,10 +1391,10 @@ notice-surprise-empty-filters = Inga titlar matchar de här filtren.
 notice-surprise-empty-planning = Planerar är tom.
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = Offline. Slumpval från sökningen kräver AniList.
+notice-surprise-offline = Du är offline. Överraska mig behöver AniList för att välja en titel.
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = Det gick inte att välja en titel just nu. Försök igen om en stund.
+notice-surprise-failed = Det gick inte att nå AniList för att välja en titel. Försök igen om en stund.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Redigera proxy
@@ -1514,7 +1514,7 @@ party-members = Deltagare
 party-choose-a-source = Välj en källa
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = Ingen källa listar avsnitt { $episode }. Källor kommer från tillägg som en tilläggsbutik lägger till.
+party-sources-none-listed = Ingen källa listar avsnitt { $episode }. Källor kommer från tillägg, som du lägger till från en tilläggsbutik.
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
@@ -1613,10 +1613,10 @@ settings-caption-sample = Vägen vid lyktan fortsätter förbi den sista byn.
 settings-caption-note = Vanlig textning ser ut så här, på { $language } när ett avsnitt har den. Formaterad textning behåller sitt eget utseende.
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = En avisering när ett avsnitt av en serie på din lista över det du tittar på släpps, vid den tid { $tracker } anger. Seriens egen inställning går först.
+settings-notify-note-on = Du får en avisering när ett avsnitt av en serie på din lista Tittar på kommer ut, vid den tid { $tracker } anger. Seriens egen inställning går före den här.
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = Av. Bara serier som är påslagna i sina egna inställningar aviserar.
+settings-notify-note-off = Av. Bara serier som du har slagit på i deras egna inställningar skickar aviseringar.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri fungerar utan konto. Din tittarhistorik stannar på den här datorn när du loggar ut.
@@ -1692,7 +1692,7 @@ controller-help-buttons = Knappar på handkontrollen
 settings-note-cast-tvs-computer = De visas under Chromecast i Spela på TV. Den här datorn skickar avsnittet till dem.
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = Låter en TV med inbyggd Chromecast spela torrents. Den här datorn skickar avsnittet så länge det spelas.
+settings-note-torrents-while-casting-computer = När det här är på kan en TV med inbyggd Chromecast spela torrents. Den här datorn skickar avsnittet så länge det spelas.
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = Öppna tilläggsbutiker
@@ -1867,7 +1867,7 @@ stores-owner-needs-connection = tilläggsbutik behöver en anslutning
 stores-owner-needs-connection-detail = Försök igen när den här enheten är online igen.
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = För att skapa en länk behövs en anslutning till tilläggsbutik.
+stores-owner-link-offline = Det går inte att skapa en länk medan den här enheten är offline.
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = Skicka länken. Den fungerar en gång, till { $until }.
@@ -1876,7 +1876,7 @@ stores-send-link-until = Skicka länken. Den fungerar en gång, till { $until }.
 stores-open-on-detail = De går med utan namn. Stänger du av det upphör länken. Slår du på det igen skapas en ny.
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = Bara personer du bjuder in kan gå med. När det är på kan vem som helst med länken gå med, utan namn.
+stores-open-off-detail = Bara personer du bjuder in kan gå med. Slår du på det kan alla med länken gå med, utan namn.
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = Inga namn sparas.
@@ -1900,7 +1900,7 @@ stores-publish-none-hint = Ett tillägg du bygger eller installerar visas här.
 stores-not-published = Inte i tilläggsbutik än
 
 # Line under a plugin in the publish dialog that the store has in another version.
-stores-store-offers = tilläggsbutik har { $version }
+stores-store-offers = Tilläggsbutiken har { $version }
 
 # Line under a plugin in the publish dialog whose version the store already has.
 stores-published-current = Uppdaterad i tilläggsbutik
@@ -1912,7 +1912,7 @@ stores-published-state = Publicerad
 stores-publish-label = Publicera { $name } { $version }
 
 # Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
-rkey-lock-linux = Du kan se den igen i Inställningar, Enheter, efter ditt kontolösenord.
+rkey-lock-linux = Du kan se den igen i Inställningar, Enheter, när du har angett ditt kontolösenord.
 
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = Visa återställningsnyckeln för Kaeri
@@ -2073,7 +2073,7 @@ library-row-summary-linux =
 library-page-watching-linux = Bevakas för ändringar
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Kontrolleras igen när Kaeri startar
+library-page-no-watch-linux = Kontrolleras efter ändringar när Kaeri startar
 
 # Heading over the matched series.
 library-matched-linux = Matchade
@@ -2239,7 +2239,7 @@ title-no-seasons = Inga kopplade säsonger finns för den här titeln.
 title-pin-off-page = Öppna titelsidan för att välja en källa för den.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = Inga källor är registrerade än. Försök igen om en stund.
+title-no-sources-yet = Källorna laddas fortfarande. Försök igen om en stund.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = Din liststatus sparas hos en tracker, och ingen är inloggad. Använd :accounts för att logga in på en.
@@ -2413,7 +2413,7 @@ episodes-empty-none-listed = Inga avsnitt listade
 episodes-empty-none-listed-hint = källan listade inga avsnitt för den här titeln. Tryck { $search } för att söka efter rätt matchning, eller { $pick } för att välja en annan källa.
 
 # Toast when an episode has no { -release } to pick from.
-episodes-no-releases = Det finns inga utgåvor att välja mellan för det här avsnittet.
+episodes-no-releases = Det här avsnittet har inga utgåvor att välja mellan.
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 episodes-add-source-to-download = Lägg till en källa innan du laddar ner. Tryck { $key } för att öppna skärmen för Källor.
@@ -2913,19 +2913,19 @@ keys-where-elsewhere = på en annan skärm
 keys-where-surprise = i Sök under bläddring och i Planerar
 
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
-keys-unbound = “{ $action }” i kommandopaletten
+keys-unbound = ”{ $action }” i kommandopaletten
 
 # Config problem shown at start-up: a [keys] entry names an action that does not exist. The action is the name as typed.
-keys-error-unknown-action = Åtgärden “{ $action }” finns inte.
+keys-error-unknown-action = Okänd åtgärd ”{ $action }”.
 
 # Config problem shown at start-up: a [keys] entry has a key that can't be parsed.
-keys-error-bad-key = Det gick inte att läsa tangenten “{ $key }” för { $action }.
+keys-error-bad-key = Det går inte att läsa tangenten ”{ $key }” för { $action }.
 
 # Config problem shown at start-up: two [keys] entries ask for the same key. Both names are action names as typed.
-keys-error-key-twice = “{ $key }” är tilldelad både { $first } och { $second }.
+keys-error-key-twice = ”{ $key }” är tilldelad både { $first } och { $second }.
 
 # Config problem shown at start-up: a [keys] entry asks for a key another action keeps.
-keys-error-key-taken = “{ $key }” för { $action } används redan av { $holder }.
+keys-error-key-taken = ”{ $key }” för { $action } används redan av { $holder }.
 
 # Label of the one help row that stands for every section jump key.
 keys-help-jump-section = Gå till sektion
@@ -3078,7 +3078,7 @@ downloads-column-progress = Förlopp
 downloads-empty-heading = Inget i kö
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = Tryck { $key } på en titel eller ett avsnitt för att ladda ner offline.
+downloads-empty-hint = Tryck { $key } på en titel eller ett avsnitt för att ladda ner det.
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = Avsn. { $episode }
@@ -3260,16 +3260,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = { $queued } i kö, { $held } väntar på id-koppling
+accounts-row-queued-held = { $queued } i kö, { $held } väntar på matchning
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = Behåll min
+accounts-conflict-keep-mine = Använd lokal
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = Behåll deras
+accounts-conflict-keep-theirs = Använd tracker
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = { $title }  ·  { $field }: min { $local } / deras { $remote }
+accounts-conflict-row = { $title }  ·  { $field }: lokal { $local } / tracker { $remote }
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = Bibliotek
@@ -3302,7 +3302,7 @@ lists-empty-type-to-search = Skriv för att söka
 lists-empty-browse-filtered = Tryck ↵ för att bläddra med de här filtren.
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
-lists-empty-browse-popular = Tryck ↵ för att bläddra bland de mest populära.
+lists-empty-browse-popular = Tryck ↵ för att bläddra bland de mest populära titlarna.
 
 # Heading when a search or a browse found nothing.
 lists-empty-no-matches = Inga träffar
@@ -3970,7 +3970,7 @@ settings-label-episode-discussions = Avsnittsdiskussioner
 settings-label-comment-images = Läs in bilder i kommentarer
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = Kalendern visar bara min lista
+settings-label-calendar-mine = Kalendern visar bara din lista
 
 # Note under the titles row.
 settings-note-titles = AniLists val följer ditt AniList-konto och är engelska när du är utloggad.
@@ -4027,13 +4027,13 @@ settings-note-update-check = En cachad förfrågan om dagen, görs vid start.
 settings-note-presence = Gäller från nästa avsnitt.
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = Kräver ett klient-ID. Registrera en app på discord.com/developers.
+settings-note-presence-needs-client = Ange ett klient-ID först. Registrera en app på discord.com/developers för att få ett.
 
 # Note under the presence title row. The quoted text is what Discord shows.
-settings-note-presence-title = Av visar “Tittar på anime” utan att nämna serien.
+settings-note-presence-title = Av visar ”Tittar på anime” utan att nämna serien.
 
 # Note under the rich presence row.
-settings-note-presence-rich = Lägger till omslag, en förloppsindikator och en AniList-länk. Kräver att titeln visas.
+settings-note-presence-rich = Lägger till omslaget, en förloppsindikator och en AniList-länk, så länge titeln visas.
 
 # Note under the torrent playback row.
 settings-note-torrents = Av som standard. Gäller direkt.
@@ -4190,13 +4190,13 @@ stores-footer-update-hosts = Uppdateringen vill också kontakta { $hosts }
 stores-footer-may-contact = Får kontakta { $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = En engångslänk som ansluter en annan av dina datorer under ditt namn
+stores-footer-link-device = En engångslänk som ansluter en annan av dina enheter som du
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = En engångslänk för någon ny
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = Vilka som har anslutit och hur du tar bort åtkomst
+stores-footer-members = Se vilka som har anslutit och ta bort någons åtkomst
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = ↵ Släpp bara in personer du bjuder in och stäng länken
@@ -4211,7 +4211,7 @@ stores-footer-publish = Erbjud ett tillägg från tilläggsmappen på den här e
 stores-footer-admin = Hantera medlemmar, inbjudningar och tillägg i webbläsaren
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = Tillägg som installerats härifrån finns kvar på den här enheten och uppdateras inte längre.
+stores-footer-leave = Tillägg som installerats härifrån finns kvar på den här enheten och slutar uppdateras
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = Alla med länken
@@ -4385,7 +4385,7 @@ stores-footer-remove-anonymous = ↵ Ta bort den här enhetn, känd endast via n
 stores-footer-remove-all-anonymous = ↵ Ta bort alla enheter som anslöt med länken
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = Kopierad till urklipp där terminalen tillåter det, annars markera den för att kopiera.
+stores-link-copied = Kopierad, om terminalen tillåter det. Annars markerar du länken för att kopiera den.
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = Markera den för att kopiera.
@@ -4458,7 +4458,7 @@ stores-key-matches-invite = { $fingerprint }  (stämmer med inbjudan)
 stores-join-open = Alla med länken kan ansluta.
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = Du ansluter utan namn, och en annan enhet ansluter med samma länk.
+stores-join-anonymous = Du ansluter utan namn. Vilken annan enhet som helst kan ansluta med samma länk.
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = Redan ansluten. Om du ansluter igen får den här enhetn en ny token.
@@ -4467,7 +4467,7 @@ stores-join-already = Redan ansluten. Om du ansluter igen får den här enhetn e
 stores-join-device-note = Ägaren till butikn ser det här namnet. Skriv för att ändra det.
 
 # Lines of the leave confirmation.
-stores-leave-plugins = Tillägg som installerats härifrån finns kvar på den här enheten och uppdateras inte längre.
+stores-leave-plugins = Tillägg som installerats härifrån finns kvar på den här enheten och slutar uppdateras.
 
 # Lines of the leave confirmation.
 stores-leave-revoked = Åtkomsten för den här enhetn till butikn är återkallad.
@@ -4582,7 +4582,7 @@ sync-tui-device-never = Inte synkad än
 sync-tui-profile-in-use = Används
 
 # The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
-sync-tui-browser-line = Din webbläsare öppnade sidan för { $service }. Tillåt åtkomst där, så sköter Kaeri resten själv.
+sync-tui-browser-line = Din webbläsare öppnade sidan för { $service }. Tillåt åtkomst där, så fortsätter Kaeri av sig själv.
 
 # Under Open the page again: the page's address follows on the next line, for a browser that did not open.
 sync-tui-browser-address = Eller gå till den här adressen själv:
@@ -4681,7 +4681,7 @@ party-no-source-still-in = { $reason } Du är kvar i watch party.
 status-reloading-sources = Laddar om källor…
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = { $name } är vald för den här titeln men går inte att använda, så de andra källor används.
+pin-unavailable = { $name } är vald för den här titeln men är inte tillgänglig. Provar de andra källorna.
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Tillsammans
@@ -4810,13 +4810,13 @@ settings-group-crashes = Kraschrapporter
 settings-crash-save = Spara kraschrapporter på den här enheten
 
 # Line under that switch.
-settings-crash-save-detail = När det här är på sparar Kaeri en kort logg över varje krasch på den här enheten, utan titlar, adresser och namn, så att du kan lägga till den i Rapportera ett fel. Inget skickas av sig självt.
+settings-crash-save-detail = Kaeri sparar en kort logg över varje krasch på den här enheten för Rapportera ett fel, utan titlar, adresser och namn. Inget skickas av sig självt.
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = Fråga efter en krasch
 
 # Line under that switch.
-settings-crash-ask-detail = Visar en notis vid starten efter en krasch, med Rapportera…
+settings-crash-ask-detail = Kaeri visar en notis med Rapportera… när den öppnas igen.
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = Sparat av { $system }
@@ -4846,7 +4846,7 @@ settings-crash-delete = Ta bort
 settings-crash-delete-all = Ta bort alla
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = Kraschrapporter stannar på den här enheten. Kaeri skickar inget av sig självt. En rapport lämnar enheten först när du öppnar den på GitHub från Rapportera ett fel. Rapporter tas bort efter 30 dagar.
+settings-crash-footnote = Kraschrapporter stannar på den här enheten, och Kaeri skickar inget av sig självt. En rapport skickas bara när du öppnar den på GitHub från Rapportera ett fel. Rapporter tas bort efter 30 dagar.
 
 # Button that shows the week before.
 calendar-previous-week = Föregående vecka
@@ -4972,13 +4972,13 @@ cast-tvs-note-iphone = De visas under Chromecast i Spela på TV. Den här iPhone
 cast-tvs-note-ipad = De visas under Chromecast i Spela på TV. Den här iPaden skickar avsnittet till dem.
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Låter en TV med inbyggd Chromecast spela torrents. Den här Macen skickar avsnittet så länge det spelas.
+cast-torrents-note-mac = Då kan en TV med inbyggd Chromecast spela torrents. Den här Macen skickar avsnittet så länge det spelas.
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Låter en TV med inbyggd Chromecast spela torrents. Den här iPhonen skickar avsnittet så länge det spelas.
+cast-torrents-note-iphone = Då kan en TV med inbyggd Chromecast spela torrents. Den här iPhonen skickar avsnittet så länge det spelas.
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Låter en TV med inbyggd Chromecast spela torrents. Den här iPaden skickar avsnittet så länge det spelas.
+cast-torrents-note-ipad = Då kan en TV med inbyggd Chromecast spela torrents. Den här iPaden skickar avsnittet så länge det spelas.
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = Nästa · spelas om { $seconds } s
@@ -5715,7 +5715,7 @@ downloads-delete-detail = Filen tas bort från den här enheten.
 downloads-delete-one-title = Ta bort nedladdningen
 
 # Line under it: what you lose.
-downloads-delete-one-detail = Den spelas bara upp igen med en anslutning, eller när du laddar ner den på nytt.
+downloads-delete-one-detail = Efter det här behöver avsnittet en anslutning för att spelas, om du inte laddar ner det igen.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = Ta bort sedda nedladdningar
@@ -5727,7 +5727,7 @@ downloads-seeding-title = Delning
 downloads-seeding-after-watching = Delning efter visning
 
 # Line under the seeding heading.
-downloads-seeding-note = Sedda avsnitt delas tillbaka medan Kaeri är öppen, tills kvoten eller tidsgränsen som satts i inställningarna under Källor nås.
+downloads-seeding-note = Sedda avsnitt delas tillbaka medan Kaeri är öppen. Delningen slutar vid den kvot eller tidsgräns du anger i Inställningar, under Källor.
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = När fönstret stängs med pågående nedladdningar
@@ -5806,10 +5806,10 @@ episode-download-failed = Det gick inte att ladda ner avsnitt { $episode }. För
 first-other-title = Använder du redan Kaeri på en annan enhet?
 
 # Under the title.
-first-other-line = Parkoppla med den, så får denna enhet dina källor, trackers och din historik. Stegen efter detta är då klara.
+first-other-line = Parkoppla med den, så får den här enheten dina källor, trackers och din historik, och resten av konfigurationen görs åt dig.
 
 # Line under the pair row.
-first-other-pair-line = Visar en kod att skriva in på en annan enhet. Båda behöver samma Wi-Fi.
+first-other-pair-line = Du får en kod att skriva in på den enheten. Båda behöver samma Wi-Fi.
 
 # Row that restores from a sync folder.
 first-other-restore = Återställ från en molnmapp
@@ -5848,13 +5848,13 @@ first-join-server = Lägg till { $host }
 first-join-server-line = { $kind } · loggar in med nyckeln från { $device }, sparad i { $store }
 
 # Note under the list.
-first-join-folders = Mappar stannar på { $device }. Lägg till egna mappar för denna enhet i Dina källor.
+first-join-folders = Mappar stannar på { $device }. Lägg till den här enhetens egna mappar i Dina källor.
 
 # Note when the setup answered the remaining pages.
 first-join-steps-done = Listor och källor är klara, så första starten slutar här. Du kan ändra dem i Inställningar.
 
 # Row error when a plugin store refused this device.
-first-join-store-refused = { $store } släppte inte in denna enhet. { $owner } kan skicka en inbjudan till dig.
+first-join-store-refused = { $store } släppte inte in den här enheten. { $owner } kan skicka en inbjudan till dig.
 
 # Notice on Home, for 4 seconds.
 first-join-syncing = Synkar med { $device }
@@ -5924,7 +5924,7 @@ home-end-signed-out = Logga in på AniList för att hämta din lista och Planeri
 home-sign-in = Logga in på AniList
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Lägg till en källa för att spela från Hem. Tilläggsbutiker har några att välja bland.
+home-end-no-sources = Lägg till en källa för att spela från Hem. Tillägg kommer från Tilläggsbutiker.
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = Finns inte i dina källor
@@ -6362,7 +6362,7 @@ library-picker-title = Välj en mapp med dina avsnitt.
 library-remove-detail = Dina filer ligger kvar där de är.
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = Kunde inte fråga AniList. Det prövas igen vid en ny genomsökning.
+library-reason-offline = Det gick inte att nå AniList. Ett nytt försök görs vid kommande genomsökning.
 
 # Button that opens the match picker for a group.
 library-choose-match = Välj matchning
@@ -6395,7 +6395,7 @@ licensed-body = Kaeri kan öppna titlar i streamingtjänster du betalar för. De
 licensed-region = Region
 
 # Line under the region menu.
-licensed-region-line = Döljer länkar som AniList markerat för andra länder. De flesta länkar anger inget land, så välj även dina tjänster.
+licensed-region-line = Länkar som AniList markerat för andra länder döljs. De flesta länkar anger inget land, så välj även dina tjänster.
 
 # Heading over the services the viewer pays for.
 licensed-yours = Dina tjänster
@@ -6839,7 +6839,7 @@ onboarding-own-heading = Har du egna media?
 onboarding-invite-heading = Har du en inbjudningslänk?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Tillägg kommer från tilläggsbutiker. En tilläggsbutik är signerad och ger varje enhet sin egen token, så du går med via en inbjudningslänk från ägaren.
+onboarding-where-stores = Tillägg kommer från tilläggsbutiker. Var och en är signerad och ger varje enhet sin egen token, och därför går du med via en inbjudningslänk från ägaren.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Prova direkt
@@ -6881,7 +6881,7 @@ party-leave = Lämna watch party
 party-leaving = Lämnar…
 
 # Label of the button that marks you as ready.
-party-ready-action = Jag är redo
+party-ready-action = Redo att titta
 
 # Button that copies the link to invite someone.
 party-copy-invite = Kopiera inbjudningslänk
@@ -6896,7 +6896,7 @@ party-leave-and-close = Lämna och stäng
 party-not-now = Inte nu
 
 # Line while the form fetches its suggestions.
-party-getting-ready = Förbereder…
+party-getting-ready = Laddar förslag…
 
 # Label of the server field.
 party-server = Server
@@ -6929,7 +6929,7 @@ party-server-public = En publik server som drivs av { $operator }, inte av Kaeri
 party-server-suggest = Ingen egen server? { $server } är en publik server, driven av { $operator }.
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = En server som personen som bjöd in dig valde. Kaeri driver den inte.
+party-server-invited = Personen som bjöd in dig valde den här servern. Kaeri driver den inte.
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = Skriv servern som en värd och en port, till exempel party.example:8999.
@@ -7140,7 +7140,7 @@ together-recent = Senaste rum
 together-recent-row = Avsnitt { $episode } · med { $names } · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = Rum du går med i visas här, de tio senaste.
+together-recent-empty = De tio senaste rummen du går med i visas här.
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = Gå med igen
@@ -7225,7 +7225,7 @@ party-member-finding = Hittar en källa
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = Tittar från { $time }
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = Redo
 
 # Heading of the invite block in the lobby.
@@ -7443,7 +7443,7 @@ party-chat-show = Visa chatten
 settings-hide-chat = Dölj chatten i watch partyn
 
 # Line under that switch.
-settings-hide-chat-line = Rader, reaktioner och deras markeringar i sökfältet hålls borta från videon, och fältet försvinner. Personlistan visar fortfarande vem som är i rummet.
+settings-hide-chat-line = Chattrader, reaktioner och deras markeringar på tidslinjen hålls borta från videon, och chattfältet försvinner. Personlistan visar fortfarande vem som är i rummet.
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = Tysta { $name }
@@ -8047,10 +8047,10 @@ player-load-audio-file = Läs in ljudfil…
 player-file-picker-failed = Det gick inte att öppna filväljaren. Försök igen.
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = Det gick inte att läsa in undertextfilen. Kontrollera att det är en undertextfil.
+player-subtitle-file-failed = Det gick inte att läsa in filen som undertexter. Välj en undertextfil, till exempel .srt eller .ass.
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = Det gick inte att läsa in ljudfilen. Kontrollera att det är en ljudfil.
+player-audio-file-failed = Det gick inte att läsa in filen som ljud. Välj en ljudfil, till exempel .mka eller .flac.
 
 # Name of a track that has no name or language.
 player-track-unnamed = Namnlöst spår
@@ -8268,7 +8268,7 @@ reader-divider-facts-source = { $facts } · från { $source }
 onboarding-read-demo = Läs demon
 
 # Under the first run's demo heading when the device is for reading.
-onboarding-demo-books-detail = Demon innehåller en kort tecknad serie och en kort novell som upphovspersonerna delar under Creative Commons.
+onboarding-demo-books-detail = En kort tecknad serie och en kort berättelse, som upphovspersonerna delar under Creative Commons.
 
 # Under the first run's demo heading when the device is for both.
 onboarding-demo-both-detail = Ett kort avsnitt och en kort tecknad serie, delade av upphovspersonerna under Creative Commons.
@@ -8305,7 +8305,7 @@ search-demo-reads = Demo · Läsbar nu
 search-demo-only-books = Bara demon är på. Andra titlar visas när du lägger till en källa.
 
 # Title of the card after the demo's last page.
-reader-demo-end = Det här är slutet på demon
+reader-demo-end = Det var slutet på demon
 
 # Line under it.
 reader-demo-end-line = För att läsa dina egna böcker, lägg till en mapp, en server eller en tilläggsbutik.
@@ -8901,7 +8901,7 @@ book-sources-keep = Behåll omatchade
 book-sources-find = Hitta
 
 # Footnote of the Check matches sheet.
-book-sources-unmatched-note = Omatchade serier läses fortfarande från mappen. De har inget förlopp hos någon tracker förrän de matchats.
+book-sources-unmatched-note = Du kan fortfarande läsa omatchade serier från mappen. De får inget förlopp hos någon tracker förrän de matchats.
 
 # Accessibility label of the control that sets Shows or Reading in the Library and Search.
 library-scope-label = Serier eller Läsning
@@ -9067,13 +9067,13 @@ onboarding-lists-line-both = Kaeri håller ditt läsande och tittande i synk med
 onboarding-lists-anilist-line = Listor, förlopp och förslag
 
 # Under AniList on the first-run page after Watch: the other trackers, for later.
-onboarding-lists-later-watch = MyAnimeList, Kitsu, Simkl och Trakt kan läggas till senare i Inställningar, under Konton.
+onboarding-lists-later-watch = Du kan lägga till MyAnimeList, Kitsu, Simkl och Trakt senare i Inställningar, under Konton.
 
 # Under AniList on the first-run page after Read: the other trackers, for later.
-onboarding-lists-later-read = MyAnimeList, Kitsu och MangaUpdates kan läggas till senare i Inställningar, under Konton.
+onboarding-lists-later-read = Du kan lägga till MyAnimeList, Kitsu och MangaUpdates senare i Inställningar, under Konton.
 
 # Under AniList on the first-run page after Both: the other trackers, for later.
-onboarding-lists-later-both = MyAnimeList, Kitsu, MangaUpdates, Simkl och Trakt kan läggas till senare i Inställningar, under Konton.
+onboarding-lists-later-both = Du kan lägga till MyAnimeList, Kitsu, MangaUpdates, Simkl och Trakt senare i Inställningar, under Konton.
 
 # The first-run page's main button: sign in to the tracker.
 onboarding-connect = Anslut { $tracker }
@@ -9310,10 +9310,10 @@ settings-chapter-notifications-note = Serier på din Läslista
 settings-downloads-finished-note = När alla kapitel som laddas ner är klara
 
 # Under New chapters.
-settings-chapter-notifications-footer = Kapitel har en egen systemkanal, så de kan tystas för sig.
+settings-chapter-notifications-footer = Kapitel har en egen systemkanal, så du kan tysta dem och behålla resten.
 
 # Credit under the trackers with reading on.
-accounts-mangaupdates-credit = MangaUpdates nås via sitt öppna API.
+accounts-mangaupdates-credit = Kaeri kommunicerar med MangaUpdates via dess öppna API.
 
 # Placeholder of the user name field when signing in to MangaUpdates.
 accounts-username = Användarnamn
@@ -9382,7 +9382,7 @@ seasonal-empty-format-detail = Prova alla format.
 seasonal-filter-in-search = Filtrera i sök
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = Den här säsongen i sök, där varje filter begränsar den
+seasonal-filter-help = Öppnar den här säsongen i Sök, där alla filter fungerar
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = Popularitet
@@ -9409,16 +9409,16 @@ search-placeholder = Sök titlar
 search-clear = Rensa sökningen
 
 # Row under the field while a search runs. The query is what the person typed.
-search-searching = Söker efter “{ $query }”
+search-searching = Söker efter ”{ $query }”
 
 # Heading over the results of a search.
-search-results-for = Resultat för “{ $query }”
+search-results-for = Resultat för ”{ $query }”
 
 # Heading over the titles shown when nothing was typed.
 search-browse = Bläddra
 
 # Title of the state when a search finds nothing.
-search-nothing-found = Inget hittades för “{ $query }”
+search-nothing-found = Inget hittades för ”{ $query }”
 
 # Line under the title when a search finds nothing.
 search-nothing-found-detail = Kontrollera stavningen, eller prova den engelska eller japanska titeln.
@@ -9427,7 +9427,7 @@ search-nothing-found-detail = Kontrollera stavningen, eller prova den engelska e
 search-nothing-with-filters = Inget hittades med de här filtren
 
 # Title of the state when a search and its filters leave nothing.
-search-nothing-found-with-filters = Inget hittades för “{ $query }” med de här filtren
+search-nothing-found-with-filters = Inget hittades för ”{ $query }” med de här filtren
 
 # Line under a state that filters emptied.
 search-try-fewer-filters = Prova färre filter.
@@ -9523,7 +9523,7 @@ filter-where-to-watch = Var du kan titta
 filter-licensed-only = Endast licensierade
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = Titlar på min lista
+filter-my-list = Titlar på din lista
 
 # Value of a three-way filter: include the titles.
 filter-show = Visa
@@ -10025,7 +10025,7 @@ servers-error-certificate = { $host } använder ett certifikat som den här enhe
 servers-row-signed-out-here = Utloggad
 
 # Line under it: what signing out does.
-servers-sign-out-line = Avslutar den här enhetens inloggning på servern. Servern och dina nedladdningar förblir som de är.
+servers-sign-out-line = Utloggning avslutar den här enhetens session på servern. Servern och dina nedladdningar förblir som de är.
 
 # Settings group and row title for choosing a language.
 settings-language = Språk
@@ -10344,7 +10344,7 @@ settings-new-episodes = Nya avsnitt
 settings-new-episodes-detail = Serier på din Tittlista
 
 # Line explaining what a notification says.
-settings-notify-detail = En avisering när ett avsnitt av en serie du följer kommer ut: serien och avsnittets nummer, aldrig dess namn. En serie kan stänga av sina egna i sina inställningar.
+settings-notify-detail = Du får en avisering när ett avsnitt av en serie du följer kommer ut. Den anger serien och avsnittets nummer, aldrig avsnittets titel. En serie kan stänga av sina egna aviseringar i sina inställningar.
 
 # Row: the coming-up digest.
 settings-coming-up = Kommer snart · nästa 7 dagar
@@ -10356,7 +10356,7 @@ settings-system-notifications = Aviseringsinställningar
 settings-system-notifications-detail = Ljud, vibration och låsskärmen
 
 # Line under it on Apple.
-settings-system-notifications-apple = Öppnar Systeminställningar, där bannerstil, ljud och märken ställs in.
+settings-system-notifications-apple = Öppnar Systeminställningar, där du ställer in bannerstil, ljud och märken.
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = Av: systemet tillåter inte aviseringar för Kaeri
@@ -10398,7 +10398,7 @@ show-settings-never = Aldrig
 show-settings-subs-remembered = Sparat från ditt senaste avsnitt.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Väljs i spelaren. Följer Inställningar › Uppspelning.
+show-settings-subs-follow = Väljs i spelaren. Fram till dess gäller Inställningar › Uppspelning.
 
 # Row: the source for this show.
 show-settings-source = Källa
@@ -10483,7 +10483,7 @@ settings-upscaling-natural = Naturlig · ArtCNN
 settings-label-hover-cards = Expandera omslag vid hovring
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = Visar ett större kort med trailern när du låter pekaren vila på ett omslag.
+settings-hover-cards-note = Om pekaren vilar på ett omslag öppnas ett större kort med trailern.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Trogen linjeföring och textur, inget omritat.
@@ -10861,7 +10861,7 @@ store-empty-line = Du är medlem, så nya tillägg visas i Tilläggsbutiker när
 store-err-unreachable = Det gick inte att nå { $host }
 
 # Line under it.
-store-err-unreachable-line = Inbjudan ser rätt ut, men ingen butik svarar. Försök igen senare, eller fråga { $owner } om den är igång.
+store-err-unreachable-line = Inbjudan ser rätt ut, men butiken svarar inte. Försök igen senare, eller fråga { $owner } om den är igång.
 
 # Under the reading group: plugins for watching while watching is off here.
 store-other-medium-more =
@@ -11174,10 +11174,10 @@ match-similarity = { $similarity } match
 match-search-field = Sök på { $source }
 
 # While a search of the source runs.
-match-searching = Söker på { $source } efter “{ $query }”
+match-searching = Söker på { $source } efter ”{ $query }”
 
 # A search of the source that found nothing.
-match-search-empty = Inget på { $source } för “{ $query }”.
+match-search-empty = Inget på { $source } för ”{ $query }”.
 
 # Under match-search-empty: what to try.
 match-search-empty-hint = Prova färre ord, eller titeln på ett annat språk.
@@ -11279,7 +11279,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = Når bara Wikimedia Commons: upload.wikimedia.org och commons.wikimedia.org.
+sources-demo-hosts = Demon når bara Wikimedia Commons: upload.wikimedia.org och commons.wikimedia.org.
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = Demon loggar aldrig in någonstans och skriver aldrig till AniList.
@@ -11384,7 +11384,7 @@ stores-access-ended-page = Den här tilläggsbutiken släpper inte in den här e
 stores-no-longer-joined = Den här tilläggsbutiken är inte längre ansluten.
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = Offline: { $reason }. De tillägg nedan är den senaste listan som kontrollerades.
+stores-offline-last-list = Offline: { $reason }. Visar den senaste listan den skickade.
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = Offline. Visar den senaste listan den skickade.
@@ -11489,7 +11489,7 @@ stores-replace-label = Ersätt kopian av { $name } som lades till för hand
 stores-remove-plugin-title = Ta bort { $name }?
 
 # Line under it.
-stores-remove-plugin-detail = Det tas bort från den här enheten. tilläggsbutiken kan installera det igen.
+stores-remove-plugin-detail = Det raderas från den här enheten. Du kan installera det igen från tilläggsbutiken.
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = Kontaktar nu
@@ -11510,7 +11510,7 @@ stores-add-title = Lägg till en tilläggsbutik
 stores-join-detail = Klistra in länken som tilläggsbutikens ägare skickade till dig.
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = Klistra in inbjudningslänken som ägaren till en tilläggsbutik skickade till dig. Du ser vad tilläggsbutiken erbjuder innan något ansluts eller installeras.
+stores-join-detail-desktop = Klistra in inbjudningslänken som ägaren till en tilläggsbutik skickade till dig. Du ser vad tilläggsbutiken har innan du går med eller installerar något.
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = Klistra in länken som tilläggsbutikens ägare skickade till dig. En Kaeri://-inbjudningslänk som öppnas från Meddelanden fyller i det här bladet direkt.
@@ -11552,7 +11552,7 @@ stores-join-installs-nothing = Att gå med installerar inget. Du väljer vilka t
 stores-key-matches = Nyckeln { $key } stämmer med tilläggsbutiken.
 
 # Line when the link is open to anyone.
-stores-anyone-note = Du ansluter utan namn. En annan enhet ansluter med samma länk.
+stores-anyone-note = Du ansluter utan namn. En annan enhet kan ansluta med samma länk.
 
 # Line when the device joined this store already.
 stores-already-joined-note = Den här enheten är redan med i den här tilläggsbutiken.
@@ -11704,7 +11704,7 @@ stores-invite-works-any = Alla som har den här länken kan gå med, till och me
 stores-invite-works-any-forever = Alla som har den här länken kan gå med tills du avbryter den.
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = Gäller en gång, för personen du skickar den till. Till och med { $until }.
+stores-invite-once-until = Gäller en gång, för personen du skickar den till, till och med { $until }.
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = Gäller en gång, för personen du skickar den till, tills du avbryter den.
@@ -11831,7 +11831,7 @@ stores-offers-plugins =
 notice-open-stores = Öppna tilläggsbutiker
 
 # Explainer on the empty plugin stores page.
-stores-what-is = En tilläggsbutik är en liten server som innehåller signerade tillägg och ger varje enhet sin egen token. Den erbjuder källor som tillägg. Kaeri driver inga tilläggsbutiker och listar inga, så du går med via en inbjudningslänk från ägaren.
+stores-what-is = En tilläggsbutik är en liten server som innehåller signerade tillägg och ger varje enhet sin egen token. Dess tillägg lägger till källor. Kaeri driver inga tilläggsbutiker och listar inga, så du går med i en via en inbjudningslänk från ägaren.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Vad är en tilläggsbutik?
@@ -11852,13 +11852,13 @@ stores-qr-warning-device = Skanna den här med den enhet du vill länka. Den gä
 stores-share = Dela…
 
 # Windows and Linux dialog line while the browser is open for a cloud sign-in.
-cloud-browser-line = Din webbläsare öppnade sidan för { $service }. Tillåt åtkomst där, så sköter Kaeri resten själv.
+cloud-browser-line = Din webbläsare öppnade sidan för { $service }. Tillåt åtkomst där, så fortsätter Kaeri av sig själv.
 
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = Logga in på { $service } i webbläsaren
 
 # Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
-cloud-close-carries-on = Du kan stänga det här. Kaeri fortsätter och går vidare till steget efter av sig självt när det är klart.
+cloud-close-carries-on = Du kan stänga det här. Kaeri fortsätter och öppnar följande steg av sig själv när det är klart.
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = datorn
@@ -11969,7 +11969,7 @@ sync-road-nearby-line = Parkoppla med en annan enhet på samma Wi-Fi. Inget spar
 sync-road-cloud = Via en molnmapp
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = En molndisk du redan använder, eller din egen server. Fungerar medan dina enheter är långt ifrån varandra och håller en säkerhetskopia.
+sync-road-cloud-line = En molndisk du redan använder, eller din egen server. Den fungerar medan dina enheter är ifrån varandra och håller en säkerhetskopia.
 
 # Road sheet footer.
 sync-road-later = Du kan lägga till det andra sättet senare. De flesta använder båda.
@@ -12029,7 +12029,7 @@ sync-turn-off-alert-line = Den här { $kind } slutar dela med dina andra enheter
 cloud-group = Molnmapp
 
 # Group footer.
-cloud-foot = Fyller på medan dina enheter är långt ifrån varandra och håller en förseglad säkerhetskopia. Bara dina enheter kan läsa den.
+cloud-foot = Mappen håller dina enheter i takt medan de är ifrån varandra och har en förseglad säkerhetskopia. Bara dina enheter kan läsa den.
 
 # Row when only the nearby road is set.
 cloud-add = Lägg till en molnmapp
@@ -12372,7 +12372,7 @@ profiles-picker = Vem tittar?
 profiles-ask-at-launch = Fråga vem som tittar vid start
 
 # iPad footer.
-profiles-ask-foot = Av som standard. För en iPad som hushållet delar. Kontoraden byter profil när som helst.
+profiles-ask-foot = Av som standard. Slå på det för en iPad som hela hushållet delar. Du kan byta profil från kontoraden när som helst.
 
 # TV Settings.
 profiles-switch = Byt profil
@@ -13156,7 +13156,7 @@ accounts-tokens-keystore = Inloggningstokens sparas på den här enheten, låsta
 accounts-form-title = Logga in på { $tracker }
 
 # Line under the title: where the password goes.
-accounts-form-detail = Ditt lösenord skickas till { $tracker } en gång, för en token som sparas på den här enheten.
+accounts-form-detail = Ditt lösenord skickas till { $tracker } en gång, i utbyte mot en token som sparas på den här enheten.
 
 # Label of the name field.
 accounts-user-or-email = E-post eller användarnamn
@@ -13228,7 +13228,7 @@ accounts-open-on = Öppna på { $tracker }
 accounts-listed-by = Listad av { $tracker }
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = { $tracker } svarade inte.
+accounts-did-not-answer = { $tracker } svarade inte. Försök igen om en stund.
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = { $tracker } har ännu ingen rollista, personal eller rekommendationer för titeln.
@@ -13591,7 +13591,7 @@ updates-saved-replace-plain = Version { $version } sparad i Hämtade filer. Ers�
 updates-why-server = Nedladdningen stoppades: servern nekade den ({ $code }). Försök igen senare.
 
 # The connection broke.
-updates-why-connection = Nedladdningen stoppades: anslutningen bröts.
+updates-why-connection = Nedladdningen stoppades: anslutningen bröts. Försök igen.
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = Nedladdningen kunde inte sparas: { $reason }

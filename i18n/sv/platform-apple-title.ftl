@@ -13,7 +13,7 @@ title-episodes-short = { $count ->
    *[other] { $count } avsnitt
  }
 title-episode-row-unaired = { $title }. { $when }, inte sänt än
-title-all-watched = Alla avsnitt är sedda
+title-all-watched = Du har sett alla avsnitt
 title-no-answer-short = AniList svarade inte.
 title-episodes-all = Alla
 title-episodes-unwatched = Osedda

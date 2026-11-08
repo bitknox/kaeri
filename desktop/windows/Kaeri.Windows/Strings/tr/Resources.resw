@@ -63,7 +63,7 @@
     <value>Başka bir cihaz {name} üzerinde bir şey başlattı, bu yüzden yayınlama durdu.</value>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>Bu cihaz, {name} ile aynı ağda değil ya da VPN üzerinden bağlanıyor. Yayınlamak için ikisinin de aynı ağda olması gerekir.</value>
+    <value>Bu cihaz, {name} ile aynı ağda değil ya da ona VPN üzerinden ulaşıyor. Yayınlamak için ikisini de aynı ağa bağlayın.</value>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name} ile bağlantı koptu, bu yüzden yayınlama durdu.</value>
@@ -375,7 +375,7 @@
     <value>Bu eşleşme tutmadı. Bu kaynak değişmiş olabilir. Eşleşmeyi yeniden seçmeyi deneyin.</value>
   </data>
   <data name="NoticeSourceSearchEmpty" xml:space="preserve">
-    <value>“{query}” için sonuç bulunamadı. Farklı bir arama deneyin.</value>
+    <value>“{query}” için bir şey bulunamadı. Farklı bir arama deneyin.</value>
   </data>
   <data name="MatchRuledOutFormat" xml:space="preserve">
     <value>Farklı biçim</value>
@@ -393,7 +393,7 @@
     <value>Açık değil.</value>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>{source} bu başlık için kullanılacak.</value>
+    <value>Bu başlık artık {source} üzerinden oynatılır.</value>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
     <value>Otomatik kaynak seçimine dönüldü.</value>
@@ -573,13 +573,13 @@
     <value>Bölüm {chapter}, sayfa {page} konumuna geçildi: {device} burada kaldı</value>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>Sağdan sola, algılandı</value>
+    <value>Sağdan sola gibi görünüyor</value>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>Soldan sağa, algılandı</value>
+    <value>Soldan sağa gibi görünüyor</value>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>Uzun şerit, algılandı</value>
+    <value>Uzun şerit gibi görünüyor</value>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
     <value>Çevrimdışısınız. İndirilen bölümler yine de açılır.</value>
@@ -1128,7 +1128,7 @@
     <value>{store} sunucusu daha eski, bu yüzden bağlantıyla kimse katılamaz. Önce güncelleyin.</value>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>{name} kapatıldı. Bölüm ararken atlanır.</value>
+    <value>{name} kapalı. Kaeri bölüm ararken onu atlar.</value>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
     <value>{name} açıldı.</value>
@@ -1137,7 +1137,7 @@
     <value>{id} yüklenmedi. Kaynaklar altında kurulu olduğunu kontrol edin.</value>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>{name} bu başlık için kullanılacak.</value>
+    <value>Bu başlıkta artık {name} kullanılıyor.</value>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Bu seçim kaydedilemedi. {reason}</value>
@@ -1227,10 +1227,10 @@
     <value>Oturum açma için tarayıcı açılamadı. Bir tarayıcının kurulu olup olmadığını denetleyin ve yeniden deneyin. {reason}</value>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>Bunu bekleyen bir oturum açma işlemi yok ({tracker}). Oturum açmayı yeniden başlatın.</value>
+    <value>{tracker} hizmetinden bir oturum açma yanıtı geldi, ama onu bekleyen bir oturum açma yoktu. Oturum açmayı yeniden başlatın.</value>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>Bu oturum açma ({tracker}) bu istekten dönmedi. Oturum açmayı yeniden başlatın.</value>
+    <value>{tracker} hizmetinden gelen oturum açma yanıtı istekle eşleşmiyor. Oturum açmayı yeniden başlatın.</value>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
     <value>Oturum açma ({tracker}) jetonsuz döndü. Yeniden deneyin.</value>
@@ -1326,7 +1326,7 @@
     <value>Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.</value>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>Vekil sunucunun adresi denetim için kullanılamıyor.</value>
+    <value>Vekil sunucu denetimi bu adresi kullanamıyor.</value>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Sunucuya ulaşılamadı.</value>
@@ -1350,7 +1350,7 @@
     <value>Kaeri içinde bir sorun oluştu. Uygulama çalışmaya devam etti, ama bir ekran donmuş görünüyorsa çıkıp uygulamayı yeniden açın.</value>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>Veritabanı bozulduğu için Kaeri yenisini başlattı. Eski dosya {path} konumunda saklanıyor. takip hizmetlerinde tutulanlar bir sonraki eşitlemede geri gelir.</value>
+    <value>Veritabanı bozulmuştu, bu yüzden Kaeri yenisini başlattı. Eski dosya {path} konumunda saklanıyor. takip hizmetlerinizde tutulanlar bir sonraki eşitlemede geri gelir.</value>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
     <value>Kaeri {path} klasörünü oluşturamadı. Diskte yer olduğunu ve klasöre yazılabildiğini denetleyin, sonra yeniden deneyin. {reason}</value>
@@ -1365,7 +1365,7 @@
     <value>Kaeri veritabanı dosyasını açamadı ({path}). Bu klasörde başka bir Kaeri uygulaması açıksa onu kapatıp yeniden deneyin. {reason}</value>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Kaeri, config.toml dosyasındaki ağ ayarlarıyla ağ bağlantısını kuramadı. {reason}</value>
+    <value>Kaeri, config.toml dosyasındaki ağ ayarlarıyla bağlanamadı. Ayarları kontrol edip yeniden deneyin. {reason}</value>
   </data>
   <data name="StartFailed" xml:space="preserve">
     <value>Kaeri başlatılamadı. Çıkın ve yeniden açın. {reason}</value>
@@ -1398,10 +1398,10 @@
     <value>Planlama boş.</value>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>Çevrimdışısınız. Arama seçimleri için AniList gerekir.</value>
+    <value>Çevrimdışısınız. Beni şaşırt, başlık seçmek için AniList'e ihtiyaç duyar.</value>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>Şu an bir başlık seçilemedi. Biraz sonra yeniden deneyin.</value>
+    <value>Başlık seçmek için AniList'e ulaşılamadı. Biraz sonra yeniden deneyin.</value>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>İzlemeye devam et</value>
@@ -1635,7 +1635,7 @@
     <value>İndirme sürerken Kaeri, bitene kadar bildirim alanında kalır.</value>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>Kapak, ilerleme çubuğu ve {tracker} üzerindeki dizi bağlantısı. Başlık gösterilmelidir.</value>
+    <value>Kapak, ilerleme çubuğu ve {tracker} üzerindeki dizi bağlantısı. Yalnızca başlık gösterilirken çalışır.</value>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
     <value>Bir TV daha</value>
@@ -1749,7 +1749,7 @@
     <value>Bunlar TV'de oynat bölümünde Chromecast başlığı altında görünür. Bölümü bu bilgisayar gönderir.</value>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Chromecast özellikli bir TV'nin torrent oynatmasını sağlar. Oynattığı sürece bölümü bu bilgisayar gönderir.</value>
+    <value>Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu bilgisayar gönderir.</value>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
     <value>Yeniden başlat</value>
@@ -1767,7 +1767,7 @@
     <value>Ayarlarda ara</value>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>Yüksek, her kaynak içinde bulunan en iyi seçeneği alır ve daha fazla yer kaplar.</value>
+    <value>Daha yüksek, bir kaynak içindeki en iyi seçeneği alır. Daha fazla yer kaplar.</value>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
     <value>Altyazılar, dosya nereye giderse gitsin bölümle birlikte kalır.</value>
@@ -1776,7 +1776,7 @@
     <value>Seed edilmeye açık tutulan bir indirme, indirme klasöründe değil, Kaeri'nin önbelleğinde kalır.</value>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>AniList forum başlığındaki yorumları, izlediğiniz bölümler için okur.</value>
+    <value>Yorumlar, bölümü izledikten sonra AniList forum konusundan gelir.</value>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
     <value>Her görsel, onu barındıran siteden yüklenir ve site IP adresinizi görür.</value>
@@ -1917,7 +1917,7 @@
     <value>Kaeri çalışmayı durdurdu</value>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>Uygulamanın işi yapan kısmı durdu. Sürdürmek için Kaeri uygulamasını yeniden açın.</value>
+    <value>İndirmeler ve eşitleme de onunla birlikte durdu. Kaldığınız yerden sürdürmek için Kaeri uygulamasını yeniden açın.</value>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
     <value>Yeniden aç</value>
@@ -2022,7 +2022,7 @@
     <value>{name} açık</value>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>Bölümler için artık denenmez. Bunu eklenti mağazasından yeniden kurabilirsiniz.</value>
+    <value>Kaeri artık bölümler için bunu denemez. Onu kendi eklenti mağazasından yeniden yükleyebilirsiniz.</value>
   </data>
   <data name="StoresUpdatesCount_one" xml:space="preserve">
     <value>Bir güncelleme var</value>
@@ -2217,13 +2217,13 @@
     <value>Çökme raporlarını bu cihaz üzerinde sakla</value>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>Bu açıkken Kaeri, her çökmenin kısa bir kaydını bu cihaz üzerinde tutar. Başlıklar, adresler ve adlar kaldırılır; böylece kaydı Hata bildir'e ekleyebilirsiniz. Kendiliğinden hiçbir şey gönderilmez.</value>
+    <value>Kaeri, Hata bildir için her çökmenin kısa bir kaydını bu cihazda tutar; başlıklar, adresler ve adlar çıkarılır. Kendiliğinden hiçbir şey gönderilmez.</value>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
     <value>Çökmeden sonra sor</value>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>Bir sonraki açılışta Bildir… ile bir bildirim gösterir.</value>
+    <value>Kaeri bir sonraki açılışında Bildir… düğmesiyle bir uyarı gösterir.</value>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
     <value>{system} tarafından tutulanlar</value>
@@ -2253,7 +2253,7 @@
     <value>Tümünü sil</value>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>Çökme raporları bu cihaz üzerinde kalır. Kaeri kendiliğinden hiçbir şey göndermez. Bir rapor yalnızca Hata bildir'den GitHub'da açtığında çıkar. Raporlar 30 gün sonra silinir.</value>
+    <value>Çökme raporları bu cihazda kalır ve Kaeri kendiliğinden hiçbir şey göndermez. Bir rapor yalnızca Hata bildir'den GitHub'da açtığınızda dışarı çıkar. Raporlar 30 gün sonra silinir.</value>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
     <value>Önceki hafta</value>
@@ -2379,13 +2379,13 @@
     <value>Chromecast bölümünde, TV'de oynat altında görünürler. Bölümü bu iPad gönderir.</value>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Chromecast özellikli TV'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu Mac gönderir.</value>
+    <value>Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu Mac gönderir.</value>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Chromecast özellikli TV'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu iPhone gönderir.</value>
+    <value>Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPhone gönderir.</value>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Chromecast özellikli TV'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu iPad gönderir.</value>
+    <value>Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPad gönderir.</value>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
     <value>Sıradaki · {seconds} sn içinde oynatılır</value>
@@ -3114,7 +3114,7 @@
     <value>İndirmeyi sil</value>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>Yalnızca bağlantıyla ya da yeniden indirdiğinizde tekrar oynatılır.</value>
+    <value>Bundan sonra bölümü yeniden indirmezseniz oynatmak için bağlantı gerekir.</value>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
     <value>İzlenen indirmeleri sil</value>
@@ -3126,7 +3126,7 @@
     <value>İzledikten sonra paylaşım</value>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>İzlenen bölümler, Kaeri açıkken ve Kaynaklar altında belirlenen oran ya da süre sınırına ulaşılana kadar paylaşılır.</value>
+    <value>İzlenen bölümler Kaeri açıkken geri paylaşılır. Paylaşım, Ayarlar'da Kaynaklar altında belirlediğiniz oran ya da süre sınırında durur.</value>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
     <value>Pencere kapanırken indirmeler sürüyorsa</value>
@@ -3204,10 +3204,10 @@
     <value>Başka bir cihazda Kaeri kullanıyor musunuz?</value>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>Eşleştirirseniz kaynaklar, takip hizmetleri ve geçmiş bu cihaza gelir. Bundan sonraki adımlar da tamamlanmış olur.</value>
+    <value>Onunla eşleştirin; bu cihaz kaynaklarınızı, takip hizmetlerinizi ve geçmişinizi alır, kurulumun geri kalanı da sizin için yapılır.</value>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>Diğer cihazda girilecek bir kod gösterir. İkisi de aynı Wi-Fi ağında olmalı.</value>
+    <value>O cihazda girmeniz için bir kod alırsınız. İkisi de aynı Wi-Fi ağında olmalı.</value>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
     <value>Bulut klasöründen geri yükle</value>
@@ -3246,13 +3246,13 @@
     <value>{kind} · {device} üzerindeki anahtarla giriş yapar, {store} içinde saklanır</value>
   </data>
   <data name="FirstJoinFolders" xml:space="preserve">
-    <value>Klasörler {device} üzerinde kalır. Bu cihazın kendi klasörlerini “kaynaklar” bölümünden ekleyin.</value>
+    <value>Klasörler {device} üzerinde kalır. Bu cihazın kendi klasörlerini “Kaynaklarınız” bölümünde ekleyin.</value>
   </data>
   <data name="FirstJoinStepsDone" xml:space="preserve">
     <value>Listeler ve kaynaklar ayarlandı, bu yüzden ilk çalıştırma burada biter. Bunları Ayarlar’dan değiştirebilirsiniz.</value>
   </data>
   <data name="FirstJoinStoreRefused" xml:space="preserve">
-    <value>{store} bu cihaza izin vermedi. {owner} size davet gönderebilir.</value>
+    <value>{store} bu cihazı içeri almadı. {owner} size bir davet gönderebilir.</value>
   </data>
   <data name="FirstJoinSyncing" xml:space="preserve">
     <value>{device} ile eşitleniyor</value>
@@ -3321,7 +3321,7 @@
     <value>AniList'e giriş yap</value>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>Ana sayfadan oynatmak için bir kaynak ekleyin. Eklenti mağazalarında seçebileceğiniz birkaç tane var.</value>
+    <value>Ana sayfadan oynatmak için bir kaynak ekleyin. Eklentiler, Eklenti mağazalarından gelir.</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>Kaynaklarınızda bulunamadı</value>
@@ -3750,7 +3750,7 @@
     <value>Dosyalarınız olduğu yerde kalır.</value>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>AniList'e sorulamadı. Sonraki taramada yeniden denenir.</value>
+    <value>AniList'e ulaşılamadı. Sonraki tarama yeniden dener.</value>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
     <value>Eşleşmeyi seç</value>
@@ -3783,7 +3783,7 @@
     <value>Bölge</value>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>AniList'in başka ülkeler için işaretlediği bağlantıları gizler. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.</value>
+    <value>AniList'in başka ülkeler için işaretlediği bağlantılar gizlenir. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.</value>
   </data>
   <data name="LicensedYours" xml:space="preserve">
     <value>Hizmetleriniz</value>
@@ -4227,7 +4227,7 @@
     <value>Davet bağlantınız var mı?</value>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Eklentiler, eklenti mağazaları üzerinden gelir. Bir eklenti mağazası imzalıdır ve her cihaz için ayrı bir belirteç verir; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</value>
+    <value>Eklentiler, eklenti mağazaları üzerinden gelir. Her biri imzalıdır ve her cihaza kendi belirtecini verir; bu yüzden sahibinden aldığınız bir davet bağlantısıyla katılırsınız.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Şimdi deneyin</value>
@@ -4269,7 +4269,7 @@
     <value>Ayrılıyor…</value>
   </data>
   <data name="PartyReadyAction" xml:space="preserve">
-    <value>Hazırım</value>
+    <value>İzlemeye hazır</value>
   </data>
   <data name="PartyCopyInvite" xml:space="preserve">
     <value>Davet bağlantısını kopyala</value>
@@ -4284,7 +4284,7 @@
     <value>Şimdi değil</value>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>Hazırlanıyor…</value>
+    <value>Öneriler yükleniyor…</value>
   </data>
   <data name="PartyServer" xml:space="preserve">
     <value>Sunucu</value>
@@ -4317,7 +4317,7 @@
     <value>Kendi sunucunuz yok mu? {server} herkese açık bir sunucudur ve {operator} tarafından işletilir.</value>
   </data>
   <data name="PartyServerInvited" xml:space="preserve">
-    <value>Sizi davet eden kişinin seçtiği bir sunucu. Kaeri bu sunucuyu işletmez.</value>
+    <value>Bu sunucuyu sizi davet eden kişi seçti. Kaeri bu sunucuyu işletmez.</value>
   </data>
   <data name="PartyServerShape" xml:space="preserve">
     <value>Sunucuyu bir ana makine ve bir port olarak yazın, örneğin party.example:8999.</value>
@@ -4527,7 +4527,7 @@
     <value>{episode}. bölüm · {names} ile · {when}</value>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>Katıldığınız odalar burada görünür, son on tanesi.</value>
+    <value>Katıldığınız son on oda burada görünür.</value>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
     <value>Yeniden katıl</value>
@@ -4827,7 +4827,7 @@
     <value>Birlikte izlemeler içinde sohbeti gizle</value>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>Satırlar, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, alan da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.</value>
+    <value>Sohbet satırları, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, sohbet alanı da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.</value>
   </data>
   <data name="PartyMute" xml:space="preserve">
     <value>{name} kişisini sustur</value>
@@ -5451,10 +5451,10 @@
     <value>Dosya seçici açılamadı. Yeniden deneyin.</value>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>Bu altyazı dosyası yüklenemedi. Bunun bir altyazı dosyası olduğunu kontrol edin.</value>
+    <value>Bu dosya altyazı olarak yüklenemedi. .srt ya da .ass gibi bir altyazı dosyası seçin.</value>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>Bu ses dosyası yüklenemedi. Bunun bir ses dosyası olduğunu kontrol edin.</value>
+    <value>Bu dosya ses olarak yüklenemedi. .mka ya da .flac gibi bir ses dosyası seçin.</value>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
     <value>Adsız parça</value>
@@ -5670,7 +5670,7 @@
     <value>Demoyu oku</value>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>Demo, yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir hikâye sunar.</value>
+    <value>Yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir öykü.</value>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
     <value>Yapımcılarının Creative Commons altında paylaştığı kısa bir bölüm ve kısa bir çizgi roman.</value>
@@ -6291,7 +6291,7 @@
     <value>Bul</value>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>Eşleşmeyen seriler yine klasörden okunur. Eşleşene kadar takip hizmeti ilerlemesi olmaz.</value>
+    <value>Eşleşmeyen serileri yine klasörden okuyabilirsiniz. Eşleşene kadar ilerlemeleri takip hizmetine gitmez.</value>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
     <value>Diziler veya Okuma</value>
@@ -6453,13 +6453,13 @@
     <value>Listeler, ilerleme ve öneriler</value>
   </data>
   <data name="OnboardingListsLaterWatch" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, Simkl ve Trakt sonradan Ayarlar'da Hesaplar altından eklenebilir.</value>
+    <value>MyAnimeList, Kitsu, Simkl ve Trakt'ı daha sonra Ayarlar'da Hesaplar altından ekleyebilirsiniz.</value>
   </data>
   <data name="OnboardingListsLaterRead" xml:space="preserve">
-    <value>MyAnimeList, Kitsu ve MangaUpdates sonradan Ayarlar'da Hesaplar altından eklenebilir.</value>
+    <value>MyAnimeList, Kitsu ve MangaUpdates'i daha sonra Ayarlar'da Hesaplar altından ekleyebilirsiniz.</value>
   </data>
   <data name="OnboardingListsLaterBoth" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, MangaUpdates, Simkl ve Trakt sonradan Ayarlar'da Hesaplar altından eklenebilir.</value>
+    <value>MyAnimeList, Kitsu, MangaUpdates, Simkl ve Trakt'ı daha sonra Ayarlar'da Hesaplar altından ekleyebilirsiniz.</value>
   </data>
   <data name="OnboardingConnect" xml:space="preserve">
     <value>{tracker} bağla</value>
@@ -6693,10 +6693,10 @@
     <value>İndirilen tüm bölümler bitince</value>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>Bölümlerin kendi sistem kanalı vardır, bu yüzden ayrıca sessize alınabilir.</value>
+    <value>Bölümlerin kendi sistem kanalı vardır; böylece onları sessize alıp gerisini açık tutabilirsiniz.</value>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>MangaUpdates, herkese açık API'siyle kullanılır.</value>
+    <value>Kaeri, MangaUpdates ile herkese açık API'si üzerinden iletişim kurar.</value>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
     <value>Kullanıcı adı</value>
@@ -6762,7 +6762,7 @@
     <value>Aramada filtrele</value>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>Bu sezon Arama'da. Her filtre sonuçları daraltır.</value>
+    <value>Bu sezonu, her filtrenin çalıştığı Arama'da açar</value>
   </data>
   <data name="SortPopularity" xml:space="preserve">
     <value>Popülerlik</value>
@@ -6903,7 +6903,7 @@
     <value>Yalnızca lisanslı</value>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>Listemdeki başlıklar</value>
+    <value>Listenizdeki başlıklar</value>
   </data>
   <data name="FilterShow" xml:space="preserve">
     <value>Göster</value>
@@ -7398,7 +7398,7 @@
     <value>Oturum kapalı</value>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>Bu cihazın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.</value>
+    <value>Oturumu kapatmak, bu cihazın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.</value>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
     <value>Dil</value>
@@ -7716,7 +7716,7 @@
     <value>İzleme listenizdeki diziler</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>İzlediğiniz bir dizinin yeni bölümü çıktığında tek bildirim: dizi ve bölüm numarası, bölümün adı değil. Bir dizi bunu kendi ayarlarında kapatabilir.</value>
+    <value>Takip ettiğiniz bir dizinin bölümü çıktığında tek bildirim alırsınız. Bildirim diziyi ve bölüm numarasını belirtir, bölümün adını hiçbir zaman belirtmez. Bir dizinin bildirimlerini kendi ayarlarından kapatabilirsiniz.</value>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
     <value>Yaklaşanlar · sonraki 7 gün</value>
@@ -7728,7 +7728,7 @@
     <value>Ses, titreşim ve kilit ekranı</value>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>Sistem Ayarları'nı açar. Afiş stili, ses ve rozetler orada ayarlanır.</value>
+    <value>Afiş stilini, sesi ve rozetleri ayarladığınız Sistem Ayarları'nı açar.</value>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
     <value>Kapalı: sistem Kaeri için bildirimlere izin vermiyor</value>
@@ -7770,7 +7770,7 @@
     <value>Son bölümünüzden hatırlandı.</value>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>Oynatıcıda seçilir. Ayarlar › Oynatma ayarlarını izler.</value>
+    <value>Oynatıcıda seçilir. O zamana kadar Ayarlar › Oynatma geçerlidir.</value>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
     <value>Kaynak</value>
@@ -7854,7 +7854,7 @@
     <value>Üzerine gelince kapağı büyüt</value>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>İmleç bir kapağın üzerinde durunca fragmanlı büyük bir kart gösterilir.</value>
+    <value>İmleç bir kapağın üzerinde durunca fragmanıyla daha büyük bir kart açılır.</value>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
     <value>Çizgiler ve doku olduğu gibi korunur, hiçbir şey yeniden çizilmez.</value>
@@ -8112,7 +8112,7 @@
     <value>{host} bu anahtarı kabul etmedi</value>
   </data>
   <data name="BookServerErrKeyLine" xml:space="preserve">
-    <value>Anahtar, Kavita’da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.</value>
+    <value>Anahtar, Kavita'da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.</value>
   </data>
   <data name="BookServerEmpty" xml:space="preserve">
     <value>{host} bu hesaba hiç seri göstermiyor</value>
@@ -8202,10 +8202,10 @@
     <value>Okuma için hepsini yükle</value>
   </data>
   <data name="StoreInstalled_one" xml:space="preserve">
-    <value>Bir eklenti yüklendi. “kaynaklar” bölümünde.</value>
+    <value>Bir eklenti yüklendi. “Kaynaklarınız” bölümünde.</value>
   </data>
   <data name="StoreInstalled_other" xml:space="preserve">
-    <value>Yüklenen eklentiler: {count}. Bunlar “kaynaklar” bölümünde.</value>
+    <value>{count} eklenti yüklendi. Hepsi “Kaynaklarınız” bölümünde.</value>
   </data>
   <data name="StoreOtherMedium" xml:space="preserve">
     <value>{store} içindeki her eklenti izlemek için</value>
@@ -8220,13 +8220,13 @@
     <value>{store} içinde henüz eklentiler yok</value>
   </data>
   <data name="StoreEmptyLine" xml:space="preserve">
-    <value>Üyesiniz. {owner} yeni eklentiler eklediğinde bunlar “Eklenti mağazaları” içinde görünür.</value>
+    <value>Üyesiniz, bu yüzden {owner} yeni eklentiler eklediğinde bunlar Eklenti mağazaları içinde görünür.</value>
   </data>
   <data name="StoreErrUnreachable" xml:space="preserve">
     <value>{host} adresine ulaşılamadı</value>
   </data>
   <data name="StoreErrUnreachableLine" xml:space="preserve">
-    <value>Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin veya çalışıp çalışmadığını {owner} kişisine sorun.</value>
+    <value>Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin ya da çalışıp çalışmadığını {owner} kişisine sorun.</value>
   </data>
   <data name="StoreOtherMediumMore_one" xml:space="preserve">
     <value>Bir tane daha izlemek için, ama izleme bu cihazda kapalı.</value>
@@ -8235,13 +8235,13 @@
     <value>{count} tane daha izlemek için, ama izleme bu cihazda kapalı.</value>
   </data>
   <data name="StoreTvReadingOnly_one" xml:space="preserve">
-    <value>Bir tane daha okumak için, ama bu TV okuma yapmıyor.</value>
+    <value>Bir tane daha okuma için; bu TV okuma yapmaz.</value>
   </data>
   <data name="StoreTvReadingOnly_other" xml:space="preserve">
-    <value>{count} tane daha okumak için, ama bu TV okuma yapmıyor.</value>
+    <value>{count} tane daha okuma için; bu TV okuma yapmaz.</value>
   </data>
   <data name="StoreTvAllReading" xml:space="preserve">
-    <value>{store} içindeki her eklenti okumak için, ama bu TV okuma yapmıyor.</value>
+    <value>{store} içindeki her eklenti okuma için; bu TV okuma yapmaz.</value>
   </data>
   <data name="StorePluginRow" xml:space="preserve">
     <value>Sürüm {version} · {hosts} ile iletişim kurabilir</value>
@@ -8592,7 +8592,7 @@
     <value>Bir eklenti mağazasına katıl…</value>
   </data>
   <data name="SourcesEmptyBody" xml:space="preserve">
-    <value>Kaynaklar, bölümlerin geldiği yerlerdir: bu cihaz üzerindeki klasörler, medya sunucunuz ve katıldığınız mağazalardan gelen eklentiler.</value>
+    <value>Kaynaklar, bölümlerin geldiği yerlerdir: bu cihazdaki klasörler, medya sunucunuz ve katıldığınız eklenti mağazalarından gelen eklentiler.</value>
   </data>
   <data name="SourcesEmptyMore" xml:space="preserve">
     <value>Ya da {join}.</value>
@@ -8634,7 +8634,7 @@
     <value>OPAP-JP</value>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>Yalnızca Wikimedia Commons'a erişir: upload.wikimedia.org ve commons.wikimedia.org.</value>
+    <value>Demo yalnızca Wikimedia Commons'a erişir: upload.wikimedia.org ve commons.wikimedia.org.</value>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
     <value>Demo hiçbir yerde oturum açmaz ve AniList'e hiçbir şey yazmaz.</value>
@@ -8703,7 +8703,7 @@
     <value>Bu eklenti mağazası sahibi {owner} tarafından işletiliyor ve eklentiler onun tarafından seçildi. Kaeri bunları yapmadı, incelemedi ya da onaylamadı.</value>
   </data>
   <data name="StoresNoPlugins" xml:space="preserve">
-    <value>Bu eklenti mağazası henüz eklentiler sunmuyor.</value>
+    <value>Bu eklenti mağazasında henüz eklentiler yok.</value>
   </data>
   <data name="StoresPlugins" xml:space="preserve">
     <value>Eklentiler</value>
@@ -8739,7 +8739,7 @@
     <value>Bu eklenti mağazası artık katılınmış değil.</value>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>Çevrimdışı: {reason}. Aşağıdaki eklentiler, kontrol edilen son listedir.</value>
+    <value>Çevrimdışı: {reason}. Gönderdiği son liste gösteriliyor.</value>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
     <value>Çevrimdışı. Gönderdiği son liste gösteriliyor.</value>
@@ -8844,7 +8844,7 @@
     <value>{name} kaldırılsın mı?</value>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>Bu cihazdan silinir. Eklenti mağazası onu yeniden yükleyebilir.</value>
+    <value>Bu cihazdan silinir. eklenti mağazasından yeniden yükleyebilirsiniz.</value>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
     <value>Yeni bağlanılanlar</value>
@@ -8865,7 +8865,7 @@
     <value>eklenti mağazasının sahibinin gönderdiği davet bağlantısını yapıştırın.</value>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>eklenti mağazasının sahibinin gönderdiği davet bağlantısını yapıştırın. Hiçbir şey katılmadan ya da yüklenmeden önce eklenti mağazasının sunduklarını görürsünüz.</value>
+    <value>Bir eklenti mağazasının sahibinin size gönderdiği davet bağlantısını yapıştırın. Katılmadan ya da bir şey yüklemeden önce eklenti mağazasının neler sunduğunu görürsünüz.</value>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
     <value>eklenti mağazasının sahibinin gönderdiği bağlantıyı yapıştırın. Mesajlar'dan açılan bir Kaeri:// davet bağlantısı bu sayfayı doğrudan doldurur.</value>
@@ -9063,7 +9063,7 @@
     <value>Bu bağlantıya sahip herkes siz iptal edene kadar katılabilir.</value>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>Gönderdiğiniz kişi için bir kez geçerli. {until} tarihine kadar.</value>
+    <value>Gönderdiğiniz kişi için {until} tarihine kadar bir kez çalışır.</value>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
     <value>Gönderdiğiniz kişi için bir kez geçerli, siz iptal edene kadar.</value>
@@ -9186,7 +9186,7 @@
     <value>eklenti mağazalarını aç</value>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaz için ayrı bir belirteç veren küçük bir sunucudur. kaynaklar eklentiler olarak sunar. Kaeri hiçbir eklenti mağazası işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.</value>
+    <value>Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaza kendi belirtecini veren küçük bir sunucudur. İçindeki eklentiler kaynaklar ekler. Kaeri eklenti mağazaları işletmez ve hiçbirini listelemez; bu yüzden sahibinden aldığınız bir davet bağlantısıyla birine katılırsınız.</value>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>eklenti mağazası nedir?</value>
@@ -9324,7 +9324,7 @@
     <value>Bir bulut klasörü üzerinden</value>
   </data>
   <data name="SyncRoadCloudLine" xml:space="preserve">
-    <value>Zaten kullandığınız bir bulut sürücüsü ya da kendi sunucunuz. cihazlar birbirinden uzaktayken de çalışır ve yedek tutar.</value>
+    <value>Zaten kullandığınız bir bulut sürücüsü ya da kendi sunucunuz. cihazlarınız birbirinden uzaktayken de çalışır ve bir yedek tutar.</value>
   </data>
   <data name="SyncRoadLater" xml:space="preserve">
     <value>Diğer yolu sonradan ekleyebilirsiniz. Çoğu kişi ikisini birden kullanır.</value>
@@ -9384,7 +9384,7 @@
     <value>Bulut klasörü</value>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>cihazlar birbirinden uzaktayken devreye girer ve mühürlü bir yedek tutar. Yalnızca cihazlar okuyabilir.</value>
+    <value>Klasör, cihazlarınızı birbirinden uzaktayken eşitler ve mühürlü bir yedek saklar. Onu yalnızca cihazlarınız okuyabilir.</value>
   </data>
   <data name="CloudAdd" xml:space="preserve">
     <value>Bulut klasörü ekle</value>
@@ -9726,7 +9726,7 @@
     <value>Açılışta kimin izlediğini sor</value>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>Varsayılan olarak kapalı. Evin paylaştığı bir iPad için. Hesap satırı profilleri istediğiniz zaman değiştirir.</value>
+    <value>Varsayılan olarak kapalıdır. Tüm evin paylaştığı bir iPad için açın. Profilleri istediğiniz zaman hesap satırından değiştirebilirsiniz.</value>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
     <value>Profil değiştir</value>
@@ -10509,7 +10509,7 @@
     <value>Oturum aç: {tracker}</value>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>Parolanız yalnızca bir kez {tracker} hizmetine gönderilir. Oturum anahtarı bu cihazda tutulur.</value>
+    <value>Parolanız bir kez {tracker} hizmetine gider; karşılığında bu cihazda kalan bir belirteç alınır.</value>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
     <value>E-posta veya kullanıcı adı</value>
@@ -10581,7 +10581,7 @@
     <value>{tracker} tarafından listelendi</value>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker} yanıt vermedi.</value>
+    <value>{tracker} yanıt vermedi. Biraz sonra yeniden deneyin.</value>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
     <value>{tracker} bu dizi için henüz kadro, ekip ya da öneri içermiyor.</value>
@@ -10944,7 +10944,7 @@
     <value>İndirme durdu: sunucu reddetti ({code}). Daha sonra yeniden deneyin.</value>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>İndirme durdu: bağlantı koptu.</value>
+    <value>İndirme durdu: bağlantı koptu. Yeniden deneyin.</value>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">
     <value>İndirme kaydedilemedi: {reason}</value>

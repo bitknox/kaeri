@@ -20,4 +20,4 @@ cast-card-stop = Sluta casta
 cast-settings-tvs = Visa TV-apparater med inbyggd Chromecast
 cast-settings-tvs-note = De visas under Chromecast i Spela på TV. Den här { -device }en skickar avsnittet till dem.
 cast-settings-torrents = Torrents vid casting
-cast-settings-torrents-note = Låter en TV med inbyggd Chromecast spela torrents. Den här { -device }en skickar avsnittet så länge det spelas.
+cast-settings-torrents-note = Då kan en TV med inbyggd Chromecast spela torrents. Den här { -device }en skickar avsnittet så länge det spelas.

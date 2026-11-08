@@ -1,6 +1,6 @@
 first-other-title = Bạn đã dùng { -app-name } trên { -device } khác?
-first-other-line = Hãy ghép nối, và { -device } này sẽ nhận { -source-pl }, { -tracker-pl } và lịch sử của bạn. Các bước sau đó cũng xong.
-first-other-pair-line = Hiện một mã để nhập trên { -device } kia. Cả hai cần cùng một mạng Wi-Fi.
+first-other-line = Ghép nối với nó, { -device } này sẽ nhận { -source-pl }, { -tracker-pl } và lịch sử của bạn, và các bước thiết lập còn lại được làm sẵn cho bạn.
+first-other-pair-line = Bạn sẽ nhận một mã để nhập trên { -device } kia. Cả hai cần cùng một mạng Wi-Fi.
 first-other-restore = Khôi phục từ thư mục đám mây
 first-other-restore-line = Dùng khóa khôi phục bạn đã lưu
 first-other-no = Không, bắt đầu từ đây
@@ -13,7 +13,7 @@ first-join-medium-line = Đọc, như trên { $device }
 first-join-signins-line = { $trackers }
 first-join-server = Thêm { $host }
 first-join-server-line = { $kind } · đăng nhập bằng khóa từ { $device }, lưu trong { $store }
-first-join-folders = Thư mục vẫn ở trên { $device }. Hãy thêm thư mục riêng của { -device } này trong “{ -source-pl }”.
+first-join-folders = Thư mục vẫn ở trên { $device }. Hãy thêm thư mục riêng của { -device } này trong mục { -source-cap-pl } của bạn.
 first-join-steps-done = Danh sách và { -source-pl } đã được thiết lập, nên lần chạy đầu kết thúc tại đây. Bạn có thể đổi chúng trong Cài đặt.
 first-join-store-refused = { $store } không cho { -device } này vào. { $owner } có thể gửi lời mời cho bạn.
 first-join-syncing = Đang đồng bộ với { $device }

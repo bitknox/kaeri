@@ -63,7 +63,7 @@
     <value>Другое устройство запустило что-то на {name}, поэтому трансляция остановлена.</value>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>Это устройство не в той сети, где {name}, или подключается к ней через VPN. Для трансляции оба должны быть в одной сети.</value>
+    <value>Это устройство не в той же сети, что {name}, или подключается к ней через VPN. Для трансляции подключите оба к одной сети.</value>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Связь с {name} потеряна, трансляция остановлена.</value>
@@ -411,7 +411,7 @@
     <value>Он не включён.</value>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>{source} будет использоваться для этого названия.</value>
+    <value>Теперь этот тайтл воспроизводится из {source}.</value>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
     <value>Снова автоматический выбор источника для этого названия.</value>
@@ -627,13 +627,13 @@
     <value>Переход к главе {chapter}, страница {page}: там остановилось {device}</value>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>Справа налево (определено)</value>
+    <value>Похоже, справа налево</value>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>Слева направо (определено)</value>
+    <value>Похоже, слева направо</value>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>Длинная лента (определено)</value>
+    <value>Похоже, длинная лента</value>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
     <value>Нет подключения. Скачанные главы по-прежнему открываются.</value>
@@ -1212,7 +1212,7 @@
     <value>{url}: это не тот магазин плагинов, что в приглашении ({reason}). Подключения не было.</value>
   </data>
   <data name="StoreTokenNotKept" xml:space="preserve">
-    <value>магазин плагинов: не удалось сохранить токен. {reason}</value>
+    <value>Не удалось сохранить токен, который выдал магазин плагинов. {reason}</value>
   </data>
   <data name="StoreInviteUnusable" xml:space="preserve">
     <value>Это приглашение уже использовано, отменено или истекло. Попросите новое.</value>
@@ -1278,7 +1278,7 @@
     <value>Сервер {store} старой версии и не может принимать подключения по ссылке. Сначала обновите его.</value>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>Выключено: {name}. При поиске эпизодов его пропускают.</value>
+    <value>Источник {name} выключен. Kaeri пропускает его при поиске эпизодов.</value>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
     <value>Включено: {name}.</value>
@@ -1287,7 +1287,7 @@
     <value>{id} не загружен. Проверьте, что он установлен, и перезагрузите Источники.</value>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>{name} будет использоваться для этого тайтла.</value>
+    <value>Теперь для этого тайтла используется {name}.</value>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Не удалось сохранить выбор. {reason}</value>
@@ -1377,10 +1377,10 @@
     <value>Не удалось открыть браузер для входа. Проверьте, что он установлен, и попробуйте ещё раз. {reason}</value>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>Вход в {tracker} сейчас не ожидает ответа. Начните вход заново.</value>
+    <value>Пришёл ответ на вход из {tracker}, но никакой вход его не ждал. Начните вход заново.</value>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>Вход в {tracker} не вернулся с этого запроса. Начните вход заново.</value>
+    <value>Ответ на вход из {tracker} не совпадает с запросом. Начните вход заново.</value>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
     <value>Вход в {tracker} вернулся без токена. Попробуйте ещё раз.</value>
@@ -1488,7 +1488,7 @@
     <value>Для прокси нужны хост и порт.</value>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>Адрес прокси не подходит для проверки.</value>
+    <value>Проверка прокси не может использовать этот адрес.</value>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Не удалось связаться с сервером.</value>
@@ -1512,7 +1512,7 @@
     <value>Внутри Kaeri что-то пошло не так. Работа продолжилась, но если экран завис, закройте приложение и откройте его снова.</value>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>База данных была повреждена, поэтому создана новая. Старый файл сохранён в {path}. Ваши трекеры вернут сохранённые у них данные при следующей синхронизации.</value>
+    <value>База данных была повреждена, поэтому Kaeri создал новую. Старый файл сохранён в {path}. Данные, которые хранят ваши трекеры, вернутся при следующей синхронизации.</value>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
     <value>Не удалось создать папку {path}. Проверьте, есть ли место на диске и можно ли писать в эту папку, и попробуйте снова. {reason}</value>
@@ -1527,7 +1527,7 @@
     <value>Не удалось открыть базу данных {path}. Если в этой папке открыто другое приложение Kaeri, закройте его и попробуйте снова. {reason}</value>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Не удалось настроить сетевое подключение по сетевым настройкам из config.toml. {reason}</value>
+    <value>Kaeri не удалось подключиться с сетевыми настройками из config.toml. Проверьте их и попробуйте снова. {reason}</value>
   </data>
   <data name="StartFailed" xml:space="preserve">
     <value>Не удалось запустить Kaeri. Закройте и откройте его снова. {reason}</value>
@@ -1566,10 +1566,10 @@
     <value>Список «В планах» пуст.</value>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>Нет сети. Для случайного выбора в поиске нужен AniList.</value>
+    <value>Нет подключения к сети. Чтобы «Удиви меня» выбрал тайтл, нужен AniList.</value>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>Сейчас не удалось выбрать тайтл. Попробуйте чуть позже.</value>
+    <value>Не удалось обратиться к AniList, чтобы выбрать тайтл. Попробуйте чуть позже.</value>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Продолжить просмотр</value>
@@ -1827,7 +1827,7 @@
     <value>Пока загрузки идут, Kaeri остаётся в области уведомлений до их завершения.</value>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>Обложка, полоса прогресса и ссылка на тайтл на {tracker}. Нужно, чтобы тайтл был виден.</value>
+    <value>Обложка, полоса прогресса и ссылка на тайтл на {tracker}. Работает, только пока название показывается.</value>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
     <value>Ещё один телевизор</value>
@@ -1947,7 +1947,7 @@
     <value>Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот ПК отправляет им эпизод.</value>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот ПК передаёт эпизод, пока он идёт.</value>
+    <value>Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот ПК передаёт эпизод, пока он идёт.</value>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
     <value>Перезапустить</value>
@@ -1971,7 +1971,7 @@
     <value>Поиск по настройкам</value>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>Чем выше, тем лучше версия, которую предлагает источник, и тем больше нужно места.</value>
+    <value>Высокое качество выбирает лучшую версию, которую даёт источник. Это занимает больше места.</value>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
     <value>Субтитры остаются с серией, куда бы ни попал файл.</value>
@@ -1980,7 +1980,7 @@
     <value>Загрузка, которая продолжает раздачу, остаётся в кэше Kaeri, а не в папке загрузок.</value>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>Читает комментарии из темы на форуме AniList для серий, которые вы смотрели.</value>
+    <value>Комментарии из темы на форуме AniList появляются, когда вы посмотрите серию.</value>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
     <value>Каждая картинка грузится с сайта, где она размещена, и он видит ваш IP-адрес.</value>
@@ -2139,7 +2139,7 @@
     <value>Kaeri перестал работать</value>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>Часть приложения, которая выполняет работу, остановилась. Откройте Kaeri снова, чтобы продолжить.</value>
+    <value>Загрузки и синхронизация остановились вместе с ним. Откройте Kaeri снова, чтобы возобновить работу.</value>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
     <value>Открыть снова</value>
@@ -2244,7 +2244,7 @@
     <value>{name}, включено</value>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>Больше не будет использоваться для серий. Его можно установить снова из магазина плагинов.</value>
+    <value>Kaeri больше не будет искать в нём эпизоды. Его можно снова установить через тот же магазин плагинов.</value>
   </data>
   <data name="StoresUpdatesCount_one" xml:space="preserve">
     <value>Одно обновление</value>
@@ -2451,13 +2451,13 @@
     <value>Сохранять отчёты о сбоях на этом устройстве</value>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>Когда это включено, Kaeri хранит на этом устройстве краткую запись о каждом сбое без названий, адресов и имён, чтобы вы могли добавить её в отчёт об ошибке. Сами по себе они не отправляются.</value>
+    <value>Kaeri хранит на этом устройстве краткую запись о каждом сбое для «Сообщить об ошибке», убирая из неё названия, адреса и имена. Ничего не отправляется само по себе.</value>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
     <value>Спрашивать после сбоя</value>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>При следующем запуске показывает уведомление с кнопкой «Сообщить…»</value>
+    <value>При следующем запуске Kaeri покажет уведомление с кнопкой «Сообщить…».</value>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
     <value>Сохранено системой {system}</value>
@@ -2487,7 +2487,7 @@
     <value>Удалить все</value>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>Отчёты о сбоях остаются на этом устройстве. Kaeri ничего не отправляет сам. Отчёт уходит только тогда, когда вы открываете его на GitHub из окна «Сообщить об ошибке». Отчёты удаляются через 30 дней.</value>
+    <value>Отчёты о сбоях остаются на этом устройстве, и Kaeri ничего не отправляет сам. Отчёт уходит, только когда вы открываете его на GitHub из «Сообщить об ошибке». Отчёты удаляются через 30 дней.</value>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
     <value>Предыдущая неделя</value>
@@ -2613,13 +2613,13 @@
     <value>Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот iPad отправляет им эпизод.</value>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.</value>
+    <value>Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.</value>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.</value>
+    <value>Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.</value>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.</value>
+    <value>Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.</value>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
     <value>Далее · воспроизведение через {seconds} с</value>
@@ -3378,7 +3378,7 @@
     <value>Удалить загрузку</value>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>Воспроизвести снова получится только с подключением к сети или после новой загрузки.</value>
+    <value>После этого для воспроизведения эпизода понадобится подключение к сети, если не загрузить его снова.</value>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
     <value>Удалить просмотренные загрузки</value>
@@ -3390,7 +3390,7 @@
     <value>Раздача после просмотра</value>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>Просмотренные эпизоды раздаются обратно, пока открыт Kaeri, до достижения коэффициента или лимита времени, заданных в разделе «Источники» настроек.</value>
+    <value>Просмотренные эпизоды раздаются обратно, пока открыт Kaeri. Раздача останавливается при достижении коэффициента или лимита времени, заданных в настройках, в разделе «Источники».</value>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
     <value>Когда окно закрывается во время загрузок</value>
@@ -3474,10 +3474,10 @@
     <value>Есть другое устройство с Kaeri?</value>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>Выполните сопряжение, и это устройство получит ваши источники, трекеры и историю. Остальные шаги тогда не нужны.</value>
+    <value>Выполните сопряжение, и это устройство получит ваши источники, трекеры и историю, а остальная настройка пройдёт сама.</value>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>Покажет код, который нужно ввести на другом. Другое устройство и это должны быть в одной сети Wi-Fi.</value>
+    <value>Вы получите код, который нужно ввести на том устройстве. Оба должны быть в одной сети Wi-Fi.</value>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
     <value>Восстановить из облачной папки</value>
@@ -3516,7 +3516,7 @@
     <value>{kind} · вход по ключу с {device}, он хранится в {store}</value>
   </data>
   <data name="FirstJoinFolders" xml:space="preserve">
-    <value>Папки остаются на {device}. Это устройство: свои папки добавьте в «Ваши источники».</value>
+    <value>Папки остаются на {device}. Чтобы добавить папки отсюда, откройте «Ваши источники».</value>
   </data>
   <data name="FirstJoinStepsDone" xml:space="preserve">
     <value>Списки и источники настроены, поэтому первый запуск завершён. Их можно изменить в настройках.</value>
@@ -3597,7 +3597,7 @@
     <value>Войти в AniList</value>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>Добавьте источник, чтобы смотреть с главной. В разделе «Магазины плагинов» есть из чего выбрать.</value>
+    <value>Добавьте источник, чтобы смотреть с главной. Плагины берутся из раздела «Магазины плагинов».</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>Не найдено в ваших источники</value>
@@ -4080,7 +4080,7 @@
     <value>Ваши файлы останутся на месте.</value>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>Не удалось обратиться к AniList. Повторим при следующем сканировании.</value>
+    <value>Не удалось обратиться к AniList. При следующем сканировании будет новая попытка.</value>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
     <value>Выбрать совпадение</value>
@@ -4113,7 +4113,7 @@
     <value>Регион</value>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>Скрывает ссылки, которые AniList отметил для других стран. У большинства ссылок страна не указана, поэтому выберите ещё и свои сервисы.</value>
+    <value>Ссылки, которые AniList отметил для других стран, скрыты. У большинства ссылок страна не указана, поэтому выберите ещё и свои сервисы.</value>
   </data>
   <data name="LicensedYours" xml:space="preserve">
     <value>Ваши сервисы</value>
@@ -4557,7 +4557,7 @@
     <value>Есть ссылка-приглашение?</value>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Плагины берутся из магазинов плагинов. Магазин плагинов подписан и выдаёт каждому устройству отдельный токен, поэтому присоединиться к нему можно по ссылке-приглашению от его владельца.</value>
+    <value>Плагины берутся из магазинов плагинов. Каждый из них подписан и выдаёт каждому устройству свой токен, поэтому подключиться к нему можно по ссылке-приглашению от владельца.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Попробуйте сразу</value>
@@ -4599,7 +4599,7 @@
     <value>Выходим…</value>
   </data>
   <data name="PartyReadyAction" xml:space="preserve">
-    <value>Я готов</value>
+    <value>Отметить готовность</value>
   </data>
   <data name="PartyCopyInvite" xml:space="preserve">
     <value>Копировать приглашение</value>
@@ -4614,7 +4614,7 @@
     <value>Не сейчас</value>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>Готовим…</value>
+    <value>Загрузка предложений…</value>
   </data>
   <data name="PartyServer" xml:space="preserve">
     <value>Сервер</value>
@@ -4647,7 +4647,7 @@
     <value>Нет своего сервера? Можно взять публичный {server}, им управляет {operator}.</value>
   </data>
   <data name="PartyServerInvited" xml:space="preserve">
-    <value>Сервер выбрал тот, кто вас пригласил. Kaeri его не запускает.</value>
+    <value>Этот сервер выбрал тот, кто вас пригласил. Kaeri им не управляет.</value>
   </data>
   <data name="PartyServerShape" xml:space="preserve">
     <value>Укажите сервер как хост и порт, например party.example:8999.</value>
@@ -4863,7 +4863,7 @@
     <value>Эпизод {episode} · с {names} · {when}</value>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>Здесь появятся комнаты, в которые вы заходили, последние десять.</value>
+    <value>Здесь появятся последние десять комнат, в которые вы зайдёте.</value>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
     <value>Вернуться</value>
@@ -5181,7 +5181,7 @@
     <value>Скрывать чат в совместных просмотрах</value>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>Сообщения, реакции и их метки на шкале перемотки не показываются на видео, а поле ввода пропадает. Список участников по-прежнему показывает, кто в комнате.</value>
+    <value>Сообщения чата, реакции и их метки на шкале перемотки не показываются поверх видео, а поле чата скрыто. Список участников по-прежнему показывает, кто в комнате.</value>
   </data>
   <data name="PartyMute" xml:space="preserve">
     <value>Скрыть сообщения: {name}</value>
@@ -5823,10 +5823,10 @@
     <value>Не удалось открыть выбор файла. Попробуйте ещё раз.</value>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>Не удалось загрузить этот файл субтитров. Проверьте, что это файл субтитров.</value>
+    <value>Не удалось загрузить этот файл как субтитры. Выберите файл субтитров, например .srt или .ass.</value>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>Не удалось загрузить этот аудиофайл. Проверьте, что это аудиофайл.</value>
+    <value>Не удалось загрузить этот файл как звук. Выберите аудиофайл, например .mka или .flac.</value>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
     <value>Дорожка без названия</value>
@@ -6054,7 +6054,7 @@
     <value>Открыть демо</value>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>В демо есть короткий комикс и короткий рассказ, которыми их авторы делятся по лицензии Creative Commons.</value>
+    <value>Один короткий комикс и один короткий рассказ, которыми их авторы делятся по лицензии Creative Commons.</value>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
     <value>Один короткий эпизод и один короткий комикс, которыми их авторы делятся по лицензии Creative Commons.</value>
@@ -6084,7 +6084,7 @@
     <value>{title}, автор: {author}. Общественное достояние. Входит в приложение.</value>
   </data>
   <data name="DemoCreditCover" xml:space="preserve">
-    <value>Обложка: «{title}», автор: {artist}, {year}. Общественное достояние. Входит в приложение.</value>
+    <value>Обложка: «{title}», {artist}, {year}. Общественное достояние. Входит в приложение.</value>
   </data>
   <data name="ReaderDemoCredit" xml:space="preserve">
     <value>{title} · {author} · {licence}</value>
@@ -6096,7 +6096,7 @@
     <value>Включено только демо. Другие названия появятся, когда вы добавите источник.</value>
   </data>
   <data name="ReaderDemoEnd" xml:space="preserve">
-    <value>Демо закончилось</value>
+    <value>Это конец демо</value>
   </data>
   <data name="ReaderDemoEndLine" xml:space="preserve">
     <value>Чтобы читать свои книги, добавьте папку, сервер или магазин плагинов.</value>
@@ -6111,7 +6111,7 @@
     <value>Комикс и рассказ · CC BY 4.0 и общественное достояние</value>
   </data>
   <data name="SourcesDemoBooksWhat" xml:space="preserve">
-    <value>Произведения, которыми их авторы делятся по лицензии Creative Commons, чтобы вы могли попробовать Kaeri, прежде чем добавите источник. Это не постоянный источник.</value>
+    <value>Произведения, которыми их авторы делятся по лицензии Creative Commons, чтобы вы могли попробовать Kaeri до того, как добавите источник. Это не источник для постоянного использования.</value>
   </data>
   <data name="SourcesDemoBooksPrivate" xml:space="preserve">
     <value>Демо нигде не входит в учётную запись и никогда не записывает данные в трекер.</value>
@@ -6747,7 +6747,7 @@
     <value>Найти</value>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>Серии без совпадения по-прежнему читаются из папки. Прогресса в трекере у них нет, пока совпадение не найдено.</value>
+    <value>Серии без совпадения можно читать из папки. Трекер не получает по ним прогресс, пока совпадение не найдено.</value>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
     <value>Сериалы или чтение</value>
@@ -7191,10 +7191,10 @@
     <value>Когда все скачиваемые главы готовы</value>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>У глав свой системный канал, поэтому их можно отключить отдельно.</value>
+    <value>У глав свой системный канал, поэтому их можно отключить, оставив остальные уведомления.</value>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>MangaUpdates подключается через публичный API.</value>
+    <value>Kaeri обращается к MangaUpdates через его публичный API.</value>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
     <value>Имя пользователя</value>
@@ -7278,7 +7278,7 @@
     <value>Фильтровать в поиске</value>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>Этот сезон в поиске, где каждый фильтр что-то сужает</value>
+    <value>Открывает этот сезон в поиске, где работают все фильтры</value>
   </data>
   <data name="SortPopularity" xml:space="preserve">
     <value>Популярность</value>
@@ -7305,7 +7305,7 @@
     <value>Очистить поиск</value>
   </data>
   <data name="SearchSearching" xml:space="preserve">
-    <value>Ищем «{query}»</value>
+    <value>Поиск: «{query}»</value>
   </data>
   <data name="SearchResultsFor" xml:space="preserve">
     <value>Результаты по запросу «{query}»</value>
@@ -7419,7 +7419,7 @@
     <value>Только лицензионные</value>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>Тайтлы из моего списка</value>
+    <value>Тайтлы из вашего списка</value>
   </data>
   <data name="FilterShow" xml:space="preserve">
     <value>Показывать</value>
@@ -7956,7 +7956,7 @@
     <value>Вход не выполнен</value>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>Завершает вход в приложении на сервере. Сам сервер и ваши загрузки остаются как есть.</value>
+    <value>Выход завершает сеанс, который это устройство открыло на сервере. Сам сервер и ваши загрузки остаются как есть.</value>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
     <value>Язык</value>
@@ -8280,7 +8280,7 @@
     <value>Серии из вашего списка «Смотрю»</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>Одно уведомление, когда выходит эпизод сериала, за которым вы следите: показываются сериал и номер эпизода, но не название. Для отдельного сериала его можно выключить в его настройках.</value>
+    <value>Вы получаете одно уведомление, когда выходит эпизод тайтла, за которым вы следите. В нём указаны тайтл и номер эпизода, но не название эпизода. Уведомления для тайтла можно выключить в его настройках.</value>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
     <value>Скоро · ближайшие 7 дней</value>
@@ -8334,7 +8334,7 @@
     <value>Запомнено с вашей последней серии.</value>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>Выбирается в плеере. Следует разделу «Настройки › Воспроизведение».</value>
+    <value>Выбираются в плеере. До тех пор действует раздел «Настройки › Воспроизведение».</value>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
     <value>Источник</value>
@@ -8424,7 +8424,7 @@
     <value>Увеличивать при наведении</value>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>Показывает увеличенную карточку с трейлером, когда вы наводите указатель на обложку.</value>
+    <value>Если задержать указатель на обложке, откроется увеличенная карточка с трейлером.</value>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
     <value>Точные линии и текстура, без изменения стиля.</value>
@@ -8688,7 +8688,7 @@
     <value>{host} не принял этот ключ</value>
   </data>
   <data name="BookServerErrKeyLine" xml:space="preserve">
-    <value>Ключ меняется при сбросе в Kavita. Скопируйте ссылку OPDS заново в настройках своей учётной записи там.</value>
+    <value>Ключ меняется, когда его сбрасывают в Kavita. Снова скопируйте ссылку OPDS из настроек своей учётной записи там.</value>
   </data>
   <data name="BookServerEmpty" xml:space="preserve">
     <value>{host} не показывает для этой учётной записи ни одной серии</value>
@@ -8727,7 +8727,7 @@
     <value>{count} файлов, которые Kaeri не может открыть</value>
   </data>
   <data name="BookFolderUnsupported_other" xml:space="preserve">
-    <value>{count} файлов, которые Kaeri не может открыть</value>
+    <value>{count} файла, которые Kaeri не может открыть</value>
   </data>
   <data name="BookFolderUnsupportedLine" xml:space="preserve">
     <value>{kinds}. Они остаются в папке как есть.</value>
@@ -8751,7 +8751,7 @@
     <value>В папке {folder} нет ничего, что Kaeri может открыть</value>
   </data>
   <data name="BookFolderEmptyLine_one" xml:space="preserve">
-    <value>В ней {files} файл, и он не CBZ, CBR, EPUB, PDF и не изображение.</value>
+    <value>В ней {files} файл, и это не CBZ, CBR, EPUB, PDF и не изображение.</value>
   </data>
   <data name="BookFolderEmptyLine_few" xml:space="preserve">
     <value>В ней {files} файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</value>
@@ -8760,7 +8760,7 @@
     <value>В ней {files} файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</value>
   </data>
   <data name="BookFolderEmptyLine_other" xml:space="preserve">
-    <value>В ней {files} файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</value>
+    <value>В ней {files} файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</value>
   </data>
   <data name="BookFolderChooseOther" xml:space="preserve">
     <value>Выбрать другую папку</value>
@@ -8802,16 +8802,16 @@
     <value>Установить всё для чтения</value>
   </data>
   <data name="StoreInstalled_one" xml:space="preserve">
-    <value>Установлен {count} плагин. Он в списке «Ваши источники».</value>
+    <value>Установлен {count} плагин. Он в разделе «Ваши источники».</value>
   </data>
   <data name="StoreInstalled_few" xml:space="preserve">
-    <value>Установлено, плагины: {count}. Они в списке «Ваши источники».</value>
+    <value>Установлено, плагины: {count}. Они в разделе «Ваши источники».</value>
   </data>
   <data name="StoreInstalled_many" xml:space="preserve">
-    <value>Установлено, плагины: {count}. Они в списке «Ваши источники».</value>
+    <value>Установлено, плагины: {count}. Они в разделе «Ваши источники».</value>
   </data>
   <data name="StoreInstalled_other" xml:space="preserve">
-    <value>Установлено, плагины: {count}. Они в списке «Ваши источники».</value>
+    <value>Установлено, плагины: {count}. Они в разделе «Ваши источники».</value>
   </data>
   <data name="StoreOtherMedium" xml:space="preserve">
     <value>Каждый плагин в {store} предназначен для просмотра</value>
@@ -8826,7 +8826,7 @@
     <value>{store}: плагины пока нет</value>
   </data>
   <data name="StoreEmptyLine" xml:space="preserve">
-    <value>Вы участник, поэтому, когда {owner} добавит новые плагины, они появятся в разделе «Магазины плагинов».</value>
+    <value>Вы участник, поэтому новые плагины появятся в разделе «Магазины плагинов», когда {owner} их добавит.</value>
   </data>
   <data name="StoreErrUnreachable" xml:space="preserve">
     <value>Не удалось подключиться к {host}</value>
@@ -8847,19 +8847,19 @@
     <value>Ещё {count} для просмотра. Это устройство: просмотр выключен.</value>
   </data>
   <data name="StoreTvReadingOnly_one" xml:space="preserve">
-    <value>Ещё {count} для чтения, а телевизор этого не умеет.</value>
+    <value>Ещё {count} предназначен для чтения, а на этом телевизоре чтения нет.</value>
   </data>
   <data name="StoreTvReadingOnly_few" xml:space="preserve">
-    <value>Ещё {count} для чтения, а телевизор этого не умеет.</value>
+    <value>Ещё {count} предназначены для чтения, а на этом телевизоре чтения нет.</value>
   </data>
   <data name="StoreTvReadingOnly_many" xml:space="preserve">
-    <value>Ещё {count} для чтения, а телевизор этого не умеет.</value>
+    <value>Ещё {count} предназначены для чтения, а на этом телевизоре чтения нет.</value>
   </data>
   <data name="StoreTvReadingOnly_other" xml:space="preserve">
-    <value>Ещё {count} для чтения, а телевизор этого не умеет.</value>
+    <value>Ещё {count} предназначены для чтения, а на этом телевизоре чтения нет.</value>
   </data>
   <data name="StoreTvAllReading" xml:space="preserve">
-    <value>Каждый плагин в {store} предназначен для чтения, а телевизор этого не умеет.</value>
+    <value>Все плагины в {store} предназначены для чтения, а на этом телевизоре чтения нет.</value>
   </data>
   <data name="StorePluginRow" xml:space="preserve">
     <value>Версия {version} · может обращаться к {hosts}</value>
@@ -9195,10 +9195,10 @@
     <value>Искать на {source}</value>
   </data>
   <data name="MatchSearching" xml:space="preserve">
-    <value>Ищем на {source} «{query}»</value>
+    <value>Поиск «{query}» на {source}</value>
   </data>
   <data name="MatchSearchEmpty" xml:space="preserve">
-    <value>На {source} ничего нет по запросу «{query}».</value>
+    <value>На {source} ничего не найдено по запросу «{query}».</value>
   </data>
   <data name="MatchSearchEmptyHint" xml:space="preserve">
     <value>Попробуйте меньше слов или название на другом языке.</value>
@@ -9258,7 +9258,7 @@
     <value>Присоединиться к магазину плагинов…</value>
   </data>
   <data name="SourcesEmptyBody" xml:space="preserve">
-    <value>Источники: то, откуда берутся эпизоды. Это папки на этом устройстве, ваш медиасервер и плагины из магазинов, к которым вы присоединились.</value>
+    <value>Источники дают эпизоды: это папки на этом устройстве, ваш медиасервер и плагины из магазинов плагинов, к которым вы присоединились.</value>
   </data>
   <data name="SourcesEmptyMore" xml:space="preserve">
     <value>Можно также {join}.</value>
@@ -9300,7 +9300,7 @@
     <value>OPAP-JP</value>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>Обращается только к Wikimedia Commons: upload.wikimedia.org и commons.wikimedia.org.</value>
+    <value>Демо обращается только к Wikimedia Commons: upload.wikimedia.org и commons.wikimedia.org.</value>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
     <value>Демо никуда не входит и ничего не записывает в AniList.</value>
@@ -9369,7 +9369,7 @@
     <value>{owner} ведёт этот магазин плагинов и выбрал его плагины. Kaeri не создавал, не проверял и не одобрял их.</value>
   </data>
   <data name="StoresNoPlugins" xml:space="preserve">
-    <value>Этот магазин плагинов пока не предлагает плагины.</value>
+    <value>Этот магазин плагинов пока пуст: плагины ещё не добавлены.</value>
   </data>
   <data name="StoresPlugins" xml:space="preserve">
     <value>Плагины</value>
@@ -9405,7 +9405,7 @@
     <value>Этот магазин плагинов больше не подключён.</value>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>Не в сети: {reason}. Плагины ниже взяты из последнего проверенного списка.</value>
+    <value>Нет сети: {reason}. Показан последний список, который он прислал.</value>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
     <value>Не в сети. Показан последний полученный список.</value>
@@ -9510,7 +9510,7 @@
     <value>Удалить {name}?</value>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>Он удаляется отсюда. Магазин плагинов сможет установить его снова.</value>
+    <value>Он будет удалён отсюда. Установить его снова можно через магазин плагинов.</value>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
     <value>Новые серверы</value>
@@ -9531,7 +9531,7 @@
     <value>Вставьте ссылку, которую прислал владелец магазина.</value>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>Вставьте пригласительную ссылку, которую прислал владелец магазина. До подключения и установки вы увидите, что предлагает магазин плагинов.</value>
+    <value>Вставьте ссылку-приглашение, которую вам прислал владелец. До подключения и установки вы увидите, что предлагает магазин плагинов.</value>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
     <value>Вставьте ссылку, которую прислал владелец магазина. Ссылка вида Kaeri://, открытая из «Сообщений», сразу заполнит этот лист.</value>
@@ -9573,7 +9573,7 @@
     <value>Ключ {key} совпадает с ключом магазина.</value>
   </data>
   <data name="StoresAnyoneNote" xml:space="preserve">
-    <value>Вы подключаетесь без имени. Другое устройство подключается по той же ссылке.</value>
+    <value>Вы подключаетесь без имени. Другое устройство может подключиться по той же ссылке.</value>
   </data>
   <data name="StoresAlreadyJoinedNote" xml:space="preserve">
     <value>Это устройство уже подключено к этому магазину.</value>
@@ -9735,7 +9735,7 @@
     <value>Присоединиться может любой, у кого есть эта ссылка, пока вы её не отмените.</value>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>Действует один раз, для того, кому вы её отправите. До {until}.</value>
+    <value>Действует один раз, для того, кому вы её отправите, до {until}.</value>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
     <value>Действует один раз, для того, кому вы её отправите, пока вы её не отмените.</value>
@@ -9882,7 +9882,7 @@
     <value>Открыть магазины плагинов</value>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>Магазин плагинов представляет собой небольшой сервер, который хранит подписанные плагины и выдаёт каждому устройству отдельный токен. Он предлагает источники в виде плагины. Kaeri не ведёт магазинов плагинов и не составляет их списков, поэтому присоединиться можно по ссылке-приглашению от владельца.</value>
+    <value>Магазин плагинов представляет собой небольшой сервер, который хранит подписанные плагины и выдаёт каждому устройству свой токен. Его плагины добавляют источники. Kaeri не ведёт магазинов плагинов и не составляет их списков, поэтому подключиться к одному из них можно по ссылке-приглашению от владельца.</value>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Что такое магазин плагинов?</value>
@@ -9903,13 +9903,13 @@
     <value>Поделиться…</value>
   </data>
   <data name="CloudBrowserLine" xml:space="preserve">
-    <value>Браузер открыл страницу {service}. Разрешите доступ там, и Kaeri продолжит сам.</value>
+    <value>В браузере открылась страница {service}. Разрешите доступ там, и Kaeri продолжит сам.</value>
   </data>
   <data name="CloudBrowserTitle" xml:space="preserve">
     <value>Войдите в {service} в браузере</value>
   </data>
   <data name="CloudCloseCarriesOn" xml:space="preserve">
-    <value>Это окно можно закрыть. Kaeri продолжит работу и сам откроет следующий шаг, когда он будет готов.</value>
+    <value>Это окно можно закрыть. Kaeri продолжит работу и сам откроет следующий шаг, когда всё будет готово.</value>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>компьютер</value>
@@ -10080,7 +10080,7 @@
     <value>Облачная папка</value>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>Дополняет данные, пока ваши устройства далеко друг от друга, и хранит зашифрованную резервную копию. Прочитать её могут только ваши устройства.</value>
+    <value>Папка синхронизирует ваши устройства, пока они далеко друг от друга, и хранит зашифрованную резервную копию. Прочитать её могут только ваши устройства.</value>
   </data>
   <data name="CloudAdd" xml:space="preserve">
     <value>Добавить облачную папку</value>
@@ -10428,7 +10428,7 @@
     <value>Спрашивать, кто смотрит, при запуске</value>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>По умолчанию выключено. Для iPad, которым пользуется вся семья. Строка аккаунта позволяет сменить профиль в любой момент.</value>
+    <value>По умолчанию выключено. Включите для iPad, которым пользуется вся семья. Сменить профиль можно в строке аккаунта в любой момент.</value>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
     <value>Сменить профиль</value>
@@ -11235,7 +11235,7 @@
     <value>Войти в {tracker}</value>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>Пароль уходит в {tracker} один раз, а токен для входа хранит устройство.</value>
+    <value>Пароль уходит в {tracker} один раз в обмен на токен, который хранит это устройство.</value>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
     <value>Эл. почта или имя пользователя</value>
@@ -11307,7 +11307,7 @@
     <value>Указано в {tracker}</value>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker} не ответил.</value>
+    <value>{tracker} не ответил. Попробуйте чуть позже.</value>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
     <value>У {tracker} пока нет актёров, создателей и рекомендаций для этого аниме.</value>
@@ -11370,7 +11370,7 @@
     <value>Откройте Kaeri на телевизоре. Он должен быть в той же сети Wi-Fi, что и это устройство.</value>
   </data>
   <data name="TvTypeCode" xml:space="preserve">
-    <value>Введите шесть цифр, которые показывает {name}. После этого это устройство подключится само.</value>
+    <value>Введите шесть цифр, которые показывает {name}. После этого это устройство будет подключаться само.</value>
   </data>
   <data name="TvPairingMoment" xml:space="preserve">
     <value>Это займёт немного времени.</value>
@@ -11670,7 +11670,7 @@
     <value>Загрузка остановлена: сервер отказал в запросе ({code}). Попробуйте позже.</value>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>Загрузка остановлена: соединение прервалось.</value>
+    <value>Загрузка остановлена: соединение прервалось. Попробуйте ещё раз.</value>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">
     <value>Не удалось сохранить загрузку: {reason}</value>

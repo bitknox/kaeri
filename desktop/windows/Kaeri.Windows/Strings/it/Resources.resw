@@ -63,7 +63,7 @@
     <value>Un altro dispositivo ha avviato qualcosa su {name}, quindi la trasmissione si è interrotta.</value>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>Questo dispositivo non è nella rete di {name} oppure la raggiunge tramite una VPN. Per trasmettere servono entrambi sulla stessa rete.</value>
+    <value>Questo dispositivo non è nella rete di {name} oppure la raggiunge tramite una VPN. Collega entrambi alla stessa rete per trasmettere.</value>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name} non risponde più, quindi la trasmissione si è interrotta.</value>
@@ -402,7 +402,7 @@
     <value>Non è attiva.</value>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>Per questo titolo si userà {source}.</value>
+    <value>Questo titolo ora si riproduce da {source}.</value>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
     <value>Per questo titolo la fonte viene scelta di nuovo automaticamente.</value>
@@ -600,13 +600,13 @@
     <value>Spostato al capitolo {chapter}, pagina {page}, dove si è fermato {device}</value>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>Da destra a sinistra, rilevato</value>
+    <value>Sembra da destra a sinistra</value>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>Da sinistra a destra, rilevato</value>
+    <value>Sembra da sinistra a destra</value>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>Striscia lunga, rilevata</value>
+    <value>Sembra una striscia lunga</value>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
     <value>Sei offline. I capitoli scaricati si aprono comunque.</value>
@@ -1203,7 +1203,7 @@
     <value>Il server di {store} è più vecchio e non può far unire nessuno con un link. Aggiornalo prima.</value>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>{name} è disattivato. Viene saltato quando si cercano gli episodi.</value>
+    <value>{name} è disattivato. Kaeri lo salta quando cerca gli episodi.</value>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
     <value>{name} è attivo.</value>
@@ -1212,7 +1212,7 @@
     <value>{id} non è caricato. Controlla che sia installato sotto Fonti.</value>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>{name} sarà usato per questo titolo.</value>
+    <value>Questo titolo ora usa {name}.</value>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Impossibile salvare quella scelta. {reason}</value>
@@ -1302,10 +1302,10 @@
     <value>Impossibile aprire un browser per l'accesso. Controlla che ce ne sia uno installato e riprova. {reason}</value>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>Nessun accesso a {tracker} è in attesa di questa risposta. Avvia di nuovo l'accesso.</value>
+    <value>È arrivata una risposta di accesso da {tracker}, ma nessun accesso la stava aspettando. Avvia di nuovo l'accesso.</value>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>L'accesso a {tracker} non corrisponde a questa richiesta. Avvia di nuovo l'accesso.</value>
+    <value>La risposta di accesso da {tracker} non corrisponde alla richiesta. Avvia di nuovo l'accesso.</value>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
     <value>L'accesso a {tracker} è tornato senza token. Riprova.</value>
@@ -1407,7 +1407,7 @@
     <value>Un proxy richiede un host e una porta.</value>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>L'indirizzo del proxy non è utilizzabile per un controllo.</value>
+    <value>Il controllo del proxy non può usare questo indirizzo.</value>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Impossibile raggiungere il server.</value>
@@ -1431,7 +1431,7 @@
     <value>Qualcosa non ha funzionato in Kaeri. Ha continuato a funzionare, ma se una schermata sembra bloccata, esci e riaprila.</value>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>Il database era danneggiato, quindi Kaeri ne ha creato uno nuovo. Il file vecchio è conservato in {path}. I tuoi tracker ripristineranno ciò che contengono alla prossima sincronizzazione.</value>
+    <value>Il database era danneggiato, quindi Kaeri ne ha creato uno nuovo. Il file vecchio è conservato in {path}. Quello che hanno i tuoi tracker torna alla prossima sincronizzazione.</value>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
     <value>Kaeri non riesce a creare la cartella {path}. Controlla che il disco abbia spazio e che la cartella sia scrivibile, poi riprova. {reason}</value>
@@ -1446,7 +1446,7 @@
     <value>Kaeri non riesce ad aprire il suo database in {path}. Se un'altra app Kaeri è aperta in questa cartella, chiudila e riprova. {reason}</value>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Kaeri non riesce a configurare la connessione di rete con le impostazioni di rete in config.toml. {reason}</value>
+    <value>Kaeri non riesce a connettersi con le impostazioni di rete in config.toml. Controllale e riprova. {reason}</value>
   </data>
   <data name="StartFailed" xml:space="preserve">
     <value>Kaeri non riesce ad avviarsi. Chiudi e riapri. {reason}</value>
@@ -1482,10 +1482,10 @@
     <value>La lista In programma è vuota.</value>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>Sei offline. I suggerimenti della ricerca richiedono AniList.</value>
+    <value>Sei offline. Sorprendimi ha bisogno di AniList per scegliere un titolo.</value>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>Impossibile scegliere un titolo ora. Riprova tra un attimo.</value>
+    <value>Impossibile raggiungere AniList per scegliere un titolo. Riprova tra un attimo.</value>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Continua a guardare</value>
@@ -1731,7 +1731,7 @@
     <value>Con Continua a scaricare, Kaeri resta nell'area di notifica finché i download non finiscono.</value>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>La copertina, una barra di avanzamento e un link al titolo su {tracker}. Richiede che il titolo sia visibile.</value>
+    <value>La copertina, una barra di avanzamento e un link alla serie su {tracker}. Funziona solo se il titolo è visibile.</value>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
     <value>Un altro TV</value>
@@ -1848,7 +1848,7 @@
     <value>Compaiono sotto Chromecast in Riproduci sulla TV. Questo PC invia loro l'episodio.</value>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Permette a una TV con Chromecast integrato di riprodurre i torrent. Questo PC invia l'episodio finché è in riproduzione.</value>
+    <value>Così una TV con Chromecast integrato può riprodurre i torrent. Questo PC invia l'episodio finché è in riproduzione.</value>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
     <value>Riavvia</value>
@@ -1869,7 +1869,7 @@
     <value>Cerca nelle impostazioni</value>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>Una qualità più alta sceglie il meglio che offre una fonte e occupa più spazio.</value>
+    <value>Alta sceglie la versione migliore che ha una fonte. Occupa più spazio.</value>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
     <value>I sottotitoli restano con l'episodio ovunque vada il file.</value>
@@ -1878,7 +1878,7 @@
     <value>Un download che continua il seeding resta nella cache di Kaeri, non nella cartella dei download.</value>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>Legge i commenti del thread del forum di AniList per gli episodi che hai guardato.</value>
+    <value>I commenti arrivano dal thread del forum di AniList, dopo che hai guardato l'episodio.</value>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
     <value>Ogni immagine si carica dal sito che la ospita, che vede il tuo indirizzo IP.</value>
@@ -2028,7 +2028,7 @@
     <value>Kaeri ha smesso di funzionare</value>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>La parte dell'app che esegue il lavoro si è fermata. Riapri Kaeri per continuare.</value>
+    <value>Anche i download e la sincronizzazione si sono fermati. Riapri Kaeri per continuare.</value>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
     <value>Riapri</value>
@@ -2133,7 +2133,7 @@
     <value>{name} attivo</value>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>Non viene più provata per gli episodi. Puoi installarla di nuovo dal suo negozio di plugin.</value>
+    <value>Kaeri non lo userà più per gli episodi. Puoi installarlo di nuovo dal suo negozio di plugin.</value>
   </data>
   <data name="StoresUpdatesCount_one" xml:space="preserve">
     <value>Uno da aggiornare</value>
@@ -2334,13 +2334,13 @@
     <value>Salva i rapporti di arresto su questo dispositivo</value>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>Quando è attivo, Kaeri conserva su questo dispositivo una breve traccia di ogni arresto, senza titoli, indirizzi e nomi, così puoi aggiungerla a Segnala un bug. Non viene inviato nulla in automatico.</value>
+    <value>Kaeri conserva su questo dispositivo una breve traccia di ogni arresto per Segnala un bug, senza titoli, indirizzi e nomi. Non viene inviato nulla in automatico.</value>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
     <value>Chiedi dopo un arresto</value>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>Alla riapertura mostra un avviso con Segnala…</value>
+    <value>Kaeri mostra un avviso con Segnala… alla prossima apertura.</value>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
     <value>Conservati da {system}</value>
@@ -2370,7 +2370,7 @@
     <value>Elimina tutti</value>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>I rapporti di arresto restano su questo dispositivo. Kaeri non invia nulla in automatico. Un rapporto esce solo quando lo apri su GitHub da Segnala un bug. I rapporti vengono eliminati dopo 30 giorni.</value>
+    <value>I rapporti di arresto restano su questo dispositivo e Kaeri non invia nulla in automatico. Un rapporto esce solo quando lo apri su GitHub da Segnala un bug. I rapporti vengono eliminati dopo 30 giorni.</value>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
     <value>Settimana precedente</value>
@@ -2496,13 +2496,13 @@
     <value>Compaiono sotto Chromecast in Riproduci sulla TV. Questo iPad invia loro l'episodio.</value>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Permette a una TV con Chromecast integrato di riprodurre i torrent. Questo Mac invia l'episodio finché è in riproduzione.</value>
+    <value>Così una TV con Chromecast integrato può riprodurre i torrent. Questo Mac invia l'episodio finché è in riproduzione.</value>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Permette a una TV con Chromecast integrato di riprodurre i torrent. Questo iPhone invia l'episodio finché è in riproduzione.</value>
+    <value>Così una TV con Chromecast integrato può riprodurre i torrent. Questo iPhone invia l'episodio finché è in riproduzione.</value>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Permette a una TV con Chromecast integrato di riprodurre i torrent. Questo iPad invia l'episodio finché è in riproduzione.</value>
+    <value>Così una TV con Chromecast integrato può riprodurre i torrent. Questo iPad invia l'episodio finché è in riproduzione.</value>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
     <value>Prossimo · si avvia tra {seconds} s</value>
@@ -3246,7 +3246,7 @@
     <value>Elimina download</value>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>Si riproduce di nuovo solo con una connessione, o dopo averlo scaricato di nuovo.</value>
+    <value>Dopo, l’episodio ha bisogno di una connessione per la riproduzione, a meno che non lo scarichi di nuovo.</value>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
     <value>Elimina i download visti</value>
@@ -3258,7 +3258,7 @@
     <value>Condivisione dopo la visione</value>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>Gli episodi visti vengono condivisi mentre Kaeri è aperto, finché non si raggiungono il rapporto o il limite di tempo impostati in Impostazioni, sotto Fonti.</value>
+    <value>Gli episodi visti vengono condivisi mentre Kaeri è aperto. La condivisione si ferma al rapporto o al limite di tempo che imposti in Impostazioni, sotto Fonti.</value>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
     <value>Quando la finestra si chiude con dei download in corso</value>
@@ -3339,10 +3339,10 @@
     <value>Usi già Kaeri su un altro dispositivo?</value>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>Abbinalo e questo dispositivo riceve le tue fonti, i tuoi tracker e la cronologia. I passaggi successivi sono quindi completati.</value>
+    <value>Abbinalo e questo dispositivo riceve le tue fonti, i tuoi tracker e la cronologia, e il resto della configurazione è già fatto.</value>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>Mostra un codice da inserire sull’altro dispositivo. Entrambi devono essere sullo stesso Wi-Fi.</value>
+    <value>Ricevi un codice da inserire sull’altro dispositivo. Entrambi devono essere sullo stesso Wi-Fi.</value>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
     <value>Ripristina da una cartella cloud</value>
@@ -3459,7 +3459,7 @@
     <value>Accedi ad AniList</value>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>Aggiungi una fonte per riprodurre dalla Home. Nei Negozi di plugin ce ne sono da scegliere.</value>
+    <value>Aggiungi una fonte per riprodurre dalla Home. I plugin arrivano dai Negozi di plugin.</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>Non trovato nelle tue fonti</value>
@@ -3915,7 +3915,7 @@
     <value>I tuoi file restano dove sono.</value>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>Impossibile interrogare AniList. Si riprova alla prossima scansione.</value>
+    <value>Impossibile raggiungere AniList. La prossima scansione riprova.</value>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
     <value>Scegli l'abbinamento</value>
@@ -3948,7 +3948,7 @@
     <value>Regione</value>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>Nasconde i link che AniList indica per altri paesi. La maggior parte dei link non indica un paese, quindi scegli anche i tuoi servizi.</value>
+    <value>I link che AniList indica per altri paesi sono nascosti. La maggior parte dei link non indica un paese, quindi scegli anche i tuoi servizi.</value>
   </data>
   <data name="LicensedYours" xml:space="preserve">
     <value>I tuoi servizi</value>
@@ -4392,7 +4392,7 @@
     <value>Hai un link d'invito?</value>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Plugin provengono da negozi di plugin. Un negozio di plugin è firmato e dà a ogni dispositivo il proprio token, quindi ti unisci a uno con un link di invito del suo proprietario.</value>
+    <value>Plugin provengono da negozi di plugin. Ognuno è firmato e dà a ogni dispositivo il proprio token, per questo ti unisci con un link di invito del suo proprietario.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Provalo subito</value>
@@ -4434,7 +4434,7 @@
     <value>Uscita in corso…</value>
   </data>
   <data name="PartyReadyAction" xml:space="preserve">
-    <value>Sono pronto</value>
+    <value>Pronto a guardare</value>
   </data>
   <data name="PartyCopyInvite" xml:space="preserve">
     <value>Copia link di invito</value>
@@ -4449,7 +4449,7 @@
     <value>Non ora</value>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>Preparazione in corso…</value>
+    <value>Caricamento dei suggerimenti…</value>
   </data>
   <data name="PartyServer" xml:space="preserve">
     <value>Server</value>
@@ -4482,7 +4482,7 @@
     <value>Non hai un server tuo? {server} è pubblico, gestito da {operator}.</value>
   </data>
   <data name="PartyServerInvited" xml:space="preserve">
-    <value>Un server scelto da chi ti ha invitato. Kaeri non lo gestisce.</value>
+    <value>Chi ti ha invitato ha scelto questo server. Kaeri non lo gestisce.</value>
   </data>
   <data name="PartyServerShape" xml:space="preserve">
     <value>Scrivi il server come host e porta, per esempio party.example:8999.</value>
@@ -4695,7 +4695,7 @@
     <value>Episodio {episode} · con {names} · {when}</value>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>Le stanze a cui ti unisci compaiono qui, le ultime dieci.</value>
+    <value>Qui compaiono le ultime dieci stanze a cui ti unisci.</value>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
     <value>Rientra</value>
@@ -5004,7 +5004,7 @@
     <value>Nascondi la chat nei watch party</value>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>Messaggi, reazioni e i loro segni sulla barra di avanzamento restano fuori dal video e il campo sparisce. L'elenco delle persone mostra comunque chi è nella stanza.</value>
+    <value>Messaggi della chat, reazioni e i loro segni sulla barra di avanzamento restano fuori dal video e il campo della chat sparisce. L'elenco delle persone mostra comunque chi è nella stanza.</value>
   </data>
   <data name="PartyMute" xml:space="preserve">
     <value>Silenzia {name}</value>
@@ -5637,10 +5637,10 @@
     <value>Impossibile aprire la selezione dei file. Riprova.</value>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>Impossibile caricare quel file dei sottotitoli. Controlla che sia un file di sottotitoli.</value>
+    <value>Impossibile caricare quel file come sottotitoli. Scegli un file di sottotitoli, ad esempio .srt o .ass.</value>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>Impossibile caricare quel file audio. Controlla che sia un file audio.</value>
+    <value>Impossibile caricare quel file come audio. Scegli un file audio, ad esempio .mka o .flac.</value>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
     <value>Traccia senza nome</value>
@@ -5862,7 +5862,7 @@
     <value>Leggi la demo</value>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>La demo contiene un breve fumetto e un breve racconto, condivisi dai loro autori con licenza Creative Commons.</value>
+    <value>Un breve fumetto e un breve racconto, condivisi dai loro autori con licenza Creative Commons.</value>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
     <value>Un breve episodio e un breve fumetto, condivisi dai loro autori con licenza Creative Commons.</value>
@@ -6519,7 +6519,7 @@
     <value>Trova</value>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>Le serie senza corrispondenza si leggono comunque dalla cartella. Non hanno progressi sul tracker finché non trovano una corrispondenza.</value>
+    <value>Puoi comunque leggere dalla cartella le serie senza corrispondenza. Non ricevono progressi sul tracker finché non trovano una corrispondenza.</value>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
     <value>Serie o lettura</value>
@@ -6693,13 +6693,13 @@
     <value>Liste, progressi e suggerimenti</value>
   </data>
   <data name="OnboardingListsLaterWatch" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, Simkl e Trakt si possono aggiungere più tardi in Impostazioni, sotto Account.</value>
+    <value>Puoi aggiungere MyAnimeList, Kitsu, Simkl e Trakt più tardi in Impostazioni, sotto Account.</value>
   </data>
   <data name="OnboardingListsLaterRead" xml:space="preserve">
-    <value>MyAnimeList, Kitsu e MangaUpdates si possono aggiungere più tardi in Impostazioni, sotto Account.</value>
+    <value>Puoi aggiungere MyAnimeList, Kitsu e MangaUpdates più tardi in Impostazioni, sotto Account.</value>
   </data>
   <data name="OnboardingListsLaterBoth" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, MangaUpdates, Simkl e Trakt si possono aggiungere più tardi in Impostazioni, sotto Account.</value>
+    <value>Puoi aggiungere MyAnimeList, Kitsu, MangaUpdates, Simkl e Trakt più tardi in Impostazioni, sotto Account.</value>
   </data>
   <data name="OnboardingConnect" xml:space="preserve">
     <value>Collega {tracker}</value>
@@ -6942,10 +6942,10 @@
     <value>Quando tutti i capitoli in download sono finiti</value>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>I capitoli hanno un loro canale di sistema, quindi si possono silenziare da soli.</value>
+    <value>I capitoli hanno un loro canale di sistema, quindi puoi silenziarli e lasciare il resto com'è.</value>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>MangaUpdates si raggiunge tramite la sua API pubblica.</value>
+    <value>Kaeri si collega a MangaUpdates tramite la sua API pubblica.</value>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
     <value>Nome utente</value>
@@ -7020,7 +7020,7 @@
     <value>Filtra nella ricerca</value>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>Questa stagione nella ricerca, dove ogni filtro la restringe</value>
+    <value>Apre questa stagione nella ricerca, dove funzionano tutti i filtri</value>
   </data>
   <data name="SortPopularity" xml:space="preserve">
     <value>Popolarità</value>
@@ -7161,7 +7161,7 @@
     <value>Solo con licenza</value>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>Titoli nella mia lista</value>
+    <value>Titoli nella tua lista</value>
   </data>
   <data name="FilterShow" xml:space="preserve">
     <value>Mostra</value>
@@ -7677,7 +7677,7 @@
     <value>Disconnesso</value>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>Termina l'accesso di questo dispositivo sul server. Il server e i tuoi download restano come sono.</value>
+    <value>Disconnettersi chiude la sessione di questo dispositivo sul server. Il server e i tuoi download restano come sono.</value>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
     <value>Lingua</value>
@@ -7998,7 +7998,7 @@
     <value>Serie nella tua lista In visione</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>Una notifica quando esce un episodio di una serie che segui: il titolo della serie e il numero dell'episodio, mai il suo titolo. Una serie può disattivarle nelle proprie impostazioni.</value>
+    <value>Ricevi una notifica quando esce un episodio di una serie che segui. Indica la serie e il numero dell'episodio, mai il titolo dell'episodio. Una serie può disattivarle nelle proprie impostazioni.</value>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
     <value>In arrivo · prossimi 7 giorni</value>
@@ -8010,7 +8010,7 @@
     <value>Suono, vibrazione e schermata di blocco</value>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>Apre Impostazioni di Sistema, dove si scelgono lo stile dei banner, il suono e i badge.</value>
+    <value>Apre Impostazioni di Sistema, dove scegli lo stile dei banner, il suono e i badge.</value>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
     <value>Disattivate: il sistema non consente le notifiche per Kaeri</value>
@@ -8052,7 +8052,7 @@
     <value>Ricordati dal tuo ultimo episodio.</value>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>Scelti nel player. Seguono Impostazioni › Riproduzione.</value>
+    <value>Scelti nel player. Fino ad allora vale Impostazioni › Riproduzione.</value>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
     <value>Fonte</value>
@@ -8139,7 +8139,7 @@
     <value>Espandi copertine al passaggio</value>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>Mostra una scheda più grande con il trailer quando fermi il puntatore su una copertina.</value>
+    <value>Fermando il puntatore su una copertina si apre una scheda più grande con il suo trailer.</value>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
     <value>Linee e texture fedeli, nulla ridisegnato.</value>
@@ -8814,7 +8814,7 @@
     <value>I torrent fanno parte di Kaeri, non sono un plugin. Il proxy e il seeding si impostano in Impostazioni, sotto Fonti.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
-    <value>Fonti sono in fase di nuova configurazione</value>
+    <value>Riconfigurazione delle fonti</value>
   </data>
   <data name="SourcesResponseMs" xml:space="preserve">
     <value>{ms} ms</value>
@@ -8925,7 +8925,7 @@
     <value>Unisciti a un negozio di plugin…</value>
   </data>
   <data name="SourcesEmptyBody" xml:space="preserve">
-    <value>Fonti sono da dove arrivano gli episodi: le cartelle su questo dispositivo, il tuo server multimediale e i plugin dei negozi a cui ti unisci.</value>
+    <value>Fonti sono da dove arrivano gli episodi: le cartelle su questo dispositivo, il tuo server multimediale e i plugin dei negozi di plugin a cui ti unisci.</value>
   </data>
   <data name="SourcesEmptyMore" xml:space="preserve">
     <value>Oppure {join}.</value>
@@ -8967,7 +8967,7 @@
     <value>OPAP-JP</value>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>Raggiunge solo Wikimedia Commons: upload.wikimedia.org e commons.wikimedia.org.</value>
+    <value>La demo raggiunge solo Wikimedia Commons: upload.wikimedia.org e commons.wikimedia.org.</value>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
     <value>La demo non accede mai a nulla e non scrive mai su AniList.</value>
@@ -9036,7 +9036,7 @@
     <value>{owner} gestisce questo negozio di plugin e ha scelto i suoi plugin. Kaeri non li ha creati, controllati né approvati.</value>
   </data>
   <data name="StoresNoPlugins" xml:space="preserve">
-    <value>Questo negozio di plugin non offre ancora nessun plugin.</value>
+    <value>Questo negozio di plugin non ha ancora nessun plugin.</value>
   </data>
   <data name="StoresPlugins" xml:space="preserve">
     <value>Plugin</value>
@@ -9072,7 +9072,7 @@
     <value>Questo negozio di plugin non è più collegato a questo dispositivo.</value>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>Offline: {reason}. I plugin qui sotto sono l'ultimo elenco controllato.</value>
+    <value>Offline: {reason}. Ecco l'ultimo elenco che ha inviato.</value>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
     <value>Offline. Mostro l'ultimo elenco ricevuto.</value>
@@ -9177,7 +9177,7 @@
     <value>Rimuovere {name}?</value>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>Viene eliminato da questo dispositivo. Il negozio di plugin può installarlo di nuovo.</value>
+    <value>Viene eliminato da questo dispositivo. Puoi installarlo di nuovo dal negozio di plugin.</value>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
     <value>Nuovi host contattati</value>
@@ -9198,7 +9198,7 @@
     <value>Incolla il link che ti ha mandato il proprietario del negozio di plugin.</value>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>Incolla il link di invito che ti ha mandato il proprietario di un negozio di plugin. Prima di unirti o installare qualcosa, vedi cosa offre il negozio di plugin.</value>
+    <value>Incolla il link di invito che ti ha mandato il proprietario di un negozio di plugin. Prima di unirti o installare qualcosa, vedi cosa c'è nel negozio di plugin.</value>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
     <value>Incolla il link che ti ha mandato il proprietario del negozio di plugin. Un link di invito Kaeri:// aperto da Messaggi compila direttamente questo foglio.</value>
@@ -9240,7 +9240,7 @@
     <value>La chiave {key} corrisponde al negozio di plugin.</value>
   </data>
   <data name="StoresAnyoneNote" xml:space="preserve">
-    <value>Ti unisci senza nome. Un altro dispositivo si unisce con lo stesso link.</value>
+    <value>Ti unisci senza nome. Un altro dispositivo può unirsi con lo stesso link.</value>
   </data>
   <data name="StoresAlreadyJoinedNote" xml:space="preserve">
     <value>Questo dispositivo è già unito a questo negozio di plugin.</value>
@@ -9399,7 +9399,7 @@
     <value>Chiunque abbia questo link può unirsi finché non lo annulli.</value>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>Vale una volta, per la persona a cui lo mandi. Fino al {until}.</value>
+    <value>Vale una volta, per la persona a cui lo mandi, fino al {until}.</value>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
     <value>Vale una volta, per la persona a cui lo mandi, finché non lo annulli.</value>
@@ -9534,7 +9534,7 @@
     <value>Apri i negozi di plugin</value>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>Un negozio di plugin è un piccolo server che contiene plugin firmati e dà a ogni dispositivo il proprio token. Offre fonti sotto forma di plugin. Kaeri non gestisce negozi di plugin e non ne elenca, quindi ti unisci a uno con un link di invito del suo proprietario.</value>
+    <value>Un negozio di plugin è un piccolo server che contiene plugin firmati e dà a ogni dispositivo il proprio token. I suoi plugin aggiungono fonti. Kaeri non gestisce negozi di plugin e non ne elenca, quindi ti unisci a uno con un link di invito del suo proprietario.</value>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Che cos'è un negozio di plugin?</value>
@@ -9561,7 +9561,7 @@
     <value>Accedi a {service} nel browser</value>
   </data>
   <data name="CloudCloseCarriesOn" xml:space="preserve">
-    <value>Puoi chiuderla. Kaeri continua da solo e apre il passaggio successivo quando è pronto.</value>
+    <value>Puoi chiuderla. Kaeri prosegue da solo e apre il passaggio successivo quando è pronto.</value>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
     <value>computer</value>
@@ -9732,7 +9732,7 @@
     <value>Cartella cloud</value>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>Si completa mentre i tuoi dispositivi sono lontani e conserva un backup sigillato. Solo i tuoi dispositivi possono leggerlo.</value>
+    <value>La cartella tiene allineati i tuoi dispositivi mentre sono lontani e conserva un backup sigillato. Solo i tuoi dispositivi possono leggerlo.</value>
   </data>
   <data name="CloudAdd" xml:space="preserve">
     <value>Aggiungi una cartella cloud</value>
@@ -10077,7 +10077,7 @@
     <value>Chiedi chi guarda all'avvio</value>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>Disattivato per impostazione predefinita. Per un iPad che la casa condivide. La riga dell'account cambia profilo in qualsiasi momento.</value>
+    <value>Disattivato per impostazione predefinita. Attivalo su un iPad che tutta la casa condivide. Puoi cambiare profilo dalla riga dell'account in qualsiasi momento.</value>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
     <value>Cambia profilo</value>
@@ -10872,7 +10872,7 @@
     <value>Accedi a {tracker}</value>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>La tua password va a {tracker} una sola volta, per un token conservato su questo dispositivo.</value>
+    <value>La tua password va a {tracker} una sola volta, in cambio di un token che resta su questo dispositivo.</value>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
     <value>Email o nome utente</value>
@@ -10944,7 +10944,7 @@
     <value>Elencato da {tracker}</value>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker} non ha risposto.</value>
+    <value>{tracker} non ha risposto. Riprova tra poco.</value>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
     <value>{tracker} non ha ancora cast, staff o consigli per questa serie.</value>
@@ -11007,7 +11007,7 @@
     <value>Apri Kaeri sulla TV. Deve essere sulla stessa rete Wi-Fi di questo dispositivo.</value>
   </data>
   <data name="TvTypeCode" xml:space="preserve">
-    <value>Scrivi le sei cifre che mostra {name}. Dopo, questo dispositivo si collega da solo.</value>
+    <value>Scrivi le sei cifre che mostra {name}. Da quel momento, questo dispositivo si collega da solo.</value>
   </data>
   <data name="TvPairingMoment" xml:space="preserve">
     <value>Ci vuole un momento.</value>
@@ -11307,7 +11307,7 @@
     <value>Il download si è interrotto: il server lo ha rifiutato ({code}). Riprova più tardi.</value>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>Il download si è interrotto: la connessione è caduta.</value>
+    <value>Il download si è interrotto: la connessione è caduta. Riprova.</value>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">
     <value>Non è stato possibile salvare il download: {reason}</value>

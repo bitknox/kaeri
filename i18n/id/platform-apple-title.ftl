@@ -12,7 +12,7 @@ title-episodes-short = { $count ->
    *[other] { $count } episode
  }
 title-episode-row-unaired = { $title }. { $when }, belum tayang
-title-all-watched = Semua episode sudah ditonton
+title-all-watched = Anda sudah menonton semua episode
 title-no-answer-short = AniList tidak merespons.
 title-episodes-all = Semua
 title-episodes-unwatched = Belum ditonton

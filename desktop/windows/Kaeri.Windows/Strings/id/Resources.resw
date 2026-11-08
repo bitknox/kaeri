@@ -63,7 +63,7 @@
     <value>Penayangan berhenti karena perangkat lain mulai memutar sesuatu di {name}.</value>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>Penayangan hanya bisa jika perangkat ini dan {name} berada di jaringan yang sama, tanpa lewat VPN.</value>
+    <value>Perangkat ini tidak berada di jaringan yang sama dengan {name}, atau terhubung lewat VPN. Sambungkan keduanya ke jaringan yang sama untuk menayangkan.</value>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Koneksi ke {name} terputus, jadi penayangan berhenti.</value>
@@ -384,7 +384,7 @@
     <value>Belum diaktifkan.</value>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>{source} akan dipakai untuk judul ini.</value>
+    <value>Judul ini sekarang diputar dari {source}.</value>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
     <value>Kembali ke pemilihan sumber otomatis.</value>
@@ -546,13 +546,13 @@
     <value>Pindah ke bab {chapter}, halaman {page}, tempat {device} berhenti</value>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>Kanan ke kiri, terdeteksi</value>
+    <value>Sepertinya kanan ke kiri</value>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>Kiri ke kanan, terdeteksi</value>
+    <value>Sepertinya kiri ke kanan</value>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>Strip panjang, terdeteksi</value>
+    <value>Sepertinya strip panjang</value>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
     <value>Anda sedang offline. Bab yang diunduh tetap bisa dibuka.</value>
@@ -1053,7 +1053,7 @@
     <value>Server {store} versi lama dan tidak bisa mengizinkan siapa pun bergabung lewat tautan. Perbarui dulu.</value>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>{name} dimatikan. Tidak diperiksa saat mencari episode.</value>
+    <value>{name} dimatikan. Kaeri melewatinya saat mencari episode.</value>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
     <value>{name} dinyalakan.</value>
@@ -1062,7 +1062,7 @@
     <value>{id} tidak dimuat. Periksa apakah sudah terpasang di Sumber-sumber.</value>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>{name} akan dipakai untuk judul ini.</value>
+    <value>Judul ini sekarang memakai {name}.</value>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Pilihan itu tidak bisa disimpan. {reason}</value>
@@ -1152,10 +1152,10 @@
     <value>Tidak dapat membuka peramban untuk masuk. Pastikan ada peramban yang terpasang, lalu coba lagi. {reason}</value>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>Tidak ada proses masuk ke {tracker} yang menunggu itu. Mulai masuk lagi.</value>
+    <value>Balasan masuk dari {tracker} tiba, tetapi tidak ada proses masuk yang menunggunya. Mulai masuk lagi.</value>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>Masuk ke {tracker} itu tidak kembali dari permintaan ini. Mulai masuk lagi.</value>
+    <value>Balasan masuk dari {tracker} tidak cocok dengan permintaannya. Mulai masuk lagi.</value>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
     <value>Proses masuk ke {tracker} kembali tanpa token. Coba lagi.</value>
@@ -1245,7 +1245,7 @@
     <value>Proxy memerlukan host dan port.</value>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>Alamat proxy tidak dapat diperiksa.</value>
+    <value>Pemeriksaan proxy tidak bisa memakai alamat ini.</value>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Server tidak dapat dihubungi.</value>
@@ -1269,7 +1269,7 @@
     <value>Terjadi kesalahan di dalam Kaeri. Aplikasi tetap berjalan, tetapi jika layar terlihat macet, keluar lalu buka lagi.</value>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>Basis data rusak, jadi Kaeri membuat yang baru. Berkas lama disimpan di {path}. Data yang disimpan pelacak-pelacak Anda akan kembali saat sinkronisasi selanjutnya.</value>
+    <value>Basis data rusak, jadi Kaeri membuat yang baru. Berkas lama disimpan di {path}. Apa yang disimpan pelacak-pelacak Anda kembali saat sinkronisasi selanjutnya.</value>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
     <value>Kaeri tidak dapat membuat folder {path}. Pastikan disk masih punya ruang dan folder itu dapat ditulisi, lalu coba lagi. {reason}</value>
@@ -1284,7 +1284,7 @@
     <value>Kaeri tidak dapat membuka basis datanya di {path}. Jika aplikasi Kaeri lain sedang terbuka di folder ini, keluar dari aplikasi itu, lalu coba lagi. {reason}</value>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Kaeri tidak dapat menyiapkan koneksi jaringannya dari pengaturan jaringan di config.toml. {reason}</value>
+    <value>Kaeri tidak dapat terhubung dengan pengaturan jaringan di config.toml. Periksa pengaturannya, lalu coba lagi. {reason}</value>
   </data>
   <data name="StartFailed" xml:space="preserve">
     <value>Kaeri tidak dapat dimulai. Keluar, lalu buka lagi. {reason}</value>
@@ -1314,10 +1314,10 @@
     <value>Daftar rencana kosong.</value>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>Sedang offline. Pilihan dari pencarian memerlukan AniList.</value>
+    <value>Anda sedang offline. Kejutkan saya memerlukan AniList untuk memilih judul.</value>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>Belum bisa memilih judul sekarang. Coba lagi sebentar lagi.</value>
+    <value>Tidak dapat menghubungi AniList untuk memilih judul. Coba lagi sebentar lagi.</value>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Lanjutkan menonton</value>
@@ -1539,7 +1539,7 @@
     <value>Lanjutkan unduhan membuat Kaeri tetap di area notifikasi sampai selesai.</value>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>Sampul, bilah kemajuan, dan tautan ke judul di {tracker}. Perlu judul ditampilkan.</value>
+    <value>Sampul, bilah kemajuan, dan tautan ke tayangan di {tracker}. Ini hanya berfungsi jika judul ditampilkan.</value>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
     <value>TV lain</value>
@@ -1650,7 +1650,7 @@
     <value>Muncul di bawah Chromecast di Putar di TV. PC ini yang mengirim episodenya.</value>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Memungkinkan TV dengan Chromecast bawaan memutar torrent. PC ini mengirim episode selama episode itu diputar.</value>
+    <value>TV dengan Chromecast bawaan lalu bisa memutar torrent. PC ini mengirim episode selama episode itu diputar.</value>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
     <value>Mulai ulang</value>
@@ -1665,7 +1665,7 @@
     <value>Cari pengaturan</value>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>Lebih tinggi memakai versi terbaik yang ditawarkan sumber, dan butuh lebih banyak ruang.</value>
+    <value>Lebih tinggi memilih versi terbaik yang dimiliki sumber. Ini memakan lebih banyak ruang.</value>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
     <value>Subtitle tetap menyertai episode ke mana pun berkasnya pergi.</value>
@@ -1674,7 +1674,7 @@
     <value>Unduhan yang terus di-seed tetap di cache Kaeri, bukan di folder unduhan.</value>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>Membaca komentar di utas forum AniList untuk episode yang sudah Anda tonton.</value>
+    <value>Komentar diambil dari utas forum AniList, setelah Anda menonton episodenya.</value>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
     <value>Tiap gambar dimuat dari situs yang menyimpannya, dan situs itu melihat alamat IP Anda.</value>
@@ -1806,7 +1806,7 @@
     <value>Kaeri berhenti bekerja</value>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>Bagian aplikasi yang bekerja telah berhenti. Buka Kaeri lagi untuk melanjutkan.</value>
+    <value>Unduhan dan sinkronisasi ikut berhenti. Buka Kaeri lagi untuk melanjutkan.</value>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
     <value>Buka lagi</value>
@@ -1911,7 +1911,7 @@
     <value>{name} aktif</value>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>Tidak akan dicoba lagi untuk episode. Anda bisa memasangnya lagi dari toko plugin.</value>
+    <value>Kaeri tidak akan mencobanya lagi untuk episode. Anda bisa memasangnya lagi dari toko plugin asalnya.</value>
   </data>
   <data name="StoresUpdatesCount_other" xml:space="preserve">
     <value>{count} perlu update</value>
@@ -2100,13 +2100,13 @@
     <value>Simpan laporan crash di perangkat ini</value>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>Saat aktif, Kaeri menyimpan catatan singkat setiap crash di perangkat ini, dengan judul, alamat, dan nama dihapus, sehingga Anda bisa menambahkannya ke Laporkan bug. Tidak ada yang dikirim otomatis.</value>
+    <value>Kaeri menyimpan catatan singkat setiap crash di perangkat ini untuk Laporkan bug, dengan judul, alamat, dan nama dihapus. Tidak ada yang dikirim otomatis.</value>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
     <value>Tanya setelah crash</value>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>Menampilkan pemberitahuan saat aplikasi dibuka lagi dengan Laporkan…</value>
+    <value>Kaeri menampilkan pemberitahuan dengan Laporkan… saat dibuka lagi.</value>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
     <value>Disimpan oleh {system}</value>
@@ -2136,7 +2136,7 @@
     <value>Hapus semua</value>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>Laporan crash tetap di perangkat ini. Kaeri tidak mengirim apa pun secara otomatis. Laporan keluar hanya saat Anda membukanya di GitHub dari Laporkan bug. Laporan dihapus setelah 30 hari.</value>
+    <value>Laporan crash tetap di perangkat ini, dan Kaeri tidak mengirim apa pun secara otomatis. Laporan keluar hanya saat Anda membukanya di GitHub dari Laporkan bug. Laporan dihapus setelah 30 hari.</value>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
     <value>Minggu sebelumnya</value>
@@ -2262,13 +2262,13 @@
     <value>Muncul di bawah Chromecast pada Putar di TV. iPad ini mengirimkan episode ke TV tersebut.</value>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Memungkinkan TV dengan Chromecast bawaan memutar torrent. Mac ini mengirim episode selama episode diputar.</value>
+    <value>TV dengan Chromecast bawaan lalu bisa memutar torrent. Mac ini mengirim episode selama episode diputar.</value>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Memungkinkan TV dengan Chromecast bawaan memutar torrent. iPhone ini mengirim episode selama episode diputar.</value>
+    <value>TV dengan Chromecast bawaan lalu bisa memutar torrent. iPhone ini mengirim episode selama episode diputar.</value>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Memungkinkan TV dengan Chromecast bawaan memutar torrent. iPad ini mengirim episode selama episode diputar.</value>
+    <value>TV dengan Chromecast bawaan lalu bisa memutar torrent. iPad ini mengirim episode selama episode diputar.</value>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
     <value>Berikutnya · diputar dalam {seconds} dtk</value>
@@ -2982,7 +2982,7 @@
     <value>Hapus unduhan</value>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>Episode hanya bisa diputar lagi dengan koneksi, atau setelah diunduh ulang.</value>
+    <value>Setelah ini, episode perlu koneksi untuk diputar, kecuali Anda mengunduhnya lagi.</value>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
     <value>Hapus unduhan yang sudah ditonton</value>
@@ -2994,7 +2994,7 @@
     <value>Seeding setelah menonton</value>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>Episode yang sudah ditonton dibagikan kembali saat Kaeri terbuka, sampai rasio atau batas waktu di Pengaturan, di bawah Sumber-sumber, tercapai.</value>
+    <value>Episode yang sudah ditonton dibagikan kembali saat Kaeri terbuka. Berbagi berhenti saat mencapai rasio atau batas waktu yang Anda atur di Pengaturan, di bawah Sumber-sumber.</value>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
     <value>Saat jendela ditutup dan unduhan sedang berjalan</value>
@@ -3069,10 +3069,10 @@
     <value>Sudah memakai Kaeri di perangkat lain?</value>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>Pasangkan, lalu perangkat ini mendapatkan sumber-sumber, pelacak-pelacak, dan riwayat Anda. Langkah setelah ini pun selesai.</value>
+    <value>Pasangkan, lalu perangkat ini mendapatkan sumber-sumber, pelacak-pelacak, dan riwayat Anda, dan sisa penyiapan pun selesai untuk Anda.</value>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>Menampilkan kode untuk dimasukkan di perangkat itu. Keduanya harus memakai Wi-Fi yang sama.</value>
+    <value>Anda akan mendapat kode untuk dimasukkan di perangkat itu. Keduanya harus memakai Wi-Fi yang sama.</value>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
     <value>Pulihkan dari folder cloud</value>
@@ -3183,7 +3183,7 @@
     <value>Masuk ke AniList</value>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>Tambahkan sumber untuk memutar dari Beranda. Toko-toko plugin menyediakan beberapa pilihan.</value>
+    <value>Tambahkan sumber untuk memutar dari Beranda. Plugin-plugin berasal dari Toko-toko plugin.</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>Tidak ada di sumber-sumber Anda</value>
@@ -3585,7 +3585,7 @@
     <value>Berkas Anda tetap di tempatnya.</value>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>Tidak bisa menghubungi AniList. Akan dicoba lagi saat pemindaian ulang.</value>
+    <value>Tidak bisa menghubungi AniList. Pemindaian selanjutnya akan mencoba lagi.</value>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
     <value>Pilih kecocokan</value>
@@ -3618,7 +3618,7 @@
     <value>Wilayah</value>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>Menyembunyikan tautan yang ditandai AniList untuk negara lain. Sebagian besar tautan tidak menyebut negara, jadi pilih juga layanan Anda.</value>
+    <value>Tautan yang ditandai AniList untuk negara lain disembunyikan. Sebagian besar tautan tidak menyebut negara, jadi pilih juga layanan Anda.</value>
   </data>
   <data name="LicensedYours" xml:space="preserve">
     <value>Layanan Anda</value>
@@ -4062,7 +4062,7 @@
     <value>Punya tautan undangan?</value>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Plugin-plugin berasal dari toko-toko plugin. Toko plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri, jadi Anda bergabung dengan tautan undangan dari pemiliknya.</value>
+    <value>Plugin-plugin berasal dari toko-toko plugin. Masing-masing bertanda tangan dan memberi setiap perangkat tokennya sendiri, karena itu Anda bergabung dengan tautan undangan dari pemiliknya.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Coba sekarang</value>
@@ -4104,7 +4104,7 @@
     <value>Sedang keluar…</value>
   </data>
   <data name="PartyReadyAction" xml:space="preserve">
-    <value>Saya sudah siap</value>
+    <value>Siap menonton</value>
   </data>
   <data name="PartyCopyInvite" xml:space="preserve">
     <value>Salin tautan undangan</value>
@@ -4119,7 +4119,7 @@
     <value>Nanti saja</value>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>Sedang menyiapkan…</value>
+    <value>Memuat saran…</value>
   </data>
   <data name="PartyServer" xml:space="preserve">
     <value>Server</value>
@@ -4152,7 +4152,7 @@
     <value>Tidak punya server sendiri? {server} adalah server publik yang dijalankan oleh {operator}.</value>
   </data>
   <data name="PartyServerInvited" xml:space="preserve">
-    <value>Server ini dipilih oleh orang yang mengundang Anda. Kaeri tidak menjalankannya.</value>
+    <value>Orang yang mengundang Anda memilih server ini. Kaeri tidak menjalankannya.</value>
   </data>
   <data name="PartyServerShape" xml:space="preserve">
     <value>Tulis server sebagai host dan port, seperti party.example:8999.</value>
@@ -4359,7 +4359,7 @@
     <value>Episode {episode} · bersama {names} · {when}</value>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>Ruang yang Anda masuki tampil di sini, sepuluh terakhir.</value>
+    <value>Sepuluh ruang terakhir yang Anda masuki tampil di sini.</value>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
     <value>Gabung lagi</value>
@@ -4650,7 +4650,7 @@
     <value>Sembunyikan obrolan di nonton bareng</value>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>Pesan, reaksi, dan tandanya di bilah geser tidak muncul di video, dan kolom tulis hilang. Daftar orang tetap menunjukkan siapa yang ada di ruangan.</value>
+    <value>Pesan obrolan, reaksi, dan tandanya di bilah geser tidak muncul di video, dan kolom obrolan hilang. Daftar orang tetap menunjukkan siapa yang ada di ruangan.</value>
   </data>
   <data name="PartyMute" xml:space="preserve">
     <value>Bisukan {name}</value>
@@ -5265,10 +5265,10 @@
     <value>Pemilih berkas tidak bisa dibuka. Coba lagi.</value>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>Berkas subtitel itu tidak bisa dimuat. Pastikan itu berkas subtitel.</value>
+    <value>Berkas itu tidak bisa dimuat sebagai subtitel. Pilih berkas subtitel, seperti .srt atau .ass.</value>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>Berkas audio itu tidak bisa dimuat. Pastikan itu berkas audio.</value>
+    <value>Berkas itu tidak bisa dimuat sebagai audio. Pilih berkas audio, seperti .mka atau .flac.</value>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
     <value>Trek tanpa nama</value>
@@ -5478,7 +5478,7 @@
     <value>Baca demo</value>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>Demo berisi komik pendek dan cerita pendek yang dibagikan pembuatnya di bawah Creative Commons.</value>
+    <value>Satu komik pendek dan satu cerita pendek, dibagikan pembuatnya di bawah Creative Commons.</value>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
     <value>Satu episode pendek dan satu komik pendek, dibagikan pembuatnya di bawah Creative Commons.</value>
@@ -6063,7 +6063,7 @@
     <value>Cari</value>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>Seri yang belum cocok tetap dibaca dari folder. Seri itu belum punya kemajuan di pelacak sampai dicocokkan.</value>
+    <value>Anda tetap bisa membaca seri yang belum cocok dari folder. Seri itu belum mendapat kemajuan di pelacak sampai dicocokkan.</value>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
     <value>Tontonan atau Bacaan</value>
@@ -6213,13 +6213,13 @@
     <value>Daftar, kemajuan, dan saran</value>
   </data>
   <data name="OnboardingListsLaterWatch" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, Simkl, dan Trakt bisa ditambahkan nanti di Pengaturan, bagian Akun.</value>
+    <value>Anda bisa menambahkan MyAnimeList, Kitsu, Simkl, dan Trakt nanti di Pengaturan, bagian Akun.</value>
   </data>
   <data name="OnboardingListsLaterRead" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, dan MangaUpdates bisa ditambahkan nanti di Pengaturan, bagian Akun.</value>
+    <value>Anda bisa menambahkan MyAnimeList, Kitsu, dan MangaUpdates nanti di Pengaturan, bagian Akun.</value>
   </data>
   <data name="OnboardingListsLaterBoth" xml:space="preserve">
-    <value>MyAnimeList, Kitsu, MangaUpdates, Simkl, dan Trakt bisa ditambahkan nanti di Pengaturan, bagian Akun.</value>
+    <value>Anda bisa menambahkan MyAnimeList, Kitsu, MangaUpdates, Simkl, dan Trakt nanti di Pengaturan, bagian Akun.</value>
   </data>
   <data name="OnboardingConnect" xml:space="preserve">
     <value>Sambungkan {tracker}</value>
@@ -6444,10 +6444,10 @@
     <value>Saat semua bab yang diunduh selesai</value>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>Bab punya kanal sistem sendiri, jadi bisa dibisukan tersendiri.</value>
+    <value>Bab punya kanal sistem sendiri, jadi Anda bisa membisukannya tanpa mengubah notifikasi lain.</value>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>MangaUpdates diakses lewat API publiknya.</value>
+    <value>Kaeri terhubung ke MangaUpdates lewat API publiknya.</value>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
     <value>Nama pengguna</value>
@@ -6504,7 +6504,7 @@
     <value>Filter di Pencarian</value>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>Musim ini di Pencarian, tempat setiap filter mempersempit hasil</value>
+    <value>Membuka musim ini di Pencarian, tempat semua filter bisa dipakai</value>
   </data>
   <data name="SortPopularity" xml:space="preserve">
     <value>Popularitas</value>
@@ -6645,7 +6645,7 @@
     <value>Hanya yang berlisensi</value>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>Judul di daftar saya</value>
+    <value>Judul di daftar Anda</value>
   </data>
   <data name="FilterShow" xml:space="preserve">
     <value>Tampilkan</value>
@@ -7119,7 +7119,7 @@
     <value>Keluar</value>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>Mengakhiri sesi masuk perangkat ini di server. Server dan unduhan Anda tetap seperti semula.</value>
+    <value>Keluar mengakhiri sesi perangkat ini di server. Server dan unduhan Anda tetap seperti semula.</value>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
     <value>Bahasa</value>
@@ -7434,7 +7434,7 @@
     <value>Muncul di daftar Menonton Anda</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>Satu notifikasi saat episode dari serial yang Anda ikuti terbit: nama serial dan nomor episodenya, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.</value>
+    <value>Anda mendapat satu notifikasi saat episode dari serial yang Anda ikuti terbit. Isinya nama serial dan nomor episode, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.</value>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
     <value>Segera tayang · 7 hari ke depan</value>
@@ -7446,7 +7446,7 @@
     <value>Suara, getaran, dan layar kunci</value>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>Membuka Pengaturan Sistem, tempat gaya banner, suara, dan lencana diatur.</value>
+    <value>Membuka Pengaturan Sistem, tempat Anda mengatur gaya banner, suara, dan lencana.</value>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
     <value>Mati: sistem tidak mengizinkan notifikasi untuk Kaeri</value>
@@ -7488,7 +7488,7 @@
     <value>Diingat dari episode terakhir Anda.</value>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>Dipilih di pemutar. Mengikuti Pengaturan › Pemutaran.</value>
+    <value>Dipilih di pemutar. Sampai saat itu, Pengaturan › Pemutaran yang berlaku.</value>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
     <value>Sumber</value>
@@ -7569,7 +7569,7 @@
     <value>Perbesar sampul saat disorot</value>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>Menampilkan kartu yang lebih besar dengan trailer saat kursor diletakkan di sampul.</value>
+    <value>Menahan kursor di atas sampul membuka kartu yang lebih besar dengan trailernya.</value>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
     <value>Garis dan tekstur asli, tanpa diubah gayanya.</value>
@@ -8154,7 +8154,7 @@
     <value>Torrent adalah bagian dari Kaeri, bukan plugin. Proxy dan seeding diatur di Pengaturan, di bawah Sumber-sumber.</value>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
-    <value>Sumber-sumber sedang disiapkan ulang</value>
+    <value>Menyiapkan ulang sumber-sumber</value>
   </data>
   <data name="SourcesResponseMs" xml:space="preserve">
     <value>{ms} ms</value>
@@ -8301,7 +8301,7 @@
     <value>OPAP-JP</value>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>Hanya menjangkau Wikimedia Commons: upload.wikimedia.org dan commons.wikimedia.org.</value>
+    <value>Demo hanya menjangkau Wikimedia Commons: upload.wikimedia.org dan commons.wikimedia.org.</value>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
     <value>Demo tidak pernah masuk ke mana pun dan tidak pernah menulis ke AniList.</value>
@@ -8370,7 +8370,7 @@
     <value>{owner} mengelola toko plugin ini dan memilih plugin-plugin-nya. Kaeri tidak membuat, meninjau, atau menyetujuinya.</value>
   </data>
   <data name="StoresNoPlugins" xml:space="preserve">
-    <value>toko plugin ini belum menawarkan plugin-plugin.</value>
+    <value>Toko plugin ini belum punya plugin-plugin.</value>
   </data>
   <data name="StoresPlugins" xml:space="preserve">
     <value>Plugin-plugin</value>
@@ -8406,7 +8406,7 @@
     <value>Anda tidak lagi bergabung dengan toko plugin ini.</value>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>Luring: {reason}. plugin-plugin di bawah adalah daftar terakhir yang diperiksa.</value>
+    <value>Luring: {reason}. Menampilkan daftar terakhir yang dikirimnya.</value>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
     <value>Luring. Menampilkan daftar terakhir yang dikirimnya.</value>
@@ -8511,7 +8511,7 @@
     <value>Hapus {name}?</value>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>Plugin ini dihapus dari perangkat ini. toko plugin dapat memasangnya lagi.</value>
+    <value>Plugin ini dihapus dari perangkat ini. Anda bisa memasangnya lagi dari toko plugin.</value>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
     <value>Juga menghubungi</value>
@@ -8532,7 +8532,7 @@
     <value>Tempel tautan yang dikirim pemilik toko plugin kepada Anda.</value>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>Tempel tautan undangan yang dikirim pemilik toko plugin kepada Anda. Anda melihat apa yang ditawarkan toko plugin sebelum ada yang digabung atau dipasang.</value>
+    <value>Tempel tautan undangan yang dikirim pemilik toko plugin kepada Anda. Anda melihat isi toko plugin sebelum bergabung atau memasang apa pun.</value>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
     <value>Tempel tautan yang dikirim pemilik toko plugin kepada Anda. Tautan Kaeri:// yang dibuka dari Pesan akan langsung mengisi lembar ini.</value>
@@ -8574,7 +8574,7 @@
     <value>Kunci {key} cocok dengan toko plugin.</value>
   </data>
   <data name="StoresAnyoneNote" xml:space="preserve">
-    <value>Anda bergabung tanpa nama. perangkat lain bergabung dengan tautan yang sama.</value>
+    <value>Anda bergabung tanpa nama. Perangkat lain bisa bergabung dengan tautan yang sama.</value>
   </data>
   <data name="StoresAlreadyJoinedNote" xml:space="preserve">
     <value>perangkat ini sudah bergabung dengan toko plugin ini.</value>
@@ -8727,7 +8727,7 @@
     <value>Siapa pun yang punya tautan ini bisa bergabung sampai Anda membatalkannya.</value>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>Berlaku sekali, untuk orang yang Anda kirimi. Sampai {until}.</value>
+    <value>Berlaku sekali, untuk orang yang Anda kirimi, sampai {until}.</value>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
     <value>Berlaku sekali, untuk orang yang Anda kirimi, sampai Anda membatalkannya.</value>
@@ -8838,7 +8838,7 @@
     <value>Buka toko-toko plugin</value>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>Toko plugin adalah server kecil yang menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Ia menawarkan sumber-sumber sebagai plugin-plugin. Kaeri tidak menjalankan atau mendaftar toko plugin apa pun, jadi Anda bergabung dengan tautan undangan dari pemiliknya.</value>
+    <value>Toko plugin adalah server kecil yang menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Plugin-plugin di dalamnya menambahkan sumber-sumber. Kaeri tidak menjalankan atau mendaftar toko plugin apa pun, jadi Anda bergabung dengan tautan undangan dari pemiliknya.</value>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Apa itu toko plugin?</value>
@@ -8976,7 +8976,7 @@
     <value>Lewat folder cloud</value>
   </data>
   <data name="SyncRoadCloudLine" xml:space="preserve">
-    <value>Drive cloud yang sudah Anda pakai, atau server Anda sendiri. Berfungsi saat perangkat Anda berjauhan, dan menyimpan cadangan.</value>
+    <value>Drive cloud yang sudah Anda pakai, atau server Anda sendiri. Ini tetap berfungsi saat perangkat Anda berjauhan, dan menyimpan cadangan.</value>
   </data>
   <data name="SyncRoadLater" xml:space="preserve">
     <value>Anda bisa menambah cara lainnya nanti. Kebanyakan orang memakai keduanya.</value>
@@ -9036,7 +9036,7 @@
     <value>Folder cloud</value>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>Melengkapi saat perangkat Anda berjauhan, dan menyimpan cadangan tersegel. Hanya perangkat Anda yang dapat membacanya.</value>
+    <value>Folder ini menjaga perangkat Anda tetap selaras saat berjauhan, dan menyimpan cadangan tersegel. Hanya perangkat Anda yang dapat membacanya.</value>
   </data>
   <data name="CloudAdd" xml:space="preserve">
     <value>Tambah folder cloud</value>
@@ -9375,7 +9375,7 @@
     <value>Tanya siapa yang menonton saat dibuka</value>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>Nonaktif secara bawaan. Untuk iPad yang dipakai bersama satu rumah. Baris akun bisa mengganti profil kapan saja.</value>
+    <value>Nonaktif secara bawaan. Aktifkan untuk iPad yang dipakai bersama seisi rumah. Anda bisa mengganti profil dari baris akun kapan saja.</value>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
     <value>Ganti profil</value>
@@ -10146,7 +10146,7 @@
     <value>Masuk ke {tracker}</value>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>Kata sandi Anda dikirim ke {tracker} sekali saja, untuk token yang disimpan di perangkat ini.</value>
+    <value>Kata sandi Anda dikirim ke {tracker} sekali saja, ditukar dengan token yang tetap tersimpan di perangkat ini.</value>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
     <value>Email atau nama pengguna</value>
@@ -10218,7 +10218,7 @@
     <value>Terdaftar di {tracker}</value>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker} tidak merespons.</value>
+    <value>{tracker} tidak merespons. Coba lagi sebentar lagi.</value>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
     <value>{tracker} belum punya pemeran, staf, atau rekomendasi untuk judul ini.</value>
@@ -10281,7 +10281,7 @@
     <value>Buka Kaeri di TV. TV harus terhubung ke Wi-Fi yang sama dengan perangkat ini.</value>
   </data>
   <data name="TvTypeCode" xml:space="preserve">
-    <value>Ketik enam digit yang ditampilkan {name}. Setelah itu, perangkat ini terhubung dengan sendirinya.</value>
+    <value>Ketik enam digit yang ditampilkan {name}. Sejak itu, perangkat ini terhubung dengan sendirinya.</value>
   </data>
   <data name="TvPairingMoment" xml:space="preserve">
     <value>Ini memerlukan sedikit waktu.</value>
@@ -10581,7 +10581,7 @@
     <value>Unduhan berhenti: server menolaknya ({code}). Coba lagi nanti.</value>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>Unduhan berhenti: koneksi terputus.</value>
+    <value>Unduhan berhenti: koneksi terputus. Coba lagi.</value>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">
     <value>Unduhan tidak bisa disimpan: {reason}</value>
