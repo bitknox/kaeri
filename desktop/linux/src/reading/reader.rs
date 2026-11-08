@@ -114,6 +114,8 @@ struct State {
     flowing: Option<ChapterId>,
     /// The open chapter came in under the strip's marker: it starts where the scroll is.
     flowed: bool,
+    /// The demo's work being read, with its credit capsule in the header on page 1.
+    demo: Option<(kaeri_model::sources::DemoWorkInfo, gtk::Widget)>,
 }
 
 pub struct Reader {
@@ -758,7 +760,10 @@ impl Reader {
 
     fn reset(&self) {
         let old = self.state.replace(State::default());
-        let _ = old;
+        // The demo's credit capsule leaves with the work, or the next open adds a second one.
+        if let Some((_, capsule)) = old.demo {
+            self.head.remove(&capsule);
+        }
         while let Some(child) = self.strip.first_child() {
             self.strip.remove(&child);
         }
@@ -788,6 +793,12 @@ impl Reader {
             | ReaderSettingKey::Justify => Medium::Novel,
             _ => Medium::Manga,
         };
+        self.shot_setting_for(medium, key, name);
+    }
+
+    /// A reader setting for the shots on `medium`'s value: a comic's look, say.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_setting_for(&self, medium: Medium, key: ReaderSettingKey, name: &str) {
         let value = match name {
             "on" => ReaderValue::Toggle { on: true },
             "off" => ReaderValue::Toggle { on: false },
@@ -1167,6 +1178,7 @@ impl Reader {
             state.strip_frames.clear();
             state.index = 0;
         }
+        self.demo_credit(view.demo_credit.as_ref());
         self.title.set_label(&view.title);
         self.group_title.set_label(&view.title);
         self.line.set_label(&view.chapter.label);
@@ -1592,6 +1604,10 @@ impl Reader {
 
     /// Tell the engine a leaf was painted.
     fn shown(&self, index: usize, how: TurnHow) {
+        // The demo's credit capsule shows on its first page only.
+        if let Some((_, capsule)) = &self.state.borrow().demo {
+            capsule.set_visible(index == 0);
+        }
         let (session, chapter) = {
             let state = self.state.borrow();
             (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
@@ -1605,11 +1621,15 @@ impl Reader {
     fn show_end(self: &Rc<Self>, index: usize, how: TurnHow) {
         self.state.borrow_mut().index = index;
         self.stop_wait();
-        self.end.in_page();
-        self.fill_end();
         let total = self.story_pages();
         self.show_pages(total, total);
-        motion::turn(&self.veil, &self.stack, || self.stack.set_visible_child_name("end"));
+        // After the demo's last chapter, its end card stands in for the end page.
+        let last = self.state.borrow().next.is_none();
+        if !(last && self.demo_end()) {
+            self.end.in_page();
+            self.fill_end();
+            motion::turn(&self.veil, &self.stack, || self.stack.set_visible_child_name("end"));
+        }
         self.widget.grab_focus();
         self.shown(index, how);
     }
@@ -1756,6 +1776,52 @@ impl Reader {
         self.fill_end();
         motion::turn(&self.veil, &self.stack, || self.stack.set_visible_child_name("end"));
         self.widget.grab_focus();
+    }
+
+    /// The demo's credit capsule in the header, as its licence asks, or none for any other work.
+    fn demo_credit(&self, demo: Option<&kaeri_model::sources::DemoWorkInfo>) {
+        let old = self.state.borrow_mut().demo.take();
+        if let Some((_, capsule)) = old {
+            self.head.remove(&capsule);
+        }
+        if let Some(demo) = demo {
+            let capsule = super::demo::credit_capsule(demo);
+            self.head.pack_end(&capsule);
+            self.state.borrow_mut().demo = Some((demo.clone(), capsule.upcast()));
+        }
+    }
+
+    /// After the demo's last page: its end card in place of the end page. False for any other
+    /// work.
+    fn demo_end(self: &Rc<Self>) -> bool {
+        let Some(demo) = self.state.borrow().demo.as_ref().map(|(demo, _)| demo.clone()) else {
+            return false;
+        };
+        let Some(ctx) = self.ctx.upgrade() else { return false };
+        let close = {
+            let this = Rc::downgrade(self);
+            move || {
+                if let Some(this) = this.upgrade() {
+                    this.close();
+                }
+            }
+        };
+        let again = {
+            let this = Rc::downgrade(self);
+            move || {
+                if let Some(this) = this.upgrade() {
+                    this.show_leaf(0, TurnHow::Jump);
+                }
+            }
+        };
+        self.status.set_icon_name(None);
+        self.status.set_title("");
+        self.status.set_description(None);
+        self.status.set_child(Some(&super::demo::end_card(&ctx, &demo, close, again)));
+        // The card stands where the last page was: the ground is the look's page, as on the Mac.
+        self.status.add_css_class("demo-end-ground");
+        motion::turn(&self.veil, &self.stack, || self.stack.set_visible_child_name("status"));
+        true
     }
 
     /// Back to the series, under a novel that can't open.
@@ -2143,6 +2209,7 @@ impl Reader {
                 self.status.set_title(&t::linux_reader_novel_unavailable());
                 self.status.set_description(Some(&t::linux_reader_novel_needs_webkit()));
                 self.status.set_child(Some(&self.back_button()));
+                self.status.remove_css_class("demo-end-ground");
                 self.stack.set_visible_child_name("status");
             }
         }
@@ -2190,6 +2257,17 @@ impl Reader {
             self.widget.add_css_class("reader-light");
         } else {
             self.widget.remove_css_class("reader-light");
+        }
+        // The page's own colour in each light look, for what stands in for a page.
+        let look = self.choice(ReaderSettingKey::Look);
+        for (name, class) in
+            [("paper", "look-paper"), ("light", "look-light"), ("sepia", "look-sepia")]
+        {
+            if look.as_deref() == Some(name) {
+                self.status.add_css_class(class);
+            } else {
+                self.status.remove_css_class(class);
+            }
         }
         let manga = self.state.borrow().medium == Some(Medium::Manga);
         let ground = if manga { self.choice(ReaderSettingKey::Background) } else { None };

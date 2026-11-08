@@ -34,6 +34,8 @@ mod reading;
 mod say;
 mod shots;
 #[cfg(feature = "fixtures")]
+mod shots_prelaunch;
+#[cfg(feature = "fixtures")]
 mod shots_reading;
 #[cfg(feature = "fixtures")]
 mod showcase;

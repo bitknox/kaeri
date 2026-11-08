@@ -763,6 +763,9 @@ fn showcase_kind(event: &Event) -> Option<&'static str> {
         Event::Server(ServerEvent::Servers(_)) => "servers",
         Event::Licensed(_) => "licensed",
         Event::StorePreview(_) => "store-preview",
+        Event::BookSources(kaeri_model::book_sources::BookSourceEvent::View(_)) => {
+            "book-sources"
+        }
         _ => return None,
     })
 }

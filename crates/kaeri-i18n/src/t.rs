@@ -2485,6 +2485,56 @@ pub fn discussion_like_named(count: i64) -> String {
     text("discussion-like-named", &[("count", Arg::Int(count))])
 }
 
+/// Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
+pub fn linux_store_invite_chip(last: &str) -> String {
+    text("linux-store-invite-chip", &[("last", Arg::Text(last))])
+}
+
+/// How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts".
+pub fn linux_store_plugin_hosts(count: i64) -> String {
+    text("linux-store-plugin-hosts", &[("count", Arg::Int(count))])
+}
+
+/// Beside a spinner in the plugin store form while the invite is spent, after 600 ms.
+pub fn linux_store_joining() -> String {
+    text("linux-store-joining", &[])
+}
+
+/// The Install all button while the plugins install.
+pub fn linux_store_installing() -> String {
+    text("linux-store-installing", &[])
+}
+
+/// Third line of a book server's row in Your sources when its sign-in no longer works.
+pub fn linux_book_server_signed_out() -> String {
+    text("linux-book-server-signed-out", &[])
+}
+
+/// Switch on a book server's page: its series show in Kaeri while it is on.
+pub fn linux_book_server_use() -> String {
+    text("linux-book-server-use", &[])
+}
+
+/// Title of the dialog that asks before a book server is removed.
+pub fn linux_book_server_remove_title(host: &str) -> String {
+    text("linux-book-server-remove-title", &[("host", Arg::Text(host))])
+}
+
+/// First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Watch.
+pub fn linux_join_medium_line_watch(device: &str) -> String {
+    text("linux-join-medium-line-watch", &[("device", Arg::Text(device))])
+}
+
+/// First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Both.
+pub fn linux_join_medium_line_both(device: &str) -> String {
+    text("linux-join-medium-line-both", &[("device", Arg::Text(device))])
+}
+
+/// Switch on a book plugin's page: its series show in Kaeri while it is on.
+pub fn linux_book_plugin_use() -> String {
+    text("linux-book-plugin-use", &[])
+}
+
 /// Tooltip of the reader toolbar's settings button.
 pub fn linux_reader_settings_open() -> String {
     text("linux-reader-settings-open", &[])

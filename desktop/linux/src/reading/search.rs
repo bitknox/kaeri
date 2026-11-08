@@ -363,6 +363,10 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     body.append(&other);
     body.append(&grid.widget);
     body.append(&rows);
+    // While only the demo is on, its works as rows instead of the grid.
+    let demo_rows = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    demo_rows.set_visible(false);
+    body.append(&demo_rows);
     body.append(&more);
     let scroll = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
@@ -487,6 +491,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         let (line, other, other_words, empty, clear) =
             (line.clone(), other.clone(), other_words.clone(), empty.clone(), clear.clone());
         let (ask, hub) = (Rc::clone(&ask), Rc::downgrade(&ctx.hub));
+        let (demo_rows, ctx_weak) = (demo_rows.clone(), Rc::downgrade(ctx));
         move |event| match event {
             Event::Reading(ReadingEvent::Search {
                 query,
@@ -505,9 +510,18 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                 at.borrow_mut().1 = *page;
                 tiles.borrow_mut().extend(found.iter().cloned());
                 let browsing = query.text.is_empty();
+                // While only the demo is on, a query lists its works in the demo's own rows.
+                let only_demo = !browsing
+                    && hub.upgrade().is_some_and(|h| h.known.borrow().demo.only_books);
                 grid.widget.set_visible(browsing);
-                rows.set_visible(!browsing);
-                if browsing {
+                rows.set_visible(!browsing && !only_demo);
+                demo_rows.set_visible(only_demo);
+                super::clear(&demo_rows);
+                if only_demo {
+                    if let Some(ctx) = ctx_weak.upgrade() {
+                        demo_rows.append(&super::demo::search_results(&ctx, &tiles.borrow()));
+                    }
+                } else if browsing {
                     grid.set(&tiles.borrow());
                 } else {
                     if *page <= 1 {
@@ -544,7 +558,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                     }
                     None => other.set_visible(false),
                 }
-                if tiles.borrow().is_empty() {
+                if tiles.borrow().is_empty() && !only_demo {
                     let set = filters.any_set();
                     empty.set_title(&if browsing {
                         t::read_search_nothing_browse()

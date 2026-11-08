@@ -79,7 +79,13 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
 }
 
 fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &ReadingHomeView) {
-    if let Some(spot) = &view.spot
+    // While the demo is the only thing to read: its own spotlight and end, and no discovery.
+    let demo = ctx.hub.known.borrow().demo.only_books;
+    if demo {
+        if let Some(card) = super::demo::spotlight(ctx) {
+            column.append(&card);
+        }
+    } else if let Some(spot) = &view.spot
         && let Some(tile) = &view.spotlight
     {
         column.append(&spotlight(ctx, tile, spot));
@@ -88,13 +94,15 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &ReadingHomeView) {
         (t::home_continue(), &view.continue_reading),
         (t::home_this_week(), &view.this_week),
         (t::home_up_next(), &view.up_next),
-        (t::home_read_releasing(), &view.releasing),
     ];
-    if let Some(title) = &view.because_title {
-        shelves.push((t::home_because(title), &view.because));
-    }
-    if let Some(genre) = &view.genre {
-        shelves.push((genre.clone(), &view.genre_shelf));
+    if !demo {
+        shelves.push((t::home_read_releasing(), &view.releasing));
+        if let Some(title) = &view.because_title {
+            shelves.push((t::home_because(title), &view.because));
+        }
+        if let Some(genre) = &view.genre {
+            shelves.push((genre.clone(), &view.genre_shelf));
+        }
     }
     for (title, tiles) in shelves {
         if tiles.is_empty() {
@@ -108,6 +116,9 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &ReadingHomeView) {
     match view.end {
         Some(kaeri_model::reading::ReadHomeEnd::Everything) => {
             column.append(&widgets::haze(&t::home_read_end(), "caption"));
+        }
+        Some(kaeri_model::reading::ReadHomeEnd::NoSources) if demo => {
+            column.append(&super::demo::home_end());
         }
         Some(kaeri_model::reading::ReadHomeEnd::NoSources) => {
             column.append(&widgets::haze(&t::home_read_no_sources(), "caption"));

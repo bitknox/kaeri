@@ -368,6 +368,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     if let Some(settle) = crate::shots_reading::stage(shell, shot) {
         return settle;
     }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
+        return settle;
+    }
     let window = &shell.ctx.window;
     match shot {
         "home" => {
@@ -1368,6 +1372,8 @@ fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f6
 fn unstage(shell: &Rc<Shell>, shot: &str) {
     #[cfg(feature = "fixtures")]
     crate::shots_reading::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_prelaunch::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -2102,6 +2108,14 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 #[cfg(feature = "fixtures")]
                 "reading" => {
                     crate::shots_reading::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "prelaunch" => {
+                    crate::shots_prelaunch::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "prelaunch-demo" => {
+                    crate::shots_prelaunch::DEMO.iter().map(|p| (*p).to_owned()).collect()
                 }
                 "match" => MATCH.iter().map(|p| (*p).to_owned()).collect(),
                 one => vec![one.to_owned()],
