@@ -1,10 +1,13 @@
-//! Reading's Home: the spotlight, Continue, This week, Up next, Releasing now, Because you
-//! finished and the genre shelf.
+//! Reading's Home: the spotlight, Continue, This week, Up next, then the discovery rows:
+//! Trending, Because you finished, New, More of a genre and Finished, per format.
 //!
 //! Home shows at once from what was kept. Then one AniList request asks for everything the
-//! screen lacks: the books the person reads that nothing is kept of, and the discovery shelves
-//! when they are stale. After it the launch's background work may begin, and Because you
-//! finished and Up next's suggestions are asked for in the paced queue.
+//! screen lacks: the books the person reads that nothing is kept of, and the Trending rows when
+//! they are stale. After it the launch's background work may begin, and the paced queue asks for
+//! the other rows in one request, the pages of the series Because you finished and Up next come
+//! from in another, and the books those suggest in a third. Rows are kept 30 minutes; a Home
+//! whose rows are all fresh asks for nothing. Discovery tiles are catalogue entries: no source is
+//! asked about them until a series opens.
 
 use std::{
     collections::{HashMap, HashSet},
@@ -13,31 +16,34 @@ use std::{
 
 use kaeri_core::{books::ChapterId, ids::AnilistId, media::Medium};
 use kaeri_meta::{
-    BrowseFilter, KeptBook, Meta,
+    KeptBook, Meta,
     anilist::books::{Book, BookAsk},
 };
 use kaeri_model::{
     Msg, ReadingMsg,
     reading::{
-        self as words, ReadHomeEnd, ReadHomePart, ReadSpotlight, ReadSpotlightCase,
-        ReadWeekDay, ReadWeekEntry, ReadingEvent, ReadingHomeView, SeriesAction, WorkTile,
+        self as words, READ_ROW_TITLES, ReadHomeEnd, ReadHomePart, ReadHomeRow, ReadRowFormat,
+        ReadSpotlight, ReadSpotlightCase, ReadWeekDay, ReadWeekEntry, ReadingEvent,
+        ReadingHomeView, SeriesAction, WorkTile,
     },
 };
 use kaeri_store::Store;
 use serde::{Deserialize, Serialize};
 
-use super::{Ask, Kit, chapters, send, tiles};
+use super::{
+    Ask, Kit, chapters,
+    discovery::{self, MIX_DAYS, Planned},
+    search, send, tiles,
+};
 use crate::{outbox::Outbox, read_sources::BookSources};
 
-/// How long a discovery shelf is shown again before AniList is asked again.
+/// How long a discovery row is shown again before AniList is asked again.
 const SHELF_KEPT_FOR: i64 = 30 * 60;
-const RELEASING: &str = "read:home:releasing";
-const GENRE: &str = "read:home:genre";
+/// Where each row's titles are kept, after its id.
+const ROW_KEY: &str = "read:home:row:";
 const BECAUSE: &str = "read:home:because";
-const SHELF: u32 = 20;
+const SHELF: u32 = READ_ROW_TITLES;
 const CONTINUE: usize = 12;
-/// The genre shelf's genre when nothing read says one.
-const FALLBACK_GENRE: &str = "Fantasy";
 const DAY: i64 = 86_400;
 
 /// The parts of Home on their way, and how the last load went.
@@ -51,7 +57,7 @@ pub struct Loading {
     pub offline_since: Option<i64>,
 }
 
-/// A discovery shelf as kept: the books on it, when it was asked, and what it is about.
+/// A discovery row as kept: the books on it, when it was asked, and what it is about.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub(crate) struct Shelf {
     pub at: i64,
@@ -82,6 +88,13 @@ impl Shelf {
     }
 }
 
+fn key_of(row: Planned) -> String {
+    match row {
+        Planned::Because => BECAUSE.to_owned(),
+        other => format!("{ROW_KEY}{}", other.id()),
+    }
+}
+
 /// Load Home: at once from what was kept, then again as each part lands.
 pub fn load(kit: &Kit, ask: Ask, refresh: bool, tx: &Outbox) {
     let memory = kit.sources.catalog.home.clone();
@@ -107,6 +120,12 @@ pub fn load(kit: &Kit, ask: Ask, refresh: bool, tx: &Outbox) {
     tokio::spawn(async move {
         home.run(refresh, &tx).await;
     });
+}
+
+/// Home as it stands, asking for nothing: for a change that shows on it, such as a series found
+/// in no source.
+pub fn resend(kit: &Kit, ask: Ask, tx: &Outbox) {
+    Home::of(kit, ask).send(tx);
 }
 
 /// What a Home load works with.
@@ -169,8 +188,20 @@ impl Home {
         self.send(tx);
     }
 
+    /// Every row's key, for when they were kept.
+    fn keys() -> Vec<String> {
+        let mut keys: Vec<String> = ReadRowFormat::ALL
+            .into_iter()
+            .flat_map(|f| [Planned::Trending(f), Planned::New(f), Planned::Finished(f)])
+            .chain([Planned::Genre, Planned::Because])
+            .map(key_of)
+            .collect();
+        keys.dedup();
+        keys
+    }
+
     fn went_offline(&self) {
-        let since = [RELEASING, GENRE, BECAUSE]
+        let since = Self::keys()
             .iter()
             .filter_map(|key| Shelf::of(&self.store, key))
             .map(|s| s.at)
@@ -180,8 +211,56 @@ impl Home {
         memory.failed = since.is_none() && self.yours().is_empty();
     }
 
+    /// A row's kept titles, when they are fresh and about what the row is about now.
+    fn kept(&self, row: Planned, name: Option<&str>) -> Option<Shelf> {
+        Shelf::of(&self.store, &key_of(row))
+            .filter(|s| s.fresh(self.ask.now) && s.name.as_deref() == name)
+    }
+
+    /// The AniList ask that fills a row: exactly its View all's search, first page.
+    fn row_ask(&self, row: Planned, genre: Option<&str>) -> Option<BookAsk> {
+        let query = row.query(genre)?;
+        let filter = search::filter_of(&query, self.ask.adult, self.ask.now);
+        Some(BookAsk::browse("", &filter, 1, SHELF))
+    }
+
+    /// Ask for `rows` in one request with `before` in front, and keep each. False when AniList
+    /// did not answer.
+    async fn fill(&self, before: Vec<BookAsk>, rows: &[(Planned, Option<String>)]) -> bool {
+        let mut asks = before;
+        let first = asks.len();
+        for (row, name) in rows {
+            asks.extend(self.row_ask(*row, name.as_deref()));
+        }
+        if asks.is_empty() {
+            return true;
+        }
+        match self.meta.books(&asks).await {
+            Ok(pages) => {
+                for (i, (row, name)) in rows.iter().enumerate() {
+                    let ids = pages
+                        .get(first + i)
+                        .map(|p| p.items.iter().map(|b| b.id.get()).collect())
+                        .unwrap_or_default();
+                    Shelf { at: self.ask.now, ids, name: name.clone() }
+                        .keep(&self.store, &key_of(*row));
+                }
+                true
+            }
+            Err(e) => {
+                tracing::info!(error = %e, "reading's Home rows were not asked for");
+                false
+            }
+        }
+    }
+
+    /// Whether any of `rows` has nothing kept to show: a failed ask then says so.
+    fn any_empty(&self, rows: &[(Planned, Option<String>)]) -> bool {
+        rows.iter().any(|(row, _)| Shelf::of(&self.store, &key_of(*row)).is_none())
+    }
+
     /// The one request the screen waits for: the person's books nothing is kept of, and the
-    /// discovery shelves that are stale.
+    /// Trending rows that are stale.
     async fn screen(&self, refresh: bool, tx: &Outbox) {
         let now = self.ask.now;
         let yours = self.yours();
@@ -190,167 +269,119 @@ impl Home {
         } else {
             tiles::missing(&self.meta, &yours, now)
         };
-        let releasing = Shelf::of(&self.store, RELEASING);
-        let genre_name = self.genre();
-        let genre = Shelf::of(&self.store, GENRE)
-            .filter(|s| s.name.as_deref() == Some(genre_name.as_str()));
-        let stale = |s: &Option<Shelf>| refresh || !s.as_ref().is_some_and(|s| s.fresh(now));
-        let mut asks = Vec::new();
-        let mut at = (None, None, None);
-        for chunk in missing.chunks(50) {
-            at.0.get_or_insert(asks.len());
-            asks.push(BookAsk::Ids(chunk.to_vec()));
-        }
-        let adult = (!self.ask.adult).then_some(false);
-        if stale(&releasing) {
-            at.1 = Some(asks.len());
-            let filter = BrowseFilter {
-                sort: vec!["TRENDING_DESC".into()],
-                statuses: vec!["RELEASING".into()],
-                adult,
-                ..BrowseFilter::default()
-            };
-            asks.push(BookAsk::browse("", &filter, 1, SHELF));
-        }
-        // The genre is the one the person reads most, which needs their books: with some not
-        // kept yet, the shelf is asked for behind the screen's request, once they are.
-        let genre_later = stale(&genre) && !missing.is_empty();
-        if stale(&genre) && !genre_later {
-            at.2 = Some(asks.len());
-            let filter = BrowseFilter {
-                sort: vec!["POPULARITY_DESC".into()],
-                genres: vec![genre_name.clone()],
-                adult,
-                ..BrowseFilter::default()
-            };
-            asks.push(BookAsk::browse("", &filter, 1, SHELF));
-        }
-        let discovery_done = |home: &Self| {
-            if !genre_later {
-                home.landed(ReadHomePart::Discovery);
-            }
-        };
-        if asks.is_empty() {
+        let stale: Vec<(Planned, Option<String>)> = ReadRowFormat::ALL
+            .into_iter()
+            .map(Planned::Trending)
+            .filter(|row| refresh || self.kept(*row, None).is_none())
+            .map(|row| (row, None))
+            .collect();
+        let asks: Vec<BookAsk> = missing.chunks(50).map(|c| BookAsk::Ids(c.to_vec())).collect();
+        if asks.is_empty() && stale.is_empty() {
             self.landed(ReadHomePart::Yours);
-            discovery_done(self);
             self.send(tx);
             return;
         }
-        match self.meta.books(&asks).await {
-            Ok(pages) => {
-                let ids_of = |i: usize| -> Vec<u32> {
-                    pages
-                        .get(i)
-                        .map(|p| p.items.iter().map(|b| b.id.get()).collect())
-                        .unwrap_or_default()
-                };
-                if let Some(i) = at.1 {
-                    Shelf { at: now, ids: ids_of(i), name: None }.keep(&self.store, RELEASING);
-                }
-                if let Some(i) = at.2 {
-                    Shelf { at: now, ids: ids_of(i), name: Some(genre_name) }
-                        .keep(&self.store, GENRE);
-                }
-                self.memory().offline_since = None;
-            }
-            Err(e) => {
-                tracing::info!(error = %e, "reading's Home was not asked for");
+        match self.fill(asks, &stale).await {
+            true => self.memory().offline_since = None,
+            false => {
                 self.went_offline();
+                if self.any_empty(&stale) {
+                    self.memory().failed = true;
+                }
             }
         }
         self.landed(ReadHomePart::Yours);
-        discovery_done(self);
         self.send(tx);
     }
 
-    /// The paced part: Because you finished, and Up next's suggestions from what is read.
+    /// The paced part: the other rows in one request, then the pages Because you finished and
+    /// Up next's suggestions come from in another, then the books they suggest in a third.
     async fn behind(&self, refresh: bool, tx: &Outbox) {
         if self.memory().offline_since.is_some() || self.memory().failed {
             return;
         }
         let now = self.ask.now;
         let mut asked = false;
-        // The genre shelf, when the screen's request had to find the person's books first.
-        let genre_name = self.genre();
-        let genre = Shelf::of(&self.store, GENRE);
-        let genre_stale = refresh
-            || genre.is_none_or(|s| {
-                !s.fresh(now) || s.name.as_deref() != Some(genre_name.as_str())
-            });
-        if self.memory().parts.contains(&ReadHomePart::Discovery) && genre_stale {
+        // New, Finished and More of a genre, as the mix plans them now that the person's books
+        // are kept.
+        let genre = self.genre();
+        let stale: Vec<(Planned, Option<String>)> = self
+            .plan()
+            .into_iter()
+            .filter(|row| !row.on_screen() && *row != Planned::Because)
+            .map(|row| (row, (row == Planned::Genre).then(|| genre.clone()).flatten()))
+            .filter(|(row, name)| refresh || self.kept(*row, name.as_deref()).is_none())
+            .collect();
+        if !stale.is_empty() {
             asked = true;
-            let filter = BrowseFilter {
-                sort: vec!["POPULARITY_DESC".into()],
-                genres: vec![genre_name.clone()],
-                adult: (!self.ask.adult).then_some(false),
-                ..BrowseFilter::default()
-            };
-            match self.meta.books(&[BookAsk::browse("", &filter, 1, SHELF)]).await {
-                Ok(pages) => {
-                    let ids = pages
-                        .first()
-                        .map(|p| p.items.iter().map(|b| b.id.get()).collect())
-                        .unwrap_or_default();
-                    Shelf { at: now, ids, name: Some(genre_name) }.keep(&self.store, GENRE);
-                }
-                Err(e) => tracing::info!(error = %e, "the genre shelf was not asked for"),
+            if !self.fill(Vec::new(), &stale).await && self.any_empty(&stale) {
+                self.memory().failed = true;
             }
         }
         self.landed(ReadHomePart::Discovery);
-        // The series to say "Because you finished" of: the one finished most recently.
+        if asked {
+            self.send(tx);
+        }
+        // The series to say "Because you finished" of, and the one Up next's suggestions come
+        // from: their pages in one request, when what is kept of them is old.
         let finished = self.finished();
-        let kept = Shelf::of(&self.store, BECAUSE);
         let because_stale = refresh
-            || kept
-                .as_ref()
-                .is_none_or(|s| !s.fresh(now) || s.name.as_deref() != finished.as_deref());
-        if let Some(work) = finished.as_deref()
-            && because_stale
-            && let Some(id) = tiles::anilist(work)
-        {
+            || finished.is_some() && self.kept(Planned::Because, finished.as_deref()).is_none();
+        let because_id = finished.as_deref().filter(|_| because_stale).and_then(tiles::anilist);
+        let up_next_id =
+            self.continuing().first().and_then(|w| tiles::anilist(w)).filter(|id| {
+                refresh || self.meta.kept_book(*id).is_none_or(|k| !k.detail_fresh(now))
+            });
+        let wanted: Vec<AnilistId> = because_id.into_iter().chain(up_next_id).collect();
+        if !wanted.is_empty() {
             asked = true;
-            if let Some(book) = self.detail(id, refresh).await {
-                let ids: Vec<AnilistId> = book
-                    .recommended()
-                    .into_iter()
-                    .filter(|r| !self.on_a_list(*r))
-                    .take(SHELF as usize)
-                    .collect();
-                self.fetch_missing(&ids).await;
-                let ids = ids.iter().map(|id| id.get()).collect();
+            let details = self.details(&wanted, refresh).await;
+            let suggested = |id: Option<AnilistId>| -> Vec<AnilistId> {
+                id.and_then(|id| details.iter().find(|b| b.id == id))
+                    .map(Book::recommended)
+                    .unwrap_or_default()
+            };
+            let because: Vec<AnilistId> = suggested(because_id)
+                .into_iter()
+                .filter(|r| !self.on_a_list(*r))
+                .take(SHELF as usize)
+                .collect();
+            let mut all = because.clone();
+            all.extend(suggested(up_next_id).into_iter().filter(|id| !because.contains(id)));
+            self.fetch_missing(&all).await;
+            if let (Some(work), Some(id)) = (finished.as_deref(), because_id)
+                && details.iter().any(|b| b.id == id)
+            {
+                let ids = because.iter().map(|id| id.get()).collect();
                 Shelf { at: now, ids, name: Some(work.to_owned()) }.keep(&self.store, BECAUSE);
             }
         }
         self.landed(ReadHomePart::Because);
-        // Up next's suggestions: what is like the series read most recently.
-        if let Some(work) = self.continuing().first()
-            && let Some(id) = tiles::anilist(work)
-            && self.meta.kept_book(id).is_none_or(|k| !k.detail_fresh(now))
-        {
-            asked = true;
-            if let Some(book) = self.detail(id, refresh).await {
-                let ids: Vec<AnilistId> = book.recommended();
-                self.fetch_missing(&ids).await;
-            }
-        }
         if asked {
             self.send(tx);
         }
     }
 
-    /// A book's page, asked again only when what was kept of it is old.
-    async fn detail(&self, id: AnilistId, refresh: bool) -> Option<Book> {
-        let kept = self.meta.kept_book(id);
-        if !refresh && let Some(kept) = kept.as_ref().filter(|k| k.detail_fresh(self.ask.now)) {
-            return Some(kept.book.clone());
-        }
-        match self.meta.book(id).await {
-            Ok(book) => Some(book),
-            Err(e) => {
-                tracing::info!(error = %e, "a book's page was not asked for");
-                kept.map(|k| k.book)
+    /// Books' pages, the kept ones when fresh, the rest asked in one request. A book AniList
+    /// did not give is its kept page, however old.
+    async fn details(&self, ids: &[AnilistId], refresh: bool) -> Vec<Book> {
+        let now = self.ask.now;
+        let mut out = Vec::new();
+        let mut ask = Vec::new();
+        for id in ids {
+            match self.meta.kept_book(*id) {
+                Some(kept) if !refresh && kept.detail_fresh(now) => out.push(kept.book),
+                _ => ask.push(*id),
             }
         }
+        match self.meta.book_details(&ask).await {
+            Ok(books) => out.extend(books),
+            Err(e) => {
+                tracing::info!(error = %e, "books' pages were not asked for");
+                out.extend(self.meta.kept_books(&ask).into_iter().map(|k| k.book));
+            }
+        }
+        out
     }
 
     async fn fetch_missing(&self, ids: &[AnilistId]) {
@@ -417,15 +448,57 @@ impl Home {
         out
     }
 
+    /// Every series that is the person's: on any list, or read here.
+    fn own(&self) -> HashSet<String> {
+        let mut out: HashSet<String> = self.yours().into_iter().collect();
+        out.extend(self.store.read_statuses().unwrap_or_default().into_iter().map(|(w, _)| w));
+        out.extend(
+            self.store
+                .continue_reading(CONTINUE * 4)
+                .unwrap_or_default()
+                .into_iter()
+                .map(|w| w.work),
+        );
+        out
+    }
+
     fn on_a_list(&self, id: AnilistId) -> bool {
         let work = tiles::work_of(id);
         self.store.read_status(work.as_str()).ok().and_then(|(s, _)| s).is_some()
             || self.store.read_work(work.as_str()).ok().flatten().is_some()
     }
 
+    /// The reading mix: series on lists plus chapters read in the last 90 days, counted by
+    /// format, from what is kept of AniList's books.
+    fn mix(&self) -> HashMap<ReadRowFormat, u32> {
+        let mut weight: HashMap<String, u32> = HashMap::new();
+        for (work, _) in self.store.read_statuses().unwrap_or_default() {
+            *weight.entry(work).or_default() += 1;
+        }
+        let since = self.ask.now - MIX_DAYS * DAY;
+        for (work, read) in self.store.chapters_read_since(since).unwrap_or_default() {
+            *weight.entry(work).or_default() += read;
+        }
+        let works: Vec<String> = weight.keys().cloned().collect();
+        let mut counts = HashMap::new();
+        for kept in tiles::kept_of(&self.meta, &works) {
+            let work = tiles::work_of(kept.book.id);
+            let format = discovery::format_of(kept.book.reading_format());
+            *counts.entry(format).or_default() +=
+                weight.get(work.as_str()).copied().unwrap_or(0);
+        }
+        counts
+    }
+
+    /// The rows the mix plans now.
+    fn plan(&self) -> Vec<Planned> {
+        let ranked = discovery::ranked(&self.mix());
+        discovery::plan(&ranked, self.finished().is_some(), self.genre().is_some())
+    }
+
     /// The genre the person reads most, by what is kept of their books; between two as common,
-    /// the one of the series read most recently.
-    fn genre(&self) -> String {
+    /// the one of the series read most recently. `None` with nothing read.
+    fn genre(&self) -> Option<String> {
         let mut works = self.following();
         works.extend(self.store.read_status_works("completed").unwrap_or_default());
         // Each genre's count, and the first series in that order to have it.
@@ -440,7 +513,7 @@ impl Home {
         counts
             .into_iter()
             .max_by(|a, b| a.1.0.cmp(&b.1.0).then_with(|| b.1.1.cmp(&a.1.1)))
-            .map_or_else(|| FALLBACK_GENRE.to_owned(), |(genre, _)| genre)
+            .map(|(genre, _)| genre)
     }
 
     // -----------------------------------------------------------------------------------------
@@ -454,17 +527,75 @@ impl Home {
         self.ask.adult || !book.adult()
     }
 
-    fn shelf(&self, key: &str, skip: &HashSet<String>) -> (Vec<WorkTile>, Option<String>) {
-        let Some(shelf) = Shelf::of(&self.store, key) else { return (Vec::new(), None) };
+    /// A row's titles as kept, however old, with when they were asked; adult ones left out
+    /// unless they are on. Each says so when it was opened and no source had it since.
+    fn shelf(&self, row: Planned, name: Option<&str>) -> Option<(Vec<WorkTile>, i64)> {
+        let shelf =
+            Shelf::of(&self.store, &key_of(row)).filter(|s| s.name.as_deref() == name)?;
+        let not_found =
+            self.sources.catalog.not_found.lock().unwrap_or_else(|e| e.into_inner()).clone();
         let tiles = self
             .meta
             .kept_books(&shelf.ids())
             .iter()
             .filter(|k| self.shown(&k.book))
-            .map(|k| tiles::plain(&self.meta, &k.book))
-            .filter(|t| !skip.contains(t.work.as_str()))
+            .map(|k| {
+                let mut tile = tiles::plain(&self.meta, &k.book);
+                tile.not_in_sources =
+                    not_found.get(tile.work.as_str()).is_some_and(|at| *at >= shelf.at);
+                tile
+            })
             .collect();
-        (tiles, shelf.name)
+        Some((tiles, shelf.at))
+    }
+
+    /// The discovery rows, in the mix's order, each title once and none of the person's own.
+    fn rows(&self, pending: &[ReadHomePart], seen: &mut HashSet<String>) -> Vec<ReadHomeRow> {
+        let genre = self.genre();
+        let finished = self.finished();
+        let because_title = finished
+            .as_deref()
+            .and_then(tiles::anilist)
+            .and_then(|id| self.meta.kept_book(id))
+            .map(|k| self.meta.titles().pick(&k.book.title).to_owned());
+        let mut planned = Vec::new();
+        let mut tiles = Vec::new();
+        for row in self.plan() {
+            let name = match row {
+                Planned::Genre => genre.as_deref(),
+                Planned::Because => finished.as_deref(),
+                _ => None,
+            };
+            let Some(title) = row.title(because_title.as_deref(), genre.as_deref()) else {
+                continue;
+            };
+            let part = match row {
+                Planned::Trending(_) => ReadHomePart::Yours,
+                Planned::Because => ReadHomePart::Because,
+                _ => ReadHomePart::Discovery,
+            };
+            let kept = self.shelf(row, name).map(|(t, _)| t);
+            let on_its_way = kept.is_none() && pending.contains(&part);
+            planned.push((row, title, on_its_way));
+            tiles.push(kept.unwrap_or_default());
+        }
+        discovery::once_each(&mut tiles, seen);
+        planned
+            .into_iter()
+            .zip(tiles)
+            // A row with nothing, and nothing on its way, leaves with its heading.
+            .filter(|((_, _, pending), tiles)| *pending || !tiles.is_empty())
+            .map(|((row, title, pending), tiles)| ReadHomeRow {
+                id: row.id(),
+                kind: row.kind(),
+                format: row.format(),
+                title,
+                side: row.side(),
+                tiles,
+                view_all: row.query(genre.as_deref()),
+                pending,
+            })
+            .collect()
     }
 
     fn view(&self) -> ReadingHomeView {
@@ -480,20 +611,36 @@ impl Home {
         let following = self.following();
         let followed = tiles::kept_of(&self.meta, &following);
         let week = self.week(&followed);
-        let mut seen: HashSet<String> = HashSet::new();
-        seen.extend(self.yours());
+        let mut seen = self.own();
         let up_next = self.up_next(&continuing, &seen);
-        // The shelves leave out what is the person's own; one may repeat another's.
-        let (releasing, _) = self.shelf(RELEASING, &seen);
-        let (because, because_work) = self.shelf(BECAUSE, &seen);
-        let because_title = because_work
-            .as_deref()
-            .filter(|_| !because.is_empty())
-            .and_then(tiles::anilist)
-            .and_then(|id| self.meta.kept_book(id))
-            .map(|k| self.meta.titles().pick(&k.book.title).to_owned());
-        let (genre_shelf, genre) = self.shelf(GENRE, &seen);
-        let spot = self.spotlight(&followed, &continue_tiles, &up_next, &releasing);
+        seen.extend(up_next.iter().map(|t| t.work.0.clone()));
+        let rows = self.rows(&pending, &mut seen);
+        let row_of = |kind| rows.iter().find(|r| r.kind == kind);
+        let trending: Vec<WorkTile> = rows
+            .iter()
+            .filter(|r| r.kind == kaeri_model::reading::ReadRowKind::Trending)
+            .flat_map(|r| r.tiles.iter().cloned())
+            .collect();
+        // The rows' first fields, for front ends not built against rows yet: the first
+        // Trending row in place of Releasing now.
+        let releasing = row_of(kaeri_model::reading::ReadRowKind::Trending)
+            .map(|r| r.tiles.clone())
+            .unwrap_or_default();
+        let because_row =
+            row_of(kaeri_model::reading::ReadRowKind::Because).filter(|r| !r.tiles.is_empty());
+        let because_title = because_row.and_then(|_| {
+            self.finished()
+                .as_deref()
+                .and_then(tiles::anilist)
+                .and_then(|id| self.meta.kept_book(id))
+                .map(|k| self.meta.titles().pick(&k.book.title).to_owned())
+        });
+        let because = because_row.map(|r| r.tiles.clone()).unwrap_or_default();
+        let genre_row = row_of(kaeri_model::reading::ReadRowKind::MoreGenre)
+            .filter(|r| !r.tiles.is_empty());
+        let genre = genre_row.and_then(|_| self.genre());
+        let genre_shelf = genre_row.map(|r| r.tiles.clone()).unwrap_or_default();
+        let spot = self.spotlight(&followed, &continue_tiles, &up_next, &trending);
         let end = pending.is_empty().then_some(if self.no_sources {
             ReadHomeEnd::NoSources
         } else {
@@ -511,7 +658,7 @@ impl Home {
             releasing,
             because_title,
             because,
-            genre: genre.filter(|_| !genre_shelf.is_empty()),
+            genre,
             genre_shelf,
             no_sources: self.no_sources,
             spot: spot.map(|(_, spot)| spot),
@@ -521,6 +668,7 @@ impl Home {
             offline_since: offline.then_some(offline_since).flatten(),
             failed,
             end,
+            rows,
         }
     }
 
@@ -659,7 +807,7 @@ impl Home {
         followed: &[KeptBook],
         continuing: &[WorkTile],
         up_next: &[WorkTile],
-        releasing: &[WorkTile],
+        trending: &[WorkTile],
     ) -> Option<(WorkTile, ReadSpotlight)> {
         let today = chapters::day_start(self.ask.now, &self.zone).unwrap_or(self.ask.now);
         for kept in followed {
@@ -747,15 +895,19 @@ impl Home {
             found.1.planned = self.planning().contains(&tile.work.0);
             return Some(found);
         }
-        let popular = releasing
+        // The popular pick: the Trending rows' most popular series still coming out, or with
+        // none coming out, their most popular.
+        let popular =
+            trending.iter().filter_map(|t| tiles::anilist(t.work.as_str())).collect::<Vec<_>>();
+        let kept = self.meta.kept_books(&popular);
+        let releasing =
+            |k: &&KeptBook| k.book.status == Some(kaeri_core::media::MediaStatus::Releasing);
+        let best = kept
             .iter()
-            .filter_map(|t| tiles::anilist(t.work.as_str()))
-            .collect::<Vec<_>>();
-        let best = self
-            .meta
-            .kept_books(&popular)
-            .into_iter()
-            .max_by_key(|k| k.book.popularity.unwrap_or_default())?;
+            .filter(releasing)
+            .max_by_key(|k| k.book.popularity.unwrap_or_default())
+            .or_else(|| kept.iter().max_by_key(|k| k.book.popularity.unwrap_or_default()))?
+            .clone();
         Some(self.spot(
             &best,
             ReadSpotlightCase::Popular,

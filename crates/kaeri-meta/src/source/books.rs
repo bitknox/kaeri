@@ -98,6 +98,19 @@ impl Meta {
         Ok(book)
     }
 
+    /// Several books' pages in one request, each kept: see [`crate::AniList::book_details`].
+    pub async fn book_details(&self, ids: &[AnilistId]) -> Result<Vec<Book>> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+        let books = self.weathered(self.anilist.book_details(ids)).await?;
+        let now = kaeri_store::now();
+        for book in &books {
+            self.keep_book(book, Some(now), now);
+        }
+        Ok(books)
+    }
+
     /// A book as kept, however old.
     pub fn kept_book(&self, id: AnilistId) -> Option<KeptBook> {
         let row = self.store.book_work(&work_of(id)).ok()??;

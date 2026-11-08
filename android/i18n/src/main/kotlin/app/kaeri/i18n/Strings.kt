@@ -1185,6 +1185,82 @@ object Strings {
     fun readingDownloadsDoneSeries(context: Context, count: Int): String =
         context.getString(R.string.reading_downloads_done_series, count)
 
+    /** Row heading on reading's Home: manga that are trending on AniList now. */
+    fun readHomeTrendingManga(context: Context): String =
+        context.getString(R.string.read_home_trending_manga)
+
+    /** Row heading on reading's Home: webtoons that are trending on AniList now. */
+    fun readHomeTrendingWebtoons(context: Context): String =
+        context.getString(R.string.read_home_trending_webtoons)
+
+    /** Row heading on reading's Home: light novels that are trending on AniList now. */
+    fun readHomeTrendingNovels(context: Context): String =
+        context.getString(R.string.read_home_trending_novels)
+
+    /** Row heading on reading's Home: the most popular manga that started in the last 12 months. */
+    fun readHomeNewManga(context: Context): String =
+        context.getString(R.string.read_home_new_manga)
+
+    /** Row heading on reading's Home: the most popular webtoons that started in the last 12 months. */
+    fun readHomeNewWebtoons(context: Context): String =
+        context.getString(R.string.read_home_new_webtoons)
+
+    /** Row heading on reading's Home: the most popular light novels that started in the last 12 months. */
+    fun readHomeNewNovels(context: Context): String =
+        context.getString(R.string.read_home_new_novels)
+
+    /** Side text beside a New row's heading, in a quieter style: what the row covers. */
+    fun readHomeNewSide(context: Context): String =
+        context.getString(R.string.read_home_new_side)
+
+    /** Row heading on reading's Home: the most popular manga that have finished. */
+    fun readHomeFinishedManga(context: Context): String =
+        context.getString(R.string.read_home_finished_manga)
+
+    /** Row heading on reading's Home: the most popular webtoons that have finished. */
+    fun readHomeFinishedWebtoons(context: Context): String =
+        context.getString(R.string.read_home_finished_webtoons)
+
+    /** Row heading on reading's Home: the most popular light novels that have finished. */
+    fun readHomeFinishedNovels(context: Context): String =
+        context.getString(R.string.read_home_finished_novels)
+
+    /** Side text beside a Finished row's heading, in a quieter style: how the row is sorted. */
+    fun readHomeFinishedSide(context: Context): String =
+        context.getString(R.string.read_home_finished_side)
+
+    /** A choice of reading Search's Started filter: series that started at any time. */
+    fun readSearchStartedAny(context: Context): String =
+        context.getString(R.string.read_search_started_any)
+
+    /** A choice of reading Search's Started filter: series that started in the last 12 months. */
+    fun readSearchStartedYear(context: Context): String =
+        context.getString(R.string.read_search_started_year)
+
+    /** A choice of reading Search's Started filter: series that started in the last 3 years. */
+    fun readSearchStarted3Years(context: Context): String =
+        context.getString(R.string.read_search_started_3_years)
+
+    /** Under a source's hit in Search: the chapters it holds, from the first. */
+    fun readHitChapters(context: Context, last: Int): String =
+        context.getString(R.string.read_hit_chapters, last)
+
+    /** Under a source's hit in Search: a web novel's episodes it holds, from the first. */
+    fun readHitEpisodes(context: Context, last: Int): String =
+        context.getString(R.string.read_hit_episodes, last)
+
+    /** Under a source's hit in Search: a light novel's parts it holds. */
+    fun readHitParts(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.read_hit_parts, count, count)
+
+    /** Under a source's hit in Search: the book files it holds. */
+    fun readHitFiles(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.read_hit_files, count, count)
+
+    /** Under a source's hit in Search: the book files it holds, all in one format ("CBZ"). */
+    fun readHitFilesFormat(context: Context, count: Int, format: String): String =
+        context.resources.getQuantityString(R.plurals.read_hit_files_format, count, count, format)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)
@@ -8818,6 +8894,30 @@ object Strings {
     fun homeReadNoSources(context: Context): String =
         context.getString(R.string.home_read_no_sources)
 
+    /** In place of Read's discovery rows on a first run with no connection: nothing was kept yet. */
+    fun readHomeOfflineRows(context: Context): String =
+        context.getString(R.string.read_home_offline_rows)
+
+    /** E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title. */
+    fun readHomeBrowse(context: Context): String =
+        context.getString(R.string.read_home_browse)
+
+    /** E-ink: the line under Browse on Read's Home. */
+    fun readHomeBrowseLine(context: Context): String =
+        context.getString(R.string.read_home_browse_line)
+
+    /** E-ink: a discovery row in the Browse list, naming its first two series and how many follow. */
+    fun readHomeBrowseRow(context: Context, first: String, second: String, more: Int): String =
+        context.getString(R.string.read_home_browse_row, first, second, more)
+
+    /** E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened. */
+    fun readHomeBrowseNote(context: Context): String =
+        context.getString(R.string.read_home_browse_note)
+
+    /** E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept. */
+    fun readHomeBrowseKept(context: Context, time: String): String =
+        context.getString(R.string.read_home_browse_kept, time)
+
     /** Under a day in Read's week: what usually comes out that day, when the time isn't known. */
     fun weekUsually(context: Context): String =
         context.getString(R.string.week_usually)
@@ -9641,6 +9741,88 @@ object Strings {
     /** A genre's state: no series with it. */
     fun readFilterLeftOut(context: Context): String =
         context.getString(R.string.read_filter_left_out)
+
+    /** A filter of reading's Search: when a series started. */
+    fun readSearchStarted(context: Context): String =
+        context.getString(R.string.read_search_started)
+
+    /** The filter bar's chip that searches only the person's own sources, leaving AniList out. */
+    fun readSearchSourcesOnly(context: Context): String =
+        context.getString(R.string.read_search_sources_only)
+
+    /** Search's section heading under AniList's results: one group per source of the person's. */
+    fun readSearchFromSources(context: Context): String =
+        context.getString(R.string.read_search_from_sources)
+
+    /** E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name. */
+    fun readSearchAsking(context: Context, source: String): String =
+        context.getString(R.string.read_search_asking, source)
+
+    /** A source group whose source failed to answer. The reason and Try again follow. */
+    fun readSearchSourceFailed(context: Context, source: String): String =
+        context.getString(R.string.read_search_source_failed, source)
+
+    /** The reason under it when the source gave no answer in time. */
+    fun readSearchSourceTimeout(context: Context, seconds: Int): String =
+        context.getString(R.string.read_search_source_timeout, seconds)
+
+    /** One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list. */
+    fun readSearchSourceNothing(context: Context, sources: String): String =
+        context.getString(R.string.read_search_source_nothing, sources)
+
+    /** On an AniList result that one of the person's sources has. The source is its name. */
+    fun readSearchInSource(context: Context, source: String): String =
+        context.getString(R.string.read_search_in_source, source)
+
+    /** On an AniList result that more than one of the person's sources has. Always 2 or more. */
+    fun readSearchInSources(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_in_sources, n, n)
+
+    /** Search, when AniList found nothing but the person's sources did. */
+    fun readSearchAnilistNothing(context: Context): String =
+        context.getString(R.string.read_search_anilist_nothing)
+
+    /** Search, when AniList could not be reached. */
+    fun readSearchAnilistFailed(context: Context): String =
+        context.getString(R.string.read_search_anilist_failed)
+
+    /** The line under it. */
+    fun readSearchAnilistFailedLine(context: Context): String =
+        context.getString(R.string.read_search_anilist_failed_line)
+
+    /** Search, when nothing was found anywhere: under the line saying AniList found nothing. */
+    fun readSearchSourcesNothing(context: Context): String =
+        context.getString(R.string.read_search_sources_nothing)
+
+    /** Over reading's results while more pages are to come, so AniList's count is not known yet. */
+    fun readSearchTotalUnknown(context: Context): String =
+        context.getString(R.string.read_search_total_unknown)
+
+    /** The link under From your sources that shows the rest of AniList's results. */
+    fun readSearchMoreAnilist(context: Context): String =
+        context.getString(R.string.read_search_more_anilist)
+
+    /** Beside More from AniList: how many of AniList's results show. */
+    fun readSearchShown(context: Context, shown: Int, total: Int): String =
+        context.getString(R.string.read_search_shown, shown, total)
+
+    /** Beside More from AniList while AniList's count is not known yet: how many results show. */
+    fun readSearchShownSome(context: Context, shown: Int): String =
+        context.getString(R.string.read_search_shown_some, shown)
+
+    /** Beside a source's name in Search: the kind of source it is. */
+    fun readSearchSourceKindServer(context: Context): String =
+        context.getString(R.string.read_search_source_kind_server)
+
+    fun readSearchSourceKindFolder(context: Context): String =
+        context.getString(R.string.read_search_source_kind_folder)
+
+    fun readSearchSourceKindPlugin(context: Context): String =
+        context.getString(R.string.read_search_source_kind_plugin)
+
+    /** The button of a source group with more than five hits. */
+    fun readSearchSourceMore(context: Context, n: Int): String =
+        context.getString(R.string.read_search_source_more, n)
 
     /** Over a first-run page's title: which page of how many. */
     fun onboardingStep(context: Context, step: Int, total: Int): String =

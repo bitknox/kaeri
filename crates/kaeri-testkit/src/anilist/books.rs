@@ -6,13 +6,15 @@ use serde_json::{Value, json};
 
 use super::Reply;
 
-/// Answer a books request: one root, or several under `q0`, `q1` and on.
-pub(super) fn respond(books: &[Value], document: &str, vars: &Value) -> Reply {
+/// Answer a books request: one root, or several under `q0`, `q1` and on. `shift` is how far the
+/// fake's clock is from the fixtures' day, so a start "in the last 12 months" means the same
+/// books whatever day a test runs.
+pub(super) fn respond(books: &[Value], document: &str, vars: &Value, shift: i64) -> Reply {
     match super::together(document, vars) {
         Some(parts) => {
             let mut data = serde_json::Map::new();
             for (alias, document, vars) in parts {
-                let mut answer = one(books, &document, &vars);
+                let mut answer = one(books, &document, &vars, shift);
                 let root = super::root_field(&document);
                 data.insert(alias, answer[&root].take());
             }
@@ -21,7 +23,7 @@ pub(super) fn respond(books: &[Value], document: &str, vars: &Value) -> Reply {
         None if document.contains("Media(id:") && book(books, &vars["id"]).is_none() => {
             Reply::errors(404, "Not Found.", json!({ "Media": null }))
         }
-        None => Reply::ok(one(books, document, vars)),
+        None => Reply::ok(one(books, document, vars, shift)),
     }
 }
 
@@ -40,7 +42,24 @@ fn listed(book: &Value) -> Value {
     book
 }
 
-fn one(books: &[Value], document: &str, vars: &Value) -> Value {
+/// A book's start as AniList's `YYYYMMDD` integer, a missing month or day as nought.
+fn started(book: &Value) -> i64 {
+    let part = |k: &str| book["startDate"][k].as_i64().unwrap_or_default();
+    part("year") * 10_000 + part("month") * 100 + part("day")
+}
+
+/// A `YYYYMMDD` start moved back by the clock's shift, to the fixtures' calendar.
+fn on_fixture_day(date: i64, shift: i64) -> i64 {
+    let (year, month, day) = (date / 10_000, date / 100 % 100, date % 100);
+    let Ok(date) = jiff::civil::Date::new(year as i16, month as i8, day as i8) else {
+        return date;
+    };
+    let days = shift.div_euclid(86_400);
+    let moved = date.checked_sub(jiff::Span::new().days(days)).unwrap_or(date);
+    i64::from(moved.year()) * 10_000 + i64::from(moved.month()) * 100 + i64::from(moved.day())
+}
+
+fn one(books: &[Value], document: &str, vars: &Value, shift: i64) -> Value {
     // The count of shows a reading search carries beside its books: the fake has none to
     // count in a books request.
     if document.contains("type: ANIME") {
@@ -77,6 +96,9 @@ fn one(books: &[Value], document: &str, vars: &Value) -> Value {
                 && list("tag_in").iter().all(|t| tags.contains(t))
                 && !list("tag_not_in").iter().any(|t| tags.contains(t))
                 && (vars["isAdult"].is_null() || vars["isAdult"] == b["isAdult"])
+                && vars["startDate_greater"]
+                    .as_i64()
+                    .is_none_or(|after| started(b) > on_fixture_day(after, shift))
         })
         .collect();
     let sort = list("sort").first().and_then(|s| s.as_str().map(str::to_owned));

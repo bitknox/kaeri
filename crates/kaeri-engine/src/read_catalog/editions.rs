@@ -220,6 +220,7 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
     };
     send_for_work(kit, &work, !to_ask.is_empty(), kept_misses(kit, &work, &wanted, now), tx);
     if to_ask.is_empty() {
+        settled(kit, ask, &work, tx);
         return;
     }
     let had_edition = kit.sources.edition_of(&work, None).is_some();
@@ -246,11 +247,33 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
             let missing = kept_misses(&kit, &work, &wanted, now);
             send_for_work(&kit, &work, !asking.is_empty(), missing, &tx);
         }
+        settled(&kit, ask, &work, &tx);
         // A series that had nowhere to be read from now has: its page fills in.
         if !had_edition && kit.sources.edition_of(&work, None).is_some() {
             series::load(&kit, ask, work, &tx);
         }
     });
+}
+
+/// The check of a series' sources is done: a series none of them has is kept as not found, so
+/// its Home tile says so for the rest of its row's 30 minutes, and Home is sent again when that
+/// changed. Only an AniList entry can be on a Home row.
+fn settled(kit: &Kit, ask: Ask, work: &WorkId, tx: &Outbox) {
+    if tiles::anilist(work.as_str()).is_none() {
+        return;
+    }
+    let missing = kit.sources.edition_of(work, None).is_none();
+    let changed = {
+        let mut kept = kit.sources.catalog.not_found.lock().unwrap_or_else(|e| e.into_inner());
+        if missing {
+            kept.insert(work.as_str().to_owned(), ask.now).is_none()
+        } else {
+            kept.remove(work.as_str()).is_some()
+        }
+    };
+    if changed {
+        super::home::resend(kit, ask, tx);
+    }
 }
 
 /// "Search there": one source's series for words the person typed, closest first.

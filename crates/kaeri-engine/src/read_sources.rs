@@ -27,8 +27,8 @@ use kaeri_books::{
 use kaeri_bookserver::{Kind, Server};
 use kaeri_core::{
     books::{
-        BookFile, BookHints, BookSourceKind, BookSourceManifest, ChapterContent, ReadingHint,
-        SeriesDetail, SeriesHit, SourceChapter, WorkKey, normalise_name,
+        BookFile, BookHints, BookSourceKind, BookSourceManifest, ChapterContent, HitAmount,
+        ReadingHint, SeriesDetail, SeriesHit, SourceChapter, WorkKey, normalise_name,
     },
     error::ProviderError,
     media::Medium,
@@ -136,6 +136,16 @@ fn other(error: kaeri_store::StoreError) -> ProviderError {
     ProviderError::Other(error.to_string())
 }
 
+/// A folder series' files, as its hit's line says them: "1 file · CBZ", "3 files".
+pub(crate) fn files_amount(
+    files: &[kaeri_store::book_sources::LocalFile],
+) -> Option<HitAmount> {
+    let count = u32::try_from(files.len()).ok().filter(|n| *n > 0)?;
+    let first = files[0].format.to_uppercase();
+    let one = files.iter().all(|f| f.format.eq_ignore_ascii_case(&first));
+    Some(HitAmount::Files { count, format: (one && !first.is_empty()).then_some(first) })
+}
+
 #[async_trait]
 impl BookSource for FolderSource {
     fn manifest(&self) -> &BookSourceManifest {
@@ -154,7 +164,11 @@ impl BookSource for FolderSource {
             .map_err(other)?
             .into_iter()
             .filter(|s| wanted.is_empty() || normalise_name(&s.name).contains(&wanted))
-            .map(|s| SeriesHit::new(s.id, s.name))
+            .map(|s| {
+                let files = self.store.local_book_files(&s.id).unwrap_or_default();
+                let amount = files_amount(&files);
+                SeriesHit { amount, ..SeriesHit::new(s.id, s.name) }
+            })
             .collect())
     }
 
@@ -728,6 +742,9 @@ pub(crate) fn demo_tile(work: &kaeri_core::reading_demo::DemoWork) -> WorkTile {
         adult: false,
         facts: vec![kaeri_model::reading::kind_words(Some(work.format()), medium, None)],
         demo: true,
+        not_in_sources: false,
+        origin: None,
+        amount: None,
     }
 }
 
@@ -1189,55 +1206,81 @@ impl BookSources {
         let mut seen = HashSet::new();
         let mut tiles = Vec::new();
         for (source, hits) in found.found {
-            let manifest = self.registry.manifest(&source);
-            let default = manifest
-                .as_ref()
-                .and_then(|m| m.media.iter().copied().find(|m| m.is_reading()))
-                .unwrap_or(Medium::Manga);
             for hit in hits {
-                // The demo's works are tiles of their own, in their medium and with their cover.
-                if source == kaeri_core::demo::DEMO_SOURCE_ID {
-                    if let Some(work) = kaeri_core::reading_demo::work(&hit.id)
-                        && seen.insert(work.work_id().0)
-                    {
-                        tiles.push(demo_tile(work));
-                    }
-                    continue;
+                if let Some(tile) = self.hit_tile(&source, hit, medium, &local, now)
+                    && seen.insert(tile.work.0.clone())
+                {
+                    tiles.push(tile);
                 }
-                let folder = (source == FOLDERS)
-                    .then(|| local.iter().find(|s| s.id == hit.id))
-                    .flatten();
-                let medium =
-                    folder.and_then(|s| Medium::parse(&s.medium)).or(medium).unwrap_or(default);
-                let work = match self.store.book_match(&source, &hit.id) {
-                    Ok(Some(work)) => work,
-                    _ => {
-                        let work = WorkKey::local(medium, &hit.title).to_string();
-                        let _ = self
-                            .store
-                            .set_book_match(&source, &hit.id, &work, 50, false, false, now);
-                        work
-                    }
-                };
-                if !seen.insert(work.clone()) {
-                    continue;
-                }
-                tiles.push(WorkTile {
-                    work: WorkId::new(work),
-                    title: hit.title,
-                    medium,
-                    cover: hit.cover,
-                    format_label: None,
-                    progress: None,
-                    next: None,
-                    new_chapter: false,
-                    adult: false,
-                    facts: Vec::new(),
-                    demo: false,
-                });
             }
         }
         tiles
+    }
+
+    /// What a source's hit is in the medium its source or folder says, else `medium`, else the
+    /// first reading medium the source carries.
+    pub(crate) fn hit_medium(
+        &self,
+        source: &str,
+        hit: &SeriesHit,
+        medium: Option<Medium>,
+        local: &[kaeri_store::book_sources::LocalSeries],
+    ) -> Medium {
+        let default = self
+            .registry
+            .manifest(source)
+            .as_ref()
+            .and_then(|m| m.media.iter().copied().find(|m| m.is_reading()))
+            .unwrap_or(Medium::Manga);
+        let folder =
+            (source == FOLDERS).then(|| local.iter().find(|s| s.id == hit.id)).flatten();
+        folder.and_then(|s| Medium::parse(&s.medium)).or(medium).unwrap_or(default)
+    }
+
+    /// A source's hit as a tile: the work it is matched to, or a work of its own on this device
+    /// when no match was made, kept so it can be opened. The demo's works are tiles of their
+    /// own, in their medium and with their cover.
+    pub(crate) fn hit_tile(
+        &self,
+        source: &str,
+        hit: SeriesHit,
+        medium: Option<Medium>,
+        local: &[kaeri_store::book_sources::LocalSeries],
+        now: i64,
+    ) -> Option<WorkTile> {
+        let amount = hit.amount.as_ref().map(crate::read_catalog::tiles::amount);
+        if source == kaeri_core::demo::DEMO_SOURCE_ID {
+            let mut tile = kaeri_core::reading_demo::work(&hit.id).map(demo_tile)?;
+            tile.amount = amount;
+            return Some(tile);
+        }
+        let origin = crate::read_catalog::tiles::origin(hit.origin.clone());
+        let medium = self.hit_medium(source, &hit, medium, local);
+        let work = match self.store.book_match(source, &hit.id) {
+            Ok(Some(work)) => work,
+            _ => {
+                let work = WorkKey::local(medium, &hit.title).to_string();
+                let _ =
+                    self.store.set_book_match(source, &hit.id, &work, 50, false, false, now);
+                work
+            }
+        };
+        Some(WorkTile {
+            work: WorkId::new(work),
+            title: hit.title,
+            medium,
+            cover: hit.cover,
+            format_label: hit.format.map(|f| f.as_str().to_owned()),
+            progress: None,
+            next: None,
+            new_chapter: false,
+            adult: false,
+            facts: Vec::new(),
+            demo: false,
+            not_in_sources: false,
+            origin,
+            amount,
+        })
     }
 
     /// Which source and series reference a work is read from: the chosen edition, the person's
