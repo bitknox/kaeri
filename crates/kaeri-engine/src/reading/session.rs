@@ -443,7 +443,6 @@ impl Reader {
             cx.send(ReaderEvent::Opening {
                 chapter: None,
                 wait: Some(ReaderWait::FindingSource),
-                session: id,
             });
             return;
         }
@@ -519,7 +518,6 @@ impl Reader {
         cx.send(ReaderEvent::Opening {
             chapter: Some(chapters[index].row(&marks)),
             wait: None,
-            session: id,
         });
         let source = cx.source_word(&work);
         let layers = cx.layers_with(medium, Some(work.as_str()), Some(source));
