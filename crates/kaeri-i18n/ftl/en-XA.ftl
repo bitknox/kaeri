@@ -1733,15 +1733,6 @@ read-linux-view-all-row = [Ṽîéŵ àļļ, { $row }~~~~]
 # Screen reader name of a discovery row's heading while its covers are on their way.
 read-linux-row-loading = [{ $row }, ļöàðîñĝ~~~~]
 
-# Beside a source's name over its row of covers: what kind of source it is.
-read-linux-source-folder = [Ƒöļðéŕ~~]
-
-# Beside a source's name over its row of covers: a book server.
-read-linux-source-server = [Šéŕṽéŕ~~]
-
-# Beside a source's name over its row of covers: a plugin.
-read-linux-source-plugin = [Þļüĝîñ~~]
-
 # Said once by screen readers when Your sources only turns on.
 read-linux-anilist-hidden = [ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ.~~~~~~~~~]
 

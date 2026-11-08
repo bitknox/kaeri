@@ -25,7 +25,7 @@ use kaeri_model::{
 
 use super::{
     Place, action_chapter, cover,
-    discovery::{self, Landing},
+    discovery::{self, Caption, Landing},
     listen, place, read_button, send,
 };
 use crate::{motion, pages::Dest, say, squeeze::Squeeze, states::Shape, widgets, window::Ctx};
@@ -243,7 +243,7 @@ impl Home {
             let section = gtk::Box::new(gtk::Orientation::Vertical, 0);
             let (head, _, _, _) = heading(&title);
             section.append(&head);
-            section.append(&discovery::strip(&posters(ctx, tiles), &title));
+            section.append(&discovery::strip(&posters(ctx, tiles, Caption::Facts), &title));
             self.own.append(&section);
         }
         self.first_gap();
@@ -360,7 +360,10 @@ impl Home {
             return;
         }
         slot.signature.replace(signature);
-        let strip = discovery::strip(&posters(ctx, &row.tiles), &title);
+        // A row of one format names each title's origin in place of the format; a mixed row
+        // leads with it.
+        let caption = if row.format.is_some() { Caption::OriginFirst } else { Caption::Facts };
+        let strip = discovery::strip(&posters(ctx, &row.tiles, caption), &title);
         let fresh = !slot.landing.is_visible() && !slot.landing.is_waiting();
         slot.landing.land(&strip, false);
         // A row that lands whole after Home was drawn, with no placeholders before it, fades in.
@@ -456,8 +459,8 @@ fn view_all(ctx: &Rc<Ctx>, query: ReadSearchQuery) {
 }
 
 /// Posters for `tiles`.
-fn posters(ctx: &Rc<Ctx>, tiles: &[WorkTile]) -> Vec<gtk::Button> {
-    tiles.iter().map(|tile| discovery::poster(&ctx.hub, tile, None)).collect()
+fn posters(ctx: &Rc<Ctx>, tiles: &[WorkTile], caption: Caption) -> Vec<gtk::Button> {
+    tiles.iter().map(|tile| discovery::poster(&ctx.hub, tile, caption, None)).collect()
 }
 
 /// A row's heading: its title (a heading for screen readers), the side text and View all.

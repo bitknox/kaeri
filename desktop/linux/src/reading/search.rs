@@ -23,14 +23,15 @@ use kaeri_i18n::t;
 use kaeri_model::{
     event::Event,
     reading::{
-        ReadFilterChoice, ReadFilters, ReadSearchQuery, ReadSourceGroup, ReadSourceSearch,
-        ReadSourceState, ReadingAbout, ReadingCommand, ReadingEvent, WorkTile, read_filters,
+        ReadFilterChoice, ReadFilters, ReadRowFormat, ReadSearchQuery, ReadSourceGroup,
+        ReadSourceKind, ReadSourceSearch, ReadSourceState, ReadingAbout, ReadingCommand,
+        ReadingEvent, WorkTile, read_filters,
     },
 };
 
 use super::{
     Dest,
-    discovery::{self, Landing},
+    discovery::{self, Caption, Landing},
     listen, scope, send,
 };
 use crate::{
@@ -554,11 +555,28 @@ fn add_posters(
     hub: &Hub,
     grid: &gtk::Box,
     tiles: &[WorkTile],
+    caption: Caption,
     joined: &HashMap<String, String>,
 ) {
     for tile in tiles {
         let line = joined.get(&tile.work.0).map(String::as_str);
-        grid.append(&discovery::item(&discovery::poster(hub, tile, line)));
+        grid.append(&discovery::item(&discovery::poster(hub, tile, caption, line)));
+    }
+}
+
+/// The captions AniList's results take: Format · Origin for typed words; browsing one format, as
+/// View all on a row does, the origin in its place; anything else, the facts.
+fn caption_for(query: &ReadSearchQuery) -> Caption {
+    let one_format = ReadRowFormat::ALL.iter().any(|format| {
+        let formats = format.search_formats();
+        !query.formats.is_empty() && query.formats.iter().all(|f| formats.contains(f))
+    });
+    if !query.text.is_empty() {
+        Caption::FormatOrigin
+    } else if one_format {
+        Caption::OriginFirst
+    } else {
+        Caption::Facts
     }
 }
 
@@ -1126,10 +1144,10 @@ impl Search {
                 self.draw_anilist();
             }
         } else if browsing {
-            add_posters(&hub, &self.grid.borrow(), found, &HashMap::new());
+            add_posters(&hub, &self.grid.borrow(), found, self.caption(), &HashMap::new());
             self.set_line();
         } else {
-            add_posters(&hub, &self.later, found, &self.joined.borrow());
+            add_posters(&hub, &self.later, found, self.caption(), &self.joined.borrow());
             self.later.set_visible(true);
         }
 
@@ -1154,13 +1172,26 @@ impl Search {
         self.draw_more();
     }
 
+    /// The captions of the query on screen.
+    fn caption(&self) -> Caption {
+        caption_for(&self.at.borrow().0)
+    }
+
     /// The line over the grid: what a browse shows, or how many AniList found once it knows.
     fn set_line(&self) {
         let query = self.at.borrow().0.clone();
         let words = if query.text.is_empty() {
             Some(browse_line(&query, &self.filters.choices, self.total.get()))
         } else {
-            self.total.get().filter(|n| *n > 0).map(|n| t::read_search_total(i64::from(n)))
+            match self.total.get() {
+                Some(n) if n > 0 => Some(t::read_search_total(i64::from(n))),
+                Some(_) => None,
+                // Answered with results and no exact count yet: the line without a number.
+                None if !self.first_page.borrow().is_empty() => {
+                    Some(t::read_search_total_unknown())
+                }
+                None => None,
+            }
         };
         self.line.set_label(words.as_deref().unwrap_or_default());
         self.line.set_visible(words.is_some());
@@ -1191,28 +1222,26 @@ impl Search {
             part.append(&note(&t::read_search_anilist_nothing(), ""));
         }
         let grid = poster_grid();
-        add_posters(&hub, &grid, &tiles, &self.joined.borrow());
+        add_posters(&hub, &grid, &tiles, self.caption(), &self.joined.borrow());
         grid.set_visible(!tiles.is_empty());
         part.append(&grid);
         self.grid.replace(grid);
         self.anilist_landing.land(&part, failure);
     }
 
-    /// More from AniList, with how many show once AniList has said how many there are.
+    /// More from AniList, with how many show, and of how many once AniList's count is exact.
     fn draw_more(&self) {
         let query = self.at.borrow().0.clone();
         let words = !query.text.is_empty();
         let show = words && !query.sources_only && self.anilist_in.get() && self.has_more.get();
         self.more_row.set_visible(show);
         let shown = self.tiles.borrow().len();
-        match self.total.get() {
-            Some(total) if show => {
-                self.more_shown
-                    .set_label(&t::read_search_shown(shown as i64, i64::from(total)));
-                self.more_shown.set_visible(true);
-            }
-            _ => self.more_shown.set_visible(false),
-        }
+        // AniList's count is only ever exact: without it, how many show and nothing more.
+        self.more_shown.set_label(&match self.total.get() {
+            Some(total) => t::read_search_shown(shown as i64, i64::from(total)),
+            None => t::read_search_shown_some(shown as i64),
+        });
+        self.more_shown.set_visible(show);
     }
 
     /// From your sources, as the newest send for the query has it.
@@ -1368,9 +1397,18 @@ impl Search {
         query: &ReadSearchQuery,
     ) {
         slot.name.set_label(&group.source_name);
-        // The kind beside the name waits for the engine to send it with the group.
-        slot.kind.set_visible(false);
-        let heading = group.source_name.clone();
+        // Server, Folder or Plugin beside the name; the demo shows its name alone.
+        let kind = group.kind.map(|kind| match kind {
+            ReadSourceKind::Server => t::read_search_source_kind_server(),
+            ReadSourceKind::Folder => t::read_search_source_kind_folder(),
+            ReadSourceKind::Plugin => t::read_search_source_kind_plugin(),
+        });
+        slot.kind.set_label(kind.as_deref().unwrap_or_default());
+        slot.kind.set_visible(kind.is_some());
+        let heading = match &kind {
+            Some(kind) => format!("{}, {kind}", group.source_name), // i18n-skip
+            None => group.source_name.clone(),
+        };
         let asking = group.state == ReadSourceState::Asking;
         slot.spinner.set_visible(asking);
         slot.landing.widget.update_state(&[gtk::accessible::State::Busy(asking)]);
@@ -1392,8 +1430,11 @@ impl Search {
         match &group.state {
             ReadSourceState::Hits if !group.tiles.is_empty() => {
                 slot.failed.set(false);
-                let posters: Vec<gtk::Button> =
-                    group.tiles.iter().map(|tile| discovery::poster(hub, tile, None)).collect();
+                let posters: Vec<gtk::Button> = group
+                    .tiles
+                    .iter()
+                    .map(|tile| discovery::poster(hub, tile, Caption::Amount, None))
+                    .collect();
                 let strip = discovery::strip(&posters, &group.source_name);
                 slot.landing.land(&strip, false);
             }
@@ -1536,14 +1577,29 @@ mod tests {
             facts: Vec::new(),
             demo: false,
             not_in_sources: false,
+            origin: None,
+            amount: None,
         };
         ReadSourceGroup {
             source_id: name.to_lowercase(),
             source_name: name.into(),
+            kind: None,
             state,
             tiles: vec![tile; hits],
             joined,
         }
+    }
+
+    #[test]
+    fn results_are_captioned_for_how_they_were_asked() {
+        let mut query = ReadSearchQuery { text: "lantern".into(), ..Default::default() };
+        assert_eq!(caption_for(&query), Caption::FormatOrigin);
+        query.text.clear();
+        assert_eq!(caption_for(&query), Caption::Facts);
+        query.formats = ReadRowFormat::Manga.search_formats();
+        assert_eq!(caption_for(&query), Caption::OriginFirst);
+        query.formats.push("webtoon".into());
+        assert_eq!(caption_for(&query), Caption::Facts);
     }
 
     #[test]

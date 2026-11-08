@@ -15,21 +15,6 @@ read-linux-row-loading = { $row }, loading
 
 ## Search, from your sources
 
-# Beside a source's name over its row of covers: what kind of source it is.
-# @only linux
-# @max 16
-read-linux-source-folder = Folder
-
-# Beside a source's name over its row of covers: a book server.
-# @only linux
-# @max 16
-read-linux-source-server = Server
-
-# Beside a source's name over its row of covers: a plugin.
-# @only linux
-# @max 16
-read-linux-source-plugin = { -plugin-cap }
-
 # Said once by screen readers when Your sources only turns on.
 # @only linux
 read-linux-anilist-hidden = AniList's results are hidden.

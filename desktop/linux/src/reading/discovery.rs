@@ -28,26 +28,57 @@ const PLACEHOLDERS: usize = 8;
 /// The most posters a grid row holds, in the widest window.
 const GRID_PLACEHOLDERS_ACROSS: i32 = 20;
 
-/// The line under a poster's title: Not found in your sources once a row's series was opened and
-/// no source had it, else what comes next, else the facts.
-pub fn line_of(tile: &WorkTile) -> String {
+/// What the line under a poster's title is made of, where it shows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Caption {
+    /// The facts as the engine gives them: "Manga · Releasing".
+    Facts,
+    /// On a row or a list of one format: the origin in place of the format, "Korea · Releasing".
+    OriginFirst,
+    /// An AniList result for typed words: "Light novel · Japan".
+    FormatOrigin,
+    /// A source's hit: how much of it the source holds, "2 volumes", or nothing.
+    Amount,
+}
+
+/// The parts of the line under a poster's title: Not found in your sources once a row's series
+/// was opened and no source had it, else what comes next, else `caption`'s words.
+fn parts(tile: &WorkTile, caption: Caption) -> Vec<String> {
     if tile.not_in_sources {
-        return t::home_not_found();
+        return vec![t::home_not_found()];
     }
-    match &tile.next {
-        Some(next) => say::msg(next),
-        None => super::dotted(&tile.facts),
+    if let Some(next) = &tile.next {
+        return vec![say::msg(next)];
     }
+    let facts = || tile.facts.iter().map(say::msg).collect::<Vec<_>>();
+    let origin = tile.origin.as_ref().map(say::msg);
+    let words = match (caption, origin) {
+        (Caption::Facts, _) | (Caption::OriginFirst, None) => facts(),
+        (Caption::OriginFirst, Some(origin)) => {
+            let mut words = facts();
+            match words.first_mut() {
+                Some(format) => *format = origin,
+                None => words.push(origin),
+            }
+            words
+        }
+        (Caption::FormatOrigin, origin) => {
+            tile.facts.first().map(say::msg).into_iter().chain(origin).collect()
+        }
+        (Caption::Amount, _) => tile.amount.iter().map(say::msg).collect(),
+    };
+    words.into_iter().filter(|w| !w.is_empty()).collect()
+}
+
+/// The line under a poster's title.
+pub fn line_of(tile: &WorkTile, caption: Caption) -> String {
+    parts(tile, caption).join(" \u{b7} ") // i18n-skip
 }
 
 /// What a screen reader says for a poster: "Title. Manga, Releasing." and, after a miss, "Title.
 /// Not found in your sources." A joined result adds where it is: "In Home library."
-pub fn spoken(tile: &WorkTile, joined: Option<&str>) -> String {
-    let line = if tile.not_in_sources || tile.next.is_some() {
-        line_of(tile)
-    } else {
-        tile.facts.iter().map(say::msg).filter(|s| !s.is_empty()).collect::<Vec<_>>().join(", ") // i18n-skip
-    };
+pub fn spoken(tile: &WorkTile, caption: Caption, joined: Option<&str>) -> String {
+    let line = parts(tile, caption).join(", "); // i18n-skip
     let mut said = tile.title.clone();
     for part in [Some(line.as_str()), joined].into_iter().flatten().filter(|p| !p.is_empty()) {
         said = format!("{said}. {part}"); // i18n-skip
@@ -111,7 +142,12 @@ fn cover(hub: &Hub, tile: &WorkTile) -> gtk::Widget {
 /// One series as a poster: the cover, the track when it is being read, the title on one line
 /// and the line under it, with `joined` in silk under that when one of the person's sources has
 /// it. Opens the series; right-click opens its menu.
-pub fn poster(hub: &Hub, tile: &WorkTile, joined: Option<&str>) -> gtk::Button {
+pub fn poster(
+    hub: &Hub,
+    tile: &WorkTile,
+    caption: Caption,
+    joined: Option<&str>,
+) -> gtk::Button {
     let inner = gtk::Box::new(gtk::Orientation::Vertical, 0);
     inner.set_size_request(POSTER, -1);
     inner.append(&cover(hub, tile));
@@ -140,7 +176,7 @@ pub fn poster(hub: &Hub, tile: &WorkTile, joined: Option<&str>) -> gtk::Button {
     let text = if tile.new_chapter && tile.next.is_none() {
         t::chapter_state_new()
     } else {
-        line_of(tile)
+        line_of(tile, caption)
     };
     let line = gtk::Label::new(Some(&text));
     line.add_css_class("haze");
@@ -182,7 +218,7 @@ pub fn poster(hub: &Hub, tile: &WorkTile, joined: Option<&str>) -> gtk::Button {
     button.set_action_target_value(Some(&tile.work.0.to_variant()));
     button.set_action_name(Some("win.open-series"));
     button.update_property(&[
-        gtk::accessible::Property::Label(&spoken(tile, joined)),
+        gtk::accessible::Property::Label(&spoken(tile, caption, joined)),
         gtk::accessible::Property::KeyShortcuts(PLAN_KEYS_SPOKEN),
     ]);
     super::work_menu(&button, &tile.work, Some((t::library_add_planning(), PLAN.to_owned())));
@@ -641,6 +677,8 @@ fn timed(
 
 #[cfg(test)]
 mod tests {
+    use kaeri_model::{Msg, ReadingMsg};
+
     use super::*;
 
     #[test]
@@ -667,6 +705,8 @@ mod tests {
             facts: Vec::new(),
             demo: false,
             not_in_sources: false,
+            origin: None,
+            amount: None,
         }
     }
 
@@ -674,9 +714,9 @@ mod tests {
     fn a_miss_is_said_in_place_of_the_facts() {
         let mut tile = tile();
         tile.not_in_sources = true;
-        assert_eq!(line_of(&tile), t::home_not_found());
+        assert_eq!(line_of(&tile, Caption::Facts), t::home_not_found());
         assert_eq!(
-            spoken(&tile, None),
+            spoken(&tile, Caption::Facts, None),
             format!("Lantern Street Notes. {}.", t::home_not_found())
         );
     }
@@ -685,8 +725,33 @@ mod tests {
     fn a_joined_result_says_where_it_is() {
         let tile = tile();
         assert_eq!(
-            spoken(&tile, Some("In Home library")),
+            spoken(&tile, Caption::Facts, Some("In Home library")),
             "Lantern Street Notes. In Home library."
         );
+    }
+
+    fn reading(msg: ReadingMsg) -> Msg {
+        Msg::Reading(msg)
+    }
+
+    #[test]
+    fn each_place_says_its_own_caption() {
+        let mut tile = tile();
+        tile.facts = vec![
+            reading(ReadingMsg::ReadingKindLightNovel),
+            reading(ReadingMsg::ReadingStatusReleasing),
+        ];
+        tile.origin = Some(reading(ReadingMsg::ReadingOriginJapan));
+        assert_eq!(line_of(&tile, Caption::Facts), "Light novel \u{b7} Releasing");
+        assert_eq!(line_of(&tile, Caption::OriginFirst), "Japan \u{b7} Releasing");
+        assert_eq!(line_of(&tile, Caption::FormatOrigin), "Light novel \u{b7} Japan");
+        assert_eq!(line_of(&tile, Caption::Amount), "");
+        assert_eq!(
+            spoken(&tile, Caption::FormatOrigin, None),
+            "Lantern Street Notes. Light novel, Japan."
+        );
+        tile.origin = None;
+        assert_eq!(line_of(&tile, Caption::OriginFirst), "Light novel \u{b7} Releasing");
+        assert_eq!(line_of(&tile, Caption::FormatOrigin), "Light novel");
     }
 }

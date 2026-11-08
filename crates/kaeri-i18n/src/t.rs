@@ -2640,21 +2640,6 @@ pub fn read_linux_row_loading(row: &str) -> String {
     text("read-linux-row-loading", &[("row", Arg::Text(row))])
 }
 
-/// Beside a source's name over its row of covers: what kind of source it is.
-pub fn read_linux_source_folder() -> String {
-    text("read-linux-source-folder", &[])
-}
-
-/// Beside a source's name over its row of covers: a book server.
-pub fn read_linux_source_server() -> String {
-    text("read-linux-source-server", &[])
-}
-
-/// Beside a source's name over its row of covers: a plugin.
-pub fn read_linux_source_plugin() -> String {
-    text("read-linux-source-plugin", &[])
-}
-
 /// Said once by screen readers when Your sources only turns on.
 pub fn read_linux_anilist_hidden() -> String {
     text("read-linux-anilist-hidden", &[])

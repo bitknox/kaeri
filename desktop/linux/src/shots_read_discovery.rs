@@ -12,9 +12,9 @@ use kaeri_model::{
     event::Event,
     reading::{
         ReadAnilistState, ReadHomeEnd, ReadHomeRow, ReadRowFormat, ReadRowKind,
-        ReadSearchQuery, ReadSourceGroup, ReadSourceJoin, ReadSourceSearch, ReadSourceState,
-        ReadSpotlight, ReadSpotlightCase, ReadingCommand, ReadingEvent, ReadingHomeView,
-        WorkTile, count_words, kind_words, status_words,
+        ReadSearchQuery, ReadSourceGroup, ReadSourceJoin, ReadSourceKind, ReadSourceSearch,
+        ReadSourceState, ReadSpotlight, ReadSpotlightCase, ReadingCommand, ReadingEvent,
+        ReadingHomeView, WorkTile, count_words, kind_words, status_words,
     },
 };
 
@@ -98,11 +98,51 @@ fn tile(b: &Book) -> WorkTile {
         facts,
         demo: false,
         not_in_sources: false,
+        origin: origin_words(b.origin),
+        amount: None,
     }
 }
 
-/// A source's hit with no AniList entry: its own cover, or none, and its count.
-fn hit(id: &str, title: &str, art_n: Option<u32>, medium: Medium, volumes: u32) -> WorkTile {
+/// A country AniList names, as the engine words it.
+fn origin_words(code: &str) -> Option<Msg> {
+    Some(Msg::Reading(match code {
+        "JP" => ReadingMsg::ReadingOriginJapan,
+        "KR" => ReadingMsg::ReadingOriginKorea,
+        "CN" => ReadingMsg::ReadingOriginChina,
+        "TW" => ReadingMsg::ReadingOriginTaiwan,
+        _ => return None,
+    }))
+}
+
+/// How much of a series a source holds, as the engine words it.
+fn volumes(count: i64) -> Option<Msg> {
+    Some(Msg::Reading(ReadingMsg::ReadingVolumes { count }))
+}
+
+fn files(count: i64) -> Option<Msg> {
+    Some(Msg::Reading(ReadingMsg::ReadHitFilesFormat { count, format: "CBZ".into() }))
+}
+
+fn chapters(last: i64) -> Option<Msg> {
+    Some(Msg::Reading(ReadingMsg::ReadHitChapters { last }))
+}
+
+fn episodes(last: i64) -> Option<Msg> {
+    Some(Msg::Reading(ReadingMsg::ReadHitEpisodes { last }))
+}
+
+fn parts(count: i64) -> Option<Msg> {
+    Some(Msg::Reading(ReadingMsg::ReadHitParts { count }))
+}
+
+/// A source's hit with no AniList entry: its own cover, or none, and how much the source holds.
+fn hit(
+    id: &str,
+    title: &str,
+    art_n: Option<u32>,
+    medium: Medium,
+    amount: Option<Msg>,
+) -> WorkTile {
     WorkTile {
         work: WorkId(format!("s:{id}")),
         title: title.into(),
@@ -113,9 +153,11 @@ fn hit(id: &str, title: &str, art_n: Option<u32>, medium: Medium, volumes: u32) 
         next: None,
         new_chapter: false,
         adult: false,
-        facts: count_words(medium, None, Some(volumes)).into_iter().collect(),
+        facts: Vec::new(),
         demo: false,
         not_in_sources: false,
+        origin: None,
+        amount,
     }
 }
 
@@ -427,7 +469,21 @@ fn group(
     state: ReadSourceState,
     tiles: Vec<WorkTile>,
 ) -> ReadSourceGroup {
-    ReadSourceGroup { source_id: id.into(), source_name: name.into(), state, tiles, joined: 0 }
+    // As Your sources has them: a server, a folder, a plugin; the demo is built in.
+    let kind = match id {
+        HOME_LIBRARY => Some(ReadSourceKind::Server),
+        COMICS_FOLDER => Some(ReadSourceKind::Folder),
+        NORTHWIND => Some(ReadSourceKind::Plugin),
+        _ => None,
+    };
+    ReadSourceGroup {
+        source_id: id.into(),
+        source_name: name.into(),
+        kind,
+        state,
+        tiles,
+        joined: 0,
+    }
 }
 
 /// How far a shot's search has got.
@@ -441,26 +497,26 @@ enum Moment {
 
 fn home_library_hits() -> Vec<WorkTile> {
     vec![
-        hit("hl-1", "Lantern Keeper's Logbook", Some(950031), Medium::Manga, 2),
-        hit("hl-2", "Lanterns at Low Tide", Some(950017), Medium::Manga, 4),
+        hit("hl-1", "Lantern Keeper's Logbook", Some(950031), Medium::Manga, volumes(2)),
+        hit("hl-2", "Lanterns at Low Tide", Some(950017), Medium::Manga, volumes(4)),
     ]
 }
 
 fn comics_hits() -> Vec<WorkTile> {
     vec![
-        hit("cf-1", "Lantern Alley Sketches", Some(950014), Medium::Manga, 1),
-        hit("cf-2", "The Lantern Ferry: Side Stories", Some(950022), Medium::Manga, 3),
-        hit("cf-3", "Kiln Row Lantern Festival", Some(950034), Medium::Manga, 1),
+        hit("cf-1", "Lantern Alley Sketches", Some(950014), Medium::Manga, files(1)),
+        hit("cf-2", "The Lantern Ferry: Side Stories", Some(950022), Medium::Manga, files(3)),
+        hit("cf-3", "Kiln Row Lantern Festival", Some(950034), Medium::Manga, files(1)),
     ]
 }
 
 fn northwind_hits() -> Vec<WorkTile> {
     vec![
-        hit("nw-1", "Notes from the Lantern Ferry", None, Medium::Novel, 3),
-        hit("nw-2", "A Lantern for the Ferry Cat", Some(950035), Medium::Manga, 2),
-        hit("nw-3", "The Lanternmaker's Rival", Some(950011), Medium::Manga, 5),
-        hit("nw-4", "Lanterns in the Rain", Some(950026), Medium::Manga, 1),
-        hit("nw-5", "Lantern Watch", Some(950032), Medium::Manga, 2),
+        hit("nw-1", "Notes from the Lantern Ferry", None, Medium::Novel, parts(6)),
+        hit("nw-2", "A Lantern for the Ferry Cat", Some(950035), Medium::Manga, episodes(40)),
+        hit("nw-3", "The Lanternmaker's Rival", Some(950011), Medium::Manga, chapters(18)),
+        hit("nw-4", "Lanterns in the Rain", Some(950026), Medium::Manga, episodes(22)),
+        hit("nw-5", "Lantern Watch", Some(950032), Medium::Manga, None),
     ]
 }
 
@@ -493,7 +549,10 @@ fn sources_part(query: &ReadSearchQuery, moment: Moment) -> ReadSourceSearch {
 /// Only the sources asked: AniList is skipped and the volumes it joined show in their row.
 fn sources_only_part(query: &ReadSearchQuery) -> ReadSourceSearch {
     let mut home = home_library_hits();
-    home.insert(0, hit("hl-0", "Lantern Street Notes", Some(950008), Medium::Novel, 6));
+    home.insert(
+        0,
+        hit("hl-0", "Lantern Street Notes", Some(950008), Medium::Novel, volumes(6)),
+    );
     ReadSourceSearch {
         query: query.clone(),
         anilist: ReadAnilistState::Skipped,
@@ -537,14 +596,20 @@ fn night_part(query: &ReadSearchQuery) -> ReadSourceSearch {
                 "Home library",
                 ReadSourceState::Hits,
                 vec![
-                    hit("hl-n1", "Night Market Sketches", Some(950036), Medium::Manga, 1),
-                    hit("hl-n2", "Notes from the Night Ferry", None, Medium::Novel, 3),
+                    hit(
+                        "hl-n1",
+                        "Night Market Sketches",
+                        Some(950036),
+                        Medium::Manga,
+                        volumes(1),
+                    ),
+                    hit("hl-n2", "Notes from the Night Ferry", None, Medium::Novel, volumes(3)),
                     hit(
                         "hl-n3",
                         "The Night Porter of Hoshimura",
                         Some(950013),
                         Medium::Manga,
-                        12,
+                        volumes(12),
                     ),
                 ],
             ),
@@ -557,20 +622,15 @@ fn night_part(query: &ReadSearchQuery) -> ReadSourceSearch {
     }
 }
 
-/// AniList's page of a search. `more` is the whole count when more pages follow, as AniList gives
-/// it with the first page.
-fn search_event(
-    query: &ReadSearchQuery,
-    page: u32,
-    tiles: Vec<WorkTile>,
-    more: Option<u32>,
-) -> Event {
-    let total = more.or_else(|| u32::try_from(tiles.len()).ok());
+/// AniList's page of a search, with `more` pages after it.
+fn search_event(query: &ReadSearchQuery, page: u32, tiles: Vec<WorkTile>, more: bool) -> Event {
+    // As the engine sends it: the count only once it is exact, on the last page.
+    let total = if more { None } else { u32::try_from(tiles.len()).ok() };
     Event::Reading(ReadingEvent::Search {
         query: query.clone(),
         page,
         tiles,
-        has_more: more.is_some(),
+        has_more: more,
         other_scope: None,
         total,
     })
@@ -611,7 +671,7 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
                 Some(vec![(0, Event::Reading(ReadingEvent::Home(Box::new(first_run()))))])
             }
             ReadingCommand::Search { query } => {
-                Some(vec![(100, search_event(query, 0, thirty(), Some(1920)))])
+                Some(vec![(100, search_event(query, 0, thirty(), true))])
             }
             _ => None,
         }),
@@ -646,8 +706,9 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
                     let tiles: Vec<WorkTile> = LANTERN.iter().map(tile).collect();
                     let mut out = vec![
                         (0, source_event(asking)),
-                        (250, search_event(query, 0, tiles, None)),
-                        (300, source_event(sources_part(query, Moment::Mid))),
+                        // The joins come before AniList's results, as the engine sends them.
+                        (250, source_event(sources_part(query, Moment::Mid))),
+                        (300, search_event(query, 0, tiles, false)),
                     ];
                     if failed {
                         out.push((900, source_event(sources_part(query, Moment::Failed))));
@@ -667,8 +728,8 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
                     Some(vec![(200, source_event(sources_only_part(query)))])
                 }
                 ReadingCommand::Search { query } if !query.text.is_empty() => Some(vec![
-                    (100, search_event(query, 0, LANTERN.iter().map(tile).collect(), None)),
-                    (150, source_event(sources_part(query, Moment::Failed))),
+                    (100, source_event(sources_part(query, Moment::Failed))),
+                    (150, search_event(query, 0, LANTERN.iter().map(tile).collect(), false)),
                 ]),
                 ReadingCommand::Search { .. } => Some(Vec::new()),
                 _ => None,
@@ -676,7 +737,7 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
         }
         "read-disc-search-nothing" => Rc::new(|command| match command {
             ReadingCommand::Search { query } if !query.text.is_empty() => Some(vec![
-                (100, search_event(query, 0, Vec::new(), None)),
+                (100, search_event(query, 0, Vec::new(), false)),
                 (200, source_event(nothing_part(query))),
             ]),
             ReadingCommand::Search { .. } => Some(Vec::new()),
@@ -684,7 +745,7 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
         }),
         "read-disc-search-end" => Rc::new(|command| match command {
             ReadingCommand::Search { query } if !query.text.is_empty() => Some(vec![
-                (100, search_event(query, 0, thirty(), Some(212))),
+                (100, search_event(query, 0, thirty(), true)),
                 (200, source_event(night_part(query))),
             ]),
             ReadingCommand::Search { .. } => Some(Vec::new()),
