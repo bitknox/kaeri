@@ -678,7 +678,21 @@ public sealed partial class SeriesPage : Page
         if (row.Download is ChapterDownloadState.Downloading { Total: > 0 } d)
         {
             var ring = new ProgressRing { IsIndeterminate = false, Value = 100.0 * d.DoneValue / d.Total, Width = 20, Height = 20 };
-            var stop = new Button { Content = ring, Padding = new Thickness(6), Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent), BorderThickness = new Thickness(0) };
+            // The stop square in the ring, as on the Mac and Android.
+            var square = new Microsoft.UI.Xaml.Shapes.Rectangle
+            {
+                Width = 6,
+                Height = 6,
+                RadiusX = 1,
+                RadiusY = 1,
+                Fill = Ui.Res<Brush>("SilkBrush"),
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            var mark = new Grid { Width = 20, Height = 20 };
+            mark.Children.Add(ring);
+            mark.Children.Add(square);
+            var stop = new Button { Content = mark, Padding = new Thickness(6), Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent), BorderThickness = new Thickness(0) };
             AutomationProperties.SetName(stop, T.ChapterDownloadStop);
             ToolTipService.SetToolTip(stop, T.ChapterDownloadStop);
             stop.Click += (_, _) => ctx.Known.Reading.CancelDownloads(work, [row.Id]);
