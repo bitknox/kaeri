@@ -34,6 +34,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.draw.alpha
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
@@ -56,10 +57,17 @@ const val StartGroundAlpha = 0.55f
 /** The deeper ground over bright art: the haze text holds 4.5:1 on it. */
 const val StartGroundBrightAlpha = 0.80f
 
-/** Whether the system asks for less motion: its animator scale is 0, as Remove animations sets it. */
+/** An e-ink panel is on: nothing moves, so every reduced-motion path is the one to take. */
+val LocalStillPanel = staticCompositionLocalOf { false }
+
+/**
+ * Whether the system asks for less motion: its animator scale is 0, as Remove animations sets it,
+ * or the panel is e-ink.
+ */
 @Composable
 fun rememberSystemReducedMotion(): Boolean {
     val context = LocalContext.current
+    val still = LocalStillPanel.current
     fun read() = runCatching { Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) }
         .getOrDefault(1f) == 0f
     var reduced by remember { mutableStateOf(read()) }
@@ -73,7 +81,7 @@ fun rememberSystemReducedMotion(): Boolean {
         reduced = read()
         onDispose { context.contentResolver.unregisterContentObserver(observer) }
     }
-    return reduced
+    return reduced || still
 }
 
 /**

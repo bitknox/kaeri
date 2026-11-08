@@ -121,8 +121,10 @@ internal object Flavour {
         appContext = context.applicationContext
         val named = intent.getStringExtra("scene")
         val scene = named?.let(FixtureScene::named) ?: FixtureScene.WATCHING
-        wideColourGamut = if (scene == FixtureScene.EINK_KALEIDO_UNSURE) true else null
-        einkSupport = if (scene == FixtureScene.EINK_KALEIDO_UNSURE) "1" else null
+        // shell=eink: any scene on a grey e-ink panel, answered at start, for the e-ink shell's shots.
+        val einkShell = intent.getStringExtra("shell") == "eink"
+        wideColourGamut = if (scene == FixtureScene.EINK_KALEIDO_UNSURE) true else if (einkShell) false else null
+        einkSupport = if (scene == FixtureScene.EINK_KALEIDO_UNSURE || einkShell) "1" else null
         if (named != null && FixtureScene.named(named) == null) Log.w(KaeriApp.TAG, "no scene named $named")
         // Home's world: invented titles dated by the scene's clock, for Home's shots.
         if (intent.getStringExtra("world") == "1") android.system.Os.setenv("KAERI_FIXTURES_HOME_WORLD", "1", true)
@@ -373,6 +375,14 @@ internal object Flavour {
         if (marked) return
         marked = true
         openReaderScene(intent)
+        if (intent.getStringExtra("shell") == "eink") {
+            // The panel's question answered as a person would: e-ink, in greys.
+            val eink = (context.applicationContext as KaeriApp).eink
+            MainScope().launch {
+                eink.state.first { it.profile != null }
+                eink.answerColour(false)
+            }
+        }
         intent.getStringExtra("medium")?.let { named ->
             KaeriIsFor.entries.firstOrNull { it.name.equals(named, ignoreCase = true) }?.let(store.medium::chooseAtLaunch)
                 ?: Log.w(KaeriApp.TAG, "medium takes read, watch or both, not $named")

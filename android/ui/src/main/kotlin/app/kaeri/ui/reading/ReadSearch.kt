@@ -249,7 +249,7 @@ internal fun OtherScopeRow(search: ReadSearchState) {
 private fun SearchCell(tile: WorkTile) {
     var menu by remember { mutableStateOf(false) }
     BoxWithConstraints {
-        ReadTile(tile, maxWidth, from = "read-search", lines = if (wideWindow()) 1 else 2, reserveLine = true, onLongClick = { menu = true })
+        ReadTile(tile, maxWidth, from = "read-search", lines = if (wideWindow()) 1 else 2, reserveLine = true, onLongClick = { menu = true }, planning = true)
         ReadTileMenu(tile, menu, current = null) { menu = false }
     }
 }

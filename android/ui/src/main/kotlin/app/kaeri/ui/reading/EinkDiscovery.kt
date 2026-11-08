@@ -95,7 +95,7 @@ import kotlinx.coroutines.flow.drop
 val LocalEinkLayout = staticCompositionLocalOf<EinkLook?> { null }
 
 /** The gutter of the paper pages. */
-private val Side = 28.dp
+internal val Side = 28.dp
 
 /** A cover in the e-ink grid, as the board draws it. */
 private val GridCover = 84.dp
@@ -136,7 +136,7 @@ internal fun BrowseEntry(rows: List<ReadHomeRow>, inline: Boolean) {
 
 /** A row of the Browse list: its title, its first two series and how many follow, and a chevron. */
 @Composable
-private fun BrowseLine(row: ReadHomeRow, colourHome: Boolean = false, onClick: () -> Unit) {
+internal fun BrowseLine(row: ReadHomeRow, colourHome: Boolean = false, onClick: () -> Unit) {
     val context = LocalContext.current
     BrowseLink(row.title.text(context), browseRowLine(context, row), colourHome, onClick)
 }
@@ -154,7 +154,7 @@ private fun browseRowLine(context: android.content.Context, row: ReadHomeRow): S
 
 /** A list row with a title, a line under it and a chevron, on paper or in the colour Home. */
 @Composable
-private fun BrowseLink(title: String, line: String, colourHome: Boolean, onClick: () -> Unit) {
+internal fun BrowseLink(title: String, line: String, colourHome: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val titleStyle = if (colourHome) MaterialTheme.typography.titleMedium else EinkType.Label
     val lineStyle = if (colourHome) MaterialTheme.typography.bodyMedium.copy(color = colors.onSurfaceVariant) else EinkType.Secondary
@@ -181,7 +181,7 @@ private fun BrowseLink(title: String, line: String, colourHome: Boolean, onClick
 
 /** A page on paper: "‹ Back to", the title with an optional link at its end, then [content]. */
 @Composable
-private fun PaperPage(
+internal fun PaperPage(
     /** The back line's words; null on a tab's own page, which has none. */
     back: String?,
     title: String,
@@ -220,7 +220,7 @@ private fun PaperPage(
  * under them: large text gets more pages, never a clipped row. [most] caps a page's items.
  */
 @Composable
-private fun <T> PagedItems(
+internal fun <T> PagedItems(
     items: List<T>,
     page: Int,
     onPage: (Int) -> Unit,
@@ -353,7 +353,7 @@ private fun PaperTile(tile: WorkTile) {
 
 /** The glyph, what happened and its line, and an outlined button at the end. */
 @Composable
-private fun PaperFailure(title: String, line: String?, action: String, onAction: () -> Unit) {
+internal fun PaperFailure(title: String, line: String?, action: String, onAction: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Problem, contentDescription = null, tint = EinkColours.Ink, modifier = Modifier.padding(end = 12.dp).size(24.dp))
         Column(Modifier.weight(1f).semantics(mergeDescendants = true) {}) {
@@ -377,6 +377,7 @@ private sealed interface Found {
     data class Note(val text: String, val ruled: Boolean = false) : Found
     data class AnilistFailed(val query: ReadSearchQuery) : Found
     data class More(val shown: Int, val total: UInt?) : Found
+    data class SourceMore(val sourceId: String, val n: Int) : Found
     /** Headings with the line under them, so a page never ends on a heading. */
     data class Together(val lines: List<Found>) : Found
 }
@@ -400,7 +401,7 @@ private fun keepHeadingsWithNext(lines: List<Found>): List<Found> {
 }
 
 /** The search as lines, in the colour apps' order and states. */
-private fun foundLines(context: android.content.Context, search: ReadSearchState): List<Found> = buildList {
+private fun foundLines(context: android.content.Context, search: ReadSearchState, opened: Set<String>): List<Found> = buildList {
     val sources = search.sources
     val query = search.query
     val anilistFailed = !query.sourcesOnly && ((search.failure != null && search.tiles.isEmpty()) || sources?.anilist == ReadAnilistState.FAILED)
@@ -429,7 +430,12 @@ private fun foundLines(context: android.content.Context, search: ReadSearchState
                 is ReadSourceState.Asking -> add(Found.Asking(group.sourceName))
                 is ReadSourceState.Failed -> add(Found.Failed(group, failureWords(context, state.failure)))
                 is ReadSourceState.TimedOut -> add(Found.Failed(group, Strings.readSearchSourceTimeout(context, state.seconds.toInt())))
-                else -> group.tiles.forEach { add(Found.Hit(it)) }
+                else -> {
+                    // Five hits, then "Show N more" until it's pressed, as in the colour apps.
+                    val capped = group.sourceId !in opened && group.tiles.size > SOURCE_HITS_SHOWN
+                    (if (capped) group.tiles.take(SOURCE_HITS_SHOWN) else group.tiles).forEach { add(Found.Hit(it)) }
+                    if (capped) add(Found.SourceMore(group.sourceId, group.tiles.size - SOURCE_HITS_SHOWN))
+                }
             }
         }
     }
@@ -455,6 +461,7 @@ internal fun EinkSearchPage(
     val text = rememberTextFieldState(search.query.text)
     var page by rememberSaveable { mutableIntStateOf(0) }
     var filters by remember { mutableStateOf(false) }
+    var opened by remember(search.query) { mutableStateOf(emptySet<String>()) }
     LaunchedEffect(text) {
         snapshotFlow { text.text.toString() }.drop(1).debounce(TYPING_REST_EINK).collect { typed ->
             val now = store.reading.search.value.query
@@ -490,7 +497,7 @@ internal fun EinkSearchPage(
             }
             EinkTextButton(Strings.readFilterTitle(context), { filters = true }, underline = true)
         }
-        val lines = foundLines(context, search)
+        val lines = foundLines(context, search, opened)
         when {
             search.query.text.isBlank() && search.tiles.isEmpty() && search.loading ->
                 Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp))
@@ -500,7 +507,7 @@ internal fun EinkSearchPage(
                 Text(Strings.readSearchNothing(context, search.query.text), style = EinkType.Body)
                 Text(Strings.readSearchNothingLine(context), style = EinkType.Secondary)
             }
-            else -> PagedItems(lines, page, { page = it }, Modifier.padding(top = 8.dp)) { line -> FoundLine(line) }
+            else -> PagedItems(lines, page, { page = it }, Modifier.padding(top = 8.dp)) { line -> FoundLine(line) { opened = opened + it } }
         }
     }
     if (filters) PaperFilters(search.query) { filters = false }
@@ -511,7 +518,7 @@ private const val TYPING_REST_EINK = 600L
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-private fun FoundLine(line: Found) {
+private fun FoundLine(line: Found, open: (String) -> Unit) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     when (line) {
@@ -544,7 +551,8 @@ private fun FoundLine(line: Found) {
                 modifier = Modifier.padding(horizontal = 12.dp),
             )
         }
-        is Found.Together -> Column { line.lines.forEach { FoundLine(it) } }
+        is Found.SourceMore -> EinkTextButton(Strings.readSearchSourceMore(context, line.n), { open(line.sourceId) }, underline = true)
+        is Found.Together -> Column { line.lines.forEach { FoundLine(it, open) } }
     }
 }
 

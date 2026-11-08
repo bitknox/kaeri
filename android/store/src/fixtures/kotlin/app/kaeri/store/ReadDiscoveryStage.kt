@@ -65,6 +65,11 @@ object ReadDiscoveryStage {
         fun hit(i: Int, title: String, amount: Msg?) = tile(i, title).copy(origin = null, amount = amount)
         val library = listOf(hit(4, "Lantern Street Notes, Vol. 2", Msg.Reading(ReadingMsg.ReadingVolumes(2L))), hit(5, "Paper Lantern Recipes", Msg.Reading(ReadingMsg.ReadingVolumes(3L)))) // i18n-skip
         val folder = listOf(hit(6, "Lantern Festival Sketchbook", Msg.Reading(ReadingMsg.ReadHitFilesFormat(1L, "CBZ")))) // i18n-skip
+        // Done: the folder holds eight, so its row shows five and Show 3 more.
+        val fullFolder = folder + listOf(
+            "Lantern Festival Sketchbook 2", "Lantern Festival Sketchbook 3", "Lantern Light Studies", // i18n-skip
+            "Lanterns at Low Tide", "Lantern Market Doodles", "Lantern Glass", "Lanternfish Notes", // i18n-skip
+        ).mapIndexed { i, title -> hit(10 + i, title, Msg.Reading(ReadingMsg.ReadHitFilesFormat(1L, "CBZ"))) } // i18n-skip
         val northwind = listOf(hit(7, "Lantern Ferry Timetables", null).copy(cover = null), hit(8, "Lantern Hill", null), hit(9, "Lantern Moths", null)) // i18n-skip
         val libraryJoined = listOf(hit(0, "Lantern Street Notes", Msg.Reading(ReadingMsg.ReadingVolumes(4L))), hit(1, "Lantern Street Notes, Side Stories", Msg.Reading(ReadingMsg.ReadingVolumes(2L)))) // i18n-skip
         val join = ReadSourceJoin(anilist[1].work, listOf("home-library"), listOf(HOME_LIBRARY)) // i18n-skip
@@ -82,7 +87,7 @@ object ReadDiscoveryStage {
                             ReadAnilistState.ANSWERED,
                             listOf(
                                 group("home-library", HOME_LIBRARY, ReadSourceState.Hits, library), // i18n-skip
-                                group("folders", COMICS, ReadSourceState.Hits, folder), // i18n-skip
+                                group("folders", COMICS, ReadSourceState.Hits, if (done) fullFolder else folder), // i18n-skip
                                 if (done) group("northwind", NORTHWIND, ReadSourceState.TimedOut(15u)) else group("northwind", NORTHWIND, ReadSourceState.Asking), // i18n-skip
                                 group("demo", DEMO, ReadSourceState.Nothing), // i18n-skip
                             ),

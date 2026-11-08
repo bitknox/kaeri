@@ -11,6 +11,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
@@ -48,6 +50,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.kaeri.design.Motion
@@ -261,15 +264,37 @@ internal fun TileStrip(
     planning: Boolean = true,
     /** The line under each title in place of the tile's own. */
     caption: ((WorkTile) -> String)? = null,
+    /** Shows this many covers, then "Show N more" in the next slot until it's pressed. */
+    cap: Int? = null,
 ) {
     val state = rememberLazyListState()
+    val context = LocalContext.current
+    val reduced = rememberSystemReducedMotion()
+    var open by rememberSaveable(rowKey) { mutableStateOf(false) }
+    val capped = cap != null && !open && tiles.size > cap
+    val shown = if (capped) tiles.take(cap!!) else tiles
     LazyRow(
         state = state,
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(cardGap()),
     ) {
-        items(tiles, key = { "$rowKey-${it.work}" }, contentType = { "cover" }) { tile ->
-            ReadTile(tile, posterWidth(), from = from, lines = 1, reserveLine = true, planning = planning, caption = caption?.invoke(tile))
+        items(shown, key = { "$rowKey-${it.work}" }, contentType = { "cover" }) { tile ->
+            // The covers past the cap fade in where the button stood, as the row's other arrivals do.
+            Box(if (reduced || cap == null) Modifier else itemMotion()) {
+                ReadTile(tile, posterWidth(), from = from, lines = 1, reserveLine = true, planning = planning, caption = caption?.invoke(tile))
+            }
+        }
+        if (capped) {
+            item(key = "$rowKey-more", contentType = "more") {
+                Box(
+                    (if (reduced) Modifier else itemMotion()).width(posterWidth()).aspectRatio(2f / 3f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    TextButton(onClick = { open = true }) {
+                        Text(Strings.readSearchSourceMore(context, tiles.size - cap!!), textAlign = TextAlign.Center)
+                    }
+                }
+            }
         }
     }
 }

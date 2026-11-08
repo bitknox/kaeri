@@ -234,6 +234,7 @@ private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?) {
             reserveLine = true,
             onLongClick = { menu = true },
             extra = extra,
+            planning = true,
         )
         ReadTileMenu(tile, menu, current = null) { menu = false }
     }
@@ -244,6 +245,9 @@ private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?) {
 private fun CoverPlaceholderCell() {
     app.kaeri.ui.PosterPlaceholder()
 }
+
+/** A source group shows this many hits, then "Show N more". */
+internal const val SOURCE_HITS_SHOWN = 5
 
 /** One source's row: its name and kind, then its covers, a failure with Try again, or placeholders. */
 @Composable
@@ -281,7 +285,7 @@ private fun SourceGroupRow(group: ReadSourceGroup) {
                 is ReadSourceState.TimedOut -> SourceFailed(group, Strings.readSearchSourceTimeout(context, state.seconds.toInt()), Modifier.padding(horizontal = 16.dp))
                 else -> {
                     val context = LocalContext.current
-                    TileStrip(group.tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false) { it.hitLine(context) }
+                    TileStrip(group.tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false, cap = SOURCE_HITS_SHOWN, caption = { it.hitLine(context) })
                 }
             }
         }

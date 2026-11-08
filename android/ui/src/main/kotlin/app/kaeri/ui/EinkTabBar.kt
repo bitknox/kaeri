@@ -39,10 +39,13 @@ import app.kaeri.eink.EinkSizes
 import app.kaeri.eink.EinkType
 import app.kaeri.engine.model.KaeriIsFor
 
-/** The e-ink bar: [current]'s destination selected, a tap goes there at once. */
+/**
+ * The e-ink bar: [current]'s destination selected, a tap goes there at once. On an e-reader
+ * ([reader]) with Read alone, the board's five tabs with Downloads and More.
+ */
 @Composable
-internal fun EinkTabBar(current: Destination, answer: KaeriIsFor, go: (Destination) -> Unit) {
-    val owner = barOwner(current, answer)
+internal fun EinkTabBar(current: Destination, answer: KaeriIsFor, reader: Boolean, go: (Destination) -> Unit) {
+    val owner = einkBarOwner(current, answer, reader)
     Column(
         Modifier
             .fillMaxWidth()
@@ -51,7 +54,7 @@ internal fun EinkTabBar(current: Destination, answer: KaeriIsFor, go: (Destinati
     ) {
         Box(Modifier.fillMaxWidth().height(EinkSizes.Rule).background(EinkColours.Ink))
         Row(Modifier.fillMaxWidth().heightIn(min = EinkSizes.BottomNav).selectableGroup()) {
-            for (destination in barDestinations(answer)) {
+            for (destination in einkBarDestinations(answer, reader)) {
                 EinkTab(stringResource(destination.labelFor(answer)), destination == owner, Modifier.weight(1f)) { go(destination) }
             }
         }

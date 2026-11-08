@@ -140,6 +140,11 @@ private const val ACTIVITY_AFTER = 4_000L
 
 @Composable
 internal fun ReadHomeScreen(actions: AppActions) {
+    // On e-ink, the board's one-screen Home on paper.
+    if (LocalEinkLayout.current != null) {
+        EinkHomeScreen(actions)
+        return
+    }
     val store = LocalAppStore.current
     val context = LocalContext.current
     val snackbars = LocalSnackbars.current

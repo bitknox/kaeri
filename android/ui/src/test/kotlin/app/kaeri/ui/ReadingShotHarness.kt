@@ -88,6 +88,8 @@ abstract class ReadingShotHarness {
         /** A step on the screen once it is ready, such as a tap, and what says it has landed. */
         act: (() -> Unit)? = null,
         acted: (AppStore) -> Boolean = { true },
+        /** A last step once [act] has landed, such as scrolling to what it brought. */
+        after: (() -> Unit)? = null,
         /** The e-ink look, as MainActivity provides it on an e-ink panel. */
         eink: app.kaeri.eink.EinkLook? = null,
         ready: (AppStore) -> Boolean,
@@ -117,6 +119,10 @@ abstract class ReadingShotHarness {
             settle(store)
             act()
             pump(name, acted)
+        }
+        if (after != null) {
+            settle(store)
+            after()
         }
         settle(store)
         val file = "${roborazziSystemPropertyOutputDirectory()}/$name.png"
