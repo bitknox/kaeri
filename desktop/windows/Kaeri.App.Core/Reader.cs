@@ -82,7 +82,6 @@ public sealed class ReaderSession
     /// <summary>The trackers the read went to, for the end page's line.</summary>
     public string[] ReadTrackers { get; private set; } = [];
     /// <summary>What the book server said of the read chapter's progress, for the end page.</summary>
-    public ReadingEvent? Unused => null;
     public (string Host, WriteBackResult Result)? ServerProgress { get; private set; }
     /// <summary>The id of the book server <see cref="ServerProgress"/> names, for Try again.</summary>
     public string? ServerProgressServer { get; private set; }
@@ -260,6 +259,7 @@ public sealed class ReaderSession
             return;
         End = null;
         Read = false;
+        ClearNotices();
         Ask(new ReaderCommand.OpenChapter(session, id));
         Phase = ReaderPhase.Opening;
         OpenedAt = DateTimeOffset.UtcNow;
@@ -292,6 +292,7 @@ public sealed class ReaderSession
         Ask(new ReaderCommand.Retry(session, view.Chapter.Id, page));
         if (page is null)
         {
+            ClearNotices();
             Phase = ReaderPhase.Opening;
             Failure = null;
             OpenedAt = DateTimeOffset.UtcNow;
@@ -335,6 +336,8 @@ public sealed class ReaderSession
         {
             Notice = null;
             noticeTimer?.Cancel();
+            noticeTimer = null;
+            noticeLeft = null;
             Changed?.Invoke(ReaderChange.Notice);
         }
     }
@@ -364,7 +367,7 @@ public sealed class ReaderSession
         Ask(new ReaderCommand.UseDefault(Medium, view.Work, key));
     }
 
-    public enum ModeChoice { Auto, RightToLeft, LeftToRight, Strip }
+    public enum ModeChoice { Auto, RightToLeft, LeftToRight, Vertical, Strip }
 
     /// <summary>
     /// The reading mode picker: Auto drops the series' choice; the others set mode and direction
@@ -385,6 +388,9 @@ public sealed class ReaderSession
             case ModeChoice.Strip:
                 Set(ReaderSettingKey.Mode, new ReaderValue.Choice("strip"), SettingScope.Series);
                 break;
+            case ModeChoice.Vertical:
+                Set(ReaderSettingKey.Mode, new ReaderValue.Choice("vertical"), SettingScope.Series);
+                break;
         }
     }
 
@@ -395,6 +401,7 @@ public sealed class ReaderSession
     public ModeChoice ChosenMode =>
         !ModeOverridden ? ModeChoice.Auto
         : Choice(ReaderSettingKey.Mode) == "strip" ? ModeChoice.Strip
+        : Choice(ReaderSettingKey.Mode) == "vertical" ? ModeChoice.Vertical
         : Choice(ReaderSettingKey.Direction) == "ltr" ? ModeChoice.LeftToRight
         : ModeChoice.RightToLeft;
 
@@ -487,6 +494,7 @@ public sealed class ReaderSession
                     return;
                 if (Leaves.Length == 0 && failed.Page == 0)
                 {
+                    ClearNotices();
                     Phase = ReaderPhase.Failed;
                     Failure = failed.Failure;
                     Changed?.Invoke(ReaderChange.Phase);
@@ -627,25 +635,66 @@ public sealed class ReaderSession
         Changed?.Invoke(ReaderChange.GoTo);
     }
 
+    /// <summary>Whether a screen reader runs now, for how long a notice holds. The window sets it.</summary>
+    public Func<bool>? ScreenReader { get; set; }
+
+    bool noticeHover, inactive;
+    TimeSpan? noticeLeft;
+    DateTimeOffset noticeRunFrom;
+
+    /// <summary>The pointer or keyboard focus is on the notice (true) or left it: its time waits meanwhile.</summary>
+    public void HoldNotice(bool held)
+    {
+        noticeHover = held;
+        NoticeClock();
+    }
+
+    /// <summary>The window came to the front or went behind another: a notice's time runs only in front.</summary>
+    public void WindowActive(bool active)
+    {
+        inactive = !active;
+        NoticeClock();
+    }
+
+    /// <summary>
+    /// How long a notice holds, in milliseconds, or null until it is dismissed: the engine's own
+    /// rule (<c>reader_notice_hold</c>). A second more for every 10 words past 12, and a notice
+    /// with a button waits for the person while a screen reader runs.
+    /// </summary>
+    public static uint? NoticeHold(uint lastsMs, uint words, bool hasAction, bool screenReader)
+    {
+        if (hasAction && screenReader)
+            return null;
+        if (lastsMs == 0)
+            return 0;
+        var extra = words <= 12 ? 0 : (words - 12 + 9) / 10;
+        return lastsMs + extra * 1000;
+    }
+
+    static uint Words(string text) => (uint)text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
+
     async void Show(ReaderNotice incoming)
     {
         var line = new ReaderNoticeLine(++noticeCount, incoming.Msg.Text(), incoming.Action);
         var back = incoming.Action == ReaderAction.BackTo;
-        var timer = new CancellationTokenSource();
-        if (back)
-        {
-            backTimer?.Cancel();
-            backTimer = timer;
-            BackTo = line;
-            Changed?.Invoke(ReaderChange.BackTo);
-        }
-        else
+        if (!back)
         {
             noticeTimer?.Cancel();
-            noticeTimer = timer;
+            noticeTimer = null;
             Notice = line;
+            var hasAction = incoming.Action is ReaderAction.StartOver or ReaderAction.GoBack or ReaderAction.ChangeMode;
+            var hold = NoticeHold(incoming.LastsMs, Words(line.Text), hasAction, ScreenReader?.Invoke() ?? false);
+            // 0 is e-ink's: the notice stays until the next turn clears it.
+            noticeLeft = hold is { } ms && ms > 0 ? TimeSpan.FromMilliseconds(ms) : null;
             Changed?.Invoke(ReaderChange.Notice);
+            NoticeClock();
+            return;
         }
+        var timer = new CancellationTokenSource();
+        backTimer?.Cancel();
+        backTimer = timer;
+        BackTo = line;
+        Changed?.Invoke(ReaderChange.BackTo);
         if (incoming.LastsMs == 0)
             return;
         try
@@ -656,21 +705,74 @@ public sealed class ReaderSession
         {
             return;
         }
-        if (back && BackTo?.Id == line.Id)
+        if (BackTo?.Id == line.Id)
         {
             BackTo = null;
             Changed?.Invoke(ReaderChange.BackTo);
         }
-        else if (!back && Notice?.Id == line.Id)
+    }
+
+    /// <summary>The notice's time runs, or waits while something holds it.</summary>
+    void NoticeClock()
+    {
+        if (Notice is not { } line || noticeLeft is not { } left)
+            return;
+        if (noticeHover || inactive)
         {
-            Notice = null;
-            Changed?.Invoke(ReaderChange.Notice);
+            if (noticeTimer is null)
+                return;
+            noticeTimer.Cancel();
+            noticeTimer = null;
+            noticeLeft = left - (DateTimeOffset.UtcNow - noticeRunFrom);
+            return;
         }
+        if (noticeTimer is null)
+            RunNotice(line.Id, left);
+    }
+
+    async void RunNotice(int id, TimeSpan left)
+    {
+        var timer = noticeTimer = new CancellationTokenSource();
+        noticeRunFrom = DateTimeOffset.UtcNow;
+        try
+        {
+            await Task.Delay(left > TimeSpan.Zero ? left : TimeSpan.Zero, timer.Token);
+        }
+        catch (TaskCanceledException)
+        {
+            return;
+        }
+        if (noticeTimer != timer || Notice?.Id != id)
+            return;
+        noticeTimer = null;
+        noticeLeft = null;
+        Notice = null;
+        Changed?.Invoke(ReaderChange.Notice);
+    }
+
+    /// <summary>Another chapter opens, or the open failed: neither the notice nor Back to stays over it.</summary>
+    void ClearNotices()
+    {
+        noticeTimer?.Cancel();
+        noticeTimer = null;
+        noticeLeft = null;
+        backTimer?.Cancel();
+        var had = Notice is not null;
+        var hadBack = BackTo is not null;
+        Notice = null;
+        BackTo = null;
+        if (had)
+            Changed?.Invoke(ReaderChange.Notice);
+        if (hadBack)
+            Changed?.Invoke(ReaderChange.BackTo);
     }
 
     void Reset()
     {
         noticeTimer?.Cancel();
+        noticeTimer = null;
+        noticeLeft = null;
+        noticeHover = false;
         backTimer?.Cancel();
         pendingStrip?.Cancel();
         View = null;

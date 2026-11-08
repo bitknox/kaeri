@@ -14,6 +14,18 @@ public class ReadingTests
             MangaFormats: [ExportFormat.Cbz, ExportFormat.Kepub], NovelFormats: [ExportFormat.Kepub], Split: false, Chosen: chosen);
 
     [Fact]
+    public void AReaderNoticeHoldsLongerForLongTextAndWaitsForAScreenReader()
+    {
+        Assert.Equal(6_000u, ReaderSession.NoticeHold(6_000, 4, true, false));
+        Assert.Equal(8_000u, ReaderSession.NoticeHold(8_000, 12, true, false));
+        Assert.Equal(9_000u, ReaderSession.NoticeHold(8_000, 13, true, false));
+        Assert.Equal(10_000u, ReaderSession.NoticeHold(8_000, 32, true, false));
+        Assert.Null(ReaderSession.NoticeHold(8_000, 4, true, true));
+        Assert.Equal(4_000u, ReaderSession.NoticeHold(4_000, 4, false, true));
+        Assert.Equal(0u, ReaderSession.NoticeHold(0, 30, false, false));
+    }
+
+    [Fact]
     public void ASendBindsToTheFirstJobTheEngineNames()
     {
         List<Command> sent = [];

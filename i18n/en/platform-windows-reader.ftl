@@ -63,7 +63,10 @@ windows-reader-end-trackers-two = { $first } and { $second }
 # @arg chapter: text
 # @arg pages: int
 # @max 48
-windows-reader-end-next-detail = { $chapter } · { $pages } pages
+windows-reader-end-next-detail = { $pages ->
+    [one] { $chapter } · 1 page
+   *[other] { $chapter } · { $pages } pages
+}
 
 # Line naming the source the next chapter was downloaded from.
 # @only windows
@@ -437,10 +440,56 @@ windows-reader-volume = Volume { $volume }
 # @only windows
 # @arg pages: int
 # @max 20
-windows-reader-chapter-pages = { $pages } pages
+windows-reader-chapter-pages = { $pages ->
+    [one] 1 page
+   *[other] { $pages } pages
+}
 
 # Name of a page in the page grid, spoken.
 # @only windows
 # @arg page: int
 # @max 16
 windows-reader-grid-page = Page { $page }
+
+# Name of an image in a strip, spoken when the strip settles on it and read by Narrator.
+# @only windows
+# @arg image: int
+# @arg count: int
+# @max 24
+windows-reader-image-label = Image { $image } of { $count }
+
+# Name and tooltip of the button that closes a novel's footnote.
+# @only windows
+# @max 20
+windows-reader-note-close = Close note
+
+# Name of the Back button at the top of the reading mode picker inside the reader settings.
+# @only windows
+# @max 12
+windows-reader-back = Back
+
+# Option of the reading mode picker: pages one under another.
+# @only windows
+# @max 24
+windows-reader-mode-vertical = Vertical pages
+
+# A guessed reading mode, inside "Auto · vertical pages".
+# @only windows
+# @max 20
+windows-reader-mode-vertical-lower = vertical pages
+
+# Hint under Auto in the reading mode picker. The way is "Right to left", "Left to right", "Strip" or "Vertical pages".
+# @only windows
+# @arg way: text
+# @max 60
+windows-reader-mode-auto-line = { $way }, from the series details
+
+# Hint under Vertical pages in the reading mode picker.
+# @only windows
+# @max 40
+windows-reader-mode-vertical-line = Pages one under another
+
+# Hint under Strip in the reading mode picker.
+# @only windows
+# @max 40
+windows-reader-mode-strip-line = For webtoons and long images

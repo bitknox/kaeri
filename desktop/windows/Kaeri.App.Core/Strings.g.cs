@@ -1561,7 +1561,7 @@ public static partial class T
     public static string WindowsReaderEndTrackersTwo(string first, string second) => Fill(Get("WindowsReaderEndTrackersTwo"), ("first", first), ("second", second));
 
     /// <summary>Detail line under the next chapter's title on the page between chapters.</summary>
-    public static string WindowsReaderEndNextDetail(string chapter, long pages) => Fill(Get("WindowsReaderEndNextDetail"), ("chapter", chapter), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderEndNextDetail(string chapter, long pages) => Fill(GetPlural("WindowsReaderEndNextDetail", pages), ("chapter", chapter), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line naming the source the next chapter was downloaded from.</summary>
     public static string WindowsReaderEndFrom(string source) => Fill(Get("WindowsReaderEndFrom"), ("source", source));
@@ -1765,10 +1765,34 @@ public static partial class T
     public static string WindowsReaderVolume(string volume) => Fill(Get("WindowsReaderVolume"), ("volume", volume));
 
     /// <summary>A chapter's length in the chapter list.</summary>
-    public static string WindowsReaderChapterPages(long pages) => Fill(Get("WindowsReaderChapterPages"), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderChapterPages(long pages) => Fill(GetPlural("WindowsReaderChapterPages", pages), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of a page in the page grid, spoken.</summary>
     public static string WindowsReaderGridPage(long page) => Fill(Get("WindowsReaderGridPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name of an image in a strip, spoken when the strip settles on it and read by Narrator.</summary>
+    public static string WindowsReaderImageLabel(long image, long count) => Fill(Get("WindowsReaderImageLabel"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name and tooltip of the button that closes a novel's footnote.</summary>
+    public static string WindowsReaderNoteClose => Get("WindowsReaderNoteClose");
+
+    /// <summary>Name of the Back button at the top of the reading mode picker inside the reader settings.</summary>
+    public static string WindowsReaderBack => Get("WindowsReaderBack");
+
+    /// <summary>Option of the reading mode picker: pages one under another.</summary>
+    public static string WindowsReaderModeVertical => Get("WindowsReaderModeVertical");
+
+    /// <summary>A guessed reading mode, inside "Auto · vertical pages".</summary>
+    public static string WindowsReaderModeVerticalLower => Get("WindowsReaderModeVerticalLower");
+
+    /// <summary>Hint under Auto in the reading mode picker. The way is "Right to left", "Left to right", "Strip" or "Vertical pages".</summary>
+    public static string WindowsReaderModeAutoLine(string way) => Fill(Get("WindowsReaderModeAutoLine"), ("way", way));
+
+    /// <summary>Hint under Vertical pages in the reading mode picker.</summary>
+    public static string WindowsReaderModeVerticalLine => Get("WindowsReaderModeVerticalLine");
+
+    /// <summary>Hint under Strip in the reading mode picker.</summary>
+    public static string WindowsReaderModeStripLine => Get("WindowsReaderModeStripLine");
 
     /// <summary>Line under the title of the Downloads page for reading when no chapter is kept on this PC.</summary>
     public static string WindowsReadDownloadsEmptyDetail => Get("WindowsReadDownloadsEmptyDetail");
@@ -11663,7 +11687,8 @@ public static partial class T
         ["WindowsReaderEndNotRead"] = "Not marked read yet",
         ["WindowsReaderEndTracker"] = "Read · {trackers} updated",
         ["WindowsReaderEndTrackersTwo"] = "{first} and {second}",
-        ["WindowsReaderEndNextDetail"] = "{chapter} · {pages} pages",
+        ["WindowsReaderEndNextDetail_one"] = "{chapter} · 1 page",
+        ["WindowsReaderEndNextDetail_other"] = "{chapter} · {pages} pages",
         ["WindowsReaderEndFrom"] = "From {source}",
         ["WindowsReaderContinue"] = "Continue",
         ["WindowsReaderBackToSeries"] = "Back to the series",
@@ -11733,8 +11758,17 @@ public static partial class T
         ["WindowsReaderPagesTab"] = "Pages",
         ["WindowsReaderChaptersTab"] = "Chapters",
         ["WindowsReaderVolume"] = "Volume {volume}",
-        ["WindowsReaderChapterPages"] = "{pages} pages",
+        ["WindowsReaderChapterPages_one"] = "1 page",
+        ["WindowsReaderChapterPages_other"] = "{pages} pages",
         ["WindowsReaderGridPage"] = "Page {page}",
+        ["WindowsReaderImageLabel"] = "Image {image} of {count}",
+        ["WindowsReaderNoteClose"] = "Close note",
+        ["WindowsReaderBack"] = "Back",
+        ["WindowsReaderModeVertical"] = "Vertical pages",
+        ["WindowsReaderModeVerticalLower"] = "vertical pages",
+        ["WindowsReaderModeAutoLine"] = "{way}, from the series details",
+        ["WindowsReaderModeVerticalLine"] = "Pages one under another",
+        ["WindowsReaderModeStripLine"] = "For webtoons and long images",
         ["WindowsReadDownloadsEmptyDetail"] = "Downloaded chapters open without a connection.",
         ["SeriesReadAgainDoneWindows"] = "Reading {title} again from the start",
         ["SendSaveFilesWindows"] = "Save files",
