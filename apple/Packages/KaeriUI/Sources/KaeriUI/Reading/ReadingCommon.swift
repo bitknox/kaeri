@@ -274,7 +274,8 @@ struct ReadTileCard: View {
     var planAction = false
     /// What the line under the cover says.
     var caption = ReadCaption.plain
-    /// Narrower than this, as a phone's grid cells are, the line may wrap once.
+    /// Narrower than this, as a phone's grid cells are, the line may wrap once. The Mac's
+    /// 128-point covers keep it to one line with an ellipsis, as the board draws them.
     static let narrow: CGFloat = 130
 
     var body: some View {
@@ -307,7 +308,7 @@ struct ReadTileCard: View {
                         // A phone's grid cell is narrow: its line takes a second line, not an
                         // ellipsis, and so does Not found in your sources anywhere.
                         Text(line)
-                            .lineLimit(width < Self.narrow || tile.notInSources ? 2 : 1)
+                            .lineLimit((!Device.isMac && width < Self.narrow) || tile.notInSources ? 2 : 1)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .font(.ui(layout.posterLine.size))
