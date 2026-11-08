@@ -112,6 +112,8 @@ struct KaeriApp: App {
             } playerWindowItems: {
                 EmptyView()
             }
+            // The reader's keys, with a hardware keyboard on iPad and iPhone.
+            ReaderMenu()
         }
         #endif
     }

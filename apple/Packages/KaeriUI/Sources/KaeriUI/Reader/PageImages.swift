@@ -35,9 +35,31 @@ enum PageImages {
     static func load(_ file: PageFile, longestSide: CGFloat) async -> CGImage? {
         let key = key(file, longestSide)
         if let hit = cache.object(forKey: key) { return hit }
-        let image = await Task.detached(priority: .userInitiated) { decode(file, longestSide: longestSide) }.value
+        let image = await Task.detached(priority: .userInitiated) {
+            decode(file, longestSide: longestSide).map(forScreen)
+        }.value
         if let image { cache.setObject(image, forKey: key, cost: image.bytesPerRow * image.height) }
         return image
+    }
+
+    /// The image redrawn in the layout the screen draws, off the main thread, so its first frame
+    /// on screen converts nothing. A page a turn brings in would otherwise hold that frame up.
+    static func forScreen(_ image: CGImage) -> CGImage {
+        let grey = image.colorSpace?.model == .monochrome
+        let space = grey ? CGColorSpaceCreateDeviceGray() : CGColorSpace(name: CGColorSpace.sRGB)!
+        let info = grey
+            ? CGImageAlphaInfo.none.rawValue
+            : CGImageAlphaInfo.premultipliedFirst.rawValue | CGBitmapInfo.byteOrder32Little.rawValue
+        if image.bitsPerComponent == 8, image.bitmapInfo.rawValue == info, image.colorSpace == space {
+            return image
+        }
+        guard let context = CGContext(
+            data: nil, width: image.width, height: image.height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: space, bitmapInfo: info)
+        else { return image }
+        context.interpolationQuality = .none
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return context.makeImage() ?? image
     }
 
     static func decode(_ file: PageFile, longestSide: CGFloat) -> CGImage? {

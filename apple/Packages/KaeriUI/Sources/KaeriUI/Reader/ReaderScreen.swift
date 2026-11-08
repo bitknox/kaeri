@@ -18,6 +18,10 @@ public struct ReaderScreen: View {
     @AppStorage(ReaderDefaults.background) private var background = "theme"
     @AppStorage(ReaderDefaults.system) private var system = false
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(Navigator.self) private var navigator: Navigator?
+    @State private var spoken: Task<Void, Never>?
+    @State private var groupHeight: CGFloat = 84
 
     public init(model: ReaderModel, onClose: @escaping () -> Void) {
         self.model = model
@@ -45,8 +49,8 @@ public struct ReaderScreen: View {
             ZStack {
                 (model.medium == .manga ? theme.backdrop(background) : theme.page)
                 content
-                ReaderChrome(model: model, theme: theme, mac: mac, size: size, onClose: close)
-                ReaderNotices(model: model, theme: theme, mac: mac)
+                ReaderChrome(model: model, theme: theme, mac: mac, size: size, onClose: close, groupHeight: $groupHeight)
+                ReaderNotices(model: model, theme: theme, mac: mac, size: size, groupHeight: groupHeight)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
             .onAppear { resize(proxy.size) }
@@ -56,6 +60,10 @@ public struct ReaderScreen: View {
         .onChange(of: voiceOver, initial: true) { _, on in model.pinChrome = on }
         // The book's decoded pages go with the reader: a page is drawn again from its file.
         .onDisappear { PageImages.removeAll() }
+        // Notices wait while the reader is out of sight.
+        .onChange(of: scenePhase, initial: true) { _, phase in model.away = phase != .active }
+        // A settled turn is said, as the chrome's line says it.
+        .onChange(of: spokenPlace) { _, _ in announcePlace() }
         .preferredColorScheme(system ? nil : theme.scheme)
         .environment(\.readerPaper, paper)
         .environment(\.readerClose, close)
@@ -77,9 +85,9 @@ public struct ReaderScreen: View {
     @ViewBuilder private var content: some View {
         switch model.phase {
         case .closed, .opening:
-            ReaderOpening(model: model, theme: theme)
+            ReaderOpening(model: model, theme: theme, size: size)
         case .failed(let failure):
-            ReaderChapterFailed(model: model, theme: theme, failure: failure, close: close)
+            ReaderChapterFailed(model: model, theme: theme, failure: failure, chooseSource: chooseSource, close: close)
         case .open:
             if model.novel != nil {
                 NovelReader(model: model, theme: theme, mac: mac, size: size, rtl: rtl) { tap($0) }
@@ -132,8 +140,48 @@ public struct ReaderScreen: View {
     }
     #else
     private func pointerMoved() {}
-    private func escape() { close() }
+
+    /// Esc steps out: a sheet first, then Go to page, then the chrome, then the reader.
+    private func escape() {
+        if model.sheet != nil { model.sheet = nil; return }
+        if model.askingPage { model.askingPage = false; return }
+        if model.chromeShown { model.chromeShown = false; return }
+        close()
+    }
     #endif
+
+    /// The place as VoiceOver hears it, once a turn has settled.
+    private var spokenPlace: String {
+        guard voiceOver, model.phase == .open else { return "" }
+        return "\(model.view?.chapter.id ?? "")|\(model.inTrail?.id ?? "")|\(model.position.index)|\(model.position.count)"
+    }
+
+    private func announcePlace() {
+        spoken?.cancel()
+        guard voiceOver, model.phase == .open else { return }
+        spoken = Task {
+            try? await Task.sleep(for: .milliseconds(450))
+            guard !Task.isCancelled else { return }
+            let line = ReaderChrome.line(model: model, index: model.position.index)
+            AccessibilityNotification.PageScrolled(line.replacingOccurrences(of: " · ", with: ", ")).post() // i18n-skip: a separator
+        }
+    }
+
+    /// Choose source: the reader goes and the series' version and source picker comes up over
+    /// its page.
+    private func chooseSource() {
+        guard let work = model.request?.work ?? model.view?.work else { close(); return }
+        close()
+        #if os(iOS)
+        // The picker is a sheet of the page under the reader: it comes once the cover has gone.
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(450))
+            navigator?.chooseSource(for: work)
+        }
+        #else
+        navigator?.chooseSource(for: work)
+        #endif
+    }
 
     private func close() {
         model.close()
@@ -149,9 +197,22 @@ public struct ReaderScreen: View {
             },
             back: { model.act(.backTo) },
             askPage: { model.chromeShown = true; model.askingPage = true },
+            edge: { first in edge(first: first) },
+            escape: { escape() },
             showChapters: { model.sheet = .chapters },
             showSettings: { model.sheet = .settings },
             zoom: { step in zoom(step) })
+    }
+
+    /// Home and End: the first page or image, or the last one before the end page.
+    private func edge(first: Bool) {
+        model.hideChrome()
+        if model.novel != nil || model.view?.mode == .strip {
+            model.requestJump(first ? 0 : max(model.position.count - 1, 0))
+            return
+        }
+        let last = model.leaves.lastIndex { !$0.endPage } ?? 0
+        model.requestJump(first ? 0 : last)
     }
 
     private func zoom(_ step: Int) {
@@ -196,6 +257,10 @@ public struct ReaderActions {
     public var chapter: (_ next: Bool) -> Void
     public var back: () -> Void
     public var askPage: () -> Void
+    /// Home and End.
+    public var edge: (_ first: Bool) -> Void
+    /// Esc on iPad: out of a sheet, the chrome, then the reader.
+    public var escape: () -> Void
     public var showChapters: () -> Void
     public var showSettings: () -> Void
     public var zoom: (_ step: Int) -> Void
@@ -217,57 +282,101 @@ extension FocusedValues {
 struct ReaderOpening: View {
     let model: ReaderModel
     let theme: ReaderTheme
+    let size: CGSize
     @State private var seconds = 0
     @State private var shown = false
 
+    /// The page's place as the opening holds it: the column of a strip, a page fitted to the
+    /// screen otherwise. The first page fades in on the same plate.
+    private var plate: CGSize {
+        if model.view?.mode == .strip { return CGSize(width: min(size.width, 720), height: size.height) }
+        let width = min(size.width, size.height * 0.7)
+        return CGSize(width: width, height: min(size.height, width / 0.7))
+    }
+
     var body: some View {
-        let chapter = model.view?.chapter.label ?? ""
-        VStack(spacing: 14) {
-            if shown {
-                ProgressView().controlSize(.regular).tint(theme.haze)
-                Text(seconds >= 4 ? L.readerOpeningSlow(seconds: seconds) : L.readerOpening(chapter: chapter))
-                    .font(.ui(15)).foregroundStyle(theme.haze).monospacedDigit()
-                    .contentTransition(.opacity)
+        let chapter = model.view?.chapter
+        let label = chapter.map { $0.number ?? $0.label } ?? ""
+        ZStack {
+            if model.medium != .novel {
+                Rectangle().fill(theme.raised).frame(width: plate.width, height: plate.height)
             }
+            VStack(spacing: 6) {
+                if shown {
+                    Text(seconds >= 3 ? L.readerOpeningSlow(seconds: seconds) : L.readerOpening(chapter: label))
+                        .font(.ui(15)).foregroundStyle(theme.haze).monospacedDigit()
+                        .multilineTextAlignment(.center)
+                        .contentTransition(.opacity)
+                        .transition(.opacity)
+                }
+            }
+            .padding(.horizontal, 28)
         }
-        .transition(.opacity)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
         .task {
-            // Nothing for 600 ms, then the spinner and its line; the slow line comes at 4 s.
+            // The plate at once; its line from 600 ms, and the wait admitted from 3 s.
             seconds = 0
             try? await Task.sleep(for: .milliseconds(600))
+            guard !Task.isCancelled else { return }
             withAnimation(.fadeIn) { shown = true }
+            AccessibilityNotification.Announcement(L.readerOpening(chapter: label)).post()
             seconds = 1
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))
-                seconds += 1
+                withAnimation(.fadeIn) { seconds += 1 }
             }
         }
     }
 }
 
+/// A chapter that would not open: the reason in plain words, Choose source as the one action,
+/// Try again and Close quiet under it.
 struct ReaderChapterFailed: View {
     let model: ReaderModel
     let theme: ReaderTheme
     let failure: ReadingFailure
+    let chooseSource: () -> Void
     let close: () -> Void
+    @Environment(\.dynamicTypeSize) private var type
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Image(systemName: "exclamationmark.triangle").font(.system(size: 24)).foregroundStyle(theme.vermilion)
-            Text(L.readerChapterFailed(chapter: model.view?.chapter.label ?? "")).font(.ui(20, weight: .semibold))
-                .foregroundStyle(theme.silk)
-            Text(failure.words).font(.ui(15)).foregroundStyle(theme.haze)
-            HStack(spacing: 10) {
-                Button(L.readerTryAgain) { model.retry(page: nil) }.buttonStyle(ReaderAmberStyle(theme: theme, height: 44).fixed())
-                Button(L.readerChooseSource, action: close).buttonStyle(ReaderPillStyle(theme: theme, height: 44))
+        let chapter = model.view?.chapter
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer(minLength: 120).frame(maxHeight: 240)
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(theme.vermilion)
+                    .accessibilityHidden(true)
+                Text(L.readerChapterFailed(chapter: chapter.map { $0.number ?? $0.label } ?? ""))
+                    .foregroundStyle(theme.silk)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.top, 6)
-            Button(L.readerClose, action: close).buttonStyle(.plain)
-                .font(.ui(15, weight: .semibold)).foregroundStyle(theme.haze).frame(minHeight: 44)
+            .font(.ui(22, weight: .semibold))
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            Text(failure.words).font(.ui(15)).foregroundStyle(theme.haze)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 10)
+            Spacer(minLength: 32)
+            Button(L.readerChooseSource, action: chooseSource)
+                .buttonStyle(ReaderAmberStyle(theme: theme))
+            let quiet = Group {
+                Button(L.readerTryAgain) { model.retry(page: nil) }
+                Button(L.readerClose, action: close)
+            }
+            .buttonStyle(.plain)
+            .font(.ui(15, weight: .semibold)).foregroundStyle(theme.silk)
+            .frame(maxWidth: .infinity, minHeight: 44)
+            .contentShape(.rect)
+            if type.isAccessibilitySize {
+                VStack(spacing: 0) { quiet }.padding(.top, 6)
+            } else {
+                HStack(spacing: 0) { quiet }.padding(.top, 6)
+            }
         }
-        .frame(maxWidth: 360, alignment: .leading)
-        .padding(28)
+        .frame(maxWidth: 440, alignment: .leading)
+        .padding(.horizontal, 28)
+        .padding(.bottom, 26)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

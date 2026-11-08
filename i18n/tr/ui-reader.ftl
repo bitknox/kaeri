@@ -51,3 +51,9 @@ reader-end-from = Şuradan: { $source }
 reader-chapter-line = Bölüm { $chapter }
 
 reader-divider-facts-source = { $facts } · şuradan: { $source }
+reader-end-swipe = Sürdürmek için kaydırın
+reader-divider-images = { $count ->
+    [one] Bir görsel
+   *[other] { $count } görsel
+ }
+reader-chapter-line-titled = Bölüm { $chapter } · { $title }

@@ -684,7 +684,7 @@ struct PairShowSheet: View {
                         SyncProblemLine(text: L.pairErrExpired)
                             .onAppear { expired = true }
                     } else {
-                        SyncNote(text: (first ? L.pairSameWifi : L.pairShowScan) + " " + L.pairGoodFor(left: String(format: "%d:%02d", left / 60, left % 60)))
+                        SyncNote(text: (first ? L.pairSameWifi : L.pairShowScan) + " " + L.pairCodeLeft(left: String(format: "%d:%02d", left / 60, left % 60)))
                             .monospacedDigit()
                     }
                 }

@@ -1,5 +1,6 @@
 // Where the reader lives. On iPhone and iPad it covers the app; on the Mac it is a window of its
-// own, one at a time, with the Go menu's keys. The dev harness draws it over its window.
+// own, one at a time. The Go menu's keys work on both, with a hardware keyboard on iPad. The dev
+// harness draws it over its window.
 
 import KaeriStore
 import KaeriStrings
@@ -100,6 +101,8 @@ private struct TrafficLights: NSViewRepresentable {
     }
 }
 
+#endif
+
 /// The Go menu while a reader is in front. Every key of the reader is an item here.
 public struct ReaderMenu: Commands {
     @FocusedValue(\.readerActions) private var reader
@@ -115,8 +118,12 @@ public struct ReaderMenu: Commands {
                 Button(L.readerMenuPreviousPage) { reader.turn(false, false) }.keyboardShortcut(previous, modifiers: [])
                 Button(L.readerMenuNextPage) { reader.turn(true, false) }.keyboardShortcut(.space, modifiers: [])
                 Button(L.readerMenuPreviousPage) { reader.turn(false, false) }.keyboardShortcut(.space, modifiers: .shift)
+                Button(L.readerMenuNextPage) { reader.turn(true, false) }.keyboardShortcut(.pageDown, modifiers: [])
+                Button(L.readerMenuPreviousPage) { reader.turn(false, false) }.keyboardShortcut(.pageUp, modifiers: [])
                 Button(L.readerMenuNextPage) { reader.turn(true, true) }.keyboardShortcut(.downArrow, modifiers: [])
                 Button(L.readerMenuPreviousPage) { reader.turn(false, true) }.keyboardShortcut(.upArrow, modifiers: [])
+                Button(L.readerMenuFirstPage) { reader.edge(true) }.keyboardShortcut(.home, modifiers: [])
+                Button(L.readerMenuLastPage) { reader.edge(false) }.keyboardShortcut(.end, modifiers: [])
                 Divider()
                 Button(L.readerMenuNextChapter) { reader.chapter(true) }.keyboardShortcut("]", modifiers: [])
                 Button(L.readerMenuPreviousChapter) { reader.chapter(false) }.keyboardShortcut("[", modifiers: [])
@@ -133,10 +140,14 @@ public struct ReaderMenu: Commands {
                 Button(L.readerMenuZoomIn) { reader.zoom(1) }.keyboardShortcut("+", modifiers: .command)
                 Button(L.readerMenuZoomOut) { reader.zoom(-1) }.keyboardShortcut("-", modifiers: .command)
                 Button(L.readerMenuZoomFit) { reader.zoom(0) }.keyboardShortcut("0", modifiers: .command)
+                #if os(iOS)
+                // The Mac's window takes Esc itself; on iPad it is an item of its own.
+                Divider()
+                Button(L.readerClose) { reader.escape() }.keyboardShortcut(.escape, modifiers: [])
+                #endif
             } else {
                 Button(L.readerMenuNextPage) {}.disabled(true)
             }
         }
     }
 }
-#endif

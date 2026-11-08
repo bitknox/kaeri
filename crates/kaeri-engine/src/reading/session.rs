@@ -939,8 +939,9 @@ impl Session {
         if let Some(msg) = said {
             cx.send(notice(msg, Some(ReaderAction::ChangeMode), RESUMED_MS, eink));
         }
-        if let Some(page) = self.resumed.take() {
-            let msg = ReadingMsg::ReaderResumed { page: i64::from(page) + 1 };
+        if let Some(page) = self.resumed.take()
+            && let Some(msg) = resumed_msg(self.mode, page, self.start.strip)
+        {
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, eink));
         }
         let start = match self.start.strip {
@@ -999,12 +1000,15 @@ impl Session {
                 if index == self.at + 1 {
                     self.chapter_read(cx, Reached::MovedOn);
                 }
+                // A strip flows into the next chapter in the same scroll, under its marker:
+                // it starts at its first image, never at a place kept from before.
+                let flowing = self.mode == ReaderMode::Strip && index == self.at + 1;
                 let store = &cx.services.store;
                 let page = store
                     .read_chapters(self.work.as_str())
                     .unwrap_or_default()
                     .into_iter()
-                    .find(|k| k.chapter == chapter.as_str() && !k.read)
+                    .find(|k| k.chapter == chapter.as_str() && !k.read && !flowing)
                     .and_then(|k| k.last_page)
                     .unwrap_or(0);
                 let novel = novel::kept_novel(cx, &self.work, &chapter);
@@ -1301,6 +1305,20 @@ impl Session {
         let msg = moved_msg(&label, i64::from(page) + 1, name);
         cx.send(notice(msg, Some(ReaderAction::GoBack), MOVED_MS, self.eink()));
     }
+}
+
+/// "Resumed at page 8", or at an image in a strip. Nothing at the chapter's very start, where
+/// Start over would have nothing to do.
+fn resumed_msg(mode: ReaderMode, page: u32, strip: Option<StripPos>) -> Option<ReadingMsg> {
+    let into = strip.filter(|s| s.image == page).map_or(0.0, |s| s.offset);
+    if page == 0 && into < 0.05 {
+        return None;
+    }
+    Some(if mode == ReaderMode::Strip {
+        ReadingMsg::ReaderResumedImage { image: i64::from(page) + 1 }
+    } else {
+        ReadingMsg::ReaderResumed { page: i64::from(page) + 1 }
+    })
 }
 
 /// The Moved notice for a chapter's label. A label that is only a number, with or without a
@@ -2065,7 +2083,7 @@ mod tests {
 
         let (view, _, said) = h.open(OpenAt::Resume).await;
         assert_eq!((view.start.page, view.start.strip), (Some(1), Some(at)));
-        assert_eq!(notices(&said), [ReadingMsg::ReaderResumed { page: 2 }]);
+        assert_eq!(notices(&said), [ReadingMsg::ReaderResumedImage { image: 2 }]);
         let session = h.session();
         h.send(ReaderCommand::Close { session });
         // The book stays where the first run laid it; only the app is started again.
@@ -2077,7 +2095,7 @@ mod tests {
         let (view, _, said) = h.open(OpenAt::Resume).await;
         assert_eq!(view.mode, ReaderMode::Strip);
         assert_eq!((view.start.page, view.start.strip), (Some(1), Some(at)));
-        assert_eq!(notices(&said), [ReadingMsg::ReaderResumed { page: 2 }]);
+        assert_eq!(notices(&said), [ReadingMsg::ReaderResumedImage { image: 2 }]);
 
         // Partway down the first image is a place too.
         let top = StripPos { image: 0, offset: 0.25 };
@@ -2090,6 +2108,68 @@ mod tests {
         // From the start, nothing of the strip's place.
         let (view, _, _) = h.open(OpenAt::Start).await;
         assert_eq!((view.start.page, view.start.strip), (Some(0), None));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_chapter_kept_at_its_start_opens_without_a_resumed_notice() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Resume).await;
+        h.shown(1, TurnHow::Turn).await;
+        h.shown(0, TurnHow::Turn).await;
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        assert_eq!(h.kept("1").and_then(|c| c.last_page), Some(0));
+
+        let (view, _, said) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.start.page, Some(0));
+        assert!(notices(&said).is_empty(), "no Resumed at page 1: {said:?}");
+    }
+
+    /// A strip runs on into the next chapter under its marker, so that chapter opens at its
+    /// first image even where a place in it was kept; Continue on a paged chapter goes back to
+    /// the kept page.
+    #[tokio::test(start_paused = true)]
+    async fn a_strip_flows_into_the_next_chapter_at_its_first_image() {
+        let store = Store::open_in_memory().unwrap();
+        let mut h = harness(store);
+        // Chapter 2 was left at its second image.
+        h.services.store.set_series_setting(WORK, "mode", Some("strip"), true, 2).unwrap();
+        let work = WorkId::new(WORK);
+        let at = OpenAt::Resume;
+        h.send(ReaderCommand::Open {
+            work,
+            chapter: Some(ChapterId::new("2")),
+            at,
+            surface: surface(),
+        });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        let session = h.session();
+        let chapter = ChapterId::new("2");
+        let at = StripPos { image: 1, offset: 0.5 };
+        h.send(ReaderCommand::StripAt { session, chapter, at, foot_visible: false });
+        h.send(ReaderCommand::Close { session });
+        assert_eq!(h.kept("2").and_then(|c| c.last_page), Some(1));
+
+        let work = WorkId::new(WORK);
+        let chapter = Some(ChapterId::new("1"));
+        h.send(ReaderCommand::Open { work, chapter, at: OpenAt::Start, surface: surface() });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        h.drain();
+        let session = h.session();
+        let foot = StripPos { image: 2, offset: 1.0 };
+        let chapter = ChapterId::new("1");
+        h.send(ReaderCommand::StripAt { session, chapter, at: foot, foot_visible: true });
+        h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+        let view = h
+            .until(|e| match e {
+                ReaderEvent::Opened(view) => Some(view.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(view.chapter.id.as_str(), "2");
+        assert_eq!((view.start.page, view.start.strip), (Some(0), None));
+        let said = h.drain();
+        assert!(notices(&said).is_empty(), "flowing on says nothing: {said:?}");
     }
 
     #[tokio::test(start_paused = true)]

@@ -181,7 +181,7 @@ public final class SendModel {
             let fraction = total > 0 ? min(1, max(0, Double(done) / Double(total))) : nil
             update(job: job) { $0.phase = .preparing(fraction: fraction, done: Int(chaptersDone), total: Int(chapters)) }
         case .exportFailed(let job, let chapter, let failure):
-            let words = chapter.map { L.sendFailedChapter(chapter: $0, cause: failure.words) } ?? L.sendFailed(cause: failure.words)
+            let words = chapter.map { L.sendFailedChapter(chapter: $0, cause: failure.sendWords) } ?? L.sendFailed(cause: failure.sendWords)
             update(job: job) { $0.phase = .failed(words) }
         case .exportWaiting(let job, let work, let target, let line):
             update(job: job, work: work, target: target) { $0.phase = .waiting(line: line.text) }
@@ -194,7 +194,7 @@ public final class SendModel {
             // waiting for an answer, else the latest still going.
             let index = sends.firstIndex { $0.job == nil && $0.isRunning }
                 ?? sends.lastIndex { $0.isRunning }
-            if let index { sends[index].phase = .failed(failure.words) }
+            if let index { sends[index].phase = .failed(failure.sendWords) }
         default:
             break
         }
@@ -240,7 +240,7 @@ public final class SendModel {
         lastId += 1
         let phase: EReaderSend.Phase = switch state {
         case "waiting": .waiting(line: "\(max(1, chapters.count - 1)) chapters aren't downloaded yet, so this send waits for Wi-Fi and goes on by itself.")
-        case "failed": .failed(L.sendFailedChapter(chapter: chapters.last ?? "1", cause: ReadingFailure.offline.words))
+        case "failed": .failed(L.sendFailedChapter(chapter: chapters.last ?? "1", cause: ReadingFailure.offline.sendWords))
         case "ready": .ready([])
         default: .preparing(fraction: 0.62, done: 2, total: min(3, max(chapters.count, 1)))
         }

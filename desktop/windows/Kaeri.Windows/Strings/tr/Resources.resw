@@ -5666,6 +5666,18 @@
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · şuradan: {source}</value>
   </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Sürdürmek için kaydırın</value>
+  </data>
+  <data name="ReaderDividerImages_one" xml:space="preserve">
+    <value>Bir görsel</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} görsel</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Bölüm {chapter} · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Demoyu oku</value>
   </data>

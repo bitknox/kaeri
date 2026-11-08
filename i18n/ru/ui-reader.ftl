@@ -55,3 +55,11 @@ reader-end-from = Из { $source }
 reader-chapter-line = Глава { $chapter }
 
 reader-divider-facts-source = { $facts } · из { $source }
+reader-end-swipe = Смахните, чтобы читать дальше
+reader-divider-images = { $count ->
+    [one] { $count } картинка
+    [few] { $count } картинки
+    [many] { $count } картинок
+   *[other] { $count } картинки
+ }
+reader-chapter-line-titled = Глава { $chapter } · { $title }

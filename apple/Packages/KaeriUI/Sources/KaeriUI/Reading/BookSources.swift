@@ -29,7 +29,7 @@ struct BookSourcesList: View {
         VStack(alignment: .leading, spacing: 22) {
             // Empty once the engine said so, not while the list is on its way.
             if store.bookSources.view != nil, store.bookSources.isEmpty {
-                PlainEmpty(title: L.sourcesAddTitle, line: L.bookAddLine) {
+                PlainEmpty(title: L.sourcesEmptyTitle, line: L.bookAddLine) {
                     Button(L.sourcesAddTitle) { navigator.addBookSource = .choose }
                         .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
                 }
@@ -335,20 +335,27 @@ struct BookDemoPage: View {
                                 .foregroundStyle(.haze)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
-                        // The file's page on Commons, which the licence asks the credit to link.
-                        if let url = work.filePageUrl, let link = URL(string: url) {
-                            Link(L.sourcesDemoLinkCommons, destination: link)
-                                .font(.plat(mac: 12, touch: 15))
-                                .foregroundStyle(.water)
-                                .padding(.top, 2)
+                        // The file's page on Commons, which the licence asks the credit to link,
+                        // and the licence itself: both links, in the one link colour.
+                        let page = work.filePageUrl.flatMap(URL.init(string:))
+                        let licence = work.licenceUrl.flatMap(URL.init(string:))
+                        if page != nil || licence != nil {
+                            ViewThatFits(in: .horizontal) {
+                                HStack(spacing: 14) {
+                                    if let page { Link(L.sourcesDemoLinkCommons, destination: page) }
+                                    if let licence { Link(L.sourcesDemoLinkLicence, destination: licence) }
+                                }
+                                VStack(alignment: .leading, spacing: 6) {
+                                    if let page { Link(L.sourcesDemoLinkCommons, destination: page) }
+                                    if let licence { Link(L.sourcesDemoLinkLicence, destination: licence) }
+                                }
+                            }
+                            .font(.plat(mac: 12, touch: 15))
+                            .foregroundStyle(.water)
+                            .padding(.top, 2)
                         }
                     } trailing: {
-                        if let url = work.licenceUrl, let link = URL(string: url) {
-                            Link(L.sourcesDemoLinkLicence, destination: link)
-                                .font(.plat(mac: 13, touch: 17))
-                                .foregroundStyle(.haze)
-                                .fixedSize()
-                        }
+                        EmptyView()
                     }
                 }
             }

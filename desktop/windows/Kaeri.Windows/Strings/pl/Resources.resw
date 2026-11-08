@@ -6050,6 +6050,24 @@
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · z: {source}</value>
   </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Przesuń, aby czytać</value>
+  </data>
+  <data name="ReaderDividerImages_one" xml:space="preserve">
+    <value>Jeden obraz</value>
+  </data>
+  <data name="ReaderDividerImages_few" xml:space="preserve">
+    <value>{count} obrazy</value>
+  </data>
+  <data name="ReaderDividerImages_many" xml:space="preserve">
+    <value>{count} obrazów</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} obrazu</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Rozdział {chapter} · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Przeczytaj demo</value>
   </data>

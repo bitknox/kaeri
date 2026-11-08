@@ -243,6 +243,16 @@ async fn novel_places_are_text_positions_that_resume_with_back_to_page() {
         })
         .await;
     assert_eq!(start.novel, Some(pos(first, &[], 0)));
+
+    // Kept at the first page, it opens there with nothing to start over from.
+    h.at(pos(first, &[], 0), 0, 4, TurnHow::Turn);
+    tokio::time::advance(WRITE_EVERY).await;
+    let session = h.session();
+    h.send(ReaderCommand::Close { session });
+    h.drain();
+    h.open_novel(OpenAt::Resume).await;
+    h.at(pos(first, &[], 0), 0, 4, TurnHow::Turn);
+    assert!(notices(&h.drain()).is_empty(), "no Resumed at page 1");
 }
 
 #[tokio::test(start_paused = true)]
