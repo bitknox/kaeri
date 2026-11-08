@@ -80,6 +80,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -124,6 +125,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import app.kaeri.design.Motion
+import app.kaeri.design.atFullSpeed
+import app.kaeri.design.rememberAnimationsRemoved
 import app.kaeri.design.robotoFlex
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.model.ChapterRow
@@ -156,6 +159,8 @@ import app.kaeri.reader.text
 import app.kaeri.store.text
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** What the phone reader leaves to the app around it. */
 class PhoneReaderActions(
@@ -408,6 +413,33 @@ fun PhoneReader(
                     plateGone = false
                 }
             }
+            // Leaving a chapter from its end page, by Continue, a swipe or the chapters list, holds that
+            // end page over the next chapter until its first page is drawn, then fades it away: the same
+            // crossfade as a turn, never a cut and never the empty ground. A first page slower than the
+            // plate's wait hands over to the opening plate instead, with the same fade.
+            val here = view?.chapter?.id
+            var endShown by remember { mutableStateOf<ReaderState?>(null) }
+            var landed by remember { mutableStateOf<Any?>(null) }
+            val handoff = remember { Animatable(0f) }
+            val removed = rememberAnimationsRemoved()
+            val leaving = endShown?.takeIf { here != null && it.view?.chapter?.id != here }
+            if (leaving == null && !strip && !novelOpen && here != null && pager.chapter == here && state.leaves.isNotEmpty()) {
+                val atEnd = state.leaves.getOrNull(pager.leaf)?.endPage == true
+                SideEffect { endShown = if (atEnd) state else null }
+            }
+            LaunchedEffect(leaving?.view?.chapter?.id, here) {
+                if (leaving == null) return@LaunchedEffect
+                landed = null
+                withTimeoutOrNull(PageWaits.PLATE_MS + 100) { snapshotFlow { landed == here }.first { it } }
+                val fade: suspend () -> Unit = { handoff.animateTo(1f, Motion.quick()) }
+                when {
+                    !fades -> handoff.snapTo(1f)
+                    removed -> atFullSpeed { fade() }
+                    else -> fade()
+                }
+                endShown = null
+                handoff.snapTo(0f)
+            }
             when {
                 failure != null && state.leaves.isEmpty() && state.novel == null -> {
                     val row = state.openingChapter ?: view?.chapter
@@ -463,8 +495,9 @@ fun PhoneReader(
                 else -> {
                     // The opening plate stays under the first page until it is drawn, so the page fades in over
                     // it, and only then fades itself: the ground never shows between the two.
+                    // Under a held end page the plate goes at once when the page is drawn: it is covered then.
                     if (state.leaves.isEmpty() || openingHeld || !plateGone) {
-                        Opening(state, done = state.leaves.isNotEmpty(), drawn = !openingHeld, fades = fades, onGone = { plateGone = true })
+                        Opening(state, done = state.leaves.isNotEmpty(), drawn = !openingHeld, fades = fades && leaving == null, onGone = { plateGone = true })
                     }
                     if (state.leaves.isNotEmpty()) PagedReader(
                     state = state,
@@ -484,8 +517,22 @@ fun PhoneReader(
                     onJumped = session::jumped,
                     endPage = { PhoneEndPage(state, session, actions, images, onFirstPage = { pager.go(0, TurnHow.JUMP) }, cover = cover, pageGround = background) },
                     motion = fades,
-                    onReady = { openingHeld = false },
+                    onReady = {
+                        openingHeld = false
+                        landed = here
+                    },
                     )
+                    if (leaving != null) {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .graphicsLayer { alpha = 1f - handoff.value }
+                                .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() } } }
+                                .clearAndSetSemantics {},
+                        ) {
+                            PhoneEndPage(leaving, session, actions, images, cover = cover, pageGround = background)
+                        }
+                    }
                 }
             }
 
