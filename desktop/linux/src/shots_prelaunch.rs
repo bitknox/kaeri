@@ -19,6 +19,7 @@ use kaeri_model::{
     event::Event,
     group::{FirstRunPage, JoinedSetup, SyncBookServerOffer, SyncStoreOffer},
     medium::{KaeriIsFor, MediumAsk},
+    stores::{StorePluginRow, StorePluginStatus, StoreRow, StoreState},
 };
 
 use crate::{
@@ -83,6 +84,8 @@ pub const DEMO: [&str; 8] = [
     "pl-demo-08",
 ];
 
+/// A Komga server that asks for a username and password.
+const KOMGA: &str = "comics.home.example";
 const KAVITA: &str = "books.home.example";
 const OPDS: &str = "comics.home.example";
 const DEVICE: &str = "Kim’s iPhone";
@@ -140,7 +143,8 @@ fn store(reading: usize, watching: usize, other: u32) -> StoreReport {
 }
 
 const KAVITA_LINK: &str = "https://books.home.example/api/opds/9d2c41e07b5e7f3a";
-const INVITE: &str = "https://store.home.example/join/kq83-fz2m-7d1x";
+const INVITE: &str =
+    "https://store.home.example/join/kq83-fz2m-7q2m#c2hlbGYta2V5LWZvci1zaG90cw";
 
 /// Your sources as the board draws it: the scene's folder, two servers and a plugin.
 fn sources_view(shell: &Rc<Shell>) -> BookSourcesView {
@@ -219,7 +223,7 @@ fn setup(stores: bool) -> JoinedSetup {
         }],
         signed_in: vec!["AniList".into(), "MangaUpdates".into()],
         folders: 1,
-        answered: vec![FirstRunPage::Lists, FirstRunPage::Sources],
+        answered: vec![FirstRunPage::Medium, FirstRunPage::Lists, FirstRunPage::Sources],
     }
 }
 
@@ -232,6 +236,47 @@ fn server_form(shell: &Rc<Shell>, address: &str, came: Option<CameIn>, looking: 
     shell.go(Dest::ReadSources);
     came_in::shot_server(&shell.ctx, address, came, looking);
     3.0
+}
+
+/// The joined store's plugins, as the store form lists them: two for reading, two for watching.
+fn seed_store(shell: &Rc<Shell>, installed: bool) {
+    let plugin =
+        |id: &str, name: &str, version: &str, hosts: usize, books: bool| StorePluginRow {
+            id: id.into(),
+            name: name.into(),
+            version: version.into(),
+            hosts: (0..hosts).map(|n| format!("cdn{n}.pages.example")).collect(),
+            status: if installed {
+                StorePluginStatus::Installed
+            } else {
+                StorePluginStatus::Available
+            },
+            books,
+            media: vec![],
+        };
+    let row = StoreRow {
+        id: "store-1".into(),
+        name: STORE.into(),
+        url: "https://store.home.example".into(),
+        host: "store.home.example".into(),
+        fingerprint: "7Q2M 4KD1 9XLA 0PE3".into(),
+        member: "kim-laptop".into(),
+        owner: false,
+        state: StoreState::Ready,
+        checked_at: None,
+        plugins: vec![
+            plugin("plugin-0", "Tsuru", "1.4", 2, true),
+            plugin("plugin-1", "Lantern Pages", "0.9", 1, true),
+            plugin("watch-0", "Kawa", "2.1", 3, false),
+            plugin("watch-1", "Hotaru", "1.0", 2, false),
+        ],
+        owners: vec!["Kim".into()],
+        open: false,
+        anonymous: false,
+    };
+    let mut known = shell.ctx.hub.known.borrow_mut();
+    known.stores.retain(|s| s.id != row.id);
+    known.stores.push(row);
 }
 
 fn store_form(shell: &Rc<Shell>, came: Option<CameIn>) -> f64 {
@@ -290,19 +335,23 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         }
         "pl-added-04" => server_form(
             shell,
-            KAVITA,
-            Some(CameIn::Empty(NothingCameIn::Unreachable { host: KAVITA.into() })),
+            KOMGA,
+            Some(CameIn::Empty(NothingCameIn::Unreachable { host: KOMGA.into() })),
             false,
         ),
-        "pl-added-05" => server_form(
-            shell,
-            KAVITA,
-            Some(CameIn::Empty(NothingCameIn::WrongPassword {
-                host: KAVITA.into(),
-                kind: BookServerKind::Komga,
-            })),
-            false,
-        ),
+        "pl-added-05" => {
+            shell.go(Dest::ReadSources);
+            came_in::shot_server_refused(
+                ctx,
+                KOMGA,
+                ("kim", "lantern-ferry"),
+                CameIn::Empty(NothingCameIn::WrongPassword {
+                    host: KOMGA.into(),
+                    kind: BookServerKind::Komga,
+                }),
+            );
+            3.0
+        }
         "pl-added-06" => server_form(
             shell,
             KAVITA_LINK,
@@ -336,20 +385,29 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             );
             3.0
         }
-        "pl-added-11" => store_form(shell, Some(CameIn::Store(store(4, 0, 2)))),
-        "pl-added-12" => store_form(
-            shell,
-            Some(CameIn::Installed(PluginsInstalled {
+        "pl-added-11" => {
+            seed_store(shell, false);
+            store_form(shell, Some(CameIn::Store(store(2, 0, 1))))
+        }
+        "pl-added-12" => {
+            seed_store(shell, false);
+            let settle = store_form(shell, Some(CameIn::Store(store(2, 0, 1))));
+            seed_store(shell, true);
+            came_in::shot_store_answer(&CameIn::Installed(PluginsInstalled {
                 store: "store-1".into(),
                 name: STORE.into(),
-                installed: 4,
+                installed: 2,
                 failed: vec![],
-            })),
-        ),
-        "pl-added-13" => store_form(
-            shell,
-            Some(CameIn::Empty(NothingCameIn::OtherMedium { store: store(0, 3, 3) })),
-        ),
+            }));
+            settle
+        }
+        "pl-added-13" => {
+            seed_store(shell, false);
+            store_form(
+                shell,
+                Some(CameIn::Empty(NothingCameIn::OtherMedium { store: store(0, 0, 2) })),
+            )
+        }
         "pl-added-14" => store_form(
             shell,
             Some(CameIn::Empty(NothingCameIn::EmptyStore { store: store(0, 0, 0) })),
@@ -494,6 +552,10 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         "pl-sources-undo" => {
             show_sources(shell);
             crate::reading::sources::shot_removed(ctx);
+            // The folder leaves the list while the notice holds Undo, as the engine would say.
+            let mut view = sources_view(shell);
+            view.folders.clear();
+            shell.ctx.hub.show_instead(vec![Event::BookSources(BookSourceEvent::View(view))]);
             3.0
         }
         // The demo, the only source.
@@ -521,6 +583,14 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         }
         "pl-demo-05" => {
             crate::reading::demo::read(&ctx.window);
+            // The credit capsule sits in the header, so the chrome stays up as the board draws it.
+            let reader = Rc::clone(&shell.reader);
+            gtk::glib::timeout_add_local_once(
+                std::time::Duration::from_millis(2500),
+                move || {
+                    reader.shot_chrome(true);
+                },
+            );
             6.0
         }
         "pl-demo-06" => {
@@ -543,7 +613,10 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         }
         "pl-demo-08" => {
             shell.go(Dest::ReadSearch);
-            type_in_search(ctx.window.upcast_ref::<gtk::Widget>(), "lantern");
+            // The demo comic's own title, so the demo's row is what comes back.
+            let comic = crate::reading::demo::comic()?;
+            let word: String = comic.series.chars().take(6).collect();
+            type_in_search(ctx.window.upcast_ref::<gtk::Widget>(), &word);
             3.5
         }
         _ => return None,

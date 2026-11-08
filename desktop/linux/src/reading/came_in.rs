@@ -147,7 +147,7 @@ pub fn note(mark: Mark, title: &str, line: Option<&str>) -> gtk::Box {
     row.add_css_class("came-in-note");
     let (icon, class) = match mark {
         Mark::Found => ("object-select-symbolic", "came-in-found"),
-        Mark::Info => ("dialog-information-symbolic", "came-in-info"),
+        Mark::Info => ("help-about-symbolic", "came-in-info"),
         Mark::Failed => ("dialog-warning-symbolic", "came-in-failed"),
     };
     let glyph = gtk::Image::from_icon_name(icon);
@@ -515,6 +515,10 @@ struct Server {
     primary: gtk::Button,
     address: adw::EntryRow,
     chip: gtk::Label,
+    /// A pasted Kavita link: what the field shows with its key masked, and the link itself.
+    link: RefCell<Option<(String, String)>>,
+    /// The field is being set to its masked form, so the change is not an edit.
+    masking: Cell<bool>,
     hint: gtk::Label,
     kept: gtk::Revealer,
     sign_in: gtk::Revealer,
@@ -552,15 +556,20 @@ pub fn add_server(ctx: &Rc<Ctx>, address: Option<&str>) {
     entry.add_suffix(&chip);
     fields.append(&entry);
     column.append(&fields);
+    // The hint, and under it the line about the key once a Kavita link is in.
+    let notes = gtk::Box::new(gtk::Orientation::Vertical, 2);
+    notes.set_margin_top(-6);
     let hint = widgets::haze(&t::book_server_address_hint(), "caption");
-    hint.set_margin_top(-6);
-    column.append(&hint);
+    notes.append(&hint);
     let kept = gtk::Revealer::builder()
         .transition_type(gtk::RevealerTransitionType::SlideDown)
         .transition_duration(if motion::reduced() { 0 } else { 300 })
-        .child(&widgets::haze(&t::book_server_key_kept(&key_store()), ""))
+        .child(&widgets::haze(&t::book_server_key_kept(&key_store()), "caption"))
         .build();
-    column.append(&kept);
+    notes.append(&kept);
+    // The key's line shows only with the hint, so the box goes when the hint does.
+    hint.bind_property("visible", &notes, "visible").sync_create().build();
+    column.append(&notes);
     let sign_in_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
     let sign_in_note = nothing();
     sign_in_box.append(&sign_in_note);
@@ -586,6 +595,8 @@ pub fn add_server(ctx: &Rc<Ctx>, address: Option<&str>) {
         primary: primary.clone(),
         address: entry.clone(),
         chip,
+        link: RefCell::default(),
+        masking: Cell::new(false),
         hint,
         kept,
         sign_in,
@@ -677,6 +688,22 @@ pub fn shot_server(ctx: &Rc<Ctx>, address: &str, came: Option<CameIn>, looking: 
     }
 }
 
+/// The server form after a username and password were tried and refused, for the shots.
+#[cfg(feature = "fixtures")]
+pub fn shot_server_refused(
+    ctx: &Rc<Ctx>,
+    address: &str,
+    (user, password): (&str, &str),
+    came: CameIn,
+) {
+    shot_server(ctx, address, None, false);
+    let Some(state) = with_server(Rc::clone) else { return };
+    state.user.set_text(user);
+    state.password.set_text(password);
+    state.asked.replace(Some((address.trim().to_owned(), true)));
+    state.answered(&came);
+}
+
 thread_local! {
     static SHOWN: RefCell<Option<std::rc::Weak<Server>>> = const { RefCell::new(None) };
 }
@@ -691,13 +718,35 @@ fn with_server<R>(f: impl FnOnce(&Rc<Server>) -> R) -> Option<R> {
 }
 
 impl Server {
+    /// The address as typed or pasted: a Kavita link whole, though the field masks its key.
     fn text(&self) -> String {
-        self.address.text().trim().to_owned()
+        let shown = self.address.text().trim().to_owned();
+        match self.link.borrow().as_ref() {
+            Some((masked, full)) if *masked == shown => full.clone(),
+            _ => shown,
+        }
     }
 
     /// The address changed: an answer for another address no longer counts, and the new one is
     /// looked at once typing rests (a pasted Kavita link at once).
     fn edited(self: &Rc<Self>) {
+        if self.masking.get() {
+            return;
+        }
+        let shown = self.address.text().trim().to_owned();
+        let masked = self.link.borrow().as_ref().is_some_and(|(masked, _)| *masked == shown);
+        if !masked {
+            self.link.replace(None);
+            if let Some(link) = kavita(&shown) {
+                // The field keeps the link's start; its key stays out of sight, in the chip.
+                let start = format!("{}/api/opds/", link.root); // i18n-skip
+                self.link.replace(Some((start.clone(), shown)));
+                self.masking.set(true);
+                self.address.set_text(&start);
+                self.address.set_position(-1);
+                self.masking.set(false);
+            }
+        }
         let edit = self.edits.get() + 1;
         self.edits.set(edit);
         let text = self.text();
@@ -1351,11 +1400,17 @@ struct StoreForm {
     primary: gtk::Button,
     invite: adw::EntryRow,
     chip: gtk::Label,
+    /// A pasted invite: what the field shows, its store's host, and the link itself.
+    link: RefCell<Option<(String, String)>>,
+    /// The field is being set to its masked form, so the change is not an edit.
+    masking: Cell<bool>,
     preview: Rc<Swap>,
     result: Rc<Swap>,
     wait: Wait,
     store: RefCell<Option<InvitedStore>>,
     step: RefCell<StoreStep>,
+    /// What the store offered when it was joined, listed again once the plugins installed.
+    joined: RefCell<Option<StoreReport>>,
     edits: Cell<u64>,
     joining: Cell<bool>,
     installing: Cell<bool>,
@@ -1388,11 +1443,14 @@ pub fn join_store(ctx: &Rc<Ctx>, link: Option<&str>) {
         primary: primary.clone(),
         invite: entry.clone(),
         chip,
+        link: RefCell::default(),
+        masking: Cell::new(false),
         preview,
         result,
         wait: Wait::default(),
         store: RefCell::default(),
         step: RefCell::new(StoreStep::Invite),
+        joined: RefCell::default(),
         edits: Cell::new(0),
         joining: Cell::new(false),
         installing: Cell::new(false),
@@ -1476,13 +1534,58 @@ pub fn shot_store(ctx: &Rc<Ctx>, link: &str, came: Option<CameIn>) {
     }
 }
 
+/// The open store form answered again, for the shots that step it on.
+#[cfg(feature = "fixtures")]
+pub fn shot_store_answer(came: &CameIn) {
+    let Some(state) =
+        STORE_SHOWN.with(|s| s.borrow().as_ref().and_then(std::rc::Weak::upgrade))
+    else {
+        return;
+    };
+    state.answered(came);
+}
+
+/// How many plugins a joined store offers, those for a medium this device doesn't show too.
+fn offered(report: &StoreReport) -> i64 {
+    (report.for_reading.len() + report.for_watching.len()) as i64
+        + i64::from(report.other_medium)
+}
+
 impl StoreForm {
     fn edited(self: &Rc<Self>) {
+        if self.masking.get() {
+            return;
+        }
+        let shown = self.invite.text().trim().to_owned();
+        let kept = self.link.borrow().as_ref().filter(|(host, _)| *host == shown).cloned();
+        let text = match kept {
+            Some((_, full)) => full,
+            None => {
+                self.link.replace(None);
+                // The field keeps the store's host; the invite's code stays out of sight, its
+                // last characters in the chip.
+                let host = crate::pages::join::invite_in(&shown).and_then(|link| {
+                    let rest = link.split_once("://")?.1;
+                    let host = rest.split(['/', '?', '#']).next()?.to_owned();
+                    (link.contains('#') && !host.is_empty()).then_some(host)
+                });
+                match host {
+                    Some(host) => {
+                        self.link.replace(Some((host.clone(), shown.clone())));
+                        self.masking.set(true);
+                        self.invite.set_text(&host);
+                        self.invite.set_position(-1);
+                        self.masking.set(false);
+                        shown
+                    }
+                    None => shown,
+                }
+            }
+        };
         let edit = self.edits.get() + 1;
         self.edits.set(edit);
         self.store.replace(None);
         self.primary.set_sensitive(false);
-        let text = self.invite.text().trim().to_owned();
         let link = crate::pages::join::invite_in(&text);
         match link.as_deref().and_then(|l| l.rsplit_once('#')).map(|(code, _)| code) {
             Some(code) => {
@@ -1618,13 +1721,13 @@ impl StoreForm {
         self.joining.set(false);
         self.installing.set(false);
         if let CameIn::Store(report) = came {
-            let count = report.for_reading.len() + report.for_watching.len();
+            let count = offered(report);
             added(Added {
                 icon: "system-software-install-symbolic",
                 title: report.name.clone(),
                 line: t::store_joined_line(
                     report.owner.as_deref().unwrap_or(&report.name),
-                    count as i64,
+                    count,
                 ),
             });
         }
@@ -1642,14 +1745,14 @@ impl StoreForm {
             }
             _ => return,
         };
-        // Once joined, the invite has done its work: the field and its preview leave.
+        // Once joined, the invite has done its work: the field stays as a record of it, and its
+        // preview leaves.
         let joined = !matches!(step, StoreStep::Unreachable(_));
-        if let Some(fields) =
-            self.invite.parent().and_then(|p| p.downcast::<gtk::ListBox>().ok())
-        {
-            fields.set_visible(!joined);
-        }
+        self.invite.set_editable(!joined);
         self.preview.stack.set_visible(!joined);
+        if let StoreStep::Joined(report) = &step {
+            self.joined.replace(Some(report.clone()));
+        }
         self.step.replace(step);
         self.draw_result();
     }
@@ -1662,11 +1765,11 @@ impl StoreForm {
             StoreStep::Invite => return,
             StoreStep::Joined(report) => {
                 let column = gtk::Box::new(gtk::Orientation::Vertical, 14);
-                let count = report.for_reading.len() + report.for_watching.len();
+                let count = offered(report);
                 column.append(&note(
                     Mark::Found,
                     &t::store_joined_title(&report.name),
-                    Some(&t::store_joined_line(&owner(report), count as i64)),
+                    Some(&t::store_joined_line(&owner(report), count)),
                 ));
                 self.groups(&column, report);
                 let label = if report.install_all {
@@ -1683,6 +1786,9 @@ impl StoreForm {
                     &t::store_installed(i64::from(installed.installed)),
                     None,
                 ));
+                if let Some(report) = self.joined.borrow().as_ref() {
+                    self.groups(&column, report);
+                }
                 (column.upcast(), t::action_done(), true)
             }
             StoreStep::OtherMedium(report) => {
@@ -1692,6 +1798,7 @@ impl StoreForm {
                     &t::store_other_medium(&report.name),
                     Some(&t::store_other_medium_line()),
                 ));
+                self.other_group(&column, report);
                 let on = gtk::Button::with_label(&t::store_turn_on_watching());
                 on.add_css_class("pill");
                 on.set_halign(gtk::Align::Start);
@@ -1773,6 +1880,45 @@ impl StoreForm {
                 "caption",
             ));
         }
+    }
+
+    /// The plugins for the medium this device doesn't show, listed without Install.
+    fn other_group(&self, column: &gtk::Box, report: &StoreReport) {
+        let plugins: Vec<StorePluginRow> = self
+            .ctx
+            .hub
+            .known
+            .borrow()
+            .stores
+            .iter()
+            .find(|s| s.id == report.store)
+            .map(|s| s.plugins.clone())
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|p| p.books == report.other_is_reading)
+            .collect();
+        if plugins.is_empty() {
+            return;
+        }
+        let title = if report.other_is_reading {
+            t::store_group_reading()
+        } else {
+            t::store_group_watching()
+        };
+        let group = adw::PreferencesGroup::builder().title(title).build();
+        for plugin in &plugins {
+            let hosts = t::linux_store_plugin_hosts(plugin.hosts.len() as i64);
+            let row = adw::ActionRow::builder()
+                .title(glib::markup_escape_text(&plugin.name))
+                .subtitle(glib::markup_escape_text(&t::store_plugin_row(
+                    &plugin.version,
+                    &hosts,
+                )))
+                .build();
+            row.add_prefix(&tile("application-x-addon-symbolic"));
+            group.add(&row);
+        }
+        column.append(&group);
     }
 
     fn plugin_row(&self, store: &str, plugin: &StorePluginRow) -> adw::ActionRow {

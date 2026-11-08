@@ -363,7 +363,7 @@ fn frame(
     title.add_css_class("first-title");
     title.set_wrap(true);
     title.set_justify(gtk::Justification::Center);
-    title.set_max_width_chars(28);
+    title.set_max_width_chars(40);
     title.set_margin_top(4);
     title.set_accessible_role(gtk::AccessibleRole::Heading);
     column.append(&title);

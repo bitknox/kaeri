@@ -506,7 +506,7 @@ list.reader-chapter-list > row { border-radius: 8px; }
 .reader-chapter-list row.reader-read .title { color: var(--haze); }
 
 /* Reading prelaunch: first run's pages, the add forms' outcomes, Your sources' rows, the demo. */
-.first-title { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 30px; font-weight: 700; line-height: 1.2; }
+.first-title { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2; }
 .first-qr { background: var(--silk); border-radius: 12px; padding: 16px; }
 .first-digits { margin-top: 4px; }
 .first-digit {
@@ -542,16 +542,20 @@ list.reader-chapter-list > row { border-radius: 8px; }
   min-height: 36px;
 }
 .source-row .server-line { font-size: 13px; }
+/* Try again under a line starts where the words do. */
+.server-line button.link { padding-left: 0; padding-right: 0; min-height: 0; }
 
 .demo-spotlight { border-radius: 12px; }
 .demo-spotlight-shade { background: linear-gradient(to top, rgba(22, 26, 46, 0.92), rgba(22, 26, 46, 0.35) 55%, rgba(22, 26, 46, 0) 80%); }
 .demo-spotlight-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; color: var(--haze); }
+/* Over the page in any look: the board's dark glass with light words. */
 .demo-credit {
-  background: var(--glass);
-  border: 1px solid var(--glass-rule);
+  background: rgba(22, 26, 46, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   padding: 4px 12px;
   font-size: 13px;
+  color: #E4E0D6;
 }
 .demo-credit-line link { color: var(--silk); }
 .demo-end {

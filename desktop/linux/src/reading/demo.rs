@@ -173,10 +173,26 @@ pub fn spotlight(ctx: &Rc<Ctx>) -> Option<gtk::Widget> {
     let overlay = gtk::Overlay::new();
     overlay.add_css_class("demo-spotlight");
     overlay.set_overflow(gtk::Overflow::Hidden);
-    overlay.set_size_request(-1, 300);
+    // A band, as the board draws it: the band sets the height, and the art fills it as a layer
+    // over it, so the cover's own size never stretches the card.
+    let band = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    band.set_size_request(-1, 300);
+    band.set_hexpand(true);
+    overlay.set_child(Some(&band));
+    overlay.set_valign(gtk::Align::Start);
     let (art, _) = widgets::art(&ctx.hub, comic.cover.as_deref(), None, "demo-spotlight-art");
-    art.set_hexpand(true);
-    overlay.set_child(Some(&art));
+    overlay.add_overlay(&art);
+    // The cover is a whole page, white margins and all. The art layer runs a little past both
+    // sides so the band shows only the drawing; the card's rounded clip trims the rest.
+    let layer = art.clone().upcast::<gtk::Widget>();
+    overlay.connect_get_child_position(move |overlay, widget| {
+        if widget != &layer {
+            return None;
+        }
+        let (width, height) = (overlay.width(), overlay.height());
+        let bleed = width / 12;
+        Some(gtk::gdk::Rectangle::new(-bleed, 0, width + 2 * bleed, height))
+    });
     let shade = gtk::Box::new(gtk::Orientation::Vertical, 0);
     shade.add_css_class("demo-spotlight-shade");
     overlay.add_overlay(&shade);
