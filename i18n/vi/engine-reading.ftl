@@ -179,7 +179,7 @@ read-search-started-any = Mọi thời điểm
 read-search-started-year = 12 tháng qua
 read-search-started-3-years = 3 năm qua
 read-hit-chapters = Chương 1 đến { $last }
-read-hit-episodes = Chương 1 đến { $last }
+read-hit-episodes = Kỳ 1 đến { $last }
 read-hit-parts = { $count ->
    *[other] { $count } phần
  }

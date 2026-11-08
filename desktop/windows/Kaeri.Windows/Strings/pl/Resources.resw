@@ -1965,7 +1965,7 @@
     <value>Otwieranie: {chapter}</value>
   </data>
   <data name="WindowsReaderOpeningSlow" xml:space="preserve">
-    <value>Wyszukiwanie: źródło · {seconds} s</value>
+    <value>Szukanie źródła · {seconds} s</value>
   </data>
   <data name="WindowsReaderChapterFailed" xml:space="preserve">
     <value>Nie udało się otworzyć: {chapter}</value>
@@ -7428,7 +7428,7 @@
     <value>Popularne</value>
   </data>
   <data name="ReadSortTrending" xml:space="preserve">
-    <value>Na czasie</value>
+    <value>Na topie</value>
   </data>
   <data name="ReadSortScore" xml:space="preserve">
     <value>Ocena</value>

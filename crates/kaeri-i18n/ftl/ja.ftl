@@ -1714,7 +1714,7 @@ linux-reader-back-to-series = 作品に戻る
 linux-reader-chapter-failed = 章を開けませんでした
 
 # Names of the reader settings in its popover.
-linux-reader-reading-mode = 読み方
+linux-reader-reading-mode = 表示モード
 
 linux-reader-fit = フィット
 

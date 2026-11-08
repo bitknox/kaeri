@@ -701,7 +701,7 @@
     <string name="reader_mode_set">%1$s için tüm cihazlarınızda ayarlandı.</string>
     <string name="reader_mode_use_default">Varsayılan</string>
     <string name="reader_mode_saved">Seçiminiz bu seri için kaydedilir ve diğer cihazlarınıza da taşınır.</string>
-    <string name="reader_row_fit">Sığdırma</string>
+    <string name="reader_row_fit">Sığdır</string>
     <string name="reader_row_crop">Kenarları kırp</string>
     <string name="reader_row_paper">Kâğıt modu</string>
     <string name="reader_row_text_size">Yazı boyutu</string>

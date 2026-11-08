@@ -353,7 +353,7 @@
     <string name="read_search_started_year">12 tháng qua</string>
     <string name="read_search_started_3_years">3 năm qua</string>
     <string name="read_hit_chapters">Chương 1 đến %1$d</string>
-    <string name="read_hit_episodes">Chương 1 đến %1$d</string>
+    <string name="read_hit_episodes">Kỳ 1 đến %1$d</string>
     <plurals name="read_hit_parts">
         <item quantity="other">%1$d phần</item>
     </plurals>

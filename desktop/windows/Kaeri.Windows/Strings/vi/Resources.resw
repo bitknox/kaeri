@@ -963,7 +963,7 @@
     <value>Chương 1 đến {last}</value>
   </data>
   <data name="ReadHitEpisodes" xml:space="preserve">
-    <value>Chương 1 đến {last}</value>
+    <value>Kỳ 1 đến {last}</value>
   </data>
   <data name="ReadHitParts_other" xml:space="preserve">
     <value>{count} phần</value>

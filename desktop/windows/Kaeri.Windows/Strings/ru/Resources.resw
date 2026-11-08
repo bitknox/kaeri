@@ -2010,7 +2010,7 @@
     <value>Больше глав нет.</value>
   </data>
   <data name="WindowsReaderEndNoSource" xml:space="preserve">
-    <value>Источники: {chapter} пока нет</value>
+    <value>Ваши источники ещё не выложили: {chapter}</value>
   </data>
   <data name="WindowsReaderEndOffline" xml:space="preserve">
     <value>Не загружено: {chapter}</value>

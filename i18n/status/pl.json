@@ -18693,8 +18693,12 @@
   "read-sort-trending": {
     "source": "c15ed31aec49",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string: 'Na czasie' changed to 'Na topie' to match the anime Home and the reading rows."
+    ],
+    "back": "Hot / on top (trending)"
   },
   "reader-action-controls": {
     "source": "83cd32b685cc",
@@ -19797,8 +19801,12 @@
   "reader-opening-slow": {
     "source": "82ab0ba82b73",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Was 'Wyszukiwanie: źródło' (read as a label); now 'Szukanie źródła' through the plural term, whose text is the genitive singular. Older Apple string, changed to match."
+    ],
+    "back": "Looking for a source · { $seconds } s [renders \"źródła\", genitive singular; plural would be \"źródeł\"]"
   },
   "reader-opening-waited": {
     "source": "627b8ecfa83f",
@@ -37002,9 +37010,9 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
-      "back-translation: 'Wyszukiwanie: źródło' reads like a label, not 'finding a source'; 'Szukanie źródła' is natural."
+      "back-translation: Was 'Wyszukiwanie: źródło' (read as a label); now 'Szukanie źródła' through the plural term, whose text is the genitive singular."
     ],
-    "back": "Searching: source · { $seconds } s [terse; reads like 'Search: source']"
+    "back": "Looking for a source · { $seconds } s [renders \"źródła\", genitive singular; plural would be \"źródeł\"]"
   },
   "windows-reader-page-failed-hint": {
     "source": "345a90e5f071",

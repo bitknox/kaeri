@@ -10013,7 +10013,11 @@
     "source": "f2a69a199c80",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-08"
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string: 'Pas' changed to 'Paskan' to match the Windows reader; back-translation found 'Pas' vague."
+    ],
+    "back": "Fit (make it fit)"
   },
   "linux-reader-fit-height": {
     "source": "ffdadf0a576f",
@@ -19114,8 +19118,12 @@
   "reader-fit": {
     "source": "f2a69a199c80",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string: 'Pas' changed to 'Paskan' to match the Windows reader; back-translation found 'Pas' vague."
+    ],
+    "back": "Fit (make it fit)"
   },
   "reader-fit-height": {
     "source": "ffdadf0a576f",
@@ -20012,8 +20020,12 @@
   "reader-row-fit": {
     "source": "f2a69a199c80",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string: 'Pas' changed to 'Paskan' to match the Windows reader; back-translation found 'Pas' vague."
+    ],
+    "back": "Fit (make it fit)"
   },
   "reader-row-folio": {
     "source": "f382dbdb0f4f",
@@ -36706,7 +36718,7 @@
     "flags": [
       "back-translation: Revised after back-translation. Was: \"Pas\" is a colloquial adjective (\"just right\"); vague as a setting label, \"Paskan\" is clearer."
     ],
-    "back": "Fit (to screen)"
+    "back": "Fit (make it fit)"
   },
   "windows-reader-fit-height": {
     "source": "ffdadf0a576f",

@@ -7340,7 +7340,7 @@
       "back-translation: Revised after back-translation. Was: 'permite { -app-name }' lacks personal 'a'; 'permite a Kaeri' reads naturally.",
       "drafter: \"redes privadas\" and \"redes públicas\" should match the Spanish Windows firewall prompt; \"feed\" rendered as \"catálogo\" as in the existing OPDS strings."
     ],
-    "back": "So that the e-readers in your home can reach the catalogue, allow Kaeri on private networks only. Leave public networks unticked."
+    "back": "So that the e-readers in your home can access the catalogue, allow Kaeri only on private networks. Leave public networks unchecked."
   },
   "feed-firewall-title-windows": {
     "source": "739ceb3c60d2",
@@ -20762,8 +20762,12 @@
   "reader-end-tracker": {
     "source": "8889ba40058a",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string. Participle didn't agree with two joined tracker names; now 'Updated in X', as the Windows line."
+    ],
+    "back": "Read · Updated on { $trackers }"
   },
   "reader-end-tracker-offline": {
     "source": "dd54aedecf1f",
@@ -40131,7 +40135,7 @@
       "back-translation: Revised after back-translation. Was: Singular 'actualizado' after two joined tracker names ('AniList y Kitsu actualizado') is ungrammatical.",
       "drafter: Reused from the shared reader string; \"actualizado\" stays singular when two trackers are joined (\"AniList y Kitsu actualizado\")."
     ],
-    "back": "Read · Updated in { $trackers }"
+    "back": "Read · Updated on { $trackers }"
   },
   "windows-reader-end-trackers-two": {
     "source": "2210cc318940",

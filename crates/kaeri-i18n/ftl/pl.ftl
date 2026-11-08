@@ -9720,7 +9720,7 @@ read-search-clear-filters = Wyczyść filtry
 read-sort-popular = Popularne
 
 # A sort of reading's Search, AniList's.
-read-sort-trending = Na czasie
+read-sort-trending = Na topie
 
 # A sort of reading's Search, AniList's.
 read-sort-score = Ocena

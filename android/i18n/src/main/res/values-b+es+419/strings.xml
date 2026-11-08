@@ -2474,7 +2474,7 @@
     <string name="reader_try_again">Reintentar</string>
     <string name="reader_close">Cerrar</string>
     <string name="reader_end_read">Leído</string>
-    <string name="reader_end_tracker">Leído · %1$s actualizado</string>
+    <string name="reader_end_tracker">Leído · Actualizado en %1$s</string>
     <string name="reader_end_next">A continuación</string>
     <string name="reader_mode_rtl">Derecha a izquierda</string>
     <string name="reader_mode_ltr">Izquierda a derecha</string>

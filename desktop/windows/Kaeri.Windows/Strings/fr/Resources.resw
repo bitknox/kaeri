@@ -1905,7 +1905,7 @@
     <value>Il n'y a plus de chapitres.</value>
   </data>
   <data name="WindowsReaderEndNoSource" xml:space="preserve">
-    <value>Pas encore de {chapter} dans vos sources</value>
+    <value>{chapter} : pas encore dans vos sources</value>
   </data>
   <data name="WindowsReaderEndOffline" xml:space="preserve">
     <value>{chapter} n'est pas téléchargé</value>

@@ -1800,7 +1800,7 @@
     <value>Başka bölüm yok.</value>
   </data>
   <data name="WindowsReaderEndNoSource" xml:space="preserve">
-    <value>{chapter} henüz kaynaklar arasında yok</value>
+    <value>Eklediğiniz kaynaklar içinde henüz {chapter} yok</value>
   </data>
   <data name="WindowsReaderEndOffline" xml:space="preserve">
     <value>{chapter} indirilmedi</value>
@@ -1887,7 +1887,7 @@
     <value>Sayfa düzeni</value>
   </data>
   <data name="WindowsReaderFit" xml:space="preserve">
-    <value>Sığdırma</value>
+    <value>Sığdır</value>
   </data>
   <data name="WindowsReaderFitHeight" xml:space="preserve">
     <value>Yükseklik</value>

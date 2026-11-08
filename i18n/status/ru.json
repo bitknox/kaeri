@@ -18964,8 +18964,12 @@
   "reader-end-caught-up-body": {
     "source": "3ce370affb34",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string: 'в ваших источники' was ungrammatical; now the Linux and Windows wording."
+    ],
+    "back": "New chapters will appear in \"Updates\" as soon as your sources get them."
   },
   "reader-end-continue": {
     "source": "f42f6a6df6bf",
@@ -19018,8 +19022,12 @@
   "reader-end-no-source": {
     "source": "6799149dde6b",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older Apple string, same fault. Case ending was glued onto the term and 'your' was lost; now 'Your sources haven't posted yet: X'."
+    ],
+    "back": "Your sources haven't posted yet: { $chapter }"
   },
   "reader-end-none": {
     "source": "d89e734d3bd8",
@@ -36671,10 +36679,10 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
-      "back-translation: Still open after revision: Case ending glued onto glossary term ('{ -source }а'); drops 'your'; colon phrasing awkward.",
+      "back-translation: Case ending was glued onto the term and 'your' was lost; now 'Your sources haven't posted yet: X'.",
       "drafter: Reuses Apple's \"Ни у одного { -source }а\", which appends \"а\" to the term."
     ],
-    "back": "Sources: no { $chapter } yet [drops 'your']"
+    "back": "Your sources haven't posted yet: { $chapter }"
   },
   "windows-reader-end-not-out": {
     "source": "ea24be349c9e",
@@ -37066,7 +37074,7 @@
       "back-translation: Revised after back-translation. Was: Comma-spliced list and colloquial 'читалка' sound off-register for a settings note.",
       "drafter: English adds \"Paper colours\" to Apple's note; check the joined sentence."
     ],
-    "back": "Paper colours. Pages turn at once, and nothing moves in the reader."
+    "back": "Paper colours. Pages turn instantly, and nothing in the reader moves."
   },
   "windows-reader-percent": {
     "source": "177259baefed",

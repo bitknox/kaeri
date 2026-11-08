@@ -2955,7 +2955,7 @@
     <string name="read_search_nothing_filters_line">Mniej filtrów może dać więcej wyników.</string>
     <string name="read_search_clear_filters">Wyczyść filtry</string>
     <string name="read_sort_popular">Popularne</string>
-    <string name="read_sort_trending">Na czasie</string>
+    <string name="read_sort_trending">Na topie</string>
     <string name="read_sort_score">Ocena</string>
     <string name="read_sort_newest">Najnowsze</string>
     <string name="read_filter_format">Format</string>

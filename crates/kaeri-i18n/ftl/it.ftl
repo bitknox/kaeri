@@ -8636,7 +8636,7 @@ reader-close = Chiudi
 reader-end-read = Letto
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = Letto · aggiornati: { $trackers }
+reader-end-tracker = Letto · aggiornamento inviato a { $trackers }
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Prossimo

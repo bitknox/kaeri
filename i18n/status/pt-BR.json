@@ -19089,8 +19089,12 @@
   "reader-end-tracker": {
     "source": "8889ba40058a",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string. Participle didn't agree with two joined tracker names; now 'Updated in X', as the Windows line."
+    ],
+    "back": "Read · Updated on { $trackers }"
   },
   "reader-end-tracker-offline": {
     "source": "dd54aedecf1f",
@@ -36699,7 +36703,7 @@
       "back-translation: Revised after back-translation. Was: 'atualizado' is singular; with two trackers ('AniList e Kitsu') it needs 'atualizados'.",
       "drafter: Reused from the shared reader string; \"atualizado\" stays singular when two trackers are joined."
     ],
-    "back": "Read · Updated in { $trackers }"
+    "back": "Read · Updated on { $trackers }"
   },
   "windows-reader-end-trackers-two": {
     "source": "2210cc318940",

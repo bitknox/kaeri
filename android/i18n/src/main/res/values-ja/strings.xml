@@ -657,7 +657,7 @@
     <string name="reader_sheet_all_manga">すべてのマンガ</string>
     <string name="reader_sheet_all_novels">すべてのライトノベル</string>
     <string name="reader_sheet_more">リーダーのその他の設定</string>
-    <string name="reader_row_reading_mode">読み方</string>
+    <string name="reader_row_reading_mode">表示モード</string>
     <string name="reader_mode_auto_way">自動 · %1$s</string>
     <string name="reader_mode_auto_name">自動</string>
     <string name="reader_mode_auto_line">%1$s(作品情報から判定)</string>

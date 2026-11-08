@@ -199380,7 +199380,7 @@
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chương 1 đến %1$lld"
+            "value" : "Kỳ 1 đến %1$lld"
           }
         }
       }
@@ -207210,7 +207210,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Na czasie"
+            "value" : "Na topie"
           }
         },
         "pt-BR" : {
@@ -210730,7 +210730,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Новые главы появятся в «Обновления», когда они будут в ваших источники."
+            "value" : "Новые главы появятся в «Обновлениях», как только ваши источники их получат."
           }
         },
         "sv" : {
@@ -211234,7 +211234,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ни у одного источника пока нет: %1$@"
+            "value" : "Ваши источники ещё не выложили: %1$@"
           }
         },
         "sv" : {
@@ -211246,7 +211246,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ henüz kaynaklar arasında yok"
+            "value" : "Eklediğiniz kaynaklar içinde henüz %1$@ yok"
           }
         },
         "vi" : {
@@ -212348,7 +212348,7 @@
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leído · %1$@ actualizado"
+            "value" : "Leído · Actualizado en %1$@"
           }
         },
         "fr" : {
@@ -212366,7 +212366,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Letto · aggiornati: %1$@"
+            "value" : "Letto · aggiornamento inviato a %1$@"
           }
         },
         "ja" : {
@@ -212384,7 +212384,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lido · %1$@ atualizado"
+            "value" : "Lido · Atualizado em %1$@"
           }
         },
         "ru" : {
@@ -212444,7 +212444,7 @@
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pas"
+            "value" : "Paskan"
           }
         },
         "it" : {
@@ -212486,7 +212486,7 @@
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sığdırma"
+            "value" : "Sığdır"
           }
         },
         "vi" : {
@@ -219602,7 +219602,7 @@
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wyszukiwanie: źródło · %1$lld s"
+            "value" : "Szukanie źródła · %1$lld s"
           }
         },
         "pt-BR" : {
@@ -221172,7 +221172,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "読み方"
+            "value" : "表示モード"
           }
         },
         "pl" : {

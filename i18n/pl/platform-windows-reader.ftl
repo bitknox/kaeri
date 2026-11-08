@@ -1,6 +1,6 @@
 windows-reader-settings-open = Ustawienia czytnika
 windows-reader-opening = Otwieranie: { $chapter }
-windows-reader-opening-slow = Wyszukiwanie: { -source } · { $seconds } s
+windows-reader-opening-slow = Szukanie { -source-pl } · { $seconds } s
 windows-reader-chapter-failed = Nie udało się otworzyć: { $chapter }
 windows-reader-choose-source = Wybierz { -source }
 windows-reader-page-failed-hint = Przewróć stronę, aby ją pominąć.

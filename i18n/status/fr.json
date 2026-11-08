@@ -36642,9 +36642,9 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
-      "back-translation: Revised after back-translation. Was: Drops 'yet'; reads as the chapter simply not existing in the sources."
+      "back-translation: Revised twice: dropped 'yet', then 'Pas encore de X' broke before titles; now 'X : not yet in your sources'."
     ],
-    "back": "No { $chapter } in your sources yet"
+    "back": "{ $chapter }: not yet in your sources"
   },
   "windows-reader-end-not-out": {
     "source": "ea24be349c9e",
@@ -36695,7 +36695,7 @@
     "flags": [
       "back-translation: Revised after back-translation. Was: Dangling 'une fois connecté' grammatically refers to the chapter and assumes a masculine reader."
     ],
-    "back": "You're offline. It will open here as soon as the connection is back."
+    "back": "You are offline. It will open here as soon as the connection comes back. [\"Il\" has no clear referent in isolation]"
   },
   "windows-reader-end-tracker": {
     "source": "8889ba40058a",

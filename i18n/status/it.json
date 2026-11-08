@@ -19080,8 +19080,12 @@
   "reader-end-tracker": {
     "source": "8889ba40058a",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string: plural 'aggiornati' broke with one tracker; now 'update sent to X', as the Windows line."
+    ],
+    "back": "Read · update sent to { $trackers }"
   },
   "reader-end-tracker-offline": {
     "source": "dd54aedecf1f",

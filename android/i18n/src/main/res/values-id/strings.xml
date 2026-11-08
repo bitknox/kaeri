@@ -666,7 +666,7 @@
     <string name="reader_mode_set">Diatur untuk %1$s di semua perangkat Anda.</string>
     <string name="reader_mode_use_default">Pakai bawaan</string>
     <string name="reader_mode_saved">Pilihan Anda disimpan untuk seri ini dan ikut ke perangkat Anda yang lain.</string>
-    <string name="reader_row_fit">Pas</string>
+    <string name="reader_row_fit">Paskan</string>
     <string name="reader_row_crop">Pangkas tepi</string>
     <string name="reader_row_paper">Mode kertas</string>
     <string name="reader_row_text_size">Ukuran teks</string>

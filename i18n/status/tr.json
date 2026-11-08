@@ -10025,7 +10025,11 @@
     "source": "f2a69a199c80",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-08"
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string. 'Sığdırma' also reads as 'Don't fit'; now 'Sığdır' on every platform."
+    ],
+    "back": "Fit"
   },
   "linux-reader-fit-height": {
     "source": "ffdadf0a576f",
@@ -18232,7 +18236,7 @@
     "flags": [
       "back-translation: Revised after back-translation. Was: \"Öne çıkan\" means featured, not trending; implies curation."
     ],
-    "back": "Trending, new and finished, by format"
+    "back": "Trending, new and completed, by format [noun-less fragment, acceptable as a subtitle]"
   },
   "read-home-browse-note": {
     "source": "565b35fc96d1",
@@ -18321,7 +18325,7 @@
     "flags": [
       "back-translation: Revised after back-translation. Was: \"Öne çıkan\" means featured, not trending; implies curation."
     ],
-    "back": "Trending and new series appear when you're online."
+    "back": "Trending and new series appear when you are online."
   },
   "read-home-trending-manga": {
     "source": "7eee43d8f9ae",
@@ -19023,8 +19027,12 @@
   "reader-end-no-source": {
     "source": "6799149dde6b",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older Apple string, same fault. Was 'kaynaklar arasında yok' (dropped 'your'); now 'the sources you added', so the term takes no suffix."
+    ],
+    "back": "There is no { $chapter } yet in the sources you added"
   },
   "reader-end-none": {
     "source": "d89e734d3bd8",
@@ -19143,8 +19151,12 @@
   "reader-fit": {
     "source": "f2a69a199c80",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string. 'Sığdırma' also reads as 'Don't fit'; now 'Sığdır' on every platform."
+    ],
+    "back": "Fit"
   },
   "reader-fit-height": {
     "source": "ffdadf0a576f",
@@ -20045,8 +20057,12 @@
   "reader-row-fit": {
     "source": "f2a69a199c80",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string. 'Sığdırma' also reads as 'Don't fit'; now 'Sığdır' on every platform."
+    ],
+    "back": "Fit"
   },
   "reader-row-folio": {
     "source": "f382dbdb0f4f",
@@ -36688,10 +36704,10 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
-      "back-translation: Drops \"your\": reads as generic sources, not the person's own.",
+      "back-translation: Was 'kaynaklar arasında yok' (dropped 'your'); now 'the sources you added', so the term takes no suffix.",
       "drafter: Reused Apple's wording, which drops your (kaynaklar arasında)."
     ],
-    "back": "{ $chapter } is not among sources yet [no \"your\"; reads as generic sources]"
+    "back": "There is no { $chapter } yet in the sources you added"
   },
   "windows-reader-end-not-out": {
     "source": "ea24be349c9e",
@@ -36755,9 +36771,9 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
-      "back-translation: \"Sığdırma\" also reads as the imperative \"Don't fit\"; \"Sığdır\" is clearer."
+      "back-translation: 'Sığdırma' also reads as 'Don't fit'; now 'Sığdır' on every platform."
     ],
-    "back": "Fitting [ambiguous: \"Sığdırma\" can also read as the negative imperative \"Don't fit\"]"
+    "back": "Fit"
   },
   "windows-reader-fit-height": {
     "source": "ffdadf0a576f",

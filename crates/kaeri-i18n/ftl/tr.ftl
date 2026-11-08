@@ -1754,7 +1754,7 @@ linux-reader-chapter-failed = Bölüm açılamadı
 # Names of the reader settings in its popover.
 linux-reader-reading-mode = Okuma modu
 
-linux-reader-fit = Sığdırma
+linux-reader-fit = Sığdır
 
 linux-reader-crop-borders = Kenarları kırp
 

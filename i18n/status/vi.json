@@ -18156,10 +18156,10 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
-      "back-translation: Says 'Chương' (chapters), identical to the chapters line; a web novel's episodes are not distinguished.",
+      "back-translation: Was 'Chương' (the chapter word); now 'Kỳ', the serial instalment word, since 'Tập' means volume. Native check wanted.",
       "drafter: Web novel \"episodes\" rendered as \"Chương\" because \"Tập\" means volume in the reading screens; this loses the chapter/episode distinction."
     ],
-    "back": "Chapter 1 to { $last }"
+    "back": "Installment/issue 1 to { $last }"
   },
   "read-hit-files": {
     "source": "31e42ba495f5",
@@ -37011,7 +37011,7 @@
     "flags": [
       "back-translation: Revised after back-translation. Was: Ungrammatical: 'mà không gì' needs 'có' ('mà không có gì ... chuyển động')."
     ],
-    "back": "Paper colour, and pages turn at once with nothing in the reader moving."
+    "back": "Paper colours, and pages turn instantly without anything in the reader moving."
   },
   "windows-reader-percent": {
     "source": "177259baefed",

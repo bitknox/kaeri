@@ -1674,7 +1674,7 @@
     <value>{first}と{second}</value>
   </data>
   <data name="WindowsReaderContinue" xml:space="preserve">
-    <value>続きを読む</value>
+    <value>次の章へ</value>
   </data>
   <data name="WindowsReaderBackToSeries" xml:space="preserve">
     <value>作品に戻る</value>
@@ -1716,10 +1716,10 @@
     <value>{chapter} · {percent}%</value>
   </data>
   <data name="WindowsReaderPageLabel" xml:space="preserve">
-    <value>{total}ページ中{page}ページ</value>
+    <value>{total}ページ中{page}ページ目</value>
   </data>
   <data name="WindowsReaderPagesLabel" xml:space="preserve">
-    <value>{total}ページ中{first}ページと{second}ページ</value>
+    <value>{total}ページ中{first}ページ目と{second}ページ目</value>
   </data>
   <data name="WindowsReaderScrubber" xml:space="preserve">
     <value>ページ</value>
@@ -1746,7 +1746,7 @@
     <value>すべてのライトノベル</value>
   </data>
   <data name="WindowsReaderReadingMode" xml:space="preserve">
-    <value>読み方</value>
+    <value>表示モード</value>
   </data>
   <data name="WindowsReaderModeAuto" xml:space="preserve">
     <value>自動 · {mode}</value>

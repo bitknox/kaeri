@@ -11110,7 +11110,11 @@
     "source": "566ac8adad81",
     "state": "draft",
     "by": "opus",
-    "at": "2026-11-08"
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string. '読み方' can read as 'pronunciation'; now 表示モード, as the reading settings say, on every platform."
+    ],
+    "back": "Display mode"
   },
   "linux-reader-settings-open": {
     "source": "89005c87f469",
@@ -21550,8 +21554,12 @@
   "reader-reading-mode": {
     "source": "566ac8adad81",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string. '読み方' can read as 'pronunciation'; now 表示モード, as the reading settings say, on every platform."
+    ],
+    "back": "Display mode"
   },
   "reader-resumed": {
     "source": "adb6245a6ad5",
@@ -21670,8 +21678,12 @@
   "reader-row-reading-mode": {
     "source": "566ac8adad81",
     "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Older string. '読み方' can read as 'pronunciation'; now 表示モード, as the reading settings say, on every platform."
+    ],
+    "back": "Display mode"
   },
   "reader-row-spreads": {
     "source": "e8c25baed19d",
@@ -39781,9 +39793,10 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
+      "back-translation: Now 次の章へ, as the Apple, Android and Linux end pages say, instead of the reading continue term.",
       "drafter: Uses the { -continue-reading-cap } term (続きを読む) as the English does; the Apple and Linux readers say 次の章へ here, so the two differ."
     ],
-    "back": "Continue reading (button)"
+    "back": "On to the next chapter"
   },
   "windows-reader-crop-borders": {
     "source": "1b28173e8b92",
@@ -39947,7 +39960,7 @@
     "flags": [
       "back-translation: Revised after back-translation. Was: Space between 画像 and the number; inconsistent with the page line's unspaced format."
     ],
-    "back": "{ $chapter } · image { $image }/{ $total }"
+    "back": "{ $chapter } · Image { $image }/{ $total }"
   },
   "windows-reader-image-label": {
     "source": "920d0ae9cb75",
@@ -40161,9 +40174,9 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
-      "back-translation: Revised after back-translation. Was: Spoken label: '/' is read aloud as 'slash'; use '{ $total }ページ中{ $page }ページ'."
+      "back-translation: Revised twice: '/' is read aloud as 'slash', then 目 added so it reads as a position, not a count."
     ],
-    "back": "Page { $page } of { $total } pages"
+    "back": "Page { $page } out of { $total } pages"
   },
   "windows-reader-page-layout": {
     "source": "a9e5d8a7ac94",
@@ -40178,9 +40191,9 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
-      "back-translation: Revised after back-translation. Was: Spoken label: '3・4/20ページ' reads poorly aloud; use '{ $total }ページ中{ $first }・{ $second }ページ'."
+      "back-translation: Revised twice: '/' is read aloud as 'slash', then 目 added so it reads as a position, not a count."
     ],
-    "back": "Pages { $first } and { $second } of { $total } pages"
+    "back": "Page { $first } and page { $second } out of { $total } pages"
   },
   "windows-reader-pages-tab": {
     "source": "6ac0c20ddc5c",
@@ -40219,9 +40232,9 @@
     "by": "opus",
     "at": "2026-11-08",
     "flags": [
-      "back-translation: 読み方 usually means pronunciation; 読む方向 or 表示モード would be clearer."
+      "back-translation: '読み方' can read as 'pronunciation'; now 表示モード, as the reading settings say, on every platform."
     ],
-    "back": "Way of reading"
+    "back": "Display mode"
   },
   "windows-reader-scrubber": {
     "source": "2e192b19ed15",

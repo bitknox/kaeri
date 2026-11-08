@@ -1716,7 +1716,7 @@ linux-reader-chapter-failed = Bab tidak bisa dibuka
 # Names of the reader settings in its popover.
 linux-reader-reading-mode = Mode baca
 
-linux-reader-fit = Pas
+linux-reader-fit = Paskan
 
 linux-reader-crop-borders = Pangkas tepi
 

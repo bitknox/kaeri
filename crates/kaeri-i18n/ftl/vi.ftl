@@ -991,7 +991,7 @@ read-search-started-3-years = 3 năm qua
 read-hit-chapters = Chương 1 đến { $last }
 
 # Under a source's hit in Search: a web novel's episodes it holds, from the first.
-read-hit-episodes = Chương 1 đến { $last }
+read-hit-episodes = Kỳ 1 đến { $last }
 
 # Under a source's hit in Search: a light novel's parts it holds.
 read-hit-parts =
