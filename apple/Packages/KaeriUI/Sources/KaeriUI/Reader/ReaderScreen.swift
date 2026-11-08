@@ -24,6 +24,8 @@ public struct ReaderScreen: View {
     @State private var groupHeight: CGFloat = 84
     /// The novel's web view, kept from chapter to chapter while the reader is open.
     @State private var novelWeb = NovelWebSession()
+    /// The held end page's opacity: 1 while it waits, faded to 0 once the next page has drawn.
+    @State private var heldShown = 1.0
 
     public init(model: ReaderModel, onClose: @escaping () -> Void) {
         self.model = model
@@ -51,6 +53,8 @@ public struct ReaderScreen: View {
             ZStack {
                 (model.medium == .manga ? theme.backdrop(background) : theme.page)
                 content
+                    .environment(\.readerHeld, model.held != nil)
+                heldEnd
                 ReaderChrome(model: model, theme: theme, mac: mac, size: size, onClose: close, groupHeight: $groupHeight)
                 ReaderNotices(model: model, theme: theme, mac: mac, size: size, groupHeight: groupHeight)
             }
@@ -81,6 +85,8 @@ public struct ReaderScreen: View {
         .onExitCommand { escape() }
         #endif
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
+        .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
+        .onChange(of: model.held?.landed == true) { _, landed in if landed { letHeldGo() } }
         .focusedSceneValue(\.readerActions, actions)
         #if os(iOS)
         .statusBarHidden(!model.chromeShown)
@@ -105,6 +111,53 @@ public struct ReaderScreen: View {
                 StripReader(model: model, theme: theme, mac: mac, size: size, tone: tone) { tap(0.5) }
             } else {
                 PagedReader(model: model, theme: theme, size: size, scale: displayScale, tone: tone, paper: paper) { tap($0) }
+            }
+        }
+    }
+
+    // MARK: The held end page
+
+    /// Leaving a chapter from its end page: that page stays over the next chapter, taking the
+    /// touches, until the next chapter's first page has drawn under it.
+    @ViewBuilder private var heldEnd: some View {
+        if let held = model.held {
+            ZStack(alignment: .bottom) {
+                ReaderEndPage(model: model, theme: theme, size: size, held: held)
+                    .allowsHitTesting(false)
+                // A chapter picked from the list has no Continue on this page to wait in: the
+                // cue sits at its foot instead.
+                if held.slow, held.to != (held.end?.next ?? held.view.next)?.id {
+                    ProgressView().controlSize(.small).tint(theme.haze)
+                        .padding(.bottom, 48)
+                        .transition(.opacity)
+                }
+            }
+            .animation(.fadeIn, value: held.slow)
+            .frame(width: size.width, height: size.height)
+            .contentShape(.rect)
+            .onTapGesture {}
+            .opacity(heldShown)
+            .accessibilityHidden(true)
+        }
+    }
+
+    /// The first page has drawn under the held end page: one crossfade to it, with the same
+    /// spring as a page turn. Paper mode and Reduce Motion swap at once; the page under it is
+    /// already drawn, so no frame is empty either way.
+    private func letHeldGo() {
+        guard let tick = model.held?.tick else { return }
+        if paper || reduceMotion {
+            model.releaseHeld(tick: tick)
+            return
+        }
+        withAnimation(.quick, completionCriteria: .logicallyComplete) {
+            heldShown = 0
+        } completion: {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                model.releaseHeld(tick: tick)
+                heldShown = 1
             }
         }
     }
@@ -252,6 +305,16 @@ extension EnvironmentValues {
 }
 
 private struct ReaderPaperKey: EnvironmentKey { static let defaultValue = false }
+
+private struct ReaderHeldKey: EnvironmentKey { static let defaultValue = false }
+
+extension EnvironmentValues {
+    /// The end page is held over these pages: they draw at once under it, with no fade of their own.
+    var readerHeld: Bool {
+        get { self[ReaderHeldKey.self] }
+        set { self[ReaderHeldKey.self] = newValue }
+    }
+}
 
 extension EnvironmentValues {
     var readerPaper: Bool {

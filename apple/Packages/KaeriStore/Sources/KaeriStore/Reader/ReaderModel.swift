@@ -127,6 +127,92 @@ public final class ReaderModel {
         chromeShown = false
     }
 
+    /// The end page a paged chapter was left from, as it was when Continue was pressed (or a
+    /// swipe past it, or a chapter picked on it). The screen keeps it over the next chapter until
+    /// that chapter's first page has drawn, then crossfades it away: never a cut to an empty
+    /// screen.
+    public struct HeldEnd {
+        public let tick: Int
+        public let view: ReaderView
+        public let end: ReaderEnd?
+        public let read: Bool
+        public let readTrackers: [String]
+        public let previews: [ChapterId: PageFile]
+        /// The chapter being opened under it.
+        public let to: ChapterId
+        /// The first page is slower than the opening's 600 ms: a small cue shows on the held page.
+        public internal(set) var slow = false
+        /// The first page has drawn, or the chapter failed: the held page can go.
+        public internal(set) var landed = false
+    }
+
+    public private(set) var held: HeldEnd?
+    /// How long the held page waits before it shows its cue: the opening plate's 600 ms.
+    @ObservationIgnored var heldCue: Duration = .milliseconds(600)
+    @ObservationIgnored private var heldTask: Task<Void, Never>?
+    /// The next chapter's pages that have drawn while the end page is held over them.
+    @ObservationIgnored private var heldPainted: Set<UInt32> = []
+
+    /// A page of the open chapter is on screen. The held end page lands once every part of the
+    /// leaf that shows has drawn.
+    public func pagePainted(chapter: String, page: UInt32) {
+        guard held != nil, chapter == view?.chapter.id else { return }
+        heldPainted.insert(page)
+        settleHeld()
+    }
+
+    /// The held page has faded away; a newer hold is kept.
+    public func releaseHeld(tick: Int) {
+        guard held?.tick == tick else { return }
+        dropHeld()
+    }
+
+    private func holdEnd(to id: ChapterId) {
+        dropHeld()
+        guard phase == .open, novel == nil, let view, view.mode != .strip,
+              leaves.indices.contains(current), leaves[current].endPage else { return }
+        let tick = bump()
+        held = HeldEnd(
+            tick: tick, view: view, end: end, read: read, readTrackers: readTrackers, previews: previews, to: id)
+        let cue = heldCue
+        heldTask = Task { [weak self] in
+            try? await Task.sleep(for: cue)
+            guard !Task.isCancelled, let self, held?.tick == tick, held?.landed == false else { return }
+            held?.slow = true
+        }
+    }
+
+    private func dropHeld() {
+        heldTask?.cancel()
+        heldTask = nil
+        heldPainted = []
+        held = nil
+    }
+
+    /// Whether the chapter under the held end page is ready to show: its first page has drawn,
+    /// or it failed, or it opened as something with no pages to wait for.
+    private func settleHeld() {
+        guard let held, !held.landed else { return }
+        let ready: Bool
+        if case .failed = phase {
+            ready = true
+        } else if phase != .open || view?.chapter.id != held.to {
+            ready = false
+        } else if novel != nil {
+            ready = true
+        } else if leaves.indices.contains(current) {
+            let chapter = held.to
+            ready = leaves[current].parts.allSatisfy { part in
+                heldPainted.contains(part.page) || failures[ReaderPageKey(chapter: chapter, page: part.page)] != nil
+            }
+        } else {
+            ready = false
+        }
+        guard ready else { return }
+        heldTask?.cancel()
+        self.held?.landed = true
+    }
+
     /// The paginator has laid a page out and said where it is.
     public private(set) var novelPainted = false
     /// Screenshots only: pages stay unloaded, to show the plate.
@@ -311,6 +397,7 @@ public final class ReaderModel {
 
     public func openChapter(_ id: ChapterId) {
         guard session != 0 else { return }
+        holdEnd(to: id)
         end = nil
         read = false
         readTrackers = []
@@ -521,6 +608,7 @@ public final class ReaderModel {
             phase = .open
             if !leaves.isEmpty { current = min(max(current, startLeaf(leaves)), leaves.count - 1) }
             if let goTo = pendingGoTo, goTo < leaves.count { show(goTo) }
+            settleHeld()
         case .pageReady(let session, let chapter, let page, let half, let file):
             guard session == self.session else { return }
             let key = ReaderPageKey(chapter: chapter, page: page, half: half)
@@ -534,12 +622,14 @@ public final class ReaderModel {
                 clearNotices()
             }
             failures[ReaderPageKey(chapter: chapter, page: page)] = failure
+            settleHeld()
         case .novelOpen(let open):
             guard open.session == session else { return }
             novel = open
             novelStyle = open.style
             phase = .open
             if let restore = open.restore { novelGoTo = (restore, bump()) }
+            settleHeld()
         case .novelStyle(let session, let style, _, _):
             guard session == self.session else { return }
             novelStyle = style
@@ -663,6 +753,7 @@ public final class ReaderModel {
     }
 
     private func reset() {
+        dropHeld()
         noticeTask?.cancel()
         backTask?.cancel()
         pendingStrip?.cancel()

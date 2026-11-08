@@ -22,6 +22,7 @@ struct PageImage: View {
     var onPaint: (() -> Void)?
     @State private var image: CGImage?
     @Environment(\.readerPaper) private var paper
+    @Environment(\.readerHeld) private var held
 
     init(file: PageFile, longest: CGFloat, tone: PageTone = PageTone(), fill: Bool = false, onPaint: (() -> Void)? = nil) {
         self.file = file
@@ -51,8 +52,9 @@ struct PageImage: View {
             guard let loaded = await PageImages.load(file, longestSide: longest), !Task.isCancelled else { return }
             if image === loaded { return }
             // A page that arrives late fades in over its plate; Reduce Motion keeps the fade,
-            // which moves nothing. Paper mode draws it at once.
-            if image == nil, !paper {
+            // which moves nothing. Paper mode draws it at once, and so does a page under the held
+            // end page, which fades away over it instead.
+            if image == nil, !paper, !held {
                 withAnimation(.fadeIn, completionCriteria: .logicallyComplete) {
                     image = loaded
                 } completion: {
@@ -235,7 +237,10 @@ struct PartView: View {
                 PagePlate(page: number, theme: theme, atOnce: fresh)
             }
             if let file = model.file(of: part, chapter: chapter) {
-                let image = PageImage(file: file, longest: max(box.width, box.height) * scale, tone: tone, onPaint: { painted = true })
+                let image = PageImage(file: file, longest: max(box.width, box.height) * scale, tone: tone, onPaint: {
+                    painted = true
+                    model.pagePainted(chapter: chapter, page: part.page)
+                })
                     .accessibilityElement()
                     .accessibilityLabel(L.readerPageLabel(page: number, total: max(model.pageCount, number), title: model.view?.title ?? ""))
                     .accessibilityAddTraits(.isImage)
