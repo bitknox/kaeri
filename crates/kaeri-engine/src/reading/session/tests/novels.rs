@@ -16,7 +16,7 @@ use kaeri_model::reader::{BookBody, BookResource, NovelOpenView, NovelPos};
 
 use super::*;
 
-/// A two-document novel, with a stylesheet and a picture.
+/// A two-document novel, with a stylesheet, a font and a picture.
 fn epub(path: &Path, title: &str) {
     let mut w = EpubWriter::new(
         Cursor::new(Vec::new()),
@@ -30,6 +30,7 @@ fn epub(path: &Path, title: &str) {
     picture.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
     w.add_resource("images/lamp.png", "image/png", &png).unwrap();
     w.add_resource("style.css", "text/css", b"p { text-indent: 1em }").unwrap();
+    w.add_resource("fonts/lantern.woff2", "font/woff2", b"wOF2 a made-up font").unwrap();
     w.add_chapter("One", "<h1>One</h1><p>The lantern keeper climbed the stair.</p><img src=\"images/lamp.png\" alt=\"\"/>").unwrap();
     w.add_chapter("Two", "<h1>Two</h1><p>The tide came in under the pier.</p>").unwrap();
     std::fs::write(path, w.finish().unwrap().into_inner()).unwrap();
@@ -164,11 +165,30 @@ async fn an_epub_opens_in_the_web_view_with_its_files_served_cleaned() {
     assert_eq!(h.get(&format!("{base}/style.css")).mime, "text/css");
     assert_eq!(h.get(&format!("{base}/nothing.css")).status, 404);
 
+    // A document is never kept by the web view, as its settings change; the book's other
+    // files are, and a font is read out of the book once, into a file, for every document.
+    let cache = |r: &BookResource| {
+        r.headers.iter().find(|h| h.name == "Cache-Control").map(|h| h.value.clone()).unwrap()
+    };
+    assert_eq!(cache(&doc), "no-store");
+    assert!(cache(&picture).contains("max-age"), "{}", cache(&picture));
+    let sheet = h.get(&format!("{base}/style.css"));
+    assert!(cache(&sheet).contains("max-age"), "{}", cache(&sheet));
+    assert_eq!(text(&sheet), text(&h.get(&format!("{base}/style.css"))));
+    let font = h.get(&format!("{base}/fonts/lantern.woff2"));
+    assert_eq!((font.status, font.mime.as_str()), (200, "font/woff2"));
+    assert!(cache(&font).contains("immutable"), "{}", cache(&font));
+    let BookBody::File { path: font_file } = &font.body else { panic!("a file") };
+    assert_eq!(std::fs::read(font_file).unwrap(), b"wOF2 a made-up font");
+    let again = h.get(&format!("{base}/fonts/lantern.woff2"));
+    assert!(matches!(&again.body, BookBody::File { path } if path == font_file));
+
     // Closed, nothing is served and the files are gone.
     let session = h.session();
     h.send(ReaderCommand::Close { session });
     assert_eq!(h.get(first).status, 404);
     assert!(!Path::new(path).exists());
+    assert!(!Path::new(font_file).exists());
 }
 
 #[tokio::test(start_paused = true)]
@@ -490,7 +510,8 @@ async fn a_sources_text_chapter_is_served_like_a_book() {
     let doc = text(&h.get(&novel.entry));
     assert!(doc.contains("Chapter c1 begins at the pier."), "{doc}");
     assert!(!doc.contains("<script") && !doc.contains("tracker.example"), "{doc}");
-    assert!(doc.contains("_kaeri/reader.css"), "{doc}");
+    // Kaeri's stylesheet comes with the paginator, as a book's documents get it: none is linked.
+    assert!(!doc.contains("<link"), "{doc}");
 
     // Its place is kept like a book's.
     h.at(pos(0, &[0], 4), 0, 1, TurnHow::Turn);
