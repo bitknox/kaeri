@@ -31,8 +31,8 @@ chrome-job-held = { $note }, { $countdown }
 overlays-window-position = { $from }–{ $to } of { $total }
 
 # Heading of the help overlay when its table does not fit on one page.
-# @arg page: int
-# @arg pages: int
+# @arg page: plain
+# @arg pages: plain
 # @max 24
 overlays-help-page = Page { $page } of { $pages }
 
@@ -153,7 +153,7 @@ tui-config-problem = { $file }: { $what }. Using the defaults until it is fixed.
 
 # Same, when the problem is on a known line.
 # @arg file: text
-# @arg line: int
+# @arg line: plain
 # @arg what: text
 tui-config-problem-at-line = { $file } line { $line }: { $what }. Using the defaults until it is fixed.
 
@@ -165,5 +165,5 @@ tui-config-problem-logged = { $path }: { $problem }. Using the defaults.
 # The status line at the foot of the screen when nothing is being said: the source in use, the audio and the quality.
 # @arg source: text
 # @arg audio: text
-# @arg quality: int
+# @arg quality: plain
 chrome-status-state = { $source } · { $audio } · { $quality }p

@@ -60,6 +60,11 @@ public enum L {
         Self.format("two-args", fallback: "%1$@ watched %2$@", who, what)
     }
 
+    /// A number that names something beside a count.
+    public static func episodeSeen(episode: Int, count: Int) -> String {
+        Self.format("episode-seen", fallback: "Episode %1$@, seen %2$lld times", String(episode), count)
+    }
+
     /// The languages this build has text for, source first. `draft` languages carry the draft label.
     public static let languages: [Language] = [
         Language(tag: "en", name: "English", flag: "gb", draft: false),

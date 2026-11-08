@@ -113,7 +113,7 @@ action-read-chapter = Read chapter { $n }
 
 # The main action when a chapter is part read.
 # @arg n: text
-# @arg page: int
+# @arg page: plain
 action-continue-chapter = { -continue-reading-cap } chapter { $n } · page { $page }
 
 # The main action for a light novel part, part read.
@@ -185,12 +185,12 @@ series-tracker-chapters = { $n ->
 
 # A tracker's progress in chapters, then the volume.
 # @arg chapters: text
-# @arg volume: int
+# @arg volume: plain
 series-tracker-with-volume = { $chapters } · volume { $volume }
 
 # A light novel tracker's progress in volumes.
-# @arg volume: int
-# @arg total: int
+# @arg volume: plain
+# @arg total: plain
 series-tracker-volumes = Volume { $volume } of { $total }
 
 # Main place when the source can't be read from.
@@ -363,12 +363,12 @@ chapter-state-downloading = Downloading · { $done } of { $total } pages
 chapter-state-failed = Couldn't download. { $reason }
 
 # A part-read chapter.
-# @arg page: int
-# @arg of: int
+# @arg page: plain
+# @arg of: plain
 chapter-state-page-of = Page { $page } of { $of }
 
 # A part-read chapter whose length isn't known.
-# @arg page: int
+# @arg page: plain
 chapter-state-page = Page { $page }
 
 # A read chapter.
@@ -475,12 +475,12 @@ series-tracker-not-there = No match on this { -tracker }
 series-tracker-looking = Looking for this series…
 
 # A tracker that is behind, and catches up on the next sync.
-# @arg has: int
-# @arg gets: int
+# @arg has: plain
+# @arg gets: plain
 series-tracker-behind = Has chapter { $has }. Gets { $gets } on the next sync.
 
 # A tracker ahead of Kaeri.
-# @arg has: int
+# @arg has: plain
 series-tracker-ahead = Has chapter { $has }, further than { -app-name }.
 
 # A tracker's score out of ten.
@@ -1399,7 +1399,7 @@ stop-set = Set your place
 
 # The other button of the sheet: leaves the place as it is, with the place named.
 # @arg chapter: text
-# @arg page: int
+# @arg page: plain
 stop-keep = Keep chapter { $chapter } · page { $page }
 
 # The other button of the sheet when the place is not a page.
@@ -1445,8 +1445,8 @@ opds-port = Port
 opds-port-note = Leave it empty for any free port, or pick one from 1024 to 65535
 
 # Line under the port row when the port asked for was taken and another is used.
-# @arg wanted: int
-# @arg port: int
+# @arg wanted: plain
+# @arg port: plain
 opds-port-moved = Port { $wanted } was busy, so the feed uses { $port }.
 
 # Heading of the group that picks what the feed shares.

@@ -177,3 +177,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } delar av { $title } är redo att läsas offline.
  }
 reading-downloads-done-series = Kapitel från { $count } serier är redo att läsas offline.
+read-source-folders = Mappar
+reading-since-january = sedan januari
+reading-since-february = sedan februari
+reading-since-march = sedan mars
+reading-since-april = sedan april
+reading-since-may = sedan maj
+reading-since-june = sedan juni
+reading-since-july = sedan juli
+reading-since-august = sedan augusti
+reading-since-september = sedan september
+reading-since-october = sedan oktober
+reading-since-november = sedan november
+reading-since-december = sedan december

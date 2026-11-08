@@ -6,7 +6,7 @@ Kaeri                                                                           
   /  Search                 │  ───────────────────────────────────────────────────────────────────────────────────────
   ▥  Library                │    yamabiko            Plugin      Ready           182 ms
   ↓  Downloads              │  ▌ tsubame             Plugin      failing
-▌ ◇  Sources                │    kawasemi            Plugin      Ready           1204 ms
+▌ ◇  Sources                │    kawasemi            Plugin      Ready           1,204 ms
   ◎  Accounts               │
   ≡  Settings               │  ───────────────────────────────────────────────────────────────────────────────────────
   ⇄  Together               │    tsubame: search timed out after 8 s
@@ -82,7 +82,7 @@ r08 c28-28 fg=rule
 r08 c33-40 fg=text
 r08 c53-58 fg=text-dim
 r08 c65-69 fg=state
-r08 c81-87 fg=text-dim
+r08 c81-88 fg=text-dim
 r09 c02-02 fg=text-dim
 r09 c05-12 fg=text-dim
 r09 c28-28 fg=rule

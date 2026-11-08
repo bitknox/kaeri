@@ -61,7 +61,7 @@ reading-also-a-book = Also a book
 reading-split-chapter = Chapter { $chapter } goes to { -tracker-pl } as { $whole }.
 
 # A notice over the page when a chapter opens where it was left. It offers Start over.
-# @arg page: int
+# @arg page: plain
 # @max 32
 reader-resumed = Resumed at page { $page }
 
@@ -72,7 +72,7 @@ reader-resumed-image = Resumed at image { $image }
 
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes
 # back to the page.
-# @arg page: int
+# @arg page: plain
 # @max 24
 reader-back-to-page = Back to page { $page }
 
@@ -81,13 +81,13 @@ reader-back-to-page = Back to page { $page }
 # device is its name, such as Living room tablet. A chapter with only a number uses the next
 # message.
 # @arg chapter: text
-# @arg page: int
+# @arg page: plain
 # @arg device: text
 reader-moved = Moved to { $chapter }, page { $page }, where { $device } stopped
 
 # The same notice for a chapter known only by its number, such as 14 or 14.5.
 # @arg chapter: text
-# @arg page: int
+# @arg page: plain
 # @arg device: text
 reader-moved-number = Moved to chapter { $chapter }, page { $page }, where { $device } stopped
 
@@ -124,7 +124,7 @@ reading-failed-blocked = { $source } refused the request. { $reason }
 reading-failed-parse = { -app-name } couldn't read what { $source } sent. Its { -plugin } may need an update.
 
 # Why one page did not load. The status is the server's HTTP status code, such as 404.
-# @arg status: int
+# @arg status: plain
 reading-failed-page = This page didn't load (error { $status }). Try again.
 
 # Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
@@ -154,7 +154,7 @@ reading-failed-disk-full = There's no room left on this { -device }. Free some s
 
 # Why a novel could not open: the system's web view is too old. The version is its major version
 # number, such as 80.
-# @arg version: int
+# @arg version: plain
 reading-failed-webview = Novels need a newer system WebView than version { $version }. Update Android System WebView and try again.
 
 # Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin
@@ -298,7 +298,7 @@ reading-out-today-titled = Chapter { $chapter }, { $title }, out today
 
 # Under a cover or the big picture: the page the person stopped on in a chapter.
 # @arg chapter: text
-# @arg page: int
+# @arg page: plain
 # @max 32
 reading-chapter-page = Chapter { $chapter } · page { $page }
 
@@ -500,13 +500,13 @@ reading-row-downloading = Downloading · { $done } of { $total } pages
 reading-row-failed = Couldn't download
 
 # A chapter row's state: the page the person stopped on, of how many.
-# @arg page: int
-# @arg of: int
+# @arg page: plain
+# @arg of: plain
 # @max 24
 reading-row-page-of = Page { $page } of { $of }
 
 # A chapter row's state: the page the person stopped on, when the length isn't known.
-# @arg page: int
+# @arg page: plain
 # @max 16
 reading-row-page = Page { $page }
 
@@ -775,12 +775,12 @@ read-search-started-year = Last 12 months
 read-search-started-3-years = Last 3 years
 
 # Under a source's hit in Search: the chapters it holds, from the first.
-# @arg last: int
+# @arg last: plain
 # @max 24
 read-hit-chapters = Chapters 1 to { $last }
 
 # Under a source's hit in Search: a web novel's episodes it holds, from the first.
-# @arg last: int
+# @arg last: plain
 # @max 24
 read-hit-episodes = Episodes 1 to { $last }
 
@@ -808,3 +808,118 @@ read-hit-files-format = { $count ->
     [one] 1 file · { $format }
    *[other] { $count } files · { $format }
  }
+
+# The name of the folders on this device, which read as one source: a Search group's heading,
+# the source a series reads from, "In Folders" on a search result. It stands alone, with no
+# word for its kind beside it.
+# @max 24
+read-source-folders = Folders
+
+# A section of the feed that e-readers fetch from: the chapters downloaded on this device.
+# @max 24
+read-feed-downloads = Downloads
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since January".
+# @max 20
+reading-since-january = since January
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since February".
+# @max 20
+reading-since-february = since February
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since March".
+# @max 20
+reading-since-march = since March
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since April".
+# @max 20
+reading-since-april = since April
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since May".
+# @max 20
+reading-since-may = since May
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since June".
+# @max 20
+reading-since-june = since June
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since July".
+# @max 20
+reading-since-july = since July
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since August".
+# @max 20
+reading-since-august = since August
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since September".
+# @max 20
+reading-since-september = since September
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since October".
+# @max 20
+reading-since-october = since October
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since November".
+# @max 20
+reading-since-november = since November
+
+# On a cover in a New row, after the country: the month the series started, within the last
+# 12 months, as in "Japan · since December".
+# @max 20
+reading-since-december = since December
+
+# The line over Search's results opened by View all on a Trending row: the format and the order. The count
+# follows it: "Manga, trending · 1,920 series from AniList".
+# @max 60
+read-view-all-trending-manga = Manga, trending
+
+# The line over Search's results opened by View all on a Trending row: the format and the order. The count
+# follows it: "Webtoons, trending · 1,920 series from AniList".
+# @max 60
+read-view-all-trending-webtoons = Webtoons, trending
+
+# The line over Search's results opened by View all on a Trending row: the format and the order. The count
+# follows it: "Light novels, trending · 1,920 series from AniList".
+# @max 60
+read-view-all-trending-novels = Light novels, trending
+
+# The line over Search's results opened by View all on a New row: the format and the filter. The count
+# follows it: "Manga started in the last 12 months · 1,920 series from AniList".
+# @max 60
+read-view-all-new-manga = Manga started in the last 12 months
+
+# The line over Search's results opened by View all on a New row: the format and the filter. The count
+# follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".
+# @max 60
+read-view-all-new-webtoons = Webtoons started in the last 12 months
+
+# The line over Search's results opened by View all on a New row: the format and the filter. The count
+# follows it: "Light novels started in the last 12 months · 1,920 series from AniList".
+# @max 60
+read-view-all-new-novels = Light novels started in the last 12 months
+
+# The line over Search's results opened by View all on a Finished row: the format and the order. The count
+# follows it: "Finished manga, most popular · 1,920 series from AniList".
+# @max 60
+read-view-all-finished-manga = Finished manga, most popular
+
+# The line over Search's results opened by View all on a Finished row: the format and the order. The count
+# follows it: "Finished webtoons, most popular · 1,920 series from AniList".
+# @max 60
+read-view-all-finished-webtoons = Finished webtoons, most popular
+
+# The line over Search's results opened by View all on a Finished row: the format and the order. The count
+# follows it: "Finished light novels, most popular · 1,920 series from AniList".
+# @max 60
+read-view-all-finished-novels = Finished light novels, most popular

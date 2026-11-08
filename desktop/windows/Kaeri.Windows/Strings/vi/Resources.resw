@@ -194,6 +194,60 @@
   <data name="HomeMoreGenre" xml:space="preserve">
     <value>Thêm {genre}</value>
   </data>
+  <data name="HomeMoreGenreAction" xml:space="preserve">
+    <value>Thêm hành động</value>
+  </data>
+  <data name="HomeMoreGenreAdventure" xml:space="preserve">
+    <value>Thêm phiêu lưu</value>
+  </data>
+  <data name="HomeMoreGenreComedy" xml:space="preserve">
+    <value>Thêm hài</value>
+  </data>
+  <data name="HomeMoreGenreDrama" xml:space="preserve">
+    <value>Thêm chính kịch</value>
+  </data>
+  <data name="HomeMoreGenreEcchi" xml:space="preserve">
+    <value>Thêm ecchi</value>
+  </data>
+  <data name="HomeMoreGenreFantasy" xml:space="preserve">
+    <value>Thêm giả tưởng</value>
+  </data>
+  <data name="HomeMoreGenreHorror" xml:space="preserve">
+    <value>Thêm kinh dị</value>
+  </data>
+  <data name="HomeMoreGenreMahouShoujo" xml:space="preserve">
+    <value>Thêm mahou shoujo</value>
+  </data>
+  <data name="HomeMoreGenreMecha" xml:space="preserve">
+    <value>Thêm mecha</value>
+  </data>
+  <data name="HomeMoreGenreMusic" xml:space="preserve">
+    <value>Thêm âm nhạc</value>
+  </data>
+  <data name="HomeMoreGenreMystery" xml:space="preserve">
+    <value>Thêm bí ẩn</value>
+  </data>
+  <data name="HomeMoreGenrePsychological" xml:space="preserve">
+    <value>Thêm tâm lý</value>
+  </data>
+  <data name="HomeMoreGenreRomance" xml:space="preserve">
+    <value>Thêm lãng mạn</value>
+  </data>
+  <data name="HomeMoreGenreSciFi" xml:space="preserve">
+    <value>Thêm khoa học viễn tưởng</value>
+  </data>
+  <data name="HomeMoreGenreSliceOfLife" xml:space="preserve">
+    <value>Thêm đời thường</value>
+  </data>
+  <data name="HomeMoreGenreSports" xml:space="preserve">
+    <value>Thêm thể thao</value>
+  </data>
+  <data name="HomeMoreGenreSupernatural" xml:space="preserve">
+    <value>Thêm siêu nhiên</value>
+  </data>
+  <data name="HomeMoreGenreThriller" xml:space="preserve">
+    <value>Thêm giật gân</value>
+  </data>
   <data name="HomeSpotlightDemo" xml:space="preserve">
     <value>Bản demo, chia sẻ thoải mái</value>
   </data>
@@ -916,6 +970,45 @@
   </data>
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>Các chương của {count} bộ truyện đã sẵn sàng để đọc ngoại tuyến.</value>
+  </data>
+  <data name="ReadSourceFolders" xml:space="preserve">
+    <value>Thư mục</value>
+  </data>
+  <data name="ReadingSinceJanuary" xml:space="preserve">
+    <value>từ tháng 1</value>
+  </data>
+  <data name="ReadingSinceFebruary" xml:space="preserve">
+    <value>từ tháng 2</value>
+  </data>
+  <data name="ReadingSinceMarch" xml:space="preserve">
+    <value>từ tháng 3</value>
+  </data>
+  <data name="ReadingSinceApril" xml:space="preserve">
+    <value>từ tháng 4</value>
+  </data>
+  <data name="ReadingSinceMay" xml:space="preserve">
+    <value>từ tháng 5</value>
+  </data>
+  <data name="ReadingSinceJune" xml:space="preserve">
+    <value>từ tháng 6</value>
+  </data>
+  <data name="ReadingSinceJuly" xml:space="preserve">
+    <value>từ tháng 7</value>
+  </data>
+  <data name="ReadingSinceAugust" xml:space="preserve">
+    <value>từ tháng 8</value>
+  </data>
+  <data name="ReadingSinceSeptember" xml:space="preserve">
+    <value>từ tháng 9</value>
+  </data>
+  <data name="ReadingSinceOctober" xml:space="preserve">
+    <value>từ tháng 10</value>
+  </data>
+  <data name="ReadingSinceNovember" xml:space="preserve">
+    <value>từ tháng 11</value>
+  </data>
+  <data name="ReadingSinceDecember" xml:space="preserve">
+    <value>từ tháng 12</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Đã tham gia {store} với tên {member}.</value>

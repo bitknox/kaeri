@@ -112,12 +112,12 @@ party-form-nothing = What's playing now plays with the room.
 party-form-pick-later = Once you're in, press Play on any episode to watch it with the room.
 
 # Line naming the episode of the form.
-# @arg episode: int
+# @arg episode: plain
 # @arg title: text
 party-form-episode-of = Episode { $episode } of { $title }
 
 # Line naming the episode of the form when the show has no name.
-# @arg episode: int
+# @arg episode: plain
 party-form-episode = Episode { $episode }
 
 # Line on the form when the party could not begin.
@@ -254,7 +254,7 @@ party-nosource-missing-title = None of your { -source-pl } has this episode
 party-nosource-missing-detail = { $why }. { $what } plays with the room once you choose a { -source } that has it.
 
 # Line under a title that says the episode has not aired.
-# @arg episode: int
+# @arg episode: plain
 party-nosource-unaired = Your { -source-pl } won't have episode { $episode } before it's out.
 
 # Line under a title that says the episode has not aired and no date is known.

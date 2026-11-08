@@ -164,3 +164,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } phần của { $title } đã sẵn sàng để đọc ngoại tuyến.
  }
 reading-downloads-done-series = Các chương của { $count } bộ truyện đã sẵn sàng để đọc ngoại tuyến.
+read-source-folders = Thư mục
+reading-since-january = từ tháng 1
+reading-since-february = từ tháng 2
+reading-since-march = từ tháng 3
+reading-since-april = từ tháng 4
+reading-since-may = từ tháng 5
+reading-since-june = từ tháng 6
+reading-since-july = từ tháng 7
+reading-since-august = từ tháng 8
+reading-since-september = từ tháng 9
+reading-since-october = từ tháng 10
+reading-since-november = từ tháng 11
+reading-since-december = từ tháng 12
