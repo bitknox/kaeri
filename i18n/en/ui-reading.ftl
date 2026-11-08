@@ -878,6 +878,12 @@ read-search-anilist-failed-line = Your { -source-pl } were still asked.
 # Search, when nothing was found anywhere: under the line saying AniList found nothing.
 read-search-sources-nothing = Nothing in your { -source-pl } either.
 
+# Search with Your sources only on, when no source found anything. The line to try other words follows.
+read-search-sources-only-nothing = Nothing found in your { -source-pl }
+
+# Line under a reading page's title when the device has no connection.
+read-state-offline-line = Offline. Downloaded chapters still open.
+
 # Over reading's results while more pages are to come, so AniList's count is not known yet.
 read-search-total-unknown = Series from AniList
 

@@ -2,6 +2,7 @@ using Medium = Kaeri.Engine.Core.Medium;
 using Microsoft.UI.Xaml.Automation.Peers;
 using Kaeri.App;
 using Kaeri.Engine.Model;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -15,13 +16,20 @@ namespace Kaeri.Windows.Pages;
 
 /// <summary>
 /// Reading's Home from the engine's view: the spotlight with its amber action, Continue with the
-/// silk track, This week by day with a link to Updates, Up next, Releasing now, Because you
-/// finished, one genre shelf, then the closing line. A section with nothing in it leaves with its
-/// heading. One 948-wide column; posters 132 by 198 at radius 4. Titled Home with reading alone
-/// and Read with both.
+/// silk track, This week by day with a link to Updates, Up next, then the engine's discovery rows
+/// (Trending, Because you finished, New, More of a genre, Finished), then the closing line. A
+/// section with nothing in it leaves with its heading. Each section is kept and changes in
+/// place; the spotlight crossfades to a new pick, and on a cold load holds its room with a plate
+/// after 600 ms. A row on its way holds placeholders at final size; a row that fails with nothing
+/// kept fades out and its gap closes. Past 4 s an activity line says Home is loading; a failure
+/// is one window notice. One 948-wide column; posters 132 by 198 at radius 4. Titled Home with
+/// reading alone and Read with both.
 /// </summary>
 public sealed partial class ReadHomePage : Page
 {
+    /// <summary>The row whose View all opened Search, and how it had the focus: Back puts the focus there again.</summary>
+    internal static (string Row, FocusState How)? Returning { get; set; }
+
     readonly Ctx ctx = Ctx.Current;
     readonly TextBlock title = new() { Style = Ui.Res<Style>("PageTitleStyle") };
     readonly TextBlock offline = new() { Style = Ui.Res<Style>("HazeBodyStyle"), Visibility = Visibility.Collapsed };
@@ -34,8 +42,18 @@ public sealed partial class ReadHomePage : Page
         Padding = new Thickness(0, 8, 36, 48),
         XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled,
     };
+    // The person's own sections, each in its own place, the discovery rows by id, and what closes Home.
+    readonly StackPanel own = new(), spotHost = new(), rows = new(), tail = new();
+    readonly Border demoHost = new() { Visibility = Visibility.Collapsed }, continueHost = new(), weekHost = new(), waitingHost = new(), upNextHost = new();
+    readonly TextBlock activityLine = new() { Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 16, 0, 0), Visibility = Visibility.Collapsed };
+    readonly Dictionary<string, ReadHomeRowView> rowViews = [];
+    readonly Microsoft.UI.Dispatching.DispatcherQueueTimer activity;
     ReadingHomeView? shown;
-    bool demoOnly, hearing;
+    CoverSlot? spot;
+    string spotKey = "", continueKey = "", weekKey = "", upNextKey = "", tailKey = "";
+    // When Home was last asked for: a row's placeholders come 600 ms after it.
+    DateTimeOffset asked = DateTimeOffset.Now;
+    bool demoOnly, hearing, complained;
 
     public ReadHomePage()
     {
@@ -46,17 +64,28 @@ public sealed partial class ReadHomePage : Page
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         var head = new StackPanel { Margin = new Thickness(0, 0, 36, 0) };
         head.Children.Add(title);
-        head.Children.Add(new OfflineLine());
+        head.Children.Add(new OfflineLine(reading: true));
         head.Children.Add(offline);
         root.Children.Add(head);
+        demoHost.Child = DemoLine();
+        foreach (var part in new UIElement[] { spotHost, demoHost, continueHost, weekHost, waitingHost, upNextHost })
+            own.Children.Add(part);
+        waitingHost.Child = Waiting();
+        waitingHost.Visibility = Visibility.Collapsed;
+        AutomationProperties.SetLiveSetting(activityLine, AutomationLiveSetting.Polite);
+        column.Children.Add(own);
+        column.Children.Add(rows);
+        column.Children.Add(activityLine);
+        column.Children.Add(tail);
         scroll.Content = column;
         state.Children.Add(scroll);
         state.Placeholders = Placeholders;
-        state.ActivityText = T.StateLoading;
+        state.ActivityText = T.HomeLoading;
         Grid.SetRow(state, 1);
         root.Children.Add(state);
         Content = root;
         NavigationCacheMode = NavigationCacheMode.Enabled;
+        activity = Timers.Weak(this, TimeSpan.FromMilliseconds(HomeWording.ActivityAfterMs), false, static page => page.ShowActivity());
 
         Refresh(VirtualKey.F5, VirtualKeyModifiers.None);
         Refresh(VirtualKey.R, VirtualKeyModifiers.Control);
@@ -77,6 +106,7 @@ public sealed partial class ReadHomePage : Page
         {
             ctx.Known.Reading.Changed -= Heard;
             ctx.Known.Medium.Changed -= Titled;
+            activity.Stop();
             hearing = false;
         };
     }
@@ -88,9 +118,19 @@ public sealed partial class ReadHomePage : Page
         {
             e.Handled = true;
             state.Wait(hasContent: shown is not null);
-            ctx.Known.Reading.LoadHome(refresh: true);
+            Ask();
         };
         KeyboardAccelerators.Add(accelerator);
+    }
+
+    /// <summary>Home asked for again: the 600 ms and the 4 s count from now, and a new failure may be said.</summary>
+    void Ask(bool refresh = true)
+    {
+        asked = DateTimeOffset.Now;
+        complained = false;
+        activity.Stop();
+        activity.Start();
+        ctx.Known.Reading.LoadHome(refresh: refresh);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -107,7 +147,14 @@ public sealed partial class ReadHomePage : Page
             state.Wait();
         else
             Show();
-        ctx.Known.Reading.LoadHome();
+        Ask(refresh: false);
+        // Back from a row's View all: the focus goes to that View all again.
+        if (e.NavigationMode == NavigationMode.Back && Returning is { } back)
+        {
+            Returning = null;
+            if (rowViews.TryGetValue(back.Row, out var view))
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => view.FocusViewAll(back.How));
+        }
     }
 
     void Titled() => title.Text = ctx.Known.Medium.Both ? T.NavRead : T.HomeTitle;
@@ -120,7 +167,7 @@ public sealed partial class ReadHomePage : Page
             state.Empty(ReadingParts.PlainEmpty(T.HomeFailed, ctx.Known.Reading.Failures[ReadingAbout.Home].Words(), T.ActionTryAgain, () =>
             {
                 state.Wait();
-                ctx.Known.Reading.LoadHome(refresh: true);
+                Ask();
             }, error: true));
     }
 
@@ -135,8 +182,10 @@ public sealed partial class ReadHomePage : Page
     }
 
     /// <summary>
-    /// Draws the engine's view. The column is made again only when the view changed; the focus
-    /// and the scroll stay where they were.
+    /// Draws the engine's view. Each of the person's own sections keeps its place and changes in
+    /// place when its part of the view changed; the discovery rows are kept by id, so a row
+    /// landing crossfades over its placeholders and nothing above it moves. The focus and the
+    /// scroll stay where they were.
     /// </summary>
     void Show(bool force = false)
     {
@@ -151,48 +200,206 @@ public sealed partial class ReadHomePage : Page
         demoOnly = ctx.Known.Demo.OnlyBooks;
         offline.Text = home.Offline && home.OfflineSince is { } since ? T.HomeOffline(ReadingParts.Clock(since)) : "";
         offline.Visibility = offline.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-        var mark = Ui.MarkFocus(column);
-        column.Children.Clear();
 
-        if (home.Spotlight is { } tile && home.Spot is { } spot)
+        Spotlight(home);
+        demoHost.Visibility = demoOnly && home.Spotlight is not null ? Visibility.Visible : Visibility.Collapsed;
+        Section(continueHost, ref continueKey, home.ContinueReading, tiles => new ReadShelf(T.HomeReadContinue, Cards(tiles, track: true, continuing: true), artHeight: HomeWording.PosterHeight),
+            (shelf, tiles) => shelf.Set(Cards(tiles, track: true, continuing: true)));
+        var week = string.Join("\n", home.Week.Select(d => $"{d.Day}\t{d.Today}\t" + string.Join(",", d.Entries.Select(x => $"{x.Tile.Work}:{x.Tile.Title}:{x.Tile.Cover}:{x.OutAt}:{x.Usually}:{x.Chapter?.Text()}:{x.Tile.Next?.Text()}"))));
+        if (week != weekKey)
         {
-            column.Children.Add(new ReadSpotlightView(ctx, tile, spot));
-            if (demoOnly)
-                column.Children.Add(new TextBlock { Text = T.HomeDemoOnlyBooks, Style = Ui.Res<Style>("HazeBodyStyle"), Margin = new Thickness(0, 16, 0, 0), TextWrapping = TextWrapping.Wrap });
+            weekKey = week;
+            var mark = Ui.MarkFocus(weekHost);
+            weekHost.Child = home.Week.Length > 0 ? Week(home.Week) : null;
+            Ui.RestoreFocus(weekHost, mark);
         }
-        if (home.ContinueReading.Length > 0)
-            column.Children.Add(new ReadShelf(T.NavContinue, home.ContinueReading.Select(t => (UIElement)ReadingParts.Card(ctx, t, track: true, continuing: true)),
-                artHeight: HomeWording.PosterHeight));
-        if (home.Week.Length > 0)
-            column.Children.Add(Week(home.Week));
-        if (home.Pending.Contains(ReadHomePart.Yours))
-            column.Children.Add(Waiting());
-        if (home.UpNext.Length > 0)
-            column.Children.Add(Shelf(T.HomeUpNext, home.UpNext, T.HomeViewAll, () => ReadingParts.OpenList(ctx, LibrarySegmentRead.Planning)));
-        if (home.Releasing.Length > 0)
-            column.Children.Add(Shelf(T.HomeReadReleasing, home.Releasing, T.HomeSearch, () => ReadingParts.OpenSearch(ctx)));
-        if (home.BecauseTitle is { } because && home.Because.Length > 0)
-            column.Children.Add(Shelf(T.HomeBecause(because), home.Because));
-        if (home.Genre is { } genre && home.GenreShelf.Length > 0)
-            column.Children.Add(Shelf(T.HomeMoreGenre(genre), home.GenreShelf, T.HomeSearch, () => ReadingParts.OpenSearch(ctx, genre)));
-        if (home.Pending.Contains(ReadHomePart.Discovery) || home.Pending.Contains(ReadHomePart.Because))
-            column.Children.Add(Waiting());
-        if (home.Failed)
-            column.Children.Add(ReadingParts.PlainEmpty(T.HomeFailed,
-                ctx.Known.Reading.Failures.TryGetValue(ReadingAbout.Home, out var failure) ? failure.Words() : null,
-                T.ActionTryAgain, () => ctx.Known.Reading.LoadHome(refresh: true), error: true));
-        if (home.End is { } end)
-            column.Children.Add(End(end));
+        waitingHost.Visibility = home.Pending.Contains(ReadHomePart.Yours) ? Visibility.Visible : Visibility.Collapsed;
+        Section(upNextHost, ref upNextKey, home.UpNext, tiles => new ReadShelf(T.HomeUpNext, Cards(tiles), T.HomeViewAll, () => ReadingParts.OpenList(ctx, LibrarySegmentRead.Planning)),
+            (shelf, tiles) => shelf.Set(Cards(tiles)));
+
+        Rows(home.Rows ?? []);
+
+        // A failure is one window notice, said once for each time Home is asked.
+        if (home.Failed && !complained)
+        {
+            complained = true;
+            ctx.Window.Say(T.HomeFailed, T.HomeTryAgain, () => Ask());
+        }
+        if (home.Pending.Length == 0)
+        {
+            activity.Stop();
+            if (activityLine.Visibility == Visibility.Visible)
+                Motion.Hide(activityLine);
+        }
+
+        var end = $"{home.Offline && (home.Rows ?? []).Length == 0}\n{home.End}";
+        if (end != tailKey)
+        {
+            tailKey = end;
+            var mark = Ui.MarkFocus(tail);
+            tail.Children.Clear();
+            if (home.Offline && (home.Rows ?? []).Length == 0)
+                tail.Children.Add(OfflineRows());
+            if (home.End is { } closing)
+                tail.Children.Add(End(closing));
+            Ui.RestoreFocus(tail, mark);
+        }
 
         state.Done();
-        Ui.RestoreFocus(column, mark);
     }
 
-    ReadShelf Shelf(string heading, WorkTile[] tiles, string? link = null, Action? act = null) =>
-        new(heading, tiles.Select(t => (UIElement)ReadingParts.Card(ctx, t)), link, act);
+    /// <summary>Continue's and Up next's cards: with the track on Continue, and Details alone in Up next's menu.</summary>
+    IEnumerable<UIElement> Cards(WorkTile[] tiles, bool track = false, bool continuing = false) =>
+        tiles.Select(t => (UIElement)ReadingParts.Card(ctx, t, track: track, continuing: continuing, lists: false));
 
-    /// <summary>A part of Home still on its way: a rail of plates where its shelf will be.</summary>
-    static UIElement Waiting() => new Border { Margin = new Thickness(0, HomeWording.ShelfGap, 0, 0), Child = States.Covers(8, rail: true) };
+    /// <summary>
+    /// A shelf of the person's own in its place: made when it first has tiles, its cards changed
+    /// in the same strip after, gone with its heading when it has none.
+    /// </summary>
+    static void Section(Border host, ref string key, WorkTile[] tiles, Func<WorkTile[], ReadShelf> make, Action<ReadShelf, WorkTile[]> update)
+    {
+        var now = string.Join("\n", tiles.Select(t => $"{t.Work}\t{t.Title}\t{t.Cover}\t{t.Progress}\t{t.NewChapter}\t{ReadingParts.Line(t)}"));
+        if (now == key)
+            return;
+        key = now;
+        if (tiles.Length == 0)
+            host.Child = null;
+        else if (host.Child is ReadShelf shelf)
+            update(shelf, tiles);
+        else
+            host.Child = make(tiles);
+    }
+
+    /// <summary>
+    /// The spotlight: a new pick crossfades over the old one. On a cold load, while the person's
+    /// own part is on its way, a plate holds its room after 600 ms, so the rows never move down.
+    /// </summary>
+    void Spotlight(ReadingHomeView home)
+    {
+        if (home.Spotlight is { } tile && home.Spot is { } pick)
+        {
+            var key = string.Join("\n", tile.Work, tile.Title, tile.Cover, tile.Progress, pick.Case, pick.Line?.Text(), pick.Label.Text(), pick.Action, pick.Planned, pick.Banner, pick.Synopsis, pick.Facts.Joined());
+            if (key == spotKey)
+                return;
+            spotKey = key;
+            SpotSlot().Replace(new ReadSpotlightView(ctx, tile, pick));
+            return;
+        }
+        spotKey = "";
+        if (home.Pending.Contains(ReadHomePart.Yours))
+        {
+            SpotSlot().Ask(asked);
+            return;
+        }
+        if (spot is { } gone)
+        {
+            spot = null;
+            Leaving.Close(gone, () => spotHost.Children.Remove(gone));
+        }
+    }
+
+    CoverSlot SpotSlot()
+    {
+        if (spot is not null)
+            return spot;
+        spot = new CoverSlot(SpotPlate(), new Grid());
+        spotHost.Children.Add(spot);
+        return spot;
+    }
+
+    /// <summary>The spotlight's plate: the words' bars beside the art's plate, at the spotlight's size.</summary>
+    static FrameworkElement SpotPlate()
+    {
+        var plate = new Grid { ColumnSpacing = 40 };
+        plate.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        plate.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var bars = new StackPanel { Spacing = 12, VerticalAlignment = VerticalAlignment.Center };
+        bars.Children.Add(States.Plate(120, 14, 3));
+        bars.Children.Add(States.Plate(320, 30, 4));
+        bars.Children.Add(States.Plate(220, 12, 3));
+        bars.Children.Add(States.Plate(360, 44, 3));
+        bars.Children.Add(States.Plate(200, 32, 4));
+        plate.Children.Add(bars);
+        var art = States.Plate(HomeWording.ArtMaxWidth, Math.Round(HomeWording.ArtMaxWidth * 9 / 16), 16);
+        Grid.SetColumn(art, 1);
+        plate.Children.Add(art);
+        AutomationProperties.SetAccessibilityView(plate, AccessibilityView.Raw);
+        return plate;
+    }
+
+    /// <summary>Past 4 s with parts still on their way: "Loading suggestions", as Watch's Home says.</summary>
+    void ShowActivity()
+    {
+        if (ctx.Known.Reading.Home is { Pending.Length: > 0 } || ctx.Known.Reading.Home is null)
+        {
+            activityLine.Text = T.HomeLoading;
+            Motion.Show(activityLine);
+        }
+    }
+
+    /// <summary>
+    /// The discovery rows in the engine's order. A row that stays keeps its view and changes in
+    /// place; a new one comes where it belongs; one that left fades out, then its gap closes.
+    /// </summary>
+    void Rows(ReadHomeRow[] now)
+    {
+        var ids = now.Select(r => r.Id).ToHashSet();
+        foreach (var (id, view) in rowViews.ToList())
+        {
+            if (ids.Contains(id))
+                continue;
+            rowViews.Remove(id);
+            view.Leave(() => rows.Children.Remove(view));
+        }
+        var at = 0;
+        foreach (var row in now)
+        {
+            if (!rowViews.TryGetValue(row.Id, out var view))
+            {
+                view = new ReadHomeRowView(ctx, row);
+                rowViews[row.Id] = view;
+            }
+            // Rows on their way out keep their place until their gap has closed.
+            while (at < rows.Children.Count && rows.Children[at] is ReadHomeRowView leaving && !rowViews.ContainsValue(leaving))
+                at++;
+            var index = rows.Children.IndexOf(view);
+            if (index != at)
+            {
+                if (index >= 0)
+                    rows.Children.RemoveAt(index);
+                rows.Children.Insert(Math.Min(at, rows.Children.Count), view);
+            }
+            at++;
+            view.Update(row, asked);
+        }
+    }
+
+    /// <summary>
+    /// With the demo as the only source: a line that says so, and Add a source beside it, which
+    /// goes under it when the window is narrow.
+    /// </summary>
+    UIElement DemoLine()
+    {
+        var line = new Kaeri.Windows.Player.WrapRow { Gap = 12, Margin = new Thickness(0, 20, 0, 0) };
+        line.Children.Add(new TextBlock { Text = T.HomeDemoOnlyBooks, Style = Ui.Res<Style>("HazeCaptionStyle"), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap });
+        var add = Ui.Label(T.SourcesAddTitle, (_, _) => ReadingParts.AddSource(ctx, XamlRoot));
+        add.VerticalAlignment = VerticalAlignment.Center;
+        line.Children.Add(add);
+        return line;
+    }
+
+    /// <summary>Offline on the first run, with no row kept: where the rows will be, a line that says when, 12 on 16.</summary>
+    static UIElement OfflineRows() => new Border
+    {
+        Margin = new Thickness(0, 40, 0, 0),
+        Padding = new Thickness(0, 16, 0, 0),
+        BorderThickness = new Thickness(0, 1, 0, 0),
+        BorderBrush = Ui.Res<Brush>("FaintRuleBrush"),
+        Child = new TextBlock { Text = T.ReadHomeOfflineRows, Style = Ui.Res<Style>("HazeCaptionStyle"), FontSize = 12, LineHeight = 16, TextWrapping = TextWrapping.Wrap },
+    };
+
+    /// <summary>The person's own sections still on their way: a rail of plates where their shelf will be.</summary>
+    static UIElement Waiting() => new Border { Margin = new Thickness(0, HomeWording.ShelfGap, 0, 0), Child = ReadPlates.Row(7) };
 
     // This week
 
@@ -297,31 +504,54 @@ public sealed partial class ReadHomePage : Page
         var button = new Button { Style = Ui.Res<Style>("HomeCardButtonStyle"), Content = row, HorizontalAlignment = HorizontalAlignment.Stretch };
         AutomationProperties.SetName(button, ReadingParts.Joined(tile.Title, time, line));
         button.Click += (_, _) => ctx.Window.OpenSeries(tile.Work);
-        button.ContextFlyout = ReadingParts.TileMenu(ctx, tile.Work);
+        button.ContextFlyout = ReadingParts.DetailsMenu(ctx, tile.Work);
         return button;
     }
 
     // The end
 
+    /// <summary>
+    /// The closing line, left over a faint rule, 12 on 16: that Home ends here with Updates and
+    /// Search as links, or with no source yet, Add a source.
+    /// </summary>
     UIElement End(ReadHomeEnd end)
     {
-        var line = new StackPanel { Spacing = 12, Margin = new Thickness(0, 48, 0, 0), HorizontalAlignment = HorizontalAlignment.Center };
-        var words = new TextBlock
+        var block = new StackPanel
+        {
+            Spacing = 8,
+            Margin = new Thickness(0, 40, 0, 0),
+            Padding = new Thickness(0, 16, 0, 0),
+            BorderThickness = new Thickness(0, 1, 0, 0),
+            BorderBrush = Ui.Res<Brush>("FaintRuleBrush"),
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        block.Children.Add(new TextBlock
         {
             Text = end == ReadHomeEnd.NoSources ? T.HomeReadNoSources : T.HomeReadEnd,
-            Style = Ui.Res<Style>("HazeBodyStyle"),
-            TextAlignment = TextAlignment.Center,
+            Style = Ui.Res<Style>("HazeCaptionStyle"),
+            FontSize = 12,
+            LineHeight = 16,
             TextWrapping = TextWrapping.Wrap,
             MaxWidth = 480,
-        };
-        line.Children.Add(words);
+            HorizontalAlignment = HorizontalAlignment.Left,
+        });
+        var links = new Kaeri.Windows.Player.WrapRow { Gap = 16 };
         if (end == ReadHomeEnd.NoSources)
+            links.Children.Add(Link(T.SourcesAddTitle, () => ReadingParts.AddSource(ctx, XamlRoot)));
+        else
         {
-            var add = Ui.Label(T.SourcesAddTitle, (_, _) => ReadingParts.AddSource(ctx, XamlRoot));
-            add.HorizontalAlignment = HorizontalAlignment.Center;
-            line.Children.Add(add);
+            links.Children.Add(Link(T.NavUpdates, () => ctx.Window.Go("updates")));
+            links.Children.Add(Link(T.NavSearch, () => ctx.Window.Go("search")));
         }
-        return line;
+        block.Children.Add(links);
+        return block;
+    }
+
+    static HyperlinkButton Link(string words, Action act)
+    {
+        var link = new HyperlinkButton { Content = words, Style = Ui.Res<Style>("SilkLinkStyle"), FontSize = 12, Padding = new Thickness(0) };
+        link.Click += (_, _) => act();
+        return link;
     }
 }
 

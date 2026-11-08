@@ -75,6 +75,16 @@ public sealed class ReadSearchState
     public uint? Total { get; internal set; }
     public bool Loading { get; internal set; }
     public ReadingFailure? Failure { get; internal set; }
+    /// <summary>
+    /// The sources' part of a search with words, the newest the engine sent for the query on
+    /// screen. Null while browsing, and until the first send.
+    /// </summary>
+    public ReadSourceSearch? Sources { get; internal set; }
+    /// <summary>The words AniList's results in <see cref="Tiles"/> were found for.</summary>
+    public string TilesFor { get; internal set; } = "";
+
+    /// <summary>How many results the first page brought: More from AniList's pages show under its button.</summary>
+    public int FirstPage { get; internal set; }
 }
 
 /// <summary>Which part of reading changed, so a page redraws only what it shows.</summary>
@@ -135,12 +145,30 @@ public sealed class ReadingStore
 
     public void RunSearch(ReadSearchQuery query)
     {
+        // The sources' groups stay while the same words are asked again, as with Your sources
+        // only turned on or off: each keeps its slot until its new answer.
+        if (Search.Sources is { } sources && sources.Query.Text.Trim() != query.Text.Trim())
+            Search.Sources = null;
+        if (query.Text.Trim().Length == 0)
+            Search.Sources = null;
+        // Results of another search never show under this one's filters, as when View all
+        // opens; turning Your sources only on or off keeps AniList's results for the same words.
+        if (!SameQuery(Search.Query with { SourcesOnly = false }, query with { SourcesOnly = false }))
+        {
+            Search.Tiles.Clear();
+            Search.FirstPage = 0;
+            Search.TilesFor = "";
+        }
         Search.Query = query;
         Search.Total = null;
         Search.Loading = true;
         Search.Failure = null;
         Ask(new ReadingCommand.Search(query));
     }
+
+    /// <summary>Try again on one source's group: only that group asks again.</summary>
+    public void RetrySource(string sourceId) =>
+        Ask(new ReadingCommand.RetrySourceSearch(Search.Query, sourceId));
 
     public void SearchMore()
     {
@@ -323,10 +351,32 @@ public sealed class ReadingStore
                 if (search.Total is { } total)
                     Search.Total = total;
                 Search.Tiles.AddRange(search.Tiles);
+                if (search.Page == 0)
+                    Search.FirstPage = Search.Tiles.Count;
+                Search.TilesFor = search.Query.Text.Trim();
                 Search.Page = search.Page;
                 Search.HasMore = search.HasMore;
                 Search.OtherScope = search.OtherScope;
                 Search.Loading = false;
+                Changed?.Invoke(ReadingPart.Search);
+                break;
+            case ReadingEvent.SourceSearch found:
+                if (!SameQuery(found.V1.Query, Search.Query))
+                    return;
+                Search.Sources = found.V1;
+                // Your sources only leaves AniList out: no page of its own comes, so the search
+                // is answered here. AniList's last results stay for turning it off again, while
+                // they are for the same words.
+                if (found.V1.Anilist == ReadAnilistState.Skipped)
+                {
+                    Search.Loading = false;
+                    Search.HasMore = false;
+                    if (Search.TilesFor != found.V1.Query.Text.Trim())
+                    {
+                        Search.Tiles.Clear();
+                        Search.Total = null;
+                    }
+                }
                 Changed?.Invoke(ReadingPart.Search);
                 break;
             case ReadingEvent.Series series:
@@ -375,10 +425,14 @@ public sealed class ReadingStore
     /// <summary>Two queries are the same search: lists compare by their items.</summary>
     public static bool SameQuery(ReadSearchQuery a, ReadSearchQuery b) =>
         a.Text == b.Text && a.Medium == b.Medium && a.Status == b.Status && a.Sort == b.Sort
+        && Started(a.Started) == Started(b.Started) && a.SourcesOnly == b.SourcesOnly
         && Same(a.Formats, b.Formats) && Same(a.Origins, b.Origins)
         && Same(a.Genres, b.Genres) && Same(a.ExcludeGenres, b.ExcludeGenres);
 
     static bool Same(string[]? a, string[]? b) => (a ?? []).SequenceEqual(b ?? []);
+
+    /// <summary>"any" and no choice are the same: any time.</summary>
+    static string? Started(string? key) => key is null or "any" ? null : key;
 }
 
 /// <summary>The sources that have a work, for Read from.</summary>

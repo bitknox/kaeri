@@ -9720,6 +9720,12 @@ read-search-anilist-failed-line = [Ýöüŕ šöüŕçéš ŵéŕé šţîļļ �
 # Search, when nothing was found anywhere: under the line saying AniList found nothing.
 read-search-sources-nothing = [Ñöţĥîñĝ îñ ýöüŕ šöüŕçéš éîţĥéŕ.~~~~~~~~~~]
 
+# Search with Your sources only on, when no source found anything. The line to try other words follows.
+read-search-sources-only-nothing = [Ñöţĥîñĝ ƒöüñð îñ ýöüŕ šöüŕçéš~~~~~~~~~]
+
+# Line under a reading page's title when the device has no connection.
+read-state-offline-line = [Öƒƒļîñé. Ðöŵñļöàðéð çĥàþţéŕš šţîļļ öþéñ.~~~~~~~~~~~~]
+
 # Over reading's results while more pages are to come, so AniList's count is not known yet.
 read-search-total-unknown = [Šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~]
 

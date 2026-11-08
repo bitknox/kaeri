@@ -47,7 +47,7 @@ public sealed partial class ReadLibraryPage : Page
         var title = new TextBlock { Text = T.NavLibrary, Style = Ui.Res<Style>("PageTitleStyle") };
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level1);
         head.Children.Add(title);
-        head.Children.Add(new OfflineLine());
+        head.Children.Add(new OfflineLine(reading: true));
         root.Children.Add(head);
 
         var bar = new Grid { ColumnSpacing = 12, Margin = new Thickness(0, 0, 36, 0) };

@@ -15467,6 +15467,16 @@ pub fn read_search_sources_nothing() -> String {
     text("read-search-sources-nothing", &[])
 }
 
+/// Search with Your sources only on, when no source found anything. The line to try other words follows.
+pub fn read_search_sources_only_nothing() -> String {
+    text("read-search-sources-only-nothing", &[])
+}
+
+/// Line under a reading page's title when the device has no connection.
+pub fn read_state_offline_line() -> String {
+    text("read-state-offline-line", &[])
+}
+
 /// Over reading's results while more pages are to come, so AniList's count is not known yet.
 pub fn read_search_total_unknown() -> String {
     text("read-search-total-unknown", &[])

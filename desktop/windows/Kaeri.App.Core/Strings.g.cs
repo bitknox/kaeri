@@ -1983,6 +1983,21 @@ public static partial class T
     /// <summary>Line under the title of the Downloads page for reading when no chapter is kept on this PC.</summary>
     public static string WindowsReadDownloadsEmptyDetail => Get("WindowsReadDownloadsEmptyDetail");
 
+    /// <summary>Said once by Narrator when a search with words has heard from AniList and every source. Failed sources follow as their own sentences.</summary>
+    public static string WindowsReadSearchFinished(long anilist, long sources) => Fill(Get("WindowsReadSearchFinished"), ("anilist", anilist.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Said once by Narrator when a search with Your sources only on has heard from every source.</summary>
+    public static string WindowsReadSearchFinishedSources(long sources) => Fill(Get("WindowsReadSearchFinishedSources"), ("sources", sources.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Said once by Narrator when Your sources only is turned on in Search.</summary>
+    public static string WindowsReadSearchAnilistHidden => Get("WindowsReadSearchAnilistHidden");
+
+    /// <summary>Narrator's words for a source that ran out of time in Search, read with its Try again.</summary>
+    public static string WindowsReadSearchSourceTimeoutSaid(long seconds) => Fill(GetPlural("WindowsReadSearchSourceTimeoutSaid", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Narrator's help on Search's filters while Your sources only is on.</summary>
+    public static string WindowsReadSearchFiltersDimmed => Get("WindowsReadSearchFiltersDimmed");
+
     /// <summary>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</summary>
     public static string SeriesReadAgainDoneWindows(string title) => Fill(Get("SeriesReadAgainDoneWindows"), ("title", title));
 
@@ -6795,6 +6810,12 @@ public static partial class T
 
     /// <summary>Search, when nothing was found anywhere: under the line saying AniList found nothing.</summary>
     public static string ReadSearchSourcesNothing => Get("ReadSearchSourcesNothing");
+
+    /// <summary>Search with Your sources only on, when no source found anything. The line to try other words follows.</summary>
+    public static string ReadSearchSourcesOnlyNothing => Get("ReadSearchSourcesOnlyNothing");
+
+    /// <summary>Line under a reading page's title when the device has no connection.</summary>
+    public static string ReadStateOfflineLine => Get("ReadStateOfflineLine");
 
     /// <summary>Over reading's results while more pages are to come, so AniList's count is not known yet.</summary>
     public static string ReadSearchTotalUnknown => Get("ReadSearchTotalUnknown");
@@ -12207,6 +12228,12 @@ public static partial class T
         ["WindowsReaderModeVerticalLine"] = "Pages one under another",
         ["WindowsReaderModeStripLine"] = "For webtoons and long images",
         ["WindowsReadDownloadsEmptyDetail"] = "Downloaded chapters open without a connection.",
+        ["WindowsReadSearchFinished"] = "{anilist} from AniList, {sources} from your sources.",
+        ["WindowsReadSearchFinishedSources"] = "{sources} from your sources.",
+        ["WindowsReadSearchAnilistHidden"] = "AniList's results are hidden.",
+        ["WindowsReadSearchSourceTimeoutSaid_one"] = "No answer in {seconds} second.",
+        ["WindowsReadSearchSourceTimeoutSaid_other"] = "No answer in {seconds} seconds.",
+        ["WindowsReadSearchFiltersDimmed"] = "The filters apply to AniList's results only.",
         ["SeriesReadAgainDoneWindows"] = "Reading {title} again from the start",
         ["SendSaveFilesWindows"] = "Save files",
         ["SendSavedWindows_one"] = "Saved the file",
@@ -13874,6 +13901,8 @@ public static partial class T
         ["ReadSearchAnilistFailed"] = "AniList didn't answer.",
         ["ReadSearchAnilistFailedLine"] = "Your sources were still asked.",
         ["ReadSearchSourcesNothing"] = "Nothing in your sources either.",
+        ["ReadSearchSourcesOnlyNothing"] = "Nothing found in your sources",
+        ["ReadStateOfflineLine"] = "Offline. Downloaded chapters still open.",
         ["ReadSearchTotalUnknown"] = "Series from AniList",
         ["ReadSearchMoreAnilist"] = "More from AniList",
         ["ReadSearchShown"] = "{shown} of {total} shown",

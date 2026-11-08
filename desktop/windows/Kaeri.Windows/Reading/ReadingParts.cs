@@ -22,17 +22,45 @@ static class ReadingParts
     /// <summary>Home's column, as the board draws it.</summary>
     public const double Column = 948;
 
-    /// <summary>Library's and Search's grid: the smallest cell and the gap between cells.</summary>
-    public const double GridCell = 128, GridGap = 16;
+    /// <summary>Library's and Search's grid: the cell, as wide as a row's covers, and the gap between cells.</summary>
+    public const double GridCell = HomeWording.PosterWidth, GridGap = HomeWording.Gap;
+
+    /// <summary>The text size the person set in Windows, 1 to 2.25.</summary>
+    public static double TextScale
+    {
+        get
+        {
+            try
+            {
+                return (uiSettings ??= new global::Windows.UI.ViewManagement.UISettings()).TextScaleFactor;
+            }
+            catch (Exception)
+            {
+                return 1;
+            }
+        }
+    }
+
+    static global::Windows.UI.ViewManagement.UISettings? uiSettings;
+
+    /// <summary>
+    /// Very large text: Search's and View all's covers become a one-column list, the cover beside
+    /// the title and its line, as on the phones.
+    /// </summary>
+    public static bool ListText => TextScale >= 2;
 
     // Covers
 
     /// <summary>
     /// A book's cover at 2:3 from its URL, rounded and edged, in the raised colour until the art
-    /// arrives, which then fades in. Art the app already has shows at once.
+    /// arrives, which then fades in. Art the app already has shows at once. A series with no
+    /// cover at all and a <paramref name="title"/> gets a plate set with its title and the book
+    /// glyph, never a plate that looks like it is loading.
     /// </summary>
-    public static Border Cover(Ctx ctx, string? url, double width, double radius = 4)
+    public static Border Cover(Ctx ctx, string? url, double width, double radius = 4, string? title = null)
     {
+        if (url is null && title is { Length: > 0 })
+            return Plate(title, width, radius);
         var image = new Image { Stretch = Stretch.UniformToFill };
         AutomationProperties.SetAccessibilityView(image, AccessibilityView.Raw);
         ArtFade.Watch(image);
@@ -48,6 +76,47 @@ static class ReadingParts
         };
         ctx.Art.Bind(url, art => image.Source = art);
         return frame;
+    }
+
+    /// <summary>
+    /// The plate of a series with no cover: its title in the show font from the top, the book
+    /// glyph at the foot, on the raised colour. Hidden from screen readers, as the caption under it
+    /// says the title once.
+    /// </summary>
+    static Border Plate(string title, double width, double radius)
+    {
+        var size = Math.Max(12, Math.Round(width / 9));
+        var inside = new Grid { Padding = new Thickness(Math.Round(width / 11)) };
+        inside.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+        inside.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        inside.Children.Add(new TextBlock
+        {
+            Text = title,
+            FontFamily = Ui.Res<FontFamily>("ShowFont"),
+            FontWeight = FontWeights.Bold,
+            FontSize = size,
+            LineHeight = Math.Round(size * 1.3),
+            LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
+            Foreground = Ui.Res<Brush>("SilkBrush"),
+            TextWrapping = TextWrapping.WrapWholeWords,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            MaxLines = 5,
+            IsTextScaleFactorEnabled = false,
+        });
+        var glyph = new FontIcon { Glyph = "\uE736", FontSize = 16, Foreground = Ui.Res<Brush>("HazeBrush"), HorizontalAlignment = HorizontalAlignment.Left };
+        Grid.SetRow(glyph, 1);
+        inside.Children.Add(glyph);
+        AutomationProperties.SetAccessibilityView(inside, AccessibilityView.Raw);
+        return new Border
+        {
+            Width = width,
+            Height = Math.Round(width * 1.5),
+            CornerRadius = new CornerRadius(radius),
+            Background = Ui.Res<Brush>("RaisedBrush"),
+            BorderBrush = Ui.Res<Brush>("EdgeBrush"),
+            BorderThickness = new Thickness(1),
+            Child = inside,
+        };
     }
 
     /// <summary>The water dot beside new things.</summary>
@@ -82,16 +151,23 @@ static class ReadingParts
 
     // The cover card
 
+    /// <summary>The height of a card's caption lines: the title's, then the line's.</summary>
+    public const double TitleLine = 20, CaptionLine = 16;
+
     /// <summary>
-    /// A series to open: its cover, the title and one line under it. With <paramref name="track"/>
-    /// the silk track sits under the cover, as Continue has it. Its menu, on right-click, Shift+F10
-    /// and the menu key, is Details with Add to list, or with <paramref name="continuing"/> Details
-    /// with Remove from Continue.
+    /// A series to open: its cover, the title and one line under it, both kept their height so
+    /// covers in a row line up. A discovery tile whose series no source has says so as its line,
+    /// over two lines when it needs them. With <paramref name="track"/> the silk track sits under
+    /// the cover, as Continue has it. <paramref name="placed"/> is a third line in silk, "In Home
+    /// library", which wraps rather than cut; <paramref name="placedRoom"/> keeps two lines for it
+    /// on a card without one, so a grid's cells are one height. Its menu, on right-click,
+    /// Shift+F10 and the menu key, is Details with Add to list, or with
+    /// <paramref name="continuing"/> Details with Remove from Continue.
     /// </summary>
-    public static Button Card(Ctx ctx, WorkTile tile, double width = HomeWording.PosterWidth, bool track = false, bool continuing = false)
+    public static Button Card(Ctx ctx, WorkTile tile, double width = HomeWording.PosterWidth, bool track = false, bool continuing = false, string? placed = null, bool placedRoom = false, string? caption = null, bool lists = true)
     {
         var stack = new StackPanel { Width = width };
-        stack.Children.Add(Cover(ctx, tile.Cover, width));
+        stack.Children.Add(Cover(ctx, tile.Cover, width, title: tile.Title));
         if (track)
             stack.Children.Add(new Border
             {
@@ -108,14 +184,17 @@ static class ReadingParts
             TextTrimming = TextTrimming.CharacterEllipsis,
             Margin = new Thickness(0, track ? 6 : 8, 0, 0),
         });
-        var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(0, 2, 0, 0) };
+        var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(0, 2, 0, 0), MinHeight = ReadPlates.Lines(CaptionLine) };
         if (tile.NewChapter)
             line.Children.Add(WaterDot());
+        // Search words its own lines: an AniList result's format and origin, a source's hit how much it holds.
+        var said = caption ?? Line(tile);
         var words = new TextBlock
         {
-            Text = Line(tile),
+            Text = said,
             Style = Ui.Res<Style>("HazeCaptionStyle"),
-            TextWrapping = TextWrapping.NoWrap,
+            TextWrapping = tile.NotInSources ? TextWrapping.WrapWholeWords : TextWrapping.NoWrap,
+            MaxLines = tile.NotInSources ? 2 : 1,
             TextTrimming = TextTrimming.CharacterEllipsis,
             MaxWidth = width - (tile.NewChapter ? 12 : 0),
         };
@@ -123,17 +202,76 @@ static class ReadingParts
             words.Foreground = Ui.Res<Brush>("SilkBrush");
         line.Children.Add(words);
         stack.Children.Add(line);
+        if (placed is not null || placedRoom)
+        {
+            var where = new TextBlock
+            {
+                Text = placed ?? "",
+                Style = Ui.Res<Style>("HazeCaptionStyle"),
+                Foreground = Ui.Res<Brush>("SilkBrush"),
+                FontWeight = FontWeights.SemiBold,
+                TextWrapping = TextWrapping.WrapWholeWords,
+                MaxLines = 2,
+                Margin = new Thickness(0, 2, 0, 0),
+                MinHeight = placedRoom ? 2 * ReadPlates.Lines(CaptionLine) : 0,
+            };
+            stack.Children.Add(where);
+        }
         var button = new Button
         {
             Style = Ui.Res<Style>("HomeCardButtonStyle"),
             Content = stack,
-            Width = width,
+            // The hover fill reaches past the art by the outset, which the style's margin takes back.
+            Width = width + 2 * HomeWording.HoverOutset,
             Tag = tile.Work,
         };
-        AutomationProperties.SetName(button, Joined(tile.Title, Line(tile)));
+        AutomationProperties.SetName(button, Joined(tile.Title, said, placed));
         button.Click += (_, _) => ctx.Window.OpenSeries(tile.Work);
-        button.ContextFlyout = continuing ? ContinueMenu(ctx, tile.Work) : TileMenu(ctx, tile.Work);
+        button.ContextFlyout = continuing ? ContinueMenu(ctx, tile.Work) : lists ? TileMenu(ctx, tile.Work) : DetailsMenu(ctx, tile.Work);
         return button;
+    }
+
+    /// <summary>
+    /// A result as a row for very large text: the cover beside the title, its line and where a
+    /// source has it, all wrapping. The same menu and name as its card.
+    /// </summary>
+    public static Button RowCard(Ctx ctx, WorkTile tile, string? placed = null, string? caption = null, bool lists = true)
+    {
+        var grid = new Grid { ColumnSpacing = 12 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var cover = Cover(ctx, tile.Cover, 56, title: tile.Title);
+        cover.VerticalAlignment = VerticalAlignment.Top;
+        grid.Children.Add(cover);
+        var words = new StackPanel { Spacing = 2, VerticalAlignment = VerticalAlignment.Center };
+        words.Children.Add(new TextBlock { Text = tile.Title, Style = Ui.Res<Style>("ShowTitleStyle"), FontSize = 14, TextWrapping = TextWrapping.WrapWholeWords });
+        var said = caption ?? Line(tile);
+        if (said.Length > 0)
+            words.Children.Add(new TextBlock { Text = said, Style = Ui.Res<Style>("HazeCaptionStyle"), TextWrapping = TextWrapping.WrapWholeWords });
+        if (placed is not null)
+            words.Children.Add(new TextBlock { Text = placed, Style = Ui.Res<Style>("HazeCaptionStyle"), Foreground = Ui.Res<Brush>("SilkBrush"), FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.WrapWholeWords });
+        Grid.SetColumn(words, 1);
+        grid.Children.Add(words);
+        var button = new Button
+        {
+            Style = Ui.Res<Style>("HomeCardButtonStyle"),
+            Content = grid,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            Tag = tile.Work,
+        };
+        AutomationProperties.SetName(button, Joined(tile.Title, said, placed));
+        button.Click += (_, _) => ctx.Window.OpenSeries(tile.Work);
+        button.ContextFlyout = lists ? TileMenu(ctx, tile.Work) : DetailsMenu(ctx, tile.Work);
+        return button;
+    }
+
+    /// <summary>A tile with no list choices here, as a source's hit, Up next and This week: Details alone.</summary>
+    public static MenuFlyout DetailsMenu(Ctx ctx, string work)
+    {
+        var menu = new MenuFlyout();
+        menu.Items.Add(Item(T.HomeDetails, () => ctx.Window.OpenSeries(work)));
+        return menu;
     }
 
     /// <summary>A tile's menu: Details, and Add to list with the lists a series can be put on.</summary>
@@ -224,14 +362,17 @@ static class ReadingParts
 
     public static string Joined(params string?[] parts) => string.Join(" · ", parts.Where(p => p is { Length: > 0 }));
 
-    /// <summary>The line under a cover: what comes next, else its facts joined.</summary>
+    /// <summary>
+    /// The line under a cover: Not found in your sources once a series' check found no source,
+    /// else what comes next, else its first two facts.
+    /// </summary>
     public static string Line(WorkTile tile)
     {
+        if (tile.NotInSources)
+            return T.HomeNotFound;
         if (tile.Next is { } next)
             return next.Text();
-        if (tile.FormatLabel is { } label && (tile.Facts?.Length ?? 0) == 0)
-            return label;
-        return tile.Facts.Joined();
+        return ReadDiscovery.ShelfFacts(tile);
     }
 
     public static string List(LibrarySegmentRead list) => list switch
@@ -353,9 +494,19 @@ static class ReadingParts
         var query = ReadingStore.EmptyQuery;
         if (genre is not null)
             query = query with { Genres = [genre] };
+        OpenSearch(ctx, query);
+    }
+
+    /// <summary>
+    /// Reading's Search on <paramref name="query"/>, a row's View all: its filters and sort set, and
+    /// its first results the row's titles in the same order.
+    /// </summary>
+    public static void OpenSearch(Ctx ctx, ReadSearchQuery query, Msg? line = null)
+    {
         ctx.Known.Reading.RunSearch(query);
         ReadSearchPage.Opening = query;
-        Open(ctx, "search", ctx.Window.SearchReading);
+        ReadSearchPage.Titled = line is null ? null : (query, line);
+        ctx.Window.OpenReadSearch(query.Text);
     }
 
     /// <summary>Reading's Library at <paramref name="list"/>.</summary>
@@ -379,98 +530,26 @@ static class ReadingParts
 }
 
 /// <summary>
-/// A shelf: the heading with its link, and the cards in a strip that scrolls sideways by whole
-/// cards. The wheel moves the page; Shift and a sideways wheel move the strip. The arrows show
-/// while the pointer is over the shelf. Tab enters the strip once, the arrow keys move along it.
+/// A shelf of the person's own: the heading with its link, and the cards in a <see cref="CoverStrip"/>
+/// that scrolls sideways by whole cards. The wheel moves the page; Shift and a sideways wheel
+/// move the strip. The arrows show while the pointer is over the shelf. Tab enters the strip
+/// once, the arrow keys move along it.
 /// </summary>
-sealed partial class ReadShelf : Grid
+sealed partial class ReadShelf : StackPanel
 {
-    readonly ScrollViewer scroll = new()
-    {
-        HorizontalScrollBarVisibility = ScrollBarVisibility.Hidden,
-        HorizontalScrollMode = ScrollMode.Enabled,
-        IsHorizontalRailEnabled = true,
-        VerticalScrollMode = ScrollMode.Disabled,
-        VerticalScrollBarVisibility = ScrollBarVisibility.Disabled,
-        IsTabStop = false,
-    };
-    readonly StackPanel strip = new()
-    {
-        Orientation = Orientation.Horizontal,
-        Spacing = HomeWording.Gap,
-        TabFocusNavigation = KeyboardNavigationMode.Once,
-        XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled,
-    };
-    readonly Button previous, next;
-    readonly double cardWidth;
-    bool inside;
+    readonly CoverStrip strip;
 
     public ReadShelf(string title, IEnumerable<UIElement> cards, string? link = null, Action? act = null, double cardWidth = HomeWording.PosterWidth, double artHeight = HomeWording.PosterHeight)
     {
-        this.cardWidth = cardWidth;
         Margin = new Thickness(0, HomeWording.ShelfGap, 0, 0);
-        RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         Children.Add(ReadingParts.ShelfHeading(title, link, act));
-        foreach (var card in cards)
-            strip.Children.Add(card);
-        AutomationProperties.SetName(strip, title);
-        scroll.Content = strip;
-        HomeShelf.ForwardWheel(scroll);
-        scroll.ViewChanged += (_, _) => Arrows();
-        scroll.SizeChanged += (_, _) => Arrows();
-        SetRow(scroll, 1);
-        Children.Add(scroll);
-        previous = Arrow("", T.HomePrevious, false, artHeight);
-        next = Arrow("", T.HomeNext, true, artHeight);
-        Children.Add(previous);
-        Children.Add(next);
-        Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-        PointerEntered += (_, _) => { inside = true; Arrows(); };
-        PointerExited += (_, _) => { inside = false; Arrows(); };
+        strip = new CoverStrip(title, cardWidth, artHeight);
+        strip.Set([.. cards.OfType<FrameworkElement>()]);
+        Children.Add(strip);
     }
 
-    Button Arrow(string glyph, string name, bool forward, double artHeight)
-    {
-        var button = new Button
-        {
-            Width = 36,
-            Height = 36,
-            Padding = new Thickness(0),
-            CornerRadius = new CornerRadius(18),
-            HorizontalAlignment = forward ? HorizontalAlignment.Right : HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(forward ? 0 : -18, artHeight / 2 - 18, forward ? -18 : 0, 0),
-            Background = Ui.Res<Brush>("RaisedBrush"),
-            Content = new FontIcon { Glyph = glyph, FontSize = 14 },
-            Opacity = 0,
-            IsHitTestVisible = false,
-            IsTabStop = false,
-        };
-        Canvas.SetZIndex(button, 5);
-        AutomationProperties.SetName(button, name);
-        SetRow(button, 1);
-        button.Click += (_, _) =>
-        {
-            var to = ShelfPaging.Target(scroll.HorizontalOffset, scroll.ViewportWidth, scroll.ExtentWidth, cardWidth, strip.Children.Count, forward);
-            Motion.Ease(scroll, scroll.HorizontalOffset, to, v => scroll.ChangeView(v, null, null, true));
-        };
-        return button;
-    }
-
-    void Arrows()
-    {
-        Set(previous, inside && ShelfPaging.Can(scroll.HorizontalOffset, scroll.ViewportWidth, scroll.ExtentWidth, false));
-        Set(next, inside && ShelfPaging.Can(scroll.HorizontalOffset, scroll.ViewportWidth, scroll.ExtentWidth, true));
-    }
-
-    static void Set(Button arrow, bool shown)
-    {
-        arrow.IsHitTestVisible = shown;
-        if (shown == arrow.Opacity > 0.5)
-            return;
-        Motion.Fade(arrow, shown ? 1 : 0);
-    }
+    /// <summary>New cards in the same strip, which keeps its sideways place and the focus on the card it was on.</summary>
+    public void Set(IEnumerable<UIElement> cards) => strip.Set([.. cards.OfType<FrameworkElement>()]);
 }
 
 /// <summary>
@@ -481,43 +560,102 @@ sealed partial class ReadGrid : ItemsRepeater
 {
     public ReadGrid()
     {
-        Layout = new UniformGridLayout
-        {
-            MinItemWidth = ReadingParts.GridCell,
-            MinColumnSpacing = ReadingParts.GridGap,
-            MinRowSpacing = 24,
-            ItemsStretch = UniformGridLayoutItemsStretch.Fill,
-        };
+        Layout = MakeLayout();
         TabFocusNavigation = KeyboardNavigationMode.Once;
         XYFocusKeyboardNavigation = XYFocusKeyboardNavigationMode.Enabled;
     }
 
-    /// <summary>Shows <paramref name="tiles"/>, each a card the cell's width.</summary>
-    public void Show(Ctx ctx, IReadOnlyList<WorkTile> tiles)
+    /// <summary>
+    /// The grid's layout: cells 132 wide that never stretch, so its covers match a row's, 16
+    /// apart and 24 between lines; with very large text, one result per line.
+    /// </summary>
+    public static Layout MakeLayout() => ReadingParts.ListText
+        ? new StackLayout { Spacing = 8 }
+        : new UniformGridLayout
+        {
+            MinItemWidth = ReadingParts.GridCell,
+            MinColumnSpacing = ReadingParts.GridGap,
+            MinRowSpacing = 24,
+            ItemsStretch = UniformGridLayoutItemsStretch.None,
+            ItemsJustification = UniformGridLayoutItemsJustification.Start,
+        };
+
+    readonly System.Collections.ObjectModel.ObservableCollection<WorkTile> items = [];
+    string shownLook = "";
+    bool shownList, shownLists;
+
+    /// <summary>
+    /// Whether <paramref name="tiles"/> under <paramref name="look"/> are what the grid shows, or
+    /// what it shows with more after: then <see cref="Show"/> adds them in place.
+    /// </summary>
+    public bool Holds(IReadOnlyList<WorkTile> tiles, string look)
     {
-        ItemTemplate = new TileFactory(ctx);
-        ItemsSource = tiles.ToList();
+        if (ItemTemplate is null || look.Length == 0 || look != shownLook || ReadingParts.ListText != shownList)
+            return false;
+        if (tiles.Count < items.Count)
+            return false;
+        for (var i = 0; i < items.Count; i++)
+            if (Same(items[i]) != Same(tiles[i]))
+                return false;
+        return true;
     }
 
-    sealed partial class TileFactory(Ctx ctx) : IElementFactory
+    static string Same(WorkTile tile) => $"{tile.Work}\t{tile.Title}\t{tile.Cover}\t{tile.NotInSources}";
+
+    /// <summary>
+    /// Shows <paramref name="tiles"/>, each a card the cell's width. <paramref name="placed"/>
+    /// gives a result its third line, "In Home library"; when any has one, every cell keeps room
+    /// for it, as the grid's cells are one height. <paramref name="caption"/> words a result's
+    /// line; <paramref name="lists"/> gives its menu the lists. <paramref name="look"/> names
+    /// what the lines depend on: under the same one, results that only grow are added in place.
+    /// </summary>
+    public void Show(Ctx ctx, IReadOnlyList<WorkTile> tiles, Func<string, string?>? placed = null, Func<WorkTile, string?>? caption = null, bool lists = true, string look = "")
+    {
+        var list = ReadingParts.ListText;
+        if (lists == shownLists && Holds(tiles, look))
+        {
+            for (var i = items.Count; i < tiles.Count; i++)
+                items.Add(tiles[i]);
+            Sizes();
+            return;
+        }
+        shownLook = look;
+        shownList = list;
+        shownLists = lists;
+        var room = placed is not null && tiles.Any(t => placed(t.Work) is not null);
+        if (list != Layout is StackLayout)
+            Layout = MakeLayout();
+        ItemTemplate = new TileFactory(ctx, placed, room, caption, lists, list, items);
+        items.Clear();
+        foreach (var tile in tiles)
+            items.Add(tile);
+        if (ItemsSource != items)
+            ItemsSource = items;
+    }
+
+    /// <summary>Each cover drawn says how many the grid holds now, "4 of 60".</summary>
+    void Sizes()
+    {
+        for (var i = 0; i < items.Count; i++)
+            if (TryGetElement(i) is { } element)
+                AutomationProperties.SetSizeOfSet(element, items.Count);
+    }
+
+    sealed partial class TileFactory(Ctx ctx, Func<string, string?>? placed, bool room, Func<WorkTile, string?>? caption, bool lists, bool list, IList<WorkTile> items) : IElementFactory
     {
         public UIElement GetElement(ElementFactoryGetArgs args)
         {
             if (args.Data is not WorkTile tile)
                 return new Grid();
-            var card = ReadingParts.Card(ctx, tile, ReadingParts.GridCell);
-            // The cell's width: the cover keeps 2:3 at whatever the layout gives it.
-            card.Width = double.NaN;
-            card.HorizontalAlignment = HorizontalAlignment.Stretch;
-            card.SizeChanged += (_, e) =>
+            FrameworkElement card = list
+                ? ReadingParts.RowCard(ctx, tile, placed?.Invoke(tile.Work), caption?.Invoke(tile), lists)
+                : ReadingParts.Card(ctx, tile, ReadingParts.GridCell, placed: placed?.Invoke(tile.Work), placedRoom: room, caption: caption?.Invoke(tile), lists: lists);
+            var at = items.IndexOf(tile);
+            if (at >= 0)
             {
-                if (card.Content is StackPanel { Children: [Border cover, ..] } stack && e.NewSize.Width > 0)
-                {
-                    stack.Width = e.NewSize.Width;
-                    cover.Width = e.NewSize.Width;
-                    cover.Height = Math.Round(e.NewSize.Width * 1.5);
-                }
-            };
+                AutomationProperties.SetPositionInSet(card, at + 1);
+                AutomationProperties.SetSizeOfSet(card, items.Count);
+            }
             return card;
         }
 
