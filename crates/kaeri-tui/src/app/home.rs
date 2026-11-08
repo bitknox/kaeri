@@ -84,7 +84,7 @@ impl App {
 
     /// Mirror the titles of Home into the list on screen, when Home is the section on screen.
     pub(super) fn sync_home(&mut self) {
-        if self.nav.section() != Section::Home {
+        if self.nav.section() != Section::Home || self.reading_only() {
             return;
         }
         let Some(view) = &self.home else { return };

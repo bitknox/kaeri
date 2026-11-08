@@ -197,6 +197,14 @@ pub(super) fn render_status(buf: &mut Buffer, app: &App, geometry: &Frame, help_
             .render(geometry.status, buf);
         return;
     }
+    let wide = buf.area().width >= crate::layout::NARROW_WIDTH;
+    if app.status.is_empty() && app.reading_here() {
+        let state = app.read_status(wide);
+        let hints = crate::keymap::reading_hints(app, wide)
+            .unwrap_or_else(|| status_hints_paged(app, help_pages));
+        StatusLine::new(&app.palette, &state).hints(&hints).render(geometry.status, buf);
+        return;
+    }
     let state = if app.status.is_empty() {
         let audio = match app.settings.translation {
             kaeri_core::media::Translation::Sub => t::audio_subbed(),

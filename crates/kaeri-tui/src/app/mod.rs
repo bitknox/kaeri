@@ -52,6 +52,7 @@ mod notices;
 mod overlays;
 mod playback;
 mod providers;
+mod reading;
 mod settings;
 mod stores;
 mod text;
@@ -75,6 +76,10 @@ pub use self::{
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
     providers::proxy_badge,
+    reading::{
+        AnilistState, GROUP_HITS, Part, ReadLine, Reading, SourceKind, read_filter_labels,
+        read_filter_summary, read_filter_value, read_query_blank,
+    },
     settings::SettingLine,
     stores::{MemberLine, PluginChoice, StoreConfirm, StoreLine},
     text::{Field, TextField},
@@ -386,6 +391,8 @@ pub struct App {
     /// Plugins that could be published, and the store they would go to.
     pub local_plugins: Vec<LocalPluginRow>,
     pub publish_for: Option<String>,
+    /// Reading's Home and Search, while this computer is set to reading alone.
+    pub reading: Reading,
 }
 
 impl App {
@@ -519,6 +526,7 @@ impl App {
             plugin_options: Vec::new(),
             local_plugins: Vec::new(),
             publish_for: None,
+            reading: Reading::default(),
         }
     }
 
@@ -579,12 +587,18 @@ impl App {
             | Event::LicensedReturn(_)
             | Event::Server(_)
             | Event::Local(_) => {}
-            // The terminal has no reader: reading's own events are not drawn here. What Kaeri is
-            // for is, and the engine relays reading's sync ops without them.
+            // The terminal has no reader, and what Kaeri is for is drawn. The download meter says
+            // what turning reading off would delete.
             Event::Reading(kaeri_model::reading::ReadingEvent::Downloads(view)) => {
                 self.take_book_downloads(view.meter.used)
             }
-            Event::Reading(_) | Event::Reader(_) | Event::BookSources(_) => {}
+            // Reading's Home and Search are drawn as text while reading is all this computer is
+            // for; the Sources view names each source's kind there.
+            Event::Reading(event) => self.apply_reading(event),
+            Event::BookSources(kaeri_model::book_sources::BookSourceEvent::View(view)) => {
+                self.apply_book_sources(&view)
+            }
+            Event::Reader(_) | Event::BookSources(_) => {}
             Event::Medium(view) => self.apply_medium(view),
             Event::Content { view, content } => self.apply_content(view, content),
             // Up next for you is a section of Home now; it is not asked for on its own.

@@ -32,7 +32,16 @@ use super::{
 };
 
 fn search_filter_rows(app: &App) -> Vec<(String, String)> {
-    use crate::app::{search_filter_labels, search_filter_value};
+    use crate::app::{
+        read_filter_labels, read_filter_value, search_filter_labels, search_filter_value,
+    };
+    if app.reading_only() && matches!(app.nav.section(), crate::nav::Section::Search) {
+        return read_filter_labels()
+            .into_iter()
+            .enumerate()
+            .map(|(row, name)| (read_filter_value(&app.reading.filter, row), name))
+            .collect();
+    }
     search_filter_labels()
         .into_iter()
         .enumerate()
@@ -498,6 +507,21 @@ pub(super) fn field_text(app: &App, field: Field) -> String {
 
 fn help_rows(app: &App) -> Vec<(String, String)> {
     let mut rows = Vec::new();
+    // Reading's own keys first, while Home and Search are reading's.
+    if app.reading_only() {
+        use crate::keymap::Action;
+        rows.push((String::new(), t::tui_read_keys_heading()));
+        for (action, label) in [
+            (Action::ToggleRail, t::tui_read_keys_next_section()),
+            (Action::ShowSources, t::tui_read_keys_sources_only()),
+            (Action::Refresh, t::tui_read_keys_try_again()),
+            (Action::Filter, t::tui_read_keys_filters()),
+        ] {
+            if let Some(key) = app.keymap.keys_for(action).first() {
+                rows.push((key.render(), format!("  {}", label)));
+            }
+        }
+    }
     for (scope, entries) in app.keymap.help() {
         rows.push((String::new(), scope.heading().to_string()));
         for (key, label) in entries {

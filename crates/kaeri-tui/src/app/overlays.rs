@@ -190,12 +190,26 @@ impl App {
             Action::Open if len > 0 => return self.confirm_overlay(visible_rows),
             // The filters overlay edits in place: the vertical axis picks a row and the
             // horizontal one walks its values, the same grammar as the Settings screen.
+            Action::Left if *overlay == Overlay::SearchFilters && self.reading_section() => {
+                super::reading::cycle_read_filter(
+                    &mut self.reading.filter,
+                    self.cursors.overlay.selected,
+                    false,
+                );
+            }
             Action::Left if *overlay == Overlay::SearchFilters => {
                 cycle_search_filter(
                     &mut self.search_filter,
                     self.cursors.overlay.selected,
                     false,
                     &self.clock,
+                );
+            }
+            Action::Right if *overlay == Overlay::SearchFilters && self.reading_section() => {
+                super::reading::cycle_read_filter(
+                    &mut self.reading.filter,
+                    self.cursors.overlay.selected,
+                    true,
                 );
             }
             Action::Right if *overlay == Overlay::SearchFilters => {
@@ -267,6 +281,9 @@ impl App {
         match self.nav.overlay() {
             Some(Overlay::ListStatus) => LibrarySegment::ALL.len(),
             Some(Overlay::Rate) => 10,
+            Some(Overlay::SearchFilters) if self.reading_section() => {
+                super::reading::READ_FILTER_ROWS
+            }
             Some(Overlay::SearchFilters) => search_filter_labels().len(),
             Some(Overlay::Conflicts) => self.conflicts.len() * 2,
             Some(Overlay::Accounts) => self.sync.len(),

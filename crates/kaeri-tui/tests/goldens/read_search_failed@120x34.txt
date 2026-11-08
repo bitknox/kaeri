@@ -1,0 +1,141 @@
+Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  ▸  Home                   │  / lantern
+  ▤  Calendar               │  filters none  ·  your sources only off
+  ▦  Seasonal               │
+▌ /  Search                 │  AniList · 4 series
+  ▥  Library                │  ▌ Lantern Street Notes                Light novel · Releasing           in Home library
+  ↓  Downloads              │    Lantern Street Notes                Manga · Releasing
+  ◇  Sources                │    The Lantern Keeper's Apprentice     Manga · Finished · 12 volumes
+  ◎  Accounts               │    Lanterns Upriver                    Webtoon · Releasing
+  ≡  Settings               │
+  ⇄  Together               │  From your sources
+                            │  Home library  server
+                            │    Lantern Street Notes, Side Stories  Light novel
+                            │    Paper Lantern Recipes               Manga
+                            │  Folders  folder
+                            │    Lantern Festival Sketchbook         Manga
+                            │  Northwind  plugin
+                            │    ▲ Northwind didn't answer. No answer in 15 s.   r try again
+                            │
+                            │  Nothing found in Demo.
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+                            │
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Reading · 4 sources                                 ↵ open   tab next section   f filters   s your sources only   ? keys
+=== styles ===
+colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
+r00 c00-04 fg=text mod=BOLD
+r00 c95-103 fg=state
+r00 c104-105 fg=text-dim
+r00 c106-106 fg=rule
+r00 c107-108 fg=text-dim
+r00 c109-119 fg=state
+r01 c00-119 fg=rule
+r02 c02-02 fg=text-dim
+r02 c05-08 fg=text-dim
+r02 c28-28 fg=rule
+r02 c31-31 fg=obi
+r02 c33-39 fg=text mod=BOLD
+r03 c02-02 fg=text-dim
+r03 c05-12 fg=text-dim
+r03 c28-28 fg=rule
+r03 c31-42 fg=text-dim
+r03 c43-47 fg=rule
+r03 c48-65 fg=text-dim
+r03 c66-68 fg=text mod=BOLD
+r04 c02-02 fg=text-dim
+r04 c05-12 fg=text-dim
+r04 c28-28 fg=rule
+r05 c00-00 fg=text-dim
+r05 c02-02 fg=text
+r05 c05-10 fg=text mod=BOLD
+r05 c28-28 fg=rule
+r05 c31-48 fg=text-dim
+r06 c02-02 fg=text-dim
+r06 c05-11 fg=text-dim
+r06 c28-28 fg=rule
+r06 c31-31 fg=obi
+r06 c33-52 fg=text mod=BOLD
+r06 c69-91 fg=text-dim
+r06 c103-117 fg=state
+r07 c02-02 fg=text-dim
+r07 c05-13 fg=text-dim
+r07 c28-28 fg=rule
+r07 c33-52 fg=text
+r07 c69-85 fg=text-dim
+r08 c02-02 fg=text-dim
+r08 c05-11 fg=text-dim
+r08 c28-28 fg=rule
+r08 c33-63 fg=text
+r08 c69-97 fg=text-dim
+r09 c02-02 fg=text-dim
+r09 c05-12 fg=text-dim
+r09 c28-28 fg=rule
+r09 c33-48 fg=text
+r09 c69-87 fg=text-dim
+r10 c02-02 fg=text-dim
+r10 c05-12 fg=text-dim
+r10 c28-28 fg=rule
+r11 c02-02 fg=text-dim
+r11 c05-12 fg=text-dim
+r11 c28-28 fg=rule
+r11 c31-47 fg=text mod=BOLD
+r12 c28-28 fg=rule
+r12 c31-42 fg=text mod=BOLD
+r12 c45-50 fg=text-dim
+r13 c28-28 fg=rule
+r13 c33-66 fg=text
+r13 c69-79 fg=text-dim
+r14 c28-28 fg=rule
+r14 c33-53 fg=text
+r14 c69-73 fg=text-dim
+r15 c28-28 fg=rule
+r15 c31-37 fg=text mod=BOLD
+r15 c40-45 fg=text-dim
+r16 c28-28 fg=rule
+r16 c33-59 fg=text
+r16 c69-73 fg=text-dim
+r17 c28-28 fg=rule
+r17 c31-39 fg=text mod=BOLD
+r17 c42-47 fg=text-dim
+r18 c28-28 fg=rule
+r18 c33-33 fg=alert
+r18 c35-77 fg=text
+r18 c81-81 fg=text mod=BOLD
+r18 c83-91 fg=text-dim
+r19 c28-28 fg=rule
+r20 c28-28 fg=rule
+r20 c31-52 fg=text-dim
+r21 c28-28 fg=rule
+r22 c28-28 fg=rule
+r23 c28-28 fg=rule
+r24 c28-28 fg=rule
+r25 c28-28 fg=rule
+r26 c28-28 fg=rule
+r27 c28-28 fg=rule
+r28 c28-28 fg=rule
+r29 c28-28 fg=rule
+r30 c28-28 fg=rule
+r31 c28-28 fg=rule
+r32 c00-119 fg=rule
+r33 c00-18 fg=text-dim
+r33 c52-52 fg=text
+r33 c53-60 fg=text-dim
+r33 c61-63 fg=text
+r33 c64-79 fg=text-dim
+r33 c80-80 fg=text
+r33 c81-91 fg=text-dim
+r33 c92-92 fg=text
+r33 c93-113 fg=text-dim
+r33 c114-114 fg=text
+r33 c115-119 fg=text-dim

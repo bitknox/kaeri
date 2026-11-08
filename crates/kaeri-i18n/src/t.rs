@@ -6980,6 +6980,136 @@ pub fn settings_note_token_storage() -> String {
     text("settings-note-token-storage", &[])
 }
 
+/// Heading over AniList's results in reading's search, with how many it found. Shown once every result is listed.
+pub fn tui_read_anilist_count(n: i64) -> String {
+    text("tui-read-anilist-count", &[("n", Arg::Int(n))])
+}
+
+/// Heading over AniList's results while more pages are to come, or while AniList is asked.
+pub fn tui_read_anilist() -> String {
+    text("tui-read-anilist", &[])
+}
+
+/// The line under the search field when no filter is set. Lower case, as the terminal's metadata lines are.
+pub fn tui_read_filters_none() -> String {
+    text("tui-read-filters-none", &[])
+}
+
+/// The line under the search field, with the filters set. The filters are already joined, such as "Manga · Japan".
+pub fn tui_read_filters(set: &str) -> String {
+    text("tui-read-filters", &[("set", Arg::Text(set))])
+}
+
+/// On the line under the search field: the switch that hides AniList's results. "on" or "off" follows it in bold.
+pub fn tui_read_sources_only() -> String {
+    text("tui-read-sources-only", &[])
+}
+
+/// The state of that switch, after it.
+pub fn tui_read_on() -> String {
+    text("tui-read-on", &[])
+}
+
+/// The state of that switch, after it.
+pub fn tui_read_off() -> String {
+    text("tui-read-off", &[])
+}
+
+/// Beside a source's name in the search results: the source is a book server.
+pub fn tui_read_kind_server() -> String {
+    text("tui-read-kind-server", &[])
+}
+
+/// Beside a source's name in the search results: the source is the folders on this computer.
+pub fn tui_read_kind_folder() -> String {
+    text("tui-read-kind-folder", &[])
+}
+
+/// Beside a source's name in the search results: the source is a { -plugin }.
+pub fn tui_read_kind_plugin() -> String {
+    text("tui-read-kind-plugin", &[])
+}
+
+/// Beside an AniList result that one of the person's sources has. The source is its name. Lower case, as the terminal's metadata lines are.
+pub fn tui_read_in_source(source: &str) -> String {
+    text("tui-read-in-source", &[("source", Arg::Text(source))])
+}
+
+/// Beside an AniList result that more than one of the person's sources has. Always 2 or more.
+pub fn tui_read_in_sources(n: i64) -> String {
+    text("tui-read-in-sources", &[("n", Arg::Int(n))])
+}
+
+/// After a source that didn't answer, beside the key that asks it again. Lower case.
+pub fn tui_read_try_again() -> String {
+    text("tui-read-try-again", &[])
+}
+
+/// Toast when "Your sources only" turns on.
+pub fn tui_read_sources_only_on() -> String {
+    text("tui-read-sources-only-on", &[])
+}
+
+/// Toast when "Your sources only" turns off.
+pub fn tui_read_sources_only_off() -> String {
+    text("tui-read-sources-only-off", &[])
+}
+
+/// Left of the status line on reading's Home and Search: how many sources are asked.
+pub fn tui_read_status(n: i64) -> String {
+    text("tui-read-status", &[("n", Arg::Int(n))])
+}
+
+/// Left of the status line on reading's Home and Search, when the terminal is narrow.
+pub fn tui_read_status_short() -> String {
+    text("tui-read-status-short", &[])
+}
+
+/// Hint in the status line on reading's Search: Tab moves between AniList's results and the sources'. Shown in lower case.
+pub fn tui_read_hint_next_section() -> String {
+    text("tui-read-hint-next-section", &[])
+}
+
+/// The same hint when the terminal is narrow.
+pub fn tui_read_hint_section() -> String {
+    text("tui-read-hint-section", &[])
+}
+
+/// Hint in the status line on reading's Search: the key that turns "Your sources only" on and off. Shown in lower case.
+pub fn tui_read_hint_sources_only() -> String {
+    text("tui-read-hint-sources-only", &[])
+}
+
+/// The same hint when the terminal is narrow.
+pub fn tui_read_hint_sources_only_short() -> String {
+    text("tui-read-hint-sources-only-short", &[])
+}
+
+/// Heading of the reading keys in the key reference.
+pub fn tui_read_keys_heading() -> String {
+    text("tui-read-keys-heading", &[])
+}
+
+/// A row of the key reference: move between AniList's results and the sources'.
+pub fn tui_read_keys_next_section() -> String {
+    text("tui-read-keys-next-section", &[])
+}
+
+/// A row of the key reference: turn "Your sources only" on or off.
+pub fn tui_read_keys_sources_only() -> String {
+    text("tui-read-keys-sources-only", &[])
+}
+
+/// A row of the key reference: ask a source that didn't answer again.
+pub fn tui_read_keys_try_again() -> String {
+    text("tui-read-keys-try-again", &[])
+}
+
+/// A row of the key reference: the filters of reading's search.
+pub fn tui_read_keys_filters() -> String {
+    text("tui-read-keys-filters", &[])
+}
+
 /// Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 pub fn stores_needs_larger_terminal() -> String {
     text("stores-needs-larger-terminal", &[])

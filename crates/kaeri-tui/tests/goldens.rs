@@ -465,7 +465,14 @@ scenarios! {
     home_native,
     home_long,
     home_first_run,
-    home_reading_only,
+    read_home_first_run,
+    read_home_history,
+    read_search_mid,
+    read_search_failed,
+    read_search_sources_only,
+    read_search_nothing,
+    read_search_filters,
+    read_keys,
     medium_first_run,
     medium_turn_off,
     settings_kaeri_is_for,
@@ -3221,10 +3228,556 @@ fn medium_view(
     })
 }
 
-/// Home on a computer set to reading alone: the page that says reading is in the apps.
-fn home_reading_only(s: &mut Screen) {
-    settled_on(s, 1);
+// ── Reading ────────────────────────────────────────────────────────────────────────────────────
+
+mod read {
+    use kaeri_core::{books::WorkId, media::Medium};
+    use kaeri_model::{
+        Msg, ReadingMsg,
+        book_sources::{
+            BookFolderRow, BookFolderScan, BookPluginRow, BookServerKind, BookServerRow,
+            BookSourceEvent, BookSourcesView,
+        },
+        event::Event,
+        reading::{
+            ReadAnilistState, ReadHomeEnd, ReadHomeRow, ReadRowFormat, ReadRowKind,
+            ReadSearchQuery, ReadSourceGroup, ReadSourceJoin, ReadSourceSearch,
+            ReadSourceState, ReadingEvent, ReadingFailure, ReadingHomeView, WorkTile,
+            count_words, kind_words, status_words,
+        },
+    };
+
+    /// A made-up series: its title, kind and facts as the engine words them.
+    pub fn tile(
+        id: &str,
+        title: &str,
+        medium: Medium,
+        format: &str,
+        origin: &str,
+        status: Option<&str>,
+        volumes: Option<u32>,
+    ) -> WorkTile {
+        let mut facts = vec![kind_words(Some(format), medium, Some(origin))];
+        facts.extend(status.and_then(status_words));
+        facts.extend(volumes.and_then(|v| count_words(medium, None, Some(v))));
+        WorkTile {
+            work: WorkId::new(id),
+            title: title.into(),
+            medium,
+            cover: None,
+            format_label: Some(format.into()),
+            progress: None,
+            next: None,
+            new_chapter: false,
+            adult: false,
+            facts,
+            demo: false,
+            not_in_sources: false,
+        }
+    }
+
+    /// A source's hit: the engine says only its kind.
+    pub fn hit(id: &str, title: &str, medium: Medium) -> WorkTile {
+        WorkTile {
+            facts: vec![kind_words(None, medium, None)],
+            ..tile(id, title, medium, "manga", "JP", None, None)
+        }
+    }
+
+    /// The person's sources: a server, the folders, a plugin.
+    pub fn sources() -> Event {
+        Event::BookSources(BookSourceEvent::View(BookSourcesView {
+            folders: vec![BookFolderRow {
+                id: "comics".into(),
+                name: "Comics".into(),
+                scan: BookFolderScan::Done,
+                path: None,
+                series: 12,
+                removed: false,
+                files: 40,
+                skipped: 0,
+            }],
+            servers: vec![BookServerRow {
+                id: "home-library".into(),
+                kind: BookServerKind::Komga,
+                name: "Home library".into(),
+                address: "https://books.example".into(),
+                series: 80,
+                report_progress: true,
+                off: false,
+                signed_out: false,
+                libraries: 2,
+                empty: false,
+                rechecks_at: None,
+                key_last4: None,
+                progress_pending: 0,
+                progress_sending: false,
+                progress_saved_at: None,
+                progress_problem: None,
+                progress_problem_at: None,
+            }],
+            plugins: vec![BookPluginRow {
+                id: "northwind".into(),
+                name: "Northwind".into(),
+                version: "1.0.0".into(),
+                media: vec![Medium::Manga, Medium::Novel],
+                languages: vec!["en".into()],
+                off: false,
+                store: None,
+            }],
+            ..Default::default()
+        }))
+    }
+
+    pub fn anilist() -> Vec<WorkTile> {
+        vec![
+            tile(
+                "anilist:1",
+                "Lantern Street Notes",
+                Medium::Novel,
+                "novel",
+                "JP",
+                Some("releasing"),
+                None,
+            ),
+            tile(
+                "anilist:2",
+                "Lantern Street Notes",
+                Medium::Manga,
+                "manga",
+                "JP",
+                Some("releasing"),
+                None,
+            ),
+            tile(
+                "anilist:3",
+                "The Lantern Keeper's Apprentice",
+                Medium::Manga,
+                "manga",
+                "JP",
+                Some("finished"),
+                Some(12),
+            ),
+            tile(
+                "anilist:4",
+                "Lanterns Upriver",
+                Medium::Manga,
+                "webtoon",
+                "KR",
+                Some("releasing"),
+                None,
+            ),
+        ]
+    }
+
+    pub fn search(query: &ReadSearchQuery, tiles: Vec<WorkTile>) -> Event {
+        let total = Some(tiles.len() as u32);
+        Event::Reading(ReadingEvent::Search {
+            query: query.clone(),
+            page: 0,
+            tiles,
+            has_more: false,
+            other_scope: None,
+            total,
+        })
+    }
+
+    fn group(
+        id: &str,
+        name: &str,
+        state: ReadSourceState,
+        tiles: Vec<WorkTile>,
+        joined: u32,
+    ) -> ReadSourceGroup {
+        ReadSourceGroup { source_id: id.into(), source_name: name.into(), state, tiles, joined }
+    }
+
+    /// Every source's group, Northwind standing as `northwind`.
+    pub fn groups(
+        query: &ReadSearchQuery,
+        anilist: ReadAnilistState,
+        northwind: ReadSourceState,
+    ) -> Event {
+        let done = !matches!(northwind, ReadSourceState::Asking);
+        Event::Reading(ReadingEvent::SourceSearch(Box::new(ReadSourceSearch {
+            query: query.clone(),
+            anilist,
+            groups: vec![
+                group(
+                    "home-library",
+                    "Home library",
+                    ReadSourceState::Hits,
+                    vec![
+                        hit(
+                            "home-library:7",
+                            "Lantern Street Notes, Side Stories",
+                            Medium::Novel,
+                        ),
+                        hit("home-library:9", "Paper Lantern Recipes", Medium::Manga),
+                    ],
+                    1,
+                ),
+                group(
+                    "folders",
+                    "Folders",
+                    ReadSourceState::Hits,
+                    vec![hit("folders:3", "Lantern Festival Sketchbook", Medium::Manga)],
+                    0,
+                ),
+                group("northwind", "Northwind", northwind, Vec::new(), 0),
+                group("demo", "Demo", ReadSourceState::Nothing, Vec::new(), 0),
+            ],
+            joins: if anilist == ReadAnilistState::Answered {
+                vec![ReadSourceJoin {
+                    work: WorkId::new("anilist:1"),
+                    source_ids: vec!["home-library".into()],
+                    source_names: vec!["Home library".into()],
+                }]
+            } else {
+                Vec::new()
+            },
+            done,
+        })))
+    }
+
+    /// Every source found nothing.
+    pub fn nothing(query: &ReadSearchQuery) -> Event {
+        let none =
+            |id: &str, name: &str| group(id, name, ReadSourceState::Nothing, Vec::new(), 0);
+        Event::Reading(ReadingEvent::SourceSearch(Box::new(ReadSourceSearch {
+            query: query.clone(),
+            anilist: ReadAnilistState::Answered,
+            groups: vec![
+                none("home-library", "Home library"),
+                none("folders", "Folders"),
+                none("northwind", "Northwind"),
+                none("demo", "Demo"),
+            ],
+            joins: Vec::new(),
+            done: true,
+        })))
+    }
+
+    pub fn failed() -> ReadSourceState {
+        ReadSourceState::Failed { failure: ReadingFailure::Offline }
+    }
+
+    fn row(
+        id: &str,
+        kind: ReadRowKind,
+        format: Option<ReadRowFormat>,
+        title: Msg,
+        side: Option<Msg>,
+        tiles: Vec<WorkTile>,
+        view_all: bool,
+    ) -> ReadHomeRow {
+        let pending = tiles.is_empty();
+        ReadHomeRow {
+            id: id.into(),
+            kind,
+            format,
+            title,
+            side,
+            tiles,
+            view_all: view_all.then(|| ReadSearchQuery {
+                sort: Some("TRENDING_DESC".into()),
+                formats: vec!["manga".into()],
+                ..Default::default()
+            }),
+            pending,
+        }
+    }
+
+    fn shelf(
+        prefix: &str,
+        names: &[&str],
+        medium: Medium,
+        format: &str,
+        origin: &str,
+    ) -> Vec<WorkTile> {
+        names
+            .iter()
+            .enumerate()
+            .map(|(n, name)| {
+                tile(
+                    &format!("{prefix}:{n}"),
+                    name,
+                    medium,
+                    format,
+                    origin,
+                    Some("releasing"),
+                    None,
+                )
+            })
+            .collect()
+    }
+
+    fn trending_manga() -> Vec<WorkTile> {
+        shelf(
+            "tm",
+            &[
+                "Iron Kite Brigade",
+                "Saltwind Diary",
+                "Moss and Iron",
+                "Foxfire Ledger",
+                "Second Floor Swordsmith",
+                "Kujira Post Office",
+            ],
+            Medium::Manga,
+            "manga",
+            "JP",
+        )
+    }
+
+    fn trending_webtoons() -> Vec<WorkTile> {
+        shelf(
+            "tw",
+            &[
+                "Rooftop Herbalist",
+                "Wren and the Iron Bridge",
+                "Seventh Platform Bookshop",
+                "Sandglass Atelier",
+            ],
+            Medium::Manga,
+            "webtoon",
+            "KR",
+        )
+    }
+
+    fn trending_novels() -> Vec<WorkTile> {
+        shelf(
+            "tn",
+            &["Tidebell Cartographer", "Snowfield Grimoire", "Letters on the Wind"],
+            Medium::Novel,
+            "novel",
+            "JP",
+        )
+    }
+
+    /// A first run: Trending of each format, New manga still on its way.
+    pub fn home_first_run() -> Event {
+        let r = Msg::Reading;
+        Event::Reading(ReadingEvent::Home(Box::new(ReadingHomeView {
+            rows: vec![
+                row(
+                    "trending-manga",
+                    ReadRowKind::Trending,
+                    Some(ReadRowFormat::Manga),
+                    r(ReadingMsg::ReadHomeTrendingManga),
+                    None,
+                    trending_manga(),
+                    true,
+                ),
+                row(
+                    "trending-webtoons",
+                    ReadRowKind::Trending,
+                    Some(ReadRowFormat::Webtoons),
+                    r(ReadingMsg::ReadHomeTrendingWebtoons),
+                    None,
+                    trending_webtoons(),
+                    true,
+                ),
+                row(
+                    "trending-novels",
+                    ReadRowKind::Trending,
+                    Some(ReadRowFormat::Novels),
+                    r(ReadingMsg::ReadHomeTrendingNovels),
+                    None,
+                    trending_novels(),
+                    true,
+                ),
+                row(
+                    "new-manga",
+                    ReadRowKind::New,
+                    Some(ReadRowFormat::Manga),
+                    r(ReadingMsg::ReadHomeNewManga),
+                    Some(r(ReadingMsg::ReadHomeNewSide)),
+                    Vec::new(),
+                    true,
+                ),
+            ],
+            ..Default::default()
+        })))
+    }
+
+    /// With history: Continue and Up next, then the rows the reading mix picks, one title the
+    /// sources did not have.
+    pub fn home_history() -> Event {
+        let r = Msg::Reading;
+        let mut reading = shelf(
+            "cr",
+            &["Harbor Light Recipes", "Glasswing Courier"],
+            Medium::Manga,
+            "manga",
+            "JP",
+        );
+        reading[0].next = Some(r(ReadingMsg::ReadingNextChapter { chapter: "14".into() }));
+        reading[0].new_chapter = true;
+        reading[1].next = Some(r(ReadingMsg::ReadingNextChapter { chapter: "3".into() }));
+        let mut manga = trending_manga();
+        manga[1].not_in_sources = true;
+        Event::Reading(ReadingEvent::Home(Box::new(ReadingHomeView {
+            continue_reading: reading,
+            up_next: shelf("un", &["Orchard of Small Hours"], Medium::Manga, "manga", "JP"),
+            rows: vec![
+                row(
+                    "trending-manga",
+                    ReadRowKind::Trending,
+                    Some(ReadRowFormat::Manga),
+                    r(ReadingMsg::ReadHomeTrendingManga),
+                    None,
+                    manga,
+                    true,
+                ),
+                row(
+                    "because",
+                    ReadRowKind::Because,
+                    None,
+                    Msg::HomeBecause { title: "Harbor Light Recipes".into() },
+                    None,
+                    shelf(
+                        "bc",
+                        &["Lamplight Bakery", "Quiet Ferry Days"],
+                        Medium::Manga,
+                        "manga",
+                        "JP",
+                    ),
+                    false,
+                ),
+                row(
+                    "new-manga",
+                    ReadRowKind::New,
+                    Some(ReadRowFormat::Manga),
+                    r(ReadingMsg::ReadHomeNewManga),
+                    Some(r(ReadingMsg::ReadHomeNewSide)),
+                    shelf(
+                        "nm",
+                        &["Copper Moth Station", "Thistle Road"],
+                        Medium::Manga,
+                        "manga",
+                        "JP",
+                    ),
+                    true,
+                ),
+                row(
+                    "genre",
+                    ReadRowKind::MoreGenre,
+                    None,
+                    Msg::HomeMoreGenre { genre: "Romance".into() },
+                    None,
+                    shelf(
+                        "gr",
+                        &["Paper Umbrella Letters", "Two Lamps Apart"],
+                        Medium::Manga,
+                        "manga",
+                        "JP",
+                    ),
+                    true,
+                ),
+                row(
+                    "finished-manga",
+                    ReadRowKind::Finished,
+                    Some(ReadRowFormat::Manga),
+                    r(ReadingMsg::ReadHomeFinishedManga),
+                    Some(r(ReadingMsg::ReadHomeFinishedSide)),
+                    shelf("fm", &["Lantern Ferry Timetables"], Medium::Manga, "manga", "JP"),
+                    true,
+                ),
+            ],
+            end: Some(ReadHomeEnd::Everything),
+            ..Default::default()
+        })))
+    }
+}
+
+/// A computer set to reading alone, its sources known, on `section`.
+fn reading_on(s: &mut Screen, section: u8) {
+    settled_on(s, section);
     s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Read, None));
+    s.apply(read::sources());
+}
+
+/// Reading's Home on a first run: Trending of each format, New manga held for its titles.
+fn read_home_first_run(s: &mut Screen) {
+    reading_on(s, 1);
+    s.apply(read::home_first_run());
+    s.wait(Duration::from_secs(1));
+}
+
+/// Reading's Home with history: the person's shelves, then the rows, one title not found.
+fn read_home_history(s: &mut Screen) {
+    reading_on(s, 1);
+    s.apply(read::home_history());
+    s.press(&["j", "j", "j", "j"]);
+}
+
+/// "lantern" typed and asked: AniList in, Northwind still asking.
+fn read_search_mid(s: &mut Screen) {
+    reading_on(s, 4);
+    s.type_text("lantern");
+    s.press(&["enter"]);
+    let query = s.app.read_query();
+    s.apply(read::search(&query, read::anilist()));
+    s.apply(read::groups(
+        &query,
+        kaeri_model::reading::ReadAnilistState::Answered,
+        kaeri_model::reading::ReadSourceState::Asking,
+    ));
+    s.wait(Duration::from_secs(1));
+}
+
+/// Every source in, Northwind gave no answer in time, the cursor in the results.
+fn read_search_failed(s: &mut Screen) {
+    reading_on(s, 4);
+    s.type_text("lantern");
+    s.press(&["enter"]);
+    let query = s.app.read_query();
+    s.apply(read::search(&query, read::anilist()));
+    s.apply(read::groups(
+        &query,
+        kaeri_model::reading::ReadAnilistState::Answered,
+        kaeri_model::reading::ReadSourceState::TimedOut { seconds: 15 },
+    ));
+    s.press(&["down"]);
+}
+
+/// `s` in the results: Your sources only, AniList skipped, Northwind offline.
+fn read_search_sources_only(s: &mut Screen) {
+    reading_on(s, 4);
+    s.type_text("lantern");
+    s.press(&["enter"]);
+    let query = s.app.read_query();
+    s.apply(read::search(&query, read::anilist()));
+    s.press(&["down", "s"]);
+    let query = s.app.read_query();
+    s.apply(read::groups(
+        &query,
+        kaeri_model::reading::ReadAnilistState::Skipped,
+        read::failed(),
+    ));
+}
+
+/// Nothing anywhere for the words.
+fn read_search_nothing(s: &mut Screen) {
+    reading_on(s, 4);
+    s.type_text("quillmarsh");
+    s.press(&["enter"]);
+    let query = s.app.read_query();
+    s.apply(read::search(&query, Vec::new()));
+    s.apply(read::nothing(&query));
+}
+
+/// The key reference while reading is all this computer is for: reading's keys first.
+fn read_keys(s: &mut Screen) {
+    reading_on(s, 1);
+    s.apply(read::home_first_run());
+    s.press(&["?"]);
+}
+
+/// Reading's search filters, the format set to manga.
+fn read_search_filters(s: &mut Screen) {
+    reading_on(s, 4);
+    s.press(&["ctrl+f", "right"]);
 }
 
 /// The first run's second question, nothing chosen and no way to skip it.

@@ -46,7 +46,7 @@ pub(crate) fn said(text: String) -> &'static str {
 pub use action::{Action, Scope};
 pub use binding::Binding;
 pub use hints::status_hints;
-pub(crate) use hints::status_hints_paged;
+pub(crate) use hints::{reading_hints, status_hints_paged};
 
 /// The resolved binding table.
 #[derive(Debug, Clone)]

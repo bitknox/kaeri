@@ -8,7 +8,7 @@ use kaeri_model::{
 };
 
 use super::{App, info};
-use crate::nav::Overlay;
+use crate::nav::{Overlay, Section};
 
 /// The three answers, in the order they are offered.
 pub const CHOICES: [KaeriIsFor; 3] = [KaeriIsFor::Watch, KaeriIsFor::Read, KaeriIsFor::Both];
@@ -52,7 +52,15 @@ pub struct MediumOff {
 impl App {
     /// The engine's word on what Kaeri is for here. A question it carries is asked once.
     pub(super) fn apply_medium(&mut self, view: MediumView) {
+        let was = self.reading_only();
         self.medium = Some(view);
+        // Home and Search are reading's now, or the shows' again: what they show is asked anew.
+        if was != self.reading_only()
+            && matches!(self.nav.section(), Section::Home | Section::Search)
+            && let Some(task) = self.reload()
+        {
+            self.commands.push(task);
+        }
         self.open_medium_ask();
     }
 
@@ -90,7 +98,7 @@ impl App {
             && matches!(self.medium_ask, Some(MediumAsk::FirstRun))
     }
 
-    /// Whether this computer is set to reading alone, so Home is the page saying where to read.
+    /// Whether this computer is set to reading alone, so Home and Search are reading's.
     pub fn reading_only(&self) -> bool {
         self.medium
             .as_ref()
@@ -249,7 +257,7 @@ mod tests {
     }
 
     #[test]
-    fn reading_alone_puts_the_page_on_home_and_the_key_changes_it() {
+    fn reading_alone_gives_home_to_reading_and_the_key_changes_it() {
         let mut a = app();
         assert!(!a.reading_only());
         a.apply(Event::Medium(view(KaeriIsFor::Read, None)));

@@ -194,7 +194,7 @@ pub(crate) fn status_hints_paged(
         let enter = if app.search_opens_on_enter() { hint_open() } else { hint_search() };
         let mut hints = vec![("↵".to_string(), enter)];
         // ↓ is how the keyboard gets from the field into the results; with none it does nothing.
-        if !app.content.is_empty() {
+        if app.search_has_results() {
             hints.push(("↓".to_string(), hint_results()));
         }
         if let Some(key) = app.keymap.keys_for(Action::FilterSearch).first() {
@@ -460,6 +460,57 @@ pub(crate) fn status_hints_paged(
     let hints =
         wanted.into_iter().filter_map(|(action, label)| Some((key(action)?, label))).collect();
     with_help(keymap, hints)
+}
+
+/// The status line's hints on reading's Home and Search with the stage focused, `None`
+/// elsewhere. `wide` picks the longer words, and the filters' key, which a narrow line leaves out
+/// as it leaves out the filter line.
+pub(crate) fn reading_hints(
+    app: &crate::app::App,
+    wide: bool,
+) -> Option<Vec<(String, &'static str)>> {
+    if !app.reading_here()
+        || app.nav.has_overlay()
+        || app.is_typing()
+        || app.nav.focus() != crate::nav::Focus::Stage
+    {
+        return None;
+    }
+    let keymap = &app.keymap;
+    let key = |action: Action| keymap.keys_for(action).first().map(Binding::render);
+    let items = app.read_items();
+    let search = app.nav.section() == Section::Search;
+    let mut wanted: Vec<(Action, &'static str)> = Vec::new();
+    if !items.is_empty() {
+        wanted.push((Action::Open, hint_open()));
+        let parts = items.windows(2).any(|pair| pair[0].part() != pair[1].part());
+        if parts {
+            wanted.push((
+                Action::ToggleRail,
+                if wide {
+                    said(t::tui_read_hint_next_section())
+                } else {
+                    said(t::tui_read_hint_section())
+                },
+            ));
+        }
+    }
+    if search {
+        if wide {
+            wanted.push((Action::Filter, said(t::keys_hint_filters())));
+        }
+        wanted.push((
+            Action::ShowSources,
+            if wide {
+                said(t::tui_read_hint_sources_only())
+            } else {
+                said(t::tui_read_hint_sources_only_short())
+            },
+        ));
+    }
+    let hints =
+        wanted.into_iter().filter_map(|(action, label)| Some((key(action)?, label))).collect();
+    Some(with_help(keymap, hints))
 }
 
 /// `? keys` last, so it is the hint a narrow status line keeps.

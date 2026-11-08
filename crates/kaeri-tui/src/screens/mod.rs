@@ -22,6 +22,7 @@ mod lists;
 mod overlays;
 mod playback;
 mod providers;
+mod reading;
 mod settings;
 mod stores;
 mod title;
@@ -157,7 +158,9 @@ fn render_stage(buf: &mut Buffer, app: &App, area: Rect) -> Option<usize> {
         StageView::StoreMembers(id) => render_store_members(buf, app, inner, id),
         StageView::Devices => render_devices(buf, app, inner),
         StageView::Section(section) => match section {
-            Section::Home if app.reading_only() => render_reading_page(buf, app, inner),
+            Section::Home | Section::Search if app.reading_only() => {
+                reading::render_reading(buf, app, inner)
+            }
             Section::Home | Section::Seasonal | Section::Search | Section::Calendar => {
                 render_list(buf, app, inner, *section)
             }
@@ -232,47 +235,4 @@ pub fn render_to_buffer(app: &mut App, width: u16, height: u16) -> Buffer {
     terminal.draw(|f| report = render(f, app)).expect("draw");
     app.took_frame(report);
     terminal.backend().buffer().clone()
-}
-
-/// Home while this computer is set to reading alone: where reading is, and the key that changes it.
-fn render_reading_page(buf: &mut Buffer, app: &App, area: Rect) {
-    use crate::{
-        keymap::Action,
-        theme::Role,
-        widgets::{truncate, wrap},
-    };
-    use kaeri_i18n::t;
-    if area.height < 3 || area.width < 8 {
-        return;
-    }
-    let width = area.width.saturating_sub(2) as usize;
-    buf.set_string(
-        area.left() + 1,
-        area.top() + 1,
-        truncate(&t::tui_medium_read_title(), width),
-        app.palette.style(Role::Text).add_modifier(ratatui::style::Modifier::BOLD),
-    );
-    let mut y = area.top() + 3;
-    for text in wrap(&t::tui_medium_read_line(), width, 4) {
-        if y >= area.bottom() {
-            return;
-        }
-        buf.set_string(
-            area.left() + 1,
-            y,
-            truncate(&text, width),
-            app.palette.style(Role::TextDim),
-        );
-        y += 1;
-    }
-    y += 1;
-    if y < area.bottom() {
-        let change = t::tui_medium_read_change(&app.key_for(Action::ChooseMedium));
-        buf.set_string(
-            area.left() + 1,
-            y,
-            truncate(&change, width),
-            app.palette.style(Role::Text),
-        );
-    }
 }

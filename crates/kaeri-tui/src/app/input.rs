@@ -147,6 +147,11 @@ impl App {
             return task;
         }
 
+        // Reading's Home and Search: Enter, Your sources only, Tab, `r` and `f` are theirs.
+        if let Some(task) = self.reading_key(action) {
+            return task;
+        }
+
         // Title commands have nothing to act on without a title, on screen or highlighted, and
         // each says so the same way rather than some doing nothing at all.
         if action.acts_on_a_title()
@@ -453,7 +458,7 @@ impl App {
             // instead ran it past the end of the list, unbounded and unscrolled, with `j` and
             // `k` typed rather than moving it.
             Action::Down | Action::PageDown
-                if self.on_search_root() && !in_prompt && !self.content.is_empty() =>
+                if self.on_search_root() && !in_prompt && self.search_has_results() =>
             {
                 self.search_in_results = true;
             }

@@ -4401,6 +4401,96 @@ settings-note-upload-limit = Caps all torrent upload, so seeding never slows pla
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Use --token-to-file to move an existing token.
 
+# Heading over AniList's results in reading's search, with how many it found. Shown once every result is listed.
+tui-read-anilist-count =
+    { $n ->
+        [one] AniList · 1 series
+       *[other] AniList · { $n } series
+    }
+
+# Heading over AniList's results while more pages are to come, or while AniList is asked.
+tui-read-anilist = AniList
+
+# The line under the search field when no filter is set. Lower case, as the terminal's metadata lines are.
+tui-read-filters-none = filters none
+
+# The line under the search field, with the filters set. The filters are already joined, such as "Manga · Japan".
+tui-read-filters = filters { $set }
+
+# On the line under the search field: the switch that hides AniList's results. "on" or "off" follows it in bold.
+tui-read-sources-only = your sources only
+
+# The state of that switch, after it.
+tui-read-on = on
+
+# The state of that switch, after it.
+tui-read-off = off
+
+# Beside a source's name in the search results: the source is a book server.
+tui-read-kind-server = server
+
+# Beside a source's name in the search results: the source is the folders on this computer.
+tui-read-kind-folder = folder
+
+# Beside a source's name in the search results: the source is a { -plugin }.
+tui-read-kind-plugin = plugin
+
+# Beside an AniList result that one of the person's sources has. The source is its name. Lower case, as the terminal's metadata lines are.
+tui-read-in-source = in { $source }
+
+# Beside an AniList result that more than one of the person's sources has. Always 2 or more.
+tui-read-in-sources =
+    { $n ->
+        [one] in { $n } of your sources
+       *[other] in { $n } of your sources
+    }
+
+# After a source that didn't answer, beside the key that asks it again. Lower case.
+tui-read-try-again = try again
+
+# Toast when "Your sources only" turns on.
+tui-read-sources-only-on = Your sources only. AniList's results are hidden.
+
+# Toast when "Your sources only" turns off.
+tui-read-sources-only-off = AniList's results show again.
+
+# Left of the status line on reading's Home and Search: how many sources are asked.
+tui-read-status =
+    { $n ->
+        [one] Reading · 1 source
+       *[other] Reading · { $n } sources
+    }
+
+# Left of the status line on reading's Home and Search, when the terminal is narrow.
+tui-read-status-short = Reading
+
+# Hint in the status line on reading's Search: Tab moves between AniList's results and the sources'. Shown in lower case.
+tui-read-hint-next-section = Next section
+
+# The same hint when the terminal is narrow.
+tui-read-hint-section = Section
+
+# Hint in the status line on reading's Search: the key that turns "Your sources only" on and off. Shown in lower case.
+tui-read-hint-sources-only = Your sources only
+
+# The same hint when the terminal is narrow.
+tui-read-hint-sources-only-short = Sources only
+
+# Heading of the reading keys in the key reference.
+tui-read-keys-heading = Reading
+
+# A row of the key reference: move between AniList's results and the sources'.
+tui-read-keys-next-section = Next section of Search
+
+# A row of the key reference: turn "Your sources only" on or off.
+tui-read-keys-sources-only = Your sources only, on or off
+
+# A row of the key reference: ask a source that didn't answer again.
+tui-read-keys-try-again = Ask a source again
+
+# A row of the key reference: the filters of reading's search.
+tui-read-keys-filters = Search filters
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Needs a larger terminal
 
