@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 39] = [
+pub const NAMES: [&str; 41] = [
     "read",
     "read-updates",
     "read-library",
@@ -43,12 +43,15 @@ pub const NAMES: [&str; 39] = [
     "read-turn-a",
     "read-turn-b",
     "read-strip",
-    // The slides come before the end, which leaves the place at the chapter's last image.
     "read-strip-slide-a",
     "read-strip-slide-b",
     "read-strip-end",
     "read-strip-mode",
     "read-strip-light",
+    // Last of the strip's: running on reads chapter 2 to its end, and the marker shot opens it
+    // at its foot after that.
+    "read-strip-flowed",
+    "read-strip-marker",
     "read-chapters",
     "read-chapters-list",
     "read-novel",
@@ -263,10 +266,23 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             read(shell, STRIP, "2");
             4.0
         }
+        // After the last chapter there is, the strip ends on the end page.
         "read-strip-end" => {
-            read(shell, STRIP, "2");
+            read(shell, STRIP, "3");
             later(shell, 2500, |reader| reader.shot_end());
             4.0
+        }
+        // The marker into chapter 3 coming up, and chapter 3 run on under it once the marker
+        // crossed the middle, its first images in.
+        "read-strip-marker" => {
+            read(shell, STRIP, "2");
+            later(shell, 2500, |reader| reader.shot_marker(0.6));
+            4.0
+        }
+        "read-strip-flowed" => {
+            read(shell, STRIP, "2");
+            later(shell, 2500, |reader| reader.shot_marker(0.15));
+            6.0
         }
         // Space in a strip 60 ms and 140 ms in: the slide on the quick spring.
         "read-strip-slide-a" | "read-strip-slide-b" => {

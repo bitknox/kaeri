@@ -42,6 +42,7 @@ use crate::{motion, say, window::Ctx};
 
 mod end;
 mod sheet;
+mod trail;
 
 /// The chrome leaves this long after the pointer stops.
 const CHROME_REST: Duration = Duration::from_secs(2);
@@ -109,6 +110,10 @@ struct State {
     preview: Option<(ChapterId, gdk::Texture)>,
     /// The end page is up over a novel.
     novel_end: bool,
+    /// The chapter a strip ran on into, until it has opened.
+    flowing: Option<ChapterId>,
+    /// The open chapter came in under the strip's marker: it starts where the scroll is.
+    flowed: bool,
 }
 
 pub struct Reader {
@@ -124,6 +129,8 @@ pub struct Reader {
     strip: gtk::Box,
     /// The end page's place at the foot of a strip.
     strip_foot: gtk::Box,
+    /// The chapters a strip ran on from, and the marker into the next one.
+    trail: trail::Trail,
     strip_scroll: gtk::ScrolledWindow,
     /// Each scroll the strip asks for; an older one that has not landed yet gives way.
     strip_scroll_ask: Rc<Cell<u32>>,
@@ -215,9 +222,12 @@ impl Reader {
         strip_foot.set_margin_top(64);
         strip_foot.set_margin_bottom(160);
         strip_foot.set_halign(gtk::Align::Center);
+        let trail = trail::Trail::new();
         let strip_column = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        strip_column.append(&trail.above);
         strip_column.append(&strip);
         strip_column.append(&strip_foot);
+        strip_column.append(&trail.foot);
         let strip_scroll = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
             .child(&strip_column)
@@ -482,6 +492,7 @@ impl Reader {
                 paged_scroll,
                 strip,
                 strip_foot,
+                trail,
                 strip_scroll,
                 strip_scroll_ask: Rc::default(),
                 strip_slide: RefCell::default(),
@@ -732,6 +743,7 @@ impl Reader {
         while let Some(child) = self.strip.first_child() {
             self.strip.remove(&child);
         }
+        self.trail.clear();
         self.picture.set_paintable(gdk::Paintable::NONE);
         if let Some(novel) = self.novel.take() {
             self.stack.remove(&novel.widget);
@@ -784,6 +796,19 @@ impl Reader {
         }
         let last = self.state.borrow().leaves.len().saturating_sub(1);
         self.show_leaf(last, TurnHow::Jump);
+    }
+
+    /// Scroll a strip so the marker into the next chapter has its top `share` of the window
+    /// down: past the middle it stays the marker, above it the next chapter runs on under it.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_marker(self: &Rc<Self>, share: f64) {
+        // Let go of the opening place without reading it: a chapter kept at its foot would run
+        // on before the scroll lands.
+        self.state.borrow_mut().strip_anchor = None;
+        let (heights, spacing) = self.strip_heights();
+        let foot = strip_target(&heights, spacing, heights.len(), None) - f64::from(spacing);
+        let page = self.strip_scroll.vadjustment().page_size();
+        self.scroll_strip_to(self.trail.height() + foot - page * share);
     }
 
     /// The end page as it is with no first page of the next chapter: the plate with its number.
@@ -956,7 +981,9 @@ impl Reader {
                     self.leaves(leaves.clone());
                 }
             }
-            ReaderEvent::PageReady { session, page, file, .. } if self.mine(*session) => {
+            ReaderEvent::PageReady { session, chapter, page, file, .. }
+                if self.mine(*session) && self.is_open(chapter) =>
+            {
                 self.page_ready(*page, file.clone());
             }
             ReaderEvent::PageFailed { session, page, failure, .. } if self.mine(*session) => {
@@ -1049,6 +1076,11 @@ impl Reader {
         session != 0 && session == self.state.borrow().session
     }
 
+    /// The chapter on screen, not one a strip ran on from or one still to open.
+    fn is_open(&self, chapter: &ChapterId) -> bool {
+        self.state.borrow().chapter.as_ref().is_some_and(|c| &c.id == chapter)
+    }
+
     fn flows(&self) -> bool {
         self.state.borrow().mode.is_some_and(ReaderMode::flows)
     }
@@ -1061,8 +1093,16 @@ impl Reader {
                 ReadingCommand::LoadChapters { work: view.work.clone(), edition: None },
             );
         }
+        // A strip that ran on keeps the chapters above; any other open starts clean.
+        let flowed = view.mode == ReaderMode::Strip
+            && self.state.borrow().flowing.as_ref() == Some(&view.chapter.id);
+        if !flowed {
+            self.trail.clear();
+        }
         {
             let mut state = self.state.borrow_mut();
+            state.flowing = None;
+            state.flowed = flowed;
             state.session = view.session;
             state.work = Some(view.work.clone());
             state.medium = Some(view.medium);
@@ -1154,10 +1194,19 @@ impl Reader {
         if let Some(id) = self.notice_timer.borrow_mut().take() {
             id.remove();
         }
-        if notice.lasts_ms > 0 {
+        // The engine's rule: longer for long text, and until it is dismissed when it carries a
+        // button and a screen reader runs.
+        let words = text.split_whitespace().count() as u32;
+        let hold = kaeri_model::reader::reader_notice_hold(
+            notice.lasts_ms,
+            words,
+            notice.action.is_some(),
+            crate::window::screen_reader_running(),
+        );
+        if let Some(hold) = hold.filter(|ms| *ms > 0) {
             let this = Rc::downgrade(self);
             let id = glib::timeout_add_local_once(
-                Duration::from_millis(u64::from(notice.lasts_ms)),
+                Duration::from_millis(u64::from(hold)),
                 move || {
                     let Some(this) = this.upgrade() else { return };
                     this.notice_timer.borrow_mut().take();
@@ -1217,7 +1266,12 @@ impl Reader {
                 let here = self.strip_place();
                 self.state.borrow_mut().strip_anchor = here;
             }
-            if first {
+            if first && std::mem::take(&mut self.state.borrow_mut().flowed) {
+                // Under the marker, where the scroll already is: nothing to hold.
+                let mut state = self.state.borrow_mut();
+                state.strip_anchor = None;
+                state.index = 0;
+            } else if first {
                 let mut state = self.state.borrow_mut();
                 let image = state.start_strip.map_or_else(
                     || {
@@ -1542,6 +1596,31 @@ impl Reader {
             }
         };
         self.end.fill(&facts);
+        self.fill_foot();
+    }
+
+    /// A strip's foot: the marker into the next chapter with its first image, or the end page
+    /// after the last chapter there is. Pages one under another end on the end page too. While
+    /// the strip runs on into a chapter, until its images come, the foot stays as it is.
+    fn fill_foot(&self) {
+        let (next, source, preview) = {
+            let state = self.state.borrow();
+            // Until the chapter run into has its images, the plate under the marker holds it.
+            if state.flowing.is_some() || state.flowed {
+                return;
+            }
+            let next = state.next.clone().filter(|_| state.mode == Some(ReaderMode::Strip));
+            let preview = state
+                .preview
+                .as_ref()
+                .filter(|(id, _)| next.as_ref().is_some_and(|n| &n.id == id))
+                .map(|(_, texture)| texture.clone());
+            (next, state.next_source.clone(), preview)
+        };
+        self.trail.show_next(next.as_ref(), source.as_deref());
+        self.trail.set_lead(preview.as_ref());
+        self.strip_foot.set_visible(next.is_none());
+        self.size_strip();
     }
 
     /// Another chapter in the open session; the plate holds its place if it takes a while.
@@ -1550,6 +1629,7 @@ impl Reader {
             self.asked_open.replace(Some((work, Some(chapter.clone()))));
         }
         self.opening_line.replace(t::linux_reader_opening());
+        self.hide_notice();
         self.wait(Waiting::Chapter);
         self.send(ReaderCommand::OpenChapter { session, chapter });
     }
@@ -1705,7 +1785,11 @@ impl Reader {
         if heights.is_empty() {
             return None;
         }
-        let top = self.strip_scroll.vadjustment().value();
+        // Above the open chapter, in the trail, there is no place in it.
+        let top = self.strip_scroll.vadjustment().value() - self.trail.height();
+        if top < 0.0 && !self.trail.is_empty() {
+            return None;
+        }
         let (image, offset) = strip_place_of(&heights, spacing, top);
         Some(StripPos { image: image as u32, offset })
     }
@@ -1719,7 +1803,7 @@ impl Reader {
             strip_target(&heights, spacing, anchor.image as usize, Some(anchor.offset));
         let total = heights.len();
         self.show_pages((anchor.image as usize + 1).min(total.max(1)), total);
-        self.scroll_strip_to(target);
+        self.scroll_strip_to(self.trail.height() + target);
     }
 
     /// The person moved the strip: it no longer holds where it opened, and says where it is.
@@ -1767,6 +1851,7 @@ impl Reader {
         let mut changed = self.strip.spacing() != spacing;
         self.strip.set_spacing(spacing);
         let column = width.min(720.0 * share / 0.6);
+        self.trail.size(column.round() as i32, spacing, height.round() as i32);
         for (picture, ratio) in &self.state.borrow().strip_frames {
             let ratio = f64::from(*ratio);
             let w = if vertical { width.min(height * ratio) } else { column };
@@ -1780,7 +1865,7 @@ impl Reader {
             let (heights, spacing) = self.strip_heights();
             let target =
                 strip_target(&heights, spacing, keep.image as usize, Some(keep.offset));
-            self.scroll_strip_to(target);
+            self.scroll_strip_to(self.trail.height() + target);
         }
     }
 
@@ -1821,10 +1906,27 @@ impl Reader {
 
     /// Ask for the pages near the viewport and, a moment after the scrolling stops, say where
     /// it stopped and whether the foot is in sight. While the strip holds its opening place it
-    /// only asks.
+    /// only asks. Over a chapter read before, the group names it and nothing is said; the marker
+    /// into the next chapter crossing the middle opens that chapter.
     fn strip_moved(self: &Rc<Self>) {
         let adj = self.strip_scroll.vadjustment();
-        let (top, bottom) = (adj.value(), adj.value() + adj.page_size());
+        let base = self.trail.height();
+        let middle = adj.value() + adj.page_size() / 2.0;
+        let over = self.trail.over(adj.value(), middle);
+        let line = match &over {
+            trail::Over::Gone { line, .. } => line.clone(),
+            trail::Over::Open => self
+                .state
+                .borrow()
+                .chapter
+                .as_ref()
+                .map(|c| c.label.clone())
+                .unwrap_or_default(),
+        };
+        if self.line.label() != line {
+            self.line.set_label(&line);
+        }
+        let (top, bottom) = (adj.value() - base, adj.value() + adj.page_size() - base);
         let reach = adj.page_size() * 1.5;
         let (heights, spacing) = self.strip_heights();
         if heights.is_empty() {
@@ -1844,6 +1946,16 @@ impl Reader {
             self.want_strip(i);
         }
         if self.state.borrow().strip_anchor.is_some() {
+            return;
+        }
+        if let trail::Over::Gone { image, count, .. } = over {
+            self.show_pages(image + 1, count);
+            return;
+        }
+        if let Some(marker) = self.trail.marker_height()
+            && middle - base > foot_top + marker / 2.0
+        {
+            self.flow_on();
             return;
         }
         let (image, offset) = strip_place_of(&heights, spacing, top);
@@ -1873,6 +1985,39 @@ impl Reader {
             }
         });
         *self.strip_timer.borrow_mut() = Some(id);
+    }
+
+    /// The marker crossed the middle: the next chapter opens under it, in the same scroll, with
+    /// no plate over the page. The chapter run from is read and stays above.
+    fn flow_on(self: &Rc<Self>) {
+        let (session, chapter, next, work) = {
+            let state = self.state.borrow();
+            (state.session, state.chapter.clone(), state.next.clone(), state.work.clone())
+        };
+        let (Some(chapter), Some(next)) = (chapter, next) else { return };
+        if session == 0 || self.state.borrow().flowing.is_some() {
+            return;
+        }
+        if let Some(id) = self.strip_timer.borrow_mut().take() {
+            id.remove();
+        }
+        // Its foot was in sight: the place is its last image, all of it read.
+        let frames = std::mem::take(&mut self.state.borrow_mut().strip_frames);
+        let last = frames.len().saturating_sub(1) as u32;
+        self.send(ReaderCommand::StripAt {
+            session,
+            chapter: chapter.id.clone(),
+            at: StripPos { image: last, offset: 1.0 },
+            foot_visible: true,
+        });
+        // A notice belongs to the chapter it was about.
+        self.hide_notice();
+        self.trail.take(chapter.label.clone(), &self.strip, frames);
+        self.state.borrow_mut().flowing = Some(next.id.clone());
+        if let Some(work) = work {
+            self.asked_open.replace(Some((work, Some(next.id.clone()))));
+        }
+        self.send(ReaderCommand::OpenChapter { session, chapter: next.id });
     }
 
     fn want_strip(&self, index: usize) {

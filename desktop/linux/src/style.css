@@ -398,6 +398,12 @@ scale.reader-scrub slider {
 .reader-light .reader-head windowcontrols > button:hover > image { background-color: var(--raised-selected); }
 .reader-light .reader-head windowcontrols > button:active > image { background-color: var(--rule); }
 .strip-leaf { background: transparent; }
+/* The marker into the next chapter in a strip (the reader board's divider): Next, the chapter
+   in the show-title face and its facts, on the ground. */
+.strip-marker { color: var(--silk); }
+.strip-marker-next { font-size: 0.93em; color: var(--haze); }
+.strip-marker-title { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 1.57em; line-height: 1.27; }
+.strip-marker-facts { font-size: 1em; color: var(--haze); }
 
 /* The page between chapters (PagedReader's end page on Apple): sizes relative, so Large Text
    reaches them. */
@@ -407,9 +413,10 @@ scale.reader-scrub slider {
 .reader-end-facts { font-size: 1em; color: var(--haze); }
 .reader-end-none { font-size: 1.57em; font-weight: 600; }
 .reader-end-body { font-size: 1.07em; color: var(--haze); }
-/* The end page sits on the dark ground in every look, so a light look's chrome tokens stop at
-   its words and buttons; its preview keeps the look's page colour. */
-.reader-light .reader-end {
+/* The end page and a strip's marker sit on the dark ground in every look, so a light look's
+   chrome tokens stop at their words and buttons; the preview keeps the look's page colour. */
+.reader-light .reader-end,
+.reader-light .strip-marker {
   --raised: #222638;
   --raised-selected: #343A57;
   --rule: #434653;
