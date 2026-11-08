@@ -20,9 +20,7 @@ namespace Kaeri.Windows.Pages;
 /// </summary>
 sealed class NovelView : Grid
 {
-    const string Scheme = "kaeri-book";
-
-    static Task<CoreWebView2Environment>? environment;
+    const string Scheme = TrailerHub.BookScheme;
 
     readonly ReaderOverlay owner;
     readonly WebView2 web;
@@ -90,35 +88,18 @@ sealed class NovelView : Grid
 
     ReaderSession Reader => owner.Reader;
 
-    static Task<CoreWebView2Environment> Environment() => environment ??= MakeOwn();
-
-    /// <summary>
-    /// The books' own environment, apart from the trailers': the custom scheme has to be
-    /// registered when the environment is made.
-    /// </summary>
-    static async Task<CoreWebView2Environment> MakeOwn()
-    {
-        var folder = Path.Combine(Path.GetTempPath(), "kaeri-windows", "webview2-books");
-        var options = new CoreWebView2EnvironmentOptions();
-        var scheme = new CoreWebView2CustomSchemeRegistration(Scheme)
-        {
-            // The WinRT projection takes the flag as a BOOL.
-            TreatAsSecure = 1,
-            HasAuthorityComponent = true,
-        };
-        options.CustomSchemeRegistrations.Add(scheme);
-        return await CoreWebView2Environment.CreateWithOptionsAsync(null, folder, options);
-    }
-
     async Task Start()
     {
         try
         {
-            var env = made = await Environment();
+            // The trailers' environment, so one browser process serves both; the books get a
+            // private profile of their own, apart from the trailers' session.
+            var env = made = await TrailerHub.Environment();
             if (closed)
                 return;
             var controller = env.CreateCoreWebView2ControllerOptions();
             controller.IsInPrivateModeEnabled = true;
+            controller.ProfileName = "books";
             await web.EnsureCoreWebView2Async(env, controller);
             // The reader closed while the web view was being made: nothing of it is shown.
             if (closed)
@@ -413,13 +394,15 @@ sealed class NovelView : Grid
     // The footnote
 
     /// <summary>The footnote over the page is up.</summary>
-    public bool NoteShown => note.Visibility == Visibility.Visible;
+    public bool NoteShown { get; private set; }
 
     /// <summary>The footnote goes, and the keys go back to the page.</summary>
     public bool CloseNote()
     {
         if (!NoteShown)
             return false;
+        NoteShown = false;
+        SyncInput();
         if (owner.PaperMode)
             Motion.Set(note, false);
         else
@@ -494,11 +477,14 @@ sealed class NovelView : Grid
     {
         endLayer.Children.Clear();
         endLayer.Children.Add(owner.BuildEndPage());
-        if (Motion.Enabled && !owner.PaperMode)
+        // A fade, which moves nothing, stays with reduced motion; Paper mode cuts.
+        if (!owner.PaperMode)
             Motion.Show(endLayer);
         else
             Motion.Set(endLayer, true);
+        SyncInput();
         owner.PositionChanged();
+        owner.NovelTurned(this);
     }
 
     public void RefreshEnd()
@@ -515,6 +501,7 @@ sealed class NovelView : Grid
             return;
         Motion.Set(endLayer, false);
         endLayer.Children.Clear();
+        SyncInput();
         owner.PositionChanged();
     }
 
@@ -539,6 +526,11 @@ sealed class NovelView : Grid
             switch (typeEl.GetString())
             {
                 case "ready":
+                    // A new document starts with no input of its own: it is told again.
+                    inputSent = null;
+                    Paged(root);
+                    SyncInput();
+                    break;
                 case "page":
                     Paged(root);
                     break;
@@ -638,25 +630,38 @@ sealed class NovelView : Grid
         }
     }
 
+    /// <summary>
+    /// A tap the page did not turn on: the page turns itself on its edges (input), so what comes
+    /// here is the middle, or any tap while the chrome, the end page or a note holds it.
+    /// </summary>
     void Tap(double x)
     {
-        var layout = Reader.Choice(ReaderSettingKey.TapLayout) ?? "edges";
         if (EndShown)
         {
             HideEnd();
             return;
         }
-        if (owner.ChromeShown || layout == "off")
-        {
-            owner.ToggleChrome();
+        owner.ToggleChrome();
+    }
+
+    string? inputSent;
+
+    /// <summary>
+    /// How the page turns itself on a tap or a key, in one message (the paginator's input): the
+    /// tap layout's edges, the side forward is on, the turning keys, and hold while the chrome,
+    /// the end page or a footnote is up, when every tap and key comes to the reader instead.
+    /// </summary>
+    public void SyncInput()
+    {
+        var layout = Reader.Choice(ReaderSettingKey.TapLayout) ?? "edges";
+        var edge = layout switch { "off" => "0", "sides" => "0.5", _ => "0.33" };
+        var forward = book?.Progression == ReadDirection.RightToLeft ? "left" : "right";
+        var hold = owner.ChromeShown || EndShown || NoteShown ? "true" : "false";
+        var how = $"{{edge: {edge}, forward: '{forward}', keys: true, hold: {hold}}}";
+        if (how == inputSent)
             return;
-        }
-        var forwardIsLeft = book?.Progression == ReadDirection.RightToLeft;
-        var edge = layout == "sides" ? 0.5 : 0.33;
-        if (x < edge || x > 1 - edge || layout == "sides")
-            Turn((x < 0.5) == forwardIsLeft, "turn");
-        else
-            owner.ToggleChrome();
+        inputSent = how;
+        Call($"window.kaeriReader && window.kaeriReader.input && window.kaeriReader.input({how})");
     }
 
     /// <summary>Only links inside the book are followed; a footnote shows over the page.</summary>
@@ -672,6 +677,8 @@ sealed class NovelView : Grid
             note.Background = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Raised, 0.97));
             note.BorderBrush = new SolidColorBrush(palette.Rule);
             note.BorderThickness = new Thickness(1);
+            NoteShown = true;
+            SyncInput();
             if (owner.PaperMode)
                 Motion.Set(note, true);
             else
