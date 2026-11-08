@@ -136,7 +136,7 @@ private struct ReadHomeContent: View {
             }
         }
         if !home.continueReading.isEmpty {
-            shelf(L.navContinue, tiles: home.continueReading, track: true)
+            shelf(L.homeReadContinue, tiles: home.continueReading, track: true)
         }
         if !home.week.isEmpty {
             ReadWeek(days: home.week)
