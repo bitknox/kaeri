@@ -78,6 +78,7 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
         let (status_button, download_button, shown) =
             (status_button.clone(), download_button.clone(), Rc::clone(&shown));
         let (details, memo, work) = (details.clone(), Rc::clone(&memo), work.clone());
+        let menu_button = menu_button.clone();
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
             if series_extra::follow(&memo, &work, event) {
@@ -85,6 +86,21 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
             }
             match event {
                 Event::Reading(ReadingEvent::Series(view)) if view.work == wanted => {
+                    // The demo's page is its own: credit, its one chapter and the other work.
+                    if let Some(demo) = &view.demo {
+                        super::clear(&head);
+                        head.append(&super::demo::series_body(&ctx, view, demo));
+                        for hidden in [&details, &chapters] {
+                            hidden.set_visible(false);
+                        }
+                        menu_button.set_visible(false);
+                        shown.replace(Some(SeriesView::clone(view)));
+                        if let Some(page) = page.upgrade() {
+                            page.set_title(&view.titles.display.clone());
+                        }
+                        states.content();
+                        return;
+                    }
                     for button in [&status_button, &download_button] {
                         if let Some(parent) = button.parent().and_downcast::<gtk::Box>() {
                             parent.remove(button);

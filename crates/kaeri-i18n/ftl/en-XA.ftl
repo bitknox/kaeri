@@ -1621,6 +1621,40 @@ discussion-like-named =
        *[other] [Ļîķé, { $count } ļîķéš~~~~~]
     }
 
+# Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
+linux-store-invite-chip = [Îñṽîţé ••••{ $last }~~~~~]
+
+# How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts".
+linux-store-plugin-hosts =
+    { $count ->
+        [one] [{ $count } ĥöšţ~~~]
+       *[other] [{ $count } ĥöšţš~~~]
+    }
+
+# Beside a spinner in the plugin store form while the invite is spent, after 600 ms.
+linux-store-joining = [Ĵöîñîñĝ…~~~]
+
+# The Install all button while the plugins install.
+linux-store-installing = [Îñšţàļļîñĝ…~~~~]
+
+# Third line of a book server's row in Your sources when its sign-in no longer works.
+linux-book-server-signed-out = [Šîĝñéð öüţ · šîĝñ îñ àĝàîñ ƒŕöɱ Éðîţ~~~~~~~~~~~]
+
+# Switch on a book server's page: its series show in Kaeri while it is on.
+linux-book-server-use = [Ûšé ţĥîš šéŕṽéŕ~~~~~]
+
+# Title of the dialog that asks before a book server is removed.
+linux-book-server-remove-title = [Ŕéɱöṽé { $host }?~~~~]
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Watch.
+linux-join-medium-line-watch = [Ŵàţçĥîñĝ, àš öñ { $device }~~~~~~]
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Both.
+linux-join-medium-line-both = [Ŵàţçĥîñĝ àñð ŕéàðîñĝ, àš öñ { $device }~~~~~~~~~~]
+
+# Switch on a book plugin's page: its series show in Kaeri while it is on.
+linux-book-plugin-use = [Ûšé ţĥîš þļüĝîñ~~~~~]
+
 # Tooltip of the reader toolbar's settings button.
 linux-reader-settings-open = [Ŕéàðéŕ šéţţîñĝš~~~~~]
 

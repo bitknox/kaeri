@@ -466,6 +466,8 @@ impl Shell {
         shell.watch_pages();
         crate::tv::sheet::attach(&shell.ctx);
         crate::sync::install(&shell.ctx);
+        // Reading's progress lines hear the reader from the start.
+        crate::reading::server_progress::model(&shell.ctx);
         shell.breakpoints();
         shell.actions(app);
         shell.listen();
@@ -1389,6 +1391,9 @@ impl Shell {
         prefs.set_welcomed();
         if !self.ctx.hub.known.borrow().used() {
             pages::first_launch::open(&self.ctx);
+        } else {
+            // No first run to ask on its page: what Kaeri is for comes as the sheet.
+            crate::reading::medium::first_run_closed(&self.ctx);
         }
     }
 

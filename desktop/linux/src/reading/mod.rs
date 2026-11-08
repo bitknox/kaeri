@@ -3,7 +3,9 @@
 //! reports what was painted. Books are made of the same parts the shows are: covers, shelves,
 //! boxed lists and the states with their waiting rule.
 
+pub mod came_in;
 pub mod chapters;
+pub mod demo;
 pub mod downloads;
 pub mod export;
 //pub mod feed;
@@ -15,6 +17,7 @@ pub mod reader;
 pub mod search;
 pub mod series;
 pub mod series_extra;
+pub mod server_progress;
 pub mod sources;
 pub mod updates;
 

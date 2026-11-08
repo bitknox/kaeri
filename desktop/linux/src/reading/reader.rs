@@ -72,6 +72,8 @@ struct State {
     settings: Option<ReaderSettingsView>,
     /// Each strip image and its width over height.
     strip_frames: Vec<(gtk::Picture, f32)>,
+    /// The demo's work being read, with its credit capsule in the header on page 1.
+    demo: Option<(kaeri_model::sources::DemoWorkInfo, gtk::Widget)>,
 }
 
 pub struct Reader {
@@ -548,6 +550,7 @@ impl Reader {
             state.asked.clear();
             state.index = 0;
         }
+        self.demo_credit(view.demo_credit.as_ref());
         self.title.set_label(&view.title);
         self.group_title.set_label(&view.title);
         self.line.set_label(&view.chapter.label);
@@ -775,6 +778,9 @@ impl Reader {
         self.scroll_to_start();
         self.stack.set_visible_child_name("paged");
         motion::crossfade_in(&self.picture);
+        if let Some((_, capsule)) = &self.state.borrow().demo {
+            capsule.set_visible(index == 0);
+        }
         let total = self.state.borrow().leaves.len();
         self.progress(index, total);
         let (session, chapter) = {
@@ -832,6 +838,12 @@ impl Reader {
         }
     }
 
+    /// For a shot: the chapter's end, as turning past its last page reaches it.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_end(self: &Rc<Self>) {
+        self.end_of_chapter();
+    }
+
     fn end_of_chapter(self: &Rc<Self>) {
         let (session, next, why) = {
             let state = self.state.borrow();
@@ -839,6 +851,7 @@ impl Reader {
         };
         match next {
             Some(next) => self.send(ReaderCommand::OpenChapter { session, chapter: next.id }),
+            None if self.demo_end() => {}
             None => {
                 let words = match why {
                     Some(NoNext::NotOutYet) => t::linux_reader_end_not_out(),
@@ -854,6 +867,50 @@ impl Reader {
                 self.stack.set_visible_child_name("status");
             }
         }
+    }
+
+    /// The demo's credit capsule in the header, as its licence asks, or none for any other work.
+    fn demo_credit(&self, demo: Option<&kaeri_model::sources::DemoWorkInfo>) {
+        let old = self.state.borrow_mut().demo.take();
+        if let Some((_, capsule)) = old {
+            self.head.remove(&capsule);
+        }
+        if let Some(demo) = demo {
+            let capsule = super::demo::credit_capsule(demo);
+            self.head.pack_end(&capsule);
+            self.state.borrow_mut().demo = Some((demo.clone(), capsule.upcast()));
+        }
+    }
+
+    /// After the demo's last page: its end card in place of the end page. False for any other
+    /// work.
+    fn demo_end(self: &Rc<Self>) -> bool {
+        let Some(demo) = self.state.borrow().demo.as_ref().map(|(demo, _)| demo.clone()) else {
+            return false;
+        };
+        let Some(ctx) = self.ctx.upgrade() else { return false };
+        let close = {
+            let this = Rc::downgrade(self);
+            move || {
+                if let Some(this) = this.upgrade() {
+                    this.close();
+                }
+            }
+        };
+        let again = {
+            let this = Rc::downgrade(self);
+            move || {
+                if let Some(this) = this.upgrade() {
+                    this.show_leaf(0, TurnHow::Jump);
+                }
+            }
+        };
+        self.status.set_icon_name(None);
+        self.status.set_title("");
+        self.status.set_description(None);
+        self.status.set_child(Some(&super::demo::end_card(&ctx, &demo, close, again)));
+        self.stack.set_visible_child_name("status");
+        true
     }
 
     /// Back to the series, under the end page and under a novel that can't open.

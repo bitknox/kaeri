@@ -352,6 +352,10 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     body.append(&line);
     body.append(&other);
     body.append(&grid.widget);
+    // While only the demo is on, its works as rows instead of the grid.
+    let demo_rows = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    demo_rows.set_visible(false);
+    body.append(&demo_rows);
     body.append(&more);
     let scroll = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
@@ -462,6 +466,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         let (line, other, other_words, empty, clear) =
             (line.clone(), other.clone(), other_words.clone(), empty.clone(), clear.clone());
         let (ask, hub) = (Rc::clone(&ask), Rc::downgrade(&ctx.hub));
+        let (demo_rows, ctx_weak) = (demo_rows.clone(), Rc::downgrade(ctx));
         move |event| match event {
             Event::Reading(ReadingEvent::Search {
                 query,
@@ -481,6 +486,14 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                 tiles.borrow_mut().extend(found.iter().cloned());
                 grid.set(&tiles.borrow());
                 more.set_visible(*has_more);
+                let only_demo = hub.upgrade().is_some_and(|h| h.known.borrow().demo.only_books)
+                    && !query.text.is_empty();
+                grid.widget.set_visible(!only_demo);
+                demo_rows.set_visible(only_demo);
+                super::clear(&demo_rows);
+                if only_demo && let Some(ctx) = ctx_weak.upgrade() {
+                    demo_rows.append(&super::demo::search_results(&ctx, &tiles.borrow()));
+                }
                 let browsing = query.text.is_empty();
                 line.set_visible(browsing);
                 if browsing {
@@ -496,7 +509,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                     }
                     None => other.set_visible(false),
                 }
-                if tiles.borrow().is_empty() {
+                if tiles.borrow().is_empty() && !only_demo {
                     let set = filters.any_set();
                     empty.set_title(&if browsing {
                         t::read_search_nothing_browse()
