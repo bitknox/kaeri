@@ -1493,6 +1493,16 @@ pub enum ReadingMsg {
     ReadSearchStartedYear,
     /// A choice of reading Search's Started filter: series that started in the last 3 years.
     ReadSearchStarted3Years,
+    /// Under a source's hit in Search: the chapters it holds, from the first.
+    ReadHitChapters { last: i64 },
+    /// Under a source's hit in Search: a web novel's episodes it holds, from the first.
+    ReadHitEpisodes { last: i64 },
+    /// Under a source's hit in Search: a light novel's parts it holds.
+    ReadHitParts { count: i64 },
+    /// Under a source's hit in Search: the book files it holds.
+    ReadHitFiles { count: i64 },
+    /// Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+    ReadHitFilesFormat { count: i64, format: String },
 }
 
 impl ReadingMsg {
@@ -1652,6 +1662,11 @@ impl ReadingMsg {
             Self::ReadSearchStartedAny => "read-search-started-any",
             Self::ReadSearchStartedYear => "read-search-started-year",
             Self::ReadSearchStarted3Years => "read-search-started-3-years",
+            Self::ReadHitChapters { .. } => "read-hit-chapters",
+            Self::ReadHitEpisodes { .. } => "read-hit-episodes",
+            Self::ReadHitParts { .. } => "read-hit-parts",
+            Self::ReadHitFiles { .. } => "read-hit-files",
+            Self::ReadHitFilesFormat { .. } => "read-hit-files-format",
         }
     }
 
@@ -1811,6 +1826,11 @@ impl ReadingMsg {
             Self::ReadSearchStartedAny => Vec::new(),
             Self::ReadSearchStartedYear => Vec::new(),
             Self::ReadSearchStarted3Years => Vec::new(),
+            Self::ReadHitChapters { last } => vec![("last", Value::Int(*last))],
+            Self::ReadHitEpisodes { last } => vec![("last", Value::Int(*last))],
+            Self::ReadHitParts { count } => vec![("count", Value::Int(*count))],
+            Self::ReadHitFiles { count } => vec![("count", Value::Int(*count))],
+            Self::ReadHitFilesFormat { count, format } => vec![("count", Value::Int(*count)), ("format", Value::Text(format.clone()))],
         }
     }
 }

@@ -1347,6 +1347,38 @@
     <value>[Ļàšţ 3 ýéàŕš~~~~]</value>
     <comment>A choice of reading Search's Started filter: series that started in the last 3 years.</comment>
   </data>
+  <data name="ReadHitChapters" xml:space="preserve">
+    <value>[Çĥàþţéŕš 1 ţö {last}~~~~~~]</value>
+    <comment>Under a source's hit in Search: the chapters it holds, from the first.</comment>
+  </data>
+  <data name="ReadHitEpisodes" xml:space="preserve">
+    <value>[Éþîšöðéš 1 ţö {last}~~~~~~]</value>
+    <comment>Under a source's hit in Search: a web novel's episodes it holds, from the first.</comment>
+  </data>
+  <data name="ReadHitParts_one" xml:space="preserve">
+    <value>[1 þàŕţ~~]</value>
+    <comment>Under a source's hit in Search: a light novel's parts it holds.</comment>
+  </data>
+  <data name="ReadHitParts_other" xml:space="preserve">
+    <value>[{count} þàŕţš~~~]</value>
+    <comment>Under a source's hit in Search: a light novel's parts it holds.</comment>
+  </data>
+  <data name="ReadHitFiles_one" xml:space="preserve">
+    <value>[1 ƒîļé~~]</value>
+    <comment>Under a source's hit in Search: the book files it holds.</comment>
+  </data>
+  <data name="ReadHitFiles_other" xml:space="preserve">
+    <value>[{count} ƒîļéš~~~]</value>
+    <comment>Under a source's hit in Search: the book files it holds.</comment>
+  </data>
+  <data name="ReadHitFilesFormat_one" xml:space="preserve">
+    <value>[1 ƒîļé · {format}~~~~]</value>
+    <comment>Under a source's hit in Search: the book files it holds, all in one format ("CBZ").</comment>
+  </data>
+  <data name="ReadHitFilesFormat_other" xml:space="preserve">
+    <value>[{count} ƒîļéš · {format}~~~~~]</value>
+    <comment>Under a source's hit in Search: the book files it holds, all in one format ("CBZ").</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>[Ĵöîñéð {store} àš {member}.~~~~~~]</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>
@@ -8864,6 +8896,10 @@
     <value>[Ñöţĥîñĝ îñ ýöüŕ šöüŕçéš éîţĥéŕ.~~~~~~~~~~]</value>
     <comment>Search, when nothing was found anywhere: under the line saying AniList found nothing.</comment>
   </data>
+  <data name="ReadSearchTotalUnknown" xml:space="preserve">
+    <value>[Šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~]</value>
+    <comment>Over reading's results while more pages are to come, so AniList's count is not known yet.</comment>
+  </data>
   <data name="ReadSearchMoreAnilist" xml:space="preserve">
     <value>[Ṁöŕé ƒŕöɱ ÅñîĻîšţ~~~~~~]</value>
     <comment>The link under From your sources that shows the rest of AniList's results.</comment>
@@ -8872,21 +8908,23 @@
     <value>[{shown} öƒ {total} šĥöŵñ~~~~~]</value>
     <comment>Beside More from AniList: how many of AniList's results show.</comment>
   </data>
-  <data name="ReadSearchSourceMore" xml:space="preserve">
-    <value>[Šĥöŵ {n} ɱöŕé~~~~]</value>
-    <comment>The button of a source group with more than five hits.</comment>
+  <data name="ReadSearchShownSome" xml:space="preserve">
+    <value>[{shown} šĥöŵñ~~~]</value>
+    <comment>Beside More from AniList while AniList's count is not known yet: how many results show.</comment>
   </data>
   <data name="ReadSearchSourceKindServer" xml:space="preserve">
     <value>[Šéŕṽéŕ~~]</value>
-    <comment>Beside a source row's name in Search: the kind of source it is.</comment>
+    <comment>Beside a source's name in Search: the kind of source it is.</comment>
   </data>
   <data name="ReadSearchSourceKindFolder" xml:space="preserve">
     <value>[Ƒöļðéŕ~~]</value>
-    <comment>Beside a source row's name in Search: the kind of source it is.</comment>
   </data>
   <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
     <value>[Þļüĝîñ~~]</value>
-    <comment>Beside a source row's name in Search: the kind of source it is.</comment>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>[Šĥöŵ {n} ɱöŕé~~~~]</value>
+    <comment>The button of a source group with more than five hits.</comment>
   </data>
   <data name="ReadSearchSourcesOnlyLine" xml:space="preserve">
     <value>[ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ. Ţĥé ƒîļţéŕš ƀéļöŵ àþþļý ţö ÅñîĻîšţ'š ŕéšüļţš öñļý.~~~~~~~~~~~~~~~~~~~~~~~~]</value>

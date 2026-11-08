@@ -85,12 +85,12 @@ struct ReadCoverRowPlaceholder: View {
                     RoundedRectangle(cornerRadius: ArtShape.coverRadius(width: width))
                         .fill(.raised)
                         .frame(width: width, height: (width * 3 / 2).rounded())
-                    Text("Kumo no Ue no Toshokan") // i18n-skip: redacted placeholder
+                    Text("Lantern Street Notes") // i18n-skip
                         .font(.showTitle(size: layout.posterTitle.size, relativeTo: .body))
                         .fixedLineHeight(layout.posterTitle.line)
                         .lineLimit(2, reservesSpace: true)
                         .padding(.top, 8)
-                    Text("Japan · Releasing") // i18n-skip: redacted placeholder
+                    Text("Japan · Releasing") // i18n-skip
                         .font(.ui(layout.posterLine.size))
                         .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)
                         .lineLimit(1)

@@ -679,6 +679,25 @@
     <string name="read_search_started_year">Last 12 months</string>
     <!-- A choice of reading Search's Started filter: series that started in the last 3 years. -->
     <string name="read_search_started_3_years">Last 3 years</string>
+    <!-- Under a source's hit in Search: the chapters it holds, from the first. -->
+    <string name="read_hit_chapters">Chapters 1 to %1$d</string>
+    <!-- Under a source's hit in Search: a web novel's episodes it holds, from the first. -->
+    <string name="read_hit_episodes">Episodes 1 to %1$d</string>
+    <!-- Under a source's hit in Search: a light novel's parts it holds. -->
+    <plurals name="read_hit_parts">
+        <item quantity="one">1 part</item>
+        <item quantity="other">%1$d parts</item>
+    </plurals>
+    <!-- Under a source's hit in Search: the book files it holds. -->
+    <plurals name="read_hit_files">
+        <item quantity="one">1 file</item>
+        <item quantity="other">%1$d files</item>
+    </plurals>
+    <!-- Under a source's hit in Search: the book files it holds, all in one format ("CBZ"). -->
+    <plurals name="read_hit_files_format">
+        <item quantity="one">1 file · %2$s</item>
+        <item quantity="other">%1$d files · %2$s</item>
+    </plurals>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->
@@ -5184,18 +5203,20 @@
     <string name="read_search_anilist_failed_line">Your sources were still asked.</string>
     <!-- Search, when nothing was found anywhere: under the line saying AniList found nothing. -->
     <string name="read_search_sources_nothing">Nothing in your sources either.</string>
+    <!-- Over reading's results while more pages are to come, so AniList's count is not known yet. -->
+    <string name="read_search_total_unknown">Series from AniList</string>
     <!-- The link under From your sources that shows the rest of AniList's results. -->
     <string name="read_search_more_anilist">More from AniList</string>
     <!-- Beside More from AniList: how many of AniList's results show. -->
     <string name="read_search_shown">%1$d of %2$d shown</string>
+    <!-- Beside More from AniList while AniList's count is not known yet: how many results show. -->
+    <string name="read_search_shown_some">%1$d shown</string>
+    <!-- Beside a source's name in Search: the kind of source it is. -->
+    <string name="read_search_source_kind_server">Server</string>
+    <string name="read_search_source_kind_folder">Folder</string>
+    <string name="read_search_source_kind_plugin">Plugin</string>
     <!-- The button of a source group with more than five hits. -->
     <string name="read_search_source_more">Show %1$d more</string>
-    <!-- Beside a source row's name in Search: the kind of source it is. -->
-    <string name="read_search_source_kind_server">Server</string>
-    <!-- Beside a source row's name in Search: the kind of source it is. -->
-    <string name="read_search_source_kind_folder">Folder</string>
-    <!-- Beside a source row's name in Search: the kind of source it is. -->
-    <string name="read_search_source_kind_plugin">Plugin</string>
     <!-- Under the Your sources only switch in the iPhone and iPad Filters sheet. -->
     <string name="read_search_sources_only_line">AniList\'s results are hidden. The filters below apply to AniList\'s results only.</string>
     <!-- What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence. -->

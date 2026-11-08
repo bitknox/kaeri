@@ -1005,6 +1005,33 @@ read-search-started-year = [Ļàšţ 12 ɱöñţĥš~~~~~]
 # A choice of reading Search's Started filter: series that started in the last 3 years.
 read-search-started-3-years = [Ļàšţ 3 ýéàŕš~~~~]
 
+# Under a source's hit in Search: the chapters it holds, from the first.
+read-hit-chapters = [Çĥàþţéŕš 1 ţö { $last }~~~~~~]
+
+# Under a source's hit in Search: a web novel's episodes it holds, from the first.
+read-hit-episodes = [Éþîšöðéš 1 ţö { $last }~~~~~~]
+
+# Under a source's hit in Search: a light novel's parts it holds.
+read-hit-parts =
+    { $count ->
+        [one] [1 þàŕţ~~]
+       *[other] [{ $count } þàŕţš~~~]
+    }
+
+# Under a source's hit in Search: the book files it holds.
+read-hit-files =
+    { $count ->
+        [one] [1 ƒîļé~~]
+       *[other] [{ $count } ƒîļéš~~~]
+    }
+
+# Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+read-hit-files-format =
+    { $count ->
+        [one] [1 ƒîļé · { $format }~~~~]
+       *[other] [{ $count } ƒîļéš · { $format }~~~~~]
+    }
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 
@@ -9365,23 +9392,27 @@ read-search-anilist-failed-line = [Ýöüŕ šöüŕçéš ŵéŕé šţîļļ �
 # Search, when nothing was found anywhere: under the line saying AniList found nothing.
 read-search-sources-nothing = [Ñöţĥîñĝ îñ ýöüŕ šöüŕçéš éîţĥéŕ.~~~~~~~~~~]
 
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = [Šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~]
+
 # The link under From your sources that shows the rest of AniList's results.
 read-search-more-anilist = [Ṁöŕé ƒŕöɱ ÅñîĻîšţ~~~~~~]
 
 # Beside More from AniList: how many of AniList's results show.
 read-search-shown = [{ $shown } öƒ { $total } šĥöŵñ~~~~~]
 
-# The button of a source group with more than five hits.
-read-search-source-more = [Šĥöŵ { $n } ɱöŕé~~~~]
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+read-search-shown-some = [{ $shown } šĥöŵñ~~~]
 
-# Beside a source row's name in Search: the kind of source it is.
+# Beside a source's name in Search: the kind of source it is.
 read-search-source-kind-server = [Šéŕṽéŕ~~]
 
-# Beside a source row's name in Search: the kind of source it is.
 read-search-source-kind-folder = [Ƒöļðéŕ~~]
 
-# Beside a source row's name in Search: the kind of source it is.
 read-search-source-kind-plugin = [Þļüĝîñ~~]
+
+# The button of a source group with more than five hits.
+read-search-source-more = [Šĥöŵ { $n } ɱöŕé~~~~]
 
 # Under the Your sources only switch in the iPhone and iPad Filters sheet.
 read-search-sources-only-line = [ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ. Ţĥé ƒîļţéŕš ƀéļöŵ àþþļý ţö ÅñîĻîšţ'š ŕéšüļţš öñļý.~~~~~~~~~~~~~~~~~~~~~~~~]
