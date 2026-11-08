@@ -37,6 +37,8 @@ use tokio::sync::{Notify, mpsc};
 use super::{Ask, Kit, home, search, tiles};
 use crate::{outbox::Outbox, read_sources::BookSources};
 
+mod lists;
+
 const DAY: i64 = 86_400;
 // Noon UTC on 14 November 2023, read in UTC.
 const NOW: i64 = 1_700_000_000 - 1_700_000_000 % DAY + 12 * 3_600;

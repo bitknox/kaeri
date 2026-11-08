@@ -84,8 +84,11 @@ pub(crate) fn view(kit: &Kit, ask: Ask) -> UpdatesView {
         let id = WorkId::new(work.clone());
         let Some((source, _, list)) = chapters::of_work(sources, store, &id) else { continue };
         let read = chapters::Read::of(store, &work);
+        // One row per chapter: two versions of it are one chapter come out.
+        let mut listed = HashSet::new();
         let new: Vec<&chapters::Kept> = list
             .iter()
+            .filter(|c| listed.insert(c.id.as_str()))
             .filter(|c| c.seen_at.is_some() || c.published.is_some())
             .filter(|c| c.out_at().is_some_and(|at| at >= since && at <= ask.now + 86_400))
             .collect();

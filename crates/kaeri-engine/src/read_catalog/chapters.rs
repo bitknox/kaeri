@@ -98,7 +98,8 @@ pub fn keep(
 ) -> Vec<Kept> {
     let before = kept(store, source, series).map(|(list, _)| list);
     let restarts = crate::read_sources::restarts_per_volume(chapters);
-    let mut fresh = Vec::new();
+    let mut fresh: Vec<Kept> = Vec::new();
+    let mut fresh_ids = HashSet::new();
     let list: Vec<Kept> = chapters
         .iter()
         .map(|c| {
@@ -122,7 +123,8 @@ pub fn keep(
                 pages: c.page_count,
                 seen_at,
             };
-            if matches!(earlier, Some(None)) {
+            // Two versions of a new chapter are one chapter come out.
+            if matches!(earlier, Some(None)) && fresh_ids.insert(kept.id.clone()) {
                 fresh.push(kept.clone());
             }
             kept

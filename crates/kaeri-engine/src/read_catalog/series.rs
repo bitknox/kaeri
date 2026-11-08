@@ -1,6 +1,8 @@
 //! A series' page: the header from what was kept at once, then AniList's page and the
 //! edition's chapters as they land, and each chapter's versions across the person's sources.
 
+use std::collections::HashSet;
+
 use kaeri_core::{
     books::{ChapterId, WorkId},
     media::Medium,
@@ -129,7 +131,9 @@ pub(crate) fn kept_volumes(
     };
     let read = chapters::Read::of(&kit.store, work.as_str());
     let mut groups: Vec<VolumeGroup> = Vec::new();
-    for chapter in &list {
+    let mut listed = HashSet::new();
+    // One row per chapter, as the source's answer gives: the first version listed.
+    for chapter in list.iter().filter(|c| listed.insert(c.id.as_str())) {
         let mut row = super::updates::row_of(chapter, &read);
         row.new_chapter = false;
         match groups.iter_mut().find(|g| g.volume == chapter.volume) {

@@ -1403,8 +1403,14 @@ impl BookSources {
         let bookmarks: HashSet<String> =
             self.store.bookmarks(work.as_str()).unwrap_or_default().into_iter().collect();
         let mut groups: Vec<VolumeGroup> = Vec::new();
+        let mut listed: HashSet<ChapterId> = HashSet::new();
         for chapter in &chapters {
             let id = chapter.key(restarts).id();
+            // Two versions of one chapter, as two groups' releases of it, are one row: the first
+            // listed, which is the one that opens. Its row counts the others as versions.
+            if !listed.insert(id.clone()) {
+                continue;
+            }
             let state = match read.get(id.as_str()) {
                 Some(r) if r.read => ChapterReadState::Read,
                 Some(r) => match r.last_page {
