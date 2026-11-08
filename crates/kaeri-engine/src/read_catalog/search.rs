@@ -128,6 +128,7 @@ fn medium_of(query: &ReadSearchQuery) -> Option<Medium> {
 /// One page of a search. Pages count from 0. With words, the first page also asks the person's
 /// sources; "Your sources only" asks them alone and never AniList.
 pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbox) {
+    let searched = searched(kit, &query);
     let words = !query.text.trim().is_empty();
     let with_sources = words && page == 0;
     let generation = with_sources.then(|| sources_search(kit, ask, &query, tx));
@@ -149,7 +150,13 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
         // The other scope's count rides the first page, with words to count.
         let shows = (ask.both() && page == 0 && !term.is_empty())
             .then_some((term.as_str(), filter.adult));
-        match kit.meta.books_and_shows(&[browse], shows).await {
+        let answer = kit.meta.books_and_shows(&[browse], shows).await;
+        // Newer words or filters were searched while AniList answered: the page shows theirs,
+        // and this answer, or failure, is for words no longer there.
+        if !still_searched(&kit, searched) {
+            return;
+        }
+        match answer {
             Ok((pages, other_scope)) => {
                 let (items, has_more) = pages
                     .into_iter()
@@ -207,6 +214,29 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
             }
         }
     });
+}
+
+/// The words and filters last searched, with a generation that changes when they do. More pages
+/// of the same search keep it.
+#[derive(Debug, Default)]
+pub(crate) struct Searched {
+    generation: u64,
+    query: ReadSearchQuery,
+}
+
+/// The generation of `query`'s search, starting a new one when it differs from the last.
+fn searched(kit: &Kit, query: &ReadSearchQuery) -> u64 {
+    let mut searched = kit.sources.catalog.searched.lock().unwrap_or_else(|e| e.into_inner());
+    if searched.generation == 0 || searched.query != *query {
+        searched.generation += 1;
+        searched.query = query.clone();
+    }
+    searched.generation
+}
+
+fn still_searched(kit: &Kit, generation: u64) -> bool {
+    kit.sources.catalog.searched.lock().unwrap_or_else(|e| e.into_inner()).generation
+        == generation
 }
 
 /// How many series AniList found, once the last page is in. Before that AniList's own total is
