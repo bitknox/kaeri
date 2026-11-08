@@ -14,7 +14,7 @@ public class ReadDiscoveryTests
         ReadingStore.EmptyQuery with { Text = text, SourcesOnly = sourcesOnly, Started = started };
 
     static ReadSourceGroup Group(string id, string name, ReadSourceState state, WorkTile[]? tiles = null, uint joined = 0) =>
-        new(SourceId: id, SourceName: name, State: state, Tiles: tiles ?? [], Joined: joined);
+        new(SourceId: id, SourceName: name, State: state, Tiles: tiles ?? [], Joined: joined, Kind: ReadSourceKind.Server);
 
     static ReadSourceSearch Found(ReadSearchQuery query, ReadAnilistState anilist, ReadSourceGroup[] groups, ReadSourceJoin[]? joins = null, bool done = false) =>
         new(Query: query, Anilist: anilist, Groups: groups, Joins: joins ?? [], Done: done);
@@ -122,12 +122,24 @@ public class ReadDiscoveryTests
     }
 
     [Fact]
-    public void TheKindBesideASourceComesFromYourSources()
+    public void ASourceSaysItsKindAndAHitHowMuchTheSourceHolds()
     {
-        Assert.Equal(ReadSourceKind.Folder, ReadDiscovery.KindOf(ReadDiscovery.FoldersId, null));
-        Assert.Equal(ReadSourceKind.None, ReadDiscovery.KindOf("demo", null));
         Assert.Equal("Folder", ReadDiscovery.KindWords(ReadSourceKind.Folder));
-        Assert.Null(ReadDiscovery.KindWords(ReadSourceKind.None));
+        Assert.Equal("Server", ReadDiscovery.KindWords(ReadSourceKind.Server));
+        Assert.Null(ReadDiscovery.KindWords(null));
+        var hit = Tile("s:1") with { Amount = new Msg.Reading(new ReadingMsg.ReadingVolumes(2)) };
+        Assert.Equal("2 volumes", ReadDiscovery.Amount(hit));
+        Assert.Equal("", ReadDiscovery.Amount(Tile("s:2")));
+    }
+
+    [Fact]
+    public void AnAniListResultSaysItsFormatAndOrigin()
+    {
+        var tile = Tile("a:900101") with { FormatLabel = "Light novel", Origin = new Msg.Reading(new ReadingMsg.ReadingOriginJapan()) };
+        Assert.Equal("Light novel · Japan", ReadDiscovery.Caption(tile));
+        Assert.Equal("Light novel", ReadDiscovery.Caption(tile with { Origin = null }));
+        Assert.Null(ReadDiscovery.Caption(Tile("a:900102")));
+        Assert.Equal("Series from AniList", ReadDiscovery.Total(null));
     }
 
     [Fact]
@@ -138,7 +150,6 @@ public class ReadDiscoveryTests
         Assert.Equal("Lantern Orchard", heading.Title);
         Assert.Equal("Because you finished Lantern Orchard", heading.ToString());
         Assert.Equal("30 of 212 shown", ReadDiscovery.Shown(30, 212));
-        Assert.Null(ReadDiscovery.Shown(30, 30));
-        Assert.Null(ReadDiscovery.Shown(30, null));
+        Assert.Equal("30 shown", ReadDiscovery.Shown(30, null));
     }
 }

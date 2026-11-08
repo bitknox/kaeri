@@ -2,44 +2,36 @@ using Kaeri.Engine.Model;
 
 namespace Kaeri.App;
 
-/// <summary>What kind of source a group in Search is, for the word beside its name.</summary>
-public enum ReadSourceKind
-{
-    None,
-    Folder,
-    Server,
-    Plugin,
-}
-
 /// <summary>
 /// The words and choices of reading's discovery: Home's rows, and Search's From your sources
 /// section, as the discovery board draws them. Kept apart from the controls so they can be tested.
 /// </summary>
 public static class ReadDiscovery
 {
-    /// <summary>The engine's one group for every scanned folder.</summary>
-    public const string FoldersId = "folders";
-
-    /// <summary>The kind of the source <paramref name="id"/> names, from Your sources as the engine last sent them.</summary>
-    public static ReadSourceKind KindOf(string id, BookSourcesView? view)
-    {
-        if (id == FoldersId || (view?.Folders ?? []).Any(f => f.Id == id))
-            return ReadSourceKind.Folder;
-        if ((view?.Servers ?? []).Any(s => s.Id == id))
-            return ReadSourceKind.Server;
-        if ((view?.Plugins ?? []).Any(p => p.Id == id))
-            return ReadSourceKind.Plugin;
-        return ReadSourceKind.None;
-    }
-
-    /// <summary>"Server", "Folder" or "Plugin"; nothing for the demo.</summary>
-    public static string? KindWords(ReadSourceKind kind) => kind switch
+    /// <summary>"Server", "Folder" or "Plugin" beside a source's name; nothing for one built in, such as the demo.</summary>
+    public static string? KindWords(ReadSourceKind? kind) => kind switch
     {
         ReadSourceKind.Folder => T.ReadSearchSourceKindFolder,
         ReadSourceKind.Server => T.ReadSearchSourceKindServer,
         ReadSourceKind.Plugin => T.ReadSearchSourceKindPlugin,
         _ => null,
     };
+
+    /// <summary>An AniList result's line in Search: its format and origin, "Light novel · Japan". Null when AniList names neither.</summary>
+    public static string? Caption(WorkTile tile)
+    {
+        var parts = new[] { tile.FormatLabel, tile.Origin?.Text() }.Where(p => p is { Length: > 0 }).ToArray();
+        return parts.Length == 0 ? null : string.Join(" · ", parts);
+    }
+
+    /// <summary>A source's hit's line: how much of the series the source holds, "2 volumes"; empty when the source does not say.</summary>
+    public static string Amount(WorkTile tile) => tile.Amount?.Text() ?? "";
+
+    /// <summary>
+    /// The line over AniList's results: "212 results" once the count is exact, else "Series from
+    /// AniList", as AniList's own count for a longer search is a stand-in.
+    /// </summary>
+    public static string Total(uint? total) => total is { } n ? T.ReadSearchTotal(n) : T.ReadSearchTotalUnknown;
 
     /// <summary>
     /// The third line of an AniList result that sources have: "In Home library", or "In 2 of
@@ -118,9 +110,9 @@ public static class ReadDiscovery
         _ => null,
     };
 
-    /// <summary>"30 of 212 shown", beside More from AniList; null when the total is not known.</summary>
-    public static string? Shown(int shown, uint? total) =>
-        total is { } all && all > shown ? T.ReadSearchShown(shown, all) : null;
+    /// <summary>"30 of 212 shown" beside More from AniList, or "30 shown" while the count is not known.</summary>
+    public static string Shown(int shown, uint? total) =>
+        total is { } all ? T.ReadSearchShown(shown, all) : T.ReadSearchShownSome(shown);
 
     /// <summary>
     /// A row's heading as runs: the words before the title, the title in the show font, and the

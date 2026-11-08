@@ -683,9 +683,9 @@ sealed partial class SourceRowView : StackPanel
     }
 
     /// <summary>Takes the group as the engine now has it; <paramref name="since"/> is when the words were asked.</summary>
-    public void Update(ReadSourceGroup group, ReadSourceKind sourceKind, DateTimeOffset since)
+    public void Update(ReadSourceGroup group, DateTimeOffset since)
     {
-        var kindWords = ReadDiscovery.KindWords(sourceKind);
+        var kindWords = ReadDiscovery.KindWords(group.Kind);
         if (name.Text != group.SourceName)
             name.Text = group.SourceName;
         // An en space between the name and its kind, as the board's gap.
@@ -707,11 +707,12 @@ sealed partial class SourceRowView : StackPanel
                 break;
             case ReadSourceState.Hits:
                 var tiles = group.Tiles ?? [];
-                var key = string.Join("\n", tiles.Select(t => $"{t.Work}\t{t.Title}\t{t.Cover}\t{ReadingParts.Line(t)}"));
+                var key = string.Join("\n", tiles.Select(t => $"{t.Work}\t{t.Title}\t{t.Cover}\t{ReadDiscovery.Amount(t)}"));
                 if (key != drawn)
                 {
                     drawn = key;
-                    slot.Covers([.. tiles.Select(t => (FrameworkElement)ReadingParts.Card(ctx, t))]);
+                    // Under a hit's title, how much of it the source holds; nothing when it does not say.
+                    slot.Covers([.. tiles.Select(t => (FrameworkElement)ReadingParts.Card(ctx, t, caption: ReadDiscovery.Amount(t)))]);
                 }
                 failed = "";
                 break;

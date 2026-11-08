@@ -140,7 +140,7 @@ static class ReadingParts
     /// Shift+F10 and the menu key, is Details with Add to list, or with
     /// <paramref name="continuing"/> Details with Remove from Continue.
     /// </summary>
-    public static Button Card(Ctx ctx, WorkTile tile, double width = HomeWording.PosterWidth, bool track = false, bool continuing = false, string? placed = null, bool placedRoom = false)
+    public static Button Card(Ctx ctx, WorkTile tile, double width = HomeWording.PosterWidth, bool track = false, bool continuing = false, string? placed = null, bool placedRoom = false, string? caption = null)
     {
         var stack = new StackPanel { Width = width };
         stack.Children.Add(Cover(ctx, tile.Cover, width, title: tile.Title));
@@ -163,7 +163,8 @@ static class ReadingParts
         var line = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(0, 2, 0, 0), MinHeight = CaptionLine };
         if (tile.NewChapter)
             line.Children.Add(WaterDot());
-        var said = Line(tile);
+        // Search words its own lines: an AniList result's format and origin, a source's hit how much it holds.
+        var said = caption ?? Line(tile);
         var words = new TextBlock
         {
             Text = said,
@@ -504,20 +505,20 @@ sealed partial class ReadGrid : ItemsRepeater
     /// gives a result its third line, "In Home library"; when any has one, every cell keeps room
     /// for it, as the grid's cells are one height.
     /// </summary>
-    public void Show(Ctx ctx, IReadOnlyList<WorkTile> tiles, Func<string, string?>? placed = null)
+    public void Show(Ctx ctx, IReadOnlyList<WorkTile> tiles, Func<string, string?>? placed = null, Func<WorkTile, string?>? caption = null)
     {
         var room = placed is not null && tiles.Any(t => placed(t.Work) is not null);
-        ItemTemplate = new TileFactory(ctx, placed, room);
+        ItemTemplate = new TileFactory(ctx, placed, room, caption);
         ItemsSource = tiles.ToList();
     }
 
-    sealed partial class TileFactory(Ctx ctx, Func<string, string?>? placed, bool room) : IElementFactory
+    sealed partial class TileFactory(Ctx ctx, Func<string, string?>? placed, bool room, Func<WorkTile, string?>? caption) : IElementFactory
     {
         public UIElement GetElement(ElementFactoryGetArgs args)
         {
             if (args.Data is not WorkTile tile)
                 return new Grid();
-            var card = ReadingParts.Card(ctx, tile, ReadingParts.GridCell, placed: placed?.Invoke(tile.Work), placedRoom: room);
+            var card = ReadingParts.Card(ctx, tile, ReadingParts.GridCell, placed: placed?.Invoke(tile.Work), placedRoom: room, caption: caption?.Invoke(tile));
             // The cell's width: the cover keeps 2:3 at whatever the layout gives it. The card
             // reaches past its cell by the hover outset, which its padding keeps clear.
             card.Width = double.NaN;

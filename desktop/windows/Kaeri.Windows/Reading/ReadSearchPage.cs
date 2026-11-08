@@ -208,7 +208,6 @@ public sealed partial class ReadSearchPage : Page
             {
                 ctx.Known.Reading.Changed += Heard;
                 ctx.Known.Medium.Changed += Other;
-                ctx.Known.Books.Changed += Show;
             }
             hearing = true;
             // What came while the page was being built, before it heard.
@@ -221,7 +220,6 @@ public sealed partial class ReadSearchPage : Page
                 box.TextChanged -= OnBoxText;
             ctx.Known.Reading.Changed -= Heard;
             ctx.Known.Medium.Changed -= Other;
-            ctx.Known.Books.Changed -= Show;
             hearing = false;
         };
     }
@@ -238,9 +236,6 @@ public sealed partial class ReadSearchPage : Page
             if (batch.Any(x => x is Event.Demo))
                 Demo();
         });
-        // The kinds beside the sources' names come from Your sources.
-        if (ctx.Known.Books.View is null)
-            ctx.Known.Books.Load();
         var search = ctx.Known.Reading.Search;
         if (Opening is { } asked)
         {
@@ -401,8 +396,8 @@ public sealed partial class ReadSearchPage : Page
             else
             {
                 anilistNote = "";
-                totalLine.Text = search.Total is { } total ? T.ReadSearchTotal(total) : "";
-                totalLine.Visibility = totalLine.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+                totalLine.Text = ReadDiscovery.Total(search.Total);
+                totalLine.Visibility = Visibility.Visible;
                 Draw(search, found);
                 anilistSlot.Content();
             }
@@ -412,7 +407,7 @@ public sealed partial class ReadSearchPage : Page
         var shown = ReadDiscovery.Shown(search.Tiles.Count, search.Total);
         moreRow.Visibility = !q.SourcesOnly && mine && search.HasMore ? Visibility.Visible : Visibility.Collapsed;
         moreAnilist.IsEnabled = !search.Loading;
-        shownWords.Text = shown ?? "";
+        shownWords.Text = shown;
         state.Done();
         Announce(search);
     }
@@ -427,7 +422,9 @@ public sealed partial class ReadSearchPage : Page
         var fresh = drawn.Length == 0 || !drawn.StartsWith(search.Query.Text + "\n", StringComparison.Ordinal);
         drawn = key;
         var mark = fresh ? null : Ui.MarkFocus(grid);
-        grid.Show(ctx, [.. search.Tiles], found is null ? null : work => ReadDiscovery.Placed(found, work));
+        // With words, AniList's results say their format and origin; browsing keeps their facts.
+        grid.Show(ctx, [.. search.Tiles], found is null ? null : work => ReadDiscovery.Placed(found, work),
+            Browsing ? null : (Func<WorkTile, string?>)ReadDiscovery.Caption);
         if (!fresh)
             Ui.RestoreFocus(grid, mark);
     }
@@ -498,7 +495,6 @@ public sealed partial class ReadSearchPage : Page
             sourceViews.Remove(id);
             sourceRows.Children.Remove(view);
         }
-        var view0 = ctx.Known.Books.View;
         for (var i = 0; i < slotted.Count; i++)
         {
             var group = slotted[i];
@@ -515,7 +511,7 @@ public sealed partial class ReadSearchPage : Page
                 sourceRows.Children.Insert(Math.Min(i, sourceRows.Children.Count), view);
             }
             view.First = i == 0;
-            view.Update(group, ReadDiscovery.KindOf(group.SourceId, view0), ranAt);
+            view.Update(group, ranAt);
         }
         var line = ReadDiscovery.NothingLine(found);
         nothingWords.Text = line ?? "";
