@@ -53,3 +53,10 @@ reader-end-from = De { $source }
 reader-chapter-line = Capítulo { $chapter }
 
 reader-divider-facts-source = { $facts } · de { $source }
+reader-end-swipe = Desliza para seguir leyendo
+reader-divider-images = { $count ->
+    [one] Una imagen
+    [many] { $count } imágenes
+   *[other] { $count } imágenes
+ }
+reader-chapter-line-titled = Capítulo { $chapter } · { $title }

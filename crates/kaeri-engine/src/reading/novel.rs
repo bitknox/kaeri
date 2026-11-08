@@ -740,6 +740,10 @@ fn look(
     }
 }
 
+/// The characters a line of a novel holds on a wide screen, at least and at most: the
+/// paginator's columns keep to it.
+const MEASURE: [u32; 2] = [65, 75];
+
 const SERIF: &str = "\"Literata\", \"Iowan Old Style\", Charter, Georgia, serif";
 const SANS: &str = "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Noto Sans\", Helvetica, Arial, sans-serif";
 
@@ -791,6 +795,9 @@ pub(crate) fn style(
         "mode": if scrolled { "scrolled" } else { "paged" },
         "columns": if eink { serde_json::Value::from(1) } else { serde_json::Value::from("auto") },
         "column": 720,
+        // A line holds between these many characters: two columns only where each holds the
+        // first, and no column wider than the second, so a wide screen grows its margins.
+        "measure": MEASURE,
         "eink": eink,
         "legacy": support == NovelSupport::KnownFlaws,
         "fixed": fixed,
@@ -836,6 +843,31 @@ mod tests {
         // The tallest group, the Mac's, is 110 px with the space under it.
         assert!(foot(false) >= 120.0, "{}", foot(false));
         assert!(foot(true) < 100.0, "phones keep their own foot");
+    }
+
+    #[test]
+    fn a_line_holds_65_to_75_characters_on_every_screen_but_e_ink() {
+        let store = kaeri_store::Store::open_in_memory().unwrap();
+        let config = kaeri_core::config::ReadingConfig::default();
+        let style_on = |eink: bool| {
+            let surface = ReaderSurface {
+                width_px: 2388,
+                height_px: 1668,
+                scale: 2.0,
+                eink,
+                two_pages: true,
+                dark: false,
+            };
+            let screen = super::super::settings::Screen::default();
+            let layers =
+                Layers::read(&store, &config, kaeri_core::media::Medium::Novel, None, screen);
+            let style = style(&layers, &surface, false, NovelSupport::Full, false, false);
+            serde_json::from_str::<serde_json::Value>(&style).unwrap()
+        };
+        let wide = style_on(false);
+        assert_eq!(wide["measure"], serde_json::json!([65, 75]));
+        assert_eq!(wide["columns"], "auto", "the paginator fits columns to the measure");
+        assert_eq!(style_on(true)["columns"], 1, "e-ink keeps one column");
     }
 
     #[test]

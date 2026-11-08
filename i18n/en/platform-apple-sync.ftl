@@ -85,3 +85,7 @@ sync-turn-off-button = Turn off
 # @arg service: text
 rkey-enter-line-generic = { $service } holds history from your other { -device-pl }. The key you saved when sync was turned on opens it.
 
+
+# Code screen: how long the code still works, as a countdown such as 1:58.
+# @arg left: text
+pair-code-left = This code works for another { $left }.

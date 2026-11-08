@@ -601,13 +601,11 @@
     <string name="reader_notice_go_back">Kembali</string>
     <string name="reader_notice_change">Ubah</string>
     <string name="reader_settings">Pengaturan pembaca</string>
-    <string name="reader_chapter_line_titled">Bab %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Bab %1$s · gulir</string>
     <string name="reader_minutes_left">%1$d mnt</string>
     <string name="reader_zone_next">Halaman selanjutnya</string>
     <string name="reader_grid_title">Halaman</string>
     <string name="reader_end_continue">Lanjutkan</string>
-    <string name="reader_end_swipe">Geser untuk terus membaca</string>
     <string name="reader_end_series">Kembali ke seri</string>
     <string name="reader_end_again">Baca ulang dari awal</string>
     <string name="reader_opening_chapter">Membuka bab %1$s</string>
@@ -697,9 +695,6 @@
     <string name="reader_row_strip_gap">Jarak antar gambar</string>
     <string name="reader_paper_look">Tampilan kertas siang hari</string>
     <string name="reader_paper_dim">Redupkan halaman</string>
-    <plurals name="reader_divider_images">
-        <item quantity="other">%1$d gambar</item>
-    </plurals>
     <string name="reader_opening_waited">%1$s · %2$d d</string>
     <string name="reader_sources_title">Baca bab ini dari</string>
     <string name="reader_paper_parts">Yang diubahnya</string>
@@ -2269,6 +2264,11 @@
     <string name="reader_end_from">Dari %1$s</string>
     <string name="reader_chapter_line">Bab %1$s</string>
     <string name="reader_divider_facts_source">%1$s · dari %2$s</string>
+    <string name="reader_end_swipe">Geser untuk terus membaca</string>
+    <plurals name="reader_divider_images">
+        <item quantity="other">%1$d gambar</item>
+    </plurals>
+    <string name="reader_chapter_line_titled">Bab %1$s · %2$s</string>
     <string name="onboarding_read_demo">Baca demo</string>
     <string name="onboarding_demo_books_detail">Satu komik pendek dan satu cerita pendek, dibagikan pembuatnya di bawah Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Satu episode pendek dan satu komik pendek, dibagikan pembuatnya di bawah Creative Commons.</string>

@@ -682,7 +682,8 @@ impl Session {
         }
         self.place = Some(here);
         self.note_place(cx);
-        if std::mem::take(&mut self.novel_resumed) {
+        // Nothing to start over from at the chapter's first page.
+        if std::mem::take(&mut self.novel_resumed) && shown > 0 {
             let msg = ReadingMsg::ReaderResumed { page: i64::from(shown) + 1 };
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, self.eink()));
         }

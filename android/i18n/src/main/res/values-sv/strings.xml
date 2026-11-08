@@ -632,13 +632,11 @@
     <string name="reader_notice_go_back">Gå tillbaka</string>
     <string name="reader_notice_change">Ändra</string>
     <string name="reader_settings">Läsarinställningar</string>
-    <string name="reader_chapter_line_titled">Kapitel %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Kapitel %1$s · rullning</string>
     <string name="reader_minutes_left">%1$d min</string>
     <string name="reader_zone_next">Nästa sida</string>
     <string name="reader_grid_title">Sidor</string>
     <string name="reader_end_continue">Fortsätt</string>
-    <string name="reader_end_swipe">Svep för att läsa vidare</string>
     <string name="reader_end_series">Tillbaka till serien</string>
     <string name="reader_end_again">Läs igen från början</string>
     <string name="reader_opening_chapter">Öppnar kapitel %1$s</string>
@@ -728,10 +726,6 @@
     <string name="reader_row_strip_gap">Avstånd mellan bilder</string>
     <string name="reader_paper_look">Pappersutseende dagtid</string>
     <string name="reader_paper_dim">Dämpa sidan</string>
-    <plurals name="reader_divider_images">
-        <item quantity="one">En bild</item>
-        <item quantity="other">%1$d bilder</item>
-    </plurals>
     <string name="reader_opening_waited">%1$s · %2$d s</string>
     <string name="reader_sources_title">Läs det här kapitlet från</string>
     <string name="reader_paper_parts">Vad det ändrar</string>
@@ -2345,6 +2339,12 @@
     <string name="reader_end_from">Från %1$s</string>
     <string name="reader_chapter_line">Kapitel %1$s</string>
     <string name="reader_divider_facts_source">%1$s · från %2$s</string>
+    <string name="reader_end_swipe">Svep för att läsa vidare</string>
+    <plurals name="reader_divider_images">
+        <item quantity="one">En bild</item>
+        <item quantity="other">%1$d bilder</item>
+    </plurals>
+    <string name="reader_chapter_line_titled">Kapitel %1$s · %2$s</string>
     <string name="onboarding_read_demo">Läs demon</string>
     <string name="onboarding_demo_books_detail">En kort tecknad serie och en kort berättelse, som upphovspersonerna delar under Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Ett kort avsnitt och en kort tecknad serie, delade av upphovspersonerna under Creative Commons.</string>

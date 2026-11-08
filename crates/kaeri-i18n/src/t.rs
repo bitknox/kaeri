@@ -840,6 +840,11 @@ pub fn reader_resumed(page: i64) -> String {
     text("reader-resumed", &[("page", Arg::Int(page))])
 }
 
+/// The same notice in a webtoon strip, which counts images rather than pages.
+pub fn reader_resumed_image(image: i64) -> String {
+    text("reader-resumed-image", &[("image", Arg::Int(image))])
+}
+
 /// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 pub fn reader_back_to_page(page: i64) -> String {
     text("reader-back-to-page", &[("page", Arg::Int(page))])
@@ -13707,7 +13712,7 @@ pub fn reader_end_from(source: &str) -> String {
     text("reader-end-from", &[("source", Arg::Text(source))])
 }
 
-/// Under the series title in the reader's controls. The chapter is its number, such as 12.
+/// Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
 pub fn reader_chapter_line(chapter: &str) -> String {
     text("reader-chapter-line", &[("chapter", Arg::Text(chapter))])
 }
@@ -13715,6 +13720,21 @@ pub fn reader_chapter_line(chapter: &str) -> String {
 /// The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
 pub fn reader_divider_facts_source(facts: &str, source: &str) -> String {
     text("reader-divider-facts-source", &[("facts", Arg::Text(facts)), ("source", Arg::Text(source))])
+}
+
+/// Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+pub fn reader_end_swipe() -> String {
+    text("reader-end-swipe", &[])
+}
+
+/// The next episode's length on the divider inside a strip.
+pub fn reader_divider_images(count: i64) -> String {
+    text("reader-divider-images", &[("count", Arg::Int(count))])
+}
+
+/// Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+pub fn reader_chapter_line_titled(chapter: &str, title: &str) -> String {
+    text("reader-chapter-line-titled", &[("chapter", Arg::Text(chapter)), ("title", Arg::Text(title))])
 }
 
 /// Button in the first run that opens the reading demo.

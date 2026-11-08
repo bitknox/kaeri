@@ -18,7 +18,7 @@ struct NovelReader: View {
     @State private var controller = NovelWebController()
     @State private var endShown = false
     @State private var note: String?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.readerPaper) private var paper
 
     private var forwardIsLeft: Bool { model.novel?.progression == .rightToLeft }
 
@@ -26,6 +26,9 @@ struct NovelReader: View {
         ZStack {
             NovelWebView(controller: controller)
                 .frame(width: size.width, height: size.height)
+            if !endShown, model.notice == nil, model.choice(.footValue) != "none", model.choice(.mode) != "scrolled" {
+                pagesLeft
+            }
             if endShown {
                 ReaderEndPage(model: model, theme: theme, size: size).transition(.opacity)
             }
@@ -41,9 +44,13 @@ struct NovelReader: View {
                 .transition(.opacity)
             }
         }
-        .animation(reduceMotion ? nil : .fadeIn, value: endShown)
-        .animation(reduceMotion ? nil : .fadeIn, value: note)
+        // Reduce Motion keeps the fades, which move nothing; Paper mode has none.
+        .animation(paper ? nil : .fadeIn, value: endShown)
+        .animation(paper ? nil : .fadeIn, value: note)
+        .animation(paper ? nil : .fadeIn, value: model.notice == nil)
         .onAppear { wire(); open() }
+        .onChange(of: theme.page, initial: true) { _, page in controller.pageColor = page }
+        .onChange(of: paper, initial: true) { _, paper in controller.paper = paper }
         .onChange(of: model.novel?.chapter) { _, _ in open() }
         .onChange(of: model.novelStyle) { _, style in controller.configure(style) }
         .onChange(of: model.jump?.tick) { _, _ in
@@ -56,6 +63,25 @@ struct NovelReader: View {
         }
         .onChange(of: model.choice(.mode)) { _, mode in controller.scrolled(mode == "scrolled") }
         .onDisappear { controller.stop() }
+    }
+
+    /// "6 pages left in this chapter", the one line at rest, in the bottom margin. A notice takes
+    /// its place while it shows.
+    private var pagesLeft: some View {
+        let left = max(model.position.count - model.position.index - 1, 0)
+        return VStack {
+            Spacer()
+            Text(L.readerPagesLeft(count: left))
+                .font(.ui(12)).monospacedDigit()
+                .foregroundStyle(theme.silk.opacity(0.6))
+                .lineLimit(1).minimumScaleFactor(0.8)
+                .padding(.bottom, mac ? 48 : (size.width >= 700 ? 30 : 28))
+        }
+        .frame(width: size.width)
+        .allowsHitTesting(false)
+        .opacity(model.chromeShown ? 0 : 1)
+        .transition(.opacity)
+        .accessibilityHidden(true)
     }
 
     private func wire() {
@@ -94,6 +120,15 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     private var book: NovelOpenView?
     private var openedChapter: String?
     private let handler = BookSchemeHandler()
+    /// The page's colour, behind the page a drag carries away.
+    var pageColor: Color = .clear
+    /// Paper mode: a swipe turns at once, with nothing following the finger.
+    var paper = false
+    #if os(iOS)
+    /// The page being dragged away, over the one the turn showed under it.
+    private var carried: UIView?
+    private var carriedForward = true
+    #endif
 
     override init() {
         let config = WKWebViewConfiguration()
@@ -112,11 +147,9 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         webView.scrollView.contentInsetAdjustmentBehavior = .never
         webView.scrollView.isScrollEnabled = false
         webView.allowsLinkPreview = false
-        for direction in [UISwipeGestureRecognizer.Direction.left, .right] {
-            let swipe = UISwipeGestureRecognizer(target: self, action: #selector(swiped(_:)))
-            swipe.direction = direction
-            webView.addGestureRecognizer(swipe)
-        }
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(panned(_:)))
+        pan.delegate = self
+        webView.addGestureRecognizer(pan)
         #else
         webView.setValue(false, forKey: "drawsBackground")
         #endif
@@ -166,11 +199,64 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     func goTo(_ page: Int) { call("window.kaeriReader && window.kaeriReader.goTo(\(max(page, 0)), 'jump')") }
 
     #if os(iOS)
-    @objc private func swiped(_ gesture: UISwipeGestureRecognizer) {
-        // A swipe to the left moves forward, unless the book runs right to left.
-        let left = gesture.direction == .left
+    /// A paged drag, as the manga reader has: the page follows the finger, the next one is
+    /// already under it, and letting go short of a quarter of the width brings it back. A drag
+    /// to the left moves forward, unless the book runs right to left.
+    @objc private func panned(_ gesture: UIPanGestureRecognizer) {
+        let dx = gesture.translation(in: webView).x
+        let width = max(webView.bounds.width, 1)
         let rtl = book?.progression == .rightToLeft
-        turn(forward: left != rtl, how: "swipe")
+        switch gesture.state {
+        case .began, .changed:
+            if carried == nil {
+                guard abs(dx) > 6 else { return }
+                let forward = (dx < 0) != rtl
+                if paper {
+                    // Paper mode turns at once; the rest of this drag is dropped.
+                    gesture.isEnabled = false
+                    gesture.isEnabled = true
+                    turn(forward: forward, how: "swipe")
+                    return
+                }
+                guard let shot = webView.snapshotView(afterScreenUpdates: false) else { return }
+                let page = UIView(frame: webView.bounds)
+                page.backgroundColor = UIColor(pageColor)
+                page.isUserInteractionEnabled = false
+                shot.frame = page.bounds
+                page.addSubview(shot)
+                webView.addSubview(page)
+                carried = page
+                carriedForward = forward
+                turn(forward: forward, how: "swipe")
+            }
+            // The page moves only the way it is going.
+            let away: CGFloat = (carriedForward != rtl) ? -1 : 1
+            carried?.transform = CGAffineTransform(translationX: away * max(dx * away, 0), y: 0)
+        case .ended, .cancelled, .failed:
+            guard let page = carried else { return }
+            let away: CGFloat = (carriedForward != rtl) ? -1 : 1
+            let velocity = gesture.velocity(in: webView).x * away
+            let commit = gesture.state == .ended && (dx * away > width * 0.25 || velocity > 450)
+            carried = nil
+            let forward = carriedForward
+            UIView.animate(withDuration: 0.25, delay: 0, options: [.curveEaseOut, .allowUserInteraction]) {
+                page.transform = commit ? CGAffineTransform(translationX: away * width, y: 0) : .identity
+            } completion: { [weak self] _ in
+                if commit {
+                    page.removeFromSuperview()
+                    return
+                }
+                // Back where it was: the turn under it is undone before the page lifts.
+                guard let self else { page.removeFromSuperview(); return }
+                self.webView.evaluateJavaScript(
+                    "window.kaeriReader && window.kaeriReader.\(forward ? "prev" : "next")('swipe')"
+                ) { _, _ in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { page.removeFromSuperview() }
+                }
+            }
+        default:
+            break
+        }
     }
     #endif
 
@@ -264,6 +350,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         case "ArrowDown", "PageDown", " ": turn(forward: true, how: "key")
         case "ArrowUp", "PageUp": turn(forward: false, how: "key")
         case "Home": goTo(0)
+        case "End": goTo(max((model?.position.count ?? 1) - 1, 0))
         default: break
         }
     }
@@ -279,6 +366,17 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         Task { @MainActor in decisionHandler(ok ? .allow : .cancel) }
     }
 }
+
+#if os(iOS)
+extension NovelWebController: UIGestureRecognizerDelegate {
+    /// Only a sideways drag on a paged book turns; scrolling and text selection keep theirs.
+    func gestureRecognizerShouldBegin(_ gesture: UIGestureRecognizer) -> Bool {
+        guard let pan = gesture as? UIPanGestureRecognizer, !webView.scrollView.isScrollEnabled else { return false }
+        let v = pan.velocity(in: webView)
+        return abs(v.x) > abs(v.y)
+    }
+}
+#endif
 
 /// The script handler holds the controller weakly, so the web view does not keep it alive.
 private final class ScriptProxy: NSObject, WKScriptMessageHandler {
