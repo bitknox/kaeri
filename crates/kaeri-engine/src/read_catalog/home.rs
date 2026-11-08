@@ -536,6 +536,49 @@ impl Home {
         tiles::reading(&self.meta, &self.store, &self.sources, &kept.book)
     }
 
+    /// Continue's covers, in its order: AniList's book where one is kept, else what the store
+    /// holds of the work, so Continue stays while AniList can't be reached.
+    fn continue_tiles(&self, continuing: &[String]) -> Vec<WorkTile> {
+        let kept = tiles::kept_of(&self.meta, continuing);
+        continuing
+            .iter()
+            .filter_map(|work| {
+                match kept.iter().find(|k| tiles::work_of(k.book.id).as_str() == work) {
+                    Some(kept) => Some(self.tile(kept)),
+                    None => self.known(work),
+                }
+            })
+            .collect()
+    }
+
+    /// A work's cover from what the store holds of it, without AniList's: its title, medium
+    /// and kind, with where the person is in it.
+    fn known(&self, work: &str) -> Option<WorkTile> {
+        let kind = self.store.book_work_kind(work).ok().flatten()?;
+        let title = kind.title_in(crate::data::title_form(self.meta.titles()))?;
+        let medium = Medium::parse(&kind.medium).unwrap_or(Medium::Manga);
+        let format = kind.format.as_deref().map(str::to_ascii_lowercase);
+        let origin = kind.origin.as_deref().and_then(kaeri_core::media::Origin::parse);
+        let mut tile = WorkTile {
+            work: kaeri_core::books::WorkId::new(work.to_owned()),
+            title,
+            medium,
+            cover: None,
+            format_label: None,
+            progress: None,
+            next: None,
+            new_chapter: false,
+            adult: false,
+            facts: vec![words::kind_words(format.as_deref(), medium, kind.origin.as_deref())],
+            demo: false,
+            not_in_sources: false,
+            origin: tiles::origin(origin),
+            amount: None,
+        };
+        tiles::mark(&mut tile, &self.store, &self.sources);
+        Some(tile)
+    }
+
     fn shown(&self, book: &Book) -> bool {
         self.ask.adult || !book.adult()
     }
@@ -619,8 +662,7 @@ impl Home {
             (pending, memory.failed, memory.offline_since)
         };
         let continuing = self.continuing();
-        let continue_tiles: Vec<WorkTile> =
-            tiles::kept_of(&self.meta, &continuing).iter().map(|k| self.tile(k)).collect();
+        let continue_tiles = self.continue_tiles(&continuing);
         let following = self.following();
         let followed = tiles::kept_of(&self.meta, &following);
         let week = self.week(&followed);

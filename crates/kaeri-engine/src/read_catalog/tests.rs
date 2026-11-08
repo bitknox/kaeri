@@ -276,6 +276,58 @@ async fn rows_with_nothing_kept_leave_when_anilist_fails() {
     assert!(home.failed || home.offline, "one notice says so");
 }
 
+/// AniList failing takes only its own rows: a series found in the person's folder and read
+/// partway stays on Continue from what the store holds of it, and Home ends as it does with a
+/// source.
+#[tokio::test]
+async fn continue_and_the_sources_stay_when_anilist_fails() {
+    const WORK: &str = "a:900301";
+    let fake = FakeAniList::start().await;
+    fake.fail_operation(Operation::Books, kaeri_testkit::anilist::Failure::Status(500));
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let folder = dir.path().join("books").display().to_string();
+    let added = kaeri_store::book_sources::Folder {
+        id: "books".into(),
+        path: Some(folder.clone()),
+        tree_uri: None,
+        bookmark: None,
+        name: None,
+        added_at: NOW,
+        last_scan: Some(NOW),
+        available: true,
+    };
+    kit.store.put_book_folder(&added).unwrap();
+    let series = kaeri_store::shelf::LocalSeries {
+        id: "fixture-lantern-ferry".into(),
+        folder,
+        name: "The Lantern Ferry".into(),
+        medium: "manga".into(),
+        work: Some(WORK.into()),
+        state: "matched".into(),
+    };
+    kit.store.put_local_series(&series).unwrap();
+    kit.store
+        .seed_book_work(WORK, "manga", Some("MANGA"), Some("JP"), "The Lantern Ferry", NOW)
+        .unwrap();
+    let place =
+        ReadEvent { page: Some(4), of_pages: Some(20), ..ReadEvent::new(WORK, "2", NOW) };
+    kit.store.record_read(&place, Vec::new()).unwrap();
+
+    let (tx, mut rx) = outbox();
+    home::load(&kit, ask(), false, &tx);
+    let home = whole_home(&mut rx).await;
+    assert!(books_asked(&fake) > 0, "AniList was asked and failed");
+    let titles: Vec<(&str, &str)> =
+        home.continue_reading.iter().map(|t| (t.work.as_str(), t.title.as_str())).collect();
+    assert_eq!(titles, [(WORK, "The Lantern Ferry")], "Continue stays");
+    assert_eq!(home.continue_reading[0].progress, Some(0.2), "with the person's place");
+    assert!(home.rows.is_empty(), "AniList's rows leave: {:?}", home.rows);
+    assert!(home.failed, "and say they failed");
+    assert!(!home.no_sources, "the folder is a source");
+    assert_eq!(home.end, Some(kaeri_model::reading::ReadHomeEnd::Everything));
+}
+
 // ---------------------------------------------------------------------------------------------
 // Search
 
