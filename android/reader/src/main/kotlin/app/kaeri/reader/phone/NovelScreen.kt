@@ -89,7 +89,8 @@ fun NovelScreen(
     val host = remember(session) {
         NovelWebHost(context, assets, resource) { message ->
             when (message) {
-                // A tap on a side third turns the page; the middle third is the chrome's.
+                // A tap on a side third turns the page, which the page does itself once it knows
+                // which side is forward; the middle third is the chrome's.
                 is NovelMessage.Tap -> when {
                     message.x < 1f / 3f -> turn(rtl, TurnHow.TURN)
                     message.x > 2f / 3f -> turn(!rtl, TurnHow.TURN)
@@ -114,6 +115,7 @@ fun NovelScreen(
         }
     }
     turn = { forward, how -> if (forward) host.next(how) else host.prev(how) }
+    LaunchedEffect(host, rtl) { host.tapsTurn(1f / 3f, rtl) }
     // A sideways fling turns the page. The web view still has the touch, for selecting text.
     DisposableEffect(host) {
         val flings = GestureDetector(

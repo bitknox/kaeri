@@ -15,7 +15,9 @@ import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
+import android.webkit.WebStorage
 import android.webkit.WebViewClient
+import androidx.webkit.ProfileStore
 import androidx.webkit.WebMessageCompat
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
@@ -53,7 +55,7 @@ sealed interface TrailerSignal {
  * A trailer's web view, made for the system's WebView the way the trailers spec asks: the engine's
  * page loaded under the app's identifier so YouTube sees a Referer, JavaScript for the player and
  * nothing else, no touch or key reaches the player, no new windows, no cookies kept for other
- * sites and nothing kept after [release].
+ * sites, and no cookies or storage kept once the last trailer is released: see [TrailerData].
  *
  * Every call is made on the main thread.
  */
@@ -75,6 +77,8 @@ class TrailerPlayer(
      * player's frame collapses and only its sound comes through.
      */
     val view: WebView = WebView(context).apply {
+        // Before anything else touches the view: a profile is set on a fresh view only.
+        TrailerData.adopt(this)
         layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
     }
 
@@ -109,7 +113,7 @@ class TrailerPlayer(
             setSupportZoom(false)
             cacheMode = WebSettings.LOAD_DEFAULT
         }
-        CookieManager.getInstance().setAcceptThirdPartyCookies(view, false)
+        TrailerData.cookies().setAcceptThirdPartyCookies(view, false)
         view.webViewClient = object : WebViewClient() {
             // The page is the only page: nothing the player does navigates the view away.
             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest) = request.isForMainFrame
@@ -162,17 +166,16 @@ class TrailerPlayer(
         if (!released) view.evaluateJavascript(trailerScript(control), null)
     }
 
-    /** Stop and let go of the view's decoder, cookies and cache. */
+    /** Stop and let go of the view and its decoder; the last trailer released takes its cookies with it. */
     fun release() {
         if (released) return
         released = true
         view.stopLoading()
         view.loadUrl("about:blank")
         view.clearHistory()
-        view.clearCache(true)
-        CookieManager.getInstance().removeAllCookies(null)
         (view.parent as? ViewGroup)?.removeView(view)
         view.destroy()
+        TrailerData.released()
     }
 
     companion object {
@@ -197,3 +200,67 @@ class TrailerPlayer(
 }
 
 private const val BRIDGE = "kaeri"
+
+/**
+ * What the trailers' pages keep, and when it goes. Where the system's WebView has profiles, the
+ * trailers have their own, so their cookies, storage and HTTP cache are apart from the book
+ * pages' and clearing them touches nothing else. Without profiles they share the app's default
+ * one, which only the book pages also use, and those keep no cookies or storage.
+ *
+ * Cookies and web storage go when the last trailer open is released, so no trailer finds what an
+ * earlier one left. The HTTP cache stays while the app runs, so the player's scripts load from it
+ * and the next trailer starts sooner, and is cleared once at the first trailer of each launch, so
+ * nothing in it outlives the app's run.
+ *
+ * Every call is made on the main thread.
+ */
+internal object TrailerData {
+    /** The trailers' WebView profile. */
+    const val PROFILE = "kaeri-trailers"
+
+    /** Trailers open now. */
+    internal var open = 0
+        private set
+
+    /** Whether this launch has had its first trailer, which clears what an earlier run left. */
+    internal var launched = false
+
+    private val profiled: Boolean by lazy { WebViewFeature.isFeatureSupported(WebViewFeature.MULTI_PROFILE) }
+
+    /** Put [view], fresh and untouched, under the trailers' profile, and count it open. */
+    fun adopt(view: WebView) {
+        if (profiled) {
+            ProfileStore.getInstance().getOrCreateProfile(PROFILE)
+            WebViewCompat.setProfile(view, PROFILE)
+        }
+        open += 1
+        if (!launched) {
+            launched = true
+            view.clearCache(true)
+            clear()
+        }
+    }
+
+    /** The trailers' cookie jar. */
+    fun cookies(): CookieManager =
+        if (profiled) ProfileStore.getInstance().getOrCreateProfile(PROFILE).cookieManager else CookieManager.getInstance()
+
+    /** A trailer let go: the last one takes the cookies and storage with it. */
+    fun released() {
+        open = (open - 1).coerceAtLeast(0)
+        if (open == 0) clear()
+    }
+
+    private fun clear() {
+        cookies().removeAllCookies(null)
+        storage()?.deleteAllData()
+    }
+
+    private fun storage(): WebStorage? =
+        if (profiled) {
+            ProfileStore.getInstance().getOrCreateProfile(PROFILE).webStorage
+        } else {
+            // Robolectric has no WebStorage; a device always does.
+            runCatching { WebStorage.getInstance() }.getOrNull()
+        }
+}
