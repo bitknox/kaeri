@@ -54,52 +54,79 @@ import app.kaeri.engine.model.ReadAnilistState
 import app.kaeri.engine.model.ReadSourceGroup
 import app.kaeri.engine.model.ReadSourceKind
 import app.kaeri.engine.model.ReadSourceJoin
-import app.kaeri.engine.model.ReadSourceSearch
 import app.kaeri.engine.model.ReadSourceState
 import app.kaeri.engine.model.WorkTile
 import app.kaeri.i18n.Strings
 import app.kaeri.store.ReadSearchState
 import app.kaeri.store.ReadingModel
-import app.kaeri.ui.AfterWait
 import app.kaeri.ui.Icons
 import app.kaeri.ui.LocalAppStore
-import app.kaeri.ui.wideWindow
 
 /** AniList's part leaving when Your sources only turns on: 200 ms. */
 private const val ANILIST_OUT = 200
 
-/** Where a grid item of Search goes: AniList's covers fade out in 200 ms, the rest glide. */
+/** Covers fading in over their placeholders: 200 ms, ease out. */
+private const val COVERS_IN = 200
+
+/** Placeholders fading out once the covers over them are opaque: 300 ms, after the covers' 200. */
+private const val PLACEHOLDERS_OUT = 300
+
+/**
+ * Where a grid item of Search goes: AniList's covers fade out in 200 ms, placeholders fade out
+ * over 300 ms once the covers over them are in, the rest glide.
+ */
 @Composable
-private fun LazyGridItemScope.searchMotion(anilist: Boolean = false): Modifier {
+internal fun LazyGridItemScope.searchMotion(anilist: Boolean = false, placeholder: Boolean = false): Modifier {
     val reduced = rememberSystemReducedMotion()
     return Modifier.animateItem(
-        fadeInSpec = Motion.fadeIn(),
+        fadeInSpec = if (placeholder) Motion.fadeIn() else tween(COVERS_IN, easing = LinearOutSlowInEasing),
         placementSpec = if (reduced) null else Motion.standard(),
-        fadeOutSpec = if (anilist) tween(ANILIST_OUT, easing = LinearOutSlowInEasing) else Motion.fadeOut(),
+        fadeOutSpec = when {
+            placeholder -> tween(PLACEHOLDERS_OUT, delayMillis = COVERS_IN, easing = LinearOutSlowInEasing)
+            anilist -> tween(ANILIST_OUT, easing = LinearOutSlowInEasing)
+            else -> Motion.fadeOut()
+        },
     )
+}
+
+/** The grid's placeholders for [count] cells, as covers or, at the largest text, as list rows. */
+internal fun LazyGridScope.placeholderCells(count: Int, list: Boolean, lines: Int, prefix: String) {
+    items(count, key = { "$prefix-$it" }, contentType = { "placeholder" }) {
+        // Hidden from screen readers: the heading or the field says Search is busy.
+        Box(searchMotion(placeholder = true).clearAndSetSemantics {}) {
+            if (list) ListRowPlaceholder() else app.kaeri.ui.PosterPlaceholder(titleLines(), lines)
+        }
+    }
 }
 
 /**
  * Search's results with words. [both] adds the count of matches in Shows; [demoOnly] the demo's
- * note. Browsing without words stays in [ReadSearchScreen].
+ * note. What is drawn is [shown]: the answer before new words stays until theirs lands, and
+ * placeholders show only where nothing is, from 600 ms ([ShownSearch.waited]). Browsing without
+ * words stays in [ReadSearchScreen].
  */
-internal fun LazyGridScope.wordsResults(search: ReadSearchState, both: Boolean, demoOnly: Boolean) {
+internal fun LazyGridScope.wordsResults(shown: ShownSearch, both: Boolean, demoOnly: Boolean, grid: ReadGridShape) {
+    val search = shown.search
     val query = search.query
     val sources = search.sources
     val sourcesOnly = query.sourcesOnly
     val anilist = when {
         sourcesOnly -> ReadAnilistState.SKIPPED
-        search.failure != null && search.tiles.isEmpty() -> ReadAnilistState.FAILED
+        shown.failureShown != null -> ReadAnilistState.FAILED
         search.loading && search.tiles.isEmpty() -> ReadAnilistState.ASKING
-        sources?.anilist == ReadAnilistState.FAILED -> ReadAnilistState.FAILED
+        sources?.anilist == ReadAnilistState.FAILED && !search.stale -> ReadAnilistState.FAILED
         else -> ReadAnilistState.ANSWERED
     }
+    // AniList's covers count only while its part shows: hidden by Your sources only, they are not found.
+    val anilistTiles = if (sourcesOnly) emptyList() else search.tiles
     val groups = sources?.groups.orEmpty()
-    val shown = groups.filter { it.shows() }
+    val shownGroups = groups.filter { it.shows() }
     val nothing = groups.filter { it.state is ReadSourceState.Nothing }
     // Every part settled with nothing at all: one Nothing found, as before the sources.
     val nothingAnywhere = !search.loading && anilist != ReadAnilistState.ASKING && anilist != ReadAnilistState.FAILED &&
-        search.tiles.isEmpty() && shown.isEmpty() && (sources == null || sources.done || groups.isEmpty())
+        anilistTiles.isEmpty() && shownGroups.isEmpty() && (sources == null || sources.done || groups.isEmpty())
+    // Kept from the words before and asked for 600 ms: a small ring beside the count says so.
+    val asking = shown.waited && search.stale
 
     when {
         nothingAnywhere -> item(span = { GridItemSpan(maxLineSpan) }, key = "nothing", contentType = "quiet") {
@@ -108,52 +135,42 @@ internal fun LazyGridScope.wordsResults(search: ReadSearchState, both: Boolean, 
         anilist == ReadAnilistState.FAILED -> item(span = { GridItemSpan(maxLineSpan) }, key = "anilist-failed", contentType = "quiet") {
             Box(searchMotion(anilist = true)) { AnilistFailed(search) }
         }
-        anilist == ReadAnilistState.ASKING ->
-            items(6, key = { "a-wait-$it" }, contentType = { "placeholder" }) {
-                Box(searchMotion(anilist = true)) { AfterWait { CoverPlaceholderCell() } }
-            }
+        anilist == ReadAnilistState.ASKING -> {
+            // The count's line holds its place from the start, so the covers land where their placeholders were.
+            countLine(null, asking = false)
+            if (shown.waited) placeholderCells(grid.columns * 2, grid.list, 1, "a-wait")
+        }
         anilist == ReadAnilistState.ANSWERED && search.tiles.isEmpty() ->
             item(span = { GridItemSpan(maxLineSpan) }, key = "anilist-nothing", contentType = "quiet") {
                 Box(searchMotion(anilist = true)) { AnilistNothing() }
             }
         anilist == ReadAnilistState.ANSWERED -> {
-            val total = search.total
-            if (!search.tiles.all { it.fromDemo }) {
-                item(span = { GridItemSpan(maxLineSpan) }, key = "count", contentType = "line") {
-                    val context = LocalContext.current
-                    // "4 series from AniList" when the engine knows the count exactly, else
-                    // "Series from AniList": never a number that is not the count.
-                    Text(
-                        if (total != null) Strings.readSearchTotal(context, total.toInt()) else Strings.readSearchTotalUnknown(context),
-                        style = MaterialTheme.typography.bodySmall.tabular(),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = searchMotion(anilist = true),
-                    )
-                }
-            }
+            countLine(search, asking)
             val first = search.tiles.take(search.firstPage.coerceAtLeast(1))
             items(first, key = { "a-${it.work}" }, contentType = { "cover" }) { tile ->
-                Box(searchMotion(anilist = true)) { ResultCell(tile, sources?.joins) }
+                Box(searchMotion(anilist = true)) { ResultCell(tile, sources?.joins, grid) }
             }
         }
         else -> {}
     }
 
-    if (shown.isNotEmpty()) {
-        // The heading rides with the first source's row, so the grid's gap does not stand between them.
-        shown.forEachIndexed { index, group ->
+    if (shownGroups.isNotEmpty()) {
+        // Its own item, so it stays while the first source's row leaves or is asked again.
+        item(span = { GridItemSpan(maxLineSpan) }, key = "src-heading", contentType = "heading") {
+            val context = LocalContext.current
+            Text(
+                Strings.readSearchFromSources(context),
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                modifier = searchMotion()
+                    .padding(top = if (sourcesOnly) 0.dp else 16.dp)
+                    // The grid's gap stands under it; it sits 4 over its first row, as the board has it.
+                    .pullUp(12.dp)
+                    .semantics { heading() },
+            )
+        }
+        shownGroups.forEach { group ->
             item(span = { GridItemSpan(maxLineSpan) }, key = "src-${group.sourceId}", contentType = "source") {
-                Column(searchMotion()) {
-                    if (index == 0) {
-                        val context = LocalContext.current
-                        Text(
-                            Strings.readSearchFromSources(context),
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            modifier = Modifier.padding(top = if (sourcesOnly) 0.dp else 16.dp, bottom = 4.dp).semantics { heading() },
-                        )
-                    }
-                    SourceGroupRow(group)
-                }
+                Box(searchMotion()) { SourceGroupRow(group, again = group.sourceId in search.staleSources, waited = shown.waited) }
             }
         }
     }
@@ -172,7 +189,7 @@ internal fun LazyGridScope.wordsResults(search: ReadSearchState, both: Boolean, 
             }
         } else if (later.isNotEmpty()) {
             items(later, key = { "a-${it.work}" }, contentType = { "cover" }) { tile ->
-                Box(searchMotion(anilist = true)) { ResultCell(tile, sources?.joins) }
+                Box(searchMotion(anilist = true)) { ResultCell(tile, sources?.joins, grid) }
             }
             if (search.hasMore) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "more-${search.page}", contentType = "more") {
@@ -191,7 +208,42 @@ internal fun LazyGridScope.wordsResults(search: ReadSearchState, both: Boolean, 
     if (demoOnly) {
         item(span = { GridItemSpan(maxLineSpan) }, key = "demo", contentType = "line") { Box(searchMotion()) { DemoSearchNote() } }
     }
-    item(span = { GridItemSpan(maxLineSpan) }, key = "said", contentType = "said") { SearchSaid(search) }
+}
+
+/**
+ * The count over AniList's covers: "4 series from AniList" when the engine knows the count
+ * exactly, else "Series from AniList", never a number that is not the count. While AniList is
+ * asked with nothing shown ([search] null) the line is empty but holds its height; while the
+ * covers are kept from the words before, a small ring beside it says they are being asked again.
+ */
+private fun LazyGridScope.countLine(search: ReadSearchState?, asking: Boolean) {
+    item(span = { GridItemSpan(maxLineSpan) }, key = "count", contentType = "line") {
+        val context = LocalContext.current
+        val total = search?.total
+        val words = when {
+            search == null || search.tiles.all { it.fromDemo } -> ""
+            total != null -> Strings.readSearchTotal(context, total.toInt())
+            else -> Strings.readSearchTotalUnknown(context)
+        }
+        Row(searchMotion(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            app.kaeri.design.SwapFade(words, animationSpec = tween(COVERS_IN, easing = LinearOutSlowInEasing), label = "count") { said -> // i18n-skip
+                Text(
+                    said,
+                    style = MaterialTheme.typography.bodySmall.tabular(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            androidx.compose.animation.AnimatedVisibility(asking, enter = androidx.compose.animation.fadeIn(Motion.fadeIn()), exit = androidx.compose.animation.fadeOut(Motion.fadeOut())) {
+                CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+}
+
+/** Draws as it is but takes [by] less room below, so what comes next sits closer. */
+private fun Modifier.pullUp(by: androidx.compose.ui.unit.Dp): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    layout(placeable.width, (placeable.height - by.roundToPx()).coerceAtLeast(0)) { placeable.place(0, 0) }
 }
 
 /** Whether a source's group takes a row: asking, failed, or with hits that joined nothing. */
@@ -215,7 +267,7 @@ internal fun sourceKind(group: ReadSourceGroup): String? {
 
 /** An AniList result in the grid, with "In Home library" under its caption when a source has it. */
 @Composable
-private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?) {
+private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?, grid: ReadGridShape) {
     val context = LocalContext.current
     val join = joins?.firstOrNull { it.work == tile.work }
     val extra = join?.let {
@@ -230,30 +282,40 @@ private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?) {
             from = "read-search",
             // The board's two-line caption: the title, then "Format · Origin".
             lines = 1,
-            caption = tile.anilistLine(LocalContext.current),
+            caption = tile.anilistLine(context),
+            spoken = tile.anilistSpoken(context),
             reserveLine = true,
             onLongClick = { menu = true },
             extra = extra,
+            list = grid.list,
         )
         ReadTileMenu(tile, menu, current = null) { menu = false }
     }
 }
 
-/** A grid cell's placeholder: the cover's plate and its caption's two bars. */
+/**
+ * One source's row: its name and kind, then its covers, a failure with Try again, or placeholders.
+ * [again]: what it shows is from the words before, kept while it is asked for these; past 600 ms
+ * ([waited]) the ring beside its name says so, and its answer crossfades in over the old one.
+ */
 @Composable
-private fun CoverPlaceholderCell() {
-    app.kaeri.ui.PosterPlaceholder()
-}
-
-/** One source's row: its name and kind, then its covers, a failure with Try again, or placeholders. */
-@Composable
-private fun SourceGroupRow(group: ReadSourceGroup) {
+private fun SourceGroupRow(group: ReadSourceGroup, again: Boolean, waited: Boolean) {
     val context = LocalContext.current
     val colors = MaterialTheme.colorScheme
     val kind = sourceKind(group)
     val asking = group.state is ReadSourceState.Asking
+    val busy = asking || again
     val reduced = rememberSystemReducedMotion()
-    val label = if (asking) Strings.readSearchAsking(context, group.sourceName) else listOfNotNull(group.sourceName, kind).joinToString(", ") // i18n-skip
+    val kept = remember { arrayOf(group) }
+    if (!asking) kept[0] = group
+    val answer = kept[0]
+    // "Northwind, plugin, searching" while it is asked; "Home library, server" once it answered.
+    val label = when {
+        busy && kind != null -> Strings.readSearchSourceBusyKind(context, group.sourceName, kind)
+        busy -> Strings.readSearchSourceBusy(context, group.sourceName)
+        kind != null -> Strings.readSearchSourceNamed(context, group.sourceName, kind)
+        else -> group.sourceName
+    }
     Column {
         Row(
             Modifier
@@ -266,22 +328,33 @@ private fun SourceGroupRow(group: ReadSourceGroup) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(group.sourceName, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold), maxLines = 1, modifier = Modifier.weight(1f, fill = false))
+            Text(group.sourceName, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), maxLines = 1, modifier = Modifier.weight(1f, fill = false))
             if (kind != null) Text(kind, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
-            if (asking) CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = colors.onSurfaceVariant)
+            androidx.compose.animation.AnimatedVisibility(asking || (again && waited), enter = androidx.compose.animation.fadeIn(Motion.fadeIn()), exit = androidx.compose.animation.fadeOut(Motion.fadeOut())) {
+                CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = colors.onSurfaceVariant)
+            }
         }
         // The slot keeps its place while asking; a failure closes it to its height on the spring.
         LandingSlot(
             landed = !asking,
             modifier = Modifier.bleed(16.dp).then(if (reduced) Modifier else Modifier.animateContentSize(Motion.standard())),
-            placeholders = { CoverStripPlaceholder(count = if (wideWindow()) 6 else 4) },
+            placeholders = { CoverStripPlaceholder() },
         ) {
-            when (val state = group.state) {
-                is ReadSourceState.Failed -> SourceFailed(group, failureWords(context, state.failure), Modifier.padding(horizontal = 16.dp))
-                is ReadSourceState.TimedOut -> SourceFailed(group, Strings.readSearchSourceTimeout(context, state.seconds.toInt()), Modifier.padding(horizontal = 16.dp))
-                else -> {
-                    val context = LocalContext.current
-                    TileStrip(group.tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false) { it.hitLine(context) }
+            // A new answer over the one kept from the words before: one crossfade in the same slot.
+            // Asked again by its Try again, the last answer stays until the slot's placeholders take it.
+            app.kaeri.design.SwapFade(answer.state to answer.tiles, animationSpec = tween(COVERS_IN, easing = LinearOutSlowInEasing), label = "source answer") { (state, tiles) -> // i18n-skip
+                when (state) {
+                    is ReadSourceState.Failed -> SourceFailed(group, failureWords(context, state.failure), null, Modifier.padding(horizontal = 16.dp))
+                    is ReadSourceState.TimedOut -> SourceFailed(
+                        group,
+                        Strings.readSearchSourceTimeout(context, state.seconds.toInt()),
+                        Strings.readSearchSourceTimeoutSpoken(context, state.seconds.toInt()),
+                        Modifier.padding(horizontal = 16.dp),
+                    )
+                    // Source hits: no menu and no Add to Planning, as the board has them.
+                    else -> TileStrip(tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false) { hit ->
+                        hit.hitLine(context).let { RowCaption(it, it) }
+                    }
                 }
             }
         }
@@ -290,13 +363,16 @@ private fun SourceGroupRow(group: ReadSourceGroup) {
 
 /** A source that didn't answer: the glyph, its name, the reason and Try again for it alone. */
 @Composable
-private fun SourceFailed(group: ReadSourceGroup, reason: String, modifier: Modifier = Modifier) {
+private fun SourceFailed(group: ReadSourceGroup, reason: String, spoken: String?, modifier: Modifier = Modifier) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     FailureNotice(
         title = Strings.readSearchSourceFailed(context, group.sourceName),
         line = reason,
+        spokenLine = spoken,
         action = Strings.actionTryAgain(context),
+        // Named with its source, so a list of them makes sense: "Try again, Northwind".
+        actionSpoken = Strings.readSearchTryAgainSource(context, group.sourceName),
         onAction = { store.reading.retrySource(group.sourceId) },
         modifier = modifier,
     )
@@ -304,18 +380,35 @@ private fun SourceFailed(group: ReadSourceGroup, reason: String, modifier: Modif
 
 /** The vermilion glyph, a sentence and its reason, and a button under them. */
 @Composable
-internal fun FailureNotice(title: String, line: String?, action: String, onAction: () -> Unit, modifier: Modifier = Modifier) {
+internal fun FailureNotice(
+    title: String,
+    line: String?,
+    action: String,
+    onAction: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** The reason as said, where it differs from what shows: "No answer in 15 seconds". */
+    spokenLine: String? = null,
+    /** The button as said, where it needs more than its words. */
+    actionSpoken: String? = null,
+) {
     val colors = MaterialTheme.colorScheme
     Row(modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Icon(Icons.Problem, contentDescription = null, tint = colors.error, modifier = Modifier.padding(top = 2.dp).size(20.dp))
+        Icon(Icons.ProblemFilled, contentDescription = null, tint = colors.error, modifier = Modifier.padding(top = 2.dp).size(20.dp))
         Column(Modifier.weight(1f)) {
             Column(Modifier.semantics(mergeDescendants = true) {}) {
                 Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
-                if (line != null) Text(line, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+                if (line != null) {
+                    Text(
+                        line,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
+                        modifier = if (spokenLine != null) Modifier.semantics { contentDescription = spokenLine } else Modifier,
+                    )
+                }
             }
             OutlinedButton(
                 onClick = onAction,
-                modifier = Modifier.padding(top = 12.dp),
+                modifier = Modifier.padding(top = 12.dp).then(if (actionSpoken != null) Modifier.semantics { contentDescription = actionSpoken } else Modifier),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.onSurface),
             ) { Text(action) }
         }
@@ -350,7 +443,10 @@ private fun AnilistNothing() {
     }
 }
 
-/** Nothing anywhere: Nothing found for the words, and the sources' line when there are any. */
+/**
+ * Nothing anywhere: Nothing found for the words, and the sources' line when there are any. With
+ * Your sources only on it says so: Nothing found in your sources, and to try other words.
+ */
 @Composable
 private fun NothingAnywhere(search: ReadSearchState, eitherLine: Boolean) {
     val store = LocalAppStore.current
@@ -359,13 +455,22 @@ private fun NothingAnywhere(search: ReadSearchState, eitherLine: Boolean) {
     val filtered = query.formats.isNotEmpty() || query.origins.isNotEmpty() || query.status != null ||
         query.genres.isNotEmpty() || query.excludeGenres.isNotEmpty() || (query.started != null && query.started != "any") // i18n-skip
     Column {
-        PlainEmpty(
-            Strings.readSearchNothing(context, query.text),
-            if (filtered) Strings.readSearchNothingFiltersLine(context) else Strings.readSearchNothingLine(context),
-            inset = 0.dp,
-            action = if (filtered) Strings.readSearchClearFilters(context) else null,
-            onAction = { store.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(text = query.text, sort = query.sort, sourcesOnly = query.sourcesOnly)) },
-        )
+        when {
+            query.sourcesOnly -> PlainEmpty(
+                Strings.readSearchSourcesOnlyNothing(context),
+                Strings.readSearchSourcesOnlyNothingLine(context),
+                inset = 0.dp,
+                small = true,
+            )
+            else -> PlainEmpty(
+                Strings.readSearchNothing(context, query.text),
+                if (filtered) Strings.readSearchNothingFiltersLine(context) else Strings.readSearchNothingLine(context),
+                inset = 0.dp,
+                small = true,
+                action = if (filtered) Strings.readSearchClearFilters(context) else null,
+                onAction = { store.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(text = query.text, sort = query.sort, sourcesOnly = query.sourcesOnly)) },
+            )
+        }
         if (eitherLine && !query.sourcesOnly) {
             Text(
                 Strings.readSearchSourcesNothing(context),
@@ -435,7 +540,7 @@ private fun MoreFromAnilist(loading: Boolean, shown: Int, total: UInt?) {
  * AniList's results are hidden.
  */
 @Composable
-private fun SearchSaid(search: ReadSearchState) {
+internal fun SearchSaid(search: ReadSearchState) {
     val context = LocalContext.current
     val sources = search.sources
     val said = when {
@@ -450,6 +555,7 @@ private fun SearchSaid(search: ReadSearchState) {
                 .forEach { add(Strings.readSearchSourceFailed(context, it.sourceName)) }
         }.joinToString(", ") // i18n-skip
     }
+    // Outside the grid, so it is there to be heard however long the results are.
     Box(
         Modifier.size(1.dp).clearAndSetSemantics {
             if (said.isNotEmpty()) {

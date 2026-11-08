@@ -28,6 +28,16 @@ import kotlinx.coroutines.withTimeoutOrNull
 object ReadDiscoveryStage {
     val STATES: List<String> = listOf("rd-search-mid", "rd-search-unreachable", "rd-search-sources-only", "rd-search-nothing", "rd-search-done")
 
+    /**
+     * States for recordings, which play out over a few seconds: `rd-typing` answers the words,
+     * then new words twice, the first slower than 600 ms and the second at once; `rd-rows-landing`
+     * holds Home's rows on their way for [ROWS_HELD] ms, then lands them.
+     */
+    val MOTION: List<String> = listOf("rd-typing", "rd-rows-landing")
+
+    /** How long `rd-rows-landing` holds the rows on their way. */
+    private const val ROWS_HELD = 1_500L
+
     /** The kinds beside the made-up sources' names; the demo is built in and has none. */
     private val KINDS = mapOf("home-library" to ReadSourceKind.SERVER, "folders" to ReadSourceKind.FOLDER, "northwind" to ReadSourceKind.PLUGIN) // i18n-skip
 
@@ -45,6 +55,10 @@ object ReadDiscoveryStage {
      * answer. Covers come from [art], series the engine already has (Home's), as many as needed.
      */
     suspend fun stage(store: AppStore, state: String): Boolean {
+        when (state) {
+            "rd-typing" -> return typing(store)
+            "rd-rows-landing" -> return rowsLanding(store)
+        }
         if (state !in STATES) return false
         val query = ReadingModel.EMPTY_QUERY.copy(text = WORDS, sourcesOnly = state == "rd-search-sources-only")
         store.reading.runSearch(query)
@@ -151,6 +165,97 @@ object ReadDiscoveryStage {
                 )
                 apply(ReadingEvent.Search(query, 0u, emptyList(), false, null, 0u))
             }
+        }
+        return true
+    }
+
+    /**
+     * New words over an answer: "lantern" answered as the board's done state, then "lantern hill"
+     * asked with the old answer kept, its sources and AniList answering past 600 ms, then
+     * "lantern moth" answered within 200 ms. Nothing goes to the engine for the new words.
+     */
+    private suspend fun typing(store: AppStore): Boolean {
+        if (!stage(store, "rd-search-done")) return false
+        val art = art(store)
+        fun tile(i: Int, title: String) = art[i % art.size].copy(title = title, notInSources = false)
+        fun hit(i: Int, title: String, amount: Msg?) = tile(i, title).copy(origin = null, amount = amount)
+        fun group(id: String, name: String, state: ReadSourceState, tiles: List<WorkTile> = emptyList()) =
+            ReadSourceGroup(id, name, KINDS[id], state, tiles, 0u)
+        val apply = { event: ReadingEvent -> store.apply(Event.Reading(event)) }
+        suspend fun wait(ms: Long) = withContext(Dispatchers.Default) { delay(ms) }
+
+        wait(2_500)
+        val hill = ReadingModel.EMPTY_QUERY.copy(text = "lantern hill") // i18n-skip
+        store.reading.askedForStage(hill)
+        wait(900)
+        apply(
+            ReadingEvent.SourceSearch(
+                ReadSourceSearch(
+                    hill, ReadAnilistState.ASKING,
+                    listOf(
+                        group("home-library", HOME_LIBRARY, ReadSourceState.Hits, listOf(hit(5, "Lantern Hill, Vol. 1", Msg.Reading(ReadingMsg.ReadingVolumes(1L))))), // i18n-skip
+                        group("folders", COMICS, ReadSourceState.Asking), // i18n-skip
+                        group("northwind", NORTHWIND, ReadSourceState.Asking), // i18n-skip
+                        group("demo", DEMO, ReadSourceState.Nothing), // i18n-skip
+                    ),
+                    emptyList(), false,
+                ),
+            ),
+        )
+        wait(500)
+        val hillTiles = listOf(tile(8, "Lantern Hill"), tile(2, "The Lantern Keeper")) // i18n-skip
+        apply(ReadingEvent.Search(hill, 0u, hillTiles, false, null, hillTiles.size.toUInt()))
+        wait(600)
+        apply(
+            ReadingEvent.SourceSearch(
+                ReadSourceSearch(
+                    hill, ReadAnilistState.ANSWERED,
+                    listOf(
+                        group("home-library", HOME_LIBRARY, ReadSourceState.Hits, listOf(hit(5, "Lantern Hill, Vol. 1", Msg.Reading(ReadingMsg.ReadingVolumes(1L))))), // i18n-skip
+                        group("folders", COMICS, ReadSourceState.Nothing), // i18n-skip
+                        group("northwind", NORTHWIND, ReadSourceState.Hits, listOf(hit(8, "Lantern Hill", null))), // i18n-skip
+                        group("demo", DEMO, ReadSourceState.Nothing), // i18n-skip
+                    ),
+                    emptyList(), true,
+                ),
+            ),
+        )
+
+        wait(2_500)
+        val moth = ReadingModel.EMPTY_QUERY.copy(text = "lantern moth") // i18n-skip
+        store.reading.askedForStage(moth)
+        wait(200)
+        val mothTiles = listOf(tile(9, "Lantern Moths"), tile(3, "Lanterns Upriver"), tile(0, "Lantern Street Notes")) // i18n-skip
+        apply(ReadingEvent.Search(moth, 0u, mothTiles, false, null, mothTiles.size.toUInt()))
+        apply(
+            ReadingEvent.SourceSearch(
+                ReadSourceSearch(
+                    moth, ReadAnilistState.ANSWERED,
+                    listOf(
+                        group("home-library", HOME_LIBRARY, ReadSourceState.Nothing), // i18n-skip
+                        group("folders", COMICS, ReadSourceState.Nothing), // i18n-skip
+                        group("northwind", NORTHWIND, ReadSourceState.Hits, listOf(hit(9, "Lantern Moths", null))), // i18n-skip
+                        group("demo", DEMO, ReadSourceState.Nothing), // i18n-skip
+                    ),
+                    emptyList(), true,
+                ),
+            ),
+        )
+        return true
+    }
+
+    /** Home's rows on their way with nothing kept for [ROWS_HELD] ms, then landing as the engine sent them. */
+    private suspend fun rowsLanding(store: AppStore): Boolean {
+        if (store.reading.home.value == null) store.reading.loadHome()
+        waitFor { store.reading.home.value?.rows?.any { it.tiles.isNotEmpty() } == true }
+        val home = store.reading.home.value ?: return false
+        withContext(Dispatchers.Main) {
+            store.reading.stage = { it.copy(rows = it.rows.map { row -> row.copy(tiles = emptyList(), pending = true) }) }
+        }
+        withContext(Dispatchers.Default) { delay(ROWS_HELD) }
+        withContext(Dispatchers.Main) {
+            store.reading.stage = null
+            store.apply(Event.Reading(ReadingEvent.Home(home)))
         }
         return true
     }

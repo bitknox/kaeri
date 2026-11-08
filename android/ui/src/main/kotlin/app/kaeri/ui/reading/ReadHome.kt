@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -666,7 +667,12 @@ private fun TileShelf(title: String, tiles: List<WorkTile>, from: String, link: 
         ReadShelfHeading(title, link, onLink)
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(cardGap())) {
             items(tiles, key = { "$from-${it.work}" }, contentType = { "cover" }) { tile ->
-                Box(itemMotion()) { ReadTile(tile, posterWidth(), from = from, lines = 2) }
+                // A long press offers Details alone: these are the person's own, already on a list.
+                var menu by remember { mutableStateOf(false) }
+                Box(itemMotion()) {
+                    ReadTile(tile, posterWidth(), from = from, lines = 2, onLongClick = { menu = true })
+                    ReadTileMenu(tile, menu, current = null, lists = false) { menu = false }
+                }
             }
         }
     }
@@ -756,12 +762,21 @@ private fun ReadWeekCell(entry: ReadWeekEntry) {
     // The chapter that came out this day; for one only expected, the chapter the engine expects,
     // and nothing when it has no confident guess.
     val chapter = if (entry.usually) entry.chapter?.text(context) else (entry.chapter ?: tile.next)?.text(context)
+    // A long press offers Details alone, as Up next's covers do.
+    var menu by remember { mutableStateOf(false) }
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    Box { ReadTileMenu(tile, menu, current = null, lists = false) { menu = false } }
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .sharedWork(Shared.Page, tile.work, "read-week")
-            .clickable(onClickLabel = stringResource(R.string.title_open), role = Role.Button) { navigator.openSeries(tile.work, "read-week") }
+            .combinedClickable(
+                onClickLabel = stringResource(R.string.title_open),
+                role = Role.Button,
+                onLongClickLabel = stringResource(R.string.action_more),
+                onLongClick = { haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress); menu = true },
+            ) { navigator.openSeries(tile.work, "read-week") }
             .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

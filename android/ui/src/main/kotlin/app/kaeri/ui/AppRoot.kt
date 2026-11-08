@@ -14,6 +14,9 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -239,6 +242,17 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.switching(): Boole
     return initialState.destinationOf() != targetState.destinationOf() || initialState.isPage || targetState.isPage
 }
 
+/** Whether the entry is a reading page pushed inside a destination: View all, e-ink's Browse. */
+private val NavBackStackEntry.isReadPage: Boolean get() = destination.route?.endsWith("/read/{page}") == true // i18n-skip
+
+/** A page coming in on M3's shared axis X: from [from] px along, fading in after the old one's first 90 ms. */
+private fun readPageIn(from: Int): EnterTransition =
+    slideInHorizontally(tween(300, easing = EMPHASIZED)) { from } + fadeIn(tween(210, delayMillis = 90))
+
+/** A page leaving on M3's shared axis X: [to] px along, faded out in its first 90 ms. */
+private fun readPageOut(to: Int): ExitTransition =
+    slideOutHorizontally(tween(300, easing = EMPHASIZED)) { to } + fadeOut(tween(90))
+
 /**
  * The frame. A switch between destinations fades the page through on the quick spring (T6); a
  * title page pushed inside one keeps the page underneath, and the shared elements do the moving
@@ -271,6 +285,8 @@ fun AppRoot(
     val navigator = remember(nav) { Navigator(nav, start) }
     // With Remove animations on, the page on screen is recorded, so Another can fade a still of it out.
     val removed = app.kaeri.design.rememberAnimationsRemoved()
+    // How far a reading page moves on the shared axis as it comes and goes: 30 dp.
+    val axis = with(androidx.compose.ui.platform.LocalDensity.current) { 30.dp.roundToPx() }
     val pageFade = app.kaeri.design.rememberStillFade()
     SideEffect { navigator.fade = pageFade }
     val sheets = remember { AppSheets() }
@@ -431,10 +447,37 @@ fun AppRoot(
                         NavHost(
                             nav,
                             startDestination = graphRoute(start),
-                            enterTransition = { if (navigator.replacing) fadeIn(Motion.standard()) else if (switching()) fadeIn(Motion.quick()) else EnterTransition.None },
-                            exitTransition = { if (navigator.replacing) fadeOut(Motion.standard()) else if (switching()) fadeOut(Motion.quick()) else ExitTransition.KeepUntilTransitionsFinished },
-                            popEnterTransition = { if (switching()) fadeIn(Motion.quick()) else EnterTransition.None },
-                            popExitTransition = { if (switching()) fadeOut(Motion.quick()) else ExitTransition.KeepUntilTransitionsFinished },
+                            // A reading page (View all) pushes on M3's shared axis, which predictive back seeks; e-ink stays still.
+                            enterTransition = {
+                                when {
+                                    navigator.replacing -> fadeIn(Motion.standard())
+                                    switching() -> fadeIn(Motion.quick())
+                                    targetState.isReadPage && !eink -> readPageIn(axis)
+                                    else -> EnterTransition.None
+                                }
+                            },
+                            exitTransition = {
+                                when {
+                                    navigator.replacing -> fadeOut(Motion.standard())
+                                    switching() -> fadeOut(Motion.quick())
+                                    targetState.isReadPage && !eink -> readPageOut(-axis)
+                                    else -> ExitTransition.KeepUntilTransitionsFinished
+                                }
+                            },
+                            popEnterTransition = {
+                                when {
+                                    switching() -> fadeIn(Motion.quick())
+                                    initialState.isReadPage && !eink -> readPageIn(-axis)
+                                    else -> EnterTransition.None
+                                }
+                            },
+                            popExitTransition = {
+                                when {
+                                    switching() -> fadeOut(Motion.quick())
+                                    initialState.isReadPage && !eink -> readPageOut(axis)
+                                    else -> ExitTransition.KeepUntilTransitionsFinished
+                                }
+                            },
                         ) {
                             if (player != null) {
                                 composable(PLAYER_ROUTE) {

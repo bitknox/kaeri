@@ -109,14 +109,23 @@ internal fun PosterCell(
     }
 }
 
-/** A poster's place before its title arrives: the plate, and its caption's lines as bars. */
+/**
+ * A poster's place before its title arrives: the plate, and its caption's lines as bars. Each
+ * line is as high as its text style's line, in sp, so the placeholder grows with the font scale
+ * just as the poster will: [titleLines] title lines in the show face, [lines] lines under them.
+ */
 @Composable
-internal fun PosterPlaceholder() {
+internal fun PosterPlaceholder(titleLines: Int = 1, lines: Int = 1) {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val titleLine = with(density) { app.kaeri.design.ShowTitle.caption.lineHeight.toDp() }
+    val line = with(density) { MaterialTheme.typography.bodySmall.lineHeight.toDp() }
     Column {
         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
             app.kaeri.design.CoverPlate(null, Modifier.size(maxWidth, maxWidth * 1.5f).clip(ArtShape.cover(maxWidth)))
         }
-        TextPlaceholder(0.8f, 20.dp, Modifier.padding(top = 8.dp))
-        TextPlaceholder(0.5f, 16.dp, Modifier.padding(top = 2.dp))
+        TextPlaceholder(0.8f, titleLine, Modifier.padding(top = 8.dp))
+        repeat(titleLines - 1) { TextPlaceholder(0.6f, titleLine) }
+        TextPlaceholder(0.5f, line, Modifier.padding(top = 2.dp))
+        repeat(lines - 1) { TextPlaceholder(0.4f, line) }
     }
 }

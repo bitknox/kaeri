@@ -47,6 +47,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -58,6 +59,8 @@ import app.kaeri.engine.model.LibrarySegmentRead
 import app.kaeri.engine.model.ReadSearchQuery
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.ReadingMsg
+import app.kaeri.engine.model.Msg
+import app.kaeri.engine.model.ReadRowKind
 import app.kaeri.engine.model.readingFailureMsg
 import app.kaeri.engine.model.SeriesAction
 import app.kaeri.engine.model.WorkTile
@@ -107,23 +110,24 @@ internal fun ReadCover(
 }
 
 /**
- * A cover with no art: the plate with a book glyph and the title on it. Hidden from screen
- * readers, as the caption under it is read once.
+ * A cover with no art: the plate with the title at the top in the show face and silk, and a book
+ * glyph at the bottom, as the board draws it. Hidden from screen readers, as the caption under it
+ * is read once.
  */
 @Composable
 private fun NoArtPlate(title: String, width: Dp, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
     Box(modifier.background(colors.surfaceContainerHighest).clearAndSetSemantics {}) {
         Column(Modifier.fillMaxSize().padding(if (width >= 100.dp) 12.dp else 8.dp)) {
-            Icon(Icons.Read, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.weight(1f))
             Text(
                 title,
-                style = MaterialTheme.typography.labelLarge,
-                color = colors.onSurfaceVariant,
+                style = ShowTitle.caption,
+                color = colors.onSurface,
                 maxLines = 4,
                 overflow = TextOverflow.Ellipsis,
             )
+            Spacer(Modifier.weight(1f))
+            Icon(Icons.Read, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
         }
     }
 }
@@ -153,6 +157,10 @@ internal fun ReadTile(
     extra: String? = null,
     /** The line under the title in place of the tile's own: Search's "Manga · Japan", a hit's "2 volumes". */
     caption: String? = null,
+    /** What a screen reader says for the line, the facts with commas: "Manga, Japan, releasing". */
+    spoken: String? = null,
+    /** A one-column list's row rather than a cover over its words: grids at the largest text. */
+    list: Boolean = false,
 ) {
     val navigator = LocalNavigator.current
     val store = app.kaeri.ui.LocalAppStore.current
@@ -162,45 +170,43 @@ internal fun ReadTile(
     val colors = MaterialTheme.colorScheme
     val line = caption ?: tile.line(context)
     val newWord = stringResource(R.string.poster_new)
-    Column(
-        modifier
-            .width(width)
-            .sharedWork(Shared.Page, tile.work, from)
-            .semantics(mergeDescendants = true) {
-                // The water dot is colour alone; the state says it too.
-                if (tile.newChapter) stateDescription = newWord
-                if (planning) {
-                    customActions = listOf(
-                        CustomAccessibilityAction(planningWord) {
-                            store.reading.setStatus(tile.work, LibrarySegmentRead.PLANNING)
-                            true
-                        },
-                    )
-                }
-            }
-            .combinedClickable(
-                onClickLabel = stringResource(R.string.title_open),
-                onLongClickLabel = onLongClick?.let { stringResource(R.string.action_more) },
-                onLongClick = onLongClick?.let { more -> { haptics.performHapticFeedback(HapticFeedbackType.LongPress); more() } },
-                onClick = { navigator.openSeries(tile.work, from) },
-            ),
-    ) {
-        ReadCover(tile.cover, width, cover.sharedWork(Shared.Cover, tile.work, from), title = tile.title)
-        if (track) {
-            // The track holds its place on every Continue cover, so the titles line up.
-            Box(Modifier.padding(top = 6.dp).height(3.dp).fillMaxWidth()) {
-                val progress = tile.progress
-                SilkTrack(progress ?: 0f)
+    // Read once as the board says it: "Iron Kite Brigade. Manga, Japan, releasing. In Home library."
+    val said = spokenTile(context, tile.title, (spoken ?: line).ifEmpty { null }, extra)
+    val titleLines = titleLines()
+    val actions = modifier
+        .then(if (list) Modifier.fillMaxWidth() else Modifier.width(width))
+        .sharedWork(Shared.Page, tile.work, from)
+        .semantics(mergeDescendants = true) {
+            contentDescription = said
+            // The water dot is colour alone; the state says it too.
+            if (tile.newChapter) stateDescription = newWord
+            if (planning) {
+                customActions = listOf(
+                    CustomAccessibilityAction(planningWord) {
+                        store.reading.setStatus(tile.work, LibrarySegmentRead.PLANNING)
+                        true
+                    },
+                )
             }
         }
+        .combinedClickable(
+            onClickLabel = stringResource(R.string.title_open),
+            onLongClickLabel = onLongClick?.let { stringResource(R.string.action_more) },
+            onLongClick = onLongClick?.let { more -> { haptics.performHapticFeedback(HapticFeedbackType.LongPress); more() } },
+            onClick = { navigator.openSeries(tile.work, from) },
+        )
+    val words: @Composable () -> Unit = {
         Text(
             tile.title,
             style = ShowTitle.caption,
-            maxLines = 1,
+            // Two lines from font scale 1.3, as Watch's shelves, so large text keeps more than a word;
+            // a list row has the width for three.
+            maxLines = if (list) 3 else titleLines,
+            minLines = if (reserveLine && !list) titleLines else 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = if (track) 6.dp else 8.dp),
+            modifier = Modifier.padding(top = if (list) 0.dp else if (track) 6.dp else 8.dp).clearAndSetSemantics {},
         )
-        if (line.isNotEmpty() || reserveLine) {
+        if (line.isNotEmpty() || (reserveLine && !list)) {
             Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (tile.newChapter) WaterDot()
                 // A line that changes (a miss recorded while away) crossfades in place.
@@ -209,22 +215,61 @@ internal fun ReadTile(
                         words,
                         style = MaterialTheme.typography.bodySmall.tabular(),
                         color = if (tile.newChapter) colors.onSurface else colors.onSurfaceVariant,
-                        maxLines = lines,
-                        minLines = if (reserveLine) lines else 1,
+                        maxLines = if (list) 2 else lines,
+                        minLines = if (reserveLine && !list) lines else 1,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clearAndSetSemantics {},
                     )
                 }
             }
         }
         if (extra != null) {
+            // Where a source has it, in semibold silk; it wraps rather than cut.
             Text(
                 extra,
-                style = MaterialTheme.typography.bodySmall,
+                style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
                 color = colors.onSurface,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp),
+                modifier = Modifier.padding(top = 2.dp).clearAndSetSemantics {},
             )
+        }
+    }
+    if (list) {
+        // The largest text: a one-column row with a 60 dp cover, as the iPhone's grids become lists.
+        Row(actions.heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            ReadCover(tile.cover, LIST_COVER, cover.sharedWork(Shared.Cover, tile.work, from), title = tile.title)
+            Column(Modifier.weight(1f).padding(top = 4.dp)) { words() }
+        }
+        return
+    }
+    Column(actions) {
+        ReadCover(tile.cover, width, cover.sharedWork(Shared.Cover, tile.work, from), title = tile.title)
+        if (track) {
+            // The track holds its place on every Continue cover, so the titles line up.
+            Box(Modifier.padding(top = 6.dp).height(3.dp).fillMaxWidth()) {
+                val progress = tile.progress
+                SilkTrack(progress ?: 0f)
+            }
+        }
+        words()
+    }
+}
+
+/** A list row's cover at the largest text: 60 wide, as the iPhone rule's. */
+internal val LIST_COVER = 60.dp
+
+/** A list row's place before its series arrives: the 60 dp plate and two bars beside it. */
+@Composable
+internal fun ListRowPlaceholder() {
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val titleLine = with(density) { ShowTitle.caption.lineHeight.toDp() }
+    val line = with(density) { MaterialTheme.typography.bodySmall.lineHeight.toDp() }
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        app.kaeri.design.CoverPlate(null, Modifier.size(LIST_COVER, LIST_COVER * 1.5f).clip(coverShape(LIST_COVER)))
+        Column(Modifier.weight(1f).padding(top = 4.dp)) {
+            app.kaeri.ui.TextPlaceholder(0.8f, titleLine)
+            app.kaeri.ui.TextPlaceholder(0.5f, line, Modifier.padding(top = 2.dp))
         }
     }
 }
@@ -285,11 +330,14 @@ internal fun PlainEmpty(
     action: String? = null,
     /** The side margin: 16 in a list, none where the place already has its margins, as a grid does. */
     inset: Dp = 16.dp,
+    /** The title at 16 semibold, for a state inside a page of results rather than the whole page. */
+    small: Boolean = false,
     onAction: () -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
+    val titleStyle = if (small) MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold) else MaterialTheme.typography.titleLarge
     Column(modifier.fillMaxWidth().padding(horizontal = inset, vertical = 8.dp)) {
-        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+        Text(title, style = titleStyle, modifier = Modifier.semantics { heading() })
         Text(
             line,
             style = MaterialTheme.typography.bodyMedium,
@@ -332,6 +380,64 @@ internal fun listWords(context: Context, segment: LibrarySegmentRead): String = 
     LibrarySegmentRead.YOUR_FILES -> Strings.readListYourFiles(context)
 }
 
+/** Title lines under a cover: two from font scale 1.3, as Watch's shelves, else one. */
+@Composable
+internal fun titleLines(): Int = if (androidx.compose.ui.platform.LocalDensity.current.fontScale >= 1.3f) 2 else 1
+
+/** Whether grids give way to one-column lists: at the largest text, as the iPhone rule has it. */
+@Composable
+internal fun listInsteadOfGrid(): Boolean = androidx.compose.ui.platform.LocalDensity.current.fontScale >= 2f
+
+/** A tile as a screen reader says it: "Iron Kite Brigade. Manga, Japan, releasing. In Home library." */
+internal fun spokenTile(context: Context, title: String, line: String?, extra: String?): String = when {
+    line == null -> Strings.readTileSpokenTitle(context, title)
+    extra == null -> Strings.readTileSpoken(context, title, line)
+    else -> Strings.readTileSpokenIn(context, title, line, extra)
+}
+
+/** What a discovery row's caption is made of: the row picks two of them. */
+private val Msg.reading: ReadingMsg? get() = (this as? Msg.Reading)?.v1
+
+private val WorkTile.status: Msg?
+    get() = facts.firstOrNull {
+        when (it.reading) {
+            ReadingMsg.ReadingStatusReleasing, ReadingMsg.ReadingStatusFinished, ReadingMsg.ReadingStatusHiatus,
+            ReadingMsg.ReadingStatusCancelled, ReadingMsg.ReadingStatusNotYet -> true
+            else -> false
+        }
+    }
+
+private val WorkTile.count: Msg?
+    get() = facts.firstOrNull { it.reading is ReadingMsg.ReadingChapters || it.reading is ReadingMsg.ReadingVolumes }
+
+/** A row tile's caption, shown and spoken. */
+internal data class RowCaption(val shown: String, val spoken: String)
+
+/**
+ * A discovery tile's caption, picked by its row, never more than two facts: a row of one format
+ * already names it, so it says the origin and the status ("Japan · Releasing"), the origin and
+ * the length on Finished ("Japan · 112 chapters") and the origin and the start on New ("Japan ·
+ * since March"); a mixed row (Because, a genre) says the format and the status. The spoken form
+ * adds what the row names: "Manga, Japan, releasing".
+ */
+internal fun WorkTile.rowCaption(context: Context, kind: ReadRowKind, oneFormat: Boolean): RowCaption {
+    if (notInSources) return Strings.homeNotFound(context).let { RowCaption(it, it) }
+    next?.text(context)?.let { return RowCaption(it, it) }
+    val format = facts.firstOrNull()
+    val status = status
+    val second = when (kind) {
+        ReadRowKind.FINISHED -> count ?: status
+        ReadRowKind.NEW -> status
+        else -> status
+    }
+    val shown = if (oneFormat) listOfNotNull(origin, second) else listOfNotNull(format, status)
+    val spoken = if (oneFormat) listOfNotNull(format, origin, second) else listOfNotNull(format, origin, status)
+    return RowCaption(
+        shown.joinToString(" · ") { it.text(context) }, // i18n-skip
+        spoken.joinToString(", ") { it.text(context) }, // i18n-skip
+    )
+}
+
 /** The line under a cover: the engine's words for where the person is, else its facts joined. */
 internal fun WorkTile.line(context: Context): String =
     if (notInSources) Strings.homeNotFound(context)
@@ -340,6 +446,10 @@ internal fun WorkTile.line(context: Context): String =
 /** An AniList result's caption: its format and where it comes from, "Light novel · Japan". */
 internal fun WorkTile.anilistLine(context: Context): String =
     listOfNotNull(facts.firstOrNull()?.text(context), origin?.text(context)).joinToString(" · ") // i18n-skip
+
+/** An AniList result's caption as a screen reader says it: "Light novel, Japan". */
+internal fun WorkTile.anilistSpoken(context: Context): String =
+    listOfNotNull(facts.firstOrNull()?.text(context), origin?.text(context)).joinToString(", ") // i18n-skip
 
 /** A source hit's caption: how much the source holds, "2 volumes"; nothing when it does not say. */
 internal fun WorkTile.hitLine(context: Context): String = amount?.text(context).orEmpty()
@@ -430,9 +540,6 @@ internal object ReadPlaces {
     /** Search runs reading's search rather than shows' (with Both). */
     var searchReading by mutableStateOf(false)
 
-    /** The row title View all's page shows. */
-    var viewAllTitle by mutableStateOf("")
-
     /** The reading list Library shows. */
     var list by mutableStateOf(LibrarySegmentRead.READING)
 
@@ -473,9 +580,12 @@ internal fun ScopeControl(reading: Boolean, modifier: Modifier = Modifier, onCha
     }
 }
 
-/** A cover's long-press menu: Details, then the lists to put it on, [current] checked. */
+/**
+ * A cover's long-press menu: Details, then the lists to put it on, [current] checked. Without
+ * [lists] it is Details alone, for covers of the person's own (Up next, This week).
+ */
 @Composable
-internal fun ReadTileMenu(tile: WorkTile, expanded: Boolean, current: LibrarySegmentRead?, onDismiss: () -> Unit) {
+internal fun ReadTileMenu(tile: WorkTile, expanded: Boolean, current: LibrarySegmentRead?, lists: Boolean = true, onDismiss: () -> Unit) {
     val store = app.kaeri.ui.LocalAppStore.current
     val context = LocalContext.current
     val navigator = LocalNavigator.current
@@ -485,6 +595,7 @@ internal fun ReadTileMenu(tile: WorkTile, expanded: Boolean, current: LibrarySeg
             leadingIcon = { Icon(Icons.External, null) },
             onClick = { onDismiss(); navigator.openSeries(tile.work, "read-menu") },
         )
+        if (!lists) return@Menu
         androidx.compose.material3.HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outlineVariant)
         for (list in READ_STATUSES) {
             androidx.compose.material3.DropdownMenuItem(

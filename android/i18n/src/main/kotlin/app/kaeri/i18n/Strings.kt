@@ -2689,6 +2689,46 @@ object Strings {
     fun readHomeOfflineLine(context: Context): String =
         context.getString(R.string.read_home_offline_line)
 
+    /** Screen readers: a source group in Search while its source is still being asked. The source is its name. */
+    fun readSearchSourceBusy(context: Context, source: String): String =
+        context.getString(R.string.read_search_source_busy, source)
+
+    /** The same, with the kind of source it is (Server, Folder or the plugin word). */
+    fun readSearchSourceBusyKind(context: Context, source: String, kind: String): String =
+        context.getString(R.string.read_search_source_busy_kind, source, kind)
+
+    /** Screen readers: a source group's heading in Search, its name and the kind of source it is. */
+    fun readSearchSourceNamed(context: Context, source: String, kind: String): String =
+        context.getString(R.string.read_search_source_named, source, kind)
+
+    /** Screen readers: the reason under a source group whose source gave no answer in time. */
+    fun readSearchSourceTimeoutSpoken(context: Context, seconds: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_source_timeout_spoken, seconds, seconds)
+
+    /** Screen readers: the Try again button of one source group in Search. The source is its name. */
+    fun readSearchTryAgainSource(context: Context, source: String): String =
+        context.getString(R.string.read_search_try_again_source, source)
+
+    /** Search with Your sources only on, when none of the person's sources found anything. */
+    fun readSearchSourcesOnlyNothing(context: Context): String =
+        context.getString(R.string.read_search_sources_only_nothing)
+
+    /** The line under it. */
+    fun readSearchSourcesOnlyNothingLine(context: Context): String =
+        context.getString(R.string.read_search_sources_only_nothing_line)
+
+    /** Screen readers: a reading cover with no line under its title. */
+    fun readTileSpokenTitle(context: Context, title: String): String =
+        context.getString(R.string.read_tile_spoken_title, title)
+
+    /** Screen readers: a reading cover, its title and the line under it. */
+    fun readTileSpoken(context: Context, title: String, line: String): String =
+        context.getString(R.string.read_tile_spoken, title, line)
+
+    /** Screen readers: a reading cover, its title, the line under it and where the person has it. */
+    fun readTileSpokenIn(context: Context, title: String, line: String, where: String): String =
+        context.getString(R.string.read_tile_spoken_in, title, line, where)
+
     /** Name of the notification channel for new chapters, shown in the system's settings. */
     fun channelChaptersName(context: Context): String =
         context.getString(R.string.channel_chapters_name)

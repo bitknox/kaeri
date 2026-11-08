@@ -148,6 +148,13 @@ data class ReadSearchState(
     val sources: ReadSourceSearch? = null,
     /** How many of [tiles] came on the first page: with words, the rest show under the sources. */
     val firstPage: Int = 0,
+    /**
+     * [tiles], the count and [failure] are the answer to the words before [query], kept on screen
+     * as they were until [query]'s own answer replaces them, so new words never empty the page.
+     */
+    val stale: Boolean = false,
+    /** The groups in [sources] kept from the words before, by source id, each until it answers [query]. */
+    val staleSources: Set<String> = emptySet(),
 ) {
     /** Whether the search has words, so the sources are asked beside AniList. */
     val words: Boolean get() = query.text.isNotBlank()
@@ -165,21 +172,57 @@ private fun ReadSearchState.answered(event: ReadingEvent.Search): ReadSearchStat
         total = event.total ?: if (first) null else total,
         loading = false,
         failure = null,
+        stale = false,
     )
 }
 
 /**
- * [this] with the groups [before] had settled kept while they are asked again for the same words:
- * turning Your sources only on or off asks every source again, and the rows stay on screen
- * meanwhile rather than going back to placeholders. A group's own Try again is not kept, as it
- * failed before.
+ * [this] asked [query] anew: what is on screen stays, marked stale, until the answer to [query]
+ * replaces it part by part, AniList's grid when its first page lands and each source's row when
+ * that source answers. Browsing has no sources; a group still asking stays asking.
  */
-private fun ReadSourceSearch.keeping(before: ReadSourceSearch?): ReadSourceSearch {
-    if (before == null || before.query.text != query.text) return this
-    val settled = before.groups.filter { it.state is ReadSourceState.Hits || it.state is ReadSourceState.Nothing }.associateBy { it.sourceId }
-    if (settled.isEmpty()) return this
-    return copy(groups = groups.map { group -> if (group.state is ReadSourceState.Asking) settled[group.sourceId] ?: group else group })
+internal fun ReadSearchState.asking(query: ReadSearchQuery): ReadSearchState {
+    val kept = sources?.takeIf { query.text.isNotBlank() }?.let {
+        it.copy(query = query, anilist = if (query.sourcesOnly) ReadAnilistState.SKIPPED else ReadAnilistState.ASKING, done = false)
+    }
+    return copy(
+        query = query,
+        loading = true,
+        page = 0u,
+        hasMore = false,
+        sources = kept,
+        stale = tiles.isNotEmpty() || failure != null,
+        staleSources = kept?.groups?.filter { it.state !is ReadSourceState.Asking }?.map { it.sourceId }?.toSet().orEmpty(),
+    )
 }
+
+/**
+ * [this] with the sources' newest answer to its query in. A group asking that still has a row
+ * kept from the words before keeps that row until it answers; one that answers takes its place
+ * and is no longer stale. A group's own Try again is never kept: it answered this query already.
+ */
+private fun ReadSearchState.sourcesIn(part: ReadSourceSearch): ReadSearchState {
+    val before = sources?.groups?.associateBy { it.sourceId }.orEmpty()
+    val asking = part.groups.filter { it.state is ReadSourceState.Asking }.map { it.sourceId }.toSet()
+    val groups = part.groups.map { group ->
+        val kept = before[group.sourceId]
+        if (group.sourceId in asking && group.sourceId in staleSources && kept != null) kept else group
+    }
+    return copy(
+        sources = part.copy(groups = groups),
+        staleSources = staleSources intersect asking,
+        // With Your sources only, AniList is not asked: the groups are the whole answer.
+        loading = if (part.query.sourcesOnly) false else loading,
+    )
+}
+
+/**
+ * [this] once AniList failed: a first page that failed takes the place of what the words before
+ * found; a later page keeps the pages already shown.
+ */
+private fun ReadSearchState.failedWith(failure: ReadingFailure): ReadSearchState =
+    if (stale) copy(loading = false, failure = failure, tiles = emptyList(), total = null, firstPage = 0, otherScope = null, stale = false)
+    else copy(loading = false, failure = failure)
 
 /** A finished download batch, said as a notification while Downloads finished is on. */
 data class DownloadsDone(val work: WorkId?, val title: Msg, val body: Msg)
@@ -273,12 +316,15 @@ class ReadingModel(private val send: (Command) -> Unit) {
     fun downloadNew() = reading(ReadingCommand.DownloadNew)
     fun loadList(segment: LibrarySegmentRead) = reading(ReadingCommand.LoadLibrary(segment))
 
+    /** Search [query]: what is on screen stays until the answer replaces it ([asking]). */
     fun runSearch(query: ReadSearchQuery) {
-        val before = _search.value
-        // Your sources only turned on or off keeps the source rows while they are asked again.
-        val kept = before.sources?.takeIf { before.query.copy(sourcesOnly = query.sourcesOnly) == query }
-        _search.value = ReadSearchState(query = query, loading = true, sources = kept?.copy(query = query, anilist = if (query.sourcesOnly) ReadAnilistState.SKIPPED else ReadAnilistState.ASKING))
+        _search.value = _search.value.asking(query)
         reading(ReadingCommand.Search(query))
+    }
+
+    /** [query] marked as asked with nothing sent, for a Fixtures stage that answers it itself. */
+    internal fun askedForStage(query: ReadSearchQuery) {
+        _search.value = _search.value.asking(query)
     }
 
     fun searchMore() {
@@ -291,9 +337,13 @@ class ReadingModel(private val send: (Command) -> Unit) {
     /** Ask one source again for the search on screen: its group's Try again. */
     fun retrySource(sourceId: String) = reading(ReadingCommand.RetrySourceSearch(_search.value.query, sourceId))
 
-    /** A row's View all: its exact query, which the engine answers with the row's titles first. */
-    fun runViewAll(query: ReadSearchQuery) {
-        _viewAll.value = ReadSearchState(query = query, loading = true)
+    /**
+     * A row's View all: its exact query, which the engine answers with the row's titles first.
+     * Opened from a row it starts afresh; a chip changed on the page keeps the titles on screen
+     * until the answer replaces them ([keep]).
+     */
+    fun runViewAll(query: ReadSearchQuery, keep: Boolean = false) {
+        _viewAll.value = if (keep) _viewAll.value.asking(query) else ReadSearchState(query = query, loading = true)
         reading(ReadingCommand.Search(query))
     }
 
@@ -463,11 +513,7 @@ class ReadingModel(private val send: (Command) -> Unit) {
             }
             is ReadingEvent.SourceSearch -> {
                 val part = event.v1
-                _search.update { now ->
-                    if (part.query != now.query) return@update now
-                    // With Your sources only, AniList is not asked: the groups are the whole answer.
-                    now.copy(sources = part.keeping(now.sources), loading = if (part.query.sourcesOnly) false else now.loading)
-                }
+                _search.update { now -> if (part.query != now.query) now else now.sourcesIn(part) }
             }
             is ReadingEvent.Series -> _series.update { it + (event.v1.work to event.v1) }
             is ReadingEvent.Chapters -> _chapters.update { it + (event.work to ReadChapters(event.edition, event.volumes, event.failure)) }
@@ -485,8 +531,8 @@ class ReadingModel(private val send: (Command) -> Unit) {
                 _failures.update { it + (event.about to event.failure) }
                 if (event.about == ReadingAbout.HOME) _homeLoading.value = false
                 if (event.about == ReadingAbout.SEARCH) {
-                    _search.update { it.copy(loading = false, failure = event.failure) }
-                    _viewAll.update { if (it.loading) it.copy(loading = false, failure = event.failure) else it }
+                    _search.update { it.failedWith(event.failure) }
+                    _viewAll.update { if (it.loading) it.failedWith(event.failure) else it }
                 }
             }
             else -> {}

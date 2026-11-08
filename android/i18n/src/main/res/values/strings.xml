@@ -1447,6 +1447,29 @@
     <string name="reader_paper_parts">What it changes</string>
     <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
     <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
+    <!-- Screen readers: a source group in Search while its source is still being asked. The source is its name. -->
+    <string name="read_search_source_busy">%1$s, searching</string>
+    <!-- The same, with the kind of source it is (Server, Folder or the plugin word). -->
+    <string name="read_search_source_busy_kind">%1$s, %2$s, searching</string>
+    <!-- Screen readers: a source group's heading in Search, its name and the kind of source it is. -->
+    <string name="read_search_source_named">%1$s, %2$s</string>
+    <!-- Screen readers: the reason under a source group whose source gave no answer in time. -->
+    <plurals name="read_search_source_timeout_spoken">
+        <item quantity="one">No answer in %1$d second.</item>
+        <item quantity="other">No answer in %1$d seconds.</item>
+    </plurals>
+    <!-- Screen readers: the Try again button of one source group in Search. The source is its name. -->
+    <string name="read_search_try_again_source">Try again, %1$s</string>
+    <!-- Search with Your sources only on, when none of the person's sources found anything. -->
+    <string name="read_search_sources_only_nothing">Nothing found in your sources</string>
+    <!-- The line under it. -->
+    <string name="read_search_sources_only_nothing_line">Try other words.</string>
+    <!-- Screen readers: a reading cover with no line under its title. -->
+    <string name="read_tile_spoken_title">%1$s.</string>
+    <!-- Screen readers: a reading cover, its title and the line under it. -->
+    <string name="read_tile_spoken">%1$s. %2$s.</string>
+    <!-- Screen readers: a reading cover, its title, the line under it and where the person has it. -->
+    <string name="read_tile_spoken_in">%1$s. %2$s. %3$s.</string>
     <!-- Name of the notification channel for new chapters, shown in the system's settings. -->
     <string name="channel_chapters_name">New chapters</string>
     <!-- What the new chapters channel is for, shown in the system's settings. -->
