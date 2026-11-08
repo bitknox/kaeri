@@ -73,7 +73,40 @@ pub fn plain(meta: &Meta, book: &Book) -> WorkTile {
         facts: facts(book),
         demo: false,
         not_in_sources: false,
+        origin: origin(book.origin()),
+        amount: None,
     }
+}
+
+/// The country a series comes from, in the words of the Origin filter.
+pub fn origin(origin: Option<kaeri_core::media::Origin>) -> Option<Msg> {
+    use kaeri_core::media::Origin;
+    Some(Msg::Reading(match origin? {
+        Origin::Japan => ReadingMsg::ReadingOriginJapan,
+        Origin::Korea => ReadingMsg::ReadingOriginKorea,
+        Origin::China => ReadingMsg::ReadingOriginChina,
+        Origin::Taiwan => ReadingMsg::ReadingOriginTaiwan,
+        Origin::Other(_) => return None,
+    }))
+}
+
+/// How much of a series a source holds, as the line under its hit says it.
+pub fn amount(amount: &kaeri_core::books::HitAmount) -> Msg {
+    use kaeri_core::books::HitAmount;
+    let int = |n: &u32| i64::from(*n);
+    Msg::Reading(match amount {
+        HitAmount::Volumes(n) => ReadingMsg::ReadingVolumes { count: int(n) },
+        HitAmount::Chapters(1) => ReadingMsg::ReadingChapters { count: 1 },
+        HitAmount::Chapters(n) => ReadingMsg::ReadHitChapters { last: int(n) },
+        HitAmount::Episodes(n) => ReadingMsg::ReadHitEpisodes { last: int(n) },
+        HitAmount::Parts(n) => ReadingMsg::ReadHitParts { count: int(n) },
+        HitAmount::Files { count, format: Some(format) } => {
+            ReadingMsg::ReadHitFilesFormat { count: int(count), format: format.clone() }
+        }
+        HitAmount::Files { count, format: None } => {
+            ReadingMsg::ReadHitFiles { count: int(count) }
+        }
+    })
 }
 
 /// A work of the reading demo, with where the person is in it.

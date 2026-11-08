@@ -1237,6 +1237,26 @@ object Strings {
     fun readSearchStarted3Years(context: Context): String =
         context.getString(R.string.read_search_started_3_years)
 
+    /** Under a source's hit in Search: the chapters it holds, from the first. */
+    fun readHitChapters(context: Context, last: Int): String =
+        context.getString(R.string.read_hit_chapters, last)
+
+    /** Under a source's hit in Search: a web novel's episodes it holds, from the first. */
+    fun readHitEpisodes(context: Context, last: Int): String =
+        context.getString(R.string.read_hit_episodes, last)
+
+    /** Under a source's hit in Search: a light novel's parts it holds. */
+    fun readHitParts(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.read_hit_parts, count, count)
+
+    /** Under a source's hit in Search: the book files it holds. */
+    fun readHitFiles(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.read_hit_files, count, count)
+
+    /** Under a source's hit in Search: the book files it holds, all in one format ("CBZ"). */
+    fun readHitFilesFormat(context: Context, count: Int, format: String): String =
+        context.resources.getQuantityString(R.plurals.read_hit_files_format, count, count, format)
+
     /** Toast after joining a plugin store with an invite that names this device's owner. */
     fun storeJoined(context: Context, store: String, member: String): String =
         context.getString(R.string.store_joined, store, member)
@@ -9766,6 +9786,10 @@ object Strings {
     fun readSearchSourcesNothing(context: Context): String =
         context.getString(R.string.read_search_sources_nothing)
 
+    /** Over reading's results while more pages are to come, so AniList's count is not known yet. */
+    fun readSearchTotalUnknown(context: Context): String =
+        context.getString(R.string.read_search_total_unknown)
+
     /** The link under From your sources that shows the rest of AniList's results. */
     fun readSearchMoreAnilist(context: Context): String =
         context.getString(R.string.read_search_more_anilist)
@@ -9773,6 +9797,20 @@ object Strings {
     /** Beside More from AniList: how many of AniList's results show. */
     fun readSearchShown(context: Context, shown: Int, total: Int): String =
         context.getString(R.string.read_search_shown, shown, total)
+
+    /** Beside More from AniList while AniList's count is not known yet: how many results show. */
+    fun readSearchShownSome(context: Context, shown: Int): String =
+        context.getString(R.string.read_search_shown_some, shown)
+
+    /** Beside a source's name in Search: the kind of source it is. */
+    fun readSearchSourceKindServer(context: Context): String =
+        context.getString(R.string.read_search_source_kind_server)
+
+    fun readSearchSourceKindFolder(context: Context): String =
+        context.getString(R.string.read_search_source_kind_folder)
+
+    fun readSearchSourceKindPlugin(context: Context): String =
+        context.getString(R.string.read_search_source_kind_plugin)
 
     /** The button of a source group with more than five hits. */
     fun readSearchSourceMore(context: Context, n: Int): String =

@@ -27,8 +27,8 @@ use kaeri_books::{
 use kaeri_bookserver::{Kind, Server};
 use kaeri_core::{
     books::{
-        BookFile, BookHints, BookSourceKind, BookSourceManifest, ChapterContent, ReadingHint,
-        SeriesDetail, SeriesHit, SourceChapter, WorkKey, normalise_name,
+        BookFile, BookHints, BookSourceKind, BookSourceManifest, ChapterContent, HitAmount,
+        ReadingHint, SeriesDetail, SeriesHit, SourceChapter, WorkKey, normalise_name,
     },
     error::ProviderError,
     media::Medium,
@@ -136,6 +136,16 @@ fn other(error: kaeri_store::StoreError) -> ProviderError {
     ProviderError::Other(error.to_string())
 }
 
+/// A folder series' files, as its hit's line says them: "1 file · CBZ", "3 files".
+pub(crate) fn files_amount(
+    files: &[kaeri_store::book_sources::LocalFile],
+) -> Option<HitAmount> {
+    let count = u32::try_from(files.len()).ok().filter(|n| *n > 0)?;
+    let first = files[0].format.to_uppercase();
+    let one = files.iter().all(|f| f.format.eq_ignore_ascii_case(&first));
+    Some(HitAmount::Files { count, format: (one && !first.is_empty()).then_some(first) })
+}
+
 #[async_trait]
 impl BookSource for FolderSource {
     fn manifest(&self) -> &BookSourceManifest {
@@ -154,7 +164,11 @@ impl BookSource for FolderSource {
             .map_err(other)?
             .into_iter()
             .filter(|s| wanted.is_empty() || normalise_name(&s.name).contains(&wanted))
-            .map(|s| SeriesHit::new(s.id, s.name))
+            .map(|s| {
+                let files = self.store.local_book_files(&s.id).unwrap_or_default();
+                let amount = files_amount(&files);
+                SeriesHit { amount, ..SeriesHit::new(s.id, s.name) }
+            })
             .collect())
     }
 
@@ -729,6 +743,8 @@ pub(crate) fn demo_tile(work: &kaeri_core::reading_demo::DemoWork) -> WorkTile {
         facts: vec![kaeri_model::reading::kind_words(Some(work.format()), medium, None)],
         demo: true,
         not_in_sources: false,
+        origin: None,
+        amount: None,
     }
 }
 
@@ -1232,9 +1248,13 @@ impl BookSources {
         local: &[kaeri_store::book_sources::LocalSeries],
         now: i64,
     ) -> Option<WorkTile> {
+        let amount = hit.amount.as_ref().map(crate::read_catalog::tiles::amount);
         if source == kaeri_core::demo::DEMO_SOURCE_ID {
-            return kaeri_core::reading_demo::work(&hit.id).map(demo_tile);
+            let mut tile = kaeri_core::reading_demo::work(&hit.id).map(demo_tile)?;
+            tile.amount = amount;
+            return Some(tile);
         }
+        let origin = crate::read_catalog::tiles::origin(hit.origin.clone());
         let medium = self.hit_medium(source, &hit, medium, local);
         let work = match self.store.book_match(source, &hit.id) {
             Ok(Some(work)) => work,
@@ -1258,6 +1278,8 @@ impl BookSources {
             facts: Vec::new(),
             demo: false,
             not_in_sources: false,
+            origin,
+            amount,
         })
     }
 

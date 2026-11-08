@@ -1005,6 +1005,33 @@ read-search-started-year = Last 12 months
 # A choice of reading Search's Started filter: series that started in the last 3 years.
 read-search-started-3-years = Last 3 years
 
+# Under a source's hit in Search: the chapters it holds, from the first.
+read-hit-chapters = Chapters 1 to { $last }
+
+# Under a source's hit in Search: a web novel's episodes it holds, from the first.
+read-hit-episodes = Episodes 1 to { $last }
+
+# Under a source's hit in Search: a light novel's parts it holds.
+read-hit-parts =
+    { $count ->
+        [one] 1 part
+       *[other] { $count } parts
+    }
+
+# Under a source's hit in Search: the book files it holds.
+read-hit-files =
+    { $count ->
+        [one] 1 file
+       *[other] { $count } files
+    }
+
+# Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+read-hit-files-format =
+    { $count ->
+        [one] 1 file · { $format }
+       *[other] { $count } files · { $format }
+    }
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Joined { $store } as { $member }.
 
@@ -9365,11 +9392,24 @@ read-search-anilist-failed-line = Your sources were still asked.
 # Search, when nothing was found anywhere: under the line saying AniList found nothing.
 read-search-sources-nothing = Nothing in your sources either.
 
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = Series from AniList
+
 # The link under From your sources that shows the rest of AniList's results.
 read-search-more-anilist = More from AniList
 
 # Beside More from AniList: how many of AniList's results show.
 read-search-shown = { $shown } of { $total } shown
+
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+read-search-shown-some = { $shown } shown
+
+# Beside a source's name in Search: the kind of source it is.
+read-search-source-kind-server = Server
+
+read-search-source-kind-folder = Folder
+
+read-search-source-kind-plugin = Plugin
 
 # The button of a source group with more than five hits.
 read-search-source-more = Show { $n } more

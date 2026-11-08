@@ -1540,6 +1540,31 @@ pub fn read_search_started_3_years() -> String {
     text("read-search-started-3-years", &[])
 }
 
+/// Under a source's hit in Search: the chapters it holds, from the first.
+pub fn read_hit_chapters(last: i64) -> String {
+    text("read-hit-chapters", &[("last", Arg::Int(last))])
+}
+
+/// Under a source's hit in Search: a web novel's episodes it holds, from the first.
+pub fn read_hit_episodes(last: i64) -> String {
+    text("read-hit-episodes", &[("last", Arg::Int(last))])
+}
+
+/// Under a source's hit in Search: a light novel's parts it holds.
+pub fn read_hit_parts(count: i64) -> String {
+    text("read-hit-parts", &[("count", Arg::Int(count))])
+}
+
+/// Under a source's hit in Search: the book files it holds.
+pub fn read_hit_files(count: i64) -> String {
+    text("read-hit-files", &[("count", Arg::Int(count))])
+}
+
+/// Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+pub fn read_hit_files_format(count: i64, format: &str) -> String {
+    text("read-hit-files-format", &[("count", Arg::Int(count)), ("format", Arg::Text(format))])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])
@@ -14920,6 +14945,11 @@ pub fn read_search_sources_nothing() -> String {
     text("read-search-sources-nothing", &[])
 }
 
+/// Over reading's results while more pages are to come, so AniList's count is not known yet.
+pub fn read_search_total_unknown() -> String {
+    text("read-search-total-unknown", &[])
+}
+
 /// The link under From your sources that shows the rest of AniList's results.
 pub fn read_search_more_anilist() -> String {
     text("read-search-more-anilist", &[])
@@ -14928,6 +14958,24 @@ pub fn read_search_more_anilist() -> String {
 /// Beside More from AniList: how many of AniList's results show.
 pub fn read_search_shown(shown: i64, total: i64) -> String {
     text("read-search-shown", &[("shown", Arg::Int(shown)), ("total", Arg::Int(total))])
+}
+
+/// Beside More from AniList while AniList's count is not known yet: how many results show.
+pub fn read_search_shown_some(shown: i64) -> String {
+    text("read-search-shown-some", &[("shown", Arg::Int(shown))])
+}
+
+/// Beside a source's name in Search: the kind of source it is.
+pub fn read_search_source_kind_server() -> String {
+    text("read-search-source-kind-server", &[])
+}
+
+pub fn read_search_source_kind_folder() -> String {
+    text("read-search-source-kind-folder", &[])
+}
+
+pub fn read_search_source_kind_plugin() -> String {
+    text("read-search-source-kind-plugin", &[])
 }
 
 /// The button of a source group with more than five hits.
