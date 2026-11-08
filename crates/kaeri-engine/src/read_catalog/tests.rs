@@ -589,6 +589,28 @@ async fn a_failed_source_says_why_and_tries_again_alone() {
     );
 }
 
+/// Try again on a group still asking (a second tap before the first ask answered) asks the
+/// source nothing more: the ask under way answers for the group.
+#[tokio::test]
+async fn try_again_while_a_group_is_asking_asks_once() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let gate = Arc::new(Notify::new());
+    let hits = vec![hit("w-1", "Wren and the Iron Bridge", None)];
+    let slow = Shelf::put(&kit, "slow", "Slow shelf", Answer::Gated(gate.clone(), hits));
+    let only = ReadSearchQuery { sources_only: true, ..query("wren") };
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), only.clone(), 0, &tx);
+    let asking = next_part(&mut rx).await;
+    assert_eq!(*state(&asking, "slow"), ReadSourceState::Asking);
+    search::retry_source(&kit, ask(), only.clone(), "slow".into(), &tx);
+    search::retry_source(&kit, ask(), only, "slow".into(), &tx);
+    gate.notify_one();
+    let done = part_until(&mut rx, |p| p.done).await;
+    assert_eq!(*state(&done, "slow"), ReadSourceState::Hits);
+    assert_eq!(slow.asked.load(Ordering::SeqCst), 1);
+}
+
 #[tokio::test(start_paused = true)]
 async fn a_source_with_no_answer_runs_out_of_time_after_fifteen_seconds() {
     let dir = tempfile::tempdir().unwrap();
