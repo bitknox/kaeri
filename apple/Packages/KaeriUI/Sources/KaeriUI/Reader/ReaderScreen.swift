@@ -22,6 +22,8 @@ public struct ReaderScreen: View {
     @Environment(Navigator.self) private var navigator: Navigator?
     @State private var spoken: Task<Void, Never>?
     @State private var groupHeight: CGFloat = 84
+    /// The novel's web view, kept from chapter to chapter while the reader is open.
+    @State private var novelWeb = NovelWebSession()
 
     public init(model: ReaderModel, onClose: @escaping () -> Void) {
         self.model = model
@@ -57,6 +59,8 @@ public struct ReaderScreen: View {
             .onChange(of: proxy.size) { _, new in resize(new) }
         }
         .ignoresSafeArea()
+        // The reader closed: its web view and everything the page held go with it.
+        .onDisappear { novelWeb.close() }
         .onChange(of: voiceOver, initial: true) { _, on in model.pinChrome = on }
         // Notices wait while the reader is out of sight.
         .onChange(of: scenePhase, initial: true) { _, phase in model.away = phase != .active }
@@ -88,7 +92,11 @@ public struct ReaderScreen: View {
             ReaderChapterFailed(model: model, theme: theme, failure: failure, chooseSource: chooseSource, close: close)
         case .open:
             if model.novel != nil {
-                NovelReader(model: model, theme: theme, mac: mac, size: size, rtl: rtl) { tap($0) }
+                // The web view keeps the tap for as long as the reader is open, so it holds the
+                // model alone, never this screen.
+                NovelReader(model: model, theme: theme, mac: mac, size: size, rtl: rtl, web: novelWeb) { [model] x in
+                    Self.tap(model, x)
+                }
             } else if model.view?.mode == .strip {
                 StripReader(model: model, theme: theme, mac: mac, size: size, tone: tone) { tap(0.5) }
             } else {
@@ -112,7 +120,9 @@ public struct ReaderScreen: View {
     // MARK: Chrome
 
     /// A tap at the horizontal fraction `x`. The middle third shows the chrome; the next tap hides it.
-    private func tap(_ x: Double) {
+    private func tap(_ x: Double) { Self.tap(model, x) }
+
+    private static func tap(_ model: ReaderModel, _ x: Double) {
         if model.sheet != nil { return }
         if model.chromeShown { model.hideChrome() } else if x > 0.33 && x < 0.67 { model.chromeShown = true }
     }
