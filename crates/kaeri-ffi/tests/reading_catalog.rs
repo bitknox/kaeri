@@ -146,34 +146,48 @@ fn home_comes_whole_from_one_request_and_the_queue_behind_it() {
     assert_eq!(&up_next[..2], ["a:900304", "a:900306"]);
     assert!(home.up_next[0].facts.contains(&Msg::Reading(ReadingMsg::ReadingOnPlanning)));
 
-    // Discovery: rows by format, Trending first, each title once and never what the person
-    // reads. The fixtures are few, so later rows may hold nothing new and leave.
+    // Discovery: manga read most, light novels next, a webtoon on Reading. The fixtures fill
+    // every row the board draws, each title once and never what the person reads.
     let rows = &home.rows;
-    assert_eq!(rows.first().map(|r| r.kind), Some(ReadRowKind::Trending), "{rows:?}");
+    let ids: Vec<&str> = rows.iter().map(|r| r.id.as_str()).collect();
+    let board = [
+        "trending-manga",
+        "trending-novels",
+        "trending-webtoons",
+        "because",
+        "new-manga",
+        "new-novels",
+        "genre",
+        "finished-manga",
+    ];
+    assert_eq!(ids, board, "every row of the board's person with history");
     assert_eq!(home.releasing, rows[0].tiles, "the old field shows the first Trending row");
     let shown: Vec<String> = rows.iter().flat_map(|r| works(&r.tiles)).collect();
     let once: std::collections::HashSet<&String> = shown.iter().collect();
     assert_eq!(once.len(), shown.len(), "{shown:?}");
     assert!(shown.iter().all(|w| !continuing.contains(w)), "{shown:?}");
+    let own = ["a:900301", "a:900302", "a:900303", "a:900304", "a:900306", "a:900307"];
+    assert!(shown.iter().all(|w| !own.contains(&w.as_str())), "{shown:?}");
     assert!(rows.iter().flat_map(|r| &r.tiles).all(|t| !t.adult));
-    assert!(rows.iter().all(|r| !r.pending && !r.tiles.is_empty()));
+    for row in rows {
+        assert!(!row.pending && row.tiles.len() >= 5, "{} has {}", row.id, row.tiles.len());
+    }
 
     // Because you finished The Quiet Observatory: what it led to, without the person's own.
-    // Each title shows once, so with the fixtures' few books the Trending rows above may have
-    // taken all of it, and the row leaves.
-    match rows.iter().find(|r| r.kind == ReadRowKind::Because) {
-        Some(because) => {
-            assert_eq!(home.because_title.as_deref(), Some("The Quiet Observatory"));
-            assert_eq!(home.because, because.tiles);
-            assert!(because.tiles.iter().all(|t| t.work.0 != "a:900307"));
-        }
-        None => {
-            assert_eq!(home.because_title, None);
-            for led_to in ["a:900308", "a:900310", "a:900312"] {
-                assert!(shown.iter().any(|w| w == led_to), "{led_to} is in a row above");
-            }
-        }
-    }
+    let because = &rows[3];
+    assert_eq!(because.title.english(), "Because you finished The Quiet Observatory");
+    assert_eq!(home.because_title.as_deref(), Some("The Quiet Observatory"));
+    assert_eq!(home.because, because.tiles);
+    assert_eq!(because.view_all, None);
+    // More of the genre read most, with its View all.
+    let genre = &rows[6];
+    assert_eq!(genre.kind, ReadRowKind::MoreGenre);
+    assert_eq!(genre.title.english(), "More Slice of Life");
+    assert_eq!(home.genre.as_deref(), Some("Slice of Life"));
+    assert_eq!(
+        genre.view_all.as_ref().map(|q| q.genres.clone()),
+        Some(vec!["Slice of Life".into()])
+    );
 
     // No folder or server yet: the end offers Sources.
     assert!(home.no_sources);
@@ -446,6 +460,21 @@ fn the_reading_demo_opens_before_any_search_and_after_a_restart() {
             .expect("the engine starts again");
     let (page, chapters) = demo_page(&engine, &story.work);
     assert_eq!((page.demo.as_ref(), chapters), (Some(story), 1));
+    engine.shutdown();
+}
+
+#[test]
+fn a_first_run_home_shows_each_trending_row_then_new_manga() {
+    // Only the demo, no history: nothing to base Because or a genre on.
+    let (_root, engine) = start(FfiScene::ReadingDemo);
+    let home = whole_home(&engine, false);
+    let ids: Vec<&str> = home.rows.iter().map(|r| r.id.as_str()).collect();
+    assert_eq!(ids, ["trending-manga", "trending-webtoons", "trending-novels", "new-manga"]);
+    assert!(home.rows.iter().all(|r| !r.pending && r.tiles.len() >= 5), "{:?}", home.rows);
+    let shown: Vec<&str> =
+        home.rows.iter().flat_map(|r| &r.tiles).map(|t| t.work.0.as_str()).collect();
+    let once: std::collections::HashSet<&&str> = shown.iter().collect();
+    assert_eq!(once.len(), shown.len(), "{shown:?}");
     engine.shutdown();
 }
 

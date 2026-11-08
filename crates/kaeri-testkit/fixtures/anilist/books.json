@@ -113,7 +113,8 @@
   "isAdult": false,
   "genres": [
    "Drama",
-   "Mystery"
+   "Mystery",
+   "Slice of Life"
   ],
   "synonyms": [],
   "coverImage": {
@@ -526,12 +527,27 @@
     },
     {
      "mediaRecommendation": {
-      "id": 900312
+      "id": 900365
      }
     },
     {
      "mediaRecommendation": {
-      "id": 900308
+      "id": 900366
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900367
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900368
+     }
+    },
+    {
+     "mediaRecommendation": {
+      "id": 900369
      }
     }
    ]
@@ -942,6 +958,3558 @@
      "node": {
       "name": {
        "full": "Mika Sato"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900315,
+  "idMal": null,
+  "title": {
+   "romaji": "The Copper Cartographer",
+   "english": "The Copper Cartographer",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A mapmaker charts a city that redraws its streets every night.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Adventure",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900315-xl.jpg",
+   "large": "https://img.example/cover/900315.jpg",
+   "color": "#5a6ab0"
+  },
+  "bannerImage": "https://img.example/banner/900315.jpg",
+  "averageScore": 72,
+  "popularity": 95000,
+  "startDate": {
+   "year": 2008,
+   "month": 1,
+   "day": 16
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Pell Maragh"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900316,
+  "idMal": null,
+  "title": {
+   "romaji": "Bellfounder's Daughter",
+   "english": "Bellfounder's Daughter",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A girl casts the bell that will wake a sleeping mountain.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Drama",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900316-xl.jpg",
+   "large": "https://img.example/cover/900316.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900316.jpg",
+  "averageScore": 73,
+  "popularity": 92000,
+  "startDate": {
+   "year": 2009,
+   "month": 2,
+   "day": 17
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Ilse Varrow"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900317,
+  "idMal": null,
+  "title": {
+   "romaji": "Ninth Signal Tower",
+   "english": "Ninth Signal Tower",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Radio operators on a lonely tower hear a station that went silent years ago.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Mystery"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900317-xl.jpg",
+   "large": "https://img.example/cover/900317.jpg",
+   "color": "#c68a5a"
+  },
+  "bannerImage": "https://img.example/banner/900317.jpg",
+  "averageScore": 74,
+  "popularity": 89000,
+  "startDate": {
+   "year": 2010,
+   "month": 3,
+   "day": 18
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Tomas Quill"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900318,
+  "idMal": null,
+  "title": {
+   "romaji": "Saltmarsh Sentinels",
+   "english": "Saltmarsh Sentinels",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "Wardens of a drowned coast keep the tide spirits from the villages.",
+  "chapters": 94,
+  "volumes": 4,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Supernatural"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900318-xl.jpg",
+   "large": "https://img.example/cover/900318.jpg",
+   "color": "#6a8f5c"
+  },
+  "bannerImage": "https://img.example/banner/900318.jpg",
+  "averageScore": 75,
+  "popularity": 86000,
+  "startDate": {
+   "year": 2011,
+   "month": 4,
+   "day": 19
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Nell Ardent"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900319,
+  "idMal": null,
+  "title": {
+   "romaji": "Weathervane Academy",
+   "english": "Weathervane Academy",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Students learn to steer the wind, and mostly crash into barns.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Comedy",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900319-xl.jpg",
+   "large": "https://img.example/cover/900319.jpg",
+   "color": "#a46aa8"
+  },
+  "bannerImage": "https://img.example/banner/900319.jpg",
+  "averageScore": 76,
+  "popularity": 83000,
+  "startDate": {
+   "year": 2012,
+   "month": 5,
+   "day": 20
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Oren Vale"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900320,
+  "idMal": null,
+  "title": {
+   "romaji": "Hollow Kiln Tales",
+   "english": "Hollow Kiln Tales",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A potter's kiln fires pots that whisper the names of strangers.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Horror",
+   "Mystery"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900320-xl.jpg",
+   "large": "https://img.example/cover/900320.jpg",
+   "color": "#c6b25a"
+  },
+  "bannerImage": "https://img.example/banner/900320.jpg",
+  "averageScore": 77,
+  "popularity": 80000,
+  "startDate": {
+   "year": 2013,
+   "month": 6,
+   "day": 21
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Mabel Fenwright"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900321,
+  "idMal": null,
+  "title": {
+   "romaji": "The Velvet Courier",
+   "english": "The Velvet Courier",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A rooftop courier delivers letters nobody else will carry.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900321-xl.jpg",
+   "large": "https://img.example/cover/900321.jpg",
+   "color": "#5aa8a0"
+  },
+  "bannerImage": "https://img.example/banner/900321.jpg",
+  "averageScore": 78,
+  "popularity": 77000,
+  "startDate": {
+   "year": 2014,
+   "month": 7,
+   "day": 22
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Caspian Dorr"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900322,
+  "idMal": null,
+  "title": {
+   "romaji": "Ashen Grove Knights",
+   "english": "Ashen Grove Knights",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "Knights guard the last orchard after a winter of ash.",
+  "chapters": 106,
+  "volumes": 8,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900322-xl.jpg",
+   "large": "https://img.example/cover/900322.jpg",
+   "color": "#b05a5a"
+  },
+  "bannerImage": "https://img.example/banner/900322.jpg",
+  "averageScore": 79,
+  "popularity": 74000,
+  "startDate": {
+   "year": 2015,
+   "month": 8,
+   "day": 23
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Juna Ellery"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900323,
+  "idMal": null,
+  "title": {
+   "romaji": "Tidepool Detective",
+   "english": "Tidepool Detective",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A small-town detective solves cases from the rock pools at low tide.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Mystery",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900323-xl.jpg",
+   "large": "https://img.example/cover/900323.jpg",
+   "color": "#5a6ab0"
+  },
+  "bannerImage": "https://img.example/banner/900323.jpg",
+  "averageScore": 80,
+  "popularity": 71000,
+  "startDate": {
+   "year": 2016,
+   "month": 9,
+   "day": 24
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Pell Maragh"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900324,
+  "idMal": null,
+  "title": {
+   "romaji": "Starboard Bakery",
+   "english": "Starboard Bakery",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A bakery on a cargo ship feeds a crew of grumbling sailors.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Comedy",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900324-xl.jpg",
+   "large": "https://img.example/cover/900324.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900324.jpg",
+  "averageScore": 81,
+  "popularity": 68000,
+  "startDate": {
+   "year": 2017,
+   "month": 10,
+   "day": 25
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Ilse Varrow"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900325,
+  "idMal": null,
+  "title": {
+   "romaji": "Iron Heron Relay",
+   "english": "Iron Heron Relay",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A rowing club of misfits trains for the river relay.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Sports",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900325-xl.jpg",
+   "large": "https://img.example/cover/900325.jpg",
+   "color": "#c68a5a"
+  },
+  "bannerImage": "https://img.example/banner/900325.jpg",
+  "averageScore": 82,
+  "popularity": 65000,
+  "startDate": {
+   "year": 2018,
+   "month": 11,
+   "day": 26
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Tomas Quill"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900326,
+  "idMal": null,
+  "title": {
+   "romaji": "Ember-Eyed Fox",
+   "english": "Ember-Eyed Fox",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "A fox spirit with glowing eyes guides lost travellers home.",
+  "chapters": 118,
+  "volumes": 12,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Supernatural"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900326-xl.jpg",
+   "large": "https://img.example/cover/900326.jpg",
+   "color": "#6a8f5c"
+  },
+  "bannerImage": "https://img.example/banner/900326.jpg",
+  "averageScore": 83,
+  "popularity": 62000,
+  "startDate": {
+   "year": 2019,
+   "month": 12,
+   "day": 27
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Nell Ardent"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900327,
+  "idMal": null,
+  "title": {
+   "romaji": "Clockwork Almanac",
+   "english": "Clockwork Almanac",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "An almanac that predicts tomorrow starts to make mistakes.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Adventure"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900327-xl.jpg",
+   "large": "https://img.example/cover/900327.jpg",
+   "color": "#a46aa8"
+  },
+  "bannerImage": "https://img.example/banner/900327.jpg",
+  "averageScore": 84,
+  "popularity": 59000,
+  "startDate": {
+   "year": 2020,
+   "month": 1,
+   "day": 1
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Oren Vale"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900328,
+  "idMal": null,
+  "title": {
+   "romaji": "The Ferrous Choir",
+   "english": "The Ferrous Choir",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A choir of automatons sings at the edge of a mining town.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Drama",
+   "Mystery"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900328-xl.jpg",
+   "large": "https://img.example/cover/900328.jpg",
+   "color": "#c6b25a"
+  },
+  "bannerImage": "https://img.example/banner/900328.jpg",
+  "averageScore": 85,
+  "popularity": 56000,
+  "startDate": {
+   "year": 2021,
+   "month": 2,
+   "day": 2
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Mabel Fenwright"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900329,
+  "idMal": null,
+  "title": {
+   "romaji": "Windward Duelists",
+   "english": "Windward Duelists",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Fencers duel on the decks of sky ships.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Sports"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900329-xl.jpg",
+   "large": "https://img.example/cover/900329.jpg",
+   "color": "#5aa8a0"
+  },
+  "bannerImage": "https://img.example/banner/900329.jpg",
+  "averageScore": 86,
+  "popularity": 53000,
+  "startDate": {
+   "year": 2022,
+   "month": 3,
+   "day": 3
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Caspian Dorr"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900330,
+  "idMal": null,
+  "title": {
+   "romaji": "A Cartographer of Small Kingdoms",
+   "english": "A Cartographer of Small Kingdoms",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "FINISHED",
+  "description": "A Cartographer of Small Kingdoms: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": 130,
+  "volumes": 7,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Adventure"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900330-xl.jpg",
+   "large": "https://img.example/cover/900330.jpg",
+   "color": "#b05a5a"
+  },
+  "bannerImage": "https://img.example/banner/900330.jpg",
+  "averageScore": 70,
+  "popularity": 60000,
+  "startDate": {
+   "year": 2010,
+   "month": 1,
+   "day": 4
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Juna Ellery"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900331,
+  "idMal": null,
+  "title": {
+   "romaji": "The Archivist Who Stayed",
+   "english": "The Archivist Who Stayed",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "The Archivist Who Stayed: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Drama",
+   "Mystery"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900331-xl.jpg",
+   "large": "https://img.example/cover/900331.jpg",
+   "color": "#5a6ab0"
+  },
+  "bannerImage": "https://img.example/banner/900331.jpg",
+  "averageScore": 71,
+  "popularity": 57000,
+  "startDate": {
+   "year": 2011,
+   "month": 6,
+   "day": 5
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Pell Maragh"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900332,
+  "idMal": null,
+  "title": {
+   "romaji": "Second Shift at the Moon Inn",
+   "english": "Second Shift at the Moon Inn",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Second Shift at the Moon Inn: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Comedy",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900332-xl.jpg",
+   "large": "https://img.example/cover/900332.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900332.jpg",
+  "averageScore": 72,
+  "popularity": 54000,
+  "startDate": {
+   "year": 2012,
+   "month": 11,
+   "day": 6
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Ilse Varrow"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900333,
+  "idMal": null,
+  "title": {
+   "romaji": "Seven Keys to the Tin Palace",
+   "english": "Seven Keys to the Tin Palace",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "FINISHED",
+  "description": "Seven Keys to the Tin Palace: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": 139,
+  "volumes": 10,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Adventure",
+   "Mystery"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900333-xl.jpg",
+   "large": "https://img.example/cover/900333.jpg",
+   "color": "#c68a5a"
+  },
+  "bannerImage": "https://img.example/banner/900333.jpg",
+  "averageScore": 73,
+  "popularity": 51000,
+  "startDate": {
+   "year": 2013,
+   "month": 4,
+   "day": 7
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Tomas Quill"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900334,
+  "idMal": null,
+  "title": {
+   "romaji": "Reborn as a Lighthouse Keeper",
+   "english": "Reborn as a Lighthouse Keeper",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Reborn as a Lighthouse Keeper: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900334-xl.jpg",
+   "large": "https://img.example/cover/900334.jpg",
+   "color": "#6a8f5c"
+  },
+  "bannerImage": "https://img.example/banner/900334.jpg",
+  "averageScore": 74,
+  "popularity": 48000,
+  "startDate": {
+   "year": 2014,
+   "month": 9,
+   "day": 8
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Nell Ardent"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900335,
+  "idMal": null,
+  "title": {
+   "romaji": "The Duke's Borrowed Telescope",
+   "english": "The Duke's Borrowed Telescope",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "The Duke's Borrowed Telescope: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Romance",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900335-xl.jpg",
+   "large": "https://img.example/cover/900335.jpg",
+   "color": "#a46aa8"
+  },
+  "bannerImage": "https://img.example/banner/900335.jpg",
+  "averageScore": 75,
+  "popularity": 45000,
+  "startDate": {
+   "year": 2015,
+   "month": 2,
+   "day": 9
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Oren Vale"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900336,
+  "idMal": null,
+  "title": {
+   "romaji": "Snowbound Signal",
+   "english": "Snowbound Signal",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "FINISHED",
+  "description": "Snowbound Signal: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": 148,
+  "volumes": 4,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900336-xl.jpg",
+   "large": "https://img.example/cover/900336.jpg",
+   "color": "#c6b25a"
+  },
+  "bannerImage": "https://img.example/banner/900336.jpg",
+  "averageScore": 76,
+  "popularity": 42000,
+  "startDate": {
+   "year": 2016,
+   "month": 7,
+   "day": 10
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Mabel Fenwright"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900337,
+  "idMal": null,
+  "title": {
+   "romaji": "My Familiar Is a Teapot",
+   "english": "My Familiar Is a Teapot",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "My Familiar Is a Teapot: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Comedy",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900337-xl.jpg",
+   "large": "https://img.example/cover/900337.jpg",
+   "color": "#5aa8a0"
+  },
+  "bannerImage": "https://img.example/banner/900337.jpg",
+  "averageScore": 77,
+  "popularity": 39000,
+  "startDate": {
+   "year": 2017,
+   "month": 12,
+   "day": 11
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Caspian Dorr"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900338,
+  "idMal": null,
+  "title": {
+   "romaji": "Marginalia of a Wandering Scribe",
+   "english": "Marginalia of a Wandering Scribe",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Marginalia of a Wandering Scribe: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Adventure",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900338-xl.jpg",
+   "large": "https://img.example/cover/900338.jpg",
+   "color": "#b05a5a"
+  },
+  "bannerImage": "https://img.example/banner/900338.jpg",
+  "averageScore": 78,
+  "popularity": 36000,
+  "startDate": {
+   "year": 2018,
+   "month": 5,
+   "day": 12
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Juna Ellery"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900339,
+  "idMal": null,
+  "title": {
+   "romaji": "The Tilemaker's Apprentice",
+   "english": "The Tilemaker's Apprentice",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "FINISHED",
+  "description": "The Tilemaker's Apprentice: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": 157,
+  "volumes": 7,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900339-xl.jpg",
+   "large": "https://img.example/cover/900339.jpg",
+   "color": "#5a6ab0"
+  },
+  "bannerImage": "https://img.example/banner/900339.jpg",
+  "averageScore": 79,
+  "popularity": 33000,
+  "startDate": {
+   "year": 2019,
+   "month": 10,
+   "day": 13
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Pell Maragh"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900340,
+  "idMal": null,
+  "title": {
+   "romaji": "Errands for a Retired Dragon",
+   "english": "Errands for a Retired Dragon",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Errands for a Retired Dragon: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900340-xl.jpg",
+   "large": "https://img.example/cover/900340.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900340.jpg",
+  "averageScore": 80,
+  "popularity": 30000,
+  "startDate": {
+   "year": 2020,
+   "month": 3,
+   "day": 14
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Ilse Varrow"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900341,
+  "idMal": null,
+  "title": {
+   "romaji": "Ledger of the Night Market",
+   "english": "Ledger of the Night Market",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Ledger of the Night Market: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Mystery",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900341-xl.jpg",
+   "large": "https://img.example/cover/900341.jpg",
+   "color": "#c68a5a"
+  },
+  "bannerImage": "https://img.example/banner/900341.jpg",
+  "averageScore": 81,
+  "popularity": 27000,
+  "startDate": {
+   "year": 2021,
+   "month": 8,
+   "day": 15
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Tomas Quill"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900342,
+  "idMal": null,
+  "title": {
+   "romaji": "The Quiet Heir of Aldercross",
+   "english": "The Quiet Heir of Aldercross",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "FINISHED",
+  "description": "The Quiet Heir of Aldercross: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": 166,
+  "volumes": 10,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Drama",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900342-xl.jpg",
+   "large": "https://img.example/cover/900342.jpg",
+   "color": "#6a8f5c"
+  },
+  "bannerImage": "https://img.example/banner/900342.jpg",
+  "averageScore": 82,
+  "popularity": 24000,
+  "startDate": {
+   "year": 2022,
+   "month": 1,
+   "day": 16
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Nell Ardent"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900343,
+  "idMal": null,
+  "title": {
+   "romaji": "Postmistress of the Floating Isles",
+   "english": "Postmistress of the Floating Isles",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Postmistress of the Floating Isles: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Adventure",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900343-xl.jpg",
+   "large": "https://img.example/cover/900343.jpg",
+   "color": "#a46aa8"
+  },
+  "bannerImage": "https://img.example/banner/900343.jpg",
+  "averageScore": 83,
+  "popularity": 21000,
+  "startDate": {
+   "year": 2023,
+   "month": 6,
+   "day": 17
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Oren Vale"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900344,
+  "idMal": null,
+  "title": {
+   "romaji": "A Treatise on Haunted Clocks",
+   "english": "A Treatise on Haunted Clocks",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "A Treatise on Haunted Clocks: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Mystery",
+   "Supernatural"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900344-xl.jpg",
+   "large": "https://img.example/cover/900344.jpg",
+   "color": "#c6b25a"
+  },
+  "bannerImage": "https://img.example/banner/900344.jpg",
+  "averageScore": 70,
+  "popularity": 18000,
+  "startDate": {
+   "year": 2010,
+   "month": 11,
+   "day": 18
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Mabel Fenwright"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900345,
+  "idMal": null,
+  "title": {
+   "romaji": "Captain of a Very Small Airship",
+   "english": "Captain of a Very Small Airship",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "FINISHED",
+  "description": "Captain of a Very Small Airship: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": 175,
+  "volumes": 4,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Adventure",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900345-xl.jpg",
+   "large": "https://img.example/cover/900345.jpg",
+   "color": "#5aa8a0"
+  },
+  "bannerImage": "https://img.example/banner/900345.jpg",
+  "averageScore": 71,
+  "popularity": 15000,
+  "startDate": {
+   "year": 2011,
+   "month": 4,
+   "day": 19
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Caspian Dorr"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900346,
+  "idMal": null,
+  "title": {
+   "romaji": "Twelve Winters in Brightwater",
+   "english": "Twelve Winters in Brightwater",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Twelve Winters in Brightwater: a light novel in volumes, told one quiet chapter at a time.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Drama",
+   "Fantasy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900346-xl.jpg",
+   "large": "https://img.example/cover/900346.jpg",
+   "color": "#b05a5a"
+  },
+  "bannerImage": "https://img.example/banner/900346.jpg",
+  "averageScore": 72,
+  "popularity": 12000,
+  "startDate": {
+   "year": 2012,
+   "month": 9,
+   "day": 20
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Juna Ellery"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900347,
+  "idMal": null,
+  "title": {
+   "romaji": "Rooftop Garden Club",
+   "english": "Rooftop Garden Club",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Rooftop Garden Club: a full-colour strip read top to bottom.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "KR",
+  "isAdult": false,
+  "genres": [
+   "Comedy",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900347-xl.jpg",
+   "large": "https://img.example/cover/900347.jpg",
+   "color": "#5a6ab0"
+  },
+  "bannerImage": "https://img.example/banner/900347.jpg",
+  "averageScore": 74,
+  "popularity": 30000,
+  "startDate": {
+   "year": 2019,
+   "month": 1,
+   "day": 21
+  },
+  "tags": [
+   {
+    "name": "Long Strip",
+    "rank": 80
+   },
+   {
+    "name": "Full Color",
+    "rank": 80
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Pell Maragh"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900348,
+  "idMal": null,
+  "title": {
+   "romaji": "The Thirteenth Floor Florist",
+   "english": "The Thirteenth Floor Florist",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "The Thirteenth Floor Florist: a full-colour strip read top to bottom.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "KR",
+  "isAdult": false,
+  "genres": [
+   "Romance",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900348-xl.jpg",
+   "large": "https://img.example/cover/900348.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900348.jpg",
+  "averageScore": 75,
+  "popularity": 25000,
+  "startDate": {
+   "year": 2020,
+   "month": 3,
+   "day": 22
+  },
+  "tags": [
+   {
+    "name": "Long Strip",
+    "rank": 80
+   },
+   {
+    "name": "Full Color",
+    "rank": 80
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Ilse Varrow"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900349,
+  "idMal": null,
+  "title": {
+   "romaji": "Neon Fishmonger",
+   "english": "Neon Fishmonger",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Neon Fishmonger: a full-colour strip read top to bottom.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "KR",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900349-xl.jpg",
+   "large": "https://img.example/cover/900349.jpg",
+   "color": "#c68a5a"
+  },
+  "bannerImage": "https://img.example/banner/900349.jpg",
+  "averageScore": 76,
+  "popularity": 20000,
+  "startDate": {
+   "year": 2021,
+   "month": 5,
+   "day": 23
+  },
+  "tags": [
+   {
+    "name": "Long Strip",
+    "rank": 80
+   },
+   {
+    "name": "Full Color",
+    "rank": 80
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Tomas Quill"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900350,
+  "idMal": null,
+  "title": {
+   "romaji": "Second Life of a Tower Mage",
+   "english": "Second Life of a Tower Mage",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Second Life of a Tower Mage: a full-colour strip read top to bottom.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "KR",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Action"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900350-xl.jpg",
+   "large": "https://img.example/cover/900350.jpg",
+   "color": "#6a8f5c"
+  },
+  "bannerImage": "https://img.example/banner/900350.jpg",
+  "averageScore": 77,
+  "popularity": 15000,
+  "startDate": {
+   "year": 2022,
+   "month": 7,
+   "day": 24
+  },
+  "tags": [
+   {
+    "name": "Long Strip",
+    "rank": 80
+   },
+   {
+    "name": "Full Color",
+    "rank": 80
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Nell Ardent"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900351,
+  "idMal": null,
+  "title": {
+   "romaji": "Monsoon Delivery Girl",
+   "english": "Monsoon Delivery Girl",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Monsoon Delivery Girl: a full-colour strip read top to bottom.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "KR",
+  "isAdult": false,
+  "genres": [
+   "Drama",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900351-xl.jpg",
+   "large": "https://img.example/cover/900351.jpg",
+   "color": "#a46aa8"
+  },
+  "bannerImage": "https://img.example/banner/900351.jpg",
+  "averageScore": 78,
+  "popularity": 10000,
+  "startDate": {
+   "year": 2023,
+   "month": 9,
+   "day": 25
+  },
+  "tags": [
+   {
+    "name": "Long Strip",
+    "rank": 80
+   },
+   {
+    "name": "Full Color",
+    "rank": 80
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Oren Vale"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900352,
+  "idMal": null,
+  "title": {
+   "romaji": "The Last Arcade on Pier Nine",
+   "english": "The Last Arcade on Pier Nine",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "The Last Arcade on Pier Nine: a full-colour strip read top to bottom.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "KR",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900352-xl.jpg",
+   "large": "https://img.example/cover/900352.jpg",
+   "color": "#c6b25a"
+  },
+  "bannerImage": "https://img.example/banner/900352.jpg",
+  "averageScore": 79,
+  "popularity": 5000,
+  "startDate": {
+   "year": 2019,
+   "month": 11,
+   "day": 26
+  },
+  "tags": [
+   {
+    "name": "Long Strip",
+    "rank": 80
+   },
+   {
+    "name": "Full Color",
+    "rank": 80
+   }
+  ],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Mabel Fenwright"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900353,
+  "idMal": null,
+  "title": {
+   "romaji": "Origami Crane Courier",
+   "english": "Origami Crane Courier",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Origami Crane Courier: a new series, a few chapters in.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900353-xl.jpg",
+   "large": "https://img.example/cover/900353.jpg",
+   "color": "#5aa8a0"
+  },
+  "bannerImage": "https://img.example/banner/900353.jpg",
+  "averageScore": 68,
+  "popularity": 12000,
+  "startDate": {
+   "year": 2025,
+   "month": 11,
+   "day": 27
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Caspian Dorr"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900354,
+  "idMal": null,
+  "title": {
+   "romaji": "The Kettle Witch of Rowan Lane",
+   "english": "The Kettle Witch of Rowan Lane",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "The Kettle Witch of Rowan Lane: a new series, a few chapters in.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900354-xl.jpg",
+   "large": "https://img.example/cover/900354.jpg",
+   "color": "#b05a5a"
+  },
+  "bannerImage": "https://img.example/banner/900354.jpg",
+  "averageScore": 69,
+  "popularity": 10000,
+  "startDate": {
+   "year": 2025,
+   "month": 12,
+   "day": 1
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Juna Ellery"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900355,
+  "idMal": null,
+  "title": {
+   "romaji": "Moonlit Ropewalk",
+   "english": "Moonlit Ropewalk",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Moonlit Ropewalk: a new series, a few chapters in.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900355-xl.jpg",
+   "large": "https://img.example/cover/900355.jpg",
+   "color": "#5a6ab0"
+  },
+  "bannerImage": "https://img.example/banner/900355.jpg",
+  "averageScore": 70,
+  "popularity": 8000,
+  "startDate": {
+   "year": 2026,
+   "month": 1,
+   "day": 2
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Pell Maragh"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900356,
+  "idMal": null,
+  "title": {
+   "romaji": "Glimmer Street Wrestlers",
+   "english": "Glimmer Street Wrestlers",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Glimmer Street Wrestlers: a new series, a few chapters in.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900356-xl.jpg",
+   "large": "https://img.example/cover/900356.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900356.jpg",
+  "averageScore": 71,
+  "popularity": 6000,
+  "startDate": {
+   "year": 2026,
+   "month": 3,
+   "day": 3
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Ilse Varrow"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900357,
+  "idMal": null,
+  "title": {
+   "romaji": "Hearthstone Cartel",
+   "english": "Hearthstone Cartel",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Hearthstone Cartel: a new series, a few chapters in.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900357-xl.jpg",
+   "large": "https://img.example/cover/900357.jpg",
+   "color": "#c68a5a"
+  },
+  "bannerImage": "https://img.example/banner/900357.jpg",
+  "averageScore": 72,
+  "popularity": 4000,
+  "startDate": {
+   "year": 2026,
+   "month": 5,
+   "day": 4
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Tomas Quill"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900358,
+  "idMal": null,
+  "title": {
+   "romaji": "The Sundial Twins",
+   "english": "The Sundial Twins",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "The Sundial Twins: a new series, a few chapters in.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900358-xl.jpg",
+   "large": "https://img.example/cover/900358.jpg",
+   "color": "#6a8f5c"
+  },
+  "bannerImage": "https://img.example/banner/900358.jpg",
+  "averageScore": 73,
+  "popularity": 2000,
+  "startDate": {
+   "year": 2026,
+   "month": 7,
+   "day": 5
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Nell Ardent"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900359,
+  "idMal": null,
+  "title": {
+   "romaji": "The Cartwright's Last Commission",
+   "english": "The Cartwright's Last Commission",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "The Cartwright's Last Commission: a new light novel, its first volumes out.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900359-xl.jpg",
+   "large": "https://img.example/cover/900359.jpg",
+   "color": "#a46aa8"
+  },
+  "bannerImage": "https://img.example/banner/900359.jpg",
+  "averageScore": 66,
+  "popularity": 8000,
+  "startDate": {
+   "year": 2025,
+   "month": 11,
+   "day": 6
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Oren Vale"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900360,
+  "idMal": null,
+  "title": {
+   "romaji": "A Year of Borrowed Candles",
+   "english": "A Year of Borrowed Candles",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "A Year of Borrowed Candles: a new light novel, its first volumes out.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Mystery",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900360-xl.jpg",
+   "large": "https://img.example/cover/900360.jpg",
+   "color": "#c6b25a"
+  },
+  "bannerImage": "https://img.example/banner/900360.jpg",
+  "averageScore": 67,
+  "popularity": 7000,
+  "startDate": {
+   "year": 2025,
+   "month": 12,
+   "day": 7
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Mabel Fenwright"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900361,
+  "idMal": null,
+  "title": {
+   "romaji": "Exile to the Salt Library",
+   "english": "Exile to the Salt Library",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Exile to the Salt Library: a new light novel, its first volumes out.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900361-xl.jpg",
+   "large": "https://img.example/cover/900361.jpg",
+   "color": "#5aa8a0"
+  },
+  "bannerImage": "https://img.example/banner/900361.jpg",
+  "averageScore": 68,
+  "popularity": 6000,
+  "startDate": {
+   "year": 2026,
+   "month": 1,
+   "day": 8
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Caspian Dorr"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900362,
+  "idMal": null,
+  "title": {
+   "romaji": "My Rival Is the Weather",
+   "english": "My Rival Is the Weather",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "My Rival Is the Weather: a new light novel, its first volumes out.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Mystery",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900362-xl.jpg",
+   "large": "https://img.example/cover/900362.jpg",
+   "color": "#b05a5a"
+  },
+  "bannerImage": "https://img.example/banner/900362.jpg",
+  "averageScore": 69,
+  "popularity": 5000,
+  "startDate": {
+   "year": 2026,
+   "month": 3,
+   "day": 9
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Juna Ellery"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900363,
+  "idMal": null,
+  "title": {
+   "romaji": "The Hedge Maze Inheritance",
+   "english": "The Hedge Maze Inheritance",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "The Hedge Maze Inheritance: a new light novel, its first volumes out.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Fantasy",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900363-xl.jpg",
+   "large": "https://img.example/cover/900363.jpg",
+   "color": "#5a6ab0"
+  },
+  "bannerImage": "https://img.example/banner/900363.jpg",
+  "averageScore": 70,
+  "popularity": 4000,
+  "startDate": {
+   "year": 2026,
+   "month": 5,
+   "day": 10
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Pell Maragh"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900364,
+  "idMal": null,
+  "title": {
+   "romaji": "Notes from a Moth Archive",
+   "english": "Notes from a Moth Archive",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Notes from a Moth Archive: a new light novel, its first volumes out.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Mystery",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900364-xl.jpg",
+   "large": "https://img.example/cover/900364.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900364.jpg",
+  "averageScore": 71,
+  "popularity": 3000,
+  "startDate": {
+   "year": 2026,
+   "month": 7,
+   "day": 11
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Ilse Varrow"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900365,
+  "idMal": null,
+  "title": {
+   "romaji": "Orbit of the Tin Moon",
+   "english": "Orbit of the Tin Moon",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "Orbit of the Tin Moon: stars, distances and the people who watch them.",
+  "chapters": 235,
+  "volumes": 6,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900365-xl.jpg",
+   "large": "https://img.example/cover/900365.jpg",
+   "color": "#c68a5a"
+  },
+  "bannerImage": "https://img.example/banner/900365.jpg",
+  "averageScore": 73,
+  "popularity": 6500,
+  "startDate": {
+   "year": 2011,
+   "month": 3,
+   "day": 12
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Tomas Quill"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900366,
+  "idMal": null,
+  "title": {
+   "romaji": "The Comet Keeper",
+   "english": "The Comet Keeper",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "The Comet Keeper: stars, distances and the people who watch them.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Adventure"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900366-xl.jpg",
+   "large": "https://img.example/cover/900366.jpg",
+   "color": "#6a8f5c"
+  },
+  "bannerImage": "https://img.example/banner/900366.jpg",
+  "averageScore": 74,
+  "popularity": 6000,
+  "startDate": {
+   "year": 2013,
+   "month": 4,
+   "day": 13
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Nell Ardent"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900367,
+  "idMal": null,
+  "title": {
+   "romaji": "Night Shift at Comet Hill",
+   "english": "Night Shift at Comet Hill",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "Night Shift at Comet Hill: stars, distances and the people who watch them.",
+  "chapters": 241,
+  "volumes": 8,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Drama",
+   "Mystery"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900367-xl.jpg",
+   "large": "https://img.example/cover/900367.jpg",
+   "color": "#a46aa8"
+  },
+  "bannerImage": "https://img.example/banner/900367.jpg",
+  "averageScore": 75,
+  "popularity": 5500,
+  "startDate": {
+   "year": 2015,
+   "month": 5,
+   "day": 14
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Oren Vale"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900368,
+  "idMal": null,
+  "title": {
+   "romaji": "Satellite Letters",
+   "english": "Satellite Letters",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Satellite Letters: stars, distances and the people who watch them.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900368-xl.jpg",
+   "large": "https://img.example/cover/900368.jpg",
+   "color": "#c6b25a"
+  },
+  "bannerImage": "https://img.example/banner/900368.jpg",
+  "averageScore": 76,
+  "popularity": 5000,
+  "startDate": {
+   "year": 2017,
+   "month": 6,
+   "day": 15
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Mabel Fenwright"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900369,
+  "idMal": null,
+  "title": {
+   "romaji": "The Astronomer's Long Winter",
+   "english": "The Astronomer's Long Winter",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "FINISHED",
+  "description": "The Astronomer's Long Winter: stars, distances and the people who watch them.",
+  "chapters": 247,
+  "volumes": 10,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Sci-Fi",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900369-xl.jpg",
+   "large": "https://img.example/cover/900369.jpg",
+   "color": "#5aa8a0"
+  },
+  "bannerImage": "https://img.example/banner/900369.jpg",
+  "averageScore": 77,
+  "popularity": 4500,
+  "startDate": {
+   "year": 2019,
+   "month": 7,
+   "day": 16
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Caspian Dorr"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900370,
+  "idMal": null,
+  "title": {
+   "romaji": "Tea Hours at the Pier",
+   "english": "Tea Hours at the Pier",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Tea Hours at the Pier: ordinary days, told gently.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Slice of Life",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900370-xl.jpg",
+   "large": "https://img.example/cover/900370.jpg",
+   "color": "#b05a5a"
+  },
+  "bannerImage": "https://img.example/banner/900370.jpg",
+  "averageScore": 76,
+  "popularity": 5800,
+  "startDate": {
+   "year": 2012,
+   "month": 2,
+   "day": 17
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Juna Ellery"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900371,
+  "idMal": null,
+  "title": {
+   "romaji": "A Bicycle Named Thursday",
+   "english": "A Bicycle Named Thursday",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "A Bicycle Named Thursday: ordinary days, told gently.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Slice of Life",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900371-xl.jpg",
+   "large": "https://img.example/cover/900371.jpg",
+   "color": "#5a6ab0"
+  },
+  "bannerImage": "https://img.example/banner/900371.jpg",
+  "averageScore": 75,
+  "popularity": 5400,
+  "startDate": {
+   "year": 2013,
+   "month": 3,
+   "day": 18
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Pell Maragh"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900372,
+  "idMal": null,
+  "title": {
+   "romaji": "The Laundromat at the End of the Line",
+   "english": "The Laundromat at the End of the Line",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "The Laundromat at the End of the Line: ordinary days, told gently.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Slice of Life",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900372-xl.jpg",
+   "large": "https://img.example/cover/900372.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900372.jpg",
+  "averageScore": 74,
+  "popularity": 5000,
+  "startDate": {
+   "year": 2014,
+   "month": 4,
+   "day": 19
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Ilse Varrow"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900373,
+  "idMal": null,
+  "title": {
+   "romaji": "Small Days in Harrow Bay",
+   "english": "Small Days in Harrow Bay",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Small Days in Harrow Bay: ordinary days, told gently.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Slice of Life",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900373-xl.jpg",
+   "large": "https://img.example/cover/900373.jpg",
+   "color": "#c68a5a"
+  },
+  "bannerImage": "https://img.example/banner/900373.jpg",
+  "averageScore": 73,
+  "popularity": 4600,
+  "startDate": {
+   "year": 2015,
+   "month": 5,
+   "day": 20
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Tomas Quill"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900374,
+  "idMal": null,
+  "title": {
+   "romaji": "Our Apartment Has a Garden Shed",
+   "english": "Our Apartment Has a Garden Shed",
+   "native": null
+  },
+  "format": "NOVEL",
+  "status": "RELEASING",
+  "description": "Our Apartment Has a Garden Shed: ordinary days, told gently.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Slice of Life",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900374-xl.jpg",
+   "large": "https://img.example/cover/900374.jpg",
+   "color": "#6a8f5c"
+  },
+  "bannerImage": "https://img.example/banner/900374.jpg",
+  "averageScore": 72,
+  "popularity": 4200,
+  "startDate": {
+   "year": 2016,
+   "month": 6,
+   "day": 21
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story",
+     "node": {
+      "name": {
+       "full": "Nell Ardent"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900375,
+  "idMal": null,
+  "title": {
+   "romaji": "Postcards from a Snowed-In Town",
+   "english": "Postcards from a Snowed-In Town",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "RELEASING",
+  "description": "Postcards from a Snowed-In Town: ordinary days, told gently.",
+  "chapters": null,
+  "volumes": null,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Slice of Life",
+   "Comedy"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900375-xl.jpg",
+   "large": "https://img.example/cover/900375.jpg",
+   "color": "#a46aa8"
+  },
+  "bannerImage": "https://img.example/banner/900375.jpg",
+  "averageScore": 71,
+  "popularity": 3800,
+  "startDate": {
+   "year": 2017,
+   "month": 7,
+   "day": 22
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Oren Vale"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900376,
+  "idMal": null,
+  "title": {
+   "romaji": "The Bridge Painters",
+   "english": "The Bridge Painters",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "The Bridge Painters: complete in its volumes.",
+  "chapters": 268,
+  "volumes": 8,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900376-xl.jpg",
+   "large": "https://img.example/cover/900376.jpg",
+   "color": "#c6b25a"
+  },
+  "bannerImage": "https://img.example/banner/900376.jpg",
+  "averageScore": 71,
+  "popularity": 3800,
+  "startDate": {
+   "year": 2001,
+   "month": 5,
+   "day": 23
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Mabel Fenwright"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900377,
+  "idMal": null,
+  "title": {
+   "romaji": "Ember and Ink",
+   "english": "Ember and Ink",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "Ember and Ink: complete in its volumes.",
+  "chapters": 271,
+  "volumes": 9,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Mystery",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900377-xl.jpg",
+   "large": "https://img.example/cover/900377.jpg",
+   "color": "#5aa8a0"
+  },
+  "bannerImage": "https://img.example/banner/900377.jpg",
+  "averageScore": 72,
+  "popularity": 3400,
+  "startDate": {
+   "year": 2003,
+   "month": 6,
+   "day": 24
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Caspian Dorr"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900378,
+  "idMal": null,
+  "title": {
+   "romaji": "Last Train to Wicker Fen",
+   "english": "Last Train to Wicker Fen",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "Last Train to Wicker Fen: complete in its volumes.",
+  "chapters": 274,
+  "volumes": 10,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900378-xl.jpg",
+   "large": "https://img.example/cover/900378.jpg",
+   "color": "#b05a5a"
+  },
+  "bannerImage": "https://img.example/banner/900378.jpg",
+  "averageScore": 73,
+  "popularity": 3000,
+  "startDate": {
+   "year": 2005,
+   "month": 7,
+   "day": 25
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Juna Ellery"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900379,
+  "idMal": null,
+  "title": {
+   "romaji": "The Gardener of Vane Hall",
+   "english": "The Gardener of Vane Hall",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "The Gardener of Vane Hall: complete in its volumes.",
+  "chapters": 277,
+  "volumes": 11,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Mystery",
+   "Romance"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900379-xl.jpg",
+   "large": "https://img.example/cover/900379.jpg",
+   "color": "#5a6ab0"
+  },
+  "bannerImage": "https://img.example/banner/900379.jpg",
+  "averageScore": 74,
+  "popularity": 2600,
+  "startDate": {
+   "year": 2007,
+   "month": 8,
+   "day": 26
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Pell Maragh"
+      }
+     }
+    }
+   ]
+  },
+  "relations": {
+   "edges": []
+  },
+  "recommendations": {
+   "nodes": []
+  }
+ },
+ {
+  "id": 900380,
+  "idMal": null,
+  "title": {
+   "romaji": "A Duel at Low Tide",
+   "english": "A Duel at Low Tide",
+   "native": null
+  },
+  "format": "MANGA",
+  "status": "FINISHED",
+  "description": "A Duel at Low Tide: complete in its volumes.",
+  "chapters": 280,
+  "volumes": 12,
+  "countryOfOrigin": "JP",
+  "isAdult": false,
+  "genres": [
+   "Action",
+   "Drama"
+  ],
+  "synonyms": [],
+  "coverImage": {
+   "extraLarge": "https://img.example/cover/900380-xl.jpg",
+   "large": "https://img.example/cover/900380.jpg",
+   "color": "#7a9cc6"
+  },
+  "bannerImage": "https://img.example/banner/900380.jpg",
+  "averageScore": 75,
+  "popularity": 2200,
+  "startDate": {
+   "year": 2009,
+   "month": 9,
+   "day": 27
+  },
+  "tags": [],
+  "staff": {
+   "edges": [
+    {
+     "role": "Story & Art",
+     "node": {
+      "name": {
+       "full": "Ilse Varrow"
       }
      }
     }

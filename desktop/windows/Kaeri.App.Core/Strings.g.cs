@@ -936,6 +936,21 @@ public static partial class T
     /// <summary>A choice of reading Search's Started filter: series that started in the last 3 years.</summary>
     public static string ReadSearchStarted3Years => Get("ReadSearchStarted3Years");
 
+    /// <summary>Under a source's hit in Search: the chapters it holds, from the first.</summary>
+    public static string ReadHitChapters(long last) => Fill(Get("ReadHitChapters"), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: a web novel's episodes it holds, from the first.</summary>
+    public static string ReadHitEpisodes(long last) => Fill(Get("ReadHitEpisodes"), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: a light novel's parts it holds.</summary>
+    public static string ReadHitParts(long count) => Fill(GetPlural("ReadHitParts", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: the book files it holds.</summary>
+    public static string ReadHitFiles(long count) => Fill(GetPlural("ReadHitFiles", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: the book files it holds, all in one format ("CBZ").</summary>
+    public static string ReadHitFilesFormat(long count, string format) => Fill(GetPlural("ReadHitFilesFormat", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("format", format));
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -6376,23 +6391,27 @@ public static partial class T
     /// <summary>Search, when nothing was found anywhere: under the line saying AniList found nothing.</summary>
     public static string ReadSearchSourcesNothing => Get("ReadSearchSourcesNothing");
 
+    /// <summary>Over reading's results while more pages are to come, so AniList's count is not known yet.</summary>
+    public static string ReadSearchTotalUnknown => Get("ReadSearchTotalUnknown");
+
     /// <summary>The link under From your sources that shows the rest of AniList's results.</summary>
     public static string ReadSearchMoreAnilist => Get("ReadSearchMoreAnilist");
 
     /// <summary>Beside More from AniList: how many of AniList's results show.</summary>
     public static string ReadSearchShown(long shown, long total) => Fill(Get("ReadSearchShown"), ("shown", shown.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>The button of a source group with more than five hits.</summary>
-    public static string ReadSearchSourceMore(long n) => Fill(Get("ReadSearchSourceMore"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    /// <summary>Beside More from AniList while AniList's count is not known yet: how many results show.</summary>
+    public static string ReadSearchShownSome(long shown) => Fill(Get("ReadSearchShownSome"), ("shown", shown.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>Beside a source's name over its row in Search: the source is a server.</summary>
+    /// <summary>Beside a source's name in Search: the kind of source it is.</summary>
     public static string ReadSearchSourceKindServer => Get("ReadSearchSourceKindServer");
 
-    /// <summary>Beside a source's name over its row in Search: the source is a folder on this device.</summary>
     public static string ReadSearchSourceKindFolder => Get("ReadSearchSourceKindFolder");
 
-    /// <summary>Beside a source's name over its row in Search: the source is a plugin.</summary>
     public static string ReadSearchSourceKindPlugin => Get("ReadSearchSourceKindPlugin");
+
+    /// <summary>The button of a source group with more than five hits.</summary>
+    public static string ReadSearchSourceMore(long n) => Fill(Get("ReadSearchSourceMore"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Screen readers: the custom action on a discovery cover that puts the series on Planning.</summary>
     public static string ReadTileAddPlanning => Get("ReadTileAddPlanning");
@@ -11429,6 +11448,14 @@ public static partial class T
         ["ReadSearchStartedAny"] = "Any time",
         ["ReadSearchStartedYear"] = "Last 12 months",
         ["ReadSearchStarted3Years"] = "Last 3 years",
+        ["ReadHitChapters"] = "Chapters 1 to {last}",
+        ["ReadHitEpisodes"] = "Episodes 1 to {last}",
+        ["ReadHitParts_one"] = "1 part",
+        ["ReadHitParts_other"] = "{count} parts",
+        ["ReadHitFiles_one"] = "1 file",
+        ["ReadHitFiles_other"] = "{count} files",
+        ["ReadHitFilesFormat_one"] = "1 file · {format}",
+        ["ReadHitFilesFormat_other"] = "{count} files · {format}",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",
@@ -13314,12 +13341,14 @@ public static partial class T
         ["ReadSearchAnilistFailed"] = "AniList didn't answer.",
         ["ReadSearchAnilistFailedLine"] = "Your sources were still asked.",
         ["ReadSearchSourcesNothing"] = "Nothing in your sources either.",
+        ["ReadSearchTotalUnknown"] = "Series from AniList",
         ["ReadSearchMoreAnilist"] = "More from AniList",
         ["ReadSearchShown"] = "{shown} of {total} shown",
-        ["ReadSearchSourceMore"] = "Show {n} more",
+        ["ReadSearchShownSome"] = "{shown} shown",
         ["ReadSearchSourceKindServer"] = "Server",
         ["ReadSearchSourceKindFolder"] = "Folder",
         ["ReadSearchSourceKindPlugin"] = "Plugin",
+        ["ReadSearchSourceMore"] = "Show {n} more",
         ["ReadTileAddPlanning"] = "Add to Planning",
         ["ReadSearchAnilistHidden"] = "AniList's results are hidden.",
         ["ReadSearchSaidAnilist_one"] = "1 from AniList",

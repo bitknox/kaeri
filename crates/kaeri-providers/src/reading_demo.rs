@@ -196,6 +196,8 @@ impl ReadingDemo {
             format: Some(if work.novel { ReadingFormat::Novel } else { ReadingFormat::Manga }),
             language: Some("en".into()),
             cover: work.cover().map(Into::into),
+            // Each work is one chapter.
+            amount: Some(kaeri_core::books::HitAmount::Chapters(1)),
             ..SeriesHit::new(work.id, work.series)
         }
     }

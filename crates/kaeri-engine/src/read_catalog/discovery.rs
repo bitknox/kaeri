@@ -305,6 +305,8 @@ mod tests {
             facts: Vec::new(),
             demo: false,
             not_in_sources: false,
+            origin: None,
+            amount: None,
         };
         let mut rows = vec![
             vec![tile("a:1"), tile("a:2"), tile("a:3")],
