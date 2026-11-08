@@ -461,6 +461,11 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadSearchStartedAny -> Strings.readSearchStartedAny(context)
         is ReadingMsg.ReadSearchStartedYear -> Strings.readSearchStartedYear(context)
         is ReadingMsg.ReadSearchStarted3Years -> Strings.readSearchStarted3Years(context)
+        is ReadingMsg.ReadHitChapters -> Strings.readHitChapters(context, this.last.toInt())
+        is ReadingMsg.ReadHitEpisodes -> Strings.readHitEpisodes(context, this.last.toInt())
+        is ReadingMsg.ReadHitParts -> Strings.readHitParts(context, this.count.toInt())
+        is ReadingMsg.ReadHitFiles -> Strings.readHitFiles(context, this.count.toInt())
+        is ReadingMsg.ReadHitFilesFormat -> Strings.readHitFilesFormat(context, this.count.toInt(), this.format)
     }
 
 /** A reason in the person's language, inside a message or on its own. */

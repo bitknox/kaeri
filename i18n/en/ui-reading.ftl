@@ -865,6 +865,9 @@ read-search-anilist-failed-line = Your { -source-pl } were still asked.
 # Search, when nothing was found anywhere: under the line saying AniList found nothing.
 read-search-sources-nothing = Nothing in your { -source-pl } either.
 
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = Series from AniList
+
 # The link under From your sources that shows the rest of AniList's results.
 read-search-more-anilist = More from AniList
 
@@ -872,6 +875,15 @@ read-search-more-anilist = More from AniList
 # @arg shown: int
 # @arg total: int
 read-search-shown = { $shown } of { $total } shown
+
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+# @arg shown: int
+read-search-shown-some = { $shown } shown
+
+# Beside a source's name in Search: the kind of source it is.
+read-search-source-kind-server = Server
+read-search-source-kind-folder = Folder
+read-search-source-kind-plugin = { -plugin-cap }
 
 # The button of a source group with more than five hits.
 # @arg n: int

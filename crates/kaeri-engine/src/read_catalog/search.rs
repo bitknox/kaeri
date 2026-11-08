@@ -10,7 +10,7 @@ use std::{collections::HashSet, time::Duration};
 
 use futures::{StreamExt, stream::FuturesUnordered};
 use kaeri_core::{
-    books::{BookHints, SeriesHit, WorkKey},
+    books::{BookHints, BookSourceKind, SeriesHit, WorkKey},
     error::ProviderError,
     media::{Medium, ReadingFormat},
 };
@@ -24,8 +24,8 @@ use kaeri_model::{
     local::MatchChoice,
     reading::{
         self as words, LibrarySegmentRead, READ_SOURCE_WAIT_SECS, ReadAnilistState,
-        ReadSearchQuery, ReadSourceGroup, ReadSourceJoin, ReadSourceSearch, ReadSourceState,
-        ReadingAbout, ReadingEvent, ReadingFailure, WorkTile,
+        ReadSearchQuery, ReadSourceGroup, ReadSourceJoin, ReadSourceKind, ReadSourceSearch,
+        ReadSourceState, ReadingAbout, ReadingEvent, ReadingFailure, WorkTile,
     },
 };
 
@@ -163,7 +163,15 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
                     }
                 }
                 let total = total(page, tiles.len(), has_more);
-                let results = tiles.clone();
+                // The joins go first, so a hit that joins a result (the demo's always do) has
+                // left its group before the result shows: it is never on screen twice.
+                if let Some(generation) = generation {
+                    let candidates = candidates(&shown, &tiles);
+                    update(&kit, generation, &tx, |run| {
+                        run.anilist = Some(ReadAnilistState::Answered);
+                        run.candidates = candidates;
+                    });
+                }
                 send(
                     &tx,
                     ReadingEvent::Search {
@@ -175,13 +183,6 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
                         total,
                     },
                 );
-                if let Some(generation) = generation {
-                    let candidates = candidates(&shown, &results);
-                    update(&kit, generation, &tx, |run| {
-                        run.anilist = Some(ReadAnilistState::Answered);
-                        run.candidates = candidates;
-                    });
-                }
             }
             Err(e) => {
                 tracing::info!(error = %e, "reading's search could not ask AniList");
@@ -231,6 +232,7 @@ pub(crate) struct Run {
 struct Group {
     id: String,
     name: String,
+    kind: Option<ReadSourceKind>,
     state: ReadSourceState,
     hits: Vec<Hit>,
 }
@@ -342,7 +344,10 @@ fn same_format(theirs: &ReadingFormat, ours: &ReadingFormat) -> bool {
 }
 
 /// The sources a search asks, in the person's order: on, and carrying the query's medium.
-fn sources_for(kit: &Kit, medium: Option<Medium>) -> Vec<(String, String)> {
+fn sources_for(
+    kit: &Kit,
+    medium: Option<Medium>,
+) -> Vec<(String, String, Option<ReadSourceKind>)> {
     let registry = &kit.sources.registry;
     registry
         .ids()
@@ -352,9 +357,19 @@ fn sources_for(kit: &Kit, medium: Option<Medium>) -> Vec<(String, String)> {
             let manifest = registry.manifest(&id)?;
             let carries =
                 medium.is_none_or(|m| manifest.media.is_empty() || manifest.media.contains(&m));
-            carries.then_some((id, manifest.name))
+            carries.then_some((id, manifest.name, kind_of(manifest.kind)))
         })
         .collect()
+}
+
+/// The word under a group's name; built-in sources show their name alone.
+fn kind_of(kind: BookSourceKind) -> Option<ReadSourceKind> {
+    match kind {
+        BookSourceKind::Server => Some(ReadSourceKind::Server),
+        BookSourceKind::Folder => Some(ReadSourceKind::Folder),
+        BookSourceKind::Plugin => Some(ReadSourceKind::Plugin),
+        BookSourceKind::Native => None,
+    }
 }
 
 /// Start the sources' part of a search with words: every group asking at once, then each
@@ -376,9 +391,10 @@ fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> 
             }),
             groups: asked
                 .iter()
-                .map(|(id, name)| Group {
+                .map(|(id, name, kind)| Group {
                     id: id.clone(),
                     name: name.clone(),
+                    kind: *kind,
                     state: ReadSourceState::Asking,
                     hits: Vec::new(),
                 })
@@ -389,7 +405,7 @@ fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> 
         generation
     };
     update(kit, generation, tx, |_| {});
-    let ids: Vec<String> = asked.into_iter().map(|(id, _)| id).collect();
+    let ids: Vec<String> = asked.into_iter().map(|(id, ..)| id).collect();
     ask_sources(kit, ask, generation, query.text.trim().to_owned(), medium, ids, tx);
     generation
 }
@@ -426,7 +442,6 @@ fn ask_sources(
                     let hits: Vec<Hit> = hits
                         .into_iter()
                         .filter_map(|hit| {
-                            let stored = kit.store.book_match(&id, &hit.id).ok().flatten();
                             let medium = kit.sources.hit_medium(&id, &hit, medium, &local);
                             let tile = kit.sources.hit_tile(
                                 &id,
@@ -435,6 +450,13 @@ fn ask_sources(
                                 &local,
                                 ask.now,
                             )?;
+                            // A demo work is its own match: it joins the same work in AniList's
+                            // results, where it follows them, and shows once.
+                            let stored = if id == kaeri_core::demo::DEMO_SOURCE_ID {
+                                Some(tile.work.0.clone())
+                            } else {
+                                kit.store.book_match(&id, &hit.id).ok().flatten()
+                            };
                             seen.insert(tile.work.0.clone()).then_some(Hit {
                                 hit,
                                 tile,
@@ -553,6 +575,7 @@ fn view(kit: &Kit, run: &mut Run) -> ReadSourceSearch {
         groups.push(ReadSourceGroup {
             source_id: group.id.clone(),
             source_name: group.name.clone(),
+            kind: group.kind,
             state: group.state.clone(),
             tiles,
             joined,
@@ -659,6 +682,8 @@ fn local_tile(kit: &Kit, work: &str, name: &str, medium: &str) -> WorkTile {
         facts: vec![words::kind_words(None, medium, None)],
         demo: false,
         not_in_sources: false,
+        origin: None,
+        amount: None,
     };
     tiles::mark(&mut tile, &kit.store, &kit.sources);
     tile
@@ -730,7 +755,10 @@ mod tests {
         media::{Medium, ReadingFormat},
     };
 
-    use super::{Candidate, PER_PAGE, fold, join_of, total};
+    use kaeri_core::books::BookSourceKind;
+    use kaeri_model::reading::ReadSourceKind;
+
+    use super::{Candidate, PER_PAGE, fold, join_of, kind_of, total};
 
     fn candidate(work: &str, titles: &[&str], format: Option<ReadingFormat>) -> Candidate {
         Candidate {
@@ -742,6 +770,14 @@ mod tests {
 
     fn hit(title: &str, format: Option<ReadingFormat>) -> SeriesHit {
         SeriesHit { format, ..SeriesHit::new("s-1", title) }
+    }
+
+    #[test]
+    fn a_group_says_what_kind_of_source_it_is_unless_built_in() {
+        assert_eq!(kind_of(BookSourceKind::Server), Some(ReadSourceKind::Server));
+        assert_eq!(kind_of(BookSourceKind::Folder), Some(ReadSourceKind::Folder));
+        assert_eq!(kind_of(BookSourceKind::Plugin), Some(ReadSourceKind::Plugin));
+        assert_eq!(kind_of(BookSourceKind::Native), None);
     }
 
     #[test]

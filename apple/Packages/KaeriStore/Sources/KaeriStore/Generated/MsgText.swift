@@ -460,6 +460,11 @@ extension ReadingMsg {
         case .readSearchStartedAny: L.readSearchStartedAny
         case .readSearchStartedYear: L.readSearchStartedYear
         case .readSearchStarted3Years: L.readSearchStarted3Years
+        case .readHitChapters(let last): L.readHitChapters(last: Int(last))
+        case .readHitEpisodes(let last): L.readHitEpisodes(last: Int(last))
+        case .readHitParts(let count): L.readHitParts(count: Int(count))
+        case .readHitFiles(let count): L.readHitFiles(count: Int(count))
+        case .readHitFilesFormat(let count, let format): L.readHitFilesFormat(count: Int(count), format: format)
         }
     }
 }
