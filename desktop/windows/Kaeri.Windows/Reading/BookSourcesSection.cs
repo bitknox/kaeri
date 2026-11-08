@@ -926,27 +926,64 @@ static class CameInDesk
         }
     }
 
-    /// <summary>The system folder picker, then the folder added for reading; its report follows.</summary>
+    /// <summary>
+    /// The system folder picker, then the folder scanned for reading; its report follows, and the
+    /// folder stays only once Add folder is chosen there.
+    /// </summary>
     public static async Task PickFolder(Ctx ctx)
     {
-        if (await ctx.Window.PickFolder() is not { Length: > 0 } path)
-            return;
+        if (await ctx.Window.PickFolder() is { Length: > 0 } path)
+            Add(ctx, path);
+    }
+
+    /// <summary>Folders picked again while already in Your sources: Cancel on their report leaves them there.</summary>
+    static readonly HashSet<string> already = new(StringComparer.OrdinalIgnoreCase);
+
+    static void Add(Ctx ctx, string path)
+    {
+        if (ctx.Known.Books.View?.Folders.Any(f => string.Equals(f.Path, path, StringComparison.OrdinalIgnoreCase)) == true)
+            already.Add(path);
         var name = System.IO.Path.GetFileName(path.TrimEnd('\\', '/'));
         ctx.Known.Books.AddFolder(path, name.Length > 0 ? name : path);
     }
 
     /// <summary>
-    /// What a folder's scan found: the series and files, or why nothing can be read; the files
-    /// Kaeri can't open, counted by format, with Show files; and the formats it opens.
+    /// What a folder's scan found, as the board draws it: the folder with Change, the series and
+    /// files or why nothing can be read, the files Kaeri can't open with Show files, and the
+    /// formats it opens; then Add folder, or Choose another folder when nothing was found, and
+    /// Cancel. The folder stays only on Add folder: Cancel or Esc takes it back out, as a form's
+    /// cancel would.
     /// </summary>
     static async Task ShowFolder(Ctx ctx, FolderReport report, bool nothing)
     {
         if (Root(ctx) is not { } root)
             return;
+        var kept = report.Path is { } picked && already.Remove(picked);
+        ContentDialog? shown = null;
+        // Another folder in this one's place: picked over the dialog, which closes only once one is.
+        async Task Change()
+        {
+            if (await ctx.Window.PickFolder() is not { Length: > 0 } path)
+                return;
+            ctx.Known.Books.RemoveFolder(report.Id);
+            // Already taken back out: closing must not remove it again.
+            kept = true;
+            shown?.Hide();
+            Add(ctx, path);
+        }
         var body = new StackPanel { Spacing = 12, Width = 460 };
-        var where = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
+        var where = new Grid { ColumnSpacing = 12 };
+        where.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        where.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        where.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         where.Children.Add(BookWords.Glyph(""));
-        where.Children.Add(new TextBlock { Text = report.Path ?? report.Name, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 400 });
+        var at = new TextBlock { Text = report.Path ?? report.Name, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+        Grid.SetColumn(at, 1);
+        where.Children.Add(at);
+        var change = new Button { Content = T.BookFolderChange, VerticalAlignment = VerticalAlignment.Center };
+        change.Click += async (_, _) => await Change();
+        Grid.SetColumn(change, 2);
+        where.Children.Add(change);
         body.Children.Add(where);
         body.Children.Add(nothing
             ? BookWords.Note(T.BookFolderEmpty(report.Name), T.BookFolderEmptyLine(report.Files))
@@ -989,22 +1026,32 @@ static class CameInDesk
             body.Children.Add(Ui.Card(card, 12));
         }
         body.Children.Add(Ui.Haze(T.BookFolderOpens));
-        var dialog = new ContentDialog
+        var dialog = shown = new ContentDialog
         {
             XamlRoot = root,
             Title = T.SourcesAddFolderButton,
             Content = new ScrollViewer { Content = body, MaxHeight = 560, VerticalScrollBarVisibility = ScrollBarVisibility.Auto },
-            CloseButtonText = T.ActionDone,
-            DefaultButton = ContentDialogButton.Close,
+            PrimaryButtonText = nothing ? T.BookFolderChooseOther : T.BookFolderAdd,
+            PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle"),
+            CloseButtonText = T.ActionCancel,
+            DefaultButton = ContentDialogButton.Primary,
         };
-        if (nothing)
+        dialog.PrimaryButtonClick += async (_, e) =>
         {
-            dialog.PrimaryButtonText = T.BookFolderChooseOther;
-            dialog.DefaultButton = ContentDialogButton.Primary;
-            dialog.PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle");
-        }
-        if (await Dialogs.Show(dialog) == ContentDialogResult.Primary)
-            await PickFolder(ctx);
+            if (!nothing)
+            {
+                kept = true;
+                return;
+            }
+            // Choose another folder: the dialog stays up while the picker is.
+            e.Cancel = true;
+            await Change();
+        };
+        // A dialog put aside for another before it showed leaves the folder as it was added.
+        var opened = false;
+        await Dialogs.Show(dialog, () => opened = true);
+        if (opened && !kept)
+            ctx.Known.Books.RemoveFolder(report.Id);
     }
 
     static async Task ShowStore(Ctx ctx, CameIn came)
