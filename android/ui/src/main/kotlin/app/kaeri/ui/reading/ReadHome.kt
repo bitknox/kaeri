@@ -620,7 +620,7 @@ private fun ContinueShelf(tiles: List<WorkTile>, actions: AppActions, hide: (Wor
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     Column(Modifier.padding(top = shelfTop())) {
-        ReadShelfHeading(Strings.navContinue(context))
+        ReadShelfHeading(Strings.homeReadContinue(context))
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(cardGap())) {
             items(tiles.take(12), key = { "c-${it.work}" }, contentType = { "cover" }) { tile ->
                 var menu by remember { mutableStateOf(false) }
