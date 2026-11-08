@@ -47,7 +47,7 @@ public sealed partial class ReadHomePage : Page
     readonly Border demoHost = new() { Visibility = Visibility.Collapsed }, continueHost = new(), weekHost = new(), waitingHost = new(), upNextHost = new();
     readonly TextBlock activityLine = new() { Style = Ui.Res<Style>("HazeCaptionStyle"), Margin = new Thickness(0, 16, 0, 0), Visibility = Visibility.Collapsed };
     readonly Dictionary<string, ReadHomeRowView> rowViews = [];
-    readonly DispatcherQueueTimer activity;
+    readonly Microsoft.UI.Dispatching.DispatcherQueueTimer activity;
     ReadingHomeView? shown;
     CoverSlot? spot;
     string spotKey = "", continueKey = "", weekKey = "", upNextKey = "", tailKey = "";

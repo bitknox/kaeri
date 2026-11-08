@@ -513,7 +513,9 @@ public sealed partial class MainWindow : Window
                 SearchReading = true;
         }
 #endif
-        if (options.Query is not null)
+        if (options.Query is not null && PageFor("search") == typeof(ReadSearchPage))
+            OpenReadSearch(options.Query);
+        else if (options.Query is not null)
             ShowSearch(options.Query);
         else
             Navigate(page, options.Pane);
