@@ -543,6 +543,10 @@ impl Home {
                 let mut tile = tiles::plain(&self.meta, &k.book);
                 tile.not_in_sources =
                     not_found.get(tile.work.as_str()).is_some_and(|at| *at >= shelf.at);
+                // A New row's caption says when each series started: "Japan · since March".
+                if matches!(row, Planned::New(_)) {
+                    tile.started = tiles::started(&k.book);
+                }
                 tile
             })
             .collect();
@@ -593,6 +597,9 @@ impl Home {
                 side: row.side(),
                 tiles,
                 view_all: row.query(genre.as_deref()),
+                view_all_title: row
+                    .query(genre.as_deref())
+                    .and_then(|_| row.view_all_title(genre.as_deref())),
                 pending,
             })
             .collect()

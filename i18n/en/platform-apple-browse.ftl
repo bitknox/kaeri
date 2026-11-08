@@ -3,33 +3,33 @@
 ## Continue and the widgets' episode lines
 
 # Short episode name for a dubbed episode, in a row or a widget.
-# @arg episode: int
+# @arg episode: plain
 # @max 18
 title-episode-short-dubbed = E{ $episode } { -dubbed }
 
 # Long episode name for a dubbed episode, in a row or a widget.
-# @arg episode: int
+# @arg episode: plain
 # @max 28
 title-episode-long-dubbed = Episode { $episode } · { -dubbed-cap }
 
 # Row caption: an episode part-watched, with how long is left. The time left is already worded.
-# @arg episode: int
+# @arg episode: plain
 # @arg left: text
 continue-row-left = E{ $episode } · { $left }
 
 # Row caption: a dubbed episode part-watched, with how long is left. The time left is already worded.
-# @arg episode: int
+# @arg episode: plain
 # @arg left: text
 continue-row-left-dubbed = E{ $episode } { -dubbed } · { $left }
 
 # Widget action: carry on with an episode that was left part-way.
-# @arg episode: int
+# @arg episode: plain
 # @max 24
 # @allow proceed
 continue-widget-resume = Resume E{ $episode }
 
 # Widget action: carry on with a dubbed episode that was left part-way.
-# @arg episode: int
+# @arg episode: plain
 # @max 25
 # @allow proceed
 continue-widget-resume-dubbed = Resume E{ $episode } { -dubbed }
@@ -81,22 +81,22 @@ calendar-filter-mine-title = My List
 calendar-last-week = Last week
 
 # Calendar row: an episode that has aired. The span is already worded, such as "1d 2h ago".
-# @arg episode: int
+# @arg episode: plain
 # @arg ago: text
 calendar-line-out-apple = E{ $episode } out { $ago }
 
 # Calendar row: a dubbed episode that has aired. The span is already worded, such as "1d 2h ago".
-# @arg episode: int
+# @arg episode: plain
 # @arg ago: text
 calendar-line-out-dubbed = E{ $episode } out { $ago } · { -dubbed-cap }
 
 # Calendar row: an episode that airs soon. The span is already worded, such as "1h 30m".
-# @arg episode: int
+# @arg episode: plain
 # @arg span: text
 calendar-line-in-apple = E{ $episode } in { $span }
 
 # Calendar row: a dubbed episode that airs soon. The span is already worded, such as "1h 30m".
-# @arg episode: int
+# @arg episode: plain
 # @arg span: text
 calendar-line-in-dubbed = E{ $episode } in { $span } · { -dubbed-cap }
 
@@ -105,8 +105,8 @@ calendar-line-in-dubbed = E{ $episode } in { $span } · { -dubbed-cap }
 title-swipe-download = Download
 
 # Line under a title in Spotlight: the episode it plays next, out of how many there are.
-# @arg episode: int
-# @arg total: int
+# @arg episode: plain
+# @arg total: plain
 title-episode-of = Episode { $episode } of { $total }
 
 ## Lists

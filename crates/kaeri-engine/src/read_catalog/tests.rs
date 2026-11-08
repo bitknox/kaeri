@@ -448,8 +448,9 @@ async fn a_slow_source_never_holds_up_anilist_or_the_others() {
     let north = done.groups.iter().find(|g| g.source_id == "northwind").unwrap();
     assert_eq!(north.state, ReadSourceState::Hits);
     assert_eq!(north.tiles[0].title, "Lantern Street Notes", "no AniList result to join");
-    // Each group names its kind, and a hit says how much the source holds.
-    assert_eq!(north.kind, Some(ReadSourceKind::Folder));
+    // Each group names its kind, but the folders' name already says it; a hit says how much
+    // the source holds.
+    assert_eq!(north.kind, None);
     assert_eq!(home.kind, Some(ReadSourceKind::Server));
     assert_eq!(
         north.tiles[0].amount.as_ref().map(Msg::english).as_deref(),

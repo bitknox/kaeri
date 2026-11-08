@@ -854,7 +854,7 @@ fn compose(
         if !items.is_empty() {
             sections.push(HomeSection {
                 kind: SectionKind::MoreGenre,
-                title: Msg::HomeMoreGenre { genre: rail.name.to_lowercase() },
+                title: kaeri_model::search::more_genre(&rail.name),
                 total: items.len() as u32,
                 items,
                 view_all: Some(HomeLink::Browse { query: genre_query(&rail.name) }),

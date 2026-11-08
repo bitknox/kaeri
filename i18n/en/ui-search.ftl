@@ -351,8 +351,8 @@ count-starts = Starts { $date }
 count-not-out = Not out yet
 
 # The count line of a show the viewer is part way through, in the library: the next episode and the total.
-# @arg episode: int
-# @arg total: int
+# @arg episode: plain
+# @arg total: plain
 # @max 24
 count-next-of = Ep { $episode } of { $total }
 
@@ -361,7 +361,7 @@ count-next-of = Ep { $episode } of { $total }
 count-dub = Dub
 
 # The dub part of a count line: the last episode the dub has.
-# @arg through: int
+# @arg through: plain
 # @max 12
 count-dub-through = Dub { $through }
 
@@ -389,13 +389,13 @@ count-spoken-out = { $count ->
 count-spoken-starts = Starts { $date }
 
 # What a screen reader says for a show the viewer is part way through.
-# @arg episode: int
-# @arg total: int
+# @arg episode: plain
+# @arg total: plain
 count-spoken-next-of = Episode { $episode } of { $total }
 
 
 # What a screen reader says after the count when the dub goes to an episode.
-# @arg through: int
+# @arg through: plain
 count-spoken-dub-through = { -dubbed } to episode { $through }
 
 # What a screen reader says after the count when a source has a dub and does not say how far it goes.

@@ -62,6 +62,24 @@ extension Msg {
         case .homeTrending: L.homeTrending
         case .homeBecause(let title): L.homeBecause(title: title)
         case .homeMoreGenre(let genre): L.homeMoreGenre(genre: genre)
+        case .homeMoreGenreAction: L.homeMoreGenreAction
+        case .homeMoreGenreAdventure: L.homeMoreGenreAdventure
+        case .homeMoreGenreComedy: L.homeMoreGenreComedy
+        case .homeMoreGenreDrama: L.homeMoreGenreDrama
+        case .homeMoreGenreEcchi: L.homeMoreGenreEcchi
+        case .homeMoreGenreFantasy: L.homeMoreGenreFantasy
+        case .homeMoreGenreHorror: L.homeMoreGenreHorror
+        case .homeMoreGenreMahouShoujo: L.homeMoreGenreMahouShoujo
+        case .homeMoreGenreMecha: L.homeMoreGenreMecha
+        case .homeMoreGenreMusic: L.homeMoreGenreMusic
+        case .homeMoreGenreMystery: L.homeMoreGenreMystery
+        case .homeMoreGenrePsychological: L.homeMoreGenrePsychological
+        case .homeMoreGenreRomance: L.homeMoreGenreRomance
+        case .homeMoreGenreSciFi: L.homeMoreGenreSciFi
+        case .homeMoreGenreSliceOfLife: L.homeMoreGenreSliceOfLife
+        case .homeMoreGenreSports: L.homeMoreGenreSports
+        case .homeMoreGenreSupernatural: L.homeMoreGenreSupernatural
+        case .homeMoreGenreThriller: L.homeMoreGenreThriller
         case .homeSpotlightDemo: L.homeSpotlightDemo
         case .licensedReturn(let episode, let service): L.licensedReturn(episode: Int(episode), service: service)
         case .licensedMarked(let episode): L.licensedMarked(episode: Int(episode))
@@ -465,6 +483,29 @@ extension ReadingMsg {
         case .readHitParts(let count): L.readHitParts(count: Int(count))
         case .readHitFiles(let count): L.readHitFiles(count: Int(count))
         case .readHitFilesFormat(let count, let format): L.readHitFilesFormat(count: Int(count), format: format)
+        case .readSourceFolders: L.readSourceFolders
+        case .readFeedDownloads: L.readFeedDownloads
+        case .readingSinceJanuary: L.readingSinceJanuary
+        case .readingSinceFebruary: L.readingSinceFebruary
+        case .readingSinceMarch: L.readingSinceMarch
+        case .readingSinceApril: L.readingSinceApril
+        case .readingSinceMay: L.readingSinceMay
+        case .readingSinceJune: L.readingSinceJune
+        case .readingSinceJuly: L.readingSinceJuly
+        case .readingSinceAugust: L.readingSinceAugust
+        case .readingSinceSeptember: L.readingSinceSeptember
+        case .readingSinceOctober: L.readingSinceOctober
+        case .readingSinceNovember: L.readingSinceNovember
+        case .readingSinceDecember: L.readingSinceDecember
+        case .readViewAllTrendingManga: L.readViewAllTrendingManga
+        case .readViewAllTrendingWebtoons: L.readViewAllTrendingWebtoons
+        case .readViewAllTrendingNovels: L.readViewAllTrendingNovels
+        case .readViewAllNewManga: L.readViewAllNewManga
+        case .readViewAllNewWebtoons: L.readViewAllNewWebtoons
+        case .readViewAllNewNovels: L.readViewAllNewNovels
+        case .readViewAllFinishedManga: L.readViewAllFinishedManga
+        case .readViewAllFinishedWebtoons: L.readViewAllFinishedWebtoons
+        case .readViewAllFinishedNovels: L.readViewAllFinishedNovels
         }
     }
 }

@@ -3277,6 +3277,7 @@ mod read {
             not_in_sources: false,
             origin: origin_words(origin),
             amount: None,
+            started: None,
         }
     }
 
@@ -3457,10 +3458,11 @@ mod read {
                     ],
                     1,
                 ),
+                // The folders are one source the engine names from the catalogue, with no kind.
                 group(
                     "folders",
                     "Folders",
-                    Some(ReadSourceKind::Folder),
+                    None,
                     ReadSourceState::Hits,
                     vec![hit(
                         "folders:3",
@@ -3538,6 +3540,8 @@ mod read {
                 formats: vec!["manga".into()],
                 ..Default::default()
             }),
+            view_all_title: view_all
+                .then_some(Msg::Reading(ReadingMsg::ReadViewAllTrendingManga)),
             pending,
         }
     }

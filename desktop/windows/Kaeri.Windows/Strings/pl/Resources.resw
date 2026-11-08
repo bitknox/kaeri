@@ -194,6 +194,60 @@
   <data name="HomeMoreGenre" xml:space="preserve">
     <value>Więcej: {genre}</value>
   </data>
+  <data name="HomeMoreGenreAction" xml:space="preserve">
+    <value>Więcej: akcja</value>
+  </data>
+  <data name="HomeMoreGenreAdventure" xml:space="preserve">
+    <value>Więcej: przygodowy</value>
+  </data>
+  <data name="HomeMoreGenreComedy" xml:space="preserve">
+    <value>Więcej: komedia</value>
+  </data>
+  <data name="HomeMoreGenreDrama" xml:space="preserve">
+    <value>Więcej: dramat</value>
+  </data>
+  <data name="HomeMoreGenreEcchi" xml:space="preserve">
+    <value>Więcej: ecchi</value>
+  </data>
+  <data name="HomeMoreGenreFantasy" xml:space="preserve">
+    <value>Więcej: fantasy</value>
+  </data>
+  <data name="HomeMoreGenreHorror" xml:space="preserve">
+    <value>Więcej: horror</value>
+  </data>
+  <data name="HomeMoreGenreMahouShoujo" xml:space="preserve">
+    <value>Więcej: mahou shoujo</value>
+  </data>
+  <data name="HomeMoreGenreMecha" xml:space="preserve">
+    <value>Więcej: mecha</value>
+  </data>
+  <data name="HomeMoreGenreMusic" xml:space="preserve">
+    <value>Więcej: muzyczny</value>
+  </data>
+  <data name="HomeMoreGenreMystery" xml:space="preserve">
+    <value>Więcej: tajemnica</value>
+  </data>
+  <data name="HomeMoreGenrePsychological" xml:space="preserve">
+    <value>Więcej: psychologiczny</value>
+  </data>
+  <data name="HomeMoreGenreRomance" xml:space="preserve">
+    <value>Więcej: romans</value>
+  </data>
+  <data name="HomeMoreGenreSciFi" xml:space="preserve">
+    <value>Więcej: sci-fi</value>
+  </data>
+  <data name="HomeMoreGenreSliceOfLife" xml:space="preserve">
+    <value>Więcej: obyczajowy</value>
+  </data>
+  <data name="HomeMoreGenreSports" xml:space="preserve">
+    <value>Więcej: sportowy</value>
+  </data>
+  <data name="HomeMoreGenreSupernatural" xml:space="preserve">
+    <value>Więcej: nadprzyrodzony</value>
+  </data>
+  <data name="HomeMoreGenreThriller" xml:space="preserve">
+    <value>Więcej: thriller</value>
+  </data>
   <data name="HomeSpotlightDemo" xml:space="preserve">
     <value>Demo, wolne do udostępniania</value>
   </data>
@@ -1078,6 +1132,45 @@
   </data>
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>Rozdziały z {count} serii są gotowe do czytania offline.</value>
+  </data>
+  <data name="ReadSourceFolders" xml:space="preserve">
+    <value>Foldery</value>
+  </data>
+  <data name="ReadingSinceJanuary" xml:space="preserve">
+    <value>od stycznia</value>
+  </data>
+  <data name="ReadingSinceFebruary" xml:space="preserve">
+    <value>od lutego</value>
+  </data>
+  <data name="ReadingSinceMarch" xml:space="preserve">
+    <value>od marca</value>
+  </data>
+  <data name="ReadingSinceApril" xml:space="preserve">
+    <value>od kwietnia</value>
+  </data>
+  <data name="ReadingSinceMay" xml:space="preserve">
+    <value>od maja</value>
+  </data>
+  <data name="ReadingSinceJune" xml:space="preserve">
+    <value>od czerwca</value>
+  </data>
+  <data name="ReadingSinceJuly" xml:space="preserve">
+    <value>od lipca</value>
+  </data>
+  <data name="ReadingSinceAugust" xml:space="preserve">
+    <value>od sierpnia</value>
+  </data>
+  <data name="ReadingSinceSeptember" xml:space="preserve">
+    <value>od września</value>
+  </data>
+  <data name="ReadingSinceOctober" xml:space="preserve">
+    <value>od października</value>
+  </data>
+  <data name="ReadingSinceNovember" xml:space="preserve">
+    <value>od listopada</value>
+  </data>
+  <data name="ReadingSinceDecember" xml:space="preserve">
+    <value>od grudnia</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Dołączono do {store} jako {member}.</value>

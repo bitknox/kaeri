@@ -12,16 +12,16 @@ reader-skip-page = Skip page
 
 # What a screen reader says for the page on screen.
 # @only android
-# @arg page: int
-# @arg pages: int
+# @arg page: plain
+# @arg pages: plain
 # @max 40
 reader-page-of = Page { $page } of { $pages }
 
 # What a screen reader says for two pages side by side.
 # @only android
-# @arg first: int
-# @arg second: int
-# @arg pages: int
+# @arg first: plain
+# @arg second: plain
+# @arg pages: plain
 # @max 40
 reader-pages-of = Pages { $first } and { $second } of { $pages }
 
@@ -57,16 +57,16 @@ eink-zone-tap = Tap
 
 # The page number in the page's margin on an e-ink screen.
 # @only android
-# @arg page: int
-# @arg pages: int
+# @arg page: plain
+# @arg pages: plain
 # @max 20
 eink-folio-one = { $page } of { $pages }
 
 # The page numbers in the margin when two pages show side by side.
 # @only android
-# @arg first: int
-# @arg second: int
-# @arg pages: int
+# @arg first: plain
+# @arg second: plain
+# @arg pages: plain
 # @max 30
 eink-folio-two = { $first } and { $second } of { $pages }
 
@@ -644,7 +644,7 @@ reader-paper-line = Pages turn at once and nothing in the reader moves. Change a
 
 # What a screen reader says for a page in the page grid.
 # @only android
-# @arg page: int
+# @arg page: plain
 # @max 30
 reader-grid-page = Go to page { $page }
 
@@ -750,7 +750,7 @@ reader-volume-none = Chapters
 
 # On the plate of a page that is still loading.
 # @only android
-# @arg page: int
+# @arg page: plain
 # @max 20
 reader-page-plate = Page { $page }
 

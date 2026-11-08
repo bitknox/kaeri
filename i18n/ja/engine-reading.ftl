@@ -155,3 +155,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $title }の{ $count }パートをオフラインで読めます。
  }
 reading-downloads-done-series = { $count }作品の章をオフラインで読めます。
+read-source-folders = フォルダ
+reading-since-january = 1月から
+reading-since-february = 2月から
+reading-since-march = 3月から
+reading-since-april = 4月から
+reading-since-may = 5月から
+reading-since-june = 6月から
+reading-since-july = 7月から
+reading-since-august = 8月から
+reading-since-september = 9月から
+reading-since-october = 10月から
+reading-since-november = 11月から
+reading-since-december = 12月から

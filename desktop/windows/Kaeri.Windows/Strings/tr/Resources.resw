@@ -194,6 +194,60 @@
   <data name="HomeMoreGenre" xml:space="preserve">
     <value>Daha fazla {genre}</value>
   </data>
+  <data name="HomeMoreGenreAction" xml:space="preserve">
+    <value>Daha fazla aksiyon</value>
+  </data>
+  <data name="HomeMoreGenreAdventure" xml:space="preserve">
+    <value>Daha fazla macera</value>
+  </data>
+  <data name="HomeMoreGenreComedy" xml:space="preserve">
+    <value>Daha fazla komedi</value>
+  </data>
+  <data name="HomeMoreGenreDrama" xml:space="preserve">
+    <value>Daha fazla dram</value>
+  </data>
+  <data name="HomeMoreGenreEcchi" xml:space="preserve">
+    <value>Daha fazla ecchi</value>
+  </data>
+  <data name="HomeMoreGenreFantasy" xml:space="preserve">
+    <value>Daha fazla fantastik</value>
+  </data>
+  <data name="HomeMoreGenreHorror" xml:space="preserve">
+    <value>Daha fazla korku</value>
+  </data>
+  <data name="HomeMoreGenreMahouShoujo" xml:space="preserve">
+    <value>Daha fazla mahou shoujo</value>
+  </data>
+  <data name="HomeMoreGenreMecha" xml:space="preserve">
+    <value>Daha fazla mecha</value>
+  </data>
+  <data name="HomeMoreGenreMusic" xml:space="preserve">
+    <value>Daha fazla müzik</value>
+  </data>
+  <data name="HomeMoreGenreMystery" xml:space="preserve">
+    <value>Daha fazla gizem</value>
+  </data>
+  <data name="HomeMoreGenrePsychological" xml:space="preserve">
+    <value>Daha fazla psikolojik</value>
+  </data>
+  <data name="HomeMoreGenreRomance" xml:space="preserve">
+    <value>Daha fazla romantik</value>
+  </data>
+  <data name="HomeMoreGenreSciFi" xml:space="preserve">
+    <value>Daha fazla bilim kurgu</value>
+  </data>
+  <data name="HomeMoreGenreSliceOfLife" xml:space="preserve">
+    <value>Daha fazla günlük yaşam</value>
+  </data>
+  <data name="HomeMoreGenreSports" xml:space="preserve">
+    <value>Daha fazla spor</value>
+  </data>
+  <data name="HomeMoreGenreSupernatural" xml:space="preserve">
+    <value>Daha fazla doğaüstü</value>
+  </data>
+  <data name="HomeMoreGenreThriller" xml:space="preserve">
+    <value>Daha fazla gerilim</value>
+  </data>
   <data name="HomeSpotlightDemo" xml:space="preserve">
     <value>Demo, paylaşmak serbest</value>
   </data>
@@ -952,6 +1006,45 @@
   </data>
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>{count} seriden bölümler çevrimdışı okumaya hazır.</value>
+  </data>
+  <data name="ReadSourceFolders" xml:space="preserve">
+    <value>Klasörler</value>
+  </data>
+  <data name="ReadingSinceJanuary" xml:space="preserve">
+    <value>Ocak'tan beri</value>
+  </data>
+  <data name="ReadingSinceFebruary" xml:space="preserve">
+    <value>Şubat'tan beri</value>
+  </data>
+  <data name="ReadingSinceMarch" xml:space="preserve">
+    <value>Mart'tan beri</value>
+  </data>
+  <data name="ReadingSinceApril" xml:space="preserve">
+    <value>Nisan'dan beri</value>
+  </data>
+  <data name="ReadingSinceMay" xml:space="preserve">
+    <value>Mayıs'tan beri</value>
+  </data>
+  <data name="ReadingSinceJune" xml:space="preserve">
+    <value>Haziran'dan beri</value>
+  </data>
+  <data name="ReadingSinceJuly" xml:space="preserve">
+    <value>Temmuz'dan beri</value>
+  </data>
+  <data name="ReadingSinceAugust" xml:space="preserve">
+    <value>Ağustos'tan beri</value>
+  </data>
+  <data name="ReadingSinceSeptember" xml:space="preserve">
+    <value>Eylül'den beri</value>
+  </data>
+  <data name="ReadingSinceOctober" xml:space="preserve">
+    <value>Ekim'den beri</value>
+  </data>
+  <data name="ReadingSinceNovember" xml:space="preserve">
+    <value>Kasım'dan beri</value>
+  </data>
+  <data name="ReadingSinceDecember" xml:space="preserve">
+    <value>Aralık'tan beri</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>{store}: {member} olarak katıldınız.</value>

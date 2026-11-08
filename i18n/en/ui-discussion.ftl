@@ -5,7 +5,7 @@
 discussion-open = Discussion
 
 # Title of the discussion window or sheet when the thread has no title yet.
-# @arg episode: int
+# @arg episode: plain
 # @max 40
 discussion-title-episode = Episode { $episode } discussion
 

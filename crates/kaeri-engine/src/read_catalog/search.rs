@@ -362,13 +362,13 @@ fn sources_for(
         .collect()
 }
 
-/// The word under a group's name; built-in sources show their name alone.
+/// The word beside a group's name. Built-in sources show their name alone, and so do the
+/// folders: all of them are one source named Folders, and "Folders  Folder" would say it twice.
 fn kind_of(kind: BookSourceKind) -> Option<ReadSourceKind> {
     match kind {
         BookSourceKind::Server => Some(ReadSourceKind::Server),
-        BookSourceKind::Folder => Some(ReadSourceKind::Folder),
         BookSourceKind::Plugin => Some(ReadSourceKind::Plugin),
-        BookSourceKind::Native => None,
+        BookSourceKind::Folder | BookSourceKind::Native => None,
     }
 }
 
@@ -684,6 +684,7 @@ fn local_tile(kit: &Kit, work: &str, name: &str, medium: &str) -> WorkTile {
         not_in_sources: false,
         origin: None,
         amount: None,
+        started: None,
     };
     tiles::mark(&mut tile, &kit.store, &kit.sources);
     tile
@@ -773,9 +774,9 @@ mod tests {
     }
 
     #[test]
-    fn a_group_says_what_kind_of_source_it_is_unless_built_in() {
+    fn a_group_says_what_kind_of_source_it_is_unless_its_name_says_it() {
         assert_eq!(kind_of(BookSourceKind::Server), Some(ReadSourceKind::Server));
-        assert_eq!(kind_of(BookSourceKind::Folder), Some(ReadSourceKind::Folder));
+        assert_eq!(kind_of(BookSourceKind::Folder), None);
         assert_eq!(kind_of(BookSourceKind::Plugin), Some(ReadSourceKind::Plugin));
         assert_eq!(kind_of(BookSourceKind::Native), None);
     }

@@ -16,15 +16,15 @@
     <string name="notice_cast_no_device">キャスト先のテレビがネットワーク上にもうありません。</string>
     <string name="notice_cast_unavailable">このバージョンのKaeriでは、テレビへのキャストはできません。</string>
     <string name="cast_phase_starting">%1$sで開始中</string>
-    <string name="cast_phase_starting_for">%1$sで開始中 · %2$d秒</string>
-    <string name="cast_phase_waiting">%1$sを待っています · %2$d秒</string>
-    <string name="cast_phase_preparing">ストリームを準備中 · %1$d秒</string>
+    <string name="cast_phase_starting_for">%1$sで開始中 · %2$,d秒</string>
+    <string name="cast_phase_waiting">%1$sを待っています · %2$,d秒</string>
+    <string name="cast_phase_preparing">ストリームを準備中 · %1$,d秒</string>
     <string name="discussion_age_now">たった今</string>
-    <string name="discussion_age_minutes">%1$d分</string>
-    <string name="discussion_age_hours">%1$d時間</string>
-    <string name="discussion_age_days">%1$d日</string>
-    <string name="discussion_age_weeks">%1$d週</string>
-    <string name="discussion_age_years">%1$d年</string>
+    <string name="discussion_age_minutes">%1$,d分</string>
+    <string name="discussion_age_hours">%1$,d時間</string>
+    <string name="discussion_age_days">%1$,d日</string>
+    <string name="discussion_age_weeks">%1$,d週</string>
+    <string name="discussion_age_years">%1$,d年</string>
     <string name="notice_comment_like_failed">コメントにいいねできませんでした。もう一度お試しください。</string>
     <string name="notice_comment_delete_failed">コメントを削除できませんでした。もう一度お試しください。</string>
     <string name="notice_discussion_sign_in">いいねや返信をするには、AniListにサインインしてください。</string>
@@ -34,7 +34,7 @@
     <string name="home_spotlight_because">%1$sを観終えたあなたに</string>
     <string name="home_spotlight_recommended">あなたへのおすすめ</string>
     <string name="home_spotlight_popular">今期の人気作品</string>
-    <string name="home_time_left">第%1$d話 · 残り%2$d分</string>
+    <string name="home_time_left">第%1$d話 · 残り%2$,d分</string>
     <string name="home_episode_out">第%1$d話が配信中</string>
     <string name="home_episode_next">次は第%1$d話</string>
     <string name="home_episode_out_today">第%1$d話 · 今日配信</string>
@@ -55,6 +55,24 @@
     <string name="home_trending">いま話題</string>
     <string name="home_because">%1$sを観終えたあなたに</string>
     <string name="home_more_genre">もっと見る:%1$s</string>
+    <string name="home_more_genre_action">もっと見る:アクション</string>
+    <string name="home_more_genre_adventure">もっと見る:アドベンチャー</string>
+    <string name="home_more_genre_comedy">もっと見る:コメディ</string>
+    <string name="home_more_genre_drama">もっと見る:ドラマ</string>
+    <string name="home_more_genre_ecchi">もっと見る:お色気</string>
+    <string name="home_more_genre_fantasy">もっと見る:ファンタジー</string>
+    <string name="home_more_genre_horror">もっと見る:ホラー</string>
+    <string name="home_more_genre_mahou_shoujo">もっと見る:魔法少女</string>
+    <string name="home_more_genre_mecha">もっと見る:メカ</string>
+    <string name="home_more_genre_music">もっと見る:音楽</string>
+    <string name="home_more_genre_mystery">もっと見る:ミステリー</string>
+    <string name="home_more_genre_psychological">もっと見る:心理</string>
+    <string name="home_more_genre_romance">もっと見る:恋愛</string>
+    <string name="home_more_genre_sci_fi">もっと見る:SF</string>
+    <string name="home_more_genre_slice_of_life">もっと見る:日常</string>
+    <string name="home_more_genre_sports">もっと見る:スポーツ</string>
+    <string name="home_more_genre_supernatural">もっと見る:超自然</string>
+    <string name="home_more_genre_thriller">もっと見る:スリラー</string>
     <string name="home_spotlight_demo">デモ版(自由に共有OK)</string>
     <string name="licensed_return">%2$sで第%1$d話を観ましたか?</string>
     <string name="licensed_marked">第%1$d話を視聴済みにしました。</string>
@@ -66,7 +84,7 @@
     <string name="cause_airs_today">今日%1$s</string>
     <string name="cause_airs_tomorrow">明日%1$s</string>
     <plurals name="cause_airs_in_days">
-        <item quantity="other">%1$d日後の%2$s</item>
+        <item quantity="other">%1$,d日後の%2$s</item>
     </plurals>
     <string name="cause_airs_on_date">%1$sの%2$s</string>
     <string name="cause_no_playable_stream">ソースが応答しましたが、再生できるものがありませんでした。別のものを試してください。</string>
@@ -78,11 +96,11 @@
     <string name="cause_source_cannot_download">このソースはストリーミングのみで、ダウンロードはできません。</string>
     <string name="cause_no_source_could_list_show">どのソースもこの作品のエピソードを見つけられなかったため、ダウンロードできません。</string>
     <plurals name="cause_subtitles_merged">
-        <item quantity="other">字幕トラック%1$d件を動画に結合しました。</item>
+        <item quantity="other">字幕トラック%1$,d件を動画に結合しました。</item>
     </plurals>
     <string name="cause_subtitles_left_apart">字幕はファイルとして別に残ります。%1$s</string>
     <plurals name="cause_already_in_downloads">
-        <item quantity="other">%1$d話はすでにダウンロードに入っています。</item>
+        <item quantity="other">%1$,d話はすでにダウンロードに入っています。</item>
     </plurals>
     <string name="status_looking_up_title">タイトルを検索しています…</string>
     <string name="status_loading_sources">ソースを読み込んでいます…</string>
@@ -95,10 +113,10 @@
     <string name="start_buffering">バッファリング中</string>
     <string name="status_searching_sources">ソースでエピソード%1$sを検索しています…</string>
     <string name="notice_player_failed_to_start">mpvを起動できませんでした。mpvが単独で起動するか確認してください。（%1$s）</string>
-    <string name="notice_stream_no_video">そのストリームから映像が届きませんでした。%2$d件中%1$d件目を試しています。</string>
+    <string name="notice_stream_no_video">そのストリームから映像が届きませんでした。%2$,d件中%1$,d件目を試しています。</string>
     <string name="notice_player_could_not_play">mpvでこのファイルを再生できませんでした。%1$s</string>
     <string name="notice_player_exited_silently">mpvは何も再生せず、理由も表示されないまま終了しました。別のソースを試してください。</string>
-    <string name="notice_player_not_playing">%1$d秒経っても、mpvで再生が始まりません。ソースにデータがない可能性があります。mpvが単独でファイルを再生できるか確認してください。</string>
+    <string name="notice_player_not_playing">%1$,d秒経っても、mpvで再生が始まりません。ソースにデータがない可能性があります。mpvが単独でファイルを再生できるか確認してください。</string>
     <string name="notice_no_player">このバージョンのKaeriでは動画を再生できません。</string>
     <string name="notice_mpv_missing">%1$sが見つかりませんでした。エピソードを再生するには、mpvをインストールしてください。</string>
     <string name="notice_mpv_old">mpv %1$sでは再生できますが、Kaeriのプレーヤーは、スキップボタン、次のエピソードカード、メニュー、サムネイルのためにmpv 0.36以降が必要です。</string>
@@ -140,10 +158,10 @@
     <string name="notice_download_removed_file_kept">ダウンロードを削除しましたが、ファイルを削除できませんでした。%1$s</string>
     <string name="notice_download_removed">ダウンロードを削除しました。</string>
     <plurals name="notice_downloads_cleared">
-        <item quantity="other">完了したダウンロードを%1$d件消去しました。</item>
+        <item quantity="other">完了したダウンロードを%1$,d件消去しました。</item>
     </plurals>
     <plurals name="notice_skip_marks_cleared">
-        <item quantity="other">マークしたスキップ位置を%1$d件消去しました。</item>
+        <item quantity="other">マークしたスキップ位置を%1$,d件消去しました。</item>
     </plurals>
     <string name="notice_skip_marks_none">マークしたスキップ位置はありません。</string>
     <string name="notice_skip_marks_not_cleared">スキップ位置を消去できませんでした。%1$s</string>
@@ -155,13 +173,13 @@
     <string name="notice_downloads_none_new">新たに追加されたものはありません。%1$s</string>
     <string name="notice_downloads_none_new_stopped">新たに追加されたものはありません。%1$s%2$s</string>
     <plurals name="notice_episodes_queued_existing">
-        <item quantity="other">%1$d件のエピソードを追加しました。%2$s</item>
+        <item quantity="other">%1$,d件のエピソードを追加しました。%2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_stopped">
-        <item quantity="other">%1$d件のエピソードを追加しましたが、途中で停止しました。%2$s</item>
+        <item quantity="other">%1$,d件のエピソードを追加しましたが、途中で停止しました。%2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_existing_stopped">
-        <item quantity="other">%1$d件のエピソードを追加しましたが、途中で停止しました。%2$s%3$s</item>
+        <item quantity="other">%1$,d件のエピソードを追加しましたが、途中で停止しました。%2$s%3$s</item>
     </plurals>
     <string name="notice_keep_next_full">この先のエピソードをダウンロードしたままにするための空き容量が足りません。さらにダウンロードするには、空き容量を確保してください。</string>
     <string name="party_needs_server">先に同時視聴のサーバーを選んでください（syncplay.server）。%1$sは%2$sが運営しています。</string>
@@ -181,7 +199,7 @@
     <string name="reading_usually_saturdays">たいてい土曜更新</string>
     <string name="reading_usually_sundays">たいてい日曜更新</string>
     <plurals name="reading_about_every_weeks">
-        <item quantity="other">約%1$d週間ごと</item>
+        <item quantity="other">約%1$,d週間ごと</item>
     </plurals>
     <string name="reading_also_a_show">アニメ版もあります</string>
     <string name="reading_also_a_book">原作もあります</string>
@@ -226,10 +244,10 @@
     <string name="reading_status_cancelled">打ち切り</string>
     <string name="reading_status_not_yet">未公開</string>
     <plurals name="reading_chapters">
-        <item quantity="other">%1$d話</item>
+        <item quantity="other">%1$,d話</item>
     </plurals>
     <plurals name="reading_volumes">
-        <item quantity="other">%1$d巻</item>
+        <item quantity="other">%1$,d巻</item>
     </plurals>
     <string name="reading_on_planning">「予定」リストに入っています</string>
     <string name="reading_spotlight_new_chapter">フォロー中の作品に新しい話があります</string>
@@ -239,10 +257,10 @@
     <string name="reading_out_today">第%1$s話が今日公開</string>
     <string name="reading_out_today_titled">第%1$s話「%2$s」が今日公開</string>
     <string name="reading_chapter_page">第%1$s話 · %2$dページ</string>
-    <string name="reading_chapter_percent">第%1$s話 · %2$d%%</string>
+    <string name="reading_chapter_percent">第%1$s話 · %2$,d%%</string>
     <string name="reading_chapter_new">第%1$s話が新着</string>
     <string name="reading_next_part">パート%1$s</string>
-    <string name="reading_part_percent">パート%1$s · %2$d%%</string>
+    <string name="reading_part_percent">パート%1$s · %2$,d%%</string>
     <string name="reading_part_new">パート%1$sが新着</string>
     <string name="reading_part_titled">パート%1$s · %2$s</string>
     <string name="reading_part_out_today">パート%1$sが今日公開</string>
@@ -260,7 +278,7 @@
     <string name="export_device_tablet">タブレット</string>
     <string name="export_chapter">第%1$s話</string>
     <plurals name="export_waits_for_wifi">
-        <item quantity="other">未ダウンロードの章が%1$d件あるため、Wi-Fi 接続を待ってから自動で送信します。</item>
+        <item quantity="other">未ダウンロードの章が%1$,d件あるため、Wi-Fi 接続を待ってから自動で送信します。</item>
     </plurals>
     <string name="reading_chapter_titled">第%1$s話 · %2$s</string>
     <string name="reading_row_read">既読</string>
@@ -271,32 +289,32 @@
     <string name="reading_row_on_device">このデバイス内</string>
     <string name="reading_row_queued">待機中</string>
     <string name="reading_row_waits_wifi">待機中 · Wi-Fi待ち</string>
-    <string name="reading_row_downloading">ダウンロード中 · %1$d/%2$dページ</string>
+    <string name="reading_row_downloading">ダウンロード中 · %1$,d/%2$,dページ</string>
     <string name="reading_row_failed">ダウンロード失敗</string>
     <string name="reading_row_page_of">%1$d/%2$dページ</string>
     <string name="reading_row_page">%1$dページ</string>
-    <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_percent">%1$,d%%</string>
     <plurals name="reading_row_pages">
-        <item quantity="other">%1$dページ</item>
+        <item quantity="other">%1$,dページ</item>
     </plurals>
     <plurals name="reading_row_versions">
-        <item quantity="other">%1$dバージョン</item>
+        <item quantity="other">%1$,dバージョン</item>
     </plurals>
     <string name="reading_ago_now">たった今</string>
-    <string name="reading_ago_minutes">%1$d分前</string>
+    <string name="reading_ago_minutes">%1$,d分前</string>
     <string name="reading_ago_today">今日</string>
     <string name="reading_ago_yesterday">昨日</string>
     <plurals name="reading_ago_days">
-        <item quantity="other">%1$d日前</item>
+        <item quantity="other">%1$,d日前</item>
     </plurals>
     <plurals name="reading_ago_weeks">
-        <item quantity="other">%1$d週間前</item>
+        <item quantity="other">%1$,d週間前</item>
     </plurals>
     <plurals name="reading_ago_months">
-        <item quantity="other">%1$dか月前</item>
+        <item quantity="other">%1$,dか月前</item>
     </plurals>
     <plurals name="reading_ago_years">
-        <item quantity="other">%1$d年前</item>
+        <item quantity="other">%1$,d年前</item>
     </plurals>
     <string name="reading_removed_from">%1$sから削除しました</string>
     <string name="reading_removed_not_there">%1$sのリストにありませんでした</string>
@@ -307,14 +325,14 @@
     <string name="reading_miss_down_since">%1$sから応答なし</string>
     <string name="reading_miss_down">応答なし</string>
     <plurals name="reading_dl_parts">
-        <item quantity="other">%1$dパート</item>
+        <item quantity="other">%1$,dパート</item>
     </plurals>
     <string name="reading_dl_size">%1$s</string>
-    <string name="reading_dl_read">既読 %1$d件</string>
+    <string name="reading_dl_read">既読 %1$,d件</string>
     <string name="reading_dl_chapter">第%1$s話</string>
-    <string name="reading_dl_pages">%1$d/%2$dページ</string>
-    <string name="reading_dl_more_queued">ほか%1$d件が待機中</string>
-    <string name="reading_dl_queued">%1$d件が待機中</string>
+    <string name="reading_dl_pages">%1$,d/%2$,dページ</string>
+    <string name="reading_dl_more_queued">ほか%1$,d件が待機中</string>
+    <string name="reading_dl_queued">%1$,d件が待機中</string>
     <string name="reading_dl_waits_wifi">Wi-Fi待ち</string>
     <string name="reading_dl_failed">第%1$s話をダウンロードできませんでした</string>
     <string name="reading_estimate_size">約%1$s</string>
@@ -323,12 +341,25 @@
     <string name="reading_estimate_waits_wifi">Wi-Fi待ち</string>
     <string name="reading_downloads_done_title">ダウンロードが完了しました</string>
     <plurals name="reading_downloads_done_chapters">
-        <item quantity="other">%1$sの%2$d話をオフラインで読めます。</item>
+        <item quantity="other">%1$sの%2$,d話をオフラインで読めます。</item>
     </plurals>
     <plurals name="reading_downloads_done_parts">
-        <item quantity="other">%1$sの%2$dパートをオフラインで読めます。</item>
+        <item quantity="other">%1$sの%2$,dパートをオフラインで読めます。</item>
     </plurals>
-    <string name="reading_downloads_done_series">%1$d作品の章をオフラインで読めます。</string>
+    <string name="reading_downloads_done_series">%1$,d作品の章をオフラインで読めます。</string>
+    <string name="read_source_folders">フォルダ</string>
+    <string name="reading_since_january">1月から</string>
+    <string name="reading_since_february">2月から</string>
+    <string name="reading_since_march">3月から</string>
+    <string name="reading_since_april">4月から</string>
+    <string name="reading_since_may">5月から</string>
+    <string name="reading_since_june">6月から</string>
+    <string name="reading_since_july">7月から</string>
+    <string name="reading_since_august">8月から</string>
+    <string name="reading_since_september">9月から</string>
+    <string name="reading_since_october">10月から</string>
+    <string name="reading_since_november">11月から</string>
+    <string name="reading_since_december">12月から</string>
     <string name="store_joined">%1$sに%2$sとして参加しました。</string>
     <string name="store_joined_unnamed">%1$sに名前なしで参加しました。</string>
     <string name="store_left">%1$sから退出しました。インストール済みのプラグインはそのまま残ります。</string>
@@ -336,12 +367,12 @@
     <string name="store_member_removed">削除しました。このメンバーのデバイスは、このプラグインストアで使えなくなりました。</string>
     <string name="store_invite_cancelled">招待を取り消しました。このリンクは使えなくなりました。</string>
     <plurals name="store_invite_cancelled_kept">
-        <item quantity="other">招待を取り消しました。参加した%1$d人はメンバーのままです。</item>
+        <item quantity="other">招待を取り消しました。参加した%1$,d人はメンバーのままです。</item>
     </plurals>
     <string name="store_open_join_on">プラグインストアのリンクを知っている人は、今から参加できます。メンバーの画面からリンクをコピーできます。</string>
     <string name="store_open_join_off">今から参加できるのは、招待された人だけです。</string>
     <plurals name="store_open_join_off_devices">
-        <item quantity="other">今から参加できるのは、招待された人だけです。リンクから参加した%1$d台のデバイスは、削除するまで引き続き使えます。</item>
+        <item quantity="other">今から参加できるのは、招待された人だけです。リンクから参加した%1$,d台のデバイスは、削除するまで引き続き使えます。</item>
     </plurals>
     <string name="store_device_removed">このデバイスは、このプラグインストアで使えなくなりました。</string>
     <string name="store_devices_removed">リンクから参加したすべてのデバイスを削除しました。</string>
@@ -355,7 +386,7 @@
     <string name="plugin_installed_not_loaded">%1$sをインストールしましたが、読み込めませんでした。%2$s</string>
     <string name="plugin_installed_outdated">%1$sをインストールしましたが、Kaeriの古いバージョン向けに作られているため、更新が必要です。作者に新しいビルドを依頼してください。</string>
     <plurals name="plugins_outdated">
-        <item quantity="other">%1$d件のプラグインがKaeriの古いバージョン向けに作られているため、更新が必要です:%2$s。</item>
+        <item quantity="other">%1$,d件のプラグインがKaeriの古いバージョン向けに作られているため、更新が必要です:%2$s。</item>
     </plurals>
     <plurals name="plugin_updates_ready">
         <item quantity="other">プラグインの更新があります：%2$s。</item>
@@ -440,7 +471,7 @@
     <string name="notice_client_id_missing">先に設定ファイルで%1$sを設定してください。</string>
     <string name="notice_signed_out">%1$sからサインアウトしました。</string>
     <plurals name="notice_signed_out_queue">
-        <item quantity="other">%1$sからサインアウトしました。送信待ちの変更が%2$d件あり、次回のサインイン後に送信されます。</item>
+        <item quantity="other">%1$sからサインアウトしました。送信待ちの変更が%2$,d件あり、次回のサインイン後に送信されます。</item>
     </plurals>
     <string name="notice_sign_out_failed">%1$sからサインアウトできませんでした。もう一度試してください。%2$s</string>
     <string name="notice_not_saved_because">その設定を保存できませんでした。%1$s</string>
@@ -455,7 +486,7 @@
     <string name="notice_mapping_data_failed">マッピングデータを更新できませんでした（%1$s）。%2$s後に再試行します。%3$s</string>
     <string name="notice_episode_aired">%1$sのエピソード%2$dが、離れている間に放送されました。</string>
     <plurals name="notice_episodes_aired">
-        <item quantity="other">視聴中の作品の新しいエピソードが%1$d件放送されました。カレンダーで確認できます。</item>
+        <item quantity="other">視聴中の作品の新しいエピソードが%1$,d件放送されました。カレンダーで確認できます。</item>
     </plurals>
     <string name="notice_update_available">%1$sが公開されました。kaeri --updateを実行するとインストールできます。</string>
     <string name="cause_proxy_needs_address">プロキシにはホストとポートが必要です。</string>
@@ -477,7 +508,7 @@
     <string name="start_failed_remote">リモコン機能を開始できませんでした。%1$s</string>
     <string name="start_failed_player">プレーヤーを開始できませんでした。%1$s</string>
     <plurals name="notice_episodes_queued">
-        <item quantity="other">%1$d件のエピソードをダウンロードキューに追加しました。</item>
+        <item quantity="other">%1$,d件のエピソードをダウンロードキューに追加しました。</item>
     </plurals>
     <string name="settings_subs_reset_done">字幕スタイルをリセットしました</string>
     <string name="crash_notice">問題が発生したため、Kaeriを終了しました。</string>
@@ -505,19 +536,19 @@
     <string name="discussion_image_host">画像 · %1$s</string>
     <string name="discussion_video_host">動画 · %1$s</string>
     <plurals name="player_more_discussion_note">
-        <item quantity="other">コメント%1$d件 · 一時停止します</item>
+        <item quantity="other">コメント%1$,d件 · 一時停止します</item>
     </plurals>
     <string name="player_more_discussion_pauses">動画を一時停止します</string>
     <string name="search_pill_set">%1$s、%2$s</string>
     <string name="search_pill_any">%1$s、指定なし</string>
-    <string name="search_pill_all_set">すべての絞り込み、%1$d件設定中</string>
+    <string name="search_pill_all_set">すべての絞り込み、%1$,d件設定中</string>
     <string name="search_pill_clear">すべての絞り込みを解除</string>
     <string name="cast_sheet_group">Chromecast</string>
     <string name="cast_sheet_through_phone">このスマートフォンを経由して再生</string>
     <string name="cast_sheet_through_tablet">このタブレットを経由して再生</string>
     <string name="cast_sheet_chromecast_too">Chromecast内蔵のテレビもここに表示されます。</string>
     <string name="cast_sheet_local_network">ローカルネットワーク上のデバイスをKaeriが見つけられるようにしてください</string>
-    <string name="cast_card_up_next_in">次のエピソード · %1$d秒後に再生</string>
+    <string name="cast_card_up_next_in">次のエピソード · %1$,d秒後に再生</string>
     <string name="cast_card_up_next">次のエピソード</string>
     <string name="cast_card_up_next_cancel">キャンセル</string>
     <string name="cast_card_up_next_play">今すぐ再生</string>
@@ -552,7 +583,7 @@
     <string name="eink_contents">目次</string>
     <string name="eink_back">戻る</string>
     <plurals name="eink_pages_left">
-        <item quantity="other">この章はあと%1$dページ</item>
+        <item quantity="other">この章はあと%1$,dページ</item>
     </plurals>
     <string name="eink_next_chapter">次の章</string>
     <string name="eink_previous_chapter">前の章</string>
@@ -562,7 +593,7 @@
     <string name="eink_counted_read">既読になりました</string>
     <string name="eink_end_next">次の章</string>
     <plurals name="eink_end_pages">
-        <item quantity="other">%1$dページ</item>
+        <item quantity="other">%1$,dページ</item>
     </plurals>
     <string name="eink_reads_rtl">右から左</string>
     <string name="eink_reads_ltr">左から右</string>
@@ -602,7 +633,7 @@
     <string name="reader_notice_change">変更</string>
     <string name="reader_settings">リーダーの設定</string>
     <string name="reader_novel_line_scroll">第%1$s話 · スクロール</string>
-    <string name="reader_minutes_left">残り%1$d分</string>
+    <string name="reader_minutes_left">残り%1$,d分</string>
     <string name="reader_zone_next">次のページ</string>
     <string name="reader_grid_title">ページ</string>
     <string name="reader_end_continue">次の章へ</string>
@@ -695,7 +726,7 @@
     <string name="reader_row_strip_gap">画像の間隔</string>
     <string name="reader_paper_look">昼のペーパー表示</string>
     <string name="reader_paper_dim">ページを暗くする</string>
-    <string name="reader_opening_waited">%1$s · %2$d秒</string>
+    <string name="reader_opening_waited">%1$s · %2$,d秒</string>
     <string name="reader_sources_title">この章を読めるソース</string>
     <string name="reader_paper_parts">変更される項目</string>
     <string name="tv_pair_request_held">%1$s がペアリングを求めています。コード %2$s</string>
@@ -714,8 +745,8 @@
     <string name="tv_connect_tracker">連携サービスを接続</string>
     <string name="tv_change_status">ステータスを変更</string>
     <string name="tv_add_to_planning">計画中に追加</string>
-    <string name="tv_progress_of">%1$d / %2$d</string>
-    <string name="tv_progress_unknown">%1$d / ?</string>
+    <string name="tv_progress_of">%1$,d / %2$,d</string>
+    <string name="tv_progress_unknown">%1$,d / ?</string>
     <string name="tv_calendar_signed_out_note">サインインすると、自分の作品だけを表示できます。</string>
     <string name="tv_calendar_time_was">%1$s（元は %2$s）</string>
     <string name="tv_player_undo_pill">%1$s · 元に戻す</string>
@@ -729,9 +760,9 @@
     <string name="tv_search_space">スペース</string>
     <string name="tv_search_season_in">%1$d年のシーズン</string>
     <string name="tv_search_genres_offline">ジャンルは、テレビがオンラインになると読み込まれます。</string>
-    <string name="tv_seasons_position">%2$dシーズン中 %1$d番目</string>
+    <string name="tv_seasons_position">%2$,dシーズン中 %1$,d番目</string>
     <plurals name="tv_seasons_count">
-        <item quantity="other">全%1$dシーズン</item>
+        <item quantity="other">全%1$,dシーズン</item>
     </plurals>
     <string name="tv_episode_mark_up_to_here">ここまで視聴済みにする</string>
     <string name="tv_card_label_watched">%1$s、視聴済み</string>
@@ -760,10 +791,10 @@
     <string name="tv_update_auto_check">アップデートを自動で確認</string>
     <string name="tv_update_auto_check_detail">Kaeriのリリースから毎日確認</string>
     <plurals name="tv_phone_used_days">
-        <item quantity="other">%1$d日前に使用</item>
+        <item quantity="other">%1$,d日前に使用</item>
     </plurals>
     <plurals name="tv_phone_paired_days">
-        <item quantity="other">%1$d日前にペアリング</item>
+        <item quantity="other">%1$,d日前にペアリング</item>
     </plurals>
     <string name="tv_update_installed">このテレビのバージョンはv%1$sです。</string>
     <string name="tv_page_not_found_text">このページはもうありません。テレビのコードをもう一度スキャンしてください。</string>
@@ -793,7 +824,7 @@
     <string name="tv_field_password_optional">パスワード（必要な場合）</string>
     <string name="tv_qr_label_link">リンクを開くページのQRコード</string>
     <string name="tv_preview_key">キー %1$s</string>
-    <string name="tv_preview_more">ほか%1$d件</string>
+    <string name="tv_preview_more">ほか%1$,d件</string>
     <string name="tv_already_joined">参加済み</string>
     <string name="tv_joining">参加中</string>
     <string name="tv_signin_done_as">%1$sに%2$sとしてサインインしました</string>
@@ -810,10 +841,10 @@
     <string name="tv_card_progress_spoken">%1$s視聴済み</string>
     <string name="tv_discussion_footer">返信するには、スマートフォンでこのディスカッションを開いてください。</string>
     <plurals name="tv_discussion_count_read_only">
-        <item quantity="other">%1$d件のコメント · 読み取り専用</item>
+        <item quantity="other">%1$,d件のコメント · 読み取り専用</item>
     </plurals>
     <plurals name="tv_discussion_likes">
-        <item quantity="other">いいね %1$d</item>
+        <item quantity="other">いいね %1$,d</item>
     </plurals>
     <string name="tv_discussion_select_spoiler">決定でネタバレを表示</string>
     <string name="updates_unknown_sources_path">設定 › アプリ › セキュリティと制限 › 提供元不明のアプリ</string>
@@ -821,7 +852,7 @@
     <string name="episode_short_dubbed">E%1$d · 吹替版</string>
     <string name="episode_long_dubbed">エピソード %1$d · 吹替版</string>
     <plurals name="downloads_live_paused">
-        <item quantity="other">%1$dエピソードが一時停止中</item>
+        <item quantity="other">%1$,dエピソードが一時停止中</item>
     </plurals>
     <string name="downloads_live_lead">%1$s E%2$d</string>
     <string name="downloads_live_left">残り %1$s</string>
@@ -843,7 +874,7 @@
     <string name="title_facts_airs">%1$sから放送予定</string>
     <string name="media_dates_range">%1$s〜%2$s</string>
     <plurals name="title_also_on_more">
-        <item quantity="other">%1$s ほか%2$d件</item>
+        <item quantity="other">%1$s ほか%2$,d件</item>
     </plurals>
     <string name="title_adult_mark">18+</string>
     <string name="downloads_storage_used_free">%1$s 使用中 · 空き %2$s</string>
@@ -853,7 +884,7 @@
     <string name="downloads_uploaded">%1$s 送信済み</string>
     <string name="downloads_ratio_of">%1$s / %2$s</string>
     <plurals name="downloads_group_summary">
-        <item quantity="other">%1$dエピソード · %2$s</item>
+        <item quantity="other">%1$,dエピソード · %2$s</item>
     </plurals>
     <string name="episode_menu_download">ダウンロード</string>
     <string name="episode_menu_download_paused">ダウンロードを一時停止中</string>
@@ -870,13 +901,13 @@
     <string name="updates_open_release">ページを開く</string>
     <string name="country_korea">韓国</string>
     <plurals name="search_genres_picked">
-        <item quantity="other">%1$dジャンル</item>
+        <item quantity="other">%1$,dジャンル</item>
     </plurals>
     <plurals name="search_formats_picked">
-        <item quantity="other">%1$d形式</item>
+        <item quantity="other">%1$,d形式</item>
     </plurals>
     <plurals name="search_statuses_picked">
-        <item quantity="other">%1$dステータス</item>
+        <item quantity="other">%1$,dステータス</item>
     </plurals>
     <string name="filter_score_any">指定なし</string>
     <string name="filter_years_from">%1$s年以降</string>
@@ -903,7 +934,7 @@
     <string name="reason_source_no_address">アドレスが見つかりませんでした。</string>
     <string name="reason_source_unreachable">接続できませんでした。</string>
     <plurals name="stores_updates_waiting">
-        <item quantity="other">%1$d件の更新</item>
+        <item quantity="other">%1$,d件の更新</item>
     </plurals>
     <string name="stores_checked_ago">%1$sに確認</string>
     <string name="stores_preview_key_link">キーがリンクと一致します</string>
@@ -921,7 +952,7 @@
     <string name="settings_summary_notify_on">新着エピソード オン</string>
     <string name="settings_summary_notify_off">新着エピソード オフ</string>
     <plurals name="settings_summary_sources">
-        <item quantity="other">%1$dソース</item>
+        <item quantity="other">%1$,dソース</item>
     </plurals>
     <string name="settings_summary_no_sources">まだソースはありません</string>
     <string name="settings_summary_torrents_on">トレント オン</string>
@@ -946,15 +977,15 @@
     <string name="settings_titles_note_english_missing">%1$sにはAniListで英語のタイトルがないため、ローマ字のタイトルのままです。</string>
     <string name="settings_titles_note_english">AniListに登録されている英語のタイトルを表示します。英語がない場合はローマ字を表示します。</string>
     <string name="settings_titles_note_romaji">AniListに登録されている日本語のタイトルを、ローマ字で表示します。</string>
-    <string name="settings_stores_with_updates">%1$d件 · %2$s</string>
+    <string name="settings_stores_with_updates">%1$,d件 · %2$s</string>
     <string name="settings_seeding_best_effort">このデバイスはKaeriを開いている間だけシーディングします。</string>
     <plurals name="settings_downloads_count">
-        <item quantity="other">%1$dエピソード</item>
+        <item quantity="other">%1$,dエピソード</item>
     </plurals>
     <string name="settings_anilist_footer">進捗とリストの変更はAniListに同期されます。ライブラリでは、AniListのリストを表示します。</string>
     <string name="accounts_sign_in_again_button">再度サインイン</string>
     <plurals name="accounts_review_differences">
-        <item quantity="other">%1$d件の差分を確認</item>
+        <item quantity="other">%1$,d件の差分を確認</item>
     </plurals>
     <string name="settings_licence_title">ライセンス</string>
     <string name="settings_licence_value">MIT、オープンソース、非商用</string>
@@ -993,7 +1024,7 @@
     <string name="tv_sheet_volume">テレビの音量</string>
     <string name="tv_sheet_volume_down">音量を下げる</string>
     <string name="tv_sheet_volume_up">音量を上げる</string>
-    <string name="tv_sheet_volume_value">%1$d / 100</string>
+    <string name="tv_sheet_volume_value">%1$,d / 100</string>
     <string name="tv_sheet_nothing_playing">再生していません</string>
     <string name="tv_sheet_position">テレビでの再生位置</string>
     <string name="tv_sheet_position_state">%1$s / %2$s</string>
@@ -1016,7 +1047,7 @@
     <string name="player_sheet_episodes_loading">エピソード一覧を読み込んでいます。</string>
     <string name="player_dual_audio">字幕版と吹替版</string>
     <plurals name="notif_new_episodes">
-        <item quantity="other">新しいエピソードが%1$d件</item>
+        <item quantity="other">新しいエピソードが%1$,d件</item>
     </plurals>
     <string name="notif_hidden_text">新しいエピソード</string>
     <string name="notif_episode_out">エピソード %1$d が公開されました。</string>
@@ -1027,7 +1058,7 @@
     <string name="device_name_tablet">Androidタブレット</string>
     <string name="tv_session_starting">%1$sで再生を開始しています</string>
     <string name="tv_session_line">%1$s · %2$s</string>
-    <string name="widget_line_left">%1$s · 残り%2$d分</string>
+    <string name="widget_line_left">%1$s · 残り%2$,d分</string>
     <string name="widget_line_of">E%1$d / %2$d</string>
     <string name="widget_continue_title">続きを見る</string>
     <string name="widget_caught_up_title">最新まで視聴済み</string>
@@ -1045,7 +1076,7 @@
     <string name="poster_new">新着</string>
     <string name="channel_downloads_name">ダウンロード</string>
     <plurals name="release_seeders">
-        <item quantity="other">%1$d人が共有中</item>
+        <item quantity="other">%1$,d人が共有中</item>
     </plurals>
     <string name="trailer_failed">予告編を開けませんでした</string>
     <string name="engine_down_title">Kaeriが停止しました</string>
@@ -1145,7 +1176,7 @@
     <string name="cast_torrents_note_mac">これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのMacがエピソードを送信します。</string>
     <string name="cast_torrents_note_iphone">これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPhoneがエピソードを送信します。</string>
     <string name="cast_torrents_note_ipad">これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPadがエピソードを送信します。</string>
-    <string name="cast_up_next_plays_in">次のエピソード · %1$d秒後に再生</string>
+    <string name="cast_up_next_plays_in">次のエピソード · %1$,d秒後に再生</string>
     <string name="cast_couldnt_start">%1$sで開始できませんでした</string>
     <string name="cast_stopped">キャストを停止しました</string>
     <string name="cast_play_here">ここで再生</string>
@@ -1155,12 +1186,12 @@
     <string name="action_cancel">キャンセル</string>
     <string name="action_go">移動</string>
     <string name="action_not_now">後で</string>
-    <string name="duration_days">%1$d日</string>
-    <string name="duration_hours_minutes">%1$d時間%2$d分</string>
-    <string name="duration_hours">%1$d時間</string>
-    <string name="duration_minutes">%1$d分</string>
-    <string name="duration_minutes_seconds">%1$d分%2$s秒</string>
-    <string name="duration_seconds">%1$d秒</string>
+    <string name="duration_days">%1$,d日</string>
+    <string name="duration_hours_minutes">%1$,d時間%2$,d分</string>
+    <string name="duration_hours">%1$,d時間</string>
+    <string name="duration_minutes">%1$,d分</string>
+    <string name="duration_minutes_seconds">%1$,d分%2$s秒</string>
+    <string name="duration_seconds">%1$,d秒</string>
     <string name="size_byte">%1$s B</string>
     <string name="size_kilobyte">%1$s kB</string>
     <string name="size_megabyte">%1$s MB</string>
@@ -1220,8 +1251,8 @@
     <string name="day_yesterday">昨日</string>
     <string name="time_ago">%1$s前</string>
     <string name="time_in">%1$s後</string>
-    <string name="time_minutes_left">残り%1$d分</string>
-    <string name="time_minutes">%1$d分</string>
+    <string name="time_minutes_left">残り%1$,d分</string>
+    <string name="time_minutes">%1$,d分</string>
     <string name="time_now_inline">今</string>
     <string name="time_just_now_inline">たった今</string>
     <string name="when_today">今日 %1$s</string>
@@ -1255,10 +1286,10 @@
     <string name="pad_help_page_up">1ページ上へ</string>
     <string name="pad_help_page_down">1ページ下へ</string>
     <plurals name="pad_help_seek_back">
-        <item quantity="other">%1$d秒戻る</item>
+        <item quantity="other">%1$,d秒戻る</item>
     </plurals>
     <plurals name="pad_help_seek_forward">
-        <item quantity="other">%1$d秒進む</item>
+        <item quantity="other">%1$,d秒進む</item>
     </plurals>
     <string name="pad_help_skip">スキップ</string>
     <string name="pad_help_play_now">今すぐ再生</string>
@@ -1306,7 +1337,7 @@
     <string name="tv_problem_version">テレビは別バージョンのKaeriを実行しています。両方を同じバージョンに更新してください。</string>
     <string name="tv_problem_wrong_code">コードが一致しませんでした。テレビに表示されたコードを確認して、もう一度お試しください。</string>
     <string name="tv_volume_down">音量を下げる</string>
-    <string name="tv_volume_of">%1$d / 100</string>
+    <string name="tv_volume_of">%1$,d / 100</string>
     <string name="tv_volume_up">音量を上げる</string>
     <string name="updates_download">更新をダウンロード</string>
     <string name="updates_restart">再起動してアップデート</string>
@@ -1318,15 +1349,15 @@
     <string name="discussion_open">ディスカッション</string>
     <string name="discussion_title_episode">エピソード %1$d のディスカッション</string>
     <plurals name="discussion_row">
-        <item quantity="other">ディスカッション · %1$d件のコメント</item>
+        <item quantity="other">ディスカッション · %1$,d件のコメント</item>
     </plurals>
     <plurals name="discussion_count">
-        <item quantity="other">%1$d件のコメント</item>
+        <item quantity="other">%1$,d件のコメント</item>
     </plurals>
     <string name="discussion_like">いいね</string>
     <string name="discussion_reply">返信</string>
     <plurals name="discussion_more_replies">
-        <item quantity="other">さらに%1$d件の返信</item>
+        <item quantity="other">さらに%1$,d件の返信</item>
     </plurals>
     <string name="discussion_spoiler">ネタバレ</string>
     <string name="discussion_image">画像</string>
@@ -1412,7 +1443,7 @@
     <string name="downloads_notice_done">第%1$d話のダウンロードが完了しました</string>
     <string name="downloads_notice_done_detail">%1$s · オフラインで視聴できます</string>
     <plurals name="downloads_notice_running">
-        <item quantity="other">%1$d件のエピソードをダウンロード中</item>
+        <item quantity="other">%1$,d件のエピソードをダウンロード中</item>
     </plurals>
     <string name="downloads_notice_episode_left">第%1$d話 · 残り %2$s</string>
     <string name="downloads_notice_starting">開始しています</string>
@@ -1452,13 +1483,13 @@
     <string name="home_marked_watched">第%1$d話を視聴済みにしました</string>
     <string name="home_remove_continue">続きを見るから削除</string>
     <plurals name="home_continue_count">
-        <item quantity="other">%1$d作品</item>
+        <item quantity="other">%1$,d作品</item>
     </plurals>
     <string name="home_view_all">すべて見る</string>
     <string name="home_full_calendar">カレンダー全体</string>
     <string name="home_today">今日</string>
     <string name="home_nothing_airing">放送なし</string>
-    <string name="home_day_more">他%1$d件</string>
+    <string name="home_day_more">他%1$,d件</string>
     <string name="home_seasonal">今期</string>
     <string name="home_search">検索</string>
     <string name="home_end">今のところは以上です。すべての一覧は「今期」と「カレンダー」で見られます。</string>
@@ -1483,15 +1514,15 @@
     <string name="home_next">次へ</string>
     <string name="home_synced">AniList同期済み</string>
     <plurals name="queue_episodes_left">
-        <item quantity="other">%2$s · 残り %1$d話</item>
+        <item quantity="other">%2$s · 残り %1$,d話</item>
     </plurals>
     <plurals name="episodes_count">
-        <item quantity="other">%1$d話</item>
+        <item quantity="other">%1$,d話</item>
     </plurals>
     <plurals name="progress_episodes">
-        <item quantity="other">%1$d/%2$d話</item>
+        <item quantity="other">%1$,d/%2$,d話</item>
     </plurals>
-    <string name="duration_days_hours">%1$d日%2$d時間</string>
+    <string name="duration_days_hours">%1$,d日%2$,d時間</string>
     <string name="group_in_progress">視聴中</string>
     <string name="group_new_this_week">今週の新着</string>
     <string name="continue_empty_title">まだ視聴した作品はありません</string>
@@ -1536,8 +1567,8 @@
     <string name="library_added_planning">視聴予定に追加しました。</string>
     <string name="library_on_your_list">リストに登録済み</string>
     <string name="library_in_your_list">登録済み</string>
-    <string name="progress_episodes_short">E%1$d/%2$d</string>
-    <string name="progress_episode_short">E%1$d</string>
+    <string name="progress_episodes_short">E%1$,d/%2$,d</string>
+    <string name="progress_episode_short">E%1$,d</string>
     <string name="continue_row_start_aired_dubbed">E%1$d 吹替版を再生 · %2$sに公開</string>
     <string name="up_next_starts">%1$s放送開始</string>
     <string name="up_next_reason_new_season">新シーズン</string>
@@ -1553,18 +1584,18 @@
     <string name="up_next_broadcast">第%1$d話 · %2$s</string>
     <string name="up_next_out">%1$sに公開</string>
     <plurals name="library_row_scanning">
-        <item quantity="other">スキャン中 · %1$dファイルを検出</item>
+        <item quantity="other">スキャン中 · %1$,dファイルを検出</item>
     </plurals>
-    <string name="library_row_matching">照合中 · %1$d / %2$dシリーズ</string>
-    <string name="library_row_waiting">AniListを待っています · %1$d秒</string>
+    <string name="library_row_matching">照合中 · %1$,d / %2$,dシリーズ</string>
+    <string name="library_row_waiting">AniListを待っています · %1$,d秒</string>
     <string name="library_row_summary">%2$s、%1$s</string>
     <plurals name="library_episodes">
-        <item quantity="other">%1$dエピソード</item>
+        <item quantity="other">%1$,dエピソード</item>
     </plurals>
     <plurals name="library_series">
-        <item quantity="other">%1$dシリーズ</item>
+        <item quantity="other">%1$,dシリーズ</item>
     </plurals>
-    <string name="library_row_needs_look">%1$d件は要確認</string>
+    <string name="library_row_needs_look">%1$,d件は要確認</string>
     <string name="library_row_drive_offline">ドライブが接続されていません</string>
     <string name="library_row_missing">フォルダーが見つかりません</string>
     <string name="library_row_no_access">Kaeriはこのフォルダーを開けなくなりました</string>
@@ -1577,23 +1608,23 @@
     <string name="library_remove_folder">フォルダーを削除</string>
     <string name="library_needs_look">要確認</string>
     <string name="library_not_matched">未照合</string>
-    <string name="library_matched">%1$dシリーズを照合済み</string>
-    <string name="library_best_guess">推定:%1$s · %2$d%%一致</string>
+    <string name="library_matched">%1$,dシリーズを照合済み</string>
+    <string name="library_best_guess">推定:%1$s · %2$,d%%一致</string>
     <string name="library_picker_prompt">フォルダーを追加</string>
     <string name="library_picker_message">エピソードが入ったフォルダーを選んでください。</string>
-    <string name="library_fix_confidence">%1$d%%一致</string>
+    <string name="library_fix_confidence">%1$,d%%一致</string>
     <string name="library_open_folder">フォルダーを開く</string>
-    <string name="library_matched_count">%1$dシリーズを照合済み</string>
+    <string name="library_matched_count">%1$,dシリーズを照合済み</string>
     <plurals name="library_row_series">
-        <item quantity="other">%1$dシリーズ</item>
+        <item quantity="other">%1$,dシリーズ</item>
     </plurals>
     <plurals name="library_row_files">
-        <item quantity="other">%1$dファイル</item>
+        <item quantity="other">%1$,dファイル</item>
     </plurals>
     <string name="library_show_finder">Finderで表示</string>
     <string name="library_remove_line">ファイルは元の場所に残ります。</string>
     <plurals name="library_files">
-        <item quantity="other">%1$dファイル</item>
+        <item quantity="other">%1$,dファイル</item>
     </plurals>
     <string name="library_reason_no_episode">名前にエピソード番号がありません</string>
     <string name="library_reason_no_title">AniListで作品が見つかりません</string>
@@ -1606,7 +1637,7 @@
     <string name="library_fix_search">AniListを検索</string>
     <string name="library_fix_hint">これらのファイルを照合する作品を検索してください。</string>
     <string name="library_connect_drive">ドライブを接続して再生</string>
-    <string name="library_fix_count_mismatch">%1$dエピソード、このフォルダーは%2$dファイル</string>
+    <string name="library_fix_count_mismatch">%1$,dエピソード、このフォルダーは%2$,dファイル</string>
     <string name="library_leave_unmatched">未照合のままにする</string>
     <string name="library_episode_title">このファイルはどのエピソードですか?</string>
     <string name="library_season">シーズン</string>
@@ -1623,13 +1654,13 @@
     <string name="library_fix_none">作品が見つかりません</string>
     <string name="library_fix_offline">AniListに接続できませんでした。オンラインになってからもう一度お試しください。</string>
     <string name="library_removed">%1$sを削除しました</string>
-    <string name="library_match_percent">%1$d%%一致</string>
+    <string name="library_match_percent">%1$,d%%一致</string>
     <string name="licensed_title">ライセンスサービス</string>
     <string name="licensed_body">Kaeriでは、あなたが契約している配信サービスで作品を開けます。再生はKaeri自体では行いません。リンクはAniListから取得します。</string>
     <string name="licensed_region">地域</string>
     <string name="licensed_region_line">AniListが他の国向けとしているリンクは非表示になります。国が指定されていないリンクも多いので、利用中のサービスも選んでください。</string>
     <string name="licensed_yours">利用中のサービス</string>
-    <string name="licensed_show_all">%1$d件すべて表示</string>
+    <string name="licensed_show_all">%1$,d件すべて表示</string>
     <string name="licensed_region_system">このデバイスに合わせる</string>
     <string name="licensed_region_device">このデバイスの地域</string>
     <string name="licensed_show_others">作品ページに他のサービスを表示</string>
@@ -1685,9 +1716,9 @@
     <string name="media_streaming_on">配信先</string>
     <string name="media_streaming_region_note">視聴できるかどうかは、お住まいの地域によって異なります。</string>
     <string name="media_link_language">%1$sのサイト</string>
-    <string name="film_length_hours_minutes">%1$d時間%2$d分</string>
-    <string name="film_length_hours">%1$d時間</string>
-    <string name="film_length_minutes">%1$d分</string>
+    <string name="film_length_hours_minutes">%1$,d時間%2$,d分</string>
+    <string name="film_length_hours">%1$,d時間</string>
+    <string name="film_length_minutes">%1$,d分</string>
     <string name="country_japan">日本</string>
     <string name="country_china">中国</string>
     <string name="country_south_korea">韓国</string>
@@ -1831,11 +1862,11 @@
     <string name="party_wait_you">あなたが準備できたら再生が始まります</string>
     <string name="party_wait_one">%1$sの準備ができたら再生が始まります</string>
     <string name="party_wait_two">%1$sと%2$sの準備ができたら再生が始まります</string>
-    <string name="party_wait_many">あと%1$d人の準備ができたら再生が始まります</string>
-    <string name="party_connection_lost">接続が切れました。再試行しています（%1$d/%2$d）</string>
+    <string name="party_wait_many">あと%1$,d人の準備ができたら再生が始まります</string>
+    <string name="party_connection_lost">接続が切れました。再試行しています（%1$,d/%2$,d）</string>
     <string name="party_connected_encrypted">接続済み、暗号化されています</string>
     <string name="party_connected_plain">接続済み、暗号化されていません</string>
-    <string name="party_connected_latency">%1$s · %2$d ms</string>
+    <string name="party_connected_latency">%1$s · %2$,d ms</string>
     <string name="party_invite_after_play">招待リンクは、エピソードが再生されると表示されます。</string>
     <string name="party_invite_detail">リンクにはルーム名とエピソードが含まれます。友だちは、それぞれ自分のソースからエピソードを再生します。</string>
     <string name="party_in_room_idle">%2$sのルーム%1$sに参加しています。再生中のものはありません。</string>
@@ -1854,10 +1885,10 @@
     <string name="party_nosource_unaired">放送前の第%1$d話は、お使いのソースにはありません。</string>
     <string name="party_nosource_unaired_plain">放送されるまで、お使いのソースにはありません。どれかのソースで配信されると、ルームと一緒に再生されます。</string>
     <plurals name="party_sources_found">
-        <item quantity="other">%1$d件のソースにあります</item>
+        <item quantity="other">%1$,d件のソースにあります</item>
     </plurals>
     <string name="party_sources_label">このエピソードのソース</string>
-    <string name="party_source_seeders">シーダー%1$d</string>
+    <string name="party_source_seeders">シーダー%1$,d</string>
     <string name="party_no_source_lists">どのソースも第%1$s話を一覧に載せていません。ソースはプラグインから提供されます。プラグインはプラグインストアで追加できます。</string>
     <string name="party_play_with">同時視聴で再生</string>
     <string name="together_title">一緒に見る</string>
@@ -1871,7 +1902,7 @@
     <string name="together_paste">貼り付け</string>
     <string name="together_join_action">参加</string>
     <string name="together_in_party">参加中の同時視聴</string>
-    <string name="together_in_party_line">エピソード %1$s · ルームに%2$d人 · 準備完了%3$d人</string>
+    <string name="together_in_party_line">エピソード %1$s · ルームに%2$,d人 · 準備完了%3$,d人</string>
     <string name="together_open_lobby">ロビーを開く</string>
     <string name="together_open_player">プレーヤーを開く</string>
     <string name="together_recent">最近のルーム</string>
@@ -1886,7 +1917,7 @@
     <string name="together_servers">サーバー</string>
     <string name="together_server_suggested">おすすめ · 運営:%1$s</string>
     <plurals name="together_server_used">
-        <item quantity="other">%1$d回の同時視聴で使用</item>
+        <item quantity="other">%1$,d回の同時視聴で使用</item>
     </plurals>
     <string name="together_add_server">サーバーを追加</string>
     <string name="together_paste_shortcut_hint">このページのどこでもリンクやコードを貼り付けられます。</string>
@@ -1899,7 +1930,7 @@
     <string name="party_lobby_sources_missing">あなたのソースにはまだありません</string>
     <string name="party_lobby_out_on">%1$sに配信</string>
     <string name="party_still_in_room">ルームには参加したままです。</string>
-    <string name="party_lobby_count">ルーム内 · %2$d人中%1$d人が準備完了</string>
+    <string name="party_lobby_count">ルーム内 · %2$,d人中%1$,d人が準備完了</string>
     <string name="party_invited_by">%1$sさんから招待されました</string>
     <string name="party_looking_in">のぞいています</string>
     <string name="party_looking_in_note">ルームを開くと、少しの間あなたも参加者として表示されます。</string>
@@ -1914,7 +1945,7 @@
     <string name="party_invite_copied">招待リンクをコピーしました</string>
     <string name="party_starts_line">全員の準備ができると0:00から始まります</string>
     <string name="party_start_anyway">このまま開始</string>
-    <string name="party_starting">%1$d秒後に開始</string>
+    <string name="party_starting">%1$,d秒後に開始</string>
     <string name="party_change_episode">エピソードを変更</string>
     <string name="party_change_server">サーバーを変更</string>
     <string name="party_room_watching">ルームで視聴中</string>
@@ -1934,14 +1965,14 @@
     <string name="party_code_wait">ここで待つ</string>
     <string name="party_code_other_server">コードは%1$sで使えます。別のサーバーの場合は、招待リンクをもらってください。</string>
     <string name="party_bar_title">%1$s · エピソード %2$s</string>
-    <string name="party_bar_line">ルームに%1$d人 · 準備完了%2$d人</string>
+    <string name="party_bar_line">ルームに%1$,d人 · 準備完了%2$,d人</string>
     <string name="party_bar_idle">ルーム内 · あなたは再生していません</string>
     <string name="party_bar_pick">好きなエピソードの再生を押すと、ルームで視聴できます</string>
     <string name="party_paused_by">%1$sさんが一時停止</string>
     <string name="party_played_by">%1$sさんが再生</string>
     <string name="party_seeked_by">%1$sさんが%2$sに移動</string>
-    <string name="party_next_line">%1$d秒後に全員で次へ進みます</string>
-    <string name="party_next_waiting">%1$sさんを待っています · %2$d秒</string>
+    <string name="party_next_line">%1$,d秒後に全員で次へ進みます</string>
+    <string name="party_next_waiting">%1$sさんを待っています · %2$,d秒</string>
     <string name="party_next_joined_at">%1$sさんが%2$sで合流しました</string>
     <string name="party_next_off">最後に全員で一緒に次へ進みます。</string>
     <string name="party_last_out">配信済みの最後のエピソードでした。</string>
@@ -1962,17 +1993,17 @@
     <string name="party_ready_on_device">%1$sで準備完了</string>
     <string name="party_leave_on_device">%1$sで同時視聴から退出</string>
     <string name="party_in_the_room">ルーム内</string>
-    <string name="party_here_count">%1$d人</string>
+    <string name="party_here_count">%1$,d人</string>
     <string name="together_recent_note">直近10件をこのデバイスに保存</string>
     <string name="party_pick_continue">続ける</string>
     <string name="party_chat_field">ひとこと送る</string>
     <string name="party_chat_send">送信</string>
     <string name="party_chat_title">チャット</string>
-    <string name="party_chat_wait">%1$d秒待機</string>
+    <string name="party_chat_wait">%1$,d秒待機</string>
     <plurals name="party_chat_wait_spoken">
-        <item quantity="other">%1$d秒お待ちください</item>
+        <item quantity="other">%1$,d秒お待ちください</item>
     </plurals>
-    <string name="party_chat_more">チャットにあと%1$d件</string>
+    <string name="party_chat_more">チャットにあと%1$,d件</string>
     <string name="party_chat_off">このルームのサーバーでは、チャットがオフです</string>
     <string name="party_chat_privacy">メッセージはルームのサーバーを経由します。Kaeriには残りません。</string>
     <string name="party_chat_hidden">チャットは非表示です</string>
@@ -1999,18 +2030,18 @@
     <string name="party_reacted_at">%2$sに%1$s</string>
     <string name="party_names_two">%1$sさんと%2$sさん</string>
     <string name="party_names_three">%1$sさん、%2$sさん、%3$sさん</string>
-    <string name="party_names_others">%1$sさん、%2$sさんほか%3$d人</string>
+    <string name="party_names_others">%1$sさん、%2$sさんほか%3$,d人</string>
     <string name="party_chat_you">あなた</string>
     <string name="party_sends_as">%1$sとして送信</string>
     <string name="party_tick_label">%1$s · %2$s</string>
     <string name="party_chat_announce">%1$s：%2$s</string>
     <plurals name="party_chat_left">
-        <item quantity="other">あと%1$d文字</item>
+        <item quantity="other">あと%1$,d文字</item>
     </plurals>
     <string name="player_up_next">次のエピソード</string>
     <string name="title_based_on">原作</string>
     <string name="player_starting">第%1$d話を開始しています</string>
-    <string name="player_finding_source">ソースを探しています · %1$d秒</string>
+    <string name="player_finding_source">ソースを探しています · %1$,d秒</string>
     <string name="player_finding_source_plain">ソースを探しています</string>
     <string name="player_failed_title">第%1$d話を再生できませんでした</string>
     <string name="player_failed_detail">どのソースにも再生できるストリームがありませんでした。別のソースをお試しください。</string>
@@ -2019,7 +2050,7 @@
     <string name="player_choose_another_source">別のソースを選択</string>
     <string name="player_add_plugin_store">プラグインストアを追加</string>
     <string name="player_buffering">バッファリング中</string>
-    <string name="player_start_place">ソース %2$d 件中 %1$d 件目</string>
+    <string name="player_start_place">ソース %2$,d 件中 %1$,d 件目</string>
     <string name="player_start_pinned">この作品で選んだもの</string>
     <string name="player_start_miss_no_match">%1$sにはこの作品がありません</string>
     <string name="player_start_miss_no_episode">%1$sにはエピソード %2$s がありません</string>
@@ -2030,9 +2061,9 @@
     <string name="player_start_resting">最近の失敗によりスキップ</string>
     <string name="player_start_from">%1$sから</string>
     <string name="player_start_no_video">最初のストリームは映像が表示されませんでした</string>
-    <string name="player_start_stream_place">ストリーム %2$d 件中 %1$d 件目</string>
+    <string name="player_start_stream_place">ストリーム %2$,d 件中 %1$,d 件目</string>
     <plurals name="player_start_peers">
-        <item quantity="other">ピア %1$d 件</item>
+        <item quantity="other">ピア %1$,d 件</item>
     </plurals>
     <string name="player_start_speed">%1$s/s</string>
     <string name="player_start_buffering_percent">バッファリング中 · %1$s</string>
@@ -2047,7 +2078,7 @@
     <string name="player_start_fix_match">一致を修正</string>
     <string name="player_start_translation">音声と字幕</string>
     <string name="player_start_looked_up">タイトルを検索しました</string>
-    <string name="player_start_seconds">%1$d 秒</string>
+    <string name="player_start_seconds">%1$,d 秒</string>
     <string name="player_start_still_starting">まだ開始中です。ソースを選ぶこともできます。</string>
     <string name="player_start_announce">エピソード %1$s %2$s を開始します</string>
     <string name="player_start_failed_announce">%1$s。%2$s</string>
@@ -2061,11 +2092,11 @@
     <string name="player_start_row_skipped">スキップ済み</string>
     <string name="player_start_asked">%1$sに問い合わせました。</string>
     <string name="player_start_subtitled">字幕あり</string>
-    <string name="player_stall_title">ソースがバッファリング中 · %1$d秒</string>
+    <string name="player_stall_title">ソースがバッファリング中 · %1$,d秒</string>
     <string name="player_stall_detail">別のストリームなら、待たずに再生できる場合があります。</string>
     <string name="player_switch_source">ソースを切り替え</string>
     <string name="player_keep_waiting">待ち続ける</string>
-    <string name="player_plays_in">%1$d秒後に再生されます</string>
+    <string name="player_plays_in">%1$,d秒後に再生されます</string>
     <string name="player_skip_opening">オープニングをスキップ</string>
     <string name="player_skip_ending">エンディングをスキップ</string>
     <string name="player_skipped_opening">オープニングをスキップしました</string>
@@ -2145,7 +2176,7 @@
     <string name="player_start_over">最初から再生</string>
     <string name="player_still_watching">まだ見ていますか？</string>
     <plurals name="player_still_watching_detail">
-        <item quantity="other">連続で%1$d話見た後、一時停止しました。</item>
+        <item quantity="other">連続で%1$,d話見た後、一時停止しました。</item>
     </plurals>
     <string name="player_still_watching_continue">続きを見る</string>
     <string name="player_ends_at">%1$sに終了</string>
@@ -2204,7 +2235,7 @@
     <string name="player_scrub_quarter">4分の1の速さでシーク</string>
     <string name="player_starting_text">第%1$s話を開始しています</string>
     <string name="player_track_n">トラック%1$d</string>
-    <string name="player_wait_note">%1$s · %2$d秒</string>
+    <string name="player_wait_note">%1$s · %2$,d秒</string>
     <string name="player_command_failed">操作できませんでした。もう一度お試しください。</string>
     <string name="player_subs_style">スタイル</string>
     <string name="player_subs_larger">字幕を大きくする</string>
@@ -2246,7 +2277,7 @@
     <string name="reader_tap_off">オフ</string>
     <string name="reader_chapters">章一覧</string>
     <plurals name="reader_pages_left">
-        <item quantity="other">この章はあと%1$dページ</item>
+        <item quantity="other">この章はあと%1$,dページ</item>
     </plurals>
     <string name="reader_chapters_loading">章を読み込み中</string>
     <string name="reader_background_theme">テーマに合わせる</string>
@@ -2259,14 +2290,14 @@
     <string name="reader_end_of_chapter_number">第%1$s話の終わり</string>
     <string name="reader_end_facts">第%1$s話 · %2$s</string>
     <plurals name="reader_end_pages">
-        <item quantity="other">%1$dページ</item>
+        <item quantity="other">%1$,dページ</item>
     </plurals>
     <string name="reader_end_from">%1$sから</string>
     <string name="reader_chapter_line">第%1$s話</string>
     <string name="reader_divider_facts_source">%1$s · %2$sから</string>
     <string name="reader_end_swipe">スワイプして読み進める</string>
     <plurals name="reader_divider_images">
-        <item quantity="other">%1$d枚の画像</item>
+        <item quantity="other">%1$,d枚の画像</item>
     </plurals>
     <string name="reader_chapter_line_titled">第%1$s話 · %2$s</string>
     <string name="onboarding_read_demo">デモを読む</string>
@@ -2275,7 +2306,7 @@
     <string name="home_demo_only_books">デモだけがオンです。自分の本を読むには、フォルダー、サーバー、またはプラグインストアを追加してください。</string>
     <string name="home_spotlight_read">読む</string>
     <plurals name="demo_series_facts">
-        <item quantity="other">デモ · コミック · %1$dページ</item>
+        <item quantity="other">デモ · コミック · %1$,dページ</item>
     </plurals>
     <string name="demo_credit_book">%2$s「%1$s」。ライセンス: %3$s。Wikimedia Commonsから読み込んでいます。</string>
     <string name="demo_credit_story">%2$s「%1$s」。パブリックドメイン。アプリに付属しています。</string>
@@ -2294,7 +2325,7 @@
     <string name="demo_also">デモ内のほかの作品</string>
     <string name="demo_credits">クレジット</string>
     <plurals name="demo_pages">
-        <item quantity="other">%1$dページ</item>
+        <item quantity="other">%1$,dページ</item>
     </plurals>
     <string name="demo_story_row">物語 · %1$s · %2$s</string>
     <string name="demo_read_chapter">第%1$s章を読む</string>
@@ -2316,29 +2347,29 @@
     <string name="chapter_updates_today">今日</string>
     <string name="chapter_updates_yesterday">昨日</string>
     <plurals name="chapter_updates_versions">
-        <item quantity="other">%1$dバージョン</item>
+        <item quantity="other">%1$,dバージョン</item>
     </plurals>
     <string name="chapter_updates_open_series">%1$sを開く</string>
     <string name="chapter_updates_open_chapter_hint">この章を開きます</string>
     <string name="chapter_updates_open_series_menu">作品を開く</string>
     <string name="action_read_chapter">第%1$s話を読む</string>
     <string name="action_continue_chapter">続きを見る 第%1$s話 · %2$dページ</string>
-    <string name="action_continue_part">続きを見る パート%1$s · %2$d%%</string>
+    <string name="action_continue_part">続きを見る パート%1$s · %2$,d%%</string>
     <string name="action_continue_part_plain">続きを見る パート%1$s</string>
     <string name="action_read_part">パート%1$sを読む</string>
     <string name="action_read_again">もう一度読む</string>
     <string name="series_reading_from">読み込み元</string>
     <string name="series_change">変更</string>
     <plurals name="series_sources_more">
-        <item quantity="other">ほか%1$d件</item>
+        <item quantity="other">ほか%1$,d件</item>
     </plurals>
     <string name="series_tracker_ask">どの作品ですか?選択してください</string>
     <string name="series_preferred_group">ここで優先するグループ</string>
     <plurals name="series_tracker_chapters_of">
-        <item quantity="other">%1$d/%2$d話</item>
+        <item quantity="other">%1$,d/%2$,d話</item>
     </plurals>
     <plurals name="series_tracker_chapters">
-        <item quantity="other">%1$d話</item>
+        <item quantity="other">%1$,d話</item>
     </plurals>
     <string name="series_tracker_with_volume">%1$s · %2$d巻</string>
     <string name="series_tracker_volumes">%1$d/%2$d巻</string>
@@ -2350,7 +2381,7 @@
     <string name="series_remove_from_lists_line">接続している各連携サービスのリストから外れます。読んだ位置と既読の章はKaeriに残ります。</string>
     <string name="series_removed_title">あなたのリスト</string>
     <plurals name="series_chosen">
-        <item quantity="other">%1$d話を選択中</item>
+        <item quantity="other">%1$,d話を選択中</item>
     </plurals>
     <string name="series_choose_all_unread">未読をすべて選択</string>
     <string name="read_from_not_found">見つからなかった場所</string>
@@ -2385,7 +2416,7 @@
     <string name="series_bookmark">しおりを付ける</string>
     <string name="series_remove_bookmark">しおりを外す</string>
     <plurals name="series_versions">
-        <item quantity="other">%1$dバージョン</item>
+        <item quantity="other">%1$,dバージョン</item>
     </plurals>
     <string name="series_versions_loading">バージョンを探しています…</string>
     <string name="series_version_in_use">%1$sを使用中</string>
@@ -2393,7 +2424,7 @@
     <string name="chapter_state_downloaded">ダウンロード済み</string>
     <string name="chapter_state_queued">待機中</string>
     <string name="chapter_state_wifi">待機中 · Wi-Fi待ち</string>
-    <string name="chapter_state_downloading">ダウンロード中 · %1$d/%2$dページ</string>
+    <string name="chapter_state_downloading">ダウンロード中 · %1$,d/%2$,dページ</string>
     <string name="chapter_state_failed">ダウンロードできませんでした。%1$s</string>
     <string name="chapter_state_page_of">%1$d/%2$dページ</string>
     <string name="chapter_state_page">%1$dページ</string>
@@ -2402,15 +2433,15 @@
     <string name="chapter_download_stop">ダウンロードを中止</string>
     <string name="chapter_retry">再試行</string>
     <string name="chapter_download_delete">ダウンロードを削除</string>
-    <string name="download_next">次の未読%1$d話</string>
+    <string name="download_next">次の未読%1$,d話</string>
     <string name="download_unread">未読の章をすべて</string>
     <plurals name="download_volume_count">
-        <item quantity="other">%1$s · %2$d話</item>
+        <item quantity="other">%1$s · %2$,d話</item>
     </plurals>
     <string name="download_choose">章を選ぶ…</string>
     <string name="download_delete_series">この作品のダウンロードを削除</string>
     <plurals name="download_chapters">
-        <item quantity="other">%1$d話をダウンロード</item>
+        <item quantity="other">%1$,d話をダウンロード</item>
     </plurals>
     <string name="download_over_wifi">Wi-Fi経由</string>
     <string name="read_again_title">%1$sを最初から読み直しますか?</string>
@@ -2428,8 +2459,8 @@
     <string name="series_tracker_connect">この作品を連携するには、設定で接続してください</string>
     <string name="series_tracker_not_there">この連携サービスに一致する作品がありません</string>
     <string name="series_tracker_looking">この作品を探しています…</string>
-    <string name="series_tracker_behind">第%1$d話まで。次の同期で第%2$d話になります。</string>
-    <string name="series_tracker_ahead">第%1$d話まで。Kaeriより先に進んでいます。</string>
+    <string name="series_tracker_behind">第%1$,d話まで。次の同期で第%2$,d話になります。</string>
+    <string name="series_tracker_ahead">第%1$,d話まで。Kaeriより先に進んでいます。</string>
     <string name="series_tracker_score">%1$s / 10</string>
     <string name="series_tracker_keep_kaeri">Kaeriの位置を残す</string>
     <string name="series_tracker_take_theirs">%1$sの位置を使う</string>
@@ -2462,7 +2493,7 @@
     <string name="book_add_server_button">サーバーを追加</string>
     <string name="sources_found_server">%1$sサーバーが見つかりました</string>
     <plurals name="sources_found_server_series">
-        <item quantity="other">%1$sサーバーが見つかりました(作品%2$d件)</item>
+        <item quantity="other">%1$sサーバーが見つかりました(作品%2$,d件)</item>
     </plurals>
     <string name="book_server_looking">このアドレスを確認中…</string>
     <string name="book_server_note">Kaeriは読書の進捗をこのサーバーに送り返します。パスワードはキーチェーンに保存されます。</string>
@@ -2471,16 +2502,16 @@
     <string name="book_sources_plugins">プラグイン</string>
     <string name="book_sources_plugins_footer">プラグインは、参加したプラグインストアから届きます。</string>
     <plurals name="book_sources_series">
-        <item quantity="other">%1$d作品</item>
+        <item quantity="other">%1$,d作品</item>
     </plurals>
-    <string name="book_sources_scanning">検索中 · %1$d件見つかりました</string>
+    <string name="book_sources_scanning">検索中 · %1$,d件見つかりました</string>
     <string name="book_sources_missing">見つかりません。ドライブは接続されていますか?</string>
     <string name="book_sources_off">オフ</string>
     <string name="book_sources_progress_back">進捗はサーバーに戻ります</string>
     <string name="book_sources_opds">OPDS カタログ</string>
     <string name="book_sources_from_store">%1$sから</string>
     <string name="book_sources_version">バージョン %1$s</string>
-    <string name="book_sources_check_matches">一致を確認 · %1$d</string>
+    <string name="book_sources_check_matches">一致を確認 · %1$,d</string>
     <string name="book_sources_check_matches_title">一致を確認</string>
     <string name="book_sources_scan">再検索</string>
     <string name="book_sources_report_progress">進捗をサーバーに送る</string>
@@ -2495,7 +2526,7 @@
     <string name="library_scope_reading">読書</string>
     <string name="read_sort_last_read">最後に読んだ順</string>
     <plurals name="read_library_list_value">
-        <item quantity="other">%1$s、%2$d作品</item>
+        <item quantity="other">%1$s、%2$,d作品</item>
     </plurals>
     <string name="read_library_empty">%1$sにはまだ何もありません</string>
     <string name="read_library_empty_line">検索や作品ページから追加した作品がここに表示されます。</string>
@@ -2504,12 +2535,12 @@
     <string name="read_library_files_add">フォルダまたはサーバーを追加</string>
     <string name="read_search_placeholder">読書を検索</string>
     <plurals name="search_other_scope">
-        <item quantity="other">%2$sに%1$d件一致</item>
+        <item quantity="other">%2$sに%1$,d件一致</item>
     </plurals>
     <string name="search_show_them">表示する</string>
     <string name="read_search_browse_line">%1$s · AniList より</string>
     <plurals name="read_search_total">
-        <item quantity="other">AniList で%1$d作品</item>
+        <item quantity="other">AniList で%1$,d作品</item>
     </plurals>
     <string name="read_search_failed">検索できませんでした</string>
     <string name="read_search_nothing">「%1$s」は見つかりませんでした</string>
@@ -2529,14 +2560,14 @@
     <string name="read_filter_reset">リセット</string>
     <string name="read_filter_any">指定なし</string>
     <string name="read_filter_set">%1$s:</string>
-    <string name="read_filter_many">%1$sほか%2$d件</string>
+    <string name="read_filter_many">%1$sほか%2$,d件</string>
     <string name="read_filter_not_genre">%1$sを除く</string>
     <plurals name="read_filter_genres_count">
-        <item quantity="other">%1$dジャンル</item>
+        <item quantity="other">%1$,dジャンル</item>
     </plurals>
     <string name="read_filter_included">含める</string>
     <string name="read_filter_left_out">除外</string>
-    <string name="onboarding_step">%1$d/%2$d</string>
+    <string name="onboarding_step">%1$,d/%2$,d</string>
     <string name="onboarding_welcome_line">自分のソースで、視聴も読書も記録できます。</string>
     <string name="onboarding_welcome_note">リストと進捗はあなたのデバイスに残ります。連携サービスとソースは、ご自分で追加します。</string>
     <string name="onboarding_medium_title">視聴、読書、それとも両方?</string>
@@ -2566,7 +2597,7 @@
     <string name="onboarding_both_books">本</string>
     <string name="onboarding_both_shows_folder_line">この%1$sにある動画ファイル</string>
     <string name="onboarding_both_shows_server_line">お使いの Jellyfin サーバー</string>
-    <string name="medium_choice_position">%1$d/%2$d</string>
+    <string name="medium_choice_position">%1$,d/%2$,d</string>
     <string name="medium_change_later">あとから設定で変更できます。</string>
     <string name="medium_update_line">Kaeriで、ソースのマンガ、ウェブトゥーン、ライトノベルも読めるようになりました。この%1$sでの使い方を選んでください。</string>
     <plurals name="medium_join_title_watch">
@@ -2634,18 +2665,18 @@
     <string name="accounts_mangaupdates_credit">Kaeriは公開APIでMangaUpdatesに接続します。</string>
     <string name="accounts_username">ユーザー名</string>
     <plurals name="read_downloads_total">
-        <item quantity="other">%1$d話 · %2$s</item>
+        <item quantity="other">%1$,d話 · %2$s</item>
     </plurals>
-    <string name="read_downloads_active">%1$s · %2$d/%3$dページ</string>
-    <string name="read_downloads_more_queued">ほか%1$d件が待機中</string>
+    <string name="read_downloads_active">%1$s · %2$,d/%3$,dページ</string>
+    <string name="read_downloads_more_queued">ほか%1$,d件が待機中</string>
     <plurals name="read_downloads_queued">
-        <item quantity="other">%1$d話が待機中</item>
+        <item quantity="other">%1$,d話が待機中</item>
     </plurals>
     <string name="read_downloads_failed">%1$sをダウンロードできませんでした。%2$s</string>
     <plurals name="read_downloads_kept">
-        <item quantity="other">%1$d話</item>
+        <item quantity="other">%1$,d話</item>
     </plurals>
-    <string name="read_downloads_read">既読 %1$d話</string>
+    <string name="read_downloads_read">既読 %1$,d話</string>
     <string name="read_downloads_delete_read">既読を削除</string>
     <string name="seasonal_previous">前のシーズン</string>
     <string name="seasonal_next">次のシーズン</string>
@@ -2684,7 +2715,7 @@
     <string name="search_loading_more">さらに作品を読み込んでいます</string>
     <string name="filters_title">フィルター</string>
     <string name="filters_close">フィルターを閉じる</string>
-    <string name="filters_button_count">すべてのフィルター · %1$d</string>
+    <string name="filters_button_count">すべてのフィルター · %1$,d</string>
     <string name="filters_button">すべてのフィルター</string>
     <string name="filter_genre">ジャンル</string>
     <string name="filter_genres">ジャンル</string>
@@ -2740,26 +2771,26 @@
     <string name="search_available_services">登録サービス内</string>
     <string name="search_line_service">%1$sにあります</string>
     <plurals name="count_episodes">
-        <item quantity="other">%1$d話</item>
+        <item quantity="other">%1$,d話</item>
     </plurals>
-    <string name="count_episodes_short">%1$d話</string>
-    <string name="count_out_of">%1$d/%2$d話 配信済み</string>
-    <string name="count_out_of_short">%1$d/%2$d</string>
+    <string name="count_episodes_short">%1$,d話</string>
+    <string name="count_out_of">%1$,d/%2$,d話 配信済み</string>
+    <string name="count_out_of_short">%1$,d/%2$,d</string>
     <plurals name="count_out">
-        <item quantity="other">%1$d話 配信済み</item>
+        <item quantity="other">%1$,d話 配信済み</item>
     </plurals>
-    <string name="count_out_short">%1$d話</string>
+    <string name="count_out_short">%1$,d話</string>
     <string name="count_starts">%1$s開始</string>
     <string name="count_not_out">未配信</string>
     <string name="count_next_of">第%1$d話/全%2$d話</string>
     <string name="count_dub">吹替</string>
     <string name="count_dub_through">吹替 %1$d</string>
     <plurals name="count_spoken_episodes">
-        <item quantity="other">%1$d話</item>
+        <item quantity="other">%1$,d話</item>
     </plurals>
-    <string name="count_spoken_out_of">全%2$d話のうち%1$d話が配信済み</string>
+    <string name="count_spoken_out_of">全%2$,d話のうち%1$,d話が配信済み</string>
     <plurals name="count_spoken_out">
-        <item quantity="other">%1$d話が配信済み</item>
+        <item quantity="other">%1$,d話が配信済み</item>
     </plurals>
     <string name="count_spoken_starts">%1$s開始</string>
     <string name="count_spoken_next_of">全%2$d話のうち第%1$d話</string>
@@ -2829,21 +2860,21 @@
     <string name="servers_qc_new_code">新しいコードを取得</string>
     <string name="servers_libraries_title">ライブラリを選ぶ</string>
     <string name="servers_libraries_body">作品はAniListと照合され、ホーム、リスト、検索に表示されます。</string>
-    <string name="servers_library_line">%1$s · %2$dシリーズ</string>
+    <string name="servers_library_line">%1$s · %2$,dシリーズ</string>
     <string name="servers_report">視聴状況をJellyfinに報告</string>
     <string name="servers_report_line">ここで再生した内容に合わせて、再開位置と視聴済みの印が更新されます。</string>
     <string name="servers_add">サーバーを追加</string>
-    <string name="servers_row_matching">照合中 · %1$d / %2$dシリーズ</string>
+    <string name="servers_row_matching">照合中 · %1$,d / %2$,dシリーズ</string>
     <plurals name="servers_row_summary">
-        <item quantity="other">%1$d個のライブラリ · %2$dシリーズ</item>
+        <item quantity="other">%1$,d個のライブラリ · %2$,dシリーズ</item>
     </plurals>
     <plurals name="servers_row_libraries">
-        <item quantity="other">%1$d個のライブラリ</item>
+        <item quantity="other">%1$,d個のライブラリ</item>
     </plurals>
     <plurals name="servers_row_series">
-        <item quantity="other">%1$dシリーズ</item>
+        <item quantity="other">%1$,dシリーズ</item>
     </plurals>
-    <string name="servers_row_needs_look">%1$d件は要確認</string>
+    <string name="servers_row_needs_look">%1$,d件は要確認</string>
     <string name="servers_page_line">%1$s · Jellyfin %2$s · %3$sとしてサインイン中</string>
     <string name="servers_sign_out">サインアウト</string>
     <string name="servers_remove">サーバーを削除</string>
@@ -2871,7 +2902,7 @@
     <string name="servers_quick_connect">Quick Connect</string>
     <string name="servers_libraries_heading">ライブラリ</string>
     <string name="servers_refresh">再照合</string>
-    <string name="servers_needs_look">AniListと照合できていない作品: %1$d件</string>
+    <string name="servers_needs_look">AniListと照合できていない作品: %1$,d件</string>
     <string name="servers_kind_films">映画</string>
     <string name="servers_error_certificate">%1$sは、このデバイスが信頼していない証明書を使っています。信頼される証明書を持つ https:// のアドレスを使ってください。</string>
     <string name="servers_row_signed_out_here">サインアウト済み</string>
@@ -2939,7 +2970,7 @@
     <string name="settings_system_captions">システムの字幕スタイルに従う</string>
     <string name="settings_system_captions_detail">装飾のない字幕は、アクセシビリティの字幕設定に従います。装飾された字幕は、独自の見た目のままです。</string>
     <plurals name="settings_overridden">
-        <item quantity="other">%1$d作品で個別の設定があります</item>
+        <item quantity="other">%1$,d作品で個別の設定があります</item>
     </plurals>
     <string name="settings_new_downloads">新しいダウンロード</string>
     <string name="settings_keep_next">次のエピソードを保持</string>
@@ -3022,7 +3053,7 @@
     <string name="widget_start_label">%2$sのエピソード%1$dを再生</string>
     <string name="widget_resume_dubbed_label">%2$sのエピソード%1$d（吹替版）を再開</string>
     <plurals name="accounts_changes_waiting">
-        <item quantity="other">同期を待っている変更が%1$d件あります</item>
+        <item quantity="other">同期を待っている変更が%1$,d件あります</item>
     </plurals>
     <string name="settings_quality_higher">高画質</string>
     <string name="settings_quality_standard">標準</string>
@@ -3061,7 +3092,7 @@
     <string name="settings_subs_system_change">アクセシビリティ設定で変更</string>
     <string name="settings_subs_system_value">システムの設定</string>
     <string name="settings_subs_size">サイズ</string>
-    <string name="settings_subs_size_value">%1$d%%</string>
+    <string name="settings_subs_size_value">%1$,d%%</string>
     <string name="settings_subs_font">フォント</string>
     <string name="settings_subs_font_default">標準</string>
     <string name="settings_subs_font_serif">明朝体</string>
@@ -3085,7 +3116,7 @@
     <string name="settings_subs_background_all">全体の背面</string>
     <string name="settings_subs_opacity">不透明度</string>
     <string name="settings_subs_raise">字幕を上げる</string>
-    <string name="settings_subs_raise_value">画面の%1$d%%</string>
+    <string name="settings_subs_raise_value">画面の%1$,d%%</string>
     <string name="settings_subs_styled">スタイル付き字幕</string>
     <string name="settings_subs_styled_keep">元の見た目を保つ</string>
     <string name="settings_subs_styled_keep_detail">スタイル付き字幕は、作者が指定したフォント、色、看板の位置を保ちます。サイズと「字幕を上げる」は適用されます。</string>
@@ -3103,10 +3134,10 @@
     <string name="book_server_key_kept">Kaeriはキーを%1$sに保存し、末尾4文字だけを表示します。</string>
     <string name="book_server_key">キー ••••%1$s</string>
     <plurals name="book_server_found_title">
-        <item quantity="other">%2$d件のライブラリで%1$dシリーズが見つかりました</item>
+        <item quantity="other">%2$,d件のライブラリで%1$,dシリーズが見つかりました</item>
     </plurals>
     <string name="book_server_found_line">%2$sの%1$sです。追加するライブラリを選んでください。</string>
-    <string name="book_server_library_line">%1$dシリーズ</string>
+    <string name="book_server_library_line">%1$,dシリーズ</string>
     <string name="book_server_sync_progress">サーバーに進捗を送る</string>
     <string name="book_server_sync_progress_line">ここで読んだページは%1$sに送られ、%1$sの進捗がここに反映されます。</string>
     <string name="book_server_username">ユーザー名</string>
@@ -3122,28 +3153,28 @@
     <string name="book_server_empty_recheck">今すぐ追加できます。Kaeriは30分ごとに再確認します。</string>
     <string name="book_server_not_books_line">Kaeriは、Komga、Kavita、OPDSのカタログから読み込みます。</string>
     <plurals name="book_folder_found">
-        <item quantity="other">%2$d個のファイルに%1$dシリーズが見つかりました</item>
+        <item quantity="other">%2$,d個のファイルに%1$,dシリーズが見つかりました</item>
     </plurals>
-    <string name="book_folder_found_line">%1$s。Kaeriは、そのうち%2$dシリーズを詳細情報で照合しました。</string>
+    <string name="book_folder_found_line">%1$s。Kaeriは、そのうち%2$,dシリーズを詳細情報で照合しました。</string>
     <plurals name="book_folder_unsupported">
-        <item quantity="other">Kaeriで開けないファイルが%1$d個</item>
+        <item quantity="other">Kaeriで開けないファイルが%1$,d個</item>
     </plurals>
     <string name="book_folder_unsupported_line">%1$s。これらはフォルダー内にそのまま残ります。</string>
-    <string name="book_folder_drm">DRMで保護されたEPUBが%1$d個</string>
+    <string name="book_folder_drm">DRMで保護されたEPUBが%1$,d個</string>
     <string name="book_folder_opens">Kaeriは、CBZ、CBR、EPUB、PDFファイルと、画像のフォルダーを開けます。</string>
     <string name="book_folder_show_files">ファイルを表示</string>
     <string name="book_folder_add">フォルダーを追加</string>
     <string name="book_folder_change">変更</string>
     <string name="book_folder_empty">%1$sにKaeriで開けるものはありません</string>
     <plurals name="book_folder_empty_line">
-        <item quantity="other">%1$d個のファイルがありますが、CBZ、CBR、EPUB、PDF、画像のいずれでもありません。</item>
+        <item quantity="other">%1$,d個のファイルがありますが、CBZ、CBR、EPUB、PDF、画像のいずれでもありません。</item>
     </plurals>
     <string name="book_folder_choose_other">別のフォルダーを選ぶ</string>
     <string name="store_join_title">プラグインストアに参加</string>
     <string name="store_invite_field">招待</string>
     <string name="store_joined_title">%1$sに参加しました</string>
     <plurals name="store_joined_line">
-        <item quantity="other">%1$sがプラグインを%2$d個提供しています。参加してもインストールはされません。ここで、または後で選んでインストールできます。</item>
+        <item quantity="other">%1$sがプラグインを%2$,d個提供しています。参加してもインストールはされません。ここで、または後で選んでインストールできます。</item>
     </plurals>
     <string name="store_group_reading">読書用</string>
     <string name="store_group_watching">視聴用</string>
@@ -3151,7 +3182,7 @@
     <string name="store_installed_row">インストール済み</string>
     <string name="store_install_all_reading">読書用をすべてインストール</string>
     <plurals name="store_installed">
-        <item quantity="other">プラグインを%1$d個インストールしました。ソースに入っています。</item>
+        <item quantity="other">プラグインを%1$,d個インストールしました。ソースに入っています。</item>
     </plurals>
     <string name="store_other_medium">%1$sのプラグインはすべて視聴用です</string>
     <string name="store_other_medium_line">このデバイスでは視聴がオフなので、ソースには表示されません。</string>
@@ -3161,26 +3192,26 @@
     <string name="store_err_unreachable">%1$sに接続できませんでした</string>
     <string name="store_err_unreachable_line">招待は正しいようですが、ストアが応答していません。しばらくしてからもう一度試すか、稼働しているか%1$sに確認してください。</string>
     <plurals name="store_other_medium_more">
-        <item quantity="other">ほかに%1$d個は視聴用ですが、このデバイスでは視聴がオフです。</item>
+        <item quantity="other">ほかに%1$,d個は視聴用ですが、このデバイスでは視聴がオフです。</item>
     </plurals>
     <plurals name="store_tv_reading_only">
-        <item quantity="other">ほかに%1$d個は読書用ですが、このTVでは読書できません。</item>
+        <item quantity="other">ほかに%1$,d個は読書用ですが、このTVでは読書できません。</item>
     </plurals>
     <string name="store_tv_all_reading">%1$sのプラグインはすべて読書用ですが、このTVでは読書できません。</string>
     <string name="store_plugin_row">バージョン%1$s · %2$sに接続する場合があります</string>
-    <string name="source_added">%1$sを追加しました · %2$dシリーズ</string>
+    <string name="source_added">%1$sを追加しました · %2$,dシリーズ</string>
     <plurals name="source_added_plugins">
-        <item quantity="other">%2$sからプラグインを%1$d個インストールしました</item>
+        <item quantity="other">%2$sからプラグインを%1$,d個インストールしました</item>
     </plurals>
     <plurals name="source_row_server">
-        <item quantity="other">%1$s · %3$d件のライブラリに%2$dシリーズ · 追加したばかり</item>
+        <item quantity="other">%1$s · %3$,d件のライブラリに%2$,dシリーズ · 追加したばかり</item>
     </plurals>
     <plurals name="source_row_server_series">
-        <item quantity="other">%1$s · %3$d件のライブラリに%2$dシリーズ</item>
+        <item quantity="other">%1$s · %3$,d件のライブラリに%2$,dシリーズ</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · シリーズはまだありません · 30分後に再確認します</string>
     <plurals name="source_row_folder">
-        <item quantity="other">%1$s · %2$dシリーズ · %3$d個のファイルをスキップ</item>
+        <item quantity="other">%1$s · %2$,dシリーズ · %3$,d個のファイルをスキップ</item>
     </plurals>
     <string name="source_row_plugin">%1$sから · %2$s · バージョン%3$s</string>
     <string name="sources_title">ソース</string>
@@ -3190,7 +3221,7 @@
     <string name="source_picker_automatic">自動</string>
     <string name="source_picker_automatic_detail">各エピソードを、配信している最初のソースから取得</string>
     <plurals name="source_picker_coverage">
-        <item quantity="other">%1$d / %2$dエピソード</item>
+        <item quantity="other">%1$,d / %2$,dエピソード</item>
     </plurals>
     <string name="source_note_off">オフになっています</string>
     <string name="source_note_resting">応答がなく、まもなく再試行します</string>
@@ -3238,13 +3269,13 @@
     <string name="sources_listed_by_store">プラグインストアに掲載</string>
     <string name="sources_contacts_one">%1$sに接続します</string>
     <plurals name="sources_contacts_line">
-        <item quantity="other">%1$sほか%2$d件に接続します</item>
+        <item quantity="other">%1$sほか%2$,d件に接続します</item>
     </plurals>
     <string name="sources_contacts_none">接続先はありません</string>
     <string name="sources_no_hosts">なし</string>
     <string name="sources_update_contacts_one">このアップデートは%1$sにも接続します。</string>
     <plurals name="sources_update_contacts">
-        <item quantity="other">このアップデートは%1$sほか%2$d件にも接続します。</item>
+        <item quantity="other">このアップデートは%1$sほか%2$,d件にも接続します。</item>
     </plurals>
     <string name="sources_update_title">%1$sをアップデートしますか？</string>
     <string name="sources_replace_title">%1$sを置き換えますか？</string>
@@ -3255,11 +3286,11 @@
     <string name="sources_source_order_row">ソースの順番</string>
     <string name="sources_torrents_note">トレントはプラグインではなく、Kaeriに含まれています。プロキシとシーディングは、設定のソースで設定します。</string>
     <string name="sources_rebuilding">ソースを設定し直しています</string>
-    <string name="sources_response_ms">%1$d ms</string>
+    <string name="sources_response_ms">%1$,d ms</string>
     <string name="match_fix">この一致を修正</string>
     <string name="match_choose">一致する作品を選ぶ</string>
     <plurals name="match_uncertain">
-        <item quantity="other">%2$sに、これかもしれない作品が%1$d件あります。1つ選ぶと、そのエピソードを再生できます。</item>
+        <item quantity="other">%2$sに、これかもしれない作品が%1$,d件あります。1つ選ぶと、そのエピソードを再生できます。</item>
     </plurals>
     <string name="match_uncertain_none">%1$sには、この作品に合うものがありません。とりあえず1つ選ぶか、検索してください。</string>
     <string name="match_source_picker_row">違う作品?一致を修正</string>
@@ -3419,7 +3450,7 @@
     <string name="stores_members">メンバー</string>
     <string name="stores_owner_devices">運営者 · %1$s</string>
     <plurals name="stores_member_devices">
-        <item quantity="other">%1$d台のデバイス</item>
+        <item quantity="other">%1$,d台のデバイス</item>
     </plurals>
     <string name="stores_invite_for">宛先（任意）</string>
     <string name="stores_their_name">相手の名前</string>
@@ -3446,8 +3477,8 @@
     <string name="stores_invite_lasts_forever">期限なし</string>
     <string name="stores_invite_group_name">この招待の名前(任意)</string>
     <string name="stores_invite_group_detail">参加するときに、各自が自分の名前を追加します。</string>
-    <string name="stores_invite_works_times">%1$d回使えます。%2$sまで。</string>
-    <string name="stores_invite_works_times_forever">%1$d回使えます。取り消すまで有効です。</string>
+    <string name="stores_invite_works_times">%1$,d回使えます。%2$sまで。</string>
+    <string name="stores_invite_works_times_forever">%1$,d回使えます。取り消すまで有効です。</string>
     <string name="stores_invite_works_any">このリンクを持っている人は誰でも、%1$sまで参加できます。</string>
     <string name="stores_invite_works_any_forever">このリンクを持っている人は、取り消すまで誰でも参加できます。</string>
     <string name="stores_invite_once_until">送った相手1人が%1$sまで1回だけ使えます。</string>
@@ -3457,9 +3488,9 @@
     <string name="stores_invite_links">招待リンク</string>
     <string name="stores_invite_not_used">未使用</string>
     <plurals name="stores_invite_used">
-        <item quantity="other">%1$d回使用</item>
+        <item quantity="other">%1$,d回使用</item>
     </plurals>
-    <string name="stores_invite_used_of">%2$d回中%1$d回使用</string>
+    <string name="stores_invite_used_of">%2$,d回中%1$,d回使用</string>
     <string name="stores_invites_ended">過去30日間に終了</string>
     <string name="stores_invite_used_up">%1$sに使い切り</string>
     <string name="stores_invite_ran_out">%1$sに終了</string>
@@ -3467,7 +3498,7 @@
     <string name="stores_invite_show_uses">使用状況</string>
     <string name="stores_invite_joined">%1$s · %2$sに参加</string>
     <plurals name="stores_cancel_invite_detail">
-        <item quantity="other">これで他の人は参加できなくなります。参加した%1$d人はメンバーのままです。</item>
+        <item quantity="other">これで他の人は参加できなくなります。参加した%1$,d人はメンバーのままです。</item>
     </plurals>
     <string name="stores_join_your_name">あなたの名前(任意)</string>
     <string name="stores_join_your_name_detail">この名前は、ストアの所有者にメンバー一覧で表示されます。</string>
@@ -3479,10 +3510,10 @@
     <string name="stores_anyone_with_store_link">プラグインストアのリンクを持つ全員</string>
     <string name="stores_only_invited">招待した人のみ</string>
     <plurals name="stores_devices_joined">
-        <item quantity="other">リンクから参加したデバイス：%1$d台</item>
+        <item quantity="other">リンクから参加したデバイス：%1$,d台</item>
     </plurals>
     <string name="stores_device_joined_at">%1$sに参加</string>
-    <string name="stores_newest_listed">新しい順に%1$d件を表示しています。</string>
+    <string name="stores_newest_listed">新しい順に%1$,d件を表示しています。</string>
     <string name="stores_server_older">このプラグインストアのサーバーは古く、招待した人のみ参加を許可しています。更新すると、選択肢が追加されます。</string>
     <string name="stores_remove_devices_title">リンクから参加したデバイスを削除しますか？</string>
     <string name="stores_remove_devices_detail">それらのデバイスは、すぐに%1$sで使えなくなります。すでにインストールされているプラグインはそのまま残ります。</string>
@@ -3492,7 +3523,7 @@
     <string name="stores_remove_all">すべて削除</string>
     <string name="stores_copy_link">リンクをコピー</string>
     <plurals name="stores_offers_plugins">
-        <item quantity="other">提供しているプラグイン（%1$d件）</item>
+        <item quantity="other">提供しているプラグイン（%1$,d件）</item>
     </plurals>
     <string name="notice_open_stores">プラグインストアを開く</string>
     <string name="stores_what_is">プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。そのプラグインがソースを追加します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加します。</string>
@@ -3547,7 +3578,7 @@
     <string name="devices_only_this">このデバイスのみ</string>
     <string name="devices_only_this_line">別のデバイスをペアリングすると、続きの位置、履歴、設定を共有できます。</string>
     <string name="devices_add">デバイスを追加</string>
-    <string name="devices_not_seen">%1$d日間確認されていません</string>
+    <string name="devices_not_seen">%1$,d日間確認されていません</string>
     <string name="devices_remote_only">リモコン専用</string>
     <string name="devices_also_sync">%1$sとも同期</string>
     <string name="devices_paired_tvs_foot">テレビで再生のためにペアリング済みです。リモコンとしてペアリングしたテレビには、履歴は送られません。</string>
@@ -3624,7 +3655,7 @@
     <string name="rkey_new_foot">古いキーは使えなくなり、デバイスは次回の同期で新しいキーに切り替わります。</string>
     <string name="rkey_enter_title">復元キーを入力</string>
     <plurals name="rkey_enter_line">
-        <item quantity="other">%1$sには、%2$d台のデバイスの履歴が保存されています。同期をオンにしたときに保存したキーで開けます。</item>
+        <item quantity="other">%1$sには、%2$,d台のデバイスの履歴が保存されています。同期をオンにしたときに保存したキーで開けます。</item>
     </plurals>
     <string name="rkey_enter_note">英数字24文字を、4文字ずつに区切ったものです。スペースと大文字小文字は区別しません。</string>
     <string name="rkey_wrong">このキーではこのフォルダを開けません。4文字ずつ確認して、もう一度お試しください。</string>
@@ -3688,7 +3719,7 @@
     <string name="cloud_folder">この%1$s内のフォルダ</string>
     <string name="cloud_app_password_note">Nextcloudの「設定」の「セキュリティ」で作成してください。この%1$sに保存されます。</string>
     <plurals name="devices_tvs_for_play">
-        <item quantity="other">「テレビで再生」用に%1$d台のテレビ</item>
+        <item quantity="other">「テレビで再生」用に%1$,d台のテレビ</item>
     </plurals>
     <string name="devices_paired_today">今日ペアリング</string>
     <string name="tv_devices_add_line">スマートフォンに入力するコードを表示します</string>
@@ -3767,15 +3798,15 @@
     <string name="episode_synopsis_hidden">ネタバレ防止のためあらすじを非表示</string>
     <string name="episode_synopsis_show">あらすじを表示</string>
     <string name="episode_synopsis_show_hint">このエピソードの静止画とあらすじを表示します</string>
-    <string name="episode_facts">%1$d分 · 放送日 %2$s</string>
-    <string name="episode_facts_length">%1$d分</string>
-    <string name="episode_facts_left">残り%1$d分</string>
+    <string name="episode_facts">%1$,d分 · 放送日 %2$s</string>
+    <string name="episode_facts_length">%1$,d分</string>
+    <string name="episode_facts_left">残り%1$,d分</string>
     <string name="episode_protection_line">ネタバレ防止により、第%1$d話より後は非表示です。</string>
     <string name="episode_protection_line_short">第%1$d話より後は非表示</string>
     <string name="episode_range">第%1$d話〜第%2$d話</string>
     <string name="episode_range_label">エピソード範囲</string>
     <plurals name="episode_fold">
-        <item quantity="other">視聴済み%1$dエピソード</item>
+        <item quantity="other">視聴済み%1$,dエピソード</item>
     </plurals>
     <string name="episode_short">第%1$d話</string>
     <string name="episode_aired">放送日 %1$s</string>
@@ -3807,14 +3838,14 @@
     <string name="more_rankings">ランキング</string>
     <string name="more_following">フォロー中のユーザー</string>
     <string name="more_following_note">AniListより</string>
-    <string name="more_followed_score">%1$d/10</string>
+    <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">似た作品</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniListには、この作品のキャスト、スタッフ、おすすめがまだありません。</string>
     <string name="more_spoiler">ネタバレ</string>
     <string name="more_hide_spoiler_tags">ネタバレタグを非表示</string>
     <plurals name="more_show_spoiler_tags">
-        <item quantity="other">ネタバレタグを表示（%1$d件）</item>
+        <item quantity="other">ネタバレタグを表示（%1$,d件）</item>
     </plurals>
     <string name="episode_line_dubbed">%1$s · 吹替版</string>
     <string name="title_button_play_dubbed">エピソード%1$dを再生 · 吹替版</string>
@@ -3826,7 +3857,7 @@
     <string name="title_fact_after">第%1$d話まで放送</string>
     <string name="title_fact_now">放送中</string>
     <string name="title_fact_tba">未定</string>
-    <string name="more_following_line">%1$s · %2$d/10</string>
+    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">エピソードへ移動…</string>
     <string name="episode_go_to_title">エピソードへ移動</string>
     <string name="episode_go_to_go">移動</string>
@@ -3912,7 +3943,7 @@
     <string name="accounts_state_signed_out">サインインしていません</string>
     <string name="accounts_state_signed_in">%1$sに%2$sとしてサインイン中</string>
     <plurals name="accounts_state_signed_in_waiting">
-        <item quantity="other">%1$sに%2$sとしてサインイン中 · 送信待ちの変更 %3$d件</item>
+        <item quantity="other">%1$sに%2$sとしてサインイン中 · 送信待ちの変更 %3$,d件</item>
     </plurals>
     <string name="accounts_state_expired">%1$sで再度サインインが必要です</string>
     <string name="accounts_state_expired_short">同期を続けるには再度サインインしてください</string>
@@ -4034,7 +4065,7 @@
     <string name="tv_volume">テレビの音量</string>
     <string name="tv_cast_group">Chromecast</string>
     <string name="tv_cast_none_found">Chromecast内蔵のテレビもここに表示されます。</string>
-    <string name="tv_cast_counting">%1$s · %2$d秒</string>
+    <string name="tv_cast_counting">%1$s · %2$,d秒</string>
     <string name="tv_cast_couldnt_start">%1$sで開始できませんでした</string>
     <string name="tv_cast_stopped">キャストを停止しました</string>
     <string name="tv_cast_play_here">ここで再生</string>
@@ -4042,7 +4073,7 @@
     <string name="tv_cast_mute">ミュート</string>
     <string name="tv_cast_unmute">ミュート解除</string>
     <string name="tv_cast_volume_on_tv">テレビ側で設定</string>
-    <string name="tv_cast_up_next_in">次のエピソード · %1$d秒後に再生</string>
+    <string name="tv_cast_up_next_in">次のエピソード · %1$,d秒後に再生</string>
     <string name="tv_forget_note">ここでテレビの登録を解除すると、テレビ側でもこのデバイスの登録が解除されます。</string>
     <string name="updates_title">アップデート</string>
     <string name="updates_checking">新しいバージョンを確認しています…</string>

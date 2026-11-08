@@ -1055,6 +1055,7 @@ mod tests {
             not_in_sources: false,
             origin: None,
             amount: None,
+            started: None,
         }
     }
 
@@ -1319,6 +1320,7 @@ mod tests {
                 side: None,
                 tiles: vec![tile("a:6", "Iron Kite Brigade")],
                 view_all: None,
+                view_all_title: None,
                 pending: false,
             }],
             ..Default::default()

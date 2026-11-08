@@ -155,8 +155,8 @@ linux-reader-novel-needs-webkit = Novels need WebKitGTK 6 with its sandbox worki
 # The reader's scrubber as a screen reader says it: the page showing and how many there are.
 # @only linux
 # @max 40
-# @arg page: int
-# @arg pages: int
+# @arg page: plain
+# @arg pages: plain
 linux-reader-page-of = Page { $page } of { $pages }
 
 # Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab

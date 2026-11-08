@@ -245,7 +245,79 @@
   </data>
   <data name="HomeMoreGenre" xml:space="preserve">
     <value>[Ṁöŕé {genre}~~~]</value>
-    <comment>Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".</comment>
+    <comment>Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.</comment>
+  </data>
+  <data name="HomeMoreGenreAction" xml:space="preserve">
+    <value>[Ṁöŕé àçţîöñ~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreAdventure" xml:space="preserve">
+    <value>[Ṁöŕé àðṽéñţüŕé~~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreComedy" xml:space="preserve">
+    <value>[Ṁöŕé çöɱéðý~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreDrama" xml:space="preserve">
+    <value>[Ṁöŕé ðŕàɱà~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreEcchi" xml:space="preserve">
+    <value>[Ṁöŕé éççĥî~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreFantasy" xml:space="preserve">
+    <value>[Ṁöŕé ƒàñţàšý~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreHorror" xml:space="preserve">
+    <value>[Ṁöŕé ĥöŕŕöŕ~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreMahouShoujo" xml:space="preserve">
+    <value>[Ṁöŕé ɱàĥöü šĥöüĵö~~~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreMecha" xml:space="preserve">
+    <value>[Ṁöŕé ɱéçĥà~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreMusic" xml:space="preserve">
+    <value>[Ṁöŕé ɱüšîç~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreMystery" xml:space="preserve">
+    <value>[Ṁöŕé ɱýšţéŕý~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenrePsychological" xml:space="preserve">
+    <value>[Ṁöŕé þšýçĥöļöĝîçàļ~~~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreRomance" xml:space="preserve">
+    <value>[Ṁöŕé ŕöɱàñçé~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreSciFi" xml:space="preserve">
+    <value>[Ṁöŕé šçî-ƒî~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreSliceOfLife" xml:space="preserve">
+    <value>[Ṁöŕé šļîçé öƒ ļîƒé~~~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreSports" xml:space="preserve">
+    <value>[Ṁöŕé šþöŕţš~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreSupernatural" xml:space="preserve">
+    <value>[Ṁöŕé šüþéŕñàţüŕàļ~~~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
+  </data>
+  <data name="HomeMoreGenreThriller" xml:space="preserve">
+    <value>[Ṁöŕé ţĥŕîļļéŕ~~~~]</value>
+    <comment>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</comment>
   </data>
   <data name="HomeSpotlightDemo" xml:space="preserve">
     <value>[Ðéɱö, ƒŕéé ţö šĥàŕé~~~~~~]</value>
@@ -1382,6 +1454,98 @@
   <data name="ReadHitFilesFormat_other" xml:space="preserve">
     <value>[{count} ƒîļéš · {format}~~~~~]</value>
     <comment>Under a source's hit in Search: the book files it holds, all in one format ("CBZ").</comment>
+  </data>
+  <data name="ReadSourceFolders" xml:space="preserve">
+    <value>[Ƒöļðéŕš~~~]</value>
+    <comment>The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.</comment>
+  </data>
+  <data name="ReadFeedDownloads" xml:space="preserve">
+    <value>[Ðöŵñļöàðš~~~]</value>
+    <comment>A section of the feed that e-readers fetch from: the chapters downloaded on this device.</comment>
+  </data>
+  <data name="ReadingSinceJanuary" xml:space="preserve">
+    <value>[šîñçé Ĵàñüàŕý~~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".</comment>
+  </data>
+  <data name="ReadingSinceFebruary" xml:space="preserve">
+    <value>[šîñçé Ƒéƀŕüàŕý~~~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".</comment>
+  </data>
+  <data name="ReadingSinceMarch" xml:space="preserve">
+    <value>[šîñçé Ṁàŕçĥ~~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".</comment>
+  </data>
+  <data name="ReadingSinceApril" xml:space="preserve">
+    <value>[šîñçé Åþŕîļ~~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".</comment>
+  </data>
+  <data name="ReadingSinceMay" xml:space="preserve">
+    <value>[šîñçé Ṁàý~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".</comment>
+  </data>
+  <data name="ReadingSinceJune" xml:space="preserve">
+    <value>[šîñçé Ĵüñé~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".</comment>
+  </data>
+  <data name="ReadingSinceJuly" xml:space="preserve">
+    <value>[šîñçé Ĵüļý~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".</comment>
+  </data>
+  <data name="ReadingSinceAugust" xml:space="preserve">
+    <value>[šîñçé Åüĝüšţ~~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".</comment>
+  </data>
+  <data name="ReadingSinceSeptember" xml:space="preserve">
+    <value>[šîñçé Šéþţéɱƀéŕ~~~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".</comment>
+  </data>
+  <data name="ReadingSinceOctober" xml:space="preserve">
+    <value>[šîñçé Öçţöƀéŕ~~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".</comment>
+  </data>
+  <data name="ReadingSinceNovember" xml:space="preserve">
+    <value>[šîñçé Ñöṽéɱƀéŕ~~~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".</comment>
+  </data>
+  <data name="ReadingSinceDecember" xml:space="preserve">
+    <value>[šîñçé Ðéçéɱƀéŕ~~~~~]</value>
+    <comment>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".</comment>
+  </data>
+  <data name="ReadViewAllTrendingManga" xml:space="preserve">
+    <value>[Ṁàñĝà, ţŕéñðîñĝ~~~~~]</value>
+    <comment>The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList".</comment>
+  </data>
+  <data name="ReadViewAllTrendingWebtoons" xml:space="preserve">
+    <value>[Ŵéƀţööñš, ţŕéñðîñĝ~~~~~~]</value>
+    <comment>The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList".</comment>
+  </data>
+  <data name="ReadViewAllTrendingNovels" xml:space="preserve">
+    <value>[Ļîĝĥţ ñöṽéļš, ţŕéñðîñĝ~~~~~~~]</value>
+    <comment>The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList".</comment>
+  </data>
+  <data name="ReadViewAllNewManga" xml:space="preserve">
+    <value>[Ṁàñĝà šţàŕţéð îñ ţĥé ļàšţ 12 ɱöñţĥš~~~~~~~~~~~]</value>
+    <comment>The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList".</comment>
+  </data>
+  <data name="ReadViewAllNewWebtoons" xml:space="preserve">
+    <value>[Ŵéƀţööñš šţàŕţéð îñ ţĥé ļàšţ 12 ɱöñţĥš~~~~~~~~~~~~]</value>
+    <comment>The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".</comment>
+  </data>
+  <data name="ReadViewAllNewNovels" xml:space="preserve">
+    <value>[Ļîĝĥţ ñöṽéļš šţàŕţéð îñ ţĥé ļàšţ 12 ɱöñţĥš~~~~~~~~~~~~~]</value>
+    <comment>The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList".</comment>
+  </data>
+  <data name="ReadViewAllFinishedManga" xml:space="preserve">
+    <value>[Ƒîñîšĥéð ɱàñĝà, ɱöšţ þöþüļàŕ~~~~~~~~~]</value>
+    <comment>The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList".</comment>
+  </data>
+  <data name="ReadViewAllFinishedWebtoons" xml:space="preserve">
+    <value>[Ƒîñîšĥéð ŵéƀţööñš, ɱöšţ þöþüļàŕ~~~~~~~~~~]</value>
+    <comment>The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList".</comment>
+  </data>
+  <data name="ReadViewAllFinishedNovels" xml:space="preserve">
+    <value>[Ƒîñîšĥéð ļîĝĥţ ñöṽéļš, ɱöšţ þöþüļàŕ~~~~~~~~~~~]</value>
+    <comment>The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList".</comment>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>[Ĵöîñéð {store} àš {member}.~~~~~~]</value>

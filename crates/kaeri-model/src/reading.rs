@@ -84,6 +84,11 @@ pub struct WorkTile {
     /// does not say.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub amount: Option<Msg>,
+    /// On a New row: the month the series started, "since March" (`reading-since-*`). The
+    /// caption is then origin and this, "Japan · since March", two facts at most. `None`
+    /// elsewhere, and when AniList gives no month.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub started: Option<Msg>,
 }
 
 /// One series' page.
@@ -565,6 +570,12 @@ pub struct ReadHomeRow {
     /// on Because you finished.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub view_all: Option<ReadSearchQuery>,
+    /// The line over View all's results, before the count: "Webtoons, trending", "Manga
+    /// started in the last 12 months", "Finished manga, most popular", and the heading itself
+    /// on a genre row ("More fantasy"). Draw it as "{line} · 1,920 series from AniList" once
+    /// the count is known. `None` when `view_all` is.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub view_all_title: Option<Msg>,
     /// On its way with nothing kept: the front end holds placeholders at final size after
     /// 600 ms, and the heading says it is loading.
     #[cfg_attr(feature = "ffi", uniffi(default))]
@@ -775,6 +786,7 @@ pub enum ReadSourceState {
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReadSourceKind {
     Server,
+    /// Not sent today: the folders are one source named Folders, which has no kind beside it.
     Folder,
     Plugin,
 }
@@ -785,9 +797,9 @@ pub enum ReadSourceKind {
 pub struct ReadSourceGroup {
     pub source_id: String,
     pub source_name: String,
-    /// The kind beside the source's name: Server, Folder or Plugin
-    /// (`read-search-source-kind-*`). `None` for one built in, such as the demo, which shows
-    /// its name alone.
+    /// The kind beside the source's name: Server or Plugin (`read-search-source-kind-*`).
+    /// `None` for one built in, such as the demo, and for the folders, whose name ("Folders",
+    /// in the app's language) says what they are: both show their name alone.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub kind: Option<ReadSourceKind>,
     pub state: ReadSourceState,
@@ -807,7 +819,9 @@ pub struct ReadSourceGroup {
 pub struct ReadSourceJoin {
     pub work: WorkId,
     /// In the order of Your sources.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub source_ids: Vec<String>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub source_names: Vec<String>,
 }
 
