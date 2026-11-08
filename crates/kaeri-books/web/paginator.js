@@ -44,7 +44,7 @@
     font: '"Literata", "Iowan Old Style", Charter, Georgia, serif',
     size: 19, line: 1.5, margin: 28, top: 40, bottom: 48,
     justify: true, hyphens: true, mode: 'paged', columns: 'auto', column: 720,
-    eink: false, legacy: false, fixed: false
+    measure: [65, 75], eink: false, legacy: false, fixed: false
   };
 
   var S = {};
@@ -132,13 +132,22 @@
     return null;
   }
 
+  // The line's length in characters, at least and at most, as px at the text size. A Latin
+  // character of running text in a book face averages about 0.45 em; CJK characters are a
+  // whole em, and their lines run 30 to 40 where Latin runs 65 to 75.
+  function measure() {
+    var m = S.measure || DEFAULTS.measure;
+    var em = cjk() ? 1 : 0.45;
+    var chars = cjk() ? [m[0] * 6 / 13, m[1] * 8 / 15] : m;
+    return { min: chars[0] * em * S.size, max: chars[1] * em * S.size };
+  }
+
   function columns(width) {
     if (state.vertical || state.scrolled) return 1;
     if (S.columns === 1 || S.columns === 2) return S.columns;
     if (S.eink) return 1;
-    // Two columns where each still holds about 55 characters (Latin) or 20 (CJK).
-    var min = (cjk() ? 20 : 27) * S.size;
-    return (width - 4 * S.margin) / 2 >= min ? 2 : 1;
+    // Two columns only where each still holds the shortest line.
+    return (width - 4 * S.margin) / 2 >= measure().min ? 2 : 1;
   }
 
   function apply() {
@@ -152,9 +161,8 @@
     var W = vw();
     var cols = columns(W);
     var margin = S.margin;
-    // The column is capped near 720 px and about 75 characters a line (40 for CJK): wider
-    // windows get wider margins.
-    var cap = Math.min(S.column, (cjk() ? 40 : 37) * S.size);
+    // The column is capped near 720 px and the longest line: wider windows get wider margins.
+    var cap = Math.min(S.column, measure().max);
     if (!state.vertical && !state.scrolled) {
       var col = (W - 2 * margin * cols) / cols;
       if (col > cap) margin = (W - cap * cols) / (2 * cols);

@@ -5474,6 +5474,15 @@
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · {source}から</value>
   </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>スワイプして読み進める</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count}枚の画像</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>第{chapter}話 · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>デモを読む</value>
   </data>

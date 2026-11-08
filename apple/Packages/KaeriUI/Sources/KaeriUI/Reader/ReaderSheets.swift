@@ -19,11 +19,41 @@ struct ReaderSettingsSheet: View {
     @AppStorage(ReaderDefaults.gap) private var gap = "none"
     @AppStorage(ReaderDefaults.step) private var step = "panel"
     @AppStorage(ReaderDefaults.system) private var system = false
+    @Environment(\.dynamicTypeSize) private var type
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    /// The reading mode picker, pushed inside the sheet.
+    @State private var pickingMode = false
+    @State private var contentHeight: CGFloat = 560
 
     private var novel: Bool { model.medium == .novel }
+    private var strip: Bool { model.view?.mode == .strip }
+    private var popover: Bool { mac || ReaderDevice.isPad }
+    /// At the accessibility sizes a row of chips becomes a list with a check.
+    private var big: Bool { type.isAccessibilitySize }
 
     var body: some View {
-        ScrollView {
+        ZStack(alignment: .top) {
+            if pickingMode {
+                modePicker
+                    .transition(reduceMotion ? .opacity : .push(from: .trailing))
+            } else {
+                main
+                    .transition(reduceMotion ? .opacity : .push(from: .leading))
+            }
+        }
+        // A popover is as tall as what it holds, up to 560 pt, and scrolls past that.
+        .frame(width: popover ? 380 : nil, height: popover ? min(contentHeight, 560) : nil, alignment: .top)
+        .clipped()
+        .presentationDetents([.fraction(0.55), .large])
+        .presentationBackgroundInteraction(.enabled)
+        .presentationBackground(theme.glassSolid)
+        .presentationCompactAdaptation(.sheet)
+        .preferredColorScheme(system ? nil : theme.scheme)
+        .foregroundStyle(theme.silk)
+    }
+
+    private var main: some View {
+        scrolling {
             VStack(alignment: .leading, spacing: 22) {
                 ForEach(groups, id: \.scope.hashValue) { group in
                     VStack(alignment: .leading, spacing: 14) {
@@ -34,17 +64,19 @@ struct ReaderSettingsSheet: View {
                 paperSection
                 moreSection
             }
-            .padding(20)
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .scrollIndicators(.hidden)
-        .frame(width: mac || ReaderDevice.isPad ? 380 : nil, height: mac || ReaderDevice.isPad ? 560 : nil)
-        .presentationDetents([.fraction(0.55), .large])
-        .presentationBackgroundInteraction(.enabled)
-        .presentationBackground(theme.glassSolid)
-        .presentationCompactAdaptation(.sheet)
-        .preferredColorScheme(system ? nil : theme.scheme)
-        .foregroundStyle(theme.silk)
+    }
+
+    /// The sheet's scroll, which reports its content's height for the popover to size to.
+    private func scrolling(@ViewBuilder _ content: () -> some View) -> some View {
+        ScrollView {
+            content()
+                .padding(20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+        }
+        .scrollIndicators(.automatic)
+        .scrollIndicatorsFlash(onAppear: true)
     }
 
     // MARK: Groups by scope
@@ -79,15 +111,22 @@ struct ReaderSettingsSheet: View {
             add(.margins, amounts(L.readerMargins, .margins, [(L.readerMarginsNarrow, 0.6), (L.readerMarginsNormal, 1.0), (L.readerMarginsWide, 1.6)]))
             add(.justify, toggle(L.readerJustify, .justify))
         } else {
-            add(.fit, segments(L.readerFit, [(L.readerFitScreen, "screen"), (L.readerFitWidth, "width")], .fit))
-            add(.cropBorders, toggle(L.readerCropBorders, .cropBorders))
+            if strip {
+                // Fit and Crop borders mean nothing to a strip; its width does, where it is not
+                // the screen's.
+                if popover, model.amount(.stripWidth) != nil {
+                    rows.append((.device, item("stripWidth", stepper(L.readerStripWidth, .stripWidth, 0.1, 0.3...1.0))))
+                }
+            } else {
+                add(.fit, segments(L.readerFit, [(L.readerFitScreen, "screen"), (L.readerFitWidth, "width")], .fit))
+                add(.cropBorders, toggle(L.readerCropBorders, .cropBorders))
+            }
             rows.append((.device, item("background", chips(
                 L.readerBackground, [(L.readerBackgroundTheme, "theme"), (L.readerBackgroundBlack, "black"), (L.readerBackgroundWhite, "white")],
                 background) { background = $0 })))
         }
-        let strip = model.view?.mode == .strip
         let medium = novel ? L.readerAllNovels : (strip ? L.readerAllStrips : L.readerAllManga)
-        let device = novel ? medium : L.readerAllMangaHere
+        let device = novel ? medium : (strip ? L.readerAllStripsHere : L.readerAllMangaHere)
         var out: [ScopeGroup] = []
         for scope in [SettingScope.series, .medium, .device] {
             let items = rows.filter { row in
@@ -130,20 +169,103 @@ struct ReaderSettingsSheet: View {
             if novel {
                 segments(L.readerReadingMode, [(L.readerModePaged, "paged"), (L.readerModeScrolled, "scrolled")], .mode)
             } else {
-                let current = currentMode
-                chips(
-                    L.readerReadingMode,
-                    [
-                        (autoName, .auto), (L.readerModeRtl, .rightToLeft), (L.readerModeLtr, .leftToRight),
-                        (L.readerModeStrip, .strip),
-                    ], current
-                ) { model.chooseMode($0) }
+                // The board's row: the mode in use, which pushes the picker.
+                Button {
+                    withAnimation(.standard) { pickingMode = true }
+                } label: {
+                    // At the accessibility sizes the value goes under the label.
+                    let row = big ? AnyLayout(VStackLayout(alignment: .leading, spacing: 2)) : AnyLayout(HStackLayout(spacing: 8))
+                    HStack(spacing: 8) {
+                        row {
+                            label(L.readerReadingMode)
+                            if !big { Spacer(minLength: 8) }
+                            Text(modeValue).font(.ui(15)).foregroundStyle(theme.haze)
+                                .multilineTextAlignment(big ? .leading : .trailing)
+                        }
+                        if big { Spacer(minLength: 8) }
+                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(theme.haze)
+                            .accessibilityHidden(true)
+                    }
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
                 if model.modeOverridden {
-                    Button(L.readerUseDefault) { model.useDefault(.mode); model.useDefault(.direction) }
-                        .buttonStyle(.plain).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).underline()
+                    let note = big ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4)) : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 6))
+                    note {
+                        Text(L.readerModeOverrideNote(title: model.view?.title ?? "")).font(.ui(13)).foregroundStyle(theme.haze)
+                        Button(L.readerUseDefault) { model.useDefault(.mode); model.useDefault(.direction) }
+                            .buttonStyle(.plain).font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk).underline()
+                    }
                 } else if model.row(.direction)?.detected == true {
                     Text(L.readerModeDetectedNote).font(.ui(13)).foregroundStyle(theme.haze)
                 }
+            }
+        }
+    }
+
+    /// The row's value: "Auto · Right to left" while guessed, the choice otherwise.
+    private var modeValue: String {
+        let guessed = model.choice(.mode) == "strip" ? L.readerModeStrip
+            : (model.choice(.direction) == "ltr" ? L.readerModeLtr : L.readerModeRtl)
+        switch currentMode {
+        case .auto: return L.readerModeAuto(mode: guessed)
+        case .rightToLeft: return L.readerModeRtl
+        case .leftToRight: return L.readerModeLtr
+        case .strip: return L.readerModeStrip
+        }
+    }
+
+    /// The pushed picker: back, the series, the four modes with a check, and where it is kept.
+    private var modePicker: some View {
+        let options: [(String, String?, ReaderModel.ReadingModeChoice)] = [
+            (autoName, L.readerModeAutoDetail, .auto), (L.readerModeRtl, nil, .rightToLeft),
+            (L.readerModeLtr, nil, .leftToRight), (L.readerModeStrip, L.readerModeStripDetail, .strip),
+        ]
+        return scrolling {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 4) {
+                    Button {
+                        withAnimation(.standard) { pickingMode = false }
+                    } label: {
+                        Image(systemName: "chevron.left").font(.system(size: 17, weight: .semibold))
+                            .frame(width: 44, height: 44).contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(L.readerSettingsOpen)
+                    Text(L.readerReadingMode).font(.ui(17, weight: .semibold))
+                        .accessibilityAddTraits(.isHeader)
+                }
+                .padding(.leading, -12)
+                header(model.view?.title ?? "").padding(.top, 6).padding(.bottom, 4)
+                ForEach(0..<options.count, id: \.self) { index in
+                    let option = options[index]
+                    let on = currentMode == option.2
+                    Button { model.chooseMode(option.2) } label: {
+                        HStack(spacing: 8) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(option.0).font(.ui(15, weight: .medium)).foregroundStyle(theme.silk)
+                                if let detail = option.1 {
+                                    Text(detail).font(.ui(13)).foregroundStyle(theme.haze)
+                                }
+                            }
+                            Spacer(minLength: 8)
+                            if on {
+                                Image(systemName: "checkmark").font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(theme.silk)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        .frame(minHeight: 44)
+                        .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+                Text(L.readerModeChoiceNote).font(.ui(13)).foregroundStyle(theme.haze).padding(.top, 10)
             }
         }
     }
@@ -195,9 +317,6 @@ struct ReaderSettingsSheet: View {
                 if show(L.readerTapZones) {
                     segments(L.readerTapZones, [(L.readerTapEdges, "edges"), (L.readerTapSides, "sides"), (L.readerTapOff, "off")], .tapLayout)
                 }
-                if show(L.readerStripWidth), !novel, model.view?.mode == .strip, mac || ReaderDevice.isPad {
-                    stepper(L.readerStripWidth, .stripWidth, 0.1, 0.3...1.0)
-                }
                 if show(L.readerStripGap), !novel, model.view?.mode == .strip {
                     chips(L.readerStripGap, [(L.readerGapNone, "none"), (L.readerGapSmall, "small")], gap) { gap = $0 }
                 }
@@ -236,6 +355,40 @@ struct ReaderSettingsSheet: View {
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             label(title)
+            if big {
+                checkList(options, current, set: set)
+            } else {
+                chipRow(options, current, set: set)
+            }
+        }
+    }
+
+    /// The choices as a list with a check, as the system pickers have it, for the largest sizes.
+    private func checkList<V: Hashable>(_ options: [(String, V)], _ current: V, set: @escaping (V) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(0..<options.count, id: \.self) { index in
+                let on = options[index].1 == current
+                Button { set(options[index].1) } label: {
+                    HStack(spacing: 8) {
+                        Text(options[index].0).font(.ui(15)).foregroundStyle(theme.silk)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 8)
+                        if on { Image(systemName: "checkmark").font(.system(size: 15, weight: .semibold)) }
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 8)
+                    .frame(minHeight: 44)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+                if index < options.count - 1 { Rectangle().fill(theme.hair).frame(height: 1).padding(.leading, 14) }
+            }
+        }
+        .background(theme.raised, in: .rect(cornerRadius: 14))
+    }
+
+    private func chipRow<V: Hashable>(_ options: [(String, V)], _ current: V, set: @escaping (V) -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 ForEach(0..<options.count, id: \.self) { index in
                     let on = options[index].1 == current
@@ -314,8 +467,12 @@ struct ReaderChaptersSheet: View {
     @Bindable var model: ReaderModel
     let theme: ReaderTheme
     @State private var tab = 0
+    /// The loading line waits 600 ms, as every state does.
+    @State private var loadingShown = false
 
     private var hasPages: Bool { model.medium == .manga }
+    /// Pages a jump in the grid covers.
+    private static let band = 20
 
     var body: some View {
         VStack(spacing: 0) {
@@ -353,9 +510,39 @@ struct ReaderChaptersSheet: View {
         let columns = ReaderDevice.isPhone
             ? Array(repeating: GridItem(.flexible(), spacing: 10), count: 4)
             : Array(repeating: GridItem(.fixed(84), spacing: 10), count: 5)
-        return ScrollView {
+        let list = pageList
+        return ScrollViewReader { proxy in
+            VStack(spacing: 0) {
+                // A long chapter folds into bands of 20 pages, one tap from each.
+                if list.count > Self.band * 2 {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(Array(stride(from: 1, through: list.count, by: Self.band)), id: \.self) { first in
+                                let last = min(first + Self.band - 1, list.count)
+                                Button(L.readerPagesRange(from: first, to: last)) {
+                                    withAnimation(.standard) { proxy.scrollTo(first, anchor: .top) }
+                                }
+                                .font(.ui(13, weight: .medium)).monospacedDigit()
+                                .foregroundStyle(theme.silk)
+                                .padding(.horizontal, 12)
+                                .frame(minHeight: 32)
+                                .background(theme.raised, in: .capsule)
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
+                    .padding(.bottom, 10)
+                }
+                pageGrid(list, columns: columns, rtl: rtl)
+            }
+        }
+    }
+
+    private func pageGrid(_ list: [(number: Int, leaf: Int, part: LeafPart)], columns: [GridItem], rtl: Bool) -> some View {
+        ScrollView {
             LazyVGrid(columns: columns, spacing: 10) {
-                ForEach(pageList, id: \.number) { entry in
+                ForEach(list, id: \.number) { entry in
                     Button {
                         model.requestJump(entry.leaf)
                         model.sheet = nil
@@ -363,6 +550,7 @@ struct ReaderChaptersSheet: View {
                         thumb(entry.part, number: entry.number, open: entry.leaf == model.current)
                     }
                     .buttonStyle(.plain)
+                    .id(entry.number)
                     .environment(\.layoutDirection, .leftToRight)
                 }
             }
@@ -393,8 +581,9 @@ struct ReaderChaptersSheet: View {
     private var chapters: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
-                if !model.chaptersLoaded {
+                if !model.chaptersLoaded, loadingShown {
                     Text(L.readerChaptersLoading).font(.ui(15)).foregroundStyle(theme.haze).padding(16)
+                        .transition(.opacity)
                 }
                 ForEach(0..<model.chapters.count, id: \.self) { group in
                     let volume = model.chapters[group]
@@ -405,6 +594,10 @@ struct ReaderChaptersSheet: View {
                     ForEach(0..<volume.chapters.count, id: \.self) { row in chapterRow(volume.chapters[row]) }
                 }
             }
+        }
+        .task {
+            try? await Task.sleep(for: .milliseconds(600))
+            withAnimation(.fadeIn) { loadingShown = true }
         }
     }
 
@@ -421,13 +614,13 @@ struct ReaderChaptersSheet: View {
                     Text(state(row)).font(.ui(13)).foregroundStyle(theme.haze)
                 }
                 Spacer()
-                if here { Image(systemName: "book.fill").foregroundStyle(theme.silk) }
             }
             .padding(.horizontal, 16).padding(.vertical, 10)
             .background(here ? theme.selected : Color.clear)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(here ? .isSelected : [])
     }
 
     private func rowRead(_ row: ChapterRow) -> Bool {

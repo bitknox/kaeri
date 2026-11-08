@@ -68,13 +68,11 @@ reader-notice-start-over = Recomeçar
 reader-notice-go-back = Voltar
 reader-notice-change = Mudar
 reader-settings = Ajustes do leitor
-reader-chapter-line-titled = Capítulo { $chapter } · { $title }
 reader-novel-line-scroll = Capítulo { $chapter } · rolagem
 reader-minutes-left = { $minutes } min
 reader-zone-next = Próxima página
 reader-grid-title = Páginas
 reader-end-continue = Seguir lendo
-reader-end-swipe = Deslize para seguir lendo
 reader-end-series = Voltar à série
 reader-end-again = Reler desde o início
 reader-opening-chapter = Abrindo o capítulo { $chapter }
@@ -164,11 +162,6 @@ reader-value-off = Desligado
 reader-row-strip-gap = Espaço entre imagens
 reader-paper-look = Aparência papel de dia
 reader-paper-dim = Escurecer a página
-reader-divider-images = { $count ->
-    [one] Uma imagem
-    [many] { $count } de imagens
-   *[other] { $count } imagens
- }
 reader-opening-waited = { $line } · { $seconds } s
 reader-sources-title = Ler este capítulo de
 reader-paper-parts = O que ele muda

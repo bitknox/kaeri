@@ -60,12 +60,30 @@ extension ReaderModel {
             case "chapters": chromeShown = true; sheet = .chapters
             case "ask": chromeShown = true; askingPage = true
             // The end page is reached by reading on, by which time the resume notice has gone.
-            case "end": notice = nil; requestJump(max(leaves.count - 1, 0))
+            // A strip has no end page: it scrolls on past its last image to the marker into the
+            // next chapter.
+            case "end":
+                notice = nil
+                requestJump(max(leaves.count - 1, 0))
+                if view?.mode == .strip {
+                    try? await Task.sleep(for: .milliseconds(700))
+                    requestTurn(forward: true)
+                }
             case "scrub": chromeShown = true; shotScrub = max(leaves.count / 4, 1)
             case "pill": backTo = ReaderNoticeLine(id: bump(), text: L.readerBackToPage(page: 9), action: .backTo)
             case "opening": hold(.opening)
             case "error": hold(.failed(.offline))
             default: break
+            }
+            try? await Task.sleep(for: .milliseconds(900))
+        }
+        // `-KaeriAutoTurn <n>`: n turns forward, 0.8 s apart, for a recording of the turns or
+        // of a strip flowing on into the next chapter.
+        if let at = arguments.firstIndex(of: "-KaeriAutoTurn"), arguments.indices.contains(at + 1),
+           let turns = Int(arguments[at + 1]) {
+            for _ in 0..<turns {
+                try? await Task.sleep(for: .milliseconds(800))
+                requestTurn(forward: true)
             }
             try? await Task.sleep(for: .milliseconds(900))
         }

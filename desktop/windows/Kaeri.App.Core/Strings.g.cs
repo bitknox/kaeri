@@ -516,6 +516,9 @@ public static partial class T
     /// <summary>A notice over the page when a chapter opens where it was left. It offers Start over.</summary>
     public static string ReaderResumed(long page) => Fill(Get("ReaderResumed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The same notice in a webtoon strip, which counts images rather than pages.</summary>
+    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</summary>
     public static string ReaderBackToPage(long page) => Fill(Get("ReaderBackToPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -5512,11 +5515,20 @@ public static partial class T
     /// <summary>Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.</summary>
     public static string ReaderEndFrom(string source) => Fill(Get("ReaderEndFrom"), ("source", source));
 
-    /// <summary>Under the series title in the reader's controls. The chapter is its number, such as 12.</summary>
+    /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
     public static string ReaderChapterLine(string chapter) => Fill(Get("ReaderChapterLine"), ("chapter", chapter));
 
     /// <summary>The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.</summary>
     public static string ReaderDividerFactsSource(string facts, string source) => Fill(Get("ReaderDividerFactsSource"), ("facts", facts), ("source", source));
+
+    /// <summary>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</summary>
+    public static string ReaderEndSwipe => Get("ReaderEndSwipe");
+
+    /// <summary>The next episode's length on the divider inside a strip.</summary>
+    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
+    public static string ReaderChapterLineTitled(string chapter, string title) => Fill(Get("ReaderChapterLineTitled"), ("chapter", chapter), ("title", title));
 
     /// <summary>Button in the first run that opens the reading demo.</summary>
     public static string OnboardingReadDemo => Get("OnboardingReadDemo");
@@ -11148,6 +11160,7 @@ public static partial class T
         ["ReadingAlsoABook"] = "Also a book",
         ["ReadingSplitChapter"] = "Chapter {chapter} goes to trackers as {whole}.",
         ["ReaderResumed"] = "Resumed at page {page}",
+        ["ReaderResumedImage"] = "Resumed at image {image}",
         ["ReaderBackToPage"] = "Back to page {page}",
         ["ReaderMoved"] = "Moved to {chapter}, page {page}, where {device} stopped",
         ["ReaderMovedNumber"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
@@ -12878,6 +12891,10 @@ public static partial class T
         ["ReaderEndFrom"] = "From {source}",
         ["ReaderChapterLine"] = "Chapter {chapter}",
         ["ReaderDividerFactsSource"] = "{facts} · from {source}",
+        ["ReaderEndSwipe"] = "Swipe to keep reading",
+        ["ReaderDividerImages_one"] = "One image",
+        ["ReaderDividerImages_other"] = "{count} images",
+        ["ReaderChapterLineTitled"] = "Chapter {chapter} · {title}",
         ["OnboardingReadDemo"] = "Read the demo",
         ["OnboardingDemoBooksDetail"] = "One short comic and one short story, shared by their makers under Creative Commons.",
         ["OnboardingDemoBothDetail"] = "One short episode and one short comic, shared by their makers under Creative Commons.",

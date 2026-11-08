@@ -779,6 +779,31 @@ pub struct ReaderNotice {
     pub lasts_ms: u32,
 }
 
+/// How long a reader notice stays on screen, in milliseconds, from the engine's `lasts_ms`, the
+/// words the person reads in it and whether a screen reader is running. `None` keeps it until
+/// it is dismissed, acted on or replaced: a notice with a button while a screen reader runs.
+/// Longer text adds a second for every 10 words past 12. On e-ink, `lasts_ms` is 0 and stays 0:
+/// the notice clears at the next turn.
+///
+/// The time counts only while the reader is in front: a host pauses it while the app is
+/// inactive, and under the pointer or a screen reader's focus where it can tell.
+#[cfg_attr(feature = "ffi", uniffi::export)]
+pub fn reader_notice_hold(
+    lasts_ms: u32,
+    words: u32,
+    has_action: bool,
+    screen_reader: bool,
+) -> Option<u32> {
+    if has_action && screen_reader {
+        return None;
+    }
+    if lasts_ms == 0 {
+        return Some(0);
+    }
+    let extra = words.saturating_sub(12).div_ceil(10);
+    Some(lasts_ms.saturating_add(extra.saturating_mul(1_000)))
+}
+
 /// One open reader session. One at a time per window.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
@@ -1073,5 +1098,25 @@ mod minutes_left {
         assert_eq!(novel_minutes_left(2_300, 10, 10, 230), None);
         assert_eq!(novel_minutes_left(0, 0, 10, 230), None, "no count, no guess");
         assert_eq!(novel_minutes_left(2_300, 0, 0, 230), None);
+    }
+}
+
+#[cfg(test)]
+mod notice_hold {
+    use super::reader_notice_hold;
+
+    #[test]
+    fn a_notice_holds_its_time_longer_for_long_text_and_waits_for_a_screen_reader() {
+        // "Resumed at page 8 · Start over": short, its own six seconds.
+        assert_eq!(reader_notice_hold(6_000, 4, true, false), Some(6_000));
+        // Twelve words fit the time; each ten past them add a second.
+        assert_eq!(reader_notice_hold(8_000, 12, true, false), Some(8_000));
+        assert_eq!(reader_notice_hold(8_000, 13, true, false), Some(9_000));
+        assert_eq!(reader_notice_hold(8_000, 32, true, false), Some(10_000));
+        // A button waits for the person under a screen reader; a plain line keeps its time.
+        assert_eq!(reader_notice_hold(8_000, 4, true, true), None);
+        assert_eq!(reader_notice_hold(4_000, 4, false, true), Some(4_000));
+        // E-ink clears at the next turn.
+        assert_eq!(reader_notice_hold(0, 30, false, false), Some(0));
     }
 }
