@@ -971,6 +971,14 @@ impl Session {
                 if foot_visible && at.image + 1 >= self.pages_total {
                     self.wait_to_read(cx);
                 }
+                // The images around the place, as a turn wants the leaves around it: one
+                // behind and three ahead. Images made already are not made again.
+                let leaf = self.leaf_of_page(at.image);
+                let mut want = vec![leaf, leaf + 1, leaf + 2, leaf + 3];
+                if let Some(before) = leaf.checked_sub(1) {
+                    want.push(before);
+                }
+                pages.want(self.id, self.generation, want, cx.tx);
                 // Near the foot, the divider names the next chapter and shows its first page.
                 if at.image + 3 >= self.pages_total {
                     self.say_end_page(cx);
@@ -2040,6 +2048,73 @@ mod tests {
             })
             .await;
         assert_eq!(to.page, Some(0));
+    }
+
+    /// A strip wants the images around its place as it scrolls, one behind and three ahead,
+    /// and an image made already is not made again.
+    #[tokio::test(start_paused = true)]
+    async fn a_strip_wants_the_images_around_its_place() {
+        let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |books| {
+            let path = books.join("Chapter 1.cbz");
+            cbz(&path, 8);
+            vec![ShelfFile {
+                path: path.display().to_string(),
+                chapter: None,
+                label: "Chapter 1".into(),
+                volume: None,
+                number_milli: Some(1000),
+                format: "cbz".into(),
+                pages: Some(8),
+                comicinfo: None,
+                source: None,
+            }]
+        });
+        h.services.store.set_series_setting(WORK, "mode", Some("strip"), true, 2).unwrap();
+        let (view, leaves, _) = h.open(OpenAt::Resume).await;
+        assert_eq!(
+            (view.mode, leaves.len()),
+            (ReaderMode::Strip, 9),
+            "eight images and the end"
+        );
+        let mut made = std::collections::BTreeSet::new();
+        let ready = async |h: &mut Harness| {
+            h.until(|e| match e {
+                ReaderEvent::PageReady { page, .. } => Some(*page),
+                _ => None,
+            })
+            .await
+        };
+        while made.len() < 2 {
+            made.insert(ready(&mut h).await);
+        }
+        assert_eq!(made, [0, 1].into(), "the opening makes the first two");
+
+        let session = h.session();
+        let chapter = ChapterId::new("1");
+        let at = |image| StripPos { image, offset: 0.5 };
+        h.send(ReaderCommand::StripAt {
+            session,
+            chapter: chapter.clone(),
+            at: at(4),
+            foot_visible: false,
+        });
+        while made.len() < 7 {
+            assert!(made.insert(ready(&mut h).await), "an image made twice");
+        }
+        assert_eq!(made, [0, 1, 3, 4, 5, 6, 7].into());
+
+        // The same place again and a scroll back to the top: only image 3's neighbour 2 is new.
+        h.send(ReaderCommand::StripAt {
+            session,
+            chapter: chapter.clone(),
+            at: at(4),
+            foot_visible: false,
+        });
+        h.send(ReaderCommand::StripAt { session, chapter, at: at(0), foot_visible: false });
+        assert_eq!(ready(&mut h).await, 2);
+        let again =
+            h.drain().into_iter().filter(|e| matches!(e, ReaderEvent::PageReady { .. }));
+        assert_eq!(again.count(), 0, "nothing made again");
     }
 
     /// A long strip opens again where it was left: at the image and how far into it, in the
