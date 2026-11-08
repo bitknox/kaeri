@@ -327,10 +327,16 @@ impl Reader {
                 self.settings_changed(cx, session, medium, Some(work), key);
             }
             ReaderCommand::Close { session } => {
-                let open = self.session.as_ref().is_some_and(|s| s.id == session);
-                let pending = self.listing.as_ref().is_some_and(|l| l.id == session);
-                if open || pending {
-                    self.close(cx);
+                // Sessions count from 1: 0 is a close from an app that has none yet, which
+                // drops the open still waiting and leaves an open session alone.
+                if session == 0 {
+                    self.listing = None;
+                } else {
+                    let open = self.session.as_ref().is_some_and(|s| s.id == session);
+                    let pending = self.listing.as_ref().is_some_and(|l| l.id == session);
+                    if open || pending {
+                        self.close(cx);
+                    }
                 }
                 cx.send(ReaderEvent::Closed { session });
             }

@@ -882,8 +882,11 @@ pub enum ReaderCommand {
         medium: Medium,
         work: Option<WorkId>,
     },
-    /// [`ReaderEvent::Closed`]; the last place is already written.
+    /// [`ReaderEvent::Closed`]; the last place is already written. Without a session (0, the
+    /// default), it drops whatever open still waits, as when the person leaves "Finding
+    /// source" before [`ReaderEvent::Opened`] named one.
     Close {
+        #[cfg_attr(feature = "ffi", uniffi(default))]
         session: u64,
     },
 }
@@ -982,7 +985,7 @@ pub enum ReaderEvent {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         wait: Option<ReaderWait>,
         /// The session the open becomes, as [`ReaderEvent::Opened`] will name it. Leaving
-        /// before then sends [`ReaderCommand::Close`] with it, and nothing opens.
+        /// before then sends [`ReaderCommand::Close`] with it, or with none, and nothing opens.
         #[cfg_attr(feature = "ffi", uniffi(default))]
         session: u64,
     },

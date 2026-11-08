@@ -51,6 +51,17 @@ const SLOW_WORK: &str = "a:900888";
 /// the session the opening named. When the source answers, nothing opens and nothing is held.
 #[tokio::test(start_paused = true)]
 async fn leaving_while_finding_the_source_opens_nothing() {
+    leave_while_finding(true).await;
+}
+
+/// The same with an app that sends Close with no session while it has none: whatever open
+/// waits is dropped.
+#[tokio::test(start_paused = true)]
+async fn leaving_with_no_session_while_finding_the_source_opens_nothing() {
+    leave_while_finding(false).await;
+}
+
+async fn leave_while_finding(named: bool) {
     let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
     let source = Arc::new(Slow {
         manifest: BookSourceManifest {
@@ -84,6 +95,7 @@ async fn leaving_while_finding_the_source_opens_nothing() {
         .await;
     assert_eq!(wait, Some(ReaderWait::FindingSource));
     assert_ne!(session, 0, "the opening names the session it becomes");
+    let session = if named { session } else { 0 };
     h.send(ReaderCommand::Close { session });
     let closed = h
         .until(|e| match e {
