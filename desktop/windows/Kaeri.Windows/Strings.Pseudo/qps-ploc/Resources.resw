@@ -2605,6 +2605,18 @@
     <value>[Ðöŵñļöàðéð çĥàþţéŕš öþéñ ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~]</value>
     <comment>Line under the title of the Downloads page for reading when no chapter is kept on this PC.</comment>
   </data>
+  <data name="WindowsReadSearchFinished" xml:space="preserve">
+    <value>[{anilist} ƒŕöɱ ÅñîĻîšţ, {sources} ƒŕöɱ ýöüŕ šöüŕçéš.~~~~~~~~~~~~]</value>
+    <comment>Said once by Narrator when a search with words has heard from AniList and every source. Failed sources follow as their own sentences.</comment>
+  </data>
+  <data name="WindowsReadSearchFinishedSources" xml:space="preserve">
+    <value>[{sources} ƒŕöɱ ýöüŕ šöüŕçéš.~~~~~~~]</value>
+    <comment>Said once by Narrator when a search with Your sources only on has heard from every source.</comment>
+  </data>
+  <data name="WindowsReadSearchAnilistHidden" xml:space="preserve">
+    <value>[ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ.~~~~~~~~~]</value>
+    <comment>Said once by Narrator when Your sources only is turned on in Search.</comment>
+  </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>[Ŕéàðîñĝ {title} àĝàîñ ƒŕöɱ ţĥé šţàŕţ~~~~~~~~~~]</value>
     <comment>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</comment>
@@ -9193,6 +9205,18 @@
   <data name="ReadSearchFromSources" xml:space="preserve">
     <value>[Ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~]</value>
     <comment>Search's section heading under AniList's results: one group per source of the person's.</comment>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>[Šéŕṽéŕ~~]</value>
+    <comment>Beside a source group's name in Search: what kind of source it is.</comment>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>[Ƒöļðéŕ~~]</value>
+    <comment>Beside a source group's name in Search: what kind of source it is.</comment>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>[Þļüĝîñ~~]</value>
+    <comment>Beside a source group's name in Search: what kind of source it is.</comment>
   </data>
   <data name="ReadSearchAsking" xml:space="preserve">
     <value>[Åšķîñĝ {source}…~~~~]</value>

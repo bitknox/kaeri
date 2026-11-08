@@ -9186,6 +9186,15 @@ public enum L {
     /// Search's section heading under AniList's results: one group per source of the person's.
     public static var readSearchFromSources: String { string("read-search-from-sources", fallback: "From your sources") }
 
+    /// Beside a source group's name in Search: what kind of source it is.
+    public static var readSearchSourceKindServer: String { string("read-search-source-kind-server", fallback: "Server") }
+
+    /// Beside a source group's name in Search: what kind of source it is.
+    public static var readSearchSourceKindFolder: String { string("read-search-source-kind-folder", fallback: "Folder") }
+
+    /// Beside a source group's name in Search: what kind of source it is.
+    public static var readSearchSourceKindPlugin: String { string("read-search-source-kind-plugin", fallback: "Plugin") }
+
     /// E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
     public static func readSearchAsking(source: String) -> String {
         Self.format("read-search-asking", fallback: "Asking %1$@…", source)

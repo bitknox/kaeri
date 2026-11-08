@@ -9347,6 +9347,15 @@ read-search-sources-only = Your sources only
 # Search's section heading under AniList's results: one group per source of the person's.
 read-search-from-sources = From your sources
 
+# Beside a source group's name in Search: what kind of source it is.
+read-search-source-kind-server = Server
+
+# Beside a source group's name in Search: what kind of source it is.
+read-search-source-kind-folder = Folder
+
+# Beside a source group's name in Search: what kind of source it is.
+read-search-source-kind-plugin = Plugin
+
 # E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
 read-search-asking = Asking { $source }…
 

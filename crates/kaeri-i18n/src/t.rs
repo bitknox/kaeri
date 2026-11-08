@@ -14890,6 +14890,21 @@ pub fn read_search_from_sources() -> String {
     text("read-search-from-sources", &[])
 }
 
+/// Beside a source group's name in Search: what kind of source it is.
+pub fn read_search_source_kind_server() -> String {
+    text("read-search-source-kind-server", &[])
+}
+
+/// Beside a source group's name in Search: what kind of source it is.
+pub fn read_search_source_kind_folder() -> String {
+    text("read-search-source-kind-folder", &[])
+}
+
+/// Beside a source group's name in Search: what kind of source it is.
+pub fn read_search_source_kind_plugin() -> String {
+    text("read-search-source-kind-plugin", &[])
+}
+
 /// E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
 pub fn read_search_asking(source: &str) -> String {
     text("read-search-asking", &[("source", Arg::Text(source))])

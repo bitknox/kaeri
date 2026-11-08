@@ -1,0 +1,143 @@
+using Kaeri.Engine.Model;
+
+namespace Kaeri.App;
+
+/// <summary>What kind of source a group in Search is, for the word beside its name.</summary>
+public enum ReadSourceKind
+{
+    None,
+    Folder,
+    Server,
+    Plugin,
+}
+
+/// <summary>
+/// The words and choices of reading's discovery: Home's rows, and Search's From your sources
+/// section, as the discovery board draws them. Kept apart from the controls so they can be tested.
+/// </summary>
+public static class ReadDiscovery
+{
+    /// <summary>The engine's one group for every scanned folder.</summary>
+    public const string FoldersId = "folders";
+
+    /// <summary>The kind of the source <paramref name="id"/> names, from Your sources as the engine last sent them.</summary>
+    public static ReadSourceKind KindOf(string id, BookSourcesView? view)
+    {
+        if (id == FoldersId || (view?.Folders ?? []).Any(f => f.Id == id))
+            return ReadSourceKind.Folder;
+        if ((view?.Servers ?? []).Any(s => s.Id == id))
+            return ReadSourceKind.Server;
+        if ((view?.Plugins ?? []).Any(p => p.Id == id))
+            return ReadSourceKind.Plugin;
+        return ReadSourceKind.None;
+    }
+
+    /// <summary>"Server", "Folder" or "Plugin"; nothing for the demo.</summary>
+    public static string? KindWords(ReadSourceKind kind) => kind switch
+    {
+        ReadSourceKind.Folder => T.ReadSearchSourceKindFolder,
+        ReadSourceKind.Server => T.ReadSearchSourceKindServer,
+        ReadSourceKind.Plugin => T.ReadSearchSourceKindPlugin,
+        _ => null,
+    };
+
+    /// <summary>
+    /// The third line of an AniList result that sources have: "In Home library", or "In 2 of
+    /// your sources". Null when no source joined it.
+    /// </summary>
+    public static string? Placed(ReadSourceSearch? sources, string work)
+    {
+        if (sources?.Joins?.FirstOrDefault(j => j.Work == work) is not { } join)
+            return null;
+        var names = join.SourceNames ?? [];
+        return names.Length switch
+        {
+            0 => null,
+            1 => T.ReadSearchInSource(names[0]),
+            _ => T.ReadSearchInSources(names.Length),
+        };
+    }
+
+    /// <summary>Whether any result shown has a third line, so every cell of the grid keeps room for one.</summary>
+    public static bool AnyPlaced(ReadSourceSearch? sources, IEnumerable<WorkTile> tiles) =>
+        sources?.Joins is { Length: > 0 } joins && tiles.Any(t => joins.Any(j => j.Work == t.Work));
+
+    /// <summary>
+    /// Whether a group takes a slot of its own: asking, with hits left after the joins, or failed.
+    /// Groups that found nothing share the line at the end, and one whose every hit joined an
+    /// AniList result is left out.
+    /// </summary>
+    public static bool Slotted(ReadSourceGroup group) => group.State switch
+    {
+        ReadSourceState.Asking => true,
+        ReadSourceState.Hits => (group.Tiles?.Length ?? 0) > 0,
+        ReadSourceState.Failed or ReadSourceState.TimedOut => true,
+        _ => false,
+    };
+
+    /// <summary>The names of the groups that found nothing, in Your sources order.</summary>
+    public static IReadOnlyList<string> NothingFrom(ReadSourceSearch sources) =>
+        [.. (sources.Groups ?? []).Where(g => g.State is ReadSourceState.Nothing).Select(g => g.SourceName)];
+
+    /// <summary>"Nothing found in Comics folder and Demo.", or null when every source found something or is still asked.</summary>
+    public static string? NothingLine(ReadSourceSearch sources) =>
+        StartScreen.Names(NothingFrom(sources)) is { } names ? T.ReadSearchSourceNothing(names) : null;
+
+    /// <summary>Whether every source has answered and found nothing: with AniList's nothing, nothing anywhere.</summary>
+    public static bool SourcesFoundNothing(ReadSourceSearch sources) =>
+        (sources.Groups ?? []).All(g => g.State is ReadSourceState.Nothing);
+
+    /// <summary>The hits the sources found: those in their rows and those that joined an AniList result.</summary>
+    public static int Hits(ReadSourceSearch sources) =>
+        (sources.Groups ?? []).Sum(g => (g.Tiles?.Length ?? 0) + (int)g.Joined);
+
+    /// <summary>
+    /// What Narrator says once when the whole search has settled: "4 from AniList, 2 from your
+    /// sources. Northwind didn't answer." Null until it has.
+    /// </summary>
+    public static string? Finished(ReadSourceSearch sources, int anilist)
+    {
+        if (!sources.Done)
+            return null;
+        var said = sources.Anilist == ReadAnilistState.Skipped
+            ? T.WindowsReadSearchFinishedSources(Hits(sources))
+            : T.WindowsReadSearchFinished(anilist, Hits(sources));
+        if (sources.Anilist == ReadAnilistState.Failed)
+            said += " " + T.ReadSearchAnilistFailed;
+        foreach (var group in sources.Groups ?? [])
+            if (group.State is ReadSourceState.Failed or ReadSourceState.TimedOut)
+                said += " " + T.ReadSearchSourceFailed(group.SourceName);
+        return said;
+    }
+
+    /// <summary>A failed group's reason: the engine's for a failure, "No answer in 15 s." for the time running out.</summary>
+    public static string? Reason(ReadSourceState state) => state switch
+    {
+        ReadSourceState.Failed failed => failed.Failure.Words(),
+        ReadSourceState.TimedOut timedOut => T.ReadSearchSourceTimeout(timedOut.Seconds),
+        _ => null,
+    };
+
+    /// <summary>"30 of 212 shown", beside More from AniList; null when the total is not known.</summary>
+    public static string? Shown(int shown, uint? total) =>
+        total is { } all && all > shown ? T.ReadSearchShown(shown, all) : null;
+
+    /// <summary>
+    /// A row's heading as runs: the words before the title, the title in the show font, and the
+    /// words after it. Only "Because you finished X" has a title.
+    /// </summary>
+    public static HomeHeading Heading(Msg title)
+    {
+        var whole = title.Text();
+        if (title is Msg.HomeBecause because && because.Title.Length > 0)
+        {
+            var at = whole.LastIndexOf(because.Title, StringComparison.Ordinal);
+            if (at >= 0)
+                return new(whole[..at], because.Title, whole[(at + because.Title.Length)..]);
+        }
+        return new(whole);
+    }
+
+    /// <summary>Whether a query sets the Started filter.</summary>
+    public static bool StartedSet(ReadSearchQuery query) => query.Started is { Length: > 0 } s && s != "any";
+}

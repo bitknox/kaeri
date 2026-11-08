@@ -2605,6 +2605,18 @@
     <value>Downloaded chapters open without a connection.</value>
     <comment>Line under the title of the Downloads page for reading when no chapter is kept on this PC.</comment>
   </data>
+  <data name="WindowsReadSearchFinished" xml:space="preserve">
+    <value>{anilist} from AniList, {sources} from your sources.</value>
+    <comment>Said once by Narrator when a search with words has heard from AniList and every source. Failed sources follow as their own sentences.</comment>
+  </data>
+  <data name="WindowsReadSearchFinishedSources" xml:space="preserve">
+    <value>{sources} from your sources.</value>
+    <comment>Said once by Narrator when a search with Your sources only on has heard from every source.</comment>
+  </data>
+  <data name="WindowsReadSearchAnilistHidden" xml:space="preserve">
+    <value>AniList's results are hidden.</value>
+    <comment>Said once by Narrator when Your sources only is turned on in Search.</comment>
+  </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>Reading {title} again from the start</value>
     <comment>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</comment>
@@ -9193,6 +9205,18 @@
   <data name="ReadSearchFromSources" xml:space="preserve">
     <value>From your sources</value>
     <comment>Search's section heading under AniList's results: one group per source of the person's.</comment>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>Server</value>
+    <comment>Beside a source group's name in Search: what kind of source it is.</comment>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>Folder</value>
+    <comment>Beside a source group's name in Search: what kind of source it is.</comment>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>Plugin</value>
+    <comment>Beside a source group's name in Search: what kind of source it is.</comment>
   </data>
   <data name="ReadSearchAsking" xml:space="preserve">
     <value>Asking {source}…</value>

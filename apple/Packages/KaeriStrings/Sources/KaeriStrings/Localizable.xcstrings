@@ -195541,6 +195541,42 @@
         }
       }
     },
+    "read-search-source-kind-folder" : {
+      "comment" : "Beside a source group's name in Search: what kind of source it is.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder"
+          }
+        }
+      }
+    },
+    "read-search-source-kind-plugin" : {
+      "comment" : "Beside a source group's name in Search: what kind of source it is.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugin"
+          }
+        }
+      }
+    },
+    "read-search-source-kind-server" : {
+      "comment" : "Beside a source group's name in Search: what kind of source it is.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
+          }
+        }
+      }
+    },
     "read-search-source-more" : {
       "comment" : "The button of a source group with more than five hits. Argument 1: n (Int).",
       "extractionState" : "manual",

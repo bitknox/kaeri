@@ -9730,6 +9730,18 @@ object Strings {
     fun readSearchFromSources(context: Context): String =
         context.getString(R.string.read_search_from_sources)
 
+    /** Beside a source group's name in Search: what kind of source it is. */
+    fun readSearchSourceKindServer(context: Context): String =
+        context.getString(R.string.read_search_source_kind_server)
+
+    /** Beside a source group's name in Search: what kind of source it is. */
+    fun readSearchSourceKindFolder(context: Context): String =
+        context.getString(R.string.read_search_source_kind_folder)
+
+    /** Beside a source group's name in Search: what kind of source it is. */
+    fun readSearchSourceKindPlugin(context: Context): String =
+        context.getString(R.string.read_search_source_kind_plugin)
+
     /** E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name. */
     fun readSearchAsking(context: Context, source: String): String =
         context.getString(R.string.read_search_asking, source)

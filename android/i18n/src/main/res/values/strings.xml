@@ -5163,6 +5163,12 @@
     <string name="read_search_sources_only">Your sources only</string>
     <!-- Search's section heading under AniList's results: one group per source of the person's. -->
     <string name="read_search_from_sources">From your sources</string>
+    <!-- Beside a source group's name in Search: what kind of source it is. -->
+    <string name="read_search_source_kind_server">Server</string>
+    <!-- Beside a source group's name in Search: what kind of source it is. -->
+    <string name="read_search_source_kind_folder">Folder</string>
+    <!-- Beside a source group's name in Search: what kind of source it is. -->
+    <string name="read_search_source_kind_plugin">Plugin</string>
     <!-- E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name. -->
     <string name="read_search_asking">Asking %1$s…</string>
     <!-- A source group whose source failed to answer. The reason and Try again follow. -->

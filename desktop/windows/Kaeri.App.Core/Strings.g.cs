@@ -1842,6 +1842,15 @@ public static partial class T
     /// <summary>Line under the title of the Downloads page for reading when no chapter is kept on this PC.</summary>
     public static string WindowsReadDownloadsEmptyDetail => Get("WindowsReadDownloadsEmptyDetail");
 
+    /// <summary>Said once by Narrator when a search with words has heard from AniList and every source. Failed sources follow as their own sentences.</summary>
+    public static string WindowsReadSearchFinished(long anilist, long sources) => Fill(Get("WindowsReadSearchFinished"), ("anilist", anilist.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Said once by Narrator when a search with Your sources only on has heard from every source.</summary>
+    public static string WindowsReadSearchFinishedSources(long sources) => Fill(Get("WindowsReadSearchFinishedSources"), ("sources", sources.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Said once by Narrator when Your sources only is turned on in Search.</summary>
+    public static string WindowsReadSearchAnilistHidden => Get("WindowsReadSearchAnilistHidden");
+
     /// <summary>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</summary>
     public static string SeriesReadAgainDoneWindows(string title) => Fill(Get("SeriesReadAgainDoneWindows"), ("title", title));
 
@@ -6615,6 +6624,15 @@ public static partial class T
 
     /// <summary>Search's section heading under AniList's results: one group per source of the person's.</summary>
     public static string ReadSearchFromSources => Get("ReadSearchFromSources");
+
+    /// <summary>Beside a source group's name in Search: what kind of source it is.</summary>
+    public static string ReadSearchSourceKindServer => Get("ReadSearchSourceKindServer");
+
+    /// <summary>Beside a source group's name in Search: what kind of source it is.</summary>
+    public static string ReadSearchSourceKindFolder => Get("ReadSearchSourceKindFolder");
+
+    /// <summary>Beside a source group's name in Search: what kind of source it is.</summary>
+    public static string ReadSearchSourceKindPlugin => Get("ReadSearchSourceKindPlugin");
 
     /// <summary>E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.</summary>
     public static string ReadSearchAsking(string source) => Fill(Get("ReadSearchAsking"), ("source", source));
@@ -11994,6 +12012,9 @@ public static partial class T
         ["WindowsReaderModeVerticalLine"] = "Pages one under another",
         ["WindowsReaderModeStripLine"] = "For webtoons and long images",
         ["WindowsReadDownloadsEmptyDetail"] = "Downloaded chapters open without a connection.",
+        ["WindowsReadSearchFinished"] = "{anilist} from AniList, {sources} from your sources.",
+        ["WindowsReadSearchFinishedSources"] = "{sources} from your sources.",
+        ["WindowsReadSearchAnilistHidden"] = "AniList's results are hidden.",
         ["SeriesReadAgainDoneWindows"] = "Reading {title} again from the start",
         ["SendSaveFilesWindows"] = "Save files",
         ["SendSavedWindows_one"] = "Saved the file",
@@ -13647,6 +13668,9 @@ public static partial class T
         ["ReadSearchStarted"] = "Started",
         ["ReadSearchSourcesOnly"] = "Your sources only",
         ["ReadSearchFromSources"] = "From your sources",
+        ["ReadSearchSourceKindServer"] = "Server",
+        ["ReadSearchSourceKindFolder"] = "Folder",
+        ["ReadSearchSourceKindPlugin"] = "Plugin",
         ["ReadSearchAsking"] = "Asking {source}…",
         ["ReadSearchSourceFailed"] = "{source} didn't answer.",
         ["ReadSearchSourceTimeout"] = "No answer in {seconds} s.",
