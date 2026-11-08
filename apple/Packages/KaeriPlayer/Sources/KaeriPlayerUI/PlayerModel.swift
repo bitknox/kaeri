@@ -759,6 +759,36 @@ public final class PlayerModel {
         if stagedAhead { send(.player(.stop)) }
     }
 
+    #if os(macOS)
+    /// The window the player plays in closed (⌘W, its close button): the playback stops with its
+    /// place saved, and mpv goes with everything it held, as nothing shows it any more. Not while
+    /// the picture floats in Picture in Picture, which plays on without the window.
+    private func hostWindowClosed() {
+        guard inMainWindow else { return }
+        Self.note(.info, "the player's window closed")
+        viewerClosed()
+    }
+
+    /// The window the player plays in, as its view found it. Watched here rather than by the
+    /// view, which the window closing takes down first: left playing, mpv would go on decoding
+    /// and holding its picture's GPU memory with nothing on screen.
+    @ObservationIgnored public weak var hostWindow: NSWindow? {
+        didSet { if hostWindow !== oldValue { watchHostWindow() } }
+    }
+    @ObservationIgnored private var hostWindowWatch: NSObjectProtocol?
+
+    private func watchHostWindow() {
+        if let hostWindowWatch { NotificationCenter.default.removeObserver(hostWindowWatch) }
+        hostWindowWatch = nil
+        guard let hostWindow else { return }
+        hostWindowWatch = NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification, object: hostWindow, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated { self?.hostWindowClosed() }
+        }
+    }
+    #endif
+
     /// Stop what the engine is finding for this player: aimed at the playback on screen, unless
     /// one has been staged since that has said nothing yet. Aimed at the one before, a Stop would
     /// miss it, so it goes to whatever plays, which is the one staged last.
@@ -813,9 +843,7 @@ public final class PlayerModel {
         // What was still queued never reaches mpv now: nobody waits for it.
         for mark in marks.values { mark.resume() }
         marks = [:]
-        if let backend {
-            ending.append(Task.detached { await backend.end() })
-        }
+        if let backend { shutDown(backend) }
         backend = nil
         preview.close()
         closedThrough = [playback, current, opened, loads.last?.playback].compactMap { $0 }.max()
@@ -1163,6 +1191,19 @@ public final class PlayerModel {
             }
         }
     }
+
+    /// mpv shuts down off the main thread, kept in `ending` for `finished()` only until it has.
+    private func shutDown(_ backend: any PlayerBackend) {
+        let task = Task.detached { await backend.end() }
+        ending.append(task)
+        Task { @MainActor [weak self] in
+            await task.value
+            self?.ending.removeAll { $0 == task }
+        }
+    }
+
+    /// The mpvs still shutting down, for a test.
+    var shuttingDown: Int { ending.count + preview.shuttingDown }
 
     /// Wait until every mpv this player closed, the preview's too, has shut down: before a
     /// process that played exits, so no mpv thread outlives it.
