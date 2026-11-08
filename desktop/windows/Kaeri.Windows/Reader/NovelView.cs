@@ -29,8 +29,9 @@ sealed class NovelView : Grid
     readonly Grid endLayer = new() { Visibility = Visibility.Collapsed };
     readonly Border note;
     readonly TextBlock noteText;
+    readonly Button noteClose;
     NovelOpenView? book;
-    bool ready, failed;
+    bool ready, failed, closed, resting;
     CoreWebView2Environment? made;
     (string Url, string? Fragment)? pendingLoad;
     string currentUrl = "";
@@ -46,11 +47,31 @@ sealed class NovelView : Grid
         web = new WebView2 { DefaultBackgroundColor = owner.NovelGround };
         Children.Add(web);
         Children.Add(endLayer);
-        noteText = new TextBlock { FontSize = 15, TextWrapping = TextWrapping.WrapWholeWords, MaxLines = 8, TextTrimming = TextTrimming.WordEllipsis };
+        noteText = new TextBlock { FontSize = 15, TextWrapping = TextWrapping.WrapWholeWords, MaxLines = 8, TextTrimming = TextTrimming.WordEllipsis, VerticalAlignment = VerticalAlignment.Center };
+        noteClose = new Button
+        {
+            Content = new FontIcon { Glyph = "\uE711", FontSize = 12 },
+            Width = 32,
+            Height = 32,
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(4),
+            BorderThickness = new Thickness(0),
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            VerticalAlignment = VerticalAlignment.Top,
+        };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(noteClose, T.WindowsReaderNoteClose);
+        ToolTipService.SetToolTip(noteClose, T.TooltipWithKey(T.WindowsReaderNoteClose, "Esc"));
+        noteClose.Click += (_, _) => CloseNote();
+        var noteRow = new Grid { ColumnSpacing = 8 };
+        noteRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        noteRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        noteRow.Children.Add(noteText);
+        Grid.SetColumn(noteClose, 1);
+        noteRow.Children.Add(noteClose);
         note = new Border
         {
-            Child = noteText,
-            Padding = new Thickness(16),
+            Child = noteRow,
+            Padding = new Thickness(16, 12, 8, 12),
             MaxWidth = 520,
             CornerRadius = new CornerRadius(8),
             VerticalAlignment = VerticalAlignment.Bottom,
@@ -60,7 +81,7 @@ sealed class NovelView : Grid
         };
         note.Tapped += (_, e) =>
         {
-            Motion.Hide(note);
+            CloseNote();
             e.Handled = true;
         };
         Children.Add(note);
@@ -69,13 +90,13 @@ sealed class NovelView : Grid
 
     ReaderSession Reader => owner.Reader;
 
-    static Task<CoreWebView2Environment> Environment() => environment ??= Make();
+    static Task<CoreWebView2Environment> Environment() => environment ??= MakeOwn();
 
     /// <summary>
     /// The books' own environment, apart from the trailers': the custom scheme has to be
     /// registered when the environment is made.
     /// </summary>
-    static async Task<CoreWebView2Environment> Make()
+    static async Task<CoreWebView2Environment> MakeOwn()
     {
         var folder = Path.Combine(Path.GetTempPath(), "kaeri-windows", "webview2-books");
         var options = new CoreWebView2EnvironmentOptions();
@@ -94,9 +115,17 @@ sealed class NovelView : Grid
         try
         {
             var env = made = await Environment();
+            if (closed)
+                return;
             var controller = env.CreateCoreWebView2ControllerOptions();
             controller.IsInPrivateModeEnabled = true;
             await web.EnsureCoreWebView2Async(env, controller);
+            // The reader closed while the web view was being made: nothing of it is shown.
+            if (closed)
+            {
+                CloseWeb();
+                return;
+            }
             var core = web.CoreWebView2;
             var settings = core.Settings;
             settings.AreDefaultContextMenusEnabled = false;
@@ -118,6 +147,9 @@ sealed class NovelView : Grid
                     Failed("a book document came as a download");
             };
             core.PermissionRequested += (_, e) => e.State = CoreWebView2PermissionState.Deny;
+            // A renderer that crashed or hung leaves a blank page: the failed screen, and Try
+            // again opens the chapter in a new web view.
+            core.ProcessFailed += (_, e) => Lost($"its process failed: {e.ProcessFailedKind}");
             core.NavigationStarting += (_, e) =>
             {
                 // Only the book's own documents: a link out of it is never followed.
@@ -135,6 +167,9 @@ sealed class NovelView : Grid
             core.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
             core.WebResourceRequested += OnResource;
             var assets = KaeriFfiMethods.NovelAssets();
+            // The paginator reads its settings when it starts, so they come first: the top row's
+            // room, so the first line clears the chrome.
+            await core.AddScriptToExecuteOnDocumentCreatedAsync(SetupScript);
             await core.AddScriptToExecuteOnDocumentCreatedAsync(assets.Script);
             await core.AddScriptToExecuteOnDocumentCreatedAsync(HostScript);
             core.WebMessageReceived += (_, e) =>
@@ -151,6 +186,11 @@ sealed class NovelView : Grid
                 if (text is not null)
                     Heard(text);
             };
+            if (closed)
+            {
+                CloseWeb();
+                return;
+            }
             ready = true;
             if (pendingLoad is { } load)
             {
@@ -161,7 +201,8 @@ sealed class NovelView : Grid
         catch (Exception e)
         {
             failed = true;
-            Failed($"the novel's web view failed: {e.GetType().Name}");
+            if (!closed)
+                Failed($"the novel's web view failed: {e.GetType().Name}");
         }
     }
 
@@ -169,8 +210,21 @@ sealed class NovelView : Grid
     void Failed(string why)
     {
         KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", why);
-        owner.NovelFailed();
+        if (!closed)
+            owner.NovelFailed(this);
     }
+
+    /// <summary>The web view's process is gone: this view is done, and the reader makes another.</summary>
+    void Lost(string why)
+    {
+        if (closed || failed)
+            return;
+        failed = true;
+        KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", "the novel's web view " + why);
+        owner.NovelLost(this);
+    }
+
+    const string SetupScript = "window.kaeriSetup = Object.assign(window.kaeriSetup || {}, { top: 76 });";
 
     /// <summary>
     /// What the reader itself needs from inside the page: the keys that leave or go full screen,
@@ -215,23 +269,25 @@ sealed class NovelView : Grid
         try
         {
             var ask = Reader.BookResource;
-            var (answer, bytes) = await Task.Run(() =>
+            var (answer, body) = await Task.Run(() =>
             {
                 var res = ask?.Invoke(uri);
-                byte[]? body = res?.Body switch
+                // A file (a font, an image) is read as the web view asks for it, not all at once.
+                Stream? stream = res?.Body switch
                 {
-                    BookBody.Bytes b => b.Data,
-                    BookBody.File f => ReadFile(f.Path),
+                    BookBody.Bytes b => new MemoryStream(b.Data),
+                    BookBody.File f => OpenFile(f.Path),
                     _ => null,
                 };
-                return (res, body);
+                return (res, stream);
             });
-            if (answer is null)
+            if (answer is null || closed)
             {
+                body?.Dispose();
                 e.Response = env.CreateWebResourceResponse(null, 404, "Not Found", "");
                 return;
             }
-            var stream = bytes is null ? null : new MemoryStream(bytes).AsRandomAccessStream();
+            var stream = body?.AsRandomAccessStream();
             e.Response = env.CreateWebResourceResponse(stream, answer.Status, Reason(answer.Status), ReaderSession.ResponseHeaders(answer));
         }
         catch (Exception ex)
@@ -245,11 +301,11 @@ sealed class NovelView : Grid
         }
     }
 
-    static byte[]? ReadFile(string path)
+    static Stream? OpenFile(string path)
     {
         try
         {
-            return File.ReadAllBytes(path);
+            return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, 64 * 1024, useAsync: false);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -319,8 +375,57 @@ sealed class NovelView : Grid
 
     void Call(string script)
     {
-        if (ready && !failed)
+        if (ready && !failed && !closed)
             _ = web.CoreWebView2.ExecuteScriptAsync(script);
+    }
+
+    /// <summary>
+    /// The window was minimised (true) or came back: hidden, the page asks for little memory and
+    /// its scripts are suspended; shown, it resumes where it was.
+    /// </summary>
+    public async void Rest(bool hidden)
+    {
+        if (!ready || failed || closed || hidden == resting || web.CoreWebView2 is not { } core)
+            return;
+        resting = hidden;
+        try
+        {
+            if (hidden)
+            {
+                core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+                web.Visibility = Visibility.Collapsed;
+                await core.TrySuspendAsync();
+            }
+            else
+            {
+                if (core.IsSuspended)
+                    core.Resume();
+                core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+                web.Visibility = Visibility.Visible;
+            }
+        }
+        catch (Exception e)
+        {
+            KaeriFfiMethods.LogLine(FfiLogLevel.Debug, "windows", $"the novel's web view did not rest: {e.GetType().Name}");
+        }
+    }
+
+    // The footnote
+
+    /// <summary>The footnote over the page is up.</summary>
+    public bool NoteShown => note.Visibility == Visibility.Visible;
+
+    /// <summary>The footnote goes, and the keys go back to the page.</summary>
+    public bool CloseNote()
+    {
+        if (!NoteShown)
+            return false;
+        if (owner.PaperMode)
+            Motion.Set(note, false);
+        else
+            Motion.Hide(note);
+        owner.Focus(FocusState.Programmatic);
+        return true;
     }
 
     /// <summary>The engine's style for the person's choices.</summary>
@@ -498,7 +603,9 @@ sealed class NovelView : Grid
         };
         Reader.NovelAt(place, Page, Pages, how);
         owner.PositionChanged();
-        owner.NovelPaintedNow();
+        owner.NovelPaintedNow(this);
+        if (Str(root, "type") == "page")
+            owner.NovelTurned(this);
     }
 
     /// <summary>Past the last page of a document: the next one in the spine, or the end page.</summary>
@@ -558,10 +665,20 @@ sealed class NovelView : Grid
         var noteWords = Str(root, "note");
         if (noteWords.Length > 0)
         {
+            var palette = owner.PagePalette;
             noteText.Text = noteWords;
-            noteText.Foreground = new SolidColorBrush(owner.Palette.Silk);
-            note.Background = new SolidColorBrush(owner.Palette.Glass);
-            Motion.Show(note);
+            noteText.Foreground = new SolidColorBrush(palette.Silk);
+            noteClose.Foreground = new SolidColorBrush(palette.Silk);
+            note.Background = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Raised, 0.97));
+            note.BorderBrush = new SolidColorBrush(palette.Rule);
+            note.BorderThickness = new Thickness(1);
+            if (owner.PaperMode)
+                Motion.Set(note, true);
+            else
+                Motion.Show(note);
+            // Focus moves to the note, so Esc and Narrator find it; Narrator reads its words.
+            noteClose.Focus(FocusState.Programmatic);
+            ReaderSpeech.Say(note, noteWords, "kaeri-reader-note");
             return;
         }
         if (Bool(root, "internal") && Str(root, "href") is { Length: > 0 } href && href.StartsWith(Scheme + "://", StringComparison.OrdinalIgnoreCase))
@@ -585,7 +702,14 @@ sealed class NovelView : Grid
     static bool Bool(JsonElement e, string name) =>
         e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.True;
 
+    /// <summary>The reader let go of this view: its web view closes, now or once it is made.</summary>
     public void Close()
+    {
+        closed = true;
+        CloseWeb();
+    }
+
+    void CloseWeb()
     {
         try
         {
