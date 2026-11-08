@@ -159,8 +159,9 @@ static class PageImages
 
 /// <summary>
 /// One page's image fitted in a box, cropped to the rectangle the engine found when the file
-/// says so, aligned to the spine when it is half of two. The image fades in when it decodes;
-/// one that was ready draws on the first frame.
+/// says so, aligned to the spine when it is half of two. The image fades in when it decodes,
+/// with reduced motion too (a fade is not movement); one that was ready draws on the first
+/// frame, and Paper mode cuts.
 /// </summary>
 sealed class PageImageView : Canvas
 {
@@ -180,10 +181,16 @@ sealed class PageImageView : Canvas
     /// <summary>Fill the box's height and let the width run (Fit height).</summary>
     public bool FitHeight { get; set; }
 
-    /// <summary>The image is on screen.</summary>
+    /// <summary>The image is on screen, its fade under way.</summary>
     public event Action? Painted;
 
+    /// <summary>The image is fully on screen: its fade, if it had one, is over.</summary>
+    public event Action? Settled;
+
     public bool IsPainted { get; private set; }
+
+    /// <summary>Paper mode: the image appears at once, with no fade.</summary>
+    public bool Cut { get; set; }
 
     public PageImageView()
     {
@@ -275,17 +282,21 @@ sealed class PageImageView : Canvas
         if (IsPainted)
             return;
         IsPainted = true;
-        if (fade && Motion.Enabled)
-            Motion.FadeIn(image);
-        else
-            image.Opacity = 1;
         Painted?.Invoke();
+        if (fade && !Cut)
+            Motion.FadeInThen(image, () => Settled?.Invoke());
+        else
+        {
+            image.Opacity = 1;
+            Settled?.Invoke();
+        }
     }
 }
 
 /// <summary>
 /// The Raised plate that holds a page's place with its number. Nothing shows for 600 ms, and a
-/// line says it is loading from 4 s.
+/// line says it is loading from 4 s. A plate that takes over from one already on screen (the
+/// opening plate) shows at once, so nothing blinks between them.
 /// </summary>
 sealed class PagePlate : Grid
 {
@@ -293,14 +304,19 @@ sealed class PagePlate : Grid
     readonly TextBlock line;
     readonly DispatcherQueueTimer first, slow;
 
-    public PagePlate(int page, ReaderPalette palette)
+    public PagePlate(int page, ReaderPalette palette, bool atOnce = false)
+        : this(page.ToString(System.Globalization.CultureInfo.CurrentCulture), T.ReaderPageLoading(page), palette, atOnce)
+    {
+    }
+
+    public PagePlate(string label, string loading, ReaderPalette palette, bool atOnce)
     {
         Background = new SolidColorBrush(palette.Raised);
-        Opacity = 0;
+        Opacity = atOnce ? 1 : 0;
         IsHitTestVisible = false;
-        number = new TextBlock { Text = page.ToString(System.Globalization.CultureInfo.CurrentCulture), FontSize = 15, Foreground = new SolidColorBrush(palette.Haze), HorizontalAlignment = HorizontalAlignment.Center };
-        line = new TextBlock { Text = T.ReaderPageLoading(page), FontSize = 13, Foreground = new SolidColorBrush(palette.Haze), HorizontalAlignment = HorizontalAlignment.Center, Visibility = Visibility.Collapsed, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Center };
-        var stack = new StackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+        number = new TextBlock { Text = label, FontSize = 15, Foreground = new SolidColorBrush(palette.Haze), HorizontalAlignment = HorizontalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Center };
+        line = new TextBlock { Text = loading, FontSize = 13, Foreground = new SolidColorBrush(palette.Haze), HorizontalAlignment = HorizontalAlignment.Center, Visibility = Visibility.Collapsed, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Center };
+        var stack = new StackPanel { Spacing = 6, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(16) };
         stack.Children.Add(number);
         stack.Children.Add(line);
         Children.Add(stack);
@@ -308,7 +324,8 @@ sealed class PagePlate : Grid
         slow = Timers.Weak(this, TimeSpan.FromMilliseconds(4000), false, p => Motion.Show(p.line));
         Loaded += (_, _) =>
         {
-            first.Start();
+            if (Opacity < 1)
+                first.Start();
             slow.Start();
         };
         Unloaded += (_, _) =>
@@ -317,6 +334,12 @@ sealed class PagePlate : Grid
             slow.Stop();
         };
     }
+
+    /// <summary>The plate is on screen, or on its way.</summary>
+    public bool Shown => Opacity > 0;
+
+    /// <summary>The loading line says something else from now on (how long a source search has taken).</summary>
+    public void Loading(string text) => line.Text = text;
 }
 
 /// <summary>
@@ -361,20 +384,32 @@ sealed class PartView : Grid
     readonly string chapter;
     readonly ReaderPalette palette;
     readonly PageImageView image = new();
+    readonly bool atOnce;
+    readonly Func<LeafPart, PageFile?>? kept;
     PagePlate? plate;
     PageFailedView? failed;
 
-    public PartView(ReaderSession reader, LeafPart part, string chapter, ReaderPalette palette, HorizontalAlignment align, bool fitWidth, bool fitHeight, string label)
+    /// <summary>
+    /// <paramref name="atOnce"/>: the plate shows from the first frame, as it takes over from the
+    /// opening plate. <paramref name="kept"/> names the file a part shows when the session no
+    /// longer has it (a chapter a strip ran on from).
+    /// </summary>
+    public PartView(ReaderSession reader, LeafPart part, string chapter, ReaderPalette palette, HorizontalAlignment align, bool fitWidth, bool fitHeight, string label, bool atOnce = false, Func<LeafPart, PageFile?>? kept = null)
     {
         this.reader = reader;
         this.part = part;
         this.chapter = chapter;
         this.palette = palette;
+        this.atOnce = atOnce;
+        this.kept = kept;
         image.Align = align;
         image.FitWidth = fitWidth;
         image.FitHeight = fitHeight;
         image.Dim = palette.Paper;
-        image.Painted += () =>
+        image.Cut = palette.Paper;
+        // The plate stays under the image until the image's fade is over: the page never fades
+        // in over bare ground.
+        image.Settled += () =>
         {
             if (plate is not null)
             {
@@ -410,8 +445,8 @@ sealed class PartView : Grid
     /// <summary>The engine's files or failures changed: show what there is now.</summary>
     public void Refresh(double rasterScale)
     {
-        var file = reader.FileOf(part, chapter);
-        var failure = file is null ? reader.FailureOf(part, chapter) : null;
+        var file = reader.FileOf(part, chapter) ?? kept?.Invoke(part);
+        var failure = file is null && kept is null ? reader.FailureOf(part, chapter) : null;
         if (failure is not null)
         {
             if (failed is null)
@@ -435,7 +470,7 @@ sealed class PartView : Grid
             image.Show(file, rasterScale);
         if (!image.IsPainted && plate is null)
         {
-            plate = new PagePlate((int)part.Page + 1, palette);
+            plate = new PagePlate((int)part.Page + 1, palette, atOnce);
             Children.Insert(0, plate);
         }
     }
@@ -482,6 +517,29 @@ static class ReaderButtons
         return button;
     }
 
+    /// <summary>A quiet text button: no fill until the pointer is over it.</summary>
+    public static Button Plain(string text, ReaderPalette palette, RoutedEventHandler click, double height = 44)
+    {
+        var button = new Button
+        {
+            Content = text,
+            MinHeight = height,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Padding = new Thickness(12, 0, 12, 0),
+            CornerRadius = new CornerRadius(height / 2),
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            Foreground = new SolidColorBrush(palette.Silk),
+            BorderThickness = new Thickness(0),
+            FontSize = 15,
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+        };
+        Brushes(button, Microsoft.UI.Colors.Transparent, palette.Silk);
+        button.Resources["ButtonBackgroundPointerOver"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.08));
+        button.Resources["ButtonBackgroundPressed"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.05));
+        button.Click += click;
+        return button;
+    }
+
     /// <summary>The button keeps its colours on hover and press, a little lighter or darker.</summary>
     static void Brushes(Button button, global::Windows.UI.Color fill, global::Windows.UI.Color text)
     {
@@ -495,5 +553,28 @@ static class ReaderButtons
         resources["ButtonBorderBrush"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
         resources["ButtonBorderBrushPointerOver"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
         resources["ButtonBorderBrushPressed"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+    }
+}
+
+/// <summary>What the reader says to Narrator: a page turn as a notification, a line as a live region.</summary>
+static class ReaderSpeech
+{
+    /// <summary>
+    /// Says <paramref name="text"/> once, replacing anything the reader said before that has not
+    /// been read yet, so a run of turns ends on the page reached.
+    /// </summary>
+    public static void Say(UIElement from, string text, string activity = "kaeri-reader-place")
+    {
+        if (string.IsNullOrEmpty(text))
+            return;
+        var peer = FrameworkElementAutomationPeer.FromElement(from) ?? FrameworkElementAutomationPeer.CreatePeerForElement(from);
+        peer?.RaiseNotificationEvent(AutomationNotificationKind.ActionCompleted, AutomationNotificationProcessing.ImportantMostRecent, text, activity);
+    }
+
+    /// <summary>The element's text changed: a live region says it.</summary>
+    public static void Raise(UIElement element)
+    {
+        var peer = FrameworkElementAutomationPeer.FromElement(element) ?? FrameworkElementAutomationPeer.CreatePeerForElement(element);
+        peer?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
     }
 }

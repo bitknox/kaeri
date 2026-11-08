@@ -18,7 +18,7 @@ sealed class LeafView : Canvas
     readonly List<(PartView View, LeafPart Part)> parts = [];
     readonly Leaf leaf;
 
-    public LeafView(ReaderSession reader, Leaf leaf, string chapter, ReaderPalette palette, string fit, int total)
+    public LeafView(ReaderSession reader, Leaf leaf, string chapter, ReaderPalette palette, string fit, int total, bool atOnce = false)
     {
         this.leaf = leaf;
         var single = leaf.Parts.Length == 1;
@@ -26,7 +26,7 @@ sealed class LeafView : Canvas
         {
             var align = single ? HorizontalAlignment.Center : part.Place.X < 0.5 ? HorizontalAlignment.Right : HorizontalAlignment.Left;
             var label = T.WindowsReaderPageLabel((int)part.Page + 1, Math.Max(total, (int)part.Page + 1));
-            var view = new PartView(reader, part, chapter, palette, align, single && fit == "width", single && fit == "height", label);
+            var view = new PartView(reader, part, chapter, palette, align, single && fit == "width", single && fit == "height", label, atOnce);
             parts.Add((view, part));
             Children.Add(view);
         }
@@ -186,7 +186,8 @@ sealed class PagedView : Grid
         var leaf = Reader.Leaves[index];
         FrameworkElement element = leaf.EndPage
             ? owner.BuildEndPage()
-            : new LeafView(Reader, leaf, chapter ?? "", owner.Palette, owner.Fit, Reader.PageCount);
+            // The first leaf after the opening plate keeps its plate up at once: no blank between them.
+            : new LeafView(Reader, leaf, chapter ?? "", owner.PagePalette, owner.Fit, Reader.PageCount, index == current && owner.TakeCarry());
         element.RenderTransform = new TranslateTransform();
         if (element is LeafView view)
             view.Refresh(owner.Scale);
@@ -342,7 +343,8 @@ sealed class PagedView : Grid
         Canvas.SetZIndex(old, 0);
         incoming.IsHitTestVisible = true;
         old.IsHitTestVisible = false;
-        if (owner.PaperMode || !animate && !Motion.Enabled)
+        // Paper mode cuts; reduced motion keeps the crossfade, which moves nothing.
+        if (owner.PaperMode)
         {
             Mount();
             return;

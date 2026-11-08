@@ -24,62 +24,36 @@ static class ReaderText
 }
 
 /// <summary>
-/// Opening a chapter: nothing for 600 ms, then the cover, the chapter and a ring; after a few
-/// seconds of finding a source, a line that counts them.
+/// Opening a chapter: the page plate holds the page's place from the first frame, with the
+/// chapter on it, and the page fades in over it when it comes; there is no spinner and no blank
+/// page. From 4 s a line under the chapter says it is opening, or counts the wait while a source
+/// is found. Narrator hears "Opening Chapter N" once.
 /// </summary>
 sealed class OpeningView : Grid
 {
-    readonly StackPanel stack;
-    readonly TextBlock slow;
-    readonly DispatcherQueueTimer first, tick;
+    readonly PagePlate plate;
+    readonly DispatcherQueueTimer tick;
     readonly DateTimeOffset since = DateTimeOffset.UtcNow;
     readonly ReaderSession reader;
 
-    public OpeningView(Ctx ctx, ReaderSession reader, ReaderPalette palette, string work, string chapter)
+    public OpeningView(ReaderSession reader, ReaderPalette palette, string chapter)
     {
         this.reader = reader;
-        Background = new SolidColorBrush(palette.Ground);
-        stack = new StackPanel { Spacing = 16, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Opacity = 0 };
-        if (ctx.Known.Reading.Series.TryGetValue(work, out var series) && series.Cover is { } cover)
-        {
-            var image = new Image { Stretch = Stretch.UniformToFill };
-            AutomationProperties.SetAccessibilityView(image, AccessibilityView.Raw);
-            ArtFade.Watch(image);
-            ctx.Art.Bind(cover, art => image.Source = art);
-            stack.Children.Add(new Border
-            {
-                Width = 160,
-                Height = 240,
-                CornerRadius = new CornerRadius(8),
-                Background = new SolidColorBrush(palette.Raised),
-                Child = image,
-                HorizontalAlignment = HorizontalAlignment.Center,
-            });
-        }
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, HorizontalAlignment = HorizontalAlignment.Center };
-        row.Children.Add(new ProgressRing { IsActive = true, Width = 18, Height = 18, Foreground = new SolidColorBrush(palette.Haze) });
+        Background = new SolidColorBrush(palette.Page);
         var words = string.IsNullOrEmpty(chapter) ? "" : T.WindowsReaderOpening(chapter);
-        row.Children.Add(ReaderText.Line(words, 15, palette.Silk));
-        stack.Children.Add(row);
-        slow = ReaderText.Line("", 13, palette.Haze);
-        slow.HorizontalAlignment = HorizontalAlignment.Center;
-        slow.Visibility = Visibility.Collapsed;
-        stack.Children.Add(slow);
-        Children.Add(stack);
+        plate = new PagePlate(chapter, words, palette, atOnce: true);
+        AutomationProperties.SetAccessibilityView(plate, AccessibilityView.Raw);
+        Children.Add(plate);
         AutomationProperties.SetName(this, words);
         AutomationProperties.SetLiveSetting(this, AutomationLiveSetting.Polite);
-        first = Timers.Weak(this, TimeSpan.FromMilliseconds(600), false, o => Motion.FadeIn(o.stack));
         tick = Timers.Weak(this, TimeSpan.FromSeconds(1), true, o => o.Tick());
         Loaded += (_, _) =>
         {
-            first.Start();
             tick.Start();
+            if (words.Length > 0)
+                ReaderSpeech.Raise(this);
         };
-        Unloaded += (_, _) =>
-        {
-            first.Stop();
-            tick.Stop();
-        };
+        Unloaded += (_, _) => tick.Stop();
     }
 
     void Tick()
@@ -87,43 +61,45 @@ sealed class OpeningView : Grid
         var seconds = (int)(DateTimeOffset.UtcNow - since).TotalSeconds;
         if (seconds < 4 || reader.Opening?.Wait != ReaderWait.FindingSource)
             return;
-        slow.Text = T.WindowsReaderOpeningSlow(seconds);
-        slow.Visibility = Visibility.Visible;
+        plate.Loading(T.WindowsReaderOpeningSlow(seconds));
     }
 }
 
-/// <summary>A chapter that would not open: the engine's words, Try again, the way to another source, and Close.</summary>
+/// <summary>
+/// A chapter that would not open: the engine's words, Choose source as the one amber action, and
+/// Try again and Close quiet beside each other under it.
+/// </summary>
 sealed class ChapterFailedView : Grid
 {
     public ChapterFailedView(ReaderOverlay owner, string chapter, ReadingFailure? failure)
     {
         var palette = owner.Palette;
         Background = new SolidColorBrush(palette.Ground);
-        var stack = new StackPanel { Spacing = 10, MaxWidth = 420, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(32) };
-        var glyph = new FontIcon { Glyph = "", FontSize = 22, Foreground = new SolidColorBrush(palette.Vermilion), HorizontalAlignment = HorizontalAlignment.Left };
+        var stack = new StackPanel { Spacing = 10, MaxWidth = 440, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(28) };
+        var title = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10 };
+        var glyph = new FontIcon { Glyph = "\uE7BA", FontSize = 20, Foreground = new SolidColorBrush(palette.Vermilion), VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 3, 0, 0) };
         AutomationProperties.SetAccessibilityView(glyph, AccessibilityView.Raw);
-        stack.Children.Add(glyph);
-        var heading = ReaderText.Line(string.IsNullOrEmpty(chapter) ? T.ReaderTryAgain : T.WindowsReaderChapterFailed(chapter), 20, palette.Silk, strong: true);
+        title.Children.Add(glyph);
+        var heading = ReaderText.Line(string.IsNullOrEmpty(chapter) ? T.ReaderTryAgain : T.WindowsReaderChapterFailed(chapter), 22, palette.Silk, strong: true);
         AutomationProperties.SetHeadingLevel(heading, AutomationHeadingLevel.Level1);
-        stack.Children.Add(heading);
+        title.Children.Add(heading);
+        stack.Children.Add(title);
         if (failure is not null)
             stack.Children.Add(ReaderText.Line(failure.Words(), 15, palette.Haze));
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 8, 0, 0) };
-        var again = ReaderButtons.Pill(T.ReaderTryAgain, palette, (_, _) => owner.Reader.Retry(null));
-        again.Background = new SolidColorBrush(palette.Amber);
-        again.Foreground = new SolidColorBrush(palette.OnAmber);
-        again.Resources["ButtonBackground"] = new SolidColorBrush(palette.Amber);
-        again.Resources["ButtonBackgroundPointerOver"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Amber, 0.9));
-        again.Resources["ButtonBackgroundPressed"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Amber, 0.8));
-        again.Resources["ButtonForeground"] = new SolidColorBrush(palette.OnAmber);
-        again.Resources["ButtonForegroundPointerOver"] = new SolidColorBrush(palette.OnAmber);
-        again.Resources["ButtonForegroundPressed"] = new SolidColorBrush(palette.OnAmber);
-        buttons.Children.Add(again);
-        buttons.Children.Add(ReaderButtons.Pill(T.WindowsReaderChooseSource, palette, (_, _) => owner.ToSeries()));
-        buttons.Children.Add(ReaderButtons.Pill(T.ReaderClose, palette, (_, _) => owner.Close()));
-        stack.Children.Add(buttons);
+        var choose = ReaderButtons.Amber(T.WindowsReaderChooseSource, palette, (_, _) => owner.ChooseSource());
+        choose.Margin = new Thickness(0, 22, 0, 0);
+        stack.Children.Add(choose);
+        var quiet = new Grid { ColumnSpacing = 8 };
+        quiet.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        quiet.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var again = ReaderButtons.Plain(T.ReaderTryAgain, palette, (_, _) => owner.Reader.Retry(null));
+        var close = ReaderButtons.Plain(T.ReaderClose, palette, (_, _) => owner.Close());
+        SetColumn(close, 1);
+        quiet.Children.Add(again);
+        quiet.Children.Add(close);
+        stack.Children.Add(quiet);
         Children.Add(stack);
-        Loaded += (_, _) => again.Focus(FocusState.Programmatic);
+        Loaded += (_, _) => choose.Focus(FocusState.Programmatic);
     }
 }
 

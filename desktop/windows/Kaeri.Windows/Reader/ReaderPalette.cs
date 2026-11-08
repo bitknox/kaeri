@@ -8,7 +8,8 @@ namespace Kaeri.Windows.Pages;
 /// <summary>
 /// The reader's colours: the dark theme the app is in, or paper. The values are the Apple
 /// reader's, so a page reads the same on every app. Windows v1 is dark, so the light set only
-/// comes with Paper mode.
+/// comes with Paper mode and with a light page look. A contrast theme replaces both with the
+/// system's colours.
 /// </summary>
 sealed class ReaderPalette
 {
@@ -82,6 +83,86 @@ sealed class ReaderPalette
         "dark" => Hex(0x161A2E),
         _ => paper ? Hex(0xEFE9DC) : Hex(0x161A2E),
     };
+
+    /// <summary>
+    /// The colours for words and buttons on a page's own ground (the end page, the opening plate,
+    /// the demo's end card): the dark set on a dark ground, the light set on a light one, each
+    /// with its raised fills taken from that ground so they keep their contrast on paper, light,
+    /// sepia, black or white. <paramref name="paper"/> is Paper mode, which cuts motion.
+    /// </summary>
+    public static ReaderPalette OnGround(Color ground, bool paper)
+    {
+        if (Contrast() is { } contrast)
+            return contrast;
+        var light = Luminance(ground) > 0.4;
+        var basis = light ? PaperSet : Dark;
+        var toward = light ? Hex(0x000000) : Hex(0xFFFFFF);
+        return new ReaderPalette
+        {
+            Ground = ground,
+            Raised = Mix(ground, toward, light ? 0.05 : 0.06),
+            Selected = Mix(ground, toward, light ? 0.12 : 0.16),
+            High = Mix(ground, toward, light ? 0.08 : 0.09),
+            Silk = basis.Silk,
+            Haze = basis.Haze,
+            Rule = Mix(ground, toward, light ? 0.18 : 0.2),
+            Glass = WithAlpha(Mix(ground, toward, light ? 0.03 : 0.08), basis.Glass.A / 255.0),
+            Vermilion = basis.Vermilion,
+            Water = basis.Water,
+            Amber = basis.Amber,
+            OnAmber = basis.OnAmber,
+            Page = ground,
+            Paper = paper,
+        };
+    }
+
+    /// <summary>
+    /// A contrast theme's colours, from the system's own, while one is on: the reader keeps its
+    /// layout and drops navy and amber. Null otherwise.
+    /// </summary>
+    public static ReaderPalette? Contrast()
+    {
+        try
+        {
+            if (!new global::Windows.UI.ViewManagement.AccessibilitySettings().HighContrast)
+                return null;
+            var ui = new global::Windows.UI.ViewManagement.UISettings();
+            Color Sys(global::Windows.UI.ViewManagement.UIElementType type) => ui.UIElementColor(type);
+            var window = Sys(global::Windows.UI.ViewManagement.UIElementType.Window);
+            var text = Sys(global::Windows.UI.ViewManagement.UIElementType.WindowText);
+            var face = Sys(global::Windows.UI.ViewManagement.UIElementType.ButtonFace);
+            var highlight = Sys(global::Windows.UI.ViewManagement.UIElementType.Highlight);
+            var onHighlight = Sys(global::Windows.UI.ViewManagement.UIElementType.HighlightText);
+            return new ReaderPalette
+            {
+                Ground = window,
+                Raised = window,
+                Selected = highlight,
+                High = face,
+                Silk = text,
+                Haze = text,
+                Rule = text,
+                Glass = window,
+                Vermilion = text,
+                Water = text,
+                Amber = highlight,
+                OnAmber = onHighlight,
+                Page = window,
+                Paper = false,
+            };
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    static double Luminance(Color c) => (0.2126 * c.R + 0.7152 * c.G + 0.0722 * c.B) / 255.0;
+
+    static Color Mix(Color from, Color to, double amount) => Color.FromArgb(255,
+        (byte)Math.Round(from.R + (to.R - from.R) * amount),
+        (byte)Math.Round(from.G + (to.G - from.G) * amount),
+        (byte)Math.Round(from.B + (to.B - from.B) * amount));
 
     public static Color Hex(uint rgb, double alpha = 1) =>
         Color.FromArgb((byte)Math.Round(alpha * 255), (byte)(rgb >> 16), (byte)(rgb >> 8 & 0xFF), (byte)(rgb & 0xFF));
