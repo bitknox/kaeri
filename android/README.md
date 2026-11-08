@@ -74,7 +74,7 @@ says otherwise, `release` for a build to keep.
 
 ## The player
 
-The player is libmpv, built by us as LGPL with `android/scripts/mpv.sh` into `android/.mpv` (about
+The player is libmpv, built from source as LGPL by `android/scripts/mpv.sh` into `android/.mpv` (about
 6 minutes on an idle Mac; `--check` says whether it is current, which every build asks first). The
 JNI shim in `player/src/main/cpp` is built by CMake against it. `PlayerModel` lives for the
 process, in the application, so a rotation, a fold or Picture in Picture only lends mpv a new
@@ -235,12 +235,12 @@ Kaeri already on the phone, keeping its data, and opens it. It ends by printing 
 installed and the signing certificate's SHA-256, which is public. The first run builds the engine
 in the release profile, which takes a while; later runs reuse it.
 
-- **The phone:** turn on Developer options (Settings › About phone, tap Build number seven times),
+- On the phone, turn on Developer options (Settings › About phone, tap Build number seven times),
   then Settings › System › Developer options › USB debugging. Connect it by USB and accept "Allow
   USB debugging?" for this computer. The script takes the one phone `adb devices -l` lists,
   emulators aside; with several, `ANDROID_SERIAL=<serial>` picks one. `--apk <file>` installs an
   APK built already.
-- **The key:** the four `KAERI_RELEASE_*` properties in `~/.gradle/gradle.properties` name the
+- The four `KAERI_RELEASE_*` properties in `~/.gradle/gradle.properties` name the
   keystore, its alias and their passwords. Without them the release is unsigned, and the script
   stops before installing.
 - **Keep the release key backed up, somewhere other than this Mac.** An update installs only over

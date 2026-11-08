@@ -10,7 +10,7 @@ torrent file you open yourself. You are responsible for what you play and for ha
 play it, under the laws that apply to you. Torrent playback is off by default.
 :::
 
-Kaeri provides torrent playback, a librqbit session that streams over loopback HTTP. A source
+Torrent playback is a librqbit session inside Kaeri that streams over loopback HTTP. A source
 plugin that declares the `torrents` capability names torrents, in its own order, and they play
 through it. Without such a plugin, nothing plays through torrents until you open a link:
 `kaeri --open-torrent <magnet link, info hash or file.torrent>`.
@@ -71,7 +71,7 @@ Playing while downloading means an episode can *count* before its file is comple
 apart: `commit_threshold` decides when it is watched, and resume is tracked separately.
 
 Seeding after an episode is watched, and after a download finishes, is off by default to save
-upload; turn it on to give back to the swarm. An episode still uploads to its swarm while it plays,
+upload. An episode still uploads to its swarm while it plays,
 as [Seeding](#seeding) describes. Completed downloads get subtitles muxed in with a stream copy.
 
 ## Seeding
@@ -94,7 +94,7 @@ lists what is still seeding, how close each episode is to its ratio and how long
 The upload limit covers all torrent traffic, playback included. On a slow uplink it keeps seeding
 from crowding out the requests the episode you are watching needs.
 
-Seeding after watching is off by default to save upload; turn it on to give back to the swarm.
+Seeding after watching is off by default to save upload.
 
 What streamed episodes leave on disk, and the limit on it, is covered under
 [Disk space](/docs/guides/configuration/#disk-space).

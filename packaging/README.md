@@ -15,7 +15,7 @@ it. Each platform has its own way of saying that:
 
 macOS is the awkward one. Finder launches a bundle with no controlling terminal, so
 `Contents/MacOS/launcher` is a shell script and the real binary sits beside it. The script walks a
-list of terminals — `$KAERI_TERMINAL` first, then Ghostty, kitty, WezTerm, iTerm and finally
+list of terminals: `$KAERI_TERMINAL` first, then Ghostty, kitty, WezTerm, iTerm and finally
 Terminal.app, which every Mac has.
 
 The Linux AppImage embeds the same `.desktop` entry and icon, and is assembled inline in the
@@ -76,11 +76,11 @@ and its tag once every build has succeeded.
 
 ## Files
 
-- `linux/kaeri.desktop` — desktop entry, installed to `/usr/share/applications`
-- `macos/Info.plist` — bundle metadata; the version is substituted at package time
-- `macos/launcher.sh` — the bundle's entry point
-- `windows/kaeri.nsi` — NSIS installer: per-user, no UAC prompt
-- `linux/glibc-floor.sh` — fails the release when the Linux binary needs a newer glibc than it
+- `linux/kaeri.desktop`: desktop entry, installed to `/usr/share/applications`
+- `macos/Info.plist`: bundle metadata; the version is substituted at package time
+- `macos/launcher.sh`: the bundle's entry point
+- `windows/kaeri.nsi`: NSIS installer, per-user, no UAC prompt
+- `linux/glibc-floor.sh`: fails the release when the Linux binary needs a newer glibc than it
   promises, and names the symbols that need it
 
 Icons come from `assets/icon/`, drawn from Nagare's three icon masters (`tools/icons/nagare_icon.py`)
@@ -238,7 +238,7 @@ those comes before it.
 
 Neither the `.pkg` nor the `setup.exe` is code-signed, so both warn on first run. Fixing that means
 an Apple Developer account for notarisation and an Authenticode certificate for Windows, and it is
-a CI change rather than a packaging one — nothing in this directory would move.
+a CI change rather than a packaging one. Nothing in this directory would move.
 
 ## mpv and ffmpeg stay out
 
