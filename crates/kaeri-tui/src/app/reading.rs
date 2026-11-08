@@ -16,8 +16,9 @@ use kaeri_model::{
     book_sources::{BookSourceCommand, BookSourcesView},
     command::Command,
     reading::{
-        ReadAnilistState, ReadHomeEnd, ReadSearchQuery, ReadSourceSearch, ReadSourceState,
-        ReadingAbout, ReadingCommand, ReadingEvent, ReadingFailure, ReadingHomeView, WorkTile,
+        ReadAnilistState, ReadHomeEnd, ReadSearchQuery, ReadSourceKind, ReadSourceSearch,
+        ReadSourceState, ReadingAbout, ReadingCommand, ReadingEvent, ReadingFailure,
+        ReadingHomeView, WorkTile,
     },
 };
 
@@ -36,21 +37,12 @@ pub const SHELF_TILES: usize = 5;
 /// How long a part still on its way is drawn as nothing before its placeholder shows.
 pub const PLACEHOLDER_AFTER: std::time::Duration = std::time::Duration::from_millis(600);
 
-/// What a source is, beside its name in Search.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SourceKind {
-    Server,
-    Folder,
-    Plugin,
-}
-
-impl SourceKind {
-    pub fn word(self) -> String {
-        match self {
-            Self::Server => t::tui_read_kind_server(),
-            Self::Folder => t::tui_read_kind_folder(),
-            Self::Plugin => t::tui_read_kind_plugin(),
-        }
+/// What a source is, beside its name in Search. A built-in source shows its name alone.
+pub fn kind_word(kind: ReadSourceKind) -> String {
+    match kind {
+        ReadSourceKind::Server => t::read_search_source_kind_server(),
+        ReadSourceKind::Folder => t::read_search_source_kind_folder(),
+        ReadSourceKind::Plugin => t::read_search_source_kind_plugin(),
     }
 }
 
@@ -88,8 +80,6 @@ pub struct Reading {
     pub sources: Option<ReadSourceSearch>,
     /// Groups opened past their first hits with Show more.
     pub expanded: HashSet<String>,
-    /// Each source's kind, from the Sources view.
-    kinds: HashMap<String, SourceKind>,
     /// How many sources are on, from the Sources view.
     on: usize,
 }
@@ -135,11 +125,14 @@ pub enum ReadLine {
         query: Box<ReadSearchQuery>,
         part: Part,
     },
-    /// AniList's heading, with its count once every page is in.
+    /// AniList's heading, with its count once it is known.
     AnilistHeading(String),
     /// AniList is being asked.
     AnilistAsking,
-    MoreAnilist,
+    /// More from AniList, with how many results show.
+    MoreAnilist {
+        shown: String,
+    },
     /// From your sources.
     SourcesHeading,
     /// A source's name and what it is.
@@ -169,7 +162,7 @@ impl ReadLine {
             self,
             Self::Work { .. }
                 | Self::ViewAll { .. }
-                | Self::MoreAnilist
+                | Self::MoreAnilist { .. }
                 | Self::SourceFailed { .. }
                 | Self::ShowMore { .. }
         )
@@ -179,33 +172,20 @@ impl ReadLine {
     pub fn part(&self) -> Part {
         match self {
             Self::Work { part, .. } | Self::ViewAll { part, .. } => *part,
-            Self::MoreAnilist => Part::Anilist,
+            Self::MoreAnilist { .. } => Part::Anilist,
             _ => Part::Sources,
         }
     }
 }
 
 impl Reading {
-    /// Take the Sources view: each source's kind, and how many are on.
+    /// Take the Sources view: how many sources are on. The folders on this computer are one
+    /// source, as the engine asks them.
     fn take_sources(&mut self, view: &BookSourcesView) {
-        self.kinds.clear();
-        let mut on = 0;
-        for server in &view.servers {
-            self.kinds.insert(server.id.clone(), SourceKind::Server);
-            on += usize::from(!server.off);
-        }
-        for plugin in &view.plugins {
-            self.kinds.insert(plugin.id.clone(), SourceKind::Plugin);
-            on += usize::from(!plugin.off);
-        }
-        self.kinds.insert(FOLDERS.to_owned(), SourceKind::Folder);
-        on += usize::from(view.folders.iter().any(|folder| !folder.removed));
-        self.on = on;
-    }
-
-    /// What a source is, when the Sources view says.
-    pub fn kind(&self, source_id: &str) -> Option<SourceKind> {
-        self.kinds.get(source_id).copied()
+        let servers = view.servers.iter().filter(|server| !server.off).count();
+        let plugins = view.plugins.iter().filter(|plugin| !plugin.off).count();
+        let folders = usize::from(view.folders.iter().any(|folder| !folder.removed));
+        self.on = servers + plugins + folders;
     }
 
     /// How many sources a search asks: the groups of the one on screen, else the sources on.
@@ -218,9 +198,6 @@ impl Reading {
         self.filter.sources_only
     }
 }
-
-/// The folders on this computer, as the engine names their source.
-const FOLDERS: &str = "folders"; // i18n-skip
 
 /// Whether a reading search asks for nothing: no words, and no filter set.
 pub fn read_query_blank(query: &ReadSearchQuery) -> bool {
@@ -378,7 +355,7 @@ impl App {
         }
     }
 
-    /// The Sources view, for each source's kind and how many there are.
+    /// The Sources view, for how many sources there are.
     pub(super) fn apply_book_sources(&mut self, view: &BookSourcesView) {
         self.reading.take_sources(view);
     }
@@ -518,7 +495,7 @@ impl App {
         if !query.sources_only {
             match reading.anilist_state {
                 AnilistState::Asking => {
-                    lines.push(ReadLine::AnilistHeading(t::tui_read_anilist()));
+                    lines.push(ReadLine::AnilistHeading(t::read_search_total_unknown()));
                     lines.push(ReadLine::AnilistAsking);
                 }
                 AnilistState::Failed => {
@@ -526,17 +503,11 @@ impl App {
                     lines.push(ReadLine::Quiet(t::read_search_anilist_failed_line()));
                 }
                 AnilistState::Answered if reading.anilist.is_empty() => {
-                    lines.push(ReadLine::AnilistHeading(t::tui_read_anilist()));
+                    lines.push(ReadLine::AnilistHeading(anilist_heading(reading.total)));
                     lines.push(ReadLine::Quiet(t::read_search_anilist_nothing()));
                 }
                 AnilistState::Answered => {
-                    let heading = match reading.total {
-                        Some(total) if !reading.more => {
-                            t::tui_read_anilist_count(i64::from(total))
-                        }
-                        _ => t::tui_read_anilist(),
-                    };
-                    lines.push(ReadLine::AnilistHeading(heading));
+                    lines.push(ReadLine::AnilistHeading(anilist_heading(reading.total)));
                     for tile in &reading.anilist {
                         let joined = joins.get(&tile.work).and_then(|join| {
                             match join.source_names.len() {
@@ -548,14 +519,19 @@ impl App {
                         lines.push(ReadLine::Work {
                             work: tile.work.clone(),
                             title: tile.title.clone(),
-                            facts: fact_line(tile),
+                            facts: anilist_facts(tile),
                             joined,
                             fresh: false,
                             part: Part::Anilist,
                         });
                     }
                     if reading.more {
-                        lines.push(ReadLine::MoreAnilist);
+                        let shown = reading.anilist.len() as i64;
+                        let shown = match reading.total {
+                            Some(total) => t::read_search_shown(shown, i64::from(total)),
+                            None => t::read_search_shown_some(shown),
+                        };
+                        lines.push(ReadLine::MoreAnilist { shown });
                     }
                 }
             }
@@ -582,7 +558,7 @@ impl App {
         for group in shown {
             lines.push(ReadLine::Group {
                 name: group.source_name.clone(),
-                kind: reading.kind(&group.source_id).map(SourceKind::word),
+                kind: group.kind.map(kind_word),
             });
             match &group.state {
                 ReadSourceState::Asking => {
@@ -603,7 +579,7 @@ impl App {
                         lines.push(ReadLine::Work {
                             work: tile.work.clone(),
                             title: tile.title.clone(),
-                            facts: fact_line(tile),
+                            facts: hit_facts(tile),
                             joined: None,
                             fresh: false,
                             part: Part::Sources,
@@ -698,7 +674,7 @@ impl App {
                 self.detail = None;
                 Some(self.run_read_search())
             }
-            ReadLine::MoreAnilist => self.more_anilist(),
+            ReadLine::MoreAnilist { .. } => self.more_anilist(),
             ReadLine::ShowMore { source_id, .. } => {
                 self.reading.expanded.insert(source_id);
                 None
@@ -827,9 +803,33 @@ fn home_tile(tile: &WorkTile, shelf: usize) -> ReadLine {
     }
 }
 
+/// AniList's heading: its count once the engine knows it exactly, else no number at all.
+fn anilist_heading(total: Option<u32>) -> String {
+    match total {
+        Some(total) => t::tui_read_anilist_count(i64::from(total)),
+        None => t::read_search_total_unknown(),
+    }
+}
+
 /// A tile's facts as one line.
 fn fact_line(tile: &WorkTile) -> String {
-    tile.facts.iter().map(say).collect::<Vec<_>>().join(" · ") // i18n-skip
+    facts_joined(tile.facts.iter().map(say))
+}
+
+/// An AniList result's facts: its format, then where it comes from when AniList says
+/// ("Light novel · Japan").
+fn anilist_facts(tile: &WorkTile) -> String {
+    facts_joined(tile.facts.first().into_iter().chain(&tile.origin).map(say))
+}
+
+/// A source's hit: what the engine says of it, then how much of it the source holds ("2
+/// volumes", "1 file · CBZ"), when the source says.
+fn hit_facts(tile: &WorkTile) -> String {
+    facts_joined(tile.facts.iter().chain(&tile.amount).map(say))
+}
+
+fn facts_joined(facts: impl Iterator<Item = String>) -> String {
+    facts.collect::<Vec<_>>().join(" · ") // i18n-skip
 }
 
 /// Why a source has no results: that it did not answer, and the reason or how long it was given.
@@ -966,11 +966,12 @@ pub fn cycle_read_filter(filter: &mut ReadSearchQuery, row: usize, forward: bool
 mod tests {
     use kaeri_core::{books::WorkId, media::Medium};
     use kaeri_model::{
+        Msg, ReadingMsg,
         event::Event,
         medium::{AppEdition, KaeriIsFor, MediumView},
         reading::{
-            ReadAnilistState, ReadSourceGroup, ReadSourceSearch, ReadSourceState,
-            ReadingCommand, ReadingEvent, WorkTile,
+            ReadAnilistState, ReadSourceGroup, ReadSourceJoin, ReadSourceSearch,
+            ReadSourceState, ReadingCommand, ReadingEvent, WorkTile, kind_words,
         },
     };
 
@@ -991,12 +992,24 @@ mod tests {
             facts: Vec::new(),
             demo: false,
             not_in_sources: false,
+            origin: None,
+            amount: None,
         }
     }
 
-    /// Reading alone, on Search, "lantern" asked: two AniList results, one source with a hit and
-    /// one that gave no answer.
-    fn searched() -> App {
+    fn group(id: &str, state: ReadSourceState, tiles: Vec<WorkTile>) -> ReadSourceGroup {
+        ReadSourceGroup {
+            source_id: id.into(),
+            source_name: id.into(),
+            kind: None,
+            state,
+            tiles,
+            joined: 0,
+        }
+    }
+
+    /// Reading alone, on Search, "lantern" asked and nothing back yet.
+    fn asked() -> App {
         let mut a = app();
         a.apply(Event::Medium(MediumView {
             answer: KaeriIsFor::Read,
@@ -1010,25 +1023,28 @@ mod tests {
         type_text(&mut a, "lantern");
         let task = a.handle(Action::Open, 10);
         let query = a.read_query();
-        assert_eq!(
-            task,
-            Some(Command::Reading(ReadingCommand::Search { query: query.clone() }))
-        );
+        assert_eq!(task, Some(Command::Reading(ReadingCommand::Search { query })));
+        a.take_commands();
+        a
+    }
+
+    /// AniList's first page of results for the search on screen.
+    fn anilist(a: &mut App, tiles: Vec<WorkTile>, has_more: bool, total: Option<u32>) {
         a.apply(Event::Reading(ReadingEvent::Search {
-            query: query.clone(),
+            query: a.read_query(),
             page: 0,
-            tiles: vec![tile("a:1", "Lantern Street Notes"), tile("a:2", "Lanterns Upriver")],
-            has_more: false,
-            other_scope: None,
-            total: Some(2),
-        }));
-        let group = |id: &str, state: ReadSourceState, tiles: Vec<WorkTile>| ReadSourceGroup {
-            source_id: id.into(),
-            source_name: id.into(),
-            state,
             tiles,
-            joined: 0,
-        };
+            has_more,
+            other_scope: None,
+            total,
+        }));
+    }
+
+    /// Reading alone, on Search, "lantern" asked: two AniList results, one source with a hit and
+    /// one that gave no answer. The sources' part comes first, as the engine sends it.
+    fn searched() -> App {
+        let mut a = asked();
+        let query = a.read_query();
         a.apply(Event::Reading(ReadingEvent::SourceSearch(Box::new(ReadSourceSearch {
             query,
             anilist: ReadAnilistState::Answered,
@@ -1043,8 +1059,166 @@ mod tests {
             joins: Vec::new(),
             done: true,
         }))));
-        a.take_commands();
+        anilist(
+            &mut a,
+            vec![tile("a:1", "Lantern Street Notes"), tile("a:2", "Lanterns Upriver")],
+            false,
+            Some(2),
+        );
         a
+    }
+
+    fn work_facts(a: &App, title: &str) -> String {
+        a.read_lines()
+            .into_iter()
+            .find_map(|line| match line {
+                ReadLine::Work { title: t, facts, .. } if t == title => Some(facts),
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("no line for {title}"))
+    }
+
+    #[test]
+    fn an_anilist_result_reads_format_then_origin() {
+        let mut a = asked();
+        let novel = WorkTile {
+            facts: vec![
+                kind_words(Some("novel"), Medium::Novel, Some("JP")),
+                Msg::Reading(ReadingMsg::ReadingStatusReleasing),
+            ],
+            origin: Some(Msg::Reading(ReadingMsg::ReadingOriginJapan)),
+            ..tile("a:1", "Lantern Street Notes")
+        };
+        let unknown = WorkTile {
+            facts: vec![kind_words(Some("manga"), Medium::Manga, None)],
+            ..tile("a:2", "Lanterns Upriver")
+        };
+        anilist(&mut a, vec![novel, unknown], false, Some(2));
+        assert_eq!(work_facts(&a, "Lantern Street Notes"), "Light novel · Japan");
+        assert_eq!(work_facts(&a, "Lanterns Upriver"), "Manga", "no origin part when unknown");
+    }
+
+    #[test]
+    fn a_source_hit_says_how_much_the_source_holds_when_it_says() {
+        let mut a = asked();
+        let query = a.read_query();
+        let volumes = WorkTile {
+            amount: Some(Msg::Reading(ReadingMsg::ReadingVolumes { count: 2 })),
+            ..tile("s:1", "Paper Lantern Recipes")
+        };
+        let file = WorkTile {
+            amount: Some(Msg::Reading(ReadingMsg::ReadHitFilesFormat {
+                count: 1,
+                format: "CBZ".into(),
+            })),
+            ..tile("s:2", "Lantern Festival Sketchbook")
+        };
+        let silent = tile("s:3", "Lantern Lane Almanac");
+        a.apply(Event::Reading(ReadingEvent::SourceSearch(Box::new(ReadSourceSearch {
+            query,
+            anilist: ReadAnilistState::Answered,
+            groups: vec![group("shelf", ReadSourceState::Hits, vec![volumes, file, silent])],
+            joins: Vec::new(),
+            done: true,
+        }))));
+        assert_eq!(work_facts(&a, "Paper Lantern Recipes"), "2 volumes");
+        assert_eq!(work_facts(&a, "Lantern Festival Sketchbook"), "1 file · CBZ");
+        assert_eq!(work_facts(&a, "Lantern Lane Almanac"), "");
+    }
+
+    #[test]
+    fn a_group_shows_the_engines_kind_and_a_built_in_source_its_name_alone() {
+        let mut a = asked();
+        let query = a.read_query();
+        let hits = || vec![tile("s:1", "Paper Lantern Recipes")];
+        let kinds = [
+            (Some(ReadSourceKind::Server), Some("Server")),
+            (Some(ReadSourceKind::Folder), Some("Folder")),
+            (Some(ReadSourceKind::Plugin), Some("Plugin")),
+            (None, None),
+        ];
+        a.apply(Event::Reading(ReadingEvent::SourceSearch(Box::new(ReadSourceSearch {
+            query,
+            anilist: ReadAnilistState::Answered,
+            groups: kinds
+                .iter()
+                .enumerate()
+                .map(|(n, (kind, _))| ReadSourceGroup {
+                    kind: *kind,
+                    ..group(&format!("source-{n}"), ReadSourceState::Hits, hits())
+                })
+                .collect(),
+            joins: Vec::new(),
+            done: true,
+        }))));
+        let drawn: Vec<Option<String>> = a
+            .read_lines()
+            .into_iter()
+            .filter_map(|line| match line {
+                ReadLine::Group { kind, .. } => Some(kind),
+                _ => None,
+            })
+            .collect();
+        let want: Vec<Option<String>> =
+            kinds.iter().map(|(_, word)| word.map(str::to_owned)).collect();
+        assert_eq!(drawn, want);
+    }
+
+    #[test]
+    fn an_unknown_count_draws_no_number() {
+        let mut a = asked();
+        let tiles = (0..30).map(|n| tile(&format!("a:{n}"), &format!("Lantern {n}"))).collect();
+        anilist(&mut a, tiles, true, None);
+        let lines = a.read_lines();
+        assert_eq!(lines[0], ReadLine::AnilistHeading("Series from AniList".into()));
+        assert!(lines.contains(&ReadLine::MoreAnilist { shown: "30 shown".into() }));
+        let digits = |text: &str| text.chars().any(|c| c.is_ascii_digit());
+        assert!(
+            !lines.iter().any(|line| matches!(line, ReadLine::AnilistHeading(h) if digits(h)))
+        );
+    }
+
+    #[test]
+    fn a_known_count_is_in_the_heading() {
+        let a = searched();
+        assert_eq!(a.read_lines()[0], ReadLine::AnilistHeading("AniList · 2 series".into()));
+        assert!(
+            !a.read_lines().iter().any(|line| matches!(line, ReadLine::MoreAnilist { .. }))
+        );
+    }
+
+    #[test]
+    fn a_joined_hit_shows_once_and_only_as_its_result() {
+        let mut a = asked();
+        let query = a.read_query();
+        // The joins arrive first: the joined hit has already left its group.
+        a.apply(Event::Reading(ReadingEvent::SourceSearch(Box::new(ReadSourceSearch {
+            query,
+            anilist: ReadAnilistState::Answered,
+            groups: vec![ReadSourceGroup {
+                joined: 1,
+                ..group("shelf", ReadSourceState::Hits, Vec::new())
+            }],
+            joins: vec![ReadSourceJoin {
+                work: WorkId::new("a:1"),
+                source_ids: vec!["shelf".into()],
+                source_names: vec!["Shelf".into()],
+            }],
+            done: true,
+        }))));
+        let works = |a: &App| {
+            a.read_lines()
+                .into_iter()
+                .filter_map(|line| match line {
+                    ReadLine::Work { work, joined, .. } => Some((work, joined)),
+                    _ => None,
+                })
+                .collect::<Vec<_>>()
+        };
+        assert!(works(&a).is_empty(), "nothing drawn before AniList's results");
+        assert!(a.read_lines().contains(&ReadLine::AnilistAsking));
+        anilist(&mut a, vec![tile("a:1", "Lantern Street Notes")], false, Some(1));
+        assert_eq!(works(&a), vec![(WorkId::new("a:1"), Some("in Shelf".into()))]);
     }
 
     #[test]

@@ -287,10 +287,13 @@ fn render_search(buf: &mut Buffer, app: &App, area: Rect) {
                     rows.push(Row::default().run(title_x + 2, joined, style(Role::State)));
                 }
             }
-            ReadLine::MoreAnilist => {
-                let row = Row::default().run(
-                    title_x,
-                    t::read_search_more_anilist(),
+            ReadLine::MoreAnilist { shown } => {
+                let more = t::read_search_more_anilist();
+                let shown_x = title_x + more.cells() as u16 + 2;
+                let room_left = room.saturating_sub(more.cells() + 4);
+                let row = Row::default().run(title_x, more, style(Role::TextDim)).run(
+                    shown_x,
+                    truncate(&shown, room_left),
                     style(Role::TextDim),
                 );
                 item(&mut rows, &mut drawn, &mut head, row);

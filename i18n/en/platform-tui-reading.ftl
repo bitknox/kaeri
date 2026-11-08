@@ -3,8 +3,8 @@
 
 ## Search
 
-# Heading over AniList's results in reading's search, with how many it found. Shown once every
-# result is listed.
+# Heading over AniList's results in reading's search, with how many it found. Shown once the
+# count is known, which is when every result is listed.
 # @arg n: int
 # @only tui
 tui-read-anilist-count = { $n ->
@@ -12,7 +12,7 @@ tui-read-anilist-count = { $n ->
    *[other] AniList · { $n } series
  }
 
-# Heading over AniList's results while more pages are to come, or while AniList is asked.
+# AniList's name, in the line that says it is still being asked.
 # @only tui
 tui-read-anilist = AniList
 
@@ -39,18 +39,6 @@ tui-read-on = on
 # The state of that switch, after it.
 # @only tui
 tui-read-off = off
-
-# Beside a source's name in the search results: the source is a book server.
-# @only tui
-tui-read-kind-server = server
-
-# Beside a source's name in the search results: the source is the folders on this computer.
-# @only tui
-tui-read-kind-folder = folder
-
-# Beside a source's name in the search results: the source is a { -plugin }.
-# @only tui
-tui-read-kind-plugin = { -plugin }
 
 # Beside an AniList result that one of the person's sources has. The source is its name. Lower
 # case, as the terminal's metadata lines are.

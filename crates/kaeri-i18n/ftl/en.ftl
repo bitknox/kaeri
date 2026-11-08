@@ -4428,14 +4428,14 @@ settings-note-upload-limit = Caps all torrent upload, so seeding never slows pla
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Use --token-to-file to move an existing token.
 
-# Heading over AniList's results in reading's search, with how many it found. Shown once every result is listed.
+# Heading over AniList's results in reading's search, with how many it found. Shown once the count is known, which is when every result is listed.
 tui-read-anilist-count =
     { $n ->
         [one] AniList · 1 series
        *[other] AniList · { $n } series
     }
 
-# Heading over AniList's results while more pages are to come, or while AniList is asked.
+# AniList's name, in the line that says it is still being asked.
 tui-read-anilist = AniList
 
 # The line under the search field when no filter is set. Lower case, as the terminal's metadata lines are.
@@ -4452,15 +4452,6 @@ tui-read-on = on
 
 # The state of that switch, after it.
 tui-read-off = off
-
-# Beside a source's name in the search results: the source is a book server.
-tui-read-kind-server = server
-
-# Beside a source's name in the search results: the source is the folders on this computer.
-tui-read-kind-folder = folder
-
-# Beside a source's name in the search results: the source is a { -plugin }.
-tui-read-kind-plugin = plugin
 
 # Beside an AniList result that one of the person's sources has. The source is its name. Lower case, as the terminal's metadata lines are.
 tui-read-in-source = in { $source }

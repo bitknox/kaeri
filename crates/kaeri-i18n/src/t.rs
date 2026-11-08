@@ -7005,12 +7005,12 @@ pub fn settings_note_token_storage() -> String {
     text("settings-note-token-storage", &[])
 }
 
-/// Heading over AniList's results in reading's search, with how many it found. Shown once every result is listed.
+/// Heading over AniList's results in reading's search, with how many it found. Shown once the count is known, which is when every result is listed.
 pub fn tui_read_anilist_count(n: i64) -> String {
     text("tui-read-anilist-count", &[("n", Arg::Int(n))])
 }
 
-/// Heading over AniList's results while more pages are to come, or while AniList is asked.
+/// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])
 }
@@ -7038,21 +7038,6 @@ pub fn tui_read_on() -> String {
 /// The state of that switch, after it.
 pub fn tui_read_off() -> String {
     text("tui-read-off", &[])
-}
-
-/// Beside a source's name in the search results: the source is a book server.
-pub fn tui_read_kind_server() -> String {
-    text("tui-read-kind-server", &[])
-}
-
-/// Beside a source's name in the search results: the source is the folders on this computer.
-pub fn tui_read_kind_folder() -> String {
-    text("tui-read-kind-folder", &[])
-}
-
-/// Beside a source's name in the search results: the source is a { -plugin }.
-pub fn tui_read_kind_plugin() -> String {
-    text("tui-read-kind-plugin", &[])
 }
 
 /// Beside an AniList result that one of the person's sources has. The source is its name. Lower case, as the terminal's metadata lines are.

@@ -77,7 +77,7 @@ pub use self::{
     playback::NowPlaying,
     providers::proxy_badge,
     reading::{
-        AnilistState, GROUP_HITS, Part, ReadLine, Reading, SourceKind, read_filter_labels,
+        AnilistState, GROUP_HITS, Part, ReadLine, Reading, read_filter_labels,
         read_filter_summary, read_filter_value, read_query_blank,
     },
     settings::SettingLine,

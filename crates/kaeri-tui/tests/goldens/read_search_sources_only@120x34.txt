@@ -4,12 +4,12 @@ Kaeri                                                                           
   ▤  Calendar               │  filters none  ·  your sources only on
   ▦  Seasonal               │
 ▌ /  Search                 │  From your sources
-  ▥  Library                │  Home library  server
-  ↓  Downloads              │  ▌ Lantern Street Notes, Side Stories  Light novel
-  ◇  Sources                │    Paper Lantern Recipes               Manga
-  ◎  Accounts               │  Folders  folder
-  ≡  Settings               │    Lantern Festival Sketchbook         Manga
-  ⇄  Together               │  Northwind  plugin
+  ▥  Library                │  Home library  Server
+  ↓  Downloads              │  ▌ Lantern Street Notes, Side Stories  2 volumes
+  ◇  Sources                │    Paper Lantern Recipes
+  ◎  Accounts               │  Folders  Folder
+  ≡  Settings               │    Lantern Festival Sketchbook         1 file · CBZ
+  ⇄  Together               │  Northwind  Plugin
                             │    ▲ Northwind didn't answer. You're offline. Downloaded chapters still o…   r try again
                             │
                             │  Nothing found in Demo.
@@ -71,12 +71,11 @@ r07 c05-13 fg=text-dim
 r07 c28-28 fg=rule
 r07 c31-31 fg=obi
 r07 c33-66 fg=text mod=BOLD
-r07 c69-79 fg=text-dim
+r07 c69-77 fg=text-dim
 r08 c02-02 fg=text-dim
 r08 c05-11 fg=text-dim
 r08 c28-28 fg=rule
 r08 c33-53 fg=text
-r08 c69-73 fg=text-dim
 r09 c02-02 fg=text-dim
 r09 c05-12 fg=text-dim
 r09 c28-28 fg=rule
@@ -86,7 +85,7 @@ r10 c02-02 fg=text-dim
 r10 c05-12 fg=text-dim
 r10 c28-28 fg=rule
 r10 c33-59 fg=text
-r10 c69-73 fg=text-dim
+r10 c69-80 fg=text-dim
 r11 c02-02 fg=text-dim
 r11 c05-12 fg=text-dim
 r11 c28-28 fg=rule

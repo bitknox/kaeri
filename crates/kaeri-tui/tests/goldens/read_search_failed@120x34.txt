@@ -4,18 +4,18 @@ Kaeri                                                                           
   ▤  Calendar               │  filters none  ·  your sources only off
   ▦  Seasonal               │
 ▌ /  Search                 │  AniList · 4 series
-  ▥  Library                │  ▌ Lantern Street Notes                Light novel · Releasing           in Home library
-  ↓  Downloads              │    Lantern Street Notes                Manga · Releasing
-  ◇  Sources                │    The Lantern Keeper's Apprentice     Manga · Finished · 12 volumes
-  ◎  Accounts               │    Lanterns Upriver                    Webtoon · Releasing
+  ▥  Library                │  ▌ Lantern Street Notes                Light novel · Japan               in Home library
+  ↓  Downloads              │    Lantern Street Notes                Manga · Japan
+  ◇  Sources                │    The Lantern Keeper's Apprentice     Manga · Japan
+  ◎  Accounts               │    Lanterns Upriver                    Webtoon · Korea
   ≡  Settings               │
   ⇄  Together               │  From your sources
-                            │  Home library  server
-                            │    Lantern Street Notes, Side Stories  Light novel
-                            │    Paper Lantern Recipes               Manga
-                            │  Folders  folder
-                            │    Lantern Festival Sketchbook         Manga
-                            │  Northwind  plugin
+                            │  Home library  Server
+                            │    Lantern Street Notes, Side Stories  2 volumes
+                            │    Paper Lantern Recipes
+                            │  Folders  Folder
+                            │    Lantern Festival Sketchbook         1 file · CBZ
+                            │  Northwind  Plugin
                             │    ▲ Northwind didn't answer. No answer in 15 s.   r try again
                             │
                             │  Nothing found in Demo.
@@ -66,23 +66,23 @@ r06 c05-11 fg=text-dim
 r06 c28-28 fg=rule
 r06 c31-31 fg=obi
 r06 c33-52 fg=text mod=BOLD
-r06 c69-91 fg=text-dim
+r06 c69-87 fg=text-dim
 r06 c103-117 fg=state
 r07 c02-02 fg=text-dim
 r07 c05-13 fg=text-dim
 r07 c28-28 fg=rule
 r07 c33-52 fg=text
-r07 c69-85 fg=text-dim
+r07 c69-81 fg=text-dim
 r08 c02-02 fg=text-dim
 r08 c05-11 fg=text-dim
 r08 c28-28 fg=rule
 r08 c33-63 fg=text
-r08 c69-97 fg=text-dim
+r08 c69-81 fg=text-dim
 r09 c02-02 fg=text-dim
 r09 c05-12 fg=text-dim
 r09 c28-28 fg=rule
 r09 c33-48 fg=text
-r09 c69-87 fg=text-dim
+r09 c69-83 fg=text-dim
 r10 c02-02 fg=text-dim
 r10 c05-12 fg=text-dim
 r10 c28-28 fg=rule
@@ -95,16 +95,15 @@ r12 c31-42 fg=text mod=BOLD
 r12 c45-50 fg=text-dim
 r13 c28-28 fg=rule
 r13 c33-66 fg=text
-r13 c69-79 fg=text-dim
+r13 c69-77 fg=text-dim
 r14 c28-28 fg=rule
 r14 c33-53 fg=text
-r14 c69-73 fg=text-dim
 r15 c28-28 fg=rule
 r15 c31-37 fg=text mod=BOLD
 r15 c40-45 fg=text-dim
 r16 c28-28 fg=rule
 r16 c33-59 fg=text
-r16 c69-73 fg=text-dim
+r16 c69-80 fg=text-dim
 r17 c28-28 fg=rule
 r17 c31-39 fg=text mod=BOLD
 r17 c42-47 fg=text-dim

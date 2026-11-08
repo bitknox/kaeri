@@ -3241,7 +3241,7 @@ mod read {
         event::Event,
         reading::{
             ReadAnilistState, ReadHomeEnd, ReadHomeRow, ReadRowFormat, ReadRowKind,
-            ReadSearchQuery, ReadSourceGroup, ReadSourceJoin, ReadSourceSearch,
+            ReadSearchQuery, ReadSourceGroup, ReadSourceJoin, ReadSourceKind, ReadSourceSearch,
             ReadSourceState, ReadingEvent, ReadingFailure, ReadingHomeView, WorkTile,
             count_words, kind_words, status_words,
         },
@@ -3273,13 +3273,28 @@ mod read {
             facts,
             demo: false,
             not_in_sources: false,
+            origin: origin_words(origin),
+            amount: None,
         }
     }
 
-    /// A source's hit: the engine says only its kind.
-    pub fn hit(id: &str, title: &str, medium: Medium) -> WorkTile {
+    /// The country AniList names, as the engine words it.
+    fn origin_words(code: &str) -> Option<Msg> {
+        Some(Msg::Reading(match code {
+            "JP" => ReadingMsg::ReadingOriginJapan,
+            "KR" => ReadingMsg::ReadingOriginKorea,
+            "CN" => ReadingMsg::ReadingOriginChina,
+            "TW" => ReadingMsg::ReadingOriginTaiwan,
+            _ => return None,
+        }))
+    }
+
+    /// A source's hit: no facts, and how much the source holds when it says.
+    pub fn hit(id: &str, title: &str, medium: Medium, amount: Option<ReadingMsg>) -> WorkTile {
         WorkTile {
-            facts: vec![kind_words(None, medium, None)],
+            facts: Vec::new(),
+            origin: None,
+            amount: amount.map(Msg::Reading),
             ..tile(id, title, medium, "manga", "JP", None, None)
         }
     }
@@ -3370,6 +3385,7 @@ mod read {
         ]
     }
 
+    /// AniList's only page: its count is known.
     pub fn search(query: &ReadSearchQuery, tiles: Vec<WorkTile>) -> Event {
         let total = Some(tiles.len() as u32);
         Event::Reading(ReadingEvent::Search {
@@ -3382,14 +3398,34 @@ mod read {
         })
     }
 
+    /// AniList's first page with more to come: its count is not known yet.
+    pub fn search_first_page(query: &ReadSearchQuery, tiles: Vec<WorkTile>) -> Event {
+        Event::Reading(ReadingEvent::Search {
+            query: query.clone(),
+            page: 0,
+            tiles,
+            has_more: true,
+            other_scope: None,
+            total: None,
+        })
+    }
+
     fn group(
         id: &str,
         name: &str,
+        kind: Option<ReadSourceKind>,
         state: ReadSourceState,
         tiles: Vec<WorkTile>,
         joined: u32,
     ) -> ReadSourceGroup {
-        ReadSourceGroup { source_id: id.into(), source_name: name.into(), state, tiles, joined }
+        ReadSourceGroup {
+            source_id: id.into(),
+            source_name: name.into(),
+            kind,
+            state,
+            tiles,
+            joined,
+        }
     }
 
     /// Every source's group, Northwind standing as `northwind`.
@@ -3406,26 +3442,41 @@ mod read {
                 group(
                     "home-library",
                     "Home library",
+                    Some(ReadSourceKind::Server),
                     ReadSourceState::Hits,
                     vec![
                         hit(
                             "home-library:7",
                             "Lantern Street Notes, Side Stories",
                             Medium::Novel,
+                            Some(ReadingMsg::ReadingVolumes { count: 2 }),
                         ),
-                        hit("home-library:9", "Paper Lantern Recipes", Medium::Manga),
+                        hit("home-library:9", "Paper Lantern Recipes", Medium::Manga, None),
                     ],
                     1,
                 ),
                 group(
                     "folders",
                     "Folders",
+                    Some(ReadSourceKind::Folder),
                     ReadSourceState::Hits,
-                    vec![hit("folders:3", "Lantern Festival Sketchbook", Medium::Manga)],
+                    vec![hit(
+                        "folders:3",
+                        "Lantern Festival Sketchbook",
+                        Medium::Manga,
+                        Some(ReadingMsg::ReadHitFilesFormat { count: 1, format: "CBZ".into() }),
+                    )],
                     0,
                 ),
-                group("northwind", "Northwind", northwind, Vec::new(), 0),
-                group("demo", "Demo", ReadSourceState::Nothing, Vec::new(), 0),
+                group(
+                    "northwind",
+                    "Northwind",
+                    Some(ReadSourceKind::Plugin),
+                    northwind,
+                    Vec::new(),
+                    0,
+                ),
+                group("demo", "Demo", None, ReadSourceState::Nothing, Vec::new(), 0),
             ],
             joins: if anilist == ReadAnilistState::Answered {
                 vec![ReadSourceJoin {
@@ -3442,8 +3493,9 @@ mod read {
 
     /// Every source found nothing.
     pub fn nothing(query: &ReadSearchQuery) -> Event {
-        let none =
-            |id: &str, name: &str| group(id, name, ReadSourceState::Nothing, Vec::new(), 0);
+        let none = |id: &str, name: &str| {
+            group(id, name, None, ReadSourceState::Nothing, Vec::new(), 0)
+        };
         Event::Reading(ReadingEvent::SourceSearch(Box::new(ReadSourceSearch {
             query: query.clone(),
             anilist: ReadAnilistState::Answered,
@@ -3711,18 +3763,19 @@ fn read_home_history(s: &mut Screen) {
     s.press(&["j", "j", "j", "j"]);
 }
 
-/// "lantern" typed and asked: AniList in, Northwind still asking.
+/// "lantern" typed and asked: AniList's first page in with more to come, so no count yet,
+/// Northwind still asking. The sources' part comes first, as the engine sends it.
 fn read_search_mid(s: &mut Screen) {
     reading_on(s, 4);
     s.type_text("lantern");
     s.press(&["enter"]);
     let query = s.app.read_query();
-    s.apply(read::search(&query, read::anilist()));
     s.apply(read::groups(
         &query,
         kaeri_model::reading::ReadAnilistState::Answered,
         kaeri_model::reading::ReadSourceState::Asking,
     ));
+    s.apply(read::search_first_page(&query, read::anilist()));
     s.wait(Duration::from_secs(1));
 }
 
@@ -3732,12 +3785,12 @@ fn read_search_failed(s: &mut Screen) {
     s.type_text("lantern");
     s.press(&["enter"]);
     let query = s.app.read_query();
-    s.apply(read::search(&query, read::anilist()));
     s.apply(read::groups(
         &query,
         kaeri_model::reading::ReadAnilistState::Answered,
         kaeri_model::reading::ReadSourceState::TimedOut { seconds: 15 },
     ));
+    s.apply(read::search(&query, read::anilist()));
     s.press(&["down"]);
 }
 
