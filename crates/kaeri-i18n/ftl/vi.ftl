@@ -945,6 +945,72 @@ reading-downloads-done-parts =
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = Các chương của { $count } bộ truyện đã sẵn sàng để đọc ngoại tuyến.
 
+# Row heading on reading's Home: manga that are trending on AniList now.
+read-home-trending-manga = Manga thịnh hành
+
+# Row heading on reading's Home: webtoons that are trending on AniList now.
+read-home-trending-webtoons = Webtoon thịnh hành
+
+# Row heading on reading's Home: light novels that are trending on AniList now.
+read-home-trending-novels = Light novel thịnh hành
+
+# Row heading on reading's Home: the most popular manga that started in the last 12 months.
+read-home-new-manga = Manga mới
+
+# Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+read-home-new-webtoons = Webtoon mới
+
+# Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+read-home-new-novels = Light novel mới
+
+# Side text beside a New row's heading, in a quieter style: what the row covers.
+read-home-new-side = 12 tháng qua
+
+# Row heading on reading's Home: the most popular manga that have finished.
+read-home-finished-manga = Manga đã hoàn thành
+
+# Row heading on reading's Home: the most popular webtoons that have finished.
+read-home-finished-webtoons = Webtoon đã hoàn thành
+
+# Row heading on reading's Home: the most popular light novels that have finished.
+read-home-finished-novels = Light novel đã hoàn thành
+
+# Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+read-home-finished-side = Phổ biến nhất
+
+# A choice of reading Search's Started filter: series that started at any time.
+read-search-started-any = Mọi thời điểm
+
+# A choice of reading Search's Started filter: series that started in the last 12 months.
+read-search-started-year = 12 tháng qua
+
+# A choice of reading Search's Started filter: series that started in the last 3 years.
+read-search-started-3-years = 3 năm qua
+
+# Under a source's hit in Search: the chapters it holds, from the first.
+read-hit-chapters = Chương 1 đến { $last }
+
+# Under a source's hit in Search: a web novel's episodes it holds, from the first.
+read-hit-episodes = Chương 1 đến { $last }
+
+# Under a source's hit in Search: a light novel's parts it holds.
+read-hit-parts =
+    { $count ->
+       *[other] { $count } phần
+    }
+
+# Under a source's hit in Search: the book files it holds.
+read-hit-files =
+    { $count ->
+       *[other] { $count } tệp
+    }
+
+# Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+read-hit-files-format =
+    { $count ->
+       *[other] { $count } tệp · { $format }
+    }
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Đã tham gia { $store } với tên { $member }.
 
@@ -8687,6 +8753,24 @@ home-read-end = Đó là tất cả lúc này. Cập nhật và Tìm kiếm có 
 # Line at the end of Read with no book sources yet. A button to add one follows it.
 home-read-no-sources = Thêm một thư mục, một máy chủ hoặc một cửa hàng plugin để đọc từ Trang chủ.
 
+# In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+read-home-offline-rows = Truyện thịnh hành và truyện mới sẽ hiện khi bạn có kết nối.
+
+# E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+read-home-browse = Duyệt
+
+# E-ink: the line under Browse on Read's Home.
+read-home-browse-line = Thịnh hành, mới và đã hoàn thành, theo định dạng
+
+# E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+read-home-browse-row = { $first }, { $second } và { $more } truyện khác
+
+# E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+read-home-browse-note = Từ AniList. Các nguồn của bạn chỉ được hỏi khi bạn mở một bộ truyện.
+
+# E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+read-home-browse-kept = Danh sách lưu từ { $time } vẫn mở được.
+
 # Under a day in Read's week: what usually comes out that day, when the time isn't known.
 week-usually = Thường
 
@@ -9346,6 +9430,70 @@ read-filter-included = Bao gồm
 
 # A genre's state: no series with it.
 read-filter-left-out = Loại trừ
+
+# A filter of reading's Search: when a series started.
+read-search-started = Ra mắt
+
+# The filter bar's chip that searches only the person's own sources, leaving AniList out.
+read-search-sources-only = Chỉ các nguồn của bạn
+
+# Search's section heading under AniList's results: one group per source of the person's.
+read-search-from-sources = Từ các nguồn của bạn
+
+# E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+read-search-asking = Đang hỏi { $source }…
+
+# A source group whose source failed to answer. The reason and Try again follow.
+read-search-source-failed = { $source } không phản hồi.
+
+# The reason under it when the source gave no answer in time.
+read-search-source-timeout = Không có phản hồi sau { $seconds } giây.
+
+# One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+read-search-source-nothing = Không tìm thấy gì trong { $sources }.
+
+# On an AniList result that one of the person's sources has. The source is its name.
+read-search-in-source = Có trong { $source }
+
+# On an AniList result that more than one of the person's sources has. Always 2 or more.
+read-search-in-sources =
+    { $n ->
+       *[other] Có trong { $n } nguồn của bạn
+    }
+
+# Search, when AniList found nothing but the person's sources did.
+read-search-anilist-nothing = AniList không tìm thấy gì với những từ này.
+
+# Search, when AniList could not be reached.
+read-search-anilist-failed = AniList không phản hồi.
+
+# The line under it.
+read-search-anilist-failed-line = Các nguồn của bạn vẫn được hỏi.
+
+# Search, when nothing was found anywhere: under the line saying AniList found nothing.
+read-search-sources-nothing = Các nguồn của bạn cũng không có gì.
+
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = Bộ truyện từ AniList
+
+# The link under From your sources that shows the rest of AniList's results.
+read-search-more-anilist = Xem thêm từ AniList
+
+# Beside More from AniList: how many of AniList's results show.
+read-search-shown = Đang hiện { $shown }/{ $total }
+
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+read-search-shown-some = Đang hiện { $shown }
+
+# Beside a source's name in Search: the kind of source it is.
+read-search-source-kind-server = Máy chủ
+
+read-search-source-kind-folder = Thư mục
+
+read-search-source-kind-plugin = Plugin
+
+# The button of a source group with more than five hits.
+read-search-source-more = Hiện thêm { $n }
 
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step }/{ $total }

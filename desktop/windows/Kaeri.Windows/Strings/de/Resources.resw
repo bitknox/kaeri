@@ -980,6 +980,72 @@
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>Kapitel von {count} Serien sind offline lesbar.</value>
   </data>
+  <data name="ReadHomeTrendingManga" xml:space="preserve">
+    <value>Manga im Trend</value>
+  </data>
+  <data name="ReadHomeTrendingWebtoons" xml:space="preserve">
+    <value>Webtoons im Trend</value>
+  </data>
+  <data name="ReadHomeTrendingNovels" xml:space="preserve">
+    <value>Light Novels im Trend</value>
+  </data>
+  <data name="ReadHomeNewManga" xml:space="preserve">
+    <value>Neu gestartete Manga</value>
+  </data>
+  <data name="ReadHomeNewWebtoons" xml:space="preserve">
+    <value>Neu gestartete Webtoons</value>
+  </data>
+  <data name="ReadHomeNewNovels" xml:space="preserve">
+    <value>Neu gestartete Light Novels</value>
+  </data>
+  <data name="ReadHomeNewSide" xml:space="preserve">
+    <value>Letzte 12 Monate</value>
+  </data>
+  <data name="ReadHomeFinishedManga" xml:space="preserve">
+    <value>Fertig erschienene Manga</value>
+  </data>
+  <data name="ReadHomeFinishedWebtoons" xml:space="preserve">
+    <value>Fertig erschienene Webtoons</value>
+  </data>
+  <data name="ReadHomeFinishedNovels" xml:space="preserve">
+    <value>Fertig erschienene Light Novels</value>
+  </data>
+  <data name="ReadHomeFinishedSide" xml:space="preserve">
+    <value>Am beliebtesten</value>
+  </data>
+  <data name="ReadSearchStartedAny" xml:space="preserve">
+    <value>Jederzeit</value>
+  </data>
+  <data name="ReadSearchStartedYear" xml:space="preserve">
+    <value>Letzte 12 Monate</value>
+  </data>
+  <data name="ReadSearchStarted3Years" xml:space="preserve">
+    <value>Letzte 3 Jahre</value>
+  </data>
+  <data name="ReadHitChapters" xml:space="preserve">
+    <value>Kapitel 1 bis {last}</value>
+  </data>
+  <data name="ReadHitEpisodes" xml:space="preserve">
+    <value>Episoden 1 bis {last}</value>
+  </data>
+  <data name="ReadHitParts_one" xml:space="preserve">
+    <value>1 Teil</value>
+  </data>
+  <data name="ReadHitParts_other" xml:space="preserve">
+    <value>{count} Teile</value>
+  </data>
+  <data name="ReadHitFiles_one" xml:space="preserve">
+    <value>1 Datei</value>
+  </data>
+  <data name="ReadHitFiles_other" xml:space="preserve">
+    <value>{count} Dateien</value>
+  </data>
+  <data name="ReadHitFilesFormat_one" xml:space="preserve">
+    <value>1 Datei · {format}</value>
+  </data>
+  <data name="ReadHitFilesFormat_other" xml:space="preserve">
+    <value>{count} Dateien · {format}</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Du bist {store} als {member} beigetreten.</value>
   </data>
@@ -1681,6 +1747,276 @@
   </data>
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Konto, {state}</value>
+  </data>
+  <data name="WindowsReaderSettingsOpen" xml:space="preserve">
+    <value>Leseeinstellungen</value>
+  </data>
+  <data name="WindowsReaderOpening" xml:space="preserve">
+    <value>{chapter} wird geöffnet</value>
+  </data>
+  <data name="WindowsReaderOpeningSlow" xml:space="preserve">
+    <value>Eine Quelle wird gesucht · {seconds} s</value>
+  </data>
+  <data name="WindowsReaderChapterFailed" xml:space="preserve">
+    <value>{chapter} ließ sich nicht öffnen</value>
+  </data>
+  <data name="WindowsReaderChooseSource" xml:space="preserve">
+    <value>Quelle wählen</value>
+  </data>
+  <data name="WindowsReaderPageFailedHint" xml:space="preserve">
+    <value>Blättere um, um ohne sie weiterzumachen.</value>
+  </data>
+  <data name="WindowsReaderEndOfChapter" xml:space="preserve">
+    <value>Ende von {chapter}</value>
+  </data>
+  <data name="WindowsReaderEndNotRead" xml:space="preserve">
+    <value>Noch nicht als gelesen markiert</value>
+  </data>
+  <data name="WindowsReaderEndTracker" xml:space="preserve">
+    <value>Gelesen · {trackers} aktualisiert</value>
+  </data>
+  <data name="WindowsReaderEndTrackersTwo" xml:space="preserve">
+    <value>{first} und {second}</value>
+  </data>
+  <data name="WindowsReaderContinue" xml:space="preserve">
+    <value>Weiterlesen</value>
+  </data>
+  <data name="WindowsReaderBackToSeries" xml:space="preserve">
+    <value>Zurück zur Serie</value>
+  </data>
+  <data name="WindowsReaderEndNotOut" xml:space="preserve">
+    <value>{chapter} ist noch nicht erschienen</value>
+  </data>
+  <data name="WindowsReaderEndNotOutBody" xml:space="preserve">
+    <value>Kaeri prüft im Hintergrund auf neue Kapitel und legt sie unter Updates ab.</value>
+  </data>
+  <data name="WindowsReaderEndCaughtUpBody" xml:space="preserve">
+    <value>Neue Kapitel erscheinen unter Updates, sobald deine Quellen sie haben.</value>
+  </data>
+  <data name="WindowsReaderEndFinished" xml:space="preserve">
+    <value>Ende der Serie</value>
+  </data>
+  <data name="WindowsReaderEndFinishedBody" xml:space="preserve">
+    <value>Es gibt keine weiteren Kapitel.</value>
+  </data>
+  <data name="WindowsReaderEndNoSource" xml:space="preserve">
+    <value>{chapter} fehlt noch in deinen Quellen</value>
+  </data>
+  <data name="WindowsReaderEndOffline" xml:space="preserve">
+    <value>{chapter} ist nicht heruntergeladen</value>
+  </data>
+  <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
+    <value>Du bist offline. Es öffnet sich hier, sobald du verbunden bist.</value>
+  </data>
+  <data name="WindowsReaderGroupLine" xml:space="preserve">
+    <value>{chapter} · Seite {page} von {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineSpread" xml:space="preserve">
+    <value>{chapter} · Seiten {first} und {second}</value>
+  </data>
+  <data name="WindowsReaderGroupLineStrip" xml:space="preserve">
+    <value>{chapter} · Bild {image} von {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineScroll" xml:space="preserve">
+    <value>{chapter} · {percent}%</value>
+  </data>
+  <data name="WindowsReaderPageLabel" xml:space="preserve">
+    <value>Seite {page} von {total}</value>
+  </data>
+  <data name="WindowsReaderPagesLabel" xml:space="preserve">
+    <value>Seiten {first} und {second} von {total}</value>
+  </data>
+  <data name="WindowsReaderScrubber" xml:space="preserve">
+    <value>Seite</value>
+  </data>
+  <data name="WindowsReaderStartOver" xml:space="preserve">
+    <value>Von vorn</value>
+  </data>
+  <data name="WindowsReaderGoBack" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="WindowsReaderChange" xml:space="preserve">
+    <value>Ändern</value>
+  </data>
+  <data name="WindowsReaderThisSeries" xml:space="preserve">
+    <value>Diese Serie</value>
+  </data>
+  <data name="WindowsReaderAllMangaPc" xml:space="preserve">
+    <value>Alle Manga auf diesem PC</value>
+  </data>
+  <data name="WindowsReaderAllStripsPc" xml:space="preserve">
+    <value>Alle Webtoons auf diesem PC</value>
+  </data>
+  <data name="WindowsReaderAllNovels" xml:space="preserve">
+    <value>Alle Romane</value>
+  </data>
+  <data name="WindowsReaderReadingMode" xml:space="preserve">
+    <value>Lesemodus</value>
+  </data>
+  <data name="WindowsReaderModeAuto" xml:space="preserve">
+    <value>Auto · {mode}</value>
+  </data>
+  <data name="WindowsReaderModeAutoOption" xml:space="preserve">
+    <value>Auto</value>
+  </data>
+  <data name="WindowsReaderModeRtlLower" xml:space="preserve">
+    <value>rechts nach links</value>
+  </data>
+  <data name="WindowsReaderModeLtrLower" xml:space="preserve">
+    <value>links nach rechts</value>
+  </data>
+  <data name="WindowsReaderModeStripLower" xml:space="preserve">
+    <value>Streifen</value>
+  </data>
+  <data name="WindowsReaderModeDetectedNote" xml:space="preserve">
+    <value>Aus den Seriendetails erkannt.</value>
+  </data>
+  <data name="WindowsReaderModeChoiceNote" xml:space="preserve">
+    <value>Deine Wahl wird für diese Serie gespeichert und folgt ihr auf deine anderen Geräte.</value>
+  </data>
+  <data name="WindowsReaderUseDefault" xml:space="preserve">
+    <value>Standard nutzen</value>
+  </data>
+  <data name="WindowsReaderModePaged" xml:space="preserve">
+    <value>Seitenweise</value>
+  </data>
+  <data name="WindowsReaderModeScrolled" xml:space="preserve">
+    <value>Scrollen</value>
+  </data>
+  <data name="WindowsReaderPageLayout" xml:space="preserve">
+    <value>Seitenlayout</value>
+  </data>
+  <data name="WindowsReaderFit" xml:space="preserve">
+    <value>Anpassung</value>
+  </data>
+  <data name="WindowsReaderFitHeight" xml:space="preserve">
+    <value>Höhe</value>
+  </data>
+  <data name="WindowsReaderCropBorders" xml:space="preserve">
+    <value>Ränder zuschneiden</value>
+  </data>
+  <data name="WindowsReaderGap" xml:space="preserve">
+    <value>Abstand zwischen Bildern</value>
+  </data>
+  <data name="WindowsReaderBackground" xml:space="preserve">
+    <value>Hintergrund</value>
+  </data>
+  <data name="WindowsReaderMoreSettings" xml:space="preserve">
+    <value>Weitere Leseeinstellungen</value>
+  </data>
+  <data name="WindowsReaderPaperMode" xml:space="preserve">
+    <value>Papiermodus</value>
+  </data>
+  <data name="WindowsReaderPaperModeNote" xml:space="preserve">
+    <value>Papierfarben, und Seiten wechseln sofort, ohne dass sich im Reader etwas bewegt.</value>
+  </data>
+  <data name="WindowsReaderFont" xml:space="preserve">
+    <value>Schrift</value>
+  </data>
+  <data name="WindowsReaderTextSize" xml:space="preserve">
+    <value>Textgröße</value>
+  </data>
+  <data name="WindowsReaderLineSpacing" xml:space="preserve">
+    <value>Zeilenabstand</value>
+  </data>
+  <data name="WindowsReaderLineTight" xml:space="preserve">
+    <value>Eng</value>
+  </data>
+  <data name="WindowsReaderLineNormal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="WindowsReaderLineLoose" xml:space="preserve">
+    <value>Locker</value>
+  </data>
+  <data name="WindowsReaderMargins" xml:space="preserve">
+    <value>Ränder</value>
+  </data>
+  <data name="WindowsReaderJustify" xml:space="preserve">
+    <value>Blocksatz</value>
+  </data>
+  <data name="WindowsReaderLook" xml:space="preserve">
+    <value>Darstellung</value>
+  </data>
+  <data name="WindowsReaderPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="WindowsReaderSmaller" xml:space="preserve">
+    <value>Kleinerer Text</value>
+  </data>
+  <data name="WindowsReaderLarger" xml:space="preserve">
+    <value>Größerer Text</value>
+  </data>
+  <data name="WindowsReaderPagesTab" xml:space="preserve">
+    <value>Seiten</value>
+  </data>
+  <data name="WindowsReaderChaptersTab" xml:space="preserve">
+    <value>Kapitel</value>
+  </data>
+  <data name="WindowsReaderVolume" xml:space="preserve">
+    <value>Band {volume}</value>
+  </data>
+  <data name="WindowsReaderChapterPages_one" xml:space="preserve">
+    <value>1 Seite</value>
+  </data>
+  <data name="WindowsReaderChapterPages_other" xml:space="preserve">
+    <value>{pages} Seiten</value>
+  </data>
+  <data name="WindowsReaderGridPage" xml:space="preserve">
+    <value>Seite {page}</value>
+  </data>
+  <data name="WindowsReaderImageLabel" xml:space="preserve">
+    <value>Bild {image} von {count}</value>
+  </data>
+  <data name="WindowsReaderNoteClose" xml:space="preserve">
+    <value>Fußnote schließen</value>
+  </data>
+  <data name="WindowsReaderBack" xml:space="preserve">
+    <value>Zurück</value>
+  </data>
+  <data name="WindowsReaderModeVertical" xml:space="preserve">
+    <value>Vertikale Seiten</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLower" xml:space="preserve">
+    <value>vertikale Seiten</value>
+  </data>
+  <data name="WindowsReaderModeAutoLine" xml:space="preserve">
+    <value>{way}, aus den Seriendetails</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLine" xml:space="preserve">
+    <value>Seiten untereinander</value>
+  </data>
+  <data name="WindowsReaderModeStripLine" xml:space="preserve">
+    <value>Für Webtoons und lange Bilder</value>
+  </data>
+  <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Heruntergeladene Kapitel öffnen sich ohne Verbindung.</value>
+  </data>
+  <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
+    <value>{title} wird von vorn gelesen</value>
+  </data>
+  <data name="SendSaveFilesWindows" xml:space="preserve">
+    <value>Dateien speichern</value>
+  </data>
+  <data name="SendSavedWindows_one" xml:space="preserve">
+    <value>Datei gespeichert</value>
+  </data>
+  <data name="SendSavedWindows_other" xml:space="preserve">
+    <value>{n} Dateien gespeichert</value>
+  </data>
+  <data name="SendSaveFailedWindows" xml:space="preserve">
+    <value>Die Dateien ließen sich dort nicht speichern. Nimm einen anderen Ordner.</value>
+  </data>
+  <data name="OpdsPausedNoneWindows" xml:space="preserve">
+    <value>Pausiert. Dieser PC ist in keinem lokalen Netzwerk.</value>
+  </data>
+  <data name="OpdsPausedVpnWindows" xml:space="preserve">
+    <value>Pausiert. Dieser PC ist nur über ein VPN verbunden.</value>
+  </data>
+  <data name="FeedFirewallTitleWindows" xml:space="preserve">
+    <value>Windows fragt nach dem Netzwerkzugriff</value>
+  </data>
+  <data name="FeedFirewallBodyWindows" xml:space="preserve">
+    <value>Damit E-Reader zu Hause den Feed erreichen, erlaube Kaeri nur in privaten Netzwerken. Lass öffentliche Netzwerke ohne Haken.</value>
   </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>Einstellungen werden geladen</value>
@@ -5930,6 +6266,24 @@
   <data name="HomeReadNoSources" xml:space="preserve">
     <value>Füge einen Ordner, einen Server oder einen Plugin-Store hinzu, um von Home aus zu lesen.</value>
   </data>
+  <data name="ReadHomeOfflineRows" xml:space="preserve">
+    <value>Serien im Trend und neue Serien erscheinen, sobald du online bist.</value>
+  </data>
+  <data name="ReadHomeBrowse" xml:space="preserve">
+    <value>Stöbern</value>
+  </data>
+  <data name="ReadHomeBrowseLine" xml:space="preserve">
+    <value>Im Trend, neu und abgeschlossen, nach Format</value>
+  </data>
+  <data name="ReadHomeBrowseRow" xml:space="preserve">
+    <value>{first}, {second} und {more} weitere</value>
+  </data>
+  <data name="ReadHomeBrowseNote" xml:space="preserve">
+    <value>Von AniList. Deine Quellen werden gefragt, wenn du eine Serie öffnest.</value>
+  </data>
+  <data name="ReadHomeBrowseKept" xml:space="preserve">
+    <value>Gespeicherte Listen (Stand {time}) lassen sich noch öffnen.</value>
+  </data>
   <data name="WeekUsually" xml:space="preserve">
     <value>Meist</value>
   </data>
@@ -6589,6 +6943,72 @@
   </data>
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Ausgeschlossen</value>
+  </data>
+  <data name="ReadSearchStarted" xml:space="preserve">
+    <value>Beginn</value>
+  </data>
+  <data name="ReadSearchSourcesOnly" xml:space="preserve">
+    <value>Nur deine Quellen</value>
+  </data>
+  <data name="ReadSearchFromSources" xml:space="preserve">
+    <value>Aus deinen Quellen</value>
+  </data>
+  <data name="ReadSearchAsking" xml:space="preserve">
+    <value>{source} wird gefragt…</value>
+  </data>
+  <data name="ReadSearchSourceFailed" xml:space="preserve">
+    <value>{source} hat nicht geantwortet.</value>
+  </data>
+  <data name="ReadSearchSourceTimeout" xml:space="preserve">
+    <value>Keine Antwort in {seconds} s.</value>
+  </data>
+  <data name="ReadSearchSourceNothing" xml:space="preserve">
+    <value>Nichts gefunden in {sources}.</value>
+  </data>
+  <data name="ReadSearchInSource" xml:space="preserve">
+    <value>Bei {source}</value>
+  </data>
+  <data name="ReadSearchInSources_one" xml:space="preserve">
+    <value>Bei {n} deiner Quellen</value>
+  </data>
+  <data name="ReadSearchInSources_other" xml:space="preserve">
+    <value>Bei {n} deiner Quellen</value>
+  </data>
+  <data name="ReadSearchAnilistNothing" xml:space="preserve">
+    <value>AniList hat für diese Wörter nichts gefunden.</value>
+  </data>
+  <data name="ReadSearchAnilistFailed" xml:space="preserve">
+    <value>AniList hat nicht geantwortet.</value>
+  </data>
+  <data name="ReadSearchAnilistFailedLine" xml:space="preserve">
+    <value>Deine Quellen wurden trotzdem gefragt.</value>
+  </data>
+  <data name="ReadSearchSourcesNothing" xml:space="preserve">
+    <value>Auch in deinen Quellen nichts gefunden.</value>
+  </data>
+  <data name="ReadSearchTotalUnknown" xml:space="preserve">
+    <value>Serien von AniList</value>
+  </data>
+  <data name="ReadSearchMoreAnilist" xml:space="preserve">
+    <value>Mehr von AniList</value>
+  </data>
+  <data name="ReadSearchShown" xml:space="preserve">
+    <value>{shown} von {total} angezeigt</value>
+  </data>
+  <data name="ReadSearchShownSome" xml:space="preserve">
+    <value>{shown} angezeigt</value>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>Ordner</value>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>Plugin</value>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>{n} weitere anzeigen</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} von {total}</value>

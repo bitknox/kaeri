@@ -401,6 +401,40 @@
         <item quantity="other">%2$d части «%1$s» готовы для чтения офлайн.</item>
     </plurals>
     <string name="reading_downloads_done_series">Главы %1$d серий готовы для чтения офлайн.</string>
+    <string name="read_home_trending_manga">Манга в тренде</string>
+    <string name="read_home_trending_webtoons">Вебтуны в тренде</string>
+    <string name="read_home_trending_novels">Ранобэ в тренде</string>
+    <string name="read_home_new_manga">Новая манга</string>
+    <string name="read_home_new_webtoons">Новые вебтуны</string>
+    <string name="read_home_new_novels">Новые ранобэ</string>
+    <string name="read_home_new_side">Последние 12 месяцев</string>
+    <string name="read_home_finished_manga">Завершённая манга</string>
+    <string name="read_home_finished_webtoons">Завершённые вебтуны</string>
+    <string name="read_home_finished_novels">Завершённые ранобэ</string>
+    <string name="read_home_finished_side">Самые популярные</string>
+    <string name="read_search_started_any">Любое время</string>
+    <string name="read_search_started_year">Последние 12 месяцев</string>
+    <string name="read_search_started_3_years">Последние 3 года</string>
+    <string name="read_hit_chapters">Главы с 1 по %1$d</string>
+    <string name="read_hit_episodes">Эпизоды с 1 по %1$d</string>
+    <plurals name="read_hit_parts">
+        <item quantity="one">%1$d часть</item>
+        <item quantity="few">%1$d части</item>
+        <item quantity="many">%1$d частей</item>
+        <item quantity="other">%1$d части</item>
+    </plurals>
+    <plurals name="read_hit_files">
+        <item quantity="one">%1$d файл</item>
+        <item quantity="few">%1$d файла</item>
+        <item quantity="many">%1$d файлов</item>
+        <item quantity="other">%1$d файла</item>
+    </plurals>
+    <plurals name="read_hit_files_format">
+        <item quantity="one">%1$d файл · %2$s</item>
+        <item quantity="few">%1$d файла · %2$s</item>
+        <item quantity="many">%1$d файлов · %2$s</item>
+        <item quantity="other">%1$d файла · %2$s</item>
+    </plurals>
     <string name="store_joined">Подключено к %1$s как %2$s.</string>
     <string name="store_joined_unnamed">Подключено к %1$s без имени.</string>
     <string name="store_left">Вы вышли из %1$s. Его плагины остаются установленными.</string>
@@ -2660,6 +2694,12 @@
     <string name="home_read_checked_on_open">Проверяется при открытии Kaeri</string>
     <string name="home_read_end">На этом пока всё. Полные списки в «Обновления» и «Поиск».</string>
     <string name="home_read_no_sources">Добавьте папку, сервер или магазин плагинов, чтобы читать с главной.</string>
+    <string name="read_home_offline_rows">Серии в тренде и новинки появятся, когда вы будете в сети.</string>
+    <string name="read_home_browse">Каталог</string>
+    <string name="read_home_browse_line">В тренде, новые и завершённые, по форматам</string>
+    <string name="read_home_browse_row">%1$s, %2$s и ещё %3$d</string>
+    <string name="read_home_browse_note">Из AniList. Ваши источники опрашиваются, когда вы открываете серию.</string>
+    <string name="read_home_browse_kept">Сохранённые списки (%1$s) по-прежнему открываются.</string>
     <string name="week_usually">Обычно</string>
     <string name="week_nothing_usually">Обычно ничего</string>
     <string name="updates_checked">Проверено %1$s</string>
@@ -2936,6 +2976,32 @@
     </plurals>
     <string name="read_filter_included">Включён</string>
     <string name="read_filter_left_out">Исключён</string>
+    <string name="read_search_started">Начало выпуска</string>
+    <string name="read_search_sources_only">Только ваши источники</string>
+    <string name="read_search_from_sources">Ваши источники</string>
+    <string name="read_search_asking">%1$s: ожидание ответа…</string>
+    <string name="read_search_source_failed">%1$s: нет ответа.</string>
+    <string name="read_search_source_timeout">Нет ответа за %1$d с.</string>
+    <string name="read_search_source_nothing">Ничего не найдено в: %1$s.</string>
+    <string name="read_search_in_source">Есть в %1$s</string>
+    <plurals name="read_search_in_sources">
+        <item quantity="one">Ваши источники с этой серией: %1$d</item>
+        <item quantity="few">Ваши источники с этой серией: %1$d</item>
+        <item quantity="many">Ваши источники с этой серией: %1$d</item>
+        <item quantity="other">Ваши источники с этой серией: %1$d</item>
+    </plurals>
+    <string name="read_search_anilist_nothing">AniList ничего не нашёл по этим словам.</string>
+    <string name="read_search_anilist_failed">AniList не ответил.</string>
+    <string name="read_search_anilist_failed_line">Ваши источники всё равно были опрошены.</string>
+    <string name="read_search_sources_nothing">Ваши источники тоже ничего не нашли.</string>
+    <string name="read_search_total_unknown">Серии из AniList</string>
+    <string name="read_search_more_anilist">Ещё из AniList</string>
+    <string name="read_search_shown">Показано %1$d из %2$d</string>
+    <string name="read_search_shown_some">Показано: %1$d</string>
+    <string name="read_search_source_kind_server">Сервер</string>
+    <string name="read_search_source_kind_folder">Папка</string>
+    <string name="read_search_source_kind_plugin">Плагин</string>
+    <string name="read_search_source_more">Показать ещё %1$d</string>
     <string name="onboarding_step">%1$d из %2$d</string>
     <string name="onboarding_welcome_line">Следите за тем, что смотрите и читаете. Источники вы добавляете сами.</string>
     <string name="onboarding_welcome_note">Ваши списки и прогресс остаются при вас. Трекеры и источники вы добавляете сами.</string>

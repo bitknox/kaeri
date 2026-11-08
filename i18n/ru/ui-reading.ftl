@@ -6,6 +6,12 @@ home-read-releasing = Выходит сейчас
 home-read-checked-on-open = Проверяется при открытии { -app-name }
 home-read-end = На этом пока всё. Полные списки в «Обновления» и «Поиск».
 home-read-no-sources = Добавьте папку, сервер или { -plugin-store }, чтобы читать с главной.
+read-home-offline-rows = Серии в тренде и новинки появятся, когда вы будете в сети.
+read-home-browse = Каталог
+read-home-browse-line = В тренде, новые и завершённые, по форматам
+read-home-browse-row = { $first }, { $second } и ещё { $more }
+read-home-browse-note = Из AniList. Ваши { -source-pl } опрашиваются, когда вы открываете серию.
+read-home-browse-kept = Сохранённые списки ({ $time }) по-прежнему открываются.
 week-usually = Обычно
 week-nothing-usually = Обычно ничего
 updates-checked = Проверено { $ago }
@@ -282,6 +288,32 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Включён
 read-filter-left-out = Исключён
+read-search-started = Начало выпуска
+read-search-sources-only = Только ваши { -source-pl }
+read-search-from-sources = Ваши { -source-pl }
+read-search-asking = { $source }: ожидание ответа…
+read-search-source-failed = { $source }: нет ответа.
+read-search-source-timeout = Нет ответа за { $seconds } с.
+read-search-source-nothing = Ничего не найдено в: { $sources }.
+read-search-in-source = Есть в { $source }
+read-search-in-sources = { $n ->
+    [one] Ваши { -source-pl } с этой серией: { $n }
+    [few] Ваши { -source-pl } с этой серией: { $n }
+    [many] Ваши { -source-pl } с этой серией: { $n }
+   *[other] Ваши { -source-pl } с этой серией: { $n }
+ }
+read-search-anilist-nothing = AniList ничего не нашёл по этим словам.
+read-search-anilist-failed = AniList не ответил.
+read-search-anilist-failed-line = Ваши { -source-pl } всё равно были опрошены.
+read-search-sources-nothing = Ваши { -source-pl } тоже ничего не нашли.
+read-search-total-unknown = Серии из AniList
+read-search-more-anilist = Ещё из AniList
+read-search-shown = Показано { $shown } из { $total }
+read-search-shown-some = Показано: { $shown }
+read-search-source-kind-server = Сервер
+read-search-source-kind-folder = Папка
+read-search-source-kind-plugin = { -plugin-cap }
+read-search-source-more = Показать ещё { $n }
 onboarding-step = { $step } из { $total }
 onboarding-welcome-line = Следите за тем, что смотрите и читаете. { -source-cap-pl } вы добавляете сами.
 onboarding-welcome-note = Ваши списки и прогресс остаются при вас. { -tracker-cap-pl } и { -source-pl } вы добавляете сами.

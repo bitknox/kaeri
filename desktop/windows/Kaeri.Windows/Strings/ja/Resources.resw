@@ -917,6 +917,63 @@
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>{count}作品の章をオフラインで読めます。</value>
   </data>
+  <data name="ReadHomeTrendingManga" xml:space="preserve">
+    <value>話題のマンガ</value>
+  </data>
+  <data name="ReadHomeTrendingWebtoons" xml:space="preserve">
+    <value>話題のウェブトゥーン</value>
+  </data>
+  <data name="ReadHomeTrendingNovels" xml:space="preserve">
+    <value>話題のライトノベル</value>
+  </data>
+  <data name="ReadHomeNewManga" xml:space="preserve">
+    <value>新作マンガ</value>
+  </data>
+  <data name="ReadHomeNewWebtoons" xml:space="preserve">
+    <value>新作ウェブトゥーン</value>
+  </data>
+  <data name="ReadHomeNewNovels" xml:space="preserve">
+    <value>新作ライトノベル</value>
+  </data>
+  <data name="ReadHomeNewSide" xml:space="preserve">
+    <value>過去12か月</value>
+  </data>
+  <data name="ReadHomeFinishedManga" xml:space="preserve">
+    <value>完結したマンガ</value>
+  </data>
+  <data name="ReadHomeFinishedWebtoons" xml:space="preserve">
+    <value>完結したウェブトゥーン</value>
+  </data>
+  <data name="ReadHomeFinishedNovels" xml:space="preserve">
+    <value>完結したライトノベル</value>
+  </data>
+  <data name="ReadHomeFinishedSide" xml:space="preserve">
+    <value>人気順</value>
+  </data>
+  <data name="ReadSearchStartedAny" xml:space="preserve">
+    <value>指定なし</value>
+  </data>
+  <data name="ReadSearchStartedYear" xml:space="preserve">
+    <value>過去12か月</value>
+  </data>
+  <data name="ReadSearchStarted3Years" xml:space="preserve">
+    <value>過去3年</value>
+  </data>
+  <data name="ReadHitChapters" xml:space="preserve">
+    <value>第1話〜第{last}話</value>
+  </data>
+  <data name="ReadHitEpisodes" xml:space="preserve">
+    <value>第1話〜第{last}話</value>
+  </data>
+  <data name="ReadHitParts_other" xml:space="preserve">
+    <value>{count}部</value>
+  </data>
+  <data name="ReadHitFiles_other" xml:space="preserve">
+    <value>ファイル{count}件</value>
+  </data>
+  <data name="ReadHitFilesFormat_other" xml:space="preserve">
+    <value>ファイル{count}件 · {format}</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>{store}に{member}として参加しました。</value>
   </data>
@@ -1585,6 +1642,270 @@
   </data>
   <data name="AccountsPaneName" xml:space="preserve">
     <value>アカウント、{state}</value>
+  </data>
+  <data name="WindowsReaderSettingsOpen" xml:space="preserve">
+    <value>リーダーの設定</value>
+  </data>
+  <data name="WindowsReaderOpening" xml:space="preserve">
+    <value>{chapter}を開いています</value>
+  </data>
+  <data name="WindowsReaderOpeningSlow" xml:space="preserve">
+    <value>ソースを探しています · {seconds}秒</value>
+  </data>
+  <data name="WindowsReaderChapterFailed" xml:space="preserve">
+    <value>{chapter}を開けませんでした</value>
+  </data>
+  <data name="WindowsReaderChooseSource" xml:space="preserve">
+    <value>ソースを選ぶ</value>
+  </data>
+  <data name="WindowsReaderPageFailedHint" xml:space="preserve">
+    <value>ページをめくると、このページを飛ばして進みます。</value>
+  </data>
+  <data name="WindowsReaderEndOfChapter" xml:space="preserve">
+    <value>{chapter}の終わり</value>
+  </data>
+  <data name="WindowsReaderEndNotRead" xml:space="preserve">
+    <value>まだ既読になっていません</value>
+  </data>
+  <data name="WindowsReaderEndTracker" xml:space="preserve">
+    <value>既読 · {trackers}を更新しました</value>
+  </data>
+  <data name="WindowsReaderEndTrackersTwo" xml:space="preserve">
+    <value>{first}と{second}</value>
+  </data>
+  <data name="WindowsReaderContinue" xml:space="preserve">
+    <value>続きを読む</value>
+  </data>
+  <data name="WindowsReaderBackToSeries" xml:space="preserve">
+    <value>作品に戻る</value>
+  </data>
+  <data name="WindowsReaderEndNotOut" xml:space="preserve">
+    <value>{chapter}はまだ公開されていません</value>
+  </data>
+  <data name="WindowsReaderEndNotOutBody" xml:space="preserve">
+    <value>Kaeriはバックグラウンドで新しい章を確認し、「更新」に追加します。</value>
+  </data>
+  <data name="WindowsReaderEndCaughtUpBody" xml:space="preserve">
+    <value>ソースに新しい章が出ると、「更新」に表示されます。</value>
+  </data>
+  <data name="WindowsReaderEndFinished" xml:space="preserve">
+    <value>作品の終わり</value>
+  </data>
+  <data name="WindowsReaderEndFinishedBody" xml:space="preserve">
+    <value>これ以上の章はありません。</value>
+  </data>
+  <data name="WindowsReaderEndNoSource" xml:space="preserve">
+    <value>ソースに{chapter}はまだありません</value>
+  </data>
+  <data name="WindowsReaderEndOffline" xml:space="preserve">
+    <value>{chapter}はダウンロードされていません</value>
+  </data>
+  <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
+    <value>オフラインです。接続すると、ここで開けます。</value>
+  </data>
+  <data name="WindowsReaderGroupLine" xml:space="preserve">
+    <value>{chapter} · {page}/{total}ページ</value>
+  </data>
+  <data name="WindowsReaderGroupLineSpread" xml:space="preserve">
+    <value>{chapter} · {first}・{second}ページ</value>
+  </data>
+  <data name="WindowsReaderGroupLineStrip" xml:space="preserve">
+    <value>{chapter} · 画像{image}/{total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineScroll" xml:space="preserve">
+    <value>{chapter} · {percent}%</value>
+  </data>
+  <data name="WindowsReaderPageLabel" xml:space="preserve">
+    <value>{total}ページ中{page}ページ</value>
+  </data>
+  <data name="WindowsReaderPagesLabel" xml:space="preserve">
+    <value>{total}ページ中{first}ページと{second}ページ</value>
+  </data>
+  <data name="WindowsReaderScrubber" xml:space="preserve">
+    <value>ページ</value>
+  </data>
+  <data name="WindowsReaderStartOver" xml:space="preserve">
+    <value>最初から</value>
+  </data>
+  <data name="WindowsReaderGoBack" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="WindowsReaderChange" xml:space="preserve">
+    <value>変更</value>
+  </data>
+  <data name="WindowsReaderThisSeries" xml:space="preserve">
+    <value>この作品</value>
+  </data>
+  <data name="WindowsReaderAllMangaPc" xml:space="preserve">
+    <value>このPCのすべてのマンガ</value>
+  </data>
+  <data name="WindowsReaderAllStripsPc" xml:space="preserve">
+    <value>このPCのすべてのウェブトゥーン</value>
+  </data>
+  <data name="WindowsReaderAllNovels" xml:space="preserve">
+    <value>すべてのライトノベル</value>
+  </data>
+  <data name="WindowsReaderReadingMode" xml:space="preserve">
+    <value>読み方</value>
+  </data>
+  <data name="WindowsReaderModeAuto" xml:space="preserve">
+    <value>自動 · {mode}</value>
+  </data>
+  <data name="WindowsReaderModeAutoOption" xml:space="preserve">
+    <value>自動</value>
+  </data>
+  <data name="WindowsReaderModeRtlLower" xml:space="preserve">
+    <value>右から左</value>
+  </data>
+  <data name="WindowsReaderModeLtrLower" xml:space="preserve">
+    <value>左から右</value>
+  </data>
+  <data name="WindowsReaderModeStripLower" xml:space="preserve">
+    <value>縦スクロール</value>
+  </data>
+  <data name="WindowsReaderModeDetectedNote" xml:space="preserve">
+    <value>作品情報から判定しました。</value>
+  </data>
+  <data name="WindowsReaderModeChoiceNote" xml:space="preserve">
+    <value>選んだ設定はこの作品用に保存され、ほかのデバイスにも引き継がれます。</value>
+  </data>
+  <data name="WindowsReaderUseDefault" xml:space="preserve">
+    <value>既定に戻す</value>
+  </data>
+  <data name="WindowsReaderModePaged" xml:space="preserve">
+    <value>ページ送り</value>
+  </data>
+  <data name="WindowsReaderModeScrolled" xml:space="preserve">
+    <value>スクロール</value>
+  </data>
+  <data name="WindowsReaderPageLayout" xml:space="preserve">
+    <value>ページレイアウト</value>
+  </data>
+  <data name="WindowsReaderFit" xml:space="preserve">
+    <value>フィット</value>
+  </data>
+  <data name="WindowsReaderFitHeight" xml:space="preserve">
+    <value>高さ</value>
+  </data>
+  <data name="WindowsReaderCropBorders" xml:space="preserve">
+    <value>余白を切り取る</value>
+  </data>
+  <data name="WindowsReaderGap" xml:space="preserve">
+    <value>画像の間隔</value>
+  </data>
+  <data name="WindowsReaderBackground" xml:space="preserve">
+    <value>背景</value>
+  </data>
+  <data name="WindowsReaderMoreSettings" xml:space="preserve">
+    <value>リーダーのその他の設定</value>
+  </data>
+  <data name="WindowsReaderPaperMode" xml:space="preserve">
+    <value>ペーパーモード</value>
+  </data>
+  <data name="WindowsReaderPaperModeNote" xml:space="preserve">
+    <value>紙のような配色になり、ページは即座にめくれ、リーダー内の動きはなくなります。</value>
+  </data>
+  <data name="WindowsReaderFont" xml:space="preserve">
+    <value>フォント</value>
+  </data>
+  <data name="WindowsReaderTextSize" xml:space="preserve">
+    <value>文字サイズ</value>
+  </data>
+  <data name="WindowsReaderLineSpacing" xml:space="preserve">
+    <value>行間</value>
+  </data>
+  <data name="WindowsReaderLineTight" xml:space="preserve">
+    <value>狭い</value>
+  </data>
+  <data name="WindowsReaderLineNormal" xml:space="preserve">
+    <value>標準</value>
+  </data>
+  <data name="WindowsReaderLineLoose" xml:space="preserve">
+    <value>広い</value>
+  </data>
+  <data name="WindowsReaderMargins" xml:space="preserve">
+    <value>余白</value>
+  </data>
+  <data name="WindowsReaderJustify" xml:space="preserve">
+    <value>両端揃え</value>
+  </data>
+  <data name="WindowsReaderLook" xml:space="preserve">
+    <value>表示色</value>
+  </data>
+  <data name="WindowsReaderPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="WindowsReaderSmaller" xml:space="preserve">
+    <value>文字を小さく</value>
+  </data>
+  <data name="WindowsReaderLarger" xml:space="preserve">
+    <value>文字を大きく</value>
+  </data>
+  <data name="WindowsReaderPagesTab" xml:space="preserve">
+    <value>ページ</value>
+  </data>
+  <data name="WindowsReaderChaptersTab" xml:space="preserve">
+    <value>章</value>
+  </data>
+  <data name="WindowsReaderVolume" xml:space="preserve">
+    <value>{volume}巻</value>
+  </data>
+  <data name="WindowsReaderChapterPages_other" xml:space="preserve">
+    <value>{pages}ページ</value>
+  </data>
+  <data name="WindowsReaderGridPage" xml:space="preserve">
+    <value>{page}ページ</value>
+  </data>
+  <data name="WindowsReaderImageLabel" xml:space="preserve">
+    <value>画像{count}枚中{image}枚目</value>
+  </data>
+  <data name="WindowsReaderNoteClose" xml:space="preserve">
+    <value>注釈を閉じる</value>
+  </data>
+  <data name="WindowsReaderBack" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="WindowsReaderModeVertical" xml:space="preserve">
+    <value>縦並びページ</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLower" xml:space="preserve">
+    <value>縦並びページ</value>
+  </data>
+  <data name="WindowsReaderModeAutoLine" xml:space="preserve">
+    <value>{way}(作品情報から判定)</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLine" xml:space="preserve">
+    <value>ページを縦に並べて表示</value>
+  </data>
+  <data name="WindowsReaderModeStripLine" xml:space="preserve">
+    <value>ウェブトゥーンや縦長の画像向け</value>
+  </data>
+  <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>ダウンロードした章は、接続なしで開けます。</value>
+  </data>
+  <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
+    <value>{title}を最初から読み直しています</value>
+  </data>
+  <data name="SendSaveFilesWindows" xml:space="preserve">
+    <value>ファイルを保存</value>
+  </data>
+  <data name="SendSavedWindows_other" xml:space="preserve">
+    <value>{n}件のファイルを保存しました</value>
+  </data>
+  <data name="SendSaveFailedWindows" xml:space="preserve">
+    <value>そのフォルダにファイルを保存できませんでした。別のフォルダをお試しください。</value>
+  </data>
+  <data name="OpdsPausedNoneWindows" xml:space="preserve">
+    <value>一時停止中。このPCはローカルネットワークに接続していません。</value>
+  </data>
+  <data name="OpdsPausedVpnWindows" xml:space="preserve">
+    <value>一時停止中。このPCはVPN経由でのみ接続しています。</value>
+  </data>
+  <data name="FeedFirewallTitleWindows" xml:space="preserve">
+    <value>Windowsからネットワークについて確認があります</value>
+  </data>
+  <data name="FeedFirewallBodyWindows" xml:space="preserve">
+    <value>家の電子書籍リーダーからフィードにアクセスできるよう、Kaeriはプライベートネットワークでのみ許可してください。パブリックネットワークのチェックは外したままにしてください。</value>
   </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>設定を読み込んでいます</value>
@@ -5717,6 +6038,24 @@
   <data name="HomeReadNoSources" xml:space="preserve">
     <value>フォルダ、サーバー、またはプラグインストアを追加すると、ホームから読めます。</value>
   </data>
+  <data name="ReadHomeOfflineRows" xml:space="preserve">
+    <value>話題の作品や新作は、オンラインになると表示されます。</value>
+  </data>
+  <data name="ReadHomeBrowse" xml:space="preserve">
+    <value>ブラウズ</value>
+  </data>
+  <data name="ReadHomeBrowseLine" xml:space="preserve">
+    <value>形式別の話題作・新作・完結作</value>
+  </data>
+  <data name="ReadHomeBrowseRow" xml:space="preserve">
+    <value>{first}、{second}ほか{more}作品</value>
+  </data>
+  <data name="ReadHomeBrowseNote" xml:space="preserve">
+    <value>AniListの情報です。ソースには、作品を開いたときに問い合わせます。</value>
+  </data>
+  <data name="ReadHomeBrowseKept" xml:space="preserve">
+    <value>{time}に保存したリストは引き続き開けます。</value>
+  </data>
   <data name="WeekUsually" xml:space="preserve">
     <value>たいてい</value>
   </data>
@@ -6334,6 +6673,69 @@
   </data>
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>除外</value>
+  </data>
+  <data name="ReadSearchStarted" xml:space="preserve">
+    <value>開始時期</value>
+  </data>
+  <data name="ReadSearchSourcesOnly" xml:space="preserve">
+    <value>ソースのみ</value>
+  </data>
+  <data name="ReadSearchFromSources" xml:space="preserve">
+    <value>ソースから</value>
+  </data>
+  <data name="ReadSearchAsking" xml:space="preserve">
+    <value>{source}に問い合わせています…</value>
+  </data>
+  <data name="ReadSearchSourceFailed" xml:space="preserve">
+    <value>{source}から応答がありませんでした。</value>
+  </data>
+  <data name="ReadSearchSourceTimeout" xml:space="preserve">
+    <value>{seconds}秒以内に応答がありませんでした。</value>
+  </data>
+  <data name="ReadSearchSourceNothing" xml:space="preserve">
+    <value>{sources}では見つかりませんでした。</value>
+  </data>
+  <data name="ReadSearchInSource" xml:space="preserve">
+    <value>{source}にあり</value>
+  </data>
+  <data name="ReadSearchInSources_other" xml:space="preserve">
+    <value>ソースのうち{n}件にあり</value>
+  </data>
+  <data name="ReadSearchAnilistNothing" xml:space="preserve">
+    <value>AniListではこの言葉に一致する作品が見つかりませんでした。</value>
+  </data>
+  <data name="ReadSearchAnilistFailed" xml:space="preserve">
+    <value>AniListからの応答がありませんでした。</value>
+  </data>
+  <data name="ReadSearchAnilistFailedLine" xml:space="preserve">
+    <value>ソースには問い合わせ済みです。</value>
+  </data>
+  <data name="ReadSearchSourcesNothing" xml:space="preserve">
+    <value>ソースにも見つかりませんでした。</value>
+  </data>
+  <data name="ReadSearchTotalUnknown" xml:space="preserve">
+    <value>AniListの作品</value>
+  </data>
+  <data name="ReadSearchMoreAnilist" xml:space="preserve">
+    <value>AniListの結果をさらに表示</value>
+  </data>
+  <data name="ReadSearchShown" xml:space="preserve">
+    <value>{total}件中{shown}件を表示</value>
+  </data>
+  <data name="ReadSearchShownSome" xml:space="preserve">
+    <value>{shown}件を表示</value>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>サーバー</value>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>フォルダ</value>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>プラグイン</value>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>さらに{n}件を表示</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step}/{total}</value>

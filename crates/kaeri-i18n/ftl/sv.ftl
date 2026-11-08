@@ -966,6 +966,75 @@ reading-downloads-done-parts =
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = Kapitel från { $count } serier är redo att läsas offline.
 
+# Row heading on reading's Home: manga that are trending on AniList now.
+read-home-trending-manga = Trendande manga
+
+# Row heading on reading's Home: webtoons that are trending on AniList now.
+read-home-trending-webtoons = Trendande webtoons
+
+# Row heading on reading's Home: light novels that are trending on AniList now.
+read-home-trending-novels = Trendande light novels
+
+# Row heading on reading's Home: the most popular manga that started in the last 12 months.
+read-home-new-manga = Nya manga
+
+# Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+read-home-new-webtoons = Nya webtoons
+
+# Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+read-home-new-novels = Nya light novels
+
+# Side text beside a New row's heading, in a quieter style: what the row covers.
+read-home-new-side = Senaste 12 månaderna
+
+# Row heading on reading's Home: the most popular manga that have finished.
+read-home-finished-manga = Avslutade manga
+
+# Row heading on reading's Home: the most popular webtoons that have finished.
+read-home-finished-webtoons = Avslutade webtoons
+
+# Row heading on reading's Home: the most popular light novels that have finished.
+read-home-finished-novels = Avslutade light novels
+
+# Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+read-home-finished-side = Mest populära
+
+# A choice of reading Search's Started filter: series that started at any time.
+read-search-started-any = När som helst
+
+# A choice of reading Search's Started filter: series that started in the last 12 months.
+read-search-started-year = Senaste 12 månaderna
+
+# A choice of reading Search's Started filter: series that started in the last 3 years.
+read-search-started-3-years = Senaste 3 åren
+
+# Under a source's hit in Search: the chapters it holds, from the first.
+read-hit-chapters = Kapitel 1 till { $last }
+
+# Under a source's hit in Search: a web novel's episodes it holds, from the first.
+read-hit-episodes = Avsnitt 1 till { $last }
+
+# Under a source's hit in Search: a light novel's parts it holds.
+read-hit-parts =
+    { $count ->
+        [one] 1 del
+       *[other] { $count } delar
+    }
+
+# Under a source's hit in Search: the book files it holds.
+read-hit-files =
+    { $count ->
+        [one] 1 fil
+       *[other] { $count } filer
+    }
+
+# Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+read-hit-files-format =
+    { $count ->
+        [one] 1 fil · { $format }
+       *[other] { $count } filer · { $format }
+    }
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Gick med i { $store } som { $member }.
 
@@ -8784,6 +8853,24 @@ home-read-end = Det var allt för nu. Uppdateringar och Sök har de fullständig
 # Line at the end of Read with no book sources yet. A button to add one follows it.
 home-read-no-sources = Lägg till en mapp, en server eller en tilläggsbutik för att läsa från startsidan.
 
+# In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+read-home-offline-rows = Trendande och nya serier visas när du är online.
+
+# E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+read-home-browse = Bläddra
+
+# E-ink: the line under Browse on Read's Home.
+read-home-browse-line = Trendande, nya och avslutade, per format
+
+# E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+read-home-browse-row = { $first }, { $second } och { $more } till
+
+# E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+read-home-browse-note = Från AniList. Dina källor tillfrågas när du öppnar en serie.
+
+# E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+read-home-browse-kept = Listor sparade { $time } går fortfarande att öppna.
+
 # Under a day in Read's week: what usually comes out that day, when the time isn't known.
 week-usually = Oftast
 
@@ -9457,6 +9544,71 @@ read-filter-included = Med
 
 # A genre's state: no series with it.
 read-filter-left-out = Utesluten
+
+# A filter of reading's Search: when a series started.
+read-search-started = Start
+
+# The filter bar's chip that searches only the person's own sources, leaving AniList out.
+read-search-sources-only = Bara dina källor
+
+# Search's section heading under AniList's results: one group per source of the person's.
+read-search-from-sources = Från dina källor
+
+# E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+read-search-asking = Frågar { $source }…
+
+# A source group whose source failed to answer. The reason and Try again follow.
+read-search-source-failed = { $source } svarade inte.
+
+# The reason under it when the source gave no answer in time.
+read-search-source-timeout = Inget svar på { $seconds } s.
+
+# One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+read-search-source-nothing = Hittade inget i { $sources }.
+
+# On an AniList result that one of the person's sources has. The source is its name.
+read-search-in-source = Hos { $source }
+
+# On an AniList result that more than one of the person's sources has. Always 2 or more.
+read-search-in-sources =
+    { $n ->
+        [one] Hos { $n } av dina källor
+       *[other] Hos { $n } av dina källor
+    }
+
+# Search, when AniList found nothing but the person's sources did.
+read-search-anilist-nothing = AniList hittade inget för de här orden.
+
+# Search, when AniList could not be reached.
+read-search-anilist-failed = AniList svarade inte.
+
+# The line under it.
+read-search-anilist-failed-line = Dina källor frågades ändå.
+
+# Search, when nothing was found anywhere: under the line saying AniList found nothing.
+read-search-sources-nothing = Inget i dina källor heller.
+
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = Serier från AniList
+
+# The link under From your sources that shows the rest of AniList's results.
+read-search-more-anilist = Mer från AniList
+
+# Beside More from AniList: how many of AniList's results show.
+read-search-shown = { $shown } av { $total } visas
+
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+read-search-shown-some = { $shown } visas
+
+# Beside a source's name in Search: the kind of source it is.
+read-search-source-kind-server = Server
+
+read-search-source-kind-folder = Mapp
+
+read-search-source-kind-plugin = Tillägg
+
+# The button of a source group with more than five hits.
+read-search-source-more = Visa { $n } till
 
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step } av { $total }

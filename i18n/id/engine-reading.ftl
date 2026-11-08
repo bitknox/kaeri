@@ -164,3 +164,28 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } bagian { $title } siap dibaca offline.
  }
 reading-downloads-done-series = Bab dari { $count } seri siap dibaca offline.
+read-home-trending-manga = Manga sedang tren
+read-home-trending-webtoons = Webtoon sedang tren
+read-home-trending-novels = Light novel sedang tren
+read-home-new-manga = Manga baru
+read-home-new-webtoons = Webtoon baru
+read-home-new-novels = Light novel baru
+read-home-new-side = 12 bulan terakhir
+read-home-finished-manga = Manga tamat
+read-home-finished-webtoons = Webtoon tamat
+read-home-finished-novels = Light novel tamat
+read-home-finished-side = Paling populer
+read-search-started-any = Kapan saja
+read-search-started-year = 12 bulan terakhir
+read-search-started-3-years = 3 tahun terakhir
+read-hit-chapters = Bab 1 sampai { $last }
+read-hit-episodes = Episode 1 sampai { $last }
+read-hit-parts = { $count ->
+   *[other] { $count } bagian
+ }
+read-hit-files = { $count ->
+   *[other] { $count } berkas
+ }
+read-hit-files-format = { $count ->
+   *[other] { $count } berkas · { $format }
+ }

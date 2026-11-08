@@ -6680,6 +6680,23 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "feed-firewall-body-windows": {
+    "source": "132a836a9009",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Частные сети\" and \"общественные сети\" should match the labels in the Russian Windows firewall dialog (Windows 11 may say \"общедоступные\")."
+    ],
+    "back": "So that home e-readers can see the feed (channel), allow Kaeri access to private networks only. Don't check public networks."
+  },
+  "feed-firewall-title-windows": {
+    "source": "739ceb3c60d2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Windows will request network access"
+  },
   "film-length-hours": {
     "source": "fb12680c5861",
     "state": "draft",
@@ -13556,11 +13573,25 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "opds-paused-none-windows": {
+    "source": "c7d804ecd7d0",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Paused. This computer is not connected to a local network."
+  },
   "opds-paused-vpn": {
     "source": "427149a54da2",
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
+  },
+  "opds-paused-vpn-windows": {
+    "source": "1928355bd8d0",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Paused. This computer is connected only through a VPN."
   },
   "opds-port": {
     "source": "b354dc19a720",
@@ -18132,6 +18163,141 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-hit-chapters": {
+    "source": "802e9b40d1d9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Chapters from 1 to { $last }"
+  },
+  "read-hit-episodes": {
+    "source": "88dd644debd8",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Web novel installments rendered as \"Эпизоды\"; Russian readers may expect \"главы\" or \"части\". Check."
+    ],
+    "back": "Episodes from 1 to { $last }"
+  },
+  "read-hit-files": {
+    "source": "31e42ba495f5",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: { $count } file | few: { $count } files | many: { $count } files | other: { $count } files"
+  },
+  "read-hit-files-format": {
+    "source": "770c7a09f6a7",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: { $count } file · { $format } | few: { $count } files · { $format } | many: { $count } files · { $format } | other: { $count } files · { $format }"
+  },
+  "read-hit-parts": {
+    "source": "ab5de0b28ab1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: { $count } part | few: { $count } parts | many: { $count } parts | other: { $count } parts"
+  },
+  "read-home-browse": {
+    "source": "99fa943a22c1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Каталог\" reused from search-browse; it is also the page title, and \"Обзор\" is the alternative."
+    ],
+    "back": "Catalog"
+  },
+  "read-home-browse-kept": {
+    "source": "919569641b9c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: The time is put in parentheses because its format is unknown (clock time or date)."
+    ],
+    "back": "Saved lists ({ $time }) still open."
+  },
+  "read-home-browse-line": {
+    "source": "c994c5844b1e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending, new and completed, by format"
+  },
+  "read-home-browse-note": {
+    "source": "565b35fc96d1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "From AniList. Your sources are polled when you open a series."
+  },
+  "read-home-browse-row": {
+    "source": "5de2127e7f29",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $first }, { $second } and { $more } more"
+  },
+  "read-home-finished-manga": {
+    "source": "ee7c676c85e9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Completed manga"
+  },
+  "read-home-finished-novels": {
+    "source": "2ddb4e46f24f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Completed ranobe (light novels)"
+  },
+  "read-home-finished-side": {
+    "source": "faf54e55dd9b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Most popular"
+  },
+  "read-home-finished-webtoons": {
+    "source": "452239b09399",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Completed webtoons"
+  },
+  "read-home-new-manga": {
+    "source": "4fc30243e1ef",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New manga"
+  },
+  "read-home-new-novels": {
+    "source": "75d2b6cc8397",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New ranobe (light novels)"
+  },
+  "read-home-new-side": {
+    "source": "ee719957657d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Last 12 months"
+  },
+  "read-home-new-webtoons": {
+    "source": "4a84fcb36480",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "New webtoons"
+  },
   "read-home-offline-line": {
     "source": "93a502484563",
     "state": "draft",
@@ -18141,6 +18307,34 @@
       "'главная в разделе чтения' for reading's Home is a guess at the right place name"
     ],
     "back": "Reading's Home needs a connection the first time it opens. Downloaded chapters still open."
+  },
+  "read-home-offline-rows": {
+    "source": "5c9d955aa514",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Trending series and new releases will appear when you are online."
+  },
+  "read-home-trending-manga": {
+    "source": "7eee43d8f9ae",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Manga in trend"
+  },
+  "read-home-trending-novels": {
+    "source": "4e45bd0a0a99",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Ranobe (light novels) in trend"
+  },
+  "read-home-trending-webtoons": {
+    "source": "7e4405f9d680",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Webtoons in trend"
   },
   "read-library-empty": {
     "source": "d3adf45c142a",
@@ -18220,6 +18414,37 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-search-anilist-failed": {
+    "source": "51697437569f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "AniList did not respond."
+  },
+  "read-search-anilist-failed-line": {
+    "source": "db477b88e688",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Your sources were polled anyway."
+  },
+  "read-search-anilist-nothing": {
+    "source": "53296c63604b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "AniList found nothing for these words."
+  },
+  "read-search-asking": {
+    "source": "f75b2bc2a054",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Name first with a colon (\"X: ожидание ответа…\") to avoid case after \"к\"; check it as a screen reader label."
+    ],
+    "back": "{ $source }: waiting for a response…"
+  },
   "read-search-browse-line": {
     "source": "40af5fd80735",
     "state": "draft",
@@ -18237,6 +18462,43 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "read-search-from-sources": {
+    "source": "4c16421d7b92",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Section heading reduced to \"Ваши источники\" because the genitive \"из ваших источников\" cannot use the term."
+    ],
+    "back": "Your sources"
+  },
+  "read-search-in-source": {
+    "source": "9d6c2ec16e83",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Есть в { $source }\" puts the name after a preposition; fine for Latin names, odd if a source has a Cyrillic name that should decline."
+    ],
+    "back": "Available in { $source }"
+  },
+  "read-search-in-sources": {
+    "source": "4f41affe0f2d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Rephrased as \"Ваши источники с этой серией: N\" because the prepositional case of the term cannot be typed; same text in all plural forms."
+    ],
+    "back": "all forms: Your sources with this series: { $n }"
+  },
+  "read-search-more-anilist": {
+    "source": "8c0d4e2b5764",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "More from AniList"
   },
   "read-search-nothing": {
     "source": "76628fdd5e7e",
@@ -18268,11 +18530,132 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-search-shown": {
+    "source": "bc2e24859970",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Shown { $shown } of { $total }"
+  },
+  "read-search-shown-some": {
+    "source": "2fa10b6235ca",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Shown: { $shown }"
+  },
+  "read-search-source-failed": {
+    "source": "f8bd3cfcebc6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $source }: no response."
+  },
+  "read-search-source-kind-folder": {
+    "source": "9434ea90b6fe",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Folder"
+  },
+  "read-search-source-kind-plugin": {
+    "source": "ff60263da2d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Plugin"
+  },
+  "read-search-source-kind-server": {
+    "source": "5afcaa918bbb",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Server"
+  },
+  "read-search-source-more": {
+    "source": "44dd0514bd9e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Show { $n } more"
+  },
+  "read-search-source-nothing": {
+    "source": "4c0214217083",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: 'Ничего не найдено: X' can read as the sources themselves not being found."
+    ],
+    "back": "Nothing found in: { $sources }."
+  },
+  "read-search-source-timeout": {
+    "source": "b95df4187657",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "No response within { $seconds } s."
+  },
+  "read-search-sources-nothing": {
+    "source": "cde3e10ce1c4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Your sources didn't find anything either."
+  },
+  "read-search-sources-only": {
+    "source": "c20c9edf24b3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Only your sources"
+  },
+  "read-search-started": {
+    "source": "3fd6bd99e3f6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Filter name coined as \"Начало выпуска\"; check it next to the other filter names."
+    ],
+    "back": "Start of publication"
+  },
+  "read-search-started-3-years": {
+    "source": "fca85bdfa141",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Last 3 years"
+  },
+  "read-search-started-any": {
+    "source": "155085305728",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Любое время\" as the filter choice; \"За всё время\" is the alternative."
+    ],
+    "back": "Any time"
+  },
+  "read-search-started-year": {
+    "source": "ee719957657d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Last 12 months"
+  },
   "read-search-total": {
     "source": "8ff253aea036",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "read-search-total-unknown": {
+    "source": "03b29b695e0a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Series from AniList"
   },
   "read-series-downloaded-open": {
     "source": "8a151ce93ce9",
@@ -22060,6 +22443,30 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "send-save-failed-windows": {
+    "source": "36709deb1a85",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Couldn't save the files to this folder. Choose another one."
+  },
+  "send-save-files-windows": {
+    "source": "11bfcbcddd95",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Save files"
+  },
+  "send-saved-windows": {
+    "source": "3a6e5e0af28e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: The one form reads \"Сохранён 1 файл\" (covers 21, 31...)."
+    ],
+    "back": "one: { $n } file saved | few: { $n } files saved | many: { $n } files saved | other: { $n } files saved"
+  },
   "send-share-again": {
     "source": "25a5e97e7ab4",
     "state": "draft",
@@ -22267,6 +22674,16 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "series-read-again-done-windows": {
+    "source": "234105505b8c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Перечитываете «X» с начала\" as a notice with Undo; a past-tense form may suit the app voice better."
+    ],
+    "back": "You are rereading \"{ $title }\" from the beginning"
   },
   "series-read-again-menu": {
     "source": "c548a26cb51a",
@@ -36125,5 +36542,603 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
+  },
+  "windows-read-downloads-empty-detail": {
+    "source": "7ead281efe81",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Downloaded chapters open without a network connection."
+  },
+  "windows-reader-all-manga-pc": {
+    "source": "b55d1dff2113",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "All manga on this computer"
+  },
+  "windows-reader-all-novels": {
+    "source": "b2d018bcfb7e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "All ranobe (light novels)"
+  },
+  "windows-reader-all-strips-pc": {
+    "source": "cfd35af8aa31",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "All webtoons on this computer"
+  },
+  "windows-reader-back": {
+    "source": "c16e00a7a8b2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Back"
+  },
+  "windows-reader-back-to-series": {
+    "source": "0899c5a1d76f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Back to the series"
+  },
+  "windows-reader-background": {
+    "source": "1efbfc3937d5",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Background"
+  },
+  "windows-reader-change": {
+    "source": "2f64461723d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Change"
+  },
+  "windows-reader-chapter-failed": {
+    "source": "b7151743bc09",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Couldn't open: { $chapter }"
+  },
+  "windows-reader-chapter-pages": {
+    "source": "6facfb38e6ae",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "one: { $pages } page | few: { $pages } pages | many: { $pages } pages | other: { $pages } pages"
+  },
+  "windows-reader-chapters-tab": {
+    "source": "15733d7d0f6d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Chapters"
+  },
+  "windows-reader-choose-source": {
+    "source": "2e134e8c7be9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Choose source"
+  },
+  "windows-reader-continue": {
+    "source": "f42f6a6df6bf",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Continue reading"
+  },
+  "windows-reader-crop-borders": {
+    "source": "1b28173e8b92",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Crop margins"
+  },
+  "windows-reader-end-caught-up-body": {
+    "source": "3ce370affb34",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Took the Linux wording; Apple's reader-end-caught-up-body renders \"в ваших источники\", which is ungrammatical and should be fixed there."
+    ],
+    "back": "New chapters will appear in \"Updates\" as soon as your sources get them."
+  },
+  "windows-reader-end-finished": {
+    "source": "cb7b1474b76f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "End of the series"
+  },
+  "windows-reader-end-finished-body": {
+    "source": "6893412bf017",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "There are no more chapters."
+  },
+  "windows-reader-end-no-source": {
+    "source": "6799149dde6b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Still open after revision: Case ending glued onto glossary term ('{ -source }а'); drops 'your'; colon phrasing awkward.",
+      "drafter: Reuses Apple's \"Ни у одного { -source }а\", which appends \"а\" to the term."
+    ],
+    "back": "Sources: no { $chapter } yet [drops 'your']"
+  },
+  "windows-reader-end-not-out": {
+    "source": "ea24be349c9e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Not out yet: { $chapter }"
+  },
+  "windows-reader-end-not-out-body": {
+    "source": "3ab576b2f95f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Kaeri checks for new chapters in the background and adds them to \"Updates\"."
+  },
+  "windows-reader-end-not-read": {
+    "source": "a8555163106b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Not marked as read yet"
+  },
+  "windows-reader-end-of-chapter": {
+    "source": "9dfd61e866b4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "End: { $chapter }"
+  },
+  "windows-reader-end-offline": {
+    "source": "56bcafcd90ca",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Apple's \"Не загружено\" reused; other reading strings say \"скачано\" for downloads."
+    ],
+    "back": "Not downloaded: { $chapter }"
+  },
+  "windows-reader-end-offline-body": {
+    "source": "bae4cdd0d59c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Took the Linux wording (\"Глава откроется\") instead of Apple's \"Она откроется\" for clarity."
+    ],
+    "back": "You are offline. The chapter will open here when a connection appears."
+  },
+  "windows-reader-end-tracker": {
+    "source": "8889ba40058a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Read · updated: { $trackers }"
+  },
+  "windows-reader-end-trackers-two": {
+    "source": "2210cc318940",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $first } and { $second }"
+  },
+  "windows-reader-fit": {
+    "source": "f2a69a199c80",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Scale"
+  },
+  "windows-reader-fit-height": {
+    "source": "ffdadf0a576f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "To height"
+  },
+  "windows-reader-font": {
+    "source": "079cf7850d93",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Font"
+  },
+  "windows-reader-gap": {
+    "source": "6f8e405853fb",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Gap between pictures"
+  },
+  "windows-reader-go-back": {
+    "source": "575e795c45e2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Return"
+  },
+  "windows-reader-grid-page": {
+    "source": "2bd90a7c5733",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page { $page }"
+  },
+  "windows-reader-group-line": {
+    "source": "7abc53e988e9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · p. { $page } of { $total }"
+  },
+  "windows-reader-group-line-scroll": {
+    "source": "09d910fab6e2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · { $percent }%"
+  },
+  "windows-reader-group-line-spread": {
+    "source": "09bcdd26d035",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · pp. { $first } and { $second }"
+  },
+  "windows-reader-group-line-strip": {
+    "source": "310bc0d31cea",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $chapter } · picture { $image } of { $total }"
+  },
+  "windows-reader-image-label": {
+    "source": "920d0ae9cb75",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Picture { $image } of { $count }"
+  },
+  "windows-reader-justify": {
+    "source": "7077a13a0ce2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Apple's \"Выравнивание по ширине\" exceeds 20 characters; used Linux's \"Выровнять по ширине\"."
+    ],
+    "back": "Justify to width"
+  },
+  "windows-reader-larger": {
+    "source": "8cc0d06745c9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Text larger"
+  },
+  "windows-reader-line-loose": {
+    "source": "80b71fc6f43c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Loose"
+  },
+  "windows-reader-line-normal": {
+    "source": "9ff3121d30f8",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Обычный\" agrees with \"Интервал\" but this string is also the margins choice, where \"Поля\" needs \"Обычные\"."
+    ],
+    "back": "Normal"
+  },
+  "windows-reader-line-spacing": {
+    "source": "04125ff41f4d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"Межстрочный интервал\" (Apple) exceeds 16 characters; shortened to \"Интервал\"."
+    ],
+    "back": "Spacing [does not say 'line']"
+  },
+  "windows-reader-line-tight": {
+    "source": "1bec74d2c7d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Dense"
+  },
+  "windows-reader-look": {
+    "source": "4efeeeb48a45",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Design / appearance"
+  },
+  "windows-reader-margins": {
+    "source": "690701565560",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Margins"
+  },
+  "windows-reader-mode-auto": {
+    "source": "36cb8cc9898d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Auto · { $mode }"
+  },
+  "windows-reader-mode-auto-line": {
+    "source": "ca1ebf3103ac",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $way }, according to the series data"
+  },
+  "windows-reader-mode-auto-option": {
+    "source": "db73788b3c97",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Auto"
+  },
+  "windows-reader-mode-choice-note": {
+    "source": "46e82bba1964",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "The choice is saved for this series and will carry over to other devices."
+  },
+  "windows-reader-mode-detected-note": {
+    "source": "3b693c47d6a6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Determined from the series data."
+  },
+  "windows-reader-mode-ltr-lower": {
+    "source": "8fc6a6f60382",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "left to right"
+  },
+  "windows-reader-mode-paged": {
+    "source": "6ac0cf0ddc5c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page flipping"
+  },
+  "windows-reader-mode-rtl-lower": {
+    "source": "a5ca6dc2e9e3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "right to left"
+  },
+  "windows-reader-mode-scrolled": {
+    "source": "a7698b3d20a6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Scrolling"
+  },
+  "windows-reader-mode-strip-line": {
+    "source": "9e40e6b1cd20",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "For webtoons and long pictures"
+  },
+  "windows-reader-mode-strip-lower": {
+    "source": "5e6cbcad84fd",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "ribbon / feed"
+  },
+  "windows-reader-mode-vertical": {
+    "source": "8ed04ce33a3a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Vertical pages"
+  },
+  "windows-reader-mode-vertical-line": {
+    "source": "d7217c9d3bb3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Pages one under another"
+  },
+  "windows-reader-mode-vertical-lower": {
+    "source": "872251bbca51",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: \"вертикальные страницы\" exceeds 20 characters; used the adverb \"вертикально\" (matches \"справа налево\")."
+    ],
+    "back": "vertically [adverb, not 'vertical pages']"
+  },
+  "windows-reader-more-settings": {
+    "source": "c807f531ef32",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Other reading settings"
+  },
+  "windows-reader-note-close": {
+    "source": "15eb1f7cc596",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Close footnote"
+  },
+  "windows-reader-opening": {
+    "source": "abe25f4dcf10",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Chapter label after a colon (\"Открывается: Глава 12\"); differs from Apple, which embeds a number."
+    ],
+    "back": "Opening: { $chapter }"
+  },
+  "windows-reader-opening-slow": {
+    "source": "82ab0ba82b73",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "drafter: Reuses Apple's \"Поиск { -source }а\", which builds the genitive by appending \"а\" to the term."
+    ],
+    "back": "Searching for a source · { $seconds } s [case ending 'а' glued onto the glossary term]"
+  },
+  "windows-reader-page-failed-hint": {
+    "source": "345a90e5f071",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Turn the page to skip it."
+  },
+  "windows-reader-page-label": {
+    "source": "d07633ff2e7b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page { $page } of { $total }"
+  },
+  "windows-reader-page-layout": {
+    "source": "a9e5d8a7ac94",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page arrangement"
+  },
+  "windows-reader-pages-label": {
+    "source": "ed2c0c059f83",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Pages { $first } and { $second } of { $total }"
+  },
+  "windows-reader-pages-tab": {
+    "source": "6ac0c20ddc5c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Pages"
+  },
+  "windows-reader-paper-mode": {
+    "source": "32986ee6814b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Paper mode"
+  },
+  "windows-reader-paper-mode-note": {
+    "source": "9cab8ac867e0",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: Comma-spliced list and colloquial 'читалка' sound off-register for a settings note.",
+      "drafter: English adds \"Paper colours\" to Apple's note; check the joined sentence."
+    ],
+    "back": "Paper colours. Pages turn at once, and nothing moves in the reader."
+  },
+  "windows-reader-percent": {
+    "source": "177259baefed",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "{ $percent }%"
+  },
+  "windows-reader-reading-mode": {
+    "source": "566ac8adad81",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Reading mode"
+  },
+  "windows-reader-scrubber": {
+    "source": "2e192b19ed15",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Page"
+  },
+  "windows-reader-settings-open": {
+    "source": "89005c87f469",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Reading settings"
+  },
+  "windows-reader-smaller": {
+    "source": "b0ca99f72a07",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Text smaller"
+  },
+  "windows-reader-start-over": {
+    "source": "338cca2d2f31",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "From the beginning"
+  },
+  "windows-reader-text-size": {
+    "source": "66da146c9f6b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Text size"
+  },
+  "windows-reader-this-series": {
+    "source": "f902decaf67c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "This series"
+  },
+  "windows-reader-use-default": {
+    "source": "082eda98d60c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "flags": [
+      "back-translation: Revised after back-translation. Was: 'Как по умолчанию' (as by default) is awkward for a button; 'По умолчанию' or 'Сбросить' fits."
+    ],
+    "back": "Default"
+  },
+  "windows-reader-volume": {
+    "source": "d4907c64a096",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-08",
+    "back": "Volume { $volume }"
   }
 }

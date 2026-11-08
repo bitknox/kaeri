@@ -6,6 +6,12 @@ home-read-releasing = In uscita ora
 home-read-checked-on-open = Controllato quando apri { -app-name }
 home-read-end = Per ora è tutto. Aggiornamenti e Cerca hanno gli elenchi completi.
 home-read-no-sources = Aggiungi una cartella, un server o un { -plugin-store } per leggere da Home.
+read-home-offline-rows = Le serie di tendenza e le novità compaiono quando sei online.
+read-home-browse = Sfoglia
+read-home-browse-line = Di tendenza, nuove e concluse, per formato
+read-home-browse-row = { $first }, { $second } e altri { $more }
+read-home-browse-note = Da AniList. Le tue { -source-pl } vengono consultate quando apri una serie.
+read-home-browse-kept = Le liste salvate ({ $time }) restano disponibili.
 week-usually = Di solito
 week-nothing-usually = Di solito niente
 updates-checked = Controllato { $ago }
@@ -268,6 +274,31 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Incluso
 read-filter-left-out = Escluso
+read-search-started = Inizio
+read-search-sources-only = Solo le tue { -source-pl }
+read-search-from-sources = Dalle tue { -source-pl }
+read-search-asking = Richiesta a { $source }…
+read-search-source-failed = { $source } non ha risposto.
+read-search-source-timeout = Nessuna risposta in { $seconds } s.
+read-search-source-nothing = Niente trovato in { $sources }.
+read-search-in-source = In { $source }
+read-search-in-sources = { $n ->
+    [one] In { $n } delle tue { -source-pl }
+    [many] In { $n } delle tue { -source-pl }
+   *[other] In { $n } delle tue { -source-pl }
+ }
+read-search-anilist-nothing = AniList non ha trovato niente per queste parole.
+read-search-anilist-failed = AniList non ha risposto.
+read-search-anilist-failed-line = Le tue { -source-pl } sono state consultate comunque.
+read-search-sources-nothing = Niente nemmeno nelle tue { -source-pl }.
+read-search-total-unknown = Serie da AniList
+read-search-more-anilist = Altro da AniList
+read-search-shown = { $shown } di { $total } mostrati
+read-search-shown-some = { $shown } mostrati
+read-search-source-kind-server = Server
+read-search-source-kind-folder = Cartella
+read-search-source-kind-plugin = { -plugin-cap }
+read-search-source-more = Mostra altri { $n }
 onboarding-step = { $step } di { $total }
 onboarding-welcome-line = Tieni traccia di ciò che guardi e leggi, dalle tue { -source-pl }.
 onboarding-welcome-note = Le tue liste e i tuoi progressi restano sui tuoi { -device-pl }. { -tracker-cap-pl } e { -source-pl } sono tue da aggiungere.

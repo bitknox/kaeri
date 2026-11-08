@@ -6,6 +6,12 @@ home-read-releasing = Şu an yayında
 home-read-checked-on-open = { -app-name } açıldığında kontrol edilir
 home-read-end = Şimdilik hepsi bu. Tam listeler Güncellemeler ve Arama'da.
 home-read-no-sources = Ana sayfadan okumak için bir klasör, bir sunucu veya bir { -plugin-store } ekleyin.
+read-home-offline-rows = Gündemdeki ve yeni seriler çevrimiçi olduğunuzda görünür.
+read-home-browse = Göz at
+read-home-browse-line = Biçime göre gündemdeki, yeni ve tamamlanan
+read-home-browse-row = { $first }, { $second } ve { $more } seri daha
+read-home-browse-note = AniList'ten. Bir seriyi açtığınızda { -source-pl }ınıza sorulur.
+read-home-browse-kept = { $time } itibarıyla saklanan listeler yine de açılır.
 week-usually = Genelde
 week-nothing-usually = Genelde hiçbir şey
 updates-checked = Kontrol edildi: { $ago }
@@ -254,6 +260,30 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Dahil
 read-filter-left-out = Hariç
+read-search-started = Başlangıç
+read-search-sources-only = Yalnızca { -source-pl }ınız
+read-search-from-sources = { -source-cap-pl }ınızdan
+read-search-asking = { $source } bekleniyor…
+read-search-source-failed = { $source } yanıt vermedi.
+read-search-source-timeout = { $seconds } sn içinde yanıt yok.
+read-search-source-nothing = Şunlarda bir şey bulunamadı: { $sources }.
+read-search-in-source = { $source } içinde
+read-search-in-sources = { $n ->
+    [one] { -source-cap-pl }ınızın { $n } tanesinde
+   *[other] { -source-cap-pl }ınızın { $n } tanesinde
+ }
+read-search-anilist-nothing = AniList bu sözcüklerle bir şey bulamadı.
+read-search-anilist-failed = AniList yanıt vermedi.
+read-search-anilist-failed-line = { -source-cap-pl }ınıza yine de soruldu.
+read-search-sources-nothing = { -source-cap-pl }ınızda da bir şey yok.
+read-search-total-unknown = AniList'ten seriler
+read-search-more-anilist = AniList'ten daha fazlası
+read-search-shown = { $shown } / { $total } gösteriliyor
+read-search-shown-some = { $shown } gösteriliyor
+read-search-source-kind-server = Sunucu
+read-search-source-kind-folder = Klasör
+read-search-source-kind-plugin = { -plugin-cap }
+read-search-source-more = { $n } tane daha göster
 onboarding-step = { $step } / { $total }
 onboarding-welcome-line = Kendi { -source-pl }ınızdan izlediklerinizi ve okuduklarınızı takip edin.
 onboarding-welcome-note = Listeleriniz ve ilerlemeniz { -device-pl }ınızda kalır. { -tracker-cap-pl } ve { -source-pl } eklemek size kalmış.

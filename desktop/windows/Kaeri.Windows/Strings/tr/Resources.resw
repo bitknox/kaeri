@@ -980,6 +980,72 @@
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>{count} seriden bölümler çevrimdışı okumaya hazır.</value>
   </data>
+  <data name="ReadHomeTrendingManga" xml:space="preserve">
+    <value>Gündemdeki mangalar</value>
+  </data>
+  <data name="ReadHomeTrendingWebtoons" xml:space="preserve">
+    <value>Gündemdeki webtoonlar</value>
+  </data>
+  <data name="ReadHomeTrendingNovels" xml:space="preserve">
+    <value>Gündemdeki hafif romanlar</value>
+  </data>
+  <data name="ReadHomeNewManga" xml:space="preserve">
+    <value>Yeni mangalar</value>
+  </data>
+  <data name="ReadHomeNewWebtoons" xml:space="preserve">
+    <value>Yeni webtoonlar</value>
+  </data>
+  <data name="ReadHomeNewNovels" xml:space="preserve">
+    <value>Yeni hafif romanlar</value>
+  </data>
+  <data name="ReadHomeNewSide" xml:space="preserve">
+    <value>Son 12 ay</value>
+  </data>
+  <data name="ReadHomeFinishedManga" xml:space="preserve">
+    <value>Tamamlanan mangalar</value>
+  </data>
+  <data name="ReadHomeFinishedWebtoons" xml:space="preserve">
+    <value>Tamamlanan webtoonlar</value>
+  </data>
+  <data name="ReadHomeFinishedNovels" xml:space="preserve">
+    <value>Tamamlanan hafif romanlar</value>
+  </data>
+  <data name="ReadHomeFinishedSide" xml:space="preserve">
+    <value>En popüler</value>
+  </data>
+  <data name="ReadSearchStartedAny" xml:space="preserve">
+    <value>Tüm zamanlar</value>
+  </data>
+  <data name="ReadSearchStartedYear" xml:space="preserve">
+    <value>Son 12 ay</value>
+  </data>
+  <data name="ReadSearchStarted3Years" xml:space="preserve">
+    <value>Son 3 yıl</value>
+  </data>
+  <data name="ReadHitChapters" xml:space="preserve">
+    <value>Bölüm 1 - {last}</value>
+  </data>
+  <data name="ReadHitEpisodes" xml:space="preserve">
+    <value>Bölüm 1 - {last}</value>
+  </data>
+  <data name="ReadHitParts_one" xml:space="preserve">
+    <value>1 kısım</value>
+  </data>
+  <data name="ReadHitParts_other" xml:space="preserve">
+    <value>{count} kısım</value>
+  </data>
+  <data name="ReadHitFiles_one" xml:space="preserve">
+    <value>1 dosya</value>
+  </data>
+  <data name="ReadHitFiles_other" xml:space="preserve">
+    <value>{count} dosya</value>
+  </data>
+  <data name="ReadHitFilesFormat_one" xml:space="preserve">
+    <value>1 dosya · {format}</value>
+  </data>
+  <data name="ReadHitFilesFormat_other" xml:space="preserve">
+    <value>{count} dosya · {format}</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>{store}: {member} olarak katıldınız.</value>
   </data>
@@ -1681,6 +1747,276 @@
   </data>
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Hesap, {state}</value>
+  </data>
+  <data name="WindowsReaderSettingsOpen" xml:space="preserve">
+    <value>Okuyucu ayarları</value>
+  </data>
+  <data name="WindowsReaderOpening" xml:space="preserve">
+    <value>{chapter} açılıyor</value>
+  </data>
+  <data name="WindowsReaderOpeningSlow" xml:space="preserve">
+    <value>Kaynak aranıyor · {seconds} sn</value>
+  </data>
+  <data name="WindowsReaderChapterFailed" xml:space="preserve">
+    <value>{chapter} açılamadı</value>
+  </data>
+  <data name="WindowsReaderChooseSource" xml:space="preserve">
+    <value>Kaynak seç</value>
+  </data>
+  <data name="WindowsReaderPageFailedHint" xml:space="preserve">
+    <value>Onsuz ilerlemek için sayfayı çevirin.</value>
+  </data>
+  <data name="WindowsReaderEndOfChapter" xml:space="preserve">
+    <value>{chapter} sona erdi</value>
+  </data>
+  <data name="WindowsReaderEndNotRead" xml:space="preserve">
+    <value>Henüz okundu olarak işaretlenmedi</value>
+  </data>
+  <data name="WindowsReaderEndTracker" xml:space="preserve">
+    <value>Okundu · {trackers} güncellendi</value>
+  </data>
+  <data name="WindowsReaderEndTrackersTwo" xml:space="preserve">
+    <value>{first} ve {second}</value>
+  </data>
+  <data name="WindowsReaderContinue" xml:space="preserve">
+    <value>Okumayı sürdür</value>
+  </data>
+  <data name="WindowsReaderBackToSeries" xml:space="preserve">
+    <value>Seriye dön</value>
+  </data>
+  <data name="WindowsReaderEndNotOut" xml:space="preserve">
+    <value>{chapter} henüz çıkmadı</value>
+  </data>
+  <data name="WindowsReaderEndNotOutBody" xml:space="preserve">
+    <value>Kaeri yeni bölümleri arka planda arar ve Güncellemeler'e ekler.</value>
+  </data>
+  <data name="WindowsReaderEndCaughtUpBody" xml:space="preserve">
+    <value>Yeni bölümler kaynaklarınızda çıktığında Güncellemeler'de görünür.</value>
+  </data>
+  <data name="WindowsReaderEndFinished" xml:space="preserve">
+    <value>Serinin sonu</value>
+  </data>
+  <data name="WindowsReaderEndFinishedBody" xml:space="preserve">
+    <value>Başka bölüm yok.</value>
+  </data>
+  <data name="WindowsReaderEndNoSource" xml:space="preserve">
+    <value>{chapter} henüz kaynaklar arasında yok</value>
+  </data>
+  <data name="WindowsReaderEndOffline" xml:space="preserve">
+    <value>{chapter} indirilmedi</value>
+  </data>
+  <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
+    <value>Çevrimdışısınız. Bağlandığınızda burada açılır.</value>
+  </data>
+  <data name="WindowsReaderGroupLine" xml:space="preserve">
+    <value>{chapter} · sayfa {page} / {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineSpread" xml:space="preserve">
+    <value>{chapter} · sayfa {first} ve {second}</value>
+  </data>
+  <data name="WindowsReaderGroupLineStrip" xml:space="preserve">
+    <value>{chapter} · görsel {image} / {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineScroll" xml:space="preserve">
+    <value>{chapter} · %{percent}</value>
+  </data>
+  <data name="WindowsReaderPageLabel" xml:space="preserve">
+    <value>Sayfa {page} / {total}</value>
+  </data>
+  <data name="WindowsReaderPagesLabel" xml:space="preserve">
+    <value>Sayfa {first} ve {second} / {total}</value>
+  </data>
+  <data name="WindowsReaderScrubber" xml:space="preserve">
+    <value>Sayfa</value>
+  </data>
+  <data name="WindowsReaderStartOver" xml:space="preserve">
+    <value>Baştan başla</value>
+  </data>
+  <data name="WindowsReaderGoBack" xml:space="preserve">
+    <value>Geri dön</value>
+  </data>
+  <data name="WindowsReaderChange" xml:space="preserve">
+    <value>Değiştir</value>
+  </data>
+  <data name="WindowsReaderThisSeries" xml:space="preserve">
+    <value>Bu seri</value>
+  </data>
+  <data name="WindowsReaderAllMangaPc" xml:space="preserve">
+    <value>Bu PC'deki tüm mangalar</value>
+  </data>
+  <data name="WindowsReaderAllStripsPc" xml:space="preserve">
+    <value>Bu PC'deki tüm webtoonlar</value>
+  </data>
+  <data name="WindowsReaderAllNovels" xml:space="preserve">
+    <value>Tüm hafif romanlar</value>
+  </data>
+  <data name="WindowsReaderReadingMode" xml:space="preserve">
+    <value>Okuma modu</value>
+  </data>
+  <data name="WindowsReaderModeAuto" xml:space="preserve">
+    <value>Otomatik · {mode}</value>
+  </data>
+  <data name="WindowsReaderModeAutoOption" xml:space="preserve">
+    <value>Otomatik</value>
+  </data>
+  <data name="WindowsReaderModeRtlLower" xml:space="preserve">
+    <value>sağdan sola</value>
+  </data>
+  <data name="WindowsReaderModeLtrLower" xml:space="preserve">
+    <value>soldan sağa</value>
+  </data>
+  <data name="WindowsReaderModeStripLower" xml:space="preserve">
+    <value>şerit</value>
+  </data>
+  <data name="WindowsReaderModeDetectedNote" xml:space="preserve">
+    <value>Seri ayrıntılarından algılandı.</value>
+  </data>
+  <data name="WindowsReaderModeChoiceNote" xml:space="preserve">
+    <value>Seçiminiz bu seri için kaydedilir ve diğer cihazlarınıza da taşınır.</value>
+  </data>
+  <data name="WindowsReaderUseDefault" xml:space="preserve">
+    <value>Varsayılanı kullan</value>
+  </data>
+  <data name="WindowsReaderModePaged" xml:space="preserve">
+    <value>Sayfalı</value>
+  </data>
+  <data name="WindowsReaderModeScrolled" xml:space="preserve">
+    <value>Kaydırmalı</value>
+  </data>
+  <data name="WindowsReaderPageLayout" xml:space="preserve">
+    <value>Sayfa düzeni</value>
+  </data>
+  <data name="WindowsReaderFit" xml:space="preserve">
+    <value>Sığdırma</value>
+  </data>
+  <data name="WindowsReaderFitHeight" xml:space="preserve">
+    <value>Yükseklik</value>
+  </data>
+  <data name="WindowsReaderCropBorders" xml:space="preserve">
+    <value>Kenarları kırp</value>
+  </data>
+  <data name="WindowsReaderGap" xml:space="preserve">
+    <value>Görseller arası boşluk</value>
+  </data>
+  <data name="WindowsReaderBackground" xml:space="preserve">
+    <value>Arka plan</value>
+  </data>
+  <data name="WindowsReaderMoreSettings" xml:space="preserve">
+    <value>Diğer okuyucu ayarları</value>
+  </data>
+  <data name="WindowsReaderPaperMode" xml:space="preserve">
+    <value>Kâğıt modu</value>
+  </data>
+  <data name="WindowsReaderPaperModeNote" xml:space="preserve">
+    <value>Kâğıt renkleri kullanılır, sayfalar anında döner ve okuyucuda hiçbir şey hareket etmez.</value>
+  </data>
+  <data name="WindowsReaderFont" xml:space="preserve">
+    <value>Yazı tipi</value>
+  </data>
+  <data name="WindowsReaderTextSize" xml:space="preserve">
+    <value>Yazı boyutu</value>
+  </data>
+  <data name="WindowsReaderLineSpacing" xml:space="preserve">
+    <value>Satır aralığı</value>
+  </data>
+  <data name="WindowsReaderLineTight" xml:space="preserve">
+    <value>Sıkı</value>
+  </data>
+  <data name="WindowsReaderLineNormal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="WindowsReaderLineLoose" xml:space="preserve">
+    <value>Geniş</value>
+  </data>
+  <data name="WindowsReaderMargins" xml:space="preserve">
+    <value>Kenar boşlukları</value>
+  </data>
+  <data name="WindowsReaderJustify" xml:space="preserve">
+    <value>Metni iki yana yasla</value>
+  </data>
+  <data name="WindowsReaderLook" xml:space="preserve">
+    <value>Görünüm</value>
+  </data>
+  <data name="WindowsReaderPercent" xml:space="preserve">
+    <value>%{percent}</value>
+  </data>
+  <data name="WindowsReaderSmaller" xml:space="preserve">
+    <value>Daha küçük metin</value>
+  </data>
+  <data name="WindowsReaderLarger" xml:space="preserve">
+    <value>Daha büyük metin</value>
+  </data>
+  <data name="WindowsReaderPagesTab" xml:space="preserve">
+    <value>Sayfalar</value>
+  </data>
+  <data name="WindowsReaderChaptersTab" xml:space="preserve">
+    <value>Bölümler</value>
+  </data>
+  <data name="WindowsReaderVolume" xml:space="preserve">
+    <value>Cilt {volume}</value>
+  </data>
+  <data name="WindowsReaderChapterPages_one" xml:space="preserve">
+    <value>1 sayfa</value>
+  </data>
+  <data name="WindowsReaderChapterPages_other" xml:space="preserve">
+    <value>{pages} sayfa</value>
+  </data>
+  <data name="WindowsReaderGridPage" xml:space="preserve">
+    <value>Sayfa {page}</value>
+  </data>
+  <data name="WindowsReaderImageLabel" xml:space="preserve">
+    <value>Görsel {image} / {count}</value>
+  </data>
+  <data name="WindowsReaderNoteClose" xml:space="preserve">
+    <value>Notu kapat</value>
+  </data>
+  <data name="WindowsReaderBack" xml:space="preserve">
+    <value>Geri</value>
+  </data>
+  <data name="WindowsReaderModeVertical" xml:space="preserve">
+    <value>Dikey sayfalar</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLower" xml:space="preserve">
+    <value>dikey sayfalar</value>
+  </data>
+  <data name="WindowsReaderModeAutoLine" xml:space="preserve">
+    <value>{way}, seri ayrıntılarından</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLine" xml:space="preserve">
+    <value>Sayfalar alt alta</value>
+  </data>
+  <data name="WindowsReaderModeStripLine" xml:space="preserve">
+    <value>Webtoonlar ve uzun görseller için</value>
+  </data>
+  <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>İndirilen bölümler bağlantı olmadan açılır.</value>
+  </data>
+  <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
+    <value>{title} baştan yeniden okunuyor</value>
+  </data>
+  <data name="SendSaveFilesWindows" xml:space="preserve">
+    <value>Dosyaları kaydet</value>
+  </data>
+  <data name="SendSavedWindows_one" xml:space="preserve">
+    <value>Dosya kaydedildi</value>
+  </data>
+  <data name="SendSavedWindows_other" xml:space="preserve">
+    <value>{n} dosya kaydedildi</value>
+  </data>
+  <data name="SendSaveFailedWindows" xml:space="preserve">
+    <value>Dosyalar oraya kaydedilemedi. Başka bir klasör deneyin.</value>
+  </data>
+  <data name="OpdsPausedNoneWindows" xml:space="preserve">
+    <value>Duraklatıldı. Bu PC yerel bir ağda değil.</value>
+  </data>
+  <data name="OpdsPausedVpnWindows" xml:space="preserve">
+    <value>Duraklatıldı. Bu PC yalnızca bir VPN üzerinden bağlı.</value>
+  </data>
+  <data name="FeedFirewallTitleWindows" xml:space="preserve">
+    <value>Windows ağ erişimini soracak</value>
+  </data>
+  <data name="FeedFirewallBodyWindows" xml:space="preserve">
+    <value>Evdeki e-okuyucuların akışa ulaşabilmesi için Kaeri uygulamasına yalnızca özel ağlarda izin verin. Ortak ağları işaretlemeyin.</value>
   </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>Ayarlar yükleniyor</value>
@@ -5930,6 +6266,24 @@
   <data name="HomeReadNoSources" xml:space="preserve">
     <value>Ana sayfadan okumak için bir klasör, bir sunucu veya bir eklenti mağazası ekleyin.</value>
   </data>
+  <data name="ReadHomeOfflineRows" xml:space="preserve">
+    <value>Gündemdeki ve yeni seriler çevrimiçi olduğunuzda görünür.</value>
+  </data>
+  <data name="ReadHomeBrowse" xml:space="preserve">
+    <value>Göz at</value>
+  </data>
+  <data name="ReadHomeBrowseLine" xml:space="preserve">
+    <value>Biçime göre gündemdeki, yeni ve tamamlanan</value>
+  </data>
+  <data name="ReadHomeBrowseRow" xml:space="preserve">
+    <value>{first}, {second} ve {more} seri daha</value>
+  </data>
+  <data name="ReadHomeBrowseNote" xml:space="preserve">
+    <value>AniList'ten. Bir seriyi açtığınızda kaynaklarınıza sorulur.</value>
+  </data>
+  <data name="ReadHomeBrowseKept" xml:space="preserve">
+    <value>{time} itibarıyla saklanan listeler yine de açılır.</value>
+  </data>
   <data name="WeekUsually" xml:space="preserve">
     <value>Genelde</value>
   </data>
@@ -6589,6 +6943,72 @@
   </data>
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Hariç</value>
+  </data>
+  <data name="ReadSearchStarted" xml:space="preserve">
+    <value>Başlangıç</value>
+  </data>
+  <data name="ReadSearchSourcesOnly" xml:space="preserve">
+    <value>Yalnızca kaynaklarınız</value>
+  </data>
+  <data name="ReadSearchFromSources" xml:space="preserve">
+    <value>Kaynaklarınızdan</value>
+  </data>
+  <data name="ReadSearchAsking" xml:space="preserve">
+    <value>{source} bekleniyor…</value>
+  </data>
+  <data name="ReadSearchSourceFailed" xml:space="preserve">
+    <value>{source} yanıt vermedi.</value>
+  </data>
+  <data name="ReadSearchSourceTimeout" xml:space="preserve">
+    <value>{seconds} sn içinde yanıt yok.</value>
+  </data>
+  <data name="ReadSearchSourceNothing" xml:space="preserve">
+    <value>Şunlarda bir şey bulunamadı: {sources}.</value>
+  </data>
+  <data name="ReadSearchInSource" xml:space="preserve">
+    <value>{source} içinde</value>
+  </data>
+  <data name="ReadSearchInSources_one" xml:space="preserve">
+    <value>Kaynaklarınızın {n} tanesinde</value>
+  </data>
+  <data name="ReadSearchInSources_other" xml:space="preserve">
+    <value>Kaynaklarınızın {n} tanesinde</value>
+  </data>
+  <data name="ReadSearchAnilistNothing" xml:space="preserve">
+    <value>AniList bu sözcüklerle bir şey bulamadı.</value>
+  </data>
+  <data name="ReadSearchAnilistFailed" xml:space="preserve">
+    <value>AniList yanıt vermedi.</value>
+  </data>
+  <data name="ReadSearchAnilistFailedLine" xml:space="preserve">
+    <value>Kaynaklarınıza yine de soruldu.</value>
+  </data>
+  <data name="ReadSearchSourcesNothing" xml:space="preserve">
+    <value>Kaynaklarınızda da bir şey yok.</value>
+  </data>
+  <data name="ReadSearchTotalUnknown" xml:space="preserve">
+    <value>AniList'ten seriler</value>
+  </data>
+  <data name="ReadSearchMoreAnilist" xml:space="preserve">
+    <value>AniList'ten daha fazlası</value>
+  </data>
+  <data name="ReadSearchShown" xml:space="preserve">
+    <value>{shown} / {total} gösteriliyor</value>
+  </data>
+  <data name="ReadSearchShownSome" xml:space="preserve">
+    <value>{shown} gösteriliyor</value>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>Sunucu</value>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>Klasör</value>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>Eklenti</value>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>{n} tane daha göster</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} / {total}</value>

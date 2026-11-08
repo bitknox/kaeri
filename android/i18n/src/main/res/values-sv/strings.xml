@@ -359,6 +359,34 @@
         <item quantity="other">%2$d delar av %1$s är redo att läsas offline.</item>
     </plurals>
     <string name="reading_downloads_done_series">Kapitel från %1$d serier är redo att läsas offline.</string>
+    <string name="read_home_trending_manga">Trendande manga</string>
+    <string name="read_home_trending_webtoons">Trendande webtoons</string>
+    <string name="read_home_trending_novels">Trendande light novels</string>
+    <string name="read_home_new_manga">Nya manga</string>
+    <string name="read_home_new_webtoons">Nya webtoons</string>
+    <string name="read_home_new_novels">Nya light novels</string>
+    <string name="read_home_new_side">Senaste 12 månaderna</string>
+    <string name="read_home_finished_manga">Avslutade manga</string>
+    <string name="read_home_finished_webtoons">Avslutade webtoons</string>
+    <string name="read_home_finished_novels">Avslutade light novels</string>
+    <string name="read_home_finished_side">Mest populära</string>
+    <string name="read_search_started_any">När som helst</string>
+    <string name="read_search_started_year">Senaste 12 månaderna</string>
+    <string name="read_search_started_3_years">Senaste 3 åren</string>
+    <string name="read_hit_chapters">Kapitel 1 till %1$d</string>
+    <string name="read_hit_episodes">Avsnitt 1 till %1$d</string>
+    <plurals name="read_hit_parts">
+        <item quantity="one">1 del</item>
+        <item quantity="other">%1$d delar</item>
+    </plurals>
+    <plurals name="read_hit_files">
+        <item quantity="one">1 fil</item>
+        <item quantity="other">%1$d filer</item>
+    </plurals>
+    <plurals name="read_hit_files_format">
+        <item quantity="one">1 fil · %2$s</item>
+        <item quantity="other">%1$d filer · %2$s</item>
+    </plurals>
     <string name="store_joined">Gick med i %1$s som %2$s.</string>
     <string name="store_joined_unnamed">Gick med i %1$s utan namn.</string>
     <string name="store_left">Lämnade %1$s. Dess tillägg finns kvar installerade.</string>
@@ -2480,6 +2508,12 @@
     <string name="home_read_checked_on_open">Kontrolleras när du öppnar Kaeri</string>
     <string name="home_read_end">Det var allt för nu. Uppdateringar och Sök har de fullständiga listorna.</string>
     <string name="home_read_no_sources">Lägg till en mapp, en server eller en tilläggsbutik för att läsa från startsidan.</string>
+    <string name="read_home_offline_rows">Trendande och nya serier visas när du är online.</string>
+    <string name="read_home_browse">Bläddra</string>
+    <string name="read_home_browse_line">Trendande, nya och avslutade, per format</string>
+    <string name="read_home_browse_row">%1$s, %2$s och %3$d till</string>
+    <string name="read_home_browse_note">Från AniList. Dina källor tillfrågas när du öppnar en serie.</string>
+    <string name="read_home_browse_kept">Listor sparade %1$s går fortfarande att öppna.</string>
     <string name="week_usually">Oftast</string>
     <string name="week_nothing_usually">Oftast inget</string>
     <string name="updates_checked">Kontrollerad %1$s</string>
@@ -2728,6 +2762,30 @@
     </plurals>
     <string name="read_filter_included">Med</string>
     <string name="read_filter_left_out">Utesluten</string>
+    <string name="read_search_started">Start</string>
+    <string name="read_search_sources_only">Bara dina källor</string>
+    <string name="read_search_from_sources">Från dina källor</string>
+    <string name="read_search_asking">Frågar %1$s…</string>
+    <string name="read_search_source_failed">%1$s svarade inte.</string>
+    <string name="read_search_source_timeout">Inget svar på %1$d s.</string>
+    <string name="read_search_source_nothing">Hittade inget i %1$s.</string>
+    <string name="read_search_in_source">Hos %1$s</string>
+    <plurals name="read_search_in_sources">
+        <item quantity="one">Hos %1$d av dina källor</item>
+        <item quantity="other">Hos %1$d av dina källor</item>
+    </plurals>
+    <string name="read_search_anilist_nothing">AniList hittade inget för de här orden.</string>
+    <string name="read_search_anilist_failed">AniList svarade inte.</string>
+    <string name="read_search_anilist_failed_line">Dina källor frågades ändå.</string>
+    <string name="read_search_sources_nothing">Inget i dina källor heller.</string>
+    <string name="read_search_total_unknown">Serier från AniList</string>
+    <string name="read_search_more_anilist">Mer från AniList</string>
+    <string name="read_search_shown">%1$d av %2$d visas</string>
+    <string name="read_search_shown_some">%1$d visas</string>
+    <string name="read_search_source_kind_server">Server</string>
+    <string name="read_search_source_kind_folder">Mapp</string>
+    <string name="read_search_source_kind_plugin">Tillägg</string>
+    <string name="read_search_source_more">Visa %1$d till</string>
     <string name="onboarding_step">%1$d av %2$d</string>
     <string name="onboarding_welcome_line">Håll koll på vad du tittar på och läser, från dina egna källor.</string>
     <string name="onboarding_welcome_note">Dina listor och ditt förlopp stannar på dina enheter. Trackers och källor lägger du till själv.</string>

@@ -380,6 +380,37 @@
         <item quantity="other">%2$d parti di %1$s sono pronte da leggere offline.</item>
     </plurals>
     <string name="reading_downloads_done_series">I capitoli di %1$d serie sono pronti da leggere offline.</string>
+    <string name="read_home_trending_manga">Manga di tendenza</string>
+    <string name="read_home_trending_webtoons">Webtoon di tendenza</string>
+    <string name="read_home_trending_novels">Light novel di tendenza</string>
+    <string name="read_home_new_manga">Nuovi manga</string>
+    <string name="read_home_new_webtoons">Nuovi webtoon</string>
+    <string name="read_home_new_novels">Nuove light novel</string>
+    <string name="read_home_new_side">Ultimi 12 mesi</string>
+    <string name="read_home_finished_manga">Manga conclusi</string>
+    <string name="read_home_finished_webtoons">Webtoon conclusi</string>
+    <string name="read_home_finished_novels">Light novel concluse</string>
+    <string name="read_home_finished_side">Più popolari</string>
+    <string name="read_search_started_any">Qualsiasi data</string>
+    <string name="read_search_started_year">Ultimi 12 mesi</string>
+    <string name="read_search_started_3_years">Ultimi 3 anni</string>
+    <string name="read_hit_chapters">Capitoli da 1 a %1$d</string>
+    <string name="read_hit_episodes">Episodi da 1 a %1$d</string>
+    <plurals name="read_hit_parts">
+        <item quantity="one">1 parte</item>
+        <item quantity="many">%1$d parti</item>
+        <item quantity="other">%1$d parti</item>
+    </plurals>
+    <plurals name="read_hit_files">
+        <item quantity="one">1 file</item>
+        <item quantity="many">%1$d file</item>
+        <item quantity="other">%1$d file</item>
+    </plurals>
+    <plurals name="read_hit_files_format">
+        <item quantity="one">1 file · %2$s</item>
+        <item quantity="many">%1$d file · %2$s</item>
+        <item quantity="other">%1$d file · %2$s</item>
+    </plurals>
     <string name="store_joined">Ti sei unito a %1$s come %2$s.</string>
     <string name="store_joined_unnamed">Ti sei unito a %1$s senza nome.</string>
     <string name="store_left">Hai lasciato %1$s. I suoi plugin restano installati.</string>
@@ -2570,6 +2601,12 @@
     <string name="home_read_checked_on_open">Controllato quando apri Kaeri</string>
     <string name="home_read_end">Per ora è tutto. Aggiornamenti e Cerca hanno gli elenchi completi.</string>
     <string name="home_read_no_sources">Aggiungi una cartella, un server o un negozio di plugin per leggere da Home.</string>
+    <string name="read_home_offline_rows">Le serie di tendenza e le novità compaiono quando sei online.</string>
+    <string name="read_home_browse">Sfoglia</string>
+    <string name="read_home_browse_line">Di tendenza, nuove e concluse, per formato</string>
+    <string name="read_home_browse_row">%1$s, %2$s e altri %3$d</string>
+    <string name="read_home_browse_note">Da AniList. Le tue fonti vengono consultate quando apri una serie.</string>
+    <string name="read_home_browse_kept">Le liste salvate (%1$s) restano disponibili.</string>
     <string name="week_usually">Di solito</string>
     <string name="week_nothing_usually">Di solito niente</string>
     <string name="updates_checked">Controllato %1$s</string>
@@ -2832,6 +2869,31 @@
     </plurals>
     <string name="read_filter_included">Incluso</string>
     <string name="read_filter_left_out">Escluso</string>
+    <string name="read_search_started">Inizio</string>
+    <string name="read_search_sources_only">Solo le tue fonti</string>
+    <string name="read_search_from_sources">Dalle tue fonti</string>
+    <string name="read_search_asking">Richiesta a %1$s…</string>
+    <string name="read_search_source_failed">%1$s non ha risposto.</string>
+    <string name="read_search_source_timeout">Nessuna risposta in %1$d s.</string>
+    <string name="read_search_source_nothing">Niente trovato in %1$s.</string>
+    <string name="read_search_in_source">In %1$s</string>
+    <plurals name="read_search_in_sources">
+        <item quantity="one">In %1$d delle tue fonti</item>
+        <item quantity="many">In %1$d delle tue fonti</item>
+        <item quantity="other">In %1$d delle tue fonti</item>
+    </plurals>
+    <string name="read_search_anilist_nothing">AniList non ha trovato niente per queste parole.</string>
+    <string name="read_search_anilist_failed">AniList non ha risposto.</string>
+    <string name="read_search_anilist_failed_line">Le tue fonti sono state consultate comunque.</string>
+    <string name="read_search_sources_nothing">Niente nemmeno nelle tue fonti.</string>
+    <string name="read_search_total_unknown">Serie da AniList</string>
+    <string name="read_search_more_anilist">Altro da AniList</string>
+    <string name="read_search_shown">%1$d di %2$d mostrati</string>
+    <string name="read_search_shown_some">%1$d mostrati</string>
+    <string name="read_search_source_kind_server">Server</string>
+    <string name="read_search_source_kind_folder">Cartella</string>
+    <string name="read_search_source_kind_plugin">Plugin</string>
+    <string name="read_search_source_more">Mostra altri %1$d</string>
     <string name="onboarding_step">%1$d di %2$d</string>
     <string name="onboarding_welcome_line">Tieni traccia di ciò che guardi e leggi, dalle tue fonti.</string>
     <string name="onboarding_welcome_note">Le tue liste e i tuoi progressi restano sui tuoi dispositivi. Tracker e fonti sono tue da aggiungere.</string>

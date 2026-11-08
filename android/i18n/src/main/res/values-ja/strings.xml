@@ -338,6 +338,31 @@
         <item quantity="other">%1$sの%2$dパートをオフラインで読めます。</item>
     </plurals>
     <string name="reading_downloads_done_series">%1$d作品の章をオフラインで読めます。</string>
+    <string name="read_home_trending_manga">話題のマンガ</string>
+    <string name="read_home_trending_webtoons">話題のウェブトゥーン</string>
+    <string name="read_home_trending_novels">話題のライトノベル</string>
+    <string name="read_home_new_manga">新作マンガ</string>
+    <string name="read_home_new_webtoons">新作ウェブトゥーン</string>
+    <string name="read_home_new_novels">新作ライトノベル</string>
+    <string name="read_home_new_side">過去12か月</string>
+    <string name="read_home_finished_manga">完結したマンガ</string>
+    <string name="read_home_finished_webtoons">完結したウェブトゥーン</string>
+    <string name="read_home_finished_novels">完結したライトノベル</string>
+    <string name="read_home_finished_side">人気順</string>
+    <string name="read_search_started_any">指定なし</string>
+    <string name="read_search_started_year">過去12か月</string>
+    <string name="read_search_started_3_years">過去3年</string>
+    <string name="read_hit_chapters">第1話〜第%1$d話</string>
+    <string name="read_hit_episodes">第1話〜第%1$d話</string>
+    <plurals name="read_hit_parts">
+        <item quantity="other">%1$d部</item>
+    </plurals>
+    <plurals name="read_hit_files">
+        <item quantity="other">ファイル%1$d件</item>
+    </plurals>
+    <plurals name="read_hit_files_format">
+        <item quantity="other">ファイル%1$d件 · %2$s</item>
+    </plurals>
     <string name="store_joined">%1$sに%2$sとして参加しました。</string>
     <string name="store_joined_unnamed">%1$sに名前なしで参加しました。</string>
     <string name="store_left">%1$sから退出しました。インストール済みのプラグインはそのまま残ります。</string>
@@ -2390,6 +2415,12 @@
     <string name="home_read_checked_on_open">Kaeriを開いたときに確認します</string>
     <string name="home_read_end">今はここまでです。全件は「更新」と検索で確認できます。</string>
     <string name="home_read_no_sources">フォルダ、サーバー、またはプラグインストアを追加すると、ホームから読めます。</string>
+    <string name="read_home_offline_rows">話題の作品や新作は、オンラインになると表示されます。</string>
+    <string name="read_home_browse">ブラウズ</string>
+    <string name="read_home_browse_line">形式別の話題作・新作・完結作</string>
+    <string name="read_home_browse_row">%1$s、%2$sほか%3$d作品</string>
+    <string name="read_home_browse_note">AniListの情報です。ソースには、作品を開いたときに問い合わせます。</string>
+    <string name="read_home_browse_kept">%1$sに保存したリストは引き続き開けます。</string>
     <string name="week_usually">たいてい</string>
     <string name="week_nothing_usually">更新なし</string>
     <string name="updates_checked">%1$sに確認</string>
@@ -2624,6 +2655,29 @@
     </plurals>
     <string name="read_filter_included">含める</string>
     <string name="read_filter_left_out">除外</string>
+    <string name="read_search_started">開始時期</string>
+    <string name="read_search_sources_only">ソースのみ</string>
+    <string name="read_search_from_sources">ソースから</string>
+    <string name="read_search_asking">%1$sに問い合わせています…</string>
+    <string name="read_search_source_failed">%1$sから応答がありませんでした。</string>
+    <string name="read_search_source_timeout">%1$d秒以内に応答がありませんでした。</string>
+    <string name="read_search_source_nothing">%1$sでは見つかりませんでした。</string>
+    <string name="read_search_in_source">%1$sにあり</string>
+    <plurals name="read_search_in_sources">
+        <item quantity="other">ソースのうち%1$d件にあり</item>
+    </plurals>
+    <string name="read_search_anilist_nothing">AniListではこの言葉に一致する作品が見つかりませんでした。</string>
+    <string name="read_search_anilist_failed">AniListからの応答がありませんでした。</string>
+    <string name="read_search_anilist_failed_line">ソースには問い合わせ済みです。</string>
+    <string name="read_search_sources_nothing">ソースにも見つかりませんでした。</string>
+    <string name="read_search_total_unknown">AniListの作品</string>
+    <string name="read_search_more_anilist">AniListの結果をさらに表示</string>
+    <string name="read_search_shown">%2$d件中%1$d件を表示</string>
+    <string name="read_search_shown_some">%1$d件を表示</string>
+    <string name="read_search_source_kind_server">サーバー</string>
+    <string name="read_search_source_kind_folder">フォルダ</string>
+    <string name="read_search_source_kind_plugin">プラグイン</string>
+    <string name="read_search_source_more">さらに%1$d件を表示</string>
     <string name="onboarding_step">%1$d/%2$d</string>
     <string name="onboarding_welcome_line">自分のソースで、視聴も読書も記録できます。</string>
     <string name="onboarding_welcome_note">リストと進捗はあなたのデバイスに残ります。連携サービスとソースは、ご自分で追加します。</string>

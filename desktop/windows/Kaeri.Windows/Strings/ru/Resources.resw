@@ -1106,6 +1106,90 @@
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>Главы {count} серий готовы для чтения офлайн.</value>
   </data>
+  <data name="ReadHomeTrendingManga" xml:space="preserve">
+    <value>Манга в тренде</value>
+  </data>
+  <data name="ReadHomeTrendingWebtoons" xml:space="preserve">
+    <value>Вебтуны в тренде</value>
+  </data>
+  <data name="ReadHomeTrendingNovels" xml:space="preserve">
+    <value>Ранобэ в тренде</value>
+  </data>
+  <data name="ReadHomeNewManga" xml:space="preserve">
+    <value>Новая манга</value>
+  </data>
+  <data name="ReadHomeNewWebtoons" xml:space="preserve">
+    <value>Новые вебтуны</value>
+  </data>
+  <data name="ReadHomeNewNovels" xml:space="preserve">
+    <value>Новые ранобэ</value>
+  </data>
+  <data name="ReadHomeNewSide" xml:space="preserve">
+    <value>Последние 12 месяцев</value>
+  </data>
+  <data name="ReadHomeFinishedManga" xml:space="preserve">
+    <value>Завершённая манга</value>
+  </data>
+  <data name="ReadHomeFinishedWebtoons" xml:space="preserve">
+    <value>Завершённые вебтуны</value>
+  </data>
+  <data name="ReadHomeFinishedNovels" xml:space="preserve">
+    <value>Завершённые ранобэ</value>
+  </data>
+  <data name="ReadHomeFinishedSide" xml:space="preserve">
+    <value>Самые популярные</value>
+  </data>
+  <data name="ReadSearchStartedAny" xml:space="preserve">
+    <value>Любое время</value>
+  </data>
+  <data name="ReadSearchStartedYear" xml:space="preserve">
+    <value>Последние 12 месяцев</value>
+  </data>
+  <data name="ReadSearchStarted3Years" xml:space="preserve">
+    <value>Последние 3 года</value>
+  </data>
+  <data name="ReadHitChapters" xml:space="preserve">
+    <value>Главы с 1 по {last}</value>
+  </data>
+  <data name="ReadHitEpisodes" xml:space="preserve">
+    <value>Эпизоды с 1 по {last}</value>
+  </data>
+  <data name="ReadHitParts_one" xml:space="preserve">
+    <value>{count} часть</value>
+  </data>
+  <data name="ReadHitParts_few" xml:space="preserve">
+    <value>{count} части</value>
+  </data>
+  <data name="ReadHitParts_many" xml:space="preserve">
+    <value>{count} частей</value>
+  </data>
+  <data name="ReadHitParts_other" xml:space="preserve">
+    <value>{count} части</value>
+  </data>
+  <data name="ReadHitFiles_one" xml:space="preserve">
+    <value>{count} файл</value>
+  </data>
+  <data name="ReadHitFiles_few" xml:space="preserve">
+    <value>{count} файла</value>
+  </data>
+  <data name="ReadHitFiles_many" xml:space="preserve">
+    <value>{count} файлов</value>
+  </data>
+  <data name="ReadHitFiles_other" xml:space="preserve">
+    <value>{count} файла</value>
+  </data>
+  <data name="ReadHitFilesFormat_one" xml:space="preserve">
+    <value>{count} файл · {format}</value>
+  </data>
+  <data name="ReadHitFilesFormat_few" xml:space="preserve">
+    <value>{count} файла · {format}</value>
+  </data>
+  <data name="ReadHitFilesFormat_many" xml:space="preserve">
+    <value>{count} файлов · {format}</value>
+  </data>
+  <data name="ReadHitFilesFormat_other" xml:space="preserve">
+    <value>{count} файла · {format}</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Подключено к {store} как {member}.</value>
   </data>
@@ -1873,6 +1957,288 @@
   </data>
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Аккаунт, {state}</value>
+  </data>
+  <data name="WindowsReaderSettingsOpen" xml:space="preserve">
+    <value>Настройки чтения</value>
+  </data>
+  <data name="WindowsReaderOpening" xml:space="preserve">
+    <value>Открывается: {chapter}</value>
+  </data>
+  <data name="WindowsReaderOpeningSlow" xml:space="preserve">
+    <value>Поиск источника · {seconds} с</value>
+  </data>
+  <data name="WindowsReaderChapterFailed" xml:space="preserve">
+    <value>Не удалось открыть: {chapter}</value>
+  </data>
+  <data name="WindowsReaderChooseSource" xml:space="preserve">
+    <value>Выбрать источник</value>
+  </data>
+  <data name="WindowsReaderPageFailedHint" xml:space="preserve">
+    <value>Переверните страницу, чтобы пропустить её.</value>
+  </data>
+  <data name="WindowsReaderEndOfChapter" xml:space="preserve">
+    <value>Конец: {chapter}</value>
+  </data>
+  <data name="WindowsReaderEndNotRead" xml:space="preserve">
+    <value>Пока не отмечено как прочитанное</value>
+  </data>
+  <data name="WindowsReaderEndTracker" xml:space="preserve">
+    <value>Прочитано · обновлено: {trackers}</value>
+  </data>
+  <data name="WindowsReaderEndTrackersTwo" xml:space="preserve">
+    <value>{first} и {second}</value>
+  </data>
+  <data name="WindowsReaderContinue" xml:space="preserve">
+    <value>Читать дальше</value>
+  </data>
+  <data name="WindowsReaderBackToSeries" xml:space="preserve">
+    <value>Назад к серии</value>
+  </data>
+  <data name="WindowsReaderEndNotOut" xml:space="preserve">
+    <value>Ещё не вышло: {chapter}</value>
+  </data>
+  <data name="WindowsReaderEndNotOutBody" xml:space="preserve">
+    <value>Kaeri проверяет новые главы в фоне и добавляет их в «Обновления».</value>
+  </data>
+  <data name="WindowsReaderEndCaughtUpBody" xml:space="preserve">
+    <value>Новые главы появятся в «Обновлениях», как только ваши источники их получат.</value>
+  </data>
+  <data name="WindowsReaderEndFinished" xml:space="preserve">
+    <value>Конец серии</value>
+  </data>
+  <data name="WindowsReaderEndFinishedBody" xml:space="preserve">
+    <value>Больше глав нет.</value>
+  </data>
+  <data name="WindowsReaderEndNoSource" xml:space="preserve">
+    <value>Источники: {chapter} пока нет</value>
+  </data>
+  <data name="WindowsReaderEndOffline" xml:space="preserve">
+    <value>Не загружено: {chapter}</value>
+  </data>
+  <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
+    <value>Вы не в сети. Глава откроется здесь, когда появится подключение.</value>
+  </data>
+  <data name="WindowsReaderGroupLine" xml:space="preserve">
+    <value>{chapter} · стр. {page} из {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineSpread" xml:space="preserve">
+    <value>{chapter} · стр. {first} и {second}</value>
+  </data>
+  <data name="WindowsReaderGroupLineStrip" xml:space="preserve">
+    <value>{chapter} · картинка {image} из {total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineScroll" xml:space="preserve">
+    <value>{chapter} · {percent}%</value>
+  </data>
+  <data name="WindowsReaderPageLabel" xml:space="preserve">
+    <value>Страница {page} из {total}</value>
+  </data>
+  <data name="WindowsReaderPagesLabel" xml:space="preserve">
+    <value>Страницы {first} и {second} из {total}</value>
+  </data>
+  <data name="WindowsReaderScrubber" xml:space="preserve">
+    <value>Страница</value>
+  </data>
+  <data name="WindowsReaderStartOver" xml:space="preserve">
+    <value>Сначала</value>
+  </data>
+  <data name="WindowsReaderGoBack" xml:space="preserve">
+    <value>Вернуться</value>
+  </data>
+  <data name="WindowsReaderChange" xml:space="preserve">
+    <value>Изменить</value>
+  </data>
+  <data name="WindowsReaderThisSeries" xml:space="preserve">
+    <value>Эта серия</value>
+  </data>
+  <data name="WindowsReaderAllMangaPc" xml:space="preserve">
+    <value>Вся манга на этом компьютере</value>
+  </data>
+  <data name="WindowsReaderAllStripsPc" xml:space="preserve">
+    <value>Все вебтуны на этом компьютере</value>
+  </data>
+  <data name="WindowsReaderAllNovels" xml:space="preserve">
+    <value>Все ранобэ</value>
+  </data>
+  <data name="WindowsReaderReadingMode" xml:space="preserve">
+    <value>Режим чтения</value>
+  </data>
+  <data name="WindowsReaderModeAuto" xml:space="preserve">
+    <value>Авто · {mode}</value>
+  </data>
+  <data name="WindowsReaderModeAutoOption" xml:space="preserve">
+    <value>Авто</value>
+  </data>
+  <data name="WindowsReaderModeRtlLower" xml:space="preserve">
+    <value>справа налево</value>
+  </data>
+  <data name="WindowsReaderModeLtrLower" xml:space="preserve">
+    <value>слева направо</value>
+  </data>
+  <data name="WindowsReaderModeStripLower" xml:space="preserve">
+    <value>лента</value>
+  </data>
+  <data name="WindowsReaderModeDetectedNote" xml:space="preserve">
+    <value>Определено по данным серии.</value>
+  </data>
+  <data name="WindowsReaderModeChoiceNote" xml:space="preserve">
+    <value>Выбор сохранён для этой серии и перейдёт на другие устройства.</value>
+  </data>
+  <data name="WindowsReaderUseDefault" xml:space="preserve">
+    <value>По умолчанию</value>
+  </data>
+  <data name="WindowsReaderModePaged" xml:space="preserve">
+    <value>Листание</value>
+  </data>
+  <data name="WindowsReaderModeScrolled" xml:space="preserve">
+    <value>Прокрутка</value>
+  </data>
+  <data name="WindowsReaderPageLayout" xml:space="preserve">
+    <value>Расположение страниц</value>
+  </data>
+  <data name="WindowsReaderFit" xml:space="preserve">
+    <value>Масштаб</value>
+  </data>
+  <data name="WindowsReaderFitHeight" xml:space="preserve">
+    <value>По высоте</value>
+  </data>
+  <data name="WindowsReaderCropBorders" xml:space="preserve">
+    <value>Обрезать поля</value>
+  </data>
+  <data name="WindowsReaderGap" xml:space="preserve">
+    <value>Промежуток между картинками</value>
+  </data>
+  <data name="WindowsReaderBackground" xml:space="preserve">
+    <value>Фон</value>
+  </data>
+  <data name="WindowsReaderMoreSettings" xml:space="preserve">
+    <value>Другие настройки чтения</value>
+  </data>
+  <data name="WindowsReaderPaperMode" xml:space="preserve">
+    <value>Режим бумаги</value>
+  </data>
+  <data name="WindowsReaderPaperModeNote" xml:space="preserve">
+    <value>Цвета бумаги. Страницы листаются сразу, и в читалке ничего не движется.</value>
+  </data>
+  <data name="WindowsReaderFont" xml:space="preserve">
+    <value>Шрифт</value>
+  </data>
+  <data name="WindowsReaderTextSize" xml:space="preserve">
+    <value>Размер текста</value>
+  </data>
+  <data name="WindowsReaderLineSpacing" xml:space="preserve">
+    <value>Интервал</value>
+  </data>
+  <data name="WindowsReaderLineTight" xml:space="preserve">
+    <value>Плотный</value>
+  </data>
+  <data name="WindowsReaderLineNormal" xml:space="preserve">
+    <value>Обычный</value>
+  </data>
+  <data name="WindowsReaderLineLoose" xml:space="preserve">
+    <value>Свободный</value>
+  </data>
+  <data name="WindowsReaderMargins" xml:space="preserve">
+    <value>Поля</value>
+  </data>
+  <data name="WindowsReaderJustify" xml:space="preserve">
+    <value>Выровнять по ширине</value>
+  </data>
+  <data name="WindowsReaderLook" xml:space="preserve">
+    <value>Оформление</value>
+  </data>
+  <data name="WindowsReaderPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="WindowsReaderSmaller" xml:space="preserve">
+    <value>Текст мельче</value>
+  </data>
+  <data name="WindowsReaderLarger" xml:space="preserve">
+    <value>Текст крупнее</value>
+  </data>
+  <data name="WindowsReaderPagesTab" xml:space="preserve">
+    <value>Страницы</value>
+  </data>
+  <data name="WindowsReaderChaptersTab" xml:space="preserve">
+    <value>Главы</value>
+  </data>
+  <data name="WindowsReaderVolume" xml:space="preserve">
+    <value>Том {volume}</value>
+  </data>
+  <data name="WindowsReaderChapterPages_one" xml:space="preserve">
+    <value>{pages} страница</value>
+  </data>
+  <data name="WindowsReaderChapterPages_few" xml:space="preserve">
+    <value>{pages} страницы</value>
+  </data>
+  <data name="WindowsReaderChapterPages_many" xml:space="preserve">
+    <value>{pages} страниц</value>
+  </data>
+  <data name="WindowsReaderChapterPages_other" xml:space="preserve">
+    <value>{pages} страницы</value>
+  </data>
+  <data name="WindowsReaderGridPage" xml:space="preserve">
+    <value>Страница {page}</value>
+  </data>
+  <data name="WindowsReaderImageLabel" xml:space="preserve">
+    <value>Картинка {image} из {count}</value>
+  </data>
+  <data name="WindowsReaderNoteClose" xml:space="preserve">
+    <value>Закрыть сноску</value>
+  </data>
+  <data name="WindowsReaderBack" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="WindowsReaderModeVertical" xml:space="preserve">
+    <value>Вертикальные страницы</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLower" xml:space="preserve">
+    <value>вертикально</value>
+  </data>
+  <data name="WindowsReaderModeAutoLine" xml:space="preserve">
+    <value>{way}, по данным серии</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLine" xml:space="preserve">
+    <value>Страницы одна под другой</value>
+  </data>
+  <data name="WindowsReaderModeStripLine" xml:space="preserve">
+    <value>Для вебтунов и длинных картинок</value>
+  </data>
+  <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Скачанные главы открываются без подключения к сети.</value>
+  </data>
+  <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
+    <value>Перечитываете «{title}» с начала</value>
+  </data>
+  <data name="SendSaveFilesWindows" xml:space="preserve">
+    <value>Сохранить файлы</value>
+  </data>
+  <data name="SendSavedWindows_one" xml:space="preserve">
+    <value>Сохранён {n} файл</value>
+  </data>
+  <data name="SendSavedWindows_few" xml:space="preserve">
+    <value>Сохранено {n} файла</value>
+  </data>
+  <data name="SendSavedWindows_many" xml:space="preserve">
+    <value>Сохранено {n} файлов</value>
+  </data>
+  <data name="SendSavedWindows_other" xml:space="preserve">
+    <value>Сохранено {n} файла</value>
+  </data>
+  <data name="SendSaveFailedWindows" xml:space="preserve">
+    <value>Не удалось сохранить файлы в эту папку. Выберите другую.</value>
+  </data>
+  <data name="OpdsPausedNoneWindows" xml:space="preserve">
+    <value>Приостановлено. Этот компьютер не подключён к локальной сети.</value>
+  </data>
+  <data name="OpdsPausedVpnWindows" xml:space="preserve">
+    <value>Приостановлено. Этот компьютер подключён только через VPN.</value>
+  </data>
+  <data name="FeedFirewallTitleWindows" xml:space="preserve">
+    <value>Windows запросит доступ к сети</value>
+  </data>
+  <data name="FeedFirewallBodyWindows" xml:space="preserve">
+    <value>Чтобы домашние ридеры видели канал, разрешите Kaeri доступ только к частным сетям. Общественные сети не отмечайте.</value>
   </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>Загрузка настроек</value>
@@ -6356,6 +6722,24 @@
   <data name="HomeReadNoSources" xml:space="preserve">
     <value>Добавьте папку, сервер или магазин плагинов, чтобы читать с главной.</value>
   </data>
+  <data name="ReadHomeOfflineRows" xml:space="preserve">
+    <value>Серии в тренде и новинки появятся, когда вы будете в сети.</value>
+  </data>
+  <data name="ReadHomeBrowse" xml:space="preserve">
+    <value>Каталог</value>
+  </data>
+  <data name="ReadHomeBrowseLine" xml:space="preserve">
+    <value>В тренде, новые и завершённые, по форматам</value>
+  </data>
+  <data name="ReadHomeBrowseRow" xml:space="preserve">
+    <value>{first}, {second} и ещё {more}</value>
+  </data>
+  <data name="ReadHomeBrowseNote" xml:space="preserve">
+    <value>Из AniList. Ваши источники опрашиваются, когда вы открываете серию.</value>
+  </data>
+  <data name="ReadHomeBrowseKept" xml:space="preserve">
+    <value>Сохранённые списки ({time}) по-прежнему открываются.</value>
+  </data>
   <data name="WeekUsually" xml:space="preserve">
     <value>Обычно</value>
   </data>
@@ -7099,6 +7483,78 @@
   </data>
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Исключён</value>
+  </data>
+  <data name="ReadSearchStarted" xml:space="preserve">
+    <value>Начало выпуска</value>
+  </data>
+  <data name="ReadSearchSourcesOnly" xml:space="preserve">
+    <value>Только ваши источники</value>
+  </data>
+  <data name="ReadSearchFromSources" xml:space="preserve">
+    <value>Ваши источники</value>
+  </data>
+  <data name="ReadSearchAsking" xml:space="preserve">
+    <value>{source}: ожидание ответа…</value>
+  </data>
+  <data name="ReadSearchSourceFailed" xml:space="preserve">
+    <value>{source}: нет ответа.</value>
+  </data>
+  <data name="ReadSearchSourceTimeout" xml:space="preserve">
+    <value>Нет ответа за {seconds} с.</value>
+  </data>
+  <data name="ReadSearchSourceNothing" xml:space="preserve">
+    <value>Ничего не найдено в: {sources}.</value>
+  </data>
+  <data name="ReadSearchInSource" xml:space="preserve">
+    <value>Есть в {source}</value>
+  </data>
+  <data name="ReadSearchInSources_one" xml:space="preserve">
+    <value>Ваши источники с этой серией: {n}</value>
+  </data>
+  <data name="ReadSearchInSources_few" xml:space="preserve">
+    <value>Ваши источники с этой серией: {n}</value>
+  </data>
+  <data name="ReadSearchInSources_many" xml:space="preserve">
+    <value>Ваши источники с этой серией: {n}</value>
+  </data>
+  <data name="ReadSearchInSources_other" xml:space="preserve">
+    <value>Ваши источники с этой серией: {n}</value>
+  </data>
+  <data name="ReadSearchAnilistNothing" xml:space="preserve">
+    <value>AniList ничего не нашёл по этим словам.</value>
+  </data>
+  <data name="ReadSearchAnilistFailed" xml:space="preserve">
+    <value>AniList не ответил.</value>
+  </data>
+  <data name="ReadSearchAnilistFailedLine" xml:space="preserve">
+    <value>Ваши источники всё равно были опрошены.</value>
+  </data>
+  <data name="ReadSearchSourcesNothing" xml:space="preserve">
+    <value>Ваши источники тоже ничего не нашли.</value>
+  </data>
+  <data name="ReadSearchTotalUnknown" xml:space="preserve">
+    <value>Серии из AniList</value>
+  </data>
+  <data name="ReadSearchMoreAnilist" xml:space="preserve">
+    <value>Ещё из AniList</value>
+  </data>
+  <data name="ReadSearchShown" xml:space="preserve">
+    <value>Показано {shown} из {total}</value>
+  </data>
+  <data name="ReadSearchShownSome" xml:space="preserve">
+    <value>Показано: {shown}</value>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>Сервер</value>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>Плагин</value>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>Показать ещё {n}</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} из {total}</value>

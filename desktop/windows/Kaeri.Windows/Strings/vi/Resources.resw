@@ -917,6 +917,63 @@
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>Các chương của {count} bộ truyện đã sẵn sàng để đọc ngoại tuyến.</value>
   </data>
+  <data name="ReadHomeTrendingManga" xml:space="preserve">
+    <value>Manga thịnh hành</value>
+  </data>
+  <data name="ReadHomeTrendingWebtoons" xml:space="preserve">
+    <value>Webtoon thịnh hành</value>
+  </data>
+  <data name="ReadHomeTrendingNovels" xml:space="preserve">
+    <value>Light novel thịnh hành</value>
+  </data>
+  <data name="ReadHomeNewManga" xml:space="preserve">
+    <value>Manga mới</value>
+  </data>
+  <data name="ReadHomeNewWebtoons" xml:space="preserve">
+    <value>Webtoon mới</value>
+  </data>
+  <data name="ReadHomeNewNovels" xml:space="preserve">
+    <value>Light novel mới</value>
+  </data>
+  <data name="ReadHomeNewSide" xml:space="preserve">
+    <value>12 tháng qua</value>
+  </data>
+  <data name="ReadHomeFinishedManga" xml:space="preserve">
+    <value>Manga đã hoàn thành</value>
+  </data>
+  <data name="ReadHomeFinishedWebtoons" xml:space="preserve">
+    <value>Webtoon đã hoàn thành</value>
+  </data>
+  <data name="ReadHomeFinishedNovels" xml:space="preserve">
+    <value>Light novel đã hoàn thành</value>
+  </data>
+  <data name="ReadHomeFinishedSide" xml:space="preserve">
+    <value>Phổ biến nhất</value>
+  </data>
+  <data name="ReadSearchStartedAny" xml:space="preserve">
+    <value>Mọi thời điểm</value>
+  </data>
+  <data name="ReadSearchStartedYear" xml:space="preserve">
+    <value>12 tháng qua</value>
+  </data>
+  <data name="ReadSearchStarted3Years" xml:space="preserve">
+    <value>3 năm qua</value>
+  </data>
+  <data name="ReadHitChapters" xml:space="preserve">
+    <value>Chương 1 đến {last}</value>
+  </data>
+  <data name="ReadHitEpisodes" xml:space="preserve">
+    <value>Chương 1 đến {last}</value>
+  </data>
+  <data name="ReadHitParts_other" xml:space="preserve">
+    <value>{count} phần</value>
+  </data>
+  <data name="ReadHitFiles_other" xml:space="preserve">
+    <value>{count} tệp</value>
+  </data>
+  <data name="ReadHitFilesFormat_other" xml:space="preserve">
+    <value>{count} tệp · {format}</value>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Đã tham gia {store} với tên {member}.</value>
   </data>
@@ -1585,6 +1642,270 @@
   </data>
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Tài khoản, {state}</value>
+  </data>
+  <data name="WindowsReaderSettingsOpen" xml:space="preserve">
+    <value>Cài đặt trình đọc</value>
+  </data>
+  <data name="WindowsReaderOpening" xml:space="preserve">
+    <value>Đang mở {chapter}</value>
+  </data>
+  <data name="WindowsReaderOpeningSlow" xml:space="preserve">
+    <value>Đang tìm nguồn · {seconds} giây</value>
+  </data>
+  <data name="WindowsReaderChapterFailed" xml:space="preserve">
+    <value>Không mở được {chapter}</value>
+  </data>
+  <data name="WindowsReaderChooseSource" xml:space="preserve">
+    <value>Chọn nguồn</value>
+  </data>
+  <data name="WindowsReaderPageFailedHint" xml:space="preserve">
+    <value>Lật trang để đi tiếp mà không cần trang này.</value>
+  </data>
+  <data name="WindowsReaderEndOfChapter" xml:space="preserve">
+    <value>Hết {chapter}</value>
+  </data>
+  <data name="WindowsReaderEndNotRead" xml:space="preserve">
+    <value>Chưa đánh dấu đã đọc</value>
+  </data>
+  <data name="WindowsReaderEndTracker" xml:space="preserve">
+    <value>Đã đọc · đã cập nhật {trackers}</value>
+  </data>
+  <data name="WindowsReaderEndTrackersTwo" xml:space="preserve">
+    <value>{first} và {second}</value>
+  </data>
+  <data name="WindowsReaderContinue" xml:space="preserve">
+    <value>Đọc tiếp</value>
+  </data>
+  <data name="WindowsReaderBackToSeries" xml:space="preserve">
+    <value>Về trang truyện</value>
+  </data>
+  <data name="WindowsReaderEndNotOut" xml:space="preserve">
+    <value>{chapter} chưa ra</value>
+  </data>
+  <data name="WindowsReaderEndNotOutBody" xml:space="preserve">
+    <value>Kaeri kiểm tra chương mới ở chế độ nền và thêm vào Cập nhật.</value>
+  </data>
+  <data name="WindowsReaderEndCaughtUpBody" xml:space="preserve">
+    <value>Chương mới sẽ hiện trong Cập nhật khi các nguồn của bạn có chúng.</value>
+  </data>
+  <data name="WindowsReaderEndFinished" xml:space="preserve">
+    <value>Hết bộ truyện</value>
+  </data>
+  <data name="WindowsReaderEndFinishedBody" xml:space="preserve">
+    <value>Không còn chương nào nữa.</value>
+  </data>
+  <data name="WindowsReaderEndNoSource" xml:space="preserve">
+    <value>Chưa có {chapter} trong các nguồn của bạn</value>
+  </data>
+  <data name="WindowsReaderEndOffline" xml:space="preserve">
+    <value>{chapter} chưa được tải</value>
+  </data>
+  <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
+    <value>Bạn đang ngoại tuyến. Chương sẽ mở tại đây khi có kết nối.</value>
+  </data>
+  <data name="WindowsReaderGroupLine" xml:space="preserve">
+    <value>{chapter} · trang {page}/{total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineSpread" xml:space="preserve">
+    <value>{chapter} · trang {first} và {second}</value>
+  </data>
+  <data name="WindowsReaderGroupLineStrip" xml:space="preserve">
+    <value>{chapter} · ảnh {image}/{total}</value>
+  </data>
+  <data name="WindowsReaderGroupLineScroll" xml:space="preserve">
+    <value>{chapter} · {percent}%</value>
+  </data>
+  <data name="WindowsReaderPageLabel" xml:space="preserve">
+    <value>Trang {page} trên {total}</value>
+  </data>
+  <data name="WindowsReaderPagesLabel" xml:space="preserve">
+    <value>Trang {first} và {second} trên {total}</value>
+  </data>
+  <data name="WindowsReaderScrubber" xml:space="preserve">
+    <value>Trang</value>
+  </data>
+  <data name="WindowsReaderStartOver" xml:space="preserve">
+    <value>Đọc lại từ đầu</value>
+  </data>
+  <data name="WindowsReaderGoBack" xml:space="preserve">
+    <value>Quay lại</value>
+  </data>
+  <data name="WindowsReaderChange" xml:space="preserve">
+    <value>Đổi</value>
+  </data>
+  <data name="WindowsReaderThisSeries" xml:space="preserve">
+    <value>Bộ truyện này</value>
+  </data>
+  <data name="WindowsReaderAllMangaPc" xml:space="preserve">
+    <value>Mọi manga trên PC này</value>
+  </data>
+  <data name="WindowsReaderAllStripsPc" xml:space="preserve">
+    <value>Mọi webtoon trên PC này</value>
+  </data>
+  <data name="WindowsReaderAllNovels" xml:space="preserve">
+    <value>Mọi light novel</value>
+  </data>
+  <data name="WindowsReaderReadingMode" xml:space="preserve">
+    <value>Chế độ đọc</value>
+  </data>
+  <data name="WindowsReaderModeAuto" xml:space="preserve">
+    <value>Tự động · {mode}</value>
+  </data>
+  <data name="WindowsReaderModeAutoOption" xml:space="preserve">
+    <value>Tự động</value>
+  </data>
+  <data name="WindowsReaderModeRtlLower" xml:space="preserve">
+    <value>phải sang trái</value>
+  </data>
+  <data name="WindowsReaderModeLtrLower" xml:space="preserve">
+    <value>trái sang phải</value>
+  </data>
+  <data name="WindowsReaderModeStripLower" xml:space="preserve">
+    <value>dải dọc</value>
+  </data>
+  <data name="WindowsReaderModeDetectedNote" xml:space="preserve">
+    <value>Nhận diện từ thông tin bộ truyện.</value>
+  </data>
+  <data name="WindowsReaderModeChoiceNote" xml:space="preserve">
+    <value>Lựa chọn của bạn được lưu cho bộ truyện này và được đồng bộ sang các thiết bị khác của bạn.</value>
+  </data>
+  <data name="WindowsReaderUseDefault" xml:space="preserve">
+    <value>Dùng mặc định</value>
+  </data>
+  <data name="WindowsReaderModePaged" xml:space="preserve">
+    <value>Lật trang</value>
+  </data>
+  <data name="WindowsReaderModeScrolled" xml:space="preserve">
+    <value>Cuộn</value>
+  </data>
+  <data name="WindowsReaderPageLayout" xml:space="preserve">
+    <value>Bố cục trang</value>
+  </data>
+  <data name="WindowsReaderFit" xml:space="preserve">
+    <value>Vừa khít</value>
+  </data>
+  <data name="WindowsReaderFitHeight" xml:space="preserve">
+    <value>Chiều cao</value>
+  </data>
+  <data name="WindowsReaderCropBorders" xml:space="preserve">
+    <value>Cắt viền trắng</value>
+  </data>
+  <data name="WindowsReaderGap" xml:space="preserve">
+    <value>Khoảng cách giữa ảnh</value>
+  </data>
+  <data name="WindowsReaderBackground" xml:space="preserve">
+    <value>Nền</value>
+  </data>
+  <data name="WindowsReaderMoreSettings" xml:space="preserve">
+    <value>Thêm cài đặt trình đọc</value>
+  </data>
+  <data name="WindowsReaderPaperMode" xml:space="preserve">
+    <value>Chế độ giấy</value>
+  </data>
+  <data name="WindowsReaderPaperModeNote" xml:space="preserve">
+    <value>Màu giấy, và trang lật ngay mà không có gì trong trình đọc chuyển động.</value>
+  </data>
+  <data name="WindowsReaderFont" xml:space="preserve">
+    <value>Phông</value>
+  </data>
+  <data name="WindowsReaderTextSize" xml:space="preserve">
+    <value>Cỡ chữ</value>
+  </data>
+  <data name="WindowsReaderLineSpacing" xml:space="preserve">
+    <value>Giãn dòng</value>
+  </data>
+  <data name="WindowsReaderLineTight" xml:space="preserve">
+    <value>Sát</value>
+  </data>
+  <data name="WindowsReaderLineNormal" xml:space="preserve">
+    <value>Vừa</value>
+  </data>
+  <data name="WindowsReaderLineLoose" xml:space="preserve">
+    <value>Thoáng</value>
+  </data>
+  <data name="WindowsReaderMargins" xml:space="preserve">
+    <value>Lề</value>
+  </data>
+  <data name="WindowsReaderJustify" xml:space="preserve">
+    <value>Căn đều hai bên</value>
+  </data>
+  <data name="WindowsReaderLook" xml:space="preserve">
+    <value>Giao diện</value>
+  </data>
+  <data name="WindowsReaderPercent" xml:space="preserve">
+    <value>{percent}%</value>
+  </data>
+  <data name="WindowsReaderSmaller" xml:space="preserve">
+    <value>Chữ nhỏ hơn</value>
+  </data>
+  <data name="WindowsReaderLarger" xml:space="preserve">
+    <value>Chữ lớn hơn</value>
+  </data>
+  <data name="WindowsReaderPagesTab" xml:space="preserve">
+    <value>Trang</value>
+  </data>
+  <data name="WindowsReaderChaptersTab" xml:space="preserve">
+    <value>Các chương</value>
+  </data>
+  <data name="WindowsReaderVolume" xml:space="preserve">
+    <value>Tập {volume}</value>
+  </data>
+  <data name="WindowsReaderChapterPages_other" xml:space="preserve">
+    <value>{pages} trang</value>
+  </data>
+  <data name="WindowsReaderGridPage" xml:space="preserve">
+    <value>Trang {page}</value>
+  </data>
+  <data name="WindowsReaderImageLabel" xml:space="preserve">
+    <value>Ảnh {image} trên {count}</value>
+  </data>
+  <data name="WindowsReaderNoteClose" xml:space="preserve">
+    <value>Đóng chú thích</value>
+  </data>
+  <data name="WindowsReaderBack" xml:space="preserve">
+    <value>Quay lại</value>
+  </data>
+  <data name="WindowsReaderModeVertical" xml:space="preserve">
+    <value>Trang dọc</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLower" xml:space="preserve">
+    <value>trang dọc</value>
+  </data>
+  <data name="WindowsReaderModeAutoLine" xml:space="preserve">
+    <value>{way}, theo thông tin bộ truyện</value>
+  </data>
+  <data name="WindowsReaderModeVerticalLine" xml:space="preserve">
+    <value>Trang nối nhau theo chiều dọc</value>
+  </data>
+  <data name="WindowsReaderModeStripLine" xml:space="preserve">
+    <value>Cho webtoon và ảnh dài</value>
+  </data>
+  <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>Chương đã tải mở được khi không có kết nối.</value>
+  </data>
+  <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
+    <value>Đang đọc lại {title} từ đầu</value>
+  </data>
+  <data name="SendSaveFilesWindows" xml:space="preserve">
+    <value>Lưu tệp</value>
+  </data>
+  <data name="SendSavedWindows_other" xml:space="preserve">
+    <value>Đã lưu {n} tệp</value>
+  </data>
+  <data name="SendSaveFailedWindows" xml:space="preserve">
+    <value>Không lưu được các tệp vào đó. Hãy thử thư mục khác.</value>
+  </data>
+  <data name="OpdsPausedNoneWindows" xml:space="preserve">
+    <value>Tạm dừng. PC này không ở trong mạng cục bộ nào.</value>
+  </data>
+  <data name="OpdsPausedVpnWindows" xml:space="preserve">
+    <value>Tạm dừng. PC này chỉ kết nối qua VPN.</value>
+  </data>
+  <data name="FeedFirewallTitleWindows" xml:space="preserve">
+    <value>Windows sẽ hỏi về mạng</value>
+  </data>
+  <data name="FeedFirewallBodyWindows" xml:space="preserve">
+    <value>Để máy đọc sách trong nhà truy cập được feed, chỉ cho phép Kaeri trên mạng riêng. Đừng đánh dấu mạng công cộng.</value>
   </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>Đang tải cài đặt</value>
@@ -5717,6 +6038,24 @@
   <data name="HomeReadNoSources" xml:space="preserve">
     <value>Thêm một thư mục, một máy chủ hoặc một cửa hàng plugin để đọc từ Trang chủ.</value>
   </data>
+  <data name="ReadHomeOfflineRows" xml:space="preserve">
+    <value>Truyện thịnh hành và truyện mới sẽ hiện khi bạn có kết nối.</value>
+  </data>
+  <data name="ReadHomeBrowse" xml:space="preserve">
+    <value>Duyệt</value>
+  </data>
+  <data name="ReadHomeBrowseLine" xml:space="preserve">
+    <value>Thịnh hành, mới và đã hoàn thành, theo định dạng</value>
+  </data>
+  <data name="ReadHomeBrowseRow" xml:space="preserve">
+    <value>{first}, {second} và {more} truyện khác</value>
+  </data>
+  <data name="ReadHomeBrowseNote" xml:space="preserve">
+    <value>Từ AniList. Các nguồn của bạn chỉ được hỏi khi bạn mở một bộ truyện.</value>
+  </data>
+  <data name="ReadHomeBrowseKept" xml:space="preserve">
+    <value>Danh sách lưu từ {time} vẫn mở được.</value>
+  </data>
   <data name="WeekUsually" xml:space="preserve">
     <value>Thường</value>
   </data>
@@ -6334,6 +6673,69 @@
   </data>
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Loại trừ</value>
+  </data>
+  <data name="ReadSearchStarted" xml:space="preserve">
+    <value>Ra mắt</value>
+  </data>
+  <data name="ReadSearchSourcesOnly" xml:space="preserve">
+    <value>Chỉ các nguồn của bạn</value>
+  </data>
+  <data name="ReadSearchFromSources" xml:space="preserve">
+    <value>Từ các nguồn của bạn</value>
+  </data>
+  <data name="ReadSearchAsking" xml:space="preserve">
+    <value>Đang hỏi {source}…</value>
+  </data>
+  <data name="ReadSearchSourceFailed" xml:space="preserve">
+    <value>{source} không phản hồi.</value>
+  </data>
+  <data name="ReadSearchSourceTimeout" xml:space="preserve">
+    <value>Không có phản hồi sau {seconds} giây.</value>
+  </data>
+  <data name="ReadSearchSourceNothing" xml:space="preserve">
+    <value>Không tìm thấy gì trong {sources}.</value>
+  </data>
+  <data name="ReadSearchInSource" xml:space="preserve">
+    <value>Có trong {source}</value>
+  </data>
+  <data name="ReadSearchInSources_other" xml:space="preserve">
+    <value>Có trong {n} nguồn của bạn</value>
+  </data>
+  <data name="ReadSearchAnilistNothing" xml:space="preserve">
+    <value>AniList không tìm thấy gì với những từ này.</value>
+  </data>
+  <data name="ReadSearchAnilistFailed" xml:space="preserve">
+    <value>AniList không phản hồi.</value>
+  </data>
+  <data name="ReadSearchAnilistFailedLine" xml:space="preserve">
+    <value>Các nguồn của bạn vẫn được hỏi.</value>
+  </data>
+  <data name="ReadSearchSourcesNothing" xml:space="preserve">
+    <value>Các nguồn của bạn cũng không có gì.</value>
+  </data>
+  <data name="ReadSearchTotalUnknown" xml:space="preserve">
+    <value>Bộ truyện từ AniList</value>
+  </data>
+  <data name="ReadSearchMoreAnilist" xml:space="preserve">
+    <value>Xem thêm từ AniList</value>
+  </data>
+  <data name="ReadSearchShown" xml:space="preserve">
+    <value>Đang hiện {shown}/{total}</value>
+  </data>
+  <data name="ReadSearchShownSome" xml:space="preserve">
+    <value>Đang hiện {shown}</value>
+  </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>Máy chủ</value>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>Thư mục</value>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>Plugin</value>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>Hiện thêm {n}</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step}/{total}</value>

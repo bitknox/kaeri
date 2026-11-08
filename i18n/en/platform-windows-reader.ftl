@@ -61,7 +61,7 @@ windows-reader-end-trackers-two = { $first } and { $second }
 # The one amber button of the page between chapters: opens the next chapter.
 # @only windows
 # @max 20
-windows-reader-continue = { -continue-cap }
+windows-reader-continue = { -continue-reading-cap }
 
 # Button on the page between chapters that closes the reader and goes back to the series page.
 # @only windows

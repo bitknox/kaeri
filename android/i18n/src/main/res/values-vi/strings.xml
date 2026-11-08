@@ -338,6 +338,31 @@
         <item quantity="other">%2$d phần của %1$s đã sẵn sàng để đọc ngoại tuyến.</item>
     </plurals>
     <string name="reading_downloads_done_series">Các chương của %1$d bộ truyện đã sẵn sàng để đọc ngoại tuyến.</string>
+    <string name="read_home_trending_manga">Manga thịnh hành</string>
+    <string name="read_home_trending_webtoons">Webtoon thịnh hành</string>
+    <string name="read_home_trending_novels">Light novel thịnh hành</string>
+    <string name="read_home_new_manga">Manga mới</string>
+    <string name="read_home_new_webtoons">Webtoon mới</string>
+    <string name="read_home_new_novels">Light novel mới</string>
+    <string name="read_home_new_side">12 tháng qua</string>
+    <string name="read_home_finished_manga">Manga đã hoàn thành</string>
+    <string name="read_home_finished_webtoons">Webtoon đã hoàn thành</string>
+    <string name="read_home_finished_novels">Light novel đã hoàn thành</string>
+    <string name="read_home_finished_side">Phổ biến nhất</string>
+    <string name="read_search_started_any">Mọi thời điểm</string>
+    <string name="read_search_started_year">12 tháng qua</string>
+    <string name="read_search_started_3_years">3 năm qua</string>
+    <string name="read_hit_chapters">Chương 1 đến %1$d</string>
+    <string name="read_hit_episodes">Chương 1 đến %1$d</string>
+    <plurals name="read_hit_parts">
+        <item quantity="other">%1$d phần</item>
+    </plurals>
+    <plurals name="read_hit_files">
+        <item quantity="other">%1$d tệp</item>
+    </plurals>
+    <plurals name="read_hit_files_format">
+        <item quantity="other">%1$d tệp · %2$s</item>
+    </plurals>
     <string name="store_joined">Đã tham gia %1$s với tên %2$s.</string>
     <string name="store_joined_unnamed">Đã tham gia %1$s mà không có tên.</string>
     <string name="store_left">Đã rời %1$s. Các plugin đã cài vẫn được giữ lại.</string>
@@ -2390,6 +2415,12 @@
     <string name="home_read_checked_on_open">Kiểm tra khi bạn mở Kaeri</string>
     <string name="home_read_end">Đó là tất cả lúc này. Cập nhật và Tìm kiếm có đầy đủ danh sách.</string>
     <string name="home_read_no_sources">Thêm một thư mục, một máy chủ hoặc một cửa hàng plugin để đọc từ Trang chủ.</string>
+    <string name="read_home_offline_rows">Truyện thịnh hành và truyện mới sẽ hiện khi bạn có kết nối.</string>
+    <string name="read_home_browse">Duyệt</string>
+    <string name="read_home_browse_line">Thịnh hành, mới và đã hoàn thành, theo định dạng</string>
+    <string name="read_home_browse_row">%1$s, %2$s và %3$d truyện khác</string>
+    <string name="read_home_browse_note">Từ AniList. Các nguồn của bạn chỉ được hỏi khi bạn mở một bộ truyện.</string>
+    <string name="read_home_browse_kept">Danh sách lưu từ %1$s vẫn mở được.</string>
     <string name="week_usually">Thường</string>
     <string name="week_nothing_usually">Thường không có</string>
     <string name="updates_checked">Đã kiểm tra %1$s</string>
@@ -2624,6 +2655,29 @@
     </plurals>
     <string name="read_filter_included">Bao gồm</string>
     <string name="read_filter_left_out">Loại trừ</string>
+    <string name="read_search_started">Ra mắt</string>
+    <string name="read_search_sources_only">Chỉ các nguồn của bạn</string>
+    <string name="read_search_from_sources">Từ các nguồn của bạn</string>
+    <string name="read_search_asking">Đang hỏi %1$s…</string>
+    <string name="read_search_source_failed">%1$s không phản hồi.</string>
+    <string name="read_search_source_timeout">Không có phản hồi sau %1$d giây.</string>
+    <string name="read_search_source_nothing">Không tìm thấy gì trong %1$s.</string>
+    <string name="read_search_in_source">Có trong %1$s</string>
+    <plurals name="read_search_in_sources">
+        <item quantity="other">Có trong %1$d nguồn của bạn</item>
+    </plurals>
+    <string name="read_search_anilist_nothing">AniList không tìm thấy gì với những từ này.</string>
+    <string name="read_search_anilist_failed">AniList không phản hồi.</string>
+    <string name="read_search_anilist_failed_line">Các nguồn của bạn vẫn được hỏi.</string>
+    <string name="read_search_sources_nothing">Các nguồn của bạn cũng không có gì.</string>
+    <string name="read_search_total_unknown">Bộ truyện từ AniList</string>
+    <string name="read_search_more_anilist">Xem thêm từ AniList</string>
+    <string name="read_search_shown">Đang hiện %1$d/%2$d</string>
+    <string name="read_search_shown_some">Đang hiện %1$d</string>
+    <string name="read_search_source_kind_server">Máy chủ</string>
+    <string name="read_search_source_kind_folder">Thư mục</string>
+    <string name="read_search_source_kind_plugin">Plugin</string>
+    <string name="read_search_source_more">Hiện thêm %1$d</string>
     <string name="onboarding_step">%1$d/%2$d</string>
     <string name="onboarding_welcome_line">Theo dõi những gì bạn xem và đọc, từ các nguồn của riêng bạn.</string>
     <string name="onboarding_welcome_note">Danh sách và tiến độ của bạn nằm trên các thiết bị của bạn. Bạn tự thêm các dịch vụ theo dõi và các nguồn.</string>

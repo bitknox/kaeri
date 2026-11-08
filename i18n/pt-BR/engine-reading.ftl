@@ -190,3 +190,34 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } partes de { $title } estão prontas para ler offline.
  }
 reading-downloads-done-series = Há capítulos de { $count } séries prontos para ler offline.
+read-home-trending-manga = Mangás em alta
+read-home-trending-webtoons = Webtoons em alta
+read-home-trending-novels = Light novels em alta
+read-home-new-manga = Novos mangás
+read-home-new-webtoons = Novos webtoons
+read-home-new-novels = Novas light novels
+read-home-new-side = Últimos 12 meses
+read-home-finished-manga = Mangás concluídos
+read-home-finished-webtoons = Webtoons concluídos
+read-home-finished-novels = Light novels concluídas
+read-home-finished-side = Mais populares
+read-search-started-any = Qualquer data
+read-search-started-year = Últimos 12 meses
+read-search-started-3-years = Últimos 3 anos
+read-hit-chapters = Capítulos 1 a { $last }
+read-hit-episodes = Episódios 1 a { $last }
+read-hit-parts = { $count ->
+    [one] 1 parte
+    [many] { $count } de partes
+   *[other] { $count } partes
+ }
+read-hit-files = { $count ->
+    [one] 1 arquivo
+    [many] { $count } de arquivos
+   *[other] { $count } arquivos
+ }
+read-hit-files-format = { $count ->
+    [one] 1 arquivo · { $format }
+    [many] { $count } de arquivos · { $format }
+   *[other] { $count } arquivos · { $format }
+ }
