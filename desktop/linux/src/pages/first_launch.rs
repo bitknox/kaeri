@@ -206,6 +206,8 @@ struct Run {
     paired: RefCell<Option<Rc<PairedParts>>>,
     added: RefCell<Vec<came_in::Added>>,
     added_list: RefCell<Option<gtk::ListBox>>,
+    /// The demo's card, for someone with nothing to read yet: it leaves once a source is in.
+    try_card: RefCell<Option<gtk::Widget>>,
     tick: RefCell<Option<glib::SourceId>>,
 }
 
@@ -257,6 +259,7 @@ pub fn open(ctx: &Rc<Ctx>) {
         paired: RefCell::default(),
         added: RefCell::default(),
         added_list: RefCell::default(),
+        try_card: RefCell::default(),
         tick: RefCell::default(),
     });
     pages.add(&welcome(&run));
@@ -1350,7 +1353,6 @@ fn sources(run: &Rc<Run>) -> adw::NavigationPage {
     added.set_visible(false);
     body.append(&added);
     run.added_list.replace(Some(added));
-    draw_added(run);
     let done = {
         let dialog = run.dialog.downgrade();
         move || {
@@ -1359,10 +1361,11 @@ fn sources(run: &Rc<Run>) -> adw::NavigationPage {
             }
         }
     };
-    body.append(
-        &crate::reading::demo::try_card(ctx, answer == KaeriIsFor::Both, done.clone())
-            .upcast::<gtk::Widget>(),
-    );
+    let try_card: gtk::Widget =
+        crate::reading::demo::try_card(ctx, answer == KaeriIsFor::Both, done.clone()).upcast();
+    body.append(&try_card);
+    run.try_card.replace(Some(try_card));
+    draw_added(run);
     let shows = |list: &gtk::ListBox| {
         let folder = nav_row(
             "folder-symbolic",
@@ -1504,6 +1507,16 @@ fn draw_added(run: &Rc<Run>) {
         crate::motion::crossfade_in(&list);
     }
     list.set_visible(any);
+    // With a source in, the demo's card has done its job; the demo stays on Home's spotlight.
+    if let Some(card) = run.try_card.borrow().as_ref().filter(|card| card.is_visible())
+        && any
+    {
+        if card.is_mapped() && !crate::motion::reduced() {
+            crate::motion::fade_out(card);
+        } else {
+            card.set_visible(false);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------------

@@ -615,6 +615,9 @@ impl Model {
 pub struct EndLine {
     pub widget: gtk::Box,
     words: gtk::Label,
+    /// The error glyph before a line that failed, and the small spinner before one being sent.
+    failed: gtk::Image,
+    sending: adw::Spinner,
     retry: gtk::Button,
 }
 
@@ -624,18 +627,33 @@ impl EndLine {
     pub fn new(ctx: &Rc<Ctx>, chapter: &ChapterId) -> Rc<Self> {
         let widget = gtk::Box::new(gtk::Orientation::Vertical, 2);
         widget.add_css_class("server-line");
+        let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        let failed = gtk::Image::from_icon_name("dialog-warning-symbolic");
+        failed.add_css_class("came-in-failed");
+        failed.set_pixel_size(12);
+        failed.set_valign(gtk::Align::Center);
+        failed.set_visible(false);
+        row.append(&failed);
+        let sending = adw::Spinner::new();
+        sending.set_size_request(12, 12);
+        sending.set_valign(gtk::Align::Center);
+        sending.set_visible(false);
+        row.append(&sending);
         let words = gtk::Label::new(None);
         words.add_css_class("haze");
         words.set_xalign(0.0);
         words.set_wrap(true);
-        widget.append(&words);
+        row.append(&words);
+        widget.append(&row);
+        // A neutral link: the page's one amber is Continue.
         let retry = gtk::Button::with_label(&t::action_try_again());
         retry.add_css_class("link");
         retry.add_css_class("flat");
+        retry.add_css_class("plain-link");
         retry.set_halign(gtk::Align::Start);
         retry.set_visible(false);
         widget.append(&retry);
-        let line = Rc::new(Self { widget, words, retry });
+        let line = Rc::new(Self { widget, words, failed, sending, retry });
         let model = model(ctx);
         line.retry.connect_clicked({
             let (model, chapter) = (Rc::downgrade(&model), chapter.clone());
@@ -670,6 +688,8 @@ impl EndLine {
         if self.words.label() != text {
             self.words.set_label(&text);
         }
+        self.failed.set_visible(matches!(line, Some(ServerLine::Failed(..))));
+        self.sending.set_visible(matches!(line, Some(ServerLine::Sending(_))));
         let retry = line.is_some_and(ServerLine::can_retry);
         self.retry.set_visible(retry);
         if !retry {

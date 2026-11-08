@@ -388,7 +388,10 @@ impl Reader {
 
     fn reset(&self) {
         let old = self.state.replace(State::default());
-        let _ = old;
+        // The demo's credit capsule leaves with the work, or the next open adds a second one.
+        if let Some((_, capsule)) = old.demo {
+            self.head.remove(&capsule);
+        }
         while let Some(child) = self.strip.first_child() {
             self.strip.remove(&child);
         }
@@ -410,6 +413,12 @@ impl Reader {
             ReaderSettingKey::Look => Medium::Novel,
             _ => Medium::Manga,
         };
+        self.shot_setting_for(medium, key, name);
+    }
+
+    /// A reader setting for the shots on `medium`'s value: a comic's look, say.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_setting_for(&self, medium: Medium, key: ReaderSettingKey, name: &str) {
         let value = match name {
             "on" => ReaderValue::Toggle { on: true },
             "off" => ReaderValue::Toggle { on: false },
@@ -749,6 +758,7 @@ impl Reader {
             }
         });
         self.status.set_child(Some(&again));
+        self.status.remove_css_class("demo-end-ground");
         self.stack.set_visible_child_name("status");
     }
 
@@ -864,6 +874,7 @@ impl Reader {
                 self.status.set_title(&words);
                 self.status.set_description(None);
                 self.status.set_child(Some(&self.back_button()));
+                self.status.remove_css_class("demo-end-ground");
                 self.stack.set_visible_child_name("status");
             }
         }
@@ -909,6 +920,8 @@ impl Reader {
         self.status.set_title("");
         self.status.set_description(None);
         self.status.set_child(Some(&super::demo::end_card(&ctx, &demo, close, again)));
+        // The card stands where the last page was: the ground is the look's page, as on the Mac.
+        self.status.add_css_class("demo-end-ground");
         self.stack.set_visible_child_name("status");
         true
     }
@@ -1153,6 +1166,7 @@ impl Reader {
                 self.status.set_title(&t::linux_reader_novel_unavailable());
                 self.status.set_description(Some(&t::linux_reader_novel_needs_webkit()));
                 self.status.set_child(Some(&self.back_button()));
+                self.status.remove_css_class("demo-end-ground");
                 self.stack.set_visible_child_name("status");
             }
         }
@@ -1196,6 +1210,17 @@ impl Reader {
             self.widget.add_css_class("reader-light");
         } else {
             self.widget.remove_css_class("reader-light");
+        }
+        // The page's own colour in each light look, for what stands in for a page.
+        let look = self.choice(ReaderSettingKey::Look);
+        for (name, class) in
+            [("paper", "look-paper"), ("light", "look-light"), ("sepia", "look-sepia")]
+        {
+            if look.as_deref() == Some(name) {
+                self.status.add_css_class(class);
+            } else {
+                self.status.remove_css_class(class);
+            }
         }
         let manga = self.state.borrow().medium == Some(Medium::Manga);
         let ground = if manga { self.choice(ReaderSettingKey::Background) } else { None };

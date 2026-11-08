@@ -305,6 +305,12 @@ pub fn shot_just_added(id: &str) {
     mark_added(id);
 }
 
+/// For the shots: nothing was added just now, so one scene's add doesn't carry into the next.
+#[cfg(feature = "fixtures")]
+pub fn shot_clear_just_added() {
+    JUST_ADDED.with_borrow_mut(Vec::clear);
+}
+
 fn added(what: Added) {
     if let Some(f) = ON_ADDED.with_borrow(Clone::clone) {
         f(what);
@@ -625,7 +631,7 @@ pub fn add_server(ctx: &Rc<Ctx>, address: Option<&str>) {
         let weak = Rc::downgrade(&state);
         move |_| {
             if let Some(state) = weak.upgrade() {
-                state.press();
+                state.returned();
             }
         }
     });
@@ -900,6 +906,22 @@ impl Server {
         }
     }
 
+    /// Return in the address: while it is being typed, or after it failed, it looks at once
+    /// instead of waiting for typing to rest. Add server stays off until the server answers.
+    fn returned(self: &Rc<Self>) {
+        let text = self.text();
+        let parses = kavita(&text).is_some() || looks_like_address(&text);
+        let fresh = matches!(*self.step.borrow(), Step::Typing | Step::Failed(_));
+        if fresh {
+            if parses && !self.asking() && !self.adding.get() {
+                self.edits.set(self.edits.get() + 1);
+                self.probe(false);
+            }
+        } else {
+            self.press();
+        }
+    }
+
     fn asking(&self) -> bool {
         self.asked.borrow().is_some() && *self.step.borrow() == Step::Looking
             || (self.asked.borrow().is_some() && !self.answer_in())
@@ -924,9 +946,11 @@ impl Server {
                 t::book_add_server_button(),
                 !self.user.text().trim().is_empty() && !self.password.text().is_empty(),
             ),
-            Step::Failed(NothingCameIn::Unreachable { .. }) => (t::action_try_again(), true),
-            Step::Failed(_) => (t::book_add_server_button(), false),
-            Step::Typing | Step::Looking => (t::book_add_server_button(), true),
+            // The likely fix is the address, so Try again sits under the error and Add server
+            // waits for an answer, as it does while typing and looking.
+            Step::Failed(_) | Step::Typing | Step::Looking => {
+                (t::book_add_server_button(), false)
+            }
         };
         self.primary.set_label(&label);
         self.primary.set_sensitive(parses && on && !self.adding.get() && !self.asking());
@@ -988,6 +1012,24 @@ impl Server {
                     Some(&t::book_server_empty_line()),
                 ));
                 column.append(&widgets::haze(&t::book_server_empty_recheck(), ""));
+                column.upcast()
+            }
+            Step::Failed(why @ NothingCameIn::Unreachable { .. }) => {
+                let column = gtk::Box::new(gtk::Orientation::Vertical, 10);
+                column.append(&failed_note(why));
+                let again = gtk::Button::with_label(&t::action_try_again());
+                again.add_css_class("pill");
+                again.set_halign(gtk::Align::Start);
+                // Under the error's words: past the glyph and the gap beside it.
+                again.set_margin_start(28);
+                let me = SHOWN.with(|s| s.borrow().clone());
+                again.connect_clicked(move |_| {
+                    if let Some(state) = me.as_ref().and_then(std::rc::Weak::upgrade) {
+                        state.edits.set(state.edits.get() + 1);
+                        state.probe(false);
+                    }
+                });
+                column.append(&again);
                 column.upcast()
             }
             Step::Failed(why) => failed_note(why).upcast(),
@@ -1414,6 +1456,8 @@ struct StoreForm {
     edits: Cell<u64>,
     joining: Cell<bool>,
     installing: Cell<bool>,
+    /// The join's answer is in and waits to be drawn; an alert for it is said by that answer.
+    answering: Cell<bool>,
 }
 
 /// Join a plugin store from Your sources: the invite, its store, Join, then what it offers for
@@ -1454,6 +1498,7 @@ pub fn join_store(ctx: &Rc<Ctx>, link: Option<&str>) {
         edits: Cell::new(0),
         joining: Cell::new(false),
         installing: Cell::new(false),
+        answering: Cell::new(false),
     });
     entry.connect_changed({
         let weak = Rc::downgrade(&state);
@@ -1488,6 +1533,10 @@ pub fn join_store(ctx: &Rc<Ctx>, link: Option<&str>) {
         let weak = Rc::downgrade(&state);
         move |_, why| {
             let Some(state) = weak.upgrade() else { return false };
+            // An unreachable store comes as an answer and an alert: the answer says it here.
+            if state.answering.get() {
+                return true;
+            }
             if !state.joining.replace(false) {
                 return false;
             }
@@ -1545,6 +1594,17 @@ pub fn shot_store_answer(came: &CameIn) {
     state.answered(came);
 }
 
+/// The open store form's invite previewed, for the shots.
+#[cfg(feature = "fixtures")]
+pub fn shot_store_preview(preview: &InvitePreview) {
+    let Some(state) =
+        STORE_SHOWN.with(|s| s.borrow().as_ref().and_then(std::rc::Weak::upgrade))
+    else {
+        return;
+    };
+    state.previewed(preview);
+}
+
 /// How many plugins a joined store offers, those for a medium this device doesn't show too.
 fn offered(report: &StoreReport) -> i64 {
     (report.for_reading.len() + report.for_watching.len()) as i64
@@ -1552,9 +1612,26 @@ fn offered(report: &StoreReport) -> i64 {
 }
 
 impl StoreForm {
+    /// The invite as pasted, though the field shows only its store's host.
+    fn invite_link(&self) -> Option<String> {
+        let shown = self.invite.text().trim().to_owned();
+        let full = match self.link.borrow().as_ref() {
+            Some((host, full)) if *host == shown => full.clone(),
+            _ => shown,
+        };
+        crate::pages::join::invite_in(&full)
+    }
+
     fn edited(self: &Rc<Self>) {
         if self.masking.get() {
             return;
+        }
+        // A new invite after an unreachable store starts over: its preview, then Join.
+        if matches!(*self.step.borrow(), StoreStep::Unreachable(_)) {
+            self.step.replace(StoreStep::Invite);
+            self.result.show(&nothing());
+            self.primary.set_label(&t::stores_join_button());
+            self.preview.stack.set_visible(true);
         }
         let shown = self.invite.text().trim().to_owned();
         let kept = self.link.borrow().as_ref().filter(|(host, _)| *host == shown).cloned();
@@ -1662,7 +1739,15 @@ impl StoreForm {
         let step = self.step.borrow().clone();
         match step {
             StoreStep::Invite | StoreStep::Unreachable(_) => {
-                let Some(store) = self.store.borrow().clone() else { return };
+                // Try again after an unreachable store needs no preview: the invite is enough.
+                let link = match self.store.borrow().as_ref() {
+                    Some(store) => store.link.clone(),
+                    None if matches!(step, StoreStep::Unreachable(_)) => {
+                        let Some(link) = self.invite_link() else { return };
+                        Secret(link)
+                    }
+                    None => return,
+                };
                 self.primary.set_sensitive(false);
                 self.joining.set(true);
                 let weak = Rc::downgrade(self);
@@ -1671,11 +1756,7 @@ impl StoreForm {
                         state.result.show(&waiting(&t::linux_store_joining()));
                     }
                 });
-                self.ctx.hub.send(Command::JoinStore {
-                    link: store.link,
-                    label: None,
-                    name: None,
-                });
+                self.ctx.hub.send(Command::JoinStore { link, label: None, name: None });
             }
             StoreStep::Joined(report) if report.install_all => {
                 self.installing.set(true);
@@ -1708,6 +1789,7 @@ impl StoreForm {
         if !ours || !(self.joining.get() || self.installing.get()) {
             return;
         }
+        self.answering.set(true);
         let weak = Rc::downgrade(self);
         let came = came.clone();
         self.wait.end(move || {
@@ -1720,6 +1802,7 @@ impl StoreForm {
     fn answered(&self, came: &CameIn) {
         self.joining.set(false);
         self.installing.set(false);
+        self.answering.set(false);
         if let CameIn::Store(report) = came {
             let count = offered(report);
             added(Added {
@@ -1749,7 +1832,13 @@ impl StoreForm {
         // preview leaves.
         let joined = !matches!(step, StoreStep::Unreachable(_));
         self.invite.set_editable(!joined);
-        self.preview.stack.set_visible(!joined);
+        // The preview stays only as the store's card above an unreachable error; a preview still
+        // being looked for gives way to the error.
+        let card = !joined && self.store.borrow().is_some();
+        if !card {
+            self.edits.set(self.edits.get() + 1);
+        }
+        self.preview.stack.set_visible(card);
         if let StoreStep::Joined(report) = &step {
             self.joined.replace(Some(report.clone()));
         }
@@ -1839,7 +1928,7 @@ impl StoreForm {
                     )
                     .upcast(),
                     t::action_try_again(),
-                    self.store.borrow().is_some(),
+                    self.store.borrow().is_some() || self.invite_link().is_some(),
                 )
             }
         };

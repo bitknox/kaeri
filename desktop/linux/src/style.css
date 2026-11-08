@@ -523,9 +523,10 @@ list.reader-chapter-list > row { border-radius: 8px; }
 .first-expired { opacity: 0.4; }
 .first-status { font-size: 14px; }
 
-.came-in-found image { color: var(--water); }
+/* The note glyphs carry the class themselves; vermilion colours the error glyph and nothing else. */
 .came-in-note image { color: var(--haze); }
-.came-in-failed image { color: var(--vermilion); }
+image.came-in-found, .came-in-found image { color: var(--water); }
+image.came-in-failed, .came-in-failed image { color: var(--vermilion); }
 .key-chip {
   background: var(--raised-selected);
   color: var(--silk);
@@ -544,6 +545,9 @@ list.reader-chapter-list > row { border-radius: 8px; }
 .source-row .server-line { font-size: 13px; }
 /* Try again under a line starts where the words do. */
 .server-line button.link { padding-left: 0; padding-right: 0; min-height: 0; }
+/* Try again between chapters is a neutral underlined link; Continue is the page's one amber. */
+.server-line button.link.plain-link { color: var(--silk); }
+.server-line button.link.plain-link label { text-decoration: underline; }
 
 .demo-spotlight { border-radius: 12px; }
 .demo-spotlight-shade { background: linear-gradient(to top, rgba(22, 26, 46, 0.92), rgba(22, 26, 46, 0.35) 55%, rgba(22, 26, 46, 0) 80%); }
@@ -558,12 +562,19 @@ list.reader-chapter-list > row { border-radius: 8px; }
   color: #E4E0D6;
 }
 .demo-credit-line link { color: var(--silk); }
+/* The demo's end card follows the reader's page look: the ground is the page, the card sits a
+   step above it (dark, paper, light or sepia), as the Mac draws it. */
+statuspage.demo-end-ground { background: #161A2E; }
+statuspage.demo-end-ground.look-paper { background: #EFE9DC; }
+statuspage.demo-end-ground.look-light { background: #F7F5F0; }
+statuspage.demo-end-ground.look-sepia { background: #E9DCC4; }
 .demo-end {
-  background: var(--raised);
+  background: #2A2F45;
   border: 1px solid var(--faint-rule);
   border-radius: 16px;
   padding: 24px;
 }
+.reader-light .demo-end { background: #DCD7CB; }
 .demo-try { background: var(--raised); border-radius: 12px; padding: 14px 16px; }
 .demo-result { border-radius: 8px; }
 

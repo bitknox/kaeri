@@ -6,7 +6,7 @@
 use std::rc::Rc;
 
 use adw::prelude::*;
-use kaeri_core::books::ChapterId;
+use kaeri_core::{books::ChapterId, media::Medium};
 use kaeri_i18n::t;
 use kaeri_model::{
     book_sources::{
@@ -19,7 +19,11 @@ use kaeri_model::{
     event::Event,
     group::{FirstRunPage, JoinedSetup, SyncBookServerOffer, SyncStoreOffer},
     medium::{KaeriIsFor, MediumAsk},
-    stores::{StorePluginRow, StorePluginStatus, StoreRow, StoreState},
+    reader::ReaderSettingKey,
+    stores::{
+        InvitePreview, InvitedStore, Secret, StorePluginRow, StorePluginStatus, StoreRow,
+        StoreState,
+    },
 };
 
 use crate::{
@@ -73,7 +77,7 @@ pub const NAMES: [&str; 37] = [
 ];
 
 /// Every shot of the demo's run, in order.
-pub const DEMO: [&str; 8] = [
+pub const DEMO: [&str; 10] = [
     "pl-demo-01",
     "pl-demo-02",
     "pl-demo-03",
@@ -82,6 +86,9 @@ pub const DEMO: [&str; 8] = [
     "pl-demo-06",
     "pl-demo-07",
     "pl-demo-08",
+    // The end card in the other looks, last: a look chosen here stays for the shots after it.
+    "pl-demo-06-sepia",
+    "pl-demo-06-dark",
 ];
 
 /// A Komga server that asks for a username and password.
@@ -327,6 +334,7 @@ fn progress_lines(shell: &Rc<Shell>) -> f64 {
 /// Put the window in the state `shot` shows, and say how long to let it settle, when it is one.
 pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
     let ctx = &shell.ctx;
+    came_in::shot_clear_just_added();
     Some(match shot {
         "pl-added-01" => server_form(shell, KAVITA_LINK, None, false),
         "pl-added-02" => server_form(shell, KAVITA_LINK, None, true),
@@ -412,12 +420,27 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             shell,
             Some(CameIn::Empty(NothingCameIn::EmptyStore { store: store(0, 0, 0) })),
         ),
-        "pl-added-15" => store_form(
-            shell,
-            Some(CameIn::Empty(NothingCameIn::StoreUnreachable {
+        "pl-added-15" => {
+            let settle = store_form(shell, None);
+            came_in::shot_store_preview(&InvitePreview::Store(InvitedStore {
+                link: Secret(INVITE.into()),
+                name: STORE.into(),
+                url: "https://store.home.example".into(),
                 host: "store.home.example".into(),
-            })),
-        ),
+                fingerprint: "7Q2M 4KD1 9XLA 0PE3".into(),
+                already_joined: false,
+                owners: vec!["Kim".into()],
+                plugins: Vec::new(),
+                open: false,
+                anonymous: false,
+                device_label: "Computer".into(),
+                names_joiner: false,
+            }));
+            came_in::shot_store_answer(&CameIn::Empty(NothingCameIn::StoreUnreachable {
+                host: "store.home.example".into(),
+            }));
+            settle
+        }
         "pl-added-16" => {
             came_in::shot_just_added("server-kavita");
             show_sources(shell);
@@ -593,7 +616,16 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             );
             6.0
         }
-        "pl-demo-06" => {
+        "pl-demo-06" | "pl-demo-06-sepia" | "pl-demo-06-dark" => {
+            // The demo is a comic: its look is the comic medium's.
+            let look = match shot {
+                "pl-demo-06-sepia" => Some("sepia"),
+                "pl-demo-06-dark" => Some("dark"),
+                _ => None,
+            };
+            if let Some(look) = look {
+                shell.reader.shot_setting_for(Medium::Manga, ReaderSettingKey::Look, look);
+            }
             crate::reading::demo::read(&ctx.window);
             let reader = Rc::clone(&shell.reader);
             gtk::glib::timeout_add_local_once(
