@@ -37,7 +37,6 @@ fn routes() -> HashMap<&'static str, &'static str> {
             r#"{"specials":[{"id":903,"range":"Extra","title":"","titleName":"Extra","pages":4,"isSpecial":true,"files":[{"format":1}]}],"chapters":[],"volumes":[{"id":11,"name":"1","chapters":[{"id":901,"range":"1-9","titleName":"","title":"","pages":3,"isSpecial":false,"releaseDate":"2025-02-03T00:00:00","files":[{"format":1}]}]},{"id":12,"name":"2","chapters":[{"id":902,"range":"0","titleName":"","title":"","pages":2,"isSpecial":false,"files":[{"format":1}]}]}],"storylineChapters":[]}"#,
         ),
         ("/api/Series/7", r#"{"id":7,"name":"Lantern Keeper","libraryId":1}"#),
-        ("/api/Library/libraries", r#"[{"id":1,"name":"Comics","type":1}]"#),
         ("/api/Reader/chapter-info", r#"{"pages":3,"fileDimensions":[]}"#),
         ("/api/Reader/mark-multiple", "{}"),
         ("/api/Account", "{}"),
@@ -77,8 +76,8 @@ async fn kavita_signs_in_lists_opens_and_writes_progress_back() {
     assert_eq!(detail.description.as_deref(), Some("A keeper of lanterns."));
     assert_eq!(detail.authors, ["A. Example"]);
     assert_eq!(detail.genres, ["Fantasy"]);
-    // Kavita keeps no direction per series: a library of comics reads left to right.
-    assert_eq!(detail.reading_hint, Some(kaeri_core::books::ReadingHint::LeftToRight));
+    // Kavita keeps no direction per series, and its library's type is not taken for one.
+    assert_eq!(detail.reading_hint, None);
 
     let chapters = source.chapters("7", &hints).await.unwrap();
     let ids: Vec<&str> = chapters.iter().map(|c| c.id.as_str()).collect();

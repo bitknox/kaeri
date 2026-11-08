@@ -238,6 +238,31 @@ async fn a_direction_hint_opens_tall_pages_paged() {
     assert_eq!(view.mode, ReaderMode::Strip);
 }
 
+/// A series the catalogue counts a webtoon opens as the Webtoons default though its source
+/// says left to right: the hint gives the direction, not a paged book.
+#[tokio::test(start_paused = true)]
+async fn a_webtoon_with_a_direction_hint_opens_as_the_webtoons_default() {
+    let mut h = hinted(HintedSource::tall("plugin-books", Some(ReadingHint::LeftToRight)));
+    h.services
+        .store
+        .seed_book_work(HINTED, "manga", Some("webtoon"), Some("KR"), "The Tin Lighthouse", 1)
+        .unwrap();
+    let (view, _, said) = h.open_work(WorkId::new(HINTED), OpenAt::Start).await;
+    assert_eq!(view.mode, ReaderMode::Strip);
+    assert!(notices(&said).is_empty(), "nothing was guessed: {said:?}");
+    let row = h.row(Key::Mode);
+    assert_eq!(row.value, ReaderValue::Choice { name: "strip".into() });
+    assert!(row.detected && !row.overridden, "{row:?}");
+    assert_eq!(h.row(Key::Direction).value, ReaderValue::Choice { name: "ltr".into() });
+    let session = h.session();
+    h.send(ReaderCommand::Close { session });
+
+    h.config.effective_mut().reading.webtoon.mode = kaeri_core::config::WebtoonMode::Paged;
+    let (view, _, _) = h.open_work(WorkId::new(HINTED), OpenAt::Start).await;
+    assert_eq!(view.mode, ReaderMode::Paged, "the Webtoons default is read at each open");
+    assert_eq!(view.direction, ReadDirection::LeftToRight, "the hint's direction");
+}
+
 /// The demo's comic says it reads left to right: it opens paged, left to right, though its
 /// pages are tall.
 #[tokio::test(start_paused = true)]

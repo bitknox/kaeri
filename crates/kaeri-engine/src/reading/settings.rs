@@ -230,8 +230,8 @@ impl Layers {
 
     /// The source's or the catalogue's value for `key`: a comic's mode and direction only. A
     /// strip, said by either, opens as the Webtoons default. Left to right and right to left are
-    /// a paged book, as in Komga, where they stand beside vertical and webtoon; the source's
-    /// word comes before the catalogue's.
+    /// a paged book, as in Komga, where they stand beside vertical and webtoon, unless the
+    /// catalogue counts the series a webtoon.
     fn source_value(&self, key: Key) -> Option<ReaderValue> {
         if self.medium != Medium::Manga {
             return None;
@@ -239,12 +239,12 @@ impl Layers {
         let hint = self.source.hint;
         match key {
             Key::Mode => match hint {
+                Some(ReadingHint::Vertical) => Some(choice("vertical")),
+                Some(ReadingHint::Strip) => Some(choice(self.config.webtoon.mode.name())),
+                _ if self.source.webtoon => Some(choice(self.config.webtoon.mode.name())),
                 Some(ReadingHint::RightToLeft | ReadingHint::LeftToRight) => {
                     Some(choice("paged"))
                 }
-                Some(ReadingHint::Vertical) => Some(choice("vertical")),
-                Some(ReadingHint::Strip) => Some(choice(self.config.webtoon.mode.name())),
-                None if self.source.webtoon => Some(choice(self.config.webtoon.mode.name())),
                 None => None,
             },
             Key::Direction => match hint? {
@@ -457,8 +457,8 @@ mod tests {
     }
 
     /// A source's left to right or right to left is a paged book: it sets the mode as well as
-    /// the direction, below the person's own choice and above the reader's guess, and before
-    /// the catalogue's word that the series is a webtoon.
+    /// the direction, below the person's own choice and above the reader's guess, unless the
+    /// catalogue counts the series a webtoon, which opens as the Webtoons default.
     #[test]
     fn a_direction_hint_means_a_paged_book() {
         let store = Store::open_in_memory().unwrap();
@@ -478,11 +478,9 @@ mod tests {
             assert!(mode.detected && !mode.overridden, "{mode:?}");
             assert!(layers.sourced(Key::Mode) && layers.sourced(Key::Direction));
             assert_eq!(layers.word(Key::Direction), direction);
-            assert_eq!(
-                read(Some(hint), true).word(Key::Mode),
-                "paged",
-                "the source's word first"
-            );
+            let webtoon = read(Some(hint), true);
+            assert_eq!(webtoon.word(Key::Mode), "strip", "a webtoon: the Webtoons default");
+            assert_eq!(webtoon.word(Key::Direction), direction);
         }
         assert_eq!(read(None, true).word(Key::Mode), "strip", "the Webtoons default");
 

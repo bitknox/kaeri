@@ -13,7 +13,7 @@ use async_trait::async_trait;
 use kaeri_core::{
     books::{
         BookFile, BookHints, BookSourceKind, BookSourceManifest, ChapterContent, PageRef,
-        ReadingHint, SeriesDetail, SeriesHit, SourceChapter,
+        SeriesDetail, SeriesHit, SourceChapter,
     },
     error::ProviderError,
     media::Medium,
@@ -149,18 +149,6 @@ struct LibraryRow {
     id: i64,
     #[serde(default)]
     name: String,
-    /// Kavita's library type: 0 manga, 1 comic, 2 book, 3 image, 4 light novel, 5 comic
-    /// (named from Comic Vine).
-    #[serde(default, rename = "type")]
-    kind: Option<i64>,
-}
-
-impl LibraryRow {
-    /// A library of comics, which read left to right. Kavita keeps no direction of a series'
-    /// own, so this is all it says of one.
-    fn comics(&self) -> bool {
-        matches!(self.kind, Some(1 | 5))
-    }
 }
 
 /// The libraries this account sees. Kavita before 0.8 lists them at `api/Library`.
@@ -443,15 +431,8 @@ impl BookSource for KavitaSource {
             .await
             .map_err(|e| self.aim(e))?;
         let name = row.get("name").and_then(|v| v.as_str()).unwrap_or(id);
+        // Kavita keeps no reading direction of a series' own, so it gives no hint.
         let mut detail = SeriesDetail::new(id, name);
-        if let Some(library) = row.get("libraryId").and_then(serde_json::Value::as_i64)
-            && let Ok(libraries) = library_rows(&self.http).await
-        {
-            detail.reading_hint = libraries
-                .iter()
-                .any(|l| l.id == library && l.comics())
-                .then_some(ReadingHint::LeftToRight);
-        }
         if let Ok(meta) = self
             .http
             .json::<serde_json::Value>(&format!("api/Series/metadata?seriesId={}", encode(id)))
