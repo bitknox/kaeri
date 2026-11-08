@@ -1116,7 +1116,7 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
                 Some(Reply::errors(401, "Invalid token", Value::Null))
             } else if operation == Operation::Books {
                 let books = lock(state).books.clone();
-                Some(books::respond(&books, &query, &variables))
+                Some(books::respond(&books, &query, &variables, clock.shift))
             } else {
                 threads::respond(&mut lock(state), operation, &variables, clock.now)
             };
