@@ -614,9 +614,24 @@ impl Reader {
         ] {
             let this = Rc::downgrade(&this);
             popover.connect_show(move |popover| {
-                if let Some(this) = this.upgrade() {
-                    this.aim(popover, &button);
-                }
+                let Some(this) = this.upgrade() else { return };
+                this.aim(popover, &button);
+                // The group may still be coming in with the chrome, its place not laid out yet:
+                // aim again once it is, so the sheet ends just over it.
+                let frames = Cell::new(0);
+                let this = Rc::downgrade(&this);
+                let button = button.clone();
+                popover.add_tick_callback(move |popover, _| {
+                    let Some(this) = this.upgrade() else { return glib::ControlFlow::Break };
+                    frames.set(frames.get() + 1);
+                    let (min, _, _, _) = this.group.measure(gtk::Orientation::Vertical, -1);
+                    if this.group.is_mapped() && this.group.height() >= min || frames.get() > 30
+                    {
+                        this.aim(popover, &button);
+                        return glib::ControlFlow::Break;
+                    }
+                    glib::ControlFlow::Continue
+                });
             });
         }
         this.sheet.connect_closed({
@@ -681,11 +696,15 @@ impl Reader {
     /// Point `popover` at a line just over the group, from `button` in it, so it opens above
     /// the group and leaves the scrubber and names in sight.
     fn aim(&self, popover: &gtk::Popover, button: &gtk::Widget) {
-        let Some(at) = button.compute_point(&self.group, &gtk::graphene::Point::zero()) else {
+        // The group's drawn top, padding included, over the button's own origin.
+        let Some(group) = self.group.compute_bounds(button) else {
             return;
         };
-        let y = -(at.y().round() as i32) - 8;
-        popover.set_pointing_to(Some(&gdk::Rectangle::new(0, y, button.width().max(1), 1)));
+        let y = group.y().round() as i32 - 8;
+        let aim = gdk::Rectangle::new(0, y, button.width().max(1), 1);
+        if popover.pointing_to() != (true, aim) {
+            popover.set_pointing_to(Some(&aim));
+        }
     }
 
     fn toggle_fullscreen(&self) {
@@ -809,6 +828,25 @@ impl Reader {
         let foot = strip_target(&heights, spacing, heights.len(), None) - f64::from(spacing);
         let page = self.strip_scroll.vadjustment().page_size();
         self.scroll_strip_to(self.trail.height() + foot - page * share);
+    }
+
+    /// "Resumed at page 2 · Start over" held over a novel, with the chrome up or gone, where the
+    /// novel's text can't be drawn (the shots box has no WebKit): only where the notice sits.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_notice(self: &Rc<Self>, chrome: bool) {
+        use kaeri_model::{Msg, ReadingMsg};
+        self.state.borrow_mut().medium = Some(Medium::Novel);
+        self.pinned.set(chrome);
+        if chrome {
+            self.reveal_chrome();
+        } else {
+            self.hide_chrome();
+        }
+        self.notice(&ReaderNotice {
+            msg: Msg::Reading(ReadingMsg::ReaderResumed { page: 2 }),
+            action: Some(ReaderAction::StartOver),
+            lasts_ms: 0,
+        });
     }
 
     /// The end page as it is with no first page of the next chapter: the plate with its number.

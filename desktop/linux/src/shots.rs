@@ -1991,8 +1991,14 @@ fn capture(
     // A popover is a surface of its own, which the window's drawing leaves out: drawn on top.
     if let Some((widget, x, y)) = over {
         let popover = gtk::WidgetPaintable::new(Some(&widget));
+        // The window draws its frame's bounds squeezed into its size: the popover goes through
+        // the same, so it lands where it sits over the window.
+        let frame = window
+            .compute_bounds(window)
+            .unwrap_or_else(|| gtk::graphene::Rect::new(0.0, 0.0, width as f32, height as f32));
         snapshot.save();
-        snapshot.translate(&gtk::graphene::Point::new(x, y));
+        snapshot.scale(width as f32 / frame.width(), height as f32 / frame.height());
+        snapshot.translate(&gtk::graphene::Point::new(x - frame.x(), y - frame.y()));
         popover.snapshot(&snapshot, f64::from(widget.width()), f64::from(widget.height()));
         snapshot.restore();
     }

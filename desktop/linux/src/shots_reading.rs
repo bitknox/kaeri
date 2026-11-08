@@ -14,7 +14,7 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 41] = [
+pub const NAMES: [&str; 43] = [
     "read",
     "read-updates",
     "read-library",
@@ -54,6 +54,9 @@ pub const NAMES: [&str; 41] = [
     "read-strip-marker",
     "read-chapters",
     "read-chapters-list",
+    // Where a novel's notice sits, with the chrome up and gone.
+    "read-novel-notice",
+    "read-novel-notice-hidden",
     "read-novel",
     "read-novel-light",
     "read-novel-paper",
@@ -308,6 +311,12 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         }
         // The novel in each look the board draws, with the chrome up: the theme's (dark), Light,
         // and Paper with Aa open.
+        "read-novel-notice" | "read-novel-notice-hidden" => {
+            read(shell, NOVEL, "3");
+            let chrome = shot == "read-novel-notice";
+            later(shell, 3000, move |reader| reader.shot_notice(chrome));
+            4.5
+        }
         "read-novel" => {
             shell.reader.shot_setting(ReaderSettingKey::Look, "system");
             read(shell, NOVEL, "3");
