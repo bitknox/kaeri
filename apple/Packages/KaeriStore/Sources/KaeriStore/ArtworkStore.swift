@@ -66,9 +66,8 @@ public final class ArtworkStore {
     /// last only when a screen shows it again, the last wait later.
     public static let backoff: [Duration] = [.seconds(2), .seconds(5), .seconds(15), .seconds(60)]
 
-    /// How many bytes of decoded pixels the cache keeps, unless the store is told otherwise: art
-    /// off screen, about two screens of covers. Art on screen is held apart from it.
-    public static let costLimit = 96 << 20
+    /// How many bytes of decoded pixels the cache keeps, unless the store is told otherwise.
+    public static let costLimit = 256 << 20
 
     /// What a view reading a URL's art observes: bumped each time that art lands. One per URL,
     /// so art landing redraws the views showing it and no others.

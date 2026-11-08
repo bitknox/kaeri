@@ -56,11 +56,7 @@ public final class SeekPreview {
         configuration.hdr = false
         configuration.logLevel = "error"
         configuration.subtitleFallback = nil
-        // A frame at a time, at the seek: nothing read ahead or kept behind.
-        configuration.readAhead = "4MiB"
-        configuration.keptBehind = "0"
         configuration.options = [
-            "cache": "no",
             "aid": "no", "sid": "no", "ao": "null", "pause": "yes", "keep-open": "yes",
             "hr-seek": "no", "osd-level": "0",
         ]

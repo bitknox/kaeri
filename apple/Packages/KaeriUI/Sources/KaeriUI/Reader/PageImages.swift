@@ -15,7 +15,7 @@ enum PageImages {
 
     /// How many bytes of decoded pages the cache keeps: the pages on screen and a few either
     /// side of them.
-    static let costLimit = 96 << 20
+    static let costLimit = 192 << 20
 
     /// Let every decoded page go, as the reader closes.
     static func removeAll() {
