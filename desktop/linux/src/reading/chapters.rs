@@ -344,7 +344,7 @@ impl Chapters {
     }
 
     /// A chapter: its words, its title and state under them, the open one on the selected fill
-    /// and a new one with the water dot. No icon on any row.
+    /// and a new one with the water dot in a place every row keeps. No icon on any row.
     fn row(&self, chapter: &ChapterRow, here: bool) -> adw::ActionRow {
         let read = matches!(chapter.state, ChapterReadState::Read);
         let mut under: Vec<String> = Vec::new();
@@ -370,12 +370,14 @@ impl Chapters {
             row.upcast_ref::<gtk::Widget>()
                 .update_state(&[gtk::accessible::State::Selected(Some(true))]);
         }
+        // Every row keeps the dot's place, so titles line up with and without it.
+        let slot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        slot.set_width_request(6);
+        slot.set_valign(gtk::Align::Center);
         if chapter.new_chapter && !read {
-            let dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-            dot.add_css_class("home-new");
-            dot.set_valign(gtk::Align::Center);
-            row.add_prefix(&dot);
+            slot.add_css_class("home-new");
         }
+        row.add_prefix(&slot);
         let id = chapter.id.clone();
         let popover = self.popover.downgrade();
         let ask = self.ask.borrow().clone();

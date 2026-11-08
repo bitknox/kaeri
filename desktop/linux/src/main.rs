@@ -7,6 +7,7 @@
 //!                     [--scene <home scene>]
 //!                     [--shots <dir> [--shot <a,b,...>] [--prefix <name>]] [--size <w>x<h>]
 
+mod cards_layout;
 mod catalog;
 mod choices;
 mod crash_signal;

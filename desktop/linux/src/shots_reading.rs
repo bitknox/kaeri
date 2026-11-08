@@ -6,17 +6,23 @@ use std::rc::Rc;
 
 use adw::prelude::*;
 use kaeri_core::books::WorkId;
-use kaeri_model::reader::ReaderSettingKey;
+use kaeri_model::{
+    input::{Direction, ReaderPad},
+    reader::ReaderSettingKey,
+};
 
-use crate::{pages::Dest, window::Shell};
+use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 24] = [
+pub const NAMES: [&str; 43] = [
     "read",
     "read-updates",
     "read-library",
     "read-library-filters",
     "read-search",
+    "read-search-query",
+    "read-settings",
+    "read-medium-off",
     "read-search-filters",
     "read-downloads",
     "read-sources",
@@ -28,10 +34,29 @@ pub const NAMES: [&str; 24] = [
     "read-paged-single",
     "read-paged-width",
     "read-paged-settings",
+    "read-end",
+    "read-end-none",
+    "read-end-plate",
+    "read-plate",
+    "read-open-failed",
+    "read-mode",
+    "read-turn-a",
+    "read-turn-b",
     "read-strip",
+    "read-strip-slide-a",
+    "read-strip-slide-b",
+    "read-strip-end",
+    "read-strip-mode",
     "read-strip-light",
+    // Last of the strip's: running on reads chapter 2 to its end, and the marker shot opens it
+    // at its foot after that.
+    "read-strip-flowed",
+    "read-strip-marker",
     "read-chapters",
     "read-chapters-list",
+    // Where a novel's notice sits, with the chrome up and gone.
+    "read-novel-notice",
+    "read-novel-notice-hidden",
     "read-novel",
     "read-novel-light",
     "read-novel-paper",
@@ -50,11 +75,52 @@ fn read(shell: &Rc<Shell>, work: &str, chapter: &str) {
     );
 }
 
+/// Do `what` with the reader `ms` after the stage, once the chapter has opened.
+fn later(shell: &Rc<Shell>, ms: u64, what: impl FnOnce(&Rc<Reader>) + 'static) {
+    let reader = Rc::clone(&shell.reader);
+    gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(ms), move || {
+        what(&reader)
+    });
+}
+
 fn series(shell: &Rc<Shell>, work: &str) {
     let _ = WidgetExt::activate_action(
         &shell.ctx.window,
         "win.open-series",
         Some(&work.to_variant()),
+    );
+}
+
+/// Type `query` into the search field on screen, once the page has come in.
+fn type_query(shell: &Rc<Shell>, query: &'static str) {
+    fn entry(widget: &gtk::Widget) -> Option<gtk::SearchEntry> {
+        if widget.is_mapped()
+            && let Some(entry) = widget.downcast_ref::<gtk::SearchEntry>()
+        {
+            return Some(entry.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = entry(&next) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
+    let window = shell.ctx.window.clone();
+    gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(1200), move || {
+        if let Some(entry) = entry(window.upcast_ref()) {
+            entry.set_text(query);
+        }
+    });
+}
+
+fn settings_reading(shell: &Rc<Shell>) {
+    let _ = WidgetExt::activate_action(
+        &shell.ctx.window,
+        "win.settings-pane",
+        Some(&"reading".to_variant()),
     );
 }
 
@@ -81,6 +147,26 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         "read-search" => {
             shell.go(Dest::ReadSearch);
             3.0
+        }
+        "read-search-query" => {
+            shell.go(Dest::ReadSearch);
+            type_query(shell, "Lantern");
+            4.5
+        }
+        "read-settings" => {
+            settings_reading(shell);
+            3.0
+        }
+        "read-medium-off" => {
+            settings_reading(shell);
+            let ctx = Rc::clone(&shell.ctx);
+            gtk::glib::timeout_add_local_once(
+                std::time::Duration::from_millis(1500),
+                move || {
+                    crate::reading::medium::shot_turn_off(&ctx);
+                },
+            );
+            3.5
         }
         "read-search-filters" => {
             shell.go(Dest::ReadSearch);
@@ -140,9 +226,72 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             );
             4.5
         }
+        // The page between chapters: on to chapter 14, and after the last chapter.
+        "read-end" | "read-end-none" => {
+            read(shell, MANGA, if shot == "read-end" { "13" } else { "15" });
+            later(shell, 2500, |reader| reader.shot_end());
+            4.0
+        }
+        // The end page with no first page to show: the plate with the chapter's number.
+        "read-end-plate" => {
+            read(shell, MANGA, "13");
+            later(shell, 2500, |reader| reader.shot_end_plate());
+            4.0
+        }
+        // A page still loading after 4 s: its plate, number and line.
+        "read-plate" => {
+            read(shell, MANGA, "13");
+            later(shell, 2500, |reader| reader.shot_plate());
+            4.0
+        }
+        // A chapter that could not open: a series no source has.
+        "read-open-failed" => {
+            read(shell, "a:900399", "1");
+            4.0
+        }
+        // Aa with Reading mode's list pushed, on a manga and on a strip.
+        "read-mode" | "read-strip-mode" => {
+            if shot == "read-mode" {
+                read(shell, MANGA, "13");
+            } else {
+                read(shell, STRIP, "2");
+            }
+            later(shell, 2500, |reader| reader.shot_mode_list());
+            4.5
+        }
+        // A page turn 60 ms and 140 ms in: the page under the one that fades away.
+        "read-turn-a" | "read-turn-b" => {
+            read(shell, MANGA, "13");
+            later(shell, 3000, |reader| reader.pad(ReaderPad::Turn(Direction::Down)));
+            if shot == "read-turn-a" { 3.0 + 0.06 } else { 3.0 + 0.14 }
+        }
         "read-strip" => {
             read(shell, STRIP, "2");
             4.0
+        }
+        // After the last chapter there is, the strip ends on the end page.
+        "read-strip-end" => {
+            read(shell, STRIP, "3");
+            later(shell, 2500, |reader| reader.shot_end());
+            4.0
+        }
+        // The marker into chapter 3 coming up, and chapter 3 run on under it once the marker
+        // crossed the middle, its first images in.
+        "read-strip-marker" => {
+            read(shell, STRIP, "2");
+            later(shell, 2500, |reader| reader.shot_marker(0.6));
+            4.0
+        }
+        "read-strip-flowed" => {
+            read(shell, STRIP, "2");
+            later(shell, 2500, |reader| reader.shot_marker(0.15));
+            6.0
+        }
+        // Space in a strip 60 ms and 140 ms in: the slide on the quick spring.
+        "read-strip-slide-a" | "read-strip-slide-b" => {
+            read(shell, STRIP, "2");
+            later(shell, 3000, |reader| reader.pad(ReaderPad::Turn(Direction::Down)));
+            if shot == "read-strip-slide-a" { 3.0 + 0.06 } else { 3.0 + 0.14 }
         }
         "read-strip-light" => {
             shell.reader.shot_setting(ReaderSettingKey::Background, "white");
@@ -162,6 +311,12 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         }
         // The novel in each look the board draws, with the chrome up: the theme's (dark), Light,
         // and Paper with Aa open.
+        "read-novel-notice" | "read-novel-notice-hidden" => {
+            read(shell, NOVEL, "3");
+            let chrome = shot == "read-novel-notice";
+            later(shell, 3000, move |reader| reader.shot_notice(chrome));
+            4.5
+        }
         "read-novel" => {
             shell.reader.shot_setting(ReaderSettingKey::Look, "system");
             read(shell, NOVEL, "3");

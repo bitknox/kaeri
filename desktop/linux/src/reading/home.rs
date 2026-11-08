@@ -16,10 +16,10 @@ use super::{
     COVER_WIDTH, Place, action_chapter, cover, heading_row, listen, place, read_button, send,
     shelf, work_card,
 };
-use crate::{nagare, say, states::Shape, widgets, window::Ctx};
+use crate::{say, states::Shape, widgets, window::Ctx};
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
-    let empty = nagare::status_page(&t::home_read_end(), &t::home_read_no_sources(), None);
+    let empty = crate::states::plain(&t::home_read_end(), &t::home_read_no_sources());
     let Place { page, states, column, .. } = place(
         ctx,
         &super::title_of(crate::pages::Dest::Read),
@@ -130,7 +130,7 @@ fn spotlight(
     let label = widgets::haze(&say::msg(&spot.label), "caption-heading");
     label.set_xalign(0.0);
     text.append(&label);
-    text.append(&widgets::show_title(&tile.title, "large"));
+    text.append(&widgets::show_title(&tile.title, "home-spot-title"));
     let facts = super::dotted(&spot.facts);
     if !facts.is_empty() {
         text.append(&widgets::haze(&facts, "caption"));

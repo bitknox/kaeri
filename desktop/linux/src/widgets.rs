@@ -664,6 +664,34 @@ pub fn surprise_button(
     button
 }
 
+/// A ring of how far something has come, 16 px: a silk arc on the rule, with a stop square
+/// inside when it can be stopped.
+pub fn ring(fraction: f64) -> gtk::DrawingArea {
+    let area = gtk::DrawingArea::new();
+    area.set_content_width(16);
+    area.set_content_height(16);
+    area.set_valign(gtk::Align::Center);
+    area.set_margin_end(4);
+    area.set_draw_func(move |area, cr, width, height| {
+        let color = area.color();
+        let (r, g, b) =
+            (f64::from(color.red()), f64::from(color.green()), f64::from(color.blue()));
+        let (cx, cy) = (f64::from(width) / 2.0, f64::from(height) / 2.0);
+        let radius = cx.min(cy) - 1.0;
+        cr.set_line_width(2.0);
+        cr.set_source_rgba(r, g, b, 0.22);
+        cr.arc(cx, cy, radius, 0.0, std::f64::consts::TAU);
+        let _ = cr.stroke();
+        cr.set_source_rgb(r, g, b);
+        let start = -std::f64::consts::FRAC_PI_2;
+        cr.arc(cx, cy, radius, start, start + std::f64::consts::TAU * fraction.clamp(0.0, 1.0));
+        let _ = cr.stroke();
+        cr.rectangle(cx - 2.5, cy - 2.5, 5.0, 5.0);
+        let _ = cr.fill();
+    });
+    area
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -17,7 +17,6 @@ use kaeri_model::{
 
 use super::{Dest, WorkGrid, listen, scope, send};
 use crate::{
-    nagare,
     pages::search_filters::{faded_scroll, menu_button, set_label},
     say,
     states::{Shape, States},
@@ -327,12 +326,23 @@ impl Filters {
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let grid = Rc::new(WorkGrid::new(&ctx.hub));
-    let more = gtk::Button::with_label(&t::action_more());
-    more.add_css_class("pill");
+    // A query lists rows; browsing without one is the grid of covers.
+    let rows = widgets::boxed_list();
+    rows.add_css_class("read-search-rows");
+    rows.set_margin_start(24);
+    rows.set_margin_end(24);
+    rows.set_margin_top(8);
+    rows.set_margin_bottom(24);
+    rows.set_visible(false);
+    // The next page loads near the end by itself, with a spinner while it comes.
+    let more = adw::Spinner::new();
     more.set_halign(gtk::Align::Center);
+    more.set_size_request(24, 24);
     more.set_margin_top(8);
     more.set_margin_bottom(16);
     more.set_visible(false);
+    let has_more = Rc::new(std::cell::Cell::new(false));
+    let asking_more = Rc::new(std::cell::Cell::new(false));
     // Over the grid: what a browse shows, or how many the Shows side has for the words.
     let line = widgets::haze("", "caption");
     line.set_halign(gtk::Align::Start);
@@ -352,6 +362,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     body.append(&line);
     body.append(&other);
     body.append(&grid.widget);
+    body.append(&rows);
     body.append(&more);
     let scroll = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never)
@@ -360,11 +371,10 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let clear = gtk::Button::with_label(&t::read_search_clear_filters());
     clear.add_css_class("pill");
     clear.set_visible(false);
-    let empty = nagare::status_page(
-        &t::read_search_nothing_browse(),
-        &t::read_search_nothing_line(),
-        Some(&clear),
-    );
+    let empty =
+        crate::states::plain(&t::read_search_nothing_browse(), &t::read_search_nothing_line());
+    clear.set_halign(gtk::Align::Center);
+    empty.set_child(Some(&clear));
     let states = States::new(&ctx.hub, &scroll, Shape::Grid, &empty, &t::read_search_failed());
 
     let entry = gtk::SearchEntry::builder()
@@ -374,9 +384,10 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let clamp = adw::Clamp::builder().maximum_size(520).child(&entry).build();
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
-    header.pack_end(&scope(ctx, Dest::Search, true));
     header.set_title_widget(Some(&clamp));
     let filters = Filters::new();
+    // Shows or Reading leads the content bar, where Library has it.
+    filters.row.prepend(&scope(ctx, Dest::Search, true));
     let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
     content.append(&filters.row);
     states.widget.set_vexpand(true);
@@ -423,10 +434,22 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             *pending.borrow_mut() = Some(id);
         }
     });
-    more.connect_clicked({
-        let (hub, at) = (Rc::downgrade(&ctx.hub), Rc::clone(&at));
-        move |_| {
+    scroll.vadjustment().connect_value_changed({
+        let (hub, at, has_more, asking_more, more) = (
+            Rc::downgrade(&ctx.hub),
+            Rc::clone(&at),
+            Rc::clone(&has_more),
+            Rc::clone(&asking_more),
+            more.clone(),
+        );
+        move |adj| {
+            let near_end = adj.value() + adj.page_size() > adj.upper() - 600.0;
+            if !near_end || !has_more.get() || asking_more.get() {
+                return;
+            }
             if let Some(hub) = hub.upgrade() {
+                asking_more.set(true);
+                more.set_visible(true);
                 let (query, page) = at.borrow().clone();
                 send(&hub, ReadingCommand::SearchMore { query, page: page + 1 });
             }
@@ -451,6 +474,8 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     });
     let tiles = Rc::new(RefCell::new(Vec::new()));
     listen(ctx, &page, {
+        let (rows, has_more_now, asking_more) =
+            (rows.clone(), Rc::clone(&has_more), Rc::clone(&asking_more));
         let (states, grid, more, at, tiles, filters) = (
             states.clone(),
             Rc::clone(&grid),
@@ -479,12 +504,35 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                 }
                 at.borrow_mut().1 = *page;
                 tiles.borrow_mut().extend(found.iter().cloned());
-                grid.set(&tiles.borrow());
-                more.set_visible(*has_more);
                 let browsing = query.text.is_empty();
-                line.set_visible(browsing);
+                grid.widget.set_visible(browsing);
+                rows.set_visible(!browsing);
+                if browsing {
+                    grid.set(&tiles.borrow());
+                } else {
+                    if *page <= 1 {
+                        while let Some(row) = rows.first_child() {
+                            rows.remove(&row);
+                        }
+                    }
+                    if let Some(hub) = hub.upgrade() {
+                        for tile in found {
+                            rows.append(&super::work_row(&hub, tile));
+                        }
+                    }
+                }
+                has_more_now.set(*has_more);
+                asking_more.set(false);
+                more.set_visible(false);
+                // Browsing says what it shows; a query says how many it found once it knows.
+                let count = total.or((!*has_more).then(|| tiles.borrow().len() as u32));
                 if browsing {
                     line.set_label(&browse_line(query, &filters.choices, *total));
+                    line.set_visible(true);
+                } else {
+                    let words = count.map(|n| t::read_search_total(i64::from(n)));
+                    line.set_label(words.as_deref().unwrap_or(""));
+                    line.set_visible(words.is_some());
                 }
                 match other_scope.filter(|n| *n > 0 && !browsing) {
                     Some(n) => {

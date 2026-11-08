@@ -648,6 +648,8 @@ impl Shell {
         }
         match dest.reading_side() {
             Some(side) if answer == Read => side,
+            // Downloads with Both is one page with a section a medium.
+            Some(_) if dest == Dest::Downloads => dest,
             Some(side) if answer == Both && self.ctx.prefs.scope_reading(dest.name()) => side,
             _ => dest,
         }
@@ -664,10 +666,14 @@ impl Shell {
                 && let Some(dest) = Dest::named(&row.widget_name())
             {
                 row.set_visible(rows.contains(&dest));
+                // With Both, 12 px set Watch's group, Read's and the shared places apart.
+                let starts = matches!(dest, Dest::Read | Dest::Search);
+                let both = answer == kaeri_model::medium::KaeriIsFor::Both;
+                row.set_margin_top(if both && starts { 12 } else { 0 });
                 if let Some(label) =
                     row.child().and_then(|c| c.last_child()).and_downcast::<gtk::Label>()
                 {
-                    label.set_label(&dest.title());
+                    label.set_label(&sidebar_title(dest));
                 }
             }
             child = widget.next_sibling();
@@ -702,7 +708,7 @@ impl Shell {
         if self.top.visible_child_name().as_deref() == Some("player") {
             self.player.close();
         } else if self.is_reader() {
-            self.reader.close();
+            self.reader.back();
         } else if let Some(nav) = self.ctx.nav() {
             nav.pop();
         }
@@ -1008,6 +1014,10 @@ impl Shell {
                             work: kaeri_core::books::WorkId(work),
                         },
                     ));
+                    // Home's Continue and spotlight show the place just left.
+                    s.ctx.hub.send(Command::Reading(
+                        kaeri_model::reading::ReadingCommand::LoadHome { refresh: false },
+                    ));
                 }
             }),
         );
@@ -1028,6 +1038,34 @@ impl Shell {
             Box::new(move |s, a| {
                 if let Some(work) = a.and_then(String::from_variant) {
                     crate::reading::export::open(&s.ctx, &kaeri_core::books::WorkId(work));
+                }
+            }),
+        );
+        add(
+            "read-delete-read",
+            Some(glib::VariantTy::STRING),
+            Box::new(|s, a| {
+                if let Some(work) = a.and_then(String::from_variant) {
+                    crate::reading::send(
+                        &s.ctx.hub,
+                        kaeri_model::reading::ReadingCommand::DownloadDeleteRead {
+                            work: kaeri_core::books::WorkId(work),
+                        },
+                    );
+                }
+            }),
+        );
+        add(
+            "show-folder",
+            Some(glib::VariantTy::STRING),
+            Box::new(|s, a| {
+                if let Some(path) = a.and_then(String::from_variant) {
+                    let folder = gtk::gio::File::for_path(path);
+                    gtk::FileLauncher::new(Some(&folder)).launch(
+                        Some(&s.ctx.window),
+                        gtk::gio::Cancellable::NONE,
+                        |_| {},
+                    );
                 }
             }),
         );
@@ -1064,6 +1102,18 @@ impl Shell {
         );
         add("search", None, Box::new(|s, _| s.go(Dest::Search)));
         add("back", None, Box::new(|s, _| s.back()));
+        // Ctrl+W closes the reader before the window.
+        add(
+            "close",
+            None,
+            Box::new(|s, _| {
+                if s.is_reader() {
+                    s.reader.close();
+                } else {
+                    s.ctx.window.close();
+                }
+            }),
+        );
         add("sync", None, Box::new(|s, _| s.ctx.hub.send(Command::SyncNow)));
         add("about", None, Box::new(|s, _| pages::settings::about(&s.ctx)));
         add(
@@ -1217,7 +1267,7 @@ impl Shell {
         app.set_accels_for_action("win.sync", &["<Control>r"]);
         app.set_accels_for_action("win.back", &["<Alt>Left"]);
         app.set_accels_for_action("win.shortcuts", &["<Control>question"]);
-        app.set_accels_for_action("window.close", &["<Control>w"]);
+        app.set_accels_for_action("win.close", &["<Control>w"]);
         let quit = gio::SimpleAction::new("quit", None);
         quit.connect_activate({
             let weak = Rc::downgrade(self);
@@ -1652,7 +1702,7 @@ fn setting_saved(notice: &Notice) -> bool {
         && matches!(notice.msg, Some(kaeri_model::Msg::NoticeSaved { .. }))
 }
 
-/// The sidebar: the destinations, "Sources" over the last two, and the account and Settings
+/// The sidebar: the destinations, "Your sources" over the last two, and the account and Settings
 /// at its foot.
 fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
     let list = gtk::ListBox::new();
@@ -1973,10 +2023,19 @@ fn link_standing(
     }
 }
 
+/// A place's name in the sidebar. Under the Sources heading the sources place reads "Your
+/// sources", as the app board's sidebar has it.
+fn sidebar_title(dest: Dest) -> String {
+    match dest {
+        Dest::Providers => kaeri_i18n::t::linux_sidebar_your_sources(),
+        _ => dest.title(),
+    }
+}
+
 fn dest_row(dest: Dest) -> gtk::ListBoxRow {
     let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
     line.append(&gtk::Image::from_icon_name(dest.icon()));
-    let label = gtk::Label::new(Some(&dest.title()));
+    let label = gtk::Label::new(Some(&sidebar_title(dest)));
     label.set_xalign(0.0);
     line.append(&label);
     let row = gtk::ListBoxRow::builder().child(&line).build();
