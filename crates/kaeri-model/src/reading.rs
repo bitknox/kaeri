@@ -75,6 +75,15 @@ pub struct WorkTile {
     /// row's 30 minutes. Never set by asking sources while Home draws.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub not_in_sources: bool,
+    /// Where the series comes from, for the caption "Light novel · Japan": a country AniList
+    /// names (`reading-origin-*`). `None` when it names none, or one Kaeri has no word for.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub origin: Option<Msg>,
+    /// On a source's hit in Search: how much of the series the source holds, the line under
+    /// the title ("2 volumes", "Chapters 1 to 18", "1 file · CBZ"). `None` when the source
+    /// does not say.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub amount: Option<Msg>,
 }
 
 /// One series' page.
@@ -761,12 +770,26 @@ pub enum ReadSourceState {
     TimedOut { seconds: u32 },
 }
 
+/// The kind of source a group in Search is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadSourceKind {
+    Server,
+    Folder,
+    Plugin,
+}
+
 /// One source's group in a search.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct ReadSourceGroup {
     pub source_id: String,
     pub source_name: String,
+    /// The kind beside the source's name: Server, Folder or Plugin
+    /// (`read-search-source-kind-*`). `None` for one built in, such as the demo, which shows
+    /// its name alone.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub kind: Option<ReadSourceKind>,
     pub state: ReadSourceState,
     /// The hits that joined no AniList result, in the source's order. The group shows five
     /// before Show more.

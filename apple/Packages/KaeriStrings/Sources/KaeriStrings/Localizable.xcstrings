@@ -193115,6 +193115,132 @@
         }
       }
     },
+    "read-hit-chapters" : {
+      "comment" : "Under a source's hit in Search: the chapters it holds, from the first. Argument 1: last (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters 1 to %1$lld"
+          }
+        }
+      }
+    },
+    "read-hit-episodes" : {
+      "comment" : "Under a source's hit in Search: a web novel's episodes it holds, from the first. Argument 1: last (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episodes 1 to %1$lld"
+          }
+        }
+      }
+    },
+    "read-hit-files" : {
+      "comment" : "Under a source's hit in Search: the book files it holds. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 file"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld files"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-hit-files-format" : {
+      "comment" : "Under a source's hit in Search: the book files it holds, all in one format (\"CBZ\"). Argument 1: count (Int). Argument 2: format (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 file · %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld files · %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-hit-parts" : {
+      "comment" : "Under a source's hit in Search: a light novel's parts it holds. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 part"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld parts"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "read-home-browse" : {
       "comment" : "E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.",
       "extractionState" : "manual",
@@ -195529,6 +195655,18 @@
         }
       }
     },
+    "read-search-shown-some" : {
+      "comment" : "Beside More from AniList while AniList's count is not known yet: how many results show. Argument 1: shown (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld shown"
+          }
+        }
+      }
+    },
     "read-search-source-failed" : {
       "comment" : "A source group whose source failed to answer. The reason and Try again follow. Argument 1: source (Text).",
       "extractionState" : "manual",
@@ -195537,6 +195675,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ didn't answer."
+          }
+        }
+      }
+    },
+    "read-search-source-kind-folder" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder"
+          }
+        }
+      }
+    },
+    "read-search-source-kind-plugin" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugin"
+          }
+        }
+      }
+    },
+    "read-search-source-kind-server" : {
+      "comment" : "Beside a source's name in Search: the kind of source it is.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
           }
         }
       }
@@ -196045,6 +196219,18 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "read-search-total-unknown" : {
+      "comment" : "Over reading's results while more pages are to come, so AniList's count is not known yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Series from AniList"
           }
         }
       }

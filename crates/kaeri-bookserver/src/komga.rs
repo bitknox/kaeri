@@ -110,6 +110,9 @@ struct Series {
     metadata: SeriesMeta,
     #[serde(rename = "booksMetadata")]
     books_metadata: BooksMeta,
+    /// How many books (files) the series holds; Komga's books are most often volumes.
+    #[serde(rename = "booksCount")]
+    books_count: u32,
 }
 
 impl Series {
@@ -421,6 +424,9 @@ impl BookSource for KomgaSource {
                 hit.cover = Some(self.http.url(&format!("api/v1/series/{}/thumbnail", s.id)));
                 if !s.metadata.language.is_empty() {
                     hit.language = Some(s.metadata.language.clone());
+                }
+                if s.books_count > 0 {
+                    hit.amount = Some(kaeri_core::books::HitAmount::Volumes(s.books_count));
                 }
                 hit
             })

@@ -773,3 +773,38 @@ read-search-started-year = Last 12 months
 # A choice of reading Search's Started filter: series that started in the last 3 years.
 # @max 24
 read-search-started-3-years = Last 3 years
+
+# Under a source's hit in Search: the chapters it holds, from the first.
+# @arg last: int
+# @max 24
+read-hit-chapters = Chapters 1 to { $last }
+
+# Under a source's hit in Search: a web novel's episodes it holds, from the first.
+# @arg last: int
+# @max 24
+read-hit-episodes = Episodes 1 to { $last }
+
+# Under a source's hit in Search: a light novel's parts it holds.
+# @arg count: int
+# @max 24
+read-hit-parts = { $count ->
+    [one] 1 part
+   *[other] { $count } parts
+ }
+
+# Under a source's hit in Search: the book files it holds.
+# @arg count: int
+# @max 24
+read-hit-files = { $count ->
+    [one] 1 file
+   *[other] { $count } files
+ }
+
+# Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+# @arg count: int
+# @arg format: text
+# @max 24
+read-hit-files-format = { $count ->
+    [one] 1 file · { $format }
+   *[other] { $count } files · { $format }
+ }

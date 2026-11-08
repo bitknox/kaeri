@@ -1251,6 +1251,31 @@ public enum L {
     /// A choice of reading Search's Started filter: series that started in the last 3 years.
     public static var readSearchStarted3Years: String { string("read-search-started-3-years", fallback: "Last 3 years") }
 
+    /// Under a source's hit in Search: the chapters it holds, from the first.
+    public static func readHitChapters(last: Int) -> String {
+        Self.format("read-hit-chapters", fallback: "Chapters 1 to %1$lld", last)
+    }
+
+    /// Under a source's hit in Search: a web novel's episodes it holds, from the first.
+    public static func readHitEpisodes(last: Int) -> String {
+        Self.format("read-hit-episodes", fallback: "Episodes 1 to %1$lld", last)
+    }
+
+    /// Under a source's hit in Search: a light novel's parts it holds.
+    public static func readHitParts(count: Int) -> String {
+        Self.format("read-hit-parts", fallback: "%1$lld parts", count)
+    }
+
+    /// Under a source's hit in Search: the book files it holds.
+    public static func readHitFiles(count: Int) -> String {
+        Self.format("read-hit-files", fallback: "%1$lld files", count)
+    }
+
+    /// Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+    public static func readHitFilesFormat(count: Int, format: String) -> String {
+        Self.format("read-hit-files-format", fallback: "%1$lld files · %2$@", count, format)
+    }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)
@@ -9228,6 +9253,9 @@ public enum L {
     /// Search, when nothing was found anywhere: under the line saying AniList found nothing.
     public static var readSearchSourcesNothing: String { string("read-search-sources-nothing", fallback: "Nothing in your sources either.") }
 
+    /// Over reading's results while more pages are to come, so AniList's count is not known yet.
+    public static var readSearchTotalUnknown: String { string("read-search-total-unknown", fallback: "Series from AniList") }
+
     /// The link under From your sources that shows the rest of AniList's results.
     public static var readSearchMoreAnilist: String { string("read-search-more-anilist", fallback: "More from AniList") }
 
@@ -9235,6 +9263,18 @@ public enum L {
     public static func readSearchShown(shown: Int, total: Int) -> String {
         Self.format("read-search-shown", fallback: "%1$lld of %2$lld shown", shown, total)
     }
+
+    /// Beside More from AniList while AniList's count is not known yet: how many results show.
+    public static func readSearchShownSome(shown: Int) -> String {
+        Self.format("read-search-shown-some", fallback: "%1$lld shown", shown)
+    }
+
+    /// Beside a source's name in Search: the kind of source it is.
+    public static var readSearchSourceKindServer: String { string("read-search-source-kind-server", fallback: "Server") }
+
+    public static var readSearchSourceKindFolder: String { string("read-search-source-kind-folder", fallback: "Folder") }
+
+    public static var readSearchSourceKindPlugin: String { string("read-search-source-kind-plugin", fallback: "Plugin") }
 
     /// The button of a source group with more than five hits.
     public static func readSearchSourceMore(n: Int) -> String {

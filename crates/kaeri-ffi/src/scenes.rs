@@ -223,8 +223,10 @@ pub enum FfiScene {
     ReadingJoinAsk,
     /// Reading on and set to Both, with reading history: The Lantern Ferry (manga, a:900301)
     /// chapter 13 at page 9 of 20 after 1 to 12 read, and The Glass Orchard (novel, a:900302)
-    /// part way into chapter 3. The engine answers Home with its empty shape until the
-    /// catalogue lands.
+    /// part way into chapter 3 after 1 and 2. Manga read most, light novels next, a webtoon
+    /// on Reading: Home's discovery fills all eight rows, Because you finished and More Slice
+    /// of Life among them. The engine answers Home with its empty shape until the catalogue
+    /// lands.
     ReadingHome,
     /// [`Self::ReadingHome`] with the manga's series choices: right to left, kept for the
     /// series, and chapter 7 bookmarked.
@@ -1114,6 +1116,11 @@ fn seed_reading(store: &Store, scene: &FfiScene, now: i64) {
         e.of_pages = Some(20);
         e.source_id = Some("fixture-books".into());
     });
+    // The novel's first two chapters, read last week: light novels are read second most, after
+    // manga, so Home's rows follow the board's person with history.
+    for (chapter, days) in [("1", 8), ("2", 7)] {
+        read(READING_NOVEL, chapter, now - days * DAY, &|e| e.completed = true);
+    }
     read(READING_NOVEL, "3", now - DAY, &|e| {
         e.novel_pos = Some("3/0.4.1/120".into());
         // The reader keeps the page it laid out with the place: a third of the way in.
