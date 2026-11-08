@@ -14935,6 +14935,41 @@ pub fn read_search_source_more(n: i64) -> String {
     text("read-search-source-more", &[("n", Arg::Int(n))])
 }
 
+/// Beside a source's name over its row in Search: the source is a server.
+pub fn read_search_source_kind_server() -> String {
+    text("read-search-source-kind-server", &[])
+}
+
+/// Beside a source's name over its row in Search: the source is a folder on this device.
+pub fn read_search_source_kind_folder() -> String {
+    text("read-search-source-kind-folder", &[])
+}
+
+/// Beside a source's name over its row in Search: the source is a plugin.
+pub fn read_search_source_kind_plugin() -> String {
+    text("read-search-source-kind-plugin", &[])
+}
+
+/// Screen readers: the custom action on a discovery cover that puts the series on Planning.
+pub fn read_tile_add_planning() -> String {
+    text("read-tile-add-planning", &[])
+}
+
+/// Said once by screen readers when Your sources only turns on.
+pub fn read_search_anilist_hidden() -> String {
+    text("read-search-anilist-hidden", &[])
+}
+
+/// Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.
+pub fn read_search_said_anilist(n: i64) -> String {
+    text("read-search-said-anilist", &[("n", Arg::Int(n))])
+}
+
+/// Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.
+pub fn read_search_said_sources(n: i64) -> String {
+    text("read-search-said-sources", &[("n", Arg::Int(n))])
+}
+
 /// Over a first-run page's title: which page of how many.
 pub fn onboarding_step(step: i64, total: i64) -> String {
     text("onboarding-step", &[("step", Arg::Int(step)), ("total", Arg::Int(total))])

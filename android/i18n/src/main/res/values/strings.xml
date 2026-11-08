@@ -5190,6 +5190,26 @@
     <string name="read_search_shown">%1$d of %2$d shown</string>
     <!-- The button of a source group with more than five hits. -->
     <string name="read_search_source_more">Show %1$d more</string>
+    <!-- Beside a source's name over its row in Search: the source is a server. -->
+    <string name="read_search_source_kind_server">Server</string>
+    <!-- Beside a source's name over its row in Search: the source is a folder on this device. -->
+    <string name="read_search_source_kind_folder">Folder</string>
+    <!-- Beside a source's name over its row in Search: the source is a plugin. -->
+    <string name="read_search_source_kind_plugin">Plugin</string>
+    <!-- Screen readers: the custom action on a discovery cover that puts the series on Planning. -->
+    <string name="read_tile_add_planning">Add to Planning</string>
+    <!-- Said once by screen readers when Your sources only turns on. -->
+    <string name="read_search_anilist_hidden">AniList\'s results are hidden.</string>
+    <!-- Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow. -->
+    <plurals name="read_search_said_anilist">
+        <item quantity="one">1 from AniList</item>
+        <item quantity="other">%1$d from AniList</item>
+    </plurals>
+    <!-- Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list. -->
+    <plurals name="read_search_said_sources">
+        <item quantity="one">1 from your sources</item>
+        <item quantity="other">%1$d from your sources</item>
+    </plurals>
     <!-- Over a first-run page's title: which page of how many. -->
     <string name="onboarding_step">%1$d of %2$d</string>
     <!-- Line under "Welcome to Kaeri" on the first page, naming both media. -->

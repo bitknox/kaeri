@@ -88,6 +88,8 @@ abstract class ReadingShotHarness {
         /** A step on the screen once it is ready, such as a tap, and what says it has landed. */
         act: (() -> Unit)? = null,
         acted: (AppStore) -> Boolean = { true },
+        /** The e-ink look, as MainActivity provides it on an e-ink panel. */
+        eink: app.kaeri.eink.EinkLook? = null,
         ready: (AppStore) -> Boolean,
     ) {
         val store = AppStore(scope)
@@ -95,7 +97,11 @@ abstract class ReadingShotHarness {
         store.start(EngineLaunch(EngineLaunch.Engine.Fixtures(scene), EngineHome.override(root)), AppHost(MemorySecrets()))
         compose.runOnUiThread { WindowCompat.setDecorFitsSystemWindows(compose.activity.window, false) }
         compose.setContent {
-            KaeriTheme { AppRoot(store, start, startPage = page) }
+            KaeriTheme {
+                androidx.compose.runtime.CompositionLocalProvider(app.kaeri.ui.reading.LocalEinkLayout provides eink) {
+                    AppRoot(store, start, startPage = page)
+                }
+            }
         }
         compose.waitForIdle()
         compose.runOnUiThread { systemBars(compose.activity) }
@@ -171,5 +177,11 @@ abstract class ReadingShotHarness {
 
         /** The tablet boards: 1280 × 800 dp, landscape, at 320 dpi. */
         const val TABLET = "w1280dp-h800dp-land-xhdpi"
+
+        /** The 6 inch e-reader of the discovery board: 572 × 772 dp. */
+        const val EREADER = "w572dp-h772dp-port-xhdpi"
+
+        /** The e-ink phone of the discovery board: 439 × 879 dp. */
+        const val EINK_PHONE = "w439dp-h879dp-port-xxhdpi"
     }
 }

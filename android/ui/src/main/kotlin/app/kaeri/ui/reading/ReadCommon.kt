@@ -5,6 +5,7 @@ package app.kaeri.ui.reading
 
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -38,7 +40,10 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -81,13 +86,46 @@ internal fun coverShape(width: Dp) = if (width >= 100.dp) RoundedCornerShape(12.
 
 /** A book's cover at 2:3 from its URL, on its plate until the art lands. */
 @Composable
-internal fun ReadCover(url: String?, width: Dp, modifier: Modifier = Modifier, shape: androidx.compose.ui.graphics.Shape = coverShape(width)) {
+internal fun ReadCover(
+    url: String?,
+    width: Dp,
+    modifier: Modifier = Modifier,
+    shape: androidx.compose.ui.graphics.Shape = coverShape(width),
+    /** Drawn on the plate with a book glyph when there is no art at all, so the cover still says what it is. */
+    title: String? = null,
+) {
+    if (url == null && title != null) {
+        NoArtPlate(title, width, modifier.size(width, width * 1.5f).clip(shape))
+        return
+    }
     ArtworkImage(
         url = url,
         plate = null,
         maxPixelSize = pixels(width * 1.5f),
         modifier = modifier.size(width, width * 1.5f).clip(shape),
     )
+}
+
+/**
+ * A cover with no art: the plate with a book glyph and the title on it. Hidden from screen
+ * readers, as the caption under it is read once.
+ */
+@Composable
+private fun NoArtPlate(title: String, width: Dp, modifier: Modifier) {
+    val colors = MaterialTheme.colorScheme
+    Box(modifier.background(colors.surfaceContainerHighest).clearAndSetSemantics {}) {
+        Column(Modifier.fillMaxSize().padding(if (width >= 100.dp) 12.dp else 8.dp)) {
+            Icon(Icons.Read, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.weight(1f))
+            Text(
+                title,
+                style = MaterialTheme.typography.labelLarge,
+                color = colors.onSurfaceVariant,
+                maxLines = 4,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
 }
 
 /**
@@ -107,8 +145,16 @@ internal fun ReadTile(
     lines: Int = 1,
     cover: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
+    /** Keeps [lines] lines under the title even when the line is shorter, so tiles in a row line up. */
+    reserveLine: Boolean = false,
+    /** Offers Add to Planning as a screen reader's custom action, as discovery's covers do. */
+    planning: Boolean = false,
+    /** A third line in silk under the facts: "In Home library" on a joined search result. */
+    extra: String? = null,
 ) {
     val navigator = LocalNavigator.current
+    val store = app.kaeri.ui.LocalAppStore.current
+    val planningWord = Strings.readTileAddPlanning(context = LocalContext.current)
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val colors = MaterialTheme.colorScheme
@@ -121,6 +167,14 @@ internal fun ReadTile(
             .semantics(mergeDescendants = true) {
                 // The water dot is colour alone; the state says it too.
                 if (tile.newChapter) stateDescription = newWord
+                if (planning) {
+                    customActions = listOf(
+                        CustomAccessibilityAction(planningWord) {
+                            store.reading.setStatus(tile.work, LibrarySegmentRead.PLANNING)
+                            true
+                        },
+                    )
+                }
             }
             .combinedClickable(
                 onClickLabel = stringResource(R.string.title_open),
@@ -129,7 +183,7 @@ internal fun ReadTile(
                 onClick = { navigator.openSeries(tile.work, from) },
             ),
     ) {
-        ReadCover(tile.cover, width, cover.sharedWork(Shared.Cover, tile.work, from))
+        ReadCover(tile.cover, width, cover.sharedWork(Shared.Cover, tile.work, from), title = tile.title)
         if (track) {
             // The track holds its place on every Continue cover, so the titles line up.
             Box(Modifier.padding(top = 6.dp).height(3.dp).fillMaxWidth()) {
@@ -144,17 +198,31 @@ internal fun ReadTile(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = if (track) 6.dp else 8.dp),
         )
-        if (line.isNotEmpty()) {
+        if (line.isNotEmpty() || reserveLine) {
             Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (tile.newChapter) WaterDot()
-                Text(
-                    line,
-                    style = MaterialTheme.typography.bodySmall.tabular(),
-                    color = if (tile.newChapter) colors.onSurface else colors.onSurfaceVariant,
-                    maxLines = lines,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                // A line that changes (a miss recorded while away) crossfades in place.
+                androidx.compose.animation.Crossfade(line, animationSpec = app.kaeri.design.Motion.fadeIn(), label = "tile line") { words -> // i18n-skip
+                    Text(
+                        words,
+                        style = MaterialTheme.typography.bodySmall.tabular(),
+                        color = if (tile.newChapter) colors.onSurface else colors.onSurfaceVariant,
+                        maxLines = lines,
+                        minLines = if (reserveLine) lines else 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
+        }
+        if (extra != null) {
+            Text(
+                extra,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 2.dp),
+            )
         }
     }
 }
@@ -264,7 +332,8 @@ internal fun listWords(context: Context, segment: LibrarySegmentRead): String = 
 
 /** The line under a cover: the engine's words for where the person is, else its facts joined. */
 internal fun WorkTile.line(context: Context): String =
-    next?.text(context) ?: facts.joinToString(" · ") { it.text(context) } // i18n-skip
+    if (notInSources) Strings.homeNotFound(context)
+    else next?.text(context) ?: facts.joinToString(" · ") { it.text(context) } // i18n-skip
 
 /** The facts of a series as one line: "Manga · Japan · Releasing". */
 internal fun WorkTile.factsLine(context: Context): String = facts.joinToString(" · ") { it.text(context) } // i18n-skip
@@ -351,6 +420,9 @@ internal object ReadPlaces {
 
     /** Search runs reading's search rather than shows' (with Both). */
     var searchReading by mutableStateOf(false)
+
+    /** The row title View all's page shows. */
+    var viewAllTitle by mutableStateOf("")
 
     /** The reading list Library shows. */
     var list by mutableStateOf(LibrarySegmentRead.READING)

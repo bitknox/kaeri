@@ -6385,6 +6385,27 @@ public static partial class T
     /// <summary>The button of a source group with more than five hits.</summary>
     public static string ReadSearchSourceMore(long n) => Fill(Get("ReadSearchSourceMore"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Beside a source's name over its row in Search: the source is a server.</summary>
+    public static string ReadSearchSourceKindServer => Get("ReadSearchSourceKindServer");
+
+    /// <summary>Beside a source's name over its row in Search: the source is a folder on this device.</summary>
+    public static string ReadSearchSourceKindFolder => Get("ReadSearchSourceKindFolder");
+
+    /// <summary>Beside a source's name over its row in Search: the source is a plugin.</summary>
+    public static string ReadSearchSourceKindPlugin => Get("ReadSearchSourceKindPlugin");
+
+    /// <summary>Screen readers: the custom action on a discovery cover that puts the series on Planning.</summary>
+    public static string ReadTileAddPlanning => Get("ReadTileAddPlanning");
+
+    /// <summary>Said once by screen readers when Your sources only turns on.</summary>
+    public static string ReadSearchAnilistHidden => Get("ReadSearchAnilistHidden");
+
+    /// <summary>Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.</summary>
+    public static string ReadSearchSaidAnilist(long n) => Fill(GetPlural("ReadSearchSaidAnilist", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.</summary>
+    public static string ReadSearchSaidSources(long n) => Fill(GetPlural("ReadSearchSaidSources", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Over a first-run page's title: which page of how many.</summary>
     public static string OnboardingStep(long step, long total) => Fill(Get("OnboardingStep"), ("step", step.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -13296,6 +13317,15 @@ public static partial class T
         ["ReadSearchMoreAnilist"] = "More from AniList",
         ["ReadSearchShown"] = "{shown} of {total} shown",
         ["ReadSearchSourceMore"] = "Show {n} more",
+        ["ReadSearchSourceKindServer"] = "Server",
+        ["ReadSearchSourceKindFolder"] = "Folder",
+        ["ReadSearchSourceKindPlugin"] = "Plugin",
+        ["ReadTileAddPlanning"] = "Add to Planning",
+        ["ReadSearchAnilistHidden"] = "AniList's results are hidden.",
+        ["ReadSearchSaidAnilist_one"] = "1 from AniList",
+        ["ReadSearchSaidAnilist_other"] = "{n} from AniList",
+        ["ReadSearchSaidSources_one"] = "1 from your sources",
+        ["ReadSearchSaidSources_other"] = "{n} from your sources",
         ["OnboardingStep"] = "{step} of {total}",
         ["OnboardingWelcomeLine"] = "Keep track of what you watch and read, from your own sources.",
         ["OnboardingWelcomeNote"] = "Your lists and progress stay on your devices. Trackers and sources are yours to add.",

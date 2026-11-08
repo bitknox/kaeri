@@ -21,6 +21,9 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -241,6 +244,10 @@ class MainActivity : ComponentActivity() {
         }
         traced("setContent") { setContent {
             KaeriTheme {
+                // On an e-ink panel, reading's discovery draws its paper pages and Home's Browse row.
+                val einkState by app.eink.state.collectAsState()
+                val einkLayout = if (einkState.eink) app.kaeri.eink.EinkLook(colour = einkState.amber) else null
+                CompositionLocalProvider(app.kaeri.ui.reading.LocalEinkLayout provides einkLayout) {
                 ReaderHost(app.store, app.eink) { AppRoot(
                     app.store,
                     if (search != null) Destination.Search else start,
@@ -254,6 +261,7 @@ class MainActivity : ComponentActivity() {
                     onSection = { section -> app.appUpdates?.section = section },
                     firstLaunch = firstLaunch,
                 ) }
+                }
             }
         } }
         if (Flavour.FIXTURES || debuggable) announceReady()

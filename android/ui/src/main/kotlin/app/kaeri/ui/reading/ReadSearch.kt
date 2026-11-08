@@ -1,8 +1,9 @@
-// Search's reading side: the M3 search bar with the query, then four filters as chips that open
-// menus (format, origin, status, genres) and the order; browsing with no words shows covers under
-// a line saying what is shown and where the list comes from, words show rows with the list status
-// on the right. With Both, the Shows or Reading control comes first, and the last row counts the
-// matches in Shows. No results names the query and offers Clear filters.
+// Search's reading side: the M3 search bar with the query, then the filters as chips that open
+// menus (format, origin, status, genres, started) and the order; with words, Your sources only
+// leads the chips. Browsing with no words shows covers under a line saying what is shown and where
+// the list comes from; words show AniList's covers and a row per source (ReadSourceResults.kt).
+// With Both, the Shows or Reading control comes first, and the last row counts the matches in
+// Shows. No results names the query and offers Clear filters.
 
 package app.kaeri.ui.reading
 
@@ -82,6 +83,7 @@ import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.MenuChip
 import app.kaeri.ui.PosterGrid
+import app.kaeri.ui.SearchChip
 import app.kaeri.ui.Shared
 import app.kaeri.ui.TextPlaceholder
 import app.kaeri.ui.itemMotion
@@ -91,6 +93,9 @@ import app.kaeri.ui.wideWindow
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
+
+/** The Started filter's choice that sets nothing. */
+internal const val STARTED_ANY = "any" // i18n-skip
 
 /** How long typing rests before the words search. */
 private const val TYPING_REST = 350L
@@ -158,6 +163,8 @@ internal fun ReadSearchScreen(startText: String? = null) {
         }
         PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp)) {
             when {
+                // With words: AniList's grid, then the sources' rows (ReadSourceResults.kt).
+                !browsing -> wordsResults(search, both, demo.onlyBooks)
                 failure != null && search.tiles.isEmpty() -> item(span = { GridItemSpan(maxLineSpan) }, key = "failed", contentType = "quiet") {
                     Box(itemMotion()) {
                         PlainEmpty(
@@ -169,20 +176,13 @@ internal fun ReadSearchScreen(startText: String? = null) {
                         )
                     }
                 }
-                search.tiles.isEmpty() && search.loading -> {
-                    if (browsing) {
-                        items(9, key = { "cell-$it" }, contentType = { "placeholder" }) { Box(itemMotion()) { AfterWait { CoverPlaceholder() } } }
-                    } else {
-                        items(6, key = { "row-$it" }, span = { GridItemSpan(maxLineSpan) }, contentType = { "placeholder" }) {
-                            Box(itemMotion()) { AfterWait { RowPlaceholder() } }
-                        }
-                    }
-                }
+                search.tiles.isEmpty() && search.loading ->
+                    items(9, key = { "cell-$it" }, contentType = { "placeholder" }) { Box(itemMotion()) { AfterWait { CoverPlaceholder() } } }
                 search.tiles.isEmpty() -> item(span = { GridItemSpan(maxLineSpan) }, key = "nothing", contentType = "quiet") {
                     Column(itemMotion()) {
                         val filtered = anyFilter(query)
                         PlainEmpty(
-                            if (browsing) Strings.readSearchNothingBrowse(context) else Strings.readSearchNothing(context, query.text),
+                            Strings.readSearchNothingBrowse(context),
                             if (filtered) Strings.readSearchNothingFiltersLine(context) else Strings.readSearchNothingLine(context),
                             inset = 0.dp,
                             action = if (filtered) Strings.readSearchClearFilters(context) else null,
@@ -191,7 +191,7 @@ internal fun ReadSearchScreen(startText: String? = null) {
                         if (both) OtherScopeRow(search)
                     }
                 }
-                browsing -> {
+                else -> {
                     item(span = { GridItemSpan(maxLineSpan) }, key = "line", contentType = "line") {
                         Text(
                             browseLine(context, search, filters),
@@ -204,37 +204,6 @@ internal fun ReadSearchScreen(startText: String? = null) {
                         Box(itemMotion()) { SearchCell(tile) }
                     }
                     moreItem(search)
-                }
-                else -> {
-                    items(search.tiles, key = { "r-${it.work}" }, span = { GridItemSpan(maxLineSpan) }, contentType = { "row" }) { tile ->
-                        Column(itemMotion()) {
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            ResultRow(tile)
-                        }
-                    }
-                    moreItem(search)
-                    // Once every match is listed, how many there are: the count matches the rows.
-                    val total = search.total
-                    // Not for the demo's works alone: they are no AniList count.
-                    if (!search.hasMore && total != null && !search.tiles.all { it.fromDemo }) {
-                        item(span = { GridItemSpan(maxLineSpan) }, key = "total", contentType = "line") {
-                            Column(itemMotion()) {
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                                Text(
-                                    Strings.readSearchTotal(context, total.toInt()),
-                                    style = MaterialTheme.typography.bodyMedium.tabular(),
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(vertical = 12.dp),
-                                )
-                            }
-                        }
-                    }
-                    if (both) {
-                        item(span = { GridItemSpan(maxLineSpan) }, key = "other", contentType = "line") { Box(itemMotion()) { OtherScopeRow(search) } }
-                    }
-                    if (demo.onlyBooks) {
-                        item(span = { GridItemSpan(maxLineSpan) }, key = "demo", contentType = "line") { Box(itemMotion()) { DemoSearchNote() } }
-                    }
                 }
             }
         }
@@ -255,7 +224,7 @@ private fun androidx.compose.foundation.lazy.grid.LazyGridScope.moreItem(search:
 
 /** "2 matches in Shows", and Show them, which switches the scope. */
 @Composable
-private fun OtherScopeRow(search: ReadSearchState) {
+internal fun OtherScopeRow(search: ReadSearchState) {
     val context = LocalContext.current
     val n = search.otherScope?.toInt() ?: return
     if (n <= 0) return
@@ -275,51 +244,12 @@ private fun OtherScopeRow(search: ReadSearchState) {
     }
 }
 
-/** A result: the cover, the title and its facts, and the list it is on to the right. */
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ResultRow(tile: WorkTile) {
-    val context = LocalContext.current
-    val navigator = LocalNavigator.current
-    val haptics = LocalHapticFeedback.current
-    val colors = MaterialTheme.colorScheme
-    var menu by remember { mutableStateOf(false) }
-    Box {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .heightIn(min = 72.dp)
-                .sharedWork(Shared.Page, tile.work, "read-search")
-                .semantics(mergeDescendants = true) {}
-                .combinedClickable(
-                    onClickLabel = stringResource(R.string.title_open),
-                    onLongClickLabel = stringResource(R.string.action_more),
-                    onLongClick = { haptics.performHapticFeedback(HapticFeedbackType.LongPress); menu = true },
-                    onClick = { navigator.openSeries(tile.work, "read-search") },
-                )
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ReadCover(tile.cover, 40.dp, Modifier.sharedWork(Shared.Cover, tile.work, "read-search"))
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(tile.title, style = ShowTitle.row.copy(fontWeight = FontWeight.SemiBold), color = colors.onSurface)
-                // The demo's works say Demo, Reads now.
-                val facts = if (tile.fromDemo) Strings.searchDemoReads(context) else tile.factsLine(context)
-                if (facts.isNotEmpty()) Text(facts, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-            }
-            tile.next?.let { Text(it.text(context), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant) }
-        }
-        ReadTileMenu(tile, menu, current = null) { menu = false }
-    }
-}
-
 /** A cover while browsing, with its long-press menu. */
 @Composable
 private fun SearchCell(tile: WorkTile) {
     var menu by remember { mutableStateOf(false) }
     BoxWithConstraints {
-        ReadTile(tile, maxWidth, from = "read-search", lines = if (wideWindow()) 1 else 2, onLongClick = { menu = true })
+        ReadTile(tile, maxWidth, from = "read-search", lines = if (wideWindow()) 1 else 2, reserveLine = true, onLongClick = { menu = true })
         ReadTileMenu(tile, menu, current = null) { menu = false }
     }
 }
@@ -331,11 +261,24 @@ private fun SearchCell(tile: WorkTile) {
  * chip says its value and fills with the neutral colour; nothing here is amber.
  */
 @Composable
-private fun ReadFilterRow(query: ReadSearchQuery, filters: ReadFilters, browsing: Boolean) {
+internal fun ReadFilterRow(
+    query: ReadSearchQuery,
+    filters: ReadFilters,
+    browsing: Boolean,
+    /** View all's chips: only the filters set, each saying its value alone. */
+    onlySet: Boolean = false,
+    /** Run the changed query; Search's own by default. */
+    run: ((ReadSearchQuery) -> Unit)? = null,
+) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val phone = !wideWindow()
-    fun change(edit: (ReadSearchQuery) -> ReadSearchQuery) = store.reading.runSearch(edit(store.reading.search.value.query))
+    fun change(edit: (ReadSearchQuery) -> ReadSearchQuery) {
+        if (run != null) run(edit(query)) else store.reading.runSearch(edit(store.reading.search.value.query))
+    }
+    // On View all a set chip says its value alone: "Manga", "Last 12 months".
+    fun chipWords(context: android.content.Context, name: String, value: String?): String =
+        if (onlySet && value != null) value else app.kaeri.ui.reading.chipWords(context, name, value)
     val row = rememberLazyListState()
     LazyRow(
         state = row,
@@ -343,34 +286,46 @@ private fun ReadFilterRow(query: ReadSearchQuery, filters: ReadFilters, browsing
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.padding(top = 4.dp),
     ) {
-        item(key = "format") {
+        // Your sources only comes first, so it is never past the edge; it needs words to ask by.
+        if (!browsing && !onlySet) {
+            item(key = "sources-only") {
+                SearchChip(
+                    Strings.readSearchSourcesOnly(context),
+                    selected = query.sourcesOnly,
+                    phone = phone,
+                ) { change { it.copy(sourcesOnly = !it.sourcesOnly) } }
+            }
+        }
+        // AniList's filters say nothing to the sources: dimmed while only they are asked.
+        val on = !query.sourcesOnly || browsing
+        if (!onlySet || value(context, query.formats, filters.formats) != null) item(key = "format") {
             val value = value(context, query.formats, filters.formats)
-            MenuChip(chipWords(context, Strings.readFilterFormat(context), value), selected = value != null, phone = phone) { _ ->
+            MenuChip(chipWords(context, Strings.readFilterFormat(context), value), selected = value != null, enabled = on, phone = phone) { _ ->
                 for (choice in filters.formats) {
                     Choice(choice.label.text(context), choice.key in query.formats) { change { it.copy(formats = it.formats.toggling(choice.key)) } }
                 }
             }
         }
-        item(key = "origin") {
+        if (!onlySet || value(context, query.origins, filters.origins) != null) item(key = "origin") {
             val value = value(context, query.origins, filters.origins)
-            MenuChip(chipWords(context, Strings.readFilterOrigin(context), value), selected = value != null, phone = phone) { _ ->
+            MenuChip(chipWords(context, Strings.readFilterOrigin(context), value), selected = value != null, enabled = on, phone = phone) { _ ->
                 for (choice in filters.origins) {
                     Choice(choice.label.text(context), choice.key in query.origins) { change { it.copy(origins = it.origins.toggling(choice.key)) } }
                 }
             }
         }
-        item(key = "status") {
+        if (!onlySet || query.status != null) item(key = "status") {
             val value = query.status?.let { value(context, listOf(it), filters.statuses) }
-            MenuChip(chipWords(context, Strings.readFilterStatus(context), value), selected = value != null, phone = phone) { close ->
+            MenuChip(chipWords(context, Strings.readFilterStatus(context), value), selected = value != null, enabled = on, phone = phone) { close ->
                 Choice(Strings.readFilterAny(context), query.status == null) { close(); change { it.copy(status = null) } }
                 for (choice in filters.statuses) {
                     Choice(choice.label.text(context), query.status == choice.key) { close(); change { it.copy(status = choice.key) } }
                 }
             }
         }
-        item(key = "genres") {
+        if (!onlySet || genresValue(context, query) != null) item(key = "genres") {
             val value = genresValue(context, query)
-            MenuChip(chipWords(context, Strings.readFilterGenres(context), value), selected = value != null, phone = phone) { _ ->
+            MenuChip(chipWords(context, Strings.readFilterGenres(context), value), selected = value != null, enabled = on, phone = phone) { _ ->
                 // Each genre cycles Any, Included, Left out; the menu stays open for the next.
                 for (genre in filters.genres) {
                     val state = when (genre) {
@@ -392,7 +347,16 @@ private fun ReadFilterRow(query: ReadSearchQuery, filters: ReadFilters, browsing
                 }
             }
         }
-        if (browsing) {
+        if (!onlySet || (query.started != null && query.started != STARTED_ANY)) item(key = "started") {
+            val value = query.started?.takeIf { it != STARTED_ANY }?.let { value(context, listOf(it), filters.started) }
+            MenuChip(chipWords(context, Strings.readSearchStarted(context), value), selected = value != null, enabled = on, phone = phone) { close ->
+                for (choice in filters.started) {
+                    val chosen = (query.started ?: STARTED_ANY) == choice.key
+                    Choice(choice.label.text(context), chosen) { close(); change { it.copy(started = choice.key.takeIf { key -> key != STARTED_ANY }) } }
+                }
+            }
+        }
+        if (browsing || onlySet) {
             item(key = "sort") {
                 val current = query.sort ?: filters.sorts.firstOrNull()
                 MenuChip(sortWords(context, current), selected = false, phone = phone) { close ->
@@ -406,7 +370,7 @@ private fun ReadFilterRow(query: ReadSearchQuery, filters: ReadFilters, browsing
 }
 
 /** A filter's chip words: its name, or once set, "Format: Manga". */
-private fun chipWords(context: android.content.Context, name: String, value: String?): String =
+internal fun chipWords(context: android.content.Context, name: String, value: String?): String =
     if (value == null) name else "${Strings.readFilterSet(context, name)} $value" // i18n-skip
 
 /** The set choices' words: one, or the first and how many more. */
@@ -434,7 +398,8 @@ private fun ReadSearchQuery.cyclingGenre(genre: String): ReadSearchQuery = when 
 }
 
 private fun anyFilter(query: ReadSearchQuery): Boolean =
-    query.formats.isNotEmpty() || query.origins.isNotEmpty() || query.status != null || query.genres.isNotEmpty() || query.excludeGenres.isNotEmpty()
+    query.formats.isNotEmpty() || query.origins.isNotEmpty() || query.status != null || query.genres.isNotEmpty() ||
+        query.excludeGenres.isNotEmpty() || (query.started != null && query.started != STARTED_ANY)
 
 /** An order in words, as the shows' search words it. */
 private fun sortWords(context: android.content.Context, key: String?): String = when (key) {
@@ -456,21 +421,11 @@ private fun browseLine(context: android.content.Context, search: ReadSearchState
         addAll(query.origins.mapNotNull { key -> filters.origins.firstOrNull { it.key == key }?.label?.text(context) })
         query.status?.let { key -> filters.statuses.firstOrNull { it.key == key }?.label?.text(context)?.let(::add) }
         addAll(query.genres)
+        query.started?.takeIf { it != STARTED_ANY }?.let { key -> filters.started.firstOrNull { it.key == key }?.label?.text(context)?.let(::add) }
     }
     val what = if (parts.isEmpty()) sortWords(context, query.sort ?: filters.sorts.firstOrNull()) else parts.joinToString(", ") // i18n-skip
     val total = search.total?.takeIf { !search.hasMore } ?: return Strings.readSearchBrowseLine(context, what)
     return listOf(what, Strings.readSearchTotal(context, total.toInt())).joinToString(" · ") // i18n-skip
-}
-
-@Composable
-private fun RowPlaceholder() {
-    Row(Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.width(40.dp)) { TextPlaceholder(1f, 60.dp) }
-        Column(Modifier.weight(1f)) {
-            TextPlaceholder(0.6f, 22.dp)
-            TextPlaceholder(0.4f, 20.dp)
-        }
-    }
 }
 
 @Composable

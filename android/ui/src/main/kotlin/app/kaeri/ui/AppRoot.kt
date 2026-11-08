@@ -467,6 +467,15 @@ fun AppRoot(
                                             app.kaeri.ui.reading.SeriesScreen(work, routed)
                                         }
                                     }
+                                    composable(
+                                        readPagePattern(destination),
+                                        arguments = listOf(navArgument("page") { type = NavType.StringType }),
+                                    ) { page ->
+                                        val name = page.arguments?.getString("page")?.let(android.net.Uri::decode) ?: return@composable
+                                        CompositionLocalProvider(LocalPageAnimation provides this) {
+                                            app.kaeri.ui.reading.ReadPage(name)
+                                        }
+                                    }
                                     // Watch together sits in Home's back stack, under its bar.
                                     if (destination == Destination.Home) {
                                         composable(TOGETHER_ROUTE) {

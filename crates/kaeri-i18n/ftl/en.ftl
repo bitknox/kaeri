@@ -9374,6 +9374,35 @@ read-search-shown = { $shown } of { $total } shown
 # The button of a source group with more than five hits.
 read-search-source-more = Show { $n } more
 
+# Beside a source's name over its row in Search: the source is a server.
+read-search-source-kind-server = Server
+
+# Beside a source's name over its row in Search: the source is a folder on this device.
+read-search-source-kind-folder = Folder
+
+# Beside a source's name over its row in Search: the source is a plugin.
+read-search-source-kind-plugin = Plugin
+
+# Screen readers: the custom action on a discovery cover that puts the series on Planning.
+read-tile-add-planning = Add to Planning
+
+# Said once by screen readers when Your sources only turns on.
+read-search-anilist-hidden = AniList's results are hidden.
+
+# Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.
+read-search-said-anilist =
+    { $n ->
+        [one] 1 from AniList
+       *[other] { $n } from AniList
+    }
+
+# Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.
+read-search-said-sources =
+    { $n ->
+        [one] 1 from your sources
+       *[other] { $n } from your sources
+    }
+
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step } of { $total }
 

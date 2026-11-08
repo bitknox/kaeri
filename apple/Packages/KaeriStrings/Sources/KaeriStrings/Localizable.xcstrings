@@ -194739,6 +194739,18 @@
         }
       }
     },
+    "read-search-anilist-hidden" : {
+      "comment" : "Said once by screen readers when Your sources only turns on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniList's results are hidden."
+          }
+        }
+      }
+    },
     "read-search-anilist-nothing" : {
       "comment" : "Search, when AniList found nothing but the person's sources did.",
       "extractionState" : "manual",
@@ -195505,6 +195517,74 @@
         }
       }
     },
+    "read-search-said-anilist" : {
+      "comment" : "Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 from AniList"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld from AniList"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-search-said-sources" : {
+      "comment" : "Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 from your sources"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld from your sources"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "read-search-shown" : {
       "comment" : "Beside More from AniList: how many of AniList's results show. Argument 1: shown (Int). Argument 2: total (Int).",
       "extractionState" : "manual",
@@ -195525,6 +195605,42 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ didn't answer."
+          }
+        }
+      }
+    },
+    "read-search-source-kind-folder" : {
+      "comment" : "Beside a source's name over its row in Search: the source is a folder on this device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folder"
+          }
+        }
+      }
+    },
+    "read-search-source-kind-plugin" : {
+      "comment" : "Beside a source's name over its row in Search: the source is a plugin.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plugin"
+          }
+        }
+      }
+    },
+    "read-search-source-kind-server" : {
+      "comment" : "Beside a source's name over its row in Search: the source is a server.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server"
           }
         }
       }
@@ -196453,6 +196569,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thịnh hành"
+          }
+        }
+      }
+    },
+    "read-tile-add-planning" : {
+      "comment" : "Screen readers: the custom action on a discovery cover that puts the series on Planning.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to Planning"
           }
         }
       }

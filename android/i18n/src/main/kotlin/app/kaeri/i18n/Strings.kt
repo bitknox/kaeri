@@ -9778,6 +9778,34 @@ object Strings {
     fun readSearchSourceMore(context: Context, n: Int): String =
         context.getString(R.string.read_search_source_more, n)
 
+    /** Beside a source's name over its row in Search: the source is a server. */
+    fun readSearchSourceKindServer(context: Context): String =
+        context.getString(R.string.read_search_source_kind_server)
+
+    /** Beside a source's name over its row in Search: the source is a folder on this device. */
+    fun readSearchSourceKindFolder(context: Context): String =
+        context.getString(R.string.read_search_source_kind_folder)
+
+    /** Beside a source's name over its row in Search: the source is a plugin. */
+    fun readSearchSourceKindPlugin(context: Context): String =
+        context.getString(R.string.read_search_source_kind_plugin)
+
+    /** Screen readers: the custom action on a discovery cover that puts the series on Planning. */
+    fun readTileAddPlanning(context: Context): String =
+        context.getString(R.string.read_tile_add_planning)
+
+    /** Said once by screen readers when Your sources only turns on. */
+    fun readSearchAnilistHidden(context: Context): String =
+        context.getString(R.string.read_search_anilist_hidden)
+
+    /** Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow. */
+    fun readSearchSaidAnilist(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_said_anilist, n, n)
+
+    /** Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list. */
+    fun readSearchSaidSources(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_said_sources, n, n)
+
     /** Over a first-run page's title: which page of how many. */
     fun onboardingStep(context: Context, step: Int, total: Int): String =
         context.getString(R.string.onboarding_step, step, total)

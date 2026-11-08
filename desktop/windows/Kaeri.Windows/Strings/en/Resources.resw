@@ -8876,6 +8876,42 @@
     <value>Show {n} more</value>
     <comment>The button of a source group with more than five hits.</comment>
   </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>Server</value>
+    <comment>Beside a source's name over its row in Search: the source is a server.</comment>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>Folder</value>
+    <comment>Beside a source's name over its row in Search: the source is a folder on this device.</comment>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>Plugin</value>
+    <comment>Beside a source's name over its row in Search: the source is a plugin.</comment>
+  </data>
+  <data name="ReadTileAddPlanning" xml:space="preserve">
+    <value>Add to Planning</value>
+    <comment>Screen readers: the custom action on a discovery cover that puts the series on Planning.</comment>
+  </data>
+  <data name="ReadSearchAnilistHidden" xml:space="preserve">
+    <value>AniList's results are hidden.</value>
+    <comment>Said once by screen readers when Your sources only turns on.</comment>
+  </data>
+  <data name="ReadSearchSaidAnilist_one" xml:space="preserve">
+    <value>1 from AniList</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.</comment>
+  </data>
+  <data name="ReadSearchSaidAnilist_other" xml:space="preserve">
+    <value>{n} from AniList</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.</comment>
+  </data>
+  <data name="ReadSearchSaidSources_one" xml:space="preserve">
+    <value>1 from your sources</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.</comment>
+  </data>
+  <data name="ReadSearchSaidSources_other" xml:space="preserve">
+    <value>{n} from your sources</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.</comment>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} of {total}</value>
     <comment>Over a first-run page's title: which page of how many.</comment>

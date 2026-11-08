@@ -255,6 +255,9 @@ internal object Flavour {
         intent.getStringExtra("prelaunch")?.let { state ->
             if (!app.kaeri.store.Prelaunch.stage(store, state)) Log.w(KaeriApp.TAG, "no prelaunch state named $state: ${app.kaeri.store.Prelaunch.STATES.joinToString()}")
         }
+        intent.getStringExtra("discovery")?.let { state ->
+            if (!app.kaeri.store.ReadDiscoveryStage.stage(store, state)) Log.w(KaeriApp.TAG, "no discovery state named $state: ${app.kaeri.store.ReadDiscoveryStage.STATES.joinToString()}")
+        }
         intent.getStringExtra("sync")?.let { state ->
             if (!app.kaeri.store.FixtureSync.stage(store, state)) Log.w(KaeriApp.TAG, "no sync state named $state: ${app.kaeri.store.FixtureSync.STATES.joinToString()}")
         }
