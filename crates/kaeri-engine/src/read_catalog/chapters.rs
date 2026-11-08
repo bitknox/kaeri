@@ -3,7 +3,7 @@
 //! the source again. A chapter seen for the first time on a later answer is dated then, so a
 //! source that dates nothing still shows what is new.
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use kaeri_core::books::{ChapterId, ChapterRange, SourceChapter};
 use kaeri_store::{Store, book_catalog::BookRhythm, reading::ReadWork};
@@ -84,7 +84,7 @@ pub fn kept(store: &Store, source: &str, series: &str) -> Option<(Vec<Kept>, i64
 
 /// In reading order: by number, then those without one in the order the source gave.
 pub fn sort(list: &mut [Kept]) {
-    list.sort_by_key(|c| (c.range().is_none(), c.range()));
+    list.sort_by_cached_key(|c| (c.range().is_none(), c.range()));
 }
 
 /// Keep a source's answer, and give the chapters it lists that the last answer did not. The
@@ -104,6 +104,9 @@ pub fn keep(
         return Vec::new();
     }
     let before = kept(store, source, series).map(|(list, _)| list).filter(|l| !l.is_empty());
+    // By id, so a long list is looked through once rather than once a chapter.
+    let before: Option<HashMap<&str, &Kept>> =
+        before.as_ref().map(|list| list.iter().map(|k| (k.id.as_str(), k)).collect());
     let restarts = crate::read_sources::restarts_per_volume(chapters);
     let mut fresh: Vec<Kept> = Vec::new();
     let mut fresh_ids = HashSet::new();
@@ -111,7 +114,7 @@ pub fn keep(
         .iter()
         .map(|c| {
             let id = c.key(restarts).id().as_str().to_owned();
-            let earlier = before.as_ref().map(|b| b.iter().find(|k| k.id == id));
+            let earlier = before.as_ref().map(|b| b.get(id.as_str()).copied());
             let seen_at = match earlier {
                 None => None,
                 Some(Some(k)) => k.seen_at,
