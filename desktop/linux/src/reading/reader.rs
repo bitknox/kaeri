@@ -1176,6 +1176,7 @@ impl Reader {
             Some(ReaderAction::BackTo) | None => None,
         };
         self.notice_action.set(notice.action);
+        self.place_notice(self.head_fade.shown());
         let back_to = notice.action == Some(ReaderAction::BackTo);
         // Back to page is the whole line as one button; the others are a line and a button.
         if back_to {
@@ -2256,6 +2257,7 @@ impl Reader {
     /// moving calls this as it moves. It stays while the settings are open, the pointer is over
     /// the group or a shot pinned it.
     fn reveal_chrome(self: &Rc<Self>) {
+        self.place_notice(true);
         self.head_fade.set(&self.head, true);
         self.group_fade.set(&self.group, true);
         self.widget.set_cursor(None);
@@ -2289,6 +2291,26 @@ impl Reader {
         self.head_fade.set(&self.head, false);
         self.group_fade.set(&self.group, false);
         self.widget.set_cursor_from_name(Some("none"));
+        self.place_notice(false);
+    }
+
+    /// Where the notice sits: at the top over pages. A novel's sits in its bottom margin, clear
+    /// of the text, and over the group while the group shows, which uses the same margin.
+    fn place_notice(&self, chrome: bool) {
+        if self.state.borrow().medium == Some(Medium::Novel) {
+            let (_, group, _, _) = self.group.measure(gtk::Orientation::Vertical, -1);
+            self.notice.set_valign(gtk::Align::End);
+            self.notice.set_margin_top(0);
+            self.notice.set_margin_bottom(if chrome {
+                self.group.margin_bottom() + group + 12
+            } else {
+                44
+            });
+        } else {
+            self.notice.set_valign(gtk::Align::Start);
+            self.notice.set_margin_top(60);
+            self.notice.set_margin_bottom(0);
+        }
     }
 
     /// A click in the middle of the page: the chrome comes, and the next one takes it away.

@@ -181,14 +181,13 @@ impl Reader {
         }
         let extra: Vec<ReaderSettingRow> = more.iter().filter_map(|k| row(*k)).collect();
         if !extra.is_empty() {
+            // Hidden rather than an unrevealed revealer, which without a slide keeps its
+            // child's height and leaves the sheet that much taller than its rows.
             let rest = gtk::Box::new(gtk::Orientation::Vertical, 0);
             for setting in &extra {
                 rest.append(&self.setting_row(setting, medium));
             }
-            let revealer = gtk::Revealer::builder()
-                .transition_type(gtk::RevealerTransitionType::None)
-                .child(&rest)
-                .build();
+            rest.set_visible(false);
             let open = gtk::Image::from_icon_name("pan-end-symbolic");
             open.add_css_class("haze");
             let words = gtk::Label::new(Some(&t::linux_reader_more_settings()));
@@ -205,10 +204,10 @@ impl Reader {
             )]);
             button.update_state(&[gtk::accessible::State::Expanded(Some(false))]);
             button.connect_clicked({
-                let revealer = revealer.clone();
+                let rest = rest.clone();
                 move |button| {
-                    let on = !revealer.reveals_child();
-                    revealer.set_reveal_child(on);
+                    let on = !rest.is_visible();
+                    rest.set_visible(on);
                     open.set_icon_name(Some(if on {
                         "pan-down-symbolic"
                     } else {
@@ -218,7 +217,7 @@ impl Reader {
                 }
             });
             column.append(&button);
-            column.append(&revealer);
+            column.append(&rest);
         }
         column
     }

@@ -249,7 +249,10 @@ impl NovelView {
         let api = api().ok_or_else(|| "WebKitGTK 6 could not be loaded".to_owned())?; // i18n-skip
         let assets = kaeri_engine::reading::novel::assets();
         let engine = ctx.hub.engine_link();
-        let script = CString::new(assets.script).map_err(|e| e.to_string())?;
+        // The header's room goes in before the paginator starts, which reads it with the page's
+        // own setup: a configure sent with the page still loading finds no paginator yet.
+        let setup = format!("window.kaeriSetup = {{top: {HEAD_ROOM}}};\n{}", assets.script); // i18n-skip
+        let script = CString::new(setup).map_err(|e| e.to_string())?;
         // SAFETY: every returned GObject is taken full and released with its wrapper; strings
         // outlive their calls; the leaked handler lives as long as the process.
         let view = unsafe {
