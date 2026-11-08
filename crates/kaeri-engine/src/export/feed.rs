@@ -11,6 +11,7 @@
 use std::{
     collections::HashMap,
     net::{IpAddr, Ipv4Addr, SocketAddr},
+    ops::ControlFlow,
     path::PathBuf,
     sync::{Arc, Mutex},
     time::{Duration, Instant},
@@ -46,6 +47,8 @@ use crate::outbox::Outbox;
 /// How many ports past the wanted one are tried when it is taken.
 const PORT_TRIES: u16 = 10;
 const READ_LIMIT: usize = 16 * 1024;
+/// How long a reader has to send its whole request. A reader trickling bytes would otherwise
+/// keep one of the feed's few connections for minutes.
 const READ_TIME: Duration = Duration::from_secs(10);
 
 #[derive(Default)]
@@ -75,6 +78,20 @@ struct Running {
     lan: Option<fn() -> Lan>,
     /// The title language setting, so series are named as in the apps.
     titles: Option<kaeri_meta::titles::Titles>,
+    /// The pages of the last solid archive a reader streamed.
+    unpacked: Unpacked,
+}
+
+/// A solid archive decodes every earlier page to reach one, so streaming it page by page would
+/// decode the book over and over. The last one streamed is unpacked once and its pages served
+/// from memory until a reader streams another solid book or the feed stops.
+type Unpacked = Arc<Mutex<Option<Unpacking>>>;
+
+struct Unpacking {
+    path: PathBuf,
+    /// When the file last changed, so a book replaced on disk is unpacked again.
+    changed: Option<std::time::SystemTime>,
+    pages: Vec<Option<Vec<u8>>>,
 }
 
 /// Which shelves the feed shares, as the config says.
@@ -293,6 +310,10 @@ impl Feed {
         self.state().titles.as_ref().map(crate::data::title_form).unwrap_or_default()
     }
 
+    fn unpacked(&self) -> Unpacked {
+        self.state().unpacked.clone()
+    }
+
     fn password(&self) -> String {
         self.state().password.clone()
     }
@@ -501,6 +522,7 @@ impl Feed {
             listener.abort();
         }
         state.bound.clear();
+        *state.unpacked.lock().unwrap_or_else(|e| e.into_inner()) = None;
     }
 
     /// Looks at the network and listens on its private addresses only, or pauses when there
@@ -640,7 +662,11 @@ struct Request {
     agent: Option<String>,
 }
 
-async fn read_request(stream: &mut TcpStream) -> Option<Request> {
+async fn read_request(stream: &mut TcpStream, within: Duration) -> Option<Request> {
+    tokio::time::timeout(within, read_head(stream)).await.ok()?
+}
+
+async fn read_head(stream: &mut TcpStream) -> Option<Request> {
     let mut buf = Vec::new();
     let mut chunk = [0u8; 2048];
     loop {
@@ -650,7 +676,7 @@ async fn read_request(stream: &mut TcpStream) -> Option<Request> {
         if buf.len() > READ_LIMIT {
             return None;
         }
-        let n = tokio::time::timeout(READ_TIME, stream.read(&mut chunk)).await.ok()?.ok()?;
+        let n = stream.read(&mut chunk).await.ok()?;
         if n == 0 {
             return None;
         }
@@ -735,7 +761,7 @@ async fn handle(
     store: Store,
     feed: &Feed,
 ) {
-    let Some(request) = read_request(&mut stream).await else {
+    let Some(request) = read_request(&mut stream, READ_TIME).await else {
         let _ =
             send(&mut stream, Response::text("400 Bad Request", "Bad request"), false).await;
         return;
@@ -744,7 +770,9 @@ async fn handle(
         Response::text("429 Too Many Requests", "Too many wrong passwords. Try again later.")
     } else if authorised(&request, password) {
         feed.forgive(peer);
-        let response = route(&request.path, store, feed.shares(), feed.title_form()).await;
+        let response =
+            route(&request.path, store, feed.shares(), feed.title_form(), feed.unpacked())
+                .await;
         let file = !request.head
             && response.status.starts_with("200")
             && matches!(response.body, Body::File(_));
@@ -1017,7 +1045,13 @@ fn book_entry(book: &Shelved) -> Entry {
     }
 }
 
-async fn route(path: &str, store: Store, shares: Shares, form: TitleForm) -> Response {
+async fn route(
+    path: &str,
+    store: Store,
+    shares: Shares,
+    form: TitleForm,
+    unpacked: Unpacked,
+) -> Response {
     let segments: Vec<String> =
         path.trim_matches('/').split('/').filter(|s| !s.is_empty()).map(decode).collect();
     let parts: Vec<&str> = segments.iter().map(String::as_str).collect();
@@ -1067,7 +1101,7 @@ async fn route(path: &str, store: Store, shares: Shares, form: TitleForm) -> Res
                     challenge: false,
                 },
                 ["page", n] => match n.parse::<usize>() {
-                    Ok(n) => page(book, n).await,
+                    Ok(n) => page(book, n, unpacked).await,
                     Err(_) => Response::text("404 Not Found", "Not found"),
                 },
                 _ => Response::text("404 Not Found", "Not found"),
@@ -1161,13 +1195,40 @@ fn acquisition(id: &str, title: &str, href: &str, books: &[Shelved]) -> Document
 }
 
 /// One page image of a book, for page streaming.
-async fn page(book: Shelved, index: usize) -> Response {
+async fn page(book: Shelved, index: usize, unpacked: Unpacked) -> Response {
     let read = tokio::task::spawn_blocking(move || {
+        let changed = std::fs::metadata(&book.path).and_then(|m| m.modified()).ok();
+        let held = |u: &Option<Unpacking>| {
+            u.as_ref()
+                .filter(|u| u.path == book.path && u.changed == changed)
+                .map(|u| u.pages.get(index).cloned().flatten())
+        };
+        if let Some(page) = held(&unpacked.lock().unwrap_or_else(|e| e.into_inner())) {
+            return page;
+        }
         let Book::Comic(mut comic) = kaeri_books::open(&book.path, &Limits::default()).ok()?
         else {
             return None;
         };
-        comic.read_page(index).ok()
+        if !comic.is_solid() {
+            return comic.read_page(index).ok();
+        }
+        // Readers ask for several pages at once: the first unpacks, the rest wait for it.
+        let mut unpacked = unpacked.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(page) = held(&unpacked) {
+            return page;
+        }
+        *unpacked = None;
+        let mut pages = vec![None; comic.pages().len()];
+        comic
+            .extract_pages(0, &mut |i, data| {
+                pages[i] = Some(data);
+                ControlFlow::Continue(())
+            })
+            .ok()?;
+        let page = pages.get(index).cloned().flatten();
+        *unpacked = Some(Unpacking { path: book.path, changed, pages });
+        page
     })
     .await
     .ok()
@@ -1554,5 +1615,80 @@ mod tests {
             assert_eq!(get(s.port, path, Some(PASSWORD), "GET").await.status, 404, "{path}");
         }
         drop(s.feed);
+    }
+
+    #[tokio::test]
+    async fn a_reader_that_trickles_its_request_is_let_go() {
+        let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let trickle = tokio::spawn(async move {
+            let mut stream = TcpStream::connect(("127.0.0.1", port)).await.unwrap();
+            // One byte at a time, each well within any wait for a single read.
+            while stream.write_all(b"G").await.is_ok() {
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        });
+        let (mut stream, _) = listener.accept().await.unwrap();
+        let read = tokio::time::timeout(
+            Duration::from_secs(5),
+            read_request(&mut stream, Duration::from_millis(300)),
+        )
+        .await;
+        assert!(matches!(read, Ok(None)), "the request read ends at its deadline");
+        trickle.abort();
+    }
+
+    #[tokio::test]
+    async fn a_solid_archive_is_unpacked_once_for_page_streaming() {
+        let s = shelf();
+        let pages: Vec<Vec<u8>> = (0..4).map(|n| page(10 + n)).collect();
+        let mut w = sevenz_rust2::ArchiveWriter::new(Cursor::new(Vec::new())).unwrap();
+        // Stored in reverse, so the archive's order is not the reading order.
+        let names: Vec<String> =
+            (0..pages.len()).map(|n| format!("{n:03}.png")).rev().collect();
+        let meta = names.iter().map(|n| sevenz_rust2::ArchiveEntry::new_file(n)).collect();
+        let readers = (0..pages.len())
+            .rev()
+            .map(|n| sevenz_rust2::SourceReader::new(Cursor::new(pages[n].clone())))
+            .collect();
+        w.push_archive_entries(meta, readers).unwrap();
+        let path = s._dir.path().join("two.cb7");
+        std::fs::write(&path, w.finish().unwrap().into_inner()).unwrap();
+        let ask = BookDownloadAsk {
+            work: "w-2",
+            chapter: "1",
+            source_id: "shelf.example",
+            version_label: None,
+            keep_ready: false,
+        };
+        s.store.queue_book_download(&ask, 10).unwrap();
+        let id = s.store.book_downloads(Some("w-2")).unwrap()[0].id;
+        let at = path.display().to_string();
+        s.store.book_download_done(id, &at, Some(4), 100, 20).unwrap();
+
+        for n in [2, 0, 3, 1] {
+            let reply =
+                get(s.port, &format!("/opds/book/d/{id}/page/{n}"), Some(PASSWORD), "GET")
+                    .await;
+            assert_eq!(reply.status, 200, "page {n}");
+            assert_eq!(reply.body, pages[n], "page {n}");
+        }
+        let missing = format!("/opds/book/d/{id}/page/4");
+        assert_eq!(get(s.port, &missing, Some(PASSWORD), "GET").await.status, 404);
+        let held = |feed: &Feed| {
+            let unpacked = feed.unpacked();
+            let unpacked = unpacked.lock().unwrap();
+            unpacked.as_ref().map(|u| (u.path.clone(), u.pages.iter().flatten().count()))
+        };
+        assert_eq!(held(&s.feed), Some((path, 4)), "the book is held unpacked");
+        // A zip is read page by page and leaves the unpacked book alone.
+        let first = s.store.book_downloads(Some("w-1")).unwrap()[0].id;
+        let zipped = format!("/opds/book/d/{first}/page/0");
+        assert_eq!(get(s.port, &zipped, Some(PASSWORD), "GET").await.status, 200);
+        assert!(held(&s.feed).is_some());
+
+        let off = FeedConfig { on: false, ..s.config.clone() };
+        s.feed.apply(&off, Some(PASSWORD.into()), s.store.clone(), &s.outbox);
+        assert_eq!(held(&s.feed), None, "turning the feed off lets the pages go");
     }
 }
