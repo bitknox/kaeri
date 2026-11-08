@@ -17,6 +17,8 @@ html.kaeri {
   --k-bottom: 48px;
   --k-cols: 1;
   --k-column: 720px;
+  --k-outer: 0px;
+  --k-page: 100vw;
   margin: 0 !important;
   background: var(--k-bg) !important;
   color: var(--k-fg) !important;
@@ -45,10 +47,12 @@ html.kaeri.k-hyphens body { -webkit-hyphens: auto; hyphens: auto; }
 html.kaeri.k-book-font body { font-family: inherit; }
 
 /* Paged: columns on <html>. The gap is twice the margin and the side padding equals it, so
-   one page is exactly the viewport and page n starts at n times its width (or height, for
-   vertical text, whose columns stack downward). */
+   one page is exactly the page width and page n starts at n times it (or the height, for
+   vertical text, whose columns stack downward). The page is the viewport, or narrower where
+   the columns are capped: then it sits between two outer margins, which cover the
+   neighbouring pages' columns. */
 html.kaeri.k-paged {
-  width: 100vw !important;
+  width: var(--k-page) !important;
   height: 100vh !important;
   max-width: none !important;
   max-height: none !important;
@@ -62,6 +66,33 @@ html.kaeri.k-paged.k-h {
   padding: var(--k-top) var(--k-margin) var(--k-bottom) var(--k-margin) !important;
   column-count: var(--k-cols) !important;
 }
+html.kaeri.k-paged.k-h.k-capped {
+  position: relative !important;
+  margin: 0 var(--k-outer) !important;
+}
+html.kaeri.k-paged.k-h.k-capped body { position: static !important; }
+/* Room past the last page, so it scrolls into place as the others do. */
+html.kaeri.k-paged.k-h.k-capped body::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: var(--k-reach) !important;
+  width: 1px !important;
+  height: 1px !important;
+}
+html.kaeri.k-paged.k-h.k-capped.k-rtl body::after { left: auto !important; right: var(--k-reach) !important; }
+html.kaeri.k-paged.k-h.k-capped::before,
+html.kaeri.k-paged.k-h.k-capped::after {
+  content: "" !important;
+  position: fixed !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: var(--k-outer) !important;
+  background: var(--k-bg) !important;
+  z-index: 2147483647 !important;
+}
+html.kaeri.k-paged.k-h.k-capped::before { left: 0 !important; }
+html.kaeri.k-paged.k-h.k-capped::after { right: 0 !important; }
 html.kaeri.k-paged.k-v {
   padding: var(--k-margin) var(--k-top) var(--k-margin) var(--k-top) !important;
   column-count: 1 !important;

@@ -364,6 +364,27 @@ struct ArtworkTests {
         for (_, task) in screen { task.cancel() }
     }
 
+    @Test func artScrolledPastStaysWithinTheCacheLimitAndItsShowsEnd() async throws {
+        // Forty covers, each on screen until it lands and then scrolled past: what stays decoded
+        // off screen is within the limit, and each show ends as its view goes.
+        let cover = png(width: 46, height: 69)
+        let decoded = try #require(ArtworkStore.decode(cover, maxPixelSize: 108))
+        let limit = decoded.bytesPerRow * decoded.height * 8
+        let artwork = ArtworkStore(costLimit: limit) { _ in true }
+        let urls = (0..<40).map { "https://img.example/cover/95\($0).jpg" }
+        for url in urls {
+            let shown = Task { await artwork.show(url, maxPixelSize: 108) }
+            try await waitFor { artwork.isPending(url) }
+            artwork.ready(url: url, bytes: cover)
+            try await waitFor { artwork.arrivalCount(url) > 0 }
+            shown.cancel()
+            await shown.value
+        }
+        let kept = urls.compactMap { artwork.image($0) }.reduce(0) { $0 + $1.bytesPerRow * $1.height }
+        #expect(kept > 0)
+        #expect(kept <= limit, "\(kept) bytes kept over a \(limit) byte limit")
+    }
+
     @Test func bytesThatAreNoImageDecodeToNothing() {
         #expect(ArtworkStore.decode(Data([0xFF, 0xD8, 0x00, 0x7F]), maxPixelSize: 100) == nil)
     }

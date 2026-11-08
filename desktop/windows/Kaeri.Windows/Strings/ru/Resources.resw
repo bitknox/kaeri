@@ -6050,6 +6050,24 @@
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · из {source}</value>
   </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Смахните, чтобы читать дальше</value>
+  </data>
+  <data name="ReaderDividerImages_one" xml:space="preserve">
+    <value>{count} картинка</value>
+  </data>
+  <data name="ReaderDividerImages_few" xml:space="preserve">
+    <value>{count} картинки</value>
+  </data>
+  <data name="ReaderDividerImages_many" xml:space="preserve">
+    <value>{count} картинок</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} картинки</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Глава {chapter} · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Открыть демо</value>
   </data>

@@ -51,3 +51,9 @@ reader-end-from = Från { $source }
 reader-chapter-line = Kapitel { $chapter }
 
 reader-divider-facts-source = { $facts } · från { $source }
+reader-end-swipe = Svep för att läsa vidare
+reader-divider-images = { $count ->
+    [one] En bild
+   *[other] { $count } bilder
+ }
+reader-chapter-line-titled = Kapitel { $chapter } · { $title }

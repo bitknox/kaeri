@@ -7,6 +7,7 @@
 //!                     [--scene <home scene>]
 //!                     [--shots <dir> [--shot <a,b,...>] [--prefix <name>]] [--size <w>x<h>]
 
+mod cards_layout;
 mod catalog;
 mod choices;
 mod crash_signal;
@@ -32,6 +33,8 @@ mod prefs;
 mod reading;
 mod say;
 mod shots;
+#[cfg(feature = "fixtures")]
+mod shots_prelaunch;
 #[cfg(feature = "fixtures")]
 mod shots_reading;
 #[cfg(feature = "fixtures")]

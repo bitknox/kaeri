@@ -192,7 +192,7 @@ reader-end-pages = { $count ->
 # @max 40
 reader-end-from = From { $source }
 
-# Under the series title in the reader's controls. The chapter is its number, such as 12.
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
 # @arg chapter: text
 # @max 30
 reader-chapter-line = Chapter { $chapter }
@@ -202,3 +202,21 @@ reader-chapter-line = Chapter { $chapter }
 # @arg source: text
 # @max 60
 reader-divider-facts-source = { $facts } · from { $source }
+
+# Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+# @max 30
+reader-end-swipe = Swipe to keep reading
+
+# The next episode's length on the divider inside a strip.
+# @arg count: int
+# @max 24
+reader-divider-images = { $count ->
+    [one] One image
+   *[other] { $count } images
+ }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+# @arg chapter: text
+# @arg title: text
+# @max 60
+reader-chapter-line-titled = Chapter { $chapter } · { $title }
