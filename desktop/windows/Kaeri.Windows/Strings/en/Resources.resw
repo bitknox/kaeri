@@ -2271,18 +2271,6 @@
     <value>{first} and {second}</value>
     <comment>Two tracker names joined, for the line above.</comment>
   </data>
-  <data name="WindowsReaderEndNextDetail_one" xml:space="preserve">
-    <value>{chapter} · 1 page</value>
-    <comment>Detail line under the next chapter's title on the page between chapters.</comment>
-  </data>
-  <data name="WindowsReaderEndNextDetail_other" xml:space="preserve">
-    <value>{chapter} · {pages} pages</value>
-    <comment>Detail line under the next chapter's title on the page between chapters.</comment>
-  </data>
-  <data name="WindowsReaderEndFrom" xml:space="preserve">
-    <value>From {source}</value>
-    <comment>Line naming the source the next chapter was downloaded from.</comment>
-  </data>
   <data name="WindowsReaderContinue" xml:space="preserve">
     <value>Continue</value>
     <comment>The one amber button of the page between chapters: opens the next chapter.</comment>
@@ -2322,42 +2310,6 @@
   <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
     <value>You're offline. It opens here once you're connected.</value>
     <comment>End page text when the next chapter is not downloaded and the PC is offline.</comment>
-  </data>
-  <data name="WindowsReaderServerSaved" xml:space="preserve">
-    <value>Saved to {server}</value>
-    <comment>Page between chapters, under the tracker line: the book server the chapter came from has the progress.</comment>
-  </data>
-  <data name="WindowsReaderServerSending" xml:space="preserve">
-    <value>Sending to {server}…</value>
-    <comment>Same place, while the server has not answered yet: shown after 600 ms, then replaced by the result.</comment>
-  </data>
-  <data name="WindowsReaderServerOffline" xml:space="preserve">
-    <value>Will send to {server} when you're back online</value>
-    <comment>Same place, offline: the progress waits and is sent later.</comment>
-  </data>
-  <data name="WindowsReaderServerRetrying" xml:space="preserve">
-    <value>{server} didn't answer. Kaeri will try again.</value>
-    <comment>Same place, the server did not answer: Kaeri tries again by itself.</comment>
-  </data>
-  <data name="WindowsReaderServerFailed" xml:space="preserve">
-    <value>Not saved to {server}: {reason}.</value>
-    <comment>Same place, the server refused: the progress waits for Try again. The reason is one of the four below.</comment>
-  </data>
-  <data name="WindowsReaderWhyKey" xml:space="preserve">
-    <value>the server refused the key</value>
-    <comment>A reason for the line above.</comment>
-  </data>
-  <data name="WindowsReaderWhyPassword" xml:space="preserve">
-    <value>the server refused the password</value>
-    <comment>A reason for the line above.</comment>
-  </data>
-  <data name="WindowsReaderWhyGone" xml:space="preserve">
-    <value>this series isn't on the server any more</value>
-    <comment>A reason for the line above.</comment>
-  </data>
-  <data name="WindowsReaderWhyGaveUp" xml:space="preserve">
-    <value>no answer for a day</value>
-    <comment>A reason for the line above.</comment>
   </data>
   <data name="WindowsReaderGroupLine" xml:space="preserve">
     <value>{chapter} · page {page} of {total}</value>

@@ -446,7 +446,8 @@ sealed class PartView : Grid
     public void Refresh(double rasterScale)
     {
         var file = reader.FileOf(part, chapter) ?? kept?.Invoke(part);
-        var failure = file is null && kept is null ? reader.FailureOf(part, chapter) : null;
+        // A chapter the strip ran on from has no failures of its own any more; the open one does.
+        var failure = file is null && (kept is null || reader.View?.Chapter.Id == chapter) ? reader.FailureOf(part, chapter) : null;
         if (failure is not null)
         {
             if (failed is null)

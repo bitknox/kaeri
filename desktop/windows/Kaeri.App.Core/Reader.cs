@@ -90,14 +90,8 @@ public sealed class ReaderSession
     /// from <see cref="ReaderEvent.ChapterRead"/> until <see cref="ReaderEvent.ProgressSent"/>. The
     /// end page shows "Sending to" once it has waited 600 ms from <c>Since</c>.
     /// </summary>
-    public (string Server, string Host, DateTimeOffset Since)? ServerSending { get; private set; }
+    public (string Host, DateTimeOffset Since)? ServerSending { get; private set; }
 
-    /// <summary>
-    /// The book server a work's chapters come from when it is set to receive progress, as its id
-    /// and host; null when there is none. The engine sends no start event, so the session asks
-    /// this when a chapter counts as read. <see cref="Known"/> sets it.
-    /// </summary>
-    public Func<string, (string Server, string Host)?>? ProgressServer { get; set; }
     /// <summary>A place the paged reader is told to show (Back to page, Start over, another device's).</summary>
     public (int Leaf, int Tick)? GoTo { get; private set; }
     /// <summary>A novel place the web view is told to show.</summary>
@@ -266,15 +260,27 @@ public sealed class ReaderSession
         Changed?.Invoke(ReaderChange.Phase);
     }
 
-    /// <summary>A strip reached its foot and the next chapter follows: it opens without the opening screen.</summary>
+    /// <summary>
+    /// A strip's marker into the next chapter reached the window's middle: the next chapter opens
+    /// under it in the same scroll, with no opening screen and no kept place. The engine opens a
+    /// strip's next chapter at its first image and says nothing of where it was.
+    /// </summary>
     public void FlowOn()
     {
-        if (session == 0 || View?.Next is not { } next)
+        if (session == 0 || Flowing || View?.Next is not { } next)
             return;
+        Flowing = true;
         End = null;
         Read = false;
+        ClearNotices();
         Ask(new ReaderCommand.OpenChapter(session, next.Id));
     }
+
+    /// <summary>A strip is flowing into the next chapter: from <see cref="FlowOn"/> until the strip took its images.</summary>
+    public bool Flowing { get; private set; }
+
+    /// <summary>The strip has the flowing chapter's images in its scroll.</summary>
+    public void Flowed() => Flowing = false;
 
     public void Retry(uint? page)
     {
@@ -462,7 +468,9 @@ public sealed class ReaderSession
                 if (view.Settings is { } settings)
                     Settings = settings;
                 Ask(new ReaderCommand.LoadSettings(view.Medium, view.Work));
-                StripRestore = view.Mode == ReaderMode.Strip ? view.Start.Strip : null;
+                StripRestore = view.Mode == ReaderMode.Strip && !Flowing ? view.Start.Strip : null;
+                if (view.Mode != ReaderMode.Strip)
+                    Flowing = false;
                 if (surface is { } now && sentSurface != now)
                     sentSurface = now;
                 Changed?.Invoke(ReaderChange.Phase);
@@ -494,6 +502,7 @@ public sealed class ReaderSession
                     return;
                 if (Leaves.Length == 0 && failed.Page == 0)
                 {
+                    Flowing = false;
                     ClearNotices();
                     Phase = ReaderPhase.Failed;
                     Failure = failed.Failure;
@@ -529,8 +538,9 @@ public sealed class ReaderSession
                     ReadTrackers = read.Trackers;
                     // What the engine already knows (offline, held) came before this; otherwise the
                     // server is asked now and its answer follows.
-                    if (ServerProgress is null && ServerSending is null && ProgressServer?.Invoke(read.Work) is { } to)
-                        ServerSending = (to.Server, to.Host, DateTimeOffset.UtcNow);
+                    // The engine names the server that receives the work's progress (progress_host).
+                    if (ServerProgress is null && ServerSending is null && View?.ProgressHost is { Length: > 0 } host)
+                        ServerSending = (host, DateTimeOffset.UtcNow);
                     Changed?.Invoke(ReaderChange.Read);
                 }
                 break;
@@ -661,15 +671,8 @@ public sealed class ReaderSession
     /// rule (<c>reader_notice_hold</c>). A second more for every 10 words past 12, and a notice
     /// with a button waits for the person while a screen reader runs.
     /// </summary>
-    public static uint? NoticeHold(uint lastsMs, uint words, bool hasAction, bool screenReader)
-    {
-        if (hasAction && screenReader)
-            return null;
-        if (lastsMs == 0)
-            return 0;
-        var extra = words <= 12 ? 0 : (words - 12 + 9) / 10;
-        return lastsMs + extra * 1000;
-    }
+    public static uint? NoticeHold(uint lastsMs, uint words, bool hasAction, bool screenReader) =>
+        KaeriModelMethods.ReaderNoticeHold(lastsMs, words, hasAction, screenReader);
 
     static uint Words(string text) => (uint)text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
 
@@ -788,6 +791,7 @@ public sealed class ReaderSession
         Current = 0;
         Ring = null;
         StripRestore = null;
+        Flowing = false;
         GoTo = null;
         NovelGoTo = null;
         Read = false;
@@ -829,22 +833,4 @@ public sealed class ReaderSession
 
     /// <summary>The leaves the person sees as pages: the end page's leaf is not one.</summary>
     public int ReadingLeaves => Leaves.Count(l => !l.EndPage);
-
-    /// <summary>
-    /// The book server <paramref name="source"/> names, when it is one of <paramref name="servers"/>
-    /// and set to receive progress: its id and host. A folder or a plugin is no server.
-    /// </summary>
-    public static (string Server, string Host)? ReceivingServer(string? source, IEnumerable<BookServerRow>? servers)
-    {
-        if (string.IsNullOrEmpty(source) || servers is null)
-            return null;
-        foreach (var server in servers)
-            if (server.Id == source)
-                return server.ReportProgress && !server.Off ? (server.Id, HostOf(server.Address)) : null;
-        return null;
-    }
-
-    /// <summary>The host the end page names for a server's address, as the engine's own line does.</summary>
-    public static string HostOf(string address) =>
-        Uri.TryCreate(address, UriKind.Absolute, out var uri) && !string.IsNullOrEmpty(uri.Host) ? uri.Host : address;
 }

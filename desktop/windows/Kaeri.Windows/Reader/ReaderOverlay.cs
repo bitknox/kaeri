@@ -99,6 +99,7 @@ public sealed partial class ReaderOverlay : UserControl
         AddHandler(PointerMovedEvent, new PointerEventHandler(OnPointerMoved), true);
         AddHandler(PointerPressedEvent, new PointerEventHandler((_, e) =>
         {
+            TouchInput = e.Pointer.PointerDeviceType != Microsoft.UI.Input.PointerDeviceType.Mouse;
             // The mouse's back button leaves, as everywhere in the app.
             if (e.GetCurrentPoint(this).Properties.IsXButton1Pressed)
             {
@@ -106,7 +107,11 @@ public sealed partial class ReaderOverlay : UserControl
                 e.Handled = true;
             }
         }), true);
-        PreviewKeyDown += OnKey;
+        PreviewKeyDown += (s, e) =>
+        {
+            TouchInput = false;
+            OnKey(s, e);
+        };
         SizeChanged += (_, _) =>
         {
             chrome.Fit(ActualWidth);
@@ -281,6 +286,7 @@ public sealed partial class ReaderOverlay : UserControl
             case ReaderChange.Settings:
                 Repaint();
                 ReportSurface();
+                novel?.SyncInput();
                 break;
             case ReaderChange.Notice:
                 // The opening and failed screens speak for themselves; the notice waits under them.
@@ -347,6 +353,9 @@ public sealed partial class ReaderOverlay : UserControl
         var hasContent = Reader.Leaves.Length > 0 || (Reader.Novel is not null && Reader.NovelPainted);
         if (Reader.Phase == ReaderPhase.Failed)
             ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), Reader.Failure));
+        else if (Reader.Flowing && kind == Kind.Strip)
+            // The next chapter opens under the strip's marker: the scroll stays as it is.
+            ClearState();
         else if (Reader.Phase == ReaderPhase.Opening || (Reader.Phase == ReaderPhase.Open && !hasContent))
             ShowState("opening:" + ChapterLabel(), () => new OpeningView(Reader, PagePalette, ChapterLabel()));
         else
@@ -434,6 +443,12 @@ public sealed partial class ReaderOverlay : UserControl
 
     bool StateShown => stateView is not null;
 
+    /// <summary>The last input was a finger or a pen: the end page offers one more swipe.</summary>
+    internal bool TouchInput { get; private set; }
+
+    /// <summary>The strip is what shows: its end comes by scrolling, not a swipe.</summary>
+    internal bool StripShown => kind == Kind.Strip;
+
     /// <summary>
     /// The novel's web view could not start (no WebView2 runtime) or lost its page: the failed
     /// screen. A view the reader already let go of says nothing.
@@ -468,11 +483,15 @@ public sealed partial class ReaderOverlay : UserControl
             ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), null));
     }
 
-    /// <summary>The window was minimised or came back: a hidden novel rests.</summary>
+    /// <summary>
+    /// The window was minimised or came back: a hidden novel rests, and a notice's time waits.
+    /// Coming back, the window's activation starts it again.
+    /// </summary>
     internal void WindowHidden(bool hidden)
     {
         novel?.Rest(hidden);
-        Reader.WindowActive(!hidden);
+        if (hidden)
+            Reader.WindowActive(false);
     }
 
     internal void NovelPaintedNow(NovelView from)
@@ -606,6 +625,7 @@ public sealed partial class ReaderOverlay : UserControl
             chromeShown = true;
             Appear(chrome.Top, true);
             Ctx.Window.ReaderChrome(true);
+            novel?.SyncInput();
         }
         if (!StateShown)
             Appear(chrome.Group, true);
@@ -627,6 +647,7 @@ public sealed partial class ReaderOverlay : UserControl
             Appear(chrome.Top, false);
             Appear(chrome.Group, false);
             Ctx.Window.ReaderChrome(false);
+            novel?.SyncInput();
         }
         HidePointer();
     }
@@ -821,7 +842,9 @@ public sealed partial class ReaderOverlay : UserControl
             }
             case Kind.Strip when strip is not null:
             {
+                // The line follows the chapter under the window's middle, the one before too.
                 var (image, count) = strip.Position;
+                label = strip.ChapterLabel ?? label;
                 chrome.Line(T.WindowsReaderGroupLineStrip(label, Math.Min(image + 1, Math.Max(count, 1)), Math.Max(count, 1)));
                 chrome.Scrub(image + 1, count, false, null);
                 break;

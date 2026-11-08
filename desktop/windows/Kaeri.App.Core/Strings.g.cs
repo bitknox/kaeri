@@ -1596,12 +1596,6 @@ public static partial class T
     /// <summary>Two tracker names joined, for the line above.</summary>
     public static string WindowsReaderEndTrackersTwo(string first, string second) => Fill(Get("WindowsReaderEndTrackersTwo"), ("first", first), ("second", second));
 
-    /// <summary>Detail line under the next chapter's title on the page between chapters.</summary>
-    public static string WindowsReaderEndNextDetail(string chapter, long pages) => Fill(GetPlural("WindowsReaderEndNextDetail", pages), ("chapter", chapter), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
-
-    /// <summary>Line naming the source the next chapter was downloaded from.</summary>
-    public static string WindowsReaderEndFrom(string source) => Fill(Get("WindowsReaderEndFrom"), ("source", source));
-
     /// <summary>The one amber button of the page between chapters: opens the next chapter.</summary>
     public static string WindowsReaderContinue => Get("WindowsReaderContinue");
 
@@ -1631,33 +1625,6 @@ public static partial class T
 
     /// <summary>End page text when the next chapter is not downloaded and the PC is offline.</summary>
     public static string WindowsReaderEndOfflineBody => Get("WindowsReaderEndOfflineBody");
-
-    /// <summary>Page between chapters, under the tracker line: the book server the chapter came from has the progress.</summary>
-    public static string WindowsReaderServerSaved(string server) => Fill(Get("WindowsReaderServerSaved"), ("server", server));
-
-    /// <summary>Same place, while the server has not answered yet: shown after 600 ms, then replaced by the result.</summary>
-    public static string WindowsReaderServerSending(string server) => Fill(Get("WindowsReaderServerSending"), ("server", server));
-
-    /// <summary>Same place, offline: the progress waits and is sent later.</summary>
-    public static string WindowsReaderServerOffline(string server) => Fill(Get("WindowsReaderServerOffline"), ("server", server));
-
-    /// <summary>Same place, the server did not answer: Kaeri tries again by itself.</summary>
-    public static string WindowsReaderServerRetrying(string server) => Fill(Get("WindowsReaderServerRetrying"), ("server", server));
-
-    /// <summary>Same place, the server refused: the progress waits for Try again. The reason is one of the four below.</summary>
-    public static string WindowsReaderServerFailed(string server, string reason) => Fill(Get("WindowsReaderServerFailed"), ("server", server), ("reason", reason));
-
-    /// <summary>A reason for the line above.</summary>
-    public static string WindowsReaderWhyKey => Get("WindowsReaderWhyKey");
-
-    /// <summary>A reason for the line above.</summary>
-    public static string WindowsReaderWhyPassword => Get("WindowsReaderWhyPassword");
-
-    /// <summary>A reason for the line above.</summary>
-    public static string WindowsReaderWhyGone => Get("WindowsReaderWhyGone");
-
-    /// <summary>A reason for the line above.</summary>
-    public static string WindowsReaderWhyGaveUp => Get("WindowsReaderWhyGaveUp");
 
     /// <summary>The group's line under the series title. The chapter label comes from the source.</summary>
     public static string WindowsReaderGroupLine(string chapter, long page, long total) => Fill(Get("WindowsReaderGroupLine"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -11834,9 +11801,6 @@ public static partial class T
         ["WindowsReaderEndNotRead"] = "Not marked read yet",
         ["WindowsReaderEndTracker"] = "Read · {trackers} updated",
         ["WindowsReaderEndTrackersTwo"] = "{first} and {second}",
-        ["WindowsReaderEndNextDetail_one"] = "{chapter} · 1 page",
-        ["WindowsReaderEndNextDetail_other"] = "{chapter} · {pages} pages",
-        ["WindowsReaderEndFrom"] = "From {source}",
         ["WindowsReaderContinue"] = "Continue",
         ["WindowsReaderBackToSeries"] = "Back to the series",
         ["WindowsReaderEndNotOut"] = "{chapter} isn't out yet",
@@ -11847,15 +11811,6 @@ public static partial class T
         ["WindowsReaderEndNoSource"] = "No {chapter} in your sources yet",
         ["WindowsReaderEndOffline"] = "{chapter} isn't downloaded",
         ["WindowsReaderEndOfflineBody"] = "You're offline. It opens here once you're connected.",
-        ["WindowsReaderServerSaved"] = "Saved to {server}",
-        ["WindowsReaderServerSending"] = "Sending to {server}…",
-        ["WindowsReaderServerOffline"] = "Will send to {server} when you're back online",
-        ["WindowsReaderServerRetrying"] = "{server} didn't answer. Kaeri will try again.",
-        ["WindowsReaderServerFailed"] = "Not saved to {server}: {reason}.",
-        ["WindowsReaderWhyKey"] = "the server refused the key",
-        ["WindowsReaderWhyPassword"] = "the server refused the password",
-        ["WindowsReaderWhyGone"] = "this series isn't on the server any more",
-        ["WindowsReaderWhyGaveUp"] = "no answer for a day",
         ["WindowsReaderGroupLine"] = "{chapter} · page {page} of {total}",
         ["WindowsReaderGroupLineSpread"] = "{chapter} · pages {first} and {second}",
         ["WindowsReaderGroupLineStrip"] = "{chapter} · image {image} of {total}",

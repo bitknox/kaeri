@@ -2271,18 +2271,6 @@
     <value>[{first} àñð {second}~~~~]</value>
     <comment>Two tracker names joined, for the line above.</comment>
   </data>
-  <data name="WindowsReaderEndNextDetail_one" xml:space="preserve">
-    <value>[{chapter} · 1 þàĝé~~~~]</value>
-    <comment>Detail line under the next chapter's title on the page between chapters.</comment>
-  </data>
-  <data name="WindowsReaderEndNextDetail_other" xml:space="preserve">
-    <value>[{chapter} · {pages} þàĝéš~~~~~]</value>
-    <comment>Detail line under the next chapter's title on the page between chapters.</comment>
-  </data>
-  <data name="WindowsReaderEndFrom" xml:space="preserve">
-    <value>[Ƒŕöɱ {source}~~~]</value>
-    <comment>Line naming the source the next chapter was downloaded from.</comment>
-  </data>
   <data name="WindowsReaderContinue" xml:space="preserve">
     <value>[Çöñţîñüé~~~]</value>
     <comment>The one amber button of the page between chapters: opens the next chapter.</comment>
@@ -2322,42 +2310,6 @@
   <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
     <value>[Ýöü'ŕé öƒƒļîñé. Îţ öþéñš ĥéŕé öñçé ýöü'ŕé çöññéçţéð.~~~~~~~~~~~~~~~~]</value>
     <comment>End page text when the next chapter is not downloaded and the PC is offline.</comment>
-  </data>
-  <data name="WindowsReaderServerSaved" xml:space="preserve">
-    <value>[Šàṽéð ţö {server}~~~~]</value>
-    <comment>Page between chapters, under the tracker line: the book server the chapter came from has the progress.</comment>
-  </data>
-  <data name="WindowsReaderServerSending" xml:space="preserve">
-    <value>[Šéñðîñĝ ţö {server}…~~~~~]</value>
-    <comment>Same place, while the server has not answered yet: shown after 600 ms, then replaced by the result.</comment>
-  </data>
-  <data name="WindowsReaderServerOffline" xml:space="preserve">
-    <value>[Ŵîļļ šéñð ţö {server} ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé~~~~~~~~~~~~]</value>
-    <comment>Same place, offline: the progress waits and is sent later.</comment>
-  </data>
-  <data name="WindowsReaderServerRetrying" xml:space="preserve">
-    <value>[{server} ðîðñ'ţ àñšŵéŕ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~]</value>
-    <comment>Same place, the server did not answer: Kaeri tries again by itself.</comment>
-  </data>
-  <data name="WindowsReaderServerFailed" xml:space="preserve">
-    <value>[Ñöţ šàṽéð ţö {server}: {reason}.~~~~~~~]</value>
-    <comment>Same place, the server refused: the progress waits for Try again. The reason is one of the four below.</comment>
-  </data>
-  <data name="WindowsReaderWhyKey" xml:space="preserve">
-    <value>[ţĥé šéŕṽéŕ ŕéƒüšéð ţĥé ķéý~~~~~~~~]</value>
-    <comment>A reason for the line above.</comment>
-  </data>
-  <data name="WindowsReaderWhyPassword" xml:space="preserve">
-    <value>[ţĥé šéŕṽéŕ ŕéƒüšéð ţĥé þàššŵöŕð~~~~~~~~~~]</value>
-    <comment>A reason for the line above.</comment>
-  </data>
-  <data name="WindowsReaderWhyGone" xml:space="preserve">
-    <value>[ţĥîš šéŕîéš îšñ'ţ öñ ţĥé šéŕṽéŕ àñý ɱöŕé~~~~~~~~~~~~]</value>
-    <comment>A reason for the line above.</comment>
-  </data>
-  <data name="WindowsReaderWhyGaveUp" xml:space="preserve">
-    <value>[ñö àñšŵéŕ ƒöŕ à ðàý~~~~~~]</value>
-    <comment>A reason for the line above.</comment>
   </data>
   <data name="WindowsReaderGroupLine" xml:space="preserve">
     <value>[{chapter} · þàĝé {page} öƒ {total}~~~~~~~]</value>

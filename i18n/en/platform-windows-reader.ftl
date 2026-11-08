@@ -58,22 +58,6 @@ windows-reader-end-tracker = Read · { $trackers } updated
 # @max 40
 windows-reader-end-trackers-two = { $first } and { $second }
 
-# Detail line under the next chapter's title on the page between chapters.
-# @only windows
-# @arg chapter: text
-# @arg pages: int
-# @max 48
-windows-reader-end-next-detail = { $pages ->
-    [one] { $chapter } · 1 page
-   *[other] { $chapter } · { $pages } pages
-}
-
-# Line naming the source the next chapter was downloaded from.
-# @only windows
-# @arg source: text
-# @max 40
-windows-reader-end-from = From { $source }
-
 # The one amber button of the page between chapters: opens the next chapter.
 # @only windows
 # @max 20
@@ -126,57 +110,6 @@ windows-reader-end-offline = { $chapter } isn't downloaded
 # @only windows
 # @max 80
 windows-reader-end-offline-body = You're offline. It opens here once you're connected.
-
-# Page between chapters, under the tracker line: the book server the chapter came from has the progress.
-# @only windows
-# @arg server: text
-# @max 60
-windows-reader-server-saved = Saved to { $server }
-
-# Same place, while the server has not answered yet: shown after 600 ms, then replaced by the result.
-# @only windows
-# @arg server: text
-# @max 60
-windows-reader-server-sending = Sending to { $server }…
-
-# Same place, offline: the progress waits and is sent later.
-# @only windows
-# @arg server: text
-# @max 80
-windows-reader-server-offline = Will send to { $server } when you're back online
-
-# Same place, the server did not answer: Kaeri tries again by itself.
-# @only windows
-# @arg server: text
-# @max 80
-windows-reader-server-retrying = { $server } didn't answer. { -app-name } will try again.
-
-# Same place, the server refused: the progress waits for Try again. The reason is one of the four below.
-# @only windows
-# @arg server: text
-# @arg reason: text
-# @max 110
-windows-reader-server-failed = Not saved to { $server }: { $reason }.
-
-# A reason for the line above.
-# @only windows
-# @max 40
-windows-reader-why-key = the server refused the key
-
-# A reason for the line above.
-# @only windows
-# @max 48
-windows-reader-why-password = the server refused the password
-
-# A reason for the line above.
-# @only windows
-# @max 56
-windows-reader-why-gone = this series isn't on the server any more
-
-# A reason for the line above.
-# @only windows
-# @max 30
-windows-reader-why-gave-up = no answer for a day
 
 # The group's line under the series title. The chapter label comes from the source.
 # @only windows

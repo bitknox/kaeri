@@ -104,25 +104,38 @@ sealed class ChapterFailedView : Grid
 }
 
 /// <summary>
-/// The page after the last: what ended, whether it counted and where it was sent, the next
-/// chapter with the one amber Continue, or why there is none. In a reading demo with no next
-/// chapter, the demo's credit and the way to add a source. On a wide window the next chapter's
-/// first page shows beside the words.
+/// The page after the last, as the reader board and the Apple and Linux readers lay it out: a
+/// 440 column, left-aligned and centred, on the page's own ground (the novel's look, the manga
+/// background). What ended, whether it counted and where it was sent; the next chapter with its
+/// facts and its first page, or a plate with its number when there is none yet, at every window
+/// width; the one amber Continue. With no next chapter it says why. In a reading demo, the
+/// demo's cover with its credit and licence, and the way to add a source.
 /// </summary>
 sealed class EndPageView : Grid
 {
+    /// <summary>The next chapter's first page, at the board's 1:1.42.</summary>
+    const double PreviewWidth = 180;
+
     public EndPageView(ReaderOverlay owner, double width)
     {
         var reader = owner.Reader;
-        var palette = owner.Palette;
+        var palette = owner.PagePalette;
         Background = new SolidColorBrush(palette.Page);
-        var chapter = reader.View?.Chapter.Label ?? "";
-        var next = reader.End?.Next ?? reader.View?.Next;
-        var demo = reader.View?.DemoCredit;
-        var wide = width >= 900 && next is not null && reader.NextPreview is not null;
+        var view = reader.View;
+        var finished = view?.Chapter;
+        var chapter = finished?.Number is { Length: > 0 } number ? T.ReaderEndOfChapterNumber(number) : T.WindowsReaderEndOfChapter(finished?.Label ?? "");
+        var next = reader.End?.Next ?? view?.Next;
+        var demo = view?.DemoCredit;
+        var novel = reader.Medium == Medium.Novel;
 
-        var words = new StackPanel { MaxWidth = 440, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = wide ? HorizontalAlignment.Left : HorizontalAlignment.Center, Margin = new Thickness(28, 72, 28, 72) };
-        var heading = ReaderText.Line(T.WindowsReaderEndOfChapter(chapter), 24, palette.Silk, strong: true);
+        var words = new StackPanel
+        {
+            Width = Math.Min(440, Math.Max(240, width - 56)),
+            VerticalAlignment = VerticalAlignment.Center,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(28, 72, 28, 72),
+        };
+        var heading = ReaderText.Line(chapter, 24, palette.Silk, strong: true);
         AutomationProperties.SetHeadingLevel(heading, AutomationHeadingLevel.Level1);
         words.Children.Add(heading);
         var readLine = !reader.Read ? T.WindowsReaderEndNotRead
@@ -140,50 +153,53 @@ sealed class EndPageView : Grid
 
         if (next is not null)
         {
-            var block = new StackPanel { Spacing = 4, Margin = new Thickness(0, 28, 0, 0) };
+            var block = new StackPanel { Spacing = 4, Margin = new Thickness(0, 22, 0, 0) };
             block.Children.Add(ReaderText.Line(T.ReaderEndNext, 13, palette.Haze, strong: true));
             block.Children.Add(ReaderText.Line(next.Title ?? next.Label, 20, palette.Silk, strong: true));
-            block.Children.Add(ReaderText.Line(next.Pages is { } pages ? T.WindowsReaderEndNextDetail(next.Label, (int)pages) : next.Label, 15, palette.Haze));
-            if (reader.End?.NextSource is { Length: > 0 } source)
-                block.Children.Add(ReaderText.Line(T.WindowsReaderEndFrom(source), 13, palette.Haze));
+            if (Facts(next, reader.End?.NextSource) is { Length: > 0 } facts)
+                block.Children.Add(ReaderText.Line(facts, 15, palette.Haze));
+            if (!novel)
+                block.Children.Add(Preview(owner, next, palette));
             words.Children.Add(block);
             var go = ReaderButtons.Amber(T.WindowsReaderContinue, palette, (_, _) => reader.OpenChapter(next.Id));
             ToolTipService.SetToolTip(go, T.TooltipWithKey(T.WindowsReaderContinue, "Space"));
-            go.Margin = new Thickness(0, 40, 0, 0);
+            go.Margin = new Thickness(0, 32, 0, 0);
             words.Children.Add(go);
+            // On a touch screen, one more swipe goes on, as on a phone.
+            if (owner.TouchInput && !owner.StripShown)
+            {
+                var swipe = ReaderText.Line(T.ReaderEndSwipe, 13, palette.Haze);
+                swipe.HorizontalAlignment = HorizontalAlignment.Center;
+                swipe.Margin = new Thickness(0, 10, 0, 0);
+                words.Children.Add(swipe);
+            }
         }
         else if (demo is not null)
         {
-            var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 28, 0, 0) };
+            var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 22, 0, 0) };
             block.Children.Add(ReaderText.Line(T.ReaderDemoEnd, 20, palette.Silk, strong: true));
             block.Children.Add(ReaderText.Line(T.ReaderDemoEndLine, 15, palette.Haze));
-            var card = new Border
-            {
-                Background = new SolidColorBrush(palette.Raised),
-                CornerRadius = new CornerRadius(8),
-                Padding = new Thickness(16),
-                Margin = new Thickness(0, 12, 0, 0),
-                Child = ReaderText.Line(T.ReaderDemoCredit(demo.Series, demo.Author, demo.Licence ?? ""), 13, palette.Haze),
-            };
-            block.Children.Add(card);
+            block.Children.Add(DemoCard(owner, demo, palette));
             words.Children.Add(block);
             var add = ReaderButtons.Amber(T.ReaderDemoAddSource, palette, (_, _) => owner.AddSource());
             add.Margin = new Thickness(0, 32, 0, 0);
             words.Children.Add(add);
             var again = ReaderButtons.Pill(T.ReaderDemoAgain, palette, (_, _) => owner.FromStart());
             again.Margin = new Thickness(0, 12, 0, 0);
+            again.HorizontalAlignment = HorizontalAlignment.Stretch;
             words.Children.Add(again);
         }
         else if (reader.End?.Why is { } why)
         {
-            var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 28, 0, 0) };
+            var label = finished?.Label ?? "";
+            var block = new StackPanel { Spacing = 6, Margin = new Thickness(0, 22, 0, 0) };
             var title = why switch
             {
-                NoNext.NotOutYet => T.WindowsReaderEndNotOut(chapter),
+                NoNext.NotOutYet => T.WindowsReaderEndNotOut(label),
                 NoNext.CaughtUp => T.ReaderEndCaughtUp,
                 NoNext.Finished => T.WindowsReaderEndFinished,
-                NoNext.NoSourceHasIt => T.WindowsReaderEndNoSource(chapter),
-                _ => T.WindowsReaderEndOffline(chapter),
+                NoNext.NoSourceHasIt => T.WindowsReaderEndNoSource(label),
+                _ => T.WindowsReaderEndOffline(label),
             };
             string? body = why switch
             {
@@ -203,20 +219,107 @@ sealed class EndPageView : Grid
         back.HorizontalAlignment = HorizontalAlignment.Stretch;
         words.Children.Add(back);
 
-        if (wide)
+        // A short window scrolls the column rather than cutting it.
+        Children.Add(new ScrollViewer
         {
-            ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            Children.Add(words);
-            var preview = new PageImageView { Margin = new Thickness(28, 48, 48, 48), Dim = palette.Paper };
-            preview.Show(reader.NextPreview!, owner.Scale);
-            AutomationProperties.SetAccessibilityView(preview, AccessibilityView.Raw);
-            SetColumn(preview, 1);
-            Children.Add(preview);
-            words.HorizontalAlignment = HorizontalAlignment.Right;
+            Content = words,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollMode = ScrollMode.Disabled,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+        });
+    }
+
+    /// <summary>
+    /// "Chapter 13 · 34 pages · from books.example": the chapter's number when it has a title of
+    /// its own, its length, and the source it came from.
+    /// </summary>
+    internal static string Facts(ChapterRow next, string? source)
+    {
+        var number = next.Title is null ? null : next.Number ?? next.Label;
+        var pages = next.Pages is { } count && count > 0 ? T.ReaderEndPages(count) : null;
+        var facts = (number, pages) switch
+        {
+            ({ } n, { } p) => T.ReaderEndFacts(n, p),
+            ({ } n, null) => T.ReaderChapterLine(n),
+            (null, var p) => p,
+        };
+        var from = source is { Length: > 0 } ? source : null;
+        return (facts, from) switch
+        {
+            ({ } f, { } s) => T.ReaderDividerFactsSource(f, s),
+            (null, { } s) => T.ReaderEndFrom(s),
+            (var f, null) => f ?? "",
+        };
+    }
+
+    /// <summary>The next chapter's first page, faded in over a plate that names the chapter, which stays when there is no page yet.</summary>
+    static FrameworkElement Preview(ReaderOverlay owner, ChapterRow next, ReaderPalette palette)
+    {
+        var frame = new Grid
+        {
+            Width = PreviewWidth,
+            Height = Math.Round(PreviewWidth * 1.42),
+            HorizontalAlignment = HorizontalAlignment.Left,
+            Margin = new Thickness(0, 14, 0, 0),
+            CornerRadius = new CornerRadius(4),
+            Background = new SolidColorBrush(palette.Raised),
+        };
+        var plateLine = next.Number is { Length: > 0 } number ? T.ReaderChapterLine(number) : next.Label;
+        frame.Children.Add(new TextBlock
+        {
+            Text = plateLine,
+            FontSize = 15,
+            Foreground = new SolidColorBrush(palette.Haze),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            TextAlignment = TextAlignment.Center,
+            TextWrapping = TextWrapping.WrapWholeWords,
+            Margin = new Thickness(12),
+        });
+        if (owner.Reader.NextPreview is { } file)
+        {
+            var preview = new PageImageView { Dim = palette.Paper, Cut = palette.Paper };
+            preview.Show(file, owner.Scale);
+            frame.Children.Add(preview);
         }
-        else
-            Children.Add(words);
+        AutomationProperties.SetAccessibilityView(frame, AccessibilityView.Raw);
+        return frame;
+    }
+
+    /// <summary>The demo work's cover beside its credit and licence, on the page's raised fill.</summary>
+    static FrameworkElement DemoCard(ReaderOverlay owner, DemoWorkInfo demo, ReaderPalette palette)
+    {
+        var row = new Grid { ColumnSpacing = 14 };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        if (demo.Cover is { Length: > 0 } cover)
+        {
+            var image = new Image { Stretch = Stretch.UniformToFill };
+            var art = new Border
+            {
+                Width = 72,
+                Height = Math.Round(72 * 1.42),
+                CornerRadius = new CornerRadius(4),
+                Background = new SolidColorBrush(palette.Selected),
+                Child = image,
+                VerticalAlignment = VerticalAlignment.Top,
+            };
+            AutomationProperties.SetAccessibilityView(art, AccessibilityView.Raw);
+            Ctx.Current.Art.Bind(cover, source => image.Source = source);
+            row.Children.Add(art);
+        }
+        var credit = new StackPanel { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        credit.Children.Add(ReaderText.Line(T.ReaderDemoCredit(demo.Series, demo.Author, demo.Licence ?? ""), 13, palette.Haze));
+        Grid.SetColumn(credit, 1);
+        row.Children.Add(credit);
+        return new Border
+        {
+            Background = new SolidColorBrush(palette.Raised),
+            CornerRadius = new CornerRadius(8),
+            Padding = new Thickness(14),
+            Margin = new Thickness(0, 12, 0, 0),
+            Child = row,
+        };
     }
 }
 
@@ -263,6 +366,10 @@ sealed class ServerLineView : Grid
     {
         later.Stop();
         var reader = owner.Reader;
+        // The line keeps its room from the first frame when the engine names the work's server
+        // (progress_host), and takes none for a work from no server.
+        Visibility = reader.View?.ProgressHost is { Length: > 0 } || reader.ServerProgress is not null || reader.ServerSending is not null
+            ? Visibility.Visible : Visibility.Collapsed;
         var now = DateTimeOffset.UtcNow;
         if (reader.ServerProgress is { } sent)
         {
@@ -287,7 +394,7 @@ sealed class ServerLineView : Grid
                 Schedule(due);
                 return;
             }
-            Swap("sending|" + sending.Host, () => Line(T.WindowsReaderServerSending(sending.Host)), animate: true);
+            Swap("sending|" + sending.Host, () => Line(T.ProgressServerSending(sending.Host)), animate: true);
             return;
         }
         // Another chapter, or none from a server: the line is empty at once.
@@ -303,24 +410,24 @@ sealed class ServerLineView : Grid
 
     static string? Words(string host, WriteBackResult result) => result switch
     {
-        WriteBackResult.Saved => T.WindowsReaderServerSaved(host),
-        WriteBackResult.Waiting { Problem: WriteBackProblem.Offline } => T.WindowsReaderServerOffline(host),
-        WriteBackResult.Waiting => T.WindowsReaderServerRetrying(host),
+        WriteBackResult.Saved => T.ProgressServerSaved(host),
+        WriteBackResult.Waiting { Problem: WriteBackProblem.Offline } => T.ProgressServerOffline(host),
+        WriteBackResult.Waiting => T.ProgressServerRetrying(host),
         WriteBackResult.NotSaved { Problem: WriteBackProblem.NotSetToReceive } => null,
         WriteBackResult.NotSaved { Problem: var problem } => problem switch
         {
-            WriteBackProblem.RefusedKey => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyKey),
-            WriteBackProblem.RefusedPassword => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyPassword),
-            WriteBackProblem.SeriesGone => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyGone),
-            WriteBackProblem.Offline => T.WindowsReaderServerOffline(host),
-            _ => T.WindowsReaderServerFailed(host, T.WindowsReaderWhyGaveUp),
+            WriteBackProblem.RefusedKey => T.ProgressServerFailed(host, T.ProgressWhyKey),
+            WriteBackProblem.RefusedPassword => T.ProgressServerFailed(host, T.ProgressWhyPassword),
+            WriteBackProblem.SeriesGone => T.ProgressServerFailed(host, T.ProgressWhyGone),
+            WriteBackProblem.Offline => T.ProgressServerOffline(host),
+            _ => T.ProgressServerFailed(host, T.ProgressWhyGaveUp),
         },
         _ => null,
     };
 
     TextBlock Line(string text)
     {
-        var line = ReaderText.Line(text, 13, owner.Palette.Haze);
+        var line = ReaderText.Line(text, 13, owner.PagePalette.Haze);
         AutomationProperties.SetLiveSetting(line, AutomationLiveSetting.Polite);
         return line;
     }
@@ -331,7 +438,7 @@ sealed class ServerLineView : Grid
         stack.Children.Add(Line(text));
         if (retry is not null)
         {
-            var again = ReaderButtons.Pill(T.ReaderTryAgain, owner.Palette, (_, _) => owner.RetryProgress(retry), height: 32);
+            var again = ReaderButtons.Pill(T.ReaderTryAgain, owner.PagePalette, (_, _) => owner.RetryProgress(retry), height: 32);
             again.HorizontalAlignment = HorizontalAlignment.Left;
             stack.Children.Add(again);
         }

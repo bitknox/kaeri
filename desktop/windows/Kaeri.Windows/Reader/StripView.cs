@@ -1,9 +1,8 @@
-using Medium = Kaeri.Engine.Core.Medium;
-using Microsoft.UI.Xaml.Automation.Peers;
 using Kaeri.App;
 using Kaeri.Engine.Model;
-using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
+using Microsoft.UI.Xaml.Automation.Peers;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
@@ -12,25 +11,45 @@ namespace Kaeri.Windows.Pages;
 
 /// <summary>
 /// The strip: every image of the chapter in one vertical scroll, a centred column on a PC. Only
-/// the images near the window are mounted. After the last image a divider names the next
-/// chapter, and if the person stays at the foot it follows on its own; the end page is only for
-/// the last chapter there is.
+/// the images near the window are mounted. After the last image a marker names the next chapter,
+/// with its first image under it; once the marker reaches the window's middle the next chapter
+/// opens under it in the same scroll, so reading runs on with no jump and no blank. Chapters far
+/// above are let go. Vertical pages and the last chapter there is end on the end page.
 /// </summary>
 sealed class StripView : Grid
 {
+    /// <summary>The marker's words between two chapters: Next, the title, its facts.</summary>
+    const double MarkerHeight = 200;
+
+    /// <summary>One chapter in the scroll, with the files of a chapter the reader has moved past.</summary>
+    sealed class Section(string chapter, string label)
+    {
+        public string Chapter { get; } = chapter;
+        public string Label { get; } = label;
+        public List<LeafPart> Parts { get; } = [];
+        public Dictionary<ReaderPageKey, PageFile> Kept { get; } = [];
+        /// <summary>The marker into this chapter: the foot it flowed from, its first image under the words.</summary>
+        public FrameworkElement? Marker { get; set; }
+        public double Top { get; set; }
+        public List<double> Tops { get; } = [];
+        public double Bottom { get; set; }
+    }
+
     readonly ReaderOverlay owner;
     readonly ScrollViewer scroll;
     readonly Canvas column = new();
-    readonly List<LeafPart> parts = [];
-    readonly List<double> tops = [];
-    readonly Dictionary<int, PartView> live = [];
-    readonly DispatcherQueueTimer follow;
+    readonly List<Section> sections = [];
+    readonly Dictionary<(Section, int), PartView> live = [];
     FrameworkElement? foot;
-    string chapter = "";
+    PageFile? footPreview;
+    double footLead;
     double columnWidth = 720;
     bool restoring = true;
-    bool atFoot;
+    bool carry;
+    Section? shown;
     int image;
+    int spoken = -1;
+    Section? spokenIn;
 
     public StripView(ReaderOverlay owner)
     {
@@ -51,15 +70,22 @@ sealed class StripView : Grid
         scroll.AddHandler(PointerWheelChangedEvent, new PointerEventHandler((_, _) => Interacted()), true);
         scroll.AddHandler(PointerPressedEvent, new PointerEventHandler((_, _) => Interacted()), true);
         SizeChanged += (_, _) => Layout();
-        follow = Timers.Weak(this, TimeSpan.FromMilliseconds(1400), false, s => s.FollowOn());
     }
 
     ReaderSession Reader => owner.Reader;
 
     double Gap => Reader.Choice(ReaderSettingKey.StripGap) == "small" ? 8 : 0;
 
-    /// <summary>The image at the window's top, counted from 0, and how many there are.</summary>
-    public (int Image, int Count) Position => (image, parts.Count);
+    /// <summary>Strip mode runs on into the next chapter; vertical pages end on the end page.</summary>
+    bool Flows => Reader.View?.Mode == ReaderMode.Strip;
+
+    Section? Current => sections.Count > 0 ? sections[^1] : null;
+
+    /// <summary>The image at the window's top in the chapter under its middle, counted from 0, and how many that chapter has.</summary>
+    public (int Image, int Count) Position => (image, (shown ?? Current)?.Parts.Count ?? 0);
+
+    /// <summary>The chapter under the window's middle, when the strip has run on from another and it is that one.</summary>
+    public string? ChapterLabel => shown is { } s && s != Current ? s.Label : null;
 
     void Interacted()
     {
@@ -71,222 +97,355 @@ sealed class StripView : Grid
 
     public void Rebuild()
     {
-        follow.Stop();
-        var newChapter = Reader.View?.Chapter.Id ?? "";
-        if (newChapter != chapter)
+        var view = Reader.View;
+        var newChapter = view?.Chapter.Id ?? "";
+        var parts = Reader.Leaves.Where(l => !l.EndPage).SelectMany(l => l.Parts).ToList();
+        if (Reader.Flowing)
         {
+            // The next chapter is opening under the marker: wait for its images, then add them.
+            if (parts.Count == 0 || Current is null || Current.Chapter == newChapter)
+                return;
+            Flow(newChapter, view?.Chapter.Label ?? "", parts);
+            Reader.Flowed();
+            return;
+        }
+        if (Current is null || Current.Chapter != newChapter)
+        {
+            // Another chapter opened (the list, the end page, a restore): the scroll starts over.
+            foreach (var key in live.Keys.ToList())
+                Unmount(key);
+            foreach (var section in sections)
+                if (section.Marker is not null)
+                    column.Children.Remove(section.Marker);
+            sections.Clear();
+            sections.Add(new Section(newChapter, view?.Chapter.Label ?? ""));
+            shown = null;
             restoring = true;
-            atFoot = false;
+            carry = owner.TakeCarry();
+            spoken = -1;
         }
-        chapter = newChapter;
-        parts.Clear();
-        foreach (var leaf in Reader.Leaves)
-            if (!leaf.EndPage)
-                parts.AddRange(leaf.Parts);
-        foreach (var view in live.Values)
-            column.Children.Remove(view);
-        live.Clear();
-        if (foot is not null)
-        {
-            column.Children.Remove(foot);
-            foot = null;
-        }
+        Current!.Parts.Clear();
+        Current.Parts.AddRange(parts);
+        // The look or the layout changed: every image is made again on the new ground.
+        foreach (var key in live.Keys.ToList())
+            Unmount(key);
+        DropFoot();
         Layout();
         if (restoring)
             Restore();
     }
 
+    /// <summary>The chapter ran on: what was the foot is now its marker, and its images follow it.</summary>
+    void Flow(string chapter, string label, List<LeafPart> parts)
+    {
+        var from = Current!;
+        // The chapter before keeps the files it showed: the session lets them go.
+        foreach (var part in from.Parts)
+            if (Reader.FileOf(part, from.Chapter) is { } file)
+                from.Kept[new ReaderPageKey(from.Chapter, part.Page, part.Half)] = file;
+        var next = new Section(chapter, label) { Marker = foot };
+        next.Parts.AddRange(parts);
+        // The first image shows the file the marker already showed, so it never blanks.
+        if (footPreview is { } lead && parts.Count > 0)
+            next.Kept[new ReaderPageKey(chapter, parts[0].Page, parts[0].Half)] = lead;
+        foot = null;
+        footPreview = null;
+        sections.Add(next);
+        Layout();
+    }
+
     public void RefreshPages()
     {
-        var before = tops.Count > 0 ? tops[^1] : 0;
+        var before = Current is { } s && s.Tops.Count > 0 ? s.Tops[^1] : 0;
         Layout();
         foreach (var view in live.Values)
             view.Refresh(owner.Scale);
         // An image that came in above the place being restored moves it: put it back.
-        if (restoring && tops.Count > 0 && Math.Abs(tops[^1] - before) > 0.5)
+        if (restoring && Current is { } now && now.Tops.Count > 0 && Math.Abs(now.Tops[^1] - before) > 0.5)
             Restore();
     }
 
     /// <summary>The foot's words changed: the next chapter, or the end page.</summary>
     public void RefreshFoot()
     {
-        if (foot is not null)
-        {
-            column.Children.Remove(foot);
-            foot = null;
-        }
+        // A flowing chapter's marker stays as it is: it becomes the chapter's top.
+        if (Reader.Flowing)
+            return;
+        DropFoot();
         Layout();
     }
 
-    double HeightOf(LeafPart part)
+    void DropFoot()
     {
-        if (Reader.FileOf(part, chapter) is { } file)
-        {
-            double w = file.Crop?.Width ?? file.Width, h = file.Crop?.Height ?? file.Height;
-            if (w > 0)
-                return columnWidth * h / w;
-        }
+        if (foot is null)
+            return;
+        column.Children.Remove(foot);
+        foot = null;
+        footPreview = null;
+    }
+
+    PageFile? FileFor(Section section, LeafPart part) =>
+        Reader.FileOf(part, section.Chapter)
+        ?? (section.Kept.TryGetValue(new ReaderPageKey(section.Chapter, part.Page, part.Half), out var half) ? half
+            : section.Kept.TryGetValue(new ReaderPageKey(section.Chapter, part.Page), out var whole) ? whole : null);
+
+    double HeightOf(Section section, LeafPart part)
+    {
+        if (FileFor(section, part) is { } file)
+            return HeightOf(file);
         if (part.Ratio is { } ratio && ratio > 0)
             return columnWidth / ratio;
         return columnWidth * 1.5;
     }
 
+    double HeightOf(PageFile file)
+    {
+        double w = file.Crop?.Width ?? file.Width, h = file.Crop?.Height ?? file.Height;
+        return w > 0 ? columnWidth * h / w : columnWidth * 1.5;
+    }
+
     void Layout()
     {
-        if (ActualWidth <= 0)
+        if (ActualWidth <= 0 || Current is null)
             return;
         var factor = (Reader.Amount(ReaderSettingKey.StripWidth) ?? 0.6) / 0.6;
         columnWidth = Math.Min(ActualWidth, 720 * factor);
-        tops.Clear();
         double y = 0;
         var gap = Gap;
-        foreach (var part in parts)
+        foreach (var section in sections)
         {
-            tops.Add(y);
-            y += HeightOf(part) + gap;
+            section.Top = y;
+            if (section.Marker is { } marker)
+            {
+                if (!column.Children.Contains(marker))
+                    column.Children.Add(marker);
+                marker.Width = columnWidth;
+                Canvas.SetTop(marker, y);
+                Canvas.SetZIndex(marker, 0);
+                y += MarkerHeight;
+            }
+            section.Tops.Clear();
+            foreach (var part in section.Parts)
+            {
+                section.Tops.Add(y);
+                y += HeightOf(section, part) + gap;
+            }
+            section.Bottom = y;
         }
         foot ??= BuildFoot();
         if (!column.Children.Contains(foot))
             column.Children.Add(foot);
         foot.Width = columnWidth;
-        foot.Height = (Reader.End?.Next ?? Reader.View?.Next) is not null ? Math.Max(ActualHeight * 0.6, 320) : Math.Max(ActualHeight * 0.8, 420);
+        foot.Height = foot is EndPageView ? Math.Max(ActualHeight * 0.8, 420) : Math.Max(MarkerHeight + footLead, ActualHeight * 0.6);
         Canvas.SetTop(foot, y);
         column.Width = columnWidth;
         column.Height = y + foot.Height;
-        foreach (var (index, view) in live)
+        foreach (var ((section, index), view) in live)
         {
             view.Width = columnWidth;
-            view.Height = HeightOf(parts[index]);
-            Canvas.SetTop(view, tops[index]);
+            view.Height = HeightOf(section, section.Parts[index]);
+            Canvas.SetTop(view, section.Tops[index]);
         }
         Mount();
     }
 
-    /// <summary>The divider and the next chapter, or the end page when there is no next.</summary>
+    /// <summary>
+    /// The marker into the next chapter, with its first image (or a plate naming it) under the
+    /// words; the end page when there is no next chapter or the strip is vertical pages.
+    /// </summary>
     FrameworkElement BuildFoot()
     {
         var next = Reader.End?.Next ?? Reader.View?.Next;
-        if (next is null)
+        footPreview = null;
+        footLead = 0;
+        if (next is null || !Flows)
             return owner.BuildEndPage();
-        var palette = owner.Palette;
-        var stack = new StackPanel { Spacing = 4, Padding = new Thickness(28, 0, 28, 0) };
-        stack.Children.Add(new Border { Height = 1, Background = new SolidColorBrush(palette.Rule), Margin = new Thickness(0, 0, 0, 28) });
-        stack.Children.Add(new TextBlock { Text = T.ReaderEndNext, FontSize = 13, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Foreground = new SolidColorBrush(palette.Haze) });
-        stack.Children.Add(new TextBlock { Text = next.Title ?? next.Label, FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Foreground = new SolidColorBrush(palette.Silk), TextWrapping = TextWrapping.WrapWholeWords });
-        stack.Children.Add(new TextBlock { Text = next.Pages is { } pages ? T.WindowsReaderEndNextDetail(next.Label, (int)pages) : next.Label, FontSize = 15, Foreground = new SolidColorBrush(palette.Haze) });
+        var palette = owner.PagePalette;
+        var marker = new StackPanel();
+        var words = new StackPanel { Spacing = 4, Padding = new Thickness(28, 0, 28, 0), Height = MarkerHeight };
+        words.Children.Add(new Border { Height = 1, Background = new SolidColorBrush(palette.Rule), Margin = new Thickness(0, 40, 0, 28) });
+        words.Children.Add(new TextBlock { Text = T.ReaderEndNext, FontSize = 13, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Foreground = new SolidColorBrush(palette.Haze) });
+        var title = next.Number is { Length: > 0 } number
+            ? next.Title is { Length: > 0 } named ? T.ReaderChapterLineTitled(number, named) : T.ReaderChapterLine(number)
+            : next.Title ?? next.Label;
+        words.Children.Add(new TextBlock { Text = title, FontSize = 20, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Foreground = new SolidColorBrush(palette.Silk), TextWrapping = TextWrapping.WrapWholeWords, MaxLines = 2 });
+        var images = next.Pages is { } count && count > 0 ? T.ReaderDividerImages(count) : null;
+        var source = Reader.End?.NextSource is { Length: > 0 } from ? from : null;
+        var facts = (images, source) switch
+        {
+            ({ } i, { } s) => T.ReaderDividerFactsSource(i, s),
+            (null, { } s) => T.ReaderEndFrom(s),
+            (var i, null) => i,
+        };
+        if (facts is not null)
+            words.Children.Add(new TextBlock { Text = facts, FontSize = 15, Foreground = new SolidColorBrush(palette.Haze) });
+        marker.Children.Add(words);
+        AutomationProperties.SetName(words, facts is null ? title : title + ", " + facts);
+        AutomationProperties.SetHeadingLevel(words, AutomationHeadingLevel.Level2);
+
+        // Its first image, where the chapter's first image will be once it opens.
         if (Reader.NextPreview is { } preview)
         {
-            var image = new PageImageView { Height = 200, Width = 140, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 16, 0, 0), Dim = palette.Paper };
-            image.Show(preview, owner.Scale);
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(image, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
-            stack.Children.Add(image);
+            footPreview = preview;
+            footLead = HeightOf(preview);
+            var lead = new PageImageView { Width = columnWidth, Height = footLead, Dim = palette.Paper, Cut = palette.Paper };
+            lead.Show(preview, owner.Scale);
+            AutomationProperties.SetAccessibilityView(lead, AccessibilityView.Raw);
+            marker.Children.Add(lead);
         }
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(stack, T.ReaderEndNext + ", " + (next.Title ?? next.Label));
-        return stack;
+        else
+        {
+            footLead = columnWidth * 1.42;
+            var plate = new Border
+            {
+                Height = footLead,
+                Background = new SolidColorBrush(palette.Raised),
+                Child = new TextBlock
+                {
+                    Text = next.Number is { Length: > 0 } n ? T.ReaderChapterLine(n) : next.Label,
+                    FontSize = 15,
+                    Foreground = new SolidColorBrush(palette.Haze),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                },
+            };
+            AutomationProperties.SetAccessibilityView(plate, AccessibilityView.Raw);
+            marker.Children.Add(plate);
+        }
+        return marker;
     }
 
     /// <summary>Only the images within a couple of windows of the view are mounted.</summary>
     void Mount()
     {
-        if (parts.Count == 0)
+        if (Current is null)
             return;
         var top = scroll.VerticalOffset - ActualHeight * 1.5;
         var bottom = scroll.VerticalOffset + ActualHeight * 2.5;
-        var want = new HashSet<int>();
-        for (var i = 0; i < parts.Count; i++)
+        var want = new HashSet<(Section, int)>();
+        foreach (var section in sections)
         {
-            var h = HeightOf(parts[i]);
-            if (tops[i] + h >= top && tops[i] <= bottom)
-                want.Add(i);
+            if (section.Bottom < top || section.Top > bottom || section.Tops.Count != section.Parts.Count)
+                continue;
+            for (var i = 0; i < section.Parts.Count; i++)
+            {
+                var h = HeightOf(section, section.Parts[i]);
+                if (section.Tops[i] + h >= top && section.Tops[i] <= bottom)
+                    want.Add((section, i));
+            }
         }
         foreach (var gone in live.Keys.Where(k => !want.Contains(k)).ToList())
+            Unmount(gone);
+        var atOnce = carry;
+        if (want.Count > 0)
+            carry = false;
+        foreach (var key in want)
         {
-            column.Children.Remove(live[gone]);
-            live.Remove(gone);
-        }
-        var total = parts.Count;
-        foreach (var index in want)
-        {
-            if (live.ContainsKey(index))
+            if (live.ContainsKey(key))
                 continue;
-            var part = parts[index];
-            var view = new PartView(Reader, part, chapter, owner.Palette, HorizontalAlignment.Center, true, false,
-                T.WindowsReaderPageLabel(index + 1, total))
+            var (section, index) = key;
+            var part = section.Parts[index];
+            var view = new PartView(Reader, part, section.Chapter, owner.PagePalette, HorizontalAlignment.Center, true, false,
+                T.WindowsReaderImageLabel(index + 1, section.Parts.Count), atOnce,
+                section.Kept.Count > 0 ? p => FileFor(section, p) : null)
             {
                 Width = columnWidth,
-                Height = HeightOf(part),
+                Height = HeightOf(section, part),
             };
-            Canvas.SetTop(view, tops[index]);
+            Canvas.SetTop(view, section.Tops[index]);
+            // Over the marker's first image, which it takes over from.
+            Canvas.SetZIndex(view, 1);
             column.Children.Add(view);
-            live[index] = view;
+            live[key] = view;
             view.Refresh(owner.Scale);
-            if (Reader.FileOf(part, chapter) is null && Reader.FailureOf(part, chapter) is null)
+            if (section == Current && Reader.FileOf(part, section.Chapter) is null && Reader.FailureOf(part, section.Chapter) is null)
                 Reader.NeedPage(part.Page);
         }
     }
 
+    void Unmount((Section, int) key)
+    {
+        if (live.Remove(key, out var view))
+            column.Children.Remove(view);
+    }
+
     void Restore()
     {
-        if (parts.Count == 0 || tops.Count != parts.Count)
+        if (Current is not { } section || section.Parts.Count == 0 || section.Tops.Count != section.Parts.Count)
             return;
         var at = Reader.StripRestore ?? Reader.View?.Start.Strip;
         if (at is null)
         {
-            scroll.ChangeView(null, 0, null, true);
+            scroll.ChangeView(null, section.Top, null, true);
             return;
         }
-        var index = Math.Min((int)at.Image, parts.Count - 1);
-        scroll.ChangeView(null, tops[index] + at.Offset * HeightOf(parts[index]), null, true);
+        var index = Math.Min((int)at.Image, section.Parts.Count - 1);
+        scroll.ChangeView(null, section.Tops[index] + at.Offset * HeightOf(section, section.Parts[index]), null, true);
     }
 
     void Track(bool moving)
     {
         Mount();
-        if (parts.Count == 0 || tops.Count != parts.Count)
+        if (Current is not { } current || current.Tops.Count != current.Parts.Count)
             return;
         var y = scroll.VerticalOffset;
+        var middle = y + scroll.ViewportHeight / 2;
         var footNow = y + scroll.ViewportHeight >= scroll.ExtentHeight - 40;
-        var found = parts.Count - 1;
-        for (var i = 0; i < parts.Count; i++)
+
+        // The chapter under the window's middle names the group's line and the scrubber.
+        var under = sections.LastOrDefault(s => s.Top <= middle) ?? sections[0];
+        var found = 0;
+        for (var i = 0; i < under.Parts.Count && i < under.Tops.Count; i++)
         {
-            if (y < tops[i] + HeightOf(parts[i]) + Gap)
-            {
-                found = i;
+            found = i;
+            if (y < under.Tops[i] + HeightOf(under, under.Parts[i]) + Gap)
                 break;
-            }
         }
-        if (found != image)
+        if (found != image || under != shown)
         {
             image = found;
+            shown = under;
             owner.PositionChanged();
         }
-        if (!restoring && !moving)
+        // Narrator hears the image once the scroll comes to rest on a new one.
+        if (!moving && (found != spoken || under != spokenIn))
         {
-            var h = HeightOf(parts[found]);
-            var into = h > 0 ? Math.Clamp((y - tops[found]) / h, 0, 1) : 0;
+            spoken = found;
+            spokenIn = under;
+            if (!restoring)
+                owner.StripSettled();
+        }
+        if (!restoring && !moving && under == current && current.Parts.Count > 0)
+        {
+            var h = HeightOf(current, current.Parts[found]);
+            var into = h > 0 ? Math.Clamp((y - current.Tops[found]) / h, 0, 1) : 0;
             Reader.StripAt(new StripPos((uint)found, (float)into), footNow);
         }
-        if (footNow && !atFoot && !restoring)
-            FollowSoon();
-        if (!footNow)
-            follow.Stop();
-        atFoot = footNow;
+
+        // The marker into the next chapter reached the middle: the chapter opens under it.
+        if (!restoring && Flows && foot is not null and not EndPageView && !Reader.Flowing
+            && Canvas.GetTop(foot) <= middle && Reader.View?.Next is not null)
+            Reader.FlowOn();
+
+        if (!moving)
+            Trim();
     }
 
-    /// <summary>The person reached the foot: a moment later, if they are still there, the next chapter follows.</summary>
-    void FollowSoon()
+    /// <summary>A chapter far above the window is let go, and the scroll keeps its place.</summary>
+    void Trim()
     {
-        if ((Reader.View?.Next) is null)
+        var y = scroll.VerticalOffset;
+        if (sections.Count < 3 || sections[0].Bottom >= y - ActualHeight * 3)
             return;
-        follow.Stop();
-        follow.Start();
-    }
-
-    void FollowOn()
-    {
-        if (!atFoot || scroll.VerticalOffset <= 0)
-            return;
-        Reader.FlowOn();
+        var gone = sections[0];
+        foreach (var key in live.Keys.Where(k => k.Item1 == gone).ToList())
+            Unmount(key);
+        if (gone.Marker is not null)
+            column.Children.Remove(gone.Marker);
+        sections.RemoveAt(0);
+        var shift = sections[0].Top;
+        Layout();
+        scroll.ChangeView(null, Math.Max(0, y - shift), null, true);
     }
 
     // Moving
@@ -305,14 +464,15 @@ sealed class StripView : Grid
         scroll.ChangeView(null, last ? scroll.ScrollableHeight : 0, null, !Motion.Enabled || owner.PaperMode);
     }
 
-    /// <summary>To the top of an image, counted from 0: the scrubber and the engine's moves.</summary>
+    /// <summary>To the top of an image of the chapter under the middle, counted from 0: the scrubber and the engine's moves.</summary>
     public void JumpTo(int index)
     {
-        if (parts.Count == 0 || tops.Count != parts.Count)
+        var section = shown ?? Current;
+        if (section is null || section.Parts.Count == 0 || section.Tops.Count != section.Parts.Count)
             return;
         restoring = false;
-        index = Math.Clamp(index, 0, parts.Count - 1);
-        scroll.ChangeView(null, tops[index], null, !Motion.Enabled || owner.PaperMode);
+        index = Math.Clamp(index, 0, section.Parts.Count - 1);
+        scroll.ChangeView(null, section.Tops[index], null, !Motion.Enabled || owner.PaperMode);
     }
 
     /// <summary>The engine moved the place: a restore, as on opening.</summary>

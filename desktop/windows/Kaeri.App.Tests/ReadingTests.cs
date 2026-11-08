@@ -114,32 +114,6 @@ public class ReadingTests
         Assert.Equal(SettingScope.Device, ReaderSession.HomeScope(ReaderSettingKey.CropBorders));
     }
 
-    [Fact]
-    public void TheEndPageSaysSendingOnlyForABookServerSetToReceiveProgress()
-    {
-        static BookServerRow Server(string id, bool report, bool off = false) =>
-            new(Id: id, Kind: BookServerKind.Kavita, Name: "Books", Address: "https://books.home.example:5000/api/opds", ReportProgress: report, Off: off);
-        var to = ReaderSession.ReceivingServer("s1", [Server("s2", true), Server("s1", true)]);
-        Assert.NotNull(to);
-        Assert.Equal("s1", to.Value.Server);
-        Assert.Equal("books.home.example", to.Value.Host);
-        Assert.Null(ReaderSession.ReceivingServer("s1", [Server("s1", false)]));
-        Assert.Null(ReaderSession.ReceivingServer("s1", [Server("s1", true, off: true)]));
-        // A folder or a plugin is no server.
-        Assert.Null(ReaderSession.ReceivingServer("folder-1", [Server("s1", true)]));
-        Assert.Null(ReaderSession.ReceivingServer(null, [Server("s1", true)]));
-        Assert.Null(ReaderSession.ReceivingServer("s1", null));
-        Assert.Equal("books.home.example", ReaderSession.HostOf("http://books.home.example"));
-        Assert.Equal("books.home.example", ReaderSession.HostOf("books.home.example"));
-
-        // The window's wiring asks Your sources; with nothing loaded there is no server.
-        var known = new Known();
-        known.SendReadingWith(_ => { });
-        Assert.NotNull(known.Reader.ProgressServer);
-        Assert.Null(known.ProgressServerOf("a:900301"));
-        Assert.Null(known.Reader.ServerSending);
-    }
-
     /// <summary>A reading scene with the models wired as the window wires them.</summary>
     sealed class Scene : IDisposable
     {

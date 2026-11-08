@@ -53,18 +53,6 @@ public sealed class Known
         Books.Send = send;
         Reader.Send = send;
         Reading.Sending.Send = send;
-        Reader.ProgressServer = ProgressServerOf;
-    }
-
-    /// <summary>
-    /// The book server a work reads from, when it is set to receive progress: the series' edition
-    /// names the source, Your sources says whether it is a server that wants progress.
-    /// </summary>
-    public (string Server, string Host)? ProgressServerOf(string work)
-    {
-        var source = (Reading.Series.TryGetValue(work, out var series) ? series.Edition?.SourceId : null)
-            ?? (Reading.Chapters.TryGetValue(work, out var chapters) ? chapters.Edition?.SourceId : null);
-        return ReaderSession.ReceivingServer(source, Books.View?.Servers);
     }
 
     /// <summary>Each show's own settings sheet, as the engine last sent it, by AniList id.</summary>
