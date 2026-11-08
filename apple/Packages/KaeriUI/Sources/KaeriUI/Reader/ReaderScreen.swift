@@ -54,6 +54,8 @@ public struct ReaderScreen: View {
         }
         .ignoresSafeArea()
         .onChange(of: voiceOver, initial: true) { _, on in model.pinChrome = on }
+        // The book's decoded pages go with the reader: a page is drawn again from its file.
+        .onDisappear { PageImages.removeAll() }
         .preferredColorScheme(system ? nil : theme.scheme)
         .environment(\.readerPaper, paper)
         .environment(\.readerClose, close)

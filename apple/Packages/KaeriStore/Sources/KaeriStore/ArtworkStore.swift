@@ -66,8 +66,9 @@ public final class ArtworkStore {
     /// last only when a screen shows it again, the last wait later.
     public static let backoff: [Duration] = [.seconds(2), .seconds(5), .seconds(15), .seconds(60)]
 
-    /// How many bytes of decoded pixels the cache keeps, unless the store is told otherwise.
-    public static let costLimit = 256 << 20
+    /// How many bytes of decoded pixels the cache keeps, unless the store is told otherwise: art
+    /// off screen, about two screens of covers. Art on screen is held apart from it.
+    public static let costLimit = 96 << 20
 
     /// What a view reading a URL's art observes: bumped each time that art lands. One per URL,
     /// so art landing redraws the views showing it and no others.
@@ -158,8 +159,18 @@ public final class ArtworkStore {
         defer { hide(url) }
         request(url, maxPixelSize: maxPixelSize)
         scheduleRetry(url)
-        while !Task.isCancelled {
-            try? await Task.sleep(for: .seconds(3600))
+        await Self.untilCancelled()
+    }
+
+    /// Wait until the calling task is cancelled, with no timer: a long `Task.sleep` cancelled
+    /// early keeps its timer, and what the timer wakes, until its deadline, so each cover
+    /// scrolled past would hold on to them for that long.
+    nonisolated static func untilCancelled() async {
+        let (stream, ended) = AsyncStream<Never>.makeStream()
+        await withTaskCancellationHandler {
+            for await _ in stream {}
+        } onCancel: {
+            ended.finish()
         }
     }
 

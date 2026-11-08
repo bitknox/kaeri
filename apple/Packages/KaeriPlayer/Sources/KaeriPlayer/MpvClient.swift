@@ -22,6 +22,12 @@ public struct MpvConfiguration: Sendable {
     /// legacy family name, which for a variable font is its default instance's) makes it the
     /// first fallback, before Core Text's. On iOS it is the font the app bundles, on the Mac none.
     public var subtitleFallback: SubtitleFont?
+    /// How much of a stream mpv reads ahead and keeps behind the playhead, in the app's memory
+    /// (`demuxer-max-bytes`, `demuxer-max-back-bytes`). mpv's own, 150 and 50 MiB, are for a
+    /// player on its own; at a few megabits a second these are a couple of minutes ahead and
+    /// half a minute back, which seeking back a little and riding out a slow network need.
+    public var readAhead = "64MiB"
+    public var keptBehind = "16MiB"
     /// Any other mpv options, set before start, after these.
     public var options: [String: String] = [:]
     /// The address of the engine's audio tap callback (`audioTapCallback()`), for finding skip
@@ -126,6 +132,8 @@ public actor MpvClient {
                 ("input-default-bindings", "no"),
                 ("input-vo-keyboard", "no"),
                 ("embeddedfonts", "yes"),
+                ("demuxer-max-bytes", configuration.readAhead),
+                ("demuxer-max-back-bytes", configuration.keptBehind),
             ]
             if let fallback = configuration.subtitleFallback {
                 options.append(("sub-fonts-dir", fallback.directory.path))
