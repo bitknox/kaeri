@@ -75,6 +75,8 @@ struct Running {
     lan: Option<fn() -> Lan>,
     /// The title language setting, so series are named as in the apps.
     titles: Option<kaeri_meta::titles::Titles>,
+    /// The sections' names in the app's language. `None` until it is set: English.
+    words: Option<Words>,
 }
 
 /// Which shelves the feed shares, as the config says.
@@ -286,6 +288,16 @@ impl Feed {
     /// Name series in the title language `titles` follows.
     pub fn use_titles(&self, titles: kaeri_meta::titles::Titles) {
         self.state().titles = Some(titles);
+    }
+
+    /// Name the sections in the language `tag` names.
+    pub fn use_language(&self, tag: &str) {
+        self.state().words = Some(Words::in_language(tag));
+    }
+
+    /// The sections' names in the app's language.
+    fn words(&self) -> Words {
+        self.state().words.clone().unwrap_or_else(|| Words::in_language("en"))
     }
 
     /// The form of a title to show now.
@@ -744,7 +756,8 @@ async fn handle(
         Response::text("429 Too Many Requests", "Too many wrong passwords. Try again later.")
     } else if authorised(&request, password) {
         feed.forgive(peer);
-        let response = route(&request.path, store, feed.shares(), feed.title_form()).await;
+        let response =
+            route(&request.path, store, feed.shares(), feed.title_form(), &feed.words()).await;
         let file = !request.head
             && response.status.starts_with("200")
             && matches!(response.body, Body::File(_));
@@ -1017,7 +1030,30 @@ fn book_entry(book: &Shelved) -> Entry {
     }
 }
 
-async fn route(path: &str, store: Store, shares: Shares, form: TitleForm) -> Response {
+/// What the feed calls its sections, in the app's language.
+#[derive(Debug, Clone)]
+struct Words {
+    downloads: String,
+    folders: String,
+}
+
+impl Words {
+    fn in_language(tag: &str) -> Words {
+        use kaeri_model::{Msg, ReadingMsg};
+        Words {
+            downloads: Msg::from(ReadingMsg::ReadFeedDownloads).text_in(tag),
+            folders: crate::read_sources::folders_name(tag),
+        }
+    }
+}
+
+async fn route(
+    path: &str,
+    store: Store,
+    shares: Shares,
+    form: TitleForm,
+    words: &Words,
+) -> Response {
     let segments: Vec<String> =
         path.trim_matches('/').split('/').filter(|s| !s.is_empty()).map(decode).collect();
     let parts: Vec<&str> = segments.iter().map(String::as_str).collect();
@@ -1030,15 +1066,15 @@ async fn route(path: &str, store: Store, shares: Shares, form: TitleForm) -> Res
         return Response::text("404 Not Found", "Not found");
     }
     match parts.as_slice() {
-        ["opds"] => Response::document(&root(&store, shares)),
-        ["opds", "downloads"] => Response::document(&downloads(&store, form)),
+        ["opds"] => Response::document(&root(&store, shares, words)),
+        ["opds", "downloads"] => Response::document(&downloads(&store, form, words)),
         ["opds", "downloads", work] => Response::document(&acquisition(
             &format!("urn:kaeri:downloads:{work}"),
             &title_of(&store, work, form),
             &format!("/opds/downloads/{}", encode(work)),
             &download_books(&store, work, form),
         )),
-        ["opds", "folders"] => Response::document(&folders(&store, shares)),
+        ["opds", "folders"] => Response::document(&folders(&store, shares, words)),
         ["opds", "folders", series] if folder_shared(&store, series, shares) => {
             Response::document(&acquisition(
                 &format!("urn:kaeri:folders:{series}"),
@@ -1084,7 +1120,7 @@ fn folder_shared(store: &Store, series: &str, shares: Shares) -> bool {
     })
 }
 
-fn root(store: &Store, shares: Shares) -> Document {
+fn root(store: &Store, shares: Shares, words: &Words) -> Document {
     let mut feed = base_feed("urn:kaeri:opds", "Kaeri", FeedKind::Navigation, "/opds");
     let down = store.book_download_works().unwrap_or_default().len();
     let folders = store
@@ -1096,7 +1132,7 @@ fn root(store: &Store, shares: Shares) -> Document {
     if shares.downloads {
         feed.entries.push(section(
             "urn:kaeri:downloads",
-            "Downloads",
+            &words.downloads,
             "/opds/downloads",
             FeedKind::Navigation,
             Some(down.to_string()),
@@ -1105,7 +1141,7 @@ fn root(store: &Store, shares: Shares) -> Document {
     if shares.manga || shares.novels {
         feed.entries.push(section(
             "urn:kaeri:folders",
-            "Folders",
+            &words.folders,
             "/opds/folders",
             FeedKind::Navigation,
             Some(folders.to_string()),
@@ -1114,9 +1150,13 @@ fn root(store: &Store, shares: Shares) -> Document {
     feed
 }
 
-fn downloads(store: &Store, form: TitleForm) -> Document {
-    let mut feed =
-        base_feed("urn:kaeri:downloads", "Downloads", FeedKind::Navigation, "/opds/downloads");
+fn downloads(store: &Store, form: TitleForm, words: &Words) -> Document {
+    let mut feed = base_feed(
+        "urn:kaeri:downloads",
+        &words.downloads,
+        FeedKind::Navigation,
+        "/opds/downloads",
+    );
     let mut works = store.book_download_works().unwrap_or_default();
     works.sort();
     for work in works {
@@ -1134,9 +1174,9 @@ fn downloads(store: &Store, form: TitleForm) -> Document {
     feed
 }
 
-fn folders(store: &Store, shares: Shares) -> Document {
+fn folders(store: &Store, shares: Shares, words: &Words) -> Document {
     let mut feed =
-        base_feed("urn:kaeri:folders", "Folders", FeedKind::Navigation, "/opds/folders");
+        base_feed("urn:kaeri:folders", &words.folders, FeedKind::Navigation, "/opds/folders");
     for series in store
         .local_book_series()
         .unwrap_or_default()

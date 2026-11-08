@@ -174,12 +174,12 @@ settings-presence-button = View on { $tracker }
 settings-presence-nothing = Watching anime
 
 # Preview of the Discord presence: the episode line with the total.
-# @arg episode: int
-# @arg total: int
+# @arg episode: plain
+# @arg total: plain
 settings-presence-episode-of = Episode { $episode } of { $total }
 
 # Preview of the Discord presence: the episode line without a total.
-# @arg episode: int
+# @arg episode: plain
 settings-presence-episode = Episode { $episode }
 
 # Under the Discord preview while presence is on.
@@ -241,7 +241,7 @@ settings-when-day = { $day } { $time }
 
 # VoiceOver label of a row of the week: the show, the episode and when it airs.
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 # @arg when: text
 settings-week-row-label = { $title }, episode { $episode }, { $when }
 

@@ -164,3 +164,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } bagian { $title } siap dibaca offline.
  }
 reading-downloads-done-series = Bab dari { $count } seri siap dibaca offline.
+read-source-folders = Folder
+reading-since-january = sejak Januari
+reading-since-february = sejak Februari
+reading-since-march = sejak Maret
+reading-since-april = sejak April
+reading-since-may = sejak Mei
+reading-since-june = sejak Juni
+reading-since-july = sejak Juli
+reading-since-august = sejak Agustus
+reading-since-september = sejak September
+reading-since-october = sejak Oktober
+reading-since-november = sejak November
+reading-since-december = sejak Desember

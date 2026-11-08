@@ -129,7 +129,7 @@ title-rating-2 = Awful
 title-rating-1 = Appalling
 
 # Place of a title in the watch order: the nth season of its franchise. Sits in a narrow column.
-# @arg number: int
+# @arg number: plain
 # @max 16
 # @only tui
 title-season = Season { $number }
@@ -168,7 +168,7 @@ title-release-first = Whichever { -release } the { -source } ranks first
 title-available-on = Available on { $services }
 
 # Beside the progress meter on the title page: the episode that follows what has been watched.
-# @arg next: int
+# @arg next: plain
 # @only tui
 title-up-next = { -up-next-cap }: episode { $next }
 
@@ -260,7 +260,7 @@ episodes-showing-unwatched = Showing unwatched episodes.
 episodes-showing-no-filler = Showing episodes without filler.
 
 # Top right of the episode table: how far the dub goes, for a dub that stops short of what has aired.
-# @arg through: int
+# @arg through: plain
 # @only tui
 episodes-dub-through = Dub to episode { $through }
 
@@ -291,7 +291,7 @@ episodes-empty-no-source-hint = AniList lists no episodes for this title yet, an
 episodes-empty-unaired = Nothing has aired yet
 
 # Under the heading when the title has not aired yet. The span is short, such as 2d 3h.
-# @arg episode: int
+# @arg episode: plain
 # @arg span: text
 # @only tui
 episodes-empty-unaired-hint = Episode { $episode } airs in { $span }.

@@ -8422,6 +8422,114 @@
     "by": "agent",
     "at": "2026-11-01"
   },
+  "home-more-genre-action": {
+    "source": "22632da674a2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-adventure": {
+    "source": "727d81686157",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-comedy": {
+    "source": "b53233e6c816",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-drama": {
+    "source": "0862bc0cb911",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-ecchi": {
+    "source": "b43aca702d09",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-fantasy": {
+    "source": "b84022d22eb1",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-horror": {
+    "source": "8143b89e18a2",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-mahou-shoujo": {
+    "source": "ea2c10eededc",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-mecha": {
+    "source": "359eb5a17669",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-music": {
+    "source": "42453f18b444",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-mystery": {
+    "source": "1accbd2af114",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-psychological": {
+    "source": "1ce243d80ee7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-romance": {
+    "source": "b2a3b0a9e950",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-sci-fi": {
+    "source": "1fbcb0853d5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-slice-of-life": {
+    "source": "e7603437c972",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-sports": {
+    "source": "4d775f0243ef",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-supernatural": {
+    "source": "19b0d84b0cac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "home-more-genre-thriller": {
+    "source": "c7b2250d8a11",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
   "home-next": {
     "source": "0fbf6dc6a196",
     "state": "draft",
@@ -20075,6 +20183,12 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-source-folders": {
+    "source": "d4d3a1e6f326",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
   "reader-action-controls": {
     "source": "83cd32b685cc",
     "state": "draft",
@@ -22479,6 +22593,78 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "reading-since-april": {
+    "source": "c4aa34ef8e3d",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-august": {
+    "source": "b7840555cda4",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-december": {
+    "source": "4e8fc9e093ac",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-february": {
+    "source": "6eb02e163725",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-january": {
+    "source": "d7749b2a5a5c",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-july": {
+    "source": "fc43d3136f29",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-june": {
+    "source": "fc3ce3136f23",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-march": {
+    "source": "b8d492526d12",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-may": {
+    "source": "9479f0a84db9",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-november": {
+    "source": "2376e1c01263",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-october": {
+    "source": "b640c0d81e9b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reading-since-september": {
+    "source": "7edc8631d6f6",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
   },
   "reading-split-chapter": {
     "source": "066d71a2dffa",

@@ -58,31 +58,31 @@ public static partial class T
     public static string CastPhaseStarting(string name) => Fill(Get("CastPhaseStarting"), ("name", name));
 
     /// <summary>The casting card's line while a cast starts, past its first 4 seconds, counting the seconds since the tap.</summary>
-    public static string CastPhaseStartingFor(string name, long seconds) => Fill(Get("CastPhaseStartingFor"), ("name", name), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CastPhaseStartingFor(string name, long seconds) => Fill(Get("CastPhaseStartingFor"), ("name", name), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The casting card's line while the TV opens its player or loads the stream, past the first 4 seconds of the start.</summary>
-    public static string CastPhaseWaiting(string name, long seconds) => Fill(Get("CastPhaseWaiting"), ("name", name), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CastPhaseWaiting(string name, long seconds) => Fill(Get("CastPhaseWaiting"), ("name", name), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The casting card's line while this device reads the stream and makes it ready for the TV, past the first 4 seconds of the start.</summary>
-    public static string CastPhasePreparing(long seconds) => Fill(Get("CastPhasePreparing"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CastPhasePreparing(long seconds) => Fill(Get("CastPhasePreparing"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, when it was written under a minute ago.</summary>
     public static string DiscussionAgeNow => Get("DiscussionAgeNow");
 
     /// <summary>A comment's age, beside its author, in minutes. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeMinutes(long minutes) => Fill(Get("DiscussionAgeMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeMinutes(long minutes) => Fill(Get("DiscussionAgeMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, in hours. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeHours(long hours) => Fill(Get("DiscussionAgeHours"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeHours(long hours) => Fill(Get("DiscussionAgeHours"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, in days. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeDays(long days) => Fill(Get("DiscussionAgeDays"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeDays(long days) => Fill(Get("DiscussionAgeDays"), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, in weeks. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeWeeks(long weeks) => Fill(Get("DiscussionAgeWeeks"), ("weeks", weeks.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeWeeks(long weeks) => Fill(Get("DiscussionAgeWeeks"), ("weeks", weeks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A comment's age, beside its author, in years. Abbreviated, as a timeline shows it.</summary>
-    public static string DiscussionAgeYears(long years) => Fill(Get("DiscussionAgeYears"), ("years", years.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionAgeYears(long years) => Fill(Get("DiscussionAgeYears"), ("years", years.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when a like on a comment did not reach AniList. The like is taken back.</summary>
     public static string NoticeCommentLikeFailed => Get("NoticeCommentLikeFailed");
@@ -112,7 +112,7 @@ public static partial class T
     public static string HomeSpotlightPopular => Get("HomeSpotlightPopular");
 
     /// <summary>Line under the spotlight's title, and under a { -continue-cap } card, for an episode part way through: the episode and the minutes left in it.</summary>
-    public static string HomeTimeLeft(long episode, long minutes) => Fill(Get("HomeTimeLeft"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string HomeTimeLeft(long episode, long minutes) => Fill(Get("HomeTimeLeft"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under the spotlight's title, and under a { -continue-cap } card, for a show still airing whose next episode is its newest one out.</summary>
     public static string HomeEpisodeOut(long episode) => Fill(Get("HomeEpisodeOut"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -171,8 +171,62 @@ public static partial class T
     /// <summary>Heading over recommendations from one show the person finished and rated well. The title is that show.</summary>
     public static string HomeBecause(string title) => Fill(Get("HomeBecause"), ("title", title));
 
-    /// <summary>Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".</summary>
+    /// <summary>Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.</summary>
     public static string HomeMoreGenre(string genre) => Fill(Get("HomeMoreGenre"), ("genre", genre));
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreAction => Get("HomeMoreGenreAction");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreAdventure => Get("HomeMoreGenreAdventure");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreComedy => Get("HomeMoreGenreComedy");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreDrama => Get("HomeMoreGenreDrama");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreEcchi => Get("HomeMoreGenreEcchi");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreFantasy => Get("HomeMoreGenreFantasy");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreHorror => Get("HomeMoreGenreHorror");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreMahouShoujo => Get("HomeMoreGenreMahouShoujo");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreMecha => Get("HomeMoreGenreMecha");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreMusic => Get("HomeMoreGenreMusic");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreMystery => Get("HomeMoreGenreMystery");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenrePsychological => Get("HomeMoreGenrePsychological");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreRomance => Get("HomeMoreGenreRomance");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreSciFi => Get("HomeMoreGenreSciFi");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreSliceOfLife => Get("HomeMoreGenreSliceOfLife");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreSports => Get("HomeMoreGenreSports");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreSupernatural => Get("HomeMoreGenreSupernatural");
+
+    /// <summary>Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.</summary>
+    public static string HomeMoreGenreThriller => Get("HomeMoreGenreThriller");
 
     /// <summary>Line over the spotlight's title when it is the built-in demo.</summary>
     public static string HomeSpotlightDemo => Get("HomeSpotlightDemo");
@@ -205,7 +259,7 @@ public static partial class T
     public static string CauseAirsTomorrow(string time) => Fill(Get("CauseAirsTomorrow"), ("time", time));
 
     /// <summary>Part of an air time: the broadcast is within the next week.</summary>
-    public static string CauseAirsInDays(long days, string time) => Fill(GetPlural("CauseAirsInDays", days), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("time", time));
+    public static string CauseAirsInDays(long days, string time) => Fill(GetPlural("CauseAirsInDays", days), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("time", time));
 
     /// <summary>Part of an air time: the broadcast is more than a week away. The date is year-month-day.</summary>
     public static string CauseAirsOnDate(string date, string time) => Fill(Get("CauseAirsOnDate"), ("date", date), ("time", time));
@@ -235,13 +289,13 @@ public static partial class T
     public static string CauseNoSourceCouldListShow => Get("CauseNoSourceCouldListShow");
 
     /// <summary>Part of a finished download's toast: subtitle files were merged into the video.</summary>
-    public static string CauseSubtitlesMerged(long tracks) => Fill(GetPlural("CauseSubtitlesMerged", tracks), ("tracks", tracks.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CauseSubtitlesMerged(long tracks) => Fill(GetPlural("CauseSubtitlesMerged", tracks), ("tracks", tracks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Part of a finished download's toast: merging failed, so the subtitles stay as files beside it.</summary>
     public static string CauseSubtitlesLeftApart(string reason) => Fill(Get("CauseSubtitlesLeftApart"), ("reason", reason));
 
     /// <summary>Part of a download toast: how many episodes of the range were in the queue already.</summary>
-    public static string CauseAlreadyInDownloads(long count) => Fill(GetPlural("CauseAlreadyInDownloads", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CauseAlreadyInDownloads(long count) => Fill(GetPlural("CauseAlreadyInDownloads", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Job note while a play looks the title up.</summary>
     public static string StatusLookingUpTitle => Get("StatusLookingUpTitle");
@@ -277,7 +331,7 @@ public static partial class T
     public static string NoticePlayerFailedToStart(string reason) => Fill(Get("NoticePlayerFailedToStart"), ("reason", reason));
 
     /// <summary>Toast when a stream never showed a frame and the next one is tried.</summary>
-    public static string NoticeStreamNoVideo(long next, long total) => Fill(Get("NoticeStreamNoVideo"), ("next", next.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeStreamNoVideo(long next, long total) => Fill(Get("NoticeStreamNoVideo"), ("next", next.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when mpv gave up on a file. The reason is mpv's own line.</summary>
     public static string NoticePlayerCouldNotPlay(string reason) => Fill(Get("NoticePlayerCouldNotPlay"), ("reason", reason));
@@ -286,7 +340,7 @@ public static partial class T
     public static string NoticePlayerExitedSilently => Get("NoticePlayerExitedSilently");
 
     /// <summary>Toast when no picture has appeared a while after the player opened.</summary>
-    public static string NoticePlayerNotPlaying(long seconds) => Fill(Get("NoticePlayerNotPlaying"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticePlayerNotPlaying(long seconds) => Fill(Get("NoticePlayerNotPlaying"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when a play is asked for in a build with no player.</summary>
     public static string NoticeNoPlayer => Get("NoticeNoPlayer");
@@ -409,10 +463,10 @@ public static partial class T
     public static string NoticeDownloadRemoved => Get("NoticeDownloadRemoved");
 
     /// <summary>Toast after finished downloads were cleared from the list.</summary>
-    public static string NoticeDownloadsCleared(long count) => Fill(GetPlural("NoticeDownloadsCleared", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeDownloadsCleared(long count) => Fill(GetPlural("NoticeDownloadsCleared", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast after the skip times the viewer marked were cleared, from Settings.</summary>
-    public static string NoticeSkipMarksCleared(long count) => Fill(GetPlural("NoticeSkipMarksCleared", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeSkipMarksCleared(long count) => Fill(GetPlural("NoticeSkipMarksCleared", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast after clearing skip times from Settings when none were marked.</summary>
     public static string NoticeSkipMarksNone => Get("NoticeSkipMarksNone");
@@ -442,13 +496,13 @@ public static partial class T
     public static string NoticeDownloadsNoneNewStopped(string existing, string reason) => Fill(Get("NoticeDownloadsNoneNewStopped"), ("existing", existing), ("reason", reason));
 
     /// <summary>Toast after a range was asked for, some episodes were queued and some were there already. `existing` is the sentence of `cause-already-in-downloads`.</summary>
-    public static string NoticeEpisodesQueuedExisting(long count, string existing) => Fill(GetPlural("NoticeEpisodesQueuedExisting", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("existing", existing));
+    public static string NoticeEpisodesQueuedExisting(long count, string existing) => Fill(GetPlural("NoticeEpisodesQueuedExisting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("existing", existing));
 
     /// <summary>Toast as above, with the reason the range stopped.</summary>
-    public static string NoticeEpisodesQueuedStopped(long count, string reason) => Fill(GetPlural("NoticeEpisodesQueuedStopped", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
+    public static string NoticeEpisodesQueuedStopped(long count, string reason) => Fill(GetPlural("NoticeEpisodesQueuedStopped", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
 
     /// <summary>Toast as above, with some episodes in the queue already and the reason the range stopped. `existing` is the sentence of `cause-already-in-downloads`; `reason` is a sentence saying why the range stopped.</summary>
-    public static string NoticeEpisodesQueuedExistingStopped(long count, string existing, string reason) => Fill(GetPlural("NoticeEpisodesQueuedExistingStopped", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("existing", existing), ("reason", reason));
+    public static string NoticeEpisodesQueuedExistingStopped(long count, string existing, string reason) => Fill(GetPlural("NoticeEpisodesQueuedExistingStopped", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("existing", existing), ("reason", reason));
 
     /// <summary>Toast when keep next found no room for another episode.</summary>
     public static string NoticeKeepNextFull => Get("NoticeKeepNextFull");
@@ -502,7 +556,7 @@ public static partial class T
     public static string ReadingUsuallySundays => Get("ReadingUsuallySundays");
 
     /// <summary>Under a cover or on a series page: how often new chapters come out, in weeks.</summary>
-    public static string ReadingAboutEveryWeeks(long weeks) => Fill(GetPlural("ReadingAboutEveryWeeks", weeks), ("weeks", weeks.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingAboutEveryWeeks(long weeks) => Fill(GetPlural("ReadingAboutEveryWeeks", weeks), ("weeks", weeks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads.</summary>
     public static string ReadingAlsoAShow => Get("ReadingAlsoAShow");
@@ -517,7 +571,7 @@ public static partial class T
     public static string ReaderResumed(long page) => Fill(Get("ReaderResumed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The same notice in a webtoon strip, which counts images rather than pages.</summary>
-    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</summary>
     public static string ReaderBackToPage(long page) => Fill(Get("ReaderBackToPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -634,10 +688,10 @@ public static partial class T
     public static string ReadingStatusNotYet => Get("ReadingStatusNotYet");
 
     /// <summary>Under a cover or on a series page: how many chapters the series has.</summary>
-    public static string ReadingChapters(long count) => Fill(GetPlural("ReadingChapters", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingChapters(long count) => Fill(GetPlural("ReadingChapters", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a cover or on a series page: how many volumes the series has.</summary>
-    public static string ReadingVolumes(long count) => Fill(GetPlural("ReadingVolumes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingVolumes(long count) => Fill(GetPlural("ReadingVolumes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a cover: the series is on the person's Planning list.</summary>
     public static string ReadingOnPlanning => Get("ReadingOnPlanning");
@@ -664,7 +718,7 @@ public static partial class T
     public static string ReadingChapterPage(string chapter, long page) => Fill(Get("ReadingChapterPage"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a cover or the big picture: how far into a novel's chapter the person is.</summary>
-    public static string ReadingChapterPercent(string chapter, long percent) => Fill(Get("ReadingChapterPercent"), ("chapter", chapter), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingChapterPercent(string chapter, long percent) => Fill(Get("ReadingChapterPercent"), ("chapter", chapter), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a cover: a chapter came out that the person has not read. The chapter is its number.</summary>
     public static string ReadingChapterNew(string chapter) => Fill(Get("ReadingChapterNew"), ("chapter", chapter));
@@ -673,13 +727,13 @@ public static partial class T
     public static string ReadingNextPart(string part) => Fill(Get("ReadingNextPart"), ("part", part));
 
     /// <summary>Under a cover or the big picture: how far into a light novel's part the person is.</summary>
-    public static string ReadingPartPercent(string part, long percent) => Fill(Get("ReadingPartPercent"), ("part", part), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingPartPercent(string part, long percent) => Fill(Get("ReadingPartPercent"), ("part", part), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a cover: a light novel's part came out that the person has not read.</summary>
     public static string ReadingPartNew(string part) => Fill(Get("ReadingPartNew"), ("part", part));
 
     /// <summary>Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.</summary>
-    public static string ReadingLabelPercent(string label, long percent) => Fill(Get("ReadingLabelPercent"), ("label", label), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingLabelPercent(string label, long percent) => Fill(Get("ReadingLabelPercent"), ("label", label), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").</summary>
     public static string ReadingLabelNew(string label) => Fill(Get("ReadingLabelNew"), ("label", label));
@@ -742,7 +796,7 @@ public static partial class T
     public static string ExportChapter(string chapter) => Fill(Get("ExportChapter"), ("chapter", chapter));
 
     /// <summary>Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch.</summary>
-    public static string ExportWaitsForWifi(long n) => Fill(GetPlural("ExportWaitsForWifi", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ExportWaitsForWifi(long n) => Fill(GetPlural("ExportWaitsForWifi", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a This week cell: the chapter that came out that day, with its own title.</summary>
     public static string ReadingChapterTitled(string chapter, string title) => Fill(Get("ReadingChapterTitled"), ("chapter", chapter), ("title", title));
@@ -772,7 +826,7 @@ public static partial class T
     public static string ReadingRowWaitsWifi => Get("ReadingRowWaitsWifi");
 
     /// <summary>A chapter row's state while it downloads.</summary>
-    public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingRowDownloading(long done, long total) => Fill(Get("ReadingRowDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A chapter row's state: the download failed. The reason follows as the next part.</summary>
     public static string ReadingRowFailed => Get("ReadingRowFailed");
@@ -784,7 +838,7 @@ public static partial class T
     public static string ReadingRowPage(long page) => Fill(Get("ReadingRowPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A novel's chapter row: how far into it the person is.</summary>
-    public static string ReadingRowPercent(long percent) => Fill(Get("ReadingRowPercent"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingRowPercent(long percent) => Fill(Get("ReadingRowPercent"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A novel's chapter row: the person opened it, and how far in is too little to say as a percent.</summary>
     public static string ReadingRowOpened => Get("ReadingRowOpened");
@@ -793,16 +847,16 @@ public static partial class T
     public static string ReadingRowBookmarked => Get("ReadingRowBookmarked");
 
     /// <summary>A chapter row: how long its pages are, for a file on the device.</summary>
-    public static string ReadingRowPages(long n) => Fill(GetPlural("ReadingRowPages", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingRowPages(long n) => Fill(GetPlural("ReadingRowPages", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</summary>
-    public static string ReadingRowVersions(long n) => Fill(GetPlural("ReadingRowVersions", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingRowVersions(long n) => Fill(GetPlural("ReadingRowVersions", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A chapter row: when it was read or came out, under a minute ago.</summary>
     public static string ReadingAgoNow => Get("ReadingAgoNow");
 
     /// <summary>A chapter row: when it was read or came out, in minutes.</summary>
-    public static string ReadingAgoMinutes(long minutes) => Fill(Get("ReadingAgoMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingAgoMinutes(long minutes) => Fill(Get("ReadingAgoMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A chapter row: when it was read or came out, earlier today.</summary>
     public static string ReadingAgoToday => Get("ReadingAgoToday");
@@ -811,16 +865,16 @@ public static partial class T
     public static string ReadingAgoYesterday => Get("ReadingAgoYesterday");
 
     /// <summary>A chapter row: when it was read or came out, in days, under a week.</summary>
-    public static string ReadingAgoDays(long days) => Fill(GetPlural("ReadingAgoDays", days), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingAgoDays(long days) => Fill(GetPlural("ReadingAgoDays", days), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A chapter row: when it was read or came out, in weeks, under two months.</summary>
-    public static string ReadingAgoWeeks(long weeks) => Fill(GetPlural("ReadingAgoWeeks", weeks), ("weeks", weeks.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingAgoWeeks(long weeks) => Fill(GetPlural("ReadingAgoWeeks", weeks), ("weeks", weeks.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A chapter row: when it was read or came out, in months, under a year.</summary>
-    public static string ReadingAgoMonths(long months) => Fill(GetPlural("ReadingAgoMonths", months), ("months", months.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingAgoMonths(long months) => Fill(GetPlural("ReadingAgoMonths", months), ("months", months.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A chapter row: when it was read or came out, in years.</summary>
-    public static string ReadingAgoYears(long years) => Fill(GetPlural("ReadingAgoYears", years), ("years", years.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingAgoYears(long years) => Fill(GetPlural("ReadingAgoYears", years), ("years", years.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The tracker took the series off its list.</summary>
     public static string ReadingRemovedFrom(string tracker) => Fill(Get("ReadingRemovedFrom"), ("tracker", tracker));
@@ -847,25 +901,25 @@ public static partial class T
     public static string ReadingMissDown => Get("ReadingMissDown");
 
     /// <summary>How many parts of a light novel are downloaded.</summary>
-    public static string ReadingDlParts(long count) => Fill(GetPlural("ReadingDlParts", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingDlParts(long count) => Fill(GetPlural("ReadingDlParts", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What the downloads take up on this device.</summary>
     public static string ReadingDlSize(string size) => Fill(Get("ReadingDlSize"), ("size", size));
 
     /// <summary>How many of the downloaded chapters are read, which Delete read clears.</summary>
-    public static string ReadingDlRead(long count) => Fill(Get("ReadingDlRead"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingDlRead(long count) => Fill(Get("ReadingDlRead"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The chapter downloading now.</summary>
     public static string ReadingDlChapter(string chapter) => Fill(Get("ReadingDlChapter"), ("chapter", chapter));
 
     /// <summary>How far the chapter downloading now has come.</summary>
-    public static string ReadingDlPages(long done, long total) => Fill(Get("ReadingDlPages"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingDlPages(long done, long total) => Fill(Get("ReadingDlPages"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Chapters waiting their turn after the one downloading.</summary>
-    public static string ReadingDlMoreQueued(long count) => Fill(Get("ReadingDlMoreQueued"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingDlMoreQueued(long count) => Fill(Get("ReadingDlMoreQueued"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Chapters waiting their turn, none downloaded yet.</summary>
-    public static string ReadingDlQueued(long count) => Fill(Get("ReadingDlQueued"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingDlQueued(long count) => Fill(Get("ReadingDlQueued"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Chapters that wait for Wi-Fi to download.</summary>
     public static string ReadingDlWaitsWifi => Get("ReadingDlWaitsWifi");
@@ -889,13 +943,13 @@ public static partial class T
     public static string ReadingDownloadsDoneTitle => Get("ReadingDownloadsDoneTitle");
 
     /// <summary>The notification's text: one series' chapters are downloaded.</summary>
-    public static string ReadingDownloadsDoneChapters(string title, long count) => Fill(GetPlural("ReadingDownloadsDoneChapters", count), ("title", title), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingDownloadsDoneChapters(string title, long count) => Fill(GetPlural("ReadingDownloadsDoneChapters", count), ("title", title), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The notification's text: one light novel's parts are downloaded.</summary>
-    public static string ReadingDownloadsDoneParts(string title, long count) => Fill(GetPlural("ReadingDownloadsDoneParts", count), ("title", title), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingDownloadsDoneParts(string title, long count) => Fill(GetPlural("ReadingDownloadsDoneParts", count), ("title", title), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The notification's text: chapters of several series are downloaded.</summary>
-    public static string ReadingDownloadsDoneSeries(long count) => Fill(Get("ReadingDownloadsDoneSeries"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadingDownloadsDoneSeries(long count) => Fill(Get("ReadingDownloadsDoneSeries"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Row heading on reading's Home: manga that are trending on AniList now.</summary>
     public static string ReadHomeTrendingManga => Get("ReadHomeTrendingManga");
@@ -946,13 +1000,82 @@ public static partial class T
     public static string ReadHitEpisodes(long last) => Fill(Get("ReadHitEpisodes"), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a source's hit in Search: a light novel's parts it holds.</summary>
-    public static string ReadHitParts(long count) => Fill(GetPlural("ReadHitParts", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadHitParts(long count) => Fill(GetPlural("ReadHitParts", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a source's hit in Search: the book files it holds.</summary>
-    public static string ReadHitFiles(long count) => Fill(GetPlural("ReadHitFiles", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadHitFiles(long count) => Fill(GetPlural("ReadHitFiles", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a source's hit in Search: the book files it holds, all in one format ("CBZ").</summary>
-    public static string ReadHitFilesFormat(long count, string format) => Fill(GetPlural("ReadHitFilesFormat", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("format", format));
+    public static string ReadHitFilesFormat(long count, string format) => Fill(GetPlural("ReadHitFilesFormat", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("format", format));
+
+    /// <summary>The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.</summary>
+    public static string ReadSourceFolders => Get("ReadSourceFolders");
+
+    /// <summary>A section of the feed that e-readers fetch from: the chapters downloaded on this device.</summary>
+    public static string ReadFeedDownloads => Get("ReadFeedDownloads");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".</summary>
+    public static string ReadingSinceJanuary => Get("ReadingSinceJanuary");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".</summary>
+    public static string ReadingSinceFebruary => Get("ReadingSinceFebruary");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".</summary>
+    public static string ReadingSinceMarch => Get("ReadingSinceMarch");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".</summary>
+    public static string ReadingSinceApril => Get("ReadingSinceApril");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".</summary>
+    public static string ReadingSinceMay => Get("ReadingSinceMay");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".</summary>
+    public static string ReadingSinceJune => Get("ReadingSinceJune");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".</summary>
+    public static string ReadingSinceJuly => Get("ReadingSinceJuly");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".</summary>
+    public static string ReadingSinceAugust => Get("ReadingSinceAugust");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".</summary>
+    public static string ReadingSinceSeptember => Get("ReadingSinceSeptember");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".</summary>
+    public static string ReadingSinceOctober => Get("ReadingSinceOctober");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".</summary>
+    public static string ReadingSinceNovember => Get("ReadingSinceNovember");
+
+    /// <summary>On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".</summary>
+    public static string ReadingSinceDecember => Get("ReadingSinceDecember");
+
+    /// <summary>The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList".</summary>
+    public static string ReadViewAllTrendingManga => Get("ReadViewAllTrendingManga");
+
+    /// <summary>The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList".</summary>
+    public static string ReadViewAllTrendingWebtoons => Get("ReadViewAllTrendingWebtoons");
+
+    /// <summary>The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList".</summary>
+    public static string ReadViewAllTrendingNovels => Get("ReadViewAllTrendingNovels");
+
+    /// <summary>The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList".</summary>
+    public static string ReadViewAllNewManga => Get("ReadViewAllNewManga");
+
+    /// <summary>The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".</summary>
+    public static string ReadViewAllNewWebtoons => Get("ReadViewAllNewWebtoons");
+
+    /// <summary>The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList".</summary>
+    public static string ReadViewAllNewNovels => Get("ReadViewAllNewNovels");
+
+    /// <summary>The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList".</summary>
+    public static string ReadViewAllFinishedManga => Get("ReadViewAllFinishedManga");
+
+    /// <summary>The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList".</summary>
+    public static string ReadViewAllFinishedWebtoons => Get("ReadViewAllFinishedWebtoons");
+
+    /// <summary>The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList".</summary>
+    public static string ReadViewAllFinishedNovels => Get("ReadViewAllFinishedNovels");
 
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
@@ -973,7 +1096,7 @@ public static partial class T
     public static string StoreInviteCancelled => Get("StoreInviteCancelled");
 
     /// <summary>Toast after cancelling an invite that people joined with.</summary>
-    public static string StoreInviteCancelledKept(long count) => Fill(GetPlural("StoreInviteCancelledKept", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoreInviteCancelledKept(long count) => Fill(GetPlural("StoreInviteCancelledKept", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast after a store owner lets anyone with the store's link join.</summary>
     public static string StoreOpenJoinOn => Get("StoreOpenJoinOn");
@@ -982,7 +1105,7 @@ public static partial class T
     public static string StoreOpenJoinOff => Get("StoreOpenJoinOff");
 
     /// <summary>Toast after a store owner turns off joining with the link, when some devices joined that way.</summary>
-    public static string StoreOpenJoinOffDevices(long devices) => Fill(GetPlural("StoreOpenJoinOffDevices", devices), ("devices", devices.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoreOpenJoinOffDevices(long devices) => Fill(GetPlural("StoreOpenJoinOffDevices", devices), ("devices", devices.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast after one device that joined with the store's link is removed.</summary>
     public static string StoreDeviceRemoved => Get("StoreDeviceRemoved");
@@ -1018,10 +1141,10 @@ public static partial class T
     public static string PluginInstalledOutdated(string plugin) => Fill(Get("PluginInstalledOutdated"), ("plugin", plugin));
 
     /// <summary>Note on the sources screen when plugins were skipped because they were built for an older plugin interface.</summary>
-    public static string PluginsOutdated(long count, string names) => Fill(GetPlural("PluginsOutdated", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
+    public static string PluginsOutdated(long count, string names) => Fill(GetPlural("PluginsOutdated", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
 
     /// <summary>Toast at launch when joined plugin stores offer newer versions of installed plugins.</summary>
-    public static string PluginUpdatesReady(long count, string names) => Fill(GetPlural("PluginUpdatesReady", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
+    public static string PluginUpdatesReady(long count, string names) => Fill(GetPlural("PluginUpdatesReady", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
 
     /// <summary>Note on the sources screen when the plugins could not be loaded. The reason comes from the plugin host.</summary>
     public static string PluginsLoadFailed(string reason) => Fill(Get("PluginsLoadFailed"), ("reason", reason));
@@ -1264,7 +1387,7 @@ public static partial class T
     public static string NoticeSignedOut(string tracker) => Fill(Get("NoticeSignedOut"), ("tracker", tracker));
 
     /// <summary>Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in.</summary>
-    public static string NoticeSignedOutQueue(string tracker, long count) => Fill(GetPlural("NoticeSignedOutQueue", count), ("tracker", tracker), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeSignedOutQueue(string tracker, long count) => Fill(GetPlural("NoticeSignedOutQueue", count), ("tracker", tracker), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when signing out of a tracker failed. The reason comes from the system.</summary>
     public static string NoticeSignOutFailed(string tracker, string reason) => Fill(Get("NoticeSignOutFailed"), ("tracker", tracker), ("reason", reason));
@@ -1303,7 +1426,7 @@ public static partial class T
     public static string NoticeEpisodeAired(string title, long episode) => Fill(Get("NoticeEpisodeAired"), ("title", title), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast, and desktop notification, for several episodes that aired while the app was closed.</summary>
-    public static string NoticeEpisodesAired(long count) => Fill(GetPlural("NoticeEpisodesAired", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeEpisodesAired(long count) => Fill(GetPlural("NoticeEpisodesAired", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps.</summary>
     public static string NoticeUpdateAvailable(string tag) => Fill(Get("NoticeUpdateAvailable"), ("tag", tag));
@@ -1363,7 +1486,7 @@ public static partial class T
     public static string StartFailedPlayer(string reason) => Fill(Get("StartFailedPlayer"), ("reason", reason));
 
     /// <summary>Toast after episodes are added to the download queue.</summary>
-    public static string NoticeEpisodesQueued(long count) => Fill(GetPlural("NoticeEpisodesQueued", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NoticeEpisodesQueued(long count) => Fill(GetPlural("NoticeEpisodesQueued", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice after the subtitle style is reset. It offers Undo.</summary>
     public static string SettingsSubsResetDone => Get("SettingsSubsResetDone");
@@ -1390,7 +1513,7 @@ public static partial class T
     public static string ContinueMenuResume => Get("ContinueMenuResume");
 
     /// <summary>Line under Continue's heading: changes made offline that AniList has not had yet.</summary>
-    public static string ContinueSyncWaiting(long count) => Fill(GetPlural("ContinueSyncWaiting", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ContinueSyncWaiting(long count) => Fill(GetPlural("ContinueSyncWaiting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Calendar: a day column of the week view with nothing airing that day.</summary>
     public static string CalendarDayEmpty => Get("CalendarDayEmpty");
@@ -1426,7 +1549,7 @@ public static partial class T
     public static string CalendarCellInDubbed(long episode, string span) => Fill(Get("CalendarCellInDubbed"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("span", span));
 
     /// <summary>Library: a list's tab with how many titles are on it, such as "Watching 12".</summary>
-    public static string LibraryListCount(string list, long count) => Fill(Get("LibraryListCount"), ("list", list), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryListCount(string list, long count) => Fill(Get("LibraryListCount"), ("list", list), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search: the Sort drop-down's name before a sort is picked.</summary>
     public static string SearchSortName => Get("SearchSortName");
@@ -1435,13 +1558,13 @@ public static partial class T
     public static string FilterPickedTwo(string first, string second) => Fill(Get("FilterPickedTwo"), ("first", first), ("second", second));
 
     /// <summary>Search: a filter drop-down with three or more values picked: the first, then how many more.</summary>
-    public static string FilterPickedMore(string first, long more) => Fill(Get("FilterPickedMore"), ("first", first), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FilterPickedMore(string first, long more) => Fill(Get("FilterPickedMore"), ("first", first), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search: a genre left out of the results, as the Genre drop-down and its chip say it.</summary>
     public static string SearchGenreLeftOut(string genre) => Fill(Get("SearchGenreLeftOut"), ("genre", genre));
 
     /// <summary>Search: the screen reader's name for the Filters button while some of the panel's filters are set.</summary>
-    public static string SearchFiltersButtonSet(long count) => Fill(Get("SearchFiltersButtonSet"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SearchFiltersButtonSet(long count) => Fill(Get("SearchFiltersButtonSet"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search: the shortcut list's line for opening and closing the filters panel.</summary>
     public static string ShortcutsSearchFilters => Get("ShortcutsSearchFilters");
@@ -1549,7 +1672,7 @@ public static partial class T
     public static string SearchResultOnService(string service) => Fill(Get("SearchResultOnService"), ("service", service));
 
     /// <summary>Fix this match: the line under a result. The parts are the format, year and episode count, already joined.</summary>
-    public static string MatchChoiceLine(string parts, long percent) => Fill(Get("MatchChoiceLine"), ("parts", parts), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MatchChoiceLine(string parts, long percent) => Fill(Get("MatchChoiceLine"), ("parts", parts), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search: line while searching as you type waits for AniList's rate limit to recover. Enter runs the search at once.</summary>
     public static string SearchRateLimitEnter => Get("SearchRateLimitEnter");
@@ -1603,16 +1726,16 @@ public static partial class T
     public static string PlayerStatsRow(string label, string value) => Fill(Get("PlayerStatsRow"), ("label", label), ("value", value));
 
     /// <summary>A length of time said for a screen reader, in hours. It is joined with minutes and seconds.</summary>
-    public static string PlayerSpokenHours(long count) => Fill(GetPlural("PlayerSpokenHours", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerSpokenHours(long count) => Fill(GetPlural("PlayerSpokenHours", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A length of time said for a screen reader, in minutes. It is joined with hours and seconds.</summary>
-    public static string PlayerSpokenMinutes(long count) => Fill(GetPlural("PlayerSpokenMinutes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerSpokenMinutes(long count) => Fill(GetPlural("PlayerSpokenMinutes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A length of time said for a screen reader, in seconds. It is joined with hours and minutes.</summary>
-    public static string PlayerSpokenSeconds(long count) => Fill(GetPlural("PlayerSpokenSeconds", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerSpokenSeconds(long count) => Fill(GetPlural("PlayerSpokenSeconds", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for the volume slider. The number is 0 to 100.</summary>
-    public static string PlayerVolumeSpoken(long percent) => Fill(Get("PlayerVolumeSpoken"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerVolumeSpoken(long percent) => Fill(Get("PlayerVolumeSpoken"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of the volume button while the sound is off. The button opens the volume slider.</summary>
     public static string PlayerVolumeMuted => Get("PlayerVolumeMuted");
@@ -1630,7 +1753,7 @@ public static partial class T
     public static string WindowsReaderOpening(string chapter) => Fill(Get("WindowsReaderOpening"), ("chapter", chapter));
 
     /// <summary>The opening screen's line after a few seconds of waiting for a source to answer.</summary>
-    public static string WindowsReaderOpeningSlow(long seconds) => Fill(Get("WindowsReaderOpeningSlow"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderOpeningSlow(long seconds) => Fill(Get("WindowsReaderOpeningSlow"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Heading of the error when a chapter would not open.</summary>
     public static string WindowsReaderChapterFailed(string chapter) => Fill(Get("WindowsReaderChapterFailed"), ("chapter", chapter));
@@ -1684,22 +1807,22 @@ public static partial class T
     public static string WindowsReaderEndOfflineBody => Get("WindowsReaderEndOfflineBody");
 
     /// <summary>The group's line under the series title. The chapter label comes from the source.</summary>
-    public static string WindowsReaderGroupLine(string chapter, long page, long total) => Fill(Get("WindowsReaderGroupLine"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGroupLine(string chapter, long page, long total) => Fill(Get("WindowsReaderGroupLine"), ("chapter", chapter), ("page", page.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The group's line when a spread shows two pages.</summary>
-    public static string WindowsReaderGroupLineSpread(string chapter, long first, long second) => Fill(Get("WindowsReaderGroupLineSpread"), ("chapter", chapter), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGroupLineSpread(string chapter, long first, long second) => Fill(Get("WindowsReaderGroupLineSpread"), ("chapter", chapter), ("first", first.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The group's line for a strip of images.</summary>
-    public static string WindowsReaderGroupLineStrip(string chapter, long image, long total) => Fill(Get("WindowsReaderGroupLineStrip"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGroupLineStrip(string chapter, long image, long total) => Fill(Get("WindowsReaderGroupLineStrip"), ("chapter", chapter), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The group's line for a novel in one long scroll.</summary>
-    public static string WindowsReaderGroupLineScroll(string chapter, long percent) => Fill(Get("WindowsReaderGroupLineScroll"), ("chapter", chapter), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGroupLineScroll(string chapter, long percent) => Fill(Get("WindowsReaderGroupLineScroll"), ("chapter", chapter), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says when the page turns.</summary>
-    public static string WindowsReaderPageLabel(long page, long total) => Fill(Get("WindowsReaderPageLabel"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderPageLabel(long page, long total) => Fill(Get("WindowsReaderPageLabel"), ("page", page.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says when a spread turns.</summary>
-    public static string WindowsReaderPagesLabel(long first, long second, long total) => Fill(Get("WindowsReaderPagesLabel"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderPagesLabel(long first, long second, long total) => Fill(Get("WindowsReaderPagesLabel"), ("first", first.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of the scrubber, spoken.</summary>
     public static string WindowsReaderScrubber => Get("WindowsReaderScrubber");
@@ -1809,7 +1932,7 @@ public static partial class T
     public static string WindowsReaderLook => Get("WindowsReaderLook");
 
     /// <summary>The text size's value.</summary>
-    public static string WindowsReaderPercent(long percent) => Fill(Get("WindowsReaderPercent"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderPercent(long percent) => Fill(Get("WindowsReaderPercent"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button names of the text size row.</summary>
     public static string WindowsReaderSmaller => Get("WindowsReaderSmaller");
@@ -1825,13 +1948,13 @@ public static partial class T
     public static string WindowsReaderVolume(string volume) => Fill(Get("WindowsReaderVolume"), ("volume", volume));
 
     /// <summary>A chapter's length in the chapter list.</summary>
-    public static string WindowsReaderChapterPages(long pages) => Fill(GetPlural("WindowsReaderChapterPages", pages), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderChapterPages(long pages) => Fill(GetPlural("WindowsReaderChapterPages", pages), ("pages", pages.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of a page in the page grid, spoken.</summary>
-    public static string WindowsReaderGridPage(long page) => Fill(Get("WindowsReaderGridPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGridPage(long page) => Fill(Get("WindowsReaderGridPage"), ("page", page.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of an image in a strip, spoken when the strip settles on it and read by Narrator.</summary>
-    public static string WindowsReaderImageLabel(long image, long count) => Fill(Get("WindowsReaderImageLabel"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderImageLabel(long image, long count) => Fill(Get("WindowsReaderImageLabel"), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name and tooltip of the button that closes a novel's footnote.</summary>
     public static string WindowsReaderNoteClose => Get("WindowsReaderNoteClose");
@@ -1864,7 +1987,7 @@ public static partial class T
     public static string SendSaveFilesWindows => Get("SendSaveFilesWindows");
 
     /// <summary>Notice after the files for an e-reader were saved.</summary>
-    public static string SendSavedWindows(long n) => Fill(GetPlural("SendSavedWindows", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SendSavedWindows(long n) => Fill(GetPlural("SendSavedWindows", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice when the files for an e-reader could not be saved where the person picked.</summary>
     public static string SendSaveFailedWindows => Get("SendSaveFailedWindows");
@@ -1957,7 +2080,7 @@ public static partial class T
     public static string SettingsPlayerUiApp => Get("SettingsPlayerUiApp");
 
     /// <summary>Value of the quality setting: a picture height in lines, as in "1080p".</summary>
-    public static string SettingsQualityLines(long lines) => Fill(Get("SettingsQualityLines"), ("lines", lines.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsQualityLines(long lines) => Fill(Get("SettingsQualityLines"), ("lines", lines.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Value of the seeding setting: share until the ratio is reached. The ratio is already formatted, as in "1.5".</summary>
     public static string SettingsSeedUntilRatio(string ratio) => Fill(Get("SettingsSeedUntilRatio"), ("ratio", ratio));
@@ -1972,7 +2095,7 @@ public static partial class T
     public static string SettingsSyncDetail => Get("SettingsSyncDetail");
 
     /// <summary>Under a tracker that is signed in, when its user name is unknown and changes wait to sync.</summary>
-    public static string SettingsSignedInWaiting(long count) => Fill(GetPlural("SettingsSignedInWaiting", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsSignedInWaiting(long count) => Fill(GetPlural("SettingsSignedInWaiting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a tracker that signs in with a code typed on its website.</summary>
     public static string SettingsSignedOutCode => Get("SettingsSignedOutCode");
@@ -2020,7 +2143,7 @@ public static partial class T
     public static string SettingsLanguageRestart => Get("SettingsLanguageRestart");
 
     /// <summary>Row title in Accounts: titles that differ between this device and the tracker since the last sync.</summary>
-    public static string SettingsDifferences(long count, string tracker) => Fill(GetPlural("SettingsDifferences", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("tracker", tracker));
+    public static string SettingsDifferences(long count, string tracker) => Fill(GetPlural("SettingsDifferences", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("tracker", tracker));
 
     /// <summary>Button in Accounts that opens the list of differences.</summary>
     public static string SettingsDifferencesReview => Get("SettingsDifferencesReview");
@@ -2062,10 +2185,10 @@ public static partial class T
     public static string CloseTitle => Get("CloseTitle");
 
     /// <summary>The close dialog's line: how many episodes are downloading. A sentence of its own.</summary>
-    public static string CloseDownloading(long count) => Fill(GetPlural("CloseDownloading", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CloseDownloading(long count) => Fill(GetPlural("CloseDownloading", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The close dialog's line: how many episodes are seeding. A sentence of its own.</summary>
-    public static string CloseSeeding(long count) => Fill(GetPlural("CloseSeeding", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CloseSeeding(long count) => Fill(GetPlural("CloseSeeding", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The close dialog's question, after the counts.</summary>
     public static string CloseAsk => Get("CloseAsk");
@@ -2101,7 +2224,7 @@ public static partial class T
     public static string NotifyDownloadedOne(string episode) => Fill(Get("NotifyDownloadedOne"), ("episode", episode));
 
     /// <summary>Notification body: several episodes of a show finished downloading.</summary>
-    public static string NotifyDownloaded(long count) => Fill(GetPlural("NotifyDownloaded", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string NotifyDownloaded(long count) => Fill(GetPlural("NotifyDownloaded", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Screen reader name of the update's progress bar in About.</summary>
     public static string UpdatesProgressName => Get("UpdatesProgressName");
@@ -2278,7 +2401,7 @@ public static partial class T
     public static string SourcesRemoveDetail => Get("SourcesRemoveDetail");
 
     /// <summary>Beside a { -plugin-store } in the list: how many of its installed { -plugin-pl } have an update.</summary>
-    public static string StoresUpdatesCount(long count) => Fill(GetPlural("StoresUpdatesCount", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresUpdatesCount(long count) => Fill(GetPlural("StoresUpdatesCount", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>In the banner when a { -plugin-store } does not answer, under its title "Not answering".</summary>
     public static string StoresOfflineKeepWorking => Get("StoresOfflineKeepWorking");
@@ -2344,7 +2467,7 @@ public static partial class T
     public static string DevicesOpenName(string device) => Fill(Get("DevicesOpenName"), ("device", device));
 
     /// <summary>Under a release in the source picker: how many people share it right now.</summary>
-    public static string SourcePickerSeeders(long count) => Fill(GetPlural("SourcePickerSeeders", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcePickerSeeders(long count) => Fill(GetPlural("SourcePickerSeeders", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A transfer rate. The size is already formatted, such as "1.2 MB".</summary>
     public static string RatePerSecond(string size) => Fill(Get("RatePerSecond"), ("size", size));
@@ -2635,7 +2758,7 @@ public static partial class T
     public static string CastTorrentsNoteIpad => Get("CastTorrentsNoteIpad");
 
     /// <summary>Line on the casting card while the next episode counts down. The seconds are whole.</summary>
-    public static string CastUpNextPlaysIn(long seconds) => Fill(Get("CastUpNextPlaysIn"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CastUpNextPlaysIn(long seconds) => Fill(Get("CastUpNextPlaysIn"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The card's line when a cast never started. The name is the TV's.</summary>
     public static string CastCouldntStart(string name) => Fill(Get("CastCouldntStart"), ("name", name));
@@ -2665,22 +2788,22 @@ public static partial class T
     public static string ActionNotNow => Get("ActionNotNow");
 
     /// <summary>A span of time in whole days. The unit letter belongs to the language.</summary>
-    public static string DurationDays(long days) => Fill(Get("DurationDays"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationDays(long days) => Fill(Get("DurationDays"), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A span of time in hours and minutes.</summary>
-    public static string DurationHoursMinutes(long hours, long minutes) => Fill(Get("DurationHoursMinutes"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationHoursMinutes(long hours, long minutes) => Fill(Get("DurationHoursMinutes"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A span of time in whole hours.</summary>
-    public static string DurationHours(long hours) => Fill(Get("DurationHours"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationHours(long hours) => Fill(Get("DurationHours"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A span of time in minutes.</summary>
-    public static string DurationMinutes(long minutes) => Fill(Get("DurationMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationMinutes(long minutes) => Fill(Get("DurationMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A short wait in minutes and seconds. The seconds come with a leading zero.</summary>
-    public static string DurationMinutesSeconds(long minutes, string seconds) => Fill(Get("DurationMinutesSeconds"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("seconds", seconds));
+    public static string DurationMinutesSeconds(long minutes, string seconds) => Fill(Get("DurationMinutesSeconds"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("seconds", seconds));
 
     /// <summary>A short wait in seconds.</summary>
-    public static string DurationSeconds(long seconds) => Fill(Get("DurationSeconds"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationSeconds(long seconds) => Fill(Get("DurationSeconds"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A file size in bytes. The number is already formatted.</summary>
     public static string SizeByte(string value) => Fill(Get("SizeByte"), ("value", value));
@@ -2860,10 +2983,10 @@ public static partial class T
     public static string TimeIn(string span) => Fill(Get("TimeIn"), ("span", span));
 
     /// <summary>Under a title or in a row: minutes left in an episode.</summary>
-    public static string TimeMinutesLeft(long minutes) => Fill(Get("TimeMinutesLeft"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TimeMinutesLeft(long minutes) => Fill(Get("TimeMinutesLeft"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A length in minutes, for an episode.</summary>
-    public static string TimeMinutes(long minutes) => Fill(Get("TimeMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TimeMinutes(long minutes) => Fill(Get("TimeMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.</summary>
     public static string TimeNowInline => Get("TimeNowInline");
@@ -2962,10 +3085,10 @@ public static partial class T
     public static string PadHelpPageDown => Get("PadHelpPageDown");
 
     /// <summary>Controller help: seeks back in the player.</summary>
-    public static string PadHelpSeekBack(long seconds) => Fill(GetPlural("PadHelpSeekBack", seconds), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PadHelpSeekBack(long seconds) => Fill(GetPlural("PadHelpSeekBack", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Controller help: seeks forward in the player.</summary>
-    public static string PadHelpSeekForward(long seconds) => Fill(GetPlural("PadHelpSeekForward", seconds), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PadHelpSeekForward(long seconds) => Fill(GetPlural("PadHelpSeekForward", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Controller help: skips the opening or ending while its offer shows.</summary>
     public static string PadHelpSkip => Get("PadHelpSkip");
@@ -3127,7 +3250,7 @@ public static partial class T
     public static string TvVolumeDown => Get("TvVolumeDown");
 
     /// <summary>The TV's volume as a value of 100.</summary>
-    public static string TvVolumeOf(long volume) => Fill(Get("TvVolumeOf"), ("volume", volume.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TvVolumeOf(long volume) => Fill(Get("TvVolumeOf"), ("volume", volume.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Accessible label of the button that turns the TV up.</summary>
     public static string TvVolumeUp => Get("TvVolumeUp");
@@ -3160,10 +3283,10 @@ public static partial class T
     public static string DiscussionTitleEpisode(long episode) => Fill(Get("DiscussionTitleEpisode"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Quiet line under an episode that opens its discussion.</summary>
-    public static string DiscussionRow(long count) => Fill(GetPlural("DiscussionRow", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionRow(long count) => Fill(GetPlural("DiscussionRow", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Count of comments in the header of the discussion.</summary>
-    public static string DiscussionCount(long count) => Fill(GetPlural("DiscussionCount", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionCount(long count) => Fill(GetPlural("DiscussionCount", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that likes a comment, with its count after it. Also its accessible name.</summary>
     public static string DiscussionLike => Get("DiscussionLike");
@@ -3172,7 +3295,7 @@ public static partial class T
     public static string DiscussionReply => Get("DiscussionReply");
 
     /// <summary>Line under a reply that has more replies folded in it. The line opens them.</summary>
-    public static string DiscussionMoreReplies(long count) => Fill(GetPlural("DiscussionMoreReplies", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DiscussionMoreReplies(long count) => Fill(GetPlural("DiscussionMoreReplies", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Muted bar in place of a spoiler in a comment, until it is opened.</summary>
     public static string DiscussionSpoiler => Get("DiscussionSpoiler");
@@ -3421,7 +3544,7 @@ public static partial class T
     public static string DownloadsNoticeDoneDetail(string title) => Fill(Get("DownloadsNoticeDoneDetail"), ("title", title));
 
     /// <summary>Notification text while several episodes download.</summary>
-    public static string DownloadsNoticeRunning(long count) => Fill(GetPlural("DownloadsNoticeRunning", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DownloadsNoticeRunning(long count) => Fill(GetPlural("DownloadsNoticeRunning", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notification text: first line of one running download.</summary>
     public static string DownloadsNoticeEpisodeLeft(long episode, string left) => Fill(Get("DownloadsNoticeEpisodeLeft"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("left", left));
@@ -3535,7 +3658,7 @@ public static partial class T
     public static string HomeRemoveContinue => Get("HomeRemoveContinue");
 
     /// <summary>Count beside the { -continue-cap } heading when there are more than twelve shows.</summary>
-    public static string HomeContinueCount(long count) => Fill(GetPlural("HomeContinueCount", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string HomeContinueCount(long count) => Fill(GetPlural("HomeContinueCount", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Link beside a heading that opens the full list.</summary>
     public static string HomeViewAll => Get("HomeViewAll");
@@ -3550,7 +3673,7 @@ public static partial class T
     public static string HomeNothingAiring => Get("HomeNothingAiring");
 
     /// <summary>A day of This week with more titles than fit.</summary>
-    public static string HomeDayMore(long count) => Fill(Get("HomeDayMore"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string HomeDayMore(long count) => Fill(Get("HomeDayMore"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Link beside This season and Starting in that opens Seasonal.</summary>
     public static string HomeSeasonal => Get("HomeSeasonal");
@@ -3622,16 +3745,16 @@ public static partial class T
     public static string HomeSynced => Get("HomeSynced");
 
     /// <summary>Continue row subtitle. The show's title is cut first when the row is short.</summary>
-    public static string QueueEpisodesLeft(long count, string title) => Fill(GetPlural("QueueEpisodesLeft", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
+    public static string QueueEpisodesLeft(long count, string title) => Fill(GetPlural("QueueEpisodesLeft", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
 
     /// <summary>A number of episodes, alone: a badge or a count under a title.</summary>
-    public static string EpisodesCount(long count) => Fill(GetPlural("EpisodesCount", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string EpisodesCount(long count) => Fill(GetPlural("EpisodesCount", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>How far through a show a person is. The plural follows the total.</summary>
-    public static string ProgressEpisodes(long watched, long total) => Fill(GetPlural("ProgressEpisodes", total), ("watched", watched.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ProgressEpisodes(long watched, long total) => Fill(GetPlural("ProgressEpisodes", total), ("watched", watched.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A span of time to the next episode, in days and hours. The unit letters belong to the language.</summary>
-    public static string DurationDaysHours(long days, long hours) => Fill(Get("DurationDaysHours"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DurationDaysHours(long days, long hours) => Fill(Get("DurationDaysHours"), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Group header on the library and continue screens.</summary>
     public static string GroupInProgress => Get("GroupInProgress");
@@ -3766,10 +3889,10 @@ public static partial class T
     public static string LibraryInYourList => Get("LibraryInYourList");
 
     /// <summary>Short progress under a show: the last episode watched out of the total.</summary>
-    public static string ProgressEpisodesShort(long done, long total) => Fill(Get("ProgressEpisodesShort"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ProgressEpisodesShort(long done, long total) => Fill(Get("ProgressEpisodesShort"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Short progress under a show when the total is not known.</summary>
-    public static string ProgressEpisodeShort(long done) => Fill(Get("ProgressEpisodeShort"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ProgressEpisodeShort(long done) => Fill(Get("ProgressEpisodeShort"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Row caption: the next unwatched episode, dubbed, which came out a while ago.</summary>
     public static string ContinueRowStartAiredDubbed(long episode, string ago) => Fill(Get("ContinueRowStartAiredDubbed"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ago", ago));
@@ -3814,25 +3937,25 @@ public static partial class T
     public static string UpNextOut(string ago) => Fill(Get("UpNextOut"), ("ago", ago));
 
     /// <summary>Line of a folder's row while it is scanned.</summary>
-    public static string LibraryRowScanning(long files) => Fill(GetPlural("LibraryRowScanning", files), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowScanning(long files) => Fill(GetPlural("LibraryRowScanning", files), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a folder's row while its series are matched to AniList.</summary>
-    public static string LibraryRowMatching(long done, long total) => Fill(Get("LibraryRowMatching"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowMatching(long done, long total) => Fill(Get("LibraryRowMatching"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Added to the matching line while the limiter holds requests back.</summary>
-    public static string LibraryRowWaiting(long seconds) => Fill(Get("LibraryRowWaiting"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowWaiting(long seconds) => Fill(Get("LibraryRowWaiting"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a folder row when it is done, such as "214 episodes of 18 series". Both parts are worded already by library-episodes and library-series.</summary>
     public static string LibraryRowSummary(string episodes, string series) => Fill(Get("LibraryRowSummary"), ("episodes", episodes), ("series", series));
 
     /// <summary>The episodes part of a folder's summary line.</summary>
-    public static string LibraryEpisodes(long count) => Fill(GetPlural("LibraryEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryEpisodes(long count) => Fill(GetPlural("LibraryEpisodes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The series part of a folder's summary line.</summary>
-    public static string LibrarySeries(long count) => Fill(GetPlural("LibrarySeries", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibrarySeries(long count) => Fill(GetPlural("LibrarySeries", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Ends the summary line when some series need a look.</summary>
-    public static string LibraryRowNeedsLook(long count) => Fill(Get("LibraryRowNeedsLook"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowNeedsLook(long count) => Fill(Get("LibraryRowNeedsLook"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a folder on a drive that is not connected.</summary>
     public static string LibraryRowDriveOffline => Get("LibraryRowDriveOffline");
@@ -3871,10 +3994,10 @@ public static partial class T
     public static string LibraryNotMatched => Get("LibraryNotMatched");
 
     /// <summary>Row that opens the list of matched series.</summary>
-    public static string LibraryMatched(long count) => Fill(Get("LibraryMatched"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryMatched(long count) => Fill(Get("LibraryMatched"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under a row in Needs a look.</summary>
-    public static string LibraryBestGuess(string title, long percent) => Fill(Get("LibraryBestGuess"), ("title", title), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryBestGuess(string title, long percent) => Fill(Get("LibraryBestGuess"), ("title", title), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Prompt of the folder chooser.</summary>
     public static string LibraryPickerPrompt => Get("LibraryPickerPrompt");
@@ -3883,19 +4006,19 @@ public static partial class T
     public static string LibraryPickerMessage => Get("LibraryPickerMessage");
 
     /// <summary>What a title in the match list says about how well it fits the files.</summary>
-    public static string LibraryFixConfidence(long percent) => Fill(Get("LibraryFixConfidence"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryFixConfidence(long percent) => Fill(Get("LibraryFixConfidence"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that shows a folder in the file manager.</summary>
     public static string LibraryOpenFolder => Get("LibraryOpenFolder");
 
     /// <summary>Row line: how many series are matched.</summary>
-    public static string LibraryMatchedCount(long count) => Fill(Get("LibraryMatchedCount"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryMatchedCount(long count) => Fill(Get("LibraryMatchedCount"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The series count of that line.</summary>
-    public static string LibraryRowSeries(long count) => Fill(GetPlural("LibraryRowSeries", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowSeries(long count) => Fill(GetPlural("LibraryRowSeries", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a folder's row once scanned.</summary>
-    public static string LibraryRowFiles(long files) => Fill(GetPlural("LibraryRowFiles", files), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryRowFiles(long files) => Fill(GetPlural("LibraryRowFiles", files), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that shows a folder in Finder.</summary>
     public static string LibraryShowFinder => Get("LibraryShowFinder");
@@ -3904,7 +4027,7 @@ public static partial class T
     public static string LibraryRemoveLine => Get("LibraryRemoveLine");
 
     /// <summary>Line of a file group: how many files it holds.</summary>
-    public static string LibraryFiles(long count) => Fill(GetPlural("LibraryFiles", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryFiles(long count) => Fill(GetPlural("LibraryFiles", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Why a file group is not matched.</summary>
     public static string LibraryReasonNoEpisode => Get("LibraryReasonNoEpisode");
@@ -3940,7 +4063,7 @@ public static partial class T
     public static string LibraryConnectDrive => Get("LibraryConnectDrive");
 
     /// <summary>Line under a title in the match sheet when its episode count does not fit the folder.</summary>
-    public static string LibraryFixCountMismatch(long titleEpisodes, long files) => Fill(Get("LibraryFixCountMismatch"), ("titleEpisodes", titleEpisodes.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryFixCountMismatch(long titleEpisodes, long files) => Fill(Get("LibraryFixCountMismatch"), ("titleEpisodes", titleEpisodes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Text button under the results of the match dialog.</summary>
     public static string LibraryLeaveUnmatched => Get("LibraryLeaveUnmatched");
@@ -3991,7 +4114,7 @@ public static partial class T
     public static string LibraryRemoved(string name) => Fill(Get("LibraryRemoved"), ("name", name));
 
     /// <summary>How well a title fits a group of files, in the match sheet.</summary>
-    public static string LibraryMatchPercent(long percent) => Fill(Get("LibraryMatchPercent"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LibraryMatchPercent(long percent) => Fill(Get("LibraryMatchPercent"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the page.</summary>
     public static string LicensedTitle => Get("LicensedTitle");
@@ -4009,7 +4132,7 @@ public static partial class T
     public static string LicensedYours => Get("LicensedYours");
 
     /// <summary>Row that shows the rest of the services.</summary>
-    public static string LicensedShowAll(long count) => Fill(Get("LicensedShowAll"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string LicensedShowAll(long count) => Fill(Get("LicensedShowAll"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Choice in the Region picker that follows the device's own country.</summary>
     public static string LicensedRegionSystem => Get("LicensedRegionSystem");
@@ -4177,13 +4300,13 @@ public static partial class T
     public static string MediaLinkLanguage(string language) => Fill(Get("MediaLinkLanguage"), ("language", language));
 
     /// <summary>Length of a film or a single episode, in its metadata line: hours and the minutes past them, such as "1 h 52 min".</summary>
-    public static string FilmLengthHoursMinutes(long hours, long minutes) => Fill(Get("FilmLengthHoursMinutes"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FilmLengthHoursMinutes(long hours, long minutes) => Fill(Get("FilmLengthHoursMinutes"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Length of a film or a single episode that is a whole number of hours, such as "2 h".</summary>
-    public static string FilmLengthHours(long hours) => Fill(Get("FilmLengthHours"), ("hours", hours.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FilmLengthHours(long hours) => Fill(Get("FilmLengthHours"), ("hours", hours.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Length of a film or a single episode under an hour, such as "46 min".</summary>
-    public static string FilmLengthMinutes(long minutes) => Fill(Get("FilmLengthMinutes"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FilmLengthMinutes(long minutes) => Fill(Get("FilmLengthMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Country name: the origin filter and, after "Made in", the title facts.</summary>
     public static string CountryJapan => Get("CountryJapan");
@@ -4615,10 +4738,10 @@ public static partial class T
     public static string PartyWaitTwo(string first, string second) => Fill(Get("PartyWaitTwo"), ("first", first), ("second", second));
 
     /// <summary>Line when more than two members are still to be ready.</summary>
-    public static string PartyWaitMany(long count) => Fill(Get("PartyWaitMany"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyWaitMany(long count) => Fill(Get("PartyWaitMany"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Connection line while the party reconnects.</summary>
-    public static string PartyConnectionLost(long attempt, long of) => Fill(Get("PartyConnectionLost"), ("attempt", attempt.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyConnectionLost(long attempt, long of) => Fill(Get("PartyConnectionLost"), ("attempt", attempt.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Connection line: encrypted.</summary>
     public static string PartyConnectedEncrypted => Get("PartyConnectedEncrypted");
@@ -4627,7 +4750,7 @@ public static partial class T
     public static string PartyConnectedPlain => Get("PartyConnectedPlain");
 
     /// <summary>Connection line with the round trip time.</summary>
-    public static string PartyConnectedLatency(string line, long ms) => Fill(Get("PartyConnectedLatency"), ("line", line), ("ms", ms.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyConnectedLatency(string line, long ms) => Fill(Get("PartyConnectedLatency"), ("line", line), ("ms", ms.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under the invite link button before any episode plays.</summary>
     public static string PartyInviteAfterPlay => Get("PartyInviteAfterPlay");
@@ -4681,13 +4804,13 @@ public static partial class T
     public static string PartyNosourceUnairedPlain => Get("PartyNosourceUnairedPlain");
 
     /// <summary>Line over the list of sources that list the episode.</summary>
-    public static string PartySourcesFound(long count) => Fill(GetPlural("PartySourcesFound", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartySourcesFound(long count) => Fill(GetPlural("PartySourcesFound", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Accessibility label of the list of sources for the episode.</summary>
     public static string PartySourcesLabel => Get("PartySourcesLabel");
 
     /// <summary>Line of a source: its quality and size already formatted, and the number of seeders.</summary>
-    public static string PartySourceSeeders(long seeders) => Fill(Get("PartySourceSeeders"), ("seeders", seeders.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartySourceSeeders(long seeders) => Fill(Get("PartySourceSeeders"), ("seeders", seeders.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line when no source lists the episode.</summary>
     public static string PartyNoSourceLists(string episode) => Fill(Get("PartyNoSourceLists"), ("episode", episode));
@@ -4729,7 +4852,7 @@ public static partial class T
     public static string TogetherInParty => Get("TogetherInParty");
 
     /// <summary>Line of the In a party block. The episode is a number or label.</summary>
-    public static string TogetherInPartyLine(string episode, long count, long ready) => Fill(Get("TogetherInPartyLine"), ("episode", episode), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ready", ready.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TogetherInPartyLine(string episode, long count, long ready) => Fill(Get("TogetherInPartyLine"), ("episode", episode), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("ready", ready.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that opens the lobby of the watch party you are in.</summary>
     public static string TogetherOpenLobby => Get("TogetherOpenLobby");
@@ -4753,7 +4876,7 @@ public static partial class T
     public static string TogetherForgetRoom => Get("TogetherForgetRoom");
 
     /// <summary>Line that says who is in a recent room now, after looking in. The names are already joined.</summary>
-    public static string TogetherSomeoneHere(string names, long count) => Fill(GetPlural("TogetherSomeoneHere", count), ("names", names), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TogetherSomeoneHere(string names, long count) => Fill(GetPlural("TogetherSomeoneHere", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line that says a recent room has nobody in it now.</summary>
     public static string TogetherNobodyHere => Get("TogetherNobodyHere");
@@ -4765,7 +4888,7 @@ public static partial class T
     public static string TogetherServerSuggested(string @operator) => Fill(Get("TogetherServerSuggested"), ("operator", @operator));
 
     /// <summary>Line under a server that parties were held on.</summary>
-    public static string TogetherServerUsed(long count) => Fill(GetPlural("TogetherServerUsed", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TogetherServerUsed(long count) => Fill(GetPlural("TogetherServerUsed", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that adds a server to the list.</summary>
     public static string TogetherAddServer => Get("TogetherAddServer");
@@ -4801,7 +4924,7 @@ public static partial class T
     public static string PartyStillInRoom => Get("PartyStillInRoom");
 
     /// <summary>Line in the lobby that counts the room.</summary>
-    public static string PartyLobbyCount(long ready, long count) => Fill(Get("PartyLobbyCount"), ("ready", ready.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyLobbyCount(long ready, long count) => Fill(Get("PartyLobbyCount"), ("ready", ready.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line in the lobby of an invite: who invited.</summary>
     public static string PartyInvitedBy(string name) => Fill(Get("PartyInvitedBy"), ("name", name));
@@ -4846,7 +4969,7 @@ public static partial class T
     public static string PartyStartAnyway => Get("PartyStartAnyway");
 
     /// <summary>Line during the three second count before play.</summary>
-    public static string PartyStarting(long seconds) => Fill(Get("PartyStarting"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyStarting(long seconds) => Fill(Get("PartyStarting"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button in the lobby that changes the room's episode.</summary>
     public static string PartyChangeEpisode => Get("PartyChangeEpisode");
@@ -4906,7 +5029,7 @@ public static partial class T
     public static string PartyBarTitle(string title, string episode) => Fill(Get("PartyBarTitle"), ("title", title), ("episode", episode));
 
     /// <summary>Second line of the bar above the tabs.</summary>
-    public static string PartyBarLine(long count, long ready) => Fill(Get("PartyBarLine"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ready", ready.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyBarLine(long count, long ready) => Fill(Get("PartyBarLine"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("ready", ready.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Second line of the bar when nothing plays for you.</summary>
     public static string PartyBarIdle => Get("PartyBarIdle");
@@ -4924,10 +5047,10 @@ public static partial class T
     public static string PartySeekedBy(string name, string time) => Fill(Get("PartySeekedBy"), ("name", name), ("time", time));
 
     /// <summary>Line on the Up Next card in a party.</summary>
-    public static string PartyNextLine(long seconds) => Fill(Get("PartyNextLine"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyNextLine(long seconds) => Fill(Get("PartyNextLine"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line on the starting screen while the room waits for a member.</summary>
-    public static string PartyNextWaiting(string name, long seconds) => Fill(Get("PartyNextWaiting"), ("name", name), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyNextWaiting(string name, long seconds) => Fill(Get("PartyNextWaiting"), ("name", name), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice when a member who was behind joins. The time is already formatted.</summary>
     public static string PartyNextJoinedAt(string name, string time) => Fill(Get("PartyNextJoinedAt"), ("name", name), ("time", time));
@@ -4990,7 +5113,7 @@ public static partial class T
     public static string PartyInTheRoom => Get("PartyInTheRoom");
 
     /// <summary>Beside that heading while looking into a room before joining it: how many are there.</summary>
-    public static string PartyHereCount(long count) => Fill(Get("PartyHereCount"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyHereCount(long count) => Fill(Get("PartyHereCount"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Beside the Recent rooms heading.</summary>
     public static string TogetherRecentNote => Get("TogetherRecentNote");
@@ -5008,13 +5131,13 @@ public static partial class T
     public static string PartyChatTitle => Get("PartyChatTitle");
 
     /// <summary>End of the chat field while sending waits, after three messages in five seconds.</summary>
-    public static string PartyChatWait(long seconds) => Fill(Get("PartyChatWait"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyChatWait(long seconds) => Fill(Get("PartyChatWait"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Spoken once when sending waits, for screen readers.</summary>
-    public static string PartyChatWaitSpoken(long seconds) => Fill(GetPlural("PartyChatWaitSpoken", seconds), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyChatWaitSpoken(long seconds) => Fill(GetPlural("PartyChatWaitSpoken", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line after the three newest chat lines on the video, which opens the conversation.</summary>
-    public static string PartyChatMore(long count) => Fill(Get("PartyChatMore"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyChatMore(long count) => Fill(Get("PartyChatMore"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice when the room's server has chat turned off, and the line that replaces the field.</summary>
     public static string PartyChatOff => Get("PartyChatOff");
@@ -5095,7 +5218,7 @@ public static partial class T
     public static string PartyNamesThree(string first, string second, string third) => Fill(Get("PartyNamesThree"), ("first", first), ("second", second), ("third", third));
 
     /// <summary>More than three members named together: two names and how many others.</summary>
-    public static string PartyNamesOthers(string first, string second, long count) => Fill(Get("PartyNamesOthers"), ("first", first), ("second", second), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyNamesOthers(string first, string second, long count) => Fill(Get("PartyNamesOthers"), ("first", first), ("second", second), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of this device's own member in the conversation and on its reactions.</summary>
     public static string PartyChatYou => Get("PartyChatYou");
@@ -5110,7 +5233,7 @@ public static partial class T
     public static string PartyChatAnnounce(string name, string message) => Fill(Get("PartyChatAnnounce"), ("name", name), ("message", message));
 
     /// <summary>Spoken by a screen reader once, when 20 characters are left in the chat field.</summary>
-    public static string PartyChatLeft(long count) => Fill(GetPlural("PartyChatLeft", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PartyChatLeft(long count) => Fill(GetPlural("PartyChatLeft", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Label on the card for the episode that plays after this one.</summary>
     public static string PlayerUpNext => Get("PlayerUpNext");
@@ -5122,7 +5245,7 @@ public static partial class T
     public static string PlayerStarting(long episode) => Fill(Get("PlayerStarting"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line on the starting screen after a few seconds: the app is looking for a stream.</summary>
-    public static string PlayerFindingSource(long seconds) => Fill(Get("PlayerFindingSource"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerFindingSource(long seconds) => Fill(Get("PlayerFindingSource"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Same line before the wait is counted.</summary>
     public static string PlayerFindingSourcePlain => Get("PlayerFindingSourcePlain");
@@ -5149,7 +5272,7 @@ public static partial class T
     public static string PlayerBuffering => Get("PlayerBuffering");
 
     /// <summary>Detail line while a source is asked and more than one is in the viewer's order.</summary>
-    public static string PlayerStartPlace(long place, long total) => Fill(Get("PlayerStartPlace"), ("place", place.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStartPlace(long place, long total) => Fill(Get("PlayerStartPlace"), ("place", place.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Detail line while the source asked is the one the show is pinned to.</summary>
     public static string PlayerStartPinned => Get("PlayerStartPinned");
@@ -5182,10 +5305,10 @@ public static partial class T
     public static string PlayerStartNoVideo => Get("PlayerStartNoVideo");
 
     /// <summary>Detail line with the place of the stream being opened.</summary>
-    public static string PlayerStartStreamPlace(long next, long total) => Fill(Get("PlayerStartStreamPlace"), ("next", next.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStartStreamPlace(long next, long total) => Fill(Get("PlayerStartStreamPlace"), ("next", next.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Detail line while a torrent has peers.</summary>
-    public static string PlayerStartPeers(long count) => Fill(GetPlural("PlayerStartPeers", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStartPeers(long count) => Fill(GetPlural("PlayerStartPeers", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB".</summary>
     public static string PlayerStartSpeed(string speed) => Fill(Get("PlayerStartSpeed"), ("speed", speed));
@@ -5227,7 +5350,7 @@ public static partial class T
     public static string PlayerStartLookedUp => Get("PlayerStartLookedUp");
 
     /// <summary>Seconds on the starting screen's detail line and Details rows.</summary>
-    public static string PlayerStartSeconds(long seconds) => Fill(Get("PlayerStartSeconds"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStartSeconds(long seconds) => Fill(Get("PlayerStartSeconds"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Spoken once, when a start has taken more than a few seconds.</summary>
     public static string PlayerStartStillStarting => Get("PlayerStartStillStarting");
@@ -5269,7 +5392,7 @@ public static partial class T
     public static string PlayerStartSubtitled => Get("PlayerStartSubtitled");
 
     /// <summary>Title of the stall card. The seconds count up.</summary>
-    public static string PlayerStallTitle(long seconds) => Fill(Get("PlayerStallTitle"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStallTitle(long seconds) => Fill(Get("PlayerStallTitle"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under the stall title.</summary>
     public static string PlayerStallDetail => Get("PlayerStallDetail");
@@ -5281,7 +5404,7 @@ public static partial class T
     public static string PlayerKeepWaiting => Get("PlayerKeepWaiting");
 
     /// <summary>Line on the Up next card: the episode starts when the count ends.</summary>
-    public static string PlayerPlaysIn(long seconds) => Fill(Get("PlayerPlaysIn"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerPlaysIn(long seconds) => Fill(Get("PlayerPlaysIn"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that skips the opening.</summary>
     public static string PlayerSkipOpening => Get("PlayerSkipOpening");
@@ -5495,7 +5618,7 @@ public static partial class T
     public static string PlayerStillWatching => Get("PlayerStillWatching");
 
     /// <summary>Line under the still-watching title.</summary>
-    public static string PlayerStillWatchingDetail(long count) => Fill(GetPlural("PlayerStillWatchingDetail", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerStillWatchingDetail(long count) => Fill(GetPlural("PlayerStillWatchingDetail", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button on the still-watching card that goes on.</summary>
     public static string PlayerStillWatchingContinue => Get("PlayerStillWatchingContinue");
@@ -5669,7 +5792,7 @@ public static partial class T
     public static string PlayerTrackN(long id) => Fill(Get("PlayerTrackN"), ("id", id.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line while an episode starts after a few seconds: what the wait is on, and for how long.</summary>
-    public static string PlayerWaitNote(string what, long seconds) => Fill(Get("PlayerWaitNote"), ("what", what), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string PlayerWaitNote(string what, long seconds) => Fill(Get("PlayerWaitNote"), ("what", what), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Message on the video when the player could not make a change the viewer asked for, such as a speed or a track.</summary>
     public static string PlayerCommandFailed => Get("PlayerCommandFailed");
@@ -5792,7 +5915,7 @@ public static partial class T
     public static string ReaderChapters => Get("ReaderChapters");
 
     /// <summary>Line in the margin of a novel's page.</summary>
-    public static string ReaderPagesLeft(long count) => Fill(GetPlural("ReaderPagesLeft", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReaderPagesLeft(long count) => Fill(GetPlural("ReaderPagesLeft", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Chapters sheet and the chapter list: the list is on its way.</summary>
     public static string ReaderChaptersLoading => Get("ReaderChaptersLoading");
@@ -5825,7 +5948,7 @@ public static partial class T
     public static string ReaderEndFacts(string chapter, string facts) => Fill(Get("ReaderEndFacts"), ("chapter", chapter), ("facts", facts));
 
     /// <summary>The next chapter's length on the page between chapters.</summary>
-    public static string ReaderEndPages(long count) => Fill(GetPlural("ReaderEndPages", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReaderEndPages(long count) => Fill(GetPlural("ReaderEndPages", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.</summary>
     public static string ReaderEndFrom(string source) => Fill(Get("ReaderEndFrom"), ("source", source));
@@ -5840,7 +5963,7 @@ public static partial class T
     public static string ReaderEndSwipe => Get("ReaderEndSwipe");
 
     /// <summary>The next episode's length on the divider inside a strip.</summary>
-    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
     public static string ReaderChapterLineTitled(string chapter, string title) => Fill(Get("ReaderChapterLineTitled"), ("chapter", chapter), ("title", title));
@@ -5861,7 +5984,7 @@ public static partial class T
     public static string HomeSpotlightRead => Get("HomeSpotlightRead");
 
     /// <summary>The demo comic's facts line on its series page.</summary>
-    public static string DemoSeriesFacts(long pages) => Fill(GetPlural("DemoSeriesFacts", pages), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DemoSeriesFacts(long pages) => Fill(GetPlural("DemoSeriesFacts", pages), ("pages", pages.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0".</summary>
     public static string DemoCreditBook(string title, string author, string licence) => Fill(Get("DemoCreditBook"), ("title", title), ("author", author), ("licence", licence));
@@ -5912,7 +6035,7 @@ public static partial class T
     public static string DemoCredits => Get("DemoCredits");
 
     /// <summary>A chapter row's line on the demo's series page.</summary>
-    public static string DemoPages(long pages) => Fill(GetPlural("DemoPages", pages), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DemoPages(long pages) => Fill(GetPlural("DemoPages", pages), ("pages", pages.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The story's row on the demo's series page. The licence is "Public domain" as the engine says it.</summary>
     public static string DemoStoryRow(string author, string licence) => Fill(Get("DemoStoryRow"), ("author", author), ("licence", licence));
@@ -5951,16 +6074,16 @@ public static partial class T
     public static string ProgressRowSaved(string ago) => Fill(Get("ProgressRowSaved"), ("ago", ago));
 
     /// <summary>The server's row, after 600 ms without an answer.</summary>
-    public static string ProgressRowSending(long count) => Fill(GetPlural("ProgressRowSending", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ProgressRowSending(long count) => Fill(GetPlural("ProgressRowSending", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The server's row, offline.</summary>
-    public static string ProgressRowOffline(long count) => Fill(GetPlural("ProgressRowOffline", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ProgressRowOffline(long count) => Fill(GetPlural("ProgressRowOffline", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The server's row, the last try failed for a reason that can pass.</summary>
-    public static string ProgressRowRetrying(long count) => Fill(GetPlural("ProgressRowRetrying", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ProgressRowRetrying(long count) => Fill(GetPlural("ProgressRowRetrying", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The server's row, the server said no. Try again sits beside it.</summary>
-    public static string ProgressRowFailed(long count, string reason) => Fill(GetPlural("ProgressRowFailed", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
+    public static string ProgressRowFailed(long count, string reason) => Fill(GetPlural("ProgressRowFailed", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
 
     /// <summary>The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</summary>
     public static string ProgressRowOff(string kind) => Fill(Get("ProgressRowOff"), ("kind", kind));
@@ -5999,7 +6122,7 @@ public static partial class T
     public static string ReadHomeBrowseLine => Get("ReadHomeBrowseLine");
 
     /// <summary>E-ink: a discovery row in the Browse list, naming its first two series and how many follow.</summary>
-    public static string ReadHomeBrowseRow(string first, string second, long more) => Fill(Get("ReadHomeBrowseRow"), ("first", first), ("second", second), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadHomeBrowseRow(string first, string second, long more) => Fill(Get("ReadHomeBrowseRow"), ("first", first), ("second", second), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.</summary>
     public static string ReadHomeBrowseNote => Get("ReadHomeBrowseNote");
@@ -6038,7 +6161,7 @@ public static partial class T
     public static string ChapterUpdatesYesterday => Get("ChapterUpdatesYesterday");
 
     /// <summary>After a chapter on an Updates row, when several groups put it out.</summary>
-    public static string ChapterUpdatesVersions(long n) => Fill(GetPlural("ChapterUpdatesVersions", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ChapterUpdatesVersions(long n) => Fill(GetPlural("ChapterUpdatesVersions", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Accessibility label on an Updates row's cover, which opens the series.</summary>
     public static string ChapterUpdatesOpenSeries(string title) => Fill(Get("ChapterUpdatesOpenSeries"), ("title", title));
@@ -6056,7 +6179,7 @@ public static partial class T
     public static string ActionContinueChapter(string n, long page) => Fill(Get("ActionContinueChapter"), ("n", n), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The main action for a light novel part, part read.</summary>
-    public static string ActionContinuePart(string n, long percent) => Fill(Get("ActionContinuePart"), ("n", n), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ActionContinuePart(string n, long percent) => Fill(Get("ActionContinuePart"), ("n", n), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The main action for a light novel part, part read, when how far is not known.</summary>
     public static string ActionContinuePartPlain(string n) => Fill(Get("ActionContinuePartPlain"), ("n", n));
@@ -6065,7 +6188,7 @@ public static partial class T
     public static string ActionReadPart(string n) => Fill(Get("ActionReadPart"), ("n", n));
 
     /// <summary>The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.</summary>
-    public static string ActionContinueNamed(string label, long percent) => Fill(Get("ActionContinueNamed"), ("label", label), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ActionContinueNamed(string label, long percent) => Fill(Get("ActionContinueNamed"), ("label", label), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The main action for a light novel part, part read, named in the source's own words, when how far is not known.</summary>
     public static string ActionContinueNamedPlain(string label) => Fill(Get("ActionContinueNamedPlain"), ("label", label));
@@ -6083,7 +6206,7 @@ public static partial class T
     public static string SeriesChange => Get("SeriesChange");
 
     /// <summary>After the source's name: how many other sources have the series.</summary>
-    public static string SeriesSourcesMore(long n) => Fill(GetPlural("SeriesSourcesMore", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SeriesSourcesMore(long n) => Fill(GetPlural("SeriesSourcesMore", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Value of the trackers row while a tracker asks which series this is.</summary>
     public static string SeriesTrackerAsk => Get("SeriesTrackerAsk");
@@ -6092,10 +6215,10 @@ public static partial class T
     public static string SeriesPreferredGroup => Get("SeriesPreferredGroup");
 
     /// <summary>A tracker's progress in chapters, with the total.</summary>
-    public static string SeriesTrackerChaptersOf(long n, long total) => Fill(GetPlural("SeriesTrackerChaptersOf", total), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SeriesTrackerChaptersOf(long n, long total) => Fill(GetPlural("SeriesTrackerChaptersOf", total), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A tracker's progress in chapters, total unknown.</summary>
-    public static string SeriesTrackerChapters(long n) => Fill(GetPlural("SeriesTrackerChapters", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SeriesTrackerChapters(long n) => Fill(GetPlural("SeriesTrackerChapters", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A tracker's progress in chapters, then the volume.</summary>
     public static string SeriesTrackerWithVolume(string chapters, long volume) => Fill(Get("SeriesTrackerWithVolume"), ("chapters", chapters), ("volume", volume.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -6125,7 +6248,7 @@ public static partial class T
     public static string SeriesRemovedTitle => Get("SeriesRemovedTitle");
 
     /// <summary>Title while choosing chapters on a phone: how many are chosen.</summary>
-    public static string SeriesChosen(long n) => Fill(GetPlural("SeriesChosen", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SeriesChosen(long n) => Fill(GetPlural("SeriesChosen", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button while choosing chapters on a phone: choose every unread chapter.</summary>
     public static string SeriesChooseAllUnread => Get("SeriesChooseAllUnread");
@@ -6224,7 +6347,7 @@ public static partial class T
     public static string SeriesRemoveBookmark => Get("SeriesRemoveBookmark");
 
     /// <summary>Menu of a chapter that several groups put out.</summary>
-    public static string SeriesVersions(long n) => Fill(GetPlural("SeriesVersions", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SeriesVersions(long n) => Fill(GetPlural("SeriesVersions", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>In that menu while the versions load.</summary>
     public static string SeriesVersionsLoading => Get("SeriesVersionsLoading");
@@ -6245,7 +6368,7 @@ public static partial class T
     public static string ChapterStateWifi => Get("ChapterStateWifi");
 
     /// <summary>A chapter downloading.</summary>
-    public static string ChapterStateDownloading(long done, long total) => Fill(Get("ChapterStateDownloading"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ChapterStateDownloading(long done, long total) => Fill(Get("ChapterStateDownloading"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A chapter that failed to download, with the reason.</summary>
     public static string ChapterStateFailed(string reason) => Fill(Get("ChapterStateFailed"), ("reason", reason));
@@ -6272,13 +6395,13 @@ public static partial class T
     public static string ChapterDownloadDelete => Get("ChapterDownloadDelete");
 
     /// <summary>Download menu item.</summary>
-    public static string DownloadNext(long n) => Fill(Get("DownloadNext"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DownloadNext(long n) => Fill(Get("DownloadNext"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Download menu item.</summary>
     public static string DownloadUnread => Get("DownloadUnread");
 
     /// <summary>Download menu item: a volume's chapters not yet downloaded.</summary>
-    public static string DownloadVolumeCount(string volume, long n) => Fill(GetPlural("DownloadVolumeCount", n), ("volume", volume), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DownloadVolumeCount(string volume, long n) => Fill(GetPlural("DownloadVolumeCount", n), ("volume", volume), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Download menu item: turns on choosing chapters in the list.</summary>
     public static string DownloadChoose => Get("DownloadChoose");
@@ -6287,7 +6410,7 @@ public static partial class T
     public static string DownloadDeleteSeries => Get("DownloadDeleteSeries");
 
     /// <summary>The amber button in the Choose chapters bar.</summary>
-    public static string DownloadChapters(long n) => Fill(GetPlural("DownloadChapters", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DownloadChapters(long n) => Fill(GetPlural("DownloadChapters", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line above that button.</summary>
     public static string DownloadOverWifi => Get("DownloadOverWifi");
@@ -6338,10 +6461,10 @@ public static partial class T
     public static string SeriesTrackerLooking => Get("SeriesTrackerLooking");
 
     /// <summary>A tracker that is behind, and catches up on the next sync.</summary>
-    public static string SeriesTrackerBehind(long has, long gets) => Fill(Get("SeriesTrackerBehind"), ("has", has.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("gets", gets.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SeriesTrackerBehind(long has, long gets) => Fill(Get("SeriesTrackerBehind"), ("has", has.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("gets", gets.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A tracker ahead of Kaeri.</summary>
-    public static string SeriesTrackerAhead(long has) => Fill(Get("SeriesTrackerAhead"), ("has", has.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SeriesTrackerAhead(long has) => Fill(Get("SeriesTrackerAhead"), ("has", has.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A tracker's score out of ten.</summary>
     public static string SeriesTrackerScore(string score) => Fill(Get("SeriesTrackerScore"), ("score", score));
@@ -6437,7 +6560,7 @@ public static partial class T
     public static string SourcesFoundServer(string kind) => Fill(Get("SourcesFoundServer"), ("kind", kind));
 
     /// <summary>What the server held once signed in, when it said how many series it lists.</summary>
-    public static string SourcesFoundServerSeries(string kind, long n) => Fill(GetPlural("SourcesFoundServerSeries", n), ("kind", kind), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcesFoundServerSeries(string kind, long n) => Fill(GetPlural("SourcesFoundServerSeries", n), ("kind", kind), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>While the address is tried.</summary>
     public static string BookServerLooking => Get("BookServerLooking");
@@ -6458,10 +6581,10 @@ public static partial class T
     public static string BookSourcesPluginsFooter => Get("BookSourcesPluginsFooter");
 
     /// <summary>How many series a folder or server holds.</summary>
-    public static string BookSourcesSeries(long n) => Fill(GetPlural("BookSourcesSeries", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookSourcesSeries(long n) => Fill(GetPlural("BookSourcesSeries", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A folder being looked through.</summary>
-    public static string BookSourcesScanning(long n) => Fill(Get("BookSourcesScanning"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookSourcesScanning(long n) => Fill(Get("BookSourcesScanning"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A folder that can't be found, such as a drive that isn't plugged in.</summary>
     public static string BookSourcesMissing => Get("BookSourcesMissing");
@@ -6482,7 +6605,7 @@ public static partial class T
     public static string BookSourcesVersion(string version) => Fill(Get("BookSourcesVersion"), ("version", version));
 
     /// <summary>Button on a folder: series whose match needs a look.</summary>
-    public static string BookSourcesCheckMatches(long n) => Fill(Get("BookSourcesCheckMatches"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookSourcesCheckMatches(long n) => Fill(Get("BookSourcesCheckMatches"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the Check matches sheet.</summary>
     public static string BookSourcesCheckMatchesTitle => Get("BookSourcesCheckMatchesTitle");
@@ -6524,7 +6647,7 @@ public static partial class T
     public static string ReadSortLastRead => Get("ReadSortLastRead");
 
     /// <summary>Accessibility value of the list menu: the list and how many series are on it.</summary>
-    public static string ReadLibraryListValue(string list, long n) => Fill(GetPlural("ReadLibraryListValue", n), ("list", list), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadLibraryListValue(string list, long n) => Fill(GetPlural("ReadLibraryListValue", n), ("list", list), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A reading list with nothing on it. A Search button follows.</summary>
     public static string ReadLibraryEmpty(string list) => Fill(Get("ReadLibraryEmpty"), ("list", list));
@@ -6545,7 +6668,7 @@ public static partial class T
     public static string ReadSearchPlaceholder => Get("ReadSearchPlaceholder");
 
     /// <summary>The last row of reading's results with both media on: matches in the other scope.</summary>
-    public static string SearchOtherScope(long n, string scope) => Fill(GetPlural("SearchOtherScope", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("scope", scope));
+    public static string SearchOtherScope(long n, string scope) => Fill(GetPlural("SearchOtherScope", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("scope", scope));
 
     /// <summary>The button on that row, which switches the scope.</summary>
     public static string SearchShowThem => Get("SearchShowThem");
@@ -6554,7 +6677,7 @@ public static partial class T
     public static string ReadSearchBrowseLine(string what) => Fill(Get("ReadSearchBrowseLine"), ("what", what));
 
     /// <summary>Over reading's results once every result is listed: how many series AniList found.</summary>
-    public static string ReadSearchTotal(long n) => Fill(GetPlural("ReadSearchTotal", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadSearchTotal(long n) => Fill(GetPlural("ReadSearchTotal", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search couldn't ask AniList.</summary>
     public static string ReadSearchFailed => Get("ReadSearchFailed");
@@ -6611,13 +6734,13 @@ public static partial class T
     public static string ReadFilterSet(string name) => Fill(Get("ReadFilterSet"), ("name", name));
 
     /// <summary>A filter with several values: the first, then how many more.</summary>
-    public static string ReadFilterMany(string first, long more) => Fill(Get("ReadFilterMany"), ("first", first), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadFilterMany(string first, long more) => Fill(Get("ReadFilterMany"), ("first", first), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A genre left out.</summary>
     public static string ReadFilterNotGenre(string genre) => Fill(Get("ReadFilterNotGenre"), ("genre", genre));
 
     /// <summary>How many genres are set.</summary>
-    public static string ReadFilterGenresCount(long n) => Fill(GetPlural("ReadFilterGenresCount", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadFilterGenresCount(long n) => Fill(GetPlural("ReadFilterGenresCount", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A genre's state: only series with it.</summary>
     public static string ReadFilterIncluded => Get("ReadFilterIncluded");
@@ -6641,7 +6764,7 @@ public static partial class T
     public static string ReadSearchSourceFailed(string source) => Fill(Get("ReadSearchSourceFailed"), ("source", source));
 
     /// <summary>The reason under it when the source gave no answer in time.</summary>
-    public static string ReadSearchSourceTimeout(long seconds) => Fill(Get("ReadSearchSourceTimeout"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadSearchSourceTimeout(long seconds) => Fill(Get("ReadSearchSourceTimeout"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.</summary>
     public static string ReadSearchSourceNothing(string sources) => Fill(Get("ReadSearchSourceNothing"), ("sources", sources));
@@ -6650,7 +6773,7 @@ public static partial class T
     public static string ReadSearchInSource(string source) => Fill(Get("ReadSearchInSource"), ("source", source));
 
     /// <summary>On an AniList result that more than one of the person's sources has. Always 2 or more.</summary>
-    public static string ReadSearchInSources(long n) => Fill(GetPlural("ReadSearchInSources", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadSearchInSources(long n) => Fill(GetPlural("ReadSearchInSources", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Search, when AniList found nothing but the person's sources did.</summary>
     public static string ReadSearchAnilistNothing => Get("ReadSearchAnilistNothing");
@@ -6671,10 +6794,10 @@ public static partial class T
     public static string ReadSearchMoreAnilist => Get("ReadSearchMoreAnilist");
 
     /// <summary>Beside More from AniList: how many of AniList's results show.</summary>
-    public static string ReadSearchShown(long shown, long total) => Fill(Get("ReadSearchShown"), ("shown", shown.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadSearchShown(long shown, long total) => Fill(Get("ReadSearchShown"), ("shown", shown.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Beside More from AniList while AniList's count is not known yet: how many results show.</summary>
-    public static string ReadSearchShownSome(long shown) => Fill(Get("ReadSearchShownSome"), ("shown", shown.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadSearchShownSome(long shown) => Fill(Get("ReadSearchShownSome"), ("shown", shown.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Beside a source's name in Search: the kind of source it is.</summary>
     public static string ReadSearchSourceKindServer => Get("ReadSearchSourceKindServer");
@@ -6684,19 +6807,19 @@ public static partial class T
     public static string ReadSearchSourceKindPlugin => Get("ReadSearchSourceKindPlugin");
 
     /// <summary>The button of a source group with more than five hits.</summary>
-    public static string ReadSearchSourceMore(long n) => Fill(Get("ReadSearchSourceMore"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadSearchSourceMore(long n) => Fill(Get("ReadSearchSourceMore"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under the Your sources only switch in the iPhone and iPad Filters sheet.</summary>
     public static string ReadSearchSourcesOnlyLine => Get("ReadSearchSourcesOnlyLine");
 
     /// <summary>What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.</summary>
-    public static string ReadSearchDone(long anilist, long sources) => Fill(Get("ReadSearchDone"), ("anilist", anilist.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadSearchDone(long anilist, long sources) => Fill(Get("ReadSearchDone"), ("anilist", anilist.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".</summary>
     public static string ReadHomeRowLoading(string row) => Fill(Get("ReadHomeRowLoading"), ("row", row));
 
     /// <summary>Over a first-run page's title: which page of how many.</summary>
-    public static string OnboardingStep(long step, long total) => Fill(Get("OnboardingStep"), ("step", step.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string OnboardingStep(long step, long total) => Fill(Get("OnboardingStep"), ("step", step.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under "Welcome to Kaeri" on the first page, naming both media.</summary>
     public static string OnboardingWelcomeLine => Get("OnboardingWelcomeLine");
@@ -6786,7 +6909,7 @@ public static partial class T
     public static string OnboardingBothShowsServerLine => Get("OnboardingBothShowsServerLine");
 
     /// <summary>Accessibility value of a choice row: its place among the three.</summary>
-    public static string MediumChoicePosition(long n, long total) => Fill(Get("MediumChoicePosition"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MediumChoicePosition(long n, long total) => Fill(Get("MediumChoicePosition"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under the choices in the sheet.</summary>
     public static string MediumChangeLater => Get("MediumChangeLater");
@@ -6795,13 +6918,13 @@ public static partial class T
     public static string MediumUpdateLine(string device) => Fill(Get("MediumUpdateLine"), ("device", device));
 
     /// <summary>Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.</summary>
-    public static string MediumJoinTitleWatch(string devices, long n) => Fill(GetPlural("MediumJoinTitleWatch", n), ("devices", devices), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MediumJoinTitleWatch(string devices, long n) => Fill(GetPlural("MediumJoinTitleWatch", n), ("devices", devices), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the sheet when the other devices answer Read.</summary>
-    public static string MediumJoinTitleRead(string devices, long n) => Fill(GetPlural("MediumJoinTitleRead", n), ("devices", devices), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MediumJoinTitleRead(string devices, long n) => Fill(GetPlural("MediumJoinTitleRead", n), ("devices", devices), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the sheet when the other devices answer Both.</summary>
-    public static string MediumJoinTitleBoth(string devices, long n) => Fill(GetPlural("MediumJoinTitleBoth", n), ("devices", devices), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MediumJoinTitleBoth(string devices, long n) => Fill(GetPlural("MediumJoinTitleBoth", n), ("devices", devices), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of the sheet on joining.</summary>
     public static string MediumJoinLine(string device) => Fill(Get("MediumJoinLine"), ("device", device));
@@ -6969,25 +7092,25 @@ public static partial class T
     public static string AccountsUsername => Get("AccountsUsername");
 
     /// <summary>Beside the Reading heading in Downloads: how many chapters are kept and their size.</summary>
-    public static string ReadDownloadsTotal(long n, string size) => Fill(GetPlural("ReadDownloadsTotal", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("size", size));
+    public static string ReadDownloadsTotal(long n, string size) => Fill(GetPlural("ReadDownloadsTotal", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("size", size));
 
     /// <summary>A series' line in Downloads while a chapter downloads.</summary>
-    public static string ReadDownloadsActive(string chapter, long done, long total) => Fill(Get("ReadDownloadsActive"), ("chapter", chapter), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadDownloadsActive(string chapter, long done, long total) => Fill(Get("ReadDownloadsActive"), ("chapter", chapter), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>After the chapter downloading: how many more wait.</summary>
-    public static string ReadDownloadsMoreQueued(long n) => Fill(Get("ReadDownloadsMoreQueued"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadDownloadsMoreQueued(long n) => Fill(Get("ReadDownloadsMoreQueued"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A series' line in Downloads when its chapters wait to start.</summary>
-    public static string ReadDownloadsQueued(long n) => Fill(GetPlural("ReadDownloadsQueued", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadDownloadsQueued(long n) => Fill(GetPlural("ReadDownloadsQueued", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A series' line in Downloads when a chapter failed, with the reason.</summary>
     public static string ReadDownloadsFailed(string chapter, string reason) => Fill(Get("ReadDownloadsFailed"), ("chapter", chapter), ("reason", reason));
 
     /// <summary>A series' line in Downloads: how many chapters are kept.</summary>
-    public static string ReadDownloadsKept(long n) => Fill(GetPlural("ReadDownloadsKept", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadDownloadsKept(long n) => Fill(GetPlural("ReadDownloadsKept", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>After the kept count: how many of them are read.</summary>
-    public static string ReadDownloadsRead(long n) => Fill(Get("ReadDownloadsRead"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReadDownloadsRead(long n) => Fill(Get("ReadDownloadsRead"), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.</summary>
     public static string ReadDownloadsDeleteRead => Get("ReadDownloadsDeleteRead");
@@ -7023,7 +7146,7 @@ public static partial class T
     public static string SendPrepare => Get("SendPrepare");
 
     /// <summary>While the files are made: which chapter of how many. The ring beside it shows how far along.</summary>
-    public static string SendPreparing(long done, long total) => Fill(GetPlural("SendPreparing", total), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SendPreparing(long done, long total) => Fill(GetPlural("SendPreparing", total), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under the progress of a send to a device: what the pages are made for.</summary>
     public static string SendSizedFor(string device) => Fill(Get("SendSizedFor"), ("device", device));
@@ -7047,7 +7170,7 @@ public static partial class T
     public static string SendChaptersClosed => Get("SendChaptersClosed");
 
     /// <summary>Spoken value of the ring in a send under way. Already a number from 0 to 100.</summary>
-    public static string SendProgressSpoken(long percent) => Fill(Get("SendProgressSpoken"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SendProgressSpoken(long percent) => Fill(Get("SendProgressSpoken"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Spoken action on a chapter row of a series: sends that chapter to an e-reader.</summary>
     public static string SendChapterAction => Get("SendChapterAction");
@@ -7059,7 +7182,7 @@ public static partial class T
     public static string SendWaitingCancel => Get("SendWaitingCancel");
 
     /// <summary>When the files are ready, over the button that opens the share sheet. The count is how many files.</summary>
-    public static string SendReady(long n) => Fill(GetPlural("SendReady", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SendReady(long n) => Fill(GetPlural("SendReady", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.</summary>
     public static string SendShareAgain => Get("SendShareAgain");
@@ -7155,7 +7278,7 @@ public static partial class T
     public static string OpdsShareDownloads => Get("OpdsShareDownloads");
 
     /// <summary>Line under that row.</summary>
-    public static string OpdsShareDownloadsCount(long n) => Fill(GetPlural("OpdsShareDownloadsCount", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string OpdsShareDownloadsCount(long n) => Fill(GetPlural("OpdsShareDownloadsCount", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Row in What it shares: the series in the manga and comic folders.</summary>
     public static string OpdsShareManga => Get("OpdsShareManga");
@@ -7164,7 +7287,7 @@ public static partial class T
     public static string OpdsShareNovels => Get("OpdsShareNovels");
 
     /// <summary>Line under a folder row.</summary>
-    public static string OpdsShareSeriesCount(long n) => Fill(GetPlural("OpdsShareSeriesCount", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string OpdsShareSeriesCount(long n) => Fill(GetPlural("OpdsShareSeriesCount", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Heading of the list of e-readers that fetched files from the feed.</summary>
     public static string OpdsFetchedBy => Get("OpdsFetchedBy");
@@ -7191,7 +7314,7 @@ public static partial class T
     public static string OpdsFetchedTime(string time) => Fill(Get("OpdsFetchedTime"), ("time", time));
 
     /// <summary>Line under an e-reader in that list: how many files it took.</summary>
-    public static string OpdsFetchedFiles(long n) => Fill(GetPlural("OpdsFetchedFiles", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string OpdsFetchedFiles(long n) => Fill(GetPlural("OpdsFetchedFiles", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name for an e-reader that did not give one.</summary>
     public static string OpdsReaderUnnamed(string address) => Fill(Get("OpdsReaderUnnamed"), ("address", address));
@@ -7308,7 +7431,7 @@ public static partial class T
     public static string FiltersClose => Get("FiltersClose");
 
     /// <summary>Button that opens the filters, with how many are on.</summary>
-    public static string FiltersButtonCount(long count) => Fill(Get("FiltersButtonCount"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string FiltersButtonCount(long count) => Fill(Get("FiltersButtonCount"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that opens the filters when none is on.</summary>
     public static string FiltersButton => Get("FiltersButton");
@@ -7473,22 +7596,22 @@ public static partial class T
     public static string SearchLineService(string service) => Fill(Get("SearchLineService"), ("service", service));
 
     /// <summary>The count line under a title in a list or on a card: how many episodes a finished show has.</summary>
-    public static string CountEpisodes(long count) => Fill(GetPlural("CountEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountEpisodes(long count) => Fill(GetPlural("CountEpisodes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The same, short, for a cell too narrow for the long form.</summary>
-    public static string CountEpisodesShort(long count) => Fill(Get("CountEpisodesShort"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountEpisodesShort(long count) => Fill(Get("CountEpisodesShort"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The count line of a show that is airing and has a known total: episodes out so far, then the total.</summary>
-    public static string CountOutOf(long @out, long total) => Fill(Get("CountOutOf"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountOutOf(long @out, long total) => Fill(Get("CountOutOf"), ("out", @out.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The same, short.</summary>
-    public static string CountOutOfShort(long @out, long total) => Fill(Get("CountOutOfShort"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountOutOfShort(long @out, long total) => Fill(Get("CountOutOfShort"), ("out", @out.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The count line of a show that is airing and has no known total: episodes out so far.</summary>
-    public static string CountOut(long count) => Fill(GetPlural("CountOut", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountOut(long count) => Fill(GetPlural("CountOut", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The same, short.</summary>
-    public static string CountOutShort(long count) => Fill(Get("CountOutShort"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountOutShort(long count) => Fill(Get("CountOutShort"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</summary>
     public static string CountStarts(string date) => Fill(Get("CountStarts"), ("date", date));
@@ -7506,13 +7629,13 @@ public static partial class T
     public static string CountDubThrough(long through) => Fill(Get("CountDubThrough"), ("through", through.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for a count line: the long form of a finished show.</summary>
-    public static string CountSpokenEpisodes(long count) => Fill(GetPlural("CountSpokenEpisodes", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountSpokenEpisodes(long count) => Fill(GetPlural("CountSpokenEpisodes", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for a show that is airing, with a known total.</summary>
-    public static string CountSpokenOutOf(long @out, long total) => Fill(Get("CountSpokenOutOf"), ("out", @out.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountSpokenOutOf(long @out, long total) => Fill(Get("CountSpokenOutOf"), ("out", @out.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for a show that is airing with no known total.</summary>
-    public static string CountSpokenOut(long count) => Fill(GetPlural("CountSpokenOut", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string CountSpokenOut(long count) => Fill(GetPlural("CountSpokenOut", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</summary>
     public static string CountSpokenStarts(string date) => Fill(Get("CountSpokenStarts"), ("date", date));
@@ -7719,7 +7842,7 @@ public static partial class T
     public static string ServersLibrariesBody => Get("ServersLibrariesBody");
 
     /// <summary>A library's line: what it holds, and how many series.</summary>
-    public static string ServersLibraryLine(string kind, long count) => Fill(Get("ServersLibraryLine"), ("kind", kind), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersLibraryLine(string kind, long count) => Fill(Get("ServersLibraryLine"), ("kind", kind), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Switch on the libraries step and the server's page.</summary>
     public static string ServersReport => Get("ServersReport");
@@ -7731,19 +7854,19 @@ public static partial class T
     public static string ServersAdd => Get("ServersAdd");
 
     /// <summary>Line of a server's row while it is matched to AniList.</summary>
-    public static string ServersRowMatching(long done, long total) => Fill(Get("ServersRowMatching"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowMatching(long done, long total) => Fill(Get("ServersRowMatching"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A server's line once it is read.</summary>
-    public static string ServersRowSummary(long libraries, long series) => Fill(GetPlural("ServersRowSummary", libraries), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowSummary(long libraries, long series) => Fill(GetPlural("ServersRowSummary", libraries), ("libraries", libraries.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>First part of a server's row line: how many libraries it has.</summary>
-    public static string ServersRowLibraries(long count) => Fill(GetPlural("ServersRowLibraries", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowLibraries(long count) => Fill(GetPlural("ServersRowLibraries", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Second part of a server's row line: how many series it holds.</summary>
-    public static string ServersRowSeries(long count) => Fill(GetPlural("ServersRowSeries", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowSeries(long count) => Fill(GetPlural("ServersRowSeries", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a server's row after the summary: series that need a look.</summary>
-    public static string ServersRowNeedsLook(long count) => Fill(Get("ServersRowNeedsLook"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersRowNeedsLook(long count) => Fill(Get("ServersRowNeedsLook"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line at the top of a server's page.</summary>
     public static string ServersPageLine(string address, string version, string user) => Fill(Get("ServersPageLine"), ("address", address), ("version", version), ("user", user));
@@ -7827,7 +7950,7 @@ public static partial class T
     public static string ServersRefresh => Get("ServersRefresh");
 
     /// <summary>Line on a server's page: how many of its series are not matched for sure.</summary>
-    public static string ServersNeedsLook(long count) => Fill(Get("ServersNeedsLook"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ServersNeedsLook(long count) => Fill(Get("ServersNeedsLook"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a Jellyfin library of films is called in a library's line.</summary>
     public static string ServersKindFilms => Get("ServersKindFilms");
@@ -8028,7 +8151,7 @@ public static partial class T
     public static string SettingsSystemCaptionsDetail => Get("SettingsSystemCaptionsDetail");
 
     /// <summary>Line: how many shows override a setting.</summary>
-    public static string SettingsOverridden(long count) => Fill(GetPlural("SettingsOverridden", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsOverridden(long count) => Fill(GetPlural("SettingsOverridden", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Row: new downloads.</summary>
     public static string SettingsNewDownloads => Get("SettingsNewDownloads");
@@ -8271,7 +8394,7 @@ public static partial class T
     public static string WidgetResumeDubbedLabel(long episode, string title) => Fill(Get("WidgetResumeDubbedLabel"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
 
     /// <summary>Line under a signed-in account while changes wait to be sent.</summary>
-    public static string AccountsChangesWaiting(long count) => Fill(GetPlural("AccountsChangesWaiting", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string AccountsChangesWaiting(long count) => Fill(GetPlural("AccountsChangesWaiting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Choice for the download quality: larger files with more detail.</summary>
     public static string SettingsQualityHigher => Get("SettingsQualityHigher");
@@ -8385,7 +8508,7 @@ public static partial class T
     public static string SettingsSubsSize => Get("SettingsSubsSize");
 
     /// <summary>Value of the size slider. The percent is a whole number from 50 to 200.</summary>
-    public static string SettingsSubsSizeValue(long percent) => Fill(Get("SettingsSubsSizeValue"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsSubsSizeValue(long percent) => Fill(Get("SettingsSubsSizeValue"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Label of the subtitle font row.</summary>
     public static string SettingsSubsFont => Get("SettingsSubsFont");
@@ -8457,7 +8580,7 @@ public static partial class T
     public static string SettingsSubsRaise => Get("SettingsSubsRaise");
 
     /// <summary>Value of the raise slider. The percent is a whole number from 0 to 20.</summary>
-    public static string SettingsSubsRaiseValue(long percent) => Fill(Get("SettingsSubsRaiseValue"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsSubsRaiseValue(long percent) => Fill(Get("SettingsSubsRaiseValue"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Label of the picker that says what happens to styled subtitles.</summary>
     public static string SettingsSubsStyled => Get("SettingsSubsStyled");
@@ -8508,13 +8631,13 @@ public static partial class T
     public static string BookServerKey(string last) => Fill(Get("BookServerKey"), ("last", last));
 
     /// <summary>Result title once the server signed in.</summary>
-    public static string BookServerFoundTitle(long series, long libraries) => Fill(GetPlural("BookServerFoundTitle", libraries), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookServerFoundTitle(long series, long libraries) => Fill(GetPlural("BookServerFoundTitle", libraries), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under the result title. The kind is Komga, Kavita or OPDS.</summary>
     public static string BookServerFoundLine(string kind, string host) => Fill(Get("BookServerFoundLine"), ("kind", kind), ("host", host));
 
     /// <summary>A library row's line in the result.</summary>
-    public static string BookServerLibraryLine(long series) => Fill(Get("BookServerLibraryLine"), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookServerLibraryLine(long series) => Fill(Get("BookServerLibraryLine"), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Switch in the result, on to start with.</summary>
     public static string BookServerSyncProgress => Get("BookServerSyncProgress");
@@ -8559,19 +8682,19 @@ public static partial class T
     public static string BookServerNotBooksLine => Get("BookServerNotBooksLine");
 
     /// <summary>Folder result title.</summary>
-    public static string BookFolderFound(long series, long files) => Fill(GetPlural("BookFolderFound", files), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookFolderFound(long series, long files) => Fill(GetPlural("BookFolderFound", files), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under it: the folder's path, then how many series were matched by their own details.</summary>
-    public static string BookFolderFoundLine(string path, long matched) => Fill(Get("BookFolderFoundLine"), ("path", path), ("matched", matched.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookFolderFoundLine(string path, long matched) => Fill(Get("BookFolderFoundLine"), ("path", path), ("matched", matched.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Row in the folder result: files that are books in formats Kaeri can't open.</summary>
-    public static string BookFolderUnsupported(long count) => Fill(GetPlural("BookFolderUnsupported", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookFolderUnsupported(long count) => Fill(GetPlural("BookFolderUnsupported", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".</summary>
     public static string BookFolderUnsupportedLine(string kinds) => Fill(Get("BookFolderUnsupportedLine"), ("kinds", kinds));
 
     /// <summary>One item of that list: EPUB files locked with DRM or a password.</summary>
-    public static string BookFolderDrm(long count) => Fill(Get("BookFolderDrm"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookFolderDrm(long count) => Fill(Get("BookFolderDrm"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Note under the folder result.</summary>
     public static string BookFolderOpens => Get("BookFolderOpens");
@@ -8589,7 +8712,7 @@ public static partial class T
     public static string BookFolderEmpty(string folder) => Fill(Get("BookFolderEmpty"), ("folder", folder));
 
     /// <summary>Line under it.</summary>
-    public static string BookFolderEmptyLine(long files) => Fill(GetPlural("BookFolderEmptyLine", files), ("files", files.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string BookFolderEmptyLine(long files) => Fill(GetPlural("BookFolderEmptyLine", files), ("files", files.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Primary action after an empty folder.</summary>
     public static string BookFolderChooseOther => Get("BookFolderChooseOther");
@@ -8604,7 +8727,7 @@ public static partial class T
     public static string StoreJoinedTitle(string store) => Fill(Get("StoreJoinedTitle"), ("store", store));
 
     /// <summary>Line under it. The owner is who runs the store.</summary>
-    public static string StoreJoinedLine(string owner, long count) => Fill(GetPlural("StoreJoinedLine", count), ("owner", owner), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoreJoinedLine(string owner, long count) => Fill(GetPlural("StoreJoinedLine", count), ("owner", owner), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Group header in the joined store's list.</summary>
     public static string StoreGroupReading => Get("StoreGroupReading");
@@ -8622,7 +8745,7 @@ public static partial class T
     public static string StoreInstallAllReading => Get("StoreInstallAllReading");
 
     /// <summary>Result after installing.</summary>
-    public static string StoreInstalled(long count) => Fill(GetPlural("StoreInstalled", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoreInstalled(long count) => Fill(GetPlural("StoreInstalled", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Info title when every plugin in a store is for watching, and watching is off here.</summary>
     public static string StoreOtherMedium(string store) => Fill(Get("StoreOtherMedium"), ("store", store));
@@ -8646,10 +8769,10 @@ public static partial class T
     public static string StoreErrUnreachableLine(string owner) => Fill(Get("StoreErrUnreachableLine"), ("owner", owner));
 
     /// <summary>Under the reading group: plugins for watching while watching is off here.</summary>
-    public static string StoreOtherMediumMore(long count) => Fill(GetPlural("StoreOtherMediumMore", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoreOtherMediumMore(long count) => Fill(GetPlural("StoreOtherMediumMore", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>On a TV, under the list: plugins for reading, which a TV doesn't do.</summary>
-    public static string StoreTvReadingOnly(long count) => Fill(GetPlural("StoreTvReadingOnly", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoreTvReadingOnly(long count) => Fill(GetPlural("StoreTvReadingOnly", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>On a TV, info title when every plugin in a store is for reading.</summary>
     public static string StoreTvAllReading(string store) => Fill(Get("StoreTvAllReading"), ("store", store));
@@ -8658,22 +8781,22 @@ public static partial class T
     public static string StorePluginRow(string version, string hosts) => Fill(Get("StorePluginRow"), ("version", version), ("hosts", hosts));
 
     /// <summary>Notice after a server or folder is added, for 4 seconds.</summary>
-    public static string SourceAdded(string name, long series) => Fill(Get("SourceAdded"), ("name", name), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourceAdded(string name, long series) => Fill(Get("SourceAdded"), ("name", name), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice after Install all, for 4 seconds.</summary>
-    public static string SourceAddedPlugins(long count, string store) => Fill(GetPlural("SourceAddedPlugins", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("store", store));
+    public static string SourceAddedPlugins(long count, string store) => Fill(GetPlural("SourceAddedPlugins", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("store", store));
 
     /// <summary>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</summary>
-    public static string SourceRowServer(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServer", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourceRowServer(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServer", libraries), ("kind", kind), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</summary>
-    public static string SourceRowServerSeries(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServerSeries", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourceRowServerSeries(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServerSeries", libraries), ("kind", kind), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A server's row in Your sources while it shows no series.</summary>
     public static string SourceRowServerEmpty(string kind) => Fill(Get("SourceRowServerEmpty"), ("kind", kind));
 
     /// <summary>A folder's row in Your sources.</summary>
-    public static string SourceRowFolder(string path, long series, long skipped) => Fill(GetPlural("SourceRowFolder", skipped), ("path", path), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("skipped", skipped.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourceRowFolder(string path, long series, long skipped) => Fill(GetPlural("SourceRowFolder", skipped), ("path", path), ("series", series.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("skipped", skipped.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A plugin's row in Your sources. The medium is "Reading" or "Watching".</summary>
     public static string SourceRowPlugin(string store, string medium, string version) => Fill(Get("SourceRowPlugin"), ("store", store), ("medium", medium), ("version", version));
@@ -8697,7 +8820,7 @@ public static partial class T
     public static string SourcePickerAutomaticDetail => Get("SourcePickerAutomaticDetail");
 
     /// <summary>Under a source: how many of the title's released episodes it lists.</summary>
-    public static string SourcePickerCoverage(long covered, long of) => Fill(GetPlural("SourcePickerCoverage", of), ("covered", covered.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcePickerCoverage(long covered, long of) => Fill(GetPlural("SourcePickerCoverage", of), ("covered", covered.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("of", of.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under a source that is switched off in Settings.</summary>
     public static string SourceNoteOff => Get("SourceNoteOff");
@@ -8835,7 +8958,7 @@ public static partial class T
     public static string SourcesContactsOne(string first) => Fill(Get("SourcesContactsOne"), ("first", first));
 
     /// <summary>Line: the plugin contacts several hosts. The count is the hosts after the first.</summary>
-    public static string SourcesContactsLine(string first, long more) => Fill(GetPlural("SourcesContactsLine", more), ("first", first), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcesContactsLine(string first, long more) => Fill(GetPlural("SourcesContactsLine", more), ("first", first), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line: the plugin contacts no host.</summary>
     public static string SourcesContactsNone => Get("SourcesContactsNone");
@@ -8847,7 +8970,7 @@ public static partial class T
     public static string SourcesUpdateContactsOne(string first) => Fill(Get("SourcesUpdateContactsOne"), ("first", first));
 
     /// <summary>Line: an update adds several hosts. The count is the hosts after the first.</summary>
-    public static string SourcesUpdateContacts(string first, long more) => Fill(GetPlural("SourcesUpdateContacts", more), ("first", first), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcesUpdateContacts(string first, long more) => Fill(GetPlural("SourcesUpdateContacts", more), ("first", first), ("more", more.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Title of the update question.</summary>
     public static string SourcesUpdateTitle(string name) => Fill(Get("SourcesUpdateTitle"), ("name", name));
@@ -8877,7 +9000,7 @@ public static partial class T
     public static string SourcesRebuilding => Get("SourcesRebuilding");
 
     /// <summary>Value of a plugin's response time, in milliseconds.</summary>
-    public static string SourcesResponseMs(long ms) => Fill(Get("SourcesResponseMs"), ("ms", ms.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SourcesResponseMs(long ms) => Fill(Get("SourcesResponseMs"), ("ms", ms.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Menu, palette and source picker entry that opens the sheet.</summary>
     public static string MatchFix => Get("MatchFix");
@@ -8886,7 +9009,7 @@ public static partial class T
     public static string MatchChoose => Get("MatchChoose");
 
     /// <summary>The line on the title page while the match is open, under its main action. The count leaves out titles that were ruled out.</summary>
-    public static string MatchUncertain(long count, string source) => Fill(GetPlural("MatchUncertain", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("source", source));
+    public static string MatchUncertain(long count, string source) => Fill(GetPlural("MatchUncertain", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("source", source));
 
     /// <summary>The line on a title page when the source listed no title that fits, so the person searches.</summary>
     public static string MatchUncertainNone(string source) => Fill(Get("MatchUncertainNone"), ("source", source));
@@ -9357,7 +9480,7 @@ public static partial class T
     public static string StoresOwnerDevices(string devices) => Fill(Get("StoresOwnerDevices"), ("devices", devices));
 
     /// <summary>Line of a member: the number of devices.</summary>
-    public static string StoresMemberDevices(long count) => Fill(GetPlural("StoresMemberDevices", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresMemberDevices(long count) => Fill(GetPlural("StoresMemberDevices", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Label of the field for the name of the person invited.</summary>
     public static string StoresInviteFor => Get("StoresInviteFor");
@@ -9430,10 +9553,10 @@ public static partial class T
     public static string StoresInviteGroupDetail => Get("StoresInviteGroupDetail");
 
     /// <summary>Line under an invite that works a set number of times.</summary>
-    public static string StoresInviteWorksTimes(long count, string until) => Fill(Get("StoresInviteWorksTimes"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("until", until));
+    public static string StoresInviteWorksTimes(long count, string until) => Fill(Get("StoresInviteWorksTimes"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("until", until));
 
     /// <summary>The same with no end date.</summary>
-    public static string StoresInviteWorksTimesForever(long count) => Fill(Get("StoresInviteWorksTimesForever"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresInviteWorksTimesForever(long count) => Fill(Get("StoresInviteWorksTimesForever"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under an invite that works any number of times.</summary>
     public static string StoresInviteWorksAny(string until) => Fill(Get("StoresInviteWorksAny"), ("until", until));
@@ -9460,10 +9583,10 @@ public static partial class T
     public static string StoresInviteNotUsed => Get("StoresInviteNotUsed");
 
     /// <summary>Uses of an invite that works any number of times.</summary>
-    public static string StoresInviteUsed(long used) => Fill(GetPlural("StoresInviteUsed", used), ("used", used.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresInviteUsed(long used) => Fill(GetPlural("StoresInviteUsed", used), ("used", used.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Uses of an invite that works a set number of times.</summary>
-    public static string StoresInviteUsedOf(long used, long max) => Fill(Get("StoresInviteUsedOf"), ("used", used.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("max", max.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresInviteUsedOf(long used, long max) => Fill(Get("StoresInviteUsedOf"), ("used", used.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("max", max.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Heading over invites that ended.</summary>
     public static string StoresInvitesEnded => Get("StoresInvitesEnded");
@@ -9484,7 +9607,7 @@ public static partial class T
     public static string StoresInviteJoined(string name, string when) => Fill(Get("StoresInviteJoined"), ("name", name), ("when", when));
 
     /// <summary>Detail of the confirmation that cancels an invite that was used.</summary>
-    public static string StoresCancelInviteDetail(long count) => Fill(GetPlural("StoresCancelInviteDetail", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresCancelInviteDetail(long count) => Fill(GetPlural("StoresCancelInviteDetail", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Join sheet: name field when the invite works more than once.</summary>
     public static string StoresJoinYourName => Get("StoresJoinYourName");
@@ -9514,13 +9637,13 @@ public static partial class T
     public static string StoresOnlyInvited => Get("StoresOnlyInvited");
 
     /// <summary>Line over the list of devices that joined with the link.</summary>
-    public static string StoresDevicesJoined(long count) => Fill(GetPlural("StoresDevicesJoined", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresDevicesJoined(long count) => Fill(GetPlural("StoresDevicesJoined", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line of a device that joined.</summary>
     public static string StoresDeviceJoinedAt(string when) => Fill(Get("StoresDeviceJoinedAt"), ("when", when));
 
     /// <summary>Line under the list when it is cut off.</summary>
-    public static string StoresNewestListed(long count) => Fill(Get("StoresNewestListed"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresNewestListed(long count) => Fill(Get("StoresNewestListed"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line when the store's server cannot offer the choice.</summary>
     public static string StoresServerOlder => Get("StoresServerOlder");
@@ -9547,7 +9670,7 @@ public static partial class T
     public static string StoresCopyLink => Get("StoresCopyLink");
 
     /// <summary>Heading over the { -plugin-pl } a { -plugin-store } offers, in the join dialog.</summary>
-    public static string StoresOffersPlugins(long count) => Fill(GetPlural("StoresOffersPlugins", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string StoresOffersPlugins(long count) => Fill(GetPlural("StoresOffersPlugins", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button of a notice that opens the plugin stores page.</summary>
     public static string NoticeOpenStores => Get("NoticeOpenStores");
@@ -9709,7 +9832,7 @@ public static partial class T
     public static string DevicesAdd => Get("DevicesAdd");
 
     /// <summary>Device row line past 30 days.</summary>
-    public static string DevicesNotSeen(long days) => Fill(Get("DevicesNotSeen"), ("days", days.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DevicesNotSeen(long days) => Fill(Get("DevicesNotSeen"), ("days", days.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A device paired only for Play on TV.</summary>
     public static string DevicesRemoteOnly => Get("DevicesRemoteOnly");
@@ -9937,7 +10060,7 @@ public static partial class T
     public static string RkeyEnterTitle => Get("RkeyEnterTitle");
 
     /// <summary>Restore.</summary>
-    public static string RkeyEnterLine(string service, long count) => Fill(GetPlural("RkeyEnterLine", count), ("service", service), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RkeyEnterLine(string service, long count) => Fill(GetPlural("RkeyEnterLine", count), ("service", service), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Field note.</summary>
     public static string RkeyEnterNote => Get("RkeyEnterNote");
@@ -10123,7 +10246,7 @@ public static partial class T
     public static string CloudAppPasswordNote(string kind) => Fill(Get("CloudAppPasswordNote"), ("kind", kind));
 
     /// <summary>Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this.</summary>
-    public static string DevicesTvsForPlay(long count) => Fill(GetPlural("DevicesTvsForPlay", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string DevicesTvsForPlay(long count) => Fill(GetPlural("DevicesTvsForPlay", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under a TV paired for Play on TV today.</summary>
     public static string DevicesPairedToday => Get("DevicesPairedToday");
@@ -10354,13 +10477,13 @@ public static partial class T
     public static string EpisodeSynopsisShowHint => Get("EpisodeSynopsisShowHint");
 
     /// <summary>Facts line of an episode with a length and an air date. The date is already formatted.</summary>
-    public static string EpisodeFacts(long minutes, string date) => Fill(Get("EpisodeFacts"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("date", date));
+    public static string EpisodeFacts(long minutes, string date) => Fill(Get("EpisodeFacts"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("date", date));
 
     /// <summary>Facts line of an episode with a length only.</summary>
-    public static string EpisodeFactsLength(long minutes) => Fill(Get("EpisodeFactsLength"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string EpisodeFactsLength(long minutes) => Fill(Get("EpisodeFactsLength"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Facts line of an episode that is part-watched.</summary>
-    public static string EpisodeFactsLeft(long minutes) => Fill(Get("EpisodeFactsLeft"), ("minutes", minutes.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string EpisodeFactsLeft(long minutes) => Fill(Get("EpisodeFactsLeft"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.</summary>
     public static string EpisodeProtectionLine(long episode) => Fill(Get("EpisodeProtectionLine"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -10375,7 +10498,7 @@ public static partial class T
     public static string EpisodeRangeLabel => Get("EpisodeRangeLabel");
 
     /// <summary>One line that stands for the watched episodes at the top of a range. Opening it shows them.</summary>
-    public static string EpisodeFold(long count) => Fill(GetPlural("EpisodeFold", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string EpisodeFold(long count) => Fill(GetPlural("EpisodeFold", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>An episode's number in a facts line on phones and in narrow desktop windows.</summary>
     public static string EpisodeShort(long episode) => Fill(Get("EpisodeShort"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -10468,7 +10591,7 @@ public static partial class T
     public static string MoreFollowingNote => Get("MoreFollowingNote");
 
     /// <summary>What a followed person gave the show, out of ten. The score is a whole number.</summary>
-    public static string MoreFollowedScore(long score) => Fill(Get("MoreFollowedScore"), ("score", score.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MoreFollowedScore(long score) => Fill(Get("MoreFollowedScore"), ("score", score.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Heading of the list of titles people who liked this one also liked.</summary>
     public static string MoreLikeThis => Get("MoreLikeThis");
@@ -10486,7 +10609,7 @@ public static partial class T
     public static string MoreHideSpoilerTags => Get("MoreHideSpoilerTags");
 
     /// <summary>Button that shows the spoiler tags.</summary>
-    public static string MoreShowSpoilerTags(long count) => Fill(GetPlural("MoreShowSpoilerTags", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MoreShowSpoilerTags(long count) => Fill(GetPlural("MoreShowSpoilerTags", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>An episode's line with the audio it was watched in marked, as Continue and the title page word it.</summary>
     public static string EpisodeLineDubbed(string line) => Fill(Get("EpisodeLineDubbed"), ("line", line));
@@ -10519,7 +10642,7 @@ public static partial class T
     public static string TitleFactTba => Get("TitleFactTba");
 
     /// <summary>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</summary>
-    public static string MoreFollowingLine(string status, long score) => Fill(Get("MoreFollowingLine"), ("status", status), ("score", score.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string MoreFollowingLine(string status, long score) => Fill(Get("MoreFollowingLine"), ("status", status), ("score", score.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</summary>
     public static string EpisodeGoTo => Get("EpisodeGoTo");
@@ -10774,7 +10897,7 @@ public static partial class T
     public static string AccountsStateSignedIn(string tracker, string name) => Fill(Get("AccountsStateSignedIn"), ("tracker", tracker), ("name", name));
 
     /// <summary>Status: signed in, with changes waiting to be sent.</summary>
-    public static string AccountsStateSignedInWaiting(string tracker, string name, long count) => Fill(GetPlural("AccountsStateSignedInWaiting", count), ("tracker", tracker), ("name", name), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string AccountsStateSignedInWaiting(string tracker, string name, long count) => Fill(GetPlural("AccountsStateSignedInWaiting", count), ("tracker", tracker), ("name", name), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Status: the sign-in ran out.</summary>
     public static string AccountsStateExpired(string tracker) => Fill(Get("AccountsStateExpired"), ("tracker", tracker));
@@ -11137,7 +11260,7 @@ public static partial class T
     public static string TvCastNoneFound => Get("TvCastNoneFound");
 
     /// <summary>Status line of the casting card while a cast takes a while to start: the line, then the seconds since the TV was picked.</summary>
-    public static string TvCastCounting(string line, long seconds) => Fill(Get("TvCastCounting"), ("line", line), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TvCastCounting(string line, long seconds) => Fill(Get("TvCastCounting"), ("line", line), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Status line of the casting card when the cast didn't start. The reason shows under the episode.</summary>
     public static string TvCastCouldntStart(string name) => Fill(Get("TvCastCouldntStart"), ("name", name));
@@ -11161,7 +11284,7 @@ public static partial class T
     public static string TvCastVolumeOnTv => Get("TvCastVolumeOnTv");
 
     /// <summary>Line over the next episode on the casting card while its count runs. At 0 the TV plays it.</summary>
-    public static string TvCastUpNextIn(long seconds) => Fill(Get("TvCastUpNextIn"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string TvCastUpNextIn(long seconds) => Fill(Get("TvCastUpNextIn"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Line under the paired TVs.</summary>
     public static string TvForgetNote => Get("TvForgetNote");
@@ -11443,6 +11566,24 @@ public static partial class T
         ["HomeTrending"] = "Trending now",
         ["HomeBecause"] = "Because you finished {title}",
         ["HomeMoreGenre"] = "More {genre}",
+        ["HomeMoreGenreAction"] = "More action",
+        ["HomeMoreGenreAdventure"] = "More adventure",
+        ["HomeMoreGenreComedy"] = "More comedy",
+        ["HomeMoreGenreDrama"] = "More drama",
+        ["HomeMoreGenreEcchi"] = "More ecchi",
+        ["HomeMoreGenreFantasy"] = "More fantasy",
+        ["HomeMoreGenreHorror"] = "More horror",
+        ["HomeMoreGenreMahouShoujo"] = "More mahou shoujo",
+        ["HomeMoreGenreMecha"] = "More mecha",
+        ["HomeMoreGenreMusic"] = "More music",
+        ["HomeMoreGenreMystery"] = "More mystery",
+        ["HomeMoreGenrePsychological"] = "More psychological",
+        ["HomeMoreGenreRomance"] = "More romance",
+        ["HomeMoreGenreSciFi"] = "More sci-fi",
+        ["HomeMoreGenreSliceOfLife"] = "More slice of life",
+        ["HomeMoreGenreSports"] = "More sports",
+        ["HomeMoreGenreSupernatural"] = "More supernatural",
+        ["HomeMoreGenreThriller"] = "More thriller",
         ["HomeSpotlightDemo"] = "Demo, free to share",
         ["LicensedReturn"] = "Watched episode {episode} on {service}?",
         ["LicensedMarked"] = "Episode {episode} marked as watched.",
@@ -11727,6 +11868,29 @@ public static partial class T
         ["ReadHitFiles_other"] = "{count} files",
         ["ReadHitFilesFormat_one"] = "1 file · {format}",
         ["ReadHitFilesFormat_other"] = "{count} files · {format}",
+        ["ReadSourceFolders"] = "Folders",
+        ["ReadFeedDownloads"] = "Downloads",
+        ["ReadingSinceJanuary"] = "since January",
+        ["ReadingSinceFebruary"] = "since February",
+        ["ReadingSinceMarch"] = "since March",
+        ["ReadingSinceApril"] = "since April",
+        ["ReadingSinceMay"] = "since May",
+        ["ReadingSinceJune"] = "since June",
+        ["ReadingSinceJuly"] = "since July",
+        ["ReadingSinceAugust"] = "since August",
+        ["ReadingSinceSeptember"] = "since September",
+        ["ReadingSinceOctober"] = "since October",
+        ["ReadingSinceNovember"] = "since November",
+        ["ReadingSinceDecember"] = "since December",
+        ["ReadViewAllTrendingManga"] = "Manga, trending",
+        ["ReadViewAllTrendingWebtoons"] = "Webtoons, trending",
+        ["ReadViewAllTrendingNovels"] = "Light novels, trending",
+        ["ReadViewAllNewManga"] = "Manga started in the last 12 months",
+        ["ReadViewAllNewWebtoons"] = "Webtoons started in the last 12 months",
+        ["ReadViewAllNewNovels"] = "Light novels started in the last 12 months",
+        ["ReadViewAllFinishedManga"] = "Finished manga, most popular",
+        ["ReadViewAllFinishedWebtoons"] = "Finished webtoons, most popular",
+        ["ReadViewAllFinishedNovels"] = "Finished light novels, most popular",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",

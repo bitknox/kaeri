@@ -145,27 +145,27 @@ public enum L {
 
     /// Line under the spotlight's title, and under a { -continue-cap } card, for an episode part way through: the episode and the minutes left in it.
     public static func homeTimeLeft(episode: Int, minutes: Int) -> String {
-        Self.format("home-time-left", fallback: "Episode %1$lld · %2$lld min left", episode, minutes)
+        Self.format("home-time-left", fallback: "Episode %1$@ · %2$lld min left", String(episode), minutes)
     }
 
     /// Line under the spotlight's title, and under a { -continue-cap } card, for a show still airing whose next episode is its newest one out.
     public static func homeEpisodeOut(episode: Int) -> String {
-        Self.format("home-episode-out", fallback: "Episode %1$lld is out", episode)
+        Self.format("home-episode-out", fallback: "Episode %1$@ is out", String(episode))
     }
 
     /// Line under the spotlight's title, and under a { -continue-cap } card, for the next episode of a show part way through when it is not the newest one out, such as any episode of a show that finished airing.
     public static func homeEpisodeNext(episode: Int) -> String {
-        Self.format("home-episode-next", fallback: "Episode %1$lld next", episode)
+        Self.format("home-episode-next", fallback: "Episode %1$@ next", String(episode))
     }
 
     /// Line under a { -continue-cap } card whose next episode came out today.
     public static func homeEpisodeOutToday(episode: Int) -> String {
-        Self.format("home-episode-out-today", fallback: "Episode %1$lld · out today", episode)
+        Self.format("home-episode-out-today", fallback: "Episode %1$@ · out today", String(episode))
     }
 
     /// Line under a poster on This season: the newest episode out.
     public static func homeEpisodeOutShort(episode: Int) -> String {
-        Self.format("home-episode-out-short", fallback: "Episode %1$lld out", episode)
+        Self.format("home-episode-out-short", fallback: "Episode %1$@ out", String(episode))
     }
 
     /// Line under a This week or Airing today card whose episode is already out today. The time is worded as a span, such as 2h 5m.
@@ -217,22 +217,76 @@ public enum L {
         Self.format("home-because", fallback: "Because you finished %1$@", title)
     }
 
-    /// Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+    /// Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
     public static func homeMoreGenre(genre: String) -> String {
         Self.format("home-more-genre", fallback: "More %1$@", genre)
     }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreAction: String { string("home-more-genre-action", fallback: "More action") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreAdventure: String { string("home-more-genre-adventure", fallback: "More adventure") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreComedy: String { string("home-more-genre-comedy", fallback: "More comedy") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreDrama: String { string("home-more-genre-drama", fallback: "More drama") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreEcchi: String { string("home-more-genre-ecchi", fallback: "More ecchi") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreFantasy: String { string("home-more-genre-fantasy", fallback: "More fantasy") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreHorror: String { string("home-more-genre-horror", fallback: "More horror") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreMahouShoujo: String { string("home-more-genre-mahou-shoujo", fallback: "More mahou shoujo") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreMecha: String { string("home-more-genre-mecha", fallback: "More mecha") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreMusic: String { string("home-more-genre-music", fallback: "More music") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreMystery: String { string("home-more-genre-mystery", fallback: "More mystery") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenrePsychological: String { string("home-more-genre-psychological", fallback: "More psychological") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreRomance: String { string("home-more-genre-romance", fallback: "More romance") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreSciFi: String { string("home-more-genre-sci-fi", fallback: "More sci-fi") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreSliceOfLife: String { string("home-more-genre-slice-of-life", fallback: "More slice of life") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreSports: String { string("home-more-genre-sports", fallback: "More sports") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreSupernatural: String { string("home-more-genre-supernatural", fallback: "More supernatural") }
+
+    /// Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+    public static var homeMoreGenreThriller: String { string("home-more-genre-thriller", fallback: "More thriller") }
 
     /// Line over the spotlight's title when it is the built-in demo.
     public static var homeSpotlightDemo: String { string("home-spotlight-demo", fallback: "Demo, free to share") }
 
     /// Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library.
     public static func licensedReturn(episode: Int, service: String) -> String {
-        Self.format("licensed-return", fallback: "Watched episode %1$lld on %2$@?", episode, service)
+        Self.format("licensed-return", fallback: "Watched episode %1$@ on %2$@?", String(episode), service)
     }
 
     /// Notice after Mark as watched on the return notice. It holds Undo.
     public static func licensedMarked(episode: Int) -> String {
-        Self.format("licensed-marked", fallback: "Episode %1$lld marked as watched.", episode)
+        Self.format("licensed-marked", fallback: "Episode %1$@ marked as watched.", String(episode))
     }
 
     /// A reason on its own, as a toast or a failed play's explanation. The reason is one of the engine's own reasons, so it is translated.
@@ -248,12 +302,12 @@ public enum L {
 
     /// A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
     public static func noticeNotAired(episode: Int, when: String) -> String {
-        Self.format("notice-not-aired", fallback: "Episode %1$lld airs %2$@.", episode, when)
+        Self.format("notice-not-aired", fallback: "Episode %1$@ airs %2$@.", String(episode), when)
     }
 
     /// A play's explanation: the episode is after the next one to air. The "when" says when that one airs.
     public static func noticeNotAiredYet(episode: Int, next: Int, when: String) -> String {
-        Self.format("notice-not-aired-yet", fallback: "Episode %1$lld hasn't aired yet. Episode %2$lld airs %3$@.", episode, next, when)
+        Self.format("notice-not-aired-yet", fallback: "Episode %1$@ hasn't aired yet. Episode %2$@ airs %3$@.", String(episode), String(next), when)
     }
 
     /// Part of an air time: the broadcast is later today. The time is the viewer's local time.
@@ -681,7 +735,7 @@ public enum L {
 
     /// A notice over the page when a chapter opens where it was left. It offers Start over.
     public static func readerResumed(page: Int) -> String {
-        Self.format("reader-resumed", fallback: "Resumed at page %1$lld", page)
+        Self.format("reader-resumed", fallback: "Resumed at page %1$@", String(page))
     }
 
     /// The same notice in a webtoon strip, which counts images rather than pages.
@@ -691,17 +745,17 @@ public enum L {
 
     /// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
     public static func readerBackToPage(page: Int) -> String {
-        Self.format("reader-back-to-page", fallback: "Back to page %1$lld", page)
+        Self.format("reader-back-to-page", fallback: "Back to page %1$@", String(page))
     }
 
     /// A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message.
     public static func readerMoved(chapter: String, page: Int, device: String) -> String {
-        Self.format("reader-moved", fallback: "Moved to %1$@, page %2$lld, where %3$@ stopped", chapter, page, device)
+        Self.format("reader-moved", fallback: "Moved to %1$@, page %2$@, where %3$@ stopped", chapter, String(page), device)
     }
 
     /// The same notice for a chapter known only by its number, such as 14 or 14.5.
     public static func readerMovedNumber(chapter: String, page: Int, device: String) -> String {
-        Self.format("reader-moved-number", fallback: "Moved to chapter %1$@, page %2$lld, where %3$@ stopped", chapter, page, device)
+        Self.format("reader-moved-number", fallback: "Moved to chapter %1$@, page %2$@, where %3$@ stopped", chapter, String(page), device)
     }
 
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
@@ -736,7 +790,7 @@ public enum L {
 
     /// Why one page did not load. The status is the server's HTTP status code, such as 404.
     public static func readingFailedPage(status: Int) -> String {
-        Self.format("reading-failed-page", fallback: "This page didn't load (error %1$lld). Try again.", status)
+        Self.format("reading-failed-page", fallback: "This page didn't load (error %1$@). Try again.", String(status))
     }
 
     /// Why something could not load: a sign-in is needed. What is a server's or a tracker's name.
@@ -767,7 +821,7 @@ public enum L {
 
     /// Why a novel could not open: the system's web view is too old. The version is its major version number, such as 80.
     public static func readingFailedWebview(version: Int) -> String {
-        Self.format("reading-failed-webview", fallback: "Novels need a newer system WebView than version %1$lld. Update Android System WebView and try again.", version)
+        Self.format("reading-failed-webview", fallback: "Novels need a newer system WebView than version %1$@. Update Android System WebView and try again.", String(version))
     }
 
     /// Why a book plugin could not be used: it was built for a newer Kaeri. The world is the plugin interface's name and version.
@@ -876,7 +930,7 @@ public enum L {
 
     /// Under a cover or the big picture: the page the person stopped on in a chapter.
     public static func readingChapterPage(chapter: String, page: Int) -> String {
-        Self.format("reading-chapter-page", fallback: "Chapter %1$@ · page %2$lld", chapter, page)
+        Self.format("reading-chapter-page", fallback: "Chapter %1$@ · page %2$@", chapter, String(page))
     }
 
     /// Under a cover or the big picture: how far into a novel's chapter the person is.
@@ -1035,12 +1089,12 @@ public enum L {
 
     /// A chapter row's state: the page the person stopped on, of how many.
     public static func readingRowPageOf(page: Int, of: Int) -> String {
-        Self.format("reading-row-page-of", fallback: "Page %1$lld of %2$lld", page, of)
+        Self.format("reading-row-page-of", fallback: "Page %1$@ of %2$@", String(page), String(of))
     }
 
     /// A chapter row's state: the page the person stopped on, when the length isn't known.
     public static func readingRowPage(page: Int) -> String {
-        Self.format("reading-row-page", fallback: "Page %1$lld", page)
+        Self.format("reading-row-page", fallback: "Page %1$@", String(page))
     }
 
     /// A novel's chapter row: how far into it the person is.
@@ -1253,12 +1307,12 @@ public enum L {
 
     /// Under a source's hit in Search: the chapters it holds, from the first.
     public static func readHitChapters(last: Int) -> String {
-        Self.format("read-hit-chapters", fallback: "Chapters 1 to %1$lld", last)
+        Self.format("read-hit-chapters", fallback: "Chapters 1 to %1$@", String(last))
     }
 
     /// Under a source's hit in Search: a web novel's episodes it holds, from the first.
     public static func readHitEpisodes(last: Int) -> String {
-        Self.format("read-hit-episodes", fallback: "Episodes 1 to %1$lld", last)
+        Self.format("read-hit-episodes", fallback: "Episodes 1 to %1$@", String(last))
     }
 
     /// Under a source's hit in Search: a light novel's parts it holds.
@@ -1275,6 +1329,75 @@ public enum L {
     public static func readHitFilesFormat(count: Int, format: String) -> String {
         Self.format("read-hit-files-format", fallback: "%1$lld files · %2$@", count, format)
     }
+
+    /// The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+    public static var readSourceFolders: String { string("read-source-folders", fallback: "Folders") }
+
+    /// A section of the feed that e-readers fetch from: the chapters downloaded on this device.
+    public static var readFeedDownloads: String { string("read-feed-downloads", fallback: "Downloads") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+    public static var readingSinceJanuary: String { string("reading-since-january", fallback: "since January") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+    public static var readingSinceFebruary: String { string("reading-since-february", fallback: "since February") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+    public static var readingSinceMarch: String { string("reading-since-march", fallback: "since March") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+    public static var readingSinceApril: String { string("reading-since-april", fallback: "since April") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+    public static var readingSinceMay: String { string("reading-since-may", fallback: "since May") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+    public static var readingSinceJune: String { string("reading-since-june", fallback: "since June") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+    public static var readingSinceJuly: String { string("reading-since-july", fallback: "since July") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+    public static var readingSinceAugust: String { string("reading-since-august", fallback: "since August") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+    public static var readingSinceSeptember: String { string("reading-since-september", fallback: "since September") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+    public static var readingSinceOctober: String { string("reading-since-october", fallback: "since October") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+    public static var readingSinceNovember: String { string("reading-since-november", fallback: "since November") }
+
+    /// On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+    public static var readingSinceDecember: String { string("reading-since-december", fallback: "since December") }
+
+    /// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList".
+    public static var readViewAllTrendingManga: String { string("read-view-all-trending-manga", fallback: "Manga, trending") }
+
+    /// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList".
+    public static var readViewAllTrendingWebtoons: String { string("read-view-all-trending-webtoons", fallback: "Webtoons, trending") }
+
+    /// The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList".
+    public static var readViewAllTrendingNovels: String { string("read-view-all-trending-novels", fallback: "Light novels, trending") }
+
+    /// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList".
+    public static var readViewAllNewManga: String { string("read-view-all-new-manga", fallback: "Manga started in the last 12 months") }
+
+    /// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".
+    public static var readViewAllNewWebtoons: String { string("read-view-all-new-webtoons", fallback: "Webtoons started in the last 12 months") }
+
+    /// The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList".
+    public static var readViewAllNewNovels: String { string("read-view-all-new-novels", fallback: "Light novels started in the last 12 months") }
+
+    /// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList".
+    public static var readViewAllFinishedManga: String { string("read-view-all-finished-manga", fallback: "Finished manga, most popular") }
+
+    /// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList".
+    public static var readViewAllFinishedWebtoons: String { string("read-view-all-finished-webtoons", fallback: "Finished webtoons, most popular") }
+
+    /// The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList".
+    public static var readViewAllFinishedNovels: String { string("read-view-all-finished-novels", fallback: "Finished light novels, most popular") }
 
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
@@ -1783,7 +1906,7 @@ public enum L {
 
     /// Toast, and desktop notification, for one episode that aired while the app was closed.
     public static func noticeEpisodeAired(title: String, episode: Int) -> String {
-        Self.format("notice-episode-aired", fallback: "%1$@, episode %2$lld, aired while you were away.", title, episode)
+        Self.format("notice-episode-aired", fallback: "%1$@, episode %2$@, aired while you were away.", title, String(episode))
     }
 
     /// Toast, and desktop notification, for several episodes that aired while the app was closed.
@@ -1900,12 +2023,12 @@ public enum L {
 
     /// VoiceOver: a title that is up to date and whose next episode airs later. The time is already worded.
     public static func accessCaughtUpAirs(episode: Int, when: String) -> String {
-        Self.format("access-caught-up-airs", fallback: "Caught up, episode %1$lld airs %2$@", episode, when)
+        Self.format("access-caught-up-airs", fallback: "Caught up, episode %1$@ airs %2$@", String(episode), when)
     }
 
     /// VoiceOver: a title that is up to date and whose next episode has no air time yet.
     public static func accessCaughtUpUnaired(episode: Int) -> String {
-        Self.format("access-caught-up-unaired", fallback: "Caught up, episode %1$lld is not out yet", episode)
+        Self.format("access-caught-up-unaired", fallback: "Caught up, episode %1$@ is not out yet", String(episode))
     }
 
     /// VoiceOver: where a part-watched episode stopped. The time is a clock time.
@@ -1994,32 +2117,32 @@ public enum L {
 
     /// Short episode name for a dubbed episode, in a row or a widget.
     public static func titleEpisodeShortDubbed(episode: Int) -> String {
-        Self.format("title-episode-short-dubbed", fallback: "E%1$lld dubbed", episode)
+        Self.format("title-episode-short-dubbed", fallback: "E%1$@ dubbed", String(episode))
     }
 
     /// Long episode name for a dubbed episode, in a row or a widget.
     public static func titleEpisodeLongDubbed(episode: Int) -> String {
-        Self.format("title-episode-long-dubbed", fallback: "Episode %1$lld · Dubbed", episode)
+        Self.format("title-episode-long-dubbed", fallback: "Episode %1$@ · Dubbed", String(episode))
     }
 
     /// Row caption: an episode part-watched, with how long is left. The time left is already worded.
     public static func continueRowLeft(episode: Int, left: String) -> String {
-        Self.format("continue-row-left", fallback: "E%1$lld · %2$@", episode, left)
+        Self.format("continue-row-left", fallback: "E%1$@ · %2$@", String(episode), left)
     }
 
     /// Row caption: a dubbed episode part-watched, with how long is left. The time left is already worded.
     public static func continueRowLeftDubbed(episode: Int, left: String) -> String {
-        Self.format("continue-row-left-dubbed", fallback: "E%1$lld dubbed · %2$@", episode, left)
+        Self.format("continue-row-left-dubbed", fallback: "E%1$@ dubbed · %2$@", String(episode), left)
     }
 
     /// Widget action: carry on with an episode that was left part-way.
     public static func continueWidgetResume(episode: Int) -> String {
-        Self.format("continue-widget-resume", fallback: "Resume E%1$lld", episode)
+        Self.format("continue-widget-resume", fallback: "Resume E%1$@", String(episode))
     }
 
     /// Widget action: carry on with a dubbed episode that was left part-way.
     public static func continueWidgetResumeDubbed(episode: Int) -> String {
-        Self.format("continue-widget-resume-dubbed", fallback: "Resume E%1$lld dubbed", episode)
+        Self.format("continue-widget-resume-dubbed", fallback: "Resume E%1$@ dubbed", String(episode))
     }
 
     /// Title of the system window that keeps downloads going after the person leaves the app.
@@ -2063,22 +2186,22 @@ public enum L {
 
     /// Calendar row: an episode that has aired. The span is already worded, such as "1d 2h ago".
     public static func calendarLineOutApple(episode: Int, ago: String) -> String {
-        Self.format("calendar-line-out-apple", fallback: "E%1$lld out %2$@", episode, ago)
+        Self.format("calendar-line-out-apple", fallback: "E%1$@ out %2$@", String(episode), ago)
     }
 
     /// Calendar row: a dubbed episode that has aired. The span is already worded, such as "1d 2h ago".
     public static func calendarLineOutDubbed(episode: Int, ago: String) -> String {
-        Self.format("calendar-line-out-dubbed", fallback: "E%1$lld out %2$@ · Dubbed", episode, ago)
+        Self.format("calendar-line-out-dubbed", fallback: "E%1$@ out %2$@ · Dubbed", String(episode), ago)
     }
 
     /// Calendar row: an episode that airs soon. The span is already worded, such as "1h 30m".
     public static func calendarLineInApple(episode: Int, span: String) -> String {
-        Self.format("calendar-line-in-apple", fallback: "E%1$lld in %2$@", episode, span)
+        Self.format("calendar-line-in-apple", fallback: "E%1$@ in %2$@", String(episode), span)
     }
 
     /// Calendar row: a dubbed episode that airs soon. The span is already worded, such as "1h 30m".
     public static func calendarLineInDubbed(episode: Int, span: String) -> String {
-        Self.format("calendar-line-in-dubbed", fallback: "E%1$lld in %2$@ · Dubbed", episode, span)
+        Self.format("calendar-line-in-dubbed", fallback: "E%1$@ in %2$@ · Dubbed", String(episode), span)
     }
 
     /// Swipe action on an episode row that downloads it.
@@ -2086,7 +2209,7 @@ public enum L {
 
     /// Line under a title in Spotlight: the episode it plays next, out of how many there are.
     public static func titleEpisodeOf(episode: Int, total: Int) -> String {
-        Self.format("title-episode-of", fallback: "Episode %1$lld of %2$lld", episode, total)
+        Self.format("title-episode-of", fallback: "Episode %1$@ of %2$@", String(episode), String(total))
     }
 
     /// Title of the failure shown over a list of titles that could not load, when the screen has no name of its own for it.
@@ -2207,22 +2330,22 @@ public enum L {
 
     /// Body of a new-episode notification when the viewer is caught up.
     public static func noticeOut(episode: Int) -> String {
-        Self.format("notice-out", fallback: "Episode %1$lld is out.", episode)
+        Self.format("notice-out", fallback: "Episode %1$@ is out.", String(episode))
     }
 
     /// Body of a new-episode notification for the dub the viewer watches the show in.
     public static func noticeOutDubbed(episode: Int) -> String {
-        Self.format("notice-out-dubbed", fallback: "Episode %1$lld is out, dubbed.", episode)
+        Self.format("notice-out-dubbed", fallback: "Episode %1$@ is out, dubbed.", String(episode))
     }
 
     /// Body of a new-episode notification when the viewer is behind: the episode out and the one to watch next.
     public static func noticeOutBehind(episode: Int, next: Int) -> String {
-        Self.format("notice-out-behind", fallback: "Episode %1$lld is out. Next for you: episode %2$lld.", episode, next)
+        Self.format("notice-out-behind", fallback: "Episode %1$@ is out. Next for you: episode %2$@.", String(episode), String(next))
     }
 
     /// Body of a new-episode notification for a dub when the viewer is behind.
     public static func noticeOutDubbedBehind(episode: Int, next: Int) -> String {
-        Self.format("notice-out-dubbed-behind", fallback: "Episode %1$lld is out, dubbed. Next for you: episode %2$lld.", episode, next)
+        Self.format("notice-out-dubbed-behind", fallback: "Episode %1$@ is out, dubbed. Next for you: episode %2$@.", String(episode), String(next))
     }
 
     /// What the system shows instead of the body when previews are hidden.
@@ -2451,7 +2574,7 @@ public enum L {
 
     /// Spoken label of a page in the reader.
     public static func readerPageLabel(page: Int, total: Int, title: String) -> String {
-        Self.format("reader-page-label", fallback: "Page %1$lld of %2$lld, %3$@", page, total, title)
+        Self.format("reader-page-label", fallback: "Page %1$@ of %2$@, %3$@", String(page), String(total), title)
     }
 
     /// The reader's scrubber, spoken.
@@ -2459,7 +2582,7 @@ public enum L {
 
     /// The scrubber's value, spoken.
     public static func readerScrubberValue(page: Int, total: Int) -> String {
-        Self.format("reader-scrubber-value", fallback: "Page %1$lld of %2$lld", page, total)
+        Self.format("reader-scrubber-value", fallback: "Page %1$@ of %2$@", String(page), String(total))
     }
 
     /// Title of the row that picks the look: paper, light, sepia, dark or the system's.
@@ -2470,22 +2593,22 @@ public enum L {
 
     /// The control group's line under the title. The chapter label comes from the source.
     public static func readerGroupLine(chapter: String, page: Int, total: Int) -> String {
-        Self.format("reader-group-line", fallback: "%1$@ · page %2$lld of %3$lld", chapter, page, total)
+        Self.format("reader-group-line", fallback: "%1$@ · page %2$@ of %3$@", chapter, String(page), String(total))
     }
 
     /// The control group's line when a spread shows two pages.
     public static func readerGroupLineSpread(chapter: String, first: Int, second: Int) -> String {
-        Self.format("reader-group-line-spread", fallback: "%1$@ · pages %2$lld and %3$lld", chapter, first, second)
+        Self.format("reader-group-line-spread", fallback: "%1$@ · pages %2$@ and %3$@", chapter, String(first), String(second))
     }
 
     /// The control group's line for a strip.
     public static func readerGroupLineStrip(chapter: String, image: Int, total: Int) -> String {
-        Self.format("reader-group-line-strip", fallback: "%1$@ · image %2$lld of %3$lld", chapter, image, total)
+        Self.format("reader-group-line-strip", fallback: "%1$@ · image %2$@ of %3$@", chapter, String(image), String(total))
     }
 
     /// The control group's line for a novel, paged.
     public static func readerGroupLineNovel(chapter: String, page: Int, total: Int) -> String {
-        Self.format("reader-group-line-novel", fallback: "%1$@ · page %2$lld of %3$lld", chapter, page, total)
+        Self.format("reader-group-line-novel", fallback: "%1$@ · page %2$@ of %3$@", chapter, String(page), String(total))
     }
 
     /// The control group's line for a novel in one long scroll.
@@ -2728,7 +2851,7 @@ public enum L {
 
     /// Chapters sheet: a chapter's state line.
     public static func readerChapterInProgress(page: Int, total: Int) -> String {
-        Self.format("reader-chapter-in-progress", fallback: "Page %1$lld of %2$lld", page, total)
+        Self.format("reader-chapter-in-progress", fallback: "Page %1$@ of %2$@", String(page), String(total))
     }
 
     public static var readerChapterRead: String { string("reader-chapter-read", fallback: "Read") }
@@ -2772,7 +2895,7 @@ public enum L {
 
     /// Mac menu item: back to where the person was before a jump.
     public static func readerMenuBackToPage(page: Int) -> String {
-        Self.format("reader-menu-back-to-page", fallback: "Back to Page %1$lld", page)
+        Self.format("reader-menu-back-to-page", fallback: "Back to Page %1$@", String(page))
     }
 
     /// Mac menu item when there is no place to go back to.
@@ -3053,12 +3176,12 @@ public enum L {
 
     /// Preview of the Discord presence: the episode line with the total.
     public static func settingsPresenceEpisodeOf(episode: Int, total: Int) -> String {
-        Self.format("settings-presence-episode-of", fallback: "Episode %1$lld of %2$lld", episode, total)
+        Self.format("settings-presence-episode-of", fallback: "Episode %1$@ of %2$@", String(episode), String(total))
     }
 
     /// Preview of the Discord presence: the episode line without a total.
     public static func settingsPresenceEpisode(episode: Int) -> String {
-        Self.format("settings-presence-episode", fallback: "Episode %1$lld", episode)
+        Self.format("settings-presence-episode", fallback: "Episode %1$@", String(episode))
     }
 
     /// Under the Discord preview while presence is on.
@@ -3127,7 +3250,7 @@ public enum L {
 
     /// VoiceOver label of a row of the week: the show, the episode and when it airs.
     public static func settingsWeekRowLabel(title: String, episode: Int, when: String) -> String {
-        Self.format("settings-week-row-label", fallback: "%1$@, episode %2$lld, %3$@", title, episode, when)
+        Self.format("settings-week-row-label", fallback: "%1$@, episode %2$@, %3$@", title, String(episode), when)
     }
 
     /// VoiceOver hint of a row of the week.
@@ -3441,7 +3564,7 @@ public enum L {
 
     /// Context menu item that carries on with an episode that was left part-way.
     public static func shellResumeEpisode(episode: Int) -> String {
-        Self.format("shell-resume-episode", fallback: "Resume episode %1$lld", episode)
+        Self.format("shell-resume-episode", fallback: "Resume episode %1$@", String(episode))
     }
 
     /// Context menu item that opens the settings of one title.
@@ -3862,12 +3985,12 @@ public enum L {
 
     /// Short episode name in a widget.
     public static func widgetEpisodeShort(episode: Int) -> String {
-        Self.format("widget-episode-short", fallback: "E%1$lld", episode)
+        Self.format("widget-episode-short", fallback: "E%1$@", String(episode))
     }
 
     /// Long episode name in a widget.
     public static func widgetEpisodeLong(episode: Int) -> String {
-        Self.format("widget-episode-long", fallback: "Episode %1$lld", episode)
+        Self.format("widget-episode-long", fallback: "Episode %1$@", String(episode))
     }
 
     /// Tomorrow, inside a line.
@@ -3875,12 +3998,12 @@ public enum L {
 
     /// Under a widget: the next episode and when it airs.
     public static func widgetNextLine(when: String, title: String, episode: Int) -> String {
-        Self.format("widget-next-line", fallback: "Next: %1$@ · %2$@ · Episode %3$lld", when, title, episode)
+        Self.format("widget-next-line", fallback: "Next: %1$@ · %2$@ · Episode %3$@", when, title, String(episode))
     }
 
     /// The same line, shorter, for the small size.
     public static func widgetNextLineShort(when: String, title: String, episode: Int) -> String {
-        Self.format("widget-next-line-short", fallback: "Next: %1$@, %2$@ E%3$lld", when, title, episode)
+        Self.format("widget-next-line-short", fallback: "Next: %1$@, %2$@ E%3$@", when, title, String(episode))
     }
 
     /// Header detail on the large Airing today widget: when the next episode airs.
@@ -3890,7 +4013,7 @@ public enum L {
 
     /// Small widget line: the show, its episode and the day it airs.
     public static func widgetAirsDay(title: String, episode: Int, day: String) -> String {
-        Self.format("widget-airs-day", fallback: "%1$@ E%2$lld airs %3$@.", title, episode, day)
+        Self.format("widget-airs-day", fallback: "%1$@ E%2$@ airs %3$@.", title, String(episode), day)
     }
 
     /// Row state: an episode came out a while ago. The span is already worded, and counts up as time passes.
@@ -3983,7 +4106,7 @@ public enum L {
 
     /// VoiceOver, an episode in a Continue row: the episode number.
     public static func widgetA11yEpisode(episode: Int) -> String {
-        Self.format("widget-a11y-episode", fallback: "episode %1$lld", episode)
+        Self.format("widget-a11y-episode", fallback: "episode %1$@", String(episode))
     }
 
     /// VoiceOver, an episode with its mark such as Dub. The first part is already worded.
@@ -4008,7 +4131,7 @@ public enum L {
 
     /// VoiceOver, an Airing today row: the show, episode and time.
     public static func widgetA11yAiring(title: String, episode: Int, time: String) -> String {
-        Self.format("widget-a11y-airing", fallback: "%1$@, episode %2$lld, %3$@", title, episode, time)
+        Self.format("widget-a11y-airing", fallback: "%1$@, episode %2$@, %3$@", title, String(episode), time)
     }
 
     /// Added to an Airing today row that was watched.
@@ -4041,12 +4164,12 @@ public enum L {
 
     /// VoiceOver, the airing activity before the episode is out.
     public static func widgetA11yAirsAt(title: String, episode: Int, time: String) -> String {
-        Self.format("widget-a11y-airs-at", fallback: "%1$@, episode %2$lld, airs at %3$@", title, episode, time)
+        Self.format("widget-a11y-airs-at", fallback: "%1$@, episode %2$@, airs at %3$@", title, String(episode), time)
     }
 
     /// VoiceOver, the airing activity once the episode is out.
     public static func widgetA11yOutNow(title: String, episode: Int) -> String {
-        Self.format("widget-a11y-out-now", fallback: "%1$@, episode %2$lld, out now", title, episode)
+        Self.format("widget-a11y-out-now", fallback: "%1$@, episode %2$@, out now", title, String(episode))
     }
 
     /// Line of the downloads activity when an episode finished.
@@ -4370,12 +4493,12 @@ public enum L {
 
     /// Row: episode number and the time it airs.
     public static func calendarRowTime(episode: Int, time: String) -> String {
-        Self.format("calendar-row-time", fallback: "E%1$lld · %2$@", episode, time)
+        Self.format("calendar-row-time", fallback: "E%1$@ · %2$@", String(episode), time)
     }
 
     /// Row: episode number, dubbed, and the time it airs.
     public static func calendarRowTimeDubbed(episode: Int, time: String) -> String {
-        Self.format("calendar-row-time-dubbed", fallback: "E%1$lld dubbed · %2$@", episode, time)
+        Self.format("calendar-row-time-dubbed", fallback: "E%1$@ dubbed · %2$@", String(episode), time)
     }
 
     /// Note on a row whose episode moved to a later time.
@@ -4395,7 +4518,7 @@ public enum L {
 
     /// Row in a small widget: the episode is out.
     public static func calendarEpisodeOut(episode: Int) -> String {
-        Self.format("calendar-episode-out", fallback: "E%1$lld out", episode)
+        Self.format("calendar-episode-out", fallback: "E%1$@ out", String(episode))
     }
 
     /// Accessibility word for an aired episode that the person has not watched.
@@ -4403,12 +4526,12 @@ public enum L {
 
     /// Line saying when an episode airs. The time is already worded: "in 1h 30m", "Thursday 16:30".
     public static func episodeAirs(episode: Int, when: String) -> String {
-        Self.format("episode-airs", fallback: "Episode %1$lld airs %2$@", episode, when)
+        Self.format("episode-airs", fallback: "Episode %1$@ airs %2$@", String(episode), when)
     }
 
     /// Line for an episode that has not aired and has no date yet.
     public static func episodeNotOut(episode: Int) -> String {
-        Self.format("episode-not-out", fallback: "Episode %1$lld is not out yet", episode)
+        Self.format("episode-not-out", fallback: "Episode %1$@ is not out yet", String(episode))
     }
 
     /// Header of the list of episodes that air in the next seven days.
@@ -5066,7 +5189,7 @@ public enum L {
 
     /// Title of the discussion window or sheet when the thread has no title yet.
     public static func discussionTitleEpisode(episode: Int) -> String {
-        Self.format("discussion-title-episode", fallback: "Episode %1$lld discussion", episode)
+        Self.format("discussion-title-episode", fallback: "Episode %1$@ discussion", String(episode))
     }
 
     /// Quiet line under an episode that opens its discussion.
@@ -5219,7 +5342,7 @@ public enum L {
 
     /// Name of a row.
     public static func downloadsEpisodeName(episode: Int) -> String {
-        Self.format("downloads-episode-name", fallback: "Episode %1$lld", episode)
+        Self.format("downloads-episode-name", fallback: "Episode %1$@", String(episode))
     }
 
     /// Row caption: waiting for a free place.
@@ -5294,7 +5417,7 @@ public enum L {
 
     /// Accessibility label: play one downloaded episode.
     public static func downloadsPlayEpisode(episode: Int) -> String {
-        Self.format("downloads-play-episode", fallback: "Play episode %1$lld", episode)
+        Self.format("downloads-play-episode", fallback: "Play episode %1$@", String(episode))
     }
 
     /// Title of the confirmation.
@@ -5358,7 +5481,7 @@ public enum L {
 
     /// Title of the notification when an episode finished.
     public static func downloadsNoticeDone(episode: Int) -> String {
-        Self.format("downloads-notice-done", fallback: "Episode %1$lld downloaded", episode)
+        Self.format("downloads-notice-done", fallback: "Episode %1$@ downloaded", String(episode))
     }
 
     /// Body of that notification.
@@ -5373,7 +5496,7 @@ public enum L {
 
     /// Notification text: first line of one running download.
     public static func downloadsNoticeEpisodeLeft(episode: Int, left: String) -> String {
-        Self.format("downloads-notice-episode-left", fallback: "Episode %1$lld · %2$@ left", episode, left)
+        Self.format("downloads-notice-episode-left", fallback: "Episode %1$@ · %2$@ left", String(episode), left)
     }
 
     /// Notification text: a download is starting.
@@ -5381,7 +5504,7 @@ public enum L {
 
     /// Button on a title page to download one episode.
     public static func episodeDownloadOne(episode: Int) -> String {
-        Self.format("episode-download-one", fallback: "Download episode %1$lld", episode)
+        Self.format("episode-download-one", fallback: "Download episode %1$@", String(episode))
     }
 
     /// Line under that button while it waits.
@@ -5405,7 +5528,7 @@ public enum L {
 
     /// Line under that button after a failure.
     public static func episodeDownloadFailed(episode: Int) -> String {
-        Self.format("episode-download-failed", fallback: "Couldn't download episode %1$lld. Try again.", episode)
+        Self.format("episode-download-failed", fallback: "Couldn't download episode %1$@. Try again.", String(episode))
     }
 
     /// First run, page 2 of 5.
@@ -5488,12 +5611,12 @@ public enum L {
 
     /// Main action for an episode part way through.
     public static func homeResumeEpisode(episode: Int) -> String {
-        Self.format("home-resume-episode", fallback: "Resume episode %1$lld", episode)
+        Self.format("home-resume-episode", fallback: "Resume episode %1$@", String(episode))
     }
 
     /// Main action for an episode not started.
     public static func homePlayEpisode(episode: Int) -> String {
-        Self.format("home-play-episode", fallback: "Play episode %1$lld", episode)
+        Self.format("home-play-episode", fallback: "Play episode %1$@", String(episode))
     }
 
     /// Shown in place of Add to Planning while it saves, after a moment.
@@ -5507,12 +5630,12 @@ public enum L {
 
     /// Action in the spotlight's More menu for a show part way through.
     public static func homeMarkWatched(episode: Int) -> String {
-        Self.format("home-mark-watched", fallback: "Mark episode %1$lld as watched", episode)
+        Self.format("home-mark-watched", fallback: "Mark episode %1$@ as watched", String(episode))
     }
 
     /// Notice after the action above. It has an Undo button.
     public static func homeMarkedWatched(episode: Int) -> String {
-        Self.format("home-marked-watched", fallback: "Episode %1$lld marked as watched", episode)
+        Self.format("home-marked-watched", fallback: "Episode %1$@ marked as watched", String(episode))
     }
 
     /// Action on a { -continue-cap } card and in the spotlight's More menu.
@@ -5667,32 +5790,32 @@ public enum L {
 
     /// Row caption: resumes this episode where it stopped. The clock is the stored position.
     public static func continueRowResume(episode: Int, clock: String) -> String {
-        Self.format("continue-row-resume", fallback: "Resume E%1$lld · %2$@", episode, clock)
+        Self.format("continue-row-resume", fallback: "Resume E%1$@ · %2$@", String(episode), clock)
     }
 
     /// Row caption: resumes this episode where it stopped, dubbed.
     public static func continueRowResumeDubbed(episode: Int, clock: String) -> String {
-        Self.format("continue-row-resume-dubbed", fallback: "Resume E%1$lld dubbed · %2$@", episode, clock)
+        Self.format("continue-row-resume-dubbed", fallback: "Resume E%1$@ dubbed · %2$@", String(episode), clock)
     }
 
     /// Row caption: the next unwatched episode.
     public static func continueRowStart(episode: Int) -> String {
-        Self.format("continue-row-start", fallback: "Play E%1$lld", episode)
+        Self.format("continue-row-start", fallback: "Play E%1$@", String(episode))
     }
 
     /// Row caption: the next unwatched episode, dubbed.
     public static func continueRowStartDubbed(episode: Int) -> String {
-        Self.format("continue-row-start-dubbed", fallback: "Play E%1$lld dubbed", episode)
+        Self.format("continue-row-start-dubbed", fallback: "Play E%1$@ dubbed", String(episode))
     }
 
     /// Row caption: the next unwatched episode, which came out a while ago.
     public static func continueRowStartAired(episode: Int, ago: String) -> String {
-        Self.format("continue-row-start-aired", fallback: "Play E%1$lld · out %2$@", episode, ago)
+        Self.format("continue-row-start-aired", fallback: "Play E%1$@ · out %2$@", String(episode), ago)
     }
 
     /// Row caption: nothing new to watch. The time is when the next episode airs.
     public static func continueRowCaughtUp(episode: Int, when: String) -> String {
-        Self.format("continue-row-caught-up", fallback: "Caught up · E%1$lld %2$@", episode, when)
+        Self.format("continue-row-caught-up", fallback: "Caught up · E%1$@ %2$@", String(episode), when)
     }
 
     /// Row caption: nothing new to watch and no date for the next episode.
@@ -5706,12 +5829,12 @@ public enum L {
 
     /// Main button of the title page when the episode is part-watched. The time is where it stopped, already formatted.
     public static func titleButtonResume(episode: Int, time: String) -> String {
-        Self.format("title-button-resume", fallback: "Resume episode %1$lld · %2$@", episode, time)
+        Self.format("title-button-resume", fallback: "Resume episode %1$@ · %2$@", String(episode), time)
     }
 
     /// Main button of the title page otherwise: plays the next unwatched episode from the start.
     public static func titleButtonPlay(episode: Int) -> String {
-        Self.format("title-button-play", fallback: "Play episode %1$lld", episode)
+        Self.format("title-button-play", fallback: "Play episode %1$@", String(episode))
     }
 
     /// Main button of the title page when there is no { -source } to play from.
@@ -5803,7 +5926,7 @@ public enum L {
 
     /// Row caption: the next unwatched episode, dubbed, which came out a while ago.
     public static func continueRowStartAiredDubbed(episode: Int, ago: String) -> String {
-        Self.format("continue-row-start-aired-dubbed", fallback: "Play E%1$lld dubbed · out %2$@", episode, ago)
+        Self.format("continue-row-start-aired-dubbed", fallback: "Play E%1$@ dubbed · out %2$@", String(episode), ago)
     }
 
     /// Line on a suggestion that has not started airing. The date is written out already, such as "9 January".
@@ -5853,7 +5976,7 @@ public enum L {
 
     /// Line under a show that airs today: its episode, then the time or how long ago it came out. The time is worded already.
     public static func upNextBroadcast(episode: Int, when: String) -> String {
-        Self.format("up-next-broadcast", fallback: "Episode %1$lld · %2$@", episode, when)
+        Self.format("up-next-broadcast", fallback: "Episode %1$@ · %2$@", String(episode), when)
     }
 
     /// The time of an episode that came out earlier today. The span is already worded, such as "2h ago".
@@ -6179,7 +6302,7 @@ public enum L {
 
     /// Line of a Continue card for a title watched on a service.
     public static func licensedContinueLine(episode: Int, service: String) -> String {
-        Self.format("licensed-continue-line", fallback: "Episode %1$lld · on %2$@", episode, service)
+        Self.format("licensed-continue-line", fallback: "Episode %1$@ · on %2$@", String(episode), service)
     }
 
     /// Line under a title's buttons naming services the viewer has not chosen that list the title.
@@ -6290,7 +6413,7 @@ public enum L {
 
     /// Date line of a show that was cancelled: the last episode that aired.
     public static func mediaCancelledAfter(episode: Int) -> String {
-        Self.format("media-cancelled-after", fallback: "Cancelled after episode %1$lld", episode)
+        Self.format("media-cancelled-after", fallback: "Cancelled after episode %1$@", String(episode))
     }
 
     /// Heading of the list of official services that stream a show, in the sheet of more about it.
@@ -6430,7 +6553,7 @@ public enum L {
 
     /// Ranking line, such as "#4 Highest rated, Autumn 2026". The label is already worded.
     public static func rankingLine(rank: Int, label: String) -> String {
-        Self.format("ranking-line", fallback: "#%1$lld %2$@", rank, label)
+        Self.format("ranking-line", fallback: "#%1$@ %2$@", String(rank), label)
     }
 
     /// Label of a ranking by score within a period.
@@ -6718,12 +6841,12 @@ public enum L {
 
     /// Line naming the episode of the form.
     public static func partyFormEpisodeOf(episode: Int, title: String) -> String {
-        Self.format("party-form-episode-of", fallback: "Episode %1$lld of %2$@", episode, title)
+        Self.format("party-form-episode-of", fallback: "Episode %1$@ of %2$@", String(episode), title)
     }
 
     /// Line naming the episode of the form when the show has no name.
     public static func partyFormEpisode(episode: Int) -> String {
-        Self.format("party-form-episode", fallback: "Episode %1$lld", episode)
+        Self.format("party-form-episode", fallback: "Episode %1$@", String(episode))
     }
 
     /// Line on the form when the party could not begin.
@@ -6858,7 +6981,7 @@ public enum L {
 
     /// Line under a title that says the episode has not aired.
     public static func partyNosourceUnaired(episode: Int) -> String {
-        Self.format("party-nosource-unaired", fallback: "Your sources won't have episode %1$lld before it's out.", episode)
+        Self.format("party-nosource-unaired", fallback: "Your sources won't have episode %1$@ before it's out.", String(episode))
     }
 
     /// Line under a title that says the episode has not aired and no date is known.
@@ -7416,7 +7539,7 @@ public enum L {
 
     /// Line on the starting screen, from the moment the player is asked to play until the first frame.
     public static func playerStarting(episode: Int) -> String {
-        Self.format("player-starting", fallback: "Starting episode %1$lld", episode)
+        Self.format("player-starting", fallback: "Starting episode %1$@", String(episode))
     }
 
     /// Line on the starting screen after a few seconds: the app is looking for a stream.
@@ -7429,7 +7552,7 @@ public enum L {
 
     /// Title of the card shown when an episode could not play.
     public static func playerFailedTitle(episode: Int) -> String {
-        Self.format("player-failed-title", fallback: "Couldn't play episode %1$lld", episode)
+        Self.format("player-failed-title", fallback: "Couldn't play episode %1$@", String(episode))
     }
 
     /// Line under the failure title when every { -source } was tried.
@@ -7797,7 +7920,7 @@ public enum L {
 
     /// Line under that prompt, in a quieter colour. $episode is the episode's number.
     public static func playerFoundAskShare(episode: Int) -> String {
-        Self.format("player-found-ask-share", fallback: "Yes shares these times with AniSkip for episode %1$lld.", episode)
+        Self.format("player-found-ask-share", fallback: "Yes shares these times with AniSkip for episode %1$@.", String(episode))
     }
 
     /// Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust opens the review with the edges to nudge.
@@ -7807,7 +7930,7 @@ public enum L {
 
     /// What the prompt says after Yes. $episode is the episode's number.
     public static func playerFoundSaved(episode: Int) -> String {
-        Self.format("player-found-saved", fallback: "Saved. AniSkip gets these times for episode %1$lld.", episode)
+        Self.format("player-found-saved", fallback: "Saved. AniSkip gets these times for episode %1$@.", String(episode))
     }
 
     /// What the prompt says after Don't ask again, with the line below it.
@@ -8019,12 +8142,12 @@ public enum L {
 
     /// Name of an audio track the file does not describe.
     public static func playerAudioTrackN(id: Int) -> String {
-        Self.format("player-audio-track-n", fallback: "Audio %1$lld", id)
+        Self.format("player-audio-track-n", fallback: "Audio %1$@", String(id))
     }
 
     /// Name of a subtitle track the file does not describe.
     public static func playerSubtitleTrackN(id: Int) -> String {
-        Self.format("player-subtitle-track-n", fallback: "Subtitles %1$lld", id)
+        Self.format("player-subtitle-track-n", fallback: "Subtitles %1$@", String(id))
     }
 
     /// Line in the track list before the file has told which tracks it has.
@@ -8057,7 +8180,7 @@ public enum L {
 
     /// Name of an audio or subtitle track that has no language or title.
     public static func playerTrackN(id: Int) -> String {
-        Self.format("player-track-n", fallback: "Track %1$lld", id)
+        Self.format("player-track-n", fallback: "Track %1$@", String(id))
     }
 
     /// Line while an episode starts after a few seconds: what the wait is on, and for how long.
@@ -8097,12 +8220,12 @@ public enum L {
 
     /// Under a page that is still loading after four seconds.
     public static func readerPageLoading(page: Int) -> String {
-        Self.format("reader-page-loading", fallback: "Loading page %1$lld", page)
+        Self.format("reader-page-loading", fallback: "Loading page %1$@", String(page))
     }
 
     /// Heading where a page could not be loaded.
     public static func readerPageFailed(page: Int) -> String {
-        Self.format("reader-page-failed", fallback: "Couldn't load page %1$lld", page)
+        Self.format("reader-page-failed", fallback: "Couldn't load page %1$@", String(page))
     }
 
     /// Button that loads a failed page again.
@@ -8524,7 +8647,7 @@ public enum L {
 
     /// The main action when a chapter is part read.
     public static func actionContinueChapter(n: String, page: Int) -> String {
-        Self.format("action-continue-chapter", fallback: "Continue chapter %1$@ · page %2$lld", n, page)
+        Self.format("action-continue-chapter", fallback: "Continue chapter %1$@ · page %2$@", n, String(page))
     }
 
     /// The main action for a light novel part, part read.
@@ -8589,12 +8712,12 @@ public enum L {
 
     /// A tracker's progress in chapters, then the volume.
     public static func seriesTrackerWithVolume(chapters: String, volume: Int) -> String {
-        Self.format("series-tracker-with-volume", fallback: "%1$@ · volume %2$lld", chapters, volume)
+        Self.format("series-tracker-with-volume", fallback: "%1$@ · volume %2$@", chapters, String(volume))
     }
 
     /// A light novel tracker's progress in volumes.
     public static func seriesTrackerVolumes(volume: Int, total: Int) -> String {
-        Self.format("series-tracker-volumes", fallback: "Volume %1$lld of %2$lld", volume, total)
+        Self.format("series-tracker-volumes", fallback: "Volume %1$@ of %2$@", String(volume), String(total))
     }
 
     /// Main place when the source can't be read from.
@@ -8770,12 +8893,12 @@ public enum L {
 
     /// A part-read chapter.
     public static func chapterStatePageOf(page: Int, of: Int) -> String {
-        Self.format("chapter-state-page-of", fallback: "Page %1$lld of %2$lld", page, of)
+        Self.format("chapter-state-page-of", fallback: "Page %1$@ of %2$@", String(page), String(of))
     }
 
     /// A part-read chapter whose length isn't known.
     public static func chapterStatePage(page: Int) -> String {
-        Self.format("chapter-state-page", fallback: "Page %1$lld", page)
+        Self.format("chapter-state-page", fallback: "Page %1$@", String(page))
     }
 
     /// A read chapter.
@@ -9787,7 +9910,7 @@ public enum L {
 
     /// The other button of the sheet: leaves the place as it is, with the place named.
     public static func stopKeep(chapter: String, page: Int) -> String {
-        Self.format("stop-keep", fallback: "Keep chapter %1$@ · page %2$lld", chapter, page)
+        Self.format("stop-keep", fallback: "Keep chapter %1$@ · page %2$@", chapter, String(page))
     }
 
     /// The other button of the sheet when the place is not a page.
@@ -9833,7 +9956,7 @@ public enum L {
 
     /// Line under the port row when the port asked for was taken and another is used.
     public static func opdsPortMoved(wanted: Int, port: Int) -> String {
-        Self.format("opds-port-moved", fallback: "Port %1$lld was busy, so the feed uses %2$lld.", wanted, port)
+        Self.format("opds-port-moved", fallback: "Port %1$@ was busy, so the feed uses %2$@.", String(wanted), String(port))
     }
 
     /// Heading of the group that picks what the feed shares.
@@ -10238,7 +10361,7 @@ public enum L {
 
     /// The count line of a show the viewer is part way through, in the library: the next episode and the total.
     public static func countNextOf(episode: Int, total: Int) -> String {
-        Self.format("count-next-of", fallback: "Ep %1$lld of %2$lld", episode, total)
+        Self.format("count-next-of", fallback: "Ep %1$@ of %2$@", String(episode), String(total))
     }
 
     /// The dub part of a count line when a source has a dub and does not say how far it goes.
@@ -10246,7 +10369,7 @@ public enum L {
 
     /// The dub part of a count line: the last episode the dub has.
     public static func countDubThrough(through: Int) -> String {
-        Self.format("count-dub-through", fallback: "Dub %1$lld", through)
+        Self.format("count-dub-through", fallback: "Dub %1$@", String(through))
     }
 
     /// What a screen reader says for a count line: the long form of a finished show.
@@ -10271,12 +10394,12 @@ public enum L {
 
     /// What a screen reader says for a show the viewer is part way through.
     public static func countSpokenNextOf(episode: Int, total: Int) -> String {
-        Self.format("count-spoken-next-of", fallback: "Episode %1$lld of %2$lld", episode, total)
+        Self.format("count-spoken-next-of", fallback: "Episode %1$@ of %2$@", String(episode), String(total))
     }
 
     /// What a screen reader says after the count when the dub goes to an episode.
     public static func countSpokenDubThrough(through: Int) -> String {
-        Self.format("count-spoken-dub-through", fallback: "dubbed to episode %1$lld", through)
+        Self.format("count-spoken-dub-through", fallback: "dubbed to episode %1$@", String(through))
     }
 
     /// What a screen reader says after the count when a source has a dub and does not say how far it goes.
@@ -11069,17 +11192,17 @@ public enum L {
 
     /// Accessibility label of a widget row: continue an episode.
     public static func widgetResumeLabel(episode: Int, title: String) -> String {
-        Self.format("widget-resume-label", fallback: "Resume episode %1$lld of %2$@", episode, title)
+        Self.format("widget-resume-label", fallback: "Resume episode %1$@ of %2$@", String(episode), title)
     }
 
     /// Accessibility label of a widget row: start an episode.
     public static func widgetStartLabel(episode: Int, title: String) -> String {
-        Self.format("widget-start-label", fallback: "Play episode %1$lld of %2$@", episode, title)
+        Self.format("widget-start-label", fallback: "Play episode %1$@ of %2$@", String(episode), title)
     }
 
     /// Accessibility label of a widget row: continue a dubbed episode.
     public static func widgetResumeDubbedLabel(episode: Int, title: String) -> String {
-        Self.format("widget-resume-dubbed-label", fallback: "Resume episode %1$lld, dubbed, of %2$@", episode, title)
+        Self.format("widget-resume-dubbed-label", fallback: "Resume episode %1$@, dubbed, of %2$@", String(episode), title)
     }
 
     /// Line under a signed-in account while changes wait to be sent.
@@ -13139,7 +13262,7 @@ public enum L {
 
     /// Continue, for a day.
     public static func continueFromDevice(n: Int, time: String, device: String) -> String {
-        Self.format("continue-from-device", fallback: "Episode %1$lld · stopped at %2$@ on %3$@", n, time, device)
+        Self.format("continue-from-device", fallback: "Episode %1$@ · stopped at %2$@ on %3$@", String(n), time, device)
     }
 
     /// Player, 6 s, with Start over.
@@ -13160,7 +13283,7 @@ public enum L {
 
     /// Sync note.
     public static func syncNoteKeptWatched(n: Int, title: String, other: String, device: String) -> String {
-        Self.format("sync-note-kept-watched", fallback: "Episode %1$lld of %2$@ stays watched. %3$@ marked it unwatched without knowing %4$@ had finished it.", n, title, other, device)
+        Self.format("sync-note-kept-watched", fallback: "Episode %1$@ of %2$@ stays watched. %3$@ marked it unwatched without knowing %4$@ had finished it.", String(n), title, other, device)
     }
 
     /// Sync note action.
@@ -13448,7 +13571,7 @@ public enum L {
 
     /// Name of one season of a show, such as "Season 2".
     public static func seasonNumber(number: Int) -> String {
-        Self.format("season-number", fallback: "Season %1$lld", number)
+        Self.format("season-number", fallback: "Season %1$@", String(number))
     }
 
     /// Heading of the list of episodes.
@@ -13474,7 +13597,7 @@ public enum L {
 
     /// Label under a season: which episodes are dubbed so far.
     public static func titleDubbedTo(episode: Int) -> String {
-        Self.format("title-dubbed-to", fallback: "Dubbed to episode %1$lld", episode)
+        Self.format("title-dubbed-to", fallback: "Dubbed to episode %1$@", String(episode))
     }
 
     /// State of a title with no episodes listed yet.
@@ -13500,27 +13623,27 @@ public enum L {
 
     /// Row that stands for several watched episodes in a row, such as "Episodes 1 to 5 watched".
     public static func titleWatchedRange(first: Int, last: Int) -> String {
-        Self.format("title-watched-range", fallback: "Episodes %1$lld to %2$lld watched", first, last)
+        Self.format("title-watched-range", fallback: "Episodes %1$@ to %2$@ watched", String(first), String(last))
     }
 
     /// Name of an episode, such as "Episode 7".
     public static func episodeNumber(number: Int) -> String {
-        Self.format("episode-number", fallback: "Episode %1$lld", number)
+        Self.format("episode-number", fallback: "Episode %1$@", String(number))
     }
 
     /// Short name of an episode, for tight spaces.
     public static func episodeNumberShort(number: Int) -> String {
-        Self.format("episode-number-short", fallback: "E%1$lld", number)
+        Self.format("episode-number-short", fallback: "E%1$@", String(number))
     }
 
     /// An episode and its name.
     public static func episodeWithTitle(number: Int, title: String) -> String {
-        Self.format("episode-with-title", fallback: "Episode %1$lld · %2$@", number, title)
+        Self.format("episode-with-title", fallback: "Episode %1$@ · %2$@", String(number), title)
     }
 
     /// An episode, dubbed, and its name.
     public static func episodeWithTitleDubbed(number: Int, title: String) -> String {
-        Self.format("episode-with-title-dubbed", fallback: "Episode %1$lld · Dubbed · %2$@", number, title)
+        Self.format("episode-with-title-dubbed", fallback: "Episode %1$@ · Dubbed · %2$@", String(number), title)
     }
 
     /// Badge on an episode the person has watched.
@@ -13566,17 +13689,17 @@ public enum L {
 
     /// One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden.
     public static func episodeProtectionLine(episode: Int) -> String {
-        Self.format("episode-protection-line", fallback: "Spoiler protection hides what comes after episode %1$lld.", episode)
+        Self.format("episode-protection-line", fallback: "Spoiler protection hides what comes after episode %1$@.", String(episode))
     }
 
     /// The same line on phones.
     public static func episodeProtectionLineShort(episode: Int) -> String {
-        Self.format("episode-protection-line-short", fallback: "Hidden after episode %1$lld", episode)
+        Self.format("episode-protection-line-short", fallback: "Hidden after episode %1$@", String(episode))
     }
 
     /// Label of an episode range of a long series, in the range menu.
     public static func episodeRange(from: Int, to: Int) -> String {
-        Self.format("episode-range", fallback: "Episodes %1$lld to %2$lld", from, to)
+        Self.format("episode-range", fallback: "Episodes %1$@ to %2$@", String(from), String(to))
     }
 
     /// Label of the control that picks an episode range.
@@ -13589,7 +13712,7 @@ public enum L {
 
     /// An episode's number in a facts line on phones and in narrow desktop windows.
     public static func episodeShort(episode: Int) -> String {
-        Self.format("episode-short", fallback: "E%1$lld", episode)
+        Self.format("episode-short", fallback: "E%1$@", String(episode))
     }
 
     /// Part of an episode's facts line: when it aired. The date is already formatted.
@@ -13610,12 +13733,12 @@ public enum L {
 
     /// The line where spoiler protection starts, once the rows after it are shown.
     public static func episodeProtectionShown(episode: Int) -> String {
-        Self.format("episode-protection-shown", fallback: "Showing what comes after episode %1$lld.", episode)
+        Self.format("episode-protection-shown", fallback: "Showing what comes after episode %1$@.", String(episode))
     }
 
     /// The same line on phones.
     public static func episodeProtectionShownShort(episode: Int) -> String {
-        Self.format("episode-protection-shown-short", fallback: "Showing after episode %1$lld", episode)
+        Self.format("episode-protection-shown-short", fallback: "Showing after episode %1$@", String(episode))
     }
 
     /// An episode range in the range menu: the first and the last episode.
@@ -13642,22 +13765,22 @@ public enum L {
 
     /// Menu item that marks every episode up to a given one as watched.
     public static func episodeMarkUpTo(episode: Int) -> String {
-        Self.format("episode-mark-up-to", fallback: "Mark watched up to episode %1$lld", episode)
+        Self.format("episode-mark-up-to", fallback: "Mark watched up to episode %1$@", String(episode))
     }
 
     /// Menu item that marks one numbered episode as watched.
     public static func episodeMarkNWatched(episode: Int) -> String {
-        Self.format("episode-mark-n-watched", fallback: "Mark episode %1$lld watched", episode)
+        Self.format("episode-mark-n-watched", fallback: "Mark episode %1$@ watched", String(episode))
     }
 
     /// Menu item that marks one numbered episode as not watched.
     public static func episodeMarkNUnwatched(episode: Int) -> String {
-        Self.format("episode-mark-n-unwatched", fallback: "Mark episode %1$lld unwatched", episode)
+        Self.format("episode-mark-n-unwatched", fallback: "Mark episode %1$@ unwatched", String(episode))
     }
 
     /// Notice after an episode was marked watched.
     public static func episodeMarkedWatched(episode: Int) -> String {
-        Self.format("episode-marked-watched", fallback: "Marked episode %1$lld watched.", episode)
+        Self.format("episode-marked-watched", fallback: "Marked episode %1$@ watched.", String(episode))
     }
 
     /// Menu item that starts an episode from the beginning.
@@ -13665,7 +13788,7 @@ public enum L {
 
     /// Menu item that downloads one numbered episode.
     public static func episodeDownloadN(episode: Int) -> String {
-        Self.format("episode-download-n", fallback: "Download episode %1$lld", episode)
+        Self.format("episode-download-n", fallback: "Download episode %1$@", String(episode))
     }
 
     /// Menu item that downloads every episode not yet watched.
@@ -13735,12 +13858,12 @@ public enum L {
 
     /// Main button of the title page for a dubbed episode that has not been started.
     public static func titleButtonPlayDubbed(episode: Int) -> String {
-        Self.format("title-button-play-dubbed", fallback: "Play episode %1$lld · Dubbed", episode)
+        Self.format("title-button-play-dubbed", fallback: "Play episode %1$@ · Dubbed", String(episode))
     }
 
     /// Main button of the title page when a dubbed episode is part-watched. The time is where it stopped, already formatted.
     public static func titleButtonResumeDubbed(episode: Int, time: String) -> String {
-        Self.format("title-button-resume-dubbed", fallback: "Resume episode %1$lld · Dubbed · %2$@", episode, time)
+        Self.format("title-button-resume-dubbed", fallback: "Resume episode %1$@ · Dubbed · %2$@", String(episode), time)
     }
 
     /// Label of a fact: the genres, joined in its value.
@@ -13759,7 +13882,7 @@ public enum L {
 
     /// Value of the fact on a cancelled show: the last episode that aired.
     public static func titleFactAfter(episode: Int) -> String {
-        Self.format("title-fact-after", fallback: "After episode %1$lld", episode)
+        Self.format("title-fact-after", fallback: "After episode %1$@", String(episode))
     }
 
     /// Value of the fact on a show that is airing and has no known start.
@@ -13784,22 +13907,22 @@ public enum L {
 
     /// Placeholder of the Go to episode field: the first and last episode of the show.
     public static func episodeGoToHint(first: Int, last: Int) -> String {
-        Self.format("episode-go-to-hint", fallback: "%1$lld to %2$lld", first, last)
+        Self.format("episode-go-to-hint", fallback: "%1$@ to %2$@", String(first), String(last))
     }
 
     /// Accessibility label of the Go to episode field.
     public static func episodeGoToLabel(first: Int, last: Int) -> String {
-        Self.format("episode-go-to-label", fallback: "Episode, %1$lld to %2$lld", first, last)
+        Self.format("episode-go-to-label", fallback: "Episode, %1$@ to %2$@", String(first), String(last))
     }
 
     /// Shown when the number typed is not an episode of the show.
     public static func episodeGoToNone(number: Int, last: Int) -> String {
-        Self.format("episode-go-to-none", fallback: "No episode %1$lld. This show has %2$lld.", number, last)
+        Self.format("episode-go-to-none", fallback: "No episode %1$@. This show has %2$@.", String(number), String(last))
     }
 
     /// Shown when the number typed is an episode with no date that has not come out.
     public static func episodeGoToNotOut(number: Int, latest: Int) -> String {
-        Self.format("episode-go-to-not-out", fallback: "Episode %1$lld isn't out yet. The latest is %2$lld.", number, latest)
+        Self.format("episode-go-to-not-out", fallback: "Episode %1$@ isn't out yet. The latest is %2$@.", String(number), String(latest))
     }
 
     /// Title of the settings group and the screen.
@@ -14463,7 +14586,7 @@ public enum L {
 
     /// Name of a track that has no name.
     public static func tvTrackN(id: Int) -> String {
-        Self.format("tv-track-n", fallback: "Track %1$lld", id)
+        Self.format("tv-track-n", fallback: "Track %1$@", String(id))
     }
 
     /// Title of the screen on the TV that waits for a phone.
@@ -14731,7 +14854,7 @@ public enum L {
 
     /// The server refused. The code is a number.
     public static func updatesWhyServer(code: Int) -> String {
-        Self.format("updates-why-server", fallback: "The download stopped: the server refused it (%1$lld). Try again later.", code)
+        Self.format("updates-why-server", fallback: "The download stopped: the server refused it (%1$@). Try again later.", String(code))
     }
 
     /// The connection broke.

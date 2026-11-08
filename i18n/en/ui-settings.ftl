@@ -442,18 +442,18 @@ widget-connect-detail = Connect { -tracker }, or play an episode, to see it here
 widget-connect = Connect
 
 # Accessibility label of a widget row: continue an episode.
-# @arg episode: int
+# @arg episode: plain
 # @arg title: text
 # @allow proceed
 widget-resume-label = Resume episode { $episode } of { $title }
 
 # Accessibility label of a widget row: start an episode.
-# @arg episode: int
+# @arg episode: plain
 # @arg title: text
 widget-start-label = Play episode { $episode } of { $title }
 
 # Accessibility label of a widget row: continue a dubbed episode.
-# @arg episode: int
+# @arg episode: plain
 # @arg title: text
 # @allow proceed
 widget-resume-dubbed-label = Resume episode { $episode }, { -dubbed }, of { $title }

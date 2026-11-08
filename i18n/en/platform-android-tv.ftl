@@ -134,7 +134,7 @@ tv-search-space = Space
 
 # Title of the season picker on the TV once a year is chosen
 # @only android
-# @arg year: int
+# @arg year: plain
 tv-search-season-in = Season in { $year }
 
 # Under the genre list on the TV when it is offline and the genres have not loaded
