@@ -26,6 +26,9 @@ action-continue-chapter = { -proceed-cap } chương { $n } · trang { $page }
 action-continue-part = { -proceed-cap } phần { $n } · { $percent }%
 action-continue-part-plain = { -proceed-cap } phần { $n }
 action-read-part = Đọc phần { $n }
+action-continue-named = { -proceed-cap } { $label } · { $percent }%
+action-continue-named-plain = { -proceed-cap } { $label }
+action-read-named = Đọc { $label }
 action-read-again = Đọc lại
 series-reading-from = Đang đọc từ
 series-change = Đổi
@@ -347,3 +350,81 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = { $n } đã đọc
 read-downloads-delete-read = Xóa chương đã đọc
+send-title = Gửi tới máy đọc sách
+send-for = Gửi tới
+send-what = Nội dung
+send-chapters = Chương
+send-chapters-one = { $chapter }
+send-chapters-range = { $first } đến { $last }
+send-size = Dung lượng
+send-size-about = Khoảng { $size }
+send-no-place = { -app-name } không biết bạn đọc tới đâu trên máy đọc sách này. Khi bạn quay lại, trang truyện sẽ hỏi bạn đã dừng ở đâu.
+send-prepare = Chuẩn bị và chia sẻ
+send-preparing = { $total ->
+   *[other] Đang chuẩn bị chương { $done }/{ $total }
+ }
+send-sized-for = Trang được định cỡ cho { $device }
+send-in-parts = Vượt quá { $size }, nên các tệp được chia thành nhiều phần.
+send-failed-chapter = Không chuẩn bị được chương { $chapter }. { $cause }
+send-failed = Không chuẩn bị được các tệp. { $cause }
+send-size-working = Đang tính
+send-chapters-open = Mở
+send-chapters-closed = Đóng
+send-progress-spoken = { $percent } phần trăm
+send-chapter-action = Gửi tới máy đọc sách
+send-parts-over = chia phần khi quá { $size }
+send-waiting-cancel = Hủy gửi
+send-ready = { $n ->
+   *[other] { $n } tệp đã sẵn sàng.
+ }
+send-share-again = Chia sẻ lại
+send-banner = Đang gửi tới { $device }
+send-format-fixed-epub = EPUB bố cục cố định
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = Bạn đã dừng ở đâu?
+stop-note = Bạn đã gửi chương tới { $device }. Bạn đã dừng ở đâu?
+stop-note-action = Đặt vị trí đọc
+stop-sent-one = Chương { $chapter } đã được gửi tới { $device } vào { $date }.
+stop-sent-range = Các chương { $first } đến { $last } đã được gửi tới { $device } vào { $date }.
+stop-finished = Đã đọc xong chương { $chapter }
+stop-set = Đặt vị trí đọc
+stop-keep = Giữ chương { $chapter } · trang { $page }
+stop-keep-plain = Giữ vị trí hiện tại
+ereaders-group = Máy đọc sách
+ereaders-send-row = Gửi tới máy đọc sách
+ereaders-feed-row = Feed OPDS
+opds-share-note = Danh mục OPDS mà máy đọc sách trong nhà có thể duyệt
+opds-footer = Feed chỉ chạy khi { -app-name } đang mở trên { $device } này. Tiến độ trên các máy đọc sách đó được giữ ở đó.
+opds-address = Địa chỉ
+opds-address-off = Bật feed để có địa chỉ.
+opds-password = Mật khẩu
+opds-password-note = Máy đọc sách chỉ hỏi một lần
+opds-new-password = Mật khẩu mới
+opds-port = Cổng
+opds-port-note = Để trống để dùng bất kỳ cổng trống nào, hoặc chọn một cổng từ 1024 đến 65535
+opds-port-moved = Cổng { $wanted } đang bận, nên feed dùng cổng { $port }.
+opds-shares = Những gì được chia sẻ
+opds-share-downloads = Tải xuống
+opds-share-downloads-count = { $n ->
+   *[other] { $n } chương
+ }
+opds-share-manga = Thư mục manga
+opds-share-novels = Thư mục light novel
+opds-share-series-count = { $n ->
+   *[other] { $n } bộ
+ }
+opds-fetched-by = Máy đã tải
+opds-fetched-none = Chưa có máy đọc sách nào tải gì.
+opds-starting = Đang khởi động…
+opds-paused-none = Tạm dừng. Máy Mac này không ở trong mạng cục bộ nào.
+opds-paused-vpn = Tạm dừng. Máy Mac này chỉ kết nối qua VPN.
+opds-new-password-title = Tạo mật khẩu mới?
+opds-new-password-warning = Các máy đọc sách đang dùng feed sẽ ngừng hoạt động cho đến khi bạn nhập mật khẩu mới vào từng máy.
+opds-fetched-time = Yêu cầu gần nhất { $time }
+opds-fetched-files = { $n ->
+   *[other] { $n } tệp
+ }
+opds-reader-unnamed = Máy đọc sách tại { $address }

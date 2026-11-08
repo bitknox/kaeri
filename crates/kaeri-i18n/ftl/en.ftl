@@ -537,6 +537,9 @@ reading-split-chapter = Chapter { $chapter } goes to trackers as { $whole }.
 # A notice over the page when a chapter opens where it was left. It offers Start over.
 reader-resumed = Resumed at page { $page }
 
+# The same notice in a webtoon strip, which counts images rather than pages.
+reader-resumed-image = Resumed at image { $image }
+
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 reader-back-to-page = Back to page { $page }
 
@@ -1621,6 +1624,40 @@ discussion-like-named =
        *[other] Like, { $count } likes
     }
 
+# Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
+linux-store-invite-chip = Invite ••••{ $last }
+
+# How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts".
+linux-store-plugin-hosts =
+    { $count ->
+        [one] { $count } host
+       *[other] { $count } hosts
+    }
+
+# Beside a spinner in the plugin store form while the invite is spent, after 600 ms.
+linux-store-joining = Joining…
+
+# The Install all button while the plugins install.
+linux-store-installing = Installing…
+
+# Third line of a book server's row in Your sources when its sign-in no longer works.
+linux-book-server-signed-out = Signed out · sign in again from Edit
+
+# Switch on a book server's page: its series show in Kaeri while it is on.
+linux-book-server-use = Use this server
+
+# Title of the dialog that asks before a book server is removed.
+linux-book-server-remove-title = Remove { $host }?
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Watch.
+linux-join-medium-line-watch = Watching, as on { $device }
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Both.
+linux-join-medium-line-both = Watching and reading, as on { $device }
+
+# Switch on a book plugin's page: its series show in Kaeri while it is on.
+linux-book-plugin-use = Use this plugin
+
 # Tooltip of the reader toolbar's settings button.
 linux-reader-settings-open = Reader settings
 
@@ -1687,9 +1724,6 @@ linux-reader-mode-scrolled = Scroll
 # Title of the sheet that prepares chapters as files for an e-reader.
 linux-send-title = Send to e-reader
 
-# Line under that title.
-linux-send-line = Pick the device. The next unread chapters are prepared as files that fit its screen.
-
 # Button that starts preparing the files.
 linux-send-prepare = Prepare files
 
@@ -1713,6 +1747,149 @@ linux-reader-page-of = Page { $page } of { $pages }
 
 # Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
 linux-reader-pages = Pages
+
+# Line on the end page for a chapter that has not counted as read yet.
+linux-reader-end-not-read = Not marked read yet
+
+# The one amber button of the end page: opens the next chapter.
+linux-reader-continue = Continue
+
+# End page text when the next chapter is not out yet.
+linux-reader-end-not-out-body = Kaeri checks for new chapters in the background and adds them to Updates.
+
+# End page text when the reader has caught up with the series.
+linux-reader-end-caught-up-body = New chapters show in Updates when your sources have them.
+
+# End page text at the end of a finished series.
+linux-reader-end-finished-body = There are no more chapters.
+
+# End page text when the next chapter is not downloaded and the computer is offline.
+linux-reader-end-offline-body = You're offline. It opens here once you're connected.
+
+# Hint under a page's error: turning the page goes on past it.
+linux-reader-page-failed-hint = Turn the page to go on without it.
+
+# Line while a chapter opens, once its number is known.
+linux-reader-opening-number = Opening chapter { $chapter }
+
+# Line while a chapter opens and a source is asked for the series' chapters.
+linux-reader-finding-source = Finding a source
+
+# Button on the Resumed notice.
+linux-reader-start-over = Start over
+
+# Button on the Moved notice.
+linux-reader-go-back = Go back
+
+# Button on the mode detected notice: opens the reader settings.
+linux-reader-change = Change
+
+# Heading in the reader settings over what this series keeps for itself.
+linux-reader-this-series = This series
+
+# Heading in the reader settings over what applies to every manga.
+linux-reader-all-manga = All manga
+
+# Heading in the reader settings over what applies to every manga on this computer.
+linux-reader-all-manga-here = All manga on this computer
+
+# Heading in the reader settings over what applies to every webtoon.
+linux-reader-all-strips = All webtoons
+
+# Heading in the reader settings over what applies to every webtoon on this computer.
+linux-reader-all-strips-here = All webtoons on this computer
+
+# Heading in the reader settings over what applies to every light novel.
+linux-reader-all-novels = All light novels
+
+# The reading mode choice that follows the series' details.
+linux-reader-mode-auto = Auto
+
+# Under the reading mode when it was guessed.
+linux-reader-mode-detected = Detected from the series details.
+
+# Button under the reading mode when the series has a choice of its own: drops it.
+linux-reader-use-default = Use default
+
+# Row that opens the rest of the reader settings.
+linux-reader-more-settings = More reader settings
+
+# Line spacing choices.
+linux-reader-line-tight = Tight
+
+linux-reader-line-normal = Normal
+
+linux-reader-line-loose = Loose
+
+# The margins choice between Narrow and Wide.
+linux-reader-margins-normal = Normal
+
+# Accessible names of the two ends of the text size slider.
+linux-reader-text-smaller = Smaller text
+
+linux-reader-text-larger = Larger text
+
+# Title of the small popover that jumps to a page, and its shortcut's name.
+linux-reader-go-to-page = Go to page
+
+# Placeholder of the Go to page field.
+linux-reader-go-to-page-field = 1 to { $total }
+
+# Heading of the reader's keys in the keyboard shortcuts window.
+linux-shortcuts-reader = Reader
+
+# Shortcut: turn the page.
+linux-shortcuts-turn = Turn the page
+
+# Shortcut: the first or last page.
+linux-shortcuts-first-last = First or last page
+
+# Shortcut: a novel's text larger, smaller or back to its size.
+linux-shortcuts-text-size = Larger, smaller or default text
+
+# Shortcut: back to the page before a jump, or out of the reader.
+linux-shortcuts-reader-back = Back to the page before a jump
+
+# Shortcut: close the reader.
+linux-shortcuts-close-reader = Close the reader
+
+# Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
+linux-reader-names-and = { $first } and { $last }
+
+# On the plate that holds a page's place while it loads. The page is its number, such as 23.
+linux-reader-page-plate = Page { $page }
+
+# Heading when a chapter could not open. The chapter is its number, such as 13.
+linux-reader-open-failed = Couldn't open chapter { $chapter }
+
+# Heading when a chapter with no number could not open.
+linux-reader-open-failed-plain = Couldn't open this chapter
+
+# Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
+linux-send-next =
+    { $n ->
+        [one] The next unread chapter
+       *[other] The next { $n } unread
+    }
+
+# Choice in Send to e-reader's Chapters row: every chapter not read yet.
+linux-send-all-unread = All unread
+
+# Under Send to e-reader's Chapters row when every chapter is read.
+linux-send-none-unread = Every chapter is read
+
+# Toast after the prepared files were saved to a folder.
+linux-send-saved =
+    { $n ->
+        [one] The file is saved
+       *[other] { $n } files are saved
+    }
+
+# Toast when the prepared files could not be written to the folder picked.
+linux-send-save-failed = Couldn't save the files in that folder
+
+# Tooltip and spoken name of the button on Updates that looks for new chapters now.
+linux-updates-check = Check for new chapters
 
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Preview
@@ -1966,6 +2143,9 @@ tv-cast-inhibit-reason = Sending an episode to a TV
 
 # The heading over the TVs running Kaeri in Play on TV, once TVs with Chromecast built in are listed below them.
 tv-network-group = On this network
+
+# The sidebar place that lists your own sources, under the Sources heading.
+linux-sidebar-your-sources = Your sources
 
 # Count of devices on a member's row in the members dialog, and after "Owner ·".
 stores-device-count =
@@ -8417,11 +8597,24 @@ reader-end-pages =
 # Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
 reader-end-from = From { $source }
 
-# Under the series title in the reader's controls. The chapter is its number, such as 12.
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
 reader-chapter-line = Chapter { $chapter }
 
 # The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
 reader-divider-facts-source = { $facts } · from { $source }
+
+# Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+reader-end-swipe = Swipe to keep reading
+
+# The next episode's length on the divider inside a strip.
+reader-divider-images =
+    { $count ->
+        [one] One image
+       *[other] { $count } images
+    }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line-titled = Chapter { $chapter } · { $title }
 
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Read the demo

@@ -19,3 +19,4 @@ pair-enter-code = Kod gir
 rkey-restores = Tüm { -device-pl } kaybolsa bile her şeyi geri getirir.
 sync-turn-off-button = Kapat
 rkey-enter-line-generic = { $service }, diğer { -device-pl } cihazlarınızdan gelen geçmişi tutuyor. Eşitleme açılırken kaydettiğiniz anahtar onu açar.
+pair-code-left = Bu kod { $left } daha geçerli.

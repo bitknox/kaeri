@@ -10,3 +10,7 @@ tui-together-join-prompt = liên kết hoặc mã
 tui-together-chat-hidden-line = Tin nhắn và biểu cảm không hiện trên trình phát ở mọi buổi xem.
 tui-together-not-a-link = Đây không phải liên kết hay mã { -watch-party }.
 tui-together-recent-alone = Tập { $episode } · { $when }
+tui-medium-read-title = Đọc truyện trong các ứng dụng
+tui-medium-read-line = Terminal không có trình đọc. Manga, webtoon và light novel mở trong các ứng dụng { -app-name }, và đồng bộ giữ tiến độ của bạn khớp nhau.
+tui-medium-read-change = Nhấn { $key } để đổi cách dùng { -app-name }.
+tui-medium-settings-hint = { $key } để đổi

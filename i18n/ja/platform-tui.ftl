@@ -10,3 +10,7 @@ tui-together-join-prompt = リンクまたはコード
 tui-together-chat-hidden-line = すべてのパーティで、チャットとリアクションはプレーヤーに表示されません。
 tui-together-not-a-link = { -watch-party }のリンクまたはコードではありません。
 tui-together-recent-alone = エピソード { $episode } · { $when }
+tui-medium-read-title = 読書はアプリで
+tui-medium-read-line = ターミナルにはリーダーがありません。マンガ、ウェブトゥーン、ライトノベルは{ -app-name }のアプリで開き、進捗は同期でそろいます。
+tui-medium-read-change = { $key }を押すと、{ -app-name }の用途を変更できます。
+tui-medium-settings-hint = { $key }で変更

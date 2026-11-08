@@ -677,6 +677,10 @@ object Strings {
     fun readerResumed(context: Context, page: Int): String =
         context.getString(R.string.reader_resumed, page)
 
+    /** The same notice in a webtoon strip, which counts images rather than pages. */
+    fun readerResumedImage(context: Context, image: Int): String =
+        context.getString(R.string.reader_resumed_image, image)
+
     /** A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page. */
     fun readerBackToPage(context: Context, page: Int): String =
         context.getString(R.string.reader_back_to_page, page)
@@ -2217,10 +2221,6 @@ object Strings {
     fun readerSettings(context: Context): String =
         context.getString(R.string.reader_settings)
 
-    /** Under the series title in the reader's controls. The chapter is its number, such as 12. */
-    fun readerChapterLineTitled(context: Context, chapter: String, title: String): String =
-        context.getString(R.string.reader_chapter_line_titled, chapter, title)
-
     /** Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. */
     fun readerNovelLineScroll(context: Context, chapter: String): String =
         context.getString(R.string.reader_novel_line_scroll, chapter)
@@ -2240,10 +2240,6 @@ object Strings {
     /** Main button on the page between chapters. */
     fun readerEndContinue(context: Context): String =
         context.getString(R.string.reader_end_continue)
-
-    /** Line above the main button on the page between chapters. */
-    fun readerEndSwipe(context: Context): String =
-        context.getString(R.string.reader_end_swipe)
 
     /** Quiet button on the page between chapters that leaves the reader for the series page. */
     fun readerEndSeries(context: Context): String =
@@ -2600,10 +2596,6 @@ object Strings {
     /** Paper mode part: a slider for how far the page's white is dimmed. */
     fun readerPaperDim(context: Context): String =
         context.getString(R.string.reader_paper_dim)
-
-    /** The next episode's length on the divider inside a strip. */
-    fun readerDividerImages(context: Context, count: Int): String =
-        context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)
 
     /** The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s". */
     fun readerOpeningWaited(context: Context, line: String, seconds: Int): String =
@@ -8614,13 +8606,25 @@ object Strings {
     fun readerEndFrom(context: Context, source: String): String =
         context.getString(R.string.reader_end_from, source)
 
-    /** Under the series title in the reader's controls. The chapter is its number, such as 12. */
+    /** Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. */
     fun readerChapterLine(context: Context, chapter: String): String =
         context.getString(R.string.reader_chapter_line, chapter)
 
     /** The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. */
     fun readerDividerFactsSource(context: Context, facts: String, source: String): String =
         context.getString(R.string.reader_divider_facts_source, facts, source)
+
+    /** Line on the page between chapters, near its buttons: one more swipe opens the next chapter. */
+    fun readerEndSwipe(context: Context): String =
+        context.getString(R.string.reader_end_swipe)
+
+    /** The next episode's length on the divider inside a strip. */
+    fun readerDividerImages(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)
+
+    /** Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. */
+    fun readerChapterLineTitled(context: Context, chapter: String, title: String): String =
+        context.getString(R.string.reader_chapter_line_titled, chapter, title)
 
     /** Button in the first run that opens the reading demo. */
     fun onboardingReadDemo(context: Context): String =

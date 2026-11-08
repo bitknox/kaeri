@@ -29,6 +29,9 @@ action-continue-chapter = { -proceed-cap }: глава { $n } · стр. { $page
 action-continue-part = { -proceed-cap }: часть { $n } · { $percent }%
 action-continue-part-plain = { -proceed-cap }: часть { $n }
 action-read-part = Читать часть { $n }
+action-continue-named = { -proceed-cap }: { $label } · { $percent }%
+action-continue-named-plain = { -proceed-cap }: { $label }
+action-read-named = Читать: { $label }
 action-read-again = Прочитать заново
 series-reading-from = Читается из
 series-change = Изменить
@@ -407,3 +410,96 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = прочитано: { $n }
 read-downloads-delete-read = Удалить прочитанные
+send-title = Отправить на ридер
+send-for = Куда
+send-what = Что
+send-chapters = Главы
+send-chapters-one = { $chapter }
+send-chapters-range = С { $first } по { $last }
+send-size = Размер
+send-size-about = Около { $size }
+send-no-place = { -app-name } не видит, докуда вы дочитали на этом ридере. Когда вы вернётесь, страница серии спросит об этом.
+send-prepare = Подготовить и поделиться
+send-preparing = { $total ->
+    [one] Подготовка { $done } из { $total } главы
+    [few] Подготовка { $done } из { $total } глав
+    [many] Подготовка { $done } из { $total } глав
+   *[other] Подготовка { $done } из { $total } главы
+ }
+send-sized-for = Страницы подогнаны под { $device }
+send-in-parts = Больше { $size }, поэтому файлы будут разделены на части.
+send-failed-chapter = Не удалось подготовить главу { $chapter }. { $cause }
+send-failed = Не удалось подготовить файлы. { $cause }
+send-size-working = Вычисляется
+send-chapters-open = Развёрнуто
+send-chapters-closed = Свёрнуто
+send-progress-spoken = { $percent } %
+send-chapter-action = Отправить на ридер
+send-parts-over = частями, если больше { $size }
+send-waiting-cancel = Отменить отправку
+send-ready = { $n ->
+    [one] { $n } файл готов.
+    [few] { $n } файла готовы.
+    [many] { $n } файлов готово.
+   *[other] { $n } файла готово.
+ }
+send-share-again = Поделиться снова
+send-banner = Отправка на { $device }
+send-format-fixed-epub = EPUB с фиксированной вёрсткой
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = Где вы остановились?
+stop-note = Вы отправили главы на { $device }. Где вы остановились?
+stop-note-action = Указать место
+stop-sent-one = Глава { $chapter } отправлена на { $device } { $date }.
+stop-sent-range = Главы с { $first } по { $last } отправлены на { $device } { $date }.
+stop-finished = Глава { $chapter } дочитана
+stop-set = Указать место
+stop-keep = Оставить главу { $chapter } · стр. { $page }
+stop-keep-plain = Оставить текущее место
+ereaders-group = Ридеры
+ereaders-send-row = Отправить на ридер
+ereaders-feed-row = Канал OPDS
+opds-share-note = Каталог OPDS, который могут просматривать домашние ридеры
+opds-footer = Канал работает, только пока { -app-name } открыт на этом устройстве ({ $device }). Прогресс на этих ридерах остаётся на них.
+opds-address = Адрес
+opds-address-off = Включите канал, чтобы получить его адрес.
+opds-password = Пароль
+opds-password-note = Ридеры спрашивают его один раз
+opds-new-password = Новый пароль
+opds-port = Порт
+opds-port-note = Оставьте пустым для любого свободного порта или выберите от 1024 до 65535
+opds-port-moved = Порт { $wanted } был занят, поэтому канал использует { $port }.
+opds-shares = Что доступно
+opds-share-downloads = Загрузки
+opds-share-downloads-count = { $n ->
+    [one] { $n } глава
+    [few] { $n } главы
+    [many] { $n } глав
+   *[other] { $n } главы
+ }
+opds-share-manga = Папка манги
+opds-share-novels = Папка ранобэ
+opds-share-series-count = { $n ->
+    [one] { $n } серия
+    [few] { $n } серии
+    [many] { $n } серий
+   *[other] { $n } серии
+ }
+opds-fetched-by = Скачивали
+opds-fetched-none = Ни один ридер ещё ничего не скачал.
+opds-starting = Запуск…
+opds-paused-none = Приостановлено. Этот Mac не подключён к локальной сети.
+opds-paused-vpn = Приостановлено. Этот Mac подключён только через VPN.
+opds-new-password-title = Создать новый пароль?
+opds-new-password-warning = Ридеры, которые уже используют канал, перестанут работать, пока вы не введёте новый пароль на каждом из них.
+opds-fetched-time = Последний запрос { $time }
+opds-fetched-files = { $n ->
+    [one] { $n } файл
+    [few] { $n } файла
+    [many] { $n } файлов
+   *[other] { $n } файла
+ }
+opds-reader-unnamed = Ридер по адресу { $address }

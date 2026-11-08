@@ -26,6 +26,9 @@ action-continue-chapter = { -continue-cap } 第{ $n }話 · { $page }ページ
 action-continue-part = { -continue-cap } パート{ $n } · { $percent }%
 action-continue-part-plain = { -continue-cap } パート{ $n }
 action-read-part = パート{ $n }を読む
+action-continue-named = { -continue-cap } { $label } · { $percent }%
+action-continue-named-plain = { -continue-cap } { $label }
+action-read-named = { $label }を読む
 action-read-again = もう一度読む
 series-reading-from = 読み込み元
 series-change = 変更
@@ -347,3 +350,81 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = 既読 { $n }話
 read-downloads-delete-read = 既読を削除
+send-title = 電子書籍リーダーに送る
+send-for = 送信先
+send-what = 内容
+send-chapters = 章
+send-chapters-one = { $chapter }
+send-chapters-range = { $first }〜{ $last }
+send-size = サイズ
+send-size-about = 約{ $size }
+send-no-place = { -app-name }からは、この電子書籍リーダーで読んだ位置がわかりません。戻ってきたときに、作品ページでどこまで読んだかを尋ねます。
+send-prepare = 準備して共有
+send-preparing = { $total ->
+   *[other] { $total }話中{ $done }話目を準備中
+ }
+send-sized-for = ページは{ $device }向けのサイズです
+send-in-parts = { $size }を超えるため、ファイルを分割します。
+send-failed-chapter = 第{ $chapter }話を準備できませんでした。{ $cause }
+send-failed = ファイルを準備できませんでした。{ $cause }
+send-size-working = 計算中
+send-chapters-open = 開いています
+send-chapters-closed = 閉じています
+send-progress-spoken = { $percent }パーセント
+send-chapter-action = 電子書籍リーダーに送る
+send-parts-over = { $size }を超えると分割
+send-waiting-cancel = 送信をキャンセル
+send-ready = { $n ->
+   *[other] { $n }件のファイルの準備ができました。
+ }
+send-share-again = もう一度共有
+send-banner = { $device }に送信中
+send-format-fixed-epub = 固定レイアウトEPUB
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = どこまで読みましたか?
+stop-note = { $device }に章を送りました。どこまで読みましたか?
+stop-note-action = 読んだ位置を設定
+stop-sent-one = { $date }に第{ $chapter }話を{ $device }に送りました。
+stop-sent-range = { $date }に第{ $first }話〜第{ $last }話を{ $device }に送りました。
+stop-finished = 第{ $chapter }話を読み終えた
+stop-set = 読んだ位置を設定
+stop-keep = 第{ $chapter }話 · { $page }ページのままにする
+stop-keep-plain = 現在の位置のままにする
+ereaders-group = 電子書籍リーダー
+ereaders-send-row = 電子書籍リーダーに送る
+ereaders-feed-row = OPDSフィード
+opds-share-note = 家庭内の電子書籍リーダーから閲覧できるOPDSカタログ
+opds-footer = フィードは、この{ $device }で{ -app-name }を開いている間だけ動作します。それらの電子書籍リーダーでの進捗は、そちらに残ります。
+opds-address = アドレス
+opds-address-off = アドレスを取得するには、フィードをオンにしてください。
+opds-password = パスワード
+opds-password-note = 電子書籍リーダーで一度だけ入力します
+opds-new-password = 新しいパスワード
+opds-port = ポート
+opds-port-note = 空欄なら空いているポートを使います。指定する場合は1024〜65535から選んでください
+opds-port-moved = ポート{ $wanted }は使用中だったため、フィードは{ $port }を使っています。
+opds-shares = 共有する内容
+opds-share-downloads = ダウンロード
+opds-share-downloads-count = { $n ->
+   *[other] { $n }話
+ }
+opds-share-manga = マンガのフォルダ
+opds-share-novels = ライトノベルのフォルダ
+opds-share-series-count = { $n ->
+   *[other] { $n }シリーズ
+ }
+opds-fetched-by = 取得した電子書籍リーダー
+opds-fetched-none = まだどの電子書籍リーダーも取得していません。
+opds-starting = 起動しています…
+opds-paused-none = 一時停止中。このMacはローカルネットワークに接続していません。
+opds-paused-vpn = 一時停止中。このMacはVPN経由でのみ接続しています。
+opds-new-password-title = 新しいパスワードを作成しますか?
+opds-new-password-warning = すでにフィードを使っている電子書籍リーダーは、それぞれに新しいパスワードを入力するまで使えなくなります。
+opds-fetched-time = 最終リクエスト：{ $time }
+opds-fetched-files = { $n ->
+   *[other] { $n }件のファイル
+ }
+opds-reader-unnamed = { $address }の電子書籍リーダー

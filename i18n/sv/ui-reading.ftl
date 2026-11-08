@@ -27,6 +27,9 @@ action-continue-chapter = Läs vidare på kapitel { $n } · sida { $page }
 action-continue-part = Läs vidare på del { $n } · { $percent }%
 action-continue-part-plain = Läs vidare på del { $n }
 action-read-part = Läs del { $n }
+action-continue-named = Läs vidare på { $label } · { $percent }%
+action-continue-named-plain = Läs vidare på { $label }
+action-read-named = Läs { $label }
 action-read-again = Läs igen
 series-reading-from = Läser från
 series-change = Ändra
@@ -367,3 +370,86 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = { $n } lästa
 read-downloads-delete-read = Ta bort lästa
+send-title = Skicka till e-läsare
+send-for = Till
+send-what = Vad
+send-chapters = Kapitel
+send-chapters-one = { $chapter }
+send-chapters-range = { $first } till { $last }
+send-size = Storlek
+send-size-about = Cirka { $size }
+send-no-place = { -app-name } kan inte se var du är på den här e-läsaren. När du kommer tillbaka frågar seriesidan var du slutade.
+send-prepare = Förbered och dela
+send-preparing = { $total ->
+    [one] Förbereder kapitlet
+   *[other] Förbereder { $done } av { $total } kapitel
+ }
+send-sized-for = Sidorna är anpassade för { $device }
+send-in-parts = Över { $size }, så filerna delas upp.
+send-failed-chapter = Kunde inte förbereda kapitel { $chapter }. { $cause }
+send-failed = Kunde inte förbereda filerna. { $cause }
+send-size-working = Räknar ut
+send-chapters-open = Öppen
+send-chapters-closed = Stängd
+send-progress-spoken = { $percent } procent
+send-chapter-action = Skicka till e-läsare
+send-parts-over = i delar över { $size }
+send-waiting-cancel = Avbryt sändningen
+send-ready = { $n ->
+    [one] En fil är klar.
+   *[other] { $n } filer är klara.
+ }
+send-share-again = Dela igen
+send-banner = Skickar till { $device }
+send-format-fixed-epub = EPUB med fast layout
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = Var slutade du?
+stop-note = Du skickade kapitel till { $device }. Var slutade du?
+stop-note-action = Ange din plats
+stop-sent-one = Kapitel { $chapter } skickades till { $device } den { $date }.
+stop-sent-range = Kapitel { $first } till { $last } skickades till { $device } den { $date }.
+stop-finished = Läste klart kapitel { $chapter }
+stop-set = Ange din plats
+stop-keep = Behåll kapitel { $chapter } · sida { $page }
+stop-keep-plain = Behåll nuvarande plats
+ereaders-group = E-läsare
+ereaders-send-row = Skicka till e-läsare
+ereaders-feed-row = OPDS-flöde
+opds-share-note = En OPDS-katalog som e-läsare hemma kan bläddra i
+opds-footer = Flödet körs bara medan { -app-name } är öppet på den här { $device }. Förlopp på de e-läsarna stannar där.
+opds-address = Adress
+opds-address-off = Slå på flödet för att få dess adress.
+opds-password = Lösenord
+opds-password-note = E-läsare frågar efter det en gång
+opds-new-password = Nytt lösenord
+opds-port = Port
+opds-port-note = Lämna tomt för valfri ledig port, eller välj en från 1024 till 65535
+opds-port-moved = Port { $wanted } var upptagen, så flödet använder { $port }.
+opds-shares = Vad det delar
+opds-share-downloads = Nedladdningar
+opds-share-downloads-count = { $n ->
+    [one] Ett kapitel
+   *[other] { $n } kapitel
+ }
+opds-share-manga = Mangamapp
+opds-share-novels = Romanmapp
+opds-share-series-count = { $n ->
+    [one] En serie
+   *[other] { $n } serier
+ }
+opds-fetched-by = Hämtat av
+opds-fetched-none = Ingen e-läsare har hämtat något än.
+opds-starting = Startar…
+opds-paused-none = Pausat. Den här Macen är inte på något lokalt nätverk.
+opds-paused-vpn = Pausat. Den här Macen är bara ansluten via VPN.
+opds-new-password-title = Skapa ett nytt lösenord?
+opds-new-password-warning = E-läsare som redan använder flödet slutar fungera tills du skriver in det nya lösenordet i var och en.
+opds-fetched-time = Senaste förfrågan { $time }
+opds-fetched-files = { $n ->
+    [one] En fil
+   *[other] { $n } filer
+ }
+opds-reader-unnamed = E-läsare på { $address }

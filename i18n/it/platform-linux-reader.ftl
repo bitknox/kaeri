@@ -1,0 +1,89 @@
+linux-reader-settings-open = Impostazioni lettore
+linux-reader-opening = Apertura del capitolo
+linux-reader-end-not-out = Il capitolo seguente non è ancora uscito
+linux-reader-end-finished = Fine della serie
+linux-reader-end-offline = Il capitolo successivo non è scaricato
+linux-reader-end-no-source = Nessun capitolo successivo nelle tue { -source-pl }
+linux-reader-back-to-series = Torna alla serie
+linux-reader-chapter-failed = Impossibile aprire il capitolo
+linux-reader-reading-mode = Modalità di lettura
+linux-reader-fit = Adatta
+linux-reader-crop-borders = Ritaglia i bordi
+linux-reader-page-layout = Layout pagine
+linux-reader-background = Sfondo
+linux-reader-look = Aspetto
+linux-reader-font = Carattere
+linux-reader-text-size = Dimensione testo
+linux-reader-margins = Margini
+linux-reader-line-spacing = Interlinea
+linux-reader-justify = Giustifica il testo
+linux-reader-direction = Direzione
+linux-reader-spreads = Pagine larghe
+linux-reader-strip-width = Larghezza striscia
+linux-reader-strip-gap = Spazio tra immagini
+linux-reader-fit-height = Altezza
+linux-reader-mode-paged = A pagine
+linux-reader-mode-scrolled = Scorrimento
+linux-send-title = Invia all'e-reader
+linux-send-prepare = Prepara i file
+linux-send-progress = Preparazione { $done } di { $total }
+linux-send-save = Salva in una cartella
+linux-send-menu = Invia all'e-reader
+linux-reader-novel-unavailable = Qui le light novel non si aprono
+linux-reader-novel-needs-webkit = Le light novel richiedono WebKitGTK 6 con la sua sandbox funzionante.
+linux-reader-page-of = Pagina { $page } di { $pages }
+linux-reader-pages = Pagine
+linux-reader-end-not-read = Non ancora segnato come letto
+linux-reader-continue = Capitolo successivo
+linux-reader-end-not-out-body = { -app-name } cerca nuovi capitoli in background e li aggiunge ad Aggiornamenti.
+linux-reader-end-caught-up-body = I nuovi capitoli compaiono in Aggiornamenti quando le tue { -source-pl } li hanno.
+linux-reader-end-finished-body = Non ci sono altri capitoli.
+linux-reader-end-offline-body = Sei offline. Si aprirà qui appena sarai connesso.
+linux-reader-page-failed-hint = Gira pagina per andare avanti senza.
+linux-reader-opening-number = Apertura del capitolo { $chapter }
+linux-reader-finding-source = Ricerca di una { -source }
+linux-reader-start-over = Ricomincia
+linux-reader-go-back = Torna indietro
+linux-reader-change = Cambia
+linux-reader-this-series = Questa serie
+linux-reader-all-manga = Tutti i manga
+linux-reader-all-manga-here = Tutti i manga su questo computer
+linux-reader-all-strips = Tutti i webtoon
+linux-reader-all-strips-here = Tutti i webtoon su questo computer
+linux-reader-all-novels = Tutte le light novel
+linux-reader-mode-auto = Auto
+linux-reader-mode-detected = Rilevata dai dettagli della serie.
+linux-reader-use-default = Usa predefinito
+linux-reader-more-settings = Altre impostazioni lettore
+linux-reader-line-tight = Stretta
+linux-reader-line-normal = Normale
+linux-reader-line-loose = Ampia
+linux-reader-margins-normal = Normali
+linux-reader-text-smaller = Testo più piccolo
+linux-reader-text-larger = Testo più grande
+linux-reader-go-to-page = Vai alla pagina
+linux-reader-go-to-page-field = Da 1 a { $total }
+linux-shortcuts-reader = Lettore
+linux-shortcuts-turn = Gira pagina
+linux-shortcuts-first-last = Prima o ultima pagina
+linux-shortcuts-text-size = Testo più grande, più piccolo o predefinito
+linux-shortcuts-reader-back = Torna alla pagina prima del salto
+linux-shortcuts-close-reader = Chiudi il lettore
+linux-reader-names-and = { $first } e { $last }
+linux-reader-page-plate = Pagina { $page }
+linux-reader-open-failed = Impossibile aprire il capitolo { $chapter }
+linux-reader-open-failed-plain = Impossibile aprire questo capitolo
+linux-send-next = { $n ->
+    [one] Il primo capitolo non letto
+    [many] I primi { $n } non letti
+   *[other] I primi { $n } non letti
+ }
+linux-send-all-unread = Tutti i non letti
+linux-send-none-unread = Tutti i capitoli sono letti
+linux-send-saved = { $n ->
+    [one] Il file è salvato
+    [many] { $n } file salvati
+   *[other] { $n } file salvati
+ }
+linux-send-save-failed = Impossibile salvare i file in quella cartella
+linux-updates-check = Cerca nuovi capitoli

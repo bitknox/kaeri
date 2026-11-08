@@ -45,3 +45,5 @@ library-linux-list-count = { $list } { $count }
 title-linux-play-on-tv-help = Odtwórz ten odcinek w telewizorze z { -app-name }
 title-linux-episode-watched = Odcinek { $episode } obejrzany
 calendar-linux-day-empty = Nic nie jest emitowane
+linux-read-library-list = Lista
+linux-read-downloads-empty = Pobrane rozdziały otwierają się bez połączenia.

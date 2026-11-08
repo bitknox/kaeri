@@ -42,3 +42,5 @@ library-linux-list-count = { $list } { $count }
 title-linux-play-on-tv-help = Riproduci questo episodio su un TV con { -app-name }
 title-linux-episode-watched = Episodio { $episode } visto
 calendar-linux-day-empty = Nessuna uscita
+linux-read-library-list = Lista
+linux-read-downloads-empty = I capitoli scaricati si aprono senza connessione.
