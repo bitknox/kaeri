@@ -24,6 +24,8 @@ struct HintedSource {
     slow: Duration,
     /// How many times the series' details were asked for.
     asked: std::sync::atomic::AtomicU32,
+    /// Pages far taller than wide, which the reader would take for a long strip.
+    tall: bool,
 }
 
 impl HintedSource {
@@ -42,7 +44,15 @@ impl HintedSource {
             hint,
             slow: Duration::ZERO,
             asked: Default::default(),
+            tall: false,
         })
+    }
+
+    /// A plugin whose pages are far taller than wide.
+    fn tall(id: &str, hint: Option<ReadingHint>) -> Arc<Self> {
+        let mut source = Arc::into_inner(Self::new(id, BookSourceKind::Plugin, hint)).unwrap();
+        source.tall = true;
+        Arc::new(source)
     }
 
     fn slow(id: &str, hint: Option<ReadingHint>, slow: Duration) -> Arc<Self> {
@@ -96,7 +106,8 @@ impl kaeri_core::traits::BookSource for HintedSource {
         page: &kaeri_core::books::PageRef,
     ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
         let shade = page.url.bytes().last().unwrap_or(b'1');
-        let picture = image::GrayImage::from_pixel(300, 450, image::Luma([shade]));
+        let (width, height) = if self.tall { (200, 900) } else { (300, 450) };
+        let picture = image::GrayImage::from_pixel(width, height, image::Luma([shade]));
         let mut png = Vec::new();
         picture.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
         Ok(png)
@@ -202,6 +213,45 @@ async fn a_plugin_series_opens_the_way_its_plugin_says() {
     let mut h = hinted(HintedSource::new("plugin-books", BookSourceKind::Plugin, vertical));
     let (view, _, _) = h.open_work(WorkId::new(HINTED), OpenAt::Start).await;
     assert_eq!(view.mode, ReaderMode::Vertical);
+}
+
+/// Left to right or right to left from the source is a paged book: pages far taller than wide
+/// still open paged, with nothing guessed, as a series marked so in Komga does.
+#[tokio::test(start_paused = true)]
+async fn a_direction_hint_opens_tall_pages_paged() {
+    for (hint, direction) in [
+        (ReadingHint::LeftToRight, ReadDirection::LeftToRight),
+        (ReadingHint::RightToLeft, ReadDirection::RightToLeft),
+    ] {
+        let mut h = hinted(HintedSource::tall("plugin-books", Some(hint)));
+        let (view, _, said) = h.open_work(WorkId::new(HINTED), OpenAt::Start).await;
+        assert_eq!((view.mode, view.direction), (ReaderMode::Paged, direction), "{hint:?}");
+        assert!(notices(&said).is_empty(), "nothing was guessed: {said:?}");
+        let row = h.row(Key::Mode);
+        assert_eq!(row.value, ReaderValue::Choice { name: "paged".into() });
+        assert!(row.detected && !row.overridden, "{row:?}");
+    }
+
+    // With no hint, the same pages are taken for a long strip.
+    let mut h = hinted(HintedSource::tall("plugin-books", None));
+    let (view, _, _) = h.open_work(WorkId::new(HINTED), OpenAt::Start).await;
+    assert_eq!(view.mode, ReaderMode::Strip);
+}
+
+/// The demo's comic says it reads left to right: it opens paged, left to right, though its
+/// pages are tall.
+#[tokio::test(start_paused = true)]
+async fn the_demo_comic_opens_paged_left_to_right() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
+    h.services.book_sources.registry.put(HintedSource::tall("pictures", None));
+    let comic = kaeri_core::reading_demo::COMIC.work_id();
+    h.services
+        .store
+        .set_book_match("pictures", "series-1", comic.as_str(), 90, true, false, 1)
+        .unwrap();
+    let (view, _, said) = h.open_work(comic, OpenAt::Start).await;
+    assert_eq!((view.mode, view.direction), (ReaderMode::Paged, ReadDirection::LeftToRight));
+    assert!(notices(&said).is_empty(), "{said:?}");
 }
 
 /// The person's own direction for the series wins over the source's hint; the reader's kept

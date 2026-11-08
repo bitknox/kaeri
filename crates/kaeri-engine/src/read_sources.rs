@@ -1432,6 +1432,23 @@ impl BookSources {
         edition: Option<&str>,
         now: i64,
     ) -> Result<Opened, ReadingFailure> {
+        let (source, series, found) = self.find_chapter(work, chapter, edition, now).await?;
+        let content = self
+            .registry
+            .content(&source, &series, &found.id, now)
+            .await
+            .map_err(|e| failure(&source, &e))?;
+        Ok(Opened { source_id: source, series_ref: series, chapter: found, content })
+    }
+
+    /// The source, its series and its own chapter for `chapter` of `work`, in the edition.
+    async fn find_chapter(
+        &self,
+        work: &WorkId,
+        chapter: &ChapterId,
+        edition: Option<&str>,
+        now: i64,
+    ) -> Result<(String, String, SourceChapter), ReadingFailure> {
         let (source, series) =
             self.edition_of(work, edition).ok_or(ReadingFailure::NotFound)?;
         let chapters = self
@@ -1444,12 +1461,33 @@ impl BookSources {
             .into_iter()
             .find(|c| c.key(restarts).id() == *chapter)
             .ok_or(ReadingFailure::NotFound)?;
-        let content = self
+        Ok((source, series, found))
+    }
+
+    /// The first page of a chapter of pictures, and nothing more of it: the reader's preview of
+    /// the next chapter. `None` for a chapter of text, or one only a whole file's download
+    /// would open. The page is fetched as the reader fetches it, with fresh addresses asked
+    /// for once on a 403 or 410.
+    pub async fn first_page(
+        &self,
+        work: &WorkId,
+        chapter: &ChapterId,
+        now: i64,
+    ) -> Result<Option<Vec<u8>>, ReadingFailure> {
+        let (source, series, found) = self.find_chapter(work, chapter, None, now).await?;
+        let pages = self
             .registry
-            .content(&source, &series, &found.id, now)
+            .chapter_pages(&source, &series, &found.id, now)
             .await
             .map_err(|e| failure(&source, &e))?;
-        Ok(Opened { source_id: source, series_ref: series, chapter: found, content })
+        let Some(pages) = pages.filter(|p| !p.is_empty()) else { return Ok(None) };
+        let mut opened = Opened {
+            source_id: source,
+            series_ref: series,
+            chapter: found,
+            content: ChapterContent::Images(pages),
+        };
+        self.page(&mut opened, 0, now).await.map(Some)
     }
 
     /// Fetch page `index` of an opened chapter's images, asking the source again once for

@@ -229,17 +229,24 @@ impl Layers {
     }
 
     /// The source's or the catalogue's value for `key`: a comic's mode and direction only. A
-    /// strip, said by either, opens as the Webtoons default.
+    /// strip, said by either, opens as the Webtoons default. Left to right and right to left are
+    /// a paged book, as in Komga, where they stand beside vertical and webtoon; the source's
+    /// word comes before the catalogue's.
     fn source_value(&self, key: Key) -> Option<ReaderValue> {
         if self.medium != Medium::Manga {
             return None;
         }
         let hint = self.source.hint;
         match key {
-            Key::Mode if hint == Some(ReadingHint::Strip) || self.source.webtoon => {
-                Some(choice(self.config.webtoon.mode.name()))
-            }
-            Key::Mode if hint == Some(ReadingHint::Vertical) => Some(choice("vertical")),
+            Key::Mode => match hint {
+                Some(ReadingHint::RightToLeft | ReadingHint::LeftToRight) => {
+                    Some(choice("paged"))
+                }
+                Some(ReadingHint::Vertical) => Some(choice("vertical")),
+                Some(ReadingHint::Strip) => Some(choice(self.config.webtoon.mode.name())),
+                None if self.source.webtoon => Some(choice(self.config.webtoon.mode.name())),
+                None => None,
+            },
             Key::Direction => match hint? {
                 ReadingHint::RightToLeft => Some(choice("rtl")),
                 ReadingHint::LeftToRight => Some(choice("ltr")),
@@ -447,6 +454,49 @@ mod tests {
         assert!(layers.on(Key::CropBorders));
         // A guess never replaces a choice.
         assert!(!store.set_series_guess(work, "direction", "ltr", 3).unwrap());
+    }
+
+    /// A source's left to right or right to left is a paged book: it sets the mode as well as
+    /// the direction, below the person's own choice and above the reader's guess, and before
+    /// the catalogue's word that the series is a webtoon.
+    #[test]
+    fn a_direction_hint_means_a_paged_book() {
+        let store = Store::open_in_memory().unwrap();
+        let config = ReadingConfig::default();
+        let work = "a:900403";
+        let screen = Screen::default();
+        let read = |hint, webtoon| {
+            Layers::read(&store, &config, Medium::Manga, Some(work), screen)
+                .with_source(SourceWord { hint, webtoon })
+        };
+        for (hint, direction) in
+            [(ReadingHint::LeftToRight, "ltr"), (ReadingHint::RightToLeft, "rtl")]
+        {
+            let layers = read(Some(hint), false);
+            let mode = layers.row(Key::Mode);
+            assert_eq!(mode.value, choice("paged"), "{hint:?}");
+            assert!(mode.detected && !mode.overridden, "{mode:?}");
+            assert!(layers.sourced(Key::Mode) && layers.sourced(Key::Direction));
+            assert_eq!(layers.word(Key::Direction), direction);
+            assert_eq!(
+                read(Some(hint), true).word(Key::Mode),
+                "paged",
+                "the source's word first"
+            );
+        }
+        assert_eq!(read(None, true).word(Key::Mode), "strip", "the Webtoons default");
+
+        // The reader's kept guess of a strip gives way to the hint.
+        assert!(store.set_series_guess(work, "mode", "strip", 1).unwrap());
+        assert_eq!(read(Some(ReadingHint::LeftToRight), false).word(Key::Mode), "paged");
+        assert_eq!(read(None, false).word(Key::Mode), "strip");
+
+        // The person's own mode for the series wins over the hint.
+        store.set_series_setting(work, "mode", Some("vertical"), true, 2).unwrap();
+        let layers = read(Some(ReadingHint::LeftToRight), false);
+        assert_eq!(layers.word(Key::Mode), "vertical");
+        assert!(!layers.sourced(Key::Mode) && layers.row(Key::Mode).overridden);
+        assert_eq!(layers.word(Key::Direction), "ltr");
     }
 
     #[test]
