@@ -60,6 +60,7 @@ fn entry_without_count(media: &Media, store: Option<&Store>) -> Entry {
         cover_url: media.cover_image.best().map(str::to_owned),
         cover_color: media.cover_image.color.clone(),
         banner_url: media.banner_image.clone(),
+        seen_still: seen_still(media, store, progress.as_ref().map_or(0, |p| p.done)),
         genres: media.genres.clone(),
         // One mention per service. AniList lists a link per region or per language, so the
         // same service could appear twice in one line ("YouTube · Bilibili TV · YouTube").
@@ -138,6 +139,31 @@ fn entry_without_count(media: &Media, store: Option<&Store>) -> Entry {
         sequels: media.sequel_ids(),
         ..Entry::new(media.id, media.title.display())
     }
+}
+
+/// The still a title with no banner shows in its place, from AniList's streaming listings as
+/// the engine holds them: the latest episode watched that has one, else episode 1's. A still
+/// from further on could give away what happens, so none is ever used. Watched is local
+/// history's word, or within the `done` count. The front ends' own rule (`HeroArt`) is the same,
+/// read from the episode table once it is here.
+///
+/// `None` for a title with a banner, and where the listings carry no stills: a list's answer
+/// carries none, though the cache keeps the ones a fuller answer brought.
+pub(crate) fn seen_still(media: &Media, store: Option<&Store>, done: u32) -> Option<String> {
+    if media.banner_image.is_some() {
+        return None;
+    }
+    let mut stills = media.episode_thumbnails();
+    if stills.is_empty() {
+        return None;
+    }
+    let completed = store.and_then(|s| s.completed_episodes(media.id).ok()).unwrap_or_default();
+    let watched = |number: u32| {
+        number <= done
+            || completed.iter().any(|e| e.parse::<f64>().ok() == Some(f64::from(number)))
+    };
+    let latest = stills.keys().rev().copied().find(|number| watched(*number));
+    stills.remove(&latest.unwrap_or(1))
 }
 
 /// Where `id` is on the library, as `store` last kept it. A rewatch is on the Watching segment,
@@ -1951,6 +1977,54 @@ mod tests {
     fn only_streaming_links_become_availability_badges() {
         let e = entry_from(&media(), None);
         assert_eq!(e.available_on, vec!["Hikari Library"]);
+    }
+
+    /// A title with no banner carries a still the viewer has seen: the latest episode watched
+    /// that has one, else episode 1's, never one further on.
+    #[test]
+    fn a_bannerless_title_carries_the_still_of_the_last_episode_watched() {
+        // Stills for episodes 1, 2, 3, 5 and 6; episode 4's listing has none.
+        let listings: Vec<_> = [1, 2, 3, 4, 5, 6]
+            .into_iter()
+            .map(|n| {
+                serde_json::json!({
+                    "title": format!("Episode {n} - Part {n}"),
+                    "url": format!("https://watch.example/{n}"),
+                    "thumbnail": (n != 4).then(|| format!("https://img.example/ep/{n}.jpg")),
+                })
+            })
+            .collect();
+        let bannerless = |listings: &[serde_json::Value]| -> Media {
+            let mut wire = serde_json::to_value(media()).unwrap();
+            wire["bannerImage"] = serde_json::Value::Null;
+            wire["streamingEpisodes"] = listings.into();
+            serde_json::from_value(wire).unwrap()
+        };
+        let still = |media: &Media, store: &Store| entry_from(media, Some(store)).seen_still;
+        let watch = |store: &Store, episode: &str| {
+            store
+                .record_event(&kaeri_store::WatchEvent {
+                    duration_secs: Some(1440.0),
+                    completed: true,
+                    ..kaeri_store::WatchEvent::new(media().id, episode, 1400.0)
+                })
+                .unwrap();
+        };
+        let at = |n: u32| Some(format!("https://img.example/ep/{n}.jpg"));
+
+        let store = Store::open_in_memory().unwrap();
+        let title = bannerless(&listings);
+        assert_eq!(still(&title, &store), at(1), "nothing watched: episode 1's");
+        watch(&store, "001");
+        watch(&store, "002");
+        assert_eq!(still(&title, &store), at(2));
+        watch(&store, "003");
+        watch(&store, "004");
+        assert_eq!(still(&title, &store), at(3), "episode 4 has none, and 5 is not seen yet");
+
+        // A banner wins, and a list's answer with no listings knows no still.
+        assert_eq!(still(&media(), &store), None);
+        assert_eq!(still(&bannerless(&[]), &store), None);
     }
 
     #[test]
