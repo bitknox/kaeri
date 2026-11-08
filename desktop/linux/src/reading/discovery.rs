@@ -25,6 +25,8 @@ pub const GAP: i32 = 16;
 pub const GRID_ROW_GAP: i32 = 24;
 /// Placeholders a row holds while it waits.
 const PLACEHOLDERS: usize = 8;
+/// The most posters a grid row holds, in the widest window.
+const GRID_PLACEHOLDERS_ACROSS: i32 = 20;
 
 /// The line under a poster's title: Not found in your sources once a row's series was opened and
 /// no source had it, else what comes next, else the facts.
@@ -179,10 +181,29 @@ pub fn poster(hub: &Hub, tile: &WorkTile, joined: Option<&str>) -> gtk::Button {
     button.set_hexpand(false);
     button.set_action_target_value(Some(&tile.work.0.to_variant()));
     button.set_action_name(Some("win.open-series"));
-    button.update_property(&[gtk::accessible::Property::Label(&spoken(tile, joined))]);
-    super::work_menu(&button, &tile.work, None);
+    button.update_property(&[
+        gtk::accessible::Property::Label(&spoken(tile, joined)),
+        gtk::accessible::Property::KeyShortcuts(PLAN_KEYS_SPOKEN),
+    ]);
+    super::work_menu(&button, &tile.work, Some((t::library_add_planning(), PLAN.to_owned())));
+    // Add to Planning without the menu: GTK has no custom screen reader actions, so the poster
+    // names its key for them.
+    let keys = gtk::ShortcutController::new();
+    let plan = gtk::Shortcut::new(
+        gtk::ShortcutTrigger::parse_string(PLAN_KEYS),
+        Some(gtk::NamedAction::new(PLAN)),
+    );
+    plan.set_arguments(Some(&tile.work.0.to_variant()));
+    keys.add_shortcut(plan);
+    button.add_controller(keys);
     button
 }
+
+/// Add to Planning, on a work.
+const PLAN: &str = "win.read-plan"; // i18n-skip
+/// Its key on a focused poster, as GTK parses it and as ARIA writes it.
+pub const PLAN_KEYS: &str = "<Control>d"; // i18n-skip
+const PLAN_KEYS_SPOKEN: &str = "Control+D"; // i18n-skip
 
 /// A poster as an item of a list, for the row or the grid that holds it.
 pub fn item(poster: &impl IsA<gtk::Widget>) -> gtk::Box {
@@ -227,6 +248,23 @@ pub fn placeholders(n: usize) -> gtk::Widget {
     clip.set_can_focus(false);
     clip.set_accessible_role(gtk::AccessibleRole::Presentation);
     clip.upcast()
+}
+
+/// Placeholders for a grid of posters: `rows` full rows at any width, 16 apart across and 24 down
+/// as the posters land.
+pub fn grid_placeholders(rows: i32) -> gtk::Widget {
+    let layout = crate::cards_layout::CardsLayout::full_rows(POSTER, GAP, GRID_ROW_GAP, rows);
+    let grid = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    grid.set_layout_manager(Some(layout));
+    grid.set_valign(gtk::Align::Start);
+    // As many as the widest window fits across; the layout shows whole rows of them.
+    for _ in 0..GRID_PLACEHOLDERS_ACROSS * rows {
+        grid.append(&placeholder());
+    }
+    grid.set_can_target(false);
+    grid.set_can_focus(false);
+    grid.set_accessible_role(gtk::AccessibleRole::Presentation);
+    grid.upcast()
 }
 
 /// The placeholders of a Home row.

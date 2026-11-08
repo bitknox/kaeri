@@ -21,7 +21,7 @@ use kaeri_model::{
 use crate::{hub::ReadAnswer, pages::Dest, window::Shell};
 
 /// Every discovery shot, in the order a run takes them.
-pub const NAMES: [&str; 12] = [
+pub const NAMES: [&str; 15] = [
     "read-disc-home-first",
     "read-disc-home-first-end",
     "read-disc-home-history",
@@ -34,6 +34,9 @@ pub const NAMES: [&str; 12] = [
     "read-disc-search-mine-end",
     "read-disc-search-nothing",
     "read-disc-search-end",
+    "read-disc-search-loading",
+    "read-disc-view-all",
+    "read-disc-poster-menu",
 ];
 
 const HOME_LIBRARY: &str = "shot-home-library";
@@ -600,7 +603,33 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
         })
     };
     Some(match shot {
-        "read-disc-home-first" | "read-disc-home-first-end" => home(first_run),
+        "read-disc-home-first" | "read-disc-home-first-end" | "read-disc-poster-menu" => {
+            home(first_run)
+        }
+        "read-disc-view-all" => Rc::new(|command| match command {
+            ReadingCommand::LoadHome { .. } => {
+                Some(vec![(0, Event::Reading(ReadingEvent::Home(Box::new(first_run()))))])
+            }
+            ReadingCommand::Search { query } => {
+                Some(vec![(100, search_event(query, 0, thirty(), Some(1920)))])
+            }
+            _ => None,
+        }),
+        // Nothing answers: AniList's grid and every source wait on their placeholders.
+        "read-disc-search-loading" => Rc::new(|command| match command {
+            ReadingCommand::Search { query } if !query.text.is_empty() => {
+                let mut asking = sources_part(query, Moment::Mid);
+                asking.anilist = ReadAnilistState::Asking;
+                for g in &mut asking.groups {
+                    g.state = ReadSourceState::Asking;
+                    g.tiles.clear();
+                }
+                asking.joins.clear();
+                Some(vec![(0, source_event(asking))])
+            }
+            ReadingCommand::Search { .. } => Some(Vec::new()),
+            _ => None,
+        }),
         "read-disc-home-history" | "read-disc-home-history-end" => home(with_history),
         "read-disc-home-loading" => home(loading),
         "read-disc-search-mid" | "read-disc-search-mid-end" | "read-disc-search-failed" => {
@@ -707,6 +736,22 @@ fn find<T: IsA<gtk::Widget>>(widget: &gtk::Widget, class: &str) -> Option<T> {
     None
 }
 
+/// Press the first button with `class` on screen 1.5 s after the stage, or with `action`, run
+/// that action on it instead.
+fn press_later(shell: &Rc<Shell>, class: &'static str, action: Option<&'static str>) {
+    let window = shell.ctx.window.clone();
+    gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(1500), move || {
+        let Some(button) = find::<gtk::Button>(window.upcast_ref(), class) else { return };
+        match action {
+            Some(action) => {
+                button.grab_focus();
+                let _ = button.activate_action(action, None);
+            }
+            None => button.emit_clicked(),
+        }
+    });
+}
+
 /// Scroll every page's scroll to its end, `ms` after the stage.
 fn scroll_to_end_later(shell: &Rc<Shell>, ms: u64) {
     fn to_end(widget: &gtk::Widget) {
@@ -733,7 +778,10 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
     let answer = answer_for(shot)?;
     let hub = Rc::clone(&shell.ctx.hub);
     *hub.read_answer.borrow_mut() = Some(Rc::clone(&answer));
-    if shot.starts_with("read-disc-home") {
+    if shot.starts_with("read-disc-home")
+        || shot == "read-disc-view-all"
+        || shot == "read-disc-poster-menu"
+    {
         let events: Vec<Event> = answer(&ReadingCommand::LoadHome { refresh: false })
             .unwrap_or_default()
             .into_iter()
@@ -757,7 +805,17 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         if shot.ends_with("-end") {
             scroll_to_end_later(shell, 2500);
         }
-        return Some(if shot.ends_with("-end") { 4.0 } else { 3.5 });
+        match shot {
+            "read-disc-view-all" => press_later(shell, "home-all", None),
+            "read-disc-poster-menu" => press_later(shell, "home-card", Some("context.popup")),
+            _ => {}
+        }
+        return Some(match shot {
+            // Loading suggestions comes in 4 s after the rows start waiting, at 1.2 s.
+            "read-disc-home-loading" => 6.0,
+            s if s.ends_with("-end") => 4.0,
+            _ => 3.5,
+        });
     }
     shell.go(Dest::ReadSearch);
     if shot.ends_with("-end") || shot == "read-disc-search-failed" {
@@ -778,6 +836,11 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         "read-disc-search-end" => {
             type_query(shell, "night", false);
             4.5
+        }
+        // Placeholders from 600 ms after asking; nothing ever answers.
+        "read-disc-search-loading" => {
+            type_query(shell, "lantern", false);
+            3.0
         }
         _ => {
             type_query(shell, "lantern", false);

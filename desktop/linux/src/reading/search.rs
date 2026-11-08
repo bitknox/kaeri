@@ -46,6 +46,8 @@ use crate::{
 
 /// Placeholders in a source's row while it is asked.
 const SOURCE_PLACEHOLDERS: usize = 5;
+/// AniList's grid waits as two full rows of placeholders.
+const ANILIST_PLACEHOLDER_ROWS: i32 = 2;
 /// Over From your sources, after AniList's grid; with nothing above it, 4.
 const ABOVE_SOURCES: i32 = 34;
 /// Over a source's row, after the one before; the first, 12.
@@ -637,7 +639,8 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     other.set_visible(false);
     other.append(&other_words);
     other.append(&show_them);
-    let anilist_landing = Landing::new(|| discovery::placeholders(SOURCE_PLACEHOLDERS));
+    let anilist_landing =
+        Landing::new(|| discovery::grid_placeholders(ANILIST_PLACEHOLDER_ROWS));
     let anilist = gtk::Box::new(gtk::Orientation::Vertical, 0);
     anilist.append(&anilist_landing.widget);
     let anilist_place = Squeeze::new(&anilist, gtk::Orientation::Vertical, 0);
@@ -725,6 +728,23 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let clamp = adw::Clamp::builder().maximum_size(520).child(&entry).build();
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
+    // Back to Read, while View all has Search pushed over it.
+    let back = gtk::Button::from_icon_name("go-previous-symbolic");
+    back.set_tooltip_text(Some(&t::action_back()));
+    back.update_property(&[gtk::accessible::Property::Label(&t::action_back())]);
+    back.set_action_name(Some("win.read-back-home"));
+    back.set_visible(false);
+    header.pack_start(&back);
+    ctx.on_dest_changed({
+        let (ctx, back) = (Rc::downgrade(ctx), back.downgrade());
+        move |dest| {
+            let (Some(ctx), Some(back)) = (ctx.upgrade(), back.upgrade()) else { return };
+            if dest != Some(Dest::ReadSearch) {
+                ctx.read_from_home.set(false);
+            }
+            back.set_visible(ctx.read_from_home.get());
+        }
+    });
     header.set_title_widget(Some(&clamp));
     let filters = Filters::new();
     // Shows or Reading leads the content bar, where Library has it.

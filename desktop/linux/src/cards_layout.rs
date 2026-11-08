@@ -19,6 +19,9 @@ mod imp {
         pub gap: Cell<i32>,
         /// The gap between rows of cards.
         pub row_gap: Cell<i32>,
+        /// Only this many rows are shown, each full, when above 0: placeholders that fill whole
+        /// rows at any width. The cards past them are kept out of sight.
+        pub full_rows: Cell<i32>,
     }
 
     #[glib::object_subclass]
@@ -55,11 +58,19 @@ mod imp {
             let (card, gap, row_gap) = (self.card.get(), self.gap.get(), self.row_gap.get());
             let columns = self.columns(width);
             let rows = self.rows(widget, columns);
+            let shown = self.shown(columns);
             let mut child = widget.first_child();
             let (mut at, mut y) = (0, 0);
             while let Some(c) = child {
                 child = c.next_sibling();
                 if !c.should_layout() {
+                    continue;
+                }
+                c.set_child_visible(at < shown);
+                if at >= shown {
+                    // Out of sight, laid over the first card at its size.
+                    c.size_allocate(&gtk::Allocation::new(0, 0, card, rows[0]), -1);
+                    at += 1;
                     continue;
                 }
                 let (column, row) = (at % columns, (at / columns) as usize);
@@ -80,8 +91,17 @@ mod imp {
             ((width + gap) / (card + gap).max(1)).max(1)
         }
 
+        /// How many cards show with `columns` across.
+        pub fn shown(&self, columns: i32) -> i32 {
+            match self.full_rows.get() {
+                0 => i32::MAX,
+                rows => columns.saturating_mul(rows),
+            }
+        }
+
         /// Each row's height: the tallest card in it.
         fn rows(&self, widget: &gtk::Widget, columns: i32) -> Vec<i32> {
+            let shown = self.shown(columns);
             let mut rows = Vec::new();
             let mut child = widget.first_child();
             let mut at = 0;
@@ -89,6 +109,9 @@ mod imp {
                 child = c.next_sibling();
                 if !c.should_layout() {
                     continue;
+                }
+                if at >= shown {
+                    break;
                 }
                 let (min, ..) = c.measure(gtk::Orientation::Vertical, self.card.get());
                 if at % columns == 0 {
@@ -121,6 +144,13 @@ impl CardsLayout {
         layout.imp().row_gap.set(row_gap);
         layout
     }
+
+    /// As [`Self::apart`], showing only `rows` full rows of the cards it is given.
+    pub fn full_rows(card: i32, gap: i32, row_gap: i32, rows: i32) -> Self {
+        let layout = Self::apart(card, gap, row_gap);
+        layout.imp().full_rows.set(rows);
+        layout
+    }
 }
 
 #[cfg(test)]
@@ -136,5 +166,14 @@ mod tests {
         assert_eq!(imp.columns(303), 1);
         assert_eq!(imp.columns(304), 2);
         assert_eq!(imp.columns(10), 1);
+    }
+
+    #[test]
+    fn full_rows_show_whole_rows_only() {
+        let imp = imp::CardsLayout::default();
+        assert_eq!(imp.shown(5), i32::MAX);
+        imp.full_rows.set(2);
+        assert_eq!(imp.shown(5), 10);
+        assert_eq!(imp.shown(7), 14);
     }
 }

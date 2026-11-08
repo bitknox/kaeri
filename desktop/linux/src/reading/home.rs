@@ -36,6 +36,8 @@ const BETWEEN: i32 = 36;
 const ABOVE_END: i32 = 28;
 /// Between the demo's spotlight and the line under it.
 const DEMO_LINE: i32 = 20;
+/// Rows still on their way this long put Loading suggestions in the header.
+const ACTIVITY: std::time::Duration = std::time::Duration::from_secs(4);
 
 /// One discovery row's slot.
 struct RowSlot {
@@ -63,11 +65,15 @@ struct Home {
     told: Cell<bool>,
     /// Something has been drawn: what lands whole after that fades in.
     drawn: Cell<bool>,
+    /// Loading suggestions, in the header once rows have waited 4 s.
+    capsule: gtk::Box,
+    capsule_spin: gtk::Spinner,
+    activity: RefCell<Option<glib::SourceId>>,
 }
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let empty = crate::states::plain(&t::home_read_end(), &t::home_read_no_sources());
-    let Place { page, states, column, .. } = place(
+    let Place { page, header, states, column } = place(
         ctx,
         &super::title_of(Dest::Read),
         Shape::Grid,
@@ -76,6 +82,17 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         true,
     );
     column.set_spacing(0);
+    // As on Watch's Home: the header says suggestions are still loading, and nothing else.
+    let capsule = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    capsule.add_css_class("home-capsule");
+    let capsule_spin = gtk::Spinner::new();
+    let capsule_text = gtk::Label::new(Some(&t::home_loading()));
+    capsule_text.add_css_class("caption");
+    capsule_text.add_css_class("haze");
+    capsule.append(&capsule_spin);
+    capsule.append(&capsule_text);
+    capsule.set_visible(false);
+    header.pack_end(&capsule);
     let own = gtk::Box::new(gtk::Orientation::Vertical, BETWEEN);
     let rows = gtk::Box::new(gtk::Orientation::Vertical, 0);
     let end = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -92,6 +109,9 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         slots: RefCell::default(),
         told: Cell::new(false),
         drawn: Cell::new(false),
+        capsule,
+        capsule_spin,
+        activity: RefCell::default(),
     });
     states.loading(None);
     states.on_retry({
@@ -111,6 +131,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             match event {
                 Event::Reading(ReadingEvent::Home(view)) => {
                     if view.failed && super::is_blank(view) {
+                        home.loading_capsule(view);
                         states.failed("");
                         return;
                     }
@@ -149,6 +170,7 @@ impl Home {
         self.draw_own(ctx, view, demo);
         self.draw_rows(ctx, view);
         self.draw_end(view, demo);
+        self.loading_capsule(view);
         self.drawn.set(true);
         // Couldn't load suggestions, once a failure, with Try again.
         if view.failed {
@@ -158,6 +180,33 @@ impl Home {
         } else {
             self.told.set(false);
         }
+    }
+
+    /// Loading suggestions after rows have waited 4 s, gone once none is on its way. Offline is
+    /// the banner's to say.
+    fn loading_capsule(self: &Rc<Self>, view: &ReadingHomeView) {
+        let waiting =
+            !view.offline && (view.rows.iter().any(|r| r.pending) || !view.pending.is_empty());
+        if !waiting {
+            if let Some(id) = self.activity.take() {
+                id.remove();
+            }
+            self.capsule_spin.set_spinning(false);
+            self.capsule.set_visible(false);
+            return;
+        }
+        if self.capsule.is_visible() || self.activity.borrow().is_some() {
+            return;
+        }
+        let home = Rc::downgrade(self);
+        let id = glib::timeout_add_local_once(ACTIVITY, move || {
+            let Some(home) = home.upgrade() else { return };
+            home.activity.replace(None);
+            home.capsule_spin.set_spinning(true);
+            home.capsule.set_visible(true);
+            motion::fade_in(&home.capsule);
+        });
+        self.activity.replace(Some(id));
     }
 
     /// The spotlight and the person's own rows, drawn again only when they changed.
@@ -399,16 +448,11 @@ impl Home {
 
 /// View all: Search on the Reading side, with the row's exact filters and order.
 fn view_all(ctx: &Rc<Ctx>, query: ReadSearchQuery) {
-    ctx.prefs.set_scope_reading(Dest::Search.name(), true);
     let open = ctx.read_view_all.borrow().clone();
     if let Some(open) = open {
         open(query);
     }
-    let _ = WidgetExt::activate_action(
-        &ctx.window,
-        "win.go",
-        Some(&Dest::ReadSearch.name().to_variant()),
-    );
+    let _ = WidgetExt::activate_action(&ctx.window, "win.read-view-all", None);
 }
 
 /// Posters for `tiles`.
