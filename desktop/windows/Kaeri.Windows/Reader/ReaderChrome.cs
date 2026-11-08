@@ -168,6 +168,10 @@ sealed class ReaderChrome
         Notice.VerticalAlignment = VerticalAlignment.Top;
         Notice.Margin = new Thickness(16, 56, 16, 0);
         AutomationProperties.SetLiveSetting(noticeText, AutomationLiveSetting.Polite);
+        Notice.PointerEntered += (_, _) => owner.Reader.HoldNotice(true);
+        Notice.PointerExited += (_, _) => owner.Reader.HoldNotice(false);
+        Notice.GotFocus += (_, _) => owner.Reader.HoldNotice(true);
+        Notice.LostFocus += (_, _) => owner.Reader.HoldNotice(false);
         noticeAction.Click += (_, _) =>
         {
             if (noticeKind is not { } action)
@@ -290,7 +294,54 @@ sealed class ReaderChrome
     }
 
     /// <summary>The group is 640 wide, or the window less its margins.</summary>
-    public void Fit(double width) => Group.Width = Math.Max(0, Math.Min(640, width - 32));
+    public void Fit(double width)
+    {
+        Group.Width = Math.Max(0, Math.Min(640, width - 32));
+        windowWidth = width;
+        Place();
+    }
+
+    double windowWidth;
+    bool groupUp = true, noticeAtFoot;
+
+    /// <summary>The group came up or went: the notice and Back to keep clear of it.</summary>
+    public void GroupUp(bool up)
+    {
+        groupUp = up;
+        Place();
+    }
+
+    /// <summary>
+    /// A novel's notices sit in its bottom margin, as on the other apps, where they cover no
+    /// text: above the group while it shows, 44 from the bottom once it goes. Pages keep the
+    /// notice at the top centre.
+    /// </summary>
+    public void NoticeAtFoot(bool foot)
+    {
+        noticeAtFoot = foot;
+        Place();
+    }
+
+    /// <summary>The height the group takes from the bottom, with its margin, while it shows.</summary>
+    const double GroupRoom = 124;
+
+    void Place()
+    {
+        if (noticeAtFoot)
+        {
+            Notice.VerticalAlignment = VerticalAlignment.Bottom;
+            Notice.Margin = new Thickness(16, 0, 16, groupUp ? GroupRoom : 44);
+        }
+        else
+        {
+            Notice.VerticalAlignment = VerticalAlignment.Top;
+            Notice.Margin = new Thickness(16, 56, 16, 0);
+        }
+        // Beside the group there is room for the pill only on a wide window; otherwise it sits
+        // above the group while the group shows.
+        var beside = (windowWidth - Group.Width) / 2 >= 200;
+        BackTo.Margin = new Thickness(16, 0, 16, groupUp && !beside ? GroupRoom : 16);
+    }
 
     public void Titles(string series, string? demoCredit)
     {
@@ -478,7 +529,7 @@ sealed class ReaderChrome
         if (notice is null)
         {
             noticeKind = null;
-            if (Motion.Enabled && !owner.PaperMode)
+            if (!owner.PaperMode)
                 Motion.Hide(Notice);
             else
                 Motion.Set(Notice, false);
@@ -494,10 +545,12 @@ sealed class ReaderChrome
             _ => null,
         };
         noticeAction.Visibility = noticeAction.Content is null ? Visibility.Collapsed : Visibility.Visible;
-        if (Motion.Enabled && !owner.PaperMode)
+        if (!owner.PaperMode)
             Motion.Show(Notice);
         else
             Motion.Set(Notice, true);
+        // Narrator says every notice, once.
+        ReaderSpeech.Raise(noticeText);
     }
 
     public void ShowBackTo(ReaderNoticeLine? line)
@@ -509,10 +562,11 @@ sealed class ReaderChrome
         }
         BackTo.Content = line.Text;
         AutomationProperties.SetName(BackTo, line.Text);
-        if (Motion.Enabled && !owner.PaperMode)
+        if (!owner.PaperMode)
             Motion.Show(BackTo);
         else
             Motion.Set(BackTo, true);
+        ReaderSpeech.Say(BackTo, line.Text, "kaeri-reader-back-to");
     }
 
     /// <summary>Keyboard focus or the pointer is in the chrome: it stays up.</summary>

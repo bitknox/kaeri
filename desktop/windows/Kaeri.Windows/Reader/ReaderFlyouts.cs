@@ -5,31 +5,148 @@ using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Automation.Peers;
+using Microsoft.UI.Xaml.Automation.Provider;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 
 namespace Kaeri.Windows.Pages;
 
-/// <summary>A row of choices where one is picked: the reader's segmented control.</summary>
+/// <summary>
+/// One choice of a group where one is picked: drawn as a segment or a row, read by Narrator as
+/// a radio button with its place in the group ("2 of 4").
+/// </summary>
+sealed class ChoiceButton : ToggleButton
+{
+    public Action? Pick { get; set; }
+
+    protected override AutomationPeer OnCreateAutomationPeer() => new ChoicePeer(this);
+
+    sealed class ChoicePeer(ChoiceButton owner) : ToggleButtonAutomationPeer(owner), ISelectionItemProvider
+    {
+        protected override AutomationControlType GetAutomationControlTypeCore() => AutomationControlType.RadioButton;
+
+        protected override string GetClassNameCore() => nameof(RadioButton);
+
+        protected override object? GetPatternCore(PatternInterface pattern) => pattern switch
+        {
+            PatternInterface.SelectionItem => this,
+            PatternInterface.Toggle => null,
+            _ => base.GetPatternCore(pattern),
+        };
+
+        public bool IsSelected => owner.IsChecked == true;
+
+        public IRawElementProviderSimple? SelectionContainer => null;
+
+        public void AddToSelection() => Select();
+
+        public void RemoveFromSelection()
+        {
+        }
+
+        public void Select() => owner.Pick?.Invoke();
+    }
+}
+
+/// <summary>
+/// A group where one is picked: one Tab stop on the chosen item, the arrow keys move along
+/// the group (and, with <c>pickOnArrow</c>, pick as they go), Home and End reach its ends.
+/// </summary>
+static class ChoiceGroup
+{
+    public static void Join(IReadOnlyList<ChoiceButton> buttons, Action<int> pick, bool pickOnArrow)
+    {
+        for (var i = 0; i < buttons.Count; i++)
+        {
+            var at = i;
+            var button = buttons[i];
+            AutomationProperties.SetPositionInSet(button, i + 1);
+            AutomationProperties.SetSizeOfSet(button, buttons.Count);
+            button.Pick = () => Choose(at);
+            button.Click += (_, _) => Choose(at);
+            button.KeyDown += (_, e) =>
+            {
+                var to = e.Key switch
+                {
+                    global::Windows.System.VirtualKey.Left or global::Windows.System.VirtualKey.Up => at - 1,
+                    global::Windows.System.VirtualKey.Right or global::Windows.System.VirtualKey.Down => at + 1,
+                    global::Windows.System.VirtualKey.Home => 0,
+                    global::Windows.System.VirtualKey.End => buttons.Count - 1,
+                    _ => -1,
+                };
+                if (e.Key is global::Windows.System.VirtualKey.Left or global::Windows.System.VirtualKey.Up && at == 0)
+                    to = buttons.Count - 1;
+                if (e.Key is global::Windows.System.VirtualKey.Right or global::Windows.System.VirtualKey.Down && at == buttons.Count - 1)
+                    to = 0;
+                if (to < 0)
+                    return;
+                e.Handled = true;
+                buttons[to].Focus(FocusState.Keyboard);
+                if (pickOnArrow)
+                    Choose(to);
+            };
+        }
+        Stops();
+
+        void Choose(int at)
+        {
+            for (var i = 0; i < buttons.Count; i++)
+            {
+                var was = buttons[i].IsChecked == true;
+                buttons[i].IsChecked = i == at;
+                if (was != (i == at) && FrameworkElementAutomationPeer.FromElement(buttons[i]) is { } peer)
+                    peer.RaisePropertyChangedEvent(SelectionItemPatternIdentifiers.IsSelectedProperty, was, i == at);
+            }
+            Stops();
+            pick(at);
+        }
+
+        // One Tab stop: the chosen item, or the first when none is.
+        void Stops()
+        {
+            var chosen = Math.Max(0, buttons.ToList().FindIndex(b => b.IsChecked == true));
+            for (var i = 0; i < buttons.Count; i++)
+                buttons[i].IsTabStop = i == chosen;
+        }
+    }
+}
+
+/// <summary>A row of choices where one is picked: the reader's segmented control. A swatch option shows its colour, named for Narrator.</summary>
 sealed class Segments : Grid
 {
-    readonly List<ToggleButton> buttons = [];
+    readonly List<ChoiceButton> buttons = [];
 
     public Segments(IReadOnlyList<(string Name, string Label)> options, string? chosen, ReaderPalette palette, Action<string> pick)
+        : this(options.Select(o => (o.Name, o.Label, (global::Windows.UI.Color?)null)).ToList(), chosen, palette, pick)
+    {
+    }
+
+    public Segments(IReadOnlyList<(string Name, string Label, global::Windows.UI.Color? Swatch)> options, string? chosen, ReaderPalette palette, Action<string> pick)
     {
         ColumnSpacing = 4;
         for (var i = 0; i < options.Count; i++)
         {
-            var (name, label) = options[i];
-            ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            var button = new ToggleButton
+            var (name, label, swatch) = options[i];
+            ColumnDefinitions.Add(new ColumnDefinition { Width = swatch is null ? new GridLength(1, GridUnitType.Star) : new GridLength(48) });
+            var button = new ChoiceButton
             {
-                Content = label,
+                // Text wraps rather than clipping at large text sizes.
+                Content = swatch is { } colour
+                    ? new Microsoft.UI.Xaml.Shapes.Ellipse
+                    {
+                        Width = 22,
+                        Height = 22,
+                        Fill = new SolidColorBrush(colour),
+                        Stroke = new SolidColorBrush(palette.Rule),
+                        StrokeThickness = 1,
+                    }
+                    : new TextBlock { Text = label, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Center },
                 IsChecked = name == chosen,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
+                VerticalAlignment = VerticalAlignment.Stretch,
                 MinHeight = 32,
-                Padding = new Thickness(6, 0, 6, 0),
+                Padding = new Thickness(6, 4, 6, 4),
                 CornerRadius = new CornerRadius(4),
                 FontSize = 13,
             };
@@ -40,18 +157,15 @@ sealed class Segments : Grid
             res["ToggleButtonForegroundChecked"] = new SolidColorBrush(palette.Silk);
             res["ToggleButtonForegroundCheckedPointerOver"] = new SolidColorBrush(palette.Silk);
             res["ToggleButtonForegroundCheckedPressed"] = new SolidColorBrush(palette.Silk);
-            res["ToggleButtonBorderBrushChecked"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+            res["ToggleButtonBorderBrushChecked"] = new SolidColorBrush(swatch is null ? Microsoft.UI.Colors.Transparent : palette.Silk);
             AutomationProperties.SetName(button, label);
-            button.Click += (_, _) =>
-            {
-                foreach (var other in buttons)
-                    other.IsChecked = other == button;
-                pick(name);
-            };
+            if (swatch is not null)
+                ToolTipService.SetToolTip(button, label);
             SetColumn(button, i);
             Children.Add(button);
             buttons.Add(button);
         }
+        ChoiceGroup.Join(buttons, at => pick(options[at].Name), pickOnArrow: true);
     }
 }
 
@@ -62,33 +176,41 @@ sealed class Segments : Grid
 /// </summary>
 static class SettingsFlyout
 {
+    /// <summary>A mode was just picked: the next build focuses the mode row.</summary>
+    internal static bool ModePicked;
+
     public static FrameworkElement Build(ReaderOverlay owner, Flyout flyout)
     {
         var reader = owner.Reader;
         var palette = owner.Palette;
-        var stack = new StackPanel { Spacing = 6, Width = 340, Padding = new Thickness(4) };
+        var (width, height) = Size(owner, 340, 560);
+        var stack = new StackPanel { Spacing = 6, Width = width, Padding = new Thickness(4) };
         var medium = reader.Medium;
         var strip = reader.View?.Mode is ReaderMode.Strip or ReaderMode.Vertical;
+        var main = new ScrollViewer { Content = stack, MaxHeight = height, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollMode = ScrollMode.Disabled };
+        // The flyout holds two pages: the settings, and the reading mode picker pushed over them.
+        var host = new Grid();
+        host.Children.Add(main);
+        Button? modeRow = null;
 
         if (medium != Medium.Novel)
         {
             stack.Children.Add(Heading(T.WindowsReaderThisSeries, palette, first: true));
-            stack.Children.Add(Label(T.WindowsReaderReadingMode, palette));
-            var chosen = reader.ModeOverridden ? reader.ChosenMode : ReaderSession.ModeChoice.Auto;
-            stack.Children.Add(new Segments(
-                [
-                    (nameof(ReaderSession.ModeChoice.Auto), T.WindowsReaderModeAutoOption),
-                    (nameof(ReaderSession.ModeChoice.RightToLeft), T.ReaderModeRtl),
-                    (nameof(ReaderSession.ModeChoice.LeftToRight), T.ReaderModeLtr),
-                    (nameof(ReaderSession.ModeChoice.Strip), T.ReaderModeStrip),
-                ],
-                chosen.ToString(), palette,
-                name => reader.ChooseMode(Enum.Parse<ReaderSession.ModeChoice>(name))));
+            var value = reader.ModeOverridden ? ModeName(reader.ChosenMode) : T.WindowsReaderModeAuto(Guessed(reader));
+            modeRow = PushRow(T.WindowsReaderReadingMode, value, palette);
+            modeRow.Click += (_, _) => PushModes(owner, host, main, modeRow, width, height);
+            stack.Children.Add(modeRow);
+            if (ModePicked)
+            {
+                var focusRow = modeRow;
+                focusRow.Loaded += (_, _) =>
+                {
+                    ModePicked = false;
+                    focusRow.Focus(FocusState.Programmatic);
+                };
+            }
             if (!reader.ModeOverridden)
             {
-                var guessed = strip ? T.WindowsReaderModeStripLower
-                    : reader.View?.Direction == ReadDirection.LeftToRight ? T.WindowsReaderModeLtrLower : T.WindowsReaderModeRtlLower;
-                stack.Children.Add(Note(T.WindowsReaderModeAuto(guessed), palette));
                 if (reader.Row(ReaderSettingKey.Direction)?.Detected == true || reader.Row(ReaderSettingKey.Mode)?.Detected == true)
                     stack.Children.Add(Note(T.WindowsReaderModeDetectedNote, palette));
             }
@@ -140,8 +262,17 @@ static class SettingsFlyout
                 [(0.6, T.ReaderMarginsNarrow), (1.0, T.WindowsReaderLineNormal), (1.6, T.ReaderMarginsWide)]));
             stack.Children.Add(Toggle(owner, ReaderSettingKey.Justify, T.WindowsReaderJustify, null));
             stack.Children.Add(Label(T.WindowsReaderLook, palette));
-            stack.Children.Add(Choice(owner, ReaderSettingKey.Look, "system",
-                [("system", T.ReaderLookSystem), ("paper", T.ReaderLookPaper), ("light", T.ReaderLookLight), ("sepia", T.ReaderLookSepia), ("dark", T.ReaderLookDark)]));
+            // System, then the four looks as swatches, each named for Narrator.
+            stack.Children.Add(new Segments(
+                [
+                    ("system", T.ReaderLookSystem, null),
+                    ("paper", T.ReaderLookPaper, ReaderPalette.NovelGround("paper", false)),
+                    ("light", T.ReaderLookLight, ReaderPalette.NovelGround("light", false)),
+                    ("sepia", T.ReaderLookSepia, ReaderPalette.NovelGround("sepia", false)),
+                    ("dark", T.ReaderLookDark, ReaderPalette.NovelGround("dark", false)),
+                ],
+                reader.Choice(ReaderSettingKey.Look) ?? "system", palette,
+                name => reader.Set(ReaderSettingKey.Look, new ReaderValue.Choice(name))));
         }
 
         // Paper mode: only where the engine offers its row (a touch screen it counts as handheld).
@@ -161,7 +292,194 @@ static class SettingsFlyout
             owner.MoreSettings();
         };
         stack.Children.Add(more);
-        return new ScrollViewer { Content = stack, MaxHeight = 560, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollMode = ScrollMode.Disabled };
+        return host;
+    }
+
+    /// <summary>
+    /// A flyout's size: its base width grows with the text size, up to what the window leaves,
+    /// and its height stays inside the window.
+    /// </summary>
+    internal static (double Width, double Height) Size(ReaderOverlay owner, double width, double height)
+    {
+        var text = Math.Max(1, new global::Windows.UI.ViewManagement.UISettings().TextScaleFactor);
+        var roomW = owner.ActualWidth > 0 ? owner.ActualWidth - 48 : width * text;
+        var roomH = owner.ActualHeight > 0 ? owner.ActualHeight - 180 : height;
+        return (Math.Max(Math.Min(width * Math.Min(text, 1.6), roomW), Math.Min(width, roomW)), Math.Max(240, Math.Min(height * Math.Min(text, 1.4), roomH)));
+    }
+
+    static string Guessed(ReaderSession reader) => reader.View?.Mode switch
+    {
+        ReaderMode.Strip => T.WindowsReaderModeStripLower,
+        ReaderMode.Vertical => T.WindowsReaderModeVerticalLower,
+        _ => reader.View?.Direction == ReadDirection.LeftToRight ? T.WindowsReaderModeLtrLower : T.WindowsReaderModeRtlLower,
+    };
+
+    static string GuessedWay(ReaderSession reader) => reader.View?.Mode switch
+    {
+        ReaderMode.Strip => T.ReaderModeStrip,
+        ReaderMode.Vertical => T.WindowsReaderModeVertical,
+        _ => reader.View?.Direction == ReadDirection.LeftToRight ? T.ReaderModeLtr : T.ReaderModeRtl,
+    };
+
+    static string ModeName(ReaderSession.ModeChoice mode) => mode switch
+    {
+        ReaderSession.ModeChoice.RightToLeft => T.ReaderModeRtl,
+        ReaderSession.ModeChoice.LeftToRight => T.ReaderModeLtr,
+        ReaderSession.ModeChoice.Vertical => T.WindowsReaderModeVertical,
+        ReaderSession.ModeChoice.Strip => T.ReaderModeStrip,
+        _ => T.WindowsReaderModeAutoOption,
+    };
+
+    /// <summary>A row that names a setting and its value, with a chevron: it pushes a picker.</summary>
+    static Button PushRow(string label, string value, ReaderPalette palette)
+    {
+        var grid = new Grid { ColumnSpacing = 8 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.Children.Add(new TextBlock { Text = label, FontSize = 14, Foreground = new SolidColorBrush(palette.Silk), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords });
+        var shown = new TextBlock { Text = value, FontSize = 14, Foreground = new SolidColorBrush(palette.Haze), VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords, TextAlignment = TextAlignment.Right };
+        Grid.SetColumn(shown, 1);
+        grid.Children.Add(shown);
+        var chevron = new FontIcon { Glyph = "\uE76C", FontSize = 12, Foreground = new SolidColorBrush(palette.Haze) };
+        Grid.SetColumn(chevron, 2);
+        grid.Children.Add(chevron);
+        var row = new Button
+        {
+            Content = grid,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            MinHeight = 40,
+            Padding = new Thickness(8, 6, 8, 6),
+            CornerRadius = new CornerRadius(4),
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            Margin = new Thickness(-8, 2, -8, 0),
+        };
+        AutomationProperties.SetName(row, label);
+        AutomationProperties.SetHelpText(row, value);
+        return row;
+    }
+
+    /// <summary>
+    /// The reading mode picker, pushed inside the flyout: Back, the series, the modes with Auto
+    /// naming what it found, and where the choice is kept. A pick applies at once and pops back;
+    /// focus goes to the chosen mode on push and back to the row on pop.
+    /// </summary>
+    static void PushModes(ReaderOverlay owner, Grid host, FrameworkElement main, Button row, double width, double height)
+    {
+        var reader = owner.Reader;
+        var palette = owner.Palette;
+        var page = new StackPanel { Spacing = 2, Width = width, Padding = new Thickness(4) };
+        var scroll = new ScrollViewer { Content = page, MaxHeight = height, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollMode = ScrollMode.Disabled };
+
+        void Pop()
+        {
+            host.Children.Remove(scroll);
+            main.Visibility = Visibility.Visible;
+            if (!owner.PaperMode)
+                Motion.FadeIn(main);
+            row.Focus(FocusState.Programmatic);
+        }
+
+        var top = new Grid { ColumnSpacing = 4, Margin = new Thickness(-4, 0, 0, 4) };
+        top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        top.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var back = new Button
+        {
+            Content = new FontIcon { Glyph = "\uE72B", FontSize = 14 },
+            Width = 36,
+            Height = 36,
+            Padding = new Thickness(0),
+            CornerRadius = new CornerRadius(4),
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            Foreground = new SolidColorBrush(palette.Silk),
+        };
+        AutomationProperties.SetName(back, T.WindowsReaderBack);
+        ToolTipService.SetToolTip(back, T.WindowsReaderBack);
+        back.Click += (_, _) => Pop();
+        top.Children.Add(back);
+        var title = new TextBlock { Text = T.WindowsReaderReadingMode, FontSize = 17, FontWeight = FontWeights.SemiBold, Foreground = new SolidColorBrush(palette.Silk), VerticalAlignment = VerticalAlignment.Center };
+        AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level2);
+        Grid.SetColumn(title, 1);
+        top.Children.Add(title);
+        page.Children.Add(top);
+        if (reader.View?.Title is { Length: > 0 } series)
+            page.Children.Add(new TextBlock { Text = series, FontSize = 12, Foreground = new SolidColorBrush(palette.Haze), Margin = new Thickness(0, 0, 0, 6), TextTrimming = TextTrimming.CharacterEllipsis });
+
+        var chosen = reader.ModeOverridden ? reader.ChosenMode : ReaderSession.ModeChoice.Auto;
+        (ReaderSession.ModeChoice Mode, string Name, string? Hint)[] modes =
+        [
+            (ReaderSession.ModeChoice.Auto, T.WindowsReaderModeAutoOption, T.WindowsReaderModeAutoLine(GuessedWay(reader))),
+            (ReaderSession.ModeChoice.RightToLeft, T.ReaderModeRtl, null),
+            (ReaderSession.ModeChoice.LeftToRight, T.ReaderModeLtr, null),
+            (ReaderSession.ModeChoice.Vertical, T.WindowsReaderModeVertical, T.WindowsReaderModeVerticalLine),
+            (ReaderSession.ModeChoice.Strip, T.ReaderModeStrip, T.WindowsReaderModeStripLine),
+        ];
+        var buttons = new List<ChoiceButton>();
+        foreach (var (mode, name, hint) in modes)
+        {
+            var words = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+            words.Children.Add(new TextBlock { Text = name, FontSize = 14, Foreground = new SolidColorBrush(palette.Silk), TextWrapping = TextWrapping.WrapWholeWords });
+            if (hint is not null)
+                words.Children.Add(new TextBlock { Text = hint, FontSize = 12, Foreground = new SolidColorBrush(palette.Haze), TextWrapping = TextWrapping.WrapWholeWords });
+            var check = new FontIcon { Glyph = "\uE73E", FontSize = 14, Foreground = new SolidColorBrush(palette.Silk), Opacity = mode == chosen ? 1 : 0 };
+            var grid = new Grid { ColumnSpacing = 8 };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            grid.Children.Add(words);
+            Grid.SetColumn(check, 1);
+            grid.Children.Add(check);
+            var button = new ChoiceButton
+            {
+                Content = grid,
+                IsChecked = mode == chosen,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
+                MinHeight = 44,
+                Padding = new Thickness(8, 6, 8, 6),
+                Margin = new Thickness(-8, 0, -8, 0),
+                CornerRadius = new CornerRadius(4),
+                Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+                BorderThickness = new Thickness(0),
+            };
+            // The check shows the choice; the row keeps the list's own ground.
+            var res = button.Resources;
+            res["ToggleButtonBackgroundChecked"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+            res["ToggleButtonBackgroundCheckedPointerOver"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.06));
+            res["ToggleButtonBackgroundCheckedPressed"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.1));
+            res["ToggleButtonBorderBrushChecked"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+            AutomationProperties.SetName(button, name);
+            if (hint is not null)
+                AutomationProperties.SetHelpText(button, hint);
+            buttons.Add(button);
+            page.Children.Add(button);
+        }
+        // Arrows move between the modes; Space, Enter or a click picks, since a pick lays the book out again.
+        ChoiceGroup.Join(buttons, at =>
+        {
+            ModePicked = true;
+            reader.ChooseMode(modes[at].Mode);
+            Pop();
+        }, pickOnArrow: false);
+        page.Children.Add(Note(T.WindowsReaderModeChoiceNote, palette));
+        page.KeyDown += (_, e) =>
+        {
+            if (e.Key is global::Windows.System.VirtualKey.Escape or global::Windows.System.VirtualKey.Back
+                || (e.Key == global::Windows.System.VirtualKey.Left && Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(global::Windows.System.VirtualKey.Menu).HasFlag(global::Windows.UI.Core.CoreVirtualKeyStates.Down)))
+            {
+                e.Handled = true;
+                Pop();
+            }
+        };
+
+        main.Visibility = Visibility.Collapsed;
+        host.Children.Add(scroll);
+        if (!owner.PaperMode)
+            Motion.FadeIn(scroll);
+        var focus = buttons[Math.Max(0, Array.FindIndex(modes, m => m.Mode == chosen))];
+        scroll.Loaded += (_, _) => focus.Focus(FocusState.Programmatic);
     }
 
     static TextBlock Heading(string text, ReaderPalette palette, bool first = false)
@@ -276,7 +594,8 @@ static class ChaptersFlyout
     {
         var reader = owner.Reader;
         var palette = owner.Palette;
-        var root = new Grid { Width = 380, Height = 520, RowSpacing = 8 };
+        var (width, height) = SettingsFlyout.Size(owner, 380, 520);
+        var root = new Grid { Width = width, Height = height, RowSpacing = 8 };
         root.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         var hasPages = reader.Medium != Medium.Novel && reader.View?.Mode == ReaderMode.Paged && reader.Leaves.Length > 0;
@@ -404,9 +723,29 @@ static class ChaptersFlyout
         var palette = owner.Palette;
         if (!reader.ChaptersLoaded)
         {
-            var waiting = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
-            waiting.Children.Add(new ProgressRing { IsActive = true, Width = 16, Height = 16 });
-            waiting.Children.Add(new TextBlock { Text = T.ReaderChaptersLoading, Foreground = new SolidColorBrush(palette.Haze), FontSize = 13 });
+            // A quick list never flashes a loading line: it shows after 600 ms, fading in.
+            var waiting = new TextBlock
+            {
+                Text = T.ReaderChaptersLoading,
+                Foreground = new SolidColorBrush(palette.Haze),
+                FontSize = 13,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center,
+                Opacity = 0,
+            };
+            AutomationProperties.SetLiveSetting(waiting, AutomationLiveSetting.Polite);
+            var timer = waiting.DispatcherQueue.CreateTimer();
+            timer.Interval = TimeSpan.FromMilliseconds(600);
+            timer.IsRepeating = false;
+            timer.Tick += (_, _) =>
+            {
+                if (owner.PaperMode)
+                    waiting.Opacity = 1;
+                else
+                    Motion.FadeIn(waiting);
+            };
+            waiting.Loaded += (_, _) => timer.Start();
+            waiting.Unloaded += (_, _) => timer.Stop();
             return waiting;
         }
         var openId = reader.View?.Chapter.Id;

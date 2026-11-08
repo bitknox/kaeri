@@ -51,7 +51,7 @@ public sealed partial class ReaderOverlay : UserControl
     Point lastPointer = new(-1, -1);
     long lastNovelWheel;
     string? lastFit, lastBackground;
-    bool lastPaper;
+    bool lastPaper, lastContrast;
     string? work;
 
     public ReaderOverlay()
@@ -89,6 +89,7 @@ public sealed partial class ReaderOverlay : UserControl
             flyout.Closed += (_, _) =>
             {
                 flyoutOpen = false;
+                SettingsFlyout.ModePicked = false;
                 Idle();
             };
         }
@@ -144,6 +145,7 @@ public sealed partial class ReaderOverlay : UserControl
                 Motion.FadeIn(this);
         }
         Clear();
+        Reader.ScreenReader ??= DeviceWatch.ScreenReaderRunning;
         // The end page's server line needs Your sources to know a send is under way.
         if (Ctx.Known.Books.View is null)
             Ctx.Known.Books.Load();
@@ -229,6 +231,13 @@ public sealed partial class ReaderOverlay : UserControl
         }
         if (!showing)
             return;
+        // A mode picked in the flyout: once the engine has it, the settings page shows the
+        // choice and its note, with focus back on the mode row.
+        if (change is ReaderChange.Settings or ReaderChange.Leaves && SettingsFlyout.ModePicked && settingsFlyout.IsOpen)
+        {
+            settingsFlyout.Content = SettingsFlyout.Build(this, settingsFlyout);
+            FlyoutTheme(settingsFlyout);
+        }
         switch (change)
         {
             case ReaderChange.Phase:
@@ -274,10 +283,13 @@ public sealed partial class ReaderOverlay : UserControl
                 ReportSurface();
                 break;
             case ReaderChange.Notice:
-                chrome.ShowNotice(Reader.Notice);
+                // The opening and failed screens speak for themselves; the notice waits under them.
+                if (!StateShown)
+                    chrome.ShowNotice(Reader.Notice);
                 break;
             case ReaderChange.BackTo:
-                chrome.ShowBackTo(Reader.BackTo);
+                if (!StateShown)
+                    chrome.ShowBackTo(Reader.BackTo);
                 break;
             case ReaderChange.GoTo:
                 if (Reader.GoTo is { } go)
@@ -336,7 +348,7 @@ public sealed partial class ReaderOverlay : UserControl
         if (Reader.Phase == ReaderPhase.Failed)
             ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), Reader.Failure));
         else if (Reader.Phase == ReaderPhase.Opening || (Reader.Phase == ReaderPhase.Open && !hasContent))
-            ShowState("opening:" + ChapterLabel(), () => new OpeningView(Ctx, Reader, Palette, work ?? Reader.View?.Work ?? "", ChapterLabel()));
+            ShowState("opening:" + ChapterLabel(), () => new OpeningView(Reader, PagePalette, ChapterLabel()));
         else
             ClearState();
     }
@@ -362,6 +374,9 @@ public sealed partial class ReaderOverlay : UserControl
         stateView = make();
         states.Children.Add(stateView);
         states.Visibility = Visibility.Visible;
+        // Nothing floats over a screen with buttons: the notice and Back to wait for the page.
+        chrome.ShowNotice(null);
+        chrome.ShowBackTo(null);
         // Over a screen with buttons the chrome's Back stays and the group waits.
         idle.Stop();
         ShowPointer();
@@ -371,24 +386,107 @@ public sealed partial class ReaderOverlay : UserControl
         Ctx.Window.ReaderChrome(true);
     }
 
+    /// <summary>
+    /// The state screen goes. The opening plate fades away over the page's own plate, which shows
+    /// at once in its place (<see cref="TakeCarry"/>), so the page fades in on a plate and never
+    /// on bare ground; the other states cut. Paper mode cuts every one.
+    /// </summary>
     void ClearState()
     {
         if (stateView is null)
             return;
+        var leaving = stateView;
+        carryPlate = leaving is OpeningView;
         stateKey = null;
         stateView = null;
-        states.Children.Clear();
-        states.Visibility = Visibility.Collapsed;
+        if (leaving is OpeningView && !PaperMode && showing)
+        {
+            leaving.IsHitTestVisible = false;
+            Motion.FadeOutThen(leaving, () =>
+            {
+                states.Children.Remove(leaving);
+                if (states.Children.Count == 0)
+                    states.Visibility = Visibility.Collapsed;
+            });
+        }
+        else
+        {
+            states.Children.Clear();
+            states.Visibility = Visibility.Collapsed;
+        }
         if (showing)
+        {
             ShowChrome();
+            chrome.ShowNotice(Reader.Notice);
+            chrome.ShowBackTo(Reader.BackTo);
+        }
+    }
+
+    bool carryPlate;
+
+    /// <summary>Whether the pages built now take over from the opening plate, once: their plates show at once.</summary>
+    internal bool TakeCarry()
+    {
+        var carry = carryPlate;
+        carryPlate = false;
+        return carry;
     }
 
     bool StateShown => stateView is not null;
 
-    /// <summary>The novel's web view could not start (no WebView2 runtime): the failed screen.</summary>
-    internal void NovelFailed() => ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), null));
+    /// <summary>
+    /// The novel's web view could not start (no WebView2 runtime) or lost its page: the failed
+    /// screen. A view the reader already let go of says nothing.
+    /// </summary>
+    internal void NovelFailed(NovelView from)
+    {
+        if (!showing || from != novel)
+            return;
+        ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), null));
+    }
 
-    internal void NovelPaintedNow() => ClearState();
+    DateTimeOffset novelLostAt = DateTimeOffset.MinValue;
+
+    /// <summary>
+    /// The novel's web view process crashed or was killed: the view goes, and a new one opens
+    /// the chapter where it was. A second loss soon after shows the failed screen instead.
+    /// </summary>
+    internal void NovelLost(NovelView from)
+    {
+        if (!showing || from != novel)
+            return;
+        var now = DateTimeOffset.UtcNow;
+        var again = now - novelLostAt > TimeSpan.FromSeconds(30);
+        novelLostAt = now;
+        novel.Close();
+        stage.Children.Remove(novel);
+        novel = null;
+        kind = Kind.None;
+        if (again && Reader.Novel is not null)
+            Render();
+        else
+            ShowState("failed", () => new ChapterFailedView(this, ChapterLabel(), null));
+    }
+
+    /// <summary>The window was minimised or came back: a hidden novel rests.</summary>
+    internal void WindowHidden(bool hidden)
+    {
+        novel?.Rest(hidden);
+        Reader.WindowActive(!hidden);
+    }
+
+    internal void NovelPaintedNow(NovelView from)
+    {
+        if (from == novel && stateView is OpeningView)
+            ClearState();
+    }
+
+    /// <summary>The paginator turned to a page: a screen reader hears it.</summary>
+    internal void NovelTurned(NovelView from)
+    {
+        if (from == novel)
+            Announce();
+    }
 
     // The surface
 
@@ -429,22 +527,46 @@ public sealed partial class ReaderOverlay : UserControl
 
     internal global::Windows.UI.Color NovelGround => ReaderPalette.NovelGround(Reader.Choice(ReaderSettingKey.Look), PaperMode);
 
+    /// <summary>
+    /// The colours on the page's own ground, for what stands in the page's place (the end page,
+    /// the opening plate, the demo's end card): a novel's look, or the manga background, black
+    /// or white; the theme background keeps the reader's set.
+    /// </summary>
+    internal ReaderPalette PagePalette
+    {
+        get
+        {
+            if (ReaderPalette.Contrast() is { } contrast)
+                return contrast;
+            var medium = Reader.View?.Medium ?? Reader.Medium;
+            if (medium == Medium.Novel)
+                return ReaderPalette.OnGround(NovelGround, PaperMode);
+            return Reader.Choice(ReaderSettingKey.Background) is "black" or "white"
+                ? ReaderPalette.OnGround(Palette.Backdrop(Reader.Choice(ReaderSettingKey.Background)), PaperMode)
+                : Palette;
+        }
+    }
+
     /// <summary>The colours, the backdrop and the fit, after a setting changed: what changed is built again.</summary>
     void Repaint(bool force = false)
     {
         var paper = PaperMode;
         var fit = Fit;
         var background = Reader.Choice(ReaderSettingKey.Background);
-        var paletteChanged = paper != lastPaper || force;
-        Palette = paper ? ReaderPalette.PaperSet : ReaderPalette.Dark;
+        var contrast = ReaderPalette.Contrast();
+        var paletteChanged = paper != lastPaper || (contrast is not null) != lastContrast || force;
+        lastContrast = contrast is not null;
+        Palette = contrast ?? (paper ? ReaderPalette.PaperSet : ReaderPalette.Dark);
         root.Background = new SolidColorBrush(kind == Kind.Novel ? NovelGround : Palette.Backdrop(background));
         if (paletteChanged)
         {
             chrome.Paint(Palette);
-            // Paper's flyouts and controls are light; the reader is dark otherwise.
-            RequestedTheme = paper ? ElementTheme.Light : ElementTheme.Dark;
+            // Paper's flyouts and controls are light; the reader is dark otherwise. A contrast
+            // theme brings its own.
+            RequestedTheme = contrast is not null ? ElementTheme.Default : paper ? ElementTheme.Light : ElementTheme.Dark;
         }
         novel?.Ground(NovelGround);
+        chrome.NoticeAtFoot(kind == Kind.Novel);
         if (!force && (paletteChanged || fit != lastFit || background != lastBackground))
         {
             paged?.Rebuild();
@@ -517,9 +639,15 @@ public sealed partial class ReaderOverlay : UserControl
             ShowChrome();
     }
 
+    /// <summary>
+    /// Chrome comes and goes on the fade tokens, which stay with reduced motion (they don't
+    /// move anything); Paper mode cuts.
+    /// </summary>
     void Appear(UIElement element, bool shown)
     {
-        if (Motion.Enabled && !PaperMode)
+        if (element == chrome.Group)
+            chrome.GroupUp(shown);
+        if (!PaperMode)
         {
             if (shown)
                 Motion.Show(element);
@@ -606,29 +734,62 @@ public sealed partial class ReaderOverlay : UserControl
         _ => false,
     };
 
-    /// <summary>A turn or a jump happened: the chrome goes and a screen reader hears the page.</summary>
+    /// <summary>
+    /// A turn or a jump happened: the chrome goes and a screen reader hears the page. A novel's
+    /// page is said when the paginator reports it (<see cref="NovelTurned"/>), a strip's when it
+    /// settles.
+    /// </summary>
     internal void Turned()
     {
         HideChrome();
         PositionChanged();
-        Announce();
+        if (kind == Kind.Paged)
+            Announce();
     }
 
+    /// <summary>
+    /// A screen reader hears where the reader is now: the page or pages, a novel's page as the
+    /// paginator counts it, a strip's image once it settles, or the end of the chapter. Each says
+    /// once and a newer one replaces one not yet read, so a run of turns ends on the page reached.
+    /// </summary>
     void Announce()
     {
-        if (!DeviceWatch.ScreenReaderRunning() || kind != Kind.Paged || paged is null)
+        if (!DeviceWatch.ScreenReaderRunning())
             return;
-        var leaf = paged.Current;
-        if (leaf < 0 || leaf >= Reader.Leaves.Length)
-            return;
-        var pages = Reader.Leaves[leaf].Parts.Select(p => (int)p.Page + 1).Distinct().Order().ToList();
-        var total = Reader.PageCount;
-        announcer.Text = Reader.Leaves[leaf].EndPage ? T.WindowsReaderEndOfChapter(Reader.View?.Chapter.Label ?? "")
-            : pages.Count >= 2 ? T.WindowsReaderPagesLabel(pages[0], pages[1], total)
-            : T.WindowsReaderPageLabel(pages.FirstOrDefault(1), total);
-        var peer = FrameworkElementAutomationPeer.FromElement(announcer) ?? FrameworkElementAutomationPeer.CreatePeerForElement(announcer);
-        peer?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
+        var label = Reader.View?.Chapter.Label ?? "";
+        string? text = null;
+        switch (kind)
+        {
+            case Kind.Paged when paged is not null:
+            {
+                var leaf = paged.Current;
+                if (leaf < 0 || leaf >= Reader.Leaves.Length)
+                    return;
+                var pages = Reader.Leaves[leaf].Parts.Select(p => (int)p.Page + 1).Distinct().Order().ToList();
+                var total = Reader.PageCount;
+                text = Reader.Leaves[leaf].EndPage ? T.WindowsReaderEndOfChapter(label)
+                    : pages.Count >= 2 ? T.WindowsReaderPagesLabel(pages[0], pages[1], total)
+                    : T.WindowsReaderPageLabel(pages.FirstOrDefault(1), total);
+                break;
+            }
+            case Kind.Novel when novel is not null:
+                text = novel.EndShown ? T.WindowsReaderEndOfChapter(label)
+                    : Reader.Choice(ReaderSettingKey.Mode) == "scrolled" ? null
+                    : T.WindowsReaderPageLabel(novel.Page + 1, Math.Max(novel.Pages, 1));
+                break;
+            case Kind.Strip when strip is not null:
+            {
+                var (image, count) = strip.Position;
+                text = count > 0 ? T.WindowsReaderImageLabel(Math.Min(image + 1, count), count) : null;
+                break;
+            }
+        }
+        if (text is not null)
+            ReaderSpeech.Say(this, text);
     }
+
+    /// <summary>A strip settled on another image: a screen reader hears it.</summary>
+    internal void StripSettled() => Announce();
 
     /// <summary>The place changed: the group's line and the scrubber follow.</summary>
     internal void PositionChanged()
@@ -784,6 +945,25 @@ public sealed partial class ReaderOverlay : UserControl
             Ctx.Window.OpenSeries(at);
     }
 
+    /// <summary>
+    /// Choose source on a chapter that would not open: the reader goes and the series' source
+    /// picker comes up over its page.
+    /// </summary>
+    internal void ChooseSource()
+    {
+        var at = work ?? Reader.View?.Work;
+        Close();
+        if (at is null)
+            return;
+        Ctx.Window.OpenSeries(at);
+        var root = XamlRoot;
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
+        {
+            if (root is not null)
+                _ = SeriesDialogs.ReadFrom(Ctx, root, at);
+        });
+    }
+
     /// <summary>The reading demo's way on: the place sources are added.</summary>
     internal void AddSource()
     {
@@ -851,7 +1031,8 @@ public sealed partial class ReaderOverlay : UserControl
 
     void OnKey(object sender, KeyRoutedEventArgs e)
     {
-        if (!showing)
+        // A flyout keeps its own keys: its arrows move between choices, and Esc closes it.
+        if (!showing || flyoutOpen)
             return;
         var ctrl = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control) & global::Windows.UI.Core.CoreVirtualKeyStates.Down) != 0;
         var shift = (InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift) & global::Windows.UI.Core.CoreVirtualKeyStates.Down) != 0;
@@ -993,6 +1174,8 @@ public sealed partial class ReaderOverlay : UserControl
     /// <summary>Esc steps out: the chrome first, then full screen, then the reader.</summary>
     void Escape()
     {
+        if (novel?.CloseNote() == true)
+            return;
         if (chromeShown && !StateShown && !DeviceWatch.ScreenReaderRunning())
         {
             HideChrome();
