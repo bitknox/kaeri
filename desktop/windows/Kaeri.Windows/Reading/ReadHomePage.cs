@@ -175,7 +175,7 @@ public sealed partial class ReadHomePage : Page
                 own.Children.Add(DemoLine());
         }
         if (home.ContinueReading.Length > 0)
-            own.Children.Add(new ReadShelf(T.NavContinue, home.ContinueReading.Select(t => (UIElement)ReadingParts.Card(ctx, t, track: true, continuing: true)),
+            own.Children.Add(new ReadShelf(T.HomeReadContinue, home.ContinueReading.Select(t => (UIElement)ReadingParts.Card(ctx, t, track: true, continuing: true)),
                 artHeight: HomeWording.PosterHeight));
         if (home.Week.Length > 0)
             own.Children.Add(Week(home.Week));
