@@ -698,39 +698,44 @@ async fn sources_are_still_asked_when_anilist_is_unreachable_and_never_for_a_bro
     assert_eq!(shelf.asked.load(Ordering::SeqCst), 1);
 }
 
-/// AniList fails the search for old words late, after newer ones (here the empty box's browse)
-/// were answered: the failure is for words no longer there and is dropped, as their results
-/// would be, so the newer page keeps its results.
+/// AniList fails the search for old words late, after newer words were answered: the failure
+/// is for words no longer there and is dropped, as their results would be, so the newer page
+/// keeps its results.
 #[tokio::test]
 async fn a_late_failure_for_old_words_leaves_the_newer_page_alone() {
     let fake = FakeAniList::start().await;
     fake.fail_next(kaeri_testkit::anilist::Failure::Status(500));
-    // Words ask books and shows in one request; the browse without words asks books alone.
-    fake.answer_slowly(Operation::Browse, std::time::Duration::from_secs(1));
+    fake.answer_slowly(Operation::Books, std::time::Duration::from_secs(1));
     let dir = tempfile::tempdir().unwrap();
     let kit = kit(Some(&fake), dir.path());
     let (tx, mut rx) = outbox();
     search::search(&kit, ask(), query("lantern"), 0, &tx);
-    // The failure is taken by the request for "lantern" once it reaches AniList.
-    while fake.requests_for(Operation::Browse).is_empty() {
-        tokio::time::sleep(std::time::Duration::from_millis(5)).await;
-    }
-    search::search(&kit, ask(), query(""), 0, &tx);
+    // Once the request for "lantern" reaches AniList it has taken the failure and its wait;
+    // the newer words are answered at once.
+    tokio::time::timeout(PATIENCE, async {
+        while books_asked(&fake) == 0 {
+            tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .expect("the old words reach AniList");
+    fake.answer_slowly(Operation::Books, std::time::Duration::ZERO);
+    search::search(&kit, ask(), query("lantern ferry"), 0, &tx);
     let mut seen = Vec::new();
     let mut answered = false;
     let until = tokio::time::Instant::now() + std::time::Duration::from_secs(3);
     while let Ok(Some(event)) = tokio::time::timeout_at(until, rx.recv()).await {
         if let Event::Reading(ReadingEvent::Search { query, .. }) = &event {
-            answered |= query.text.is_empty();
+            answered |= query.text == "lantern ferry";
         }
         seen.push(event);
     }
-    assert!(answered, "the browse was answered: {seen:?}");
+    assert!(answered, "the newer words were answered: {seen:?}");
     for event in &seen {
         match event {
             Event::Reading(ReadingEvent::Failed { .. }) => panic!("a stale failure: {seen:?}"),
             Event::Reading(ReadingEvent::Search { query, .. }) => {
-                assert!(query.text.is_empty(), "results for old words: {seen:?}");
+                assert_eq!(query.text, "lantern ferry", "results for old words: {seen:?}");
             }
             Event::Reading(ReadingEvent::SourceSearch(part)) => {
                 assert_ne!(part.anilist, ReadAnilistState::Failed, "{part:?}");
