@@ -32,6 +32,17 @@ struct ServerProgressTests {
 
     private func settle() async { try? await Task.sleep(for: .milliseconds(400)) }
 
+    /// Waits for `condition` rather than for a fixed time, so a busy machine that runs the
+    /// waiting line's timer late doesn't fail a test about what the line shows.
+    private func eventually(_ condition: () -> Bool) async -> Bool {
+        let deadline = ContinuousClock.now + .seconds(3)
+        while !condition() {
+            if ContinuousClock.now > deadline { return false }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        return true
+    }
+
     @Test func aQuickAnswerIsTheFirstThingSeen() async {
         let model = model()
         model.apply(.reader(.chapterRead(work: "w", chapter: "12", trackers: ["AniList"])))
@@ -46,13 +57,12 @@ struct ServerProgressTests {
     @Test func aSlowAnswerShowsSendingThenWaitsForTheHold() async {
         let model = model()
         model.apply(.reader(.chapterRead(work: "w", chapter: "12", trackers: [])))
-        try? await Task.sleep(for: .milliseconds(160))
-        #expect(model.lines["12"] == .sending(host: host))
+        #expect(model.lines["12"] == nil)
+        #expect(await eventually { model.lines["12"] == .sending(host: host) })
         model.apply(.reader(.progressSent(work: "w", chapter: "12", server: "s1", host: host, result: .saved)))
         // Sending stays until it has shown for the hold.
         #expect(model.lines["12"] == .sending(host: host))
-        await settle()
-        #expect(model.lines["12"] == .saved(host: host))
+        #expect(await eventually { model.lines["12"] == .saved(host: host) })
     }
 
     @Test func eachResultSaysItsLine() {
@@ -96,8 +106,7 @@ struct ServerProgressTests {
         model.apply(.reader(.progressSent(work: "w", chapter: "12", server: "s1", host: host, result: .waiting(problem: .offline))))
         #expect(model.lines["12"] == .offline(host: host))
         model.apply(.bookSources(.view(BookSourcesView(servers: [row(pending: 0, saved: 2_000)]))))
-        await settle()
-        #expect(model.lines["12"] == .saved(host: host))
+        #expect(await eventually { model.lines["12"] == .saved(host: host) })
     }
 
     @Test func theRowSaysWhereTheQueueStands() async {
@@ -131,12 +140,10 @@ struct ServerProgressTests {
         #expect(sent.count == 1)
         // The engine publishes the old facts at once: the press is not answered by them.
         model.apply(.bookSources(.view(BookSourcesView(servers: [failed]))))
-        try? await Task.sleep(for: .milliseconds(160))
-        #expect(model.rowLines["s1"] == .sending(count: 3))
+        #expect(await eventually { model.rowLines["s1"] == .sending(count: 3) })
         model.apply(.bookSources(.view(BookSourcesView(servers: [row(pending: 3, sending: true, problem: .refusedKey, problemAt: 5)]))))
         model.apply(.bookSources(.view(BookSourcesView(servers: [row(pending: 0, saved: 3_000)]))))
-        await settle()
-        #expect(model.rowLines["s1"] == .saved(at: 3_000))
+        #expect(await eventually { model.rowLines["s1"] == .saved(at: 3_000) })
         #expect(!model.retrying.contains("s1"))
     }
 
