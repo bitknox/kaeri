@@ -5702,6 +5702,9 @@
   <data name="NavUpdates" xml:space="preserve">
     <value>更新</value>
   </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>続きを読む</value>
+  </data>
   <data name="HomeReadReleasing" xml:space="preserve">
     <value>連載中</value>
   </data>

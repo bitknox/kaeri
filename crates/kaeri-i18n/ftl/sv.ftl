@@ -8769,6 +8769,9 @@ nav-read = Läs
 # Sidebar and tab label: new chapters from followed series.
 nav-updates = Uppdateringar
 
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = Läs vidare
+
 # Shelf heading on Read: series releasing now.
 home-read-releasing = Pågår nu
 

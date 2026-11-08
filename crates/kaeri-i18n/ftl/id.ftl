@@ -8672,6 +8672,9 @@ nav-read = Baca
 # Sidebar and tab label: new chapters from followed series.
 nav-updates = Pembaruan
 
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = Lanjutkan membaca
+
 # Shelf heading on Read: series releasing now.
 home-read-releasing = Sedang terbit
 

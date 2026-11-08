@@ -2565,6 +2565,7 @@
     <string name="nav_watch">Regarder</string>
     <string name="nav_read">Lire</string>
     <string name="nav_updates">Mises à jour</string>
+    <string name="home_read_continue">Poursuivre</string>
     <string name="home_read_releasing">En cours de parution</string>
     <string name="home_read_checked_on_open">Vérifié à l\'ouverture de Kaeri</string>
     <string name="home_read_end">C\'est tout pour le moment. Mises à jour et Recherche ont les listes complètes.</string>

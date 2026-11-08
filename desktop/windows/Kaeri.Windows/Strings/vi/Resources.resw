@@ -5702,6 +5702,9 @@
   <data name="NavUpdates" xml:space="preserve">
     <value>Cập nhật</value>
   </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>Đọc tiếp</value>
+  </data>
   <data name="HomeReadReleasing" xml:space="preserve">
     <value>Đang ra</value>
   </data>

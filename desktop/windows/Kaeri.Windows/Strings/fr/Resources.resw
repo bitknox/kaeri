@@ -6128,6 +6128,9 @@
   <data name="NavUpdates" xml:space="preserve">
     <value>Mises à jour</value>
   </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>Poursuivre</value>
+  </data>
   <data name="HomeReadReleasing" xml:space="preserve">
     <value>En cours de parution</value>
   </data>

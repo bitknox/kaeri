@@ -1,6 +1,7 @@
 nav-watch = Tonton
 nav-read = Baca
 nav-updates = Pembaruan
+home-read-continue = { -continue-reading-cap }
 home-read-releasing = Sedang terbit
 home-read-checked-on-open = Diperiksa saat Anda membuka { -app-name }
 home-read-end = Hanya itu untuk saat ini. Pembaruan dan Cari punya daftar lengkapnya.

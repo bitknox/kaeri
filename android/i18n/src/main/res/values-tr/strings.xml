@@ -2475,6 +2475,7 @@
     <string name="nav_watch">İzle</string>
     <string name="nav_read">Oku</string>
     <string name="nav_updates">Güncellemeler</string>
+    <string name="home_read_continue">Okumayı sürdür</string>
     <string name="home_read_releasing">Şu an yayında</string>
     <string name="home_read_checked_on_open">Kaeri açıldığında kontrol edilir</string>
     <string name="home_read_end">Şimdilik hepsi bu. Tam listeler Güncellemeler ve Arama\'da.</string>

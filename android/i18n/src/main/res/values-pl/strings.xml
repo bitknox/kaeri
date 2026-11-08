@@ -2655,6 +2655,7 @@
     <string name="nav_watch">Oglądaj</string>
     <string name="nav_read">Czytaj</string>
     <string name="nav_updates">Aktualizacje</string>
+    <string name="home_read_continue">Czytaj dalej</string>
     <string name="home_read_releasing">Aktualnie wydawane</string>
     <string name="home_read_checked_on_open">Sprawdzane po otwarciu aplikacji Kaeri</string>
     <string name="home_read_end">To na razie wszystko. Pełne listy znajdziesz w sekcjach Aktualizacje i Szukaj.</string>

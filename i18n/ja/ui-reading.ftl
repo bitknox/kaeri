@@ -1,6 +1,7 @@
 nav-watch = 視聴
 nav-read = 読書
 nav-updates = 更新
+home-read-continue = { -continue-reading-cap }
 home-read-releasing = 連載中
 home-read-checked-on-open = { -app-name }を開いたときに確認します
 home-read-end = 今はここまでです。全件は「更新」と検索で確認できます。

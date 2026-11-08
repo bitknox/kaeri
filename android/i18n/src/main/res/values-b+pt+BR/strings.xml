@@ -2565,6 +2565,7 @@
     <string name="nav_watch">Assistir</string>
     <string name="nav_read">Ler</string>
     <string name="nav_updates">Novidades</string>
+    <string name="home_read_continue">Continuar lendo</string>
     <string name="home_read_releasing">Em lançamento agora</string>
     <string name="home_read_checked_on_open">Verificado quando você abre o Kaeri</string>
     <string name="home_read_end">Por enquanto é só isso. Novidades e Busca têm as listas completas.</string>

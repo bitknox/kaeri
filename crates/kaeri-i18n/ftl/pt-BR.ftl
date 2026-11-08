@@ -8866,6 +8866,9 @@ nav-read = Ler
 # Sidebar and tab label: new chapters from followed series.
 nav-updates = Novidades
 
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = Continuar lendo
+
 # Shelf heading on Read: series releasing now.
 home-read-releasing = Em lançamento agora
 

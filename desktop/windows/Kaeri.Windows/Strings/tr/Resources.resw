@@ -5915,6 +5915,9 @@
   <data name="NavUpdates" xml:space="preserve">
     <value>Güncellemeler</value>
   </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>Okumayı sürdür</value>
+  </data>
   <data name="HomeReadReleasing" xml:space="preserve">
     <value>Şu an yayında</value>
   </data>

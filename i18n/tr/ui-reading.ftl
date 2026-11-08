@@ -1,6 +1,7 @@
 nav-watch = İzle
 nav-read = Oku
 nav-updates = Güncellemeler
+home-read-continue = { -continue-reading-cap }
 home-read-releasing = Şu an yayında
 home-read-checked-on-open = { -app-name } açıldığında kontrol edilir
 home-read-end = Şimdilik hepsi bu. Tam listeler Güncellemeler ve Arama'da.

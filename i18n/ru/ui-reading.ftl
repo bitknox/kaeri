@@ -1,6 +1,7 @@
 nav-watch = Смотреть
 nav-read = Читать
 nav-updates = Обновления
+home-read-continue = { -continue-reading-cap }
 home-read-releasing = Выходит сейчас
 home-read-checked-on-open = Проверяется при открытии { -app-name }
 home-read-end = На этом пока всё. Полные списки в «Обновления» и «Поиск».

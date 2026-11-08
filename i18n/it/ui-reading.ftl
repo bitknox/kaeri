@@ -1,6 +1,7 @@
 nav-watch = Guarda
 nav-read = Leggi
 nav-updates = Aggiornamenti
+home-read-continue = { -continue-reading-cap }
 home-read-releasing = In uscita ora
 home-read-checked-on-open = Controllato quando apri { -app-name }
 home-read-end = Per ora è tutto. Aggiornamenti e Cerca hanno gli elenchi completi.

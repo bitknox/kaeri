@@ -2475,6 +2475,7 @@
     <string name="nav_watch">Titta</string>
     <string name="nav_read">Läs</string>
     <string name="nav_updates">Uppdateringar</string>
+    <string name="home_read_continue">Läs vidare</string>
     <string name="home_read_releasing">Pågår nu</string>
     <string name="home_read_checked_on_open">Kontrolleras när du öppnar Kaeri</string>
     <string name="home_read_end">Det var allt för nu. Uppdateringar och Sök har de fullständiga listorna.</string>

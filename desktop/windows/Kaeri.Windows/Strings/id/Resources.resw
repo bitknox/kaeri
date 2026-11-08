@@ -5702,6 +5702,9 @@
   <data name="NavUpdates" xml:space="preserve">
     <value>Pembaruan</value>
   </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>Lanjutkan membaca</value>
+  </data>
   <data name="HomeReadReleasing" xml:space="preserve">
     <value>Sedang terbit</value>
   </data>

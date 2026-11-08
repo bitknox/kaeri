@@ -8672,6 +8672,9 @@ nav-read = 読書
 # Sidebar and tab label: new chapters from followed series.
 nav-updates = 更新
 
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = 続きを読む
+
 # Shelf heading on Read: series releasing now.
 home-read-releasing = 連載中
 

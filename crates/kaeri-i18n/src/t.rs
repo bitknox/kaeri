@@ -14002,6 +14002,11 @@ pub fn nav_updates() -> String {
     text("nav-updates", &[])
 }
 
+/// Shelf heading on Read: the series being read, each at its place.
+pub fn home_read_continue() -> String {
+    text("home-read-continue", &[])
+}
+
 /// Shelf heading on Read: series releasing now.
 pub fn home_read_releasing() -> String {
     text("home-read-releasing", &[])

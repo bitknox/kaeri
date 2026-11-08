@@ -1,6 +1,7 @@
 nav-watch = Xem
 nav-read = Đọc
 nav-updates = Cập nhật
+home-read-continue = { -continue-reading-cap }
 home-read-releasing = Đang ra
 home-read-checked-on-open = Kiểm tra khi bạn mở { -app-name }
 home-read-end = Đó là tất cả lúc này. Cập nhật và Tìm kiếm có đầy đủ danh sách.

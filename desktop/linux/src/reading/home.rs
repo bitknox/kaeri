@@ -91,7 +91,7 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &ReadingHomeView) {
         column.append(&spotlight(ctx, tile, spot));
     }
     let mut shelves: Vec<(String, &[WorkTile])> = vec![
-        (t::home_continue(), &view.continue_reading),
+        (t::home_read_continue(), &view.continue_reading),
         (t::home_this_week(), &view.this_week),
         (t::home_up_next(), &view.up_next),
     ];

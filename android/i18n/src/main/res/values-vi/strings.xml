@@ -2385,6 +2385,7 @@
     <string name="nav_watch">Xem</string>
     <string name="nav_read">Đọc</string>
     <string name="nav_updates">Cập nhật</string>
+    <string name="home_read_continue">Đọc tiếp</string>
     <string name="home_read_releasing">Đang ra</string>
     <string name="home_read_checked_on_open">Kiểm tra khi bạn mở Kaeri</string>
     <string name="home_read_end">Đó là tất cả lúc này. Cập nhật và Tìm kiếm có đầy đủ danh sách.</string>

@@ -1,6 +1,7 @@
 nav-watch = Titta
 nav-read = Läs
 nav-updates = Uppdateringar
+home-read-continue = { -continue-reading-cap }
 home-read-releasing = Pågår nu
 home-read-checked-on-open = Kontrolleras när du öppnar { -app-name }
 home-read-end = Det var allt för nu. Uppdateringar och Sök har de fullständiga listorna.

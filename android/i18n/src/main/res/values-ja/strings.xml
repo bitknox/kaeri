@@ -2385,6 +2385,7 @@
     <string name="nav_watch">視聴</string>
     <string name="nav_read">読書</string>
     <string name="nav_updates">更新</string>
+    <string name="home_read_continue">続きを読む</string>
     <string name="home_read_releasing">連載中</string>
     <string name="home_read_checked_on_open">Kaeriを開いたときに確認します</string>
     <string name="home_read_end">今はここまでです。全件は「更新」と検索で確認できます。</string>

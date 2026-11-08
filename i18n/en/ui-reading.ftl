@@ -15,6 +15,9 @@ nav-updates = Updates
 
 ## Read, reading's Home
 
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = { -continue-reading-cap }
+
 # Shelf heading on Read: series releasing now.
 home-read-releasing = Releasing now
 

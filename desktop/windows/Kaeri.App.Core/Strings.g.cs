@@ -5917,6 +5917,9 @@ public static partial class T
     /// <summary>Sidebar and tab label: new chapters from followed series.</summary>
     public static string NavUpdates => Get("NavUpdates");
 
+    /// <summary>Shelf heading on Read: the series being read, each at its place.</summary>
+    public static string HomeReadContinue => Get("HomeReadContinue");
+
     /// <summary>Shelf heading on Read: series releasing now.</summary>
     public static string HomeReadReleasing => Get("HomeReadReleasing");
 
@@ -13292,6 +13295,7 @@ public static partial class T
         ["NavWatch"] = "Watch",
         ["NavRead"] = "Read",
         ["NavUpdates"] = "Updates",
+        ["HomeReadContinue"] = "Continue",
         ["HomeReadReleasing"] = "Releasing now",
         ["HomeReadCheckedOnOpen"] = "Checked when you open Kaeri",
         ["HomeReadEnd"] = "That's everything for now. Updates and Search have the full lists.",

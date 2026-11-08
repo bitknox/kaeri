@@ -2385,6 +2385,7 @@
     <string name="nav_watch">Tonton</string>
     <string name="nav_read">Baca</string>
     <string name="nav_updates">Pembaruan</string>
+    <string name="home_read_continue">Lanjutkan membaca</string>
     <string name="home_read_releasing">Sedang terbit</string>
     <string name="home_read_checked_on_open">Diperiksa saat Anda membuka Kaeri</string>
     <string name="home_read_end">Hanya itu untuk saat ini. Pembaruan dan Cari punya daftar lengkapnya.</string>

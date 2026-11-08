@@ -2475,6 +2475,7 @@
     <string name="nav_watch">Schauen</string>
     <string name="nav_read">Lesen</string>
     <string name="nav_updates">Updates</string>
+    <string name="home_read_continue">Weiterlesen</string>
     <string name="home_read_releasing">Erscheint gerade</string>
     <string name="home_read_checked_on_open">Wird geprüft, wenn du Kaeri öffnest</string>
     <string name="home_read_end">Das ist vorerst alles. Updates und Suche zeigen die vollständigen Listen.</string>
