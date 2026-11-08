@@ -539,7 +539,7 @@ impl ReadRowFormat {
     /// [`ReadSearchQuery::formats`] for the format.
     pub fn search_formats(self) -> Vec<String> {
         match self {
-            Self::Manga => vec!["manga".into(), "one-shot".into()],
+            Self::Manga => vec!["manga".into()],
             Self::Webtoons => vec!["webtoon".into()],
             Self::Novels => vec!["novel".into()],
         }
@@ -728,6 +728,8 @@ pub struct ReadSearchQuery {
     /// `None`: manga and novels.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub medium: Option<Medium>,
+    /// Keys from [`ReadFilters::formats`]. `manga` takes in one-shots; `one-shot`, from a query
+    /// saved before it was folded in, reads as `manga` (see [`ReadSearchQuery::format_keys`]).
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub formats: Vec<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
@@ -746,6 +748,21 @@ pub struct ReadSearchQuery {
     /// Ask only the person's sources, not AniList: the filter bar's "Your sources only".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub sources_only: bool,
+}
+
+impl ReadSearchQuery {
+    /// [`Self::formats`] as the filter reads them: a saved `one-shot` is `manga`, each once,
+    /// in the order chosen.
+    pub fn format_keys(&self) -> Vec<&str> {
+        let mut keys: Vec<&str> = Vec::new();
+        for key in &self.formats {
+            let key = if key == "one-shot" { "manga" } else { key.as_str() };
+            if !keys.contains(&key) {
+                keys.push(key);
+            }
+        }
+        keys
+    }
 }
 
 /// How long a source has to answer a search before its group says it gave no answer.
@@ -819,9 +836,7 @@ pub struct ReadSourceGroup {
 pub struct ReadSourceJoin {
     pub work: WorkId,
     /// In the order of Your sources.
-    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub source_ids: Vec<String>,
-    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub source_names: Vec<String>,
 }
 
@@ -985,7 +1000,7 @@ pub struct NewChapter {
 #[derive(Debug, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct ReadFilters {
-    /// [`ReadSearchQuery::formats`]: `manga`, `webtoon`, `one-shot`, `novel`.
+    /// [`ReadSearchQuery::formats`]: `manga` (one-shots included), `webtoon`, `novel`.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub formats: Vec<ReadFilterChoice>,
     /// [`ReadSearchQuery::origins`]: `JP`, `KR`, `CN`, `TW`.
@@ -1501,7 +1516,6 @@ pub fn read_filters() -> ReadFilters {
         formats: vec![
             choice("manga", ReadingMsg::ReadingKindManga),
             choice("webtoon", ReadingMsg::ReadingKindWebtoon),
-            choice("one-shot", ReadingMsg::ReadingKindOneShot),
             choice("novel", ReadingMsg::ReadingKindLightNovel),
         ],
         origins: vec![

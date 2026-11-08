@@ -713,9 +713,7 @@ impl BookSources {
             .iter()
             .filter(|w| w.answers_to(&query.text))
             .filter(|w| query.medium.is_none_or(|m| m == w.medium()))
-            .filter(|w| {
-                query.formats.is_empty() || query.formats.iter().any(|f| f == w.format())
-            })
+            .filter(|w| query.formats.is_empty() || query.format_keys().contains(&w.format()))
             .map(demo_tile)
             .collect()
     }

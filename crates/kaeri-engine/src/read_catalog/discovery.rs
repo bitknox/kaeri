@@ -287,7 +287,7 @@ mod tests {
     #[test]
     fn each_row_carries_the_search_view_all_opens() {
         let trending = Planned::Trending(Manga).query(None).unwrap();
-        assert_eq!(trending.formats, ["manga", "one-shot"]);
+        assert_eq!(trending.formats, ["manga"]);
         assert_eq!(trending.sort.as_deref(), Some("TRENDING_DESC"));
         let new = Planned::New(Webtoons).query(None).unwrap();
         assert_eq!(new.formats, ["webtoon"]);
