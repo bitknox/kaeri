@@ -36,7 +36,7 @@ use crate::{
     outbox::{Internal, Outbox, ReaderWake},
     reading::{
         novel::{self as served, EinkImages, NovelBook, Opened, Opening, ServedBook},
-        pages::Pages,
+        pages::{Pages, PeekJob},
         shelf::ShelfChapter,
     },
 };
@@ -154,12 +154,9 @@ async fn fetch_pages(
             Ok(bytes) => bytes,
             Err(failure) => return Prepared::Failed(failure),
         };
-        let Some(ext) =
-            kaeri_books::mime::sniff_image(&bytes).and_then(|m| m.strip_prefix("image/"))
-        else {
+        let Some(ext) = page_extension(&bytes) else {
             return Prepared::Failed(ReadingFailure::Unsupported { extension: "page".into() });
         };
-        let ext = if ext == "jpeg" { "jpg" } else { ext };
         if let Err(e) =
             tokio::fs::write(dir.join(format!("{:05}.{ext}", index + 1)), &bytes).await
         {
@@ -167,6 +164,50 @@ async fn fetch_pages(
         }
     }
     Prepared::Pages(dir.to_owned())
+}
+
+/// The extension a page's bytes are of, by their first bytes, for the page worker.
+fn page_extension(bytes: &[u8]) -> Option<&'static str> {
+    let ext = kaeri_books::mime::sniff_image(bytes)?.strip_prefix("image/")?;
+    Some(if ext == "jpeg" { "jpg" } else { ext })
+}
+
+/// Make the end page's preview of the next chapter, one from a source, as a shelf chapter's is
+/// made: its first page alone is fetched, off the actor, into a folder of the session that the
+/// page worker opens as a book. Nothing waits on it. A chapter of text, or one only a whole
+/// file's download would open, has no preview, and neither has one that fails.
+pub(super) fn peek_source(
+    cx: &Cx<'_>,
+    pages: &Pages,
+    session: u64,
+    work: &WorkId,
+    next: (usize, &ShelfChapter),
+) {
+    let (index, next) = next;
+    let sources = cx.services.book_sources.clone();
+    let work = work.clone();
+    let chapter = next.id.clone();
+    let now = cx.now();
+    let dir = streamed_dir(&cx.services.paths.cache_dir, session).join(format!("next-{index}"));
+    let pages = pages.clone();
+    let out = cx.tx.clone();
+    tokio::spawn(async move {
+        let bytes = match sources.first_page(&work, &chapter, now).await {
+            Ok(Some(bytes)) => bytes,
+            Ok(None) => return,
+            Err(failure) => {
+                tracing::debug!(?failure, "no preview of the next chapter");
+                return;
+            }
+        };
+        let Some(ext) = page_extension(&bytes) else { return };
+        if tokio::fs::create_dir_all(&dir).await.is_err()
+            || tokio::fs::write(dir.join(format!("00001.{ext}")), &bytes).await.is_err()
+        {
+            return;
+        }
+        pages.peek(PeekJob { session, chapter, path: dir, out });
+    });
 }
 
 /// The format of a chapter read from a source rather than a file on the shelf.

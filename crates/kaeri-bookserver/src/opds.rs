@@ -467,7 +467,14 @@ impl OpdsSource {
         chapter
     }
 
-    async fn content_of(&self, series: &str, chapter: &str) -> Result<ChapterContent> {
+    /// What `chapter` is made of. A whole file is downloaded only with `files`; without, such a
+    /// chapter is `None`.
+    async fn content_of(
+        &self,
+        series: &str,
+        chapter: &str,
+        files: bool,
+    ) -> Result<Option<ChapterContent>> {
         let handle = Handle::parse(series).ok_or(ServerError::NotFound)?;
         let entries = self.books_of(&handle).await?;
         let entry = entries.iter().find(|e| e.id == chapter).ok_or(ServerError::NotFound)?;
@@ -481,7 +488,7 @@ impl OpdsSource {
             && let Some(count) = stream.pse_count.filter(|n| *n > 0)
         {
             let header: Vec<(String, String)> = self.http.auth().header().into_iter().collect();
-            return Ok(ChapterContent::Images(
+            return Ok(Some(ChapterContent::Images(
                 (0..count)
                     .map(|n| PageRef {
                         url: stream
@@ -494,7 +501,10 @@ impl OpdsSource {
                         height: None,
                     })
                     .collect(),
-            ));
+            )));
+        }
+        if !files {
+            return Ok(None);
         }
         let link = file
             .or_else(|| {
@@ -508,7 +518,7 @@ impl OpdsSource {
         let to =
             keep_path(&self.keep, &self.manifest.id, &entry.id, &format!("book.{extension}"));
         self.http.download(&link.href, &to, 8 * 1024 * 1024 * 1024).await?;
-        Ok(ChapterContent::Book(BookFile { path: to, temporary: true }))
+        Ok(Some(ChapterContent::Book(BookFile { path: to, temporary: true })))
     }
 }
 
@@ -583,7 +593,23 @@ impl BookSource for OpdsSource {
         series: &str,
         chapter: &str,
     ) -> std::result::Result<ChapterContent, ProviderError> {
-        self.content_of(series, chapter).await.map_err(|e| self.aim(e))
+        match self.content_of(series, chapter, true).await {
+            Ok(Some(content)) => Ok(content),
+            Ok(None) => Err(ProviderError::NotFound),
+            Err(e) => Err(self.aim(e)),
+        }
+    }
+
+    async fn chapter_pages(
+        &self,
+        series: &str,
+        chapter: &str,
+    ) -> std::result::Result<Option<Vec<PageRef>>, ProviderError> {
+        match self.content_of(series, chapter, false).await {
+            Ok(Some(ChapterContent::Images(pages))) => Ok(Some(pages)),
+            Ok(_) => Ok(None),
+            Err(e) => Err(self.aim(e)),
+        }
     }
 
     async fn health_check(&self) -> std::result::Result<(), ProviderError> {

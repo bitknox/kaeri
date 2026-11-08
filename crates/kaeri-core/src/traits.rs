@@ -258,6 +258,22 @@ pub trait BookSource: Send + Sync {
         chapter: &str,
     ) -> Result<ChapterContent, ProviderError>;
 
+    /// The page images chapter `chapter` of series `series` is made of, found without fetching
+    /// a whole book file: `None` for text, or for a chapter only a download would open. The
+    /// reader's preview of the next chapter asks this. The default asks [`Self::content`], which
+    /// fetches no file for a source that names pages or text; a source that downloads in
+    /// `content` answers on its own.
+    async fn chapter_pages(
+        &self,
+        series: &str,
+        chapter: &str,
+    ) -> Result<Option<Vec<PageRef>>, ProviderError> {
+        Ok(match self.content(series, chapter).await? {
+            ChapterContent::Images(pages) => Some(pages),
+            ChapterContent::Text(_) | ChapterContent::Book(_) => None,
+        })
+    }
+
     /// Find a series by the ids other services know it by, with no fuzzy matching. A source
     /// with its own index (a server, a folder) answers from it; the default answers `None`, so
     /// the caller falls back to [`Self::search`].

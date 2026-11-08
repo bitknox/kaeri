@@ -344,6 +344,18 @@ impl BookRegistry {
         self.ask(source, now, |s| async move { s.content(series, chapter).await }).await
     }
 
+    /// A chapter's page images, when it is made of them, found without downloading a whole
+    /// book file: what the reader's preview of the next chapter fetches its first page from.
+    pub async fn chapter_pages(
+        &self,
+        source: &str,
+        series: &str,
+        chapter: &str,
+        now: i64,
+    ) -> Result<Option<Vec<PageRef>>, ProviderError> {
+        self.ask(source, now, |s| async move { s.chapter_pages(series, chapter).await }).await
+    }
+
     /// Tell a source a chapter was read or taken back. A failure is for the log: the person's
     /// own mark is already kept.
     pub async fn report_progress(

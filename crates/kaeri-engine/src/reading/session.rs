@@ -1073,12 +1073,17 @@ impl Session {
         }
     }
 
-    /// Ask the worker for the next chapter's first page, once a chapter.
+    /// Ask the worker for the next chapter's first page, once a chapter. A chapter from a
+    /// source has that page fetched first, and only that page.
     fn peek(&mut self, cx: &Cx<'_>, pages: &Pages) {
         if std::mem::replace(&mut self.peeked, true) {
             return;
         }
         let Some(next) = self.chapters.get(self.at + 1) else { return };
+        if next.format == novel::SOURCE {
+            novel::peek_source(cx, pages, self.id, &self.work, (self.at + 1, next));
+            return;
+        }
         if novel::prepares(next) {
             return;
         }
@@ -1406,6 +1411,7 @@ mod tests {
 
     mod hints;
     mod novels;
+    mod peek;
 
     const WORK: &str = "a:4242";
 

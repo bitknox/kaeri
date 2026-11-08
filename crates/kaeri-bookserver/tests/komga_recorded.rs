@@ -72,3 +72,51 @@ async fn komga_signs_in_lists_and_writes_progress_back() {
     // After sign-in the token went as a header, never in a path.
     assert!(seen.iter().all(|(_, p, _)| !p.contains("tok-one")));
 }
+
+/// The next chapter's preview asks for a book's pages without its file: a comic names its
+/// pages, and a PDF, which only its download would open, names none and is not downloaded.
+#[tokio::test]
+async fn komga_names_a_comic_s_pages_and_never_downloads_a_file_for_them() {
+    let mut routes = routes();
+    routes.extend([
+        (
+            "/api/v1/books/b1",
+            r#"{"id":"b1","name":"Lantern Keeper 001","sizeBytes":1000,"media":{"status":"READY","mediaType":"application/zip","pagesCount":3},"metadata":{"title":"","number":"1"}}"#,
+        ),
+        (
+            "/api/v1/books/b1/pages",
+            r#"[{"number":1,"width":800,"height":1200},{"number":2},{"number":3}]"#,
+        ),
+        (
+            "/api/v1/books/b4",
+            r#"{"id":"b4","name":"Lantern Keeper 004","sizeBytes":1000,"media":{"status":"READY","mediaType":"application/pdf","pagesCount":12},"metadata":{"title":"","number":"4"}}"#,
+        ),
+    ]);
+    let (address, seen) = serve(routes).await;
+    let client = reqwest::Client::new();
+    let done = sign_in(&client, &address, Some(Kind::Komga), "test", "test").await.unwrap();
+    let keep = tempfile::tempdir().unwrap();
+    let source = source(
+        &client,
+        &Server {
+            id: "k",
+            name: "Komga",
+            kind: Kind::Komga,
+            address: &address,
+            credential: &done.credential,
+        },
+        keep.path().to_path_buf(),
+        Arc::new(AtomicBool::new(false)),
+    )
+    .unwrap();
+
+    let pages = source.chapter_pages("s1", "b1").await.unwrap().expect("a comic names pages");
+    assert_eq!(pages.len(), 3);
+    assert!(pages[0].url.ends_with("/api/v1/books/b1/pages/1"), "{}", pages[0].url);
+    assert_eq!((pages[0].width, pages[0].height), (Some(800), Some(1200)));
+
+    assert_eq!(source.chapter_pages("s1", "b4").await.unwrap(), None);
+    let seen = seen.lock().unwrap();
+    assert!(seen.iter().any(|(_, p, _)| p == "/api/v1/books/b4"));
+    assert!(seen.iter().all(|(_, p, _)| !p.ends_with("/file")), "no file was downloaded");
+}

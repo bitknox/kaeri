@@ -329,7 +329,9 @@ impl KomgaSource {
         Ok(page.content)
     }
 
-    async fn content_of(&self, book: &str) -> Result<ChapterContent> {
+    /// What `book` is made of. A whole file is downloaded only with `files`; without, such a
+    /// book is `None`.
+    async fn content_of(&self, book: &str, files: bool) -> Result<Option<ChapterContent>> {
         let info: Book = self.http.json(&format!("api/v1/books/{}", encode(book))).await?;
         let file_book = matches!(
             info.media.media_type.as_str(),
@@ -342,6 +344,9 @@ impl KomgaSource {
             )));
         }
         if file_book || info.media.pages == 0 {
+            if !files {
+                return Ok(None);
+            }
             let name = file_name(&info);
             let to = keep_path(&self.keep, &self.manifest.id, book, &name);
             self.http
@@ -351,12 +356,12 @@ impl KomgaSource {
                     8 * 1024 * 1024 * 1024,
                 )
                 .await?;
-            return Ok(ChapterContent::Book(BookFile { path: to, temporary: true }));
+            return Ok(Some(ChapterContent::Book(BookFile { path: to, temporary: true })));
         }
         let pages: Vec<PageInfo> =
             self.http.json(&format!("api/v1/books/{}/pages", encode(book))).await?;
         let header: Vec<(String, String)> = self.http.auth().header().into_iter().collect();
-        Ok(ChapterContent::Images(
+        Ok(Some(ChapterContent::Images(
             pages
                 .into_iter()
                 .map(|p| PageRef {
@@ -371,7 +376,7 @@ impl KomgaSource {
                     height: p.height,
                 })
                 .collect(),
-        ))
+        )))
     }
 }
 
@@ -460,7 +465,23 @@ impl BookSource for KomgaSource {
         _series: &str,
         chapter: &str,
     ) -> std::result::Result<ChapterContent, ProviderError> {
-        self.content_of(chapter).await.map_err(|e| self.aim(e))
+        match self.content_of(chapter, true).await {
+            Ok(Some(content)) => Ok(content),
+            Ok(None) => Err(ProviderError::NotFound),
+            Err(e) => Err(self.aim(e)),
+        }
+    }
+
+    async fn chapter_pages(
+        &self,
+        _series: &str,
+        chapter: &str,
+    ) -> std::result::Result<Option<Vec<PageRef>>, ProviderError> {
+        match self.content_of(chapter, false).await {
+            Ok(Some(ChapterContent::Images(pages))) => Ok(Some(pages)),
+            Ok(_) => Ok(None),
+            Err(e) => Err(self.aim(e)),
+        }
     }
 
     async fn report_progress(
