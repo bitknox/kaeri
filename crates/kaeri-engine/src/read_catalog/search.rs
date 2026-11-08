@@ -442,32 +442,34 @@ fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> 
         generation
     };
     update(kit, generation, tx, |_| {});
-    let ids: Vec<String> = asked.into_iter().map(|(id, ..)| id).collect();
-    ask_sources(kit, ask, generation, query.text.trim().to_owned(), medium, ids, tx);
+    let named: Vec<(String, String)> =
+        asked.into_iter().map(|(id, name, _)| (id, name)).collect();
+    ask_sources(kit, ask, generation, query.text.trim().to_owned(), medium, named, tx);
     generation
 }
 
-/// Ask each of `ids` for `text`, each answer landing in the run as it comes.
+/// Ask each of `named` (id and the name its group shows) for `text`, each answer landing in
+/// the run as it comes.
 fn ask_sources(
     kit: &Kit,
     ask: Ask,
     generation: u64,
     text: String,
     medium: Option<Medium>,
-    ids: Vec<String>,
+    named: Vec<(String, String)>,
     tx: &Outbox,
 ) {
-    if ids.is_empty() {
+    if named.is_empty() {
         return;
     }
     let (kit, tx) = (kit.clone(), tx.clone());
     tokio::spawn(async move {
         let text = &text;
-        let mut asking: FuturesUnordered<_> = ids
+        let mut asking: FuturesUnordered<_> = named
             .iter()
-            .map(|id| {
+            .map(|(id, name)| {
                 let kit = &kit;
-                async move { (id.clone(), ask_source(kit, id, text, ask.now).await) }
+                async move { (id.clone(), ask_source(kit, id, name, text, ask.now).await) }
             })
             .collect();
         while let Some((id, answer)) = asking.next().await {
@@ -516,10 +518,12 @@ fn ask_sources(
     });
 }
 
-/// One source's answer to a search, or the state its group shows instead.
+/// One source's answer to a search, or the state its group shows instead. A failure names the
+/// source as its group does.
 async fn ask_source(
     kit: &Kit,
     id: &str,
+    name: &str,
     text: &str,
     now: i64,
 ) -> Result<Vec<SeriesHit>, ReadSourceState> {
@@ -533,13 +537,13 @@ async fn ask_source(
         Ok(Ok(hits)) => Ok(hits),
         // A source without the title is not a failure.
         Ok(Err(ProviderError::NotFound)) => Ok(Vec::new()),
-        Ok(Err(error)) => Err(ReadSourceState::Failed { failure: failure(id, &error) }),
+        Ok(Err(error)) => Err(ReadSourceState::Failed { failure: failure(name, &error) }),
     }
 }
 
 /// A group's Try again: ask its source once more for the search still shown.
 pub fn retry_source(kit: &Kit, ask: Ask, query: ReadSearchQuery, source: String, tx: &Outbox) {
-    let generation = {
+    let (generation, name) = {
         let mut run = kit.sources.catalog.search.lock().unwrap_or_else(|e| e.into_inner());
         // A group still asking has an ask under way, which answers for it: a second would
         // ask the source twice and let the slower answer overwrite the other.
@@ -547,16 +551,16 @@ pub fn retry_source(kit: &Kit, ask: Ask, query: ReadSearchQuery, source: String,
         if run.query != query || !run.groups.iter().any(ready) {
             return;
         }
-        if let Some(group) = run.groups.iter_mut().find(|g| g.id == source) {
-            group.state = ReadSourceState::Asking;
-            group.hits.clear();
-        }
-        run.generation
+        let Some(group) = run.groups.iter_mut().find(|g| g.id == source) else { return };
+        group.state = ReadSourceState::Asking;
+        group.hits.clear();
+        let name = group.name.clone();
+        (run.generation, name)
     };
     kit.sources.registry.retry_down();
     update(kit, generation, tx, |_| {});
     let text = query.text.trim().to_owned();
-    ask_sources(kit, ask, generation, text, medium_of(&query), vec![source], tx);
+    ask_sources(kit, ask, generation, text, medium_of(&query), vec![(source, name)], tx);
 }
 
 /// Change the run, unless a newer search replaced it, and send the sources' part as it stands.

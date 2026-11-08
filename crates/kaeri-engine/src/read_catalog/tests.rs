@@ -739,3 +739,25 @@ async fn a_late_failure_for_old_words_leaves_the_newer_page_alone() {
         }
     }
 }
+
+/// A source that fails is named in its group's reason as its heading names it, never by its id.
+#[tokio::test]
+async fn a_failed_source_is_named_as_its_group_is() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    Shelf::put(&kit, "shelf-7", "Tidewater shelf", Answer::FailsOnce(Vec::new()));
+    let only = ReadSearchQuery { sources_only: true, ..query("kite") };
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), only, 0, &tx);
+    let done = part_until(&mut rx, |p| p.done).await;
+    let group = done.groups.iter().find(|g| g.source_id == "shelf-7").unwrap();
+    assert_eq!(group.source_name, "Tidewater shelf");
+    assert_eq!(
+        group.state,
+        ReadSourceState::Failed {
+            failure: kaeri_model::reading::ReadingFailure::SourceDown {
+                source: "Tidewater shelf".into()
+            }
+        }
+    );
+}
