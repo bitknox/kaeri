@@ -66,14 +66,11 @@ reader-notice-start-over = Baştan başla
 reader-notice-go-back = Geri dön
 reader-notice-change = Değiştir
 reader-settings = Okuyucu ayarları
-reader-chapter-line = Bölüm { $chapter }
 reader-chapter-line-titled = Bölüm { $chapter } · { $title }
 reader-novel-line-scroll = Bölüm { $chapter } · kaydırma
 reader-minutes-left = { $minutes } dk
 reader-zone-next = Sonraki sayfa
 reader-grid-title = Sayfalar
-reader-end-of-chapter-number = Bölüm { $chapter } sona erdi
-reader-end-facts = Bölüm { $chapter } · { $facts }
 reader-end-continue = Okumayı sürdür
 reader-end-swipe = Sürdürmek için kaydırın
 reader-end-series = Seriye dön
@@ -160,21 +157,15 @@ reader-zone-previous = Önceki sayfa
 reader-zone-controls = Kontroller
 reader-size-small = Daha küçük metin
 reader-size-large = Daha büyük metin
-reader-end-pages = { $count ->
-    [one] Bir sayfa
-   *[other] { $count } sayfa
- }
 reader-value-on = Açık
 reader-value-off = Kapalı
 reader-row-strip-gap = Görseller arası boşluk
 reader-paper-look = Gündüz kâğıt görünümü
 reader-paper-dim = Sayfayı karart
-reader-end-from = Şuradan: { $source }
 reader-divider-images = { $count ->
     [one] Bir görsel
    *[other] { $count } görsel
  }
-reader-divider-facts-source = { $facts } · şuradan: { $source }
 reader-opening-waited = { $line } · { $seconds } sn
 reader-sources-title = Bu bölümü şuradan oku
 reader-paper-parts = Neleri değiştirir

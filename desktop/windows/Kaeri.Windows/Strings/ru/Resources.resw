@@ -6023,6 +6023,33 @@
   <data name="ReaderLookSystem" xml:space="preserve">
     <value>Как в системе</value>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>Конец главы {chapter}</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>Глава {chapter} · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_one" xml:space="preserve">
+    <value>{count} страница</value>
+  </data>
+  <data name="ReaderEndPages_few" xml:space="preserve">
+    <value>{count} страницы</value>
+  </data>
+  <data name="ReaderEndPages_many" xml:space="preserve">
+    <value>{count} страниц</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count} страницы</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>Из {source}</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>Глава {chapter}</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · из {source}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Открыть демо</value>
   </data>
@@ -8863,6 +8890,18 @@
   </data>
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · серий: {series} · библиотек: {libraries} · добавлено только что</value>
+  </data>
+  <data name="SourceRowServerSeries_one" xml:space="preserve">
+    <value>{kind} · серий: {series} · библиотек: {libraries}</value>
+  </data>
+  <data name="SourceRowServerSeries_few" xml:space="preserve">
+    <value>{kind} · серий: {series} · библиотек: {libraries}</value>
+  </data>
+  <data name="SourceRowServerSeries_many" xml:space="preserve">
+    <value>{kind} · серий: {series} · библиотек: {libraries}</value>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · серий: {series} · библиотек: {libraries}</value>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · серий пока нет · проверка снова через 30 минут</value>

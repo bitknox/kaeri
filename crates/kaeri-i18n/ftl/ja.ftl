@@ -8156,6 +8156,27 @@ reader-gap-small = 小
 # Look choice that follows the system's light or dark.
 reader-look-system = システム
 
+# Top line of the page between chapters. The chapter is its number, such as 12.
+reader-end-of-chapter-number = 第{ $chapter }話の終わり
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+reader-end-facts = 第{ $chapter }話 · { $facts }
+
+# The next chapter's length on the page between chapters.
+reader-end-pages =
+    { $count ->
+       *[other] { $count }ページ
+    }
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+reader-end-from = { $source }から
+
+# Under the series title in the reader's controls. The chapter is its number, such as 12.
+reader-chapter-line = 第{ $chapter }話
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+reader-divider-facts-source = { $facts } · { $source }から
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = デモを読む
 
@@ -10745,10 +10766,16 @@ source-added-plugins =
        *[other] { $store }からプラグインを{ $count }個インストールしました
     }
 
-# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 source-row-server =
     { $libraries ->
        *[other] { $kind } · { $libraries }件のライブラリに{ $series }シリーズ · 追加したばかり
+    }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server-series =
+    { $libraries ->
+       *[other] { $kind } · { $libraries }件のライブラリに{ $series }シリーズ
     }
 
 # A server's row in Your sources while it shows no series.

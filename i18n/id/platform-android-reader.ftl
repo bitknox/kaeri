@@ -64,14 +64,11 @@ reader-notice-start-over = Mulai ulang
 reader-notice-go-back = Kembali
 reader-notice-change = Ubah
 reader-settings = Pengaturan pembaca
-reader-chapter-line = Bab { $chapter }
 reader-chapter-line-titled = Bab { $chapter } · { $title }
 reader-novel-line-scroll = Bab { $chapter } · gulir
 reader-minutes-left = { $minutes } mnt
 reader-zone-next = Halaman selanjutnya
 reader-grid-title = Halaman
-reader-end-of-chapter-number = Akhir bab { $chapter }
-reader-end-facts = Bab { $chapter } · { $facts }
 reader-end-continue = { -proceed-cap }
 reader-end-swipe = Geser untuk terus membaca
 reader-end-series = Kembali ke seri
@@ -158,19 +155,14 @@ reader-zone-previous = Halaman sebelumnya
 reader-zone-controls = Kontrol
 reader-size-small = Teks lebih kecil
 reader-size-large = Teks lebih besar
-reader-end-pages = { $count ->
-   *[other] { $count } halaman
- }
 reader-value-on = Aktif
 reader-value-off = Mati
 reader-row-strip-gap = Jarak antar gambar
 reader-paper-look = Tampilan kertas siang hari
 reader-paper-dim = Redupkan halaman
-reader-end-from = Dari { $source }
 reader-divider-images = { $count ->
    *[other] { $count } gambar
  }
-reader-divider-facts-source = { $facts } · dari { $source }
 reader-opening-waited = { $line } · { $seconds } d
 reader-sources-title = Baca bab ini dari
 reader-paper-parts = Yang diubahnya

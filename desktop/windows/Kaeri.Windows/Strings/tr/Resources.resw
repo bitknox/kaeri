@@ -5645,6 +5645,27 @@
   <data name="ReaderLookSystem" xml:space="preserve">
     <value>Sistem</value>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>Bölüm {chapter} sona erdi</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>Bölüm {chapter} · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_one" xml:space="preserve">
+    <value>Bir sayfa</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count} sayfa</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>Şuradan: {source}</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>Bölüm {chapter}</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · şuradan: {source}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Demoyu oku</value>
   </data>
@@ -8235,10 +8256,16 @@
     <value>{store} içinden yüklenen eklentiler: {count}</value>
   </data>
   <data name="SourceRowServer_one" xml:space="preserve">
-    <value>{kind} · {series} seri · az önce eklendi</value>
+    <value>{kind} · {libraries} kitaplıkta {series} seri · az önce eklendi</value>
   </data>
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · {libraries} kitaplıkta {series} seri · az önce eklendi</value>
+  </data>
+  <data name="SourceRowServerSeries_one" xml:space="preserve">
+    <value>{kind} · {libraries} kitaplıkta {series} seri</value>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · {libraries} kitaplıkta {series} seri</value>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · henüz seri yok · 30 dakika sonra yeniden bakar</value>

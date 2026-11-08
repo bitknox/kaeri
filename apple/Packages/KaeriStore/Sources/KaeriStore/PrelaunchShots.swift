@@ -101,7 +101,7 @@ extension CameInModel {
         case .kavitaLink: stage(nil)
         case .looking: stage(nil, looking: true)
         case .found: stage(.found(PrelaunchFixtures.found))
-        case .unreachable: stage(.empty(.unreachable(host: host)))
+        case .unreachable: stage(.empty(.unreachable(host: "comics.home.example"))) // i18n-skip: a made-up host, as the board has it
         case .wrongPassword: stage(.empty(.wrongPassword(host: host, kind: .kavita)))
         case .wrongKey: stage(.empty(.wrongKey(host: host)))
         case .empty: stage(.empty(.emptyCatalogue(found: PrelaunchFixtures.empty)))
@@ -235,6 +235,7 @@ extension AppStore {
         #if FIXTURES
         guard scene.isProgressLine, let chapter = reader.view?.chapter.id else { return }
         reader.stageRead(trackers: ["AniList"]) // i18n-skip: a tracker's name
+        reader.stageNextSource(PrelaunchFixtures.host)
         serverProgress.stage(chapter: chapter, line: PrelaunchFixtures.line(scene), server: "s1")
         if scene == .progressMotion {
             let progress = serverProgress

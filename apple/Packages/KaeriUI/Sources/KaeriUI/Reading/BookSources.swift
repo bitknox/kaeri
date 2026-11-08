@@ -9,12 +9,20 @@ import KaeriStrings
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The list of book sources, under Your sources.
+/// A page a book source's row opens: the demo, a server or a plugin.
+enum BookSourcePage: Hashable {
+    case demo
+    case server(String)
+    case plugin(String)
+}
+
+/// The list of book sources, under Your sources: the demo first, then folders, servers and
+/// plugins. A row opens the source's own page.
 struct BookSourcesList: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Binding var page: BookSourcePage?
     @State private var matchesShown = false
-    @State private var aboutDemo = false
 
     var body: some View {
         let view = store.bookSources.view
@@ -26,12 +34,23 @@ struct BookSourcesList: View {
                         .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
                 }
             }
+            if store.demo.state.reading {
+                SettingsGroup(title: nil) {
+                    BookSourceRow(title: L.sourcesDemoName, note: L.sourcesDemoBooksLine, open: { page = .demo }) {
+                        SourceTile(systemImage: "book")
+                    } trailing: {
+                        RowChevron()
+                    }
+                }
+            }
             if let view, !view.folders.isEmpty {
                 let unsure = view.groups.filter { $0.work == nil && !$0.kept }.count
                 SettingsGroup(title: L.bookSourcesFolders) {
                     ForEach(view.folders.filter { !$0.removed }, id: \.id) { folder in
-                        SettingsRow(title: folder.name, note: Self.folderLine(folder),
-                                    noteColor: folder.scan == .missing ? .silk : .haze) {
+                        BookSourceRow(title: folder.name, note: Self.folderLine(folder),
+                                      noteColor: folder.scan == .missing ? .silk : .haze, open: nil) {
+                            SourceTile(systemImage: "folder")
+                        } trailing: {
                             HStack(spacing: 8) {
                                 if unsure > 0, folder.id == view.folders.first?.id {
                                     Button(L.bookSourcesCheckMatches(n: unsure)) { matchesShown = true }
@@ -57,31 +76,11 @@ struct BookSourcesList: View {
             if let view, !view.servers.isEmpty {
                 SettingsGroup(title: L.bookSourcesServers) {
                     ForEach(view.servers, id: \.id) { server in
-                        BookServerSourceRow(server: server, note: Self.serverLine(server, justAdded: store.cameIn.justAdded.contains(server.id))) {
-                            HStack(spacing: 8) {
-                                if server.signedOut {
-                                    Label(L.serversRowSignedOut, systemImage: "exclamationmark.triangle.fill")
-                                        .labelStyle(BookHealthLabel())
-                                }
-                                Menu {
-                                    Toggle(L.bookSourcesReportProgress, isOn: Binding(
-                                        get: { server.reportProgress },
-                                        set: { store.bookSources.setReportProgress(server.id, on: $0) }
-                                    ))
-                                    Toggle(L.bookSourcesUse, isOn: Binding(
-                                        get: { !server.off },
-                                        set: { store.bookSources.setOff(server.id, off: !$0) }
-                                    ))
-                                    Divider()
-                                    Button(L.actionRemove, role: .destructive) { store.bookSources.removeServer(server.id) }
-                                } label: {
-                                    Image(systemName: "ellipsis").foregroundStyle(.haze)
-                                }
-                                .menuStyle(.button)
-                                .buttonStyle(.plain)
-                                .menuIndicator(.hidden)
-                                .fixedSize()
-                                .accessibilityLabel(L.actionMore)
+                        BookServerSourceRow(server: server, note: Self.serverLine(server, justAdded: store.cameIn.justAdded.contains(server.id)),
+                                            open: { page = .server(server.id) }) {
+                            if server.signedOut {
+                                Label(L.serversRowSignedOut, systemImage: "exclamationmark.triangle.fill")
+                                    .labelStyle(BookHealthLabel())
                             }
                         }
                     }
@@ -90,46 +89,17 @@ struct BookSourcesList: View {
             if let view, !view.plugins.isEmpty {
                 SettingsGroup(title: L.bookSourcesPlugins) {
                     ForEach(view.plugins, id: \.id) { plugin in
-                        SettingsRow(title: plugin.name, note: Self.pluginLine(plugin)) {
-                            Toggle(plugin.name, isOn: Binding(
-                                get: { !plugin.off },
-                                set: { store.bookSources.setOff(plugin.id, off: !$0) }
-                            ))
-                            .toggleStyle(.switch)
-                            .labelsHidden()
-                            .tint(.silk)
+                        BookSourceRow(title: plugin.name, note: Self.pluginLine(plugin), open: { page = .plugin(plugin.id) }) {
+                            SourceTile(systemImage: "powerplug")
+                        } trailing: {
+                            RowChevron()
                         }
                     }
                 }
             }
-            if store.demo.state.reading {
-                SettingsGroup(title: nil) {
-                    SettingsRow(title: L.sourcesDemoName, note: L.sourcesDemoBooksLine) {
-                        Button(aboutDemo ? L.actionDone : L.sourcesDemoAbout) { aboutDemo.toggle() }
-                            .buttonStyle(SecondaryCapsuleStyle(height: 24, raisedSurface: true, fontSize: 12))
-                            .fixedSize()
-                    }
-                    if aboutDemo {
-                        DemoBooksAbout()
-                            .padding(.horizontal, 14).padding(.vertical, 12)
-                            .transition(.opacity)
-                    }
-                }
-                .animation(.standard, value: aboutDemo)
-            }
             if !store.bookSources.isEmpty {
-                HStack(spacing: 4) {
-                    Text(L.bookSourcesPluginsFooter)
-                    Button(L.navPluginStores) { navigator.open(.pluginStores) }
-                        .buttonStyle(.plain)
-                        .underline()
-                        .foregroundStyle(.silk)
-                        .pointerHover()
-                }
-                .font(.plat(mac: 12, touch: 13))
-                .foregroundStyle(.haze)
-                .padding(.top, -14)
-                .padding(.leading, 14)
+                SettingsFootnote(L.bookSourcesPluginsFooter)
+                    .padding(.top, -12)
             }
         }
         .task { store.bookSources.load() }
@@ -137,7 +107,7 @@ struct BookSourcesList: View {
         .folderCameInSheet(store)
         .refreshable { store.bookSources.scan() }
         // Shots: a prelaunch state's sheet, staged with nothing asked of a real server.
-        .onLaunchSheet("demo-about", navigator) { aboutDemo = true } // i18n-skip: a shot's sheet name
+        .onLaunchSheet("demo-about", navigator) { page = .demo } // i18n-skip: a shot's sheet name
         .onLaunchSheet("came-in", navigator) { // i18n-skip: a shot's sheet name
             guard let scene = PrelaunchScene.named() else { return }
             switch scene {
@@ -174,14 +144,14 @@ struct BookSourcesList: View {
     /// "Kavita · 212 series in 2 libraries". What became of the progress sent to it is the line
     /// under this one (ServerProgressModel), so this no longer says progress goes back.
     static func serverLine(_ server: BookServerRow, justAdded: Bool = false) -> String {
-        if server.empty { return L.sourceRowServerEmpty(kind: BookServerWords.kind(server.kind)) }
+        if server.empty { return L.sourceRowServerEmpty(kind: BookServerWords.rowKind(server.kind)) }
         if justAdded {
-            return L.sourceRowServer(kind: BookServerWords.kind(server.kind), series: Int(server.series), libraries: Int(server.libraries))
+            return L.sourceRowServer(kind: BookServerWords.rowKind(server.kind), series: Int(server.series), libraries: Int(server.libraries))
         }
         if server.libraries > 0 && !server.off {
-            return L.sourceRowServerSeries(kind: BookServerWords.kind(server.kind), series: Int(server.series), libraries: Int(server.libraries))
+            return L.sourceRowServerSeries(kind: BookServerWords.rowKind(server.kind), series: Int(server.series), libraries: Int(server.libraries))
         }
-        var parts = [BookServerWords.kind(server.kind)]
+        var parts = [BookServerWords.rowKind(server.kind)]
         if server.name != server.address, server.name != server.progressHost { parts.append(server.address) }
         parts.append(L.bookSourcesSeries(n: Int(server.series)))
         if server.off { parts.append(L.bookSourcesOff) }
@@ -202,6 +172,11 @@ enum BookServerWords {
         case .kavita: "Kavita" // i18n-skip
         case .opds: L.bookSourcesOpds
         }
+    }
+
+    /// The kind at the head of a server's row: "OPDS" there, "OPDS catalogue" in a sentence.
+    static func rowKind(_ kind: BookServerKind) -> String {
+        kind == .opds ? "OPDS" : Self.kind(kind) // i18n-skip: a format's name
     }
 
     static func failure(_ failure: BookServerFailure) -> String {
@@ -236,17 +211,249 @@ struct BookSourcesToolbar: View {
     }
 }
 
-/// The book sources on a page of their own.
+/// The book sources on a page of their own. A row's page is pushed on the stack on iPhone and
+/// iPad; on the Mac it takes the list's place, with Back in the toolbar (MacShell).
 struct BookSourcesScreen: View {
+    @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+    #if os(iOS)
+    @State private var pushed: BookSourcePage?
+    #endif
+
     var body: some View {
+        #if os(iOS)
+        scroll { BookSourcesList(page: $pushed) }
+            .navigationDestination(item: $pushed) { page in
+                scroll { BookSourcePageView(page: page) }
+                    .navigationTitle(page.title(store))
+                    .modifier(PushedTitle(title: page.title(store)))
+            }
+            .onChange(of: pushed.map { $0.exists(store) } ?? true) { _, there in
+                if !there { pushed = nil }
+            }
+        #else
+        @Bindable var navigator = navigator
+        ZStack(alignment: .topLeading) {
+            if let page = navigator.bookSourcePage {
+                scroll { BookSourcePageView(page: page) }
+                    .id(page)
+                    .transition(.opacity)
+            } else {
+                scroll { BookSourcesList(page: $navigator.bookSourcePage) }
+                    .transition(.opacity)
+            }
+        }
+        .animation(.standard, value: navigator.bookSourcePage)
+        // A source removed while its page shows, here or on another device: back to the list.
+        .onChange(of: navigator.bookSourcePage.map { $0.exists(store) } ?? true) { _, there in
+            if !there { navigator.bookSourcePage = nil }
+        }
+        #endif
+    }
+
+    private func scroll<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         ScrollView {
-            BookSourcesList()
+            content()
                 .frame(maxWidth: 640, alignment: .leading)
                 .padding(.horizontal, Device.isMac ? 24 : 16)
                 .padding(.vertical, Device.isMac ? 20 : 12)
                 .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .background(.ground)
+    }
+}
+
+#if os(iOS)
+/// A pushed source page's title: inline on iPhone, the boards' title on iPad.
+private struct PushedTitle: ViewModifier {
+    let title: String
+
+    func body(content: Content) -> some View {
+        if Device.isPad {
+            content.boardTitle(title)
+        } else {
+            content.navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+#endif
+
+extension BookSourcePage {
+    /// The page's title: About the demo, or the server's or the plugin's name.
+    @MainActor
+    func title(_ store: AppStore) -> String {
+        switch self {
+        case .demo: L.sourcesDemoAbout
+        case .server(let id): store.bookSources.view?.servers.first { $0.id == id }?.name ?? ""
+        case .plugin(let id): store.bookSources.view?.plugins.first { $0.id == id }?.name ?? ""
+        }
+    }
+
+    /// Whether what the page shows is still there.
+    @MainActor
+    func exists(_ store: AppStore) -> Bool {
+        switch self {
+        case .demo: store.demo.state.reading
+        case .server(let id): store.bookSources.view?.servers.contains { $0.id == id } ?? false
+        case .plugin(let id): store.bookSources.view?.plugins.contains { $0.id == id } ?? false
+        }
+    }
+}
+
+/// A book source's own page.
+struct BookSourcePageView: View {
+    let page: BookSourcePage
+
+    var body: some View {
+        switch page {
+        case .demo: BookDemoPage()
+        case .server(let id): BookServerPage(id: id)
+        case .plugin(let id): BookPluginPage(id: id)
+        }
+    }
+}
+
+/// About the demo: what it is, its credits with each work's cover, where it reaches, and Remove
+/// demo.
+struct BookDemoPage: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 22) {
+            Text(L.sourcesDemoBooksWhat)
+                .font(.plat(mac: 13, touch: 17))
+                .foregroundStyle(.silk)
+                .fixedSize(horizontal: false, vertical: true)
+            SettingsGroup(title: L.demoCredits) {
+                ForEach(store.demo.reading.works, id: \.id) { work in
+                    BookSourceRow(title: work.series, note: demoCreditLine(work), open: nil) {
+                        BookCover(url: work.cover, width: Device.isMac ? 28 : 36, radius: 4)
+                    } extra: {
+                        if let cover = work.coverCredit {
+                            Text(L.demoCreditCover(title: cover.title, artist: cover.artist, year: String(cover.year)))
+                                .font(.plat(mac: 12, touch: 15))
+                                .foregroundStyle(.haze)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        // The file's page on Commons, which the licence asks the credit to link.
+                        if let url = work.filePageUrl, let link = URL(string: url) {
+                            Link(L.sourcesDemoLinkCommons, destination: link)
+                                .font(.plat(mac: 12, touch: 15))
+                                .foregroundStyle(.water)
+                                .padding(.top, 2)
+                        }
+                    } trailing: {
+                        if let url = work.licenceUrl, let link = URL(string: url) {
+                            Link(L.sourcesDemoLinkLicence, destination: link)
+                                .font(.plat(mac: 13, touch: 17))
+                                .foregroundStyle(.haze)
+                                .fixedSize()
+                        }
+                    }
+                }
+            }
+            SettingsGroup(title: nil) {
+                line(L.sourcesDemoHosts)
+                line(L.sourcesDemoBooksPrivate)
+            }
+            SettingsGroup(title: nil) {
+                BookSourceRow(title: L.sourcesDemoRemove, open: { store.removeDemo() }) {
+                    SourceTile(systemImage: "trash")
+                } trailing: {
+                    EmptyView()
+                }
+            }
+        }
+    }
+
+    private func line(_ text: String) -> some View {
+        Text(text)
+            .font(.plat(mac: 13, touch: 17))
+            .foregroundStyle(.silk)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(EdgeInsets(top: Device.isMac ? 10 : 14, leading: 14, bottom: Device.isMac ? 10 : 14, trailing: 14))
+    }
+}
+
+/// A book server's page: its row with what became of the progress sent to it, Send progress and
+/// Use, and Remove.
+struct BookServerPage: View {
+    @Environment(AppStore.self) private var store
+    let id: String
+
+    var body: some View {
+        if let server = store.bookSources.view?.servers.first(where: { $0.id == id }) {
+            VStack(alignment: .leading, spacing: 22) {
+                SettingsGroup(title: nil) {
+                    BookServerSourceRow(server: server, note: BookSourcesList.serverLine(server), open: nil) {
+                        EmptyView()
+                    }
+                }
+                SettingsGroup(title: nil) {
+                    SettingsRow(title: L.bookSourcesReportProgress) {
+                        BookSourceSwitch(title: L.bookSourcesReportProgress, isOn: Binding(
+                            get: { server.reportProgress },
+                            set: { store.bookSources.setReportProgress(server.id, on: $0) }
+                        ))
+                    }
+                    SettingsRow(title: L.bookSourcesUse) {
+                        BookSourceSwitch(title: L.bookSourcesUse, isOn: Binding(
+                            get: { !server.off },
+                            set: { store.bookSources.setOff(server.id, off: !$0) }
+                        ))
+                    }
+                }
+                SettingsGroup(title: nil) {
+                    BookSourceRow(title: L.actionRemove, open: { store.bookSources.removeServer(server.id) }) {
+                        SourceTile(systemImage: "trash")
+                    } trailing: {
+                        EmptyView()
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// A book plugin's page: its row and Use.
+struct BookPluginPage: View {
+    @Environment(AppStore.self) private var store
+    let id: String
+
+    var body: some View {
+        if let plugin = store.bookSources.view?.plugins.first(where: { $0.id == id }) {
+            VStack(alignment: .leading, spacing: 22) {
+                SettingsGroup(title: nil) {
+                    BookSourceRow(title: plugin.name, note: BookSourcesList.pluginLine(plugin), open: nil) {
+                        SourceTile(systemImage: "powerplug")
+                    } trailing: {
+                        EmptyView()
+                    }
+                }
+                SettingsGroup(title: nil) {
+                    SettingsRow(title: L.bookSourcesUse) {
+                        BookSourceSwitch(title: L.bookSourcesUse, isOn: Binding(
+                            get: { !plugin.off },
+                            set: { store.bookSources.setOff(plugin.id, off: !$0) }
+                        ))
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// A switch at a row's end, its label kept for VoiceOver.
+private struct BookSourceSwitch: View {
+    let title: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Toggle(title, isOn: $isOn)
+            .toggleStyle(.switch)
+            .labelsHidden()
+            .tint(.silk)
     }
 }
 
@@ -315,9 +522,10 @@ struct PhoneYourSourcesPage: View {
                 .background(.ground)
             }
         }
-        // Whichever list shows: the phone's providers page names itself too.
-        .navigationTitle(L.sourcesTitle)
-        .navigationBarTitleDisplayMode(.inline)
+        // Whichever list shows: the phone's providers page names itself too. Reading alone has
+        // the board's large Your sources.
+        .navigationTitle(store.medium.answer == .read ? L.sourcesYour : L.sourcesTitle)
+        .navigationBarTitleDisplayMode(store.medium.answer == .read ? .large : .inline)
         .sheet(item: Binding(get: { navigator.addBookSource }, set: { navigator.addBookSource = $0 })) { step in
             AddBookSourceSheet(start: step)
         }
@@ -502,7 +710,7 @@ struct AddBookServerStep: View {
         staged = true
         address = scene == .kavitaLink || scene == .found || scene == .wrongKey || scene == .looking
             ? "https://books.home.example/api/opds/9c1e7a2b4d5f3f9a" // i18n-skip: a made-up link
-            : "books.home.example" // i18n-skip: a made-up host
+            : scene == .unreachable ? "comics.home.example" : "books.home.example" // i18n-skip: made-up hosts
         hideKey()
         if link == nil { user = "reader"; password = "example-password" } // i18n-skip: made up
         store.cameIn.stage(scene)
@@ -535,6 +743,10 @@ struct AddBookServerStep: View {
                 Button(L.actionCancel) { dismiss() }
                     .buttonStyle(SecondaryCapsuleStyle(height: 28, raisedSurface: true, fontSize: 13))
                     .keyboardShortcut(.cancelAction)
+                if unreachable {
+                    Button(L.actionTryAgain) { look() }
+                        .buttonStyle(SecondaryCapsuleStyle(height: 28, raisedSurface: true, fontSize: 13))
+                }
                 action
                     .buttonStyle(PrimaryCapsuleStyle(height: 28, fontSize: 13))
                     .keyboardShortcut(.defaultAction)
@@ -563,10 +775,16 @@ struct AddBookServerStep: View {
         return true
     }
 
+    /// A server that didn't answer: the sheet keeps the address alone, Add server waits, and Try
+    /// again is the other action, beside it on the Mac and under the note on iPhone and iPad.
+    private var unreachable: Bool {
+        if case .empty(.unreachable)? = outcome { true } else { false }
+    }
+
     /// Try again after a failed look, else Add server.
     @ViewBuilder
     private var action: some View {
-        if failed {
+        if failed, !unreachable {
             Button(L.actionTryAgain) { look() }
         } else {
             Button(L.bookAddServerButton) { add() }
@@ -574,6 +792,7 @@ struct AddBookServerStep: View {
     }
 
     private var actionOff: Bool {
+        if unreachable { return true }
         if failed { return false }
         guard let found else { return true }
         return !found.libraries.isEmpty && found.libraries.allSatisfy { unticked.contains($0.id) }
@@ -641,7 +860,7 @@ struct AddBookServerStep: View {
             } else if link != nil {
                 note(L.bookServerKavitaKey).padding(.top, 8)
                 note(L.bookServerKeyKept(store: "the Keychain")).padding(.top, 4) // i18n-skip: the system's name for it
-            } else {
+            } else if !unreachable {
                 label(L.bookServerUsername).padding(.top, 16)
                 field(L.bookServerUsername, text: $user, focus: .user).padding(.top, 6)
                 label(L.bookServerPassword).padding(.top, 12)
@@ -678,7 +897,17 @@ struct AddBookServerStep: View {
             Group {
                 switch why {
                 case .unreachable(let host):
-                    CameInNote(kind: .failed, title: L.bookServerErrUnreachable(host: host), line: L.bookServerErrUnreachableLine)
+                    VStack(spacing: 18) {
+                        CameInNote(kind: .failed, title: L.bookServerErrUnreachable(host: host), line: L.bookServerErrUnreachableLine)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        #if os(iOS)
+                        Button(L.actionTryAgain) { look() }
+                            .font(.ui(17, weight: .semibold))
+                            .foregroundStyle(.silk)
+                            .frame(minHeight: 44)
+                            .buttonStyle(.plain)
+                        #endif
+                    }
                 case .wrongPassword(let host, let kind):
                     CameInNote(kind: .failed, title: L.bookServerErrPassword(host: host),
                                line: L.bookServerErrPasswordLine(kind: BookServerWords.kind(kind)))

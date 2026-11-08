@@ -512,8 +512,9 @@ impl BookSources {
                 let meta = self.server_meta(&s.id);
                 let (pending, sending, saved_at, problem, problem_at) =
                     self.write_back_row(&s.id, s.report_progress);
+                let kind = kind_of(Kind::parse(&s.kind)?);
                 Some(BookServerRow {
-                    kind: kind_of(Kind::parse(&s.kind)?),
+                    kind,
                     off: self.registry.is_off(&s.id),
                     id: s.id,
                     name: s.name,
@@ -521,7 +522,7 @@ impl BookSources {
                     series: meta.series.unwrap_or(0),
                     report_progress: s.report_progress,
                     signed_out: s.signed_out,
-                    libraries: meta.library_count,
+                    libraries: added::row_libraries(kind, meta.library_count),
                     empty: meta.empty,
                     rechecks_at: meta.rechecks_at(),
                     key_last4: meta.key_last4,

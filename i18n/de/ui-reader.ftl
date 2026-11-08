@@ -40,3 +40,14 @@ reader-gap-none = Keiner
 reader-gap-small = Klein
 reader-look-system = System
 reader-end-tracker = Gelesen · { $trackers } aktualisiert
+reader-end-of-chapter-number = Ende von Kapitel { $chapter }
+reader-end-facts = Kapitel { $chapter } · { $facts }
+reader-end-pages = { $count ->
+    [one] Eine Seite
+   *[other] { $count } Seiten
+ }
+reader-end-from = Von { $source }
+
+reader-chapter-line = Kapitel { $chapter }
+
+reader-divider-facts-source = { $facts } · von { $source }

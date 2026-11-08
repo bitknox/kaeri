@@ -689,6 +689,8 @@ struct FirstLaunch: View {
         let looksRight = InviteLinks.looksLikeInvite(trimmed)
         let both = (chosen ?? store.medium.answer) == .both
         return VStack(alignment: .leading, spacing: 0) {
+            // The combined page runs taller than a phone: it scrolls, with Done kept below.
+            scrolls { VStack(alignment: .leading, spacing: 0) {
             if both {
                 top(5, L.onboardingBothTitle, L.onboardingBothLine)
                 demoTry(both: true)
@@ -757,6 +759,7 @@ struct FirstLaunch: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, Device.isMac ? 12 : 16)
                 .padding(.top, 8)
+            } }
             Spacer(minLength: 16)
             actions {
                 #if os(macOS)
@@ -800,10 +803,15 @@ struct FirstLaunch: View {
     @ViewBuilder
     private func demoTry(both: Bool) -> some View {
         if store.demo.state.reading {
-            HStack(alignment: .top, spacing: Device.isMac ? 12 : 14) {
+            let width: CGFloat = Device.isMac ? 56 : 64
+            HStack(alignment: .center, spacing: Device.isMac ? 12 : 14) {
+                // After Both, the show's art and then the comic; after Read, the comic and the story.
                 HStack(spacing: 6) {
-                    ForEach([store.demo.comic, store.demo.story].compactMap { $0 }, id: \.work) { work in
-                        BookCover(url: work.cover, width: Device.isMac ? 34 : 44)
+                    if both {
+                        BookCover(url: store.demo.info.art, width: width, radius: 6)
+                    }
+                    ForEach((both ? [store.demo.comic] : [store.demo.comic, store.demo.story]).compactMap { $0 }, id: \.work) { work in
+                        BookCover(url: work.cover, width: width, radius: 6)
                     }
                 }
                 .accessibilityHidden(true)
@@ -826,17 +834,26 @@ struct FirstLaunch: View {
                 .font(.plat(mac: 13, touch: 15))
                 .foregroundStyle(.haze)
                 .fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: 8) {
-                if both {
-                    Button { store.playDemo(); finish(nil) } label: { Text(L.onboardingPlayDemo) }
-                        .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
-                }
-                Button { readDemo() } label: { Text(L.onboardingReadDemo) }
-                    .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
+            // Play and Read side by side where they fit, one over the other where they do not.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) { demoTryButtons(both: both) }
+                VStack(alignment: .leading, spacing: 8) { demoTryButtons(both: both) }
             }
             .padding(.top, 6)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private func demoTryButtons(both: Bool) -> some View {
+        if both {
+            Button { store.playDemo(); finish(nil) } label: { Text(L.onboardingPlayDemo) }
+                .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
+                .fixedSize()
+        }
+        Button { readDemo() } label: { Text(L.onboardingReadDemo) }
+            .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
+            .fixedSize()
     }
 
     /// A folder and a server for books, on one raised card.
@@ -951,6 +968,20 @@ struct FirstLaunch: View {
             .font(.plat(mac: 22, touch: 28, weight: .semibold))
             .foregroundStyle(.silk)
             .accessibilityAddTraits(.isHeader)
+    }
+
+    /// A page's words and rows, scrolling on a touch screen when they run past it. The Mac's
+    /// window is sized to them.
+    @ViewBuilder
+    private func scrolls<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        #if os(iOS)
+        ScrollView(.vertical) { content().frame(maxWidth: .infinity, alignment: .leading) }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.interactively)
+        #else
+        content()
+        #endif
     }
 
     /// The page's buttons: trailing on the Mac, as a sheet's are, and full width at the foot on

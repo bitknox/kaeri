@@ -83,8 +83,12 @@ source-added-plugins = { $count ->
    *[other] { $store } içinden yüklenen { -plugin-pl }: { $count }
  }
 source-row-server = { $libraries ->
-    [one] { $kind } · { $series } seri · az önce eklendi
+    [one] { $kind } · { $libraries } kitaplıkta { $series } seri · az önce eklendi
    *[other] { $kind } · { $libraries } kitaplıkta { $series } seri · az önce eklendi
+ }
+source-row-server-series = { $libraries ->
+    [one] { $kind } · { $libraries } kitaplıkta { $series } seri
+   *[other] { $kind } · { $libraries } kitaplıkta { $series } seri
  }
 source-row-server-empty = { $kind } · henüz seri yok · 30 dakika sonra yeniden bakar
 source-row-folder = { $skipped ->

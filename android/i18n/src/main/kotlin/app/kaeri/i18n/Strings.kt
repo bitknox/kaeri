@@ -2218,10 +2218,6 @@ object Strings {
         context.getString(R.string.reader_settings)
 
     /** Under the series title in the reader's controls. The chapter is its number, such as 12. */
-    fun readerChapterLine(context: Context, chapter: String): String =
-        context.getString(R.string.reader_chapter_line, chapter)
-
-    /** Under the series title in the reader's controls. The chapter is its number, such as 12. */
     fun readerChapterLineTitled(context: Context, chapter: String, title: String): String =
         context.getString(R.string.reader_chapter_line_titled, chapter, title)
 
@@ -2240,14 +2236,6 @@ object Strings {
     /** Heading of the page grid. */
     fun readerGridTitle(context: Context): String =
         context.getString(R.string.reader_grid_title)
-
-    /** Top line of the page between chapters. The chapter is its number, such as 12. */
-    fun readerEndOfChapterNumber(context: Context, chapter: String): String =
-        context.getString(R.string.reader_end_of_chapter_number, chapter)
-
-    /** The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. */
-    fun readerEndFacts(context: Context, chapter: String, facts: String): String =
-        context.getString(R.string.reader_end_facts, chapter, facts)
 
     /** Main button on the page between chapters. */
     fun readerEndContinue(context: Context): String =
@@ -2593,10 +2581,6 @@ object Strings {
     fun readerSizeLarge(context: Context): String =
         context.getString(R.string.reader_size_large)
 
-    /** The next chapter's length on the page between chapters. */
-    fun readerEndPages(context: Context, count: Int): String =
-        context.resources.getQuantityString(R.plurals.reader_end_pages, count, count)
-
     /** The value of Paper mode in the settings list when it is on. */
     fun readerValueOn(context: Context): String =
         context.getString(R.string.reader_value_on)
@@ -2617,17 +2601,9 @@ object Strings {
     fun readerPaperDim(context: Context): String =
         context.getString(R.string.reader_paper_dim)
 
-    /** Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from. */
-    fun readerEndFrom(context: Context, source: String): String =
-        context.getString(R.string.reader_end_from, source)
-
     /** The next episode's length on the divider inside a strip. */
     fun readerDividerImages(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)
-
-    /** The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. */
-    fun readerDividerFactsSource(context: Context, facts: String, source: String): String =
-        context.getString(R.string.reader_divider_facts_source, facts, source)
 
     /** The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s". */
     fun readerOpeningWaited(context: Context, line: String, seconds: Int): String =
@@ -8622,6 +8598,30 @@ object Strings {
     fun readerLookSystem(context: Context): String =
         context.getString(R.string.reader_look_system)
 
+    /** Top line of the page between chapters. The chapter is its number, such as 12. */
+    fun readerEndOfChapterNumber(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_of_chapter_number, chapter)
+
+    /** The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. */
+    fun readerEndFacts(context: Context, chapter: String, facts: String): String =
+        context.getString(R.string.reader_end_facts, chapter, facts)
+
+    /** The next chapter's length on the page between chapters. */
+    fun readerEndPages(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reader_end_pages, count, count)
+
+    /** Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from. */
+    fun readerEndFrom(context: Context, source: String): String =
+        context.getString(R.string.reader_end_from, source)
+
+    /** Under the series title in the reader's controls. The chapter is its number, such as 12. */
+    fun readerChapterLine(context: Context, chapter: String): String =
+        context.getString(R.string.reader_chapter_line, chapter)
+
+    /** The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. */
+    fun readerDividerFactsSource(context: Context, facts: String, source: String): String =
+        context.getString(R.string.reader_divider_facts_source, facts, source)
+
     /** Button in the first run that opens the reading demo. */
     fun onboardingReadDemo(context: Context): String =
         context.getString(R.string.onboarding_read_demo)
@@ -12258,11 +12258,11 @@ object Strings {
     fun sourceAddedPlugins(context: Context, count: Int, store: String): String =
         context.resources.getQuantityString(R.plurals.source_added_plugins, count, count, store)
 
-    /** A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS. */
+    /** A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library. */
     fun sourceRowServer(context: Context, kind: String, series: Int, libraries: Int): String =
         context.resources.getQuantityString(R.plurals.source_row_server, libraries, kind, series, libraries)
 
-    /** A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS. */
+    /** A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library. */
     fun sourceRowServerSeries(context: Context, kind: String, series: Int, libraries: Int): String =
         context.resources.getQuantityString(R.plurals.source_row_server_series, libraries, kind, series, libraries)
 

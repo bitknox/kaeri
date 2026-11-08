@@ -61,10 +61,6 @@ reader-go-to-page = Go to page
 # @arg total: int
 reader-go-to-page-field = 1 to { $total }
 
-# Label of the end page: what just ended.
-# @arg chapter: text
-reader-end-of-chapter = End of { $chapter }
-
 # Line on the end page when the chapter counted as read.
 
 # Line on the end page for a chapter that has not counted yet.
@@ -72,19 +68,11 @@ reader-end-not-read = Not marked read yet
 
 # Small label above the next chapter's title on the end page.
 
-# Detail line under the next chapter's title. The chapter label is the source's own words.
-# @arg chapter: text
-# @arg pages: int
-reader-end-next-detail = { $chapter } · { $pages } pages
-
 # The one amber button of the end page: opens the next chapter.
 reader-continue = { -continue-cap }
 
 # Button on the end page that goes back to the series page.
 reader-back-to-series = Back to the series
-
-# Hint under Continue on the end page.
-reader-swipe-to-continue = Swipe to keep reading
 
 # End page heading when the next chapter is not out yet.
 # @arg chapter: text

@@ -5456,6 +5456,24 @@
   <data name="ReaderLookSystem" xml:space="preserve">
     <value>Sistem</value>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>Akhir bab {chapter}</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>Bab {chapter} · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count} halaman</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>Dari {source}</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>Bab {chapter}</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · dari {source}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Baca demo</value>
   </data>
@@ -7927,6 +7945,9 @@
   </data>
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · {series} seri di {libraries} pustaka · baru ditambahkan</value>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · {series} seri di {libraries} pustaka</value>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · belum ada seri · diperiksa lagi dalam 30 menit</value>

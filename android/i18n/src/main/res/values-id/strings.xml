@@ -601,14 +601,11 @@
     <string name="reader_notice_go_back">Kembali</string>
     <string name="reader_notice_change">Ubah</string>
     <string name="reader_settings">Pengaturan pembaca</string>
-    <string name="reader_chapter_line">Bab %1$s</string>
     <string name="reader_chapter_line_titled">Bab %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Bab %1$s · gulir</string>
     <string name="reader_minutes_left">%1$d mnt</string>
     <string name="reader_zone_next">Halaman selanjutnya</string>
     <string name="reader_grid_title">Halaman</string>
-    <string name="reader_end_of_chapter_number">Akhir bab %1$s</string>
-    <string name="reader_end_facts">Bab %1$s · %2$s</string>
     <string name="reader_end_continue">Lanjutkan</string>
     <string name="reader_end_swipe">Geser untuk terus membaca</string>
     <string name="reader_end_series">Kembali ke seri</string>
@@ -695,19 +692,14 @@
     <string name="reader_zone_controls">Kontrol</string>
     <string name="reader_size_small">Teks lebih kecil</string>
     <string name="reader_size_large">Teks lebih besar</string>
-    <plurals name="reader_end_pages">
-        <item quantity="other">%1$d halaman</item>
-    </plurals>
     <string name="reader_value_on">Aktif</string>
     <string name="reader_value_off">Mati</string>
     <string name="reader_row_strip_gap">Jarak antar gambar</string>
     <string name="reader_paper_look">Tampilan kertas siang hari</string>
     <string name="reader_paper_dim">Redupkan halaman</string>
-    <string name="reader_end_from">Dari %1$s</string>
     <plurals name="reader_divider_images">
         <item quantity="other">%1$d gambar</item>
     </plurals>
-    <string name="reader_divider_facts_source">%1$s · dari %2$s</string>
     <string name="reader_opening_waited">%1$s · %2$d d</string>
     <string name="reader_sources_title">Baca bab ini dari</string>
     <string name="reader_paper_parts">Yang diubahnya</string>
@@ -2269,6 +2261,14 @@
     <string name="reader_gap_none">Tanpa jarak</string>
     <string name="reader_gap_small">Kecil</string>
     <string name="reader_look_system">Sistem</string>
+    <string name="reader_end_of_chapter_number">Akhir bab %1$s</string>
+    <string name="reader_end_facts">Bab %1$s · %2$s</string>
+    <plurals name="reader_end_pages">
+        <item quantity="other">%1$d halaman</item>
+    </plurals>
+    <string name="reader_end_from">Dari %1$s</string>
+    <string name="reader_chapter_line">Bab %1$s</string>
+    <string name="reader_divider_facts_source">%1$s · dari %2$s</string>
     <string name="onboarding_read_demo">Baca demo</string>
     <string name="onboarding_demo_books_detail">Demo berisi komik pendek dan cerita pendek yang dibagikan pembuatnya di bawah Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Satu episode pendek dan satu komik pendek, dibagikan pembuatnya di bawah Creative Commons.</string>
@@ -3174,6 +3174,9 @@
     </plurals>
     <plurals name="source_row_server">
         <item quantity="other">%1$s · %2$d seri di %3$d pustaka · baru ditambahkan</item>
+    </plurals>
+    <plurals name="source_row_server_series">
+        <item quantity="other">%1$s · %2$d seri di %3$d pustaka</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · belum ada seri · diperiksa lagi dalam 30 menit</string>
     <plurals name="source_row_folder">

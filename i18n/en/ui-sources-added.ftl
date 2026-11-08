@@ -243,23 +243,23 @@ source-added-plugins = { $count ->
    *[other] Installed { $count } { -plugin-pl } from { $store }
  }
 
-# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 # @allow library
 # @arg kind: text
 # @arg series: int
 # @arg libraries: int
 source-row-server = { $libraries ->
-    [one] { $kind } · { $series } series · added just now
+    [one] { $kind } · { $series } series in { $libraries } library · added just now
    *[other] { $kind } · { $series } series in { $libraries } libraries · added just now
  }
 
-# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 # @allow library
 # @arg kind: text
 # @arg series: int
 # @arg libraries: int
 source-row-server-series = { $libraries ->
-    [one] { $kind } · { $series } series
+    [one] { $kind } · { $series } series in { $libraries } library
    *[other] { $kind } · { $series } series in { $libraries } libraries
  }
 

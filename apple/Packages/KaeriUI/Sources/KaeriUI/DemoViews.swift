@@ -150,51 +150,6 @@ struct DemoAlso: View {
     }
 }
 
-/// About the demo for the reading demo: what it is, the credits for each work, the hosts, what it
-/// never does, and Remove demo.
-struct DemoBooksAbout: View {
-    @Environment(AppStore.self) private var store
-    var size: CGFloat = 13
-
-    var body: some View {
-        let reading = store.demo.reading
-        VStack(alignment: .leading, spacing: 12) {
-            Text(L.sourcesDemoAbout).groupHeaderStyle().accessibilityAddTraits(.isHeader)
-            line(L.sourcesDemoBooksWhat)
-            Text(L.demoCredits).groupHeaderStyle().accessibilityAddTraits(.isHeader)
-            ForEach(reading.works, id: \.id) { work in
-                VStack(alignment: .leading, spacing: 4) {
-                    line(demoCreditLine(work))
-                    if let cover = work.coverCredit {
-                        line(L.demoCreditCover(title: cover.title, artist: cover.artist, year: String(cover.year)))
-                    }
-                    HStack(spacing: 14) {
-                        if let url = work.licenceUrl, let link = URL(string: url) {
-                            Link(L.sourcesDemoLinkLicence, destination: link)
-                        }
-                        if let url = work.filePageUrl, let link = URL(string: url) {
-                            Link(L.sourcesDemoLinkCommons, destination: link)
-                        }
-                    }
-                    .font(.plat(mac: size, touch: size + 2))
-                    .foregroundStyle(.water)
-                }
-            }
-            line(L.sourcesDemoHosts)
-            line(L.sourcesDemoBooksPrivate)
-            Button(L.sourcesDemoRemove, role: .destructive) { store.removeDemo() }
-                .buttonStyle(SecondaryCapsuleStyle(height: ScreenFailed.buttonHeight, fontSize: ScreenFailed.buttonFont))
-        }
-    }
-
-    private func line(_ text: String) -> some View {
-        Text(text)
-            .font(.plat(mac: size, touch: size + 2))
-            .foregroundStyle(.haze)
-            .fixedSize(horizontal: false, vertical: true)
-    }
-}
-
 /// Home's spotlight while the demo is the only thing to read: the comic's first panel across,
 /// darkened from the foot, with Demo, free to share, its title and its line over it, and Read,
 /// the one amber action. A banner of 300 on the Mac and iPad, 230 on the iPhone, as the board has

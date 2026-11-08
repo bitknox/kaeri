@@ -522,6 +522,10 @@ pub struct DemoInfo {
     /// The only hosts the demo reaches.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub hosts: Vec<String>,
+    /// The show's art: the first part's still, the same address its title's cover is, fetched
+    /// with `FetchArtwork`. First run's Try it now shows it beside the comic after Both.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub art: Option<String>,
 }
 
 /// The demo's credit, licence and hosts.
@@ -534,6 +538,7 @@ pub fn demo_info() -> DemoInfo {
         maker_url: demo::DEMO_MAKER_URL.into(),
         file_page_url: demo::DEMO_FILE_PAGE_URL.into(),
         hosts: demo::DEMO_HOSTS.iter().map(|host| (*host).to_owned()).collect(),
+        art: demo::PARTS.first().map(|part| part.still_url.to_owned()),
     }
 }
 

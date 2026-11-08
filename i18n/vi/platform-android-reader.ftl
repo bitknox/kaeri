@@ -64,14 +64,11 @@ reader-notice-start-over = Đọc lại từ đầu
 reader-notice-go-back = Quay lại
 reader-notice-change = Đổi
 reader-settings = Cài đặt trình đọc
-reader-chapter-line = Chương { $chapter }
 reader-chapter-line-titled = Chương { $chapter } · { $title }
 reader-novel-line-scroll = Chương { $chapter } · cuộn
 reader-minutes-left = { $minutes } phút
 reader-zone-next = Trang sau
 reader-grid-title = Trang
-reader-end-of-chapter-number = Hết chương { $chapter }
-reader-end-facts = Chương { $chapter } · { $facts }
 reader-end-continue = { -proceed-cap }
 reader-end-swipe = Vuốt để đọc tiếp
 reader-end-series = Về trang truyện
@@ -158,19 +155,14 @@ reader-zone-previous = Trang trước
 reader-zone-controls = Điều khiển
 reader-size-small = Chữ nhỏ hơn
 reader-size-large = Chữ lớn hơn
-reader-end-pages = { $count ->
-   *[other] { $count } trang
- }
 reader-value-on = Bật
 reader-value-off = Tắt
 reader-row-strip-gap = Khoảng cách giữa ảnh
 reader-paper-look = Giao diện giấy ban ngày
 reader-paper-dim = Làm tối trang
-reader-end-from = Từ { $source }
 reader-divider-images = { $count ->
    *[other] { $count } ảnh
  }
-reader-divider-facts-source = { $facts } · từ { $source }
 reader-opening-waited = { $line } · { $seconds } giây
 reader-sources-title = Đọc chương này từ
 reader-paper-parts = Những gì nó thay đổi

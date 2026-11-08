@@ -39,3 +39,13 @@ reader-gap-none = なし
 reader-gap-small = 小
 reader-look-system = システム
 reader-end-tracker = 既読 · { $trackers }を更新しました
+reader-end-of-chapter-number = 第{ $chapter }話の終わり
+reader-end-facts = 第{ $chapter }話 · { $facts }
+reader-end-pages = { $count ->
+   *[other] { $count }ページ
+ }
+reader-end-from = { $source }から
+
+reader-chapter-line = 第{ $chapter }話
+
+reader-divider-facts-source = { $facts } · { $source }から

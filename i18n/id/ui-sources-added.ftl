@@ -76,6 +76,9 @@ source-added-plugins = { $count ->
 source-row-server = { $libraries ->
    *[other] { $kind } · { $series } seri di { $libraries } pustaka · baru ditambahkan
  }
+source-row-server-series = { $libraries ->
+   *[other] { $kind } · { $series } seri di { $libraries } pustaka
+ }
 source-row-server-empty = { $kind } · belum ada seri · diperiksa lagi dalam 30 menit
 source-row-folder = { $skipped ->
    *[other] { $path } · { $series } seri · { $skipped } berkas dilewati

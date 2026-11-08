@@ -601,14 +601,11 @@
     <string name="reader_notice_go_back">Quay lại</string>
     <string name="reader_notice_change">Đổi</string>
     <string name="reader_settings">Cài đặt trình đọc</string>
-    <string name="reader_chapter_line">Chương %1$s</string>
     <string name="reader_chapter_line_titled">Chương %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Chương %1$s · cuộn</string>
     <string name="reader_minutes_left">%1$d phút</string>
     <string name="reader_zone_next">Trang sau</string>
     <string name="reader_grid_title">Trang</string>
-    <string name="reader_end_of_chapter_number">Hết chương %1$s</string>
-    <string name="reader_end_facts">Chương %1$s · %2$s</string>
     <string name="reader_end_continue">Tiếp tục</string>
     <string name="reader_end_swipe">Vuốt để đọc tiếp</string>
     <string name="reader_end_series">Về trang truyện</string>
@@ -695,19 +692,14 @@
     <string name="reader_zone_controls">Điều khiển</string>
     <string name="reader_size_small">Chữ nhỏ hơn</string>
     <string name="reader_size_large">Chữ lớn hơn</string>
-    <plurals name="reader_end_pages">
-        <item quantity="other">%1$d trang</item>
-    </plurals>
     <string name="reader_value_on">Bật</string>
     <string name="reader_value_off">Tắt</string>
     <string name="reader_row_strip_gap">Khoảng cách giữa ảnh</string>
     <string name="reader_paper_look">Giao diện giấy ban ngày</string>
     <string name="reader_paper_dim">Làm tối trang</string>
-    <string name="reader_end_from">Từ %1$s</string>
     <plurals name="reader_divider_images">
         <item quantity="other">%1$d ảnh</item>
     </plurals>
-    <string name="reader_divider_facts_source">%1$s · từ %2$s</string>
     <string name="reader_opening_waited">%1$s · %2$d giây</string>
     <string name="reader_sources_title">Đọc chương này từ</string>
     <string name="reader_paper_parts">Những gì nó thay đổi</string>
@@ -2269,6 +2261,14 @@
     <string name="reader_gap_none">Không</string>
     <string name="reader_gap_small">Nhỏ</string>
     <string name="reader_look_system">Theo hệ thống</string>
+    <string name="reader_end_of_chapter_number">Hết chương %1$s</string>
+    <string name="reader_end_facts">Chương %1$s · %2$s</string>
+    <plurals name="reader_end_pages">
+        <item quantity="other">%1$d trang</item>
+    </plurals>
+    <string name="reader_end_from">Từ %1$s</string>
+    <string name="reader_chapter_line">Chương %1$s</string>
+    <string name="reader_divider_facts_source">%1$s · từ %2$s</string>
     <string name="onboarding_read_demo">Đọc bản demo</string>
     <string name="onboarding_demo_books_detail">Bản demo có một truyện tranh ngắn và một truyện ngắn mà tác giả chia sẻ theo Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Một tập ngắn và một truyện tranh ngắn, do tác giả chia sẻ theo Creative Commons.</string>
@@ -3174,6 +3174,9 @@
     </plurals>
     <plurals name="source_row_server">
         <item quantity="other">%1$s · %2$d bộ trong %3$d thư viện · vừa thêm</item>
+    </plurals>
+    <plurals name="source_row_server_series">
+        <item quantity="other">%1$s · %2$d bộ trong %3$d thư viện</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · chưa có bộ nào · sẽ kiểm tra lại sau 30 phút</string>
     <plurals name="source_row_folder">

@@ -632,14 +632,11 @@
     <string name="reader_notice_go_back">Geri dön</string>
     <string name="reader_notice_change">Değiştir</string>
     <string name="reader_settings">Okuyucu ayarları</string>
-    <string name="reader_chapter_line">Bölüm %1$s</string>
     <string name="reader_chapter_line_titled">Bölüm %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Bölüm %1$s · kaydırma</string>
     <string name="reader_minutes_left">%1$d dk</string>
     <string name="reader_zone_next">Sonraki sayfa</string>
     <string name="reader_grid_title">Sayfalar</string>
-    <string name="reader_end_of_chapter_number">Bölüm %1$s sona erdi</string>
-    <string name="reader_end_facts">Bölüm %1$s · %2$s</string>
     <string name="reader_end_continue">Okumayı sürdür</string>
     <string name="reader_end_swipe">Sürdürmek için kaydırın</string>
     <string name="reader_end_series">Seriye dön</string>
@@ -726,21 +723,15 @@
     <string name="reader_zone_controls">Kontroller</string>
     <string name="reader_size_small">Daha küçük metin</string>
     <string name="reader_size_large">Daha büyük metin</string>
-    <plurals name="reader_end_pages">
-        <item quantity="one">Bir sayfa</item>
-        <item quantity="other">%1$d sayfa</item>
-    </plurals>
     <string name="reader_value_on">Açık</string>
     <string name="reader_value_off">Kapalı</string>
     <string name="reader_row_strip_gap">Görseller arası boşluk</string>
     <string name="reader_paper_look">Gündüz kâğıt görünümü</string>
     <string name="reader_paper_dim">Sayfayı karart</string>
-    <string name="reader_end_from">Şuradan: %1$s</string>
     <plurals name="reader_divider_images">
         <item quantity="one">Bir görsel</item>
         <item quantity="other">%1$d görsel</item>
     </plurals>
-    <string name="reader_divider_facts_source">%1$s · şuradan: %2$s</string>
     <string name="reader_opening_waited">%1$s · %2$d sn</string>
     <string name="reader_sources_title">Bu bölümü şuradan oku</string>
     <string name="reader_paper_parts">Neleri değiştirir</string>
@@ -2345,6 +2336,15 @@
     <string name="reader_gap_none">Yok</string>
     <string name="reader_gap_small">Küçük</string>
     <string name="reader_look_system">Sistem</string>
+    <string name="reader_end_of_chapter_number">Bölüm %1$s sona erdi</string>
+    <string name="reader_end_facts">Bölüm %1$s · %2$s</string>
+    <plurals name="reader_end_pages">
+        <item quantity="one">Bir sayfa</item>
+        <item quantity="other">%1$d sayfa</item>
+    </plurals>
+    <string name="reader_end_from">Şuradan: %1$s</string>
+    <string name="reader_chapter_line">Bölüm %1$s</string>
+    <string name="reader_divider_facts_source">%1$s · şuradan: %2$s</string>
     <string name="onboarding_read_demo">Demoyu oku</string>
     <string name="onboarding_demo_books_detail">Demo, yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir hikâye sunar.</string>
     <string name="onboarding_demo_both_detail">Yapımcılarının Creative Commons altında paylaştığı kısa bir bölüm ve kısa bir çizgi roman.</string>
@@ -3289,8 +3289,12 @@
         <item quantity="other">%2$s içinden yüklenen eklentiler: %1$d</item>
     </plurals>
     <plurals name="source_row_server">
-        <item quantity="one">%1$s · %2$d seri · az önce eklendi</item>
+        <item quantity="one">%1$s · %3$d kitaplıkta %2$d seri · az önce eklendi</item>
         <item quantity="other">%1$s · %3$d kitaplıkta %2$d seri · az önce eklendi</item>
+    </plurals>
+    <plurals name="source_row_server_series">
+        <item quantity="one">%1$s · %3$d kitaplıkta %2$d seri</item>
+        <item quantity="other">%1$s · %3$d kitaplıkta %2$d seri</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · henüz seri yok · 30 dakika sonra yeniden bakar</string>
     <plurals name="source_row_folder">

@@ -5645,6 +5645,27 @@
   <data name="ReaderLookSystem" xml:space="preserve">
     <value>System</value>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>Ende von Kapitel {chapter}</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>Kapitel {chapter} · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_one" xml:space="preserve">
+    <value>Eine Seite</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count} Seiten</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>Von {source}</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>Kapitel {chapter}</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · von {source}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Demo lesen</value>
   </data>
@@ -8235,10 +8256,16 @@
     <value>{count} Plugins von {store} installiert</value>
   </data>
   <data name="SourceRowServer_one" xml:space="preserve">
-    <value>{kind} · Serien: {series} · gerade hinzugefügt</value>
+    <value>{kind} · Serien: {series} in {libraries} Bibliothek · gerade hinzugefügt</value>
   </data>
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · Serien: {series} in {libraries} Bibliotheken · gerade hinzugefügt</value>
+  </data>
+  <data name="SourceRowServerSeries_one" xml:space="preserve">
+    <value>{kind} · Serien: {series} in {libraries} Bibliothek</value>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · Serien: {series} in {libraries} Bibliotheken</value>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · noch keine Serien · schaut in 30 Minuten erneut nach</value>

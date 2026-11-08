@@ -8414,6 +8414,30 @@ reader-gap-small = Малый
 # Look choice that follows the system's light or dark.
 reader-look-system = Как в системе
 
+# Top line of the page between chapters. The chapter is its number, such as 12.
+reader-end-of-chapter-number = Конец главы { $chapter }
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+reader-end-facts = Глава { $chapter } · { $facts }
+
+# The next chapter's length on the page between chapters.
+reader-end-pages =
+    { $count ->
+        [one] { $count } страница
+        [few] { $count } страницы
+        [many] { $count } страниц
+       *[other] { $count } страницы
+    }
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+reader-end-from = Из { $source }
+
+# Under the series title in the reader's controls. The chapter is its number, such as 12.
+reader-chapter-line = Глава { $chapter }
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+reader-divider-facts-source = { $facts } · из { $source }
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Открыть демо
 
@@ -11123,13 +11147,22 @@ source-added-plugins =
        *[other] Установлено из { $store }, плагины: { $count }
     }
 
-# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 source-row-server =
     { $libraries ->
         [one] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
         [few] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
         [many] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
        *[other] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
+    }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server-series =
+    { $libraries ->
+        [one] { $kind } · серий: { $series } · библиотек: { $libraries }
+        [few] { $kind } · серий: { $series } · библиотек: { $libraries }
+        [many] { $kind } · серий: { $series } · библиотек: { $libraries }
+       *[other] { $kind } · серий: { $series } · библиотек: { $libraries }
     }
 
 # A server's row in Your sources while it shows no series.

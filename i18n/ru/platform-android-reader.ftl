@@ -70,14 +70,11 @@ reader-notice-start-over = Сначала
 reader-notice-go-back = Вернуться
 reader-notice-change = Изменить
 reader-settings = Настройки чтения
-reader-chapter-line = Глава { $chapter }
 reader-chapter-line-titled = Глава { $chapter } · { $title }
 reader-novel-line-scroll = Глава { $chapter } · прокрутка
 reader-minutes-left = { $minutes } мин
 reader-zone-next = Следующая страница
 reader-grid-title = Страницы
-reader-end-of-chapter-number = Конец главы { $chapter }
-reader-end-facts = Глава { $chapter } · { $facts }
 reader-end-continue = { -proceed-cap }
 reader-end-swipe = Смахните, чтобы читать дальше
 reader-end-series = Назад к серии
@@ -164,25 +161,17 @@ reader-zone-previous = Предыдущая страница
 reader-zone-controls = Управление
 reader-size-small = Меньше текст
 reader-size-large = Больше текст
-reader-end-pages = { $count ->
-    [one] { $count } страница
-    [few] { $count } страницы
-    [many] { $count } страниц
-   *[other] { $count } страницы
- }
 reader-value-on = Вкл.
 reader-value-off = Выкл.
 reader-row-strip-gap = Промежуток между картинками
 reader-paper-look = Бумажный вид днём
 reader-paper-dim = Приглушить страницу
-reader-end-from = Из { $source }
 reader-divider-images = { $count ->
     [one] { $count } картинка
     [few] { $count } картинки
     [many] { $count } картинок
    *[other] { $count } картинки
  }
-reader-divider-facts-source = { $facts } · из { $source }
 reader-opening-waited = { $line } · { $seconds } с
 reader-sources-title = Читать эту главу из
 reader-paper-parts = Что меняется

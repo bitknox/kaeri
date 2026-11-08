@@ -22,6 +22,9 @@ public struct ReaderPageKey: Hashable, Sendable {
 public struct ReaderEnd: Equatable, Sendable {
     public var next: ChapterRow?
     public var why: NoNext?
+    /// The source the next chapter comes from, by name: "from books.home.example". None for a
+    /// file in a folder.
+    public var nextSource: String?
 }
 
 /// The notice over the page, with the action it offers.
@@ -52,6 +55,8 @@ public final class ReaderModel {
     public private(set) var novel: NovelOpenView?
     public private(set) var novelStyle = ""
     public private(set) var end: ReaderEnd?
+    /// The next chapter's first page, made while this one is read, for the page between chapters.
+    public private(set) var previews: [ChapterId: PageFile] = [:]
     public private(set) var settings: ReaderSettingsView?
     public internal(set) var notice: ReaderNoticeLine?
     /// "Back to page 8", waiting in the corner.
@@ -218,6 +223,11 @@ public final class ReaderModel {
     public func stageRead(trackers: [String]) {
         read = true
         readTrackers = trackers
+    }
+
+    /// For shots: the next chapter comes from `source`, as a server's chapter does.
+    public func stageNextSource(_ source: String) {
+        end = ReaderEnd(next: end?.next ?? view?.next, why: end?.why, nextSource: source)
     }
     #endif
 
@@ -435,6 +445,7 @@ public final class ReaderModel {
             failures = [:]
             novel = nil
             end = nil
+            previews = [:]
             read = false
             readTrackers = []
             ring = nil
@@ -476,14 +487,17 @@ public final class ReaderModel {
                 read = true
                 readTrackers = trackers
             }
-        case .endPage(let session, let next, let why, _):
+        case .endPage(let session, let next, let why, let source):
             guard session == self.session else { return }
-            end = ReaderEnd(next: next, why: why)
+            end = ReaderEnd(next: next, why: why, nextSource: source ?? end?.nextSource)
         case .progressSent:
             // The page between chapters' server line: AppStore hands it to ServerProgressModel.
             break
-        case .nextPreview, .opening:
-            // The Android reader's end page preview and opening screen; this reader has neither.
+        case .nextPreview(let session, let chapter, let file):
+            guard session == self.session else { return }
+            previews[chapter] = file
+        case .opening:
+            // The Android reader's opening screen; this reader has none.
             break
         case .notice(let notice):
             show(notice)
@@ -582,6 +596,7 @@ public final class ReaderModel {
         novelPainted = false
         novelStyle = ""
         end = nil
+        previews = [:]
         notice = nil
         backTo = nil
         current = 0

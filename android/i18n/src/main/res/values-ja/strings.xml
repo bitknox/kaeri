@@ -601,14 +601,11 @@
     <string name="reader_notice_go_back">戻る</string>
     <string name="reader_notice_change">変更</string>
     <string name="reader_settings">リーダーの設定</string>
-    <string name="reader_chapter_line">第%1$s話</string>
     <string name="reader_chapter_line_titled">第%1$s話 · %2$s</string>
     <string name="reader_novel_line_scroll">第%1$s話 · スクロール</string>
     <string name="reader_minutes_left">残り%1$d分</string>
     <string name="reader_zone_next">次のページ</string>
     <string name="reader_grid_title">ページ</string>
-    <string name="reader_end_of_chapter_number">第%1$s話の終わり</string>
-    <string name="reader_end_facts">第%1$s話 · %2$s</string>
     <string name="reader_end_continue">次の章へ</string>
     <string name="reader_end_swipe">スワイプして読み進める</string>
     <string name="reader_end_series">作品に戻る</string>
@@ -695,19 +692,14 @@
     <string name="reader_zone_controls">操作パネル</string>
     <string name="reader_size_small">文字を小さく</string>
     <string name="reader_size_large">文字を大きく</string>
-    <plurals name="reader_end_pages">
-        <item quantity="other">%1$dページ</item>
-    </plurals>
     <string name="reader_value_on">オン</string>
     <string name="reader_value_off">オフ</string>
     <string name="reader_row_strip_gap">画像の間隔</string>
     <string name="reader_paper_look">昼のペーパー表示</string>
     <string name="reader_paper_dim">ページを暗くする</string>
-    <string name="reader_end_from">%1$sから</string>
     <plurals name="reader_divider_images">
         <item quantity="other">%1$d枚の画像</item>
     </plurals>
-    <string name="reader_divider_facts_source">%1$s · %2$sから</string>
     <string name="reader_opening_waited">%1$s · %2$d秒</string>
     <string name="reader_sources_title">この章を読めるソース</string>
     <string name="reader_paper_parts">変更される項目</string>
@@ -2269,6 +2261,14 @@
     <string name="reader_gap_none">なし</string>
     <string name="reader_gap_small">小</string>
     <string name="reader_look_system">システム</string>
+    <string name="reader_end_of_chapter_number">第%1$s話の終わり</string>
+    <string name="reader_end_facts">第%1$s話 · %2$s</string>
+    <plurals name="reader_end_pages">
+        <item quantity="other">%1$dページ</item>
+    </plurals>
+    <string name="reader_end_from">%1$sから</string>
+    <string name="reader_chapter_line">第%1$s話</string>
+    <string name="reader_divider_facts_source">%1$s · %2$sから</string>
     <string name="onboarding_read_demo">デモを読む</string>
     <string name="onboarding_demo_books_detail">デモでは、作者がCreative Commonsで共有している短いコミックと短い物語を読めます。</string>
     <string name="onboarding_demo_both_detail">作者がCreative Commonsで共有している、短いエピソードと短いコミックが1つずつあります。</string>
@@ -3174,6 +3174,9 @@
     </plurals>
     <plurals name="source_row_server">
         <item quantity="other">%1$s · %3$d件のライブラリに%2$dシリーズ · 追加したばかり</item>
+    </plurals>
+    <plurals name="source_row_server_series">
+        <item quantity="other">%1$s · %3$d件のライブラリに%2$dシリーズ</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · シリーズはまだありません · 30分後に再確認します</string>
     <plurals name="source_row_folder">

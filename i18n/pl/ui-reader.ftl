@@ -42,3 +42,16 @@ reader-gap-none = Brak
 reader-gap-small = Mały
 reader-look-system = Systemowy
 reader-end-tracker = Przeczytano · zaktualizowano: { $trackers }
+reader-end-of-chapter-number = Koniec rozdziału { $chapter }
+reader-end-facts = Rozdział { $chapter } · { $facts }
+reader-end-pages = { $count ->
+    [one] Jedna strona
+    [few] { $count } strony
+    [many] { $count } stron
+   *[other] { $count } strony
+ }
+reader-end-from = Z: { $source }
+
+reader-chapter-line = Rozdział { $chapter }
+
+reader-divider-facts-source = { $facts } · z: { $source }
