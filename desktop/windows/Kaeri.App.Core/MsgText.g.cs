@@ -458,6 +458,11 @@ public static class MsgText
         ReadingMsg.ReadSearchStartedAny => T.ReadSearchStartedAny,
         ReadingMsg.ReadSearchStartedYear => T.ReadSearchStartedYear,
         ReadingMsg.ReadSearchStarted3Years => T.ReadSearchStarted3Years,
+        ReadingMsg.ReadHitChapters x => T.ReadHitChapters(x.Last),
+        ReadingMsg.ReadHitEpisodes x => T.ReadHitEpisodes(x.Last),
+        ReadingMsg.ReadHitParts x => T.ReadHitParts(x.Count),
+        ReadingMsg.ReadHitFiles x => T.ReadHitFiles(x.Count),
+        ReadingMsg.ReadHitFilesFormat x => T.ReadHitFilesFormat(x.Count, x.Format),
         _ => message.ToString() ?? "",
     };
 
