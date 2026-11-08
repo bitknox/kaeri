@@ -760,7 +760,7 @@ public final class PlayerModel {
     }
 
     #if os(macOS)
-    /// The window the player plays in closed (⌘W, its close button): the playback stops with its
+    /// The window the player plays in closed (its close button): the playback stops with its
     /// place saved, and mpv goes with everything it held, as nothing shows it any more. Not while
     /// the picture floats in Picture in Picture, which plays on without the window.
     private func hostWindowClosed() {
@@ -776,16 +776,37 @@ public final class PlayerModel {
         didSet { if hostWindow !== oldValue { watchHostWindow() } }
     }
     @ObservationIgnored private var hostWindowWatch: NSObjectProtocol?
+    @ObservationIgnored private var stopKeyWatch: Any?
 
     private func watchHostWindow() {
         if let hostWindowWatch { NotificationCenter.default.removeObserver(hostWindowWatch) }
         hostWindowWatch = nil
+        if let stopKeyWatch { NSEvent.removeMonitor(stopKeyWatch) }
+        stopKeyWatch = nil
         guard let hostWindow else { return }
         hostWindowWatch = NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification, object: hostWindow, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.hostWindowClosed() }
         }
+        stopKeyWatch = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            let stopped = MainActor.assumeIsolated { self?.stopKey(event, in: event.window) ?? false }
+            return stopped ? nil : event
+        }
+    }
+
+    /// ⌘W while the player has the window: Stop, as ⌘. is, with the controls showing or hidden.
+    /// Answered before the menu bar's Close, which would close the window with the browsing
+    /// under the player, and which only beeps while the close button hides with the controls.
+    /// In Picture in Picture the window is the browsing's, and ⌘W closes it as anywhere else.
+    func stopKey(_ event: NSEvent, in window: NSWindow?) -> Bool {
+        guard inMainWindow, let window, window === hostWindow,
+              event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+              event.charactersIgnoringModifiers?.lowercased() == "w"
+        else { return false }
+        Self.note(.info, "⌘W stops the player")
+        viewerClosed()
+        return true
     }
     #endif
 

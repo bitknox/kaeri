@@ -203,6 +203,42 @@ struct ClosingTests {
         #expect(!rig.reports.contains { $0.1 == .closed })
     }
 
+    @Test func commandWStopsThePlayerAndLeavesItsWindowOpen() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        let window = Self.window()
+        rig.model.hostWindow = window
+        // Other keys, and ⌘W meant for another window, go on to the menus.
+        #expect(!rig.model.stopKey(Self.key("w", [.command, .shift]), in: window))
+        #expect(!rig.model.stopKey(Self.key("q", .command), in: window))
+        #expect(!rig.model.stopKey(Self.key("w", .command), in: Self.window()))
+        #expect(rig.model.isPresented)
+        // With the controls hidden too: the key is the model's, not the close button's.
+        #expect(rig.model.stopKey(Self.key("w", .command), in: window))
+        #expect(rig.reports.suffix(2).map(\.1) == [.ended(reason: .quit), .closed])
+        #expect(!rig.model.isPresented)
+        try await until("mpv shut down") { rig.mpv.ended }
+        // Nothing plays any more: ⌘W is the window's again.
+        #expect(!rig.model.stopKey(Self.key("w", .command), in: window))
+    }
+
+    @Test func commandWWhileThePictureFloatsIsTheMainWindows() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        let window = Self.window()
+        rig.model.hostWindow = window
+        rig.model.pictureInPicture = true
+        #expect(!rig.model.stopKey(Self.key("w", .command), in: window))
+        #expect(rig.model.isPresented)
+    }
+
+    static func key(_ characters: String, _ modifiers: NSEvent.ModifierFlags) -> NSEvent {
+        NSEvent.keyEvent(
+            with: .keyDown, location: .zero, modifierFlags: modifiers, timestamp: 0, windowNumber: 0,
+            context: nil, characters: characters, charactersIgnoringModifiers: characters,
+            isARepeat: false, keyCode: characters == "w" ? 13 : 12)!
+    }
+
     /// A window as the player's view finds it, which closing leaves for the test to let go.
     static func window() -> NSWindow {
         let window = NSWindow(
