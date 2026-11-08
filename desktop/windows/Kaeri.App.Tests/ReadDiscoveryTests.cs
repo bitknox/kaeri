@@ -132,14 +132,52 @@ public class ReadDiscoveryTests
         Assert.Equal("", ReadDiscovery.Amount(Tile("s:2")));
     }
 
+    static readonly Msg Japan = new Msg.Reading(new ReadingMsg.ReadingOriginJapan());
+    static readonly Msg LightNovel = new Msg.Reading(new ReadingMsg.ReadingKindLightNovel());
+    static readonly Msg Manga = new Msg.Reading(new ReadingMsg.ReadingKindManga());
+    static readonly Msg Releasing = new Msg.Reading(new ReadingMsg.ReadingStatusReleasing());
+    static readonly Msg Finished = new Msg.Reading(new ReadingMsg.ReadingStatusFinished());
+    static readonly Msg Chapters = new Msg.Reading(new ReadingMsg.ReadingChapters(112));
+
     [Fact]
     public void AnAniListResultSaysItsFormatAndOrigin()
     {
-        var tile = Tile("a:900101") with { FormatLabel = "Light novel", Origin = new Msg.Reading(new ReadingMsg.ReadingOriginJapan()) };
+        // The engine's key, as it sends it; the words come from the facts, through the catalogue.
+        var tile = Tile("a:900101") with { FormatLabel = "novel", Facts = [LightNovel, Releasing], Origin = Japan };
         Assert.Equal("Light novel · Japan", ReadDiscovery.Caption(tile));
         Assert.Equal("Light novel", ReadDiscovery.Caption(tile with { Origin = null }));
         Assert.Null(ReadDiscovery.Caption(Tile("a:900102")));
+        Assert.Equal("Not found in your sources", ReadDiscovery.Caption(tile with { NotInSources = true }));
         Assert.Equal("Series from AniList", ReadDiscovery.Total(null));
+    }
+
+    [Fact]
+    public void ARowTileSaysTwoFactsAsItsRowDraws()
+    {
+        var tile = Tile("a:900103") with { FormatLabel = "manga", Facts = [Manga, Finished, Chapters], Origin = Japan };
+        Assert.Equal("Japan · Finished", ReadDiscovery.RowCaption(ReadRowKind.Trending, tile));
+        Assert.Equal("Japan · Finished", ReadDiscovery.RowCaption(ReadRowKind.New, tile));
+        Assert.Equal("Japan · 112 chapters", ReadDiscovery.RowCaption(ReadRowKind.Finished, tile));
+        Assert.Equal("Manga · Finished", ReadDiscovery.RowCaption(ReadRowKind.Because, tile));
+        Assert.Equal("Manga · Finished", ReadDiscovery.RowCaption(ReadRowKind.MoreGenre, tile));
+        var releasing = tile with { Facts = [Manga, Releasing] };
+        Assert.Equal("Japan · Releasing", ReadDiscovery.RowCaption(ReadRowKind.Finished, releasing));
+        Assert.Equal("Manga · Releasing", ReadDiscovery.RowCaption(ReadRowKind.Trending, releasing with { Origin = null }));
+        Assert.Equal("Not found in your sources", ReadDiscovery.RowCaption(ReadRowKind.Trending, tile with { NotInSources = true }));
+    }
+
+    [Fact]
+    public void OneShotsFoldIntoMangaInTheFilterBar()
+    {
+        Assert.Equal(["manga"], ReadDiscovery.FoldedFormats(["manga", "one-shot"]));
+        Assert.Equal(["one-shot"], ReadDiscovery.FoldedFormats(["one-shot"]));
+        Assert.Empty(ReadDiscovery.FoldedFormats(null));
+        // Manga takes one-shots with it while the engine lists them apart, and lets them go with it.
+        Assert.Equal(["manga", "one-shot"], ReadDiscovery.ToggleFormat(null, "manga", oneShotsApart: true));
+        Assert.Equal(["manga"], ReadDiscovery.ToggleFormat([], "manga", oneShotsApart: false));
+        Assert.Equal(["novel"], ReadDiscovery.ToggleFormat(["manga", "one-shot", "novel"], "manga", oneShotsApart: true));
+        var choices = new[] { new ReadFilterChoice(Key: "manga", Label: new Msg.Reading(new ReadingMsg.ReadingKindManga())), new ReadFilterChoice(Key: "one-shot", Label: new Msg.Reading(new ReadingMsg.ReadingKindManga())) };
+        Assert.Equal(["manga"], ReadDiscovery.FormatChoices(choices).Select(c => c.Key));
     }
 
     [Fact]

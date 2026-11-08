@@ -9256,6 +9256,9 @@ public enum L {
     /// Search, when nothing was found anywhere: under the line saying AniList found nothing.
     public static var readSearchSourcesNothing: String { string("read-search-sources-nothing", fallback: "Nothing in your sources either.") }
 
+    /// Search with Your sources only on, when no source found anything. The line to try other words follows.
+    public static var readSearchSourcesOnlyNothing: String { string("read-search-sources-only-nothing", fallback: "Nothing found in your sources") }
+
     /// Over reading's results while more pages are to come, so AniList's count is not known yet.
     public static var readSearchTotalUnknown: String { string("read-search-total-unknown", fallback: "Series from AniList") }
 

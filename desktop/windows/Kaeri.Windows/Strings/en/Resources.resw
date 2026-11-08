@@ -2649,6 +2649,18 @@
     <value>AniList's results are hidden.</value>
     <comment>Said once by Narrator when Your sources only is turned on in Search.</comment>
   </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_one" xml:space="preserve">
+    <value>No answer in {seconds} second.</value>
+    <comment>Narrator's words for a source that ran out of time in Search, read with its Try again.</comment>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_other" xml:space="preserve">
+    <value>No answer in {seconds} seconds.</value>
+    <comment>Narrator's words for a source that ran out of time in Search, read with its Try again.</comment>
+  </data>
+  <data name="WindowsReadSearchFiltersDimmed" xml:space="preserve">
+    <value>The filters apply to AniList's results only.</value>
+    <comment>Narrator's help on Search's filters while Your sources only is on.</comment>
+  </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>Reading {title} again from the start</value>
     <comment>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</comment>
@@ -9285,6 +9297,10 @@
   <data name="ReadSearchSourcesNothing" xml:space="preserve">
     <value>Nothing in your sources either.</value>
     <comment>Search, when nothing was found anywhere: under the line saying AniList found nothing.</comment>
+  </data>
+  <data name="ReadSearchSourcesOnlyNothing" xml:space="preserve">
+    <value>Nothing found in your sources</value>
+    <comment>Search with Your sources only on, when no source found anything. The line to try other words follows.</comment>
   </data>
   <data name="ReadSearchTotalUnknown" xml:space="preserve">
     <value>Series from AniList</value>

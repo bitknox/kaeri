@@ -82,6 +82,9 @@ public sealed class ReadSearchState
     public ReadSourceSearch? Sources { get; internal set; }
     /// <summary>The words AniList's results in <see cref="Tiles"/> were found for.</summary>
     public string TilesFor { get; internal set; } = "";
+
+    /// <summary>How many results the first page brought: More from AniList's pages show under its button.</summary>
+    public int FirstPage { get; internal set; }
 }
 
 /// <summary>Which part of reading changed, so a page redraws only what it shows.</summary>
@@ -148,6 +151,14 @@ public sealed class ReadingStore
             Search.Sources = null;
         if (query.Text.Trim().Length == 0)
             Search.Sources = null;
+        // Results of another search never show under this one's filters, as when View all
+        // opens; turning Your sources only on or off keeps AniList's results for the same words.
+        if (!SameQuery(Search.Query with { SourcesOnly = false }, query with { SourcesOnly = false }))
+        {
+            Search.Tiles.Clear();
+            Search.FirstPage = 0;
+            Search.TilesFor = "";
+        }
         Search.Query = query;
         Search.Total = null;
         Search.Loading = true;
@@ -340,6 +351,8 @@ public sealed class ReadingStore
                 if (search.Total is { } total)
                     Search.Total = total;
                 Search.Tiles.AddRange(search.Tiles);
+                if (search.Page == 0)
+                    Search.FirstPage = Search.Tiles.Count;
                 Search.TilesFor = search.Query.Text.Trim();
                 Search.Page = search.Page;
                 Search.HasMore = search.HasMore;

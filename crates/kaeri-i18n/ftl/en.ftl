@@ -9588,6 +9588,9 @@ read-search-anilist-failed-line = Your sources were still asked.
 # Search, when nothing was found anywhere: under the line saying AniList found nothing.
 read-search-sources-nothing = Nothing in your sources either.
 
+# Search with Your sources only on, when no source found anything. The line to try other words follows.
+read-search-sources-only-nothing = Nothing found in your sources
+
 # Over reading's results while more pages are to come, so AniList's count is not known yet.
 read-search-total-unknown = Series from AniList
 

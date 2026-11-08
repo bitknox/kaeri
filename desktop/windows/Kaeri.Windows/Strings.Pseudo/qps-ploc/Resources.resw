@@ -2649,6 +2649,18 @@
     <value>[ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ.~~~~~~~~~]</value>
     <comment>Said once by Narrator when Your sources only is turned on in Search.</comment>
   </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_one" xml:space="preserve">
+    <value>[Ñö àñšŵéŕ îñ {seconds} šéçöñð.~~~~~~~~]</value>
+    <comment>Narrator's words for a source that ran out of time in Search, read with its Try again.</comment>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_other" xml:space="preserve">
+    <value>[Ñö àñšŵéŕ îñ {seconds} šéçöñðš.~~~~~~~~]</value>
+    <comment>Narrator's words for a source that ran out of time in Search, read with its Try again.</comment>
+  </data>
+  <data name="WindowsReadSearchFiltersDimmed" xml:space="preserve">
+    <value>[Ţĥé ƒîļţéŕš àþþļý ţö ÅñîĻîšţ'š ŕéšüļţš öñļý.~~~~~~~~~~~~~~]</value>
+    <comment>Narrator's help on Search's filters while Your sources only is on.</comment>
+  </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>[Ŕéàðîñĝ {title} àĝàîñ ƒŕöɱ ţĥé šţàŕţ~~~~~~~~~~]</value>
     <comment>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</comment>
@@ -9285,6 +9297,10 @@
   <data name="ReadSearchSourcesNothing" xml:space="preserve">
     <value>[Ñöţĥîñĝ îñ ýöüŕ šöüŕçéš éîţĥéŕ.~~~~~~~~~~]</value>
     <comment>Search, when nothing was found anywhere: under the line saying AniList found nothing.</comment>
+  </data>
+  <data name="ReadSearchSourcesOnlyNothing" xml:space="preserve">
+    <value>[Ñöţĥîñĝ ƒöüñð îñ ýöüŕ šöüŕçéš~~~~~~~~~]</value>
+    <comment>Search with Your sources only on, when no source found anything. The line to try other words follows.</comment>
   </data>
   <data name="ReadSearchTotalUnknown" xml:space="preserve">
     <value>[Šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~]</value>

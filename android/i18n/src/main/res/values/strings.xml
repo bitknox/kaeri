@@ -5207,6 +5207,8 @@
     <string name="read_search_anilist_failed_line">Your sources were still asked.</string>
     <!-- Search, when nothing was found anywhere: under the line saying AniList found nothing. -->
     <string name="read_search_sources_nothing">Nothing in your sources either.</string>
+    <!-- Search with Your sources only on, when no source found anything. The line to try other words follows. -->
+    <string name="read_search_sources_only_nothing">Nothing found in your sources</string>
     <!-- Over reading's results while more pages are to come, so AniList's count is not known yet. -->
     <string name="read_search_total_unknown">Series from AniList</string>
     <!-- The link under From your sources that shows the rest of AniList's results. -->

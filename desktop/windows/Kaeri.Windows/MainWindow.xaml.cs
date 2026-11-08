@@ -1265,6 +1265,7 @@ public sealed partial class MainWindow : Window
 
     void OnFrameNavigated(object sender, NavigationEventArgs e)
     {
+        SearchPrompt();
 #if KAERI_TESTING
         // For Kaeri.Drive: when a navigation is done, and when the new page has been laid out.
         Probe.Mark($"navigated {e.SourcePageType.Name}");
@@ -1394,7 +1395,8 @@ public sealed partial class MainWindow : Window
         if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
             return;
         var text = sender.Text.Trim();
-        if (text.Length < 2)
+        // On reading, the box offers nothing: the words search reading as they are typed.
+        if (text.Length < 2 || PageFor("search") == typeof(ReadSearchPage))
         {
             sender.ItemsSource = null;
             return;
@@ -1446,8 +1448,13 @@ public sealed partial class MainWindow : Window
         }
         else if (PageFor("search") == typeof(ReadSearchPage))
         {
-            // Reading's Search takes the words when Search is on reading.
-            ContentFrame.Navigate(typeof(ReadSearchPage), args.QueryText.Trim(), new SuppressNavigationTransitionInfo());
+            // Reading's Search takes the words when Search is on reading: in place when it is up.
+            if (Player.Showing)
+                Player.Close();
+            if (ContentFrame.Content is ReadSearchPage reading)
+                reading.Take(args.QueryText);
+            else
+                ContentFrame.Navigate(typeof(ReadSearchPage), args.QueryText.Trim(), new SuppressNavigationTransitionInfo());
         }
         else
             ShowSearch(args.QueryText.Trim());

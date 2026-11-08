@@ -9794,6 +9794,10 @@ object Strings {
     fun readSearchSourcesNothing(context: Context): String =
         context.getString(R.string.read_search_sources_nothing)
 
+    /** Search with Your sources only on, when no source found anything. The line to try other words follows. */
+    fun readSearchSourcesOnlyNothing(context: Context): String =
+        context.getString(R.string.read_search_sources_only_nothing)
+
     /** Over reading's results while more pages are to come, so AniList's count is not known yet. */
     fun readSearchTotalUnknown(context: Context): String =
         context.getString(R.string.read_search_total_unknown)

@@ -17,12 +17,92 @@ public static class ReadDiscovery
         _ => null,
     };
 
-    /// <summary>An AniList result's line in Search: its format and origin, "Light novel · Japan". Null when AniList names neither.</summary>
+    /// <summary>
+    /// An AniList result's line in Search: its format and origin, "Light novel · Japan". The
+    /// format is the catalogue's words the engine put first in the facts, never its key.
+    /// </summary>
     public static string? Caption(WorkTile tile)
     {
-        var parts = new[] { tile.FormatLabel, tile.Origin?.Text() }.Where(p => p is { Length: > 0 }).ToArray();
+        if (tile.NotInSources)
+            return T.HomeNotFound;
+        return Two(Format(tile), tile.Origin?.Text());
+    }
+
+    /// <summary>
+    /// A Home row tile's line, two facts at most, as the board draws each row: Trending
+    /// "Japan · Releasing", New "Japan · since March" (its status until the engine says when it
+    /// started), Finished "Japan · 112 chapters", Because and More of a genre, mixing formats,
+    /// "Manga · Finished". Not found in your sources once a series' check found none.
+    /// </summary>
+    public static string RowCaption(ReadRowKind kind, WorkTile tile)
+    {
+        if (tile.NotInSources)
+            return T.HomeNotFound;
+        var origin = tile.Origin?.Text();
+        var lead = kind is ReadRowKind.Because or ReadRowKind.MoreGenre ? Format(tile) : origin ?? Format(tile);
+        var second = kind switch
+        {
+            ReadRowKind.Finished => Count(tile) ?? Status(tile),
+            _ => Status(tile),
+        };
+        return Two(lead, second) ?? "";
+    }
+
+    /// <summary>The format's words, "Light novel": the first of the engine's facts.</summary>
+    public static string? Format(WorkTile tile) => tile.Facts is { Length: > 0 } facts ? facts[0].Text() : null;
+
+    /// <summary>The status among the facts, "Releasing".</summary>
+    public static string? Status(WorkTile tile) =>
+        (tile.Facts ?? []).FirstOrDefault(IsStatus)?.Text();
+
+    /// <summary>The count among the facts, "112 chapters" or "9 volumes".</summary>
+    public static string? Count(WorkTile tile) =>
+        (tile.Facts ?? []).FirstOrDefault(f => f is Msg.Reading { V1: ReadingMsg.ReadingChapters or ReadingMsg.ReadingVolumes })?.Text();
+
+    static bool IsStatus(Msg fact) => fact is Msg.Reading
+    {
+        V1: ReadingMsg.ReadingStatusReleasing or ReadingMsg.ReadingStatusFinished or ReadingMsg.ReadingStatusHiatus
+            or ReadingMsg.ReadingStatusCancelled or ReadingMsg.ReadingStatusNotYet,
+    };
+
+    static string? Two(string? first, string? second)
+    {
+        var parts = new[] { first, second }.Where(p => !string.IsNullOrEmpty(p)).Cast<string>().ToArray();
         return parts.Length == 0 ? null : string.Join(" · ", parts);
     }
+
+    /// <summary>
+    /// A filter's chosen formats as the bar says them: one-shots fold into Manga, so "Manga" for
+    /// manga with one-shots, else the first and how many more.
+    /// </summary>
+    public static string[] FoldedFormats(string[]? keys) =>
+        (keys ?? []) is var all && all.Contains("manga") ? [.. all.Where(k => k != "one-shot")] : all; // i18n-skip: the engine's format keys
+
+    /// <summary>The format menu's choices: one Manga, which takes one-shots in, so no one-shot choice of its own.</summary>
+    public static ReadFilterChoice[] FormatChoices(ReadFilterChoice[] choices) =>
+        [.. choices.Where(c => c.Key != OneShot)];
+
+    /// <summary>
+    /// The formats after Manga or another format is chosen or let go in the menu. While the
+    /// engine still lists one-shots apart, Manga takes them with it, so Manga always includes
+    /// one-shots.
+    /// </summary>
+    public static string[] ToggleFormat(string[]? chosen, string key, bool oneShotsApart)
+    {
+        var list = (chosen ?? []).ToList();
+        var on = !list.Contains(key);
+        list.RemoveAll(k => k == key || key == MangaKey && k == OneShot);
+        if (on)
+        {
+            list.Add(key);
+            if (key == MangaKey && oneShotsApart)
+                list.Add(OneShot);
+        }
+        return [.. list];
+    }
+
+    // i18n-skip: the engine's format keys
+    const string MangaKey = "manga", OneShot = "one-shot";
 
     /// <summary>A source's hit's line: how much of the series the source holds, "2 volumes"; empty when the source does not say.</summary>
     public static string Amount(WorkTile tile) => tile.Amount?.Text() ?? "";

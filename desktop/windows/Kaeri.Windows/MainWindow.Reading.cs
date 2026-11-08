@@ -80,6 +80,7 @@ public sealed partial class MainWindow
         }
         var changed = shownAnswer != answer;
         shownAnswer = answer;
+        SearchPrompt();
         if (!changed || ctx is null)
             return;
         // The page on screen may belong to the medium that left, or show the other's scope.
@@ -112,7 +113,10 @@ public sealed partial class MainWindow
         if (tag == "library")
             LibraryReading = reading;
         else if (tag == "search")
+        {
             SearchReading = reading;
+            SearchPrompt();
+        }
         else
             return;
         if (PageFor(tag) is not { } page || ContentFrame.CurrentSourcePageType == page)
@@ -126,6 +130,27 @@ public sealed partial class MainWindow
                 ContentFrame.BackStack.RemoveAt(ContentFrame.BackStack.Count - 1);
         });
     }
+
+    /// <summary>
+    /// A row's View all: Reading's Search on its query, crossfading in as Back crossfades out,
+    /// with the box holding the query's words.
+    /// </summary>
+    internal void OpenReadSearch(string words)
+    {
+        if (ReaderLayer.Showing)
+            ReaderLayer.Close();
+        if (Player.Showing)
+            Player.Close();
+        if (Answer == KaeriIsFor.Both)
+            SearchReading = true;
+        SearchBox.Text = words;
+        SearchBox.ItemsSource = null;
+        Crossfade.Swap(ContentFrame, () => ContentFrame.Navigate(typeof(ReadSearchPage), null, new SuppressNavigationTransitionInfo()));
+    }
+
+    /// <summary>The box's prompt follows Search's scope: "Search reading" while Search shows reading.</summary>
+    void SearchPrompt() =>
+        SearchBox.PlaceholderText = PageFor("search") == typeof(ReadSearchPage) ? T.ReadSearchPlaceholder : T.SearchPlaceholder;
 
     /// <summary>A series' page: drill-in, as a title's page opens.</summary>
     internal void OpenSeries(string work)
