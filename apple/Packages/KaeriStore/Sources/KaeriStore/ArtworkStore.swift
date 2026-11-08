@@ -158,8 +158,18 @@ public final class ArtworkStore {
         defer { hide(url) }
         request(url, maxPixelSize: maxPixelSize)
         scheduleRetry(url)
-        while !Task.isCancelled {
-            try? await Task.sleep(for: .seconds(3600))
+        await Self.untilCancelled()
+    }
+
+    /// Wait until the calling task is cancelled, with no timer: a long `Task.sleep` cancelled
+    /// early keeps its timer, and what the timer wakes, until its deadline, so each cover
+    /// scrolled past would hold on to them for that long.
+    nonisolated static func untilCancelled() async {
+        let (stream, ended) = AsyncStream<Never>.makeStream()
+        await withTaskCancellationHandler {
+            for await _ in stream {}
+        } onCancel: {
+            ended.finish()
         }
     }
 

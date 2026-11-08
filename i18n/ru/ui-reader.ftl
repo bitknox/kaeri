@@ -3,6 +3,7 @@ reader-page-failed = Не удалось загрузить страницу { $
 reader-try-again = Повторить
 reader-close = Закрыть
 reader-end-read = Прочитано
+reader-end-tracker = Прочитано · обновлено: { $trackers }
 reader-end-next = Следующая
 reader-mode-rtl = Справа налево
 reader-mode-ltr = Слева направо
@@ -41,7 +42,6 @@ reader-end-caught-up = Вы всё прочитали
 reader-gap-none = Нет
 reader-gap-small = Малый
 reader-look-system = Как в системе
-reader-end-tracker = Прочитано · обновлено: { $trackers }
 reader-end-of-chapter-number = Конец главы { $chapter }
 reader-end-facts = Глава { $chapter } · { $facts }
 reader-end-pages = { $count ->
@@ -51,7 +51,13 @@ reader-end-pages = { $count ->
    *[other] { $count } страницы
  }
 reader-end-from = Из { $source }
-
 reader-chapter-line = Глава { $chapter }
-
 reader-divider-facts-source = { $facts } · из { $source }
+reader-end-swipe = Смахните, чтобы { -continue-reading }
+reader-divider-images = { $count ->
+    [one] { $count } картинка
+    [few] { $count } картинки
+    [many] { $count } картинок
+   *[other] { $count } картинки
+ }
+reader-chapter-line-titled = Глава { $chapter } · { $title }

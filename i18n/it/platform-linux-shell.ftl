@@ -55,3 +55,4 @@ shell-device-label = Computer Linux
 tv-cast-through-computer = Riprodotto tramite questo computer
 tv-cast-inhibit-reason = Invio di un episodio a una TV
 tv-network-group = Su questa rete
+linux-sidebar-your-sources = Le tue { -source-pl }

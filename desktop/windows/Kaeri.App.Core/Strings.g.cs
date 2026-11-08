@@ -516,6 +516,9 @@ public static partial class T
     /// <summary>A notice over the page when a chapter opens where it was left. It offers Start over.</summary>
     public static string ReaderResumed(long page) => Fill(Get("ReaderResumed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The same notice in a webtoon strip, which counts images rather than pages.</summary>
+    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</summary>
     public static string ReaderBackToPage(long page) => Fill(Get("ReaderBackToPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -1619,6 +1622,264 @@ public static partial class T
 
     /// <summary>Name of the account entry in the navigation pane, followed by its state.</summary>
     public static string AccountsPaneName(string state) => Fill(Get("AccountsPaneName"), ("state", state));
+
+    /// <summary>Name and tooltip of the Aa button in the reader's group, which opens the reader's settings.</summary>
+    public static string WindowsReaderSettingsOpen => Get("WindowsReaderSettingsOpen");
+
+    /// <summary>The opening screen's line, under the cover, after the first moment. The chapter label comes from the source.</summary>
+    public static string WindowsReaderOpening(string chapter) => Fill(Get("WindowsReaderOpening"), ("chapter", chapter));
+
+    /// <summary>The opening screen's line after a few seconds of waiting for a source to answer.</summary>
+    public static string WindowsReaderOpeningSlow(long seconds) => Fill(Get("WindowsReaderOpeningSlow"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Heading of the error when a chapter would not open.</summary>
+    public static string WindowsReaderChapterFailed(string chapter) => Fill(Get("WindowsReaderChapterFailed"), ("chapter", chapter));
+
+    /// <summary>Button of the error when a chapter would not open: back to the series page, where the source is chosen.</summary>
+    public static string WindowsReaderChooseSource => Get("WindowsReaderChooseSource");
+
+    /// <summary>Hint under a page's error: the next page still opens.</summary>
+    public static string WindowsReaderPageFailedHint => Get("WindowsReaderPageFailedHint");
+
+    /// <summary>Top line of the page between chapters: what just ended. The chapter label comes from the source.</summary>
+    public static string WindowsReaderEndOfChapter(string chapter) => Fill(Get("WindowsReaderEndOfChapter"), ("chapter", chapter));
+
+    /// <summary>Line under it when the chapter has not counted as read yet.</summary>
+    public static string WindowsReaderEndNotRead => Get("WindowsReaderEndNotRead");
+
+    /// <summary>Line under the top line once the chapter counted as read and the trackers were updated. The trackers are names joined by the app: "AniList and Kitsu".</summary>
+    public static string WindowsReaderEndTracker(string trackers) => Fill(Get("WindowsReaderEndTracker"), ("trackers", trackers));
+
+    /// <summary>Two tracker names joined, for the line above.</summary>
+    public static string WindowsReaderEndTrackersTwo(string first, string second) => Fill(Get("WindowsReaderEndTrackersTwo"), ("first", first), ("second", second));
+
+    /// <summary>The one amber button of the page between chapters: opens the next chapter.</summary>
+    public static string WindowsReaderContinue => Get("WindowsReaderContinue");
+
+    /// <summary>Button on the page between chapters that closes the reader and goes back to the series page.</summary>
+    public static string WindowsReaderBackToSeries => Get("WindowsReaderBackToSeries");
+
+    /// <summary>End page heading when the next chapter is not out yet.</summary>
+    public static string WindowsReaderEndNotOut(string chapter) => Fill(Get("WindowsReaderEndNotOut"), ("chapter", chapter));
+
+    /// <summary>End page text when the next chapter is not out yet.</summary>
+    public static string WindowsReaderEndNotOutBody => Get("WindowsReaderEndNotOutBody");
+
+    /// <summary>End page text when the reader has caught up with the series.</summary>
+    public static string WindowsReaderEndCaughtUpBody => Get("WindowsReaderEndCaughtUpBody");
+
+    /// <summary>End page heading at the end of a finished series.</summary>
+    public static string WindowsReaderEndFinished => Get("WindowsReaderEndFinished");
+
+    /// <summary>End page text at the end of a finished series.</summary>
+    public static string WindowsReaderEndFinishedBody => Get("WindowsReaderEndFinishedBody");
+
+    /// <summary>End page heading when no source has the next chapter.</summary>
+    public static string WindowsReaderEndNoSource(string chapter) => Fill(Get("WindowsReaderEndNoSource"), ("chapter", chapter));
+
+    /// <summary>End page heading when the next chapter is not downloaded and the PC is offline.</summary>
+    public static string WindowsReaderEndOffline(string chapter) => Fill(Get("WindowsReaderEndOffline"), ("chapter", chapter));
+
+    /// <summary>End page text when the next chapter is not downloaded and the PC is offline.</summary>
+    public static string WindowsReaderEndOfflineBody => Get("WindowsReaderEndOfflineBody");
+
+    /// <summary>The group's line under the series title. The chapter label comes from the source.</summary>
+    public static string WindowsReaderGroupLine(string chapter, long page, long total) => Fill(Get("WindowsReaderGroupLine"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The group's line when a spread shows two pages.</summary>
+    public static string WindowsReaderGroupLineSpread(string chapter, long first, long second) => Fill(Get("WindowsReaderGroupLineSpread"), ("chapter", chapter), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The group's line for a strip of images.</summary>
+    public static string WindowsReaderGroupLineStrip(string chapter, long image, long total) => Fill(Get("WindowsReaderGroupLineStrip"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The group's line for a novel in one long scroll.</summary>
+    public static string WindowsReaderGroupLineScroll(string chapter, long percent) => Fill(Get("WindowsReaderGroupLineScroll"), ("chapter", chapter), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says when the page turns.</summary>
+    public static string WindowsReaderPageLabel(long page, long total) => Fill(Get("WindowsReaderPageLabel"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>What a screen reader says when a spread turns.</summary>
+    public static string WindowsReaderPagesLabel(long first, long second, long total) => Fill(Get("WindowsReaderPagesLabel"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name of the scrubber, spoken.</summary>
+    public static string WindowsReaderScrubber => Get("WindowsReaderScrubber");
+
+    /// <summary>Button on the Resumed notice.</summary>
+    public static string WindowsReaderStartOver => Get("WindowsReaderStartOver");
+
+    /// <summary>Button on the Moved notice.</summary>
+    public static string WindowsReaderGoBack => Get("WindowsReaderGoBack");
+
+    /// <summary>Button on the reading mode notice, which opens the reader's settings.</summary>
+    public static string WindowsReaderChange => Get("WindowsReaderChange");
+
+    /// <summary>Heading of the settings that belong to one series.</summary>
+    public static string WindowsReaderThisSeries => Get("WindowsReaderThisSeries");
+
+    /// <summary>Heading of the manga settings that stay on this PC.</summary>
+    public static string WindowsReaderAllMangaPc => Get("WindowsReaderAllMangaPc");
+
+    /// <summary>Heading of the webtoon settings that stay on this PC.</summary>
+    public static string WindowsReaderAllStripsPc => Get("WindowsReaderAllStripsPc");
+
+    /// <summary>Heading of the novel settings.</summary>
+    public static string WindowsReaderAllNovels => Get("WindowsReaderAllNovels");
+
+    /// <summary>Row: how the series reads.</summary>
+    public static string WindowsReaderReadingMode => Get("WindowsReaderReadingMode");
+
+    /// <summary>The reading mode's value when it was guessed. The mode is "right to left", "left to right" or "strip".</summary>
+    public static string WindowsReaderModeAuto(string mode) => Fill(Get("WindowsReaderModeAuto"), ("mode", mode));
+
+    /// <summary>Option of the reading mode picker that lets Kaeri guess again.</summary>
+    public static string WindowsReaderModeAutoOption => Get("WindowsReaderModeAutoOption");
+
+    /// <summary>A guessed reading mode, inside "Auto · right to left".</summary>
+    public static string WindowsReaderModeRtlLower => Get("WindowsReaderModeRtlLower");
+
+    /// <summary>A guessed reading mode, inside "Auto · left to right".</summary>
+    public static string WindowsReaderModeLtrLower => Get("WindowsReaderModeLtrLower");
+
+    /// <summary>A guessed reading mode, inside "Auto · strip".</summary>
+    public static string WindowsReaderModeStripLower => Get("WindowsReaderModeStripLower");
+
+    /// <summary>Under the reading mode for a guessed mode.</summary>
+    public static string WindowsReaderModeDetectedNote => Get("WindowsReaderModeDetectedNote");
+
+    /// <summary>Under the reading mode for the series' own choice.</summary>
+    public static string WindowsReaderModeChoiceNote => Get("WindowsReaderModeChoiceNote");
+
+    /// <summary>Button that drops the series' own reading mode.</summary>
+    public static string WindowsReaderUseDefault => Get("WindowsReaderUseDefault");
+
+    /// <summary>A novel's reading mode: pages.</summary>
+    public static string WindowsReaderModePaged => Get("WindowsReaderModePaged");
+
+    /// <summary>A novel's reading mode: one long scroll.</summary>
+    public static string WindowsReaderModeScrolled => Get("WindowsReaderModeScrolled");
+
+    /// <summary>Row of the manga settings: one page or two.</summary>
+    public static string WindowsReaderPageLayout => Get("WindowsReaderPageLayout");
+
+    /// <summary>Row of the manga settings: how a page is fitted.</summary>
+    public static string WindowsReaderFit => Get("WindowsReaderFit");
+
+    /// <summary>A choice for how a page is fitted: to the window's height.</summary>
+    public static string WindowsReaderFitHeight => Get("WindowsReaderFitHeight");
+
+    /// <summary>Row of the manga settings.</summary>
+    public static string WindowsReaderCropBorders => Get("WindowsReaderCropBorders");
+
+    /// <summary>Row of the webtoon settings: the space between a strip's images.</summary>
+    public static string WindowsReaderGap => Get("WindowsReaderGap");
+
+    /// <summary>Row of the manga settings: what shows round the page.</summary>
+    public static string WindowsReaderBackground => Get("WindowsReaderBackground");
+
+    /// <summary>Row that opens Settings on its Reading pane.</summary>
+    public static string WindowsReaderMoreSettings => Get("WindowsReaderMoreSettings");
+
+    /// <summary>Row: the e-reader-like look.</summary>
+    public static string WindowsReaderPaperMode => Get("WindowsReaderPaperMode");
+
+    /// <summary>Under the Paper mode switch.</summary>
+    public static string WindowsReaderPaperModeNote => Get("WindowsReaderPaperModeNote");
+
+    /// <summary>Rows of the novel settings.</summary>
+    public static string WindowsReaderFont => Get("WindowsReaderFont");
+
+    public static string WindowsReaderTextSize => Get("WindowsReaderTextSize");
+
+    public static string WindowsReaderLineSpacing => Get("WindowsReaderLineSpacing");
+
+    /// <summary>A choice of line spacing.</summary>
+    public static string WindowsReaderLineTight => Get("WindowsReaderLineTight");
+
+    /// <summary>A choice of line spacing, and of margins.</summary>
+    public static string WindowsReaderLineNormal => Get("WindowsReaderLineNormal");
+
+    /// <summary>A choice of line spacing.</summary>
+    public static string WindowsReaderLineLoose => Get("WindowsReaderLineLoose");
+
+    public static string WindowsReaderMargins => Get("WindowsReaderMargins");
+
+    public static string WindowsReaderJustify => Get("WindowsReaderJustify");
+
+    /// <summary>Row of the novel settings: the page's colours.</summary>
+    public static string WindowsReaderLook => Get("WindowsReaderLook");
+
+    /// <summary>The text size's value.</summary>
+    public static string WindowsReaderPercent(long percent) => Fill(Get("WindowsReaderPercent"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button names of the text size row.</summary>
+    public static string WindowsReaderSmaller => Get("WindowsReaderSmaller");
+
+    public static string WindowsReaderLarger => Get("WindowsReaderLarger");
+
+    /// <summary>Tabs of the Chapters flyout.</summary>
+    public static string WindowsReaderPagesTab => Get("WindowsReaderPagesTab");
+
+    public static string WindowsReaderChaptersTab => Get("WindowsReaderChaptersTab");
+
+    /// <summary>A volume's heading in the chapter list.</summary>
+    public static string WindowsReaderVolume(string volume) => Fill(Get("WindowsReaderVolume"), ("volume", volume));
+
+    /// <summary>A chapter's length in the chapter list.</summary>
+    public static string WindowsReaderChapterPages(long pages) => Fill(GetPlural("WindowsReaderChapterPages", pages), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name of a page in the page grid, spoken.</summary>
+    public static string WindowsReaderGridPage(long page) => Fill(Get("WindowsReaderGridPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name of an image in a strip, spoken when the strip settles on it and read by Narrator.</summary>
+    public static string WindowsReaderImageLabel(long image, long count) => Fill(Get("WindowsReaderImageLabel"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name and tooltip of the button that closes a novel's footnote.</summary>
+    public static string WindowsReaderNoteClose => Get("WindowsReaderNoteClose");
+
+    /// <summary>Name of the Back button at the top of the reading mode picker inside the reader settings.</summary>
+    public static string WindowsReaderBack => Get("WindowsReaderBack");
+
+    /// <summary>Option of the reading mode picker: pages one under another.</summary>
+    public static string WindowsReaderModeVertical => Get("WindowsReaderModeVertical");
+
+    /// <summary>A guessed reading mode, inside "Auto · vertical pages".</summary>
+    public static string WindowsReaderModeVerticalLower => Get("WindowsReaderModeVerticalLower");
+
+    /// <summary>Hint under Auto in the reading mode picker. The way is "Right to left", "Left to right", "Strip" or "Vertical pages".</summary>
+    public static string WindowsReaderModeAutoLine(string way) => Fill(Get("WindowsReaderModeAutoLine"), ("way", way));
+
+    /// <summary>Hint under Vertical pages in the reading mode picker.</summary>
+    public static string WindowsReaderModeVerticalLine => Get("WindowsReaderModeVerticalLine");
+
+    /// <summary>Hint under Strip in the reading mode picker.</summary>
+    public static string WindowsReaderModeStripLine => Get("WindowsReaderModeStripLine");
+
+    /// <summary>Line under the title of the Downloads page for reading when no chapter is kept on this PC.</summary>
+    public static string WindowsReadDownloadsEmptyDetail => Get("WindowsReadDownloadsEmptyDetail");
+
+    /// <summary>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</summary>
+    public static string SeriesReadAgainDoneWindows(string title) => Fill(Get("SeriesReadAgainDoneWindows"), ("title", title));
+
+    /// <summary>Button in Send to e-reader, once the files are ready: saves them where the person picks instead of sharing them.</summary>
+    public static string SendSaveFilesWindows => Get("SendSaveFilesWindows");
+
+    /// <summary>Notice after the files for an e-reader were saved.</summary>
+    public static string SendSavedWindows(long n) => Fill(GetPlural("SendSavedWindows", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Notice when the files for an e-reader could not be saved where the person picked.</summary>
+    public static string SendSaveFailedWindows => Get("SendSaveFailedWindows");
+
+    /// <summary>Shown in place of the feed's address while the feed is on but this computer has no local network.</summary>
+    public static string OpdsPausedNoneWindows => Get("OpdsPausedNoneWindows");
+
+    /// <summary>Shown in place of the feed's address while the feed is on but the only connection goes through a VPN.</summary>
+    public static string OpdsPausedVpnWindows => Get("OpdsPausedVpnWindows");
+
+    /// <summary>Title of the dialog shown once, the first time the OPDS feed is switched on, before Windows asks whether Kaeri may use the network.</summary>
+    public static string FeedFirewallTitleWindows => Get("FeedFirewallTitleWindows");
+
+    /// <summary>Body of that dialog. "Private networks" and "public networks" are the names Windows' own question uses.</summary>
+    public static string FeedFirewallBodyWindows => Get("FeedFirewallBodyWindows");
 
     /// <summary>Busy line while Settings waits for the engine's values.</summary>
     public static string SettingsLoading => Get("SettingsLoading");
@@ -5569,11 +5830,20 @@ public static partial class T
     /// <summary>Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.</summary>
     public static string ReaderEndFrom(string source) => Fill(Get("ReaderEndFrom"), ("source", source));
 
-    /// <summary>Under the series title in the reader's controls. The chapter is its number, such as 12.</summary>
+    /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
     public static string ReaderChapterLine(string chapter) => Fill(Get("ReaderChapterLine"), ("chapter", chapter));
 
     /// <summary>The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.</summary>
     public static string ReaderDividerFactsSource(string facts, string source) => Fill(Get("ReaderDividerFactsSource"), ("facts", facts), ("source", source));
+
+    /// <summary>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</summary>
+    public static string ReaderEndSwipe => Get("ReaderEndSwipe");
+
+    /// <summary>The next episode's length on the divider inside a strip.</summary>
+    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
+    public static string ReaderChapterLineTitled(string chapter, string title) => Fill(Get("ReaderChapterLineTitled"), ("chapter", chapter), ("title", title));
 
     /// <summary>Button in the first run that opens the reading demo.</summary>
     public static string OnboardingReadDemo => Get("OnboardingReadDemo");
@@ -5703,6 +5973,9 @@ public static partial class T
 
     /// <summary>Sidebar and tab label: new chapters from followed series.</summary>
     public static string NavUpdates => Get("NavUpdates");
+
+    /// <summary>Shelf heading on Read: the series being read, each at its place.</summary>
+    public static string HomeReadContinue => Get("HomeReadContinue");
 
     /// <summary>Shelf heading on Read: series releasing now.</summary>
     public static string HomeReadReleasing => Get("HomeReadReleasing");
@@ -11296,6 +11569,7 @@ public static partial class T
         ["ReadingAlsoABook"] = "Also a book",
         ["ReadingSplitChapter"] = "Chapter {chapter} goes to trackers as {whole}.",
         ["ReaderResumed"] = "Resumed at page {page}",
+        ["ReaderResumedImage"] = "Resumed at image {image}",
         ["ReaderBackToPage"] = "Back to page {page}",
         ["ReaderMoved"] = "Moved to {chapter}, page {page}, where {device} stopped",
         ["ReaderMovedNumber"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
@@ -11690,6 +11964,96 @@ public static partial class T
         ["PlayerVolumeMuted"] = "Volume, muted",
         ["PlayerExitFullscreen"] = "Exit full screen",
         ["AccountsPaneName"] = "Account, {state}",
+        ["WindowsReaderSettingsOpen"] = "Reader settings",
+        ["WindowsReaderOpening"] = "Opening {chapter}",
+        ["WindowsReaderOpeningSlow"] = "Finding a source · {seconds} s",
+        ["WindowsReaderChapterFailed"] = "Couldn't open {chapter}",
+        ["WindowsReaderChooseSource"] = "Choose source",
+        ["WindowsReaderPageFailedHint"] = "Turn the page to go on without it.",
+        ["WindowsReaderEndOfChapter"] = "End of {chapter}",
+        ["WindowsReaderEndNotRead"] = "Not marked read yet",
+        ["WindowsReaderEndTracker"] = "Read · {trackers} updated",
+        ["WindowsReaderEndTrackersTwo"] = "{first} and {second}",
+        ["WindowsReaderContinue"] = "Continue",
+        ["WindowsReaderBackToSeries"] = "Back to the series",
+        ["WindowsReaderEndNotOut"] = "{chapter} isn't out yet",
+        ["WindowsReaderEndNotOutBody"] = "Kaeri checks for new chapters in the background and adds them to Updates.",
+        ["WindowsReaderEndCaughtUpBody"] = "New chapters show in Updates when your sources have them.",
+        ["WindowsReaderEndFinished"] = "End of the series",
+        ["WindowsReaderEndFinishedBody"] = "There are no more chapters.",
+        ["WindowsReaderEndNoSource"] = "No {chapter} in your sources yet",
+        ["WindowsReaderEndOffline"] = "{chapter} isn't downloaded",
+        ["WindowsReaderEndOfflineBody"] = "You're offline. It opens here once you're connected.",
+        ["WindowsReaderGroupLine"] = "{chapter} · page {page} of {total}",
+        ["WindowsReaderGroupLineSpread"] = "{chapter} · pages {first} and {second}",
+        ["WindowsReaderGroupLineStrip"] = "{chapter} · image {image} of {total}",
+        ["WindowsReaderGroupLineScroll"] = "{chapter} · {percent}%",
+        ["WindowsReaderPageLabel"] = "Page {page} of {total}",
+        ["WindowsReaderPagesLabel"] = "Pages {first} and {second} of {total}",
+        ["WindowsReaderScrubber"] = "Page",
+        ["WindowsReaderStartOver"] = "Start over",
+        ["WindowsReaderGoBack"] = "Go back",
+        ["WindowsReaderChange"] = "Change",
+        ["WindowsReaderThisSeries"] = "This series",
+        ["WindowsReaderAllMangaPc"] = "All manga on this PC",
+        ["WindowsReaderAllStripsPc"] = "All webtoons on this PC",
+        ["WindowsReaderAllNovels"] = "All light novels",
+        ["WindowsReaderReadingMode"] = "Reading mode",
+        ["WindowsReaderModeAuto"] = "Auto · {mode}",
+        ["WindowsReaderModeAutoOption"] = "Auto",
+        ["WindowsReaderModeRtlLower"] = "right to left",
+        ["WindowsReaderModeLtrLower"] = "left to right",
+        ["WindowsReaderModeStripLower"] = "strip",
+        ["WindowsReaderModeDetectedNote"] = "Detected from the series details.",
+        ["WindowsReaderModeChoiceNote"] = "Your choice is saved for this series and follows it to your other devices.",
+        ["WindowsReaderUseDefault"] = "Use default",
+        ["WindowsReaderModePaged"] = "Paged",
+        ["WindowsReaderModeScrolled"] = "Scroll",
+        ["WindowsReaderPageLayout"] = "Page layout",
+        ["WindowsReaderFit"] = "Fit",
+        ["WindowsReaderFitHeight"] = "Height",
+        ["WindowsReaderCropBorders"] = "Crop borders",
+        ["WindowsReaderGap"] = "Space between images",
+        ["WindowsReaderBackground"] = "Background",
+        ["WindowsReaderMoreSettings"] = "More reader settings",
+        ["WindowsReaderPaperMode"] = "Paper mode",
+        ["WindowsReaderPaperModeNote"] = "Paper colours, and pages turn at once with nothing in the reader moving.",
+        ["WindowsReaderFont"] = "Font",
+        ["WindowsReaderTextSize"] = "Text size",
+        ["WindowsReaderLineSpacing"] = "Line spacing",
+        ["WindowsReaderLineTight"] = "Tight",
+        ["WindowsReaderLineNormal"] = "Normal",
+        ["WindowsReaderLineLoose"] = "Loose",
+        ["WindowsReaderMargins"] = "Margins",
+        ["WindowsReaderJustify"] = "Justify text",
+        ["WindowsReaderLook"] = "Look",
+        ["WindowsReaderPercent"] = "{percent}%",
+        ["WindowsReaderSmaller"] = "Smaller text",
+        ["WindowsReaderLarger"] = "Larger text",
+        ["WindowsReaderPagesTab"] = "Pages",
+        ["WindowsReaderChaptersTab"] = "Chapters",
+        ["WindowsReaderVolume"] = "Volume {volume}",
+        ["WindowsReaderChapterPages_one"] = "1 page",
+        ["WindowsReaderChapterPages_other"] = "{pages} pages",
+        ["WindowsReaderGridPage"] = "Page {page}",
+        ["WindowsReaderImageLabel"] = "Image {image} of {count}",
+        ["WindowsReaderNoteClose"] = "Close note",
+        ["WindowsReaderBack"] = "Back",
+        ["WindowsReaderModeVertical"] = "Vertical pages",
+        ["WindowsReaderModeVerticalLower"] = "vertical pages",
+        ["WindowsReaderModeAutoLine"] = "{way}, from the series details",
+        ["WindowsReaderModeVerticalLine"] = "Pages one under another",
+        ["WindowsReaderModeStripLine"] = "For webtoons and long images",
+        ["WindowsReadDownloadsEmptyDetail"] = "Downloaded chapters open without a connection.",
+        ["SeriesReadAgainDoneWindows"] = "Reading {title} again from the start",
+        ["SendSaveFilesWindows"] = "Save files",
+        ["SendSavedWindows_one"] = "Saved the file",
+        ["SendSavedWindows_other"] = "Saved {n} files",
+        ["SendSaveFailedWindows"] = "Couldn't save the files there. Try another folder.",
+        ["OpdsPausedNoneWindows"] = "Paused. This PC isn't on a local network.",
+        ["OpdsPausedVpnWindows"] = "Paused. This PC is only connected through a VPN.",
+        ["FeedFirewallTitleWindows"] = "Windows will ask about the network",
+        ["FeedFirewallBodyWindows"] = "To let e-readers at home reach the feed, allow Kaeri on private networks only. Leave public networks unticked.",
         ["SettingsLoading"] = "Loading settings",
         ["SettingsGroupMpv"] = "mpv",
         ["SettingsCardState"] = "{title}, {state}",
@@ -13048,6 +13412,10 @@ public static partial class T
         ["ReaderEndFrom"] = "From {source}",
         ["ReaderChapterLine"] = "Chapter {chapter}",
         ["ReaderDividerFactsSource"] = "{facts} · from {source}",
+        ["ReaderEndSwipe"] = "Swipe to keep reading",
+        ["ReaderDividerImages_one"] = "One image",
+        ["ReaderDividerImages_other"] = "{count} images",
+        ["ReaderChapterLineTitled"] = "Chapter {chapter} · {title}",
         ["OnboardingReadDemo"] = "Read the demo",
         ["OnboardingDemoBooksDetail"] = "One short comic and one short story, shared by their makers under Creative Commons.",
         ["OnboardingDemoBothDetail"] = "One short episode and one short comic, shared by their makers under Creative Commons.",
@@ -13097,6 +13465,7 @@ public static partial class T
         ["NavWatch"] = "Watch",
         ["NavRead"] = "Read",
         ["NavUpdates"] = "Updates",
+        ["HomeReadContinue"] = "Continue",
         ["HomeReadReleasing"] = "Releasing now",
         ["HomeReadCheckedOnOpen"] = "Checked when you open Kaeri",
         ["HomeReadEnd"] = "That's everything for now. Updates and Search have the full lists.",

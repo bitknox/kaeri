@@ -9,11 +9,17 @@
 //!
 //! What is served:
 //! - XHTML: cleaned (`kaeri_books::novel::document`), soft hyphens on Windows and Linux, the
-//!   reader's settings in a `<meta name="kaeri-setup">`; kept in memory while the book is open.
-//! - CSS and SVG: cleaned.
+//!   reader's settings in a `<meta name="kaeri-setup">`; kept in memory while the book is open,
+//!   and never cached by the web view, as the settings in it change.
+//! - CSS and SVG: cleaned once and kept in memory while the book is open.
 //! - Images: written into the cache and answered as files; on e-ink processed for the panel
 //!   first (grey levels, tone, colour), as manga pages are.
-//! - Fonts as bytes; audio and video as files. Scripts and anything else: 403.
+//! - Fonts: written into the cache once and answered as files; audio and video as files.
+//!   Scripts and anything else: 403.
+//!
+//! Everything but a document may be cached by the web view: a URL names one open book's file,
+//! which never changes while the book is open, so the book's fonts and stylesheets are read
+//! once for all of its documents.
 
 use std::{
     collections::HashMap,
@@ -39,9 +45,11 @@ use kaeri_pages::{Look, Panel, Renderer, Target, resize::Fit};
 
 use super::settings::Layers;
 
+/// A stylesheet or picture kept for an open book: its type and its bytes.
+type Kept = (&'static str, Arc<[u8]>);
+
 /// The path a source's text chapter is served at.
 pub const TEXT_CHAPTER: &str = "chapter.xhtml";
-use kaeri_books::novel::READER_CSS;
 /// The page's foot on a desktop: room for the reader's floating bottom group (about 90 px
 /// with 20 under it on the Mac, 80 and 20 on Linux, 80 and 16 on Windows) and a gap, so the
 /// text stops above the group whether it shows or not, as the reader board's desktop frames
@@ -49,6 +57,12 @@ use kaeri_books::novel::READER_CSS;
 const DESKTOP_FOOT: f64 = 124.0;
 /// Cleaned documents kept per book; a chapter read through holds a few.
 const KEPT_DOCUMENTS: usize = 24;
+/// Cleaned stylesheets and pictures kept per book. A book links a handful; this only bounds a
+/// hostile one.
+const KEPT_FILES: usize = 256;
+/// How long a web view may keep a book's file other than a document: a day, more than any
+/// reading session, and the URL names the open book, so nothing stale is ever shown.
+const KEEP_FOR: &str = "private, max-age=86400, immutable";
 
 /// What every host injects: the paginator, its stylesheet and the policy.
 pub fn assets() -> NovelAssets {
@@ -163,6 +177,15 @@ fn parse_url(url: &str) -> Option<(u64, Option<String>)> {
 }
 
 fn respond(status: u16, mime: &str, body: BookBody) -> BookResource {
+    answer(status, mime, body, "no-store")
+}
+
+/// A book's file that does not change while the book is open: the web view may keep it.
+fn kept(mime: &str, body: BookBody) -> BookResource {
+    answer(200, mime, body, KEEP_FOR)
+}
+
+fn answer(status: u16, mime: &str, body: BookBody, cache: &str) -> BookResource {
     let content_type = if mime.starts_with("text/") || mime.ends_with("+xml") {
         format!("{mime}; charset=utf-8")
     } else {
@@ -177,7 +200,7 @@ fn respond(status: u16, mime: &str, body: BookBody) -> BookResource {
             header("Content-Security-Policy", novel::csp()),
             header("X-Content-Type-Options", "nosniff".into()),
             header("Referrer-Policy", "no-referrer".into()),
-            header("Cache-Control", "no-store".into()),
+            header("Cache-Control", cache.into()),
             header("Cross-Origin-Resource-Policy", "same-origin".into()),
         ],
         body,
@@ -229,6 +252,8 @@ pub(crate) struct ServedBook {
     /// The last document in the reading flow.
     last_linear: usize,
     docs: Mutex<HashMap<String, Arc<Document>>>,
+    /// Cleaned stylesheets and SVG pictures, by path: (MIME type, bytes).
+    files: Mutex<HashMap<String, Kept>>,
     dir: PathBuf,
     eink: Option<EinkImages>,
 }
@@ -304,10 +329,6 @@ impl ServedBook {
     }
 
     pub fn resource(&self, path: &str) -> BookResource {
-        if path == READER_CSS {
-            let css = novel::STYLESHEET.as_bytes().to_vec();
-            return respond(200, "text/css", BookBody::Bytes { data: css });
-        }
         let epub = match &self.content {
             Content::Text(doc) if path == TEXT_CHAPTER => {
                 return self.served_document(path, doc);
@@ -318,6 +339,9 @@ impl ServedBook {
         let cached = self.docs.lock().ok().and_then(|d| d.get(path).cloned());
         if let Some(doc) = cached {
             return self.served_document(path, &doc);
+        }
+        if let Some((mime, bytes)) = self.files.lock().ok().and_then(|f| f.get(path).cloned()) {
+            return kept(mime, BookBody::Bytes { data: bytes.to_vec() });
         }
         let resource = {
             let Ok(mut epub) = epub.lock() else { return missing() };
@@ -340,20 +364,21 @@ impl ServedBook {
                 self.served_document(path, &doc)
             }
             "image/svg+xml" => match novel::svg(&resource.data, &self.clean(path)) {
-                Some(svg) => {
-                    respond(200, "image/svg+xml", BookBody::Bytes { data: svg.into_bytes() })
-                }
+                Some(svg) => self.keep(path, "image/svg+xml", svg.into_bytes()),
                 None => refused(),
             },
             "text/css" => {
                 let text = String::from_utf8_lossy(&resource.data);
                 let css = novel::stylesheet(&text, path, &self.limits);
-                respond(200, "text/css", BookBody::Bytes { data: css.into_bytes() })
+                self.keep(path, "text/css", css.into_bytes())
             }
             m if kaeri_books::mime::is_image(m) => self.image(path, m, &resource.data),
-            m if is_font(m, path) => {
-                respond(200, font_mime(m, path), BookBody::Bytes { data: resource.data })
-            }
+            // Written out once, however many documents ask: a font can be megabytes, and a
+            // file is answered without reading it into memory again.
+            m if is_font(m, path) => match self.write_file(path, &resource.data, None) {
+                Some(file) => kept(font_mime(m, path), BookBody::File { path: file }),
+                None => kept(font_mime(m, path), BookBody::Bytes { data: resource.data }),
+            },
             m if m.starts_with("audio/") || m.starts_with("video/") => {
                 match self.write_file(path, &resource.data, None) {
                     Some(file) => respond(200, m, BookBody::File { path: file }),
@@ -364,19 +389,30 @@ impl ServedBook {
         }
     }
 
+    /// A cleaned stylesheet or SVG picture, kept for the next document that asks.
+    fn keep(&self, path: &str, mime: &'static str, bytes: Vec<u8>) -> BookResource {
+        if let Ok(mut files) = self.files.lock() {
+            if files.len() >= KEPT_FILES {
+                files.clear();
+            }
+            files.insert(path.to_owned(), (mime, Arc::from(bytes.as_slice())));
+        }
+        kept(mime, BookBody::Bytes { data: bytes })
+    }
+
     /// A picture as a file; on e-ink prepared for the panel.
     fn image(&self, path: &str, mime: &str, bytes: &[u8]) -> BookResource {
         if let Some(eink) = self.eink
             && let Some(png) = eink_image(bytes, eink)
         {
             return match self.write_file(path, &png, Some("png")) {
-                Some(file) => respond(200, "image/png", BookBody::File { path: file }),
+                Some(file) => kept("image/png", BookBody::File { path: file }),
                 None => missing(),
             };
         }
         let mime = kaeri_books::mime::sniff_image(bytes).unwrap_or(mime);
         match self.write_file(path, bytes, None) {
-            Some(file) => respond(200, mime, BookBody::File { path: file }),
+            Some(file) => kept(mime, BookBody::File { path: file }),
             None => missing(),
         }
     }
@@ -548,6 +584,7 @@ pub(crate) fn open_epub(path: &Path, opening: Opening) -> Result<Opened, Reading
         spine: spine.iter().map(|(p, _)| p.clone()).collect(),
         last_linear,
         docs: Mutex::default(),
+        files: Mutex::default(),
         dir: opening.dir,
         eink: opening.eink,
     });
@@ -642,6 +679,7 @@ pub(crate) fn open_text(
         spine: vec![TEXT_CHAPTER.to_owned()],
         last_linear: 0,
         docs: Mutex::default(),
+        files: Mutex::default(),
         dir: opening.dir,
         eink: opening.eink,
     });
@@ -740,6 +778,10 @@ fn look(
     }
 }
 
+/// The characters a line of a novel holds on a wide screen, at least and at most: the
+/// paginator's columns keep to it.
+const MEASURE: [u32; 2] = [65, 75];
+
 const SERIF: &str = "\"Literata\", \"Iowan Old Style\", Charter, Georgia, serif";
 const SANS: &str = "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Noto Sans\", Helvetica, Arial, sans-serif";
 
@@ -791,6 +833,9 @@ pub(crate) fn style(
         "mode": if scrolled { "scrolled" } else { "paged" },
         "columns": if eink { serde_json::Value::from(1) } else { serde_json::Value::from("auto") },
         "column": 720,
+        // A line holds between these many characters: two columns only where each holds the
+        // first, and no column wider than the second, so a wide screen grows its margins.
+        "measure": MEASURE,
         "eink": eink,
         "legacy": support == NovelSupport::KnownFlaws,
         "fixed": fixed,
@@ -836,6 +881,31 @@ mod tests {
         // The tallest group, the Mac's, is 110 px with the space under it.
         assert!(foot(false) >= 120.0, "{}", foot(false));
         assert!(foot(true) < 100.0, "phones keep their own foot");
+    }
+
+    #[test]
+    fn a_line_holds_65_to_75_characters_on_every_screen_but_e_ink() {
+        let store = kaeri_store::Store::open_in_memory().unwrap();
+        let config = kaeri_core::config::ReadingConfig::default();
+        let style_on = |eink: bool| {
+            let surface = ReaderSurface {
+                width_px: 2388,
+                height_px: 1668,
+                scale: 2.0,
+                eink,
+                two_pages: true,
+                dark: false,
+            };
+            let screen = super::super::settings::Screen::default();
+            let layers =
+                Layers::read(&store, &config, kaeri_core::media::Medium::Novel, None, screen);
+            let style = style(&layers, &surface, false, NovelSupport::Full, false, false);
+            serde_json::from_str::<serde_json::Value>(&style).unwrap()
+        };
+        let wide = style_on(false);
+        assert_eq!(wide["measure"], serde_json::json!([65, 75]));
+        assert_eq!(wide["columns"], "auto", "the paginator fits columns to the measure");
+        assert_eq!(style_on(true)["columns"], 1, "e-ink keeps one column");
     }
 
     #[test]
@@ -903,8 +973,9 @@ mod tests {
         assert_eq!(books.resource("kaeri-book://8/chapter.xhtml").unwrap().status, 404);
         assert_eq!(books.resource("kaeri-book://7/../../etc/passwd").unwrap().status, 404);
         assert!(books.resource("https://x.example/a").is_none());
-        let css = books.resource("kaeri-book://7/_kaeri/reader.css").unwrap();
-        assert_eq!((css.status, css.mime.as_str()), (200, "text/css"));
+        // Kaeri's stylesheet comes with the paginator: the chapter links none, and none is served.
+        assert!(!text.contains("<link"), "{text}");
+        assert_eq!(books.resource("kaeri-book://7/_kaeri/reader.css").unwrap().status, 404);
         books.remove(7);
         assert_eq!(books.resource(&url).unwrap().status, 404);
     }

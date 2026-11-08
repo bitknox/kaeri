@@ -1,4 +1,4 @@
-legal-hosts-no-content = { -app-name } lagrar inga serier eller böcker. Du lägger till dina egna { -source-pl }.
+legal-hosts-no-content = { -app-name } är inte värd för några serier eller böcker. Du lägger till dina egna { -source-pl }.
 notice-saved = Sparade { $label }.
 notice-not-saved = Det gick inte att spara inställningen. { $reason }
 notice-title-load-failed = Det gick inte att läsa in titeln. Kontrollera anslutningen och försök igen.

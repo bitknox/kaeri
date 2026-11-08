@@ -19,3 +19,4 @@ pair-enter-code = Ввести код
 rkey-restores = Восстановит всё, если вы потеряете все свои { -device-pl }.
 sync-turn-off-button = Выключить
 rkey-enter-line-generic = { $service } хранит историю с ваших других устройств. Её откроет ключ, который вы сохранили при включении синхронизации.
+pair-code-left = Код действует ещё { $left }.

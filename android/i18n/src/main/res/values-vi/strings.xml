@@ -186,7 +186,8 @@
     <string name="reading_also_a_show">Cũng có bản phim</string>
     <string name="reading_also_a_book">Cũng có bản truyện</string>
     <string name="reading_split_chapter">Chương %1$s được gửi tới các dịch vụ theo dõi là chương %2$s.</string>
-    <string name="reader_resumed">Đọc tiếp từ trang %1$d</string>
+    <string name="reader_resumed">Mở lại ở trang %1$d</string>
+    <string name="reader_resumed_image">Mở lại ở ảnh %1$d</string>
     <string name="reader_back_to_page">Quay lại trang %1$d</string>
     <string name="reader_moved">Đã chuyển tới %1$s, trang %2$d, nơi %3$s dừng lại</string>
     <string name="reader_moved_number">Đã chuyển tới chương %1$s, trang %2$d, nơi %3$s dừng lại</string>
@@ -233,7 +234,7 @@
     </plurals>
     <string name="reading_on_planning">Trong danh sách dự định của bạn</string>
     <string name="reading_spotlight_new_chapter">Chương mới của truyện bạn theo dõi</string>
-    <string name="reading_spotlight_continue">Tiếp tục đọc</string>
+    <string name="reading_spotlight_continue">Đọc tiếp</string>
     <string name="reading_spotlight_up_next">Tiếp theo cho bạn</string>
     <string name="reading_spotlight_popular">Phổ biến, đang ra</string>
     <string name="reading_out_today">Chương %1$s ra hôm nay</string>
@@ -244,11 +245,17 @@
     <string name="reading_next_part">Phần %1$s</string>
     <string name="reading_part_percent">Phần %1$s · %2$d%%</string>
     <string name="reading_part_new">Phần %1$s là phần mới</string>
+    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_new">%1$s là phần mới</string>
     <string name="reading_part_titled">Phần %1$s · %2$s</string>
+    <string name="reading_label_titled">%1$s · %2$s</string>
     <string name="reading_part_out_today">Phần %1$s ra hôm nay</string>
+    <string name="reading_label_out_today">%1$s ra hôm nay</string>
     <string name="reading_part_out_today_titled">Phần %1$s, %2$s, ra hôm nay</string>
+    <string name="reading_label_out_today_titled">%1$s, %2$s, ra hôm nay</string>
     <string name="reading_chapter_of">Chương %1$s / %2$s</string>
     <string name="reading_volume_part">Tập %1$s, phần %2$s</string>
+    <string name="reading_volume_label">Tập %1$s, %2$s</string>
     <string name="reading_origin_japan">Nhật Bản</string>
     <string name="reading_origin_korea">Hàn Quốc</string>
     <string name="reading_origin_china">Trung Quốc</string>
@@ -276,6 +283,8 @@
     <string name="reading_row_page_of">Trang %1$d/%2$d</string>
     <string name="reading_row_page">Trang %1$d</string>
     <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_opened">Đã mở</string>
+    <string name="reading_row_bookmarked">Đã đánh dấu</string>
     <plurals name="reading_row_pages">
         <item quantity="other">%1$d trang</item>
     </plurals>
@@ -415,6 +424,7 @@
     <string name="sources_demo_removed">Đã gỡ bản demo</string>
     <string name="stores_ready_demo_stays">%1$s đã sẵn sàng. Bản demo vẫn nằm cuối mục Các nguồn của bạn.</string>
     <string name="cloud_loopback_done">Bạn có thể đóng thẻ này và quay lại Kaeri.</string>
+    <string name="sync_device_removed">Thiết bị này đã bị xóa khỏi đồng bộ trên một thiết bị khác. Hãy tham gia lại để đồng bộ.</string>
     <string name="notice_signed_in">Đã đăng nhập vào %1$s.</string>
     <string name="notice_signed_in_keychain">Đã đăng nhập vào %1$s. Mã đăng nhập được lưu trong chuỗi khóa của hệ điều hành.</string>
     <string name="notice_signed_in_file">Đã đăng nhập vào %1$s. Không có chuỗi khóa nào, nên mã đăng nhập được lưu trong một tệp riêng chỉ người dùng này đọc được, trên thiết bị này.</string>
@@ -461,7 +471,7 @@
     <string name="cause_proxy_needs_address">Proxy cần có máy chủ và cổng.</string>
     <string name="cause_proxy_address_unusable">Bước kiểm tra proxy không dùng được địa chỉ này.</string>
     <string name="cause_server_unreachable">Không kết nối được tới máy chủ.</string>
-    <string name="legal_hosts_no_content">Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</string>
+    <string name="legal_hosts_no_content">Kaeri không host bất kỳ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</string>
     <string name="notice_saved">Đã lưu %1$s.</string>
     <string name="notice_not_saved">Không lưu được cài đặt đó. %1$s</string>
     <string name="notice_title_load_failed">Không tải được chi tiết của bộ phim này. Hãy kiểm tra kết nối rồi thử lại.</string>
@@ -535,6 +545,14 @@
     <string name="cast_settings_tvs_note">Các TV này hiện dưới mục Chromecast trong Phát trên TV. thiết bị này gửi tập phim đến chúng.</string>
     <string name="cast_settings_torrents">Torrent khi đang truyền</string>
     <string name="cast_settings_torrents_note">Khi đó, TV có Chromecast tích hợp sẽ phát được torrent. Thiết bị này gửi tập phim trong suốt thời gian phát.</string>
+    <string name="book_server_keystore_android">kho khóa của Android</string>
+    <string name="store_invite_chip">Lời mời ••••%1$s</string>
+    <plurals name="store_plugin_hosts">
+        <item quantity="other">%1$d máy chủ</item>
+    </plurals>
+    <string name="join_medium_line_watch">Xem, như trên %1$s</string>
+    <string name="join_medium_line_both">Xem và đọc, như trên %1$s</string>
+    <string name="join_key_store">kho khóa của Android</string>
     <string name="reader_page_failed_swipe">Vuốt để đi tiếp mà không cần trang này.</string>
     <string name="reader_skip_page">Bỏ qua trang</string>
     <string name="reader_page_of">Trang %1$d/%2$d</string>
@@ -568,9 +586,9 @@
     <string name="eink_reads_ltr">trái sang phải</string>
     <string name="eink_reads_strip">cuộn dọc</string>
     <string name="eink_on_device">có trên thiết bị này</string>
-    <string name="eink_continue_to">Tiếp tục sang chương %1$s</string>
+    <string name="eink_continue_to">Đọc tiếp chương %1$s</string>
     <string name="eink_back_to_series">Về trang truyện</string>
-    <string name="eink_turn_to_continue">Lật trang để tiếp tục</string>
+    <string name="eink_turn_to_continue">Lật trang để đọc tiếp</string>
     <string name="eink_next_missing">Chương %1$s chưa có trong các nguồn của bạn</string>
     <string name="eink_next_not_out">Chương sau chưa ra</string>
     <string name="eink_caught_up">Bạn đã đọc kịp</string>
@@ -601,13 +619,11 @@
     <string name="reader_notice_go_back">Quay lại</string>
     <string name="reader_notice_change">Đổi</string>
     <string name="reader_settings">Cài đặt trình đọc</string>
-    <string name="reader_chapter_line_titled">Chương %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Chương %1$s · cuộn</string>
     <string name="reader_minutes_left">%1$d phút</string>
     <string name="reader_zone_next">Trang sau</string>
     <string name="reader_grid_title">Trang</string>
-    <string name="reader_end_continue">Tiếp tục</string>
-    <string name="reader_end_swipe">Vuốt để đọc tiếp</string>
+    <string name="reader_end_continue">Đọc tiếp</string>
     <string name="reader_end_series">Về trang truyện</string>
     <string name="reader_end_again">Đọc lại từ đầu</string>
     <string name="reader_opening_chapter">Đang mở chương %1$s</string>
@@ -697,12 +713,45 @@
     <string name="reader_row_strip_gap">Khoảng cách giữa ảnh</string>
     <string name="reader_paper_look">Giao diện giấy ban ngày</string>
     <string name="reader_paper_dim">Làm tối trang</string>
-    <plurals name="reader_divider_images">
-        <item quantity="other">%1$d ảnh</item>
-    </plurals>
     <string name="reader_opening_waited">%1$s · %2$d giây</string>
     <string name="reader_sources_title">Đọc chương này từ</string>
     <string name="reader_paper_parts">Những gì nó thay đổi</string>
+    <string name="read_home_offline_line">Trang chủ phần Đọc cần kết nối lần đầu mở. Các chương đã tải vẫn mở được.</string>
+    <string name="channel_chapters_name">Chương mới</string>
+    <string name="channel_chapters_description">Khi một bộ truyện trong danh sách Đang đọc của bạn có chương mới.</string>
+    <string name="channel_downloads_finished_name">Tải xong</string>
+    <string name="channel_downloads_finished_description">Khi các chương bạn yêu cầu tải đều đã xong.</string>
+    <string name="notif_chapter_new">%1$s đã ra mắt.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="other">%1$d chương mới</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Chương mới</string>
+    <string name="notif_chapter_read">Đọc</string>
+    <plurals name="downloads_notice_chapters">
+        <item quantity="other">Đang tải %1$d chương</item>
+    </plurals>
+    <plurals name="read_series_downloaded_open">
+        <item quantity="other">%1$d chương đã tải vẫn mở được.</item>
+    </plurals>
+    <string name="read_downloads_empty_detail">Chương đã tải mở được khi không có kết nối.</string>
+    <string name="read_downloads_empty_both">Tập và chương đã tải mở được khi không có kết nối.</string>
+    <string name="settings_summary_chapters_on">Chương mới đang bật</string>
+    <string name="settings_summary_chapters_off">Chương mới đang tắt</string>
+    <plurals name="settings_summary_book_folders">
+        <item quantity="other">%1$d thư mục</item>
+    </plurals>
+    <plurals name="settings_summary_book_servers">
+        <item quantity="other">%1$d máy chủ</item>
+    </plurals>
+    <plurals name="settings_summary_book_plugins">
+        <item quantity="other">%1$d plugin</item>
+    </plurals>
+    <string name="settings_book_sources">Nguồn sách</string>
+    <plurals name="book_matches_line">
+        <item quantity="other">Kaeri đã khớp %1$d bộ theo thông tin của chúng. %2$d bộ này cần bạn xem lại.</item>
+    </plurals>
+    <string name="book_folder_failed">Không thêm được thư mục đó. Hãy thử thư mục khác.</string>
+    <string name="book_server_note_device">Kaeri gửi tiến độ đọc của bạn về máy chủ này. Mật khẩu được giữ trên thiết bị này.</string>
     <string name="tv_pair_request_held">%1$s muốn ghép nối. Mã: %2$s</string>
     <string name="tv_add_store_to_play">Thêm cửa hàng plugin để phát</string>
     <string name="tv_title_page">Trang bộ phim</string>
@@ -1289,6 +1338,13 @@
     <string name="pad_button_view">View</string>
     <string name="pad_button_left_stick">Cần analog trái</string>
     <string name="pad_button_right_stick">Cần analog phải</string>
+    <string name="pad_help_turn_page">Lật trang</string>
+    <string name="pad_help_previous_chapter">Chương trước</string>
+    <string name="pad_help_next_chapter">Chương sau</string>
+    <string name="pad_help_reader_bar">Hiện hoặc ẩn thanh</string>
+    <string name="pad_help_reader_settings">Cài đặt trình đọc</string>
+    <string name="pad_help_close_reader">Đóng trình đọc</string>
+    <string name="pad_help_reader">Trình đọc</string>
     <string name="close_dont_ask">Không hỏi lại</string>
     <string name="close_keep_going">Tiếp tục chạy</string>
     <string name="party_looking_sources">Đang tìm trong các nguồn của bạn…</string>
@@ -2269,6 +2325,11 @@
     <string name="reader_end_from">Từ %1$s</string>
     <string name="reader_chapter_line">Chương %1$s</string>
     <string name="reader_divider_facts_source">%1$s · từ %2$s</string>
+    <string name="reader_end_swipe">Vuốt để đọc tiếp</string>
+    <plurals name="reader_divider_images">
+        <item quantity="other">%1$d ảnh</item>
+    </plurals>
+    <string name="reader_chapter_line_titled">Chương %1$s · %2$s</string>
     <string name="onboarding_read_demo">Đọc bản demo</string>
     <string name="onboarding_demo_books_detail">Một truyện tranh ngắn và một truyện ngắn, do tác giả chia sẻ theo Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Một tập ngắn và một truyện tranh ngắn, do tác giả chia sẻ theo Creative Commons.</string>
@@ -2298,9 +2359,33 @@
     </plurals>
     <string name="demo_story_row">Truyện ngắn · %1$s · %2$s</string>
     <string name="demo_read_chapter">Đọc chương %1$s</string>
+    <string name="progress_server_saved">Đã lưu vào %1$s</string>
+    <string name="progress_server_sending">Đang gửi tới %1$s…</string>
+    <string name="progress_server_offline">Sẽ gửi tới %1$s khi bạn có mạng lại</string>
+    <string name="progress_server_retrying">%1$s không phản hồi. Kaeri sẽ thử lại.</string>
+    <string name="progress_server_failed">Chưa lưu vào %1$s: %2$s.</string>
+    <string name="progress_why_key">máy chủ từ chối khóa</string>
+    <string name="progress_why_password">máy chủ từ chối mật khẩu</string>
+    <string name="progress_why_gone">bộ truyện này không còn trên máy chủ</string>
+    <string name="progress_why_gave_up">không có phản hồi trong một ngày</string>
+    <string name="progress_row_saved">Đã lưu tiến độ %1$s</string>
+    <plurals name="progress_row_sending">
+        <item quantity="other">Đang gửi %1$d chương…</item>
+    </plurals>
+    <plurals name="progress_row_offline">
+        <item quantity="other">%1$d chương sẽ được gửi khi bạn có mạng lại</item>
+    </plurals>
+    <plurals name="progress_row_retrying">
+        <item quantity="other">%1$d chương đang chờ. Kaeri sẽ thử lại.</item>
+    </plurals>
+    <plurals name="progress_row_failed">
+        <item quantity="other">%1$d chương chưa được lưu: %2$s</item>
+    </plurals>
+    <string name="progress_row_off">Tiến độ được giữ trên %1$s này</string>
     <string name="nav_watch">Xem</string>
     <string name="nav_read">Đọc</string>
     <string name="nav_updates">Cập nhật</string>
+    <string name="home_read_continue">Đọc tiếp</string>
     <string name="home_read_releasing">Đang ra</string>
     <string name="home_read_checked_on_open">Kiểm tra khi bạn mở Kaeri</string>
     <string name="home_read_end">Đó là tất cả lúc này. Cập nhật và Tìm kiếm có đầy đủ danh sách.</string>
@@ -2322,10 +2407,13 @@
     <string name="chapter_updates_open_chapter_hint">Mở chương</string>
     <string name="chapter_updates_open_series_menu">Mở bộ truyện</string>
     <string name="action_read_chapter">Đọc chương %1$s</string>
-    <string name="action_continue_chapter">Tiếp tục chương %1$s · trang %2$d</string>
-    <string name="action_continue_part">Tiếp tục phần %1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">Tiếp tục phần %1$s</string>
+    <string name="action_continue_chapter">Đọc tiếp chương %1$s · trang %2$d</string>
+    <string name="action_continue_part">Đọc tiếp phần %1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">Đọc tiếp phần %1$s</string>
     <string name="action_read_part">Đọc phần %1$s</string>
+    <string name="action_continue_named">Đọc tiếp %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">Đọc tiếp %1$s</string>
+    <string name="action_read_named">Đọc %1$s</string>
     <string name="action_read_again">Đọc lại</string>
     <string name="series_reading_from">Đang đọc từ</string>
     <string name="series_change">Đổi</string>
@@ -2612,7 +2700,7 @@
     <string name="settings_counts_read_moving_on">Khi rời khỏi chương</string>
     <string name="settings_counts_read_moving_on_note">Lật qua trang cuối, hoặc mở chương sau</string>
     <string name="settings_counts_read_marked">Khi bạn đánh dấu</string>
-    <string name="settings_counts_read_marked_note">Xem tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn</string>
+    <string name="settings_counts_read_marked_note">Đọc tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn</string>
     <string name="settings_follow_group">Cài đặt bộ truyện đi theo bạn</string>
     <string name="settings_follow_mode">Chế độ, hướng đọc và màu</string>
     <string name="settings_follow_mode_note">Bộ truyện bạn đổi sẽ đọc giống nhau trên các thiết bị khác</string>
@@ -2647,6 +2735,84 @@
     </plurals>
     <string name="read_downloads_read">%1$d đã đọc</string>
     <string name="read_downloads_delete_read">Xóa chương đã đọc</string>
+    <string name="send_title">Gửi tới máy đọc sách</string>
+    <string name="send_for">Gửi tới</string>
+    <string name="send_what">Nội dung</string>
+    <string name="send_chapters">Chương</string>
+    <string name="send_chapters_one">%1$s</string>
+    <string name="send_chapters_range">%1$s đến %2$s</string>
+    <string name="send_size">Dung lượng</string>
+    <string name="send_size_about">Khoảng %1$s</string>
+    <string name="send_no_place">Kaeri không biết bạn đọc tới đâu trên máy đọc sách này. Khi bạn quay lại, trang truyện sẽ hỏi bạn đã dừng ở đâu.</string>
+    <string name="send_prepare">Chuẩn bị và chia sẻ</string>
+    <plurals name="send_preparing">
+        <item quantity="other">Đang chuẩn bị chương %1$d/%2$d</item>
+    </plurals>
+    <string name="send_sized_for">Trang được định cỡ cho %1$s</string>
+    <string name="send_in_parts">Vượt quá %1$s, nên các tệp được chia thành nhiều phần.</string>
+    <string name="send_failed_chapter">Không chuẩn bị được chương %1$s. %2$s</string>
+    <string name="send_failed">Không chuẩn bị được các tệp. %1$s</string>
+    <string name="send_size_working">Đang tính</string>
+    <string name="send_chapters_open">Mở</string>
+    <string name="send_chapters_closed">Đóng</string>
+    <string name="send_progress_spoken">%1$d phần trăm</string>
+    <string name="send_chapter_action">Gửi tới máy đọc sách</string>
+    <string name="send_parts_over">chia phần khi quá %1$s</string>
+    <string name="send_waiting_cancel">Hủy gửi</string>
+    <plurals name="send_ready">
+        <item quantity="other">%1$d tệp đã sẵn sàng.</item>
+    </plurals>
+    <string name="send_share_again">Chia sẻ lại</string>
+    <string name="send_banner">Đang gửi tới %1$s</string>
+    <string name="send_format_fixed_epub">EPUB bố cục cố định</string>
+    <string name="send_format_kepub">KEPUB</string>
+    <string name="send_format_epub">EPUB</string>
+    <string name="send_format_cbz">CBZ</string>
+    <string name="send_target_line">%1$s · %2$s × %3$s</string>
+    <string name="stop_title">Bạn đã dừng ở đâu?</string>
+    <string name="stop_note">Bạn đã gửi chương tới %1$s. Bạn đã dừng ở đâu?</string>
+    <string name="stop_note_action">Đặt vị trí đọc</string>
+    <string name="stop_sent_one">Chương %1$s đã được gửi tới %2$s vào %3$s.</string>
+    <string name="stop_sent_range">Các chương %1$s đến %2$s đã được gửi tới %3$s vào %4$s.</string>
+    <string name="stop_finished">Đã đọc xong chương %1$s</string>
+    <string name="stop_set">Đặt vị trí đọc</string>
+    <string name="stop_keep">Giữ chương %1$s · trang %2$d</string>
+    <string name="stop_keep_plain">Giữ vị trí hiện tại</string>
+    <string name="ereaders_group">Máy đọc sách</string>
+    <string name="ereaders_send_row">Gửi tới máy đọc sách</string>
+    <string name="ereaders_feed_row">Feed OPDS</string>
+    <string name="opds_share_note">Danh mục OPDS mà máy đọc sách trong nhà có thể duyệt</string>
+    <string name="opds_footer">Feed chỉ chạy khi Kaeri đang mở trên %1$s này. Tiến độ trên các máy đọc sách đó được giữ ở đó.</string>
+    <string name="opds_address">Địa chỉ</string>
+    <string name="opds_address_off">Bật feed để có địa chỉ.</string>
+    <string name="opds_password">Mật khẩu</string>
+    <string name="opds_password_note">Máy đọc sách chỉ hỏi một lần</string>
+    <string name="opds_new_password">Mật khẩu mới</string>
+    <string name="opds_port">Cổng</string>
+    <string name="opds_port_note">Để trống để dùng bất kỳ cổng trống nào, hoặc chọn một cổng từ 1024 đến 65535</string>
+    <string name="opds_port_moved">Cổng %1$d đang bận, nên feed dùng cổng %2$d.</string>
+    <string name="opds_shares">Những gì được chia sẻ</string>
+    <string name="opds_share_downloads">Tải xuống</string>
+    <plurals name="opds_share_downloads_count">
+        <item quantity="other">%1$d chương</item>
+    </plurals>
+    <string name="opds_share_manga">Thư mục manga</string>
+    <string name="opds_share_novels">Thư mục light novel</string>
+    <plurals name="opds_share_series_count">
+        <item quantity="other">%1$d bộ</item>
+    </plurals>
+    <string name="opds_fetched_by">Máy đã tải</string>
+    <string name="opds_fetched_none">Chưa có máy đọc sách nào tải gì.</string>
+    <string name="opds_starting">Đang khởi động…</string>
+    <string name="opds_paused_none">Tạm dừng. Máy Mac này không ở trong mạng cục bộ nào.</string>
+    <string name="opds_paused_vpn">Tạm dừng. Máy Mac này chỉ kết nối qua VPN.</string>
+    <string name="opds_new_password_title">Tạo mật khẩu mới?</string>
+    <string name="opds_new_password_warning">Các máy đọc sách đang dùng feed sẽ ngừng hoạt động cho đến khi bạn nhập mật khẩu mới vào từng máy.</string>
+    <string name="opds_fetched_time">Yêu cầu gần nhất %1$s</string>
+    <plurals name="opds_fetched_files">
+        <item quantity="other">%1$d tệp</item>
+    </plurals>
+    <string name="opds_reader_unnamed">Máy đọc sách tại %1$s</string>
     <string name="seasonal_previous">Mùa trước</string>
     <string name="seasonal_next">Mùa sau</string>
     <string name="seasonal_loading">Đang tải mùa này</string>
@@ -3897,7 +4063,7 @@
     <string name="accounts_other_trackers_note">Các dịch vụ theo dõi khác nằm trong Tài khoản.</string>
     <string name="accounts_welcome_detail">Đăng nhập vào %1$s để đồng bộ danh sách và chỗ bạn xem dở.</string>
     <string name="accounts_brings_lists">Lấy danh sách của bạn và điền những tựa đang xem vào mục Xem tiếp.</string>
-    <string name="accounts_brings_lists_read">Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang đọc.</string>
+    <string name="accounts_brings_lists_read">Đưa các danh sách của bạn vào và điền vào Đọc tiếp những gì bạn đang đọc.</string>
     <string name="accounts_brings_lists_both">Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang xem và đọc.</string>
     <string name="accounts_tracker_lists">Danh sách và tiến độ</string>
     <string name="accounts_tracker_reading_lists">Danh sách đọc và tiến độ</string>

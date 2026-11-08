@@ -214,3 +214,44 @@ pub fn ghost(
     fade.connect_done(move |_| veil.remove_overlay(&gone));
     fade.play();
 }
+
+/// A page turn in the reader: `change` is made to `of` under a picture of it as it stood, which
+/// fades away on the quick token, so the old page stays until the new one is drawn and the turn
+/// never passes through an empty frame. A turn that starts while the last one fades takes its
+/// place. Under Reduce Animation the change is instant.
+pub fn turn(veil: &gtk::Overlay, of: &impl IsA<gtk::Widget>, change: impl FnOnce()) {
+    let of = of.as_ref();
+    // The last turn's picture goes at once: the new one is taken of what is drawn now.
+    let mut child = veil.first_child();
+    while let Some(widget) = child {
+        child = widget.next_sibling();
+        if widget.has_css_class("turn-ghost") {
+            // Unparenting unmaps it, which ends its fade there and then: the class goes first
+            // so the fade's end doesn't remove it a second time from inside this removal.
+            widget.remove_css_class("turn-ghost");
+            veil.remove_overlay(&widget);
+        }
+    }
+    if reduced() || !of.is_mapped() || of.width() <= 0 {
+        change();
+        return;
+    }
+    let before = gtk::WidgetPaintable::new(Some(of)).current_image();
+    let ghost = gtk::Picture::for_paintable(&before);
+    ghost.add_css_class("turn-ghost");
+    ghost.set_can_target(false);
+    ghost.set_halign(gtk::Align::Fill);
+    ghost.set_valign(gtk::Align::Fill);
+    ghost.set_content_fit(gtk::ContentFit::Fill);
+    change();
+    veil.add_overlay(&ghost);
+    let (veil, gone) = (veil.clone(), ghost.clone());
+    let fade = quick(&ghost, 1.0, 0.0, opacity(&ghost));
+    fade.connect_done(move |_| {
+        if gone.has_css_class("turn-ghost") {
+            gone.remove_css_class("turn-ghost");
+            veil.remove_overlay(&gone);
+        }
+    });
+    fade.play();
+}

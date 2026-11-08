@@ -1,11 +1,14 @@
 //! A series' page: its cover, titles and facts, the main action (read, continue, read again),
 //! its place on the reading lists, and the chapters by volume, each with its state and a menu.
 
-use std::{cell::RefCell, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 
 use adw::prelude::*;
 use gtk::{gio, glib};
-use kaeri_core::books::WorkId;
+use kaeri_core::{books::WorkId, media::Medium};
 use kaeri_i18n::t;
 use kaeri_model::{
     event::Event,
@@ -44,6 +47,8 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
     );
     states.loading(None);
     let header = adw::HeaderBar::new();
+    // The title is the page's own heading; the bar keeps it only for the back button.
+    header.set_show_title(false);
     let menu_button = gtk::MenuButton::builder()
         .icon_name("view-more-symbolic")
         .tooltip_text(t::action_more())
@@ -57,7 +62,41 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
     let download_button = menu_pill(&t::series_download());
     download_button.set_menu_model(Some(&download_menu(work, &[])));
     let shown: Rc<RefCell<Option<SeriesView>>> = Rc::default();
-    page.insert_action_group("series", Some(&page_actions(ctx, work, &shown)));
+    let actions = page_actions(ctx, work, &shown);
+    // The chapter order, newest first as on Apple; the menu beside the heading flips it and
+    // the list redraws from what the engine sent last.
+    let newest = Rc::new(Cell::new(true));
+    let listed: Rc<RefCell<Listed>> = Rc::default();
+    let redraw: Rc<dyn Fn()> = Rc::new({
+        let (ctx, chapters, work) = (Rc::downgrade(ctx), chapters.clone(), work.clone());
+        let (listed, newest, shown) =
+            (Rc::clone(&listed), Rc::clone(&newest), Rc::clone(&shown));
+        move || {
+            let Some(ctx) = ctx.upgrade() else { return };
+            super::clear(&chapters);
+            let listed = listed.borrow();
+            let Some((volumes, failure)) = listed.as_ref() else { return };
+            let novel = shown.borrow().as_ref().is_some_and(|v| v.medium == Medium::Novel);
+            let order = Order { newest: newest.get(), novel };
+            draw_chapters(&ctx, &chapters, &work, volumes, failure.as_deref(), order);
+        }
+    });
+    let order = gio::SimpleAction::new_stateful(
+        "order",
+        Some(glib::VariantTy::STRING),
+        &"newest".to_variant(),
+    );
+    order.connect_activate({
+        let (newest, redraw) = (Rc::clone(&newest), Rc::clone(&redraw));
+        move |action, value| {
+            let Some(value) = value else { return };
+            action.set_state(value);
+            newest.set(value.str() == Some("newest"));
+            redraw();
+        }
+    });
+    actions.add_action(&order);
+    page.insert_action_group("series", Some(&actions));
     states.on_retry({
         let (hub, work) = (Rc::downgrade(&ctx.hub), work.clone());
         move || {
@@ -68,16 +107,13 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
     });
     let wanted = work.clone();
     listen(ctx, &page, {
-        let (ctx, states, head, chapters, page) = (
-            Rc::downgrade(ctx),
-            states.clone(),
-            head.clone(),
-            chapters.clone(),
-            page.downgrade(),
-        );
+        let (ctx, states, head, page) =
+            (Rc::downgrade(ctx), states.clone(), head.clone(), page.downgrade());
         let (status_button, download_button, shown) =
             (status_button.clone(), download_button.clone(), Rc::clone(&shown));
+        let (listed, redraw) = (Rc::clone(&listed), Rc::clone(&redraw));
         let (details, memo, work) = (details.clone(), Rc::clone(&memo), work.clone());
+        let menu_button = menu_button.clone();
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
             if series_extra::follow(&memo, &work, event) {
@@ -85,6 +121,21 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
             }
             match event {
                 Event::Reading(ReadingEvent::Series(view)) if view.work == wanted => {
+                    // The demo's page is its own: credit, its one chapter and the other work.
+                    if let Some(demo) = &view.demo {
+                        super::clear(&head);
+                        head.append(&super::demo::series_body(&ctx, view, demo));
+                        for hidden in [&details, &chapters] {
+                            hidden.set_visible(false);
+                        }
+                        menu_button.set_visible(false);
+                        shown.replace(Some(SeriesView::clone(view)));
+                        if let Some(page) = page.upgrade() {
+                            page.set_title(&view.titles.display.clone());
+                        }
+                        states.content();
+                        return;
+                    }
                     for button in [&status_button, &download_button] {
                         if let Some(parent) = button.parent().and_downcast::<gtk::Box>() {
                             parent.remove(button);
@@ -98,6 +149,10 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
                     status_button.set_menu_model(Some(&status_menu(view)));
                     draw_head(&ctx, &head, view, &[&status_button, &download_button]);
                     shown.replace(Some(SeriesView::clone(view)));
+                    // The heading says Volumes for a novel, which the series view tells.
+                    if listed.borrow().is_some() {
+                        redraw();
+                    }
                     if let Some(page) = page.upgrade() {
                         page.set_title(&view.titles.display.clone());
                     }
@@ -106,12 +161,10 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
                 Event::Reading(ReadingEvent::Chapters { work, volumes, failure, .. })
                     if *work == wanted =>
                 {
-                    super::clear(&chapters);
-                    if let Some(failure) = failure {
-                        chapters.append(&widgets::haze(&super::failure(failure), "caption"));
-                    }
                     download_button.set_menu_model(Some(&download_menu(work, volumes)));
-                    draw_chapters(&ctx, &chapters, work, volumes);
+                    listed
+                        .replace(Some((volumes.clone(), failure.as_ref().map(super::failure))));
+                    redraw();
                 }
                 Event::Reading(ReadingEvent::Failed {
                     about: kaeri_model::reading::ReadingAbout::Series,
@@ -319,7 +372,7 @@ fn draw_head(ctx: &Rc<Ctx>, head: &gtk::Box, view: &SeriesView, menus: &[&gtk::M
     let text = gtk::Box::new(gtk::Orientation::Vertical, 6);
     text.set_valign(gtk::Align::Center);
     text.set_hexpand(true);
-    text.append(&widgets::show_title(&view.titles.display.clone(), "large"));
+    text.append(&widgets::show_title(&view.titles.display, "page"));
     // The kind, the status and the count are the engine's facts line; the year and the author
     // come before it.
     let mut facts: Vec<String> = Vec::new();
@@ -402,7 +455,53 @@ pub(super) fn state_line(chapter: &ChapterRow) -> String {
     parts.join(" \u{b7} ")
 }
 
-fn draw_chapters(ctx: &Rc<Ctx>, column: &gtk::Box, work: &WorkId, volumes: &[VolumeGroup]) {
+/// The volumes the engine sent last, with what failed, kept to redraw in the other order.
+type Listed = Option<(Vec<VolumeGroup>, Option<String>)>;
+
+/// How the chapter list reads: its order, and whether its heading says Volumes.
+#[derive(Clone, Copy)]
+struct Order {
+    newest: bool,
+    novel: bool,
+}
+
+/// The heading with the order menu at its end, as on the board.
+fn chapters_head(order: Order) -> gtk::Box {
+    let heading =
+        widgets::heading(&if order.novel { t::series_volumes() } else { t::series_chapters() });
+    heading.set_hexpand(true);
+    let shown = if order.newest { t::series_newest_first() } else { t::series_oldest_first() };
+    let label = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+    label.append(&gtk::Label::new(Some(&shown)));
+    label.append(&gtk::Image::from_icon_name("pan-down-symbolic"));
+    let menu = gio::Menu::new();
+    for (name, value) in
+        [(t::series_newest_first(), "newest"), (t::series_oldest_first(), "oldest")]
+    {
+        menu.append_item(&widgets::menu_item(&name, "series.order", value));
+    }
+    let button = gtk::MenuButton::builder().child(&label).menu_model(&menu).build();
+    button.add_css_class("flat");
+    button.set_valign(gtk::Align::Center);
+    button.set_tooltip_text(Some(&t::series_order()));
+    button.update_property(&[gtk::accessible::Property::Label(&format!(
+        "{}, {shown}", // i18n-skip
+        t::series_order()
+    ))]);
+    let head = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+    head.append(&heading);
+    head.append(&button);
+    head
+}
+
+fn draw_chapters(
+    ctx: &Rc<Ctx>,
+    column: &gtk::Box,
+    work: &WorkId,
+    volumes: &[VolumeGroup],
+    failure: Option<&str>,
+    order: Order,
+) {
     // The group is named only when the series has more than one.
     let groups = volumes
         .iter()
@@ -410,9 +509,26 @@ fn draw_chapters(ctx: &Rc<Ctx>, column: &gtk::Box, work: &WorkId, volumes: &[Vol
         .filter_map(|c| c.version_label.as_deref())
         .collect::<std::collections::HashSet<_>>()
         .len();
-    if volumes.len() <= 1 {
-        column.append(&widgets::heading(&t::series_chapters()));
+    column.append(&chapters_head(order));
+    if let Some(failure) = failure {
+        column.append(&widgets::haze(failure, "caption"));
     }
+    // The engine lists oldest first; newest first turns the volumes and their chapters round.
+    let turned: Vec<VolumeGroup>;
+    let volumes = if order.newest {
+        turned = volumes
+            .iter()
+            .rev()
+            .map(|group| {
+                let mut group = group.clone();
+                group.chapters.reverse();
+                group
+            })
+            .collect();
+        &turned[..]
+    } else {
+        volumes
+    };
     // Read volumes in a row share one list, each folded into one line.
     let mut folded: Option<gtk::ListBox> = None;
     for group in volumes {
@@ -420,7 +536,9 @@ fn draw_chapters(ctx: &Rc<Ctx>, column: &gtk::Box, work: &WorkId, volumes: &[Vol
         if group.all_read && volumes.len() > 1 {
             // Volume 9 · chapters 77 to 84 · read.
             let mut line = Vec::new();
-            if let (Some(low), Some(high)) = (group.chapters.first(), group.chapters.last()) {
+            let (first, last) = (group.chapters.first(), group.chapters.last());
+            let (low, high) = if order.newest { (last, first) } else { (first, last) };
+            if let (Some(low), Some(high)) = (low, high) {
                 let number =
                     |c: &ChapterRow| c.number.clone().unwrap_or_else(|| c.label.clone());
                 line.push(t::series_chapter_range(&number(low), &number(high)));
@@ -443,7 +561,10 @@ fn draw_chapters(ctx: &Rc<Ctx>, column: &gtk::Box, work: &WorkId, volumes: &[Vol
         }
         folded = None;
         if volumes.len() > 1 {
-            column.append(&widgets::heading(&name));
+            let heading = widgets::heading(&name);
+            heading.remove_css_class("title-4");
+            heading.add_css_class("heading");
+            column.append(&heading);
         }
         let list = widgets::boxed_list();
         for chapter in &group.chapters {
@@ -518,10 +639,10 @@ fn chapter_row(work: &WorkId, chapter: &ChapterRow, name_group: bool) -> gtk::Li
     let target = (work.0.clone(), chapter.id.0.clone()).to_variant();
     match &chapter.download {
         Some(ChapterDownloadState::Downloading { done, total }) => {
-            line.append(&ring(*done as f64 / f64::from((*total).max(1))));
+            line.append(&widgets::ring(*done as f64 / f64::from((*total).max(1))));
         }
         Some(ChapterDownloadState::Queued | ChapterDownloadState::WaitsForWifi) => {
-            line.append(&ring(0.0));
+            line.append(&widgets::ring(0.0));
         }
         Some(ChapterDownloadState::Failed { .. }) => {
             let again = gtk::Button::from_icon_name("view-refresh-symbolic");
@@ -534,45 +655,12 @@ fn chapter_row(work: &WorkId, chapter: &ChapterRow, name_group: bool) -> gtk::Li
         }
         _ => {}
     }
-    let more = gtk::MenuButton::builder()
-        .icon_name("view-more-symbolic")
-        .valign(gtk::Align::Center)
-        .tooltip_text(t::action_more())
-        .build();
-    more.add_css_class("flat");
-    more.set_menu_model(Some(&chapter_menu(work, chapter)));
-    line.append(&more);
     let row = gtk::ListBoxRow::builder().child(&line).activatable(true).build();
+    // Right-click, a long press or the Menu key open the chapter's menu; the row has no button.
+    widgets::context_menu(&row, &chapter_menu(work, chapter));
     row.set_action_target_value(Some(&super::read_target(work, Some(&chapter.id))));
     row.set_action_name(Some("win.read"));
     row
-}
-
-/// A download's ring, 16 px: a silk arc on the rule, a stop square inside.
-fn ring(fraction: f64) -> gtk::DrawingArea {
-    let area = gtk::DrawingArea::new();
-    area.set_content_width(16);
-    area.set_content_height(16);
-    area.set_valign(gtk::Align::Center);
-    area.set_margin_end(4);
-    area.set_draw_func(move |area, cr, width, height| {
-        let color = area.color();
-        let (r, g, b) =
-            (f64::from(color.red()), f64::from(color.green()), f64::from(color.blue()));
-        let (cx, cy) = (f64::from(width) / 2.0, f64::from(height) / 2.0);
-        let radius = cx.min(cy) - 1.0;
-        cr.set_line_width(2.0);
-        cr.set_source_rgba(r, g, b, 0.22);
-        cr.arc(cx, cy, radius, 0.0, std::f64::consts::TAU);
-        let _ = cr.stroke();
-        cr.set_source_rgb(r, g, b);
-        let start = -std::f64::consts::FRAC_PI_2;
-        cr.arc(cx, cy, radius, start, start + std::f64::consts::TAU * fraction.clamp(0.0, 1.0));
-        let _ = cr.stroke();
-        cr.rectangle(cx - 2.5, cy - 2.5, 5.0, 5.0);
-        let _ = cr.fill();
-    });
-    area
 }
 
 fn chapter_menu(work: &WorkId, chapter: &ChapterRow) -> gio::Menu {

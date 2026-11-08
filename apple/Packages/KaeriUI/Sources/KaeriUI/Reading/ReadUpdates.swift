@@ -143,7 +143,20 @@ private struct UpdateDayView: View {
 private struct UpdateRowView: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(\.dynamicTypeSize) private var type
     let row: UpdateRow
+
+    /// At the accessibility sizes the time goes under the title, which keeps the width.
+    private var big: Bool { type.isAccessibilitySize }
+
+    private var time: Text? {
+        row.chapter.published.map { at in
+            Text(ReadWords.clock(at))
+                .font(.plat(mac: 12, touch: 15))
+                .monospacedDigit()
+                .foregroundStyle(.haze)
+        }
+    }
 
     var body: some View {
         let unread = row.chapter.state != .read
@@ -164,10 +177,11 @@ private struct UpdateRowView: View {
                         Text(row.tile.title)
                             .font(.plat(mac: 13, touch: 17, weight: unread ? .semibold : .regular))
                             .foregroundStyle(unread ? .silk : .haze)
-                            .lineLimit(1)
+                            .lineLimit(big ? 3 : 1)
+                        if big, let time { time }
                         HStack(spacing: 6) {
                             if unread { WaterDot() }
-                            Text(UpdatesWords.line(row.chapter)).lineLimit(1)
+                            Text(UpdatesWords.line(row.chapter)).lineLimit(big ? 3 : 1)
                         }
                         .font(.plat(mac: 12, touch: 15))
                         .foregroundStyle(unread ? .silk : .haze)
@@ -179,12 +193,7 @@ private struct UpdateRowView: View {
                         }
                     }
                     Spacer(minLength: 8)
-                    if let at = row.chapter.published {
-                        Text(ReadWords.clock(at))
-                            .font(.plat(mac: 12, touch: 15))
-                            .monospacedDigit()
-                            .foregroundStyle(.haze)
-                    }
+                    if !big, let time { time }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(.rect)

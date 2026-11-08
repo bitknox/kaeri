@@ -29,18 +29,24 @@ namespace Kaeri.Windows;
 /// <param name="Hide">Testing build: titles to hide from Continue at start, <c>id,id</c>, so a short queue leaves room for Up next.</param>
 /// <param name="UpNext">Testing build: show made-up suggestions under Continue, <c>signed-in</c>, <c>signed-out</c> or <c>fallback</c>, because the fixture catalogue has too few titles for the engine to suggest any.</param>
 /// <param name="CrashProbe">Testing build: raise one made-up exception through the crash guard a few seconds after start, so a Fixtures run can check that nothing is kept with saving off.</param>
+/// <param name="Work">Testing build: a reading series whose page opens over the page, such as <c>a:900301</c>.</param>
+/// <param name="Read">Testing build: open the reader on a series, <c>work</c> or <c>work,chapter</c>, where it was left.</param>
+/// <param name="Send">Testing build: a Send to e-reader dialog in a state for a screenshot: preparing, waiting, failed or ready.</param>
+/// <param name="Feed">Testing build: the feed pane told as on or paused, never switched on.</param>
 /// <param name="Opens">The <c>kaeri://</c> link the app was opened with, as the installer's <c>kaeri.exe "%1"</c> hands it over.</param>
 public sealed record Options(
     string? Scene, string? Media, string? Page, uint? Title, string? Query, bool Play,
     string? Pane, int? Width, int? Height, bool KeepControls, bool Downloads, bool AskClose,
     bool Showcase = false, bool Join = false, string? Select = null, string? Show = null,
-    bool Welcome = false, bool Offline = false, bool Shortcuts = false, string? Opens = null, string? UpdateFrom = null, string? Language = null, string? Hide = null, string? UpNext = null, bool CrashProbe = false)
+    bool Welcome = false, bool Offline = false, bool Shortcuts = false, string? Opens = null, string? UpdateFrom = null, string? Language = null, string? Hide = null, string? UpNext = null, bool CrashProbe = false,
+    string? Work = null, string? Read = null, string? Send = null, string? Feed = null)
 {
     public bool Fixture => Scene is not null;
 
     public static Options Parse(IEnumerable<string> args)
     {
         string? scene = null, media = null, page = null, query = null, pane = null, select = null, show = null, updateFrom = null, language = null, hide = null, upNext = null;
+        string? work = null, read = null, send = null, feed = null;
         uint? title = null;
         int? width = null, height = null;
         bool play = false, keep = false, downloads = false, askClose = false, showcase = false, join = false;
@@ -74,6 +80,10 @@ public sealed record Options(
                 case "--hide": hide = value; break;
                 case "--up-next": upNext = value; break;
                 case "--crash-probe": crashProbe = true; break;
+                case "--work": work = value; break;
+                case "--read": read = value; break;
+                case "--send": send = value; break;
+                case "--feed": feed = value; break;
 #endif
                 case "--size":
                     if (value.Split('x') is [var w, var h] && int.TryParse(w, out var wi) && int.TryParse(h, out var hi))
@@ -81,6 +91,6 @@ public sealed record Options(
                     break;
             }
         }
-        return new(scene, media, page, title, query, play, pane, width, height, keep, downloads, askClose, showcase, join, select, show, welcome, offline, shortcuts, opens, updateFrom, language, hide, upNext, crashProbe);
+        return new(scene, media, page, title, query, play, pane, width, height, keep, downloads, askClose, showcase, join, select, show, welcome, offline, shortcuts, opens, updateFrom, language, hide, upNext, crashProbe, work, read, send, feed);
     }
 }

@@ -171,7 +171,7 @@ eink-on-device = on this { -device }
 # @only android
 # @arg chapter: text
 # @max 32
-eink-continue-to = { -continue-cap } to chapter { $chapter }
+eink-continue-to = { -continue-reading-cap } to chapter { $chapter }
 
 # Button on the page between chapters that leaves the reader for the series page.
 # @only android
@@ -181,7 +181,7 @@ eink-back-to-series = Back to series
 # Line at the foot of the page between chapters.
 # @only android
 # @max 40
-eink-turn-to-continue = Turn the page to { -continue }
+eink-turn-to-continue = Turn the page to { -continue-reading }
 
 # Heading on the page between chapters when no source has the next chapter yet.
 # @only android
@@ -335,13 +335,6 @@ reader-notice-change = Change
 # @max 24
 reader-settings = Reader settings
 
-# Under the series title in the reader's controls. The chapter is its number, such as 12.
-# @only android
-# @arg chapter: text
-# @arg title: text
-# @max 60
-reader-chapter-line-titled = Chapter { $chapter } · { $title }
-
 # Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4.
 # @only android
 # @arg chapter: text
@@ -367,12 +360,7 @@ reader-grid-title = Pages
 # Main button on the page between chapters.
 # @only android
 # @max 16
-reader-end-continue = { -continue-cap }
-
-# Line above the main button on the page between chapters.
-# @only android
-# @max 30
-reader-end-swipe = Swipe to keep reading
+reader-end-continue = { -continue-reading-cap }
 
 # Quiet button on the page between chapters that leaves the reader for the series page.
 # @only android
@@ -830,15 +818,6 @@ reader-paper-look = Paper look by day
 # @only android
 # @max 30
 reader-paper-dim = Dim the page
-
-# The next episode's length on the divider inside a strip.
-# @only android
-# @arg count: int
-# @max 24
-reader-divider-images = { $count ->
-    [one] One image
-   *[other] { $count } images
- }
 
 # The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s".
 # @only android

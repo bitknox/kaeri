@@ -319,6 +319,7 @@ extension ReadingMsg {
         case .readingAlsoABook: L.readingAlsoABook
         case .readingSplitChapter(let chapter, let whole): L.readingSplitChapter(chapter: chapter, whole: whole)
         case .readerResumed(let page): L.readerResumed(page: Int(page))
+        case .readerResumedImage(let image): L.readerResumedImage(image: Int(image))
         case .readerBackToPage(let page): L.readerBackToPage(page: Int(page))
         case .readerMoved(let chapter, let page, let device): L.readerMoved(chapter: chapter, page: Int(page), device: device)
         case .readerMovedNumber(let chapter, let page, let device): L.readerMovedNumber(chapter: chapter, page: Int(page), device: device)

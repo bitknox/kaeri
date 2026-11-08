@@ -50,6 +50,10 @@ runs=(
   "readingdl 1280x800 ${SHOTS:-read-downloads}"
   # A first launch with the demo as the only source: a run of its own, as its shots need it.
   "demo 1280x800 ${SHOTS:-demo-home,demo-search,demo-title,demo-starting,demo-removed}"
+  # Reading's prelaunch states on the reading scene, and the demo as the only book source:
+  # SIZES="prelaunch pldemo".
+  "prelaunch 1280x800 ${SHOTS:-prelaunch}"
+  "pldemo 1280x800 ${SHOTS:-prelaunch-demo}"
 )
 for run in "${runs[@]}"; do
   read -r name size shots <<<"$run"
@@ -61,6 +65,8 @@ for run in "${runs[@]}"; do
     demo) extra=(--demo) ;;
     reading) extra=(--scene reading) ;;
     readingdl) extra=(--scene reading-downloads) ;;
+    prelaunch) extra=(--scene reading) ;;
+    pldemo) extra=(--demo --scene reading) ;;
   esac
   case ",$shots," in *,downloads,*|*,all,*) extra+=(--downloading) ;; esac
   # The match picker's shots need the finished title's source to be unsure of its match.

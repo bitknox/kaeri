@@ -45,3 +45,5 @@ library-linux-list-count = { $list } · { $count }
 title-linux-play-on-tv-help = Воспроизвести этот эпизод на телевизоре с { -app-name }
 title-linux-episode-watched = Эпизод { $episode } просмотрен
 calendar-linux-day-empty = Ничего не выходит
+linux-read-library-list = Список
+linux-read-downloads-empty = Скачанные главы открываются без подключения к сети.

@@ -56,6 +56,8 @@ struct CameInCard<Content: View>: View {
 struct FolderCameIn: View {
     let report: FolderReport
     let nothing: Bool
+    /// Change on the folder's row, where the sheet can pick another.
+    var change: (() -> Void)?
     private var skippedCount: UInt32 { (report.unsupported + report.locked).reduce(0) { $0 + $1.count } }
     @State private var showFiles = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -67,6 +69,17 @@ struct FolderCameIn: View {
                     .frame(width: 32, height: 32).background(Palette.raised, in: .rect(cornerRadius: 8))
                 Text(report.path?.replacingOccurrences(of: NSHomeDirectory(), with: "~") ?? report.name) // i18n-skip
                     .font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk).lineLimit(1).truncationMode(.middle)
+                if let change {
+                    Spacer(minLength: 8)
+                    Button(L.bookFolderChange, action: change)
+                        .buttonStyle(.plain)
+                        .font(.plat(mac: 13, touch: 15, weight: .semibold))
+                        .foregroundStyle(.silk)
+                        .fixedSize()
+                        .frame(minHeight: Device.isMac ? 24 : 44)
+                        .contentShape(.rect)
+                        .pointerHover()
+                }
             }
             if nothing {
                 CameInNote(kind: .info, title: L.bookFolderEmpty(folder: report.name),
@@ -128,39 +141,102 @@ struct FolderCameIn: View {
     }
 }
 
-/// The folder report as a sheet of its own, over Your sources or first run.
+/// The folder report as a sheet of its own, over Your sources or first run, as the board lays
+/// it: the close button and the title, the folder with Change, what it holds, and Add folder
+/// across the width. The folder is read before the sheet shows; closing it takes the folder
+/// back out, and Add folder keeps it.
 struct FolderCameInSheet: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     let report: FolderReport
     let nothing: Bool
-    var chooseOther: (() -> Void)?
+    @State private var picking = false
+    @State private var kept = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(L.sourcesAddFolderButton)
-                .font(.plat(mac: 17, touch: 22, weight: .bold)).foregroundStyle(.silk)
-                .accessibilityAddTraits(.isHeader)
-                .padding(.bottom, 14)
-            FolderCameIn(report: report, nothing: nothing)
-            HStack(spacing: 10) {
-                Spacer()
-                if nothing, let chooseOther {
-                    Button(L.bookFolderChooseOther) { dismiss(); chooseOther() }
-                        .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, raisedSurface: true, fontSize: Device.isMac ? 13 : 17))
+            HStack(spacing: 12) {
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Color.silk)
+                        .frame(width: 28, height: 28)
+                        .background(Circle().fill(Palette.ground.opacity(0.5)))
+                        .frame(width: 44, height: 44)
+                        .contentShape(.circle)
                 }
-                Button(L.actionDone) { dismiss() }
-                    .buttonStyle(PrimaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
-                    .keyboardShortcut(.defaultAction)
+                .buttonStyle(.plain)
+                .pointerHover()
+                .accessibilityLabel(L.actionClose)
+                .padding(.leading, -8)
+                Text(L.sourcesAddFolderButton)
+                    .font(.plat(mac: 17, touch: 17, weight: .semibold)).foregroundStyle(.silk)
+                    .accessibilityAddTraits(.isHeader)
             }
+            .padding(.bottom, 14)
+            ScrollView {
+                FolderCameIn(report: report, nothing: nothing, change: change)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            // Across the sheet on iPhone and iPad; at the trailing end on the Mac, as its sheets
+            // put their buttons.
+            Group {
+                if nothing {
+                    Button(action: change) { primaryLabel(L.bookFolderChooseOther) }
+                } else {
+                    Button {
+                        kept = true
+                        dismiss()
+                    } label: {
+                        primaryLabel(L.bookFolderAdd)
+                    }
+                }
+            }
+            .buttonStyle(PrimaryCapsuleStyle(height: Device.isMac ? 28 : 50, fontSize: Device.isMac ? 13 : 17))
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .keyboardShortcut(.defaultAction)
             .padding(.top, 20)
         }
         .padding(Device.isMac ? 24 : 20)
         .sheetWidth(480)
         .background(.raised)
         .presentationBackground(.raised)
+        .presentationDetents([.medium, .large])
         .closesOnEscape { dismiss() }
-        .onDisappear { store.cameIn.reset() }
+        #if os(iOS)
+        .fileImporter(isPresented: $picking, allowedContentTypes: [.folder]) { result in
+            guard case .success(let url) = result else { return }
+            store.bookSources.removeFolder(report.id)
+            BookFolders.add(url, to: store)
+        }
+        #endif
+        .onDisappear {
+            // Closed without Add folder: the folder goes back out, as a form's cancel would.
+            if !kept { store.bookSources.removeFolder(report.id) }
+            store.cameIn.reset()
+        }
+    }
+
+    /// The primary button's words: the label fills the width on iPhone and iPad.
+    @ViewBuilder private func primaryLabel(_ text: String) -> some View {
+        if Device.isMac {
+            Text(text)
+        } else {
+            Text(text).frame(maxWidth: .infinity)
+        }
+    }
+
+    /// Another folder in this one's place.
+    private func change() {
+        #if os(macOS)
+        FolderPicker.choose { path in
+            store.bookSources.removeFolder(report.id)
+            BookFolders.add(URL(filePath: path), to: store)
+        }
+        #else
+        picking = true
+        #endif
     }
 }
 
