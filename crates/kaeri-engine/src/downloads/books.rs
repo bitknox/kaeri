@@ -752,13 +752,19 @@ impl BookDownloads {
         match self.fetch(lent, store, &row).await {
             Ok(done) => {
                 let path = done.path.to_string_lossy().into_owned();
-                if let Err(e) =
-                    store.book_download_done(row.id, &path, done.pages, done.bytes, now)
-                {
+                let kept =
+                    store.book_download_fetched(row.id, &path, done.pages, done.bytes, now);
+                let kept = kept.unwrap_or_else(|e| {
                     tracing::warn!(error = %e, "a finished download was not kept");
+                    true
+                });
+                if !kept {
+                    // Cancelled or deleted while its last page or its file was made: the file
+                    // goes with the row, and a row kept as removed stays removed.
+                    let _ = std::fs::remove_file(&done.path);
                 }
                 self.publish(store, &lent.tx);
-                (true, true)
+                (true, kept)
             }
             Err(Stop::Cancelled) => {
                 let _ = std::fs::remove_file(part_of(&self.file_stem(&row)));

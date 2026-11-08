@@ -1,6 +1,8 @@
 //! A series' page: the header from what was kept at once, then AniList's page and the
 //! edition's chapters as they land, and each chapter's versions across the person's sources.
 
+use std::collections::{HashMap, HashSet};
+
 use kaeri_core::{
     books::{ChapterId, WorkId},
     media::Medium,
@@ -129,18 +131,22 @@ pub(crate) fn kept_volumes(
     };
     let read = chapters::Read::of(&kit.store, work.as_str());
     let mut groups: Vec<VolumeGroup> = Vec::new();
-    for chapter in &list {
+    let mut listed = HashSet::new();
+    let mut group_of: HashMap<Option<String>, usize> = HashMap::new();
+    // One row per chapter, as the source's answer gives: the first version listed.
+    for chapter in list.iter().filter(|c| listed.insert(c.id.as_str())) {
         let mut row = super::updates::row_of(chapter, &read);
         row.new_chapter = false;
-        match groups.iter_mut().find(|g| g.volume == chapter.volume) {
-            Some(group) => group.chapters.push(row),
-            None => groups.push(VolumeGroup {
+        let at = *group_of.entry(chapter.volume.clone()).or_insert_with(|| {
+            groups.push(VolumeGroup {
                 volume: chapter.volume.clone(),
                 title: None,
-                chapters: vec![row],
+                chapters: Vec::new(),
                 all_read: false,
-            }),
-        }
+            });
+            groups.len() - 1
+        });
+        groups[at].chapters.push(row);
     }
     for group in &mut groups {
         group.all_read =
@@ -162,12 +168,16 @@ pub(crate) fn finish(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup], now:
 /// How many versions each chapter has across the person's editions.
 fn count_versions(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup]) {
     let refs = kit.store.book_refs_for_work(work.as_str()).unwrap_or_default();
-    let lists: Vec<Vec<chapters::Kept>> = refs
-        .iter()
-        .filter_map(|(source, series)| chapters::kept(&kit.store, source, series).map(|k| k.0))
-        .collect();
+    let mut counts: HashMap<String, usize> = HashMap::new();
+    for (source, series) in &refs {
+        for chapter in
+            chapters::kept(&kit.store, source, series).map(|k| k.0).unwrap_or_default()
+        {
+            *counts.entry(chapter.id).or_default() += 1;
+        }
+    }
     for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {
-        let count = lists.iter().flatten().filter(|c| c.id == row.id.as_str()).count();
+        let count = counts.get(row.id.as_str()).copied().unwrap_or(0);
         row.versions = u32::try_from(count.max(1)).unwrap_or(u32::MAX);
     }
 }
@@ -179,14 +189,14 @@ fn mark_new(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup]) {
     if !read.any() {
         return;
     }
-    let new: Vec<&str> = read
+    let new: HashSet<&str> = read
         .unread(&list)
         .into_iter()
         .filter(|c| c.seen_at.is_some())
         .map(|c| c.id.as_str())
         .collect();
     for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {
-        row.new_chapter = new.contains(&row.id.as_str());
+        row.new_chapter = new.contains(row.id.as_str());
     }
 }
 

@@ -254,7 +254,12 @@ async fn a_search_of_the_sources_marks_the_demo_works() {
     assert_eq!(tiles.len(), 1);
     assert!(tiles[0].demo && tiles[0].medium == Medium::Novel);
     assert_eq!(tiles[0].cover.as_deref(), kaeri_core::reading_demo::STORY.cover());
-    let found = sources.search("kwaidan", None, 1_000).await;
+    // The sources' own search gives the same tile, with the amount every source hit carries:
+    // each demo work is one chapter.
+    let mut found = sources.search("kwaidan", None, 1_000).await;
+    assert_eq!(found.len(), 1);
+    let one = kaeri_model::Msg::Reading(kaeri_model::ReadingMsg::ReadingChapters { count: 1 });
+    assert_eq!(found[0].amount.take(), Some(one));
     assert_eq!(found, tiles, "the sources fallback gives the same tile");
     let comic = sources.demo_tiles(&query("pepper"));
     assert_eq!(comic[0].cover.as_deref(), kaeri_core::reading_demo::COMIC.cover());

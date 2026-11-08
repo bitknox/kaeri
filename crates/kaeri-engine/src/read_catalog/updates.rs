@@ -84,8 +84,11 @@ pub(crate) fn view(kit: &Kit, ask: Ask) -> UpdatesView {
         let id = WorkId::new(work.clone());
         let Some((source, _, list)) = chapters::of_work(sources, store, &id) else { continue };
         let read = chapters::Read::of(store, &work);
+        // One row per chapter: two versions of it are one chapter come out.
+        let mut listed = HashSet::new();
         let new: Vec<&chapters::Kept> = list
             .iter()
+            .filter(|c| listed.insert(c.id.as_str()))
             .filter(|c| c.seen_at.is_some() || c.published.is_some())
             .filter(|c| c.out_at().is_some_and(|at| at >= since && at <= ask.now + 86_400))
             .collect();
@@ -444,6 +447,63 @@ mod tests {
 
     fn ask(now: i64, notices: bool) -> Ask {
         Ask { answer: KaeriIsFor::Both, adult: false, chapter_notices: notices, now }
+    }
+
+    /// A source that once answers an empty list (a server part way through a scan, a plugin
+    /// whose scrape broke) and then the full list again: nothing came out, so nothing is told,
+    /// queued to download or shown as new, and a list kept empty by an earlier version counts
+    /// as no list.
+    #[tokio::test]
+    async fn an_empty_answer_makes_nothing_new() {
+        use crate::downloads::books::Setup;
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = BookSourceManifest {
+            id: "shelf".into(),
+            name: "Shelf".into(),
+            version: "1".into(),
+            kind: BookSourceKind::Native,
+            media: vec![Medium::Manga],
+            languages: Vec::new(),
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        let full: Vec<SourceChapter> = (1..=60).map(chapter).collect();
+        let shelf = Arc::new(Shelf { manifest, listed: Mutex::new(full.clone()) });
+        let kit = kit(dir.path(), shelf.clone());
+        let work = "a:900301";
+        kit.store.set_book_match("shelf", "s-1", work, 100, true, false, 1).unwrap();
+        kit.store.adopt_read(work, "10", None, 2).unwrap();
+        kit.store.set_read_status(work, Some("reading"), 2).unwrap();
+        let setup = Setup {
+            keep_ready: true,
+            new_chapters: NewChapters::Reading,
+            hold: true,
+            ..Setup::default()
+        };
+        kit.sources.downloads.configure(setup);
+        let rows = |now: i64| -> usize {
+            view(&kit, ask(now, true)).days.iter().map(|d| d.rows.len()).sum()
+        };
+        let first = run(&kit, ask(1_000, true)).await;
+        assert!(first.found.is_empty() && first.queued == 0);
+        assert_eq!(rows(1_000), 0);
+
+        *shelf.listed.lock().unwrap() = Vec::new();
+        let empty = run(&kit, ask(2_000, true)).await;
+        assert!(empty.found.is_empty() && empty.queued == 0);
+        assert_eq!(chapters::kept(&kit.store, "shelf", "s-1").unwrap().0.len(), 60);
+
+        *shelf.listed.lock().unwrap() = full.clone();
+        let again = run(&kit, ask(3_000, true)).await;
+        assert!(again.found.is_empty(), "nothing came out: {} told", again.found.len());
+        assert_eq!(again.queued, 0, "nothing came out to download");
+        assert_eq!(rows(3_000), 0, "Updates shows nothing new");
+
+        // A list an earlier version kept empty is no list: the next answer is a first one.
+        kit.store.put_book_chapters("shelf", "s-1", "[]", 3_500).unwrap();
+        let after = run(&kit, ask(4_000, true)).await;
+        assert!(after.found.is_empty() && after.queued == 0);
+        assert_eq!(rows(4_000), 0);
     }
 
     #[tokio::test]
