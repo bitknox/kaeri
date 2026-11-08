@@ -2,7 +2,8 @@ reader-page-loading = Wczytywanie strony { $page }
 reader-page-failed = Nie udało się wczytać strony { $page }
 reader-try-again = Spróbuj ponownie
 reader-close = Zamknij
-reader-end-read = Przeczytano
+reader-end-read = Zaliczono jako przeczytany
+reader-end-tracker = Zaliczono jako przeczytany · zaktualizowano: { $trackers }
 reader-end-next = Kolejny
 reader-mode-rtl = Od prawej do lewej
 reader-mode-ltr = Od lewej do prawej
@@ -41,7 +42,6 @@ reader-end-caught-up = Jesteś na bieżąco
 reader-gap-none = Brak
 reader-gap-small = Mały
 reader-look-system = Systemowy
-reader-end-tracker = Przeczytano · zaktualizowano: { $trackers }
 reader-end-of-chapter-number = Koniec rozdziału { $chapter }
 reader-end-facts = Rozdział { $chapter } · { $facts }
 reader-end-pages = { $count ->
@@ -51,9 +51,7 @@ reader-end-pages = { $count ->
    *[other] { $count } strony
  }
 reader-end-from = Z: { $source }
-
 reader-chapter-line = Rozdział { $chapter }
-
 reader-divider-facts-source = { $facts } · z: { $source }
 reader-chapter-line-titled = Rozdział { $chapter } · { $title }
 reader-end-swipe = Przesuń, aby czytać

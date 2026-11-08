@@ -17,13 +17,13 @@ reader-try-again = Try again
 reader-close = Close
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-# @max 16
-reader-end-read = Read
+# @max 40
+reader-end-read = Counted as read
 
 # Under the end of chapter line, naming the trackers the read went to.
 # @arg trackers: text
-# @max 60
-reader-end-tracker = Read · { $trackers } updated
+# @max 80
+reader-end-tracker = Counted as read · { $trackers } updated
 
 # Small heading above the next chapter on the page between chapters.
 # @max 16

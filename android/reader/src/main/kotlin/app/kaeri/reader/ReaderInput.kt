@@ -1,15 +1,20 @@
 // Taps and keys to reader actions, apart from any view so both readers and their tests share them.
 // The boards' rules: thirds on a phone, mirrored for right to left; on e-ink the forward zone is
 // 40% wide at the reading side, controls 30% in the middle and back 30%. Page buttons arrive as
-// the volume keys, the upper one forward.
+// the volume keys, the upper one forward. Home and End go to the first and last page, Escape
+// hides the chrome then closes, and G shows the scrubber.
 
 package app.kaeri.reader
 
 import android.view.KeyEvent
 import app.kaeri.engine.model.ReadDirection
 
-/** What a tap or a key asks of the reader. */
-enum class ReaderAction { FORWARD, BACK, CONTROLS, CLEAN }
+/**
+ * What a tap or a key asks of the reader. [FIRST] and [LAST] go to the chapter's first and last
+ * page; [ESCAPE] hides the chrome, or closes the reader when it is hidden; [GO_TO] shows the chrome
+ * with the scrubber.
+ */
+enum class ReaderAction { FORWARD, BACK, CONTROLS, CLEAN, FIRST, LAST, ESCAPE, GO_TO }
 
 /** The bands across the screen, from the left edge, as fractions of its width. */
 data class TapZones(val forward: ClosedFloatingPointRange<Float>, val controls: ClosedFloatingPointRange<Float>) {
@@ -65,6 +70,10 @@ fun ReaderKeyRules.action(keyCode: Int, shift: Boolean = false, repeat: Int = 0,
         KeyEvent.KEYCODE_PAGE_UP, KeyEvent.KEYCODE_DPAD_UP, backArrow -> ReaderAction.BACK
         KeyEvent.KEYCODE_SPACE -> if (shift) ReaderAction.BACK else ReaderAction.FORWARD
         KeyEvent.KEYCODE_MENU, KeyEvent.KEYCODE_ENTER, KeyEvent.KEYCODE_DPAD_CENTER -> ReaderAction.CONTROLS
+        KeyEvent.KEYCODE_MOVE_HOME -> ReaderAction.FIRST
+        KeyEvent.KEYCODE_MOVE_END -> ReaderAction.LAST
+        KeyEvent.KEYCODE_ESCAPE -> ReaderAction.ESCAPE
+        KeyEvent.KEYCODE_G -> ReaderAction.GO_TO
         else -> return null
     }
     if (repeat > 0 || longPress) {

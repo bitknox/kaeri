@@ -969,6 +969,9 @@ reading-dl-waits-wifi = menunggu Wi-Fi
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Bab { $chapter } gagal diunduh
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = Offline
+
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Sekitar { $size }
 
@@ -8544,10 +8547,10 @@ reader-try-again = Coba lagi
 reader-close = Tutup
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-reader-end-read = Dibaca
+reader-end-read = Dihitung sudah dibaca
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = Dibaca · { $trackers } diperbarui
+reader-end-tracker = Dihitung sudah dibaca · { $trackers } diperbarui
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Selanjutnya
@@ -8920,6 +8923,12 @@ action-continue-part = Lanjutkan membaca bagian { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
 action-continue-part-plain = Lanjutkan membaca bagian { $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = Lanjutkan bab { $n } · { $percent }%
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = Lanjutkan bab { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Baca bagian { $n }
@@ -9823,7 +9832,7 @@ settings-follow-mode-note = Seri yang Anda ubah dibaca sama di perangkat Anda ya
 settings-follow-footer = Ukuran teks, margin, area ketuk, dan penyegaran tetap di { $device } ini.
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = Warna atau abu-abu
+settings-look-follows-note = Halaman berwarna atau abu-abu untuk e-ink
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = Seri di daftar Membaca

@@ -401,6 +401,7 @@
     <string name="reading_dl_queued">В очереди: %1$,d</string>
     <string name="reading_dl_waits_wifi">ждёт Wi-Fi</string>
     <string name="reading_dl_failed">Не удалось скачать главу %1$s</string>
+    <string name="reading_dl_offline">Нет сети</string>
     <string name="reading_estimate_size">Около %1$s</string>
     <string name="reading_estimate_wifi">по Wi-Fi</string>
     <string name="reading_estimate_mobile">по мобильной сети</string>
@@ -735,7 +736,6 @@
     <string name="eink_settings">Настройки</string>
     <string name="eink_clean_screen">Очистить экран</string>
     <string name="eink_end_of_chapter">Конец главы %1$s</string>
-    <string name="eink_counted_read">Засчитано как прочитанная</string>
     <string name="eink_end_next">Следующая</string>
     <plurals name="eink_end_pages">
         <item quantity="one">%1$,d страница</item>
@@ -748,7 +748,6 @@
     <string name="eink_reads_strip">длинная лента</string>
     <string name="eink_on_device">хранится здесь</string>
     <string name="eink_continue_to">Перейти к главе %1$s</string>
-    <string name="eink_back_to_series">К серии</string>
     <string name="eink_turn_to_continue">Перелистните, чтобы читать дальше</string>
     <string name="eink_next_missing">Ни у одного источника пока нет главы %1$s</string>
     <string name="eink_next_not_out">Следующая глава ещё не вышла</string>
@@ -791,6 +790,7 @@
     <string name="reader_failed_chapter">Не удалось открыть главу %1$s</string>
     <string name="reader_sheet_series">Эта серия</string>
     <string name="reader_sheet_all_manga">Вся манга</string>
+    <string name="reader_sheet_all_webtoons">Все вебтуны</string>
     <string name="reader_sheet_all_novels">Все ранобэ</string>
     <string name="reader_sheet_more">Другие настройки чтения</string>
     <string name="reader_row_reading_mode">Режим чтения</string>
@@ -843,7 +843,7 @@
     <string name="reader_grid_page">Перейти к странице %1$d</string>
     <string name="reader_scrubber_in_chapter">Страница в главе</string>
     <string name="reader_failed_novel">Не удалось показать эту главу</string>
-    <string name="reader_end_tracker_offline">Прочитано · %1$s обновится, когда вы вернётесь в сеть</string>
+    <string name="reader_end_tracker_offline">Засчитано как прочитанная · %1$s обновится, когда вы вернётесь в сеть</string>
     <string name="reader_end_none">Ни у одного источника пока нет главы %1$s</string>
     <string name="reader_end_none_line">Kaeri проверяет новые главы в фоне и добавляет их в «Обновления».</string>
     <string name="reader_end_finished_title">Конец</string>
@@ -861,6 +861,8 @@
     <string name="reader_volume_read">Том %1$s · прочитан</string>
     <string name="reader_volume_none">Главы</string>
     <string name="reader_page_plate">Страница %1$d</string>
+    <string name="reader_image_plate">Картинка %1$,d</string>
+    <string name="reader_image_loading">Загрузка картинки %1$,d</string>
     <string name="reader_opening_finding">Поиск источника</string>
     <string name="reader_failed_choose">Выбрать источник</string>
     <string name="reader_settings_search">Поиск по настройкам</string>
@@ -2588,8 +2590,8 @@
     <string name="reader_page_failed">Не удалось загрузить страницу %1$d</string>
     <string name="reader_try_again">Повторить</string>
     <string name="reader_close">Закрыть</string>
-    <string name="reader_end_read">Прочитано</string>
-    <string name="reader_end_tracker">Прочитано · обновлено: %1$s</string>
+    <string name="reader_end_read">Засчитано как прочитанная</string>
+    <string name="reader_end_tracker">Засчитано как прочитанная · обновлено: %1$s</string>
     <string name="reader_end_next">Следующая</string>
     <string name="reader_mode_rtl">Справа налево</string>
     <string name="reader_mode_ltr">Слева направо</string>
@@ -2754,6 +2756,8 @@
     <string name="action_continue_chapter">Читать дальше: глава %1$s · стр. %2$d</string>
     <string name="action_continue_part">Читать дальше: часть %1$s · %2$,d%%</string>
     <string name="action_continue_part_plain">Читать дальше: часть %1$s</string>
+    <string name="action_continue_chapter_percent">Продолжить: глава %1$s · %2$,d%%</string>
+    <string name="action_continue_chapter_plain">Продолжить: глава %1$s</string>
     <string name="action_read_part">Читать часть %1$s</string>
     <string name="action_continue_named">Читать дальше: %1$s · %2$,d%%</string>
     <string name="action_continue_named_plain">Читать дальше: %1$s</string>
@@ -3123,7 +3127,7 @@
     <string name="settings_follow_mode">Режим, направление и цвет</string>
     <string name="settings_follow_mode_note">Изменённая серия читается так же, остальные устройства это подхватят</string>
     <string name="settings_follow_footer">Размер текста, поля, зоны нажатия и обновление остаются на %1$s.</string>
-    <string name="settings_look_follows_note">Цвет или серый</string>
+    <string name="settings_look_follows_note">Цветные страницы или серые для e-ink</string>
     <string name="settings_new_chapters_reading">Серии из «Читаю»</string>
     <string name="settings_new_chapters_note">Для читаемой серии следующие главы тоже держатся наготове</string>
     <string name="settings_progress_group">Прогресс</string>

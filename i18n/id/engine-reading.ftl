@@ -152,6 +152,7 @@ reading-dl-more-queued = { $count } lagi antre
 reading-dl-queued = { $count } antre
 reading-dl-waits-wifi = menunggu Wi-Fi
 reading-dl-failed = Bab { $chapter } gagal diunduh
+reading-dl-offline = Offline
 reading-estimate-size = Sekitar { $size }
 reading-estimate-wifi = lewat Wi-Fi
 reading-estimate-mobile = lewat data seluler

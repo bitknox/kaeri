@@ -667,6 +667,8 @@
     <string name="reading_dl_waits_wifi">waits for Wi-Fi</string>
     <!-- A chapter that failed. The reason follows as the next part. -->
     <string name="reading_dl_failed">Chapter %1$s couldn\'t download</string>
+    <!-- After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest. -->
+    <string name="reading_dl_offline">Offline</string>
     <!-- How much the chosen chapters will take, from their pages and the size of pages downloaded before. -->
     <string name="reading_estimate_size">About %1$s</string>
     <!-- The chapters download only on Wi-Fi, as the settings say. -->
@@ -1250,8 +1252,6 @@
     <string name="eink_clean_screen">Clean screen</string>
     <!-- Top line of the page between chapters. The chapter is its number, such as 12. -->
     <string name="eink_end_of_chapter">End of chapter %1$s</string>
-    <!-- On the page between chapters, once the chapter counts as read. -->
-    <string name="eink_counted_read">Counted as read</string>
     <!-- Small heading above the next chapter on the page between chapters. -->
     <string name="eink_end_next">Next</string>
     <!-- The next chapter's length on the page between chapters. -->
@@ -1269,8 +1269,6 @@
     <string name="eink_on_device">on this device</string>
     <!-- The main button on the page between chapters. -->
     <string name="eink_continue_to">Continue to chapter %1$s</string>
-    <!-- Button on the page between chapters that leaves the reader for the series page. -->
-    <string name="eink_back_to_series">Back to series</string>
     <!-- Line at the foot of the page between chapters. -->
     <string name="eink_turn_to_continue">Turn the page to continue</string>
     <!-- Heading on the page between chapters when no source has the next chapter yet. -->
@@ -1355,6 +1353,8 @@
     <string name="reader_sheet_series">This series</string>
     <!-- Heading in the reader's settings above the choices every manga shares. -->
     <string name="reader_sheet_all_manga">All manga</string>
+    <!-- Heading in the reader's settings above the choices every webtoon shares. -->
+    <string name="reader_sheet_all_webtoons">All webtoons</string>
     <!-- Heading in the reader's settings above the choices every light novel shares. -->
     <string name="reader_sheet_all_novels">All light novels</string>
     <!-- Row in the reader's settings that opens the rest of the settings. -->
@@ -1460,7 +1460,7 @@
     <!-- Heading when a novel could not be shown. -->
     <string name="reader_failed_novel">Couldn\'t show this chapter</string>
     <!-- Under the end of chapter line when the phone is offline. -->
-    <string name="reader_end_tracker_offline">Read · %1$s updates when you\'re back online</string>
+    <string name="reader_end_tracker_offline">Counted as read · %1$s updates when you\'re back online</string>
     <!-- Title of the end page when no source has the next chapter. -->
     <string name="reader_end_none">No chapter %1$s in your sources yet</string>
     <!-- Line under the no next chapter title. -->
@@ -1495,6 +1495,10 @@
     <string name="reader_volume_none">Chapters</string>
     <!-- On the plate of a page that is still loading. -->
     <string name="reader_page_plate">Page %1$d</string>
+    <!-- On the plate of a strip image that is still loading. -->
+    <string name="reader_image_plate">Image %1$,d</string>
+    <!-- On a strip image's plate in place of its number after four seconds. -->
+    <string name="reader_image_loading">Loading image %1$,d</string>
     <!-- Under Opening chapter when it takes more than three seconds. -->
     <string name="reader_opening_finding">Finding a source</string>
     <!-- Button on a chapter that could not open. -->
@@ -4584,9 +4588,9 @@
     <!-- Closes the reader and goes back to the series. -->
     <string name="reader_close">Close</string>
     <!-- Under the top line of the page between chapters, once the chapter counts as read. -->
-    <string name="reader_end_read">Read</string>
+    <string name="reader_end_read">Counted as read</string>
     <!-- Under the end of chapter line, naming the trackers the read went to. -->
-    <string name="reader_end_tracker">Read · %1$s updated</string>
+    <string name="reader_end_tracker">Counted as read · %1$s updated</string>
     <!-- Small heading above the next chapter on the page between chapters. -->
     <string name="reader_end_next">Next</string>
     <!-- A reading mode, and a reading direction. -->
@@ -4845,6 +4849,10 @@
     <string name="action_continue_part">Continue part %1$s · %2$,d%%</string>
     <!-- The main action for a light novel part, part read, when how far is not known. -->
     <string name="action_continue_part_plain">Continue part %1$s</string>
+    <!-- The main action for a light novel part the source calls a chapter, part read. -->
+    <string name="action_continue_chapter_percent">Continue chapter %1$s · %2$,d%%</string>
+    <!-- The main action for a light novel part the source calls a chapter, part read, when how far is not known. -->
+    <string name="action_continue_chapter_plain">Continue chapter %1$s</string>
     <!-- The main action for a light novel part not opened yet. -->
     <string name="action_read_part">Read part %1$s</string>
     <!-- The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is. -->
@@ -5463,7 +5471,7 @@
     <!-- Under the group: what stays on this device. -->
     <string name="settings_follow_footer">Text size, margins, tap zones and refresh stay on this %1$s.</string>
     <!-- Line under Look in Series settings that follow you. -->
-    <string name="settings_look_follows_note">Colour or greys</string>
+    <string name="settings_look_follows_note">Colour pages or greys for e-ink</string>
     <!-- Value of New chapters in Downloads: the series on the Reading list. -->
     <string name="settings_new_chapters_reading">Series on Reading</string>
     <!-- Line under New chapters in Downloads. -->

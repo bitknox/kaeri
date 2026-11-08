@@ -456,6 +456,7 @@ extension ReadingMsg {
         case .readingDlQueued(let count): L.readingDlQueued(count: Int(count))
         case .readingDlWaitsWifi: L.readingDlWaitsWifi
         case .readingDlFailed(let chapter): L.readingDlFailed(chapter: chapter)
+        case .readingDlOffline: L.readingDlOffline
         case .readingEstimateSize(let size): L.readingEstimateSize(size: sizeText(size))
         case .readingEstimateWifi: L.readingEstimateWifi
         case .readingEstimateMobile: L.readingEstimateMobile

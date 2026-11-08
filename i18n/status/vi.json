@@ -1085,6 +1085,18 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "action-continue-chapter-percent": {
+    "source": "ec9886fdc568",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "action-continue-chapter-plain": {
+    "source": "4bc140d1eb7b",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
   "action-continue-part": {
     "source": "7e29b4f60faf",
     "state": "draft",
@@ -5513,12 +5525,6 @@
     "by": "agent",
     "at": "2026-11-07"
   },
-  "eink-back-to-series": {
-    "source": "95b48aa392c7",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
   "eink-caught-up": {
     "source": "e609666568cb",
     "state": "draft",
@@ -5608,12 +5614,6 @@
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08"
-  },
-  "eink-counted-read": {
-    "source": "b46e4b0b2ed2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
   },
   "eink-end-next": {
     "source": "0fbf6dc6a196",
@@ -19169,10 +19169,10 @@
     "at": "2026-11-07"
   },
   "reader-end-read": {
-    "source": "740d542bbe69",
+    "source": "b46e4b0b2ed2",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-08"
   },
   "reader-end-series": {
     "source": "0899c5a1d76f",
@@ -19187,16 +19187,16 @@
     "at": "2026-11-08"
   },
   "reader-end-tracker": {
-    "source": "8889ba40058a",
+    "source": "d32465d9896e",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-08"
   },
   "reader-end-tracker-offline": {
-    "source": "dd54aedecf1f",
+    "source": "da8ceef2288a",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-08"
   },
   "reader-failed-chapter": {
     "source": "06502febeb13",
@@ -19407,6 +19407,18 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "reader-image-loading": {
+    "source": "2a8ce2434454",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
+  "reader-image-plate": {
+    "source": "72af6e129bc7",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
   },
   "reader-justify": {
     "source": "7077a13a0ce2",
@@ -20290,6 +20302,12 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "reader-sheet-all-webtoons": {
+    "source": "c1db01fad609",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
+  },
   "reader-sheet-more": {
     "source": "c807f531ef32",
     "state": "draft",
@@ -20643,6 +20661,12 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "reading-dl-offline": {
+    "source": "cde3342a428a",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-08"
   },
   "reading-dl-pages": {
     "source": "c339ba269662",
@@ -24813,10 +24837,10 @@
     "at": "2026-11-07"
   },
   "settings-look-follows-note": {
-    "source": "46fb4460dde2",
+    "source": "b326a9bfc3a2",
     "state": "draft",
     "by": "agent",
-    "at": "2026-11-07"
+    "at": "2026-11-08"
   },
   "settings-mark-opening": {
     "source": "ec6f5610fb31",

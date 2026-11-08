@@ -1523,6 +1523,8 @@ pub enum ReadingMsg {
     ReadingDlWaitsWifi,
     /// A chapter that failed. The reason follows as the next part.
     ReadingDlFailed { chapter: String },
+    /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+    ReadingDlOffline,
     /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
     ReadingEstimateSize { size: Size },
     /// The chapters download only on Wi-Fi, as the settings say.
@@ -1761,6 +1763,7 @@ impl ReadingMsg {
             Self::ReadingDlQueued { .. } => "reading-dl-queued",
             Self::ReadingDlWaitsWifi => "reading-dl-waits-wifi",
             Self::ReadingDlFailed { .. } => "reading-dl-failed",
+            Self::ReadingDlOffline => "reading-dl-offline",
             Self::ReadingEstimateSize { .. } => "reading-estimate-size",
             Self::ReadingEstimateWifi => "reading-estimate-wifi",
             Self::ReadingEstimateMobile => "reading-estimate-mobile",
@@ -1949,6 +1952,7 @@ impl ReadingMsg {
             Self::ReadingDlQueued { count } => vec![("count", Value::Int(*count))],
             Self::ReadingDlWaitsWifi => Vec::new(),
             Self::ReadingDlFailed { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
+            Self::ReadingDlOffline => Vec::new(),
             Self::ReadingEstimateSize { size } => vec![("size", Value::Size(*size))],
             Self::ReadingEstimateWifi => Vec::new(),
             Self::ReadingEstimateMobile => Vec::new(),

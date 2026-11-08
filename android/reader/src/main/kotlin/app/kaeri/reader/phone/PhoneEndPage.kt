@@ -62,6 +62,14 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -104,11 +112,16 @@ fun PhoneEndPage(
     onFirstPage: () -> Unit = {},
     /** The series' cover, on the demo's card. */
     cover: (@Composable (Modifier) -> Unit)? = null,
+    /** The reader's page background: the demo's card follows it, light on a white or paper page. */
+    pageGround: Color? = null,
 ) {
     val view = state.view ?: return
     val demo = view.demoCredit
     if (demo != null) {
-        DemoEndCard(demo, actions, onFirstPage, cover, modifier)
+        val light = pageGround != null && pageGround.luminance() > 0.5f
+        CompositionLocalProvider(LocalChrome provides if (light) LightChrome else LocalChrome.current) {
+            DemoEndCard(demo, actions, onFirstPage, cover, pageGround ?: Chrome.ground, modifier)
+        }
         return
     }
     val context = LocalContext.current
@@ -122,64 +135,76 @@ fun PhoneEndPage(
     val retryFocus = remember { FocusRequester() }
     val retrying = server.line?.canRetry == true
     Box(modifier.fillMaxSize().background(Chrome.ground).windowInsetsPadding(WindowInsets.safeDrawing).semantics { isTraversalGroup = true }) {
-        // Swipe at 150 dp from the foot, the amber button at 88, the text button at 40. They come
-        // first, so Continue is the first stop and Try again on the line follows Back.
+        // Swipe above the amber button, the amber button at 88 dp from the foot, the text button at 40;
+        // each grows with larger text. They come first, so Continue is the first stop and Try again on
+        // the line follows Back.
         val finished = next == null && end?.whyNone == NoNext.FINISHED
-        if (next != null) {
-            Text(
-                Strings.readerEndSwipe(context),
-                color = Chrome.faint,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(start = 28.dp, end = 28.dp, bottom = 150.dp),
-            )
-        }
         val second = next != null || finished
-        Button(
-            onClick = { if (next != null) session.openChapter(next.id) else actions.onSeries() },
-            shape = RoundedCornerShape(25.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Chrome.accent, contentColor = Chrome.onAccent),
-            modifier = Modifier
+        var foot by remember { mutableIntStateOf(0) }
+        Column(
+            Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 28.dp, end = 28.dp, bottom = 88.dp)
                 .fillMaxWidth()
-                .height(50.dp)
-                .focusRequester(continueFocus)
-                .focusProperties {
-                    when {
-                        second -> this.next = backFocus
-                        retrying -> this.next = retryFocus
-                    }
-                },
+                .padding(start = 28.dp, end = 28.dp, bottom = 40.dp)
+                .onSizeChanged { foot = it.height },
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(
-                if (next != null) Strings.readerEndContinue(context) else Strings.readerEndSeries(context),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-            )
-        }
-        val secondModifier = Modifier
-            .align(Alignment.BottomCenter)
-            .padding(bottom = 40.dp)
-            .heightIn(min = 38.dp)
-            .focusRequester(backFocus)
-            .focusProperties {
-                previous = continueFocus
-                if (retrying) this.next = retryFocus
+            if (next != null) {
+                Text(
+                    Strings.readerEndSwipe(context),
+                    color = Chrome.faint,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(12.dp))
             }
-        when {
-            next != null -> TextButton(onClick = actions.onSeries, modifier = secondModifier) {
-                Text(Strings.readerEndSeries(context), color = Chrome.text, fontSize = 15.sp)
+            Button(
+                onClick = { if (next != null) session.openChapter(next.id) else actions.onSeries() },
+                shape = RoundedCornerShape(25.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Chrome.accent, contentColor = Chrome.onAccent),
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 50.dp)
+                    .focusRequester(continueFocus)
+                    .focusProperties {
+                        when {
+                            second -> this.next = backFocus
+                            retrying -> this.next = retryFocus
+                        }
+                    },
+            ) {
+                Text(
+                    if (next != null) Strings.readerEndContinue(context) else Strings.readerEndSeries(context),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                )
             }
-            finished -> TextButton(onClick = session::readAgain, modifier = secondModifier) {
-                Text(Strings.readerEndAgain(context), color = Chrome.text, fontSize = 15.sp)
+            Spacer(Modifier.height(10.dp))
+            val secondModifier = Modifier
+                .heightIn(min = 38.dp)
+                .focusRequester(backFocus)
+                .focusProperties {
+                    previous = continueFocus
+                    if (retrying) this.next = retryFocus
+                }
+            when {
+                next != null -> TextButton(onClick = actions.onSeries, modifier = secondModifier) {
+                    Text(Strings.readerEndSeries(context), color = Chrome.text, fontSize = 15.sp, textAlign = TextAlign.Center)
+                }
+                finished -> TextButton(onClick = session::readAgain, modifier = secondModifier) {
+                    Text(Strings.readerEndAgain(context), color = Chrome.text, fontSize = 15.sp, textAlign = TextAlign.Center)
+                }
+                else -> Spacer(Modifier.height(38.dp))
             }
         }
         // Larger text scrolls the page above the buttons.
         Column(
             Modifier
                 .fillMaxSize()
-                .padding(bottom = 190.dp)
+                .padding(bottom = with(LocalDensity.current) { foot.toDp() } + 64.dp)
                 .verticalScroll(rememberScrollState())
                 .padding(start = 28.dp, end = 28.dp, top = 100.dp),
         ) {
@@ -188,7 +213,7 @@ fun PhoneEndPage(
             if (read || server.held) {
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    trackerLine(context, state, view.chapter.id),
+                    endReadLine(context, state, view.chapter.id),
                     color = Chrome.faint,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
@@ -226,7 +251,18 @@ fun PhoneEndPage(
                         file = state.preview?.takeIf { it.chapter == next.id }?.file,
                         images = images,
                         modifier = Modifier.width(170.dp).height(242.dp),
-                    ) { Box(Modifier.fillMaxSize().background(Chrome.plate)) }
+                    ) {
+                        // With no preview the plate names the chapter, as the page plate names its page.
+                        Box(Modifier.fillMaxSize().background(Chrome.plate)) {
+                            Text(
+                                Strings.readerChapterLine(context, chapterNumber(next)),
+                                color = Chrome.faint,
+                                fontSize = 15.sp,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.align(Alignment.Center).padding(horizontal = 12.dp),
+                            )
+                        }
+                    }
                 }
             } else {
                 val why = end?.whyNone ?: NoNext.CAUGHT_UP
@@ -352,8 +388,8 @@ private val WifiOff: ImageVector = ImageVector.Builder("WifiOff", 24.dp, 24.dp, 
 }.build()
 
 /**
- * The end of the demo, after its last page instead of a next chapter: a card a third of the way
- * down, its cover, the line on adding your own books, Add a source in amber and Back to page 1.
+ * The end of the demo, after its last page instead of a next chapter, on the page's own ground so
+ * the last turn does not flash: a card a third of the way down, its cover, the line on adding your own books, Add a source in amber and Back to page 1.
  * It comes up on reveal.
  */
 @Composable
@@ -362,11 +398,12 @@ private fun DemoEndCard(
     actions: PhoneReaderActions,
     onFirstPage: () -> Unit,
     cover: (@Composable (Modifier) -> Unit)?,
+    ground: Color,
     modifier: Modifier,
 ) {
     val context = LocalContext.current
     val shown = remember { MutableTransitionState(false).apply { targetState = true } }
-    BoxWithConstraints(modifier.fillMaxSize().background(Chrome.ground)) {
+    BoxWithConstraints(modifier.fillMaxSize().background(ground)) {
         val top = maxHeight * 0.3f
         AnimatedVisibility(
             visibleState = shown,
@@ -433,8 +470,11 @@ internal fun endFacts(context: Context, next: ChapterRow, source: String?): Stri
     }
 }
 
-/** "Read · AniList and another updated", or the offline form when the phone has no network. */
-private fun trackerLine(context: Context, state: ReaderState, chapter: app.kaeri.engine.core.ChapterId): String {
+/**
+ * The line once a chapter counts as read, on the phone's and the e-ink end pages alike: "Counted as
+ * read", with the trackers it went to, or the offline form when there is no network.
+ */
+fun endReadLine(context: Context, state: ReaderState, chapter: app.kaeri.engine.core.ChapterId): String {
     val names = state.readTrackers[chapter].orEmpty()
     if (names.isEmpty()) return Strings.readerEndRead(context)
     val manager = context.getSystemService(ConnectivityManager::class.java)

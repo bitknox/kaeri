@@ -1749,12 +1749,11 @@ fn search(vars: &Value, catalogue: Catalogue<'_>) -> Vec<AnilistId> {
     found
 }
 
-/// The season the real clock is in, in AniList's words, and its year.
+/// The season the real clock is in, in AniList's words, and its year: the clock as the store
+/// reads it, so a scene recording that stopped it ([`kaeri_store::stopped`]) asks for the
+/// season it stopped in.
 fn real_season() -> (&'static str, u64) {
-    let days = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |d| d.as_secs() as i64)
-        / 86_400;
+    let days = kaeri_store::now() / 86_400;
     // Civil from days.
     let z = days + 719_468;
     let era = z.div_euclid(146_097);

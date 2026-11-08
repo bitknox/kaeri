@@ -454,6 +454,7 @@ public static class MsgText
         ReadingMsg.ReadingDlQueued x => T.ReadingDlQueued(x.Count),
         ReadingMsg.ReadingDlWaitsWifi => T.ReadingDlWaitsWifi,
         ReadingMsg.ReadingDlFailed x => T.ReadingDlFailed(x.Chapter),
+        ReadingMsg.ReadingDlOffline => T.ReadingDlOffline,
         ReadingMsg.ReadingEstimateSize x => T.ReadingEstimateSize(Wording.Size(x.Size)),
         ReadingMsg.ReadingEstimateWifi => T.ReadingEstimateWifi,
         ReadingMsg.ReadingEstimateMobile => T.ReadingEstimateMobile,

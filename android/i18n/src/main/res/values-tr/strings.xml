@@ -363,6 +363,7 @@
     <string name="reading_dl_queued">%1$,d sırada</string>
     <string name="reading_dl_waits_wifi">Wi-Fi bekliyor</string>
     <string name="reading_dl_failed">Bölüm %1$s indirilemedi</string>
+    <string name="reading_dl_offline">Çevrimdışı</string>
     <string name="reading_estimate_size">Yaklaşık %1$s</string>
     <string name="reading_estimate_wifi">Wi-Fi ile</string>
     <string name="reading_estimate_mobile">mobil veriyle</string>
@@ -667,7 +668,6 @@
     <string name="eink_settings">Ayarlar</string>
     <string name="eink_clean_screen">Ekranı temizle</string>
     <string name="eink_end_of_chapter">Bölüm %1$s sona erdi</string>
-    <string name="eink_counted_read">Okundu sayıldı</string>
     <string name="eink_end_next">Sonraki</string>
     <plurals name="eink_end_pages">
         <item quantity="one">Bir sayfa</item>
@@ -678,7 +678,6 @@
     <string name="eink_reads_strip">uzun şerit</string>
     <string name="eink_on_device">bu cihazda</string>
     <string name="eink_continue_to">Okumayı sürdür: bölüm %1$s</string>
-    <string name="eink_back_to_series">Seriye dön</string>
     <string name="eink_turn_to_continue">Okumayı sürdürmek için sayfayı çevirin</string>
     <string name="eink_next_missing">Bölüm %1$s henüz kaynaklar arasında yok</string>
     <string name="eink_next_not_out">Sonraki bölüm henüz çıkmadı</string>
@@ -721,6 +720,7 @@
     <string name="reader_failed_chapter">Bölüm %1$s açılamadı</string>
     <string name="reader_sheet_series">Bu seri</string>
     <string name="reader_sheet_all_manga">Tüm mangalar</string>
+    <string name="reader_sheet_all_webtoons">Tüm webtoonlar</string>
     <string name="reader_sheet_all_novels">Tüm hafif romanlar</string>
     <string name="reader_sheet_more">Diğer okuyucu ayarları</string>
     <string name="reader_row_reading_mode">Okuma modu</string>
@@ -773,7 +773,7 @@
     <string name="reader_grid_page">Sayfa %1$d konumuna git</string>
     <string name="reader_scrubber_in_chapter">Bölümdeki sayfa</string>
     <string name="reader_failed_novel">Bu bölüm gösterilemedi</string>
-    <string name="reader_end_tracker_offline">Okundu · çevrimiçi olunca %1$s güncellenir</string>
+    <string name="reader_end_tracker_offline">Okundu sayıldı · çevrimiçi olunca %1$s güncellenir</string>
     <string name="reader_end_none">Bölüm %1$s henüz kaynaklar arasında yok</string>
     <string name="reader_end_none_line">Kaeri yeni bölümleri arka planda arar ve Güncellemeler\'e ekler.</string>
     <string name="reader_end_finished_title">Son</string>
@@ -791,6 +791,8 @@
     <string name="reader_volume_read">Cilt %1$s · okundu</string>
     <string name="reader_volume_none">Bölümler</string>
     <string name="reader_page_plate">Sayfa %1$d</string>
+    <string name="reader_image_plate">Görsel %1$,d</string>
+    <string name="reader_image_loading">Görsel %1$,d yükleniyor</string>
     <string name="reader_opening_finding">Kaynak aranıyor</string>
     <string name="reader_failed_choose">Kaynak seç</string>
     <string name="reader_settings_search">Ayarlarda ara</string>
@@ -2420,8 +2422,8 @@
     <string name="reader_page_failed">Sayfa %1$d yüklenemedi</string>
     <string name="reader_try_again">Tekrar dene</string>
     <string name="reader_close">Kapat</string>
-    <string name="reader_end_read">Okundu</string>
-    <string name="reader_end_tracker">Okundu · %1$s güncellendi</string>
+    <string name="reader_end_read">Okundu sayıldı</string>
+    <string name="reader_end_tracker">Okundu sayıldı · %1$s güncellendi</string>
     <string name="reader_end_next">Sonraki</string>
     <string name="reader_mode_rtl">Sağdan sola</string>
     <string name="reader_mode_ltr">Soldan sağa</string>
@@ -2566,6 +2568,8 @@
     <string name="action_continue_chapter">Okumayı sürdür: bölüm %1$s · sayfa %2$d</string>
     <string name="action_continue_part">Okumayı sürdür: kısım %1$s · %%%2$,d</string>
     <string name="action_continue_part_plain">Okumayı sürdür: kısım %1$s</string>
+    <string name="action_continue_chapter_percent">Okumayı sürdür: bölüm %1$s · %%%2$,d</string>
+    <string name="action_continue_chapter_plain">Okumayı sürdür: bölüm %1$s</string>
     <string name="action_read_part">Kısım %1$s oku</string>
     <string name="action_continue_named">Okumayı sürdür: %1$s · %%%2$,d</string>
     <string name="action_continue_named_plain">Okumayı sürdür: %1$s</string>
@@ -2901,7 +2905,7 @@
     <string name="settings_follow_mode">Mod, yön ve renk</string>
     <string name="settings_follow_mode_note">Değiştirdiğiniz seri diğer cihazlarınızda da aynı okunur</string>
     <string name="settings_follow_footer">Yazı boyutu, kenar boşlukları, dokunma bölgeleri ve yenileme bu %1$s üzerinde kalır.</string>
-    <string name="settings_look_follows_note">Renkli veya gri</string>
+    <string name="settings_look_follows_note">Renkli sayfalar ya da e-ink için gri</string>
     <string name="settings_new_chapters_reading">Okuma listesindeki seriler</string>
     <string name="settings_new_chapters_note">Okunan bir serinin sonraki bölümleri de hazır tutulur</string>
     <string name="settings_progress_group">İlerleme</string>

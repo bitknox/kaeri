@@ -55,6 +55,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.heading
@@ -370,7 +372,16 @@ private fun SeriesHeader(series: SeriesView, wide: Boolean, coverKey: String, on
                 Modifier
                     .sharedWork(Shared.Cover, series.work)
                     .readerZoomSource(coverKey)
-                    .then(if (canOpen) Modifier.clickable(onClickLabel = actionWords(context, series.action), onClick = onCover) else Modifier),
+                    .then(
+                        if (canOpen) {
+                            // Named for a screen reader by the series it opens.
+                            Modifier
+                                .clickable(onClickLabel = actionWords(context, series.action), role = Role.Button, onClick = onCover)
+                                .semantics { contentDescription = series.titles.display }
+                        } else {
+                            Modifier
+                        },
+                    ),
             )
             Column(Modifier.weight(1f).padding(top = 2.dp)) {
                 Text(

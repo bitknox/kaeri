@@ -12,6 +12,7 @@ import android.content.ContextWrapper
 import android.view.accessibility.AccessibilityManager
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.draw.drawBehind
@@ -66,7 +68,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
@@ -78,6 +79,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -90,6 +93,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.Color
@@ -120,6 +125,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import app.kaeri.design.Motion
+import app.kaeri.design.atFullSpeed
+import app.kaeri.design.rememberAnimationsRemoved
 import app.kaeri.design.robotoFlex
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.model.ChapterRow
@@ -133,6 +140,7 @@ import app.kaeri.engine.model.TurnHow
 import app.kaeri.i18n.Strings
 import app.kaeri.reader.LocalPageTone
 import app.kaeri.reader.PageImages
+import app.kaeri.reader.PageWaits
 import app.kaeri.reader.PagedReader
 import app.kaeri.reader.ReaderAction
 import app.kaeri.reader.ReaderKeyRules
@@ -141,7 +149,9 @@ import app.kaeri.reader.ReaderState
 import app.kaeri.reader.ShownNotice
 import app.kaeri.reader.StripReader
 import app.kaeri.reader.TapZones
+import app.kaeri.reader.onKeyDown
 import app.kaeri.reader.readerKeys
+import app.kaeri.reader.takesKeyUp
 import app.kaeri.reader.readerSurface
 import app.kaeri.reader.rememberPagedReaderState
 import app.kaeri.reader.rightToLeft
@@ -149,6 +159,8 @@ import app.kaeri.reader.text
 import app.kaeri.store.text
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** What the phone reader leaves to the app around it. */
 class PhoneReaderActions(
@@ -311,11 +323,35 @@ fun PhoneReader(
     }
 
     fun act(action: ReaderAction) {
+        // The last page of the chapter's story, before its end page.
+        val last = state.leaves.indexOfLast { !it.endPage }.coerceAtLeast(0)
         when (action) {
-            ReaderAction.FORWARD -> pager.forward(TurnHow.KEY)
-            ReaderAction.BACK -> pager.back(TurnHow.KEY)
+            ReaderAction.FORWARD -> if (novelOpen) place.turn(true) else pager.forward(TurnHow.KEY)
+            ReaderAction.BACK -> if (novelOpen) place.turn(false) else pager.back(TurnHow.KEY)
             ReaderAction.CONTROLS -> chrome = !chrome
             ReaderAction.CLEAN -> {}
+            ReaderAction.FIRST -> if (novelOpen) place.go(0) else pager.go(0, TurnHow.JUMP)
+            ReaderAction.LAST -> if (novelOpen) place.go((place.pages - 1).coerceAtLeast(0)) else pager.go(last, TurnHow.JUMP)
+            ReaderAction.ESCAPE -> when {
+                sheet != Sheet.None -> sheet = Sheet.None
+                chrome -> chrome = false
+                else -> actions.onClose()
+            }
+            ReaderAction.GO_TO -> chrome = true
+        }
+    }
+    val keyRules = ReaderKeyRules(direction, volumeTurns = volume)
+    // The novel's web view hears keys first and hands the reader's own over.
+    SideEffect {
+        place.keys = { event ->
+            when (event.action) {
+                android.view.KeyEvent.ACTION_DOWN -> keyRules.onKeyDown(event)?.let { answer ->
+                    answer.action?.let(::act)
+                    true
+                } ?: false
+                android.view.KeyEvent.ACTION_UP -> keyRules.takesKeyUp(event.keyCode)
+                else -> false
+            }
         }
     }
 
@@ -363,12 +399,47 @@ fun PhoneReader(
                     if (state.view == null && !state.opening) return@readerSurface
                     session.surface(surface)
                 }
-                .readerKeys(ReaderKeyRules(direction, volumeTurns = volume), ::act),
+                .readerKeys(keyRules, ::act),
         ) {
             val failure = state.failure
             val tapZones = zonesFor(state.choice(ReaderSettingKey.TAP_LAYOUT), direction)
             val strip = view?.mode == ReaderMode.STRIP || view?.mode == ReaderMode.VERTICAL
             var showingAbove by remember(view?.chapter?.id) { mutableStateOf(false) }
+            var openingHeld by remember { mutableStateOf(true) }
+            var plateGone by remember { mutableStateOf(false) }
+            LaunchedEffect(state.leaves.isEmpty()) {
+                if (state.leaves.isEmpty()) {
+                    openingHeld = true
+                    plateGone = false
+                }
+            }
+            // Leaving a chapter from its end page, by Continue, a swipe or the chapters list, holds that
+            // end page over the next chapter until its first page is drawn, then fades it away: the same
+            // crossfade as a turn, never a cut and never the empty ground. A first page slower than the
+            // plate's wait hands over to the opening plate instead, with the same fade.
+            val here = view?.chapter?.id
+            var endShown by remember { mutableStateOf<ReaderState?>(null) }
+            var landed by remember { mutableStateOf<Any?>(null) }
+            val handoff = remember { Animatable(0f) }
+            val removed = rememberAnimationsRemoved()
+            val leaving = endShown?.takeIf { here != null && it.view?.chapter?.id != here }
+            if (leaving == null && !strip && !novelOpen && here != null && pager.chapter == here && state.leaves.isNotEmpty()) {
+                val atEnd = state.leaves.getOrNull(pager.leaf)?.endPage == true
+                SideEffect { endShown = if (atEnd) state else null }
+            }
+            LaunchedEffect(leaving?.view?.chapter?.id, here) {
+                if (leaving == null) return@LaunchedEffect
+                landed = null
+                withTimeoutOrNull(PageWaits.PLATE_MS + 100) { snapshotFlow { landed == here }.first { it } }
+                val fade: suspend () -> Unit = { handoff.animateTo(1f, Motion.quick()) }
+                when {
+                    !fades -> handoff.snapTo(1f)
+                    removed -> atFullSpeed { fade() }
+                    else -> fade()
+                }
+                endShown = null
+                handoff.snapTo(0f)
+            }
             when {
                 failure != null && state.leaves.isEmpty() && state.novel == null -> {
                     val row = state.openingChapter ?: view?.chapter
@@ -414,15 +485,21 @@ fun PhoneReader(
                         onMissing = session::needPage,
                         onRetry = { session.retry(it.toUInt()) },
                         onJumped = session::jumped,
-                        footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover) },
+                        footer = { PhoneEndPage(state, session, actions, images, onFirstPage = { session.startOver() }, cover = cover, pageGround = background) },
                         divider = { next -> StripDivider(state, next) },
                         onFlow = { next -> session.flowInto(next.id) },
                         onShowing = { showingAbove = it },
                         gap = gap,
                     )
                 }
-                state.leaves.isEmpty() -> Opening(state, cover)
-                else -> PagedReader(
+                else -> {
+                    // The opening plate stays under the first page until it is drawn, so the page fades in over
+                    // it, and only then fades itself: the ground never shows between the two.
+                    // Under a held end page the plate goes at once when the page is drawn: it is covered then.
+                    if (state.leaves.isEmpty() || openingHeld || !plateGone) {
+                        Opening(state, done = state.leaves.isNotEmpty(), drawn = !openingHeld, fades = fades && leaving == null, onGone = { plateGone = true })
+                    }
+                    if (state.leaves.isNotEmpty()) PagedReader(
                     state = state,
                     pager = pager,
                     images = images,
@@ -438,9 +515,25 @@ fun PhoneReader(
                     onMissing = session::needPage,
                     onRetry = { session.retry(it.toUInt()) },
                     onJumped = session::jumped,
-                    endPage = { PhoneEndPage(state, session, actions, images, onFirstPage = { pager.go(0, TurnHow.JUMP) }, cover = cover) },
+                    endPage = { PhoneEndPage(state, session, actions, images, onFirstPage = { pager.go(0, TurnHow.JUMP) }, cover = cover, pageGround = background) },
                     motion = fades,
-                )
+                    onReady = {
+                        openingHeld = false
+                        landed = here
+                    },
+                    )
+                    if (leaving != null) {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .graphicsLayer { alpha = 1f - handoff.value }
+                                .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() } } }
+                                .clearAndSetSemantics {},
+                        ) {
+                            PhoneEndPage(leaving, session, actions, images, cover = cover, pageGround = background)
+                        }
+                    }
+                }
             }
 
             if (view != null && view.mode != ReaderMode.STRIP && view.mode != ReaderMode.VERTICAL && !novelOpen && state.leaves.isNotEmpty()) {
@@ -495,23 +588,26 @@ fun PhoneReader(
                 }
             }
 
-            // At rest a novel's only line: the pages left in the chapter, in the bottom margin.
-            if (novelOpen && !shown && place.failed == null && !place.ended) PagesLeft(state, place)
-
             // Notices sit at the top centre while the chrome is away, and Back to page in the bottom
-            // leading corner, as the board has them.
+            // leading corner, as the board has them. A novel's text runs up to the top margin, so its
+            // notices take the bottom margin in place of the pages left.
             val notice = state.notice
             val clear = !shown && sheet == Sheet.None
+            val plated = notice != null && clear && notice.notice.action != NoticeAction.BACK_TO
+
+            // At rest a novel's only line: the pages left in the chapter, in the bottom margin.
+            if (novelOpen && !shown && place.failed == null && !place.ended && !plated) PagesLeft(state, place)
+
             AnimatedVisibility(
-                visible = notice != null && clear && notice.notice.action != NoticeAction.BACK_TO,
+                visible = plated,
                 enter = if (fades) fadeIn(Motion.fadeIn()) else EnterTransition.None,
                 exit = if (fades) fadeOut(Motion.fadeOut()) else ExitTransition.None,
-                modifier = Modifier.align(Alignment.TopCenter),
+                modifier = Modifier.align(if (novelOpen) Alignment.BottomCenter else Alignment.TopCenter),
             ) {
                 val held = remember { mutableStateOf<ShownNotice?>(null) }
                 if (notice != null) held.value = notice
                 held.value?.let { n ->
-                    NoticePlate(n.notice.msg.text(context), actionWords(context, n), Modifier) {
+                    NoticePlate(n.notice.msg.text(context), actionWords(context, n), Modifier, atFoot = novelOpen) {
                         n.notice.action?.let { action ->
                             when (action) {
                                 NoticeAction.START_OVER -> session.startOver()
@@ -524,8 +620,10 @@ fun PhoneReader(
                     }
                 }
             }
+            // Not on the end page, where the corner holds the end page's own buttons.
+            val atEndPage = state.leaves.getOrNull(pager.leaf)?.endPage == true || place.ended
             AnimatedVisibility(
-                visible = notice != null && clear && notice.notice.action == NoticeAction.BACK_TO,
+                visible = notice != null && clear && notice.notice.action == NoticeAction.BACK_TO && !atEndPage,
                 enter = if (fades) fadeIn(Motion.fadeIn()) else EnterTransition.None,
                 exit = if (fades) fadeOut(Motion.fadeOut()) else ExitTransition.None,
                 modifier = Modifier.align(Alignment.BottomStart),
@@ -644,46 +742,50 @@ private fun ChromeGroup(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val density = LocalDensity.current
     val shape = RoundedCornerShape(28.dp)
-    // Larger text scales the group up to 1.3 times.
-    CompositionLocalProvider(LocalDensity provides Density(density.density, density.fontScale.coerceAtMost(1.3f))) {
-        Column(
-            modifier
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-                .padding(start = 12.dp, end = 12.dp, bottom = 26.dp)
-                .fillMaxWidth()
-                .clip(shape)
-                .background(Chrome.plate, shape)
-                .padding(horizontal = 8.dp, vertical = 8.dp)
-                .semantics { isTraversalGroup = true },
+    // Larger text grows the group with it: its words follow the font scale, its buttons are at least 48 dp.
+    Column(
+        modifier
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
+            .padding(start = 12.dp, end = 12.dp, bottom = 26.dp)
+            .fillMaxWidth()
+            .clip(shape)
+            .background(Chrome.plate, shape)
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .semantics { isTraversalGroup = true },
+    ) {
+        if (scrubber != null) {
+            Box(Modifier.semantics { isTraversalGroup = true; traversalIndex = 1f }) { scrubber() }
+        }
+        Row(
+            Modifier.fillMaxWidth().semantics { isTraversalGroup = true; traversalIndex = 0f },
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (scrubber != null) {
-                Box(Modifier.semantics { isTraversalGroup = true; traversalIndex = 1f }) { scrubber() }
+            IconButton(onClick = onClose, modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)) {
+                GlyphIcon(Glyph.Close, Chrome.text, modifier = Modifier.semantics { contentDescription = Strings.readerClose(context) })
             }
-            Row(
-                Modifier.fillMaxWidth().semantics { isTraversalGroup = true; traversalIndex = 0f },
-                verticalAlignment = Alignment.CenterVertically,
+            Column(Modifier.weight(1f).padding(horizontal = 6.dp)) {
+                Text(title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.Bold, 14.sp), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(line, color = Chrome.faint, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            IconButton(
+                onClick = onChapters,
+                modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp).background(if (chaptersOpen) Chrome.selected else Color.Transparent, RoundedCornerShape(24.dp)),
             ) {
-                IconButton(onClick = onClose, modifier = Modifier.size(48.dp)) {
-                    GlyphIcon(Glyph.Close, Chrome.text, modifier = Modifier.semantics { contentDescription = Strings.readerClose(context) })
-                }
-                Column(Modifier.weight(1f).padding(horizontal = 6.dp)) {
-                    Text(title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.Bold, 14.sp), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(line, color = Chrome.faint, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                IconButton(
-                    onClick = onChapters,
-                    modifier = Modifier.size(48.dp).background(if (chaptersOpen) Chrome.selected else Color.Transparent, RoundedCornerShape(24.dp)),
-                ) {
-                    GlyphIcon(Glyph.List, Chrome.text, modifier = Modifier.semantics { contentDescription = Strings.readerChapters(context) })
-                }
-                IconButton(
-                    onClick = onSettings,
-                    modifier = Modifier.size(48.dp).background(if (settingsOpen) Chrome.selected else Color.Transparent, RoundedCornerShape(24.dp)),
-                ) {
-                    Text("Aa", color = Chrome.text, fontSize = 17.sp, fontWeight = FontWeight.Medium, modifier = Modifier.semantics { contentDescription = Strings.readerSettings(context) })
-                }
+                GlyphIcon(Glyph.List, Chrome.text, modifier = Modifier.semantics { contentDescription = Strings.readerChapters(context) })
+            }
+            // Aa is text, so its button grows with it.
+            Box(
+                Modifier
+                    .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(if (settingsOpen) Chrome.selected else Color.Transparent)
+                    .clickable(role = Role.Button, onClick = onSettings)
+                    .semantics { contentDescription = Strings.readerSettings(context) }
+                    .padding(horizontal = 6.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Aa", color = Chrome.text, fontSize = 17.sp, fontWeight = FontWeight.Medium, modifier = Modifier.clearAndSetSemantics {})
             }
         }
     }
@@ -735,7 +837,7 @@ private fun Scrubber(state: ReaderState, rtl: Boolean, shownLeaf: Int, scrub: Sc
     val layout = if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr
     CompositionLocalProvider(LocalLayoutDirection provides layout) {
         Row(Modifier.fillMaxWidth().heightIn(min = 28.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text((at + 1).toString(), color = Chrome.text, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.width(32.dp))
+            Text((at + 1).toString(), color = Chrome.text, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.widthIn(min = 32.dp))
             val slider = remember(count) {
                 SliderState(page.toFloat(), (count - 2).coerceAtLeast(0), 0f..last.toFloat())
             }
@@ -784,7 +886,7 @@ private fun Scrubber(state: ReaderState, rtl: Boolean, shownLeaf: Int, scrub: Sc
                     stateDescription = Strings.readerPageOf(context, at + 1, count)
                 },
             )
-            Text(count.toString(), color = Chrome.faint, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.width(32.dp))
+            Text(count.toString(), color = Chrome.faint, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.widthIn(min = 32.dp))
         }
     }
 }
@@ -872,7 +974,8 @@ private fun NovelScrubber(state: ReaderState, place: NovelPlace) {
     val start = if (scroll) "${(at * 100) / last}%" else (at + 1).toString()
     val end = if (scroll) Strings.readerMinutesLeft(context, (pages - 1 - at).coerceAtLeast(1)) else pages.toString()
     Row(Modifier.fillMaxWidth().heightIn(min = 28.dp).padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(start, color = Chrome.text, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.widthIn(min = 32.dp))
+        // The numbers are the slider's value, which says them as "Page 3 of 8".
+        Text(start, color = Chrome.text, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.widthIn(min = 32.dp).clearAndSetSemantics {})
         Slider(
             value = at.toFloat(),
             onValueChange = { dragging = it.roundToInt() },
@@ -895,7 +998,7 @@ private fun NovelScrubber(state: ReaderState, place: NovelPlace) {
                 stateDescription = if (scroll) start else Strings.readerPageOf(context, at + 1, pages)
             },
         )
-        Text(end, color = Chrome.faint, fontFamily = FontFamily.Monospace, fontSize = 13.sp, textAlign = TextAlign.End, modifier = Modifier.widthIn(min = 32.dp))
+        Text(end, color = Chrome.faint, fontFamily = FontFamily.Monospace, fontSize = 13.sp, textAlign = TextAlign.End, modifier = Modifier.widthIn(min = 32.dp).then(if (scroll) Modifier else Modifier.clearAndSetSemantics {}))
     }
 }
 
@@ -975,11 +1078,12 @@ private fun NovelEndPage(
 
 /** A capsule at the top centre: 44 dp tall at least, solid, with an underlined text action. */
 @Composable
-private fun NoticePlate(words: String, action: String?, modifier: Modifier, onAction: () -> Unit) {
+private fun NoticePlate(words: String, action: String?, modifier: Modifier, atFoot: Boolean = false, onAction: () -> Unit) {
     Row(
         modifier
             .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(top = 12.dp, start = 16.dp, end = 16.dp)
+            // At the foot it is centred where the pages left line sits.
+            .padding(top = if (atFoot) 0.dp else 12.dp, bottom = if (atFoot) 15.dp else 0.dp, start = 16.dp, end = 16.dp)
             .heightIn(min = 44.dp)
             .background(Chrome.plate, RoundedCornerShape(22.dp))
             .border(1.dp, Chrome.rule, RoundedCornerShape(22.dp))
@@ -1087,50 +1191,56 @@ internal fun StripDivider(state: ReaderState, next: ChapterRow) {
 }
 
 /**
- * While a chapter opens: the series' cover held dimmed to 55% where the page goes, then from
- * 600 ms a 20 dp silk spinner and the chapter, and from 3 s what it waits on and for how long.
+ * While a chapter opens: nothing for 600 ms, then the page plate in the page's place with the
+ * chapter on it, and from 3 s what it waits on and for how long. Once the first page is [done] and
+ * drawn over it, the plate fades out.
  */
 @Composable
-private fun Opening(state: ReaderState, cover: (@Composable (Modifier) -> Unit)?) {
+private fun Opening(state: ReaderState, done: Boolean, drawn: Boolean, fades: Boolean, onGone: () -> Unit) {
     val context = LocalContext.current
     var waited by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
-        delay(600)
-        waited = 600
+        delay(PageWaits.PLATE_MS)
+        waited = PageWaits.PLATE_MS.toInt()
         while (true) {
             delay(200)
             waited += 200
         }
     }
-    Box(Modifier.fillMaxSize()) {
-        if (cover != null) {
-            BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                // The page's place: a page's shape, as wide as it fits.
-                val width = minOf(maxWidth, maxHeight * 0.703f)
-                cover(Modifier.width(width).aspectRatio(0.703f).graphicsLayer { alpha = 0.55f })
-            }
+    val shown = remember { Animatable(1f) }
+    val gone by rememberUpdatedState(onGone)
+    LaunchedEffect(drawn) {
+        if (drawn) {
+            if (fades) shown.animateTo(0f, Motion.fadeOut()) else shown.snapTo(0f)
+            gone()
         }
-        if (waited < 600) return@Box
-        val number = (state.openingChapter ?: state.view?.chapter)?.let(::chapterNumber)
-        val opening = number?.let { Strings.readerOpeningChapter(context, it) }
-        val line = when {
-            waited < 3000 -> opening
-            else -> {
-                val what = if (state.openingWait == ReaderWait.FINDING_SOURCE) Strings.readerOpeningFinding(context) else opening
-                what?.let { Strings.readerOpeningWaited(context, it, waited / 1000) }
-            }
+    }
+    if (waited < PageWaits.PLATE_MS) return
+    val number = (state.openingChapter ?: state.view?.chapter)?.let(::chapterNumber)
+    val opening = number?.let { Strings.readerOpeningChapter(context, it) }
+    val line = when {
+        waited < 3000 -> opening
+        else -> {
+            val what = if (state.openingWait == ReaderWait.FINDING_SOURCE) Strings.readerOpeningFinding(context) else opening
+            what?.let { Strings.readerOpeningWaited(context, it, waited / 1000) }
         }
-        Row(
-            Modifier
-                .align(Alignment.BottomCenter)
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom))
-                .padding(bottom = 120.dp, start = 24.dp, end = 24.dp)
-                .semantics { liveRegion = LiveRegionMode.Polite },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            CircularProgressIndicator(color = Chrome.text, trackColor = Color.Transparent, strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
-            if (line != null) Text(line, color = Chrome.text, fontSize = 15.sp)
+    }
+    BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value }, contentAlignment = Alignment.Center) {
+        // The page's place: a page's shape, as wide as it fits.
+        val width = minOf(maxWidth, maxHeight * 0.703f)
+        Box(Modifier.width(width).aspectRatio(0.703f).background(Chrome.plate)) {
+            if (line != null && !done) {
+                Text(
+                    line,
+                    color = Chrome.faint,
+                    fontSize = 15.sp,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 24.dp)
+                        .semantics { liveRegion = LiveRegionMode.Polite },
+                )
+            }
         }
     }
 }

@@ -1506,6 +1506,11 @@ class AppStore(
             }
             is Event.Reading -> when (val said = event.v1) {
                 is ReadingEvent.Eink -> readers.forEach { it(event) }
+                // The reader's Chapters tab and its failed screen wait for these as well.
+                is ReadingEvent.Chapters, is ReadingEvent.Versions -> {
+                    readers.forEach { it(event) }
+                    reading.apply(said)
+                }
                 is ReadingEvent.Failed -> when (said.about) {
                     ReadingAbout.READER, ReadingAbout.EINK -> readers.forEach { it(event) }
                     ReadingAbout.EXPORT -> exportFailure = said.failure

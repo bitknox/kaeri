@@ -65,4 +65,15 @@ class ReaderInputTest {
         assertEquals(KeyAnswer(null), rules.action(KeyEvent.KEYCODE_VOLUME_UP, repeat = 2))
         assertEquals(KeyAnswer(null), ReaderKeyRules(rtl).action(KeyEvent.KEYCODE_VOLUME_UP, repeat = 1))
     }
+
+    @Test
+    fun home_end_escape_and_g_have_their_own_actions() {
+        val rules = ReaderKeyRules(rtl)
+        assertEquals(ReaderAction.FIRST, rules.action(KeyEvent.KEYCODE_MOVE_HOME)?.action)
+        assertEquals(ReaderAction.LAST, rules.action(KeyEvent.KEYCODE_MOVE_END)?.action)
+        assertEquals(ReaderAction.ESCAPE, rules.action(KeyEvent.KEYCODE_ESCAPE)?.action)
+        assertEquals(ReaderAction.GO_TO, rules.action(KeyEvent.KEYCODE_G)?.action)
+        // A held key does not repeat them.
+        assertEquals(KeyAnswer(null), rules.action(KeyEvent.KEYCODE_MOVE_END, repeat = 1))
+    }
 }

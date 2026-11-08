@@ -1225,6 +1225,10 @@ object Strings {
     fun readingDlFailed(context: Context, chapter: String): String =
         context.getString(R.string.reading_dl_failed, chapter)
 
+    /** After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest. */
+    fun readingDlOffline(context: Context): String =
+        context.getString(R.string.reading_dl_offline)
+
     /** How much the chosen chapters will take, from their pages and the size of pages downloaded before. */
     fun readingEstimateSize(context: Context, size: String): String =
         context.getString(R.string.reading_estimate_size, size)
@@ -2301,10 +2305,6 @@ object Strings {
     fun einkEndOfChapter(context: Context, chapter: String): String =
         context.getString(R.string.eink_end_of_chapter, chapter)
 
-    /** On the page between chapters, once the chapter counts as read. */
-    fun einkCountedRead(context: Context): String =
-        context.getString(R.string.eink_counted_read)
-
     /** Small heading above the next chapter on the page between chapters. */
     fun einkEndNext(context: Context): String =
         context.getString(R.string.eink_end_next)
@@ -2332,10 +2332,6 @@ object Strings {
     /** The main button on the page between chapters. */
     fun einkContinueTo(context: Context, chapter: String): String =
         context.getString(R.string.eink_continue_to, chapter)
-
-    /** Button on the page between chapters that leaves the reader for the series page. */
-    fun einkBackToSeries(context: Context): String =
-        context.getString(R.string.eink_back_to_series)
 
     /** Line at the foot of the page between chapters. */
     fun einkTurnToContinue(context: Context): String =
@@ -2504,6 +2500,10 @@ object Strings {
     /** Heading in the reader's settings above the choices every manga shares. */
     fun readerSheetAllManga(context: Context): String =
         context.getString(R.string.reader_sheet_all_manga)
+
+    /** Heading in the reader's settings above the choices every webtoon shares. */
+    fun readerSheetAllWebtoons(context: Context): String =
+        context.getString(R.string.reader_sheet_all_webtoons)
 
     /** Heading in the reader's settings above the choices every light novel shares. */
     fun readerSheetAllNovels(context: Context): String =
@@ -2784,6 +2784,14 @@ object Strings {
     /** On the plate of a page that is still loading. */
     fun readerPagePlate(context: Context, page: Int): String =
         context.getString(R.string.reader_page_plate, page)
+
+    /** On the plate of a strip image that is still loading. */
+    fun readerImagePlate(context: Context, image: Int): String =
+        context.getString(R.string.reader_image_plate, image)
+
+    /** On a strip image's plate in place of its number after four seconds. */
+    fun readerImageLoading(context: Context, image: Int): String =
+        context.getString(R.string.reader_image_loading, image)
 
     /** Under Opening chapter when it takes more than three seconds. */
     fun readerOpeningFinding(context: Context): String =
@@ -9153,6 +9161,14 @@ object Strings {
     /** The main action for a light novel part, part read, when how far is not known. */
     fun actionContinuePartPlain(context: Context, n: String): String =
         context.getString(R.string.action_continue_part_plain, n)
+
+    /** The main action for a light novel part the source calls a chapter, part read. */
+    fun actionContinueChapterPercent(context: Context, n: String, percent: Int): String =
+        context.getString(R.string.action_continue_chapter_percent, n, percent)
+
+    /** The main action for a light novel part the source calls a chapter, part read, when how far is not known. */
+    fun actionContinueChapterPlain(context: Context, n: String): String =
+        context.getString(R.string.action_continue_chapter_plain, n)
 
     /** The main action for a light novel part not opened yet. */
     fun actionReadPart(context: Context, n: String): String =

@@ -1525,6 +1525,11 @@ pub fn reading_dl_failed(chapter: &str) -> String {
     text("reading-dl-failed", &[("chapter", Arg::Text(chapter))])
 }
 
+/// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+pub fn reading_dl_offline() -> String {
+    text("reading-dl-offline", &[])
+}
+
 /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 pub fn reading_estimate_size(size: &str) -> String {
     text("reading-estimate-size", &[("size", Arg::Text(size))])
@@ -14445,6 +14450,16 @@ pub fn action_continue_part(n: &str, percent: i64) -> String {
 /// The main action for a light novel part, part read, when how far is not known.
 pub fn action_continue_part_plain(n: &str) -> String {
     text("action-continue-part-plain", &[("n", Arg::Text(n))])
+}
+
+/// The main action for a light novel part the source calls a chapter, part read.
+pub fn action_continue_chapter_percent(n: &str, percent: i64) -> String {
+    text("action-continue-chapter-percent", &[("n", Arg::Text(n)), ("percent", Arg::Int(percent))])
+}
+
+/// The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+pub fn action_continue_chapter_plain(n: &str) -> String {
+    text("action-continue-chapter-plain", &[("n", Arg::Text(n))])
 }
 
 /// The main action for a light novel part not opened yet.

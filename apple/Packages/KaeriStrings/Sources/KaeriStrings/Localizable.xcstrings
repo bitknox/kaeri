@@ -11849,6 +11849,174 @@
         }
       }
     },
+    "action-continue-chapter-percent" : {
+      "comment" : "The main action for a light novel part the source calls a chapter, part read. Argument 1: n (Text). Argument 2: percent (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiterlesen mit Kapitel %1$@ · %2$lld%%"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue chapter %1$@ · %2$lld%%"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir con el capítulo %1$@ · %2$lld%%"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre le chapitre %1$@ · %2$lld %%"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lanjutkan bab %1$@ · %2$lld%%"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprendi il capitolo %1$@ · %2$lld%%"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "続きを見る 第%1$@話 · %2$lld%%"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wznów rozdział %1$@ · %2$lld%%"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retomar o capítulo %1$@ · %2$lld%%"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продолжить: глава %1$@ · %2$lld%%"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läs vidare på kapitel %1$@ · %2$lld%%"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okumayı sürdür: bölüm %1$@ · %%%2$lld"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiếp tục chương %1$@ · %2$lld%%"
+          }
+        }
+      }
+    },
+    "action-continue-chapter-plain" : {
+      "comment" : "The main action for a light novel part the source calls a chapter, part read, when how far is not known. Argument 1: n (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weiterlesen mit Kapitel %1$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue chapter %1$@"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir con el capítulo %1$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre le chapitre %1$@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lanjutkan bab %1$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Riprendi il capitolo %1$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "続きを見る 第%1$@話"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wznów rozdział %1$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retomar o capítulo %1$@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продолжить: глава %1$@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Läs vidare på kapitel %1$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okumayı sürdür: bölüm %1$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiếp tục chương %1$@"
+          }
+        }
+      }
+    },
     "action-continue-named" : {
       "comment" : "The main action for a light novel part, part read, named in the source's own words (\"Part 3\", \"Chapter 3\") as its row is. Argument 1: label (Text). Argument 2: percent (Int).",
       "extractionState" : "manual",
@@ -213884,79 +214052,79 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gelesen"
+            "value" : "Als gelesen gezählt"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read"
+            "value" : "Counted as read"
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leído"
+            "value" : "Contado como leído"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lu"
+            "value" : "Compté comme lu"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dibaca"
+            "value" : "Dihitung sudah dibaca"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Letto"
+            "value" : "Contato come letto"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "既読"
+            "value" : "既読になりました"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Przeczytano"
+            "value" : "Zaliczono jako przeczytany"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lido"
+            "value" : "Contado como lido"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Прочитано"
+            "value" : "Засчитано как прочитанная"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Läst"
+            "value" : "Räknas som läst"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Okundu"
+            "value" : "Okundu sayıldı"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Đã đọc"
+            "value" : "Đã tính là đã đọc"
           }
         }
       }
@@ -214052,79 +214220,79 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Gelesen · %1$@ aktualisiert"
+            "value" : "Als gelesen gezählt · %1$@ aktualisiert"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Read · %1$@ updated"
+            "value" : "Counted as read · %1$@ updated"
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leído · Actualizado en %1$@"
+            "value" : "Contado como leído · Actualizado en %1$@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lu · %1$@ à jour"
+            "value" : "Compté comme lu · %1$@ à jour"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dibaca · %1$@ diperbarui"
+            "value" : "Dihitung sudah dibaca · %1$@ diperbarui"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Letto · aggiornamento inviato a %1$@"
+            "value" : "Contato come letto · aggiornamento inviato a %1$@"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "既読 · %1$@を更新しました"
+            "value" : "既読になりました · %1$@を更新しました"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Przeczytano · zaktualizowano: %1$@"
+            "value" : "Zaliczono jako przeczytany · zaktualizowano: %1$@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lido · Atualizado em %1$@"
+            "value" : "Contado como lido · Atualizado em %1$@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Прочитано · обновлено: %1$@"
+            "value" : "Засчитано как прочитанная · обновлено: %1$@"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Läst · uppdaterat på %1$@"
+            "value" : "Räknas som läst · uppdaterat på %1$@"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Okundu · %1$@ güncellendi"
+            "value" : "Okundu sayıldı · %1$@ güncellendi"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Đã đọc · đã cập nhật %1$@"
+            "value" : "Đã tính là đã đọc · đã cập nhật %1$@"
           }
         }
       }
@@ -228853,6 +229021,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld đang chờ nữa"
+          }
+        }
+      }
+    },
+    "reading-dl-offline" : {
+      "comment" : "After \"Chapter 2 couldn't download\" when there was no network: the downloads banner says the rest.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin conexión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hors ligne"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフライン"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет сети"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çevrimdışı"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ngoại tuyến"
           }
         }
       }
@@ -280696,79 +280948,79 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Farbe oder Grau"
+            "value" : "Farbseiten oder Grautöne für E-Ink"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Colour or greys"
+            "value" : "Colour pages or greys for e-ink"
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Color o grises"
+            "value" : "Páginas en color o grises para e-ink"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couleur ou gris"
+            "value" : "Pages en couleur ou en gris pour e-ink"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Warna atau abu-abu"
+            "value" : "Halaman berwarna atau abu-abu untuk e-ink"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Colore o grigi"
+            "value" : "Pagine a colori o in grigi per e-ink"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "カラーまたはグレー"
+            "value" : "カラーページか、電子ペーパー向けのグレーか"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kolor lub szarości"
+            "value" : "Strony w kolorze lub w szarościach dla e-ink"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cores ou cinzas"
+            "value" : "Páginas coloridas ou em cinza para e-ink"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Цвет или серый"
+            "value" : "Цветные страницы или серые для e-ink"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Färg eller gråtoner"
+            "value" : "Färgsidor eller gråtoner för e-ink"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Renkli veya gri"
+            "value" : "Renkli sayfalar ya da e-ink için gri"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Màu hoặc xám"
+            "value" : "Trang màu hoặc xám cho e-ink"
           }
         }
       }

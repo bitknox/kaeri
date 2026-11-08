@@ -163,6 +163,7 @@ reading-dl-more-queued = { $count } tane daha sırada
 reading-dl-queued = { $count } sırada
 reading-dl-waits-wifi = Wi-Fi bekliyor
 reading-dl-failed = Bölüm { $chapter } indirilemedi
+reading-dl-offline = Çevrimdışı
 reading-estimate-size = Yaklaşık { $size }
 reading-estimate-wifi = Wi-Fi ile
 reading-estimate-mobile = mobil veriyle

@@ -179,10 +179,15 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.StripAt(now.session ?: return, now.chapter ?: return, at, footVisible))
     }
 
-    /** The paginator turned in a novel. */
+    /**
+     * The paginator turned in a novel. A notice lies over the text, so the first turn takes it,
+     * apart from Back to page.
+     */
     fun novelAt(pos: NovelPos, page: UInt, pages: UInt, how: TurnHow) {
         val now = state.value
         reader(ReaderCommand.NovelAt(now.session ?: return, now.novel?.chapter ?: now.chapter ?: return, pos, page, pages, how))
+        val notice = now.notice
+        if (notice != null && how != TurnHow.JUMP && notice.notice.action != app.kaeri.engine.model.ReaderAction.BACK_TO) dismissNotice(notice.id)
     }
 
     /** The hidden web view counted the volume's pages for these settings and this screen. */

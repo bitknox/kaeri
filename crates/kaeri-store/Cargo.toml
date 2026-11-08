@@ -10,6 +10,10 @@ description = "Local SQLite store: watch history, sync outbox, caches and mappin
 # No doc example is written as a test, and rustdoc spends seconds per crate finding none.
 doctest = false
 
+[features]
+# `stop_clock_at`, for recording the apps' scenes the same on every run.
+testing = []
+
 [dependencies]
 kaeri-core.workspace = true
 rusqlite.workspace = true

@@ -1061,6 +1061,9 @@
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Le chapitre {chapter} n'a pas pu être téléchargé</value>
   </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>Hors ligne</value>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Environ {size}</value>
   </data>
@@ -6258,10 +6261,10 @@
     <value>Fermer</value>
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
-    <value>Lu</value>
+    <value>Compté comme lu</value>
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
-    <value>Lu · {trackers} à jour</value>
+    <value>Compté comme lu · {trackers} à jour</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Suivant</value>
@@ -6664,6 +6667,12 @@
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
     <value>Poursuivre la partie {n}</value>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>Reprendre le chapitre {n} · {percent} %</value>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>Reprendre le chapitre {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Lire la partie {n}</value>
@@ -7620,7 +7629,7 @@
     <value>La taille du texte, les marges, les zones tactiles et le rafraîchissement restent sur {device}.</value>
   </data>
   <data name="SettingsLookFollowsNote" xml:space="preserve">
-    <value>Couleur ou gris</value>
+    <value>Pages en couleur ou en gris pour e-ink</value>
   </data>
   <data name="SettingsNewChaptersReading" xml:space="preserve">
     <value>Séries de la liste Lecture</value>

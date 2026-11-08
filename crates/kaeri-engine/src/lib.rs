@@ -164,8 +164,11 @@ pub mod widgets;
 pub mod write_back;
 
 /// Now, in seconds since the Unix epoch, by the system clock: what the work dates and ages
-/// things by.
+/// things by. A scene recording can stop it ([`clock::stop_at`]).
 pub fn now_epoch() -> i64 {
+    if let Some(at) = clock::stopped() {
+        return at;
+    }
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_secs() as i64)

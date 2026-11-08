@@ -1007,6 +1007,9 @@ reading-dl-waits-wifi = attend le Wi-Fi
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Le chapitre { $chapter } n'a pas pu être téléchargé
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = Hors ligne
+
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Environ { $size }
 
@@ -8726,10 +8729,10 @@ reader-try-again = Réessayer
 reader-close = Fermer
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-reader-end-read = Lu
+reader-end-read = Compté comme lu
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = Lu · { $trackers } à jour
+reader-end-tracker = Compté comme lu · { $trackers } à jour
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Suivant
@@ -9122,6 +9125,12 @@ action-continue-part = Poursuivre la partie { $n } · { $percent } %
 
 # The main action for a light novel part, part read, when how far is not known.
 action-continue-part-plain = Poursuivre la partie { $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = Reprendre le chapitre { $n } · { $percent } %
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = Reprendre le chapitre { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Lire la partie { $n }
@@ -10059,7 +10068,7 @@ settings-follow-mode-note = Une série que vous modifiez se lit pareil sur vos a
 settings-follow-footer = La taille du texte, les marges, les zones tactiles et le rafraîchissement restent sur { $device }.
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = Couleur ou gris
+settings-look-follows-note = Pages en couleur ou en gris pour e-ink
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = Séries de la liste Lecture

@@ -295,6 +295,8 @@ struct Chapter {
     /// Parts already sent, by page and half.
     sent: HashSet<(u32, Option<PageHalf>)>,
     queue: VecDeque<u32>,
+    /// Leaves an app asked for again and not yet made: a later wish keeps them queued.
+    asked: HashSet<u32>,
     /// Pages made before the session sent the leaves, held until it asks for any: an app
     /// never hears of a page before the leaf it belongs to.
     held: Option<Vec<ReaderEvent>>,
@@ -377,7 +379,7 @@ impl Worker {
                     .as_mut()
                     .filter(|c| c.session == session && c.generation == generation)
                 {
-                    c.queue = leaves.into();
+                    c.queue = wished(leaves, &c.queue, &c.asked);
                     held = c.held.take().unwrap_or_default();
                 }
                 for event in held {
@@ -392,8 +394,10 @@ impl Worker {
                         c.leaves.iter().position(|l| l.iter().any(|p| p.page == page))
                     {
                         c.queue.push_front(leaf as u32);
+                        c.asked.insert(leaf as u32);
                     } else if c.strip.is_some() {
                         c.queue.push_front(page);
+                        c.asked.insert(page);
                     }
                 }
             }
@@ -600,6 +604,7 @@ impl Worker {
             strip: None,
             sent: HashSet::new(),
             queue: VecDeque::new(),
+            asked: HashSet::new(),
             held: Some(Vec::new()),
             decoder: self.decoder.clone(),
         };
@@ -693,6 +698,7 @@ impl Worker {
     fn make_next(&mut self) {
         let Some(chapter) = self.open.as_mut() else { return };
         let Some(leaf) = chapter.queue.pop_front() else { return };
+        chapter.asked.remove(&leaf);
         let events = chapter.make_leaf(leaf);
         if let Some(held) = chapter.held.as_mut() {
             held.extend(events);
@@ -702,6 +708,17 @@ impl Worker {
             self.send(event);
         }
     }
+}
+
+/// The queue after a wish: the wished leaves in order, then any leaf an app asked for again
+/// that the wish leaves out, so a row that asked keeps its turn. A leaf made already costs
+/// nothing when wished again.
+fn wished(leaves: Vec<u32>, queue: &VecDeque<u32>, asked: &HashSet<u32>) -> VecDeque<u32> {
+    let kept: Vec<u32> =
+        queue.iter().copied().filter(|l| asked.contains(l) && !leaves.contains(l)).collect();
+    let mut next: VecDeque<u32> = leaves.into();
+    next.extend(kept);
+    next
 }
 
 /// Opens the book on its own thread, waiting at most [`OPEN_BUDGET`].
@@ -1312,6 +1329,15 @@ mod tests {
         // A spread shown as two halves is asked for at the size one half needs.
         let (w, h) = decode_room(6000, 4000, (600, 900));
         assert!((1200..6000).contains(&w) && h < 4000);
+    }
+
+    #[test]
+    fn a_wish_keeps_the_leaves_asked_for_again() {
+        let queue: VecDeque<u32> = [9, 4, 5].into();
+        let asked: HashSet<u32> = [9, 5].into();
+        // The wish comes first; 9 was asked for and is kept, 4 was only wished before.
+        assert_eq!(wished(vec![5, 6, 7], &queue, &asked), VecDeque::from([5, 6, 7, 9]));
+        assert_eq!(wished(vec![1], &VecDeque::new(), &HashSet::new()), VecDeque::from([1]));
     }
 
     #[test]

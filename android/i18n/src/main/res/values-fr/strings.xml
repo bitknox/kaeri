@@ -382,6 +382,7 @@
     <string name="reading_dl_queued">%1$,d en attente</string>
     <string name="reading_dl_waits_wifi">attend le Wi-Fi</string>
     <string name="reading_dl_failed">Le chapitre %1$s n\'a pas pu être téléchargé</string>
+    <string name="reading_dl_offline">Hors ligne</string>
     <string name="reading_estimate_size">Environ %1$s</string>
     <string name="reading_estimate_wifi">en Wi-Fi</string>
     <string name="reading_estimate_mobile">en données mobiles</string>
@@ -701,7 +702,6 @@
     <string name="eink_settings">Réglages</string>
     <string name="eink_clean_screen">Nettoyer l\'écran</string>
     <string name="eink_end_of_chapter">Fin du chapitre %1$s</string>
-    <string name="eink_counted_read">Compté comme lu</string>
     <string name="eink_end_next">Suivant</string>
     <plurals name="eink_end_pages">
         <item quantity="one">Une page</item>
@@ -713,7 +713,6 @@
     <string name="eink_reads_strip">bande verticale</string>
     <string name="eink_on_device">sur cet appareil</string>
     <string name="eink_continue_to">Poursuivre au chapitre %1$s</string>
-    <string name="eink_back_to_series">Retour à la série</string>
     <string name="eink_turn_to_continue">Tournez la page pour poursuivre</string>
     <string name="eink_next_missing">Le chapitre %1$s n\'est pas encore dans vos sources</string>
     <string name="eink_next_not_out">Le prochain chapitre n\'est pas encore sorti</string>
@@ -756,6 +755,7 @@
     <string name="reader_failed_chapter">Impossible d\'ouvrir le chapitre %1$s</string>
     <string name="reader_sheet_series">Cette série</string>
     <string name="reader_sheet_all_manga">Tous les mangas</string>
+    <string name="reader_sheet_all_webtoons">Tous les webtoons</string>
     <string name="reader_sheet_all_novels">Tous les light novels</string>
     <string name="reader_sheet_more">Plus de réglages du lecteur</string>
     <string name="reader_row_reading_mode">Mode de lecture</string>
@@ -808,7 +808,7 @@
     <string name="reader_grid_page">Aller à la page %1$d</string>
     <string name="reader_scrubber_in_chapter">Page dans le chapitre</string>
     <string name="reader_failed_novel">Impossible d\'afficher ce chapitre</string>
-    <string name="reader_end_tracker_offline">Lu · %1$s se mettra à jour une fois en ligne</string>
+    <string name="reader_end_tracker_offline">Compté comme lu · %1$s se mettra à jour une fois en ligne</string>
     <string name="reader_end_none">Pas de chapitre %1$s dans vos sources</string>
     <string name="reader_end_none_line">Kaeri cherche de nouveaux chapitres en arrière-plan et les ajoute à Mises à jour.</string>
     <string name="reader_end_finished_title">Fin</string>
@@ -826,6 +826,8 @@
     <string name="reader_volume_read">Tome %1$s · lu</string>
     <string name="reader_volume_none">Chapitres</string>
     <string name="reader_page_plate">Page %1$d</string>
+    <string name="reader_image_plate">Image %1$,d</string>
+    <string name="reader_image_loading">Chargement de l\'image %1$,d</string>
     <string name="reader_opening_finding">Recherche d\'une source</string>
     <string name="reader_failed_choose">Choisir une source</string>
     <string name="reader_settings_search">Rechercher dans les réglages</string>
@@ -2504,8 +2506,8 @@
     <string name="reader_page_failed">Impossible de charger la page %1$d</string>
     <string name="reader_try_again">Réessayer</string>
     <string name="reader_close">Fermer</string>
-    <string name="reader_end_read">Lu</string>
-    <string name="reader_end_tracker">Lu · %1$s à jour</string>
+    <string name="reader_end_read">Compté comme lu</string>
+    <string name="reader_end_tracker">Compté comme lu · %1$s à jour</string>
     <string name="reader_end_next">Suivant</string>
     <string name="reader_mode_rtl">De droite à gauche</string>
     <string name="reader_mode_ltr">De gauche à droite</string>
@@ -2660,6 +2662,8 @@
     <string name="action_continue_chapter">Poursuivre le chapitre %1$s · page %2$d</string>
     <string name="action_continue_part">Poursuivre la partie %1$s · %2$,d %%</string>
     <string name="action_continue_part_plain">Poursuivre la partie %1$s</string>
+    <string name="action_continue_chapter_percent">Reprendre le chapitre %1$s · %2$,d %%</string>
+    <string name="action_continue_chapter_plain">Reprendre le chapitre %1$s</string>
     <string name="action_read_part">Lire la partie %1$s</string>
     <string name="action_continue_named">Poursuivre %1$s · %2$,d %%</string>
     <string name="action_continue_named_plain">Poursuivre %1$s</string>
@@ -3012,7 +3016,7 @@
     <string name="settings_follow_mode">Mode, sens et couleur</string>
     <string name="settings_follow_mode_note">Une série que vous modifiez se lit pareil sur vos autres appareils</string>
     <string name="settings_follow_footer">La taille du texte, les marges, les zones tactiles et le rafraîchissement restent sur %1$s.</string>
-    <string name="settings_look_follows_note">Couleur ou gris</string>
+    <string name="settings_look_follows_note">Pages en couleur ou en gris pour e-ink</string>
     <string name="settings_new_chapters_reading">Séries de la liste Lecture</string>
     <string name="settings_new_chapters_note">Une série en cours de lecture garde aussi ses prochains chapitres prêts</string>
     <string name="settings_progress_group">Progression</string>

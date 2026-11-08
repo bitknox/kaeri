@@ -344,6 +344,7 @@
     <string name="reading_dl_queued">%1$,d件が待機中</string>
     <string name="reading_dl_waits_wifi">Wi-Fi待ち</string>
     <string name="reading_dl_failed">第%1$s話をダウンロードできませんでした</string>
+    <string name="reading_dl_offline">オフライン</string>
     <string name="reading_estimate_size">約%1$s</string>
     <string name="reading_estimate_wifi">Wi-Fi経由</string>
     <string name="reading_estimate_mobile">モバイルデータ経由</string>
@@ -633,7 +634,6 @@
     <string name="eink_settings">設定</string>
     <string name="eink_clean_screen">画面をリフレッシュ</string>
     <string name="eink_end_of_chapter">第%1$s話の終わり</string>
-    <string name="eink_counted_read">既読になりました</string>
     <string name="eink_end_next">次の章</string>
     <plurals name="eink_end_pages">
         <item quantity="other">%1$,dページ</item>
@@ -643,7 +643,6 @@
     <string name="eink_reads_strip">縦スクロール</string>
     <string name="eink_on_device">このデバイス内</string>
     <string name="eink_continue_to">第%1$s話へ進む</string>
-    <string name="eink_back_to_series">作品に戻る</string>
     <string name="eink_turn_to_continue">ページをめくると次の章へ進みます</string>
     <string name="eink_next_missing">第%1$s話はソースにまだありません</string>
     <string name="eink_next_not_out">次の章はまだ公開されていません</string>
@@ -686,6 +685,7 @@
     <string name="reader_failed_chapter">第%1$s話を開けませんでした</string>
     <string name="reader_sheet_series">この作品</string>
     <string name="reader_sheet_all_manga">すべてのマンガ</string>
+    <string name="reader_sheet_all_webtoons">すべてのウェブトゥーン</string>
     <string name="reader_sheet_all_novels">すべてのライトノベル</string>
     <string name="reader_sheet_more">リーダーのその他の設定</string>
     <string name="reader_row_reading_mode">表示モード</string>
@@ -738,7 +738,7 @@
     <string name="reader_grid_page">%1$dページへ移動</string>
     <string name="reader_scrubber_in_chapter">章内のページ</string>
     <string name="reader_failed_novel">この章を表示できませんでした</string>
-    <string name="reader_end_tracker_offline">既読 · %1$sはオンラインに戻ると更新されます</string>
+    <string name="reader_end_tracker_offline">既読になりました · %1$sはオンラインに戻ると更新されます</string>
     <string name="reader_end_none">第%1$s話はソースにまだありません</string>
     <string name="reader_end_none_line">Kaeriはバックグラウンドで新しい章を確認し、「更新」に追加します。</string>
     <string name="reader_end_finished_title">おわり</string>
@@ -756,6 +756,8 @@
     <string name="reader_volume_read">%1$s巻 · 既読</string>
     <string name="reader_volume_none">章</string>
     <string name="reader_page_plate">%1$dページ</string>
+    <string name="reader_image_plate">画像 %1$,d</string>
+    <string name="reader_image_loading">画像 %1$,d を読み込み中</string>
     <string name="reader_opening_finding">ソースを探しています</string>
     <string name="reader_failed_choose">ソースを選ぶ</string>
     <string name="reader_settings_search">設定を検索</string>
@@ -2336,8 +2338,8 @@
     <string name="reader_page_failed">%1$dページを読み込めませんでした</string>
     <string name="reader_try_again">もう一度試す</string>
     <string name="reader_close">閉じる</string>
-    <string name="reader_end_read">既読</string>
-    <string name="reader_end_tracker">既読 · %1$sを更新しました</string>
+    <string name="reader_end_read">既読になりました</string>
+    <string name="reader_end_tracker">既読になりました · %1$sを更新しました</string>
     <string name="reader_end_next">次の章</string>
     <string name="reader_mode_rtl">右から左</string>
     <string name="reader_mode_ltr">左から右</string>
@@ -2472,6 +2474,8 @@
     <string name="action_continue_chapter">続きを読む 第%1$s話 · %2$dページ</string>
     <string name="action_continue_part">続きを読む パート%1$s · %2$,d%%</string>
     <string name="action_continue_part_plain">続きを読む パート%1$s</string>
+    <string name="action_continue_chapter_percent">続きを見る 第%1$s話 · %2$,d%%</string>
+    <string name="action_continue_chapter_plain">続きを見る 第%1$s話</string>
     <string name="action_read_part">パート%1$sを読む</string>
     <string name="action_continue_named">続きを読む %1$s · %2$,d%%</string>
     <string name="action_continue_named_plain">続きを読む %1$s</string>
@@ -2790,7 +2794,7 @@
     <string name="settings_follow_mode">表示モード、読む向き、色</string>
     <string name="settings_follow_mode_note">変更した作品は、ほかのデバイスでも同じ読み方になります</string>
     <string name="settings_follow_footer">文字サイズ、余白、タップ領域、画面更新はこの%1$sに残ります。</string>
-    <string name="settings_look_follows_note">カラーまたはグレー</string>
+    <string name="settings_look_follows_note">カラーページか、電子ペーパー向けのグレーか</string>
     <string name="settings_new_chapters_reading">「読書中」の作品</string>
     <string name="settings_new_chapters_note">読んでいる作品は、次の章も先にダウンロードされます</string>
     <string name="settings_progress_group">進捗</string>

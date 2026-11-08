@@ -988,6 +988,9 @@ reading-dl-waits-wifi = waits for Wi-Fi
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Chapter { $chapter } couldn't download
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = Offline
+
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = About { $size }
 
@@ -8665,10 +8668,10 @@ reader-try-again = Try again
 reader-close = Close
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-reader-end-read = Read
+reader-end-read = Counted as read
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = Read · { $trackers } updated
+reader-end-tracker = Counted as read · { $trackers } updated
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Next
@@ -9051,6 +9054,12 @@ action-continue-part = Continue part { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
 action-continue-part-plain = Continue part { $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = Continue chapter { $n } · { $percent }%
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = Continue chapter { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Read part { $n }
@@ -9971,7 +9980,7 @@ settings-follow-mode-note = A series you change reads the same on your other dev
 settings-follow-footer = Text size, margins, tap zones and refresh stay on this { $device }.
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = Colour or greys
+settings-look-follows-note = Colour pages or greys for e-ink
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = Series on Reading

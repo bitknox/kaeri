@@ -1004,6 +1004,9 @@
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Bölüm {chapter} indirilemedi</value>
   </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>Çevrimdışı</value>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Yaklaşık {size}</value>
   </data>
@@ -6057,10 +6060,10 @@
     <value>Kapat</value>
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
-    <value>Okundu</value>
+    <value>Okundu sayıldı</value>
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
-    <value>Okundu · {trackers} güncellendi</value>
+    <value>Okundu sayıldı · {trackers} güncellendi</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Sonraki</value>
@@ -6433,6 +6436,12 @@
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
     <value>Okumayı sürdür: kısım {n}</value>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>Okumayı sürdür: bölüm {n} · %{percent}</value>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>Okumayı sürdür: bölüm {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Kısım {n} oku</value>
@@ -7338,7 +7347,7 @@
     <value>Yazı boyutu, kenar boşlukları, dokunma bölgeleri ve yenileme bu {device} üzerinde kalır.</value>
   </data>
   <data name="SettingsLookFollowsNote" xml:space="preserve">
-    <value>Renkli veya gri</value>
+    <value>Renkli sayfalar ya da e-ink için gri</value>
   </data>
   <data name="SettingsNewChaptersReading" xml:space="preserve">
     <value>Okuma listesindeki seriler</value>

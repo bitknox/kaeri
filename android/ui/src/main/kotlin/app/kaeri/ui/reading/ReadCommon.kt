@@ -144,7 +144,8 @@ internal fun ReadTile(
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = if (track) 6.dp else 8.dp),
         )
-        if (line.isNotEmpty()) {
+        // A grid's line keeps all its lines' room, so every caption is as tall and the rows stay even.
+        if (line.isNotEmpty() || lines > 1) {
             Row(Modifier.padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (tile.newChapter) WaterDot()
                 Text(
@@ -152,6 +153,7 @@ internal fun ReadTile(
                     style = MaterialTheme.typography.bodySmall.tabular(),
                     color = if (tile.newChapter) colors.onSurface else colors.onSurfaceVariant,
                     maxLines = lines,
+                    minLines = lines,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -277,16 +279,44 @@ internal fun actionWords(context: Context, action: SeriesAction?): String? = whe
     is SeriesAction.ContinuePart -> {
         val percent = action.percent?.takeIf { it > 0u }?.toInt()
         val named = action.named
+        val unit = named?.let(::namedUnit)
         when {
+            unit?.first == NamedUnit.CHAPTER && percent != null -> Strings.actionContinueChapterPercent(context, unit.second, percent)
+            unit?.first == NamedUnit.CHAPTER -> Strings.actionContinueChapterPlain(context, unit.second)
+            unit?.first == NamedUnit.PART && percent != null -> Strings.actionContinuePart(context, unit.second, percent)
+            unit?.first == NamedUnit.PART -> Strings.actionContinuePartPlain(context, unit.second)
             named != null && percent != null -> Strings.actionContinueNamed(context, named, percent)
             named != null -> Strings.actionContinueNamedPlain(context, named)
             percent != null -> Strings.actionContinuePart(context, action.label, percent)
             else -> Strings.actionContinuePartPlain(context, action.label)
         }
     }
-    is SeriesAction.ReadPart -> action.named?.let { Strings.actionReadNamed(context, it) } ?: Strings.actionReadPart(context, action.label)
+    is SeriesAction.ReadPart -> {
+        val named = action.named
+        val unit = named?.let(::namedUnit)
+        when {
+            unit?.first == NamedUnit.CHAPTER -> Strings.actionReadChapter(context, unit.second)
+            unit?.first == NamedUnit.PART -> Strings.actionReadPart(context, unit.second)
+            named != null -> Strings.actionReadNamed(context, named)
+            else -> Strings.actionReadPart(context, action.label)
+        }
+    }
     SeriesAction.ReadAgain -> Strings.actionReadAgain(context)
     SeriesAction.NoSource, null -> null
+}
+
+private enum class NamedUnit { CHAPTER, PART }
+
+private val unitName = Regex("""^\s*(chapter|part)\s+(\S+)\s*$""", RegexOption.IGNORE_CASE)
+
+/**
+ * A source's own "Chapter 3" or "Part 3", so the action says it in the app's words and case, as
+ * every other main action does; `null` for any other name, which goes as the source has it.
+ */
+private fun namedUnit(named: String): Pair<NamedUnit, String>? {
+    val found = unitName.matchEntire(named) ?: return null
+    val unit = if (found.groupValues[1].equals("chapter", ignoreCase = true)) NamedUnit.CHAPTER else NamedUnit.PART
+    return unit to found.groupValues[2]
 }
 
 /** The chapter a main action opens the reader at, or `null` for one that opens no chapter. */

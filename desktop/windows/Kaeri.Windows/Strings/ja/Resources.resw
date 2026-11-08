@@ -947,6 +947,9 @@
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>第{chapter}話をダウンロードできませんでした</value>
   </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>オフライン</value>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>約{size}</value>
   </data>
@@ -5856,10 +5859,10 @@
     <value>閉じる</value>
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
-    <value>既読</value>
+    <value>既読になりました</value>
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
-    <value>既読 · {trackers}を更新しました</value>
+    <value>既読になりました · {trackers}を更新しました</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>次の章</value>
@@ -6202,6 +6205,12 @@
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
     <value>続きを読む パート{n}</value>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>続きを見る 第{n}話 · {percent}%</value>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>続きを見る 第{n}話</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>パート{n}を読む</value>
@@ -7056,7 +7065,7 @@
     <value>文字サイズ、余白、タップ領域、画面更新はこの{device}に残ります。</value>
   </data>
   <data name="SettingsLookFollowsNote" xml:space="preserve">
-    <value>カラーまたはグレー</value>
+    <value>カラーページか、電子ペーパー向けのグレーか</value>
   </data>
   <data name="SettingsNewChaptersReading" xml:space="preserve">
     <value>「読書中」の作品</value>

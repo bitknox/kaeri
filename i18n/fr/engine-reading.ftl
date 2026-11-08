@@ -174,6 +174,7 @@ reading-dl-more-queued = { $count } autres en attente
 reading-dl-queued = { $count } en attente
 reading-dl-waits-wifi = attend le Wi-Fi
 reading-dl-failed = Le chapitre { $chapter } n'a pas pu être téléchargé
+reading-dl-offline = Hors ligne
 reading-estimate-size = Environ { $size }
 reading-estimate-wifi = en Wi-Fi
 reading-estimate-mobile = en données mobiles

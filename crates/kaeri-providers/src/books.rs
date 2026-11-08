@@ -14,7 +14,7 @@
 use std::{
     collections::BTreeSet,
     sync::{Arc, RwLock},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 use futures::future::join_all;
@@ -252,10 +252,10 @@ impl BookRegistry {
             return Err(ProviderError::Unavailable("switched off".into()));
         }
         self.admit(source.as_ref(), now)?;
-        let started = Instant::now();
+        let started = kaeri_store::instant_now();
         match call(source).await {
             Ok(value) => {
-                self.health.record_success(id, started.elapsed(), now);
+                self.health.record_success(id, kaeri_store::elapsed(started), now);
                 Ok(value)
             }
             Err(error) => {

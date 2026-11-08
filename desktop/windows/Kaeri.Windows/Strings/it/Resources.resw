@@ -1061,6 +1061,9 @@
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Download del capitolo {chapter} non riuscito</value>
   </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Circa {size}</value>
   </data>
@@ -6258,10 +6261,10 @@
     <value>Chiudi</value>
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
-    <value>Letto</value>
+    <value>Contato come letto</value>
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
-    <value>Letto · aggiornamento inviato a {trackers}</value>
+    <value>Contato come letto · aggiornamento inviato a {trackers}</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Prossimo</value>
@@ -6664,6 +6667,12 @@
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
     <value>Continua a leggere la parte {n}</value>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>Riprendi il capitolo {n} · {percent}%</value>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>Riprendi il capitolo {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Leggi la parte {n}</value>
@@ -7620,7 +7629,7 @@
     <value>Dimensione del testo, margini, zone di tocco e aggiornamento restano su questo {device}.</value>
   </data>
   <data name="SettingsLookFollowsNote" xml:space="preserve">
-    <value>Colore o grigi</value>
+    <value>Pagine a colori o in grigi per e-ink</value>
   </data>
   <data name="SettingsNewChaptersReading" xml:space="preserve">
     <value>Serie in lettura</value>

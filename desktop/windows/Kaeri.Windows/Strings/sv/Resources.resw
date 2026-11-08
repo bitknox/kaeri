@@ -1004,6 +1004,9 @@
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Kapitel {chapter} kunde inte laddas ner</value>
   </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Cirka {size}</value>
   </data>
@@ -6057,10 +6060,10 @@
     <value>Stäng</value>
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
-    <value>Läst</value>
+    <value>Räknas som läst</value>
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
-    <value>Läst · uppdaterat på {trackers}</value>
+    <value>Räknas som läst · uppdaterat på {trackers}</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Nästa</value>
@@ -6433,6 +6436,12 @@
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
     <value>Läs vidare på del {n}</value>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>Läs vidare på kapitel {n} · {percent}%</value>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>Läs vidare på kapitel {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Läs del {n}</value>
@@ -7338,7 +7347,7 @@
     <value>Textstorlek, marginaler, tryckytor och uppdatering stannar på den här {device}.</value>
   </data>
   <data name="SettingsLookFollowsNote" xml:space="preserve">
-    <value>Färg eller gråtoner</value>
+    <value>Färgsidor eller gråtoner för e-ink</value>
   </data>
   <data name="SettingsNewChaptersReading" xml:space="preserve">
     <value>Serier i Läsning</value>

@@ -48,7 +48,11 @@ import androidx.compose.ui.unit.sp
 import app.kaeri.design.robotoFlex
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.i18n.Strings
-import app.kaeri.reader.PageCanvas
+import app.kaeri.reader.PageFileView
+import app.kaeri.reader.PageWaits
+import app.kaeri.engine.model.LeafPart
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import kotlinx.coroutines.delay
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
@@ -84,7 +88,7 @@ fun ChaptersSheet(
             Spacer(Modifier.height(12.dp))
             Box(Modifier.heightIn(min = 240.dp, max = 460.dp).fillMaxWidth()) {
                 if (tab == 0) {
-                    PageGrid(state, images, currentLeaf, rtl, onGo)
+                    PageGrid(state, images, currentLeaf, rtl, onGo, session::needPage)
                 } else {
                     ChapterList(session, state)
                 }
@@ -99,21 +103,28 @@ internal fun chapterWords(context: android.content.Context, chapter: ChapterRow)
     return chapter.title?.let { Strings.readerChapterLineTitled(context, number, it) } ?: Strings.readerChapterLine(context, number)
 }
 
+/**
+ * Every page small, three across, opened at the row before the page being read. Each cell asks for
+ * its page as it comes into view.
+ */
 @Composable
-private fun PageGrid(state: ReaderState, images: PageImages, currentLeaf: Int, rtl: Boolean, onGo: (Int) -> Unit) {
+private fun PageGrid(state: ReaderState, images: PageImages, currentLeaf: Int, rtl: Boolean, onGo: (Int) -> Unit, onMissing: (LeafPart) -> Unit) {
     val context = LocalContext.current
     val story = state.leaves.filter { !it.endPage }
+    val grid = rememberLazyGridState(initialFirstVisibleItemIndex = (currentLeaf / 3 * 3 - 3).coerceIn(0, (story.size - 1).coerceAtLeast(0)))
     // A right-to-left series lays its grid out from the right, as its pages run.
     CompositionLocalProvider(LocalLayoutDirection provides if (rtl) LayoutDirection.Rtl else LayoutDirection.Ltr) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
+            state = grid,
             modifier = Modifier.fillMaxSize(),
         ) {
             itemsIndexed(story, key = { _, leaf -> leaf.index.toInt() }) { index, leaf ->
                 val part = leaf.parts.firstOrNull()
-                val bitmap = part?.let(state::file)?.let(images::cached)
+                val file = part?.let(state::file)
+                LaunchedEffect(part?.page, file == null) { if (file == null && part != null && state.failures[part.page] == null) onMissing(part) }
                 val page = (part?.page?.toInt() ?: index) + 1
                 val shape = RoundedCornerShape(8.dp)
                 Box(
@@ -126,12 +137,20 @@ private fun PageGrid(state: ReaderState, images: PageImages, currentLeaf: Int, r
                         .clickable { onGo(index) }
                         .semantics { contentDescription = Strings.readerGridPage(context, page) },
                 ) {
-                    if (bitmap != null) PageCanvas(bitmap, rotate = false, modifier = Modifier.fillMaxSize())
+                    PageFileView(file, images, Modifier.fillMaxSize())
                     Text(
                         page.toString(),
-                        color = if (bitmap != null) Color.White else Chrome.faint,
+                        color = if (file != null) Color.White else Chrome.faint,
                         fontSize = 13.sp,
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp),
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+                            // On a drawn page the number sits on a dark chip, so it reads on light paper.
+                            .then(
+                                if (file != null) {
+                                    Modifier.background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(4.dp)).padding(horizontal = 5.dp, vertical = 1.dp)
+                                } else {
+                                    Modifier
+                                },
+                            ),
                     )
                 }
             }
@@ -145,7 +164,13 @@ private fun ChapterList(session: ReaderSession, state: ReaderState) {
     val current = state.chapter
     var open by remember { mutableStateOf(setOf<Int>()) }
     if (state.volumes.isEmpty()) {
-        Text(Strings.readerChaptersLoading(context), color = Chrome.faint, fontSize = 15.sp)
+        // Nothing for the first 600 ms, as a page's plate waits, then the line.
+        var waited by remember { mutableStateOf(false) }
+        LaunchedEffect(Unit) {
+            delay(PageWaits.PLATE_MS)
+            waited = true
+        }
+        if (waited) Text(Strings.readerChaptersLoading(context), color = Chrome.faint, fontSize = 15.sp)
         return
     }
     LazyColumn(Modifier.fillMaxSize()) {

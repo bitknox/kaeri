@@ -947,6 +947,9 @@
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Bab {chapter} gagal diunduh</value>
   </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Sekitar {size}</value>
   </data>
@@ -5856,10 +5859,10 @@
     <value>Tutup</value>
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
-    <value>Dibaca</value>
+    <value>Dihitung sudah dibaca</value>
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
-    <value>Dibaca · {trackers} diperbarui</value>
+    <value>Dihitung sudah dibaca · {trackers} diperbarui</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Selanjutnya</value>
@@ -6202,6 +6205,12 @@
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
     <value>Lanjutkan membaca bagian {n}</value>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>Lanjutkan bab {n} · {percent}%</value>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>Lanjutkan bab {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Baca bagian {n}</value>
@@ -7056,7 +7065,7 @@
     <value>Ukuran teks, margin, area ketuk, dan penyegaran tetap di {device} ini.</value>
   </data>
   <data name="SettingsLookFollowsNote" xml:space="preserve">
-    <value>Warna atau abu-abu</value>
+    <value>Halaman berwarna atau abu-abu untuk e-ink</value>
   </data>
   <data name="SettingsNewChaptersReading" xml:space="preserve">
     <value>Seri di daftar Membaca</value>

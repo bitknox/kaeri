@@ -1,5 +1,6 @@
 // The paged reader: one leaf at a time, turned by taps in the zones, swipes, keys and jumps. On a
-// phone a tap or key turn is a 0.2 s crossfade with the old page held under, never through empty;
+// phone a tap or key turn is a 0.2 s crossfade with the old page held under until the new one is
+// drawn, never through empty, and Remove animations keeps that fade;
 // a swipe follows the finger and turns past 25% of the width or a 450 dp/s flick with a spring that
 // does not bounce. With motion off (e-ink, Paper mode) every turn is at once. Pinch zooms, and
 // while zoomed a drag pans and the tap zones are off.
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -28,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -43,13 +46,17 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.kaeri.design.Motion
+import app.kaeri.design.atFullSpeed
+import app.kaeri.design.rememberAnimationsRemoved
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.LeafPart
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.TurnHow
 import app.kaeri.i18n.Strings
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 
 /** Where the paged reader is, for the screen to turn it from keys, bars and the scrubber. */
@@ -61,6 +68,12 @@ class PagedReaderState(initial: Int = 0) {
 
     /** The leaf being turned away from, held under the new one while it fades in. */
     internal var under by mutableStateOf<Int?>(null)
+
+    /** The chapter whose leaves [leaf] counts in. */
+    internal var chapter by mutableStateOf<Any?>(null)
+
+    /** The turn whose crossfade has started; until then the new leaf waits under nothing. */
+    internal var fading by mutableIntStateOf(0)
 
     /** How the leaf on screen was reached, and a count that moves with each turn. */
     var how by mutableStateOf(TurnHow.TURN)
@@ -130,13 +143,20 @@ fun PagedReader(
     val shown by rememberUpdatedState(onShown)
 
     // The engine's own moves: the start place, Back to page, a place another device reached.
+    // A new chapter's leaves count afresh: the old leaf number names another page there, so it is
+    // never shown or faded from. Until the chapter's jump lands, the leaf it lands on shows.
+    val chapter = state.view?.chapter?.id
+    val fresh = chapter != pager.chapter
     LaunchedEffect(state.jump, leaves.size) {
         val jump = state.jump ?: return@LaunchedEffect
         if (leaves.isEmpty()) return@LaunchedEffect
         // Reported as a turn, so the engine does not offer Back to page for its own move.
         pager.go(jump.leaf, TurnHow.TURN)
+        if (fresh) pager.under = null
+        pager.chapter = chapter
         onJumped(jump.id)
     }
+    if (fresh && state.jump == null && leaves.isNotEmpty()) SideEffect { pager.chapter = chapter }
     // A leaf counts as shown once it is on screen, never while a jump is still to come.
     LaunchedEffect(pager.turns, state.layout) {
         if (leaves.isEmpty() || state.jump != null) return@LaunchedEffect
@@ -144,16 +164,24 @@ fun PagedReader(
         shown(pager.leaf, pager.how)
     }
 
-    // The crossfade: the new leaf over the old one, then the old one goes.
+    // The crossfade: the new leaf over the old one, then the old one goes once the new one is drawn,
+    // so a turn never shows the empty ground. With Remove animations on the fade keeps its own clock.
     val fade = remember { Animatable(1f) }
+    val removed = rememberAnimationsRemoved()
+    var drawn by remember { mutableIntStateOf(-1) }
     LaunchedEffect(pager.turns) {
         if (pager.under == null) return@LaunchedEffect
         if (!motion) {
             pager.under = null
             return@LaunchedEffect
         }
-        fade.snapTo(0f)
-        fade.animateTo(1f, Motion.quick())
+        val turn: suspend () -> Unit = {
+            fade.snapTo(0f)
+            pager.fading = pager.turns
+            fade.animateTo(1f, Motion.quick())
+            withTimeoutOrNull(PageWaits.PLATE_MS) { snapshotFlow { drawn == pager.leaf }.first { it } }
+        }
+        if (removed) atFullSpeed { turn() } else turn()
         pager.under = null
     }
 
@@ -312,7 +340,12 @@ fun PagedReader(
                             onMissing = onMissing,
                             onRetry = onRetry,
                             instant = !motion,
-                            onReady = { if (current) onReady(index) },
+                            onReady = {
+                                if (current) {
+                                    drawn = index
+                                    onReady(index)
+                                }
+                            },
                             waiting = waiting,
                             failed = failed,
                         )
@@ -323,7 +356,15 @@ fun PagedReader(
                 val under = pager.under
                 if (under != null && motion) Show(under)
                 if (drag != 0f && motion) neighbour(drag)?.let { Show(it, shift = if (drag > 0) drag - width else drag + width) }
-                Show(pager.leaf, alpha = if (under != null && motion) fade.value else 1f, shift = if (motion) drag else 0f, current = true)
+                // The frame between a turn and its fade's start draws the old leaf alone, not the new one
+                // whole for a frame before it fades in.
+                val alpha = when {
+                    under == null || !motion -> 1f
+                    pager.fading != pager.turns -> 0f
+                    else -> fade.value
+                }
+                val landing = state.jump?.leaf?.takeIf { fresh }?.coerceIn(0, leaves.lastIndex)
+                Show(landing ?: pager.leaf, alpha = if (landing != null) 1f else alpha, shift = if (motion) drag else 0f, current = true)
             }
         }
     }

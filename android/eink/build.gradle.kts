@@ -20,6 +20,7 @@ android {
 dependencies {
     api(project(":reader"))
     implementation(project(":i18n"))
+    implementation(libs.activity.compose)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)

@@ -57,6 +57,18 @@ class NovelPlace {
         internal set
     internal var goTo: ((Int) -> Unit)? = null
     internal var reload: (() -> Unit)? = null
+    internal var turnBy: ((forward: Boolean) -> Unit)? = null
+
+    /**
+     * The reader's keys while the web view has focus, which would otherwise take arrows and Space
+     * for itself: true for a key the reader took.
+     */
+    var keys: ((android.view.KeyEvent) -> Boolean)? = null
+
+    /** Turn a page forward or back, as a key does. */
+    fun turn(forward: Boolean) {
+        turnBy?.invoke(forward)
+    }
 
     /** Turn to [page] of the document shown. */
     fun go(page: Int) {
@@ -137,7 +149,12 @@ fun NovelScreen(
     }
     DisposableEffect(host) {
         place.goTo = { host.goTo(it) }
+        place.turnBy = { forward -> turn(forward, TurnHow.KEY) }
+        // Keys reach the web view first; the reader's own go to the reader.
+        host.view.setOnKeyListener { _, _, event -> place.keys?.invoke(event) == true }
         onDispose {
+            host.view.setOnKeyListener(null)
+            place.turnBy = null
             place.goTo = null
             place.reload = null
             host.destroy()
