@@ -1,6 +1,7 @@
 // The phone reader's states the Fixtures app cannot reach on its own, drawn on the JVM from
 // made-up records: the slow open over the cover, a chapter that would not open (with and without
-// another source), the end page naming the next chapter's source with its first page, the strip's
+// another source), the end page naming the next chapter's source with its first page and while
+// that page loads, the demo's card on a white page, a strip image still loading, the strip's
 // divider, and a novel the web view could not show. Written to android/.shots/roborazzi/reader-*.
 
 package app.kaeri.reader
@@ -24,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import app.kaeri.design.ObiSilk
 import app.kaeri.engine.model.BookEditionRow
 import app.kaeri.engine.model.ChapterVersion
+import app.kaeri.engine.model.DemoWorkInfo
+import app.kaeri.reader.phone.Chrome
 import app.kaeri.engine.model.ReaderWait
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.reader.phone.PhoneEndPage
@@ -154,6 +157,61 @@ class ReaderShots {
         }
         compose.waitForIdle()
         captureScreenRoboImage(file("end-page-source"))
+    }
+
+    @Test
+    fun the_end_page_names_the_next_chapter_while_its_first_page_loads() {
+        val state = ReaderState(
+            view = ReaderFixtures.view(next = next),
+            leaves = ReaderFixtures.leaves(3),
+            end = EndPageView(next, null, "Lantern Archive"),
+        )
+        compose.setContent {
+            PhoneEndPage(state, session, actions, PageImages())
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage(file("end-page-waiting"))
+    }
+
+    @Test
+    fun the_demo_card_follows_a_white_page() {
+        val demo = DemoWorkInfo(
+            id = "lantern-demo",
+            series = "Lantern Stair",
+            chapter = "The First Flight",
+            author = "A. Maker",
+            licence = "CC BY 4.0",
+            licenceUrl = null,
+            makerUrl = "https://maker.example",
+            filePageUrl = null,
+            credit = "Lantern Stair by A. Maker. Licensed CC BY 4.0.",
+            novel = false,
+            pages = 3u,
+        )
+        val state = ReaderState(
+            view = ReaderFixtures.view(next = null).copy(demoCredit = demo),
+            leaves = ReaderFixtures.leaves(3),
+        )
+        compose.setContent {
+            Box(Modifier.fillMaxSize().background(Color.White)) {
+                PhoneEndPage(state, session, actions, PageImages(), pageGround = Color.White)
+            }
+        }
+        compose.waitForIdle()
+        captureScreenRoboImage(file("demo-end-white"))
+    }
+
+    @Test
+    fun a_strip_image_waits_with_its_number_then_one_line() {
+        compose.setContent {
+            androidx.compose.foundation.layout.Column {
+                for (long in listOf(false, true)) {
+                    Box(Modifier.fillMaxWidth().height(240.dp).background(Chrome.ground)) { ImageWaiting(7, long) }
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage(file("strip-waiting"))
     }
 
     @Test
