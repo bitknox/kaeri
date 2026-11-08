@@ -214,6 +214,7 @@
     <string name="reading_also_a_book">Есть и книга</string>
     <string name="reading_split_chapter">Глава %1$s уходит в трекеры как %2$s.</string>
     <string name="reader_resumed">Продолжено со страницы %1$d</string>
+    <string name="reader_resumed_image">Открыто на картинке %1$d</string>
     <string name="reader_back_to_page">Назад на страницу %1$d</string>
     <string name="reader_moved">Переход к %1$s, страница %2$d: там остановилось %3$s</string>
     <string name="reader_moved_number">Переход к главе %1$s, страница %2$d: там остановилось %3$s</string>
@@ -266,7 +267,7 @@
     </plurals>
     <string name="reading_on_planning">В вашем списке «Запланировано»</string>
     <string name="reading_spotlight_new_chapter">Новая глава в серии, за которой вы следите</string>
-    <string name="reading_spotlight_continue">Продолжить чтение</string>
+    <string name="reading_spotlight_continue">Читать дальше</string>
     <string name="reading_spotlight_up_next">Далее для вас</string>
     <string name="reading_spotlight_popular">Популярное, выходит сейчас</string>
     <string name="reading_out_today">Глава %1$s вышла сегодня</string>
@@ -277,11 +278,17 @@
     <string name="reading_next_part">Часть %1$s</string>
     <string name="reading_part_percent">Часть %1$s · %2$d%%</string>
     <string name="reading_part_new">Вышла часть %1$s</string>
+    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_new">Новое: %1$s</string>
     <string name="reading_part_titled">Часть %1$s · %2$s</string>
+    <string name="reading_label_titled">%1$s · %2$s</string>
     <string name="reading_part_out_today">Часть %1$s вышла сегодня</string>
+    <string name="reading_label_out_today">Сегодня вышло: %1$s</string>
     <string name="reading_part_out_today_titled">Часть %1$s, %2$s, вышла сегодня</string>
+    <string name="reading_label_out_today_titled">Сегодня вышло: %1$s, %2$s</string>
     <string name="reading_chapter_of">Глава %1$s из %2$s</string>
     <string name="reading_volume_part">Том %1$s, часть %2$s</string>
+    <string name="reading_volume_label">Том %1$s, %2$s</string>
     <string name="reading_origin_japan">Япония</string>
     <string name="reading_origin_korea">Корея</string>
     <string name="reading_origin_china">Китай</string>
@@ -312,6 +319,8 @@
     <string name="reading_row_page_of">Стр. %1$d из %2$d</string>
     <string name="reading_row_page">Стр. %1$d</string>
     <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_opened">Открыта</string>
+    <string name="reading_row_bookmarked">В закладках</string>
     <plurals name="reading_row_pages">
         <item quantity="one">%1$d страница</item>
         <item quantity="few">%1$d страницы</item>
@@ -490,6 +499,7 @@
     <string name="sources_demo_removed">Демо удалено</string>
     <string name="stores_ready_demo_stays">%1$s готов. Демо остаётся последним в списке «Ваши источники».</string>
     <string name="cloud_loopback_done">Можно закрыть эту вкладку и вернуться в Kaeri.</string>
+    <string name="sync_device_removed">Другое устройство удалило это устройство из синхронизации. Подключите его снова, чтобы синхронизировать.</string>
     <string name="notice_signed_in">Вы вошли в %1$s.</string>
     <string name="notice_signed_in_keychain">Вы вошли в %1$s. Токен сохранён в системной связке ключей.</string>
     <string name="notice_signed_in_file">Вы вошли в %1$s. Связки ключей нет, поэтому токен хранится в файле, доступном только вам, на этом устройстве.</string>
@@ -622,6 +632,17 @@
     <string name="cast_settings_tvs_note">Они появятся в разделе Chromecast в «Смотреть на ТВ». Это устройство отправляет им эпизод.</string>
     <string name="cast_settings_torrents">Торренты при трансляции</string>
     <string name="cast_settings_torrents_note">Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Это устройство передаёт эпизод, пока он идёт.</string>
+    <string name="book_server_keystore_android">хранилище ключей Android</string>
+    <string name="store_invite_chip">Приглашение ••••%1$s</string>
+    <plurals name="store_plugin_hosts">
+        <item quantity="one">%1$d хосту</item>
+        <item quantity="few">%1$d хостам</item>
+        <item quantity="many">%1$d хостам</item>
+        <item quantity="other">%1$d хоста</item>
+    </plurals>
+    <string name="join_medium_line_watch">Просмотр, как на %1$s</string>
+    <string name="join_medium_line_both">Просмотр и чтение, как на %1$s</string>
+    <string name="join_key_store">хранилище ключей Android</string>
     <string name="reader_page_failed_swipe">Смахните, чтобы идти дальше без неё.</string>
     <string name="reader_skip_page">Пропустить страницу</string>
     <string name="reader_page_of">Страница %1$d из %2$d</string>
@@ -663,7 +684,7 @@
     <string name="eink_on_device">хранится здесь</string>
     <string name="eink_continue_to">Перейти к главе %1$s</string>
     <string name="eink_back_to_series">К серии</string>
-    <string name="eink_turn_to_continue">Перелистните, чтобы продолжить</string>
+    <string name="eink_turn_to_continue">Перелистните, чтобы читать дальше</string>
     <string name="eink_next_missing">Ни у одного источника пока нет главы %1$s</string>
     <string name="eink_next_not_out">Следующая глава ещё не вышла</string>
     <string name="eink_caught_up">Вы всё прочитали</string>
@@ -698,7 +719,7 @@
     <string name="reader_minutes_left">%1$d мин</string>
     <string name="reader_zone_next">Следующая страница</string>
     <string name="reader_grid_title">Страницы</string>
-    <string name="reader_end_continue">Продолжить</string>
+    <string name="reader_end_continue">Читать дальше</string>
     <string name="reader_end_series">Назад к серии</string>
     <string name="reader_end_again">Прочитать заново</string>
     <string name="reader_opening_chapter">Открывается глава %1$s</string>
@@ -791,6 +812,63 @@
     <string name="reader_opening_waited">%1$s · %2$d с</string>
     <string name="reader_sources_title">Читать эту главу из</string>
     <string name="reader_paper_parts">Что меняется</string>
+    <string name="read_home_offline_line">При первом открытии главной в разделе чтения нужно подключение. Скачанные главы по-прежнему открываются.</string>
+    <string name="channel_chapters_name">Новые главы</string>
+    <string name="channel_chapters_description">Когда у серии из списка «Читаю» выходит новая глава.</string>
+    <string name="channel_downloads_finished_name">Загрузки завершены</string>
+    <string name="channel_downloads_finished_description">Когда все главы, выбранные для скачивания, готовы.</string>
+    <string name="notif_chapter_new">Вышло: %1$s.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">%1$d новая глава</item>
+        <item quantity="few">%1$d новые главы</item>
+        <item quantity="many">%1$d новых глав</item>
+        <item quantity="other">%1$d новой главы</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Новая глава</string>
+    <string name="notif_chapter_read">Читать</string>
+    <plurals name="downloads_notice_chapters">
+        <item quantity="one">Скачивается %1$d глава</item>
+        <item quantity="few">Скачиваются %1$d главы</item>
+        <item quantity="many">Скачивается %1$d глав</item>
+        <item quantity="other">Скачивается %1$d главы</item>
+    </plurals>
+    <plurals name="read_series_downloaded_open">
+        <item quantity="one">%1$d скачанная глава по-прежнему открывается.</item>
+        <item quantity="few">%1$d скачанные главы по-прежнему открываются.</item>
+        <item quantity="many">%1$d скачанных глав по-прежнему открываются.</item>
+        <item quantity="other">%1$d скачанной главы по-прежнему открываются.</item>
+    </plurals>
+    <string name="read_downloads_empty_detail">Скачанные главы открываются без подключения к сети.</string>
+    <string name="read_downloads_empty_both">Скачанные эпизоды и главы открываются без подключения к сети.</string>
+    <string name="settings_summary_chapters_on">Новые главы включены</string>
+    <string name="settings_summary_chapters_off">Новые главы выключены</string>
+    <plurals name="settings_summary_book_folders">
+        <item quantity="one">%1$d папка</item>
+        <item quantity="few">%1$d папки</item>
+        <item quantity="many">%1$d папок</item>
+        <item quantity="other">%1$d папки</item>
+    </plurals>
+    <plurals name="settings_summary_book_servers">
+        <item quantity="one">%1$d сервер</item>
+        <item quantity="few">%1$d сервера</item>
+        <item quantity="many">%1$d серверов</item>
+        <item quantity="other">%1$d сервера</item>
+    </plurals>
+    <plurals name="settings_summary_book_plugins">
+        <item quantity="one">%1$d плагин</item>
+        <item quantity="few">Плагины: %1$d</item>
+        <item quantity="many">Плагины: %1$d</item>
+        <item quantity="other">Плагины: %1$d</item>
+    </plurals>
+    <string name="settings_book_sources">Источники книг</string>
+    <plurals name="book_matches_line">
+        <item quantity="one">Kaeri сопоставил по данным: %1$d. %2$d серию нужно проверить.</item>
+        <item quantity="few">Kaeri сопоставил по данным: %1$d. %2$d серии нужно проверить.</item>
+        <item quantity="many">Kaeri сопоставил по данным: %1$d. %2$d серий нужно проверить.</item>
+        <item quantity="other">Kaeri сопоставил по данным: %1$d. %2$d серии нужно проверить.</item>
+    </plurals>
+    <string name="book_folder_failed">Не удалось добавить эту папку. Попробуйте другую.</string>
+    <string name="book_server_note_device">Kaeri отправляет ваш прогресс чтения обратно на этот сервер. Пароль хранит только это устройство.</string>
     <string name="tv_pair_request_held">%1$s хочет подключиться. Код %2$s</string>
     <string name="tv_add_store_to_play">Добавьте магазин плагинов, чтобы смотреть</string>
     <string name="tv_title_page">Страница тайтла</string>
@@ -1440,6 +1518,13 @@
     <string name="pad_button_view">Кнопка «Вид»</string>
     <string name="pad_button_left_stick">Левый стик</string>
     <string name="pad_button_right_stick">Правый стик</string>
+    <string name="pad_help_turn_page">Перевернуть страницу</string>
+    <string name="pad_help_previous_chapter">Предыдущая глава</string>
+    <string name="pad_help_next_chapter">Следующая глава</string>
+    <string name="pad_help_reader_bar">Показать или скрыть панель</string>
+    <string name="pad_help_reader_settings">Настройки чтения</string>
+    <string name="pad_help_close_reader">Закрыть читалку</string>
+    <string name="pad_help_reader">Читалка</string>
     <string name="close_dont_ask">Больше не спрашивать</string>
     <string name="close_keep_going">Оставить в фоне</string>
     <string name="party_looking_sources">Ищем источники…</string>
@@ -2532,9 +2617,45 @@
     </plurals>
     <string name="demo_story_row">Рассказ · %1$s · %2$s</string>
     <string name="demo_read_chapter">Читать главу %1$s</string>
+    <string name="progress_server_saved">Сохранено на сервере %1$s</string>
+    <string name="progress_server_sending">Отправка на сервер %1$s…</string>
+    <string name="progress_server_offline">Отправится на сервер %1$s, когда вы снова будете в сети</string>
+    <string name="progress_server_retrying">Сервер %1$s не ответил. Kaeri попробует снова.</string>
+    <string name="progress_server_failed">Не сохранено на сервере %1$s: %2$s.</string>
+    <string name="progress_why_key">сервер не принял ключ</string>
+    <string name="progress_why_password">сервер не принял пароль</string>
+    <string name="progress_why_gone">этой серии больше нет на сервере</string>
+    <string name="progress_why_gave_up">нет ответа в течение суток</string>
+    <string name="progress_row_saved">Прогресс сохранён %1$s</string>
+    <plurals name="progress_row_sending">
+        <item quantity="one">Отправка %1$d главы…</item>
+        <item quantity="few">Отправка %1$d глав…</item>
+        <item quantity="many">Отправка %1$d глав…</item>
+        <item quantity="other">Отправка %1$d главы…</item>
+    </plurals>
+    <plurals name="progress_row_offline">
+        <item quantity="one">%1$d глава отправится, когда вы снова будете в сети</item>
+        <item quantity="few">%1$d главы отправятся, когда вы снова будете в сети</item>
+        <item quantity="many">%1$d глав отправятся, когда вы снова будете в сети</item>
+        <item quantity="other">%1$d главы отправятся, когда вы снова будете в сети</item>
+    </plurals>
+    <plurals name="progress_row_retrying">
+        <item quantity="one">%1$d глава ждёт. Kaeri попробует снова.</item>
+        <item quantity="few">%1$d главы ждут. Kaeri попробует снова.</item>
+        <item quantity="many">%1$d глав ждут. Kaeri попробует снова.</item>
+        <item quantity="other">%1$d главы ждут. Kaeri попробует снова.</item>
+    </plurals>
+    <plurals name="progress_row_failed">
+        <item quantity="one">%1$d глава не сохранена: %2$s</item>
+        <item quantity="few">%1$d главы не сохранены: %2$s</item>
+        <item quantity="many">%1$d глав не сохранено: %2$s</item>
+        <item quantity="other">%1$d главы не сохранено: %2$s</item>
+    </plurals>
+    <string name="progress_row_off">Прогресс остаётся на этом устройстве (%1$s)</string>
     <string name="nav_watch">Смотреть</string>
     <string name="nav_read">Читать</string>
     <string name="nav_updates">Обновления</string>
+    <string name="home_read_continue">Читать дальше</string>
     <string name="home_read_releasing">Выходит сейчас</string>
     <string name="home_read_checked_on_open">Проверяется при открытии Kaeri</string>
     <string name="home_read_end">На этом пока всё. Полные списки в «Обновления» и «Поиск».</string>
@@ -2559,10 +2680,13 @@
     <string name="chapter_updates_open_chapter_hint">Открывает главу</string>
     <string name="chapter_updates_open_series_menu">Открыть серию</string>
     <string name="action_read_chapter">Читать главу %1$s</string>
-    <string name="action_continue_chapter">Продолжить: глава %1$s · стр. %2$d</string>
-    <string name="action_continue_part">Продолжить: часть %1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">Продолжить: часть %1$s</string>
+    <string name="action_continue_chapter">Читать дальше: глава %1$s · стр. %2$d</string>
+    <string name="action_continue_part">Читать дальше: часть %1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">Читать дальше: часть %1$s</string>
     <string name="action_read_part">Читать часть %1$s</string>
+    <string name="action_continue_named">Читать дальше: %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">Читать дальше: %1$s</string>
+    <string name="action_read_named">Читать: %1$s</string>
     <string name="action_read_again">Прочитать заново</string>
     <string name="series_reading_from">Читается из</string>
     <string name="series_change">Изменить</string>
@@ -2897,7 +3021,7 @@
     <string name="settings_counts_read_moving_on">При переходе дальше</string>
     <string name="settings_counts_read_moving_on_note">Перелистывание последней страницы или открытие следующей главы</string>
     <string name="settings_counts_read_marked">Когда вы отметите</string>
-    <string name="settings_counts_read_marked_note">«Продолжить» и ваши трекеры следуют за вашими отметками</string>
+    <string name="settings_counts_read_marked_note">«Читать дальше» и ваши трекеры следуют за вашими отметками</string>
     <string name="settings_follow_group">Настройки серий, которые следуют за вами</string>
     <string name="settings_follow_mode">Режим, направление и цвет</string>
     <string name="settings_follow_mode_note">Изменённая серия читается так же, остальные устройства это подхватят</string>
@@ -2941,6 +3065,99 @@
     </plurals>
     <string name="read_downloads_read">прочитано: %1$d</string>
     <string name="read_downloads_delete_read">Удалить прочитанные</string>
+    <string name="send_title">Отправить на ридер</string>
+    <string name="send_for">Куда</string>
+    <string name="send_what">Что</string>
+    <string name="send_chapters">Главы</string>
+    <string name="send_chapters_one">%1$s</string>
+    <string name="send_chapters_range">С %1$s по %2$s</string>
+    <string name="send_size">Размер</string>
+    <string name="send_size_about">Около %1$s</string>
+    <string name="send_no_place">Kaeri не видит, докуда вы дочитали на этом ридере. Когда вы вернётесь, страница серии спросит об этом.</string>
+    <string name="send_prepare">Подготовить и поделиться</string>
+    <plurals name="send_preparing">
+        <item quantity="one">Подготовка %1$d из %2$d главы</item>
+        <item quantity="few">Подготовка %1$d из %2$d глав</item>
+        <item quantity="many">Подготовка %1$d из %2$d глав</item>
+        <item quantity="other">Подготовка %1$d из %2$d главы</item>
+    </plurals>
+    <string name="send_sized_for">Страницы подогнаны под %1$s</string>
+    <string name="send_in_parts">Больше %1$s, поэтому файлы будут разделены на части.</string>
+    <string name="send_failed_chapter">Не удалось подготовить главу %1$s. %2$s</string>
+    <string name="send_failed">Не удалось подготовить файлы. %1$s</string>
+    <string name="send_size_working">Вычисляется</string>
+    <string name="send_chapters_open">Развёрнуто</string>
+    <string name="send_chapters_closed">Свёрнуто</string>
+    <string name="send_progress_spoken">%1$d %%</string>
+    <string name="send_chapter_action">Отправить на ридер</string>
+    <string name="send_parts_over">частями, если больше %1$s</string>
+    <string name="send_waiting_cancel">Отменить отправку</string>
+    <plurals name="send_ready">
+        <item quantity="one">%1$d файл готов.</item>
+        <item quantity="few">%1$d файла готовы.</item>
+        <item quantity="many">%1$d файлов готово.</item>
+        <item quantity="other">%1$d файла готово.</item>
+    </plurals>
+    <string name="send_share_again">Поделиться снова</string>
+    <string name="send_banner">Отправка на %1$s</string>
+    <string name="send_format_fixed_epub">EPUB с фиксированной вёрсткой</string>
+    <string name="send_format_kepub">KEPUB</string>
+    <string name="send_format_epub">EPUB</string>
+    <string name="send_format_cbz">CBZ</string>
+    <string name="send_target_line">%1$s · %2$s × %3$s</string>
+    <string name="stop_title">Где вы остановились?</string>
+    <string name="stop_note">Вы отправили главы на %1$s. Где вы остановились?</string>
+    <string name="stop_note_action">Указать место</string>
+    <string name="stop_sent_one">Глава %1$s отправлена на %2$s %3$s.</string>
+    <string name="stop_sent_range">Главы с %1$s по %2$s отправлены на %3$s %4$s.</string>
+    <string name="stop_finished">Глава %1$s дочитана</string>
+    <string name="stop_set">Указать место</string>
+    <string name="stop_keep">Оставить главу %1$s · стр. %2$d</string>
+    <string name="stop_keep_plain">Оставить текущее место</string>
+    <string name="ereaders_group">Ридеры</string>
+    <string name="ereaders_send_row">Отправить на ридер</string>
+    <string name="ereaders_feed_row">Канал OPDS</string>
+    <string name="opds_share_note">Каталог OPDS, который могут просматривать домашние ридеры</string>
+    <string name="opds_footer">Канал работает, только пока Kaeri открыт на этом устройстве (%1$s). Прогресс на этих ридерах остаётся на них.</string>
+    <string name="opds_address">Адрес</string>
+    <string name="opds_address_off">Включите канал, чтобы получить его адрес.</string>
+    <string name="opds_password">Пароль</string>
+    <string name="opds_password_note">Ридеры спрашивают его один раз</string>
+    <string name="opds_new_password">Новый пароль</string>
+    <string name="opds_port">Порт</string>
+    <string name="opds_port_note">Оставьте пустым для любого свободного порта или выберите от 1024 до 65535</string>
+    <string name="opds_port_moved">Порт %1$d был занят, поэтому канал использует %2$d.</string>
+    <string name="opds_shares">Что доступно</string>
+    <string name="opds_share_downloads">Загрузки</string>
+    <plurals name="opds_share_downloads_count">
+        <item quantity="one">%1$d глава</item>
+        <item quantity="few">%1$d главы</item>
+        <item quantity="many">%1$d глав</item>
+        <item quantity="other">%1$d главы</item>
+    </plurals>
+    <string name="opds_share_manga">Папка манги</string>
+    <string name="opds_share_novels">Папка ранобэ</string>
+    <plurals name="opds_share_series_count">
+        <item quantity="one">%1$d серия</item>
+        <item quantity="few">%1$d серии</item>
+        <item quantity="many">%1$d серий</item>
+        <item quantity="other">%1$d серии</item>
+    </plurals>
+    <string name="opds_fetched_by">Скачивали</string>
+    <string name="opds_fetched_none">Ни один ридер ещё ничего не скачал.</string>
+    <string name="opds_starting">Запуск…</string>
+    <string name="opds_paused_none">Приостановлено. Этот Mac не подключён к локальной сети.</string>
+    <string name="opds_paused_vpn">Приостановлено. Этот Mac подключён только через VPN.</string>
+    <string name="opds_new_password_title">Создать новый пароль?</string>
+    <string name="opds_new_password_warning">Ридеры, которые уже используют канал, перестанут работать, пока вы не введёте новый пароль на каждом из них.</string>
+    <string name="opds_fetched_time">Последний запрос %1$s</string>
+    <plurals name="opds_fetched_files">
+        <item quantity="one">%1$d файл</item>
+        <item quantity="few">%1$d файла</item>
+        <item quantity="many">%1$d файлов</item>
+        <item quantity="other">%1$d файла</item>
+    </plurals>
+    <string name="opds_reader_unnamed">Ридер по адресу %1$s</string>
     <string name="seasonal_previous">Предыдущий сезон</string>
     <string name="seasonal_next">Следующий сезон</string>
     <string name="seasonal_loading">Загружаем сезон</string>
@@ -4293,7 +4510,7 @@
     <string name="accounts_other_trackers_note">Другие трекеры находятся в разделе «Аккаунты».</string>
     <string name="accounts_welcome_detail">Войдите в %1$s, чтобы синхронизировать список и место, где вы остановились.</string>
     <string name="accounts_brings_lists">Импортирует ваши списки и заполняет «Продолжить просмотр» тем, что вы смотрите.</string>
-    <string name="accounts_brings_lists_read">Подтягивает ваши списки и наполняет «Продолжить» тем, что вы читаете.</string>
+    <string name="accounts_brings_lists_read">Подтягивает ваши списки и наполняет «Читать дальше» тем, что вы читаете.</string>
     <string name="accounts_brings_lists_both">Подтягивает ваши списки и наполняет «Продолжить» тем, что вы смотрите и читаете.</string>
     <string name="accounts_tracker_lists">Списки и прогресс</string>
     <string name="accounts_tracker_reading_lists">Списки чтения и прогресс</string>

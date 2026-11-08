@@ -116,6 +116,7 @@ fn rules(platform: Platform) -> Rules {
             skip: skip(&[
                 "shots.rs",
                 "shots_reading.rs",
+                "shots_prelaunch.rs",
                 "showcase.rs",
                 "fixtures.rs",
                 "fixtures_reading.rs",

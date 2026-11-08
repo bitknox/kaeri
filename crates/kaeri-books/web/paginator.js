@@ -169,6 +169,15 @@
     state.scrolled = S.mode === 'scrolled' && !state.vertical && !S.fixed;
     state.rtl = !state.vertical && getComputedStyle(h).direction === 'rtl';
     state.axis = state.vertical || state.scrolled ? 'y' : 'x';
+    // The mode's classes go on before the view is measured. Until the paged class hides the
+    // overflow, a long document has a vertical scroll bar where scroll bars take room (a Mac
+    // with a mouse, Windows, GTK without overlay scrolling), and the view would measure that
+    // much narrower than the page: a capped page's outer margins would come out uneven.
+    h.classList.toggle('k-fixed', !!S.fixed);
+    h.classList.toggle('k-paged', !state.scrolled && !S.fixed);
+    h.classList.toggle('k-scrolled', state.scrolled);
+    h.classList.toggle('k-v', state.vertical);
+    h.classList.toggle('k-h', !state.vertical);
     var W = vw();
     var cols = columns(W);
     var margin = S.margin;
@@ -208,11 +217,6 @@
     h.classList.toggle('k-ink', !!(look.ink || S.eink));
     h.classList.toggle('k-eink', !!S.eink);
     h.classList.toggle('k-legacy', !!S.legacy);
-    h.classList.toggle('k-fixed', !!S.fixed);
-    h.classList.toggle('k-paged', !state.scrolled && !S.fixed);
-    h.classList.toggle('k-scrolled', state.scrolled);
-    h.classList.toggle('k-v', state.vertical);
-    h.classList.toggle('k-h', !state.vertical);
     h.classList.toggle('k-capped', !!state.width);
     h.classList.toggle('k-rtl', state.rtl);
     if (S.fixed) fit();

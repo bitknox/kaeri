@@ -187,6 +187,7 @@
     <string name="reading_also_a_book">原作もあります</string>
     <string name="reading_split_chapter">第%1$s話は 連携サービス には %2$s として送られます。</string>
     <string name="reader_resumed">%1$dページから再開しました</string>
+    <string name="reader_resumed_image">%1$d枚目の画像から再開しました</string>
     <string name="reader_back_to_page">%1$dページに戻る</string>
     <string name="reader_moved">%3$sが止まった第%1$s話の%2$dページに移動しました</string>
     <string name="reader_moved_number">%3$sが止まった第%1$s話の%2$dページに移動しました</string>
@@ -233,7 +234,7 @@
     </plurals>
     <string name="reading_on_planning">「予定」リストに入っています</string>
     <string name="reading_spotlight_new_chapter">フォロー中の作品に新しい話があります</string>
-    <string name="reading_spotlight_continue">続きから読む</string>
+    <string name="reading_spotlight_continue">続きを読む</string>
     <string name="reading_spotlight_up_next">次に読む作品</string>
     <string name="reading_spotlight_popular">人気の連載中作品</string>
     <string name="reading_out_today">第%1$s話が今日公開</string>
@@ -244,11 +245,17 @@
     <string name="reading_next_part">パート%1$s</string>
     <string name="reading_part_percent">パート%1$s · %2$d%%</string>
     <string name="reading_part_new">パート%1$sが新着</string>
+    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_new">%1$sが公開されました</string>
     <string name="reading_part_titled">パート%1$s · %2$s</string>
+    <string name="reading_label_titled">%1$s · %2$s</string>
     <string name="reading_part_out_today">パート%1$sが今日公開</string>
+    <string name="reading_label_out_today">%1$sが今日公開</string>
     <string name="reading_part_out_today_titled">パート%1$s「%2$s」が今日公開</string>
+    <string name="reading_label_out_today_titled">%1$s「%2$s」が今日公開</string>
     <string name="reading_chapter_of">第%1$s話 / 最新 第%2$s話</string>
     <string name="reading_volume_part">%1$s巻 パート%2$s</string>
+    <string name="reading_volume_label">%1$s巻、%2$s</string>
     <string name="reading_origin_japan">日本</string>
     <string name="reading_origin_korea">韓国</string>
     <string name="reading_origin_china">中国</string>
@@ -276,6 +283,8 @@
     <string name="reading_row_page_of">%1$d/%2$dページ</string>
     <string name="reading_row_page">%1$dページ</string>
     <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_opened">読みかけ</string>
+    <string name="reading_row_bookmarked">しおり付き</string>
     <plurals name="reading_row_pages">
         <item quantity="other">%1$dページ</item>
     </plurals>
@@ -415,6 +424,7 @@
     <string name="sources_demo_removed">デモを削除しました</string>
     <string name="stores_ready_demo_stays">%1$sの準備ができました。デモは「あなたのソース」の最後に残ります。</string>
     <string name="cloud_loopback_done">このタブを閉じて Kaeri に戻ってください。</string>
+    <string name="sync_device_removed">このデバイスは、別のデバイスで同期から削除されました。同期するには、もう一度参加してください。</string>
     <string name="notice_signed_in">%1$sにサインインしました。</string>
     <string name="notice_signed_in_keychain">%1$sにサインインしました。トークンはOSのキーチェーンに保存されています。</string>
     <string name="notice_signed_in_file">%1$sにサインインしました。キーチェーンが利用できないため、トークンはこのデバイス内の非公開ファイルに保存されています。</string>
@@ -535,6 +545,14 @@
     <string name="cast_settings_tvs_note">「テレビで再生」のChromecastの下に表示されます。このデバイスがエピソードを送信します。</string>
     <string name="cast_settings_torrents">キャスト中のトレント</string>
     <string name="cast_settings_torrents_note">これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのデバイスがエピソードを送信します。</string>
+    <string name="book_server_keystore_android">Androidのキーストア</string>
+    <string name="store_invite_chip">招待 ••••%1$s</string>
+    <plurals name="store_plugin_hosts">
+        <item quantity="other">%1$d件のホスト</item>
+    </plurals>
+    <string name="join_medium_line_watch">%1$sと同じ、視聴</string>
+    <string name="join_medium_line_both">%1$sと同じ、視聴と読書</string>
+    <string name="join_key_store">Androidのキーストア</string>
     <string name="reader_page_failed_swipe">スワイプすると、このページを飛ばして進みます。</string>
     <string name="reader_skip_page">ページを飛ばす</string>
     <string name="reader_page_of">%1$d/%2$dページ</string>
@@ -698,6 +716,42 @@
     <string name="reader_opening_waited">%1$s · %2$d秒</string>
     <string name="reader_sources_title">この章を読めるソース</string>
     <string name="reader_paper_parts">変更される項目</string>
+    <string name="read_home_offline_line">読書のホームは、初めて開くときに接続が必要です。ダウンロード済みの章は開けます。</string>
+    <string name="channel_chapters_name">新しい章</string>
+    <string name="channel_chapters_description">「読書中」リストの作品に新しい章が出たとき。</string>
+    <string name="channel_downloads_finished_name">ダウンロード完了</string>
+    <string name="channel_downloads_finished_description">ダウンロードを指定した章がすべて終わったとき。</string>
+    <string name="notif_chapter_new">%1$sが公開されました。</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="other">新しい章が%1$d話あります</item>
+    </plurals>
+    <string name="notif_chapter_hidden">新しい章</string>
+    <string name="notif_chapter_read">読む</string>
+    <plurals name="downloads_notice_chapters">
+        <item quantity="other">%1$d話をダウンロード中</item>
+    </plurals>
+    <plurals name="read_series_downloaded_open">
+        <item quantity="other">ダウンロード済みの%1$d話は引き続き開けます。</item>
+    </plurals>
+    <string name="read_downloads_empty_detail">ダウンロードした章は、接続なしで開けます。</string>
+    <string name="read_downloads_empty_both">ダウンロードしたエピソードと章は、接続なしで開けます。</string>
+    <string name="settings_summary_chapters_on">新しい章 オン</string>
+    <string name="settings_summary_chapters_off">新しい章 オフ</string>
+    <plurals name="settings_summary_book_folders">
+        <item quantity="other">%1$dフォルダ</item>
+    </plurals>
+    <plurals name="settings_summary_book_servers">
+        <item quantity="other">%1$dサーバー</item>
+    </plurals>
+    <plurals name="settings_summary_book_plugins">
+        <item quantity="other">%1$dプラグイン</item>
+    </plurals>
+    <string name="settings_book_sources">本のソース</string>
+    <plurals name="book_matches_line">
+        <item quantity="other">Kaeriは%1$d件を作品情報から照合しました。残りの%2$d件は確認が必要です。</item>
+    </plurals>
+    <string name="book_folder_failed">そのフォルダを追加できませんでした。別のフォルダをお試しください。</string>
+    <string name="book_server_note_device">Kaeriは読書の進捗をこのサーバーに送り返します。パスワードはこのデバイスに保存されます。</string>
     <string name="tv_pair_request_held">%1$s がペアリングを求めています。コード %2$s</string>
     <string name="tv_add_store_to_play">プラグインストアを追加して再生</string>
     <string name="tv_title_page">作品ページ</string>
@@ -1284,6 +1338,13 @@
     <string name="pad_button_view">ビューボタン</string>
     <string name="pad_button_left_stick">左スティック</string>
     <string name="pad_button_right_stick">右スティック</string>
+    <string name="pad_help_turn_page">ページをめくる</string>
+    <string name="pad_help_previous_chapter">前の章</string>
+    <string name="pad_help_next_chapter">次の章</string>
+    <string name="pad_help_reader_bar">バーの表示・非表示</string>
+    <string name="pad_help_reader_settings">リーダーの設定</string>
+    <string name="pad_help_close_reader">リーダーを閉じる</string>
+    <string name="pad_help_reader">リーダー</string>
     <string name="close_dont_ask">今後は確認しない</string>
     <string name="close_keep_going">バックグラウンドで続ける</string>
     <string name="party_looking_sources">ソースを検索しています…</string>
@@ -2298,9 +2359,33 @@
     </plurals>
     <string name="demo_story_row">物語 · %1$s · %2$s</string>
     <string name="demo_read_chapter">第%1$s章を読む</string>
+    <string name="progress_server_saved">%1$sに保存しました</string>
+    <string name="progress_server_sending">%1$sに送信中…</string>
+    <string name="progress_server_offline">オンラインに戻ると%1$sに送信します</string>
+    <string name="progress_server_retrying">%1$sから応答がありません。Kaeriが再試行します。</string>
+    <string name="progress_server_failed">%1$sに保存できませんでした：%2$s。</string>
+    <string name="progress_why_key">サーバーがキーを受け付けませんでした</string>
+    <string name="progress_why_password">サーバーがパスワードを受け付けませんでした</string>
+    <string name="progress_why_gone">この作品はもうサーバーにありません</string>
+    <string name="progress_why_gave_up">1日応答がありませんでした</string>
+    <string name="progress_row_saved">%1$sに進捗を保存しました</string>
+    <plurals name="progress_row_sending">
+        <item quantity="other">%1$d話を送信中…</item>
+    </plurals>
+    <plurals name="progress_row_offline">
+        <item quantity="other">%1$d話はオンラインに戻ると送信されます</item>
+    </plurals>
+    <plurals name="progress_row_retrying">
+        <item quantity="other">%1$d話が待機中です。Kaeriが再試行します。</item>
+    </plurals>
+    <plurals name="progress_row_failed">
+        <item quantity="other">%1$d話を保存できませんでした：%2$s</item>
+    </plurals>
+    <string name="progress_row_off">進捗はこの%1$sに残ります</string>
     <string name="nav_watch">視聴</string>
     <string name="nav_read">読書</string>
     <string name="nav_updates">更新</string>
+    <string name="home_read_continue">続きを読む</string>
     <string name="home_read_releasing">連載中</string>
     <string name="home_read_checked_on_open">Kaeriを開いたときに確認します</string>
     <string name="home_read_end">今はここまでです。全件は「更新」と検索で確認できます。</string>
@@ -2322,10 +2407,13 @@
     <string name="chapter_updates_open_chapter_hint">この章を開きます</string>
     <string name="chapter_updates_open_series_menu">作品を開く</string>
     <string name="action_read_chapter">第%1$s話を読む</string>
-    <string name="action_continue_chapter">続きを見る 第%1$s話 · %2$dページ</string>
-    <string name="action_continue_part">続きを見る パート%1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">続きを見る パート%1$s</string>
+    <string name="action_continue_chapter">続きを読む 第%1$s話 · %2$dページ</string>
+    <string name="action_continue_part">続きを読む パート%1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">続きを読む パート%1$s</string>
     <string name="action_read_part">パート%1$sを読む</string>
+    <string name="action_continue_named">続きを読む %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">続きを読む %1$s</string>
+    <string name="action_read_named">%1$sを読む</string>
     <string name="action_read_again">もう一度読む</string>
     <string name="series_reading_from">読み込み元</string>
     <string name="series_change">変更</string>
@@ -2612,7 +2700,7 @@
     <string name="settings_counts_read_moving_on">先へ進んだとき</string>
     <string name="settings_counts_read_moving_on_note">最後のページをめくったとき、または次の章を開いたとき</string>
     <string name="settings_counts_read_marked">自分で付けたとき</string>
-    <string name="settings_counts_read_marked_note">続きを見ると連携サービスは、あなたが付けた記録に従います</string>
+    <string name="settings_counts_read_marked_note">続きを読むと連携サービスは、あなたが付けた記録に従います</string>
     <string name="settings_follow_group">引き継がれる作品設定</string>
     <string name="settings_follow_mode">表示モード、読む向き、色</string>
     <string name="settings_follow_mode_note">変更した作品は、ほかのデバイスでも同じ読み方になります</string>
@@ -2647,6 +2735,84 @@
     </plurals>
     <string name="read_downloads_read">既読 %1$d話</string>
     <string name="read_downloads_delete_read">既読を削除</string>
+    <string name="send_title">電子書籍リーダーに送る</string>
+    <string name="send_for">送信先</string>
+    <string name="send_what">内容</string>
+    <string name="send_chapters">章</string>
+    <string name="send_chapters_one">%1$s</string>
+    <string name="send_chapters_range">%1$s〜%2$s</string>
+    <string name="send_size">サイズ</string>
+    <string name="send_size_about">約%1$s</string>
+    <string name="send_no_place">Kaeriからは、この電子書籍リーダーで読んだ位置がわかりません。戻ってきたときに、作品ページでどこまで読んだかを尋ねます。</string>
+    <string name="send_prepare">準備して共有</string>
+    <plurals name="send_preparing">
+        <item quantity="other">%2$d話中%1$d話目を準備中</item>
+    </plurals>
+    <string name="send_sized_for">ページは%1$s向けのサイズです</string>
+    <string name="send_in_parts">%1$sを超えるため、ファイルを分割します。</string>
+    <string name="send_failed_chapter">第%1$s話を準備できませんでした。%2$s</string>
+    <string name="send_failed">ファイルを準備できませんでした。%1$s</string>
+    <string name="send_size_working">計算中</string>
+    <string name="send_chapters_open">開いています</string>
+    <string name="send_chapters_closed">閉じています</string>
+    <string name="send_progress_spoken">%1$dパーセント</string>
+    <string name="send_chapter_action">電子書籍リーダーに送る</string>
+    <string name="send_parts_over">%1$sを超えると分割</string>
+    <string name="send_waiting_cancel">送信をキャンセル</string>
+    <plurals name="send_ready">
+        <item quantity="other">%1$d件のファイルの準備ができました。</item>
+    </plurals>
+    <string name="send_share_again">もう一度共有</string>
+    <string name="send_banner">%1$sに送信中</string>
+    <string name="send_format_fixed_epub">固定レイアウトEPUB</string>
+    <string name="send_format_kepub">KEPUB</string>
+    <string name="send_format_epub">EPUB</string>
+    <string name="send_format_cbz">CBZ</string>
+    <string name="send_target_line">%1$s · %2$s × %3$s</string>
+    <string name="stop_title">どこまで読みましたか?</string>
+    <string name="stop_note">%1$sに章を送りました。どこまで読みましたか?</string>
+    <string name="stop_note_action">読んだ位置を設定</string>
+    <string name="stop_sent_one">%3$sに第%1$s話を%2$sに送りました。</string>
+    <string name="stop_sent_range">%4$sに第%1$s話〜第%2$s話を%3$sに送りました。</string>
+    <string name="stop_finished">第%1$s話を読み終えた</string>
+    <string name="stop_set">読んだ位置を設定</string>
+    <string name="stop_keep">第%1$s話 · %2$dページのままにする</string>
+    <string name="stop_keep_plain">現在の位置のままにする</string>
+    <string name="ereaders_group">電子書籍リーダー</string>
+    <string name="ereaders_send_row">電子書籍リーダーに送る</string>
+    <string name="ereaders_feed_row">OPDSフィード</string>
+    <string name="opds_share_note">家庭内の電子書籍リーダーから閲覧できるOPDSカタログ</string>
+    <string name="opds_footer">フィードは、この%1$sでKaeriを開いている間だけ動作します。それらの電子書籍リーダーでの進捗は、そちらに残ります。</string>
+    <string name="opds_address">アドレス</string>
+    <string name="opds_address_off">アドレスを取得するには、フィードをオンにしてください。</string>
+    <string name="opds_password">パスワード</string>
+    <string name="opds_password_note">電子書籍リーダーで一度だけ入力します</string>
+    <string name="opds_new_password">新しいパスワード</string>
+    <string name="opds_port">ポート</string>
+    <string name="opds_port_note">空欄なら空いているポートを使います。指定する場合は1024〜65535から選んでください</string>
+    <string name="opds_port_moved">ポート%1$dは使用中だったため、フィードは%2$dを使っています。</string>
+    <string name="opds_shares">共有する内容</string>
+    <string name="opds_share_downloads">ダウンロード</string>
+    <plurals name="opds_share_downloads_count">
+        <item quantity="other">%1$d話</item>
+    </plurals>
+    <string name="opds_share_manga">マンガのフォルダ</string>
+    <string name="opds_share_novels">ライトノベルのフォルダ</string>
+    <plurals name="opds_share_series_count">
+        <item quantity="other">%1$dシリーズ</item>
+    </plurals>
+    <string name="opds_fetched_by">取得した電子書籍リーダー</string>
+    <string name="opds_fetched_none">まだどの電子書籍リーダーも取得していません。</string>
+    <string name="opds_starting">起動しています…</string>
+    <string name="opds_paused_none">一時停止中。このMacはローカルネットワークに接続していません。</string>
+    <string name="opds_paused_vpn">一時停止中。このMacはVPN経由でのみ接続しています。</string>
+    <string name="opds_new_password_title">新しいパスワードを作成しますか?</string>
+    <string name="opds_new_password_warning">すでにフィードを使っている電子書籍リーダーは、それぞれに新しいパスワードを入力するまで使えなくなります。</string>
+    <string name="opds_fetched_time">最終リクエスト：%1$s</string>
+    <plurals name="opds_fetched_files">
+        <item quantity="other">%1$d件のファイル</item>
+    </plurals>
+    <string name="opds_reader_unnamed">%1$sの電子書籍リーダー</string>
     <string name="seasonal_previous">前のシーズン</string>
     <string name="seasonal_next">次のシーズン</string>
     <string name="seasonal_loading">シーズンを読み込んでいます</string>
@@ -3897,7 +4063,7 @@
     <string name="accounts_other_trackers_note">その他の連携サービスはアカウントにあります。</string>
     <string name="accounts_welcome_detail">%1$sにサインインすると、リストと再生位置を同期できます。</string>
     <string name="accounts_brings_lists">リストを読み込み、続きを見るに視聴中の作品を表示します。</string>
-    <string name="accounts_brings_lists_read">リストを取り込み、読んでいる作品を続きを見るに表示します。</string>
+    <string name="accounts_brings_lists_read">リストを取り込み、読んでいる作品を続きを読むに表示します。</string>
     <string name="accounts_brings_lists_both">リストを取り込み、視聴中と読書中の作品を続きを見るに表示します。</string>
     <string name="accounts_tracker_lists">リストと進捗</string>
     <string name="accounts_tracker_reading_lists">読書リストと進捗</string>

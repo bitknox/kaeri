@@ -273,7 +273,7 @@ reading-spotlight-new-chapter = New chapter in a series you follow
 
 # Above the big picture at the top of reading's Home: the series the person was reading last.
 # @max 40
-reading-spotlight-continue = { -continue-cap } reading
+reading-spotlight-continue = { -continue-reading-cap } reading
 
 # Above the big picture at the top of reading's Home: the first series on the person's Planning
 # list, or one like what they read.

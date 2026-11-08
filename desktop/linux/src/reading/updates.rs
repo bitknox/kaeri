@@ -12,11 +12,11 @@ use kaeri_model::{
 };
 
 use super::{Place, day_label, listen, place, send};
-use crate::{nagare, say, states::Shape, widgets, window::Ctx};
+use crate::{say, states::Shape, widgets, window::Ctx};
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let empty =
-        nagare::status_page(&t::updates_empty_title(), &t::chapter_updates_empty_line(), None);
+        crate::states::plain(&t::updates_empty_title(), &t::chapter_updates_empty_line());
     let Place { page, header, states, column } = place(
         ctx,
         &t::nav_updates(),
@@ -34,8 +34,10 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             }
         }
     });
+    download.set_sensitive(false);
     let check = gtk::Button::from_icon_name("view-refresh-symbolic");
-    check.set_tooltip_text(Some(&t::chapter_updates_checking()));
+    check.set_tooltip_text(Some(&t::linux_updates_check()));
+    check.update_property(&[gtk::accessible::Property::Label(&t::linux_updates_check())]);
     check.connect_clicked({
         let hub = Rc::downgrade(&ctx.hub);
         move |_| {
@@ -47,20 +49,37 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     header.pack_end(&check);
     header.pack_end(&download);
     states.loading(None);
+    states.on_retry({
+        let hub = Rc::downgrade(&ctx.hub);
+        move || {
+            if let Some(hub) = hub.upgrade() {
+                send(&hub, ReadingCommand::LoadUpdates);
+            }
+        }
+    });
     listen(ctx, &page, {
-        let (ctx, states, column) = (Rc::downgrade(ctx), states.clone(), column.clone());
+        let (ctx, states, column, download) =
+            (Rc::downgrade(ctx), states.clone(), column.clone(), download.clone());
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
             match event {
                 Event::Reading(ReadingEvent::Updates(view)) => {
                     super::clear(&column);
                     draw(&ctx, &column, view);
-                    if view.days.is_empty() {
+                    let new =
+                        view.days.iter().flat_map(|d| &d.rows).any(|r| r.chapter.new_chapter);
+                    download.set_sensitive(new);
+                    // Sources that failed stay in sight even with no chapters to list.
+                    if view.days.is_empty() && view.failures.is_empty() {
                         states.empty();
                     } else {
                         states.content();
                     }
                 }
+                Event::Reading(ReadingEvent::Failed {
+                    about: kaeri_model::reading::ReadingAbout::Updates,
+                    failure,
+                }) => states.failed(&super::failure(failure)),
                 Event::Medium(_) if super::reads(&ctx.hub) => {
                     send(&ctx.hub, ReadingCommand::LoadUpdates)
                 }
@@ -107,6 +126,10 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &UpdatesView) {
             if row.chapter.new_chapter {
                 line.add_suffix(&super::new_words());
             }
+            // A chapter already read steps back.
+            if matches!(row.chapter.state, kaeri_model::reading::ChapterReadState::Read) {
+                line.add_css_class("haze");
+            }
             line.set_action_target_value(Some(&super::read_target(
                 &row.tile.work,
                 Some(&row.chapter.id),
@@ -116,6 +139,9 @@ fn draw(ctx: &Rc<Ctx>, column: &gtk::Box, view: &UpdatesView) {
             list.append(&line);
         }
         column.append(&list);
+    }
+    if view.days.is_empty() && !view.failures.is_empty() {
+        column.append(&widgets::haze(&t::chapter_updates_empty_line(), "caption"));
     }
     for failure in &view.failures {
         let line = t::series_chapters_failed(&failure.source_name);

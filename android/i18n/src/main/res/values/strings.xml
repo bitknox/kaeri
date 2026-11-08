@@ -4702,6 +4702,8 @@
     <string name="nav_read">Read</string>
     <!-- Sidebar and tab label: new chapters from followed series. -->
     <string name="nav_updates">Updates</string>
+    <!-- Shelf heading on Read: the series being read, each at its place. -->
+    <string name="home_read_continue">Continue</string>
     <!-- Shelf heading on Read: series releasing now. -->
     <string name="home_read_releasing">Releasing now</string>
     <!-- Line under the spotlight of a popular series, when the engine gives no line of its own. -->

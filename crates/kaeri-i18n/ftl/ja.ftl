@@ -528,6 +528,9 @@ reading-split-chapter = 第{ $chapter }話は 連携サービス には { $whole
 # A notice over the page when a chapter opens where it was left. It offers Start over.
 reader-resumed = { $page }ページから再開しました
 
+# The same notice in a webtoon strip, which counts images rather than pages.
+reader-resumed-image = { $image }枚目の画像から再開しました
+
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 reader-back-to-page = { $page }ページに戻る
 
@@ -661,7 +664,7 @@ reading-on-planning = 「予定」リストに入っています
 reading-spotlight-new-chapter = フォロー中の作品に新しい話があります
 
 # Above the big picture at the top of reading's Home: the series the person was reading last.
-reading-spotlight-continue = 続きから読む
+reading-spotlight-continue = 続きを読む
 
 # Above the big picture at the top of reading's Home: the first series on the person's Planning list, or one like what they read.
 reading-spotlight-up-next = 次に読む作品
@@ -693,20 +696,38 @@ reading-part-percent = パート{ $part } · { $percent }%
 # Under a cover: a light novel's part came out that the person has not read.
 reading-part-new = パート{ $part }が新着
 
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = { $label } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = { $label }が公開されました
+
 # Under a This week cell: a light novel's part that came out that day, with its own title.
 reading-part-titled = パート{ $part } · { $title }
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = { $label } · { $title }
 
 # Under the big picture on reading's Home: a light novel's part that came out today.
 reading-part-out-today = パート{ $part }が今日公開
 
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = { $label }が今日公開
+
 # Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 reading-part-out-today-titled = パート{ $part }「{ $title }」が今日公開
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = { $label }「{ $title }」が今日公開
 
 # Under a Library cover: the chapter the person is at, and the newest chapter there is.
 reading-chapter-of = 第{ $chapter }話 / 最新 第{ $of }話
 
 # Under a Library cover: the volume and part of a light novel the person is at.
 reading-volume-part = { $volume }巻 パート{ $part }
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = { $volume }巻、{ $label }
 
 # A search filter: books from Japan.
 reading-origin-japan = 日本
@@ -785,6 +806,12 @@ reading-row-page = { $page }ページ
 
 # A novel's chapter row: how far into it the person is.
 reading-row-percent = { $percent }%
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = 読みかけ
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = しおり付き
 
 # A chapter row: how long its pages are, for a file on the device.
 reading-row-pages =
@@ -1164,6 +1191,9 @@ stores-ready-demo-stays = { $store }の準備ができました。デモは「�
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = このタブを閉じて Kaeri に戻ってください。
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = このデバイスは、別のデバイスで同期から削除されました。同期するには、もう一度参加してください。
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = { $tracker }にサインインしました。
 
@@ -1473,6 +1503,12 @@ title-linux-episode-watched = エピソード{ $episode }、視聴済み
 # Line in a day's column when nothing airs that day.
 calendar-linux-day-empty = 放送なし
 
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+linux-read-library-list = リスト
+
+# Under No downloads on Downloads, Reading side.
+linux-read-downloads-empty = ダウンロードした章は、接続なしで開けます。
+
 # Accessible label of the line that says how the watch party form is getting on.
 party-status = 同時視聴の状態
 
@@ -1553,6 +1589,270 @@ discussion-like-named =
     { $count ->
        *[other] いいね、{ $count }件のいいね
     }
+
+# Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
+linux-store-invite-chip = 招待 ••••{ $last }
+
+# How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts".
+linux-store-plugin-hosts =
+    { $count ->
+       *[other] { $count }件のホスト
+    }
+
+# Beside a spinner in the plugin store form while the invite is spent, after 600 ms.
+linux-store-joining = 参加しています…
+
+# The Install all button while the plugins install.
+linux-store-installing = インストールしています…
+
+# Third line of a book server's row in Your sources when its sign-in no longer works.
+linux-book-server-signed-out = サインアウト済み · 「編集」から再度サインイン
+
+# Switch on a book server's page: its series show in Kaeri while it is on.
+linux-book-server-use = このサーバーを使う
+
+# Title of the dialog that asks before a book server is removed.
+linux-book-server-remove-title = { $host }を削除しますか?
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Watch.
+linux-join-medium-line-watch = { $device }と同じ、視聴
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Both.
+linux-join-medium-line-both = { $device }と同じ、視聴と読書
+
+# Switch on a book plugin's page: its series show in Kaeri while it is on.
+linux-book-plugin-use = このプラグインを使う
+
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = リーダーの設定
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = 章を開いています
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = 次の章はまだ公開されていません
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = 作品の終わり
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = 次の章はダウンロードされていません
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = ソースに次の章はまだありません
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = 作品に戻る
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = 章を開けませんでした
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = 読み方
+
+linux-reader-fit = フィット
+
+linux-reader-crop-borders = 余白を切り取る
+
+linux-reader-page-layout = ページレイアウト
+
+linux-reader-background = 背景
+
+linux-reader-look = 表示色
+
+linux-reader-font = フォント
+
+linux-reader-text-size = 文字サイズ
+
+linux-reader-margins = 余白
+
+linux-reader-line-spacing = 行間
+
+linux-reader-justify = 両端揃え
+
+linux-reader-direction = 読む向き
+
+linux-reader-spreads = 見開きページ
+
+linux-reader-strip-width = 縦スクロールの幅
+
+linux-reader-strip-gap = 画像の間隔
+
+# The fit that fills the window's height.
+linux-reader-fit-height = 高さ
+
+# Reading mode names.
+linux-reader-mode-paged = ページ送り
+
+linux-reader-mode-scrolled = スクロール
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = 電子書籍リーダーに送る
+
+# Button that starts preparing the files.
+linux-send-prepare = ファイルを準備
+
+# Line while the files are prepared.
+linux-send-progress = { $total }件中{ $done }件を準備中
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = フォルダに保存
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = 電子書籍リーダーに送る
+
+# Heading when the web view that shows a novel cannot start.
+linux-reader-novel-unavailable = ここではライトノベルを開けません
+
+# Line under it: what a novel needs on this computer.
+linux-reader-novel-needs-webkit = ライトノベルの表示には、サンドボックスが動作するWebKitGTK 6が必要です。
+
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = { $page }/{ $pages }ページ
+
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+linux-reader-pages = ページ
+
+# Line on the end page for a chapter that has not counted as read yet.
+linux-reader-end-not-read = まだ既読になっていません
+
+# The one amber button of the end page: opens the next chapter.
+linux-reader-continue = 次の章へ
+
+# End page text when the next chapter is not out yet.
+linux-reader-end-not-out-body = Kaeriはバックグラウンドで新しい章を確認し、「更新」に追加します。
+
+# End page text when the reader has caught up with the series.
+linux-reader-end-caught-up-body = ソースに新しい章が出ると、「更新」に表示されます。
+
+# End page text at the end of a finished series.
+linux-reader-end-finished-body = これ以上の章はありません。
+
+# End page text when the next chapter is not downloaded and the computer is offline.
+linux-reader-end-offline-body = オフラインです。接続すると、ここで開けます。
+
+# Hint under a page's error: turning the page goes on past it.
+linux-reader-page-failed-hint = ページをめくると、このページを飛ばして進みます。
+
+# Line while a chapter opens, once its number is known.
+linux-reader-opening-number = 第{ $chapter }話を開いています
+
+# Line while a chapter opens and a source is asked for the series' chapters.
+linux-reader-finding-source = ソースを探しています
+
+# Button on the Resumed notice.
+linux-reader-start-over = 最初から
+
+# Button on the Moved notice.
+linux-reader-go-back = 戻る
+
+# Button on the mode detected notice: opens the reader settings.
+linux-reader-change = 変更
+
+# Heading in the reader settings over what this series keeps for itself.
+linux-reader-this-series = この作品
+
+# Heading in the reader settings over what applies to every manga.
+linux-reader-all-manga = すべてのマンガ
+
+# Heading in the reader settings over what applies to every manga on this computer.
+linux-reader-all-manga-here = このコンピューターのすべてのマンガ
+
+# Heading in the reader settings over what applies to every webtoon.
+linux-reader-all-strips = すべてのウェブトゥーン
+
+# Heading in the reader settings over what applies to every webtoon on this computer.
+linux-reader-all-strips-here = このコンピューターのすべてのウェブトゥーン
+
+# Heading in the reader settings over what applies to every light novel.
+linux-reader-all-novels = すべてのライトノベル
+
+# The reading mode choice that follows the series' details.
+linux-reader-mode-auto = 自動
+
+# Under the reading mode when it was guessed.
+linux-reader-mode-detected = 作品情報から判定しました。
+
+# Button under the reading mode when the series has a choice of its own: drops it.
+linux-reader-use-default = 既定に戻す
+
+# Row that opens the rest of the reader settings.
+linux-reader-more-settings = リーダーのその他の設定
+
+# Line spacing choices.
+linux-reader-line-tight = 狭い
+
+linux-reader-line-normal = 標準
+
+linux-reader-line-loose = 広い
+
+# The margins choice between Narrow and Wide.
+linux-reader-margins-normal = 標準
+
+# Accessible names of the two ends of the text size slider.
+linux-reader-text-smaller = 文字を小さく
+
+linux-reader-text-larger = 文字を大きく
+
+# Title of the small popover that jumps to a page, and its shortcut's name.
+linux-reader-go-to-page = ページへ移動
+
+# Placeholder of the Go to page field.
+linux-reader-go-to-page-field = 1〜{ $total }
+
+# Heading of the reader's keys in the keyboard shortcuts window.
+linux-shortcuts-reader = リーダー
+
+# Shortcut: turn the page.
+linux-shortcuts-turn = ページをめくる
+
+# Shortcut: the first or last page.
+linux-shortcuts-first-last = 最初または最後のページ
+
+# Shortcut: a novel's text larger, smaller or back to its size.
+linux-shortcuts-text-size = 文字を大きく・小さく・標準に
+
+# Shortcut: back to the page before a jump, or out of the reader.
+linux-shortcuts-reader-back = 移動する前のページに戻る
+
+# Shortcut: close the reader.
+linux-shortcuts-close-reader = リーダーを閉じる
+
+# Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
+linux-reader-names-and = { $first }と{ $last }
+
+# On the plate that holds a page's place while it loads. The page is its number, such as 23.
+linux-reader-page-plate = { $page }ページ
+
+# Heading when a chapter could not open. The chapter is its number, such as 13.
+linux-reader-open-failed = 第{ $chapter }話を開けませんでした
+
+# Heading when a chapter with no number could not open.
+linux-reader-open-failed-plain = この章を開けませんでした
+
+# Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
+linux-send-next =
+    { $n ->
+       *[other] 次の未読{ $n }話
+    }
+
+# Choice in Send to e-reader's Chapters row: every chapter not read yet.
+linux-send-all-unread = 未読の章をすべて
+
+# Under Send to e-reader's Chapters row when every chapter is read.
+linux-send-none-unread = すべての章を読みました
+
+# Toast after the prepared files were saved to a folder.
+linux-send-saved =
+    { $n ->
+       *[other] { $n }件のファイルを保存しました
+    }
+
+# Toast when the prepared files could not be written to the folder picked.
+linux-send-save-failed = そのフォルダにファイルを保存できませんでした
+
+# Tooltip and spoken name of the button on Updates that looks for new chapters now.
+linux-updates-check = 新しい章を確認
 
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = プレビュー
@@ -1802,6 +2102,9 @@ tv-cast-inhibit-reason = テレビにエピソードを送信中
 
 # The heading over the TVs running Kaeri in Play on TV, once TVs with Chromecast built in are listed below them.
 tv-network-group = このネットワーク上
+
+# The sidebar place that lists your own sources, under the Sources heading.
+linux-sidebar-your-sources = あなたのソース
 
 # Count of devices on a member's row in the members dialog, and after "Owner ·".
 stores-device-count =
@@ -4636,6 +4939,18 @@ tui-together-not-a-link = 同時視聴のリンクまたはコードではあり
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = エピソード { $episode } · { $when }
 
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = 読書はアプリで
+
+# Line under the title of that page.
+tui-medium-read-line = ターミナルにはリーダーがありません。マンガ、ウェブトゥーン、ライトノベルはKaeriのアプリで開き、進捗は同期でそろいます。
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = { $key }を押すと、Kaeriの用途を変更できます。
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = { $key }で変更
+
 # Title of the about page.
 about-title = 概要
 
@@ -5328,6 +5643,27 @@ pad-button-left-stick = 左スティック
 
 # Name of the controller's right stick, in the controller help.
 pad-button-right-stick = 右スティック
+
+# Controller help: the D-pad in the reader turns the page, the way the book reads.
+pad-help-turn-page = ページをめくる
+
+# Controller help: the left shoulder button in the reader.
+pad-help-previous-chapter = 前の章
+
+# Controller help: the right shoulder button in the reader.
+pad-help-next-chapter = 次の章
+
+# Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pad-help-reader-bar = バーの表示・非表示
+
+# Controller help: the menu button in the reader.
+pad-help-reader-settings = リーダーの設定
+
+# Controller help: the B button in the reader.
+pad-help-close-reader = リーダーを閉じる
+
+# Heading in the controller help for the buttons in the reader.
+pad-help-reader = リーダー
 
 # Checkbox of the close question.
 close-dont-ask = 今後は確認しない
@@ -8270,6 +8606,63 @@ demo-story-row = 物語 · { $author } · { $licence }
 # Primary action on the demo's series page.
 demo-read-chapter = 第{ $number }章を読む
 
+# Page between chapters, under the tracker line: the server has the progress.
+progress-server-saved = { $server }に保存しました
+
+# Same place, only after 600 ms without an answer.
+progress-server-sending = { $server }に送信中…
+
+# Same place, offline: the send waits in the queue.
+progress-server-offline = オンラインに戻ると{ $server }に送信します
+
+# Same place, the send failed for a reason that can pass.
+progress-server-retrying = { $server }から応答がありません。Kaeriが再試行します。
+
+# Same place, the server said no. Try again follows it.
+progress-server-failed = { $server }に保存できませんでした：{ $reason }。
+
+# Reason: a Kavita key.
+progress-why-key = サーバーがキーを受け付けませんでした
+
+# Reason: a Komga or OPDS password.
+progress-why-password = サーバーがパスワードを受け付けませんでした
+
+# Reason.
+progress-why-gone = この作品はもうサーバーにありません
+
+# Reason, after a day of retries.
+progress-why-gave-up = 1日応答がありませんでした
+
+# Your sources, the server's row, second line.
+progress-row-saved = { $ago }に進捗を保存しました
+
+# The server's row, after 600 ms without an answer.
+progress-row-sending =
+    { $count ->
+       *[other] { $count }話を送信中…
+    }
+
+# The server's row, offline.
+progress-row-offline =
+    { $count ->
+       *[other] { $count }話はオンラインに戻ると送信されます
+    }
+
+# The server's row, the last try failed for a reason that can pass.
+progress-row-retrying =
+    { $count ->
+       *[other] { $count }話が待機中です。Kaeriが再試行します。
+    }
+
+# The server's row, the server said no. Try again sits beside it.
+progress-row-failed =
+    { $count ->
+       *[other] { $count }話を保存できませんでした：{ $reason }
+    }
+
+# The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+progress-row-off = 進捗はこの{ $kind }に残ります
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = 視聴
 
@@ -8278,6 +8671,9 @@ nav-read = 読書
 
 # Sidebar and tab label: new chapters from followed series.
 nav-updates = 更新
+
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = 続きを読む
 
 # Shelf heading on Read: series releasing now.
 home-read-releasing = 連載中
@@ -8340,16 +8736,25 @@ chapter-updates-open-series-menu = 作品を開く
 action-read-chapter = 第{ $n }話を読む
 
 # The main action when a chapter is part read.
-action-continue-chapter = 続きを見る 第{ $n }話 · { $page }ページ
+action-continue-chapter = 続きを読む 第{ $n }話 · { $page }ページ
 
 # The main action for a light novel part, part read.
-action-continue-part = 続きを見る パート{ $n } · { $percent }%
+action-continue-part = 続きを読む パート{ $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
-action-continue-part-plain = 続きを見る パート{ $n }
+action-continue-part-plain = 続きを読む パート{ $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = パート{ $n }を読む
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = 続きを読む { $label } · { $percent }%
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = 続きを読む { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+action-read-named = { $label }を読む
 
 # The main action when every chapter is read.
 action-read-again = もう一度読む
@@ -9162,7 +9567,7 @@ settings-counts-read-moving-on-note = 最後のページをめくったとき、
 settings-counts-read-marked = 自分で付けたとき
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = 続きを見ると連携サービスは、あなたが付けた記録に従います
+settings-counts-read-marked-note = 続きを読むと連携サービスは、あなたが付けた記録に従います
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = 引き継がれる作品設定
@@ -9256,6 +9661,225 @@ read-downloads-read = 既読 { $n }話
 
 # Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 read-downloads-delete-read = 既読を削除
+
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = 電子書籍リーダーに送る
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = 送信先
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = 内容
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = 章
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = { $chapter }
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = { $first }〜{ $last }
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = サイズ
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = 約{ $size }
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = Kaeriからは、この電子書籍リーダーで読んだ位置がわかりません。戻ってきたときに、作品ページでどこまで読んだかを尋ねます。
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = 準備して共有
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+       *[other] { $total }話中{ $done }話目を準備中
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = ページは{ $device }向けのサイズです
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = { $size }を超えるため、ファイルを分割します。
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = 第{ $chapter }話を準備できませんでした。{ $cause }
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = ファイルを準備できませんでした。{ $cause }
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = 計算中
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = 開いています
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = 閉じています
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = { $percent }パーセント
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = 電子書籍リーダーに送る
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = { $size }を超えると分割
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = 送信をキャンセル
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+       *[other] { $n }件のファイルの準備ができました。
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = もう一度共有
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = { $device }に送信中
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = 固定レイアウトEPUB
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = KEPUB
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = EPUB
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = CBZ
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = { $format } · { $width } × { $height }
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = どこまで読みましたか?
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = { $device }に章を送りました。どこまで読みましたか?
+
+# Button in that note.
+stop-note-action = 読んだ位置を設定
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = { $date }に第{ $chapter }話を{ $device }に送りました。
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = { $date }に第{ $first }話〜第{ $last }話を{ $device }に送りました。
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = 第{ $chapter }話を読み終えた
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = 読んだ位置を設定
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = 第{ $chapter }話 · { $page }ページのままにする
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = 現在の位置のままにする
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = 電子書籍リーダー
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = 電子書籍リーダーに送る
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = OPDSフィード
+
+# Line under the Share on this network switch.
+opds-share-note = 家庭内の電子書籍リーダーから閲覧できるOPDSカタログ
+
+# Footnote under the feed settings.
+opds-footer = フィードは、この{ $device }でKaeriを開いている間だけ動作します。それらの電子書籍リーダーでの進捗は、そちらに残ります。
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = アドレス
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = アドレスを取得するには、フィードをオンにしてください。
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = パスワード
+
+# Line under the password row.
+opds-password-note = 電子書籍リーダーで一度だけ入力します
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = 新しいパスワード
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = ポート
+
+# Line under the port row when it is empty.
+opds-port-note = 空欄なら空いているポートを使います。指定する場合は1024〜65535から選んでください
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = ポート{ $wanted }は使用中だったため、フィードは{ $port }を使っています。
+
+# Heading of the group that picks what the feed shares.
+opds-shares = 共有する内容
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = ダウンロード
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+       *[other] { $n }話
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = マンガのフォルダ
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = ライトノベルのフォルダ
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+       *[other] { $n }シリーズ
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = 取得した電子書籍リーダー
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = まだどの電子書籍リーダーも取得していません。
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = 起動しています…
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = 一時停止中。このMacはローカルネットワークに接続していません。
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = 一時停止中。このMacはVPN経由でのみ接続しています。
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = 新しいパスワードを作成しますか?
+
+# Text of that question.
+opds-new-password-warning = すでにフィードを使っている電子書籍リーダーは、それぞれに新しいパスワードを入力するまで使えなくなります。
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = 最終リクエスト：{ $time }
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+       *[other] { $n }件のファイル
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = { $address }の電子書籍リーダー
 
 # Button that shows the season before.
 seasonal-previous = 前のシーズン
@@ -12895,7 +13519,7 @@ accounts-welcome-detail = { $tracker }にサインインすると、リストと
 accounts-brings-lists = リストを読み込み、続きを見るに視聴中の作品を表示します。
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = リストを取り込み、読んでいる作品を続きを見るに表示します。
+accounts-brings-lists-read = リストを取り込み、読んでいる作品を続きを読むに表示します。
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = リストを取り込み、視聴中と読書中の作品を続きを見るに表示します。

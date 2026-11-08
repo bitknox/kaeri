@@ -8306,6 +8306,10 @@
     <value>Updates</value>
     <comment>Sidebar and tab label: new chapters from followed series.</comment>
   </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>Continue</value>
+    <comment>Shelf heading on Read: the series being read, each at its place.</comment>
+  </data>
   <data name="HomeReadReleasing" xml:space="preserve">
     <value>Releasing now</value>
     <comment>Shelf heading on Read: series releasing now.</comment>

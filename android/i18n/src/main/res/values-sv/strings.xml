@@ -196,6 +196,7 @@
     <string name="reading_also_a_book">Finns även som bok</string>
     <string name="reading_split_chapter">Kapitel %1$s skickas till trackers som %2$s.</string>
     <string name="reader_resumed">Fortsatte på sida %1$d</string>
+    <string name="reader_resumed_image">Fortsatte på bild %1$d</string>
     <string name="reader_back_to_page">Tillbaka till sida %1$d</string>
     <string name="reader_moved">Flyttade till %1$s, sida %2$d, där %3$s slutade</string>
     <string name="reader_moved_number">Flyttade till kapitel %1$s, sida %2$d, där %3$s slutade</string>
@@ -255,11 +256,17 @@
     <string name="reading_next_part">Del %1$s</string>
     <string name="reading_part_percent">Del %1$s · %2$d%%</string>
     <string name="reading_part_new">Del %1$s är ny</string>
+    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_new">%1$s har kommit ut</string>
     <string name="reading_part_titled">Del %1$s · %2$s</string>
+    <string name="reading_label_titled">%1$s · %2$s</string>
     <string name="reading_part_out_today">Del %1$s kommer ut idag</string>
+    <string name="reading_label_out_today">%1$s kommer ut idag</string>
     <string name="reading_part_out_today_titled">Del %1$s, %2$s, kommer ut idag</string>
+    <string name="reading_label_out_today_titled">%1$s, %2$s, kommer ut idag</string>
     <string name="reading_chapter_of">Kapitel %1$s av %2$s</string>
     <string name="reading_volume_part">Volym %1$s, del %2$s</string>
+    <string name="reading_volume_label">Volym %1$s, %2$s</string>
     <string name="reading_origin_japan">Japan</string>
     <string name="reading_origin_korea">Korea</string>
     <string name="reading_origin_china">Kina</string>
@@ -288,6 +295,8 @@
     <string name="reading_row_page_of">Sida %1$d av %2$d</string>
     <string name="reading_row_page">Sida %1$d</string>
     <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_opened">Öppnad</string>
+    <string name="reading_row_bookmarked">Bokmärkt</string>
     <plurals name="reading_row_pages">
         <item quantity="one">1 sida</item>
         <item quantity="other">%1$d sidor</item>
@@ -440,6 +449,7 @@
     <string name="sources_demo_removed">Demon togs bort</string>
     <string name="stores_ready_demo_stays">%1$s är klar. Demon ligger kvar sist bland Dina källor.</string>
     <string name="cloud_loopback_done">Du kan stänga den här fliken och gå tillbaka till Kaeri.</string>
+    <string name="sync_device_removed">Den här enheten togs bort från synk på en annan enhet. Gå med igen för att synka den.</string>
     <string name="notice_signed_in">Inloggad på %1$s.</string>
     <string name="notice_signed_in_keychain">Inloggad på %1$s. Token sparades i systemets nyckelring.</string>
     <string name="notice_signed_in_file">Inloggad på %1$s. Ingen nyckelring finns, så token ligger i en privat fil på den här enheten.</string>
@@ -488,7 +498,7 @@
     <string name="cause_proxy_needs_address">En proxy behöver en värd och en port.</string>
     <string name="cause_proxy_address_unusable">Proxykontrollen kan inte använda den här adressen.</string>
     <string name="cause_server_unreachable">Det gick inte att nå servern.</string>
-    <string name="legal_hosts_no_content">Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.</string>
+    <string name="legal_hosts_no_content">Kaeri är inte värd för några serier eller böcker. Du lägger till dina egna källor.</string>
     <string name="notice_saved">Sparade %1$s.</string>
     <string name="notice_not_saved">Det gick inte att spara inställningen. %1$s</string>
     <string name="notice_title_load_failed">Det gick inte att läsa in titeln. Kontrollera anslutningen och försök igen.</string>
@@ -564,6 +574,15 @@
     <string name="cast_settings_tvs_note">De visas under Chromecast i Spela på TV. Den här enheten skickar avsnittet till dem.</string>
     <string name="cast_settings_torrents">Torrents vid casting</string>
     <string name="cast_settings_torrents_note">Då kan en TV med inbyggd Chromecast spela torrents. Den här enheten skickar avsnittet så länge det spelas.</string>
+    <string name="book_server_keystore_android">Androids nyckellager</string>
+    <string name="store_invite_chip">Inbjudan ••••%1$s</string>
+    <plurals name="store_plugin_hosts">
+        <item quantity="one">%1$d värd</item>
+        <item quantity="other">%1$d värdar</item>
+    </plurals>
+    <string name="join_medium_line_watch">Titta, som på %1$s</string>
+    <string name="join_medium_line_both">Titta och läsa, som på %1$s</string>
+    <string name="join_key_store">Androids nyckellager</string>
     <string name="reader_page_failed_swipe">Svep för att gå vidare utan den.</string>
     <string name="reader_skip_page">Hoppa över sida</string>
     <string name="reader_page_of">Sida %1$d av %2$d</string>
@@ -599,7 +618,7 @@
     <string name="eink_reads_ltr">vänster till höger</string>
     <string name="eink_reads_strip">lång remsa</string>
     <string name="eink_on_device">på den här enheten</string>
-    <string name="eink_continue_to">Läs vidare till kapitel %1$s</string>
+    <string name="eink_continue_to">Läs vidare: kapitel %1$s</string>
     <string name="eink_back_to_series">Tillbaka till serien</string>
     <string name="eink_turn_to_continue">Vänd sida för att läsa vidare</string>
     <string name="eink_next_missing">Kapitel %1$s finns inte hos dina källor än</string>
@@ -636,7 +655,7 @@
     <string name="reader_minutes_left">%1$d min</string>
     <string name="reader_zone_next">Nästa sida</string>
     <string name="reader_grid_title">Sidor</string>
-    <string name="reader_end_continue">Fortsätt</string>
+    <string name="reader_end_continue">Läs vidare</string>
     <string name="reader_end_series">Tillbaka till serien</string>
     <string name="reader_end_again">Läs igen från början</string>
     <string name="reader_opening_chapter">Öppnar kapitel %1$s</string>
@@ -729,6 +748,49 @@
     <string name="reader_opening_waited">%1$s · %2$d s</string>
     <string name="reader_sources_title">Läs det här kapitlet från</string>
     <string name="reader_paper_parts">Vad det ändrar</string>
+    <string name="read_home_offline_line">Hem för läsning behöver en anslutning första gången den öppnas. Nedladdade kapitel går fortfarande att öppna.</string>
+    <string name="channel_chapters_name">Nya kapitel</string>
+    <string name="channel_chapters_description">När en serie på din Läser-lista får ett nytt kapitel.</string>
+    <string name="channel_downloads_finished_name">Nedladdningar klara</string>
+    <string name="channel_downloads_finished_description">När alla kapitel du valde att ladda ner är klara.</string>
+    <string name="notif_chapter_new">%1$s är ute.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Ett nytt kapitel</item>
+        <item quantity="other">%1$d nya kapitel</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Nytt kapitel</string>
+    <string name="notif_chapter_read">Läs</string>
+    <plurals name="downloads_notice_chapters">
+        <item quantity="one">Laddar ner ett kapitel</item>
+        <item quantity="other">Laddar ner %1$d kapitel</item>
+    </plurals>
+    <plurals name="read_series_downloaded_open">
+        <item quantity="one">Ett nedladdat kapitel går fortfarande att öppna.</item>
+        <item quantity="other">%1$d nedladdade kapitel går fortfarande att öppna.</item>
+    </plurals>
+    <string name="read_downloads_empty_detail">Nedladdade kapitel öppnas utan anslutning.</string>
+    <string name="read_downloads_empty_both">Nedladdade avsnitt och kapitel öppnas utan anslutning.</string>
+    <string name="settings_summary_chapters_on">Nya kapitel på</string>
+    <string name="settings_summary_chapters_off">Nya kapitel av</string>
+    <plurals name="settings_summary_book_folders">
+        <item quantity="one">1 mapp</item>
+        <item quantity="other">%1$d mappar</item>
+    </plurals>
+    <plurals name="settings_summary_book_servers">
+        <item quantity="one">1 server</item>
+        <item quantity="other">%1$d servrar</item>
+    </plurals>
+    <plurals name="settings_summary_book_plugins">
+        <item quantity="one">1 tillägg</item>
+        <item quantity="other">%1$d tillägg</item>
+    </plurals>
+    <string name="settings_book_sources">Källor för böcker</string>
+    <plurals name="book_matches_line">
+        <item quantity="one">Kaeri matchade %1$d utifrån deras detaljer. Den här behöver granskas.</item>
+        <item quantity="other">Kaeri matchade %1$d utifrån deras detaljer. De här %2$d behöver granskas.</item>
+    </plurals>
+    <string name="book_folder_failed">Mappen kunde inte läggas till. Prova en annan.</string>
+    <string name="book_server_note_device">Kaeri skickar tillbaka ditt läsförlopp till servern. Lösenordet stannar på den här enheten.</string>
     <string name="tv_pair_request_held">%1$s vill koppla ihop sig. Koden är %2$s</string>
     <string name="tv_add_store_to_play">Lägg till en tilläggsbutik för att spela</string>
     <string name="tv_title_page">Titelsida</string>
@@ -1336,6 +1398,13 @@
     <string name="pad_button_view">Vyknappen</string>
     <string name="pad_button_left_stick">Vänster spak</string>
     <string name="pad_button_right_stick">Höger spak</string>
+    <string name="pad_help_turn_page">Bläddra</string>
+    <string name="pad_help_previous_chapter">Föregående kapitel</string>
+    <string name="pad_help_next_chapter">Nästa kapitel</string>
+    <string name="pad_help_reader_bar">Visa eller dölj fältet</string>
+    <string name="pad_help_reader_settings">Läsarinställningar</string>
+    <string name="pad_help_close_reader">Stäng läsaren</string>
+    <string name="pad_help_reader">Läsare</string>
     <string name="close_dont_ask">Fråga inte igen</string>
     <string name="close_keep_going">Fortsätt i bakgrunden</string>
     <string name="party_looking_sources">Söker igenom dina källor…</string>
@@ -2376,9 +2445,37 @@
     </plurals>
     <string name="demo_story_row">Novell · %1$s · %2$s</string>
     <string name="demo_read_chapter">Läs kapitel %1$s</string>
+    <string name="progress_server_saved">Sparat på %1$s</string>
+    <string name="progress_server_sending">Skickar till %1$s…</string>
+    <string name="progress_server_offline">Skickas till %1$s när du är online igen</string>
+    <string name="progress_server_retrying">%1$s svarade inte. Kaeri försöker igen.</string>
+    <string name="progress_server_failed">Inte sparat på %1$s: %2$s.</string>
+    <string name="progress_why_key">servern godtog inte nyckeln</string>
+    <string name="progress_why_password">servern godtog inte lösenordet</string>
+    <string name="progress_why_gone">serien finns inte längre på servern</string>
+    <string name="progress_why_gave_up">inget svar på ett dygn</string>
+    <string name="progress_row_saved">Förlopp sparat %1$s</string>
+    <plurals name="progress_row_sending">
+        <item quantity="one">Skickar 1 kapitel…</item>
+        <item quantity="other">Skickar %1$d kapitel…</item>
+    </plurals>
+    <plurals name="progress_row_offline">
+        <item quantity="one">1 kapitel skickas när du är online igen</item>
+        <item quantity="other">%1$d kapitel skickas när du är online igen</item>
+    </plurals>
+    <plurals name="progress_row_retrying">
+        <item quantity="one">1 kapitel väntar. Kaeri försöker igen.</item>
+        <item quantity="other">%1$d kapitel väntar. Kaeri försöker igen.</item>
+    </plurals>
+    <plurals name="progress_row_failed">
+        <item quantity="one">1 kapitel inte sparat: %2$s</item>
+        <item quantity="other">%1$d kapitel inte sparade: %2$s</item>
+    </plurals>
+    <string name="progress_row_off">Förloppet stannar på den här %1$s</string>
     <string name="nav_watch">Titta</string>
     <string name="nav_read">Läs</string>
     <string name="nav_updates">Uppdateringar</string>
+    <string name="home_read_continue">Läs vidare</string>
     <string name="home_read_releasing">Pågår nu</string>
     <string name="home_read_checked_on_open">Kontrolleras när du öppnar Kaeri</string>
     <string name="home_read_end">Det var allt för nu. Uppdateringar och Sök har de fullständiga listorna.</string>
@@ -2405,6 +2502,9 @@
     <string name="action_continue_part">Läs vidare på del %1$s · %2$d%%</string>
     <string name="action_continue_part_plain">Läs vidare på del %1$s</string>
     <string name="action_read_part">Läs del %1$s</string>
+    <string name="action_continue_named">Läs vidare på %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">Läs vidare på %1$s</string>
+    <string name="action_read_named">Läs %1$s</string>
     <string name="action_read_again">Läs igen</string>
     <string name="series_reading_from">Läser från</string>
     <string name="series_change">Ändra</string>
@@ -2745,6 +2845,89 @@
     </plurals>
     <string name="read_downloads_read">%1$d lästa</string>
     <string name="read_downloads_delete_read">Ta bort lästa</string>
+    <string name="send_title">Skicka till e-läsare</string>
+    <string name="send_for">Till</string>
+    <string name="send_what">Vad</string>
+    <string name="send_chapters">Kapitel</string>
+    <string name="send_chapters_one">%1$s</string>
+    <string name="send_chapters_range">%1$s till %2$s</string>
+    <string name="send_size">Storlek</string>
+    <string name="send_size_about">Cirka %1$s</string>
+    <string name="send_no_place">Kaeri kan inte se var du är på den här e-läsaren. När du kommer tillbaka frågar seriesidan var du slutade.</string>
+    <string name="send_prepare">Förbered och dela</string>
+    <plurals name="send_preparing">
+        <item quantity="one">Förbereder kapitlet</item>
+        <item quantity="other">Förbereder %1$d av %2$d kapitel</item>
+    </plurals>
+    <string name="send_sized_for">Sidorna är anpassade för %1$s</string>
+    <string name="send_in_parts">Över %1$s, så filerna delas upp.</string>
+    <string name="send_failed_chapter">Kunde inte förbereda kapitel %1$s. %2$s</string>
+    <string name="send_failed">Kunde inte förbereda filerna. %1$s</string>
+    <string name="send_size_working">Räknar ut</string>
+    <string name="send_chapters_open">Öppen</string>
+    <string name="send_chapters_closed">Stängd</string>
+    <string name="send_progress_spoken">%1$d procent</string>
+    <string name="send_chapter_action">Skicka till e-läsare</string>
+    <string name="send_parts_over">i delar över %1$s</string>
+    <string name="send_waiting_cancel">Avbryt sändningen</string>
+    <plurals name="send_ready">
+        <item quantity="one">En fil är klar.</item>
+        <item quantity="other">%1$d filer är klara.</item>
+    </plurals>
+    <string name="send_share_again">Dela igen</string>
+    <string name="send_banner">Skickar till %1$s</string>
+    <string name="send_format_fixed_epub">EPUB med fast layout</string>
+    <string name="send_format_kepub">KEPUB</string>
+    <string name="send_format_epub">EPUB</string>
+    <string name="send_format_cbz">CBZ</string>
+    <string name="send_target_line">%1$s · %2$s × %3$s</string>
+    <string name="stop_title">Var slutade du?</string>
+    <string name="stop_note">Du skickade kapitel till %1$s. Var slutade du?</string>
+    <string name="stop_note_action">Ange din plats</string>
+    <string name="stop_sent_one">Kapitel %1$s skickades till %2$s den %3$s.</string>
+    <string name="stop_sent_range">Kapitel %1$s till %2$s skickades till %3$s den %4$s.</string>
+    <string name="stop_finished">Läste klart kapitel %1$s</string>
+    <string name="stop_set">Ange din plats</string>
+    <string name="stop_keep">Behåll kapitel %1$s · sida %2$d</string>
+    <string name="stop_keep_plain">Behåll nuvarande plats</string>
+    <string name="ereaders_group">E-läsare</string>
+    <string name="ereaders_send_row">Skicka till e-läsare</string>
+    <string name="ereaders_feed_row">OPDS-flöde</string>
+    <string name="opds_share_note">En OPDS-katalog som e-läsare hemma kan bläddra i</string>
+    <string name="opds_footer">Flödet körs bara medan Kaeri är öppet på den här %1$s. Förlopp på de e-läsarna stannar där.</string>
+    <string name="opds_address">Adress</string>
+    <string name="opds_address_off">Slå på flödet för att få dess adress.</string>
+    <string name="opds_password">Lösenord</string>
+    <string name="opds_password_note">E-läsare frågar efter det en gång</string>
+    <string name="opds_new_password">Nytt lösenord</string>
+    <string name="opds_port">Port</string>
+    <string name="opds_port_note">Lämna tomt för valfri ledig port, eller välj en från 1024 till 65535</string>
+    <string name="opds_port_moved">Port %1$d var upptagen, så flödet använder %2$d.</string>
+    <string name="opds_shares">Vad det delar</string>
+    <string name="opds_share_downloads">Nedladdningar</string>
+    <plurals name="opds_share_downloads_count">
+        <item quantity="one">Ett kapitel</item>
+        <item quantity="other">%1$d kapitel</item>
+    </plurals>
+    <string name="opds_share_manga">Mangamapp</string>
+    <string name="opds_share_novels">Romanmapp</string>
+    <plurals name="opds_share_series_count">
+        <item quantity="one">En serie</item>
+        <item quantity="other">%1$d serier</item>
+    </plurals>
+    <string name="opds_fetched_by">Hämtat av</string>
+    <string name="opds_fetched_none">Ingen e-läsare har hämtat något än.</string>
+    <string name="opds_starting">Startar…</string>
+    <string name="opds_paused_none">Pausat. Den här Macen är inte på något lokalt nätverk.</string>
+    <string name="opds_paused_vpn">Pausat. Den här Macen är bara ansluten via VPN.</string>
+    <string name="opds_new_password_title">Skapa ett nytt lösenord?</string>
+    <string name="opds_new_password_warning">E-läsare som redan använder flödet slutar fungera tills du skriver in det nya lösenordet i var och en.</string>
+    <string name="opds_fetched_time">Senaste förfrågan %1$s</string>
+    <plurals name="opds_fetched_files">
+        <item quantity="one">En fil</item>
+        <item quantity="other">%1$d filer</item>
+    </plurals>
+    <string name="opds_reader_unnamed">E-läsare på %1$s</string>
     <string name="seasonal_previous">Föregående säsong</string>
     <string name="seasonal_next">Nästa säsong</string>
     <string name="seasonal_loading">Laddar säsongen</string>
@@ -4029,7 +4212,7 @@
     <string name="accounts_other_trackers_note">Övriga trackers finns under Konton.</string>
     <string name="accounts_welcome_detail">Logga in på %1$s för att synka din lista och var du slutade.</string>
     <string name="accounts_brings_lists">Hämtar dina listor och fyller Fortsätt titta med det du tittar på.</string>
-    <string name="accounts_brings_lists_read">Hämtar in dina listor och fyller startsidan med det du läser.</string>
+    <string name="accounts_brings_lists_read">Hämtar in dina listor och fyller raden Läs vidare med det du läser.</string>
     <string name="accounts_brings_lists_both">Hämtar in dina listor och fyller startsidan med det du tittar på och läser.</string>
     <string name="accounts_tracker_lists">Listor och förlopp</string>
     <string name="accounts_tracker_reading_lists">Läslistor och förlopp</string>

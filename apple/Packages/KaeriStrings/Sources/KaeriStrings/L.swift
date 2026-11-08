@@ -8430,6 +8430,9 @@ public enum L {
     /// Sidebar and tab label: new chapters from followed series.
     public static var navUpdates: String { string("nav-updates", fallback: "Updates") }
 
+    /// Shelf heading on Read: the series being read, each at its place.
+    public static var homeReadContinue: String { string("home-read-continue", fallback: "Continue") }
+
     /// Shelf heading on Read: series releasing now.
     public static var homeReadReleasing: String { string("home-read-releasing", fallback: "Releasing now") }
 

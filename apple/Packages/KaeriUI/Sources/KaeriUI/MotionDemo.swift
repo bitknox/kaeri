@@ -29,6 +29,9 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     /// Home asked for again as on its first visit, with nothing kept: its placeholders, then its
     /// sections arriving.
     case homeFirst
+    /// `homeFirst` with no episode table and no wide art wait kept either: the spotlight's and
+    /// Continue's wide art as they first come, with `--episodes-delay` holding the tables back.
+    case homeArt
     /// M2: Continue's selection moves to the next title, the preview crossfading.
     case m2
     /// M3: the preview's banner grows into the title page.
@@ -189,6 +192,10 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             withTransaction(instant) { navigator.section = section }
         case .homeFirst:
             store.discovery.forgetForDemo()
+            store.loadHome(force: true)
+        case .homeArt:
+            store.discovery.forgetForDemo()
+            store.forgetArtForDemo()
             store.loadHome(force: true)
         case .m2:
             if queue.count > 1 { navigator.continueSelection = queue[1] }

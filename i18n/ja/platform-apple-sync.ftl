@@ -19,3 +19,4 @@ pair-enter-code = コードを入力
 rkey-restores = すべての{ -device }をなくしても、すべてを復元できます。
 sync-turn-off-button = オフにする
 rkey-enter-line-generic = { $service }には、ほかの{ -device-pl }の履歴が保存されています。同期をオンにしたときに保存したキーで開けます。
+pair-code-left = このコードはあと{ $left }有効です。

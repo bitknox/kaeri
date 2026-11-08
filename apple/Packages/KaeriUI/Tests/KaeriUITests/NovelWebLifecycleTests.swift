@@ -10,7 +10,8 @@ import WebKit
 /// The novel reader's web view over a reading session: one made for the reader, kept while ten
 /// chapters open and close and the screen is drawn again, and let go with the reader. A tap on a
 /// page's side turns it in the page, which says so once. And two columns capped in a wide view
-/// keep their usual gap and sit in the middle, on the first page and the last.
+/// keep their usual gap and sit in the middle, on the first page and the last, with scroll bars
+/// that take room as well.
 @MainActor
 @Suite(.serialized)
 struct NovelWebLifecycleTests {
@@ -168,7 +169,28 @@ struct NovelWebLifecycleTests {
     })()
     """
 
+    /// Scroll bars that take room, as a Mac with a mouse and Windows draw them, whatever the
+    /// machine running the tests has set. Before the paginator's first layout a long chapter is
+    /// one tall column, so the view has a vertical scroll bar until the page hides the overflow.
+    private static let scrollBars = """
+    (function () {
+      var s = document.createElementNS('http://www.w3.org/1999/xhtml', 'style');
+      s.textContent = '::-webkit-scrollbar { width: 17px; height: 17px; background: #888; }';
+      (document.head || document.documentElement).appendChild(s);
+      // What the scroll bar takes from the view before the paginator lays the page out.
+      window.kaeriTestScrollBar = window.innerWidth - document.documentElement.clientWidth;
+    })();
+    """
+
     @Test func twoCappedColumnsKeepTheirGapAndSitInTheMiddle() async throws {
+        try await twoCappedColumns(scrollBars: false)
+    }
+
+    @Test func twoCappedColumnsSitInTheMiddleWithScrollBarsThatTakeRoom() async throws {
+        try await twoCappedColumns(scrollBars: true)
+    }
+
+    private func twoCappedColumns(scrollBars: Bool) async throws {
         let model = model(Sent())
         model.open(work: "a:900302")
         let window = window(model, size: CGSize(width: 1920, height: 1080))
@@ -180,8 +202,18 @@ struct NovelWebLifecycleTests {
         await spin(0.2)
         opened(model, chapter: 1)
         #expect(await until(10) { model.position.count > 2 })
-        await spin(0.5)
         let view = try #require(window.contentView.flatMap(Self.webView(in:)))
+        if scrollBars {
+            // The chapter again, laid out from the start with the scroll bars in.
+            view.configuration.userContentController.addUserScript(
+                WKUserScript(source: Self.scrollBars, injectionTime: .atDocumentEnd, forMainFrameOnly: true))
+            model.position = (0, 1)
+            view.reload()
+            #expect(await until(10) { model.position.count > 2 }, "laid out again")
+            let bar = try await view.evaluateJavaScript("window.kaeriTestScrollBar") as? Double
+            #expect(bar == 17, "the scroll bar took room before the layout: \(bar ?? -1)")
+        }
+        await spin(0.5)
         let first = try #require(try await view.evaluateJavaScript(Self.columns) as? [Double])
         let (width, left, leftEnd, right, rightEnd) = (first[0], first[1], first[2], first[3], first[4])
         #expect(width > 1500, "a wide view: \(first)")
@@ -194,6 +226,7 @@ struct NovelWebLifecycleTests {
         await spin(0.5)
         let last = try #require(try await view.evaluateJavaScript(Self.columns) as? [Double])
         #expect(abs(last[1] - left) <= 4, "the last page lines up: \(last)")
+        #expect(abs(last[1] - (last[0] - last[4])) <= 4, "the last page in the middle: \(last)")
     }
 
     private static func webView(in view: NSView) -> WKWebView? {

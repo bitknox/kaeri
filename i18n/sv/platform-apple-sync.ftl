@@ -19,3 +19,4 @@ pair-enter-code = Ange en kod
 rkey-restores = Återställer allt om du förlorar alla dina { -device-pl }.
 sync-turn-off-button = Stäng av
 rkey-enter-line-generic = { $service } innehåller historik från dina andra { -device-pl }. Nyckeln du sparade när synkningen slogs på öppnar den.
+pair-code-left = Koden fungerar i { $left } till.

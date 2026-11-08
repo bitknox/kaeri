@@ -338,6 +338,7 @@ progressbar.read-track { min-height: 3px; }
 progressbar.read-track trough { min-height: 3px; border-radius: 2px; background: var(--rule); }
 progressbar.read-track progress { min-height: 3px; border-radius: 2px; background: var(--silk); }
 .read-card { padding: 2px; border-radius: 10px; }
+.read-grid { margin: 8px 24px 24px 24px; }
 .read-card:hover { background: var(--raised-selected); }
 .read-card:focus-visible { outline: 2px solid var(--silk); outline-offset: 2px; }
 .read-spotlight { padding: 12px 0 8px; }
@@ -347,7 +348,7 @@ progressbar.read-track progress { min-height: 3px; border-radius: 2px; backgroun
 
 /* The reader's chrome (the reader board's Linux frames): a flat header over the page, and the
    group at its foot on Raised with corners 14, its scrubber in silk and 34 px pill buttons. */
-.reader-head { background: none; box-shadow: none; }
+.reader-head { background: var(--raised); box-shadow: inset 0 -1px alpha(currentColor, 0.08); }
 .reader-group {
   background: var(--raised);
   border-radius: 14px;
@@ -356,8 +357,8 @@ progressbar.read-track progress { min-height: 3px; border-radius: 2px; backgroun
 }
 .reader-group button { min-width: 34px; min-height: 34px; padding: 0; border-radius: 17px; }
 .reader-scrub-row { min-height: 28px; padding: 0 8px; }
-.reader-group-title { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 14px; }
-.reader-group-line { font-size: 12px; color: var(--haze); }
+.reader-group-title { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 1em; }
+.reader-group-line { font-size: 0.86em; color: var(--haze); }
 scale.reader-scrub { padding: 0; }
 scale.reader-scrub trough { min-height: 3px; border-radius: 2px; background: alpha(currentColor, 0.25); }
 scale.reader-scrub highlight { min-height: 3px; border-radius: 2px; background: currentColor; }
@@ -397,6 +398,87 @@ scale.reader-scrub slider {
 .reader-light .reader-head windowcontrols > button:hover > image { background-color: var(--raised-selected); }
 .reader-light .reader-head windowcontrols > button:active > image { background-color: var(--rule); }
 .strip-leaf { background: transparent; }
+/* The marker into the next chapter in a strip (the reader board's divider): Next, the chapter
+   in the show-title face and its facts, on the ground. */
+.strip-marker { color: var(--silk); }
+.strip-marker-next { font-size: 0.93em; color: var(--haze); }
+.strip-marker-title { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 1.57em; line-height: 1.27; }
+.strip-marker-facts { font-size: 1em; color: var(--haze); }
+
+/* The page between chapters (PagedReader's end page on Apple): sizes relative, so Large Text
+   reaches them. */
+.reader-end-top { font-size: 1.07em; color: var(--haze); }
+.reader-end-read { font-size: 0.93em; color: var(--haze); }
+.reader-end-title { font-size: 2.14em; line-height: 1.2; }
+.reader-end-facts { font-size: 1em; color: var(--haze); }
+.reader-end-none { font-size: 1.57em; font-weight: 600; }
+.reader-end-body { font-size: 1.07em; color: var(--haze); }
+/* The end page and a strip's marker sit on the dark ground in every look, so a light look's
+   chrome tokens stop at their words and buttons; the preview keeps the look's page colour. */
+.reader-light .reader-end,
+.reader-light .strip-marker {
+  --raised: #222638;
+  --raised-selected: #343A57;
+  --rule: #434653;
+  --silk: #E4E0D6;
+  --haze: #A3A9C4;
+  --window-fg-color: #E4E0D6;
+  --view-fg-color: #E4E0D6;
+  color: #E4E0D6;
+}
+.reader-light .reader-end .reader-end-preview { background: #E3DFD4; --haze: #4F546E; }
+.reader-end-preview {
+  background: var(--raised); border-radius: 4px;
+  box-shadow: 0 10px 30px alpha(black, 0.35), inset 0 0 0 1px alpha(currentColor, 0.18);
+}
+
+/* A page that failed, in the page's place: Raised, the glyph alone in vermilion. */
+.reader-plate { background: var(--raised); }
+/* The page plate's words: the number while it waits, the line from a few seconds. */
+.reader-plate-number, .reader-end-plate { color: var(--haze); font-size: 1.07em; }
+.reader-plate-line { color: var(--haze); font-size: 0.93em; }
+/* Reading mode's list, pushed over the sheet. */
+.reader-sheet-pushed-head { padding: 6px 8px 8px 6px; }
+popover.reader-sheet button.reader-sheet-push,
+popover.reader-sheet button.reader-sheet-choice { padding: 10px 16px; border-radius: 0; font-weight: normal; }
+.reader-failed-glyph { color: var(--vermilion); }
+.reader-failed-title { font-size: 1.07em; font-weight: 600; }
+
+/* A notice over the page: resumed, back to page, moved, mode detected. */
+.reader-notice {
+  background: var(--raised); border-radius: 999px; padding: 4px 6px 4px 16px;
+  box-shadow: 0 6px 20px alpha(black, 0.3), inset 0 0 0 1px alpha(currentColor, 0.08);
+}
+.reader-notice-action { font-weight: 700; color: var(--silk); padding: 4px 10px; min-height: 0; }
+
+/* The reader settings popover, on Raised: headings in haze, the label at the start of each row and
+   the control at its end, and the controls in silk (the reader board's Linux frames). */
+popover.reader-sheet > contents { background: var(--raised); padding: 0; border-radius: 14px; }
+.reader-sheet-column { padding-bottom: 8px; }
+.reader-sheet-heading { font-size: 0.93em; font-weight: 600; padding: 14px 16px 4px; }
+.reader-sheet-row { min-height: 40px; padding: 2px 16px; }
+.reader-sheet-note { padding: 0 16px 6px; }
+button.reader-sheet-link { padding: 0 16px; min-height: 24px; font-size: 0.93em; font-weight: 600; color: var(--haze); text-decoration: underline; }
+button.reader-sheet-more { padding: 8px 16px; border-radius: 0; font-weight: 400; }
+.reader-sheet switch:checked { background: var(--silk); }
+.reader-sheet switch:checked > slider { background: var(--ground); }
+.reader-sheet scale highlight { background: var(--silk); }
+.reader-sheet scale slider { background: var(--silk); box-shadow: none; }
+.reader-sheet-segments toggle:checked { background: var(--raised-selected); color: var(--silk); }
+.reader-sheet-a-small { font-family: "Literata", serif; font-weight: 600; font-size: 0.93em; color: var(--haze); }
+.reader-sheet-a-large { font-family: "Literata", serif; font-weight: 600; font-size: 1.5em; color: var(--haze); }
+.reader-sheet-swatches { padding: 4px 12px 10px; }
+button.reader-swatch-button { padding: 4px 0; background: none; color: var(--haze); }
+button.reader-swatch-button:checked { color: var(--silk); font-weight: 600; }
+.reader-swatch {
+  min-width: 40px; min-height: 40px; border-radius: 999px;
+  font-family: "Literata", serif; font-weight: 600; box-shadow: inset 0 0 0 1px var(--rule);
+}
+button.reader-swatch-button:checked .reader-swatch { box-shadow: 0 0 0 2px var(--raised), 0 0 0 4px var(--silk); }
+.reader-swatch.look-paper { background: #EFE9DC; color: #2A2620; }
+.reader-swatch.look-light { background: #F7F5F0; color: #1E2033; }
+.reader-swatch.look-sepia { background: #E9DCC4; color: #3B2F22; }
+.reader-swatch.look-dark, .reader-swatch.look-system { background: #161A2E; color: #D9D5CB; }
 .home-week { border-top: 1px solid var(--faint-rule); padding-top: 12px; }
 .home-day { font-size: 12px; line-height: 1.33; font-weight: 600; }
 .home-week-time { font-size: 12px; font-weight: 600; color: var(--silk); }
@@ -495,7 +577,7 @@ popover.ep-panel > contents { padding: 0; }
 /* The reader's Chapters popover: the chapter's name, the page grid with the open page ringed,
    and the chapters with the open one on the selected fill. */
 .reader-chapters { padding: 14px 18px 18px; }
-.reader-chapters-title { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 17px; }
+.reader-chapters-title { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 1.21em; }
 gridview.reader-pages { background: none; }
 gridview.reader-pages > child { padding: 5px; border-radius: 8px; }
 .reader-thumb { border-radius: 8px; background: var(--raised); }
@@ -504,3 +586,79 @@ list.reader-chapter-list { background: none; }
 list.reader-chapter-list > row { border-radius: 8px; }
 .reader-chapter-list row.reader-here { background: var(--raised-selected); }
 .reader-chapter-list row.reader-read .title { color: var(--haze); }
+
+/* Reading prelaunch: first run's pages, the add forms' outcomes, Your sources' rows, the demo. */
+.first-title { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2; }
+.first-qr { background: var(--silk); border-radius: 12px; padding: 16px; }
+.first-digits { margin-top: 4px; }
+.first-digit {
+  background: var(--raised);
+  border: 1px solid var(--faint-rule);
+  border-radius: 8px;
+  min-width: 48px;
+  min-height: 60px;
+  font-family: monospace;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--silk);
+}
+.first-expired { opacity: 0.4; }
+.first-status { font-size: 14px; }
+
+/* The note glyphs carry the class themselves; vermilion colours the error glyph and nothing else. */
+.came-in-note image { color: var(--haze); }
+image.came-in-found, .came-in-found image { color: var(--water); }
+image.came-in-failed, .came-in-failed image { color: var(--vermilion); }
+.key-chip {
+  background: var(--raised-selected);
+  color: var(--silk);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-family: monospace;
+  font-size: 12px;
+}
+.source-tile {
+  background: var(--raised-selected);
+  color: var(--silk);
+  border-radius: 8px;
+  min-width: 36px;
+  min-height: 36px;
+}
+.source-row .server-line { font-size: 13px; }
+/* Try again under a line starts where the words do. */
+.server-line button.link { padding-left: 0; padding-right: 0; min-height: 0; }
+/* Try again between chapters is a neutral underlined link; Continue is the page's one amber. */
+.server-line button.link.plain-link { color: var(--silk); }
+.server-line button.link.plain-link label { text-decoration: underline; }
+
+.demo-spotlight { border-radius: 12px; }
+.demo-spotlight-shade { background: linear-gradient(to top, rgba(22, 26, 46, 0.92), rgba(22, 26, 46, 0.35) 55%, rgba(22, 26, 46, 0) 80%); }
+.demo-spotlight-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; color: var(--haze); }
+/* Over the page in any look: the board's dark glass with light words. */
+.demo-credit {
+  background: rgba(22, 26, 46, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  color: #E4E0D6;
+}
+.demo-credit-line link { color: var(--silk); }
+/* The demo's end card follows the reader's page look: the ground is the page, the card sits a
+   step above it (dark, paper, light or sepia), as the Mac draws it. */
+statuspage.demo-end-ground { background: #161A2E; }
+statuspage.demo-end-ground.look-paper { background: #EFE9DC; }
+statuspage.demo-end-ground.look-light { background: #F7F5F0; }
+statuspage.demo-end-ground.look-sepia { background: #E9DCC4; }
+.demo-end {
+  background: #2A2F45;
+  border: 1px solid var(--faint-rule);
+  border-radius: 16px;
+  padding: 24px;
+}
+.reader-light .demo-end { background: #DCD7CB; }
+.demo-try { background: var(--raised); border-radius: 12px; padding: 14px 16px; }
+.demo-result { border-radius: 8px; }
+
+.medium-check { color: var(--amber); transition: opacity 150ms ease-out; }
+.medium-choices row.chosen { background: var(--raised-selected); }

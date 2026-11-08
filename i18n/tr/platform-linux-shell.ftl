@@ -52,3 +52,4 @@ shell-device-label = Linux bilgisayarı
 tv-cast-through-computer = Bu bilgisayar üzerinden oynatılır
 tv-cast-inhibit-reason = Bir TV'ye bölüm gönderiliyor
 tv-network-group = Bu ağdaki TV'ler
+linux-sidebar-your-sources = { -source-cap-pl }ınız

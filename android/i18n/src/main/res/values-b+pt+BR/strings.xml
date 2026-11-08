@@ -205,6 +205,7 @@
     <string name="reading_also_a_book">Também é um livro</string>
     <string name="reading_split_chapter">O capítulo %1$s vai para o serviço de acompanhamento como %2$s.</string>
     <string name="reader_resumed">Retomado na página %1$d</string>
+    <string name="reader_resumed_image">Retomado na imagem %1$d</string>
     <string name="reader_back_to_page">Voltar à página %1$d</string>
     <string name="reader_moved">Movido para %1$s, página %2$d, onde %3$s parou</string>
     <string name="reader_moved_number">Movido para o capítulo %1$s, página %2$d, onde %3$s parou</string>
@@ -255,7 +256,7 @@
     </plurals>
     <string name="reading_on_planning">Na sua lista Planejando</string>
     <string name="reading_spotlight_new_chapter">Capítulo novo em uma série que você segue</string>
-    <string name="reading_spotlight_continue">Retomar a leitura</string>
+    <string name="reading_spotlight_continue">Continuar lendo</string>
     <string name="reading_spotlight_up_next">Próxima leitura para você</string>
     <string name="reading_spotlight_popular">Popular, em lançamento agora</string>
     <string name="reading_out_today">O capítulo %1$s saiu hoje</string>
@@ -266,11 +267,17 @@
     <string name="reading_next_part">Parte %1$s</string>
     <string name="reading_part_percent">Parte %1$s · %2$d%%</string>
     <string name="reading_part_new">A parte %1$s é nova</string>
+    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_new">%1$s já saiu</string>
     <string name="reading_part_titled">Parte %1$s · %2$s</string>
+    <string name="reading_label_titled">%1$s · %2$s</string>
     <string name="reading_part_out_today">A parte %1$s saiu hoje</string>
+    <string name="reading_label_out_today">%1$s saiu hoje</string>
     <string name="reading_part_out_today_titled">Parte %1$s, %2$s, saiu hoje</string>
+    <string name="reading_label_out_today_titled">%1$s, %2$s, saiu hoje</string>
     <string name="reading_chapter_of">Capítulo %1$s de %2$s</string>
     <string name="reading_volume_part">Volume %1$s, parte %2$s</string>
+    <string name="reading_volume_label">Volume %1$s, %2$s</string>
     <string name="reading_origin_japan">Japão</string>
     <string name="reading_origin_korea">Coreia</string>
     <string name="reading_origin_china">China</string>
@@ -300,6 +307,8 @@
     <string name="reading_row_page_of">Página %1$d de %2$d</string>
     <string name="reading_row_page">Página %1$d</string>
     <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_opened">Aberto</string>
+    <string name="reading_row_bookmarked">Com marcador</string>
     <plurals name="reading_row_pages">
         <item quantity="one">1 página</item>
         <item quantity="many">%1$d de páginas</item>
@@ -465,6 +474,7 @@
     <string name="sources_demo_removed">Demo removida</string>
     <string name="stores_ready_demo_stays">%1$s está pronta. A demo continua por último em Suas fontes.</string>
     <string name="cloud_loopback_done">Você pode fechar esta aba e voltar ao Kaeri.</string>
+    <string name="sync_device_removed">Este dispositivo foi removido da sincronização em outro dispositivo. Entre de novo para sincronizá-lo.</string>
     <string name="notice_signed_in">Conectado ao %1$s.</string>
     <string name="notice_signed_in_keychain">Conectado ao %1$s. O token está no chaveiro do sistema.</string>
     <string name="notice_signed_in_file">Conectado ao %1$s. Não há chaveiro disponível, então o token fica em um arquivo privado neste dispositivo.</string>
@@ -593,6 +603,16 @@
     <string name="cast_settings_tvs_note">Elas aparecem em Chromecast, em Reproduzir na TV. Este dispositivo envia o episódio a elas.</string>
     <string name="cast_settings_torrents">Torrents durante a transmissão</string>
     <string name="cast_settings_torrents_note">Assim, uma TV com Chromecast integrado pode reproduzir torrents. Este dispositivo envia o episódio enquanto ele estiver sendo reproduzido.</string>
+    <string name="book_server_keystore_android">o armazenamento de chaves do Android</string>
+    <string name="store_invite_chip">Convite ••••%1$s</string>
+    <plurals name="store_plugin_hosts">
+        <item quantity="one">%1$d host</item>
+        <item quantity="many">%1$d hosts</item>
+        <item quantity="other">%1$d hosts</item>
+    </plurals>
+    <string name="join_medium_line_watch">Assistir, como em %1$s</string>
+    <string name="join_medium_line_both">Assistir e ler, como em %1$s</string>
+    <string name="join_key_store">o armazenamento de chaves do Android</string>
     <string name="reader_page_failed_swipe">Deslize para seguir sem ela.</string>
     <string name="reader_skip_page">Pular página</string>
     <string name="reader_page_of">Página %1$d de %2$d</string>
@@ -632,7 +652,7 @@
     <string name="eink_on_device">neste dispositivo</string>
     <string name="eink_continue_to">Ir ao capítulo %1$s</string>
     <string name="eink_back_to_series">Voltar à série</string>
-    <string name="eink_turn_to_continue">Vire a página para seguir</string>
+    <string name="eink_turn_to_continue">Vire a página para continuar lendo</string>
     <string name="eink_next_missing">O capítulo %1$s ainda não está nas suas fontes</string>
     <string name="eink_next_not_out">O capítulo seguinte ainda não saiu</string>
     <string name="eink_caught_up">Você está em dia</string>
@@ -667,7 +687,7 @@
     <string name="reader_minutes_left">%1$d min</string>
     <string name="reader_zone_next">Próxima página</string>
     <string name="reader_grid_title">Páginas</string>
-    <string name="reader_end_continue">Seguir lendo</string>
+    <string name="reader_end_continue">Continuar lendo</string>
     <string name="reader_end_series">Voltar à série</string>
     <string name="reader_end_again">Reler desde o início</string>
     <string name="reader_opening_chapter">Abrindo o capítulo %1$s</string>
@@ -760,6 +780,56 @@
     <string name="reader_opening_waited">%1$s · %2$d s</string>
     <string name="reader_sources_title">Ler este capítulo de</string>
     <string name="reader_paper_parts">O que ele muda</string>
+    <string name="read_home_offline_line">O Início de Ler precisa de conexão na primeira vez que abre. Os capítulos baixados ainda abrem.</string>
+    <string name="channel_chapters_name">Capítulos novos</string>
+    <string name="channel_chapters_description">Quando uma série da sua lista Lendo tem um capítulo novo.</string>
+    <string name="channel_downloads_finished_name">Downloads concluídos</string>
+    <string name="channel_downloads_finished_description">Quando todos os capítulos que você pediu para baixar terminam.</string>
+    <string name="notif_chapter_new">%1$s já saiu.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Um capítulo novo</item>
+        <item quantity="many">%1$d capítulos novos</item>
+        <item quantity="other">%1$d capítulos novos</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Capítulo novo</string>
+    <string name="notif_chapter_read">Ler</string>
+    <plurals name="downloads_notice_chapters">
+        <item quantity="one">Baixando um capítulo</item>
+        <item quantity="many">Baixando %1$d capítulos</item>
+        <item quantity="other">Baixando %1$d capítulos</item>
+    </plurals>
+    <plurals name="read_series_downloaded_open">
+        <item quantity="one">Um capítulo baixado ainda abre.</item>
+        <item quantity="many">%1$d capítulos baixados ainda abrem.</item>
+        <item quantity="other">%1$d capítulos baixados ainda abrem.</item>
+    </plurals>
+    <string name="read_downloads_empty_detail">Capítulos baixados abrem sem conexão.</string>
+    <string name="read_downloads_empty_both">Episódios e capítulos baixados abrem sem conexão.</string>
+    <string name="settings_summary_chapters_on">Capítulos novos ativados</string>
+    <string name="settings_summary_chapters_off">Capítulos novos desativados</string>
+    <plurals name="settings_summary_book_folders">
+        <item quantity="one">1 pasta</item>
+        <item quantity="many">%1$d pastas</item>
+        <item quantity="other">%1$d pastas</item>
+    </plurals>
+    <plurals name="settings_summary_book_servers">
+        <item quantity="one">1 servidor</item>
+        <item quantity="many">%1$d servidores</item>
+        <item quantity="other">%1$d servidores</item>
+    </plurals>
+    <plurals name="settings_summary_book_plugins">
+        <item quantity="one">1 plugin</item>
+        <item quantity="many">%1$d plugins</item>
+        <item quantity="other">%1$d plugins</item>
+    </plurals>
+    <string name="settings_book_sources">Fontes de livros</string>
+    <plurals name="book_matches_line">
+        <item quantity="one">O Kaeri identificou %1$d pelos dados. Esta precisa ser conferida.</item>
+        <item quantity="many">O Kaeri identificou %1$d pelos dados. Estas %2$d precisam ser conferidas.</item>
+        <item quantity="other">O Kaeri identificou %1$d pelos dados. Estas %2$d precisam ser conferidas.</item>
+    </plurals>
+    <string name="book_folder_failed">Não foi possível adicionar essa pasta. Tente outra.</string>
+    <string name="book_server_note_device">O Kaeri envia seu progresso de leitura de volta a este servidor. A senha fica neste dispositivo.</string>
     <string name="tv_pair_request_held">%1$s quer parear. Código %2$s</string>
     <string name="tv_add_store_to_play">Adicione uma loja de plugins para reproduzir</string>
     <string name="tv_title_page">Página do título</string>
@@ -1388,6 +1458,13 @@
     <string name="pad_button_view">Visualização</string>
     <string name="pad_button_left_stick">Analógico esquerdo</string>
     <string name="pad_button_right_stick">Analógico direito</string>
+    <string name="pad_help_turn_page">Virar a página</string>
+    <string name="pad_help_previous_chapter">Capítulo anterior</string>
+    <string name="pad_help_next_chapter">Capítulo seguinte</string>
+    <string name="pad_help_reader_bar">Mostrar ou ocultar a barra</string>
+    <string name="pad_help_reader_settings">Ajustes do leitor</string>
+    <string name="pad_help_close_reader">Fechar o leitor</string>
+    <string name="pad_help_reader">Leitor</string>
     <string name="close_dont_ask">Não perguntar de novo</string>
     <string name="close_keep_going">Manter em segundo plano</string>
     <string name="party_looking_sources">Procurando nas fontes…</string>
@@ -2454,9 +2531,41 @@
     </plurals>
     <string name="demo_story_row">Conto · %1$s · %2$s</string>
     <string name="demo_read_chapter">Ler o capítulo %1$s</string>
+    <string name="progress_server_saved">Salvo em %1$s</string>
+    <string name="progress_server_sending">Enviando para %1$s…</string>
+    <string name="progress_server_offline">Vai para %1$s quando você voltar online</string>
+    <string name="progress_server_retrying">%1$s não respondeu. O Kaeri vai tentar de novo.</string>
+    <string name="progress_server_failed">Não salvo em %1$s: %2$s.</string>
+    <string name="progress_why_key">o servidor recusou a chave</string>
+    <string name="progress_why_password">o servidor recusou a senha</string>
+    <string name="progress_why_gone">esta série não está mais no servidor</string>
+    <string name="progress_why_gave_up">sem resposta há um dia</string>
+    <string name="progress_row_saved">Progresso salvo %1$s</string>
+    <plurals name="progress_row_sending">
+        <item quantity="one">Enviando 1 capítulo…</item>
+        <item quantity="many">Enviando %1$d capítulos…</item>
+        <item quantity="other">Enviando %1$d capítulos…</item>
+    </plurals>
+    <plurals name="progress_row_offline">
+        <item quantity="one">1 capítulo será enviado quando você voltar online</item>
+        <item quantity="many">%1$d capítulos serão enviados quando você voltar online</item>
+        <item quantity="other">%1$d capítulos serão enviados quando você voltar online</item>
+    </plurals>
+    <plurals name="progress_row_retrying">
+        <item quantity="one">1 capítulo aguardando. O Kaeri vai tentar de novo.</item>
+        <item quantity="many">%1$d capítulos aguardando. O Kaeri vai tentar de novo.</item>
+        <item quantity="other">%1$d capítulos aguardando. O Kaeri vai tentar de novo.</item>
+    </plurals>
+    <plurals name="progress_row_failed">
+        <item quantity="one">1 capítulo não salvo: %2$s</item>
+        <item quantity="many">%1$d capítulos não salvos: %2$s</item>
+        <item quantity="other">%1$d capítulos não salvos: %2$s</item>
+    </plurals>
+    <string name="progress_row_off">O progresso fica neste %1$s</string>
     <string name="nav_watch">Assistir</string>
     <string name="nav_read">Ler</string>
     <string name="nav_updates">Novidades</string>
+    <string name="home_read_continue">Continuar lendo</string>
     <string name="home_read_releasing">Em lançamento agora</string>
     <string name="home_read_checked_on_open">Verificado quando você abre o Kaeri</string>
     <string name="home_read_end">Por enquanto é só isso. Novidades e Busca têm as listas completas.</string>
@@ -2480,10 +2589,13 @@
     <string name="chapter_updates_open_chapter_hint">Abre o capítulo</string>
     <string name="chapter_updates_open_series_menu">Abrir série</string>
     <string name="action_read_chapter">Ler o capítulo %1$s</string>
-    <string name="action_continue_chapter">Retomar o capítulo %1$s · página %2$d</string>
-    <string name="action_continue_part">Retomar a parte %1$s · %2$d%%</string>
-    <string name="action_continue_part_plain">Retomar a parte %1$s</string>
+    <string name="action_continue_chapter">Continuar lendo o capítulo %1$s · página %2$d</string>
+    <string name="action_continue_part">Continuar lendo a parte %1$s · %2$d%%</string>
+    <string name="action_continue_part_plain">Continuar lendo a parte %1$s</string>
     <string name="action_read_part">Ler a parte %1$s</string>
+    <string name="action_continue_named">Continuar lendo %1$s · %2$d%%</string>
+    <string name="action_continue_named_plain">Continuar lendo %1$s</string>
+    <string name="action_read_named">Ler %1$s</string>
     <string name="action_read_again">Ler de novo</string>
     <string name="series_reading_from">Lendo de</string>
     <string name="series_change">Mudar</string>
@@ -2802,7 +2914,7 @@
     <string name="settings_counts_read_moving_on">Ao seguir adiante</string>
     <string name="settings_counts_read_moving_on_note">Virar além da última página ou abrir o capítulo seguinte</string>
     <string name="settings_counts_read_marked">Quando você marca</string>
-    <string name="settings_counts_read_marked_note">Continuar assistindo e seus serviços de acompanhamento seguem as suas marcas</string>
+    <string name="settings_counts_read_marked_note">Continuar lendo e seus serviços de acompanhamento seguem as suas marcas</string>
     <string name="settings_follow_group">Ajustes de série que seguem você</string>
     <string name="settings_follow_mode">Modo, direção e cor</string>
     <string name="settings_follow_mode_note">Uma série que você muda é lida igual nos seus outros dispositivos</string>
@@ -2843,6 +2955,94 @@
     </plurals>
     <string name="read_downloads_read">%1$d lidos</string>
     <string name="read_downloads_delete_read">Apagar lidos</string>
+    <string name="send_title">Enviar para o e-reader</string>
+    <string name="send_for">Para</string>
+    <string name="send_what">O que enviar</string>
+    <string name="send_chapters">Capítulos</string>
+    <string name="send_chapters_one">%1$s</string>
+    <string name="send_chapters_range">%1$s a %2$s</string>
+    <string name="send_size">Tamanho</string>
+    <string name="send_size_about">Cerca de %1$s</string>
+    <string name="send_no_place">O Kaeri não consegue ver onde você está neste e-reader. Quando você voltar, a página da série pergunta onde você parou.</string>
+    <string name="send_prepare">Preparar e compartilhar</string>
+    <plurals name="send_preparing">
+        <item quantity="one">Preparando o capítulo</item>
+        <item quantity="many">Preparando %1$d de %2$d capítulos</item>
+        <item quantity="other">Preparando %1$d de %2$d capítulos</item>
+    </plurals>
+    <string name="send_sized_for">Páginas ajustadas para %1$s</string>
+    <string name="send_in_parts">Acima de %1$s, então os arquivos vão em partes.</string>
+    <string name="send_failed_chapter">Não foi possível preparar o capítulo %1$s. %2$s</string>
+    <string name="send_failed">Não foi possível preparar os arquivos. %1$s</string>
+    <string name="send_size_working">Calculando</string>
+    <string name="send_chapters_open">Aberta</string>
+    <string name="send_chapters_closed">Fechada</string>
+    <string name="send_progress_spoken">%1$d por cento</string>
+    <string name="send_chapter_action">Enviar para o e-reader</string>
+    <string name="send_parts_over">em partes acima de %1$s</string>
+    <string name="send_waiting_cancel">Cancelar envio</string>
+    <plurals name="send_ready">
+        <item quantity="one">Um arquivo está pronto.</item>
+        <item quantity="many">%1$d arquivos estão prontos.</item>
+        <item quantity="other">%1$d arquivos estão prontos.</item>
+    </plurals>
+    <string name="send_share_again">Compartilhar de novo</string>
+    <string name="send_banner">Enviando para %1$s</string>
+    <string name="send_format_fixed_epub">EPUB de layout fixo</string>
+    <string name="send_format_kepub">KEPUB</string>
+    <string name="send_format_epub">EPUB</string>
+    <string name="send_format_cbz">CBZ</string>
+    <string name="send_target_line">%1$s · %2$s × %3$s</string>
+    <string name="stop_title">Onde você parou?</string>
+    <string name="stop_note">Você enviou capítulos para %1$s. Onde você parou?</string>
+    <string name="stop_note_action">Marcar onde parou</string>
+    <string name="stop_sent_one">O capítulo %1$s foi para %2$s em %3$s.</string>
+    <string name="stop_sent_range">Os capítulos %1$s a %2$s foram para %3$s em %4$s.</string>
+    <string name="stop_finished">Capítulo %1$s terminado</string>
+    <string name="stop_set">Marcar onde parou</string>
+    <string name="stop_keep">Manter capítulo %1$s · página %2$d</string>
+    <string name="stop_keep_plain">Manter a posição atual</string>
+    <string name="ereaders_group">E-readers</string>
+    <string name="ereaders_send_row">Enviar para o e-reader</string>
+    <string name="ereaders_feed_row">Feed OPDS</string>
+    <string name="opds_share_note">Um catálogo OPDS que os e-readers da sua casa podem navegar</string>
+    <string name="opds_footer">O feed só funciona enquanto o Kaeri está aberto neste %1$s. O progresso nesses e-readers fica neles.</string>
+    <string name="opds_address">Endereço</string>
+    <string name="opds_address_off">Ative o feed para ver o endereço.</string>
+    <string name="opds_password">Senha</string>
+    <string name="opds_password_note">Os e-readers pedem uma vez</string>
+    <string name="opds_new_password">Nova senha</string>
+    <string name="opds_port">Porta</string>
+    <string name="opds_port_note">Deixe vazio para qualquer porta livre, ou escolha uma de 1024 a 65535</string>
+    <string name="opds_port_moved">A porta %1$d estava ocupada, então o feed usa a %2$d.</string>
+    <string name="opds_shares">O que compartilha</string>
+    <string name="opds_share_downloads">Downloads</string>
+    <plurals name="opds_share_downloads_count">
+        <item quantity="one">Um capítulo</item>
+        <item quantity="many">%1$d capítulos</item>
+        <item quantity="other">%1$d capítulos</item>
+    </plurals>
+    <string name="opds_share_manga">Pasta de mangás</string>
+    <string name="opds_share_novels">Pasta de romances</string>
+    <plurals name="opds_share_series_count">
+        <item quantity="one">Uma série</item>
+        <item quantity="many">%1$d séries</item>
+        <item quantity="other">%1$d séries</item>
+    </plurals>
+    <string name="opds_fetched_by">Baixado por</string>
+    <string name="opds_fetched_none">Nenhum e-reader baixou nada ainda.</string>
+    <string name="opds_starting">Iniciando…</string>
+    <string name="opds_paused_none">Em pausa. Este Mac não está em uma rede local.</string>
+    <string name="opds_paused_vpn">Em pausa. Este Mac só está conectado por uma VPN.</string>
+    <string name="opds_new_password_title">Criar uma nova senha?</string>
+    <string name="opds_new_password_warning">Os e-readers que já usam o feed param de funcionar até você digitar a nova senha em cada um.</string>
+    <string name="opds_fetched_time">Último pedido: %1$s</string>
+    <plurals name="opds_fetched_files">
+        <item quantity="one">Um arquivo</item>
+        <item quantity="many">%1$d arquivos</item>
+        <item quantity="other">%1$d arquivos</item>
+    </plurals>
+    <string name="opds_reader_unnamed">E-reader em %1$s</string>
     <string name="seasonal_previous">Temporada anterior</string>
     <string name="seasonal_next">Temporada seguinte</string>
     <string name="seasonal_loading">Carregando esta temporada</string>
@@ -4161,7 +4361,7 @@
     <string name="accounts_other_trackers_note">Outros serviços de acompanhamento ficam em Contas.</string>
     <string name="accounts_welcome_detail">Entre em %1$s para sincronizar sua lista e o ponto em que você parou.</string>
     <string name="accounts_brings_lists">Traz suas listas e preenche Continuar assistindo com o que você está assistindo.</string>
-    <string name="accounts_brings_lists_read">Traz suas listas e preenche Continuar assistindo com o que você está lendo.</string>
+    <string name="accounts_brings_lists_read">Traz suas listas e preenche Continuar lendo com o que você está lendo.</string>
     <string name="accounts_brings_lists_both">Traz suas listas e preenche Continuar assistindo com o que você está assistindo e lendo.</string>
     <string name="accounts_tracker_lists">Listas e progresso</string>
     <string name="accounts_tracker_reading_lists">Listas de leitura e progresso</string>

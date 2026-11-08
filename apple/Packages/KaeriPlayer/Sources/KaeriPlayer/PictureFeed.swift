@@ -182,11 +182,16 @@ public final class PictureFeed: @unchecked Sendable {
     }
     #endif
 
-    /// Stop copying. What the display layer shows stays until it is flushed.
+    /// Stop copying, and let the frames' buffers go. What the display layer shows stays until
+    /// it is flushed.
     public func stop() {
         let layer = lock.withLock { () -> MpvLayer? in
             let layer = self.layer
             self.layer = nil
+            pool = nil
+            poolKey = nil
+            format = nil
+            lastFrame = nil
             #if targetEnvironment(simulator)
             previous = nil
             #endif

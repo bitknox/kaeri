@@ -1,0 +1,89 @@
+linux-reader-settings-open = Ajustes do leitor
+linux-reader-opening = Abrindo o capítulo
+linux-reader-end-not-out = O capítulo seguinte ainda não saiu
+linux-reader-end-finished = Fim da série
+linux-reader-end-offline = O capítulo seguinte não foi baixado
+linux-reader-end-no-source = Ainda não há capítulo seguinte nas suas { -source-pl }
+linux-reader-back-to-series = Voltar à série
+linux-reader-chapter-failed = Não foi possível abrir o capítulo
+linux-reader-reading-mode = Modo de leitura
+linux-reader-fit = Ajuste
+linux-reader-crop-borders = Cortar bordas
+linux-reader-page-layout = Layout da página
+linux-reader-background = Fundo
+linux-reader-look = Aparência
+linux-reader-font = Tipografia
+linux-reader-text-size = Tamanho do texto
+linux-reader-margins = Margens
+linux-reader-line-spacing = Espaço entre linhas
+linux-reader-justify = Justificar texto
+linux-reader-direction = Direção
+linux-reader-spreads = Páginas largas
+linux-reader-strip-width = Largura da tira
+linux-reader-strip-gap = Espaço entre imagens
+linux-reader-fit-height = Altura
+linux-reader-mode-paged = Paginado
+linux-reader-mode-scrolled = Rolagem
+linux-send-title = Enviar para o e-reader
+linux-send-prepare = Preparar arquivos
+linux-send-progress = Preparando { $done } de { $total }
+linux-send-save = Salvar em uma pasta
+linux-send-menu = Enviar para o e-reader
+linux-reader-novel-unavailable = Romances não abrem aqui
+linux-reader-novel-needs-webkit = Os romances precisam do WebKitGTK 6 com o sandbox funcionando.
+linux-reader-page-of = Página { $page } de { $pages }
+linux-reader-pages = Páginas
+linux-reader-end-not-read = Ainda não marcado como lido
+linux-reader-continue = { -continue-reading-cap }
+linux-reader-end-not-out-body = O { -app-name } procura capítulos novos em segundo plano e os adiciona a Novidades.
+linux-reader-end-caught-up-body = Os capítulos novos aparecem em Novidades quando suas { -source-pl } os tiverem.
+linux-reader-end-finished-body = Não há mais capítulos.
+linux-reader-end-offline-body = Você está offline. Ele abre aqui assim que você se conectar.
+linux-reader-page-failed-hint = Vire a página para seguir sem ela.
+linux-reader-opening-number = Abrindo o capítulo { $chapter }
+linux-reader-finding-source = Procurando uma { -source }
+linux-reader-start-over = Recomeçar
+linux-reader-go-back = Voltar
+linux-reader-change = Mudar
+linux-reader-this-series = Esta série
+linux-reader-all-manga = Todos os mangás
+linux-reader-all-manga-here = Todos os mangás neste computador
+linux-reader-all-strips = Todos os webtoons
+linux-reader-all-strips-here = Todos os webtoons neste computador
+linux-reader-all-novels = Todas as light novels
+linux-reader-mode-auto = Auto
+linux-reader-mode-detected = Detectado pelos detalhes da série.
+linux-reader-use-default = Usar padrão
+linux-reader-more-settings = Mais ajustes do leitor
+linux-reader-line-tight = Justo
+linux-reader-line-normal = Normal
+linux-reader-line-loose = Amplo
+linux-reader-margins-normal = Normais
+linux-reader-text-smaller = Texto menor
+linux-reader-text-larger = Texto maior
+linux-reader-go-to-page = Ir para a página
+linux-reader-go-to-page-field = 1 a { $total }
+linux-shortcuts-reader = Leitor
+linux-shortcuts-turn = Virar a página
+linux-shortcuts-first-last = Primeira ou última página
+linux-shortcuts-text-size = Texto maior, menor ou padrão
+linux-shortcuts-reader-back = Voltar à página de antes de um salto
+linux-shortcuts-close-reader = Fechar o leitor
+linux-reader-names-and = { $first } e { $last }
+linux-reader-page-plate = Página { $page }
+linux-reader-open-failed = Não foi possível abrir o capítulo { $chapter }
+linux-reader-open-failed-plain = Não foi possível abrir este capítulo
+linux-send-next = { $n ->
+    [one] O capítulo seguinte não lido
+    [many] Os { $n } seguintes não lidos
+   *[other] Os { $n } seguintes não lidos
+ }
+linux-send-all-unread = Todos não lidos
+linux-send-none-unread = Todos os capítulos foram lidos
+linux-send-saved = { $n ->
+    [one] O arquivo foi salvo
+    [many] { $n } arquivos foram salvos
+   *[other] { $n } arquivos foram salvos
+ }
+linux-send-save-failed = Não foi possível salvar os arquivos nessa pasta
+linux-updates-check = Procurar capítulos novos

@@ -64,6 +64,8 @@ public struct ReaderScreen: View {
         .onDisappear { novelWeb.close() }
         .onChange(of: model.request == nil) { _, closed in if closed { novelWeb.close() } }
         .onChange(of: voiceOver, initial: true) { _, on in model.pinChrome = on }
+        // The book's decoded pages go with the reader: a page is drawn again from its file.
+        .onDisappear { PageImages.removeAll() }
         // Notices wait while the reader is out of sight.
         .onChange(of: scenePhase, initial: true) { _, phase in model.away = phase != .active }
         // A settled turn is said, as the chrome's line says it.
