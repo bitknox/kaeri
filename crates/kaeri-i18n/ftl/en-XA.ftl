@@ -963,6 +963,48 @@ reading-downloads-done-parts =
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = [Çĥàþţéŕš öƒ { $count } šéŕîéš àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~~~]
 
+# Row heading on reading's Home: manga that are trending on AniList now.
+read-home-trending-manga = [Ţŕéñðîñĝ ɱàñĝà~~~~~]
+
+# Row heading on reading's Home: webtoons that are trending on AniList now.
+read-home-trending-webtoons = [Ţŕéñðîñĝ ŵéƀţööñš~~~~~~]
+
+# Row heading on reading's Home: light novels that are trending on AniList now.
+read-home-trending-novels = [Ţŕéñðîñĝ ļîĝĥţ ñöṽéļš~~~~~~~]
+
+# Row heading on reading's Home: the most popular manga that started in the last 12 months.
+read-home-new-manga = [Ñéŵ ɱàñĝà~~~]
+
+# Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+read-home-new-webtoons = [Ñéŵ ŵéƀţööñš~~~~]
+
+# Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+read-home-new-novels = [Ñéŵ ļîĝĥţ ñöṽéļš~~~~~]
+
+# Side text beside a New row's heading, in a quieter style: what the row covers.
+read-home-new-side = [Ļàšţ 12 ɱöñţĥš~~~~~]
+
+# Row heading on reading's Home: the most popular manga that have finished.
+read-home-finished-manga = [Ƒîñîšĥéð ɱàñĝà~~~~~]
+
+# Row heading on reading's Home: the most popular webtoons that have finished.
+read-home-finished-webtoons = [Ƒîñîšĥéð ŵéƀţööñš~~~~~~]
+
+# Row heading on reading's Home: the most popular light novels that have finished.
+read-home-finished-novels = [Ƒîñîšĥéð ļîĝĥţ ñöṽéļš~~~~~~~]
+
+# Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+read-home-finished-side = [Ṁöšţ þöþüļàŕ~~~~]
+
+# A choice of reading Search's Started filter: series that started at any time.
+read-search-started-any = [Åñý ţîɱé~~~]
+
+# A choice of reading Search's Started filter: series that started in the last 12 months.
+read-search-started-year = [Ļàšţ 12 ɱöñţĥš~~~~~]
+
+# A choice of reading Search's Started filter: series that started in the last 3 years.
+read-search-started-3-years = [Ļàšţ 3 ýéàŕš~~~~]
+
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = [Ĵöîñéð { $store } àš { $member }.~~~~~~]
 
@@ -8588,6 +8630,24 @@ home-read-end = [Ţĥàţ'š éṽéŕýţĥîñĝ ƒöŕ ñöŵ. Ûþðàţéš
 # Line at the end of Read with no book sources yet. A button to add one follows it.
 home-read-no-sources = [Åðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé ţö ŕéàð ƒŕöɱ Ĥöɱé.~~~~~~~~~~~~~~~~~~]
 
+# In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+read-home-offline-rows = [Ţŕéñðîñĝ àñð ñéŵ šéŕîéš šĥöŵ öñçé ýöü'ŕé öñļîñé.~~~~~~~~~~~~~~~]
+
+# E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+read-home-browse = [Ɓŕöŵšé~~]
+
+# E-ink: the line under Browse on Read's Home.
+read-home-browse-line = [Ţŕéñðîñĝ, ñéŵ àñð ƒîñîšĥéð, ƀý ƒöŕɱàţ~~~~~~~~~~~~]
+
+# E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+read-home-browse-row = [{ $first }, { $second } àñð { $more } ɱöŕé~~~~~~~]
+
+# E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+read-home-browse-note = [Ƒŕöɱ ÅñîĻîšţ. Ýöüŕ šöüŕçéš àŕé àšķéð ŵĥéñ ýöü öþéñ à šéŕîéš.~~~~~~~~~~~~~~~~~~]
+
+# E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+read-home-browse-kept = [Ļîšţš ķéþţ ƒŕöɱ { $time } šţîļļ öþéñ.~~~~~~~~~~]
+
 # Under a day in Read's week: what usually comes out that day, when the time isn't known.
 week-usually = [Ûšüàļļý~~~]
 
@@ -9261,6 +9321,58 @@ read-filter-included = [Îñçļüðéð~~~]
 
 # A genre's state: no series with it.
 read-filter-left-out = [Ļéƒţ öüţ~~~]
+
+# A filter of reading's Search: when a series started.
+read-search-started = [Šţàŕţéð~~~]
+
+# The filter bar's chip that searches only the person's own sources, leaving AniList out.
+read-search-sources-only = [Ýöüŕ šöüŕçéš öñļý~~~~~~]
+
+# Search's section heading under AniList's results: one group per source of the person's.
+read-search-from-sources = [Ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~]
+
+# E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+read-search-asking = [Åšķîñĝ { $source }…~~~~]
+
+# A source group whose source failed to answer. The reason and Try again follow.
+read-search-source-failed = [{ $source } ðîðñ'ţ àñšŵéŕ.~~~~~~]
+
+# The reason under it when the source gave no answer in time.
+read-search-source-timeout = [Ñö àñšŵéŕ îñ { $seconds } š.~~~~~~]
+
+# One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+read-search-source-nothing = [Ñöţĥîñĝ ƒöüñð îñ { $sources }.~~~~~~~]
+
+# On an AniList result that one of the person's sources has. The source is its name.
+read-search-in-source = [Îñ { $source }~~]
+
+# On an AniList result that more than one of the person's sources has. Always 2 or more.
+read-search-in-sources =
+    { $n ->
+        [one] [Îñ { $n } öƒ ýöüŕ šöüŕçéš~~~~~~~]
+       *[other] [Îñ { $n } öƒ ýöüŕ šöüŕçéš~~~~~~~]
+    }
+
+# Search, when AniList found nothing but the person's sources did.
+read-search-anilist-nothing = [ÅñîĻîšţ ƒöüñð ñöţĥîñĝ ƒöŕ ţĥéšé ŵöŕðš.~~~~~~~~~~~~]
+
+# Search, when AniList could not be reached.
+read-search-anilist-failed = [ÅñîĻîšţ ðîðñ'ţ àñšŵéŕ.~~~~~~~]
+
+# The line under it.
+read-search-anilist-failed-line = [Ýöüŕ šöüŕçéš ŵéŕé šţîļļ àšķéð.~~~~~~~~~]
+
+# Search, when nothing was found anywhere: under the line saying AniList found nothing.
+read-search-sources-nothing = [Ñöţĥîñĝ îñ ýöüŕ šöüŕçéš éîţĥéŕ.~~~~~~~~~~]
+
+# The link under From your sources that shows the rest of AniList's results.
+read-search-more-anilist = [Ṁöŕé ƒŕöɱ ÅñîĻîšţ~~~~~~]
+
+# Beside More from AniList: how many of AniList's results show.
+read-search-shown = [{ $shown } öƒ { $total } šĥöŵñ~~~~~]
+
+# The button of a source group with more than five hits.
+read-search-source-more = [Šĥöŵ { $n } ɱöŕé~~~~]
 
 # Over a first-run page's title: which page of how many.
 onboarding-step = [{ $step } öƒ { $total }~~~]

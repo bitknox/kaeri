@@ -446,6 +446,20 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingDownloadsDoneChapters -> Strings.readingDownloadsDoneChapters(context, this.title, this.count.toInt())
         is ReadingMsg.ReadingDownloadsDoneParts -> Strings.readingDownloadsDoneParts(context, this.title, this.count.toInt())
         is ReadingMsg.ReadingDownloadsDoneSeries -> Strings.readingDownloadsDoneSeries(context, this.count.toInt())
+        is ReadingMsg.ReadHomeTrendingManga -> Strings.readHomeTrendingManga(context)
+        is ReadingMsg.ReadHomeTrendingWebtoons -> Strings.readHomeTrendingWebtoons(context)
+        is ReadingMsg.ReadHomeTrendingNovels -> Strings.readHomeTrendingNovels(context)
+        is ReadingMsg.ReadHomeNewManga -> Strings.readHomeNewManga(context)
+        is ReadingMsg.ReadHomeNewWebtoons -> Strings.readHomeNewWebtoons(context)
+        is ReadingMsg.ReadHomeNewNovels -> Strings.readHomeNewNovels(context)
+        is ReadingMsg.ReadHomeNewSide -> Strings.readHomeNewSide(context)
+        is ReadingMsg.ReadHomeFinishedManga -> Strings.readHomeFinishedManga(context)
+        is ReadingMsg.ReadHomeFinishedWebtoons -> Strings.readHomeFinishedWebtoons(context)
+        is ReadingMsg.ReadHomeFinishedNovels -> Strings.readHomeFinishedNovels(context)
+        is ReadingMsg.ReadHomeFinishedSide -> Strings.readHomeFinishedSide(context)
+        is ReadingMsg.ReadSearchStartedAny -> Strings.readSearchStartedAny(context)
+        is ReadingMsg.ReadSearchStartedYear -> Strings.readSearchStartedYear(context)
+        is ReadingMsg.ReadSearchStarted3Years -> Strings.readSearchStarted3Years(context)
     }
 
 /** A reason in the person's language, inside a message or on its own. */

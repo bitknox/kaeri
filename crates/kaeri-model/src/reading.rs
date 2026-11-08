@@ -70,6 +70,11 @@ pub struct WorkTile {
     /// A work of the reading demo, which Search labels as the demo's.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub demo: bool,
+    /// On a Home discovery row: the series was opened and none of the person's sources has it.
+    /// The tile's line says "Not found in your sources" (`home-not-found`) for the rest of the
+    /// row's 30 minutes. Never set by asking sources while Home draws.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub not_in_sources: bool,
 }
 
 /// One series' page.
@@ -464,6 +469,97 @@ pub struct ReadingHomeView {
     /// What the end of Home says, when it says something.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub end: Option<ReadHomeEnd>,
+    /// The discovery rows after the person's own sections, in order, at most
+    /// [`READ_HOME_ROWS`]: Trending, Because you finished, New, More of a genre and Finished,
+    /// chosen by the reading mix. They replace [`Self::releasing`], [`Self::because`] and
+    /// [`Self::genre_shelf`], which stay filled for front ends not built against rows yet. Each
+    /// title shows in one row only. A row with nothing in it and nothing on its way is left out.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub rows: Vec<ReadHomeRow>,
+}
+
+/// The most discovery rows reading's Home shows.
+pub const READ_HOME_ROWS: u32 = 8;
+
+/// The titles a discovery row holds at most.
+pub const READ_ROW_TITLES: u32 = 20;
+
+/// What a discovery row on reading's Home is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadRowKind {
+    /// What is trending on AniList in a format.
+    Trending,
+    /// Started in the last 12 months, most popular first.
+    New,
+    /// Finished, most popular first.
+    Finished,
+    /// What people who liked the series finished most recently rated highest. No View all.
+    Because,
+    /// The genre the person reads most, most popular first.
+    MoreGenre,
+}
+
+/// The formats Home's rows are per. Manga is AniList's manga and one-shots without the Long
+/// Strip tag, webtoons are those with it, light novels are novels.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadRowFormat {
+    Manga,
+    Webtoons,
+    Novels,
+}
+
+impl ReadRowFormat {
+    pub const ALL: [Self; 3] = [Self::Manga, Self::Webtoons, Self::Novels];
+
+    /// The row's key part: `manga`, `webtoons`, `novels`.
+    pub const fn key(self) -> &'static str {
+        match self {
+            Self::Manga => "manga",
+            Self::Webtoons => "webtoons",
+            Self::Novels => "novels",
+        }
+    }
+
+    /// [`ReadSearchQuery::formats`] for the format.
+    pub fn search_formats(self) -> Vec<String> {
+        match self {
+            Self::Manga => vec!["manga".into(), "one-shot".into()],
+            Self::Webtoons => vec!["webtoon".into()],
+            Self::Novels => vec!["novel".into()],
+        }
+    }
+}
+
+/// One discovery row of reading's Home.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadHomeRow {
+    /// Stable across sends, for the row's slot and its crossfade: `trending-manga`,
+    /// `new-novels`, `finished-webtoons`, `because`, `genre`.
+    pub id: String,
+    pub kind: ReadRowKind,
+    /// The format the row is about; `None` for Because you finished and More of a genre.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub format: Option<ReadRowFormat>,
+    /// The heading: "Trending manga", "Because you finished The Lantern Ferry".
+    pub title: Msg,
+    /// The side text beside the heading: "Last 12 months" on New, "Most popular" on Finished.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub side: Option<Msg>,
+    /// At most [`READ_ROW_TITLES`].
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub tiles: Vec<WorkTile>,
+    /// View all: Search with exactly this query, whose first results are this row's titles in
+    /// the same order (less the ones shown in an earlier row or on the person's lists). `None`
+    /// on Because you finished.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub view_all: Option<ReadSearchQuery>,
+    /// On its way with nothing kept: the front end holds placeholders at final size after
+    /// 600 ms, and the heading says it is loading.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub pending: bool,
 }
 
 /// The series at the top of reading's Home, and why it is there. The first that applies wins:
@@ -539,7 +635,8 @@ pub struct ReadWeekEntry {
 pub enum ReadHomePart {
     /// Continue, This week and Up next, from this device's reading and the catalogue.
     Yours,
-    /// Releasing now and the genre shelf.
+    /// The discovery rows asked for in the paced queue: New, Finished and More of a genre.
+    /// The Trending rows come with [`Self::Yours`].
     Discovery,
     /// Because you finished.
     Because,
@@ -623,6 +720,89 @@ pub struct ReadSearchQuery {
     pub exclude_genres: Vec<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub sort: Option<String>,
+    /// [`ReadFilters::started`]: `12-months` or `3-years`; `None` (or `any`) is any time.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub started: Option<String>,
+    /// Ask only the person's sources, not AniList: the filter bar's "Your sources only".
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub sources_only: bool,
+}
+
+/// How long a source has to answer a search before its group says it gave no answer.
+pub const READ_SOURCE_WAIT_SECS: u32 = 15;
+
+/// How a search with words went at AniList, beside the sources' groups.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadAnilistState {
+    Asking,
+    /// Its results came as [`ReadingEvent::Search`].
+    Answered,
+    /// AniList could not be reached; the sources were still asked.
+    Failed,
+    /// "Your sources only" is on.
+    Skipped,
+}
+
+/// Where one source's group stands in a search.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ReadSourceState {
+    /// Asked, no answer yet: two placeholder rows in the group's slot after 600 ms.
+    Asking,
+    /// It found something. Hits that joined an AniList result are in [`ReadSourceSearch::joins`]
+    /// and not in the group's tiles.
+    Hits,
+    /// It found nothing: said once for every such source, at the end.
+    Nothing,
+    /// It answered with a failure: the reason and Try again in its slot.
+    Failed { failure: ReadingFailure },
+    /// No answer in [`READ_SOURCE_WAIT_SECS`].
+    TimedOut { seconds: u32 },
+}
+
+/// One source's group in a search.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadSourceGroup {
+    pub source_id: String,
+    pub source_name: String,
+    pub state: ReadSourceState,
+    /// The hits that joined no AniList result, in the source's order. The group shows five
+    /// before Show more.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub tiles: Vec<WorkTile>,
+    /// How many of its hits joined an AniList result.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub joined: u32,
+}
+
+/// An AniList result that one or more sources have: its row says "In Home library" or "In 2 of
+/// your sources", and opening it reads from the first of them.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadSourceJoin {
+    pub work: WorkId,
+    /// In the order of Your sources.
+    pub source_ids: Vec<String>,
+    pub source_names: Vec<String>,
+}
+
+/// The sources' part of a search with words, sent whole each time a part of it lands. Groups
+/// keep their slots, in the order of Your sources, from the first send on.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ReadSourceSearch {
+    pub query: ReadSearchQuery,
+    pub anilist: ReadAnilistState,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub groups: Vec<ReadSourceGroup>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub joins: Vec<ReadSourceJoin>,
+    /// AniList and every source have answered, failed or run out of time: the one polite
+    /// announcement of the whole search.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub done: bool,
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -785,6 +965,9 @@ pub struct ReadFilters {
     /// AniList's genres, in its own words, the adult one left out.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub genres: Vec<String>,
+    /// [`ReadSearchQuery::started`]: `any`, `12-months`, `3-years`.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub started: Vec<ReadFilterChoice>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1298,6 +1481,11 @@ pub fn read_filters() -> ReadFilters {
             .collect(),
         sorts: READ_SORTS.iter().map(|s| (*s).to_owned()).collect(),
         genres: READ_GENRES.iter().map(|g| (*g).to_owned()).collect(),
+        started: vec![
+            choice("any", ReadingMsg::ReadSearchStartedAny),
+            choice("12-months", ReadingMsg::ReadSearchStartedYear),
+            choice("3-years", ReadingMsg::ReadSearchStarted3Years),
+        ],
     }
 }
 
@@ -1328,6 +1516,12 @@ pub enum ReadingCommand {
     SearchMore {
         query: ReadSearchQuery,
         page: u32,
+    },
+    /// Ask one source again for the search `query` named: its group's Try again.
+    /// [`ReadingEvent::SourceSearch`] follows.
+    RetrySourceSearch {
+        query: ReadSearchQuery,
+        source_id: String,
     },
     /// [`ReadingEvent::Series`], then [`ReadingEvent::Chapters`] once a source answers.
     LoadSeries {
@@ -1486,7 +1680,9 @@ impl ReadingCommand {
             Self::LoadHome { .. } | Self::HideFromContinue { .. } => ReadingAbout::Home,
             Self::LoadUpdates | Self::CheckUpdates | Self::DownloadNew => ReadingAbout::Updates,
             Self::LoadLibrary { .. } => ReadingAbout::Library,
-            Self::Search { .. } | Self::SearchMore { .. } => ReadingAbout::Search,
+            Self::Search { .. } | Self::SearchMore { .. } | Self::RetrySourceSearch { .. } => {
+                ReadingAbout::Search
+            }
             Self::LoadSeries { .. }
             | Self::ChooseEdition { .. }
             | Self::ReadAgain { .. }
@@ -1528,7 +1724,9 @@ impl ReadingCommand {
             Self::LoadHome { .. } => "loading reading home".into(),
             Self::LoadUpdates | Self::CheckUpdates => "checking for new chapters".into(),
             Self::LoadLibrary { .. } => "loading your reading list".into(),
-            Self::Search { query } | Self::SearchMore { query, .. } => {
+            Self::Search { query }
+            | Self::SearchMore { query, .. }
+            | Self::RetrySourceSearch { query, .. } => {
                 format!("searching \u{201c}{}\u{201d}", query.text.trim())
             }
             Self::LoadSeries { .. } => "loading the series".into(),
@@ -1561,6 +1759,9 @@ pub enum ReadingEvent {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         total: Option<u32>,
     },
+    /// The sources' part of a search with words: once with every group asking, then again each
+    /// time AniList or a source answers. Not sent for a browse without words or for later pages.
+    SourceSearch(Box<ReadSourceSearch>),
     Series(Box<SeriesView>),
     Chapters {
         work: WorkId,

@@ -1465,6 +1465,34 @@ pub enum ReadingMsg {
     ReadingDownloadsDoneParts { title: String, count: i64 },
     /// The notification's text: chapters of several series are downloaded.
     ReadingDownloadsDoneSeries { count: i64 },
+    /// Row heading on reading's Home: manga that are trending on AniList now.
+    ReadHomeTrendingManga,
+    /// Row heading on reading's Home: webtoons that are trending on AniList now.
+    ReadHomeTrendingWebtoons,
+    /// Row heading on reading's Home: light novels that are trending on AniList now.
+    ReadHomeTrendingNovels,
+    /// Row heading on reading's Home: the most popular manga that started in the last 12 months.
+    ReadHomeNewManga,
+    /// Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+    ReadHomeNewWebtoons,
+    /// Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+    ReadHomeNewNovels,
+    /// Side text beside a New row's heading, in a quieter style: what the row covers.
+    ReadHomeNewSide,
+    /// Row heading on reading's Home: the most popular manga that have finished.
+    ReadHomeFinishedManga,
+    /// Row heading on reading's Home: the most popular webtoons that have finished.
+    ReadHomeFinishedWebtoons,
+    /// Row heading on reading's Home: the most popular light novels that have finished.
+    ReadHomeFinishedNovels,
+    /// Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+    ReadHomeFinishedSide,
+    /// A choice of reading Search's Started filter: series that started at any time.
+    ReadSearchStartedAny,
+    /// A choice of reading Search's Started filter: series that started in the last 12 months.
+    ReadSearchStartedYear,
+    /// A choice of reading Search's Started filter: series that started in the last 3 years.
+    ReadSearchStarted3Years,
 }
 
 impl ReadingMsg {
@@ -1610,6 +1638,20 @@ impl ReadingMsg {
             Self::ReadingDownloadsDoneChapters { .. } => "reading-downloads-done-chapters",
             Self::ReadingDownloadsDoneParts { .. } => "reading-downloads-done-parts",
             Self::ReadingDownloadsDoneSeries { .. } => "reading-downloads-done-series",
+            Self::ReadHomeTrendingManga => "read-home-trending-manga",
+            Self::ReadHomeTrendingWebtoons => "read-home-trending-webtoons",
+            Self::ReadHomeTrendingNovels => "read-home-trending-novels",
+            Self::ReadHomeNewManga => "read-home-new-manga",
+            Self::ReadHomeNewWebtoons => "read-home-new-webtoons",
+            Self::ReadHomeNewNovels => "read-home-new-novels",
+            Self::ReadHomeNewSide => "read-home-new-side",
+            Self::ReadHomeFinishedManga => "read-home-finished-manga",
+            Self::ReadHomeFinishedWebtoons => "read-home-finished-webtoons",
+            Self::ReadHomeFinishedNovels => "read-home-finished-novels",
+            Self::ReadHomeFinishedSide => "read-home-finished-side",
+            Self::ReadSearchStartedAny => "read-search-started-any",
+            Self::ReadSearchStartedYear => "read-search-started-year",
+            Self::ReadSearchStarted3Years => "read-search-started-3-years",
         }
     }
 
@@ -1755,6 +1797,20 @@ impl ReadingMsg {
             Self::ReadingDownloadsDoneChapters { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],
             Self::ReadingDownloadsDoneParts { title, count } => vec![("title", Value::Text(title.clone())), ("count", Value::Int(*count))],
             Self::ReadingDownloadsDoneSeries { count } => vec![("count", Value::Int(*count))],
+            Self::ReadHomeTrendingManga => Vec::new(),
+            Self::ReadHomeTrendingWebtoons => Vec::new(),
+            Self::ReadHomeTrendingNovels => Vec::new(),
+            Self::ReadHomeNewManga => Vec::new(),
+            Self::ReadHomeNewWebtoons => Vec::new(),
+            Self::ReadHomeNewNovels => Vec::new(),
+            Self::ReadHomeNewSide => Vec::new(),
+            Self::ReadHomeFinishedManga => Vec::new(),
+            Self::ReadHomeFinishedWebtoons => Vec::new(),
+            Self::ReadHomeFinishedNovels => Vec::new(),
+            Self::ReadHomeFinishedSide => Vec::new(),
+            Self::ReadSearchStartedAny => Vec::new(),
+            Self::ReadSearchStartedYear => Vec::new(),
+            Self::ReadSearchStarted3Years => Vec::new(),
         }
     }
 }

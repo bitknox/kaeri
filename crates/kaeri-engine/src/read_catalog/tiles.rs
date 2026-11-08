@@ -72,6 +72,7 @@ pub fn plain(meta: &Meta, book: &Book) -> WorkTile {
         adult: book.adult(),
         facts: facts(book),
         demo: false,
+        not_in_sources: false,
     }
 }
 

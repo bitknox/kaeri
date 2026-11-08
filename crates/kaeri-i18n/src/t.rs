@@ -1470,6 +1470,76 @@ pub fn reading_downloads_done_series(count: i64) -> String {
     text("reading-downloads-done-series", &[("count", Arg::Int(count))])
 }
 
+/// Row heading on reading's Home: manga that are trending on AniList now.
+pub fn read_home_trending_manga() -> String {
+    text("read-home-trending-manga", &[])
+}
+
+/// Row heading on reading's Home: webtoons that are trending on AniList now.
+pub fn read_home_trending_webtoons() -> String {
+    text("read-home-trending-webtoons", &[])
+}
+
+/// Row heading on reading's Home: light novels that are trending on AniList now.
+pub fn read_home_trending_novels() -> String {
+    text("read-home-trending-novels", &[])
+}
+
+/// Row heading on reading's Home: the most popular manga that started in the last 12 months.
+pub fn read_home_new_manga() -> String {
+    text("read-home-new-manga", &[])
+}
+
+/// Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+pub fn read_home_new_webtoons() -> String {
+    text("read-home-new-webtoons", &[])
+}
+
+/// Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+pub fn read_home_new_novels() -> String {
+    text("read-home-new-novels", &[])
+}
+
+/// Side text beside a New row's heading, in a quieter style: what the row covers.
+pub fn read_home_new_side() -> String {
+    text("read-home-new-side", &[])
+}
+
+/// Row heading on reading's Home: the most popular manga that have finished.
+pub fn read_home_finished_manga() -> String {
+    text("read-home-finished-manga", &[])
+}
+
+/// Row heading on reading's Home: the most popular webtoons that have finished.
+pub fn read_home_finished_webtoons() -> String {
+    text("read-home-finished-webtoons", &[])
+}
+
+/// Row heading on reading's Home: the most popular light novels that have finished.
+pub fn read_home_finished_novels() -> String {
+    text("read-home-finished-novels", &[])
+}
+
+/// Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+pub fn read_home_finished_side() -> String {
+    text("read-home-finished-side", &[])
+}
+
+/// A choice of reading Search's Started filter: series that started at any time.
+pub fn read_search_started_any() -> String {
+    text("read-search-started-any", &[])
+}
+
+/// A choice of reading Search's Started filter: series that started in the last 12 months.
+pub fn read_search_started_year() -> String {
+    text("read-search-started-year", &[])
+}
+
+/// A choice of reading Search's Started filter: series that started in the last 3 years.
+pub fn read_search_started_3_years() -> String {
+    text("read-search-started-3-years", &[])
+}
+
 /// Toast after joining a plugin store with an invite that names this device's owner.
 pub fn store_joined(store: &str, member: &str) -> String {
     text("store-joined", &[("store", Arg::Text(store)), ("member", Arg::Text(member))])
@@ -13725,6 +13795,36 @@ pub fn home_read_no_sources() -> String {
     text("home-read-no-sources", &[])
 }
 
+/// In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+pub fn read_home_offline_rows() -> String {
+    text("read-home-offline-rows", &[])
+}
+
+/// E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+pub fn read_home_browse() -> String {
+    text("read-home-browse", &[])
+}
+
+/// E-ink: the line under Browse on Read's Home.
+pub fn read_home_browse_line() -> String {
+    text("read-home-browse-line", &[])
+}
+
+/// E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+pub fn read_home_browse_row(first: &str, second: &str, more: i64) -> String {
+    text("read-home-browse-row", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("more", Arg::Int(more))])
+}
+
+/// E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+pub fn read_home_browse_note() -> String {
+    text("read-home-browse-note", &[])
+}
+
+/// E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+pub fn read_home_browse_kept(time: &str) -> String {
+    text("read-home-browse-kept", &[("time", Arg::Text(time))])
+}
+
 /// Under a day in Read's week: what usually comes out that day, when the time isn't known.
 pub fn week_usually() -> String {
     text("week-usually", &[])
@@ -14753,6 +14853,86 @@ pub fn read_filter_included() -> String {
 /// A genre's state: no series with it.
 pub fn read_filter_left_out() -> String {
     text("read-filter-left-out", &[])
+}
+
+/// A filter of reading's Search: when a series started.
+pub fn read_search_started() -> String {
+    text("read-search-started", &[])
+}
+
+/// The filter bar's chip that searches only the person's own sources, leaving AniList out.
+pub fn read_search_sources_only() -> String {
+    text("read-search-sources-only", &[])
+}
+
+/// Search's section heading under AniList's results: one group per source of the person's.
+pub fn read_search_from_sources() -> String {
+    text("read-search-from-sources", &[])
+}
+
+/// E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+pub fn read_search_asking(source: &str) -> String {
+    text("read-search-asking", &[("source", Arg::Text(source))])
+}
+
+/// A source group whose source failed to answer. The reason and Try again follow.
+pub fn read_search_source_failed(source: &str) -> String {
+    text("read-search-source-failed", &[("source", Arg::Text(source))])
+}
+
+/// The reason under it when the source gave no answer in time.
+pub fn read_search_source_timeout(seconds: i64) -> String {
+    text("read-search-source-timeout", &[("seconds", Arg::Int(seconds))])
+}
+
+/// One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+pub fn read_search_source_nothing(sources: &str) -> String {
+    text("read-search-source-nothing", &[("sources", Arg::Text(sources))])
+}
+
+/// On an AniList result that one of the person's sources has. The source is its name.
+pub fn read_search_in_source(source: &str) -> String {
+    text("read-search-in-source", &[("source", Arg::Text(source))])
+}
+
+/// On an AniList result that more than one of the person's sources has. Always 2 or more.
+pub fn read_search_in_sources(n: i64) -> String {
+    text("read-search-in-sources", &[("n", Arg::Int(n))])
+}
+
+/// Search, when AniList found nothing but the person's sources did.
+pub fn read_search_anilist_nothing() -> String {
+    text("read-search-anilist-nothing", &[])
+}
+
+/// Search, when AniList could not be reached.
+pub fn read_search_anilist_failed() -> String {
+    text("read-search-anilist-failed", &[])
+}
+
+/// The line under it.
+pub fn read_search_anilist_failed_line() -> String {
+    text("read-search-anilist-failed-line", &[])
+}
+
+/// Search, when nothing was found anywhere: under the line saying AniList found nothing.
+pub fn read_search_sources_nothing() -> String {
+    text("read-search-sources-nothing", &[])
+}
+
+/// The link under From your sources that shows the rest of AniList's results.
+pub fn read_search_more_anilist() -> String {
+    text("read-search-more-anilist", &[])
+}
+
+/// Beside More from AniList: how many of AniList's results show.
+pub fn read_search_shown(shown: i64, total: i64) -> String {
+    text("read-search-shown", &[("shown", Arg::Int(shown)), ("total", Arg::Int(total))])
+}
+
+/// The button of a source group with more than five hits.
+pub fn read_search_source_more(n: i64) -> String {
+    text("read-search-source-more", &[("n", Arg::Int(n))])
 }
 
 /// Over a first-run page's title: which page of how many.

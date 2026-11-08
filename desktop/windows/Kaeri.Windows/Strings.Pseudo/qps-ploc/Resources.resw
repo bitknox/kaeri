@@ -1291,6 +1291,62 @@
     <value>[Çĥàþţéŕš öƒ {count} šéŕîéš àŕé ŕéàðý ţö ŕéàð öƒƒļîñé.~~~~~~~~~~~~~~~]</value>
     <comment>The notification's text: chapters of several series are downloaded.</comment>
   </data>
+  <data name="ReadHomeTrendingManga" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ ɱàñĝà~~~~~]</value>
+    <comment>Row heading on reading's Home: manga that are trending on AniList now.</comment>
+  </data>
+  <data name="ReadHomeTrendingWebtoons" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ ŵéƀţööñš~~~~~~]</value>
+    <comment>Row heading on reading's Home: webtoons that are trending on AniList now.</comment>
+  </data>
+  <data name="ReadHomeTrendingNovels" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ ļîĝĥţ ñöṽéļš~~~~~~~]</value>
+    <comment>Row heading on reading's Home: light novels that are trending on AniList now.</comment>
+  </data>
+  <data name="ReadHomeNewManga" xml:space="preserve">
+    <value>[Ñéŵ ɱàñĝà~~~]</value>
+    <comment>Row heading on reading's Home: the most popular manga that started in the last 12 months.</comment>
+  </data>
+  <data name="ReadHomeNewWebtoons" xml:space="preserve">
+    <value>[Ñéŵ ŵéƀţööñš~~~~]</value>
+    <comment>Row heading on reading's Home: the most popular webtoons that started in the last 12 months.</comment>
+  </data>
+  <data name="ReadHomeNewNovels" xml:space="preserve">
+    <value>[Ñéŵ ļîĝĥţ ñöṽéļš~~~~~]</value>
+    <comment>Row heading on reading's Home: the most popular light novels that started in the last 12 months.</comment>
+  </data>
+  <data name="ReadHomeNewSide" xml:space="preserve">
+    <value>[Ļàšţ 12 ɱöñţĥš~~~~~]</value>
+    <comment>Side text beside a New row's heading, in a quieter style: what the row covers.</comment>
+  </data>
+  <data name="ReadHomeFinishedManga" xml:space="preserve">
+    <value>[Ƒîñîšĥéð ɱàñĝà~~~~~]</value>
+    <comment>Row heading on reading's Home: the most popular manga that have finished.</comment>
+  </data>
+  <data name="ReadHomeFinishedWebtoons" xml:space="preserve">
+    <value>[Ƒîñîšĥéð ŵéƀţööñš~~~~~~]</value>
+    <comment>Row heading on reading's Home: the most popular webtoons that have finished.</comment>
+  </data>
+  <data name="ReadHomeFinishedNovels" xml:space="preserve">
+    <value>[Ƒîñîšĥéð ļîĝĥţ ñöṽéļš~~~~~~~]</value>
+    <comment>Row heading on reading's Home: the most popular light novels that have finished.</comment>
+  </data>
+  <data name="ReadHomeFinishedSide" xml:space="preserve">
+    <value>[Ṁöšţ þöþüļàŕ~~~~]</value>
+    <comment>Side text beside a Finished row's heading, in a quieter style: how the row is sorted.</comment>
+  </data>
+  <data name="ReadSearchStartedAny" xml:space="preserve">
+    <value>[Åñý ţîɱé~~~]</value>
+    <comment>A choice of reading Search's Started filter: series that started at any time.</comment>
+  </data>
+  <data name="ReadSearchStartedYear" xml:space="preserve">
+    <value>[Ļàšţ 12 ɱöñţĥš~~~~~]</value>
+    <comment>A choice of reading Search's Started filter: series that started in the last 12 months.</comment>
+  </data>
+  <data name="ReadSearchStarted3Years" xml:space="preserve">
+    <value>[Ļàšţ 3 ýéàŕš~~~~]</value>
+    <comment>A choice of reading Search's Started filter: series that started in the last 3 years.</comment>
+  </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>[Ĵöîñéð {store} àš {member}.~~~~~~]</value>
     <comment>Toast after joining a plugin store with an invite that names this device's owner.</comment>
@@ -7848,6 +7904,30 @@
     <value>[Åðð à ƒöļðéŕ, à šéŕṽéŕ öŕ à þļüĝîñ šţöŕé ţö ŕéàð ƒŕöɱ Ĥöɱé.~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line at the end of Read with no book sources yet. A button to add one follows it.</comment>
   </data>
+  <data name="ReadHomeOfflineRows" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ àñð ñéŵ šéŕîéš šĥöŵ öñçé ýöü'ŕé öñļîñé.~~~~~~~~~~~~~~~]</value>
+    <comment>In place of Read's discovery rows on a first run with no connection: nothing was kept yet.</comment>
+  </data>
+  <data name="ReadHomeBrowse" xml:space="preserve">
+    <value>[Ɓŕöŵšé~~]</value>
+    <comment>E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.</comment>
+  </data>
+  <data name="ReadHomeBrowseLine" xml:space="preserve">
+    <value>[Ţŕéñðîñĝ, ñéŵ àñð ƒîñîšĥéð, ƀý ƒöŕɱàţ~~~~~~~~~~~~]</value>
+    <comment>E-ink: the line under Browse on Read's Home.</comment>
+  </data>
+  <data name="ReadHomeBrowseRow" xml:space="preserve">
+    <value>[{first}, {second} àñð {more} ɱöŕé~~~~~~~]</value>
+    <comment>E-ink: a discovery row in the Browse list, naming its first two series and how many follow.</comment>
+  </data>
+  <data name="ReadHomeBrowseNote" xml:space="preserve">
+    <value>[Ƒŕöɱ ÅñîĻîšţ. Ýöüŕ šöüŕçéš àŕé àšķéð ŵĥéñ ýöü öþéñ à šéŕîéš.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.</comment>
+  </data>
+  <data name="ReadHomeBrowseKept" xml:space="preserve">
+    <value>[Ļîšţš ķéþţ ƒŕöɱ {time} šţîļļ öþéñ.~~~~~~~~~~]</value>
+    <comment>E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.</comment>
+  </data>
   <data name="WeekUsually" xml:space="preserve">
     <value>[Ûšüàļļý~~~]</value>
     <comment>Under a day in Read's week: what usually comes out that day, when the time isn't known.</comment>
@@ -8727,6 +8807,74 @@
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>[Ļéƒţ öüţ~~~]</value>
     <comment>A genre's state: no series with it.</comment>
+  </data>
+  <data name="ReadSearchStarted" xml:space="preserve">
+    <value>[Šţàŕţéð~~~]</value>
+    <comment>A filter of reading's Search: when a series started.</comment>
+  </data>
+  <data name="ReadSearchSourcesOnly" xml:space="preserve">
+    <value>[Ýöüŕ šöüŕçéš öñļý~~~~~~]</value>
+    <comment>The filter bar's chip that searches only the person's own sources, leaving AniList out.</comment>
+  </data>
+  <data name="ReadSearchFromSources" xml:space="preserve">
+    <value>[Ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~]</value>
+    <comment>Search's section heading under AniList's results: one group per source of the person's.</comment>
+  </data>
+  <data name="ReadSearchAsking" xml:space="preserve">
+    <value>[Åšķîñĝ {source}…~~~~]</value>
+    <comment>E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.</comment>
+  </data>
+  <data name="ReadSearchSourceFailed" xml:space="preserve">
+    <value>[{source} ðîðñ'ţ àñšŵéŕ.~~~~~~]</value>
+    <comment>A source group whose source failed to answer. The reason and Try again follow.</comment>
+  </data>
+  <data name="ReadSearchSourceTimeout" xml:space="preserve">
+    <value>[Ñö àñšŵéŕ îñ {seconds} š.~~~~~~]</value>
+    <comment>The reason under it when the source gave no answer in time.</comment>
+  </data>
+  <data name="ReadSearchSourceNothing" xml:space="preserve">
+    <value>[Ñöţĥîñĝ ƒöüñð îñ {sources}.~~~~~~~]</value>
+    <comment>One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.</comment>
+  </data>
+  <data name="ReadSearchInSource" xml:space="preserve">
+    <value>[Îñ {source}~~]</value>
+    <comment>On an AniList result that one of the person's sources has. The source is its name.</comment>
+  </data>
+  <data name="ReadSearchInSources_one" xml:space="preserve">
+    <value>[Îñ {n} öƒ ýöüŕ šöüŕçéš~~~~~~~]</value>
+    <comment>On an AniList result that more than one of the person's sources has. Always 2 or more.</comment>
+  </data>
+  <data name="ReadSearchInSources_other" xml:space="preserve">
+    <value>[Îñ {n} öƒ ýöüŕ šöüŕçéš~~~~~~~]</value>
+    <comment>On an AniList result that more than one of the person's sources has. Always 2 or more.</comment>
+  </data>
+  <data name="ReadSearchAnilistNothing" xml:space="preserve">
+    <value>[ÅñîĻîšţ ƒöüñð ñöţĥîñĝ ƒöŕ ţĥéšé ŵöŕðš.~~~~~~~~~~~~]</value>
+    <comment>Search, when AniList found nothing but the person's sources did.</comment>
+  </data>
+  <data name="ReadSearchAnilistFailed" xml:space="preserve">
+    <value>[ÅñîĻîšţ ðîðñ'ţ àñšŵéŕ.~~~~~~~]</value>
+    <comment>Search, when AniList could not be reached.</comment>
+  </data>
+  <data name="ReadSearchAnilistFailedLine" xml:space="preserve">
+    <value>[Ýöüŕ šöüŕçéš ŵéŕé šţîļļ àšķéð.~~~~~~~~~]</value>
+    <comment>The line under it.</comment>
+  </data>
+  <data name="ReadSearchSourcesNothing" xml:space="preserve">
+    <value>[Ñöţĥîñĝ îñ ýöüŕ šöüŕçéš éîţĥéŕ.~~~~~~~~~~]</value>
+    <comment>Search, when nothing was found anywhere: under the line saying AniList found nothing.</comment>
+  </data>
+  <data name="ReadSearchMoreAnilist" xml:space="preserve">
+    <value>[Ṁöŕé ƒŕöɱ ÅñîĻîšţ~~~~~~]</value>
+    <comment>The link under From your sources that shows the rest of AniList's results.</comment>
+  </data>
+  <data name="ReadSearchShown" xml:space="preserve">
+    <value>[{shown} öƒ {total} šĥöŵñ~~~~~]</value>
+    <comment>Beside More from AniList: how many of AniList's results show.</comment>
+  </data>
+  <data name="ReadSearchSourceMore" xml:space="preserve">
+    <value>[Šĥöŵ {n} ɱöŕé~~~~]</value>
+    <comment>The button of a source group with more than five hits.</comment>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>[{step} öƒ {total}~~~]</value>

@@ -445,6 +445,20 @@ extension ReadingMsg {
         case .readingDownloadsDoneChapters(let title, let count): L.readingDownloadsDoneChapters(title: title, count: Int(count))
         case .readingDownloadsDoneParts(let title, let count): L.readingDownloadsDoneParts(title: title, count: Int(count))
         case .readingDownloadsDoneSeries(let count): L.readingDownloadsDoneSeries(count: Int(count))
+        case .readHomeTrendingManga: L.readHomeTrendingManga
+        case .readHomeTrendingWebtoons: L.readHomeTrendingWebtoons
+        case .readHomeTrendingNovels: L.readHomeTrendingNovels
+        case .readHomeNewManga: L.readHomeNewManga
+        case .readHomeNewWebtoons: L.readHomeNewWebtoons
+        case .readHomeNewNovels: L.readHomeNewNovels
+        case .readHomeNewSide: L.readHomeNewSide
+        case .readHomeFinishedManga: L.readHomeFinishedManga
+        case .readHomeFinishedWebtoons: L.readHomeFinishedWebtoons
+        case .readHomeFinishedNovels: L.readHomeFinishedNovels
+        case .readHomeFinishedSide: L.readHomeFinishedSide
+        case .readSearchStartedAny: L.readSearchStartedAny
+        case .readSearchStartedYear: L.readSearchStartedYear
+        case .readSearchStarted3Years: L.readSearchStarted3Years
         }
     }
 }

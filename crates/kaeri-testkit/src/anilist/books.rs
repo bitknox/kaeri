@@ -40,6 +40,12 @@ fn listed(book: &Value) -> Value {
     book
 }
 
+/// A book's start as AniList's `YYYYMMDD` integer, a missing month or day as nought.
+fn started(book: &Value) -> i64 {
+    let part = |k: &str| book["startDate"][k].as_i64().unwrap_or_default();
+    part("year") * 10_000 + part("month") * 100 + part("day")
+}
+
 fn one(books: &[Value], document: &str, vars: &Value) -> Value {
     // The count of shows a reading search carries beside its books: the fake has none to
     // count in a books request.
@@ -77,6 +83,7 @@ fn one(books: &[Value], document: &str, vars: &Value) -> Value {
                 && list("tag_in").iter().all(|t| tags.contains(t))
                 && !list("tag_not_in").iter().any(|t| tags.contains(t))
                 && (vars["isAdult"].is_null() || vars["isAdult"] == b["isAdult"])
+                && vars["startDate_greater"].as_i64().is_none_or(|after| started(b) > after)
         })
         .collect();
     let sort = list("sort").first().and_then(|s| s.as_str().map(str::to_owned));

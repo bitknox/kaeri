@@ -193103,6 +193103,210 @@
         }
       }
     },
+    "read-home-browse" : {
+      "comment" : "E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browse"
+          }
+        }
+      }
+    },
+    "read-home-browse-kept" : {
+      "comment" : "E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept. Argument 1: time (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lists kept from %1$@ still open."
+          }
+        }
+      }
+    },
+    "read-home-browse-line" : {
+      "comment" : "E-ink: the line under Browse on Read's Home.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending, new and finished, by format"
+          }
+        }
+      }
+    },
+    "read-home-browse-note" : {
+      "comment" : "E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From AniList. Your sources are asked when you open a series."
+          }
+        }
+      }
+    },
+    "read-home-browse-row" : {
+      "comment" : "E-ink: a discovery row in the Browse list, naming its first two series and how many follow. Argument 1: first (Text). Argument 2: second (Text). Argument 3: more (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ and %3$lld more"
+          }
+        }
+      }
+    },
+    "read-home-finished-manga" : {
+      "comment" : "Row heading on reading's Home: the most popular manga that have finished.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished manga"
+          }
+        }
+      }
+    },
+    "read-home-finished-novels" : {
+      "comment" : "Row heading on reading's Home: the most popular light novels that have finished.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished light novels"
+          }
+        }
+      }
+    },
+    "read-home-finished-side" : {
+      "comment" : "Side text beside a Finished row's heading, in a quieter style: how the row is sorted.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Most popular"
+          }
+        }
+      }
+    },
+    "read-home-finished-webtoons" : {
+      "comment" : "Row heading on reading's Home: the most popular webtoons that have finished.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finished webtoons"
+          }
+        }
+      }
+    },
+    "read-home-new-manga" : {
+      "comment" : "Row heading on reading's Home: the most popular manga that started in the last 12 months.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New manga"
+          }
+        }
+      }
+    },
+    "read-home-new-novels" : {
+      "comment" : "Row heading on reading's Home: the most popular light novels that started in the last 12 months.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New light novels"
+          }
+        }
+      }
+    },
+    "read-home-new-side" : {
+      "comment" : "Side text beside a New row's heading, in a quieter style: what the row covers.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last 12 months"
+          }
+        }
+      }
+    },
+    "read-home-new-webtoons" : {
+      "comment" : "Row heading on reading's Home: the most popular webtoons that started in the last 12 months.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New webtoons"
+          }
+        }
+      }
+    },
+    "read-home-offline-rows" : {
+      "comment" : "In place of Read's discovery rows on a first run with no connection: nothing was kept yet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending and new series show once you're online."
+          }
+        }
+      }
+    },
+    "read-home-trending-manga" : {
+      "comment" : "Row heading on reading's Home: manga that are trending on AniList now.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending manga"
+          }
+        }
+      }
+    },
+    "read-home-trending-novels" : {
+      "comment" : "Row heading on reading's Home: light novels that are trending on AniList now.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending light novels"
+          }
+        }
+      }
+    },
+    "read-home-trending-webtoons" : {
+      "comment" : "Row heading on reading's Home: webtoons that are trending on AniList now.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trending webtoons"
+          }
+        }
+      }
+    },
     "read-library-empty" : {
       "comment" : "A reading list with nothing on it. A Search button follows. Argument 1: list (Text).",
       "extractionState" : "manual",
@@ -194511,6 +194715,54 @@
         }
       }
     },
+    "read-search-anilist-failed" : {
+      "comment" : "Search, when AniList could not be reached.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniList didn't answer."
+          }
+        }
+      }
+    },
+    "read-search-anilist-failed-line" : {
+      "comment" : "The line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your sources were still asked."
+          }
+        }
+      }
+    },
+    "read-search-anilist-nothing" : {
+      "comment" : "Search, when AniList found nothing but the person's sources did.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniList found nothing for these words."
+          }
+        }
+      }
+    },
+    "read-search-asking" : {
+      "comment" : "E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asking %1$@…"
+          }
+        }
+      }
+    },
     "read-search-browse-line" : {
       "comment" : "The line over browsing: what is shown, and where the list comes from. Argument 1: what (Text).",
       "extractionState" : "manual",
@@ -194759,6 +195011,76 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không tìm kiếm được"
+          }
+        }
+      }
+    },
+    "read-search-from-sources" : {
+      "comment" : "Search's section heading under AniList's results: one group per source of the person's.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From your sources"
+          }
+        }
+      }
+    },
+    "read-search-in-source" : {
+      "comment" : "On an AniList result that one of the person's sources has. The source is its name. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %1$@"
+          }
+        }
+      }
+    },
+    "read-search-in-sources" : {
+      "comment" : "On an AniList result that more than one of the person's sources has. Always 2 or more. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "In %1$lld of your sources"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "In %1$lld of your sources"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-search-more-anilist" : {
+      "comment" : "The link under From your sources that shows the rest of AniList's results.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More from AniList"
           }
         }
       }
@@ -195179,6 +195501,138 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tìm truyện"
+          }
+        }
+      }
+    },
+    "read-search-shown" : {
+      "comment" : "Beside More from AniList: how many of AniList's results show. Argument 1: shown (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld shown"
+          }
+        }
+      }
+    },
+    "read-search-source-failed" : {
+      "comment" : "A source group whose source failed to answer. The reason and Try again follow. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ didn't answer."
+          }
+        }
+      }
+    },
+    "read-search-source-more" : {
+      "comment" : "The button of a source group with more than five hits. Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show %1$lld more"
+          }
+        }
+      }
+    },
+    "read-search-source-nothing" : {
+      "comment" : "One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list. Argument 1: sources (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing found in %1$@."
+          }
+        }
+      }
+    },
+    "read-search-source-timeout" : {
+      "comment" : "The reason under it when the source gave no answer in time. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No answer in %1$lld s."
+          }
+        }
+      }
+    },
+    "read-search-sources-nothing" : {
+      "comment" : "Search, when nothing was found anywhere: under the line saying AniList found nothing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing in your sources either."
+          }
+        }
+      }
+    },
+    "read-search-sources-only" : {
+      "comment" : "The filter bar's chip that searches only the person's own sources, leaving AniList out.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your sources only"
+          }
+        }
+      }
+    },
+    "read-search-started" : {
+      "comment" : "A filter of reading's Search: when a series started.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Started"
+          }
+        }
+      }
+    },
+    "read-search-started-3-years" : {
+      "comment" : "A choice of reading Search's Started filter: series that started in the last 3 years.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last 3 years"
+          }
+        }
+      }
+    },
+    "read-search-started-any" : {
+      "comment" : "A choice of reading Search's Started filter: series that started at any time.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any time"
+          }
+        }
+      }
+    },
+    "read-search-started-year" : {
+      "comment" : "A choice of reading Search's Started filter: series that started in the last 12 months.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last 12 months"
           }
         }
       }

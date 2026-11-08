@@ -708,3 +708,63 @@ reading-downloads-done-parts = { $count ->
 # The notification's text: chapters of several series are downloaded.
 # @arg count: int
 reading-downloads-done-series = Chapters of { $count } series are ready to read offline.
+
+## Read's discovery rows
+## The rows of reading's Home after the person's own sections, each a heading over a row of
+## covers from AniList. Light novels, manga and webtoons each get their own rows.
+
+# Row heading on reading's Home: manga that are trending on AniList now.
+# @max 32
+read-home-trending-manga = Trending manga
+
+# Row heading on reading's Home: webtoons that are trending on AniList now.
+# @max 32
+read-home-trending-webtoons = Trending webtoons
+
+# Row heading on reading's Home: light novels that are trending on AniList now.
+# @max 32
+read-home-trending-novels = Trending light novels
+
+# Row heading on reading's Home: the most popular manga that started in the last 12 months.
+# @max 32
+read-home-new-manga = New manga
+
+# Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+# @max 32
+read-home-new-webtoons = New webtoons
+
+# Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+# @max 32
+read-home-new-novels = New light novels
+
+# Side text beside a New row's heading, in a quieter style: what the row covers.
+# @max 24
+read-home-new-side = Last 12 months
+
+# Row heading on reading's Home: the most popular manga that have finished.
+# @max 32
+read-home-finished-manga = Finished manga
+
+# Row heading on reading's Home: the most popular webtoons that have finished.
+# @max 32
+read-home-finished-webtoons = Finished webtoons
+
+# Row heading on reading's Home: the most popular light novels that have finished.
+# @max 32
+read-home-finished-novels = Finished light novels
+
+# Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+# @max 24
+read-home-finished-side = Most popular
+
+# A choice of reading Search's Started filter: series that started at any time.
+# @max 24
+read-search-started-any = Any time
+
+# A choice of reading Search's Started filter: series that started in the last 12 months.
+# @max 24
+read-search-started-year = Last 12 months
+
+# A choice of reading Search's Started filter: series that started in the last 3 years.
+# @max 24
+read-search-started-3-years = Last 3 years
