@@ -55,6 +55,9 @@ pub struct Loading {
     pub failed: bool,
     /// AniList was not reached: what is shown was kept then.
     pub offline_since: Option<i64>,
+    /// Which load the parts are of. A refresh starts a load while one runs, and the older one
+    /// ending leaves the newer one's parts alone.
+    pub generation: u64,
 }
 
 /// A discovery row as kept: the books on it, when it was asked, and what it is about.
@@ -97,29 +100,31 @@ fn key_of(row: Planned) -> String {
 
 /// Load Home: at once from what was kept, then again as each part lands.
 pub fn load(kit: &Kit, ask: Ask, refresh: bool, tx: &Outbox) {
-    let memory = kit.sources.catalog.home.clone();
-    let already = {
-        let mut loading = memory.lock().unwrap_or_else(|e| e.into_inner());
-        let already = loading.running && !refresh;
-        if !already {
-            loading.running = true;
-            loading.failed = false;
-            loading.parts =
-                [ReadHomePart::Yours, ReadHomePart::Discovery, ReadHomePart::Because]
-                    .into_iter()
-                    .collect();
-        }
-        already
-    };
-    let home = Home::of(kit, ask);
+    let generation = begin(&kit.sources.catalog.home, refresh);
+    let home = Home { generation: generation.unwrap_or(0), ..Home::of(kit, ask) };
     home.send(tx);
-    if already {
+    if generation.is_none() {
         return;
     }
     let tx = tx.clone();
     tokio::spawn(async move {
         home.run(refresh, &tx).await;
     });
+}
+
+/// Start a load, unless one runs and this is no refresh: the new load's generation.
+fn begin(memory: &std::sync::Mutex<Loading>, refresh: bool) -> Option<u64> {
+    let mut loading = memory.lock().unwrap_or_else(|e| e.into_inner());
+    if loading.running && !refresh {
+        return None;
+    }
+    loading.running = true;
+    loading.failed = false;
+    loading.parts = [ReadHomePart::Yours, ReadHomePart::Discovery, ReadHomePart::Because]
+        .into_iter()
+        .collect();
+    loading.generation += 1;
+    Some(loading.generation)
 }
 
 /// Home as it stands, asking for nothing: for a change that shows on it, such as a series found
@@ -138,6 +143,8 @@ struct Home {
     zone: jiff::tz::TimeZone,
     offline: std::sync::Arc<std::sync::atomic::AtomicBool>,
     no_sources: bool,
+    /// The load this is, as [`begin`] gave it; 0 for a view alone.
+    generation: u64,
 }
 
 impl Home {
@@ -150,6 +157,7 @@ impl Home {
             zone: kit.clock.zone(),
             offline: kit.offline.clone(),
             no_sources: kit.no_sources(),
+            generation: 0,
         }
     }
 
@@ -158,7 +166,10 @@ impl Home {
     }
 
     fn landed(&self, part: ReadHomePart) {
-        self.memory().parts.remove(&part);
+        let mut memory = self.memory();
+        if memory.generation == self.generation {
+            memory.parts.remove(&part);
+        }
     }
 
     fn send(&self, tx: &Outbox) {
@@ -182,8 +193,10 @@ impl Home {
     fn finish(&self, tx: &Outbox) {
         {
             let mut memory = self.memory();
-            memory.parts.clear();
-            memory.running = false;
+            if memory.generation == self.generation {
+                memory.parts.clear();
+                memory.running = false;
+            }
         }
         self.send(tx);
     }
@@ -1127,6 +1140,35 @@ mod tests {
 
     fn reading(msg: ReadingMsg) -> Option<Msg> {
         Some(Msg::Reading(msg))
+    }
+
+    /// A refresh sent while the first load runs starts its own; the first one ending leaves
+    /// the refresh's parts on their way and the load running, so Home does not say it is done
+    /// before the refresh's rows land.
+    #[test]
+    fn a_refresh_during_a_load_keeps_its_parts_when_the_first_load_ends() {
+        let dir = tempfile::tempdir().unwrap();
+        let kit = kit(dir.path());
+        let ask =
+            Ask { answer: KaeriIsFor::Both, adult: false, chapter_notices: false, now: NOW };
+        let memory = &kit.sources.catalog.home;
+        let first = begin(memory, false).unwrap();
+        assert_eq!(begin(memory, false), None, "a second load joins the one running");
+        let refresh = begin(memory, true).unwrap();
+        let (tx, _rx) = Outbox::inbox();
+        let older = Home { generation: first, ..Home::of(&kit, ask) };
+        older.landed(ReadHomePart::Yours);
+        older.finish(&tx);
+        {
+            let loading = memory.lock().unwrap();
+            assert!(loading.running, "the refresh still runs");
+            assert_eq!(loading.parts.len(), 3, "the refresh's parts are still on their way");
+        }
+        let newer = Home { generation: refresh, ..Home::of(&kit, ask) };
+        newer.landed(ReadHomePart::Yours);
+        newer.finish(&tx);
+        let loading = memory.lock().unwrap();
+        assert!(!loading.running && loading.parts.is_empty());
     }
 
     #[test]

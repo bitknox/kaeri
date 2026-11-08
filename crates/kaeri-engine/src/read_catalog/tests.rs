@@ -37,6 +37,8 @@ use tokio::sync::{Notify, mpsc};
 use super::{Ask, Kit, home, search, tiles};
 use crate::{outbox::Outbox, read_sources::BookSources};
 
+mod lists;
+
 const DAY: i64 = 86_400;
 // Noon UTC on 14 November 2023, read in UTC.
 const NOW: i64 = 1_700_000_000 - 1_700_000_000 % DAY + 12 * 3_600;
@@ -588,6 +590,28 @@ async fn a_failed_source_says_why_and_tries_again_alone() {
     );
 }
 
+/// Try again on a group still asking (a second tap before the first ask answered) asks the
+/// source nothing more: the ask under way answers for the group.
+#[tokio::test]
+async fn try_again_while_a_group_is_asking_asks_once() {
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let gate = Arc::new(Notify::new());
+    let hits = vec![hit("w-1", "Wren and the Iron Bridge", None)];
+    let slow = Shelf::put(&kit, "slow", "Slow shelf", Answer::Gated(gate.clone(), hits));
+    let only = ReadSearchQuery { sources_only: true, ..query("wren") };
+    let (tx, mut rx) = outbox();
+    search::search(&kit, ask(), only.clone(), 0, &tx);
+    let asking = next_part(&mut rx).await;
+    assert_eq!(*state(&asking, "slow"), ReadSourceState::Asking);
+    search::retry_source(&kit, ask(), only.clone(), "slow".into(), &tx);
+    search::retry_source(&kit, ask(), only, "slow".into(), &tx);
+    gate.notify_one();
+    let done = part_until(&mut rx, |p| p.done).await;
+    assert_eq!(*state(&done, "slow"), ReadSourceState::Hits);
+    assert_eq!(slow.asked.load(Ordering::SeqCst), 1);
+}
+
 #[tokio::test(start_paused = true)]
 async fn a_source_with_no_answer_runs_out_of_time_after_fifteen_seconds() {
     let dir = tempfile::tempdir().unwrap();
@@ -620,6 +644,33 @@ async fn your_sources_only_leaves_anilist_out() {
     while let Ok(event) = rx.try_recv() {
         assert!(!matches!(event, Event::Reading(ReadingEvent::Search { .. })), "{event:?}");
     }
+}
+
+/// Browse with only "Your sources only" on: no words for the sources, and AniList is never
+/// asked. The answer is an empty page, on a later page too.
+#[tokio::test]
+async fn your_sources_only_without_words_asks_nobody() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let shelf = Shelf::put(&kit, "home", "Home library", Answer::Now(Vec::new()));
+    let (tx, mut rx) = outbox();
+    for page in [0, 1] {
+        let only = ReadSearchQuery { sources_only: true, ..query("") };
+        search::search(&kit, ask(), only, page, &tx);
+        let (asked_page, tiles, has_more) = loop {
+            match next_event(&mut rx).await {
+                Event::Reading(ReadingEvent::Search { page, tiles, has_more, .. }) => {
+                    break (page, tiles, has_more);
+                }
+                Event::Reading(ReadingEvent::SourceSearch(part)) => panic!("{part:?}"),
+                _ => {}
+            }
+        };
+        assert_eq!((asked_page, tiles.len(), has_more), (page, 0, false));
+    }
+    assert_eq!(books_asked(&fake), 0, "Your sources only never asks AniList");
+    assert_eq!(shelf.asked.load(Ordering::SeqCst), 0);
 }
 
 #[tokio::test]

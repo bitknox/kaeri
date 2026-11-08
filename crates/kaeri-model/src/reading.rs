@@ -836,7 +836,9 @@ pub struct ReadSourceGroup {
 pub struct ReadSourceJoin {
     pub work: WorkId,
     /// In the order of Your sources.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub source_ids: Vec<String>,
+    #[cfg_attr(feature = "ffi", uniffi(default))]
     pub source_names: Vec<String>,
 }
 

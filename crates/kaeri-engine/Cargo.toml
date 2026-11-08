@@ -106,6 +106,8 @@ tempfile = "3"
 # Comic archives of generated pages, for the reader's tests.
 zip.workspace = true
 image.workspace = true
+# Solid 7z comics, for the feed's page streaming tests.
+sevenz-rust2 = { workspace = true, features = ["compress"] }
 # A stopped clock, for the paced fills that wait seconds between titles and the start that
 # waits two minutes for a connection.
 tokio = { workspace = true, features = ["test-util"] }
