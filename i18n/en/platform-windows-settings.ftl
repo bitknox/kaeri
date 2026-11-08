@@ -115,7 +115,7 @@ settings-player-ui-app = { -app-name }
 
 # Value of the quality setting: a picture height in lines, as in "1080p".
 # @only windows
-# @arg lines: int
+# @arg lines: plain
 settings-quality-lines = { $lines }p
 
 # Value of the seeding setting: share until the ratio is reached. The ratio is already formatted, as in "1.5".

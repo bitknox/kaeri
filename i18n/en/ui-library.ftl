@@ -191,13 +191,13 @@ library-on-your-list = On your list
 library-in-your-list = In your list
 
 # Short progress under a show: the last episode watched out of the total.
-# @arg done: int
-# @arg total: int
+# @arg done: plain
+# @arg total: plain
 # @max 24
 progress-episodes-short = E{ $done } of { $total }
 
 # Short progress under a show when the total is not known.
-# @arg done: int
+# @arg done: plain
 # @max 12
 progress-episode-short = E{ $done }
 

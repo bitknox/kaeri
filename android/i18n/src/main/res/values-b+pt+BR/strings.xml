@@ -1694,8 +1694,8 @@
     <string name="library_added_planning">Adicionado a Planejado.</string>
     <string name="library_on_your_list">Na sua lista</string>
     <string name="library_in_your_list">Na lista</string>
-    <string name="progress_episodes_short">E%1$,d de %2$,d</string>
-    <string name="progress_episode_short">E%1$,d</string>
+    <string name="progress_episodes_short">E%1$d de %2$d</string>
+    <string name="progress_episode_short">E%1$d</string>
     <string name="continue_row_start_aired_dubbed">Reproduzir E%1$d dublado · saiu %2$s</string>
     <string name="up_next_starts">Começa %1$s</string>
     <string name="up_next_reason_new_season">Nova temporada</string>
@@ -2631,8 +2631,8 @@
     <string name="series_tracker_connect">Conecte em Ajustes para acompanhar esta série</string>
     <string name="series_tracker_not_there">Sem correspondência neste serviço de acompanhamento</string>
     <string name="series_tracker_looking">Procurando esta série…</string>
-    <string name="series_tracker_behind">Está no capítulo %1$,d. Recebe o %2$,d na próxima sincronização.</string>
-    <string name="series_tracker_ahead">Está no capítulo %1$,d, além do Kaeri.</string>
+    <string name="series_tracker_behind">Está no capítulo %1$d. Recebe o %2$d na próxima sincronização.</string>
+    <string name="series_tracker_ahead">Está no capítulo %1$d, além do Kaeri.</string>
     <string name="series_tracker_score">%1$s / 10</string>
     <string name="series_tracker_keep_kaeri">Manter o progresso do Kaeri</string>
     <string name="series_tracker_take_theirs">Usar o progresso de %1$s</string>

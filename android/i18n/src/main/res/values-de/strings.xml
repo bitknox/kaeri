@@ -1633,8 +1633,8 @@
     <string name="library_added_planning">Zu Geplant hinzugefügt.</string>
     <string name="library_on_your_list">Auf deiner Liste</string>
     <string name="library_in_your_list">In deiner Liste</string>
-    <string name="progress_episodes_short">E%1$,d von %2$,d</string>
-    <string name="progress_episode_short">E%1$,d</string>
+    <string name="progress_episodes_short">E%1$d von %2$d</string>
+    <string name="progress_episode_short">E%1$d</string>
     <string name="continue_row_start_aired_dubbed">E%1$d, synchronisiert, abspielen · erschienen %2$s</string>
     <string name="up_next_starts">Startet am %1$s</string>
     <string name="up_next_reason_new_season">Neue Staffel</string>
@@ -2545,8 +2545,8 @@
     <string name="series_tracker_connect">Verbinde ihn in den Einstellungen, um diese Serie zu verfolgen</string>
     <string name="series_tracker_not_there">Kein Treffer bei diesem Tracker</string>
     <string name="series_tracker_looking">Diese Serie wird gesucht…</string>
-    <string name="series_tracker_behind">Hat Kapitel %1$,d. Bekommt %2$,d beim nächsten Abgleich.</string>
-    <string name="series_tracker_ahead">Hat Kapitel %1$,d, mehr als Kaeri.</string>
+    <string name="series_tracker_behind">Hat Kapitel %1$d. Bekommt %2$d beim nächsten Abgleich.</string>
+    <string name="series_tracker_ahead">Hat Kapitel %1$d, mehr als Kaeri.</string>
     <string name="series_tracker_score">%1$s / 10</string>
     <string name="series_tracker_keep_kaeri">Position von Kaeri behalten</string>
     <string name="series_tracker_take_theirs">Position von %1$s übernehmen</string>

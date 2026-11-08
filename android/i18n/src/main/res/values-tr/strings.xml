@@ -1633,8 +1633,8 @@
     <string name="library_added_planning">Planlamaya eklendi.</string>
     <string name="library_on_your_list">Listenizde</string>
     <string name="library_in_your_list">Listenizde</string>
-    <string name="progress_episodes_short">E%1$,d / %2$,d</string>
-    <string name="progress_episode_short">E%1$,d</string>
+    <string name="progress_episodes_short">E%1$d / %2$d</string>
+    <string name="progress_episode_short">E%1$d</string>
     <string name="continue_row_start_aired_dubbed">Oynat: E%1$d dublajlı · yayınlandı: %2$s</string>
     <string name="up_next_starts">Başlıyor: %1$s</string>
     <string name="up_next_reason_new_season">Yeni sezon</string>
@@ -2545,8 +2545,8 @@
     <string name="series_tracker_connect">Bu seriyi takip etmek için Ayarlar\'dan bağlanın</string>
     <string name="series_tracker_not_there">Bu takip hizmetinde eşleşme yok</string>
     <string name="series_tracker_looking">Bu seri aranıyor…</string>
-    <string name="series_tracker_behind">Bölüm %1$,d kayıtlı. Sonraki eşitlemede %2$,d olur.</string>
-    <string name="series_tracker_ahead">Bölüm %1$,d kayıtlı, Kaeri\'den ilerde.</string>
+    <string name="series_tracker_behind">Bölüm %1$d kayıtlı. Sonraki eşitlemede %2$d olur.</string>
+    <string name="series_tracker_ahead">Bölüm %1$d kayıtlı, Kaeri\'den ilerde.</string>
     <string name="series_tracker_score">%1$s / 10</string>
     <string name="series_tracker_keep_kaeri">Kaeri\'nin yerini koru</string>
     <string name="series_tracker_take_theirs">%1$s yerini kullan</string>

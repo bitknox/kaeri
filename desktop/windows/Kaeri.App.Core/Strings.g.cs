@@ -1819,7 +1819,7 @@ public static partial class T
     public static string SettingsPlayerUiApp => Get("SettingsPlayerUiApp");
 
     /// <summary>Value of the quality setting: a picture height in lines, as in "1080p".</summary>
-    public static string SettingsQualityLines(long lines) => Fill(Get("SettingsQualityLines"), ("lines", lines.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SettingsQualityLines(long lines) => Fill(Get("SettingsQualityLines"), ("lines", lines.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Value of the seeding setting: share until the ratio is reached. The ratio is already formatted, as in "1.5".</summary>
     public static string SettingsSeedUntilRatio(string ratio) => Fill(Get("SettingsSeedUntilRatio"), ("ratio", ratio));
@@ -3628,10 +3628,10 @@ public static partial class T
     public static string LibraryInYourList => Get("LibraryInYourList");
 
     /// <summary>Short progress under a show: the last episode watched out of the total.</summary>
-    public static string ProgressEpisodesShort(long done, long total) => Fill(Get("ProgressEpisodesShort"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ProgressEpisodesShort(long done, long total) => Fill(Get("ProgressEpisodesShort"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Short progress under a show when the total is not known.</summary>
-    public static string ProgressEpisodeShort(long done) => Fill(Get("ProgressEpisodeShort"), ("done", done.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ProgressEpisodeShort(long done) => Fill(Get("ProgressEpisodeShort"), ("done", done.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Row caption: the next unwatched episode, dubbed, which came out a while ago.</summary>
     public static string ContinueRowStartAiredDubbed(long episode, string ago) => Fill(Get("ContinueRowStartAiredDubbed"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("ago", ago));
@@ -6188,10 +6188,10 @@ public static partial class T
     public static string SeriesTrackerLooking => Get("SeriesTrackerLooking");
 
     /// <summary>A tracker that is behind, and catches up on the next sync.</summary>
-    public static string SeriesTrackerBehind(long has, long gets) => Fill(Get("SeriesTrackerBehind"), ("has", has.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("gets", gets.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SeriesTrackerBehind(long has, long gets) => Fill(Get("SeriesTrackerBehind"), ("has", has.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("gets", gets.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A tracker ahead of Kaeri.</summary>
-    public static string SeriesTrackerAhead(long has) => Fill(Get("SeriesTrackerAhead"), ("has", has.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SeriesTrackerAhead(long has) => Fill(Get("SeriesTrackerAhead"), ("has", has.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A tracker's score out of ten.</summary>
     public static string SeriesTrackerScore(string score) => Fill(Get("SeriesTrackerScore"), ("score", score));

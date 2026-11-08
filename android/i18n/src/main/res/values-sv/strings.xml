@@ -1633,8 +1633,8 @@
     <string name="library_added_planning">Lade till i planeringslistan.</string>
     <string name="library_on_your_list">På din lista</string>
     <string name="library_in_your_list">I din lista</string>
-    <string name="progress_episodes_short">E%1$,d av %2$,d</string>
-    <string name="progress_episode_short">E%1$,d</string>
+    <string name="progress_episodes_short">E%1$d av %2$d</string>
+    <string name="progress_episode_short">E%1$d</string>
     <string name="continue_row_start_aired_dubbed">Spela E%1$d dubbat · släpptes %2$s</string>
     <string name="up_next_starts">Börjar %1$s</string>
     <string name="up_next_reason_new_season">Ny säsong</string>
@@ -2545,8 +2545,8 @@
     <string name="series_tracker_connect">Anslut i Inställningar för att spåra den här serien</string>
     <string name="series_tracker_not_there">Ingen träff på den här trackern</string>
     <string name="series_tracker_looking">Letar efter den här serien…</string>
-    <string name="series_tracker_behind">Har kapitel %1$,d. Får %2$,d vid kommande synk.</string>
-    <string name="series_tracker_ahead">Har kapitel %1$,d, längre än Kaeri.</string>
+    <string name="series_tracker_behind">Har kapitel %1$d. Får %2$d vid kommande synk.</string>
+    <string name="series_tracker_ahead">Har kapitel %1$d, längre än Kaeri.</string>
     <string name="series_tracker_score">%1$s / 10</string>
     <string name="series_tracker_keep_kaeri">Behåll platsen i Kaeri</string>
     <string name="series_tracker_take_theirs">Använd platsen hos %1$s</string>

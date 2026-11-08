@@ -3261,9 +3261,9 @@
     <!-- Shorter marker used in a widget row. -->
     <string name="library_in_your_list">In your list</string>
     <!-- Short progress under a show: the last episode watched out of the total. -->
-    <string name="progress_episodes_short">E%1$,d of %2$,d</string>
+    <string name="progress_episodes_short">E%1$d of %2$d</string>
     <!-- Short progress under a show when the total is not known. -->
-    <string name="progress_episode_short">E%1$,d</string>
+    <string name="progress_episode_short">E%1$d</string>
     <!-- Row caption: the next unwatched episode, dubbed, which came out a while ago. -->
     <string name="continue_row_start_aired_dubbed">Play E%1$d dubbed · out %2$s</string>
     <!-- Line on a suggestion that has not started airing. The date is written out already, such as "9 January". -->
@@ -5047,9 +5047,9 @@
     <!-- A tracker looking for the series. -->
     <string name="series_tracker_looking">Looking for this series…</string>
     <!-- A tracker that is behind, and catches up on the next sync. -->
-    <string name="series_tracker_behind">Has chapter %1$,d. Gets %2$,d on the next sync.</string>
+    <string name="series_tracker_behind">Has chapter %1$d. Gets %2$d on the next sync.</string>
     <!-- A tracker ahead of Kaeri. -->
-    <string name="series_tracker_ahead">Has chapter %1$,d, further than Kaeri.</string>
+    <string name="series_tracker_ahead">Has chapter %1$d, further than Kaeri.</string>
     <!-- A tracker's score out of ten. -->
     <string name="series_tracker_score">%1$s / 10</string>
     <!-- Menu item on a tracker that differs. -->

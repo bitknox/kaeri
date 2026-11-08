@@ -1572,8 +1572,8 @@
     <string name="library_added_planning">Đã thêm vào Kế hoạch.</string>
     <string name="library_on_your_list">Trong danh sách</string>
     <string name="library_in_your_list">Đã có</string>
-    <string name="progress_episodes_short">E%1$,d trên %2$,d</string>
-    <string name="progress_episode_short">E%1$,d</string>
+    <string name="progress_episodes_short">E%1$d trên %2$d</string>
+    <string name="progress_episode_short">E%1$d</string>
     <string name="continue_row_start_aired_dubbed">Phát E%1$d lồng tiếng · ra mắt %2$s</string>
     <string name="up_next_starts">Bắt đầu %1$s</string>
     <string name="up_next_reason_new_season">Mùa mới</string>
@@ -2459,8 +2459,8 @@
     <string name="series_tracker_connect">Kết nối trong Cài đặt để theo dõi bộ truyện này</string>
     <string name="series_tracker_not_there">Không có kết quả khớp trên dịch vụ theo dõi này</string>
     <string name="series_tracker_looking">Đang tìm bộ truyện này…</string>
-    <string name="series_tracker_behind">Đang ở chương %1$,d. Sẽ nhận chương %2$,d ở lần đồng bộ sau.</string>
-    <string name="series_tracker_ahead">Đang ở chương %1$,d, xa hơn Kaeri.</string>
+    <string name="series_tracker_behind">Đang ở chương %1$d. Sẽ nhận chương %2$d ở lần đồng bộ sau.</string>
+    <string name="series_tracker_ahead">Đang ở chương %1$d, xa hơn Kaeri.</string>
     <string name="series_tracker_score">%1$s/10</string>
     <string name="series_tracker_keep_kaeri">Giữ vị trí của Kaeri</string>
     <string name="series_tracker_take_theirs">Dùng vị trí của %1$s</string>

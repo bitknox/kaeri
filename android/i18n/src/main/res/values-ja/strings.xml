@@ -1572,8 +1572,8 @@
     <string name="library_added_planning">視聴予定に追加しました。</string>
     <string name="library_on_your_list">リストに登録済み</string>
     <string name="library_in_your_list">登録済み</string>
-    <string name="progress_episodes_short">E%1$,d/%2$,d</string>
-    <string name="progress_episode_short">E%1$,d</string>
+    <string name="progress_episodes_short">E%1$d/%2$d</string>
+    <string name="progress_episode_short">E%1$d</string>
     <string name="continue_row_start_aired_dubbed">E%1$d 吹替版を再生 · %2$sに公開</string>
     <string name="up_next_starts">%1$s放送開始</string>
     <string name="up_next_reason_new_season">新シーズン</string>
@@ -2459,8 +2459,8 @@
     <string name="series_tracker_connect">この作品を連携するには、設定で接続してください</string>
     <string name="series_tracker_not_there">この連携サービスに一致する作品がありません</string>
     <string name="series_tracker_looking">この作品を探しています…</string>
-    <string name="series_tracker_behind">第%1$,d話まで。次の同期で第%2$,d話になります。</string>
-    <string name="series_tracker_ahead">第%1$,d話まで。Kaeriより先に進んでいます。</string>
+    <string name="series_tracker_behind">第%1$d話まで。次の同期で第%2$d話になります。</string>
+    <string name="series_tracker_ahead">第%1$d話まで。Kaeriより先に進んでいます。</string>
     <string name="series_tracker_score">%1$s / 10</string>
     <string name="series_tracker_keep_kaeri">Kaeriの位置を残す</string>
     <string name="series_tracker_take_theirs">%1$sの位置を使う</string>

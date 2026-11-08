@@ -472,12 +472,12 @@ series-tracker-not-there = No match on this { -tracker }
 series-tracker-looking = Looking for this series…
 
 # A tracker that is behind, and catches up on the next sync.
-# @arg has: int
-# @arg gets: int
+# @arg has: plain
+# @arg gets: plain
 series-tracker-behind = Has chapter { $has }. Gets { $gets } on the next sync.
 
 # A tracker ahead of Kaeri.
-# @arg has: int
+# @arg has: plain
 series-tracker-ahead = Has chapter { $has }, further than { -app-name }.
 
 # A tracker's score out of ten.

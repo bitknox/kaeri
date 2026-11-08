@@ -1572,8 +1572,8 @@
     <string name="library_added_planning">Ditambahkan ke Rencana.</string>
     <string name="library_on_your_list">Ada di daftar Anda</string>
     <string name="library_in_your_list">Di daftar Anda</string>
-    <string name="progress_episodes_short">E%1$,d dari %2$,d</string>
-    <string name="progress_episode_short">E%1$,d</string>
+    <string name="progress_episodes_short">E%1$d dari %2$d</string>
+    <string name="progress_episode_short">E%1$d</string>
     <string name="continue_row_start_aired_dubbed">Putar E%1$d berdubbing · terbit %2$s</string>
     <string name="up_next_starts">Mulai %1$s</string>
     <string name="up_next_reason_new_season">Musim baru</string>
@@ -2459,8 +2459,8 @@
     <string name="series_tracker_connect">Sambungkan di Pengaturan untuk melacak seri ini</string>
     <string name="series_tracker_not_there">Tidak ada yang cocok di pelacak ini</string>
     <string name="series_tracker_looking">Mencari seri ini…</string>
-    <string name="series_tracker_behind">Baru sampai bab %1$,d. Menjadi %2$,d pada sinkronisasi selanjutnya.</string>
-    <string name="series_tracker_ahead">Sudah bab %1$,d, lebih jauh dari Kaeri.</string>
+    <string name="series_tracker_behind">Baru sampai bab %1$d. Menjadi %2$d pada sinkronisasi selanjutnya.</string>
+    <string name="series_tracker_ahead">Sudah bab %1$d, lebih jauh dari Kaeri.</string>
     <string name="series_tracker_score">%1$s / 10</string>
     <string name="series_tracker_keep_kaeri">Pertahankan posisi Kaeri</string>
     <string name="series_tracker_take_theirs">Pakai posisi %1$s</string>

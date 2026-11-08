@@ -1755,8 +1755,8 @@
     <string name="library_added_planning">Добавлено в «Запланировано».</string>
     <string name="library_on_your_list">В вашем списке</string>
     <string name="library_in_your_list">В списке</string>
-    <string name="progress_episodes_short">E%1$,d из %2$,d</string>
-    <string name="progress_episode_short">E%1$,d</string>
+    <string name="progress_episodes_short">E%1$d из %2$d</string>
+    <string name="progress_episode_short">E%1$d</string>
     <string name="continue_row_start_aired_dubbed">Смотреть E%1$d с дубляжом · вышла %2$s</string>
     <string name="up_next_starts">Начнётся %1$s</string>
     <string name="up_next_reason_new_season">Новый сезон</string>
@@ -2717,8 +2717,8 @@
     <string name="series_tracker_connect">Подключите в настройках, чтобы отслеживать эту серию</string>
     <string name="series_tracker_not_there">Нет совпадения в этом трекере</string>
     <string name="series_tracker_looking">Ищем эту серию…</string>
-    <string name="series_tracker_behind">Есть глава %1$,d. При следующей синхронизации будет %2$,d.</string>
-    <string name="series_tracker_ahead">Есть глава %1$,d, это дальше, чем у Kaeri.</string>
+    <string name="series_tracker_behind">Есть глава %1$d. При следующей синхронизации будет %2$d.</string>
+    <string name="series_tracker_ahead">Есть глава %1$d, это дальше, чем у Kaeri.</string>
     <string name="series_tracker_score">%1$s / 10</string>
     <string name="series_tracker_keep_kaeri">Оставить место из Kaeri</string>
     <string name="series_tracker_take_theirs">Взять место из %1$s</string>

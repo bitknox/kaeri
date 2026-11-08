@@ -5888,12 +5888,12 @@ public enum L {
 
     /// Short progress under a show: the last episode watched out of the total.
     public static func progressEpisodesShort(done: Int, total: Int) -> String {
-        Self.format("progress-episodes-short", fallback: "E%1$lld of %2$lld", done, total)
+        Self.format("progress-episodes-short", fallback: "E%1$@ of %2$@", String(done), String(total))
     }
 
     /// Short progress under a show when the total is not known.
     public static func progressEpisodeShort(done: Int) -> String {
-        Self.format("progress-episode-short", fallback: "E%1$lld", done)
+        Self.format("progress-episode-short", fallback: "E%1$@", String(done))
     }
 
     /// Row caption: the next unwatched episode, dubbed, which came out a while ago.
@@ -8954,12 +8954,12 @@ public enum L {
 
     /// A tracker that is behind, and catches up on the next sync.
     public static func seriesTrackerBehind(has: Int, gets: Int) -> String {
-        Self.format("series-tracker-behind", fallback: "Has chapter %1$lld. Gets %2$lld on the next sync.", has, gets)
+        Self.format("series-tracker-behind", fallback: "Has chapter %1$@. Gets %2$@ on the next sync.", String(has), String(gets))
     }
 
     /// A tracker ahead of Kaeri.
     public static func seriesTrackerAhead(has: Int) -> String {
-        Self.format("series-tracker-ahead", fallback: "Has chapter %1$lld, further than Kaeri.", has)
+        Self.format("series-tracker-ahead", fallback: "Has chapter %1$@, further than Kaeri.", String(has))
     }
 
     /// A tracker's score out of ten.

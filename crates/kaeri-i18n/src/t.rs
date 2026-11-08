@@ -10325,12 +10325,12 @@ pub fn library_in_your_list() -> String {
 
 /// Short progress under a show: the last episode watched out of the total.
 pub fn progress_episodes_short(done: i64, total: i64) -> String {
-    text("progress-episodes-short", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
+    text("progress-episodes-short", &[("done", Arg::Plain(done)), ("total", Arg::Plain(total))])
 }
 
 /// Short progress under a show when the total is not known.
 pub fn progress_episode_short(done: i64) -> String {
-    text("progress-episode-short", &[("done", Arg::Int(done))])
+    text("progress-episode-short", &[("done", Arg::Plain(done))])
 }
 
 /// Row caption: the next unwatched episode, dubbed, which came out a while ago.
@@ -14607,12 +14607,12 @@ pub fn series_tracker_looking() -> String {
 
 /// A tracker that is behind, and catches up on the next sync.
 pub fn series_tracker_behind(has: i64, gets: i64) -> String {
-    text("series-tracker-behind", &[("has", Arg::Int(has)), ("gets", Arg::Int(gets))])
+    text("series-tracker-behind", &[("has", Arg::Plain(has)), ("gets", Arg::Plain(gets))])
 }
 
 /// A tracker ahead of Kaeri.
 pub fn series_tracker_ahead(has: i64) -> String {
-    text("series-tracker-ahead", &[("has", Arg::Int(has))])
+    text("series-tracker-ahead", &[("has", Arg::Plain(has))])
 }
 
 /// A tracker's score out of ten.

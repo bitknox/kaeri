@@ -189344,85 +189344,85 @@
       }
     },
     "progress-episode-short" : {
-      "comment" : "Short progress under a show when the total is not known. Argument 1: done (Int).",
+      "comment" : "Short progress under a show when the total is not known. Argument 1: done (Plain).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld"
+            "value" : "E%1$@"
           }
         }
       }
@@ -189828,85 +189828,85 @@
       }
     },
     "progress-episodes-short" : {
-      "comment" : "Short progress under a show: the last episode watched out of the total. Argument 1: done (Int). Argument 2: total (Int).",
+      "comment" : "Short progress under a show: the last episode watched out of the total. Argument 1: done (Plain). Argument 2: total (Plain).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld von %2$lld"
+            "value" : "E%1$@ von %2$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld of %2$lld"
+            "value" : "E%1$@ of %2$@"
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld de %2$lld"
+            "value" : "E%1$@ de %2$@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld sur %2$lld"
+            "value" : "E%1$@ sur %2$@"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld dari %2$lld"
+            "value" : "E%1$@ dari %2$@"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld di %2$lld"
+            "value" : "E%1$@ di %2$@"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld/%2$lld"
+            "value" : "E%1$@/%2$@"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld z %2$lld"
+            "value" : "E%1$@ z %2$@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld de %2$lld"
+            "value" : "E%1$@ de %2$@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld из %2$lld"
+            "value" : "E%1$@ из %2$@"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld av %2$lld"
+            "value" : "E%1$@ av %2$@"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld / %2$lld"
+            "value" : "E%1$@ / %2$@"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "E%1$lld trên %2$lld"
+            "value" : "E%1$@ trên %2$@"
           }
         }
       }
@@ -244976,85 +244976,85 @@
       }
     },
     "series-tracker-ahead" : {
-      "comment" : "A tracker ahead of Kaeri. Argument 1: has (Int).",
+      "comment" : "A tracker ahead of Kaeri. Argument 1: has (Plain).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hat Kapitel %1$lld, mehr als Kaeri."
+            "value" : "Hat Kapitel %1$@, mehr als Kaeri."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Has chapter %1$lld, further than Kaeri."
+            "value" : "Has chapter %1$@, further than Kaeri."
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tiene el capítulo %1$lld, más adelante que Kaeri."
+            "value" : "Tiene el capítulo %1$@, más adelante que Kaeri."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En est au chapitre %1$lld, plus loin que Kaeri."
+            "value" : "En est au chapitre %1$@, plus loin que Kaeri."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sudah bab %1$lld, lebih jauh dari Kaeri."
+            "value" : "Sudah bab %1$@, lebih jauh dari Kaeri."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ha il capitolo %1$lld, più avanti di Kaeri."
+            "value" : "Ha il capitolo %1$@, più avanti di Kaeri."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "第%1$lld話まで。Kaeriより先に進んでいます。"
+            "value" : "第%1$@話まで。Kaeriより先に進んでいます。"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ma rozdział %1$lld, więcej niż Kaeri."
+            "value" : "Ma rozdział %1$@, więcej niż Kaeri."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Está no capítulo %1$lld, além do Kaeri."
+            "value" : "Está no capítulo %1$@, além do Kaeri."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Есть глава %1$lld, это дальше, чем у Kaeri."
+            "value" : "Есть глава %1$@, это дальше, чем у Kaeri."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Har kapitel %1$lld, längre än Kaeri."
+            "value" : "Har kapitel %1$@, längre än Kaeri."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bölüm %1$lld kayıtlı, Kaeri'den ilerde."
+            "value" : "Bölüm %1$@ kayıtlı, Kaeri'den ilerde."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Đang ở chương %1$lld, xa hơn Kaeri."
+            "value" : "Đang ở chương %1$@, xa hơn Kaeri."
           }
         }
       }
@@ -245144,85 +245144,85 @@
       }
     },
     "series-tracker-behind" : {
-      "comment" : "A tracker that is behind, and catches up on the next sync. Argument 1: has (Int). Argument 2: gets (Int).",
+      "comment" : "A tracker that is behind, and catches up on the next sync. Argument 1: has (Plain). Argument 2: gets (Plain).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hat Kapitel %1$lld. Bekommt %2$lld beim nächsten Abgleich."
+            "value" : "Hat Kapitel %1$@. Bekommt %2$@ beim nächsten Abgleich."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Has chapter %1$lld. Gets %2$lld on the next sync."
+            "value" : "Has chapter %1$@. Gets %2$@ on the next sync."
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tiene el capítulo %1$lld. Pasa al %2$lld en la próxima sincronización."
+            "value" : "Tiene el capítulo %1$@. Pasa al %2$@ en la próxima sincronización."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En est au chapitre %1$lld. Passera à %2$lld à la prochaine synchronisation."
+            "value" : "En est au chapitre %1$@. Passera à %2$@ à la prochaine synchronisation."
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Baru sampai bab %1$lld. Menjadi %2$lld pada sinkronisasi selanjutnya."
+            "value" : "Baru sampai bab %1$@. Menjadi %2$@ pada sinkronisasi selanjutnya."
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ha il capitolo %1$lld. Con la sincronizzazione seguente arriva a %2$lld."
+            "value" : "Ha il capitolo %1$@. Con la sincronizzazione seguente arriva a %2$@."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "第%1$lld話まで。次の同期で第%2$lld話になります。"
+            "value" : "第%1$@話まで。次の同期で第%2$@話になります。"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ma rozdział %1$lld. Przy kolejnej synchronizacji dostanie %2$lld."
+            "value" : "Ma rozdział %1$@. Przy kolejnej synchronizacji dostanie %2$@."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Está no capítulo %1$lld. Recebe o %2$lld na próxima sincronização."
+            "value" : "Está no capítulo %1$@. Recebe o %2$@ na próxima sincronização."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Есть глава %1$lld. При следующей синхронизации будет %2$lld."
+            "value" : "Есть глава %1$@. При следующей синхронизации будет %2$@."
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Har kapitel %1$lld. Får %2$lld vid kommande synk."
+            "value" : "Har kapitel %1$@. Får %2$@ vid kommande synk."
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bölüm %1$lld kayıtlı. Sonraki eşitlemede %2$lld olur."
+            "value" : "Bölüm %1$@ kayıtlı. Sonraki eşitlemede %2$@ olur."
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Đang ở chương %1$lld. Sẽ nhận chương %2$lld ở lần đồng bộ sau."
+            "value" : "Đang ở chương %1$@. Sẽ nhận chương %2$@ ở lần đồng bộ sau."
           }
         }
       }
