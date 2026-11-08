@@ -1251,6 +1251,10 @@
     <value>Chapter {chapter} couldn't download</value>
     <comment>A chapter that failed. The reason follows as the next part.</comment>
   </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>Offline</value>
+    <comment>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</comment>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>About {size}</value>
     <comment>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</comment>
@@ -7465,11 +7469,11 @@
     <comment>Closes the reader and goes back to the series.</comment>
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
-    <value>Read</value>
+    <value>Counted as read</value>
     <comment>Under the top line of the page between chapters, once the chapter counts as read.</comment>
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
-    <value>Read · {trackers} updated</value>
+    <value>Counted as read · {trackers} updated</value>
     <comment>Under the end of chapter line, naming the trackers the read went to.</comment>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
@@ -7923,6 +7927,14 @@
   <data name="ActionContinuePartPlain" xml:space="preserve">
     <value>Continue part {n}</value>
     <comment>The main action for a light novel part, part read, when how far is not known.</comment>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>Continue chapter {n} · {percent}%</value>
+    <comment>The main action for a light novel part the source calls a chapter, part read.</comment>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>Continue chapter {n}</value>
+    <comment>The main action for a light novel part the source calls a chapter, part read, when how far is not known.</comment>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Read part {n}</value>
@@ -9041,7 +9053,7 @@
     <comment>Under the group: what stays on this device.</comment>
   </data>
   <data name="SettingsLookFollowsNote" xml:space="preserve">
-    <value>Colour or greys</value>
+    <value>Colour pages or greys for e-ink</value>
     <comment>Line under Look in Series settings that follow you.</comment>
   </data>
   <data name="SettingsNewChaptersReading" xml:space="preserve">

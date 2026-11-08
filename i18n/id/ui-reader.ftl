@@ -2,7 +2,8 @@ reader-page-loading = Memuat halaman { $page }
 reader-page-failed = Halaman { $page } gagal dimuat
 reader-try-again = Coba lagi
 reader-close = Tutup
-reader-end-read = Dibaca
+reader-end-read = Dihitung sudah dibaca
+reader-end-tracker = Dihitung sudah dibaca · { $trackers } diperbarui
 reader-end-next = Selanjutnya
 reader-mode-rtl = Kanan ke kiri
 reader-mode-ltr = Kiri ke kanan
@@ -38,14 +39,11 @@ reader-end-caught-up = Anda sudah menyusul
 reader-gap-none = Tanpa jarak
 reader-gap-small = Kecil
 reader-look-system = Sistem
-reader-end-tracker = Dibaca · { $trackers } diperbarui
 reader-end-of-chapter-number = Akhir bab { $chapter }
 reader-end-facts = Bab { $chapter } · { $facts }
 reader-end-pages = { $count ->
    *[other] { $count } halaman
  }
 reader-end-from = Dari { $source }
-
 reader-chapter-line = Bab { $chapter }
-
 reader-divider-facts-source = { $facts } · dari { $source }

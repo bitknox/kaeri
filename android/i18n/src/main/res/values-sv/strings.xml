@@ -336,6 +336,7 @@
     <string name="reading_dl_queued">%1$d i kö</string>
     <string name="reading_dl_waits_wifi">väntar på Wi-Fi</string>
     <string name="reading_dl_failed">Kapitel %1$s kunde inte laddas ner</string>
+    <string name="reading_dl_offline">Offline</string>
     <string name="reading_estimate_size">Cirka %1$s</string>
     <string name="reading_estimate_wifi">via Wi-Fi</string>
     <string name="reading_estimate_mobile">via mobildata</string>
@@ -589,7 +590,6 @@
     <string name="eink_settings">Inställningar</string>
     <string name="eink_clean_screen">Rensa skärmen</string>
     <string name="eink_end_of_chapter">Slut på kapitel %1$s</string>
-    <string name="eink_counted_read">Räknas som läst</string>
     <string name="eink_end_next">Nästa</string>
     <plurals name="eink_end_pages">
         <item quantity="one">En sida</item>
@@ -600,7 +600,6 @@
     <string name="eink_reads_strip">lång remsa</string>
     <string name="eink_on_device">på den här enheten</string>
     <string name="eink_continue_to">Läs vidare till kapitel %1$s</string>
-    <string name="eink_back_to_series">Tillbaka till serien</string>
     <string name="eink_turn_to_continue">Vänd sida för att läsa vidare</string>
     <string name="eink_next_missing">Kapitel %1$s finns inte hos dina källor än</string>
     <string name="eink_next_not_out">Kapitlet efter har inte kommit ut än</string>
@@ -645,6 +644,7 @@
     <string name="reader_failed_chapter">Kunde inte öppna kapitel %1$s</string>
     <string name="reader_sheet_series">Den här serien</string>
     <string name="reader_sheet_all_manga">All manga</string>
+    <string name="reader_sheet_all_webtoons">Alla webtoons</string>
     <string name="reader_sheet_all_novels">Alla light novels</string>
     <string name="reader_sheet_more">Fler läsarinställningar</string>
     <string name="reader_row_reading_mode">Läsläge</string>
@@ -697,7 +697,7 @@
     <string name="reader_grid_page">Gå till sida %1$d</string>
     <string name="reader_scrubber_in_chapter">Sida i kapitlet</string>
     <string name="reader_failed_novel">Kunde inte visa kapitlet</string>
-    <string name="reader_end_tracker_offline">Läst · %1$s uppdateras när du är online igen</string>
+    <string name="reader_end_tracker_offline">Räknas som läst · %1$s uppdateras när du är online igen</string>
     <string name="reader_end_none">Inget kapitel %1$s hos dina källor än</string>
     <string name="reader_end_none_line">Kaeri söker efter nya kapitel i bakgrunden och lägger till dem i Uppdateringar.</string>
     <string name="reader_end_finished_title">Slutet</string>
@@ -715,6 +715,8 @@
     <string name="reader_volume_read">Volym %1$s · läst</string>
     <string name="reader_volume_none">Kapitel</string>
     <string name="reader_page_plate">Sida %1$d</string>
+    <string name="reader_image_plate">Bild %1$d</string>
+    <string name="reader_image_loading">Laddar bild %1$d</string>
     <string name="reader_opening_finding">Letar efter en källa</string>
     <string name="reader_failed_choose">Välj källa</string>
     <string name="reader_settings_search">Sök i inställningar</string>
@@ -2298,8 +2300,8 @@
     <string name="reader_page_failed">Kunde inte ladda sida %1$d</string>
     <string name="reader_try_again">Försök igen</string>
     <string name="reader_close">Stäng</string>
-    <string name="reader_end_read">Läst</string>
-    <string name="reader_end_tracker">Läst · uppdaterat på %1$s</string>
+    <string name="reader_end_read">Räknas som läst</string>
+    <string name="reader_end_tracker">Räknas som läst · uppdaterat på %1$s</string>
     <string name="reader_end_next">Nästa</string>
     <string name="reader_mode_rtl">Höger till vänster</string>
     <string name="reader_mode_ltr">Vänster till höger</string>
@@ -2404,6 +2406,8 @@
     <string name="action_continue_chapter">Läs vidare på kapitel %1$s · sida %2$d</string>
     <string name="action_continue_part">Läs vidare på del %1$s · %2$d%%</string>
     <string name="action_continue_part_plain">Läs vidare på del %1$s</string>
+    <string name="action_continue_chapter_percent">Läs vidare på kapitel %1$s · %2$d%%</string>
+    <string name="action_continue_chapter_plain">Läs vidare på kapitel %1$s</string>
     <string name="action_read_part">Läs del %1$s</string>
     <string name="action_read_again">Läs igen</string>
     <string name="series_reading_from">Läser från</string>
@@ -2712,7 +2716,7 @@
     <string name="settings_follow_mode">Läge, riktning och färg</string>
     <string name="settings_follow_mode_note">En serie du ändrar läses likadant på dina andra enheter</string>
     <string name="settings_follow_footer">Textstorlek, marginaler, tryckytor och uppdatering stannar på den här %1$s.</string>
-    <string name="settings_look_follows_note">Färg eller gråtoner</string>
+    <string name="settings_look_follows_note">Färgsidor eller gråtoner för e-ink</string>
     <string name="settings_new_chapters_reading">Serier i Läsning</string>
     <string name="settings_new_chapters_note">En serie du läser får också sina kommande kapitel redo</string>
     <string name="settings_progress_group">Förlopp</string>

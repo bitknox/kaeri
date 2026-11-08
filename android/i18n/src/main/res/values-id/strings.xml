@@ -317,6 +317,7 @@
     <string name="reading_dl_queued">%1$d antre</string>
     <string name="reading_dl_waits_wifi">menunggu Wi-Fi</string>
     <string name="reading_dl_failed">Bab %1$s gagal diunduh</string>
+    <string name="reading_dl_offline">Offline</string>
     <string name="reading_estimate_size">Sekitar %1$s</string>
     <string name="reading_estimate_wifi">lewat Wi-Fi</string>
     <string name="reading_estimate_mobile">lewat data seluler</string>
@@ -559,7 +560,6 @@
     <string name="eink_settings">Pengaturan</string>
     <string name="eink_clean_screen">Bersihkan layar</string>
     <string name="eink_end_of_chapter">Akhir bab %1$s</string>
-    <string name="eink_counted_read">Dihitung sudah dibaca</string>
     <string name="eink_end_next">Selanjutnya</string>
     <plurals name="eink_end_pages">
         <item quantity="other">%1$d halaman</item>
@@ -569,7 +569,6 @@
     <string name="eink_reads_strip">strip panjang</string>
     <string name="eink_on_device">di perangkat ini</string>
     <string name="eink_continue_to">Lanjutkan ke bab %1$s</string>
-    <string name="eink_back_to_series">Kembali ke seri</string>
     <string name="eink_turn_to_continue">Balik halaman untuk lanjutkan</string>
     <string name="eink_next_missing">Bab %1$s belum ada di sumber-sumber Anda</string>
     <string name="eink_next_not_out">Bab selanjutnya belum terbit</string>
@@ -614,6 +613,7 @@
     <string name="reader_failed_chapter">Bab %1$s tidak bisa dibuka</string>
     <string name="reader_sheet_series">Seri ini</string>
     <string name="reader_sheet_all_manga">Semua manga</string>
+    <string name="reader_sheet_all_webtoons">Semua webtoon</string>
     <string name="reader_sheet_all_novels">Semua light novel</string>
     <string name="reader_sheet_more">Pengaturan pembaca lainnya</string>
     <string name="reader_row_reading_mode">Mode baca</string>
@@ -666,7 +666,7 @@
     <string name="reader_grid_page">Ke halaman %1$d</string>
     <string name="reader_scrubber_in_chapter">Halaman dalam bab</string>
     <string name="reader_failed_novel">Bab ini tidak bisa ditampilkan</string>
-    <string name="reader_end_tracker_offline">Dibaca · %1$s diperbarui saat Anda kembali online</string>
+    <string name="reader_end_tracker_offline">Dihitung sudah dibaca · %1$s diperbarui saat Anda kembali online</string>
     <string name="reader_end_none">Belum ada bab %1$s di sumber-sumber Anda</string>
     <string name="reader_end_none_line">Kaeri memeriksa bab baru di latar belakang dan menambahkannya ke Pembaruan.</string>
     <string name="reader_end_finished_title">Tamat</string>
@@ -684,6 +684,8 @@
     <string name="reader_volume_read">Volume %1$s · dibaca</string>
     <string name="reader_volume_none">Bab</string>
     <string name="reader_page_plate">Halaman %1$d</string>
+    <string name="reader_image_plate">Gambar %1$d</string>
+    <string name="reader_image_loading">Memuat gambar %1$d</string>
     <string name="reader_opening_finding">Mencari sumber</string>
     <string name="reader_failed_choose">Pilih sumber</string>
     <string name="reader_settings_search">Cari pengaturan</string>
@@ -2224,8 +2226,8 @@
     <string name="reader_page_failed">Halaman %1$d gagal dimuat</string>
     <string name="reader_try_again">Coba lagi</string>
     <string name="reader_close">Tutup</string>
-    <string name="reader_end_read">Dibaca</string>
-    <string name="reader_end_tracker">Dibaca · %1$s diperbarui</string>
+    <string name="reader_end_read">Dihitung sudah dibaca</string>
+    <string name="reader_end_tracker">Dihitung sudah dibaca · %1$s diperbarui</string>
     <string name="reader_end_next">Selanjutnya</string>
     <string name="reader_mode_rtl">Kanan ke kiri</string>
     <string name="reader_mode_ltr">Kiri ke kanan</string>
@@ -2325,6 +2327,8 @@
     <string name="action_continue_chapter">Lanjutkan bab %1$s · halaman %2$d</string>
     <string name="action_continue_part">Lanjutkan bagian %1$s · %2$d%%</string>
     <string name="action_continue_part_plain">Lanjutkan bagian %1$s</string>
+    <string name="action_continue_chapter_percent">Lanjutkan bab %1$s · %2$d%%</string>
+    <string name="action_continue_chapter_plain">Lanjutkan bab %1$s</string>
     <string name="action_read_part">Baca bagian %1$s</string>
     <string name="action_read_again">Baca ulang</string>
     <string name="series_reading_from">Dibaca dari</string>
@@ -2617,7 +2621,7 @@
     <string name="settings_follow_mode">Mode, arah, dan warna</string>
     <string name="settings_follow_mode_note">Seri yang Anda ubah dibaca sama di perangkat Anda yang lain</string>
     <string name="settings_follow_footer">Ukuran teks, margin, area ketuk, dan penyegaran tetap di %1$s ini.</string>
-    <string name="settings_look_follows_note">Warna atau abu-abu</string>
+    <string name="settings_look_follows_note">Halaman berwarna atau abu-abu untuk e-ink</string>
     <string name="settings_new_chapters_reading">Seri di daftar Membaca</string>
     <string name="settings_new_chapters_note">Seri yang sedang dibaca juga menyiapkan bab selanjutnya</string>
     <string name="settings_progress_group">Kemajuan</string>

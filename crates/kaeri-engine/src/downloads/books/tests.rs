@@ -675,7 +675,7 @@ fn a_series_waiting_or_failing_says_so_in_its_line() {
     let row = store.book_download(WORK, "2").unwrap().unwrap();
     store.book_download_failed(row.id, &encode(&ReadingFailure::Offline), 2).unwrap();
     let view = kit.queue.view(store);
-    assert_eq!(msg_ids(&view.series[0].line), ["reading-dl-failed", "reading-failed-offline"]);
+    assert_eq!(msg_ids(&view.series[0].line), ["reading-dl-failed", "reading-dl-offline"]);
     assert_eq!(view.series[0].failed, ids(&["2"]), "Retry asks for these again");
 }
 

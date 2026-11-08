@@ -151,8 +151,12 @@ pub(crate) fn series(
             }
         } else if let Some(first) = failed.first() {
             line.push(r(ReadingMsg::ReadingDlFailed { chapter: label(first) }));
+            // The row keeps a short reason: the downloads banner says what being offline means.
             let failure = first.error.as_deref().map_or(ReadingFailure::Offline, decode);
-            line.push(failure.msg());
+            line.push(match failure {
+                ReadingFailure::Offline => r(ReadingMsg::ReadingDlOffline),
+                other => other.msg(),
+            });
         } else {
             if clearable > 0 {
                 line.push(r(ReadingMsg::ReadingDlRead { count: count(clearable) }));

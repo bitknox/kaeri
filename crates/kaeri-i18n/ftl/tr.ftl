@@ -907,6 +907,9 @@ reading-dl-waits-wifi = Wi-Fi bekliyor
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Bölüm { $chapter } indirilemedi
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = Çevrimdışı
+
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Yaklaşık { $size }
 
@@ -8134,10 +8137,10 @@ reader-try-again = Tekrar dene
 reader-close = Kapat
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-reader-end-read = Okundu
+reader-end-read = Okundu sayıldı
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = Okundu · { $trackers } güncellendi
+reader-end-tracker = Okundu sayıldı · { $trackers } güncellendi
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Sonraki
@@ -8425,6 +8428,12 @@ action-continue-part = Okumayı sürdür: kısım { $n } · %{ $percent }
 
 # The main action for a light novel part, part read, when how far is not known.
 action-continue-part-plain = Okumayı sürdür: kısım { $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = Okumayı sürdür: bölüm { $n } · %{ $percent }
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = Okumayı sürdür: bölüm { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Kısım { $n } oku
@@ -9271,7 +9280,7 @@ settings-follow-mode-note = Değiştirdiğiniz seri diğer cihazlarınızda da a
 settings-follow-footer = Yazı boyutu, kenar boşlukları, dokunma bölgeleri ve yenileme bu { $device } üzerinde kalır.
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = Renkli veya gri
+settings-look-follows-note = Renkli sayfalar ya da e-ink için gri
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = Okuma listesindeki seriler

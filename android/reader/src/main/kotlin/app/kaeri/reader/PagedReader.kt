@@ -1,5 +1,6 @@
 // The paged reader: one leaf at a time, turned by taps in the zones, swipes, keys and jumps. On a
-// phone a tap or key turn is a 0.2 s crossfade with the old page held under, never through empty;
+// phone a tap or key turn is a 0.2 s crossfade with the old page held under until the new one is
+// drawn, never through empty, and Remove animations keeps that fade;
 // a swipe follows the finger and turns past 25% of the width or a 450 dp/s flick with a spring that
 // does not bounce. With motion off (e-ink, Paper mode) every turn is at once. Pinch zooms, and
 // while zoomed a drag pans and the tap zones are off.
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -43,13 +45,17 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import app.kaeri.design.Motion
+import app.kaeri.design.atFullSpeed
+import app.kaeri.design.rememberAnimationsRemoved
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.LeafPart
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.TurnHow
 import app.kaeri.i18n.Strings
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.abs
 
 /** Where the paged reader is, for the screen to turn it from keys, bars and the scrubber. */
@@ -144,16 +150,23 @@ fun PagedReader(
         shown(pager.leaf, pager.how)
     }
 
-    // The crossfade: the new leaf over the old one, then the old one goes.
+    // The crossfade: the new leaf over the old one, then the old one goes once the new one is drawn,
+    // so a turn never shows the empty ground. With Remove animations on the fade keeps its own clock.
     val fade = remember { Animatable(1f) }
+    val removed = rememberAnimationsRemoved()
+    var drawn by remember { mutableIntStateOf(-1) }
     LaunchedEffect(pager.turns) {
         if (pager.under == null) return@LaunchedEffect
         if (!motion) {
             pager.under = null
             return@LaunchedEffect
         }
-        fade.snapTo(0f)
-        fade.animateTo(1f, Motion.quick())
+        val turn: suspend () -> Unit = {
+            fade.snapTo(0f)
+            fade.animateTo(1f, Motion.quick())
+            withTimeoutOrNull(PageWaits.PLATE_MS) { snapshotFlow { drawn == pager.leaf }.first { it } }
+        }
+        if (removed) atFullSpeed { turn() } else turn()
         pager.under = null
     }
 
@@ -312,7 +325,12 @@ fun PagedReader(
                             onMissing = onMissing,
                             onRetry = onRetry,
                             instant = !motion,
-                            onReady = { if (current) onReady(index) },
+                            onReady = {
+                                if (current) {
+                                    drawn = index
+                                    onReady(index)
+                                }
+                            },
                             waiting = waiting,
                             failed = failed,
                         )

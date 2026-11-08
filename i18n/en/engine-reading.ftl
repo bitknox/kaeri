@@ -665,6 +665,10 @@ reading-dl-waits-wifi = waits for Wi-Fi
 # @arg chapter: text
 reading-dl-failed = Chapter { $chapter } couldn't download
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+# @max 20
+reading-dl-offline = Offline
+
 ## Download estimate
 ## Above the Download button when choosing chapters: "About 62 MB · over Wi-Fi".
 

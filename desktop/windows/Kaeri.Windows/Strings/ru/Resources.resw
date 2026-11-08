@@ -1037,6 +1037,9 @@
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Не удалось скачать главу {chapter}</value>
   </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>Нет сети</value>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Около {size}</value>
   </data>
@@ -5910,10 +5913,10 @@
     <value>Закрыть</value>
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
-    <value>Прочитано</value>
+    <value>Засчитано как прочитанная</value>
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
-    <value>Прочитано · обновлено: {trackers}</value>
+    <value>Засчитано как прочитанная · обновлено: {trackers}</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Следующая</value>
@@ -6226,6 +6229,12 @@
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
     <value>Продолжить: часть {n}</value>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>Продолжить: глава {n} · {percent}%</value>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>Продолжить: глава {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Читать часть {n}</value>
@@ -7152,7 +7161,7 @@
     <value>Размер текста, поля, зоны нажатия и обновление остаются на {device}.</value>
   </data>
   <data name="SettingsLookFollowsNote" xml:space="preserve">
-    <value>Цвет или серый</value>
+    <value>Цветные страницы или серые для e-ink</value>
   </data>
   <data name="SettingsNewChaptersReading" xml:space="preserve">
     <value>Серии из «Читаю»</value>

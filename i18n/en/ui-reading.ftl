@@ -98,6 +98,16 @@ action-continue-part = { -continue-cap } part { $n } · { $percent }%
 # @arg n: text
 action-continue-part-plain = { -continue-cap } part { $n }
 
+# The main action for a light novel part the source calls a chapter, part read.
+# @arg n: text
+# @arg percent: int
+action-continue-chapter-percent = { -continue-cap } chapter { $n } · { $percent }%
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is
+# not known.
+# @arg n: text
+action-continue-chapter-plain = { -continue-cap } chapter { $n }
+
 # The main action for a light novel part not opened yet.
 # @arg n: text
 action-read-part = Read part { $n }
@@ -1054,7 +1064,7 @@ settings-follow-mode-note = A series you change reads the same on your other { -
 settings-follow-footer = Text size, margins, tap zones and refresh stay on this { $device }.
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = Colour or greys
+settings-look-follows-note = Colour pages or greys for e-ink
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = Series on Reading

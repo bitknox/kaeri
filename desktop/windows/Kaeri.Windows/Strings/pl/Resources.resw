@@ -1037,6 +1037,9 @@
   <data name="ReadingDlFailed" xml:space="preserve">
     <value>Nie udało się pobrać rozdziału {chapter}</value>
   </data>
+  <data name="ReadingDlOffline" xml:space="preserve">
+    <value>Offline</value>
+  </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Około {size}</value>
   </data>
@@ -5910,10 +5913,10 @@
     <value>Zamknij</value>
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
-    <value>Przeczytano</value>
+    <value>Zaliczono jako przeczytany</value>
   </data>
   <data name="ReaderEndTracker" xml:space="preserve">
-    <value>Przeczytano · zaktualizowano: {trackers}</value>
+    <value>Zaliczono jako przeczytany · zaktualizowano: {trackers}</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Kolejny</value>
@@ -6226,6 +6229,12 @@
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
     <value>Wznów część {n}</value>
+  </data>
+  <data name="ActionContinueChapterPercent" xml:space="preserve">
+    <value>Wznów rozdział {n} · {percent}%</value>
+  </data>
+  <data name="ActionContinueChapterPlain" xml:space="preserve">
+    <value>Wznów rozdział {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Czytaj część {n}</value>
@@ -7152,7 +7161,7 @@
     <value>Rozmiar tekstu, marginesy, strefy dotyku i odświeżanie zostają na: {device}.</value>
   </data>
   <data name="SettingsLookFollowsNote" xml:space="preserve">
-    <value>Kolor lub szarości</value>
+    <value>Strony w kolorze lub w szarościach dla e-ink</value>
   </data>
   <data name="SettingsNewChaptersReading" xml:space="preserve">
     <value>Serie z listy Czytane</value>

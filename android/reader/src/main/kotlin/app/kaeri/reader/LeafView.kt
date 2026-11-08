@@ -53,6 +53,8 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.kaeri.design.Motion
+import app.kaeri.design.atFullSpeed
+import app.kaeri.design.rememberAnimationsRemoved
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.robotoFlex
 import app.kaeri.engine.model.Leaf
@@ -117,6 +119,7 @@ fun LeafView(
                     state = state,
                     images = images,
                     instant = instant,
+                    spine = spineOf(leaf, index),
                     onMissing = onMissing,
                     onReady = { ready[index] = true },
                     waiting = waiting,
@@ -145,6 +148,7 @@ private fun BoxScope.PartView(
     state: ReaderState,
     images: PageImages,
     instant: Boolean,
+    spine: Float,
     onMissing: (LeafPart) -> Unit,
     onReady: () -> Unit,
     waiting: WaitingSlot,
@@ -162,16 +166,22 @@ private fun BoxScope.PartView(
     val result by produceState(file?.let(images::cached)?.let { PageDecodeResult.Decoded(it) } as PageDecodeResult?, file) {
         if (file != null && value == null) value = withContext(Dispatchers.IO) { images.load(file) }
     }
+    val removed = rememberAnimationsRemoved()
     when (val now = result) {
         is PageDecodeResult.Decoded -> {
-            // A page that was there at once goes in at once; one that came later fades over its plate.
+            // A page that was there at once goes in at once; one that came later fades over its plate,
+            // on its own clock when Remove animations is on. It is ready once fully drawn.
             val alpha = remember(file?.path) { Animatable(if (instant || wasCached) 1f else 0f) }
             LaunchedEffect(now) {
-                if (!instant) alpha.animateTo(1f, Motion.fadeIn()) else alpha.snapTo(1f)
+                when {
+                    instant -> alpha.snapTo(1f)
+                    removed -> atFullSpeed { alpha.animateTo(1f, Motion.fadeIn()) }
+                    else -> alpha.animateTo(1f, Motion.fadeIn())
+                }
+                onReady()
             }
             if (alpha.value < 1f) Waited(page, waiting)
-            PageCanvas(now.page, rotate = part.rotate, alpha = alpha.value, modifier = Modifier.fillMaxSize())
-            LaunchedEffect(now) { onReady() }
+            PageCanvas(now.page, rotate = part.rotate, alpha = alpha.value, modifier = Modifier.fillMaxSize(), spine = spine)
         }
         is PageDecodeResult.Missing -> {
             LaunchedEffect(file) { onMissing(part) }
@@ -180,6 +190,12 @@ private fun BoxScope.PartView(
         is PageDecodeResult.Unreadable -> failed(page, ReadingFailure.Other(now.reason)) { onRetry(page) }
         null -> Waited(page, waiting)
     }
+}
+
+/** Where a part's page sits in its box: the two pages of a spread against the spine between them. */
+internal fun spineOf(leaf: Leaf, index: Int): Float {
+    if (leaf.parts.size != 2) return 0f
+    return if (leaf.parts[index].place.x < leaf.parts[1 - index].place.x) 1f else -1f
 }
 
 /** Nothing for the first 600 ms, then the plate, then its words at four seconds. */
@@ -198,9 +214,13 @@ private fun BoxScope.Waited(page: Int, waiting: WaitingSlot) {
 /** A filter over every page: Paper mode dims the white instead of tinting the page. */
 val LocalPageTone = androidx.compose.runtime.compositionLocalOf<ColorFilter?> { null }
 
-/** A decoded page, fitted into its box; a grey page is drawn white over black. */
+/**
+ * A decoded page, fitted into its box; a grey page is drawn white over black. [spine] is where the
+ * page sits across its box: -1 at the left edge, 1 at the right, 0 centred. The two pages of a spread
+ * sit against the spine, so they meet as in print.
+ */
 @Composable
-fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier, alpha: Float = 1f) {
+fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier, alpha: Float = 1f, spine: Float = 0f) {
     val tone = LocalPageTone.current
     val image = remember(page) { page.bitmap.asImageBitmap() }
     Canvas(modifier) {
@@ -212,7 +232,8 @@ fun PageCanvas(page: PageBitmap, rotate: Boolean, modifier: Modifier = Modifier,
             // Unrotated, the image's own box centred where the turned page goes.
             val iw = image.width * scale
             val ih = image.height * scale
-            val dst = IntOffset((size.width / 2 - iw / 2).roundToInt(), (size.height / 2 - ih / 2).roundToInt())
+            val left = if (turned) size.width / 2 - iw / 2 else (size.width - iw) * (1f + spine) / 2
+            val dst = IntOffset(left.roundToInt(), (size.height / 2 - ih / 2).roundToInt())
             val dstSize = IntSize(iw.roundToInt(), ih.roundToInt())
             if (page.grey) {
                 drawRect(Color.Black, Offset(dst.x.toFloat(), dst.y.toFloat()), Size(iw, ih), alpha = alpha)
@@ -240,6 +261,16 @@ fun BoxScope.PageWaiting(page: Int, long: Boolean) {
                 Text(Strings.readerPageLoading(context, page + 1), color = ObiSilk.Haze, fontSize = 15.sp)
             }
         }
+    }
+}
+
+/** The phone's plate for a strip image: its number, then from four seconds the one line that it is loading. */
+@Composable
+fun BoxScope.ImageWaiting(page: Int, long: Boolean) {
+    val context = LocalContext.current
+    Box(Modifier.fillMaxSize().background(ObiSilk.Raised)) {
+        val words = if (long) Strings.readerImageLoading(context, page + 1) else Strings.readerImagePlate(context, page + 1)
+        Text(words, color = ObiSilk.Haze, fontSize = 15.sp, modifier = Modifier.align(Alignment.Center))
     }
 }
 

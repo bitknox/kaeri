@@ -154,6 +154,7 @@ reading-dl-more-queued = { $count } till i kö
 reading-dl-queued = { $count } i kö
 reading-dl-waits-wifi = väntar på Wi-Fi
 reading-dl-failed = Kapitel { $chapter } kunde inte laddas ner
+reading-dl-offline = Offline
 reading-estimate-size = Cirka { $size }
 reading-estimate-wifi = via Wi-Fi
 reading-estimate-mobile = via mobildata

@@ -176,6 +176,7 @@ reading-dl-more-queued = Ещё в очереди: { $count }
 reading-dl-queued = В очереди: { $count }
 reading-dl-waits-wifi = ждёт Wi-Fi
 reading-dl-failed = Не удалось скачать главу { $chapter }
+reading-dl-offline = Нет сети
 reading-estimate-size = Около { $size }
 reading-estimate-wifi = по Wi-Fi
 reading-estimate-mobile = по мобильной сети

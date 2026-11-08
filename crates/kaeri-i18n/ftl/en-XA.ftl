@@ -931,6 +931,9 @@ reading-dl-waits-wifi = [ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~]
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = [Çĥàþţéŕ { $chapter } çöüļðñ'ţ ðöŵñļöàð~~~~~~~~~]
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = [Öƒƒļîñé~~~]
+
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = [Åƀöüţ { $size }~~~]
 
@@ -8293,10 +8296,10 @@ reader-try-again = [Ţŕý àĝàîñ~~~]
 reader-close = [Çļöšé~~]
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-reader-end-read = [Ŕéàð~~]
+reader-end-read = [Çöüñţéð àš ŕéàð~~~~~]
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = [Ŕéàð · { $trackers } üþðàţéð~~~~~~]
+reader-end-tracker = [Çöüñţéð àš ŕéàð · { $trackers } üþðàţéð~~~~~~~~~]
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = [Ñéẋţ~~]
@@ -8645,6 +8648,12 @@ action-continue-part = [Çöñţîñüé þàŕţ { $n } · { $percent }%~~~~~~~
 
 # The main action for a light novel part, part read, when how far is not known.
 action-continue-part-plain = [Çöñţîñüé þàŕţ { $n }~~~~~~]
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = [Çöñţîñüé çĥàþţéŕ { $n } · { $percent }%~~~~~~~~~]
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = [Çöñţîñüé çĥàþţéŕ { $n }~~~~~~]
 
 # The main action for a light novel part not opened yet.
 action-read-part = [Ŕéàð þàŕţ { $n }~~~~]
@@ -9500,7 +9509,7 @@ settings-follow-mode-note = [Å šéŕîéš ýöü çĥàñĝé ŕéàðš ţĥ
 settings-follow-footer = [Ţéẋţ šîžé, ɱàŕĝîñš, ţàþ žöñéš àñð ŕéƒŕéšĥ šţàý öñ ţĥîš { $device }.~~~~~~~~~~~~~~~~~~]
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = [Çöļöüŕ öŕ ĝŕéýš~~~~~]
+settings-look-follows-note = [Çöļöüŕ þàĝéš öŕ ĝŕéýš ƒöŕ é-îñķ~~~~~~~~~~]
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = [Šéŕîéš öñ Ŕéàðîñĝ~~~~~~]

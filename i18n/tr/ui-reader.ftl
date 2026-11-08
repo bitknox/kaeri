@@ -2,7 +2,8 @@ reader-page-loading = Sayfa { $page } yükleniyor
 reader-page-failed = Sayfa { $page } yüklenemedi
 reader-try-again = Tekrar dene
 reader-close = Kapat
-reader-end-read = Okundu
+reader-end-read = Okundu sayıldı
+reader-end-tracker = Okundu sayıldı · { $trackers } güncellendi
 reader-end-next = Sonraki
 reader-mode-rtl = Sağdan sola
 reader-mode-ltr = Soldan sağa
@@ -39,7 +40,6 @@ reader-end-caught-up = Güncelsiniz
 reader-gap-none = Yok
 reader-gap-small = Küçük
 reader-look-system = Sistem
-reader-end-tracker = Okundu · { $trackers } güncellendi
 reader-end-of-chapter-number = Bölüm { $chapter } sona erdi
 reader-end-facts = Bölüm { $chapter } · { $facts }
 reader-end-pages = { $count ->
@@ -47,7 +47,5 @@ reader-end-pages = { $count ->
    *[other] { $count } sayfa
  }
 reader-end-from = Şuradan: { $source }
-
 reader-chapter-line = Bölüm { $chapter }
-
 reader-divider-facts-source = { $facts } · şuradan: { $source }

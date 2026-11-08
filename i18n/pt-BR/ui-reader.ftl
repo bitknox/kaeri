@@ -2,7 +2,8 @@ reader-page-loading = Carregando a página { $page }
 reader-page-failed = Não foi possível carregar a página { $page }
 reader-try-again = Tentar de novo
 reader-close = Fechar
-reader-end-read = Lido
+reader-end-read = Contado como lido
+reader-end-tracker = Contado como lido · { $trackers } atualizado
 reader-end-next = Seguinte
 reader-mode-rtl = Direita p/ esquerda
 reader-mode-ltr = Esquerda p/ direita
@@ -40,7 +41,6 @@ reader-end-caught-up = Você está em dia
 reader-gap-none = Nenhum
 reader-gap-small = Pequeno
 reader-look-system = Sistema
-reader-end-tracker = Lido · { $trackers } atualizado
 reader-end-of-chapter-number = Fim do capítulo { $chapter }
 reader-end-facts = Capítulo { $chapter } · { $facts }
 reader-end-pages = { $count ->
@@ -49,7 +49,5 @@ reader-end-pages = { $count ->
    *[other] { $count } páginas
  }
 reader-end-from = De { $source }
-
 reader-chapter-line = Capítulo { $chapter }
-
 reader-divider-facts-source = { $facts } · de { $source }

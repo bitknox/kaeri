@@ -945,6 +945,9 @@ reading-dl-waits-wifi = ждёт Wi-Fi
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Не удалось скачать главу { $chapter }
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = Нет сети
+
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Около { $size }
 
@@ -8304,10 +8307,10 @@ reader-try-again = Повторить
 reader-close = Закрыть
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-reader-end-read = Прочитано
+reader-end-read = Засчитано как прочитанная
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = Прочитано · обновлено: { $trackers }
+reader-end-tracker = Засчитано как прочитанная · обновлено: { $trackers }
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Следующая
@@ -8605,6 +8608,12 @@ action-continue-part = Продолжить: часть { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
 action-continue-part-plain = Продолжить: часть { $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = Продолжить: глава { $n } · { $percent }%
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = Продолжить: глава { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Читать часть { $n }
@@ -9483,7 +9492,7 @@ settings-follow-mode-note = Изменённая серия читается т�
 settings-follow-footer = Размер текста, поля, зоны нажатия и обновление остаются на { $device }.
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = Цвет или серый
+settings-look-follows-note = Цветные страницы или серые для e-ink
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = Серии из «Читаю»

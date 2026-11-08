@@ -102,7 +102,7 @@ fun StripReader(
     list: LazyListState = rememberLazyListState(),
     maxWidth: Dp = 620.dp,
     gap: Dp = 0.dp,
-    waiting: WaitingSlot = { page, long -> PageWaiting(page, long) },
+    waiting: WaitingSlot = { page, long -> ImageWaiting(page, long) },
     failed: FailedSlot = { page, failure, retry -> PageFailed(page, failure, retry) },
 ) {
     val story = state.leaves.filter { !it.endPage }
@@ -221,7 +221,11 @@ private fun LazyListScope.images(
 ) {
     val chapter = state.chapter
     items(story, key = { leaf -> "$chapter ${leaf.index}" }) { leaf ->
-        val ratio = state.ratioOf(leaf.parts.firstOrNull())
+        val part = leaf.parts.firstOrNull()
+        val ratio = state.ratioOf(part)
+        // A row on screen with no file asks for its image; the session asks once a layout.
+        val missing = part != null && state.file(part) == null && state.failures[part.page] == null
+        LaunchedEffect(part?.page, missing) { if (missing && part != null) onMissing(part) }
         Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().aspectRatio(ratio)) {
             LeafView(
                 leaf = leaf,

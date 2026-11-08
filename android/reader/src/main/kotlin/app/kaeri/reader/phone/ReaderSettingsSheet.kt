@@ -196,7 +196,7 @@ private fun Main(
         Heading(Strings.readerSheetSeries(context))
         NavRow(Strings.readerRowReadingMode(context), modeSummary(context, mode, direction), onMode)
         ModeNote(context, session, mode, direction, title)
-        Heading(Strings.readerSheetAllManga(context))
+        Heading(if (strip) Strings.readerSheetAllWebtoons(context) else Strings.readerSheetAllManga(context))
         // A strip has no fit or borders to crop; its images can have a gap instead.
         val keys = if (strip) listOf(Key.STRIP_GAP, Key.BACKGROUND) else listOf(Key.FIT, Key.CROP_BORDERS, Key.BACKGROUND)
         keys.forEach { key -> row(key)?.let { SettingLine(context, session, it, toggle) } }

@@ -143,6 +143,7 @@ reading-dl-more-queued = { $count } đang chờ nữa
 reading-dl-queued = { $count } đang chờ
 reading-dl-waits-wifi = chờ Wi-Fi
 reading-dl-failed = Chương { $chapter } không tải được
+reading-dl-offline = Ngoại tuyến
 reading-estimate-size = Khoảng { $size }
 reading-estimate-wifi = qua Wi-Fi
 reading-estimate-mobile = qua dữ liệu di động

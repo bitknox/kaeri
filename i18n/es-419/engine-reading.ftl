@@ -165,6 +165,7 @@ reading-dl-more-queued = { $count } más en cola
 reading-dl-queued = { $count } en cola
 reading-dl-waits-wifi = espera Wi-Fi
 reading-dl-failed = No se pudo descargar el capítulo { $chapter }
+reading-dl-offline = Sin conexión
 reading-estimate-size = Aprox. { $size }
 reading-estimate-wifi = por Wi-Fi
 reading-estimate-mobile = con datos móviles

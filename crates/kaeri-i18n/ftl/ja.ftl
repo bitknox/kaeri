@@ -888,6 +888,9 @@ reading-dl-waits-wifi = Wi-Fi待ち
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = 第{ $chapter }話をダウンロードできませんでした
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = オフライン
+
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = 約{ $size }
 
@@ -8049,10 +8052,10 @@ reader-try-again = もう一度試す
 reader-close = 閉じる
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-reader-end-read = 既読
+reader-end-read = 既読になりました
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = 既読 · { $trackers }を更新しました
+reader-end-tracker = 既読になりました · { $trackers }を更新しました
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = 次の章
@@ -8335,6 +8338,12 @@ action-continue-part = 続きを見る パート{ $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
 action-continue-part-plain = 続きを見る パート{ $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = 続きを見る 第{ $n }話 · { $percent }%
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = 続きを見る 第{ $n }話
 
 # The main action for a light novel part not opened yet.
 action-read-part = パート{ $n }を読む
@@ -9165,7 +9174,7 @@ settings-follow-mode-note = 変更した作品は、ほかのデバイスでも�
 settings-follow-footer = 文字サイズ、余白、タップ領域、画面更新はこの{ $device }に残ります。
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = カラーまたはグレー
+settings-look-follows-note = カラーページか、電子ペーパー向けのグレーか
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = 「読書中」の作品

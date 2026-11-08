@@ -888,6 +888,9 @@ reading-dl-waits-wifi = chờ Wi-Fi
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Chương { $chapter } không tải được
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = Ngoại tuyến
+
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Khoảng { $size }
 
@@ -8049,10 +8052,10 @@ reader-try-again = Thử lại
 reader-close = Đóng
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-reader-end-read = Đã đọc
+reader-end-read = Đã tính là đã đọc
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = Đã đọc · đã cập nhật { $trackers }
+reader-end-tracker = Đã tính là đã đọc · đã cập nhật { $trackers }
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Kế tiếp
@@ -8335,6 +8338,12 @@ action-continue-part = Tiếp tục phần { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
 action-continue-part-plain = Tiếp tục phần { $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = Tiếp tục chương { $n } · { $percent }%
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = Tiếp tục chương { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Đọc phần { $n }
@@ -9165,7 +9174,7 @@ settings-follow-mode-note = Bộ truyện bạn đổi sẽ đọc giống nhau 
 settings-follow-footer = Cỡ chữ, lề, vùng chạm và làm mới ở lại trên { $device } này.
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = Màu hoặc xám
+settings-look-follows-note = Trang màu hoặc xám cho e-ink
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = Bộ truyện trong Đang đọc

@@ -128,10 +128,6 @@ eink-clean-screen = Clean screen
 # @max 40
 eink-end-of-chapter = End of chapter { $chapter }
 
-# On the page between chapters, once the chapter counts as read.
-# @only android
-# @max 40
-eink-counted-read = Counted as read
 
 # Small heading above the next chapter on the page between chapters.
 # @only android
@@ -173,10 +169,6 @@ eink-on-device = on this { -device }
 # @max 32
 eink-continue-to = { -continue-cap } to chapter { $chapter }
 
-# Button on the page between chapters that leaves the reader for the series page.
-# @only android
-# @max 24
-eink-back-to-series = Back to series
 
 # Line at the foot of the page between chapters.
 # @only android
@@ -405,6 +397,11 @@ reader-sheet-series = This series
 # @only android
 # @max 20
 reader-sheet-all-manga = All manga
+
+# Heading in the reader's settings above the choices every webtoon shares.
+# @only android
+# @max 20
+reader-sheet-all-webtoons = All webtoons
 
 # Heading in the reader's settings above the choices every light novel shares.
 # @only android
@@ -673,8 +670,8 @@ reader-failed-novel = Couldn't show this chapter
 # Under the end of chapter line when the phone is offline.
 # @only android
 # @arg tracker: text
-# @max 70
-reader-end-tracker-offline = Read · { $tracker } updates when you're back online
+# @max 90
+reader-end-tracker-offline = Counted as read · { $tracker } updates when you're back online
 
 # Title of the end page when no source has the next chapter.
 # @only android
@@ -765,6 +762,18 @@ reader-volume-none = Chapters
 # @arg page: int
 # @max 20
 reader-page-plate = Page { $page }
+
+# On the plate of a strip image that is still loading.
+# @only android
+# @arg image: int
+# @max 20
+reader-image-plate = Image { $image }
+
+# On a strip image's plate in place of its number after four seconds.
+# @only android
+# @arg image: int
+# @max 30
+reader-image-loading = Loading image { $image }
 
 # Under Opening chapter when it takes more than three seconds.
 # @only android

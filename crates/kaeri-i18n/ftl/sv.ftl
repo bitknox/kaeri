@@ -907,6 +907,9 @@ reading-dl-waits-wifi = väntar på Wi-Fi
 # A chapter that failed. The reason follows as the next part.
 reading-dl-failed = Kapitel { $chapter } kunde inte laddas ner
 
+# After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+reading-dl-offline = Offline
+
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Cirka { $size }
 
@@ -8134,10 +8137,10 @@ reader-try-again = Försök igen
 reader-close = Stäng
 
 # Under the top line of the page between chapters, once the chapter counts as read.
-reader-end-read = Läst
+reader-end-read = Räknas som läst
 
 # Under the end of chapter line, naming the trackers the read went to.
-reader-end-tracker = Läst · uppdaterat på { $trackers }
+reader-end-tracker = Räknas som läst · uppdaterat på { $trackers }
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Nästa
@@ -8425,6 +8428,12 @@ action-continue-part = Läs vidare på del { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
 action-continue-part-plain = Läs vidare på del { $n }
+
+# The main action for a light novel part the source calls a chapter, part read.
+action-continue-chapter-percent = Läs vidare på kapitel { $n } · { $percent }%
+
+# The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+action-continue-chapter-plain = Läs vidare på kapitel { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Läs del { $n }
@@ -9271,7 +9280,7 @@ settings-follow-mode-note = En serie du ändrar läses likadant på dina andra e
 settings-follow-footer = Textstorlek, marginaler, tryckytor och uppdatering stannar på den här { $device }.
 
 # Line under Look in Series settings that follow you.
-settings-look-follows-note = Färg eller gråtoner
+settings-look-follows-note = Färgsidor eller gråtoner för e-ink
 
 # Value of New chapters in Downloads: the series on the Reading list.
 settings-new-chapters-reading = Serier i Läsning

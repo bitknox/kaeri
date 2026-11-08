@@ -317,6 +317,7 @@
     <string name="reading_dl_queued">%1$d đang chờ</string>
     <string name="reading_dl_waits_wifi">chờ Wi-Fi</string>
     <string name="reading_dl_failed">Chương %1$s không tải được</string>
+    <string name="reading_dl_offline">Ngoại tuyến</string>
     <string name="reading_estimate_size">Khoảng %1$s</string>
     <string name="reading_estimate_wifi">qua Wi-Fi</string>
     <string name="reading_estimate_mobile">qua dữ liệu di động</string>
@@ -559,7 +560,6 @@
     <string name="eink_settings">Cài đặt</string>
     <string name="eink_clean_screen">Làm sạch màn hình</string>
     <string name="eink_end_of_chapter">Hết chương %1$s</string>
-    <string name="eink_counted_read">Đã tính là đã đọc</string>
     <string name="eink_end_next">Kế tiếp</string>
     <plurals name="eink_end_pages">
         <item quantity="other">%1$d trang</item>
@@ -569,7 +569,6 @@
     <string name="eink_reads_strip">cuộn dọc</string>
     <string name="eink_on_device">có trên thiết bị này</string>
     <string name="eink_continue_to">Tiếp tục sang chương %1$s</string>
-    <string name="eink_back_to_series">Về trang truyện</string>
     <string name="eink_turn_to_continue">Lật trang để tiếp tục</string>
     <string name="eink_next_missing">Chương %1$s chưa có trong các nguồn của bạn</string>
     <string name="eink_next_not_out">Chương sau chưa ra</string>
@@ -614,6 +613,7 @@
     <string name="reader_failed_chapter">Không mở được chương %1$s</string>
     <string name="reader_sheet_series">Bộ truyện này</string>
     <string name="reader_sheet_all_manga">Mọi manga</string>
+    <string name="reader_sheet_all_webtoons">Mọi webtoon</string>
     <string name="reader_sheet_all_novels">Mọi light novel</string>
     <string name="reader_sheet_more">Thêm cài đặt trình đọc</string>
     <string name="reader_row_reading_mode">Chế độ đọc</string>
@@ -666,7 +666,7 @@
     <string name="reader_grid_page">Đi tới trang %1$d</string>
     <string name="reader_scrubber_in_chapter">Trang trong chương</string>
     <string name="reader_failed_novel">Không hiển thị được chương này</string>
-    <string name="reader_end_tracker_offline">Đã đọc · %1$s sẽ cập nhật khi bạn có mạng lại</string>
+    <string name="reader_end_tracker_offline">Đã tính là đã đọc · %1$s sẽ cập nhật khi bạn có mạng lại</string>
     <string name="reader_end_none">Chưa có chương %1$s trong các nguồn của bạn</string>
     <string name="reader_end_none_line">Kaeri kiểm tra chương mới ở chế độ nền và thêm vào Cập nhật.</string>
     <string name="reader_end_finished_title">Hết</string>
@@ -684,6 +684,8 @@
     <string name="reader_volume_read">Tập %1$s · đã đọc</string>
     <string name="reader_volume_none">Các chương</string>
     <string name="reader_page_plate">Trang %1$d</string>
+    <string name="reader_image_plate">Ảnh %1$d</string>
+    <string name="reader_image_loading">Đang tải ảnh %1$d</string>
     <string name="reader_opening_finding">Đang tìm nguồn</string>
     <string name="reader_failed_choose">Chọn nguồn</string>
     <string name="reader_settings_search">Tìm cài đặt</string>
@@ -2224,8 +2226,8 @@
     <string name="reader_page_failed">Không tải được trang %1$d</string>
     <string name="reader_try_again">Thử lại</string>
     <string name="reader_close">Đóng</string>
-    <string name="reader_end_read">Đã đọc</string>
-    <string name="reader_end_tracker">Đã đọc · đã cập nhật %1$s</string>
+    <string name="reader_end_read">Đã tính là đã đọc</string>
+    <string name="reader_end_tracker">Đã tính là đã đọc · đã cập nhật %1$s</string>
     <string name="reader_end_next">Kế tiếp</string>
     <string name="reader_mode_rtl">Phải sang trái</string>
     <string name="reader_mode_ltr">Trái sang phải</string>
@@ -2325,6 +2327,8 @@
     <string name="action_continue_chapter">Tiếp tục chương %1$s · trang %2$d</string>
     <string name="action_continue_part">Tiếp tục phần %1$s · %2$d%%</string>
     <string name="action_continue_part_plain">Tiếp tục phần %1$s</string>
+    <string name="action_continue_chapter_percent">Tiếp tục chương %1$s · %2$d%%</string>
+    <string name="action_continue_chapter_plain">Tiếp tục chương %1$s</string>
     <string name="action_read_part">Đọc phần %1$s</string>
     <string name="action_read_again">Đọc lại</string>
     <string name="series_reading_from">Đang đọc từ</string>
@@ -2617,7 +2621,7 @@
     <string name="settings_follow_mode">Chế độ, hướng đọc và màu</string>
     <string name="settings_follow_mode_note">Bộ truyện bạn đổi sẽ đọc giống nhau trên các thiết bị khác</string>
     <string name="settings_follow_footer">Cỡ chữ, lề, vùng chạm và làm mới ở lại trên %1$s này.</string>
-    <string name="settings_look_follows_note">Màu hoặc xám</string>
+    <string name="settings_look_follows_note">Trang màu hoặc xám cho e-ink</string>
     <string name="settings_new_chapters_reading">Bộ truyện trong Đang đọc</string>
     <string name="settings_new_chapters_note">Bộ truyện đang đọc cũng được giữ sẵn các chương sau</string>
     <string name="settings_progress_group">Tiến độ</string>

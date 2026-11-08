@@ -2,7 +2,8 @@ reader-page-loading = { $page }ページを読み込み中
 reader-page-failed = { $page }ページを読み込めませんでした
 reader-try-again = もう一度試す
 reader-close = 閉じる
-reader-end-read = 既読
+reader-end-read = 既読になりました
+reader-end-tracker = 既読になりました · { $trackers }を更新しました
 reader-end-next = 次の章
 reader-mode-rtl = 右から左
 reader-mode-ltr = 左から右
@@ -38,14 +39,11 @@ reader-end-caught-up = 最新話まで読みました
 reader-gap-none = なし
 reader-gap-small = 小
 reader-look-system = システム
-reader-end-tracker = 既読 · { $trackers }を更新しました
 reader-end-of-chapter-number = 第{ $chapter }話の終わり
 reader-end-facts = 第{ $chapter }話 · { $facts }
 reader-end-pages = { $count ->
    *[other] { $count }ページ
  }
 reader-end-from = { $source }から
-
 reader-chapter-line = 第{ $chapter }話
-
 reader-divider-facts-source = { $facts } · { $source }から

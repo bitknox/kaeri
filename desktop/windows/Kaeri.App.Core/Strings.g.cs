@@ -870,6 +870,9 @@ public static partial class T
     /// <summary>A chapter that failed. The reason follows as the next part.</summary>
     public static string ReadingDlFailed(string chapter) => Fill(Get("ReadingDlFailed"), ("chapter", chapter));
 
+    /// <summary>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</summary>
+    public static string ReadingDlOffline => Get("ReadingDlOffline");
+
     /// <summary>How much the chosen chapters will take, from their pages and the size of pages downloaded before.</summary>
     public static string ReadingEstimateSize(string size) => Fill(Get("ReadingEstimateSize"), ("size", size));
 
@@ -5712,6 +5715,12 @@ public static partial class T
 
     /// <summary>The main action for a light novel part, part read, when how far is not known.</summary>
     public static string ActionContinuePartPlain(string n) => Fill(Get("ActionContinuePartPlain"), ("n", n));
+
+    /// <summary>The main action for a light novel part the source calls a chapter, part read.</summary>
+    public static string ActionContinueChapterPercent(string n, long percent) => Fill(Get("ActionContinueChapterPercent"), ("n", n), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The main action for a light novel part the source calls a chapter, part read, when how far is not known.</summary>
+    public static string ActionContinueChapterPlain(string n) => Fill(Get("ActionContinueChapterPlain"), ("n", n));
 
     /// <summary>The main action for a light novel part not opened yet.</summary>
     public static string ActionReadPart(string n) => Fill(Get("ActionReadPart"), ("n", n));
@@ -11276,6 +11285,7 @@ public static partial class T
         ["ReadingDlQueued"] = "{count} queued",
         ["ReadingDlWaitsWifi"] = "waits for Wi-Fi",
         ["ReadingDlFailed"] = "Chapter {chapter} couldn't download",
+        ["ReadingDlOffline"] = "Offline",
         ["ReadingEstimateSize"] = "About {size}",
         ["ReadingEstimateWifi"] = "over Wi-Fi",
         ["ReadingEstimateMobile"] = "over mobile data",
@@ -12835,8 +12845,8 @@ public static partial class T
         ["ReaderPageFailed"] = "Couldn't load page {page}",
         ["ReaderTryAgain"] = "Try again",
         ["ReaderClose"] = "Close",
-        ["ReaderEndRead"] = "Read",
-        ["ReaderEndTracker"] = "Read · {trackers} updated",
+        ["ReaderEndRead"] = "Counted as read",
+        ["ReaderEndTracker"] = "Counted as read · {trackers} updated",
         ["ReaderEndNext"] = "Next",
         ["ReaderModeRtl"] = "Right to left",
         ["ReaderModeLtr"] = "Left to right",
@@ -12950,6 +12960,8 @@ public static partial class T
         ["ActionContinueChapter"] = "Continue chapter {n} · page {page}",
         ["ActionContinuePart"] = "Continue part {n} · {percent}%",
         ["ActionContinuePartPlain"] = "Continue part {n}",
+        ["ActionContinueChapterPercent"] = "Continue chapter {n} · {percent}%",
+        ["ActionContinueChapterPlain"] = "Continue chapter {n}",
         ["ActionReadPart"] = "Read part {n}",
         ["ActionContinueNamed"] = "Continue {label} · {percent}%",
         ["ActionContinueNamedPlain"] = "Continue {label}",
@@ -13229,7 +13241,7 @@ public static partial class T
         ["SettingsFollowMode"] = "Mode, direction and colour",
         ["SettingsFollowModeNote"] = "A series you change reads the same on your other devices",
         ["SettingsFollowFooter"] = "Text size, margins, tap zones and refresh stay on this {device}.",
-        ["SettingsLookFollowsNote"] = "Colour or greys",
+        ["SettingsLookFollowsNote"] = "Colour pages or greys for e-ink",
         ["SettingsNewChaptersReading"] = "Series on Reading",
         ["SettingsNewChaptersNote"] = "A series being read also keeps its next chapters ready",
         ["SettingsProgressGroup"] = "Progress",

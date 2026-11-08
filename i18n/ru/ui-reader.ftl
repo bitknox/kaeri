@@ -2,7 +2,8 @@ reader-page-loading = Загрузка страницы { $page }
 reader-page-failed = Не удалось загрузить страницу { $page }
 reader-try-again = Повторить
 reader-close = Закрыть
-reader-end-read = Прочитано
+reader-end-read = Засчитано как прочитанная
+reader-end-tracker = Засчитано как прочитанная · обновлено: { $trackers }
 reader-end-next = Следующая
 reader-mode-rtl = Справа налево
 reader-mode-ltr = Слева направо
@@ -41,7 +42,6 @@ reader-end-caught-up = Вы всё прочитали
 reader-gap-none = Нет
 reader-gap-small = Малый
 reader-look-system = Как в системе
-reader-end-tracker = Прочитано · обновлено: { $trackers }
 reader-end-of-chapter-number = Конец главы { $chapter }
 reader-end-facts = Глава { $chapter } · { $facts }
 reader-end-pages = { $count ->
@@ -51,7 +51,5 @@ reader-end-pages = { $count ->
    *[other] { $count } страницы
  }
 reader-end-from = Из { $source }
-
 reader-chapter-line = Глава { $chapter }
-
 reader-divider-facts-source = { $facts } · из { $source }

@@ -6,6 +6,10 @@
 package app.kaeri.eink
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.clickable
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -73,6 +77,7 @@ import app.kaeri.reader.TapZones
 import app.kaeri.reader.readerKeys
 import app.kaeri.reader.rememberPagedReaderState
 import app.kaeri.reader.rightToLeft
+import app.kaeri.reader.phone.endReadLine
 import app.kaeri.reader.text
 import app.kaeri.store.text
 import androidx.compose.ui.draw.alpha
@@ -146,6 +151,10 @@ fun EinkReader(
             ReaderAction.BACK -> pager.back(TurnHow.KEY)
             ReaderAction.CONTROLS -> toggleChrome()
             ReaderAction.CLEAN -> paint(EinkPaint.Clean)
+            ReaderAction.FIRST -> pager.go(0, TurnHow.JUMP)
+            ReaderAction.LAST -> pager.go(state.leaves.indexOfLast { !it.endPage }.coerceAtLeast(0), TurnHow.JUMP)
+            ReaderAction.ESCAPE -> if (chrome) toggleChrome() else actions.onBack()
+            ReaderAction.GO_TO -> if (!chrome) toggleChrome()
         }
     }
 
@@ -165,7 +174,7 @@ fun EinkReader(
     ) {
         val failure = state.failure
         when {
-            failure != null && state.leaves.isEmpty() -> EinkChapterFailed(failure, onRetry = { session.retry(null) }, onBack = actions.onBack)
+            failure != null && state.leaves.isEmpty() -> EinkChapterFailed(failure, state, session, onRetry = { session.retry(null) }, onBack = actions.onBack)
             state.leaves.isEmpty() -> EinkWaiting(view?.chapter?.let(::chapterNumber))
             else -> PagedReader(
                 state = state,
@@ -450,10 +459,40 @@ fun BoxScope.EinkPageFailed(page: Int, failure: ReadingFailure, retry: () -> Uni
     }
 }
 
-/** The chapter itself could not open. */
+/**
+ * The chapter itself could not open. When another source has the chapter, Choose source is the
+ * solid button and Try again the outlined one, and Back is the system's; otherwise Try again and
+ * Back to the series. The sources are a plain list in place of the screen, closed by Back.
+ */
 @Composable
-fun BoxScope.EinkChapterFailed(failure: ReadingFailure, onRetry: () -> Unit, onBack: () -> Unit) {
+fun BoxScope.EinkChapterFailed(failure: ReadingFailure, state: ReaderState, session: ReaderSession, onRetry: () -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
+    LaunchedEffect(Unit) { session.loadSources() }
+    val sources = state.sources.orEmpty()
+    var choosing by remember { mutableStateOf(false) }
+    BackHandler(enabled = choosing) { choosing = false }
+    if (choosing && sources.isNotEmpty()) {
+        Column(Modifier.fillMaxSize().background(EinkColours.Paper).padding(horizontal = 44.dp, vertical = 92.dp)) {
+            Text(Strings.readerSourcesTitle(context), style = EinkType.Secondary)
+            Spacer(Modifier.height(14.dp))
+            sources.forEach { version ->
+                Box(Modifier.fillMaxWidth().height(EinkSizes.Rule).background(EinkColours.Ink))
+                Text(
+                    version.edition.sourceName,
+                    style = EinkType.RowTitle,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 64.dp)
+                        .clickable(role = Role.Button) {
+                            choosing = false
+                            session.chooseSource(version)
+                        }
+                        .wrapContentHeight(Alignment.CenterVertically),
+                )
+            }
+        }
+        return
+    }
     Column(
         Modifier.align(Alignment.Center).widthIn(max = 480.dp).padding(44.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -461,8 +500,13 @@ fun BoxScope.EinkChapterFailed(failure: ReadingFailure, onRetry: () -> Unit, onB
     ) {
         BrokenPageGlyph(EinkColours.Ink, Modifier.size(52.dp))
         Text(failure.text(context), style = EinkType.Body, textAlign = TextAlign.Center)
-        EinkSolidButton(Strings.readerTryAgain(context), onRetry, Modifier.fillMaxWidth())
-        EinkOutlinedButton(Strings.einkBackToSeries(context), onBack, Modifier.fillMaxWidth())
+        if (sources.isNotEmpty()) {
+            EinkSolidButton(Strings.readerFailedChoose(context), { choosing = true }, Modifier.fillMaxWidth())
+            EinkOutlinedButton(Strings.readerTryAgain(context), onRetry, Modifier.fillMaxWidth())
+        } else {
+            EinkSolidButton(Strings.readerTryAgain(context), onRetry, Modifier.fillMaxWidth())
+            EinkOutlinedButton(Strings.readerEndSeries(context), onBack, Modifier.fillMaxWidth())
+        }
     }
 }
 
@@ -499,7 +543,7 @@ fun EinkEndPage(
             Spacer(Modifier.height(8.dp))
             // With a server line coming the counted line's place is kept, so nothing under it moves.
             Text(
-                Strings.einkCountedRead(context),
+                endReadLine(context, state, view.chapter.id),
                 style = EinkType.Secondary,
                 modifier = if (read) Modifier else Modifier.alpha(0f).clearAndSetSemantics {},
             )
@@ -523,7 +567,7 @@ fun EinkEndPage(
             EinkSolidButton(Strings.einkContinueTo(context, nextNumber), { onContinue(next) }, Modifier.fillMaxWidth().focusRequester(first).focusProperties { this.next = second })
             Spacer(Modifier.height(14.dp))
             EinkOutlinedButton(
-                Strings.einkBackToSeries(context),
+                Strings.readerEndSeries(context),
                 actions.onSeries,
                 Modifier.fillMaxWidth().focusRequester(second).focusProperties {
                     previous = first
@@ -549,9 +593,9 @@ fun EinkEndPage(
             if (why == NoNext.OFFLINE) {
                 EinkSolidButton(Strings.einkOpenDownloads(context), actions.onDownloads, Modifier.fillMaxWidth())
                 Spacer(Modifier.height(14.dp))
-                EinkOutlinedButton(Strings.einkBackToSeries(context), actions.onSeries, Modifier.fillMaxWidth())
+                EinkOutlinedButton(Strings.readerEndSeries(context), actions.onSeries, Modifier.fillMaxWidth())
             } else {
-                EinkSolidButton(Strings.einkBackToSeries(context), actions.onSeries, Modifier.fillMaxWidth())
+                EinkSolidButton(Strings.readerEndSeries(context), actions.onSeries, Modifier.fillMaxWidth())
             }
         }
     }

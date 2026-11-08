@@ -1172,6 +1172,9 @@ public enum L {
         Self.format("reading-dl-failed", fallback: "Chapter %1$@ couldn't download", chapter)
     }
 
+    /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
+    public static var readingDlOffline: String { string("reading-dl-offline", fallback: "Offline") }
+
     /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
     public static func readingEstimateSize(size: String) -> String {
         Self.format("reading-estimate-size", fallback: "About %1$@", size)
@@ -8017,11 +8020,11 @@ public enum L {
     public static var readerClose: String { string("reader-close", fallback: "Close") }
 
     /// Under the top line of the page between chapters, once the chapter counts as read.
-    public static var readerEndRead: String { string("reader-end-read", fallback: "Read") }
+    public static var readerEndRead: String { string("reader-end-read", fallback: "Counted as read") }
 
     /// Under the end of chapter line, naming the trackers the read went to.
     public static func readerEndTracker(trackers: String) -> String {
-        Self.format("reader-end-tracker", fallback: "Read · %1$@ updated", trackers)
+        Self.format("reader-end-tracker", fallback: "Counted as read · %1$@ updated", trackers)
     }
 
     /// Small heading above the next chapter on the page between chapters.
@@ -8402,6 +8405,16 @@ public enum L {
     /// The main action for a light novel part, part read, when how far is not known.
     public static func actionContinuePartPlain(n: String) -> String {
         Self.format("action-continue-part-plain", fallback: "Continue part %1$@", n)
+    }
+
+    /// The main action for a light novel part the source calls a chapter, part read.
+    public static func actionContinueChapterPercent(n: String, percent: Int) -> String {
+        Self.format("action-continue-chapter-percent", fallback: "Continue chapter %1$@ · %2$lld%%", n, percent)
+    }
+
+    /// The main action for a light novel part the source calls a chapter, part read, when how far is not known.
+    public static func actionContinueChapterPlain(n: String) -> String {
+        Self.format("action-continue-chapter-plain", fallback: "Continue chapter %1$@", n)
     }
 
     /// The main action for a light novel part not opened yet.
@@ -9330,7 +9343,7 @@ public enum L {
     }
 
     /// Line under Look in Series settings that follow you.
-    public static var settingsLookFollowsNote: String { string("settings-look-follows-note", fallback: "Colour or greys") }
+    public static var settingsLookFollowsNote: String { string("settings-look-follows-note", fallback: "Colour pages or greys for e-ink") }
 
     /// Value of New chapters in Downloads: the series on the Reading list.
     public static var settingsNewChaptersReading: String { string("settings-new-chapters-reading", fallback: "Series on Reading") }

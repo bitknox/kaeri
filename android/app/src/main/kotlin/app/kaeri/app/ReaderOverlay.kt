@@ -287,6 +287,9 @@ private fun OpenReader(
                 )
             }
         } else {
+            // Opened by work alone (a notification, a widget, a link), the reader looks the cover up.
+            val series by store.reading.series.collectAsState()
+            LaunchedEffect(request.work) { if (request.cover == null) store.reading.loadSeriesInfo(request.work) }
             PhoneReader(
                 session = session,
                 state = state,
@@ -303,7 +306,7 @@ private fun OpenReader(
                         onControls = onControls,
                     )
                 },
-                cover = request.cover?.let { url ->
+                cover = (request.cover ?: series[request.work]?.cover)?.let { url ->
                     { modifier -> ArtworkImage(url, plate = null, maxPixelSize = 1200, modifier = modifier) }
                 },
                 settingsAsked = settingsAsked,

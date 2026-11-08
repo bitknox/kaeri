@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -217,7 +218,8 @@ private fun UpdateRowView(row: UpdateRow, actions: AppActions) {
                     .readerZoomSource(key)
                     .clickable(onClickLabel = Strings.chapterUpdatesOpenSeries(context, tile.title), role = Role.Button) {
                         navigator.openSeries(tile.work, "updates")
-                    },
+                    }
+                    .semantics { contentDescription = tile.title },
             )
             Row(
                 Modifier

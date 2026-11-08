@@ -31,8 +31,9 @@ fun ReadingFailure.msg(): ReadingMsg = when (this) {
     is ReadingFailure.SendTooLarge, is ReadingFailure.SendCheck -> readingFailureMsg(this)
 }
 
-/** This failure in the person's language. */
-fun ReadingFailure.text(context: Context): String = msg().text(context)
+/** This failure in the person's language. A reason that came with it is said alone, without "Something went wrong" first. */
+fun ReadingFailure.text(context: Context): String =
+    if (this is ReadingFailure.Other && reason.isNotBlank()) reason else msg().text(context)
 
 /** The source a failure names, for the page-failed line, or null when it names none. */
 val ReadingFailure.source: String?

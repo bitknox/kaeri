@@ -143,6 +143,7 @@ reading-dl-more-queued = ほか{ $count }件が待機中
 reading-dl-queued = { $count }件が待機中
 reading-dl-waits-wifi = Wi-Fi待ち
 reading-dl-failed = 第{ $chapter }話をダウンロードできませんでした
+reading-dl-offline = オフライン
 reading-estimate-size = 約{ $size }
 reading-estimate-wifi = Wi-Fi経由
 reading-estimate-mobile = モバイルデータ経由
