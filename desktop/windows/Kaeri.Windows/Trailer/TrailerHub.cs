@@ -5,6 +5,9 @@ namespace Kaeri.Windows;
 /// <summary>
 /// What every trailer shares: the one WebView2 environment (private, so nothing a trailer sets is
 /// kept), whether the runtime is there, and the rule that one trailer plays by itself at a time.
+/// The private web views share one in-memory session, which lasts while any of them is open: the
+/// pool's kept pages hold it for the run, so YouTube's player and what it fetched stay cached
+/// between trailers, and none of it reaches the disk.
 /// </summary>
 static class TrailerHub
 {
@@ -74,8 +77,11 @@ static class TrailerHub
     /// <summary>Every trailer is let go of: the window lost focus, an episode starts, a sheet opens.</summary>
     public static void StopAll()
     {
+        // The card first: its trailer goes back at once as the card closes over it.
+        HoverPreview.Close();
         foreach (var stage in playing.ToList())
             stage.Stop();
-        HoverPreview.Close();
+        HoverTrailer.StopAll();
+        TrailerPool.EndPrime();
     }
 }

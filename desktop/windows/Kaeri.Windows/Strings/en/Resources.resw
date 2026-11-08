@@ -1967,6 +1967,50 @@
     <value>{first} +{more}</value>
     <comment>Search: a filter drop-down with three or more values picked: the first, then how many more.</comment>
   </data>
+  <data name="SearchGenreLeftOut" xml:space="preserve">
+    <value>Not {genre}</value>
+    <comment>Search: a genre left out of the results, as the Genre drop-down and its chip say it.</comment>
+  </data>
+  <data name="SearchFiltersButtonSet" xml:space="preserve">
+    <value>Filters, {count} set</value>
+    <comment>Search: the screen reader's name for the Filters button while some of the panel's filters are set.</comment>
+  </data>
+  <data name="ShortcutsSearchFilters" xml:space="preserve">
+    <value>Search filters</value>
+    <comment>Search: the shortcut list's line for opening and closing the filters panel.</comment>
+  </data>
+  <data name="FilterHintClick" xml:space="preserve">
+    <value>Click once to include, twice to leave out.</value>
+    <comment>Search filters panel: how a genre or tag is picked with the pointer. A right-click offers each choice.</comment>
+  </data>
+  <data name="SearchPickInclude" xml:space="preserve">
+    <value>Include</value>
+    <comment>Search filters panel: context menu item that includes a genre or tag in the results.</comment>
+  </data>
+  <data name="SearchPickLeaveOut" xml:space="preserve">
+    <value>Leave out</value>
+    <comment>Search filters panel: context menu item that leaves a genre or tag out of the results.</comment>
+  </data>
+  <data name="SearchRangeFrom" xml:space="preserve">
+    <value>From</value>
+    <comment>Search filters panel: placeholder of the lower bound of a range, such as the first year.</comment>
+  </data>
+  <data name="SearchRangeTo" xml:space="preserve">
+    <value>To</value>
+    <comment>Search filters panel: placeholder of the upper bound of a range, such as the last year.</comment>
+  </data>
+  <data name="SearchMinutesUnit" xml:space="preserve">
+    <value>min</value>
+    <comment>Search filters panel: the unit after the episode length's bounds, in minutes.</comment>
+  </data>
+  <data name="SearchScoreAny" xml:space="preserve">
+    <value>Any</value>
+    <comment>Search filters panel: the score slider's value while no minimum is set.</comment>
+  </data>
+  <data name="SearchSuggestFilter" xml:space="preserve">
+    <value>Filter by {name}</value>
+    <comment>Title bar search box: a suggestion that adds a genre or tag as a filter, rather than searching for the words.</comment>
+  </data>
   <data name="TitleSeasonWhen" xml:space="preserve">
     <value>{season} · {when}</value>
     <comment>Title page: a season in the season picker with when it aired, such as "Season 2 · Spring 2025".</comment>

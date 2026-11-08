@@ -927,26 +927,44 @@ public class SearchTests
     [Fact]
     public void AFilterWithNothingTypedBrowses()
     {
-        var filters = SearchFilters.None with { Genres = ["Drama"], Formats = [MediaFormat.Movie], Year = 2019 };
+        var filters = Searches.Nothing.WithYear(2019) with { Genres = ["Drama"], Formats = [MediaFormat.Movie] };
         var query = Searches.With("", filters);
         Assert.Equal("", query.Text);
         Assert.Equal(["Drama"], query.Genres);
         Assert.Equal([MediaFormat.Movie], query.Formats);
         Assert.Equal(new Bounds(2019, 2019), query.Years);
-        Assert.True(filters.Narrows);
-        Assert.False(SearchFilters.None.Narrows);
-        Assert.True((SearchFilters.None with { Sort = SearchSort.Score }) is { Narrows: false, IsEmpty: false });
+        Assert.Equal(2019u, filters.SingleYear());
+        Assert.True(filters.Narrows());
+        Assert.False(Searches.Nothing.Narrows());
+        Assert.True(Searches.Nothing.IsEmpty());
+        var sorted = Searches.Nothing with { Sort = SearchSort.Score };
+        Assert.False(sorted.Narrows());
+        Assert.False(sorted.IsEmpty());
+    }
+
+    [Fact]
+    public void ABrowseOpenedKeepsItsFiltersAndLeavesItsWords()
+    {
+        var browse = new SearchQuery(Text: "lamp", Genres: ["Mecha"], MinScore: 70, Years: new Bounds(), Episodes: new Bounds(), Minutes: new Bounds());
+        var filters = Searches.FiltersOf(browse);
+        Assert.Equal("", filters.Text);
+        Assert.Equal(["Mecha"], filters.Genres);
+        Assert.Equal((byte)70, filters.MinScore);
+        // Every list is filled in, so the engine's own rules can be called on it.
+        Assert.Empty(filters.TagsExcluded);
+        Assert.True(filters.HasFilters());
+        Assert.Equal("lamp", Searches.With("lamp", filters).Text);
     }
 
     [Fact]
     public void AQueryIsTheSameQueryWhateverArraysCarryIt()
     {
-        var filters = SearchFilters.None with { Genres = ["Drama", "Mystery"] };
+        var filters = Searches.Nothing with { Genres = ["Drama", "Mystery"] };
         var a = Searches.With("lamp", filters);
         var b = Searches.With("lamp", filters with { Genres = ["Drama", "Mystery"] });
         Assert.NotEqual(a, b);
         Assert.True(Searches.Same(a, b));
-        Assert.False(Searches.Same(a, Searches.With("lamp", SearchFilters.None)));
+        Assert.False(Searches.Same(a, Searches.With("lamp", Searches.Nothing)));
         Assert.True(Searches.Same(Searches.Text("x"), new SearchQuery(Text: "x", Years: new Bounds(), Episodes: new Bounds(), Minutes: new Bounds())));
 
         var known = new Known();
@@ -958,18 +976,130 @@ public class SearchTests
     }
 
     [Fact]
-    public void GenresKeepTheListsOrderAndADropDownSaysWhatItHas()
+    public void AGenreClickedGoesInThenOutThenOffAndADropDownSaysWhatItHas()
     {
-        var order = Searches.Genres;
-        var filters = SearchFilters.None.Toggle("Mystery", order).Toggle("Action", order);
-        Assert.Equal(["Action", "Mystery"], filters.Genres);
-        Assert.Equal(["Mystery"], filters.Toggle("Action", order).Genres);
-        Assert.Equal([MediaFormat.Tv, MediaFormat.Movie], SearchFilters.None.Toggle(MediaFormat.Movie).Toggle(MediaFormat.Tv).Formats);
+        Assert.Equal(Pick.Include, Pick.Off.Next());
+        Assert.Equal(Pick.Exclude, Pick.Include.Next());
+        Assert.Equal(Pick.Off, Pick.Exclude.Next());
+        Assert.Equal(T.FilterIncluded, Pick.Include.Word());
+        Assert.Equal(T.FilterLeftOut, Pick.Exclude.Word());
+        Assert.Null(Pick.Off.Word());
+
+        var filters = Searches.Nothing.PickingGenre("Mystery", Pick.Include).PickingGenre("Action", Pick.Include);
+        Assert.Equal(["Mystery", "Action"], filters.Genres);
+        filters = filters.PickingGenre("Mystery", Pick.Include.Next());
+        Assert.Equal(["Action"], filters.Genres);
+        Assert.Equal(["Mystery"], filters.GenresExcluded);
+        Assert.Equal(["Action", "Not Mystery"], filters.GenreWords());
+        Assert.Equal([MediaFormat.Movie, MediaFormat.Tv], Searches.Nothing.TogglingFormat(MediaFormat.Movie).TogglingFormat(MediaFormat.Tv).Formats);
         Assert.Equal("Genre", SearchFilters.Say("Genre", []));
         Assert.Equal("Action, Mystery", SearchFilters.Say("Genre", ["Action", "Mystery"]));
         Assert.Equal("Action +2", SearchFilters.Say("Genre", ["Action", "Drama", "Mystery"]));
         Assert.Equal(2027u, Searches.Years(2026)[0]);
         Assert.Equal(1970u, Searches.Years(2026)[^1]);
+    }
+
+    [Fact]
+    public void EveryFilterSetIsAChipThatTakesItOff()
+    {
+        var filters = Searches.Nothing.InYears(new Bounds(2010, 2015)) with
+        {
+            Sort = SearchSort.Score,
+            Genres = ["Mecha"],
+            GenresExcluded = ["Romance"],
+            Tags = ["Trains"],
+            TagsExcluded = ["Gardening"],
+            MinTagRank = 80,
+            Formats = [MediaFormat.Tv, MediaFormat.Movie],
+            Statuses = [AiringStatus.Releasing],
+            Episodes = new Bounds(null, 12),
+            Minutes = new Bounds(20, 30),
+            MinScore = 70,
+            MinPopularity = SearchFilters.ObscureBelow,
+            Sources = [SourceMaterial.LightNovel],
+            Countries = ["KR"],
+            StreamingOn = ["Lantern Library"],
+            LicensedOnly = true,
+            OnList = OnList.Hide,
+            Available = Available.PlaysHere,
+        };
+        var chips = filters.Chips();
+        Assert.Equal(
+            [
+                "Mecha", "Not Romance", "Trains", "Not Gardening", "Tag rank 80% or higher", "2010 to 2015",
+                "TV, Movie", "Airing", "Up to 12 episodes", "20 to 30 min", "Score 70% or higher", "Hide obscure titles",
+                "Light novel", "South Korea", "On Lantern Library", "Licensed only", "Not on my list", "Plays here",
+            ],
+            chips.Select(c => c.Label));
+        // The panel's badge counts its own: each tag, the rank, length, score, obscure, origin, streaming, licence, list.
+        Assert.Equal(12u, filters.AdvancedCount());
+
+        // Each chip takes off its own filter and no other; all of them leave the sort.
+        var left = filters;
+        foreach (var (key, _) in chips)
+        {
+            var before = left.Chips().Length;
+            left = left.Without(key);
+            Assert.Equal(before - 1, left.Chips().Length);
+        }
+        Assert.False(left.Narrows());
+        Assert.Equal(SearchSort.Score, left.Sort);
+        Assert.False(filters.Cleared().Narrows());
+        Assert.Equal(SearchSort.Score, filters.Cleared().Sort);
+    }
+
+    [Fact]
+    public void AYearKeepsTheSeasonButARangeOfYearsDoesNot()
+    {
+        var spring = Searches.Nothing with { Season = Season.Spring };
+        Assert.Equal(Season.Spring, spring.WithYear(2024).Season);
+        Assert.Equal(Season.Spring, spring.WithYear(null).Season);
+        Assert.Equal(Season.Spring, spring.InYears(new Bounds(2024, 2024)).Season);
+        Assert.Null(spring.InYears(new Bounds(2020, 2024)).Season);
+        Assert.Null(spring.InYears(new Bounds(2020, null)).Season);
+        Assert.Equal("Since 2020", spring.InYears(new Bounds(2020, null)).Chips().Single().Label);
+    }
+
+    [Fact]
+    public void ThePanelsPresetsAndFieldsSayAndAskWhatTheEngineDoes()
+    {
+        Assert.Equal(["1 episode", "Up to 12 episodes", "13 to 26 episodes", "50 episodes or more"], SearchFilters.EpisodePresets.Select(SearchFilters.EpisodesWords));
+        Assert.Equal(["Up to 15 min", "20 to 30 min", "60 min or more"], SearchFilters.MinutePresets.Select(SearchFilters.MinutesWords));
+        Assert.Equal(new Bounds(null, 12), SearchFilters.Range(double.NaN, 12));
+        Assert.Equal(new Bounds(1990, null), SearchFilters.Range(1990.4, double.NaN));
+        Assert.Equal(Searches.Open, SearchFilters.Range(double.NaN, double.NaN));
+        Assert.Null(SearchFilters.Score(0));
+        Assert.Equal((byte)70, SearchFilters.Score(70));
+        Assert.Null(SearchFilters.TagRank(SearchFilters.DefaultTagRank));
+        Assert.Equal((byte)80, SearchFilters.TagRank(80));
+        Assert.Equal([T.MediaStatusAiring, T.MediaStatusAired], Searches.Statuses.Take(2).Select(Searches.StatusName));
+        Assert.Equal(T.MaterialOriginal, Searches.SourceName(Searches.Sources[0]));
+        Assert.Equal([T.CountryJapan, T.CountryChina, T.CountrySouthKorea, T.CountryTaiwan], Searches.Countries.Select(Searches.CountryName));
+    }
+
+    [Fact]
+    public void TagsAreFoundByNameAndTheBoxOffersGenresAndTagsAsFilters()
+    {
+        var facets = new SearchFacets(
+            Genres: ["Mecha", "Mystery", "Music"],
+            TagGroups:
+            [
+                new TagGroup("Setting-Scene", [new FacetTag("Trains", "Railways."), new FacetTag("Mountain Huts", "High up.")]),
+                new TagGroup("Theme-Drama", [new FacetTag("The Last Lantern", "A twist.", Spoiler: true)]),
+            ],
+            StreamingSites: ["Lantern Library"]);
+        Assert.Equal(["Trains"], SearchFilters.TagsFound(facets, "rain", spoilers: false).Select(t => t.Name));
+        Assert.Empty(SearchFilters.TagsFound(facets, "lantern", spoilers: false));
+        Assert.Equal(["The Last Lantern"], SearchFilters.TagsFound(facets, "lantern", spoilers: true).Select(t => t.Name));
+        Assert.Empty(SearchFilters.TagsFound(facets, "  ", spoilers: true));
+
+        Assert.Empty(SearchFilters.Suggestions(facets, Searches.Nothing, "m"));
+        Assert.Equal([(false, "Mecha")], SearchFilters.Suggestions(facets, Searches.Nothing, "mec"));
+        Assert.Equal([(true, "Mountain Huts")], SearchFilters.Suggestions(facets, Searches.Nothing, "mou"));
+        // What is already wanted is not offered again.
+        Assert.Empty(SearchFilters.Suggestions(facets, Searches.Nothing with { Genres = ["Mecha"] }, "mec"));
+        Assert.Empty(SearchFilters.Suggestions(facets, Searches.Nothing with { Tags = ["Mountain Huts"] }, "mou"));
+        Assert.Empty(SearchFilters.Suggestions(null, Searches.Nothing, "mec"));
     }
 }
 
@@ -1657,10 +1787,10 @@ public class LawfulLinesTests
     [Fact]
     public void TheAvailableFilterGoesToTheEngineAndNarrowsTheRow()
     {
-        var filters = SearchFilters.None with { Available = Available.PlaysHere };
-        Assert.True(filters.Narrows);
+        var filters = Searches.Nothing with { Available = Available.PlaysHere };
+        Assert.True(filters.Narrows());
         Assert.Equal(Available.PlaysHere, Searches.With("lantern", filters).Available);
-        Assert.False(Searches.Same(Searches.With("lantern", filters), Searches.With("lantern", SearchFilters.None)));
+        Assert.False(Searches.Same(Searches.With("lantern", filters), Searches.With("lantern", Searches.Nothing)));
     }
 
     [Fact]

@@ -1802,24 +1802,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         _ => T.LibraryStatusDropped,
     };
 
-    static string MaterialName(SourceMaterial source) => source switch
-    {
-        SourceMaterial.Original => T.MaterialOriginal,
-        SourceMaterial.Manga => T.MaterialManga,
-        SourceMaterial.LightNovel => T.MaterialLightNovel,
-        SourceMaterial.VisualNovel => T.MaterialVisualNovel,
-        SourceMaterial.VideoGame => T.MaterialVideoGame,
-        SourceMaterial.Novel => T.MaterialNovel,
-        SourceMaterial.Doujinshi => T.MaterialDoujinshi,
-        SourceMaterial.Anime => T.MaterialAnime,
-        SourceMaterial.WebNovel => T.MaterialWebNovel,
-        SourceMaterial.LiveAction => T.MaterialLiveAction,
-        SourceMaterial.Game => T.MaterialGame,
-        SourceMaterial.Comic => T.MaterialComic,
-        SourceMaterial.MultimediaProject => T.MaterialMultimedia,
-        SourceMaterial.PictureBook => T.MaterialPictureBook,
-        _ => T.RelationOther,
-    };
+    static string MaterialName(SourceMaterial source) => Searches.SourceName(source);
 
     /// <summary>A related title's line: "Sequel · TV". AniList's relation comes as its wire name, "SIDE_STORY".</summary>
     static string RelationLine(string relation, string? format)
