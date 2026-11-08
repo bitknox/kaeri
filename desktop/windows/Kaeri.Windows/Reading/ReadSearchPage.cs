@@ -30,6 +30,12 @@ public sealed partial class ReadSearchPage : Page
     /// <summary>A search another place asked before opening the page, such as a Home row's View all.</summary>
     internal static ReadSearchQuery? Opening { get; set; }
 
+    /// <summary>
+    /// The line a row's View all gives its results, "Manga started in the last 12 months", held
+    /// while the search asks what the row asked.
+    /// </summary>
+    internal static (ReadSearchQuery Query, Msg Line)? Titled { get; set; }
+
     static ReadFilters? filters;
     static ReadFilters Filters => filters ??= KaeriFfiMethods.ReadFilters();
 
@@ -892,6 +898,13 @@ public sealed partial class ReadSearchPage : Page
     static string BrowseLine(ReadSearchQuery q, uint? total)
     {
         var f = Filters;
+        if (Titled is { } titled)
+        {
+            if (ReadDiscovery.SameAsk(titled.Query, q, f.Sorts.FirstOrDefault()))
+                return total is { } count ? ReadingParts.Joined(titled.Line.Text(), T.ReadSearchTotal(count)) : T.ReadSearchBrowseLine(titled.Line.Text());
+            // Asked something else since: the row's line is gone for good.
+            Titled = null;
+        }
         var parts = Labels(ReadDiscovery.FoldedFormats(q.Formats), f.Formats).Concat(Labels(q.Origins, f.Origins)).ToList();
         if (q.Status is { } s)
             parts.AddRange(Labels([s], f.Statuses));

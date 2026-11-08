@@ -164,6 +164,20 @@ public class ReadDiscoveryTests
         Assert.Equal("Japan · Releasing", ReadDiscovery.RowCaption(ReadRowKind.Finished, releasing));
         Assert.Equal("Manga · Releasing", ReadDiscovery.RowCaption(ReadRowKind.Trending, releasing with { Origin = null }));
         Assert.Equal("Not found in your sources", ReadDiscovery.RowCaption(ReadRowKind.Trending, tile with { NotInSources = true }));
+        // A New row says when the series started, in place of its status.
+        var started = tile with { Started = new Msg.Reading(new ReadingMsg.ReadingSinceMarch()) };
+        Assert.Equal("Japan · since March", ReadDiscovery.RowCaption(ReadRowKind.New, started));
+        Assert.Equal("Japan · Finished", ReadDiscovery.RowCaption(ReadRowKind.Trending, started));
+    }
+
+    [Fact]
+    public void AViewAllLineHoldsWhileTheSearchAsksWhatTheRowAsked()
+    {
+        var row = new ReadSearchQuery(Text: "", Medium: null, Formats: ["manga", "one-shot"], Origins: [], Status: null, Genres: [], ExcludeGenres: [], Sort: null, Started: "12-months", SourcesOnly: false);
+        Assert.True(ReadDiscovery.SameAsk(row, row with { Formats = ["manga"], Sort = "TRENDING_DESC" }, "TRENDING_DESC"));
+        Assert.False(ReadDiscovery.SameAsk(row, row with { Genres = ["Fantasy"] }, "TRENDING_DESC"));
+        Assert.False(ReadDiscovery.SameAsk(row, row with { Text = "ferry" }, "TRENDING_DESC"));
+        Assert.False(ReadDiscovery.SameAsk(row, row with { Started = "any" }, "TRENDING_DESC"));
     }
 
     [Fact]

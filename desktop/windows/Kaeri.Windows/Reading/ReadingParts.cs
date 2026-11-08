@@ -503,10 +503,11 @@ static class ReadingParts
     /// Reading's Search on <paramref name="query"/>, a row's View all: its filters and sort set, and
     /// its first results the row's titles in the same order.
     /// </summary>
-    public static void OpenSearch(Ctx ctx, ReadSearchQuery query)
+    public static void OpenSearch(Ctx ctx, ReadSearchQuery query, Msg? line = null)
     {
         ctx.Known.Reading.RunSearch(query);
         ReadSearchPage.Opening = query;
+        ReadSearchPage.Titled = line is null ? null : (query, line);
         ctx.Window.OpenReadSearch(query.Text);
     }
 

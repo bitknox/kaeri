@@ -43,6 +43,8 @@ public static class ReadDiscovery
         var second = kind switch
         {
             ReadRowKind.Finished => Count(tile) ?? Status(tile),
+            // "Japan · since March": the engine gives the month on New rows only.
+            ReadRowKind.New => tile.Started?.Text() ?? Status(tile),
             _ => Status(tile),
         };
         return Two(lead, second) ?? "";
@@ -212,4 +214,18 @@ public static class ReadDiscovery
 
     /// <summary>Whether a query sets the Started filter.</summary>
     public static bool StartedSet(ReadSearchQuery query) => query.Started is { Length: > 0 } s && s != "any";
+
+    /// <summary>
+    /// Whether two queries ask AniList the same thing, so a View all's line holds over its results
+    /// until a filter, the sort or the words change. One-shots fold into Manga, and an unset sort
+    /// or "any" start count as the defaults.
+    /// </summary>
+    public static bool SameAsk(ReadSearchQuery a, ReadSearchQuery b, string? defaultSort) => Key(a, defaultSort) == Key(b, defaultSort);
+
+    static string Key(ReadSearchQuery q, string? defaultSort) => string.Join("\u001f",
+        q.Text.Trim(),
+        Set(FoldedFormats(q.Formats)), Set(q.Origins), q.Status ?? "", Set(q.Genres), Set(q.ExcludeGenres),
+        StartedSet(q) ? q.Started : "", q.Sort ?? defaultSort ?? "", q.SourcesOnly);
+
+    static string Set(IEnumerable<string>? keys) => string.Join(",", (keys ?? []).Order(StringComparer.Ordinal));
 }

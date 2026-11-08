@@ -825,7 +825,7 @@ sealed partial class ReadHomeRowView : Grid
                 return;
             // Back comes to this View all again, the way it was reached.
             ReadHomePage.Returning = (this.row.Id, viewAll.FocusState == FocusState.Unfocused ? FocusState.Programmatic : viewAll.FocusState);
-            ReadingParts.OpenSearch(ctx, query);
+            ReadingParts.OpenSearch(ctx, query, this.row.ViewAllTitle);
         };
         Grid.SetColumn(viewAll, 1);
         head.Children.Add(viewAll);
