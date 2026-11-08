@@ -206,6 +206,7 @@ struct ReadGrid: View {
     var twoLines = false
     /// The silk line under a cover's facts, such as the source a Search result is in.
     var note: (WorkTile) -> String? = { _ in nil }
+    var caption = ReadCaption.plain
     @State private var width: CGFloat = 0
 
     var body: some View {
@@ -216,7 +217,7 @@ struct ReadGrid: View {
             spacing: Device.isMac ? 24 : 20
         ) {
             ForEach(tiles, id: \.work) { tile in
-                ReadTileCard(tile: tile, width: cell, twoLines: twoLines, note: note(tile), planAction: twoLines)
+                ReadTileCard(tile: tile, width: cell, twoLines: twoLines, note: note(tile), planAction: twoLines, caption: caption)
                     .contextMenu { ReadTileMenu(tile: tile) }
             }
         }

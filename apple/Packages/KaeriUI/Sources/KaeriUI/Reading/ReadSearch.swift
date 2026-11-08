@@ -129,8 +129,6 @@ struct ReadSearchScreen: View {
                 store.reading.runSearch(search.query)
             }
         }
-        // The word beside each source's name says what kind it is.
-        .task { if store.bookSources.view == nil { store.bookSources.load() } }
         // Shots: the sources' part in the board's states, `sources-<state>`.
         .task {
             guard let sheet = navigator.launchSheet, sheet.hasPrefix("sources-") else { return } // i18n-skip
@@ -228,7 +226,7 @@ private struct ReadSearchBody: View {
                 Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total))
                     .font(.plat(mac: 12, touch: 13))
                     .foregroundStyle(.haze)
-                ReadGrid(tiles: search.tiles, twoLines: true)
+                ReadGrid(tiles: search.tiles, twoLines: true, caption: .formatOrigin)
                 ReadSearchMore()
             }
         }
@@ -378,15 +376,14 @@ private struct ReadWordsResults: View {
             }
         } else {
             VStack(alignment: .leading, spacing: 12) {
-                if let total = search.total {
-                    Text(L.readSearchTotal(n: Int(total)))
-                        .font(.plat(mac: 12, touch: 13))
-                        .foregroundStyle(.haze)
-                }
+                // AniList's count only once it is exact; until then the line has no number.
+                Text(search.total.map { L.readSearchTotal(n: Int($0)) } ?? L.readSearchTotalUnknown)
+                    .font(.plat(mac: 12, touch: 13))
+                    .foregroundStyle(.haze)
                 // With sources, the first page stands above them and the rest waits under More
                 // from AniList; without, the results run on as browsing's do.
                 let shown = sources ? Array(search.tiles.prefix(max(search.firstPage, 1))) : search.tiles
-                ReadGrid(tiles: shown, twoLines: true) { tile in joinedLine(tile.work, in: search) }
+                ReadGrid(tiles: shown, twoLines: true, note: { tile in joinedLine(tile.work, in: search) }, caption: .formatOrigin)
                 if !sources { ReadSearchMore() }
             }
         }
@@ -429,15 +426,14 @@ private struct ReadWordsResults: View {
                         .buttonStyle(.plain)
                         .pointerHover()
                     }
-                    if let total = search.total {
-                        Text(L.readSearchShown(shown: moreShown ? search.tiles.count : first, total: Int(total)))
-                            .font(.plat(mac: 12, touch: 13))
-                            .foregroundStyle(.haze)
-                            .contentTransition(.numericText())
-                    }
+                    let shown = moreShown ? search.tiles.count : first
+                    Text(search.total.map { L.readSearchShown(shown: shown, total: Int($0)) } ?? L.readSearchShownSome(shown: shown))
+                        .font(.plat(mac: 12, touch: 13))
+                        .foregroundStyle(.haze)
+                        .contentTransition(.numericText())
                 }
                 if moreShown {
-                    ReadGrid(tiles: rest, twoLines: true) { tile in joinedLine(tile.work, in: search) }
+                    ReadGrid(tiles: rest, twoLines: true, note: { tile in joinedLine(tile.work, in: search) }, caption: .formatOrigin)
                         .transition(.opacity)
                     ReadSearchMore()
                 }
@@ -561,8 +557,9 @@ private struct ReadSourceRow: View {
         }
     }
 
+    /// Server, Folder or Plugin beside the name; the demo shows its name alone.
     private var kind: String? {
-        switch store.bookSources.kind(of: group.sourceId) {
+        switch group.kind {
         case .server: L.readSearchSourceKindServer
         case .folder: L.readSearchSourceKindFolder
         case .plugin: L.readSearchSourceKindPlugin
@@ -580,7 +577,7 @@ private struct ReadSourceRow: View {
         case .hits, .asking, .nothing:
             HomeShelf(spacing: layout.cardGap) {
                 ForEach(group.tiles, id: \.work) { tile in
-                    ReadTileCard(tile: tile, twoLines: true, planAction: true)
+                    ReadTileCard(tile: tile, twoLines: true, planAction: true, caption: .amount)
                         .contextMenu { ReadTileMenu(tile: tile) }
                 }
             }

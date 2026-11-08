@@ -130,7 +130,7 @@ struct ReadHomeRowView: View {
             ReadWaitSlot(waiting: waiting) {
                 HomeShelf(spacing: layout.cardGap) {
                     ForEach(row.tiles, id: \.work) { tile in
-                        ReadTileCard(tile: tile, twoLines: true, planAction: true)
+                        ReadTileCard(tile: tile, twoLines: true, planAction: true, caption: row.format == nil ? .formatOrigin : .formatRow)
                             .contextMenu { ReadTileMenu(tile: tile) }
                             .transition(.opacity)
                     }
@@ -172,7 +172,7 @@ struct ReadViewAllPage: View {
                     Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total))
                         .font(.ui(13))
                         .foregroundStyle(.haze)
-                    ReadGrid(tiles: search.tiles, twoLines: true)
+                    ReadGrid(tiles: search.tiles, twoLines: true, caption: .formatOrigin)
                     if search.hasMore {
                         HStack { if search.loading { ProgressView().controlSize(.small) } }
                             .frame(maxWidth: .infinity, minHeight: 32)

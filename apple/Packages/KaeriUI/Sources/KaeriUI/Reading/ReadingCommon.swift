@@ -91,20 +91,46 @@ struct WaterDot: View {
 
 // MARK: - Words
 
+/// What the line under a cover says, by where the cover is.
+enum ReadCaption {
+    /// What comes next, else the facts: the person's own shelves and the library.
+    case plain
+    /// A Home row of one format: the origin, then the status.
+    case formatRow
+    /// A Home row of several formats, and AniList's results in Search: the format, then the origin.
+    case formatOrigin
+    /// A source's hit in Search: how much the source has, or nothing where it doesn't say.
+    case amount
+}
+
 enum ReadWords {
-    /// The line under a cover: what comes next, else its facts joined.
-    static func line(_ tile: WorkTile) -> String {
-        if tile.notInSources { return L.homeNotFound }
-        if let next = tile.next { return next.text }
-        if let label = tile.formatLabel, tile.facts.isEmpty { return label }
-        return tile.facts.map(\.text).joined(separator: " · ") // i18n-skip
+    /// The line under a cover: what comes next, else its facts joined. Nil where there is none.
+    static func line(_ tile: WorkTile, _ caption: ReadCaption = .plain) -> String? {
+        parts(tile, caption).map { $0.joined(separator: " · ") } // i18n-skip
     }
 
-    /// The line as a screen reader hears it after the title: the facts as a list, or the line.
-    static func spoken(_ tile: WorkTile) -> String {
-        if tile.notInSources { return L.homeNotFound }
-        if tile.next == nil, !tile.facts.isEmpty { return tile.facts.map(\.text).joined(separator: ", ") } // i18n-skip
-        return line(tile)
+    /// The line as a screen reader hears it after the title, as a list.
+    static func spoken(_ tile: WorkTile, _ caption: ReadCaption = .plain) -> String? {
+        parts(tile, caption).map { $0.joined(separator: ", ") } // i18n-skip
+    }
+
+    private static func parts(_ tile: WorkTile, _ caption: ReadCaption) -> [String]? {
+        if tile.notInSources { return [L.homeNotFound] }
+        if let next = tile.next { return [next.text] }
+        let facts = tile.facts.map(\.text)
+        switch caption {
+        case .amount:
+            return tile.amount.map { [$0.text] }
+        case .formatRow:
+            // The facts lead with the format word, which the row's heading already says.
+            if let origin = tile.origin?.text { return [origin] + facts.dropFirst().prefix(1) }
+        case .formatOrigin:
+            if let origin = tile.origin?.text { return facts.prefix(1) + [origin] }
+        case .plain:
+            break
+        }
+        if let label = tile.formatLabel, facts.isEmpty { return [label] }
+        return facts.isEmpty ? nil : facts
     }
 
     static func list(_ segment: LibrarySegmentRead) -> String {
@@ -241,6 +267,8 @@ struct ReadTileCard: View {
     var note: String?
     /// Add to Planning as a screen reader's action, for a series not on a list yet.
     var planAction = false
+    /// What the line under the cover says.
+    var caption = ReadCaption.plain
     /// Narrower than this, as a phone's grid cells are, the line may wrap once.
     static let narrow: CGFloat = 130
 
@@ -268,18 +296,20 @@ struct ReadTileCard: View {
                     .lineLimit(twoLines ? 2 : 1, reservesSpace: twoLines)
                     .fixedSize(horizontal: false, vertical: twoLines)
                     .padding(.top, track ? 6 : 8)
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    if tile.newChapter { WaterDot() }
-                    // A phone's grid cell is narrow: its line takes a second line, not an ellipsis,
-                    // and so does Not found in your sources anywhere.
-                    Text(ReadWords.line(tile))
-                        .lineLimit(width < Self.narrow || tile.notInSources ? 2 : 1)
-                        .fixedSize(horizontal: false, vertical: true)
+                if let line = ReadWords.line(tile, caption) {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        if tile.newChapter { WaterDot() }
+                        // A phone's grid cell is narrow: its line takes a second line, not an
+                        // ellipsis, and so does Not found in your sources anywhere.
+                        Text(line)
+                            .lineLimit(width < Self.narrow || tile.notInSources ? 2 : 1)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .font(.ui(layout.posterLine.size))
+                    .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)
+                    .foregroundStyle(tile.newChapter ? .silk : .haze)
+                    .padding(.top, 2)
                 }
-                .font(.ui(layout.posterLine.size))
-                .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)
-                .foregroundStyle(tile.newChapter ? .silk : .haze)
-                .padding(.top, 2)
                 if let note {
                     Text(note)
                         .font(.ui(layout.posterLine.size, weight: .semibold))
@@ -300,7 +330,7 @@ struct ReadTileCard: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(tile.title))
         // The source a joined result is in comes last.
-        .accessibilityValue(Text([ReadWords.spoken(tile), note].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
+        .accessibilityValue(Text([ReadWords.spoken(tile, caption), note].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
         .accessibilityAddTraits(.isButton)
         .accessibilityActions {
             if planAction {

@@ -499,22 +499,6 @@ public final class BookSourcesModel {
         return view.folders.isEmpty && view.servers.isEmpty && view.plugins.isEmpty
     }
 
-    /// What kind of source an id is, for the word beside its name in Search: the folders (one
-    /// source, `folders`, however many there are), a server or a plugin. Nil for the demo.
-    public func kind(of id: String) -> BookSourceKind? {
-        if id == "folders" { return .folder } // i18n-skip: the folders' source id
-        if let view {
-            if view.folders.contains(where: { $0.id == id }) { return .folder }
-            if view.servers.contains(where: { $0.id == id }) { return .server }
-            if view.plugins.contains(where: { $0.id == id }) { return .plugin }
-        }
-        #if FIXTURES
-        return SourceSearchShots.kinds[id]
-        #else
-        return nil
-        #endif
-    }
-
     public func load() { send?(.bookSources(.load)) }
     public func addFolder(_ folder: FolderRef) { send?(.bookSources(.addFolder(folder: folder))) }
     public func removeFolder(_ id: String) { send?(.bookSources(.removeFolder(id: id))) }
