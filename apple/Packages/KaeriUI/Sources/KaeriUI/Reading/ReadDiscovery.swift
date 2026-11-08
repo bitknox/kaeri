@@ -79,29 +79,33 @@ struct ReadCoverRowPlaceholder: View {
 
     var body: some View {
         let width = width ?? layout.poster.width
-        HStack(alignment: .top, spacing: spacing ?? layout.cardGap) {
-            ForEach(0..<count, id: \.self) { _ in
-                VStack(alignment: .leading, spacing: 0) {
-                    RoundedRectangle(cornerRadius: ArtShape.coverRadius(width: width))
-                        .fill(.raised)
-                        .frame(width: width, height: (width * 3 / 2).rounded())
-                    Text("Lantern Street Notes") // i18n-skip
-                        .font(.showTitle(size: layout.posterTitle.size, relativeTo: .body))
-                        .fixedLineHeight(layout.posterTitle.line)
-                        .lineLimit(2, reservesSpace: true)
-                        .padding(.top, 8)
-                    Text("Japan · Releasing") // i18n-skip
-                        .font(.ui(layout.posterLine.size))
-                        .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)
-                        .lineLimit(1)
-                        .padding(.top, 2)
+        // Held in a scroll view that doesn't scroll, so a row longer than the column is cut at
+        // its edge instead of widening the page.
+        ScrollView(.horizontal) {
+            HStack(alignment: .top, spacing: spacing ?? layout.cardGap) {
+                ForEach(0..<count, id: \.self) { _ in
+                    VStack(alignment: .leading, spacing: 0) {
+                        RoundedRectangle(cornerRadius: ArtShape.coverRadius(width: width))
+                            .fill(.raised)
+                            .frame(width: width, height: (width * 3 / 2).rounded())
+                        Text("Lantern Street Notes") // i18n-skip
+                            .font(.showTitle(size: layout.posterTitle.size, relativeTo: .body))
+                            .fixedLineHeight(layout.posterTitle.line)
+                            .lineLimit(2, reservesSpace: true)
+                            .padding(.top, 8)
+                        Text("Japan · Releasing") // i18n-skip
+                            .font(.ui(layout.posterLine.size))
+                            .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)
+                            .lineLimit(1)
+                            .padding(.top, 2)
+                    }
+                    .frame(width: width, alignment: .leading)
                 }
-                .frame(width: width, alignment: .leading)
             }
         }
+        .scrollDisabled(true)
+        .scrollIndicators(.never)
         .foregroundStyle(.haze)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .clipped()
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
 }
@@ -125,19 +129,69 @@ struct ReadHomeRowView: View {
                 spoken: waiting ? L.readHomeRowLoading(row: title) : nil
             ) {
                 guard let query = row.viewAll else { return }
-                navigator.openReadViewAll(query, title: title, wide: layout.wide, store: store)
+                navigator.openReadViewAll(query, title: title, line: row.viewAllTitle?.text, wide: layout.wide, store: store)
             }
             ReadWaitSlot(waiting: waiting) {
                 HomeShelf(spacing: layout.cardGap) {
                     ForEach(row.tiles, id: \.work) { tile in
                         ReadTileCard(tile: tile, twoLines: true, planAction: true, caption: row.format == nil ? .formatOrigin : .formatRow)
-                            .contextMenu { ReadTileMenu(tile: tile) }
+                            .contextMenu { ReadTileMenu(tile: tile, kind: .plan) }
                             .transition(.opacity)
                     }
                 }
                 .animation(.standard, value: row.tiles.map(\.work))
             } placeholder: {
                 ReadCoverRowPlaceholder()
+            }
+        }
+    }
+}
+
+// MARK: - The largest text
+
+/// A cover as a row, for a grid at the largest text sizes: the small cover, then the title and
+/// its lines at full width, wrapping as far as they need.
+struct ReadTileListRow: View {
+    @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
+    let tile: WorkTile
+    var note: String?
+    var planAction = false
+    var caption = ReadCaption.plain
+
+    var body: some View {
+        let line = ReadWords.line(tile, caption)
+        Button {
+            navigator.openSeries(tile.work)
+        } label: {
+            HStack(alignment: .top, spacing: 12) {
+                BookCover(url: tile.cover, width: 56, radius: 4, title: tile.title)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(tile.title)
+                        .font(.showTitle(size: 17, relativeTo: .body))
+                        .foregroundStyle(.silk)
+                    if let line {
+                        Text(line).font(.ui(15)).foregroundStyle(.haze)
+                    }
+                    if let note {
+                        Text(note).font(.ui(15, weight: .semibold)).foregroundStyle(.silk)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.vertical, 10)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .pointerHover()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(tile.title))
+        .accessibilityValue(Text([ReadWords.spoken(tile, caption), note].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
+        .accessibilityAddTraits(.isButton)
+        .accessibilityActions {
+            if planAction {
+                Button(L.libraryAddPlanning) { store.reading.setStatus(tile.work, .planning) }
             }
         }
     }
@@ -169,7 +223,9 @@ struct ReadViewAllPage: View {
                 } else if search.tiles.isEmpty {
                     PlainEmpty(title: L.readSearchNothingBrowse, line: L.readSearchNothingFiltersLine)
                 } else {
-                    Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total))
+                    Text(ReadFilterWords.browseLine(
+                        search.query, filters: store.reading.filters, total: search.total,
+                        line: search.query == page.query ? page.line : nil))
                         .font(.ui(13))
                         .foregroundStyle(.haze)
                     ReadGrid(tiles: search.tiles, twoLines: true, caption: .formatOrigin)

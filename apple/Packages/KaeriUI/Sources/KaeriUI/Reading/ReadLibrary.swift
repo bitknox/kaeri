@@ -208,17 +208,33 @@ struct ReadGrid: View {
     var note: (WorkTile) -> String? = { _ in nil }
     var caption = ReadCaption.plain
     @State private var width: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
+        if typeSize.isAccessibilitySize {
+            // The largest text sizes read better as one column of rows than as covers.
+            LazyVStack(alignment: .leading, spacing: 0) {
+                ForEach(tiles, id: \.work) { tile in
+                    ReadTileListRow(tile: tile, note: note(tile), planAction: twoLines, caption: caption)
+                        .contextMenu { ReadTileMenu(tile: tile, kind: twoLines ? .plan : .lists) }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            covers
+        }
+    }
+
+    private var covers: some View {
         let (columns, cell) = Self.columns(width)
-        LazyVGrid(
+        return LazyVGrid(
             columns: Array(repeating: GridItem(.fixed(cell), spacing: Self.gap, alignment: .top), count: columns),
             alignment: .leading,
             spacing: Device.isMac ? 24 : 20
         ) {
             ForEach(tiles, id: \.work) { tile in
                 ReadTileCard(tile: tile, width: cell, twoLines: twoLines, note: note(tile), planAction: twoLines, caption: caption)
-                    .contextMenu { ReadTileMenu(tile: tile) }
+                    .contextMenu { ReadTileMenu(tile: tile, kind: twoLines ? .plan : .lists) }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -246,13 +262,25 @@ struct ReadTileMenu: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     let tile: WorkTile
+    var kind = Kind.lists
+
+    /// What the menu offers past Details: every list in Library, Add to Planning on a discovery
+    /// row's or AniList's cover, and nothing more on Up next, This week and a source's hits.
+    enum Kind { case lists, plan, details }
 
     var body: some View {
         Button(L.homeDetails) { navigator.openSeries(tile.work) }
-        Menu(L.seriesAddToList) {
-            ForEach(ReadWords.statuses, id: \.self) { list in
-                Button(ReadWords.list(list)) { store.reading.setStatus(tile.work, list) }
+        switch kind {
+        case .lists:
+            Menu(L.seriesAddToList) {
+                ForEach(ReadWords.statuses, id: \.self) { list in
+                    Button(ReadWords.list(list)) { store.reading.setStatus(tile.work, list) }
+                }
             }
+        case .plan:
+            Button(L.libraryAddPlanning) { store.reading.setStatus(tile.work, .planning) }
+        case .details:
+            EmptyView()
         }
     }
 }

@@ -45,6 +45,16 @@ struct ReadHomeScreen: View {
         .onAppear {
             if navigator.readHomeOffset > 1 { position.scrollTo(y: navigator.readHomeOffset) }
         }
+        // A shot's `scroll=<points>`: Home's rows brought up once they are drawn.
+        .task {
+            guard navigator.section == .read, let points = navigator.launchReadScroll else { return }
+            navigator.launchReadScroll = nil
+            for _ in 0..<50 where store.reading.home?.rows.isEmpty ?? true {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            try? await Task.sleep(for: .milliseconds(800))
+            position.scrollTo(y: CGFloat(points))
+        }
         #if os(iOS)
         .navigationDestination(item: Binding(get: { navigator.readViewAll }, set: { navigator.readViewAll = $0 })) { page in
             ReadViewAllPage(page: page)
@@ -184,7 +194,9 @@ private struct ReadHomeContent: View {
             HomeShelf(spacing: layout.cardGap) {
                 ForEach(tiles, id: \.work) { tile in
                     ReadTileCard(tile: tile, track: track)
-                        .contextMenu { if track { ReadContinueMenu(tile: tile) } }
+                        .contextMenu {
+                            if track { ReadContinueMenu(tile: tile) } else { ReadTileMenu(tile: tile, kind: .details) }
+                        }
                         .transition(.opacity)
                 }
             }
@@ -603,6 +615,7 @@ private struct ReadWeekCell: View {
         }
         .buttonStyle(.plain)
         .pointerHover()
+        .contextMenu { ReadTileMenu(tile: tile, kind: .details) }
         .accessibilityElement(children: .combine)
     }
 }

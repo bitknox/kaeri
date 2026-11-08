@@ -8,25 +8,26 @@ import Foundation
 /// The board's Search states, staged over the testing engine's AniList results by
 /// `-KaeriSheet sources-<name>` (ReadingModel.stageSourceSearchShot):
 ///
-/// - `mid`: Home library and Comics folder answered, Northwind still asking, Demo found nothing;
+/// - `mid`: Home library and Folders answered, Northwind still asking, Demo found nothing;
 ///   Home library joins AniList's first result.
 /// - `failed`: as `mid`, with Northwind out of time.
-/// - `only`: Your sources only, every source in.
+/// - `only`: Your sources only, every source in; Northwind's seven hits show five and Show 2 more.
 /// - `nothing`: nothing from AniList or any source.
 /// - `sourcehits`: AniList found nothing, Home library has one series.
 /// - `anilistfailed`: AniList didn't answer; the sources were still asked.
-enum SourceSearchShots {
+@MainActor enum SourceSearchShots {
     static let mid = "mid", failed = "failed", sourcesOnly = "only", nothing = "nothing"
     static let sourceHits = "sourcehits", anilistFailed = "anilistfailed"
     static let names: Set<String> = [mid, failed, sourcesOnly, nothing, sourceHits, anilistFailed]
 
     // Made-up sources. i18n-skip: fixture names
     private static let library: (String, String, ReadSourceKind?) = ("fixture-home-library", "Home library", .server) // i18n-skip
-    private static let comics: (String, String, ReadSourceKind?) = ("fixture-comics-folder", "Comics folder", .folder) // i18n-skip
+    private static let comics: (String, String, ReadSourceKind?) = ("fixture-folders", "Folders", nil) // i18n-skip
     private static let northwind: (String, String, ReadSourceKind?) = ("fixture-northwind", "Northwind", .plugin) // i18n-skip
     private static let demo: (String, String, ReadSourceKind?) = ("demo", "Demo", nil) // i18n-skip
 
-    static func make(_ name: String, query: ReadSearchQuery, results: [WorkTile]) -> ReadSourceSearch {
+    static func make(_ name: String, query: ReadSearchQuery, results: [WorkTile], art: String?) -> ReadSourceSearch {
+        self.art = art ?? "https://img.example/cover/" // i18n-skip
         let only = name == sourcesOnly
         let anilist: ReadAnilistState = switch name {
         case sourcesOnly: .skipped
@@ -67,6 +68,9 @@ enum SourceSearchShots {
         return ReadSourceSearch(query: query, anilist: anilist, groups: groups, joins: joins, done: name != mid)
     }
 
+    /// Where the fixture covers are served from: the fake's art address, `.../cover/`.
+    private static var art = ""
+
     private static var libraryTiles: [WorkTile] {
         [
             tile("lsn-side", "Lantern Street Notes, Side Stories", cover: 900302, .novel, .volumes(2)), // i18n-skip
@@ -81,6 +85,8 @@ enum SourceSearchShots {
             tile("timetables", "Lantern Ferry Timetables", cover: nil, .novel, .parts(6)), // i18n-skip
             tile("diner", "Lanternfish Diner", cover: 900308, .manga, .episodes(22)), // i18n-skip
             tile("bridge", "Under the Lantern Bridge", cover: 900310, .manga, .chapters(9)), // i18n-skip
+            tile("keeper", "The Lantern Keeper's Ledger", cover: 900311, .novel, .volumes(3)), // i18n-skip
+            tile("orchard", "Lantern Orchard Letters", cover: 900312, .manga, .chapters(27)), // i18n-skip
         ]
     }
 
@@ -110,7 +116,7 @@ enum SourceSearchShots {
     ) -> WorkTile {
         WorkTile(
             work: "local:fixture:\(key)", title: title, medium: medium, // i18n-skip
-            cover: cover.map { "https://img.example/cover/\($0).jpg" }, // i18n-skip
+            cover: cover.map { "\(art)\($0)-xl.jpg" }, // i18n-skip
             formatLabel: nil, progress: nil, next: nil, newChapter: false, adult: false,
             facts: [], demo: false, notInSources: false, origin: nil, amount: amount.msg)
     }

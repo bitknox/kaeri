@@ -428,7 +428,12 @@ public final class ReadingModel {
     private func restageSources() {
         guard let name = stagedSources else { return }
         if name == SourceSearchShots.sourcesOnly { search.query.sourcesOnly = true }
-        let staged = SourceSearchShots.make(name, query: search.query, results: search.tiles)
+        // The fixture covers come from wherever the fake serves art; any cover on screen says where.
+        let covers = search.tiles + (home?.continueReading ?? []) + (home?.rows.flatMap(\.tiles) ?? [])
+        let art = covers.lazy.compactMap(\.cover).compactMap { url in
+            url.range(of: "/cover/").map { String(url[..<$0.upperBound]) } // i18n-skip
+        }.first
+        let staged = SourceSearchShots.make(name, query: search.query, results: search.tiles, art: art)
         search.sources = staged
         if staged.anilist != .answered || name == SourceSearchShots.nothing || name == SourceSearchShots.sourceHits {
             search.tiles = []

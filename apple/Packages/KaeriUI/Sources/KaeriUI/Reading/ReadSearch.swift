@@ -67,6 +67,7 @@ struct ReadSearchScreen: View {
     @Environment(Navigator.self) private var navigator
     @State private var filtersShown = false
     @State private var width: CGFloat = 1_000
+    @State private var position = ScrollPosition()
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var compact: Bool { sizeClass == .compact }
@@ -116,6 +117,7 @@ struct ReadSearchScreen: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .scrollIndicators(.never)
+        .scrollPosition($position)
         .background(.ground)
         .environment(\.homeLayout, layout)
         .onOfferedWidth { width = $0 }
@@ -135,6 +137,11 @@ struct ReadSearchScreen: View {
             try? await Task.sleep(for: .milliseconds(500))
             navigator.launchSheet = nil
             store.reading.stageSourceSearchShot(String(sheet.dropFirst("sources-".count))) // i18n-skip
+            // A shot's `scroll=<points>`: the sources' rows brought up once they are drawn.
+            guard navigator.section == .search, let points = navigator.launchReadScroll else { return }
+            navigator.launchReadScroll = nil
+            try? await Task.sleep(for: .milliseconds(1_000))
+            position.scrollTo(y: CGFloat(points))
         }
         #if os(iOS)
         .toolbar {
@@ -190,7 +197,9 @@ private struct ReadChipToggleStyle: ToggleStyle {
             .foregroundStyle(configuration.isOn ? .silk : .haze)
             .padding(.horizontal, 12)
             .frame(height: Device.isMac ? 28 : 36)
-            .overlay { Capsule().strokeBorder(Palette.glassRule, lineWidth: 1) }
+            // On, it takes the neutral fill as a set filter does; amber stays with the actions.
+            .background(configuration.isOn ? Palette.raisedSelected : .clear, in: .capsule)
+            .overlay { Capsule().strokeBorder(configuration.isOn ? .clear : Palette.glassRule, lineWidth: 1) }
             .contentShape(.capsule)
             .animation(.quick, value: configuration.isOn)
         }
@@ -204,6 +213,7 @@ private struct ReadChipToggleStyle: ToggleStyle {
 
 private struct ReadSearchBody: View {
     @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     let browsing: Bool
 
     var body: some View {
@@ -223,7 +233,8 @@ private struct ReadSearchBody: View {
             }
         } else {
             VStack(alignment: .leading, spacing: 12) {
-                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total))
+                let viewAll = navigator.readViewAllLine.flatMap { $0.query == search.query ? $0.line : nil }
+                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total, line: viewAll))
                     .font(.plat(mac: 12, touch: 13))
                     .foregroundStyle(.haze)
                 ReadGrid(tiles: search.tiles, twoLines: true, caption: .formatOrigin)
@@ -514,6 +525,11 @@ private struct ReadSourceRow: View {
     @Environment(AppStore.self) private var store
     @Environment(\.homeLayout) private var layout
     let group: ReadSourceGroup
+    /// Whether the hits past the first five are in.
+    @State private var expanded = false
+
+    /// A row shows five hits, and Show N more brings in the rest.
+    private static let first = 5
 
     var body: some View {
         let asking = group.state == .asking
@@ -575,12 +591,28 @@ private struct ReadSourceRow: View {
         case .timedOut(let seconds):
             failed(reason: L.readSearchSourceTimeout(seconds: Int(seconds)))
         case .hits, .asking, .nothing:
-            HomeShelf(spacing: layout.cardGap) {
-                ForEach(group.tiles, id: \.work) { tile in
-                    ReadTileCard(tile: tile, twoLines: true, planAction: true, caption: .amount)
-                        .contextMenu { ReadTileMenu(tile: tile) }
+            let hidden = expanded ? 0 : max(0, group.tiles.count - Self.first)
+            VStack(alignment: .leading, spacing: 8) {
+                HomeShelf(spacing: layout.cardGap) {
+                    ForEach(group.tiles.prefix(group.tiles.count - hidden), id: \.work) { tile in
+                        ReadTileCard(tile: tile, twoLines: true, caption: .amount)
+                            .contextMenu { ReadTileMenu(tile: tile, kind: .details) }
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.standard, value: expanded)
+                if hidden > 0 {
+                    Button(L.readSearchSourceMore(n: hidden)) { expanded = true }
+                        .buttonStyle(.plain)
+                        .font(.plat(mac: 13, touch: 15, weight: .medium))
+                        .foregroundStyle(.silk)
+                        .frame(minHeight: Device.isMac ? 24 : 44)
+                        .contentShape(.rect)
+                        .pointerHover()
+                        .transition(.opacity)
                 }
             }
+            .onChange(of: group.tiles.map(\.work)) { expanded = false }
         }
     }
 
@@ -682,12 +714,13 @@ enum ReadFilterWords {
 
     /// The line over browsing: what is shown, and where the list comes from.
     /// "Popular · from AniList", or once every result is listed, "Popular · 214 series from AniList".
-    static func browseLine(_ query: ReadSearchQuery, filters: ReadFilters, total: UInt32? = nil) -> String {
+    /// `line` is a View all's own line ("Manga, trending"), which says it better than the filters.
+    static func browseLine(_ query: ReadSearchQuery, filters: ReadFilters, total: UInt32? = nil, line: String? = nil) -> String {
         var parts = labels(query.formats, in: filters.formats) + labels(query.origins, in: filters.origins)
         if let status = query.status { parts += labels([status], in: filters.statuses) }
         parts += query.genres
-        let what = parts.isEmpty ? sort(query.sort ?? filters.sorts.first ?? "") : parts.joined(separator: ", ") // i18n-skip
-        guard let total else { return L.readSearchBrowseLine(what: what) }
+        let what = line ?? (parts.isEmpty ? sort(query.sort ?? filters.sorts.first ?? "") : parts.joined(separator: ", ")) // i18n-skip
+        guard let total else { return line ?? L.readSearchBrowseLine(what: what) }
         return [what, L.readSearchTotal(n: Int(total))].joined(separator: " · ") // i18n-skip
     }
 
@@ -820,7 +853,7 @@ private struct ReadFilterMenus: View {
     }
 }
 
-/// A filter's button: "Format" when unset, "Origin: Korea" in an outline when set.
+/// A filter's button: "Format" when unset, "Origin: Korea" on the neutral fill when set.
 private struct ReadFilterLabel: View {
     let name: String
     let value: String?
@@ -841,9 +874,9 @@ private struct ReadFilterLabel: View {
         .font(.plat(mac: 13, touch: 15, weight: .medium))
         .padding(.horizontal, 12)
         .frame(height: Device.isMac ? 28 : 36)
-        .overlay {
-            if value != nil { Capsule().strokeBorder(Palette.glassRule, lineWidth: 1) }
-        }
+        // A set filter takes the neutral fill, as the shows' set pills do; amber stays with the actions.
+        .background(value == nil ? .clear : Palette.raisedSelected, in: .capsule)
+        .animation(.quick, value: value)
         .contentShape(.capsule)
     }
 }

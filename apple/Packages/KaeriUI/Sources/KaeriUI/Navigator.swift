@@ -45,6 +45,9 @@ public final class Navigator {
     public var readSearchBack: AppSection?
     /// On iPhone and in a narrow window, the row whose View all pushed its results onto Home.
     public var readViewAll: ReadViewAll?
+    /// The line a row's View all puts over its results in the Search place ("Manga, trending"),
+    /// for as long as Search still has exactly the row's query.
+    var readViewAllLine: (query: ReadSearchQuery, line: String)?
     /// How far reading's Home was scrolled when it was left, for coming back to the same place.
     @ObservationIgnored var readHomeOffset: CGFloat = 0
     /// The Library's reading list on screen.
@@ -101,6 +104,9 @@ public final class Navigator {
     public var launchSearch: SearchQuery?
     /// Points to scroll Search's results at launch, for shots.
     public var launchScroll: Int?
+    /// The same points for Reading's Home and Search, which the shows' Search, drawn first while
+    /// Reading loads, would otherwise take.
+    @ObservationIgnored var launchReadScroll: Int?
     /// Counts the asks to scroll the iPhone's pinned filter row to its end, for the motion audit.
     public var searchRowToEnd = 0
     /// Whether Downloads is pushed over the Library, as its first row does on iPhone.
@@ -216,6 +222,7 @@ public final class Navigator {
                 minScore: 70, licensedOnly: true)
         }
         launchScroll = route.scroll
+        launchReadScroll = route.scroll
         if let genre = route.genre { launchSearch = SearchQuery(text: route.query ?? "", genres: [genre]) }
         if route.sheet == "join" { invite = "https://plugins.hotaru.example/join/fixture#key" }
         if route.sheet == "show" { showSettings = route.title }
@@ -303,7 +310,7 @@ public final class Navigator {
     /// A discovery row's View all: Search with exactly the row's filter and sort, whose first
     /// results are the row's titles. Wide, the Search place opens with Back to Home; narrow, the
     /// results push onto Home with the row's name as their title.
-    public func openReadViewAll(_ query: ReadSearchQuery, title: String, wide: Bool, store: AppStore) {
+    public func openReadViewAll(_ query: ReadSearchQuery, title: String, line: String? = nil, wide: Bool, store: AppStore) {
         store.reading.runSearch(query)
         // The field says what the search has, so typing starts from it, and nothing more is asked.
         self.query = query.text
@@ -312,8 +319,9 @@ public final class Navigator {
             searchReading = true
             section = .search
             readSearchBack = from
+            readViewAllLine = line.map { (query, $0) }
         } else {
-            readViewAll = ReadViewAll(title: title, query: query)
+            readViewAll = ReadViewAll(title: title, query: query, line: line)
         }
     }
 
@@ -416,5 +424,7 @@ public final class Navigator {
 public struct ReadViewAll: Hashable, Identifiable {
     public let title: String
     public let query: ReadSearchQuery
+    /// The line over the results, from the row ("Manga, trending").
+    public var line: String?
     public var id: Self { self }
 }

@@ -122,15 +122,20 @@ enum ReadWords {
         case .amount:
             return tile.amount.map { [$0.text] }
         case .formatRow:
-            // The facts lead with the format word, which the row's heading already says.
-            if let origin = tile.origin?.text { return [origin] + facts.dropFirst().prefix(1) }
+            // The facts lead with the format word, which the row's heading already says. A New
+            // row says the month the series started instead: "Japan · since March".
+            if let origin = tile.origin?.text {
+                if let started = tile.started?.text { return [origin, started] }
+                return [origin] + facts.dropFirst().prefix(1)
+            }
         case .formatOrigin:
             if let origin = tile.origin?.text { return facts.prefix(1) + [origin] }
         case .plain:
             break
         }
         if let label = tile.formatLabel, facts.isEmpty { return [label] }
-        return facts.isEmpty ? nil : facts
+        // Two facts at most, so the line fits under a cover.
+        return facts.isEmpty ? nil : Array(facts.prefix(2))
     }
 
     static func list(_ segment: LibrarySegmentRead) -> String {
