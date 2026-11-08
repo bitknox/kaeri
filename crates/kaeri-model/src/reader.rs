@@ -981,6 +981,10 @@ pub enum ReaderEvent {
         chapter: Option<ChapterRow>,
         #[cfg_attr(feature = "ffi", uniffi(default))]
         wait: Option<ReaderWait>,
+        /// The session the open becomes, as [`ReaderEvent::Opened`] will name it. Leaving
+        /// before then sends [`ReaderCommand::Close`] with it, and nothing opens.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        session: u64,
     },
     Notice(ReaderNotice),
     /// Another device read further: the reader moved, with Go back to `back`.

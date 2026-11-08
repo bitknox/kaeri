@@ -327,7 +327,9 @@ impl Reader {
                 self.settings_changed(cx, session, medium, Some(work), key);
             }
             ReaderCommand::Close { session } => {
-                if self.session.as_ref().is_some_and(|s| s.id == session) {
+                let open = self.session.as_ref().is_some_and(|s| s.id == session);
+                let pending = self.listing.as_ref().is_some_and(|l| l.id == session);
+                if open || pending {
                     self.close(cx);
                 }
                 cx.send(ReaderEvent::Closed { session });
@@ -372,6 +374,8 @@ impl Reader {
     }
 
     fn close(&mut self, cx: &Cx<'_>) {
+        // An open still waiting for its source goes too: nothing opens when it answers.
+        self.listing = None;
         if let Some(mut s) = self.session.take() {
             s.read_timer += 1;
             s.flush(cx);
@@ -404,7 +408,6 @@ impl Reader {
         surface: ReaderSurface,
     ) {
         self.close(cx);
-        self.listing = None;
         if !std::mem::replace(&mut self.novels_cleared, true) {
             // An earlier run's files: session numbers start again each run.
             let _ = std::fs::remove_dir_all(novel::cache_dir(&cx.services.paths.cache_dir));
@@ -434,6 +437,7 @@ impl Reader {
             cx.send(ReaderEvent::Opening {
                 chapter: None,
                 wait: Some(ReaderWait::FindingSource),
+                session: id,
             });
             return;
         }
@@ -509,6 +513,7 @@ impl Reader {
         cx.send(ReaderEvent::Opening {
             chapter: Some(chapters[index].row(&marks)),
             wait: None,
+            session: id,
         });
         let source = cx.source_word(&work);
         let layers = cx.layers_with(medium, Some(work.as_str()), Some(source));
@@ -1410,6 +1415,7 @@ mod tests {
     use crate::{host::QuietHost, outbox::Envelope};
 
     mod hints;
+    mod leaving;
     mod novels;
     mod peek;
 
