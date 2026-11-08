@@ -102,11 +102,12 @@ struct NovelWebLifecycleTests {
         }
         #expect(NovelWebController.made - made == 1, "one web view for the whole reading")
 
+        // The book closes before its window does: what the page held goes already.
         model.close()
+        #expect(await until(5) { NovelWebController.live == 0 }, "the controller goes with the book")
+        #expect(await until(5) { first == nil }, "and the web view with it")
         window.contentView = nil
         window.close()
-        #expect(await until(5) { NovelWebController.live == 0 }, "the controller goes with the reader")
-        #expect(await until(5) { first == nil }, "and the web view with it")
     }
 
     @Test func aTapOnTheSideTurnsInThePageWithOneMessage() async throws {

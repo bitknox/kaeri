@@ -59,8 +59,10 @@ public struct ReaderScreen: View {
             .onChange(of: proxy.size) { _, new in resize(new) }
         }
         .ignoresSafeArea()
-        // The reader closed: its web view and everything the page held go with it.
+        // The reader closed: its web view and everything the page held go with it, as soon as
+        // the book closes, whether or not the window it was in has gone yet.
         .onDisappear { novelWeb.close() }
+        .onChange(of: model.request == nil) { _, closed in if closed { novelWeb.close() } }
         .onChange(of: voiceOver, initial: true) { _, on in model.pinChrome = on }
         // Notices wait while the reader is out of sight.
         .onChange(of: scenePhase, initial: true) { _, phase in model.away = phase != .active }
