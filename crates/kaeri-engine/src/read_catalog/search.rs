@@ -126,12 +126,19 @@ fn medium_of(query: &ReadSearchQuery) -> Option<Medium> {
 }
 
 /// One page of a search. Pages count from 0. With words, the first page also asks the person's
-/// sources; "Your sources only" asks them alone.
+/// sources; "Your sources only" asks them alone and never AniList.
 pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbox) {
     let words = !query.text.trim().is_empty();
     let with_sources = words && page == 0;
     let generation = with_sources.then(|| sources_search(kit, ask, &query, tx));
-    if query.sources_only && with_sources {
+    if query.sources_only {
+        // Without words, or past the first page, the sources have nothing to answer either:
+        // an empty page says so.
+        if !with_sources {
+            let tiles = Vec::new();
+            let (has_more, other_scope, total) = (false, None, None);
+            send(tx, ReadingEvent::Search { query, page, tiles, has_more, other_scope, total });
+        }
         return;
     }
     let (kit, tx) = (kit.clone(), tx.clone());

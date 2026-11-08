@@ -623,6 +623,33 @@ async fn your_sources_only_leaves_anilist_out() {
     }
 }
 
+/// Browse with only "Your sources only" on: no words for the sources, and AniList is never
+/// asked. The answer is an empty page, on a later page too.
+#[tokio::test]
+async fn your_sources_only_without_words_asks_nobody() {
+    let fake = FakeAniList::start().await;
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    let shelf = Shelf::put(&kit, "home", "Home library", Answer::Now(Vec::new()));
+    let (tx, mut rx) = outbox();
+    for page in [0, 1] {
+        let only = ReadSearchQuery { sources_only: true, ..query("") };
+        search::search(&kit, ask(), only, page, &tx);
+        let (asked_page, tiles, has_more) = loop {
+            match next_event(&mut rx).await {
+                Event::Reading(ReadingEvent::Search { page, tiles, has_more, .. }) => {
+                    break (page, tiles, has_more);
+                }
+                Event::Reading(ReadingEvent::SourceSearch(part)) => panic!("{part:?}"),
+                _ => {}
+            }
+        };
+        assert_eq!((asked_page, tiles.len(), has_more), (page, 0, false));
+    }
+    assert_eq!(books_asked(&fake), 0, "Your sources only never asks AniList");
+    assert_eq!(shelf.asked.load(Ordering::SeqCst), 0);
+}
+
 #[tokio::test]
 async fn sources_are_still_asked_when_anilist_is_unreachable_and_never_for_a_browse() {
     let fake = FakeAniList::start().await;
