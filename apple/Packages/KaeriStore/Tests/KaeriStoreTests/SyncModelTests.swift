@@ -26,8 +26,21 @@ struct SyncModelTests {
 
     private static let page = SyncSignInStep.sheet(url: "https://accounts.example/auth", callbackScheme: "example.apps.123")
 
-    @Test func aRefusalStaysInTheSheetThatWaitedAndTryAgainChoosesTheServiceAgain() async throws {
-        let sync = SyncModel()
+    /// A sync model whose cloud steps wait on `clock`, so a slow or busy machine changes nothing
+    /// a test sees: a step shows only as the test moves the clock past its time.
+    private static func stepped(_ clock: SteppedClock) -> SyncModel {
+        SyncModel(now: { clock.now }, schedule: false)
+    }
+
+    /// Move the clock on and let the sheet catch up with it.
+    private static func advance(_ sync: SyncModel, _ clock: SteppedClock, _ ms: Int64) {
+        clock.advance(.milliseconds(ms))
+        sync.refreshCloudStep()
+    }
+
+    @Test func aRefusalStaysInTheSheetThatWaitedAndTryAgainChoosesTheServiceAgain() {
+        let clock = SteppedClock()
+        let sync = Self.stepped(clock)
         var sent: [Command] = []
         sync.send = { sent.append($0) }
         sync.addCloudFolder()
@@ -38,7 +51,9 @@ struct SyncModelTests {
         sync.apply(.syncProblem(.signInDenied(service: .googleDrive)))
         sync.apply(.syncStatus(SyncStatus(enabled: false, syncing: false)))
         sync.apply(.syncSignIn(service: .googleDrive, step: nil))
-        try await Task.sleep(for: .milliseconds(600))
+        Self.advance(sync, clock, 399)
+        #expect(sync.cloudStep == .waiting(.googleDrive), "the wait keeps its 400 ms")
+        Self.advance(sync, clock, 1)
         #expect(sync.cloudStep == .failed(.googleDrive, .signInDenied(service: .googleDrive), folder: false))
         #expect(sync.sheet == .picker, "the sheet stays open to say it")
 
@@ -48,8 +63,9 @@ struct SyncModelTests {
         #expect(sent == [.startSync(deviceName: "Kim’s Mac", folder: SyncFolderSpec(kind: .googleDrive))])
     }
 
-    @Test func aQuickSetUpGoesFromTheWaitStraightToTheKeyInTheSameSheet() async throws {
-        let sync = SyncModel()
+    @Test func aQuickSetUpGoesFromTheWaitStraightToTheKeyInTheSameSheet() {
+        let clock = SteppedClock()
+        let sync = Self.stepped(clock)
         sync.addCloudFolder()
         sync.choose(.googleDrive, deviceName: "Kim’s Mac")
         sync.apply(.syncSignIn(service: .googleDrive, step: Self.page))
@@ -57,30 +73,34 @@ struct SyncModelTests {
         sync.apply(.syncSignIn(service: .googleDrive, step: .finishing))
         sync.apply(.syncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA"))
         sync.apply(.syncSignIn(service: .googleDrive, step: nil))
+        Self.advance(sync, clock, 399)
         #expect(sync.cloudStep == .waiting(.googleDrive), "the wait keeps its 400 ms")
-        try await Task.sleep(for: .milliseconds(700))
+        Self.advance(sync, clock, 1)
         #expect(sync.cloudStep == .key, "connecting and setting up never showed")
         #expect(sync.sheet == .picker && sync.holdsSheet)
         sync.keySaved()
         #expect(sync.sheet == nil && sync.cloudStep == nil && sync.recoveryKey == nil)
     }
 
-    @Test func aSlowFolderShowsSettingUpAndCannotBeCancelled() async throws {
-        let sync = SyncModel()
+    @Test func aSlowFolderShowsSettingUpAndCannotBeCancelled() {
+        let clock = SteppedClock()
+        let sync = Self.stepped(clock)
         var sent: [Command] = []
         sync.send = { sent.append($0) }
         sync.addCloudFolder()
         sync.choose(.dropbox, deviceName: "Kim’s Mac")
         sync.apply(.syncSignIn(service: .dropbox, step: .finishing))
-        try await Task.sleep(for: .milliseconds(300))
+        Self.advance(sync, clock, 599)
         #expect(sync.cloudStep == .waiting(.dropbox), "setting up waits 600 ms before it shows")
-        try await Task.sleep(for: .milliseconds(600))
+        Self.advance(sync, clock, 1)
         #expect(sync.cloudStep == .settingUp(.dropbox))
         sent = []
         sync.cancelCloudStep()
         #expect(sent.isEmpty && sync.cloudStep == .settingUp(.dropbox) && sync.sheet == .picker)
         sync.apply(.syncProblem(.unreachable))
-        try await Task.sleep(for: .milliseconds(500))
+        Self.advance(sync, clock, 399)
+        #expect(sync.cloudStep == .settingUp(.dropbox), "setting up keeps its 400 ms")
+        Self.advance(sync, clock, 1)
         #expect(sync.cloudStep == .failed(.dropbox, .unreachable, folder: true))
     }
 

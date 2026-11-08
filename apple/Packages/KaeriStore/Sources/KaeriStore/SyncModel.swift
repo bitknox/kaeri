@@ -169,9 +169,23 @@ public final class SyncModel {
     /// The step the engine is at, which `cloudStep` shows once its time comes.
     private var cloudTarget: CloudStep?
     @ObservationIgnored private var cloudShownAt: ContinuousClock.Instant?
+    /// When `cloudTarget` takes the sheet's place, while it waits for its time.
+    @ObservationIgnored private var cloudDue: ContinuousClock.Instant?
     @ObservationIgnored private var cloudTask: Task<Void, Never>?
+    @ObservationIgnored private let clock: @Sendable () -> ContinuousClock.Instant
+    @ObservationIgnored private let schedule: Bool
 
-    public init() {}
+    /// - Parameters:
+    ///   - now: the clock the cloud folder's sheet times its steps on, which a test replaces.
+    ///   - schedule: whether a step waits for its time by itself; a test that steps its own
+    ///     clock calls `refreshCloudStep()` instead.
+    public init(
+        now: @escaping @Sendable () -> ContinuousClock.Instant = { ContinuousClock.now },
+        schedule: Bool = true
+    ) {
+        clock = now
+        self.schedule = schedule
+    }
 
     // MARK: Reading
 
@@ -677,25 +691,38 @@ public final class SyncModel {
     private func aim(_ step: CloudStep?, atOnce: Bool = false) {
         cloudTarget = step
         cloudTask?.cancel()
-        let now = ContinuousClock.now
+        cloudDue = nil
+        let now = clock()
         guard let step, !staged, !atOnce else { return show(step) }
         var due = step.quiet ? now + .milliseconds(600) : now
         if cloudStep != nil, let at = cloudShownAt { due = max(due, at + .milliseconds(400)) }
         guard due > now else { return show(step) }
+        cloudDue = due
+        guard schedule else { return }
         cloudTask = Task { [weak self] in
             try? await Task.sleep(until: due, clock: .continuous)
             guard !Task.isCancelled, let self, self.cloudTarget == step else { return }
+            self.cloudDue = nil
             self.show(step)
         }
     }
 
+    /// Show the step aimed at once the clock has reached its time. A test that steps its own
+    /// clock calls this where the app's scheduled wait would wake.
+    func refreshCloudStep() {
+        guard let due = cloudDue, clock() >= due else { return }
+        cloudDue = nil
+        show(cloudTarget)
+    }
+
     private func show(_ step: CloudStep?) {
         cloudStep = step
-        cloudShownAt = step == nil ? nil : .now
+        cloudShownAt = step == nil ? nil : clock()
     }
 
     private func resetCloudStep() {
         cloudTask?.cancel()
+        cloudDue = nil
         cloudTarget = nil
         show(nil)
     }
@@ -732,6 +759,8 @@ public final class SyncModel {
     public func stage(setup new: JoinedSetup?, refused: String? = nil) { staged = true; setup = new; storeRefused = refused }
     public func stage(cloudStep step: CloudStep?, switching: Bool = false) {
         self.switching = switching
+        cloudTask?.cancel()
+        cloudDue = nil
         cloudTarget = step
         show(step)
     }
