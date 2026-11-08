@@ -56,26 +56,21 @@ eink-colour-title = Zeigt dieser Bildschirm Farbe?
 eink-colour-body = { -app-name } konnte es an diesem { -device } nicht erkennen. Sieh dir die vier Quadrate an.
 eink-colour-squares = Vier Quadrate: Rot, Grün, Blau und Bernstein
 eink-colour-hint = Wirken sie wie vier Grautöne, wähle Nur Grau. Du kannst das unter Einstellungen › Bildschirm ändern.
-eink-colour-yes = Ich sehe Farbe
+eink-colour-yes = Ja, Farbe
 eink-colour-no = Nur Grau
 eink-colour-skip = Überspringen
-eink-colour-skipped = Übersprungen. Bilder bleiben farbig, ein Graubildschirm zeigt sie grau.
-eink-page-keys-hint = Stelle die Seitentasten in den Einstellungen des { -device } auf Lautstärke, um zu blättern.
+eink-colour-skipped = Übersprungen. Bilder bleiben farbig. Ein grauer Bildschirm zeigt sie in Grau.
+eink-page-keys-hint = Um mit den Tasten zu blättern, stelle sie in den Einstellungen des { -device } auf Lautstärke.
 eink-new = Neu
 reader-notice-start-over = Von vorn
 reader-notice-go-back = Zurück
 reader-notice-change = Ändern
 reader-settings = Leseeinstellungen
-reader-chapter-line = Kapitel { $chapter }
-reader-chapter-line-titled = Kapitel { $chapter } · { $title }
 reader-novel-line-scroll = Kapitel { $chapter } · Scrollen
 reader-minutes-left = { $minutes } Min.
 reader-zone-next = Nächste Seite
 reader-grid-title = Seiten
-reader-end-of-chapter-number = Ende von Kapitel { $chapter }
-reader-end-facts = Kapitel { $chapter } · { $facts }
 reader-end-continue = Weiterlesen
-reader-end-swipe = Wische zum Weiterlesen
 reader-end-series = Zurück zur Serie
 reader-end-again = Von vorn lesen
 reader-opening-chapter = Kapitel { $chapter } wird geöffnet
@@ -134,7 +129,6 @@ reader-paper-line = Seiten wechseln sofort und nichts im Reader bewegt sich. Än
 reader-grid-page = Zu Seite { $page }
 reader-scrubber-in-chapter = Seite im Kapitel
 reader-failed-novel = Kapitel konnte nicht angezeigt werden
-reader-end-tracker = Gelesen · { $trackers } aktualisiert
 reader-end-tracker-offline = Gelesen · { $tracker } aktualisiert, sobald du wieder online bist
 reader-end-none = Kein Kapitel { $chapter } in deinen { -source-pl }
 reader-end-none-line = { -app-name } prüft im Hintergrund auf neue Kapitel und legt sie unter Updates ab.
@@ -161,21 +155,11 @@ reader-zone-previous = Vorherige Seite
 reader-zone-controls = Steuerung
 reader-size-small = Kleinerer Text
 reader-size-large = Größerer Text
-reader-end-pages = { $count ->
-    [one] Eine Seite
-   *[other] { $count } Seiten
- }
 reader-value-on = An
 reader-value-off = Aus
 reader-row-strip-gap = Abstand zwischen Bildern
 reader-paper-look = Papier-Look tagsüber
 reader-paper-dim = Seite abdunkeln
-reader-end-from = Von { $source }
-reader-divider-images = { $count ->
-    [one] Ein Bild
-   *[other] { $count } Bilder
- }
-reader-divider-facts-source = { $facts } · von { $source }
 reader-opening-waited = { $line } · { $seconds } s
 reader-sources-title = Dieses Kapitel lesen von
 reader-paper-parts = Was sich ändert

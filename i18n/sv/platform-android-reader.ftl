@@ -56,26 +56,21 @@ eink-colour-title = Visar den här skärmen färg?
 eink-colour-body = { -app-name } kunde inte avgöra det på den här { -device }en. Titta på de fyra rutorna.
 eink-colour-squares = Fyra rutor: röd, grön, blå och bärnsten
 eink-colour-hint = Om de ser ut som fyra gråtoner, välj Bara gråtoner. Du kan ändra det i Inställningar › Skärm.
-eink-colour-yes = Jag ser färg
+eink-colour-yes = Ja, färg
 eink-colour-no = Bara gråtoner
 eink-colour-skip = Hoppa över
-eink-colour-skipped = Överhoppat. Bilderna förblir i färg, som en gråskärm visar i gråtoner.
-eink-page-keys-hint = Ställ in sidknapparna på Volym i { -device }ens inställningar för att bläddra.
+eink-colour-skipped = Överhoppat. Bilderna förblir i färg. En gråskalig skärm visar dem i gråtoner.
+eink-page-keys-hint = Ställ in knapparna på Volym i { -device }ens inställningar för att bläddra med dem.
 eink-new = Ny
 reader-notice-start-over = Börja om
 reader-notice-go-back = Gå tillbaka
 reader-notice-change = Ändra
 reader-settings = Läsarinställningar
-reader-chapter-line = Kapitel { $chapter }
-reader-chapter-line-titled = Kapitel { $chapter } · { $title }
 reader-novel-line-scroll = Kapitel { $chapter } · rullning
 reader-minutes-left = { $minutes } min
 reader-zone-next = { -up-next-cap } sida
 reader-grid-title = Sidor
-reader-end-of-chapter-number = Slut på kapitel { $chapter }
-reader-end-facts = Kapitel { $chapter } · { $facts }
 reader-end-continue = { -proceed-cap }
-reader-end-swipe = Svep för att läsa vidare
 reader-end-series = Tillbaka till serien
 reader-end-again = Läs igen från början
 reader-opening-chapter = Öppnar kapitel { $chapter }
@@ -134,7 +129,6 @@ reader-paper-line = Sidor bläddras direkt och inget i läsaren rör sig. Ändra
 reader-grid-page = Gå till sida { $page }
 reader-scrubber-in-chapter = Sida i kapitlet
 reader-failed-novel = Kunde inte visa kapitlet
-reader-end-tracker = Läst · uppdaterat på { $trackers }
 reader-end-tracker-offline = Läst · { $tracker } uppdateras när du är online igen
 reader-end-none = Inget kapitel { $chapter } hos dina { -source-pl } än
 reader-end-none-line = { -app-name } söker efter nya kapitel i bakgrunden och lägger till dem i Uppdateringar.
@@ -161,21 +155,11 @@ reader-zone-previous = Föregående sida
 reader-zone-controls = Kontroller
 reader-size-small = Mindre text
 reader-size-large = Större text
-reader-end-pages = { $count ->
-    [one] En sida
-   *[other] { $count } sidor
- }
 reader-value-on = På
 reader-value-off = Av
 reader-row-strip-gap = Avstånd mellan bilder
 reader-paper-look = Pappersutseende dagtid
 reader-paper-dim = Dämpa sidan
-reader-end-from = Från { $source }
-reader-divider-images = { $count ->
-    [one] En bild
-   *[other] { $count } bilder
- }
-reader-divider-facts-source = { $facts } · från { $source }
 reader-opening-waited = { $line } · { $seconds } s
 reader-sources-title = Läs det här kapitlet från
 reader-paper-parts = Vad det ändrar

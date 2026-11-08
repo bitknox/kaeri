@@ -53,6 +53,7 @@ import app.kaeri.eink.EinkQuestions
 import app.kaeri.eink.EinkReader
 import app.kaeri.eink.EinkReaderActions
 import app.kaeri.eink.RefreshControllers
+import app.kaeri.reader.LocalServerLines
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.phone.NovelScreen
@@ -86,7 +87,7 @@ fun ReaderHost(store: AppStore, eink: EinkModel, app: @Composable () -> Unit) {
             app()
         }
         // The cover it grows out of loads as the app's covers do.
-        CompositionLocalProvider(LocalAppStore provides store) {
+        CompositionLocalProvider(LocalAppStore provides store, LocalServerLines provides store.serverLines) {
             ReaderOverlay(store, eink, this, zoomed) { zoomed = it }
         }
     }
@@ -261,6 +262,11 @@ private fun OpenReader(
             },
     ) {
         val close = { ReaderLauncher.close() }
+        // The demo's last page: the reader closes and Your sources opens with Add a source.
+        val addSource = {
+            ReaderLauncher.close()
+            store.cameIn.choose()
+        }
         if (request.eink) {
             val profile by einkModel.state.collectAsState()
             // The panel's questions come first when the engine is unsure of it.
@@ -277,7 +283,7 @@ private fun OpenReader(
                     state = state,
                     images = images,
                     painter = painter,
-                    actions = EinkReaderActions(onBack = close, onContents = close, onSettings = {}, onSeries = close, onDownloads = close),
+                    actions = EinkReaderActions(onBack = close, onContents = close, onSettings = {}, onSeries = close, onDownloads = close, onAddSource = addSource),
                 )
             }
         } else {
@@ -285,7 +291,7 @@ private fun OpenReader(
                 session = session,
                 state = state,
                 images = images,
-                actions = PhoneReaderActions(onClose = close),
+                actions = PhoneReaderActions(onClose = close, onAddSource = addSource),
                 quiet = quiet,
                 novel = { place, onControls ->
                     NovelScreen(

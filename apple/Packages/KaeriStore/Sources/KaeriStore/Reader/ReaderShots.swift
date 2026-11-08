@@ -20,6 +20,10 @@ extension ReaderModel {
         case "readermangartl", "readermoved": return "a:900301"
         case "readernovel": return "a:900302"
         case "readerstrip": return "a:900303"
+        // The reading demo's comic, for its reader and its end (prelaunch=demo-reader, demo-end).
+        case "readingdemo":
+            guard let scene = PrelaunchScene.named(in: arguments), scene == .demoReader || scene == .demoEnd else { return nil }
+            return readingDemoInfo().works.first { !$0.novel }?.work
         default: return nil
         }
     }
@@ -55,12 +59,31 @@ extension ReaderModel {
             case "settings": chromeShown = true; sheet = .settings
             case "chapters": chromeShown = true; sheet = .chapters
             case "ask": chromeShown = true; askingPage = true
-            case "end": requestJump(max(leaves.count - 1, 0))
+            // The end page is reached by reading on, by which time the resume notice has gone.
+            // A strip has no end page: it scrolls on past its last image to the marker into the
+            // next chapter.
+            case "end":
+                notice = nil
+                requestJump(max(leaves.count - 1, 0))
+                if view?.mode == .strip {
+                    try? await Task.sleep(for: .milliseconds(700))
+                    requestTurn(forward: true)
+                }
             case "scrub": chromeShown = true; shotScrub = max(leaves.count / 4, 1)
             case "pill": backTo = ReaderNoticeLine(id: bump(), text: L.readerBackToPage(page: 9), action: .backTo)
             case "opening": hold(.opening)
             case "error": hold(.failed(.offline))
             default: break
+            }
+            try? await Task.sleep(for: .milliseconds(900))
+        }
+        // `-KaeriAutoTurn <n>`: n turns forward, 0.8 s apart, for a recording of the turns or
+        // of a strip flowing on into the next chapter.
+        if let at = arguments.firstIndex(of: "-KaeriAutoTurn"), arguments.indices.contains(at + 1),
+           let turns = Int(arguments[at + 1]) {
+            for _ in 0..<turns {
+                try? await Task.sleep(for: .milliseconds(800))
+                requestTurn(forward: true)
             }
             try? await Task.sleep(for: .milliseconds(900))
         }

@@ -3019,6 +3019,7 @@ dependencies = [
  "jiff",
  "kaeri-core",
  "kaeri-net",
+ "kaeri-pages",
  "regex",
  "reqwest 0.13.1",
  "thiserror 2.0.21",
@@ -3162,6 +3163,7 @@ dependencies = [
 name = "kaeri-testkit"
 version = "0.4.0"
 dependencies = [
+ "image",
  "jiff",
  "kaeri-core",
  "kaeri-meta",
@@ -3170,6 +3172,8 @@ dependencies = [
  "kaeri-store",
  "serde_json",
  "tokio",
+ "tracing",
+ "zip",
 ]
 
 [[package]]

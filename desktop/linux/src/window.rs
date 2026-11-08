@@ -281,6 +281,7 @@ impl Ctx {
 pub struct Shell {
     pub ctx: Rc<Ctx>,
     pub player: Rc<PlayerView>,
+    pub reader: Rc<crate::reading::reader::Reader>,
     top: gtk::Stack,
     sidebar: gtk::ListBox,
     foot: gtk::ListBox,
@@ -396,8 +397,14 @@ impl Shell {
         // The destinations, each a navigation view of its own.
         let search = pages::search::build(&ctx);
         let settings = pages::settings::build(&ctx);
-        for dest in Dest::ALL {
+        for dest in Dest::ALL.into_iter().chain(Dest::READING) {
             let root = match dest {
+                Dest::Read => crate::reading::home::build(&ctx),
+                Dest::Updates => crate::reading::updates::build(&ctx),
+                Dest::ReadSearch => crate::reading::search::build(&ctx),
+                Dest::ReadLibrary => crate::reading::library::build(&ctx),
+                Dest::ReadDownloads => crate::reading::downloads::build(&ctx),
+                Dest::ReadSources => crate::reading::sources::build(&ctx),
                 Dest::Home => pages::home_page::build(&ctx),
                 Dest::Calendar => pages::calendar::build(&ctx),
                 Dest::Downloads => pages::downloads::build(&ctx),
@@ -429,12 +436,18 @@ impl Shell {
         top.set_vhomogeneous(false);
         top.add_named(&split, Some("main"));
         top.add_named(&player.widget, Some("player"));
+        let reader = crate::reading::reader::Reader::new(&ctx, {
+            let top = top.clone();
+            Rc::new(move |on| top.set_visible_child_name(if on { "reader" } else { "main" }))
+        });
+        top.add_named(&reader.widget, Some("reader"));
         toasts.set_child(Some(&top));
         window.set_content(Some(&toasts));
 
         let shell = Rc::new(Self {
             ctx,
             player,
+            reader,
             top,
             sidebar,
             foot,
@@ -497,6 +510,8 @@ impl Shell {
             shell.watch_device();
         }
         shell.close_request();
+        shell.ctx.hub.send(Command::Medium(kaeri_model::medium::MediumCommand::Load));
+        shell.apply_answer();
         shell.go(Dest::Home);
         shell
     }
@@ -505,6 +520,8 @@ impl Shell {
     pub fn pad_context(&self) -> kaeri_model::input::PadContext {
         if self.is_player() {
             self.player.pad_context()
+        } else if self.is_reader() {
+            self.reader.pad_context()
         } else {
             kaeri_model::input::PadContext::Browse
         }
@@ -550,7 +567,9 @@ impl Shell {
     /// Show `dest`, as its sidebar row does.
     pub fn go(&self, dest: Dest) {
         let ctx = &self.ctx;
-        ctx.stack.set_visible_child_name(dest.name());
+        let shown = self.resolve(dest);
+        ctx.stack.set_visible_child_name(shown.name());
+        let dest = shown.row();
         let (list, other) = if dest == Dest::Settings {
             (&self.foot, &self.sidebar)
         } else {
@@ -570,7 +589,8 @@ impl Shell {
         if ctx.split.is_collapsed() {
             ctx.split.set_show_sidebar(false);
         }
-        if dest == Dest::Search {
+        // The Shows side's field, only while that side shows.
+        if shown == Dest::Search {
             self.search.focus();
         }
     }
@@ -617,6 +637,59 @@ impl Shell {
         nav.replace(&kept);
     }
 
+    /// The destination a sidebar row opens with what Kaeri is for here: Home is Read's when
+    /// the device only reads; Search, Library, Downloads and Sources are Reading's when it only
+    /// reads, or when Both has Reading chosen on that screen.
+    fn resolve(&self, dest: Dest) -> Dest {
+        use kaeri_model::medium::KaeriIsFor::{Both, Read};
+        let answer = crate::reading::answer(&self.ctx.hub);
+        if dest == Dest::Home && answer == Read {
+            return Dest::Read;
+        }
+        match dest.reading_side() {
+            Some(side) if answer == Read => side,
+            Some(side) if answer == Both && self.ctx.prefs.scope_reading(dest.name()) => side,
+            _ => dest,
+        }
+    }
+
+    /// Show the sidebar's rows for what Kaeri is for, and move off a place that is gone.
+    pub fn apply_answer(&self) {
+        let answer = crate::reading::answer(&self.ctx.hub);
+        pages::set_answer(answer);
+        let rows = Dest::rows(answer);
+        let mut child = self.sidebar.first_child();
+        while let Some(widget) = child {
+            if let Some(row) = widget.downcast_ref::<gtk::ListBoxRow>()
+                && let Some(dest) = Dest::named(&row.widget_name())
+            {
+                row.set_visible(rows.contains(&dest));
+                if let Some(label) =
+                    row.child().and_then(|c| c.last_child()).and_downcast::<gtk::Label>()
+                {
+                    label.set_label(&dest.title());
+                }
+            }
+            child = widget.next_sibling();
+        }
+        if let Some(current) = self.ctx.current_dest()
+            && !rows.contains(&current.row())
+        {
+            self.go(Dest::Home);
+        }
+    }
+
+    /// A series' page, over the destination on screen.
+    pub fn open_series(&self, work: &kaeri_core::books::WorkId) {
+        let Some(nav) = self.ctx.nav() else { return };
+        let tag = crate::reading::series_tag(work);
+        if let Some(page) = nav.find_page(&tag) {
+            nav.pop_to_page(&page);
+        } else {
+            nav.push(&crate::reading::series::page(&self.ctx, work));
+        }
+    }
+
     pub fn show_player(&self, on: bool) {
         self.top.set_visible_child_name(if on { "player" } else { "main" });
         self.search.capture_keys(!on);
@@ -628,6 +701,8 @@ impl Shell {
     pub fn back(&self) {
         if self.top.visible_child_name().as_deref() == Some("player") {
             self.player.close();
+        } else if self.is_reader() {
+            self.reader.close();
         } else if let Some(nav) = self.ctx.nav() {
             nav.pop();
         }
@@ -891,6 +966,93 @@ impl Shell {
                 }
             }),
         );
+        // Ctrl+1 to 8: Watch and Read first with both media, then the sidebar's order.
+        add(
+            "go-section",
+            Some(glib::VariantTy::INT32),
+            Box::new(move |s, a| {
+                let n = a.and_then(|a| a.get::<i32>()).unwrap_or(0);
+                let sections = Dest::numbered(pages::answer());
+                if let Some(dest) = usize::try_from(n - 1).ok().and_then(|i| sections.get(i)) {
+                    s.go(*dest);
+                }
+            }),
+        );
+        add(
+            "open-series",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let Some(work) = a.and_then(String::from_variant) {
+                    s.open_series(&kaeri_core::books::WorkId(work));
+                }
+            }),
+        );
+        add(
+            "read",
+            Some(glib::VariantTy::new("(ss)").expect("a type")),
+            Box::new(move |s, a| {
+                if let Some((work, chapter)) = a.and_then(|a| a.get::<(String, String)>()) {
+                    let chapter =
+                        (!chapter.is_empty()).then_some(kaeri_core::books::ChapterId(chapter));
+                    s.reader.open(kaeri_core::books::WorkId(work), chapter);
+                }
+            }),
+        );
+        add(
+            "reader-closed",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let Some(work) = a.and_then(String::from_variant) {
+                    s.ctx.hub.send(Command::Reading(
+                        kaeri_model::reading::ReadingCommand::LoadSeries {
+                            work: kaeri_core::books::WorkId(work),
+                        },
+                    ));
+                }
+            }),
+        );
+        add(
+            "scope",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let Some(dest) =
+                    a.and_then(String::from_variant).and_then(|n| Dest::named(&n))
+                {
+                    s.go(dest);
+                }
+            }),
+        );
+        add(
+            "read-send",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if let Some(work) = a.and_then(String::from_variant) {
+                    crate::reading::export::open(&s.ctx, &kaeri_core::books::WorkId(work));
+                }
+            }),
+        );
+        add(
+            "book-add-folder",
+            None,
+            Box::new(|s, _| crate::reading::sources::add_folder(&s.ctx)),
+        );
+        add(
+            "book-add-server",
+            None,
+            Box::new(|s, _| crate::reading::sources::add_server(&s.ctx)),
+        );
+        for (name, shape) in crate::reading::series::ACTIONS {
+            let ty = glib::VariantType::new(shape).expect("a type");
+            add(
+                name,
+                Some(&ty),
+                Box::new(move |s, a| {
+                    if let Some(a) = a {
+                        crate::reading::series::command(name, &s.ctx.hub, a);
+                    }
+                }),
+            );
+        }
         add(
             "settings-pane",
             Some(glib::VariantTy::STRING),
@@ -1044,10 +1206,10 @@ impl Shell {
         add("join-store", None, Box::new(|s, _| pages::join::open_from_clipboard(&s.ctx)));
         let _ = hub;
 
-        for (i, dest) in Dest::ALL.iter().take(8).enumerate() {
+        for n in 1..=8 {
             app.set_accels_for_action(
-                &format!("win.go::{}", dest.name()),
-                &[&format!("<Control>{}", i + 1)],
+                &format!("win.go-section({n})"),
+                &[&format!("<Control>{n}")],
             );
         }
         app.set_accels_for_action("win.go::settings", &["<Control>comma"]);
@@ -1162,6 +1324,12 @@ impl Shell {
                         && shell.player.is_starting() => {}
                 Event::Toast(notice) => shell.ctx.notice(notice),
                 Event::Connectivity { offline } => widgets::set_offline(*offline),
+                Event::Medium(view) => {
+                    shell.apply_answer();
+                    if let Some(ask) = &view.ask {
+                        crate::reading::medium::ask(&shell.ctx, ask);
+                    }
+                }
                 Event::Content { view: ContentFor::Continue, content }
                     if !shell.welcome_checked.get()
                         && !matches!(content, ContentList::Loading) =>
@@ -1455,6 +1623,11 @@ impl Shell {
     pub fn is_player(&self) -> bool {
         self.top.visible_child_name().as_deref() == Some("player")
     }
+
+    /// Whether the reader is what the window shows.
+    pub fn is_reader(&self) -> bool {
+        self.top.visible_child_name().as_deref() == Some("reader")
+    }
 }
 
 /// Whether `link` is a watch party's invite, `kaeri://party?…`, in any case.
@@ -1484,7 +1657,11 @@ fn setting_saved(notice: &Notice) -> bool {
 fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
     let list = gtk::ListBox::new();
     list.add_css_class("navigation-sidebar");
-    for dest in Dest::ALL {
+    let mut rows: Vec<Dest> = Dest::ALL.to_vec();
+    if let Some(at) = rows.iter().position(|d| *d == Dest::Seasonal) {
+        rows.splice(at + 1..at + 1, [Dest::Read, Dest::Updates]);
+    }
+    for dest in rows {
         if dest == Dest::Settings {
             continue;
         }

@@ -66,6 +66,14 @@ pub struct Known {
     pub demo: kaeri_model::sources::DemoState,
     /// Whether the device has no network, as the engine last said.
     pub offline: bool,
+    /// What Kaeri is for on this device (watch, read or both), as the engine last said.
+    pub medium: Option<kaeri_model::medium::MediumView>,
+    /// The book sources (folders, servers and plugins), as the engine last said.
+    pub book_sources: Option<kaeri_model::book_sources::BookSourcesView>,
+    /// The chapters read downloading, as the engine last said.
+    pub book_downloads: Option<kaeri_model::reading::BookDownloadsView>,
+    /// The OPDS feed as the engine last said.
+    pub feed: Option<kaeri_model::reading::FeedView>,
     /// Whether trailers may start by themselves, as the engine last said.
     pub autoplay: Option<kaeri_model::trailer::AutoplayView>,
     /// Whether the engine has said what is downloading yet.
@@ -344,6 +352,16 @@ impl Known {
                 self.source_options.insert(id.get(), options.clone());
             }
             Event::Connectivity { offline } => self.offline = *offline,
+            Event::Medium(view) => self.medium = Some(view.clone()),
+            Event::BookSources(kaeri_model::book_sources::BookSourceEvent::View(view)) => {
+                self.book_sources = Some(view.clone());
+            }
+            Event::Reading(kaeri_model::reading::ReadingEvent::Downloads(view)) => {
+                self.book_downloads = Some(view.clone());
+            }
+            Event::Reading(kaeri_model::reading::ReadingEvent::Feed(view)) => {
+                self.feed = Some(view.clone());
+            }
             Event::Autoplay(view) => self.autoplay = Some(*view),
             Event::DiscussionFound { media, episode, comments } => {
                 self.discussions.insert((media.get(), *episode), *comments);

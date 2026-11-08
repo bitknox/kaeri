@@ -58,26 +58,21 @@ eink-colour-title = Questo schermo mostra i colori?
 eink-colour-body = { -app-name } non l'ha capito da questo { -device }. Guarda i quattro quadrati.
 eink-colour-squares = Quattro quadrati: rosso, verde, blu e ambra
 eink-colour-hint = Se sembrano quattro grigi, scegli Solo grigi. Puoi cambiarlo in Impostazioni › Schermo.
-eink-colour-yes = Vedo i colori
+eink-colour-yes = Sì, a colori
 eink-colour-no = Solo grigi
 eink-colour-skip = Salta
-eink-colour-skipped = Saltato: le immagini restano a colori, che uno schermo in grigi mostra come grigi.
-eink-page-keys-hint = Imposta i tasti pagina su Volume nelle impostazioni del { -device } per girare le pagine.
+eink-colour-skipped = Saltato. Le immagini restano a colori. Uno schermo in grigi le mostra in grigi.
+eink-page-keys-hint = Per girare le pagine con i tasti, impostali su Volume nelle impostazioni del { -device }.
 eink-new = Nuovo
 reader-notice-start-over = Ricomincia
 reader-notice-go-back = Torna indietro
 reader-notice-change = Cambia
 reader-settings = Impostazioni del lettore
-reader-chapter-line = Capitolo { $chapter }
-reader-chapter-line-titled = Capitolo { $chapter } · { $title }
 reader-novel-line-scroll = Capitolo { $chapter } · scorrimento
 reader-minutes-left = { $minutes } min
 reader-zone-next = Pagina successiva
 reader-grid-title = Pagine
-reader-end-of-chapter-number = Fine del capitolo { $chapter }
-reader-end-facts = Capitolo { $chapter } · { $facts }
 reader-end-continue = Prosegui
-reader-end-swipe = Scorri per proseguire
 reader-end-series = Torna alla serie
 reader-end-again = Rileggi dall'inizio
 reader-opening-chapter = Apertura del capitolo { $chapter }
@@ -136,7 +131,6 @@ reader-paper-line = Le pagine girano subito e nulla nel lettore si muove. Cambia
 reader-grid-page = Vai alla pagina { $page }
 reader-scrubber-in-chapter = Pagina nel capitolo
 reader-failed-novel = Impossibile mostrare questo capitolo
-reader-end-tracker = Letto · aggiornati: { $trackers }
 reader-end-tracker-offline = Letto · { $tracker } si aggiorna quando torni online
 reader-end-none = Il capitolo { $chapter } non è ancora nelle tue { -source-pl }
 reader-end-none-line = { -app-name } cerca nuovi capitoli in background e li aggiunge ad Aggiornamenti.
@@ -163,23 +157,11 @@ reader-zone-previous = Pagina precedente
 reader-zone-controls = Controlli
 reader-size-small = Testo più piccolo
 reader-size-large = Testo più grande
-reader-end-pages = { $count ->
-    [one] Una pagina
-    [many] { $count } pagine
-   *[other] { $count } pagine
- }
 reader-value-on = Attivo
 reader-value-off = Disattivo
 reader-row-strip-gap = Spazio tra le immagini
 reader-paper-look = Aspetto Carta di giorno
 reader-paper-dim = Attenua la pagina
-reader-end-from = Da { $source }
-reader-divider-images = { $count ->
-    [one] Un'immagine
-    [many] { $count } immagini
-   *[other] { $count } immagini
- }
-reader-divider-facts-source = { $facts } · da { $source }
 reader-opening-waited = { $line } · { $seconds } s
 reader-sources-title = Leggi questo capitolo da
 reader-paper-parts = Cosa cambia

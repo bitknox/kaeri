@@ -72,7 +72,7 @@
     <comment>Someone started something else on the TV, which ends the cast. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.</comment>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>[Ţĥîš ðéṽîçé îšñ'ţ öñ ţĥé ñéţŵöŕķ {name} îš öñ, öŕ ŕéàçĥéš îţ ţĥŕöüĝĥ à ṼÞÑ. Çàšţîñĝ ñééðš ƀöţĥ öñ ţĥé šàɱé ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥîš ðéṽîçé îšñ'ţ öñ ţĥé ñéţŵöŕķ {name} îš öñ, öŕ ŕéàçĥéš îţ ţĥŕöüĝĥ à ṼÞÑ. Çöññéçţ ƀöţĥ ţö ţĥé šàɱé ñéţŵöŕķ ţö çàšţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.</comment>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
@@ -488,7 +488,7 @@
     <comment>Toast when a chosen match still left the title undecided.</comment>
   </data>
   <data name="NoticeSourceSearchEmpty" xml:space="preserve">
-    <value>[Ñöţĥîñĝ ƒöüñð ƒöŕ “{query}”. Ţŕý à ðîƒƒéŕéñţ šéàŕçĥ.~~~~~~~~~~~~~~~]</value>
+    <value>[Ñöţĥîñĝ ƒöüñð ƒöŕ "{query}". Ţŕý à ðîƒƒéŕéñţ šéàŕçĥ.~~~~~~~~~~~~~~~]</value>
     <comment>Toast when a search of the sources for a title found nothing.</comment>
   </data>
   <data name="MatchRuledOutFormat" xml:space="preserve">
@@ -512,7 +512,7 @@
     <comment>Why a search of a source for a show's match failed: the source isn't installed or switched on.</comment>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>[{source} ŵîļļ ƀé üšéð ƒöŕ ţĥîš ţîţļé.~~~~~~~~~~]</value>
+    <value>[Ţĥîš ţîţļé ñöŵ þļàýš ƒŕöɱ {source}.~~~~~~~~~]</value>
     <comment>Toast after the person picked a source for one title.</comment>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
@@ -739,6 +739,10 @@
     <value>[Ŕéšüɱéð àţ þàĝé {page}~~~~~~]</value>
     <comment>A notice over the page when a chapter opens where it was left. It offers Start over.</comment>
   </data>
+  <data name="ReaderResumedImage" xml:space="preserve">
+    <value>[Ŕéšüɱéð àţ îɱàĝé {image}~~~~~~]</value>
+    <comment>The same notice in a webtoon strip, which counts images rather than pages.</comment>
+  </data>
   <data name="ReaderBackToPage" xml:space="preserve">
     <value>[Ɓàçķ ţö þàĝé {page}~~~~~]</value>
     <comment>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</comment>
@@ -752,15 +756,15 @@
     <comment>The same notice for a chapter known only by its number, such as 14 or 14.5.</comment>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>[Ŕîĝĥţ ţö ļéƒţ, ðéţéçţéð~~~~~~~]</value>
+    <value>[Ļööķš ļîķé ŕîĝĥţ ţö ļéƒţ~~~~~~~~]</value>
     <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>[Ļéƒţ ţö ŕîĝĥţ, ðéţéçţéð~~~~~~~]</value>
+    <value>[Ļööķš ļîķé ļéƒţ ţö ŕîĝĥţ~~~~~~~~]</value>
     <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>[Ļöñĝ šţŕîþ, ðéţéçţéð~~~~~~]</value>
+    <value>[Ļööķš ļîķé à ļöñĝ šţŕîþ~~~~~~~]</value>
     <comment>A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.</comment>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
@@ -1436,7 +1440,7 @@
     <comment>Error: the server at a link's address could not prove it is the store the invite named.</comment>
   </data>
   <data name="StoreTokenNotKept" xml:space="preserve">
-    <value>[Çöüļðñ'ţ ķééþ ţĥé ţöķéñ ƒöŕ ţĥîš þļüĝîñ šţöŕé. {reason}~~~~~~~~~~~~~~~]</value>
+    <value>[Çöüļðñ'ţ šàṽé ţĥé ţöķéñ ƒöŕ ţĥîš þļüĝîñ šţöŕé. {reason}~~~~~~~~~~~~~~~]</value>
     <comment>Error: the token for a joined store could not be saved on this device. The reason comes from the system.</comment>
   </data>
   <data name="StoreInviteUnusable" xml:space="preserve">
@@ -1524,7 +1528,7 @@
     <comment>Error: the store's server is too old for joining with a link.</comment>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>[{name} îš öƒƒ. Îţ îš šķîþþéð ŵĥéñ ļööķîñĝ ƒöŕ éþîšöðéš.~~~~~~~~~~~~~~~~]</value>
+    <value>[{name} îš öƒƒ. Ķàéŕî šķîþš îţ ŵĥéñ ļööķîñĝ ƒöŕ éþîšöðéš.~~~~~~~~~~~~~~~~]</value>
     <comment>Toast after a source (plugin) is switched off. It is skipped when looking for episodes.</comment>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
@@ -1536,7 +1540,7 @@
     <comment>Error: a command named a plugin that is not loaded.</comment>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>[{name} ŵîļļ ƀé üšéð ƒöŕ ţĥîš ţîţļé.~~~~~~~~~~]</value>
+    <value>[Ţĥîš ţîţļé ñöŵ üšéš {name}.~~~~~~~~]</value>
     <comment>Toast after a release is chosen for a title. The name is the release's title.</comment>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
@@ -1660,11 +1664,11 @@
     <comment>Toast when no browser could be opened for a sign-in. The reason comes from the system.</comment>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>[Ñö šîĝñ-îñ ţö {tracker} îš ŵàîţîñĝ ƒöŕ ţĥàţ. Šţàŕţ ţĥé šîĝñ-îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Å šîĝñ-îñ ŕéþļý ƒŕöɱ {tracker} àŕŕîṽéð, ƀüţ ñö šîĝñ-îñ ŵàš ŵàîţîñĝ ƒöŕ îţ. Šţàŕţ ţĥé šîĝñ-îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast when a sign-in redirect arrives and no sign-in is waiting for it.</comment>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>[Ţĥàţ šîĝñ-îñ ţö {tracker} ðîðñ'ţ çöɱé ƀàçķ ƒŕöɱ ţĥîš ŕéƣüéšţ. Šţàŕţ ţĥé šîĝñ-îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé šîĝñ-îñ ŕéþļý ƒŕöɱ {tracker} ðöéšñ'ţ ɱàţçĥ ţĥé ŕéƣüéšţ. Šţàŕţ ţĥé šîĝñ-îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast when a sign-in redirect does not match the request that was made.</comment>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
@@ -1792,7 +1796,7 @@
     <comment>The reason a proxy was refused: it has no host or no port.</comment>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>[Ţĥé þŕöẋý'š àððŕéšš îš ñöţ öñé à çĥéçķ çàñ üšé.~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé þŕöẋý çĥéçķ çàñ'ţ üšé ţĥîš àððŕéšš.~~~~~~~~~~~~]</value>
     <comment>The reason a proxy could not be checked: its address is not one the check can use.</comment>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
@@ -1824,7 +1828,7 @@
     <comment>Toast when something went wrong inside the engine and it carried on.</comment>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>[Ţĥé ðàţàƀàšé ŵàš ðàɱàĝéð, šö Ķàéŕî šţàŕţéð à ñéŵ öñé. Ţĥé öļð ƒîļé îš ķéþţ àţ {path}. Ýöüŕ ţŕàçķéŕš ƀŕîñĝ ƀàçķ ŵĥàţ ţĥéý ĥöļð àţ ţĥé ñéẋţ šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé ðàţàƀàšé ŵàš ðàɱàĝéð, šö Ķàéŕî šţàŕţéð à ñéŵ öñé. Ţĥé öļð ƒîļé îš ķéþţ àţ {path}. Ŵĥàţ ýöüŕ ţŕàçķéŕš ĥöļð çöɱéš ƀàçķ àţ ţĥé ñéẋţ šýñç.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.</comment>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
@@ -1844,7 +1848,7 @@
     <comment>Message when Kaeri could not start because its database could not be opened. The path is the database file, the reason comes from the system.</comment>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>[Ķàéŕî çöüļðñ'ţ šéţ üþ îţš ñéţŵöŕķ çöññéçţîöñ ƒŕöɱ ţĥé ñéţŵöŕķ šéţţîñĝš îñ çöñƒîĝ.ţöɱļ. {reason}~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ķàéŕî çöüļðñ'ţ çöññéçţ ŵîţĥ ţĥé ñéţŵöŕķ šéţţîñĝš îñ çöñƒîĝ.ţöɱļ. Çĥéçķ ţĥéɱ, ţĥéñ ţŕý àĝàîñ. {reason}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Message when Kaeri could not start its network connection from the network settings.</comment>
   </data>
   <data name="StartFailed" xml:space="preserve">
@@ -1888,11 +1892,11 @@
     <comment>Toast: Surprise me on the Planning list, which has nothing on it to pick.</comment>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>[Öƒƒļîñé. Šéàŕçĥ þîçķš ñééð ÅñîĻîšţ.~~~~~~~~~~~]</value>
+    <value>[Ýöü'ŕé öƒƒļîñé. Šüŕþŕîšé ɱé ñééðš ÅñîĻîšţ ţö þîçķ à ţîţļé.~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.</comment>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>[Çöüļðñ'ţ þîçķ à ţîţļé ŕîĝĥţ ñöŵ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~]</value>
+    <value>[Çöüļðñ'ţ ŕéàçĥ ÅñîĻîšţ ţö þîçķ à ţîţļé. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast: Surprise me on the filters, and AniList could not be asked.</comment>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
@@ -1966,6 +1970,50 @@
   <data name="FilterPickedMore" xml:space="preserve">
     <value>[{first} +{more}~~~]</value>
     <comment>Search: a filter drop-down with three or more values picked: the first, then how many more.</comment>
+  </data>
+  <data name="SearchGenreLeftOut" xml:space="preserve">
+    <value>[Ñöţ {genre}~~~]</value>
+    <comment>Search: a genre left out of the results, as the Genre drop-down and its chip say it.</comment>
+  </data>
+  <data name="SearchFiltersButtonSet" xml:space="preserve">
+    <value>[Ƒîļţéŕš, {count} šéţ~~~~~]</value>
+    <comment>Search: the screen reader's name for the Filters button while some of the panel's filters are set.</comment>
+  </data>
+  <data name="ShortcutsSearchFilters" xml:space="preserve">
+    <value>[Šéàŕçĥ ƒîļţéŕš~~~~~]</value>
+    <comment>Search: the shortcut list's line for opening and closing the filters panel.</comment>
+  </data>
+  <data name="FilterHintClick" xml:space="preserve">
+    <value>[Çļîçķ öñçé ţö îñçļüðé, ţŵîçé ţö ļéàṽé öüţ.~~~~~~~~~~~~~]</value>
+    <comment>Search filters panel: how a genre or tag is picked with the pointer. A right-click offers each choice.</comment>
+  </data>
+  <data name="SearchPickInclude" xml:space="preserve">
+    <value>[Îñçļüðé~~~]</value>
+    <comment>Search filters panel: context menu item that includes a genre or tag in the results.</comment>
+  </data>
+  <data name="SearchPickLeaveOut" xml:space="preserve">
+    <value>[Ļéàṽé öüţ~~~]</value>
+    <comment>Search filters panel: context menu item that leaves a genre or tag out of the results.</comment>
+  </data>
+  <data name="SearchRangeFrom" xml:space="preserve">
+    <value>[Ƒŕöɱ~~]</value>
+    <comment>Search filters panel: placeholder of the lower bound of a range, such as the first year.</comment>
+  </data>
+  <data name="SearchRangeTo" xml:space="preserve">
+    <value>[Ţö~]</value>
+    <comment>Search filters panel: placeholder of the upper bound of a range, such as the last year.</comment>
+  </data>
+  <data name="SearchMinutesUnit" xml:space="preserve">
+    <value>[ɱîñ~]</value>
+    <comment>Search filters panel: the unit after the episode length's bounds, in minutes.</comment>
+  </data>
+  <data name="SearchScoreAny" xml:space="preserve">
+    <value>[Åñý~]</value>
+    <comment>Search filters panel: the score slider's value while no minimum is set.</comment>
+  </data>
+  <data name="SearchSuggestFilter" xml:space="preserve">
+    <value>[Ƒîļţéŕ ƀý {name}~~~~]</value>
+    <comment>Title bar search box: a suggestion that adds a genre or tag as a filter, rather than searching for the words.</comment>
   </data>
   <data name="TitleSeasonWhen" xml:space="preserve">
     <value>[{season} · {when}~~~]</value>
@@ -2606,7 +2654,7 @@
     <comment>Under the setting for what closing the window does while episodes download.</comment>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>[Ţĥé çöṽéŕ, à þŕöĝŕéšš ƀàŕ àñð à ļîñķ ţö ţĥé šĥöŵ öñ {tracker}. Ñééðš ţĥé ţîţļé šĥöŵñ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé çöṽéŕ, à þŕöĝŕéšš ƀàŕ àñð à ļîñķ ţö ţĥé šĥöŵ öñ {tracker}. Îţ ŵöŕķš öñļý ŵĥîļé ţĥé ţîţļé îš šĥöŵñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Under the rich presence switch: what Discord shows. The tracker is the site the link goes to.</comment>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
@@ -2766,7 +2814,7 @@
     <comment>Note under the Show TVs with Chromecast built in setting, in the Play on TV group.</comment>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>[Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš ÞÇ šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Å ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ çàñ ţĥéñ þļàý ţöŕŕéñţš. Ţĥîš ÞÇ šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the Torrents while casting setting, shown while torrents are on.</comment>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
@@ -2790,7 +2838,7 @@
     <comment>The box at the top of Settings that finds a setting by its name.</comment>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>[Ĥîĝĥéŕ ţàķéš ţĥé ƀéšţ ṽéŕšîöñ à šöüŕçé öƒƒéŕš, àñð ɱöŕé šþàçé.~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ĥîĝĥéŕ þîçķš ţĥé ƀéšţ ṽéŕšîöñ à šöüŕçé ĥàš. Îţ ţàķéš ɱöŕé šþàçé.~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the download quality row.</comment>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
@@ -2802,7 +2850,7 @@
     <comment>Note under the keep seeding row.</comment>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>[Ŕéàðš ţĥé çöɱɱéñţš öñ ÅñîĻîšţ'š ƒöŕüɱ ţĥŕéàð ƒöŕ éþîšöðéš ýöü ĥàṽé ŵàţçĥéð.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Çöɱɱéñţš çöɱé ƒŕöɱ ÅñîĻîšţ'š ƒöŕüɱ ţĥŕéàð, öñçé ýöü'ṽé ŵàţçĥéð ţĥé éþîšöðé.~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the switch for episode discussions.</comment>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
@@ -2990,7 +3038,7 @@
     <comment>Title of the window shown instead of the app when the engine stopped while the app was open.</comment>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>[Ţĥé þàŕţ öƒ ţĥé àþþ ţĥàţ ðöéš ţĥé ŵöŕķ ĥàš šţöþþéð. Öþéñ Ķàéŕî àĝàîñ ţö çàŕŕý öñ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ðöŵñļöàðš àñð šýñç šţöþþéð ŵîţĥ îţ. Öþéñ Ķàéŕî àĝàîñ ţö çàŕŕý öñ.~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under that title: what happened and what to do.</comment>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
@@ -3130,7 +3178,7 @@
     <comment>Name read by a screen reader for that switch.</comment>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>[Îţ šţöþš ƀéîñĝ ţŕîéð ƒöŕ éþîšöðéš. Ýöü çàñ îñšţàļļ îţ àĝàîñ ƒŕöɱ îţš þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ķàéŕî ŵöñ'ţ ţŕý îţ ƒöŕ éþîšöðéš àñý ɱöŕé. Ýöü çàñ îñšţàļļ îţ àĝàîñ ƒŕöɱ îţš þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Under the title of the dialog that asks before a { -plugin } is removed from the { -source-cap-pl } page.</comment>
   </data>
   <data name="StoresUpdatesCount_one" xml:space="preserve">
@@ -3390,7 +3438,7 @@
     <comment>Switch that turns saving crash reports on this device on or off.</comment>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>[Ŵĥéñ ţĥîš îš öñ, Ķàéŕî ķééþš à šĥöŕţ ŕéçöŕð öƒ éàçĥ çŕàšĥ öñ ţĥîš ðéṽîçé, ŵîţĥ ţîţļéš, àððŕéššéš àñð ñàɱéš ŕéɱöṽéð, šö ýöü çàñ àðð îţ ţö Ŕéþöŕţ à ƀüĝ. Ñöţĥîñĝ îš šéñţ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ķàéŕî ķééþš à šĥöŕţ ŕéçöŕð öƒ éàçĥ çŕàšĥ öñ ţĥîš ðéṽîçé ƒöŕ Ŕéþöŕţ à ƀüĝ, ŵîţĥ ţîţļéš, àððŕéššéš àñð ñàɱéš ŕéɱöṽéð. Ñöţĥîñĝ îš šéñţ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under that switch.</comment>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
@@ -3398,7 +3446,7 @@
     <comment>Switch that turns the notice after a crash on or off.</comment>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>[Šĥöŵš à ñöţîçé àţ ţĥé ñéẋţ ļàüñçĥ ŵîţĥ Ŕéþöŕţ…~~~~~~~~~~~~~~]</value>
+    <value>[Ķàéŕî šĥöŵš à ñöţîçé ŵîţĥ Ŕéþöŕţ… ţĥé ñéẋţ ţîɱé îţ öþéñš.~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under that switch.</comment>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
@@ -3438,7 +3486,7 @@
     <comment>Button that deletes every saved crash report.</comment>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>[Çŕàšĥ ŕéþöŕţš šţàý öñ ţĥîš ðéṽîçé. Ķàéŕî šéñðš ñöţĥîñĝ ƀý îţšéļƒ. Å ŕéþöŕţ ļéàṽéš öñļý ŵĥéñ ýöü öþéñ îţ öñ ĜîţĤüƀ ƒŕöɱ Ŕéþöŕţ à ƀüĝ. Ŕéþöŕţš àŕé ðéļéţéð àƒţéŕ 30 ðàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Çŕàšĥ ŕéþöŕţš šţàý öñ ţĥîš ðéṽîçé, àñð Ķàéŕî šéñðš ñöţĥîñĝ ƀý îţšéļƒ. Å ŕéþöŕţ ļéàṽéš öñļý ŵĥéñ ýöü öþéñ îţ öñ ĜîţĤüƀ ƒŕöɱ Ŕéþöŕţ à ƀüĝ. Ŕéþöŕţš àŕé ðéļéţéð àƒţéŕ 30 ðàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Footnote of the Crash reports group.</comment>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
@@ -3606,15 +3654,15 @@
     <comment>Note under the Settings row that shows TVs with Chromecast built in, on an iPad.</comment>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>[Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš Ṁàç šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Å ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ çàñ ţĥéñ þļàý ţöŕŕéñţš. Ţĥîš Ṁàç šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the Settings row that lets a cast play torrents, on a Mac.</comment>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>[Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš îÞĥöñé šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Å ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ çàñ ţĥéñ þļàý ţöŕŕéñţš. Ţĥîš îÞĥöñé šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the Settings row that lets a cast play torrents, on an iPhone.</comment>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>[Ļéţš à ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ þļàý ţöŕŕéñţš. Ţĥîš îÞàð šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Å ŢṼ ŵîţĥ Çĥŕöɱéçàšţ ƀüîļţ îñ çàñ ţĥéñ þļàý ţöŕŕéñţš. Ţĥîš îÞàð šéñðš ţĥé éþîšöðé ƒöŕ àš ļöñĝ àš îţ þļàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the Settings row that lets a cast play torrents, on an iPad.</comment>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
@@ -4165,6 +4213,34 @@
     <value>[Ŕîĝĥţ šţîçķ~~~~]</value>
     <comment>Name of the controller's right stick, in the controller help.</comment>
   </data>
+  <data name="PadHelpTurnPage" xml:space="preserve">
+    <value>[Ţüŕñ ţĥé þàĝé~~~~]</value>
+    <comment>Controller help: the D-pad in the reader turns the page, the way the book reads.</comment>
+  </data>
+  <data name="PadHelpPreviousChapter" xml:space="preserve">
+    <value>[Þŕéṽîöüš çĥàþţéŕ~~~~~]</value>
+    <comment>Controller help: the left shoulder button in the reader.</comment>
+  </data>
+  <data name="PadHelpNextChapter" xml:space="preserve">
+    <value>[Ñéẋţ çĥàþţéŕ~~~~]</value>
+    <comment>Controller help: the right shoulder button in the reader.</comment>
+  </data>
+  <data name="PadHelpReaderBar" xml:space="preserve">
+    <value>[Šĥöŵ öŕ ĥîðé ţĥé ƀàŕ~~~~~~]</value>
+    <comment>Controller help: the A button in the reader shows or hides the bar with the title and settings.</comment>
+  </data>
+  <data name="PadHelpReaderSettings" xml:space="preserve">
+    <value>[Ŕéàðéŕ šéţţîñĝš~~~~~]</value>
+    <comment>Controller help: the menu button in the reader.</comment>
+  </data>
+  <data name="PadHelpCloseReader" xml:space="preserve">
+    <value>[Çļöšé ţĥé ŕéàðéŕ~~~~~]</value>
+    <comment>Controller help: the B button in the reader.</comment>
+  </data>
+  <data name="PadHelpReader" xml:space="preserve">
+    <value>[Ŕéàðéŕ~~]</value>
+    <comment>Heading in the controller help for the buttons in the reader.</comment>
+  </data>
   <data name="CloseDontAsk" xml:space="preserve">
     <value>[Ðöñ'ţ àšķ àĝàîñ~~~~~]</value>
     <comment>Checkbox of the close question.</comment>
@@ -4586,7 +4662,7 @@
     <comment>Title of the confirmation on a phone.</comment>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>[Îţ þļàýš àĝàîñ öñļý ŵîţĥ à çöññéçţîöñ, öŕ öñçé ýöü ðöŵñļöàð îţ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Åƒţéŕ ţĥîš, ţĥé éþîšöðé ñééðš à çöññéçţîöñ ţö þļàý, üñļéšš ýöü ðöŵñļöàð îţ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it: what you lose.</comment>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
@@ -4602,7 +4678,7 @@
     <comment>Heading of the seeding group on the downloads screen.</comment>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>[Ŵàţçĥéð éþîšöðéš àŕé šĥàŕéð ƀàçķ ŵĥîļé Ķàéŕî îš öþéñ, üñţîļ ţĥé ŕàţîö öŕ ţĥé ţîɱé ļîɱîţ šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš, îš ŕéàçĥéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ŵàţçĥéð éþîšöðéš àŕé šĥàŕéð ƀàçķ ŵĥîļé Ķàéŕî îš öþéñ. Šĥàŕîñĝ šţöþš àţ ţĥé ŕàţîö öŕ ţîɱé ļîɱîţ ýöü šéţ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the seeding heading.</comment>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
@@ -4706,11 +4782,11 @@
     <comment>First run, page 2 of 5.</comment>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>[Þàîŕ ŵîţĥ îţ àñð ţĥîš ðéṽîçé ĝéţš ýöüŕ šöüŕçéš, ţŕàçķéŕš àñð ĥîšţöŕý. Ţĥé šţéþš àƒţéŕ ţĥîš àŕé ţĥéñ ðöñé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Þàîŕ ŵîţĥ îţ àñð ţĥîš ðéṽîçé ĝéţš ýöüŕ šöüŕçéš, ţŕàçķéŕš àñð ĥîšţöŕý, àñð ţĥé ŕéšţ öƒ šéţüþ îš ðöñé ƒöŕ ýöü.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Under the title.</comment>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>[Šĥöŵš à çöðé ţö éñţéŕ öñ ţĥàţ ðéṽîçé. Ɓöţĥ ñééð ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü ĝéţ à çöðé ţö éñţéŕ öñ ţĥàţ ðéṽîçé. Ɓöţĥ ñééð ţĥé šàɱé Ŵî-Ƒî.~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the pair row.</comment>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
@@ -4762,7 +4838,7 @@
     <comment>Line under a server's switch. The kind is Komga, Kavita or OPDS; the store is Keychain or Android Keystore.</comment>
   </data>
   <data name="FirstJoinFolders" xml:space="preserve">
-    <value>[Ƒöļðéŕš šţàý öñ {device}. Åðð ţĥîš ðéṽîçé’š öŵñ ƒöļðéŕš îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ƒöļðéŕš šţàý öñ {device}. Åðð ţĥîš ðéṽîçé'š öŵñ ƒöļðéŕš îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the list.</comment>
   </data>
   <data name="FirstJoinStepsDone" xml:space="preserve">
@@ -4770,7 +4846,7 @@
     <comment>Note when the setup answered the remaining pages.</comment>
   </data>
   <data name="FirstJoinStoreRefused" xml:space="preserve">
-    <value>[{store} ðîðñ’ţ ļéţ ţĥîš ðéṽîçé îñ. {owner} çàñ šéñð ýöü àñ îñṽîţé.~~~~~~~~~~~~~~~~~~]</value>
+    <value>[{store} ðîðñ'ţ ļéţ ţĥîš ðéṽîçé îñ. {owner} çàñ šéñð ýöü àñ îñṽîţé.~~~~~~~~~~~~~~~~~~]</value>
     <comment>Row error when a plugin store refused this device.</comment>
   </data>
   <data name="FirstJoinSyncing" xml:space="preserve">
@@ -4862,7 +4938,7 @@
     <comment>Button in the closing line when no { -tracker } is signed in.</comment>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>[Åðð à šöüŕçé ţö þļàý ƒŕöɱ Ĥöɱé. Þļüĝîñ šţöŕéš ĥàš šöɱé ţö çĥööšé ƒŕöɱ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Åðð à šöüŕçé ţö þļàý ƒŕöɱ Ĥöɱé. Þļüĝîñš çöɱé ƒŕöɱ Þļüĝîñ šţöŕéš.~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.</comment>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
@@ -5434,7 +5510,7 @@
     <comment>Line on a folder's page, under Remove folder.</comment>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>[Çöüļðñ'ţ àšķ ÅñîĻîšţ. Îţ îš ţŕîéð àĝàîñ àţ ţĥé ñéẋţ šçàñ.~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Çöüļðñ'ţ ŕéàçĥ ÅñîĻîšţ. Ţĥé ñéẋţ šçàñ ţŕîéš àĝàîñ.~~~~~~~~~~~~~~~]</value>
     <comment>Why a group of files is not matched: AniList could not be asked.</comment>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
@@ -5478,7 +5554,7 @@
     <comment>Label of the region menu.</comment>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>[Ĥîðéš ļîñķš ÅñîĻîšţ ɱàŕķš ƒöŕ öţĥéŕ çöüñţŕîéš. Ṁöšţ ļîñķš ñàɱé ñö çöüñţŕý, šö çĥööšé ýöüŕ šéŕṽîçéš ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ļîñķš ÅñîĻîšţ ɱàŕķš ƒöŕ öţĥéŕ çöüñţŕîéš àŕé ĥîððéñ. Ṁöšţ ļîñķš ñàɱé ñö çöüñţŕý, šö çĥööšé ýöüŕ šéŕṽîçéš ţöö.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the region menu.</comment>
   </data>
   <data name="LicensedYours" xml:space="preserve">
@@ -6070,7 +6146,7 @@
     <comment>Heading of the group that joins a store with an invite.</comment>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>[Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Å þļüĝîñ šţöŕé îš šîĝñéð àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Þļüĝîñš çöɱé ƒŕöɱ þļüĝîñ šţöŕéš. Éàçĥ öñé îš šîĝñéð àñð ĝîṽéš éṽéŕý ðéṽîçé îţš öŵñ ţöķéñ, ŵĥîçĥ îš ŵĥý ýöü ĵöîñ ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.</comment>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
@@ -6126,7 +6202,7 @@
     <comment>Label of the leave button while it works.</comment>
   </data>
   <data name="PartyReadyAction" xml:space="preserve">
-    <value>[Î'ɱ ŕéàðý~~~]</value>
+    <value>[Ŕéàðý ţö ŵàţçĥ~~~~~]</value>
     <comment>Label of the button that marks you as ready.</comment>
   </data>
   <data name="PartyCopyInvite" xml:space="preserve">
@@ -6146,7 +6222,7 @@
     <comment>Button on the invite card that is not accepted now.</comment>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>[Ĝéţţîñĝ ţĥîñĝš ŕéàðý…~~~~~~~]</value>
+    <value>[Ļöàðîñĝ šüĝĝéšţîöñš…~~~~~~]</value>
     <comment>Line while the form fetches its suggestions.</comment>
   </data>
   <data name="PartyServer" xml:space="preserve">
@@ -6190,7 +6266,7 @@
     <comment>Line under the server field when something else is typed.</comment>
   </data>
   <data name="PartyServerInvited" xml:space="preserve">
-    <value>[Å šéŕṽéŕ ţĥé þéŕšöñ ŵĥö îñṽîţéð ýöü çĥöšé. Ķàéŕî ðöéšñ'ţ ŕüñ îţ.~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé þéŕšöñ ŵĥö îñṽîţéð ýöü çĥöšé ţĥîš šéŕṽéŕ. Ķàéŕî ðöéšñ'ţ ŕüñ îţ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under an invite's room when the server is not the public one.</comment>
   </data>
   <data name="PartyServerShape" xml:space="preserve">
@@ -6470,7 +6546,7 @@
     <comment>Line of a recent room under its title. The names are who was there; the time is already formatted, such as Tuesday.</comment>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>[Ŕööɱš ýöü ĵöîñ šĥöŵ ĥéŕé, ţĥé ļàšţ ţéñ.~~~~~~~~~~~~]</value>
+    <value>[Ţĥé ļàšţ ţéñ ŕööɱš ýöü ĵöîñ šĥöŵ ĥéŕé.~~~~~~~~~~~~]</value>
     <comment>Line shown when no recent rooms are kept yet.</comment>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
@@ -6583,7 +6659,7 @@
   </data>
   <data name="PartyReadyOn" xml:space="preserve">
     <value>[Ŕéàðý~~]</value>
-    <comment>Label of the I'm ready button once you are ready.</comment>
+    <comment>Label of the Ready to watch button once you are ready.</comment>
   </data>
   <data name="PartyInvite" xml:space="preserve">
     <value>[Îñṽîţé~~]</value>
@@ -6870,7 +6946,7 @@
     <comment>Settings switch that hides chat in every watch party on this device.</comment>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>[Ļîñéš, ŕéàçţîöñš àñð ţĥéîŕ ţîçķš öñ ţĥé šééķ ƀàŕ šţàý öƒƒ ţĥé ṽîðéö, àñð ţĥé ƒîéļð îš ĝöñé. Ţĥé þéöþļé ļîšţ šţîļļ šĥöŵš ŵĥö îš îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Çĥàţ ļîñéš, ŕéàçţîöñš àñð ţĥéîŕ ţîçķš öñ ţĥé šééķ ƀàŕ šţàý öƒƒ ţĥé ṽîðéö, àñð ţĥé çĥàţ ƒîéļð îš ĝöñé. Ţĥé þéöþļé ļîšţ šţîļļ šĥöŵš ŵĥö îš îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under that switch.</comment>
   </data>
   <data name="PartyMute" xml:space="preserve">
@@ -7679,11 +7755,11 @@
     <comment>Notice when the file chooser could not open.</comment>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>[Çöüļðñ'ţ ļöàð ţĥàţ šüƀţîţļé ƒîļé. Çĥéçķ ţĥàţ îţ îš à šüƀţîţļé ƒîļé.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Çöüļðñ'ţ ļöàð ţĥàţ ƒîļé àš šüƀţîţļéš. Çĥööšé à šüƀţîţļé ƒîļé, šüçĥ àš .šŕţ öŕ .àšš.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Notice when a chosen subtitle file could not be loaded.</comment>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>[Çöüļðñ'ţ ļöàð ţĥàţ àüðîö ƒîļé. Çĥéçķ ţĥàţ îţ îš àñ àüðîö ƒîļé.~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Çöüļðñ'ţ ļöàð ţĥàţ ƒîļé àš àüðîö. Çĥööšé àñ àüðîö ƒîļé, šüçĥ àš .ɱķà öŕ .ƒļàç.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Notice when a chosen audio file could not be loaded.</comment>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
@@ -7797,6 +7873,10 @@
   <data name="ReaderEndRead" xml:space="preserve">
     <value>[Ŕéàð~~]</value>
     <comment>Under the top line of the page between chapters, once the chapter counts as read.</comment>
+  </data>
+  <data name="ReaderEndTracker" xml:space="preserve">
+    <value>[Ŕéàð · {trackers} üþðàţéð~~~~~~]</value>
+    <comment>Under the end of chapter line, naming the trackers the read went to.</comment>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>[Ñéẋţ~~]</value>
@@ -7934,12 +8014,56 @@
     <value>[Šýšţéɱ~~]</value>
     <comment>Look choice that follows the system's light or dark.</comment>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>[Éñð öƒ çĥàþţéŕ {chapter}~~~~~~]</value>
+    <comment>Top line of the page between chapters. The chapter is its number, such as 12.</comment>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} · {facts}~~~~~~]</value>
+    <comment>The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.</comment>
+  </data>
+  <data name="ReaderEndPages_one" xml:space="preserve">
+    <value>[Öñé þàĝé~~~]</value>
+    <comment>The next chapter's length on the page between chapters.</comment>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>[{count} þàĝéš~~~]</value>
+    <comment>The next chapter's length on the page between chapters.</comment>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>[Ƒŕöɱ {source}~~~]</value>
+    <comment>Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.</comment>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter}~~~~]</value>
+    <comment>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</comment>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>[{facts} · ƒŕöɱ {source}~~~~~]</value>
+    <comment>The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.</comment>
+  </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>[Šŵîþé ţö ķééþ ŕéàðîñĝ~~~~~~~]</value>
+    <comment>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</comment>
+  </data>
+  <data name="ReaderDividerImages_one" xml:space="preserve">
+    <value>[Öñé îɱàĝé~~~]</value>
+    <comment>The next episode's length on the divider inside a strip.</comment>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>[{count} îɱàĝéš~~~]</value>
+    <comment>The next episode's length on the divider inside a strip.</comment>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>[Çĥàþţéŕ {chapter} · {title}~~~~~~]</value>
+    <comment>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</comment>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>[Ŕéàð ţĥé ðéɱö~~~~]</value>
     <comment>Button in the first run that opens the reading demo.</comment>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>[Ţĥé ðéɱö ŕéàðš à šĥöŕţ çöɱîç àñð à šĥöŕţ šţöŕý ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Öñé šĥöŕţ çöɱîç àñð öñé šĥöŕţ šţöŕý, šĥàŕéð ƀý ţĥéîŕ ɱàķéŕš üñðéŕ Çŕéàţîṽé Çöɱɱöñš.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Under the first run's demo heading when the device is for reading.</comment>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
@@ -7971,7 +8095,7 @@
     <comment>The story's credit in About the demo.</comment>
   </data>
   <data name="DemoCreditCover" xml:space="preserve">
-    <value>[Çöṽéŕ: “{title}” ƀý {artist}, {year}. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Çöṽéŕ: "{title}" ƀý {artist}, {year}. Þüƀļîç ðöɱàîñ. Îţ çöɱéš ŵîţĥ ţĥé àþþ.~~~~~~~~~~~~~~~~~~~]</value>
     <comment>The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.</comment>
   </data>
   <data name="ReaderDemoCredit" xml:space="preserve">
@@ -7987,7 +8111,7 @@
     <comment>Search, under the demo results, when only the demo is on.</comment>
   </data>
   <data name="ReaderDemoEnd" xml:space="preserve">
-    <value>[Ţĥàţ’š ţĥé éñð öƒ ţĥé ðéɱö~~~~~~~~]</value>
+    <value>[Ţĥàţ'š ţĥé éñð öƒ ţĥé ðéɱö~~~~~~~~]</value>
     <comment>Title of the card after the demo's last page.</comment>
   </data>
   <data name="ReaderDemoEndLine" xml:space="preserve">
@@ -8007,7 +8131,7 @@
     <comment>The demo row's line in Your sources when reading is on.</comment>
   </data>
   <data name="SourcesDemoBooksWhat" xml:space="preserve">
-    <value>[Ŵöŕķš ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš, šö ýöü çàñ ţŕý Ķàéŕî ƀéƒöŕé àððîñĝ à šöüŕçé. Îţ îšñ’ţ à šöüŕçé ţö ķééþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ŵöŕķš ţĥéîŕ ɱàķéŕš šĥàŕé üñðéŕ Çŕéàţîṽé Çöɱɱöñš, šö ýöü çàñ ţŕý Ķàéŕî ƀéƒöŕé àððîñĝ à šöüŕçé. Îţ îšñ'ţ à šöüŕçé ţö ķééþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>About the demo, first line, when reading is on.</comment>
   </data>
   <data name="SourcesDemoBooksPrivate" xml:space="preserve">
@@ -8041,6 +8165,82 @@
   <data name="DemoReadChapter" xml:space="preserve">
     <value>[Ŕéàð çĥàþţéŕ {number}~~~~~]</value>
     <comment>Primary action on the demo's series page.</comment>
+  </data>
+  <data name="ProgressServerSaved" xml:space="preserve">
+    <value>[Šàṽéð ţö {server}~~~~]</value>
+    <comment>Page between chapters, under the tracker line: the server has the progress.</comment>
+  </data>
+  <data name="ProgressServerSending" xml:space="preserve">
+    <value>[Šéñðîñĝ ţö {server}…~~~~~]</value>
+    <comment>Same place, only after 600 ms without an answer.</comment>
+  </data>
+  <data name="ProgressServerOffline" xml:space="preserve">
+    <value>[Ŵîļļ šéñð ţö {server} ŵĥéñ ýöü’ŕé ƀàçķ öñļîñé~~~~~~~~~~~~]</value>
+    <comment>Same place, offline: the send waits in the queue.</comment>
+  </data>
+  <data name="ProgressServerRetrying" xml:space="preserve">
+    <value>[{server} ðîðñ’ţ àñšŵéŕ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~]</value>
+    <comment>Same place, the send failed for a reason that can pass.</comment>
+  </data>
+  <data name="ProgressServerFailed" xml:space="preserve">
+    <value>[Ñöţ šàṽéð ţö {server}: {reason}.~~~~~~~]</value>
+    <comment>Same place, the server said no. Try again follows it.</comment>
+  </data>
+  <data name="ProgressWhyKey" xml:space="preserve">
+    <value>[ţĥé šéŕṽéŕ ŕéƒüšéð ţĥé ķéý~~~~~~~~]</value>
+    <comment>Reason: a Kavita key.</comment>
+  </data>
+  <data name="ProgressWhyPassword" xml:space="preserve">
+    <value>[ţĥé šéŕṽéŕ ŕéƒüšéð ţĥé þàššŵöŕð~~~~~~~~~~]</value>
+    <comment>Reason: a Komga or OPDS password.</comment>
+  </data>
+  <data name="ProgressWhyGone" xml:space="preserve">
+    <value>[ţĥîš šéŕîéš îšñ’ţ öñ ţĥé šéŕṽéŕ àñý ɱöŕé~~~~~~~~~~~~]</value>
+    <comment>Reason.</comment>
+  </data>
+  <data name="ProgressWhyGaveUp" xml:space="preserve">
+    <value>[ñö àñšŵéŕ ƒöŕ à ðàý~~~~~~]</value>
+    <comment>Reason, after a day of retries.</comment>
+  </data>
+  <data name="ProgressRowSaved" xml:space="preserve">
+    <value>[Þŕöĝŕéšš šàṽéð {ago}~~~~~~]</value>
+    <comment>Your sources, the server's row, second line.</comment>
+  </data>
+  <data name="ProgressRowSending_one" xml:space="preserve">
+    <value>[Šéñðîñĝ 1 çĥàþţéŕ…~~~~~~]</value>
+    <comment>The server's row, after 600 ms without an answer.</comment>
+  </data>
+  <data name="ProgressRowSending_other" xml:space="preserve">
+    <value>[Šéñðîñĝ {count} çĥàþţéŕš…~~~~~~~]</value>
+    <comment>The server's row, after 600 ms without an answer.</comment>
+  </data>
+  <data name="ProgressRowOffline_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ ŵîļļ šéñð ŵĥéñ ýöü’ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~]</value>
+    <comment>The server's row, offline.</comment>
+  </data>
+  <data name="ProgressRowOffline_other" xml:space="preserve">
+    <value>[{count} çĥàþţéŕš ŵîļļ šéñð ŵĥéñ ýöü’ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~~]</value>
+    <comment>The server's row, offline.</comment>
+  </data>
+  <data name="ProgressRowRetrying_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ ŵàîţîñĝ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~]</value>
+    <comment>The server's row, the last try failed for a reason that can pass.</comment>
+  </data>
+  <data name="ProgressRowRetrying_other" xml:space="preserve">
+    <value>[{count} çĥàþţéŕš ŵàîţîñĝ. Ķàéŕî ŵîļļ ţŕý àĝàîñ.~~~~~~~~~~~~~]</value>
+    <comment>The server's row, the last try failed for a reason that can pass.</comment>
+  </data>
+  <data name="ProgressRowFailed_one" xml:space="preserve">
+    <value>[1 çĥàþţéŕ ñöţ šàṽéð: {reason}~~~~~~~~]</value>
+    <comment>The server's row, the server said no. Try again sits beside it.</comment>
+  </data>
+  <data name="ProgressRowFailed_other" xml:space="preserve">
+    <value>[{count} çĥàþţéŕš ñöţ šàṽéð: {reason}~~~~~~~~~]</value>
+    <comment>The server's row, the server said no. Try again sits beside it.</comment>
+  </data>
+  <data name="ProgressRowOff" xml:space="preserve">
+    <value>[Þŕöĝŕéšš šţàýš öñ ţĥîš {kind}~~~~~~~~]</value>
+    <comment>The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</comment>
   </data>
   <data name="NavWatch" xml:space="preserve">
     <value>[Ŵàţçĥ~~]</value>
@@ -8779,7 +8979,7 @@
     <comment>Button: search for the match by hand.</comment>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>[Ûñɱàţçĥéð šéŕîéš šţîļļ ŕéàð ƒŕöɱ ţĥé ƒöļðéŕ. Ţĥéý ĥàṽé ñö ţŕàçķéŕ þŕöĝŕéšš üñţîļ ɱàţçĥéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü çàñ šţîļļ ŕéàð üñɱàţçĥéð šéŕîéš ƒŕöɱ ţĥé ƒöļðéŕ. Ţĥéý ĝéţ ñö ţŕàçķéŕ þŕöĝŕéšš üñţîļ ţĥéý'ŕé ɱàţçĥéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Footnote of the Check matches sheet.</comment>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
@@ -8995,15 +9195,15 @@
     <comment>Line under AniList's name on the first-run page.</comment>
   </data>
   <data name="OnboardingListsLaterWatch" xml:space="preserve">
-    <value>[ṀýÅñîɱéĻîšţ, Ķîţšü, Šîɱķļ àñð Ţŕàķţ çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü çàñ àðð ṀýÅñîɱéĻîšţ, Ķîţšü, Šîɱķļ àñð Ţŕàķţ ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Under AniList on the first-run page after Watch: the other trackers, for later.</comment>
   </data>
   <data name="OnboardingListsLaterRead" xml:space="preserve">
-    <value>[ṀýÅñîɱéĻîšţ, Ķîţšü àñð ṀàñĝàÛþðàţéš çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü çàñ àðð ṀýÅñîɱéĻîšţ, Ķîţšü àñð ṀàñĝàÛþðàţéš ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Under AniList on the first-run page after Read: the other trackers, for later.</comment>
   </data>
   <data name="OnboardingListsLaterBoth" xml:space="preserve">
-    <value>[ṀýÅñîɱéĻîšţ, Ķîţšü, ṀàñĝàÛþðàţéš, Šîɱķļ àñð Ţŕàķţ çàñ ƀé àððéð ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü çàñ àðð ṀýÅñîɱéĻîšţ, Ķîţšü, ṀàñĝàÛþðàţéš, Šîɱķļ àñð Ţŕàķţ ļàţéŕ îñ Šéţţîñĝš, üñðéŕ Åççöüñţš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Under AniList on the first-run page after Both: the other trackers, for later.</comment>
   </data>
   <data name="OnboardingConnect" xml:space="preserve">
@@ -9315,11 +9515,11 @@
     <comment>Line under Downloads finished.</comment>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>[Çĥàþţéŕš ĥàṽé ţĥéîŕ öŵñ šýšţéɱ çĥàññéļ, šö ţĥéý çàñ ƀé šîļéñçéð öñ ţĥéîŕ öŵñ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Çĥàþţéŕš ĥàṽé ţĥéîŕ öŵñ šýšţéɱ çĥàññéļ, šö ýöü çàñ šîļéñçé ţĥéɱ àñð ķééþ ţĥé ŕéšţ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Under New chapters.</comment>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>[ṀàñĝàÛþðàţéš îš ŕéàçĥéð ţĥŕöüĝĥ îţš þüƀļîç ÅÞÎ.~~~~~~~~~~~~~~~]</value>
+    <value>[Ķàéŕî ţàļķš ţö ṀàñĝàÛþðàţéš ţĥŕöüĝĥ îţš þüƀļîç ÅÞÎ.~~~~~~~~~~~~~~~~]</value>
     <comment>Credit under the trackers with reading on.</comment>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
@@ -9507,7 +9707,7 @@
     <comment>Note on a series page after chapters were sent: opens the question.</comment>
   </data>
   <data name="StopNoteAction" xml:space="preserve">
-    <value>[Šéţ ɱý þļàçé~~~~]</value>
+    <value>[Šéţ ýöüŕ þļàçé~~~~~]</value>
     <comment>Button in that note.</comment>
   </data>
   <data name="StopSentOne" xml:space="preserve">
@@ -9519,11 +9719,11 @@
     <comment>First line of the sheet when several chapters were sent, from the first to the last.</comment>
   </data>
   <data name="StopFinished" xml:space="preserve">
-    <value>[Î ƒîñîšĥéð çĥàþţéŕ {chapter}~~~~~~~]</value>
+    <value>[Ƒîñîšĥéð çĥàþţéŕ {chapter}~~~~~~]</value>
     <comment>Switch in the sheet: the last chapter sent was read to its end.</comment>
   </data>
   <data name="StopSet" xml:space="preserve">
-    <value>[Šéţ ɱý þļàçé~~~~]</value>
+    <value>[Šéţ ýöüŕ þļàçé~~~~~]</value>
     <comment>The main button of the sheet: keeps the chapter chosen as the place.</comment>
   </data>
   <data name="StopKeep" xml:space="preserve">
@@ -9531,7 +9731,7 @@
     <comment>The other button of the sheet: leaves the place as it is, with the place named.</comment>
   </data>
   <data name="StopKeepPlain" xml:space="preserve">
-    <value>[Ķééþ ɱý þļàçé~~~~]</value>
+    <value>[Ķééþ çüŕŕéñţ þļàçé~~~~~~]</value>
     <comment>The other button of the sheet when the place is not a page.</comment>
   </data>
   <data name="EreadersGroup" xml:space="preserve">
@@ -9551,7 +9751,7 @@
     <comment>Line under the Share on this network switch.</comment>
   </data>
   <data name="OpdsFooter" xml:space="preserve">
-    <value>[Öñļý ŵĥîļé Ķàéŕî îš öþéñ öñ ţĥîš {device}. Þŕöĝŕéšš öñ ţĥöšé é-ŕéàðéŕš šţàýš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé ƒééð ŕüñš öñļý ŵĥîļé Ķàéŕî îš öþéñ öñ ţĥîš {device}. Þŕöĝŕéšš öñ ţĥöšé é-ŕéàðéŕš šţàýš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Footnote under the feed settings.</comment>
   </data>
   <data name="OpdsAddress" xml:space="preserve">
@@ -9579,7 +9779,7 @@
     <comment>Row in the feed settings: the port the feed listens on.</comment>
   </data>
   <data name="OpdsPortNote" xml:space="preserve">
-    <value>[Ļéàṽé îţ éɱþţý ţö þîçķ à ƒŕéé þöŕţ, öŕ üšé 1024 ţö 65535~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ļéàṽé îţ éɱþţý ƒöŕ àñý ƒŕéé þöŕţ, öŕ þîçķ öñé ƒŕöɱ 1024 ţö 65535~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the port row when it is empty.</comment>
   </data>
   <data name="OpdsPortMoved" xml:space="preserve">
@@ -9699,7 +9899,7 @@
     <comment>Button that opens the season in Search, where filters narrow it.</comment>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>[Ţĥîš šéàšöñ îñ Šéàŕçĥ, ŵĥéŕé éṽéŕý ƒîļţéŕ ñàŕŕöŵš îţ~~~~~~~~~~~~~~~~]</value>
+    <value>[Öþéñš ţĥîš šéàšöñ îñ Šéàŕçĥ, ŵĥéŕé éṽéŕý ƒîļţéŕ ŵöŕķš~~~~~~~~~~~~~~~~]</value>
     <comment>Tooltip of the Filter in Search button.</comment>
   </data>
   <data name="SortPopularity" xml:space="preserve">
@@ -9735,11 +9935,11 @@
     <comment>Accessibility label of the button that empties the search field.</comment>
   </data>
   <data name="SearchSearching" xml:space="preserve">
-    <value>[Šéàŕçĥîñĝ ƒöŕ “{query}”~~~~~~]</value>
+    <value>[Šéàŕçĥîñĝ ƒöŕ "{query}"~~~~~~]</value>
     <comment>Row under the field while a search runs. The query is what the person typed.</comment>
   </data>
   <data name="SearchResultsFor" xml:space="preserve">
-    <value>[Ŕéšüļţš ƒöŕ “{query}”~~~~~~]</value>
+    <value>[Ŕéšüļţš ƒöŕ "{query}"~~~~~~]</value>
     <comment>Heading over the results of a search.</comment>
   </data>
   <data name="SearchBrowse" xml:space="preserve">
@@ -9747,7 +9947,7 @@
     <comment>Heading over the titles shown when nothing was typed.</comment>
   </data>
   <data name="SearchNothingFound" xml:space="preserve">
-    <value>[Ñöţĥîñĝ ƒöüñð ƒöŕ “{query}”~~~~~~~]</value>
+    <value>[Ñöţĥîñĝ ƒöüñð ƒöŕ "{query}"~~~~~~~]</value>
     <comment>Title of the state when a search finds nothing.</comment>
   </data>
   <data name="SearchNothingFoundDetail" xml:space="preserve">
@@ -9759,7 +9959,7 @@
     <comment>Title of the state when filters leave nothing.</comment>
   </data>
   <data name="SearchNothingFoundWithFilters" xml:space="preserve">
-    <value>[Ñöţĥîñĝ ƒöüñð ƒöŕ “{query}” ŵîţĥ ţĥéšé ƒîļţéŕš~~~~~~~~~~~~~]</value>
+    <value>[Ñöţĥîñĝ ƒöüñð ƒöŕ "{query}" ŵîţĥ ţĥéšé ƒîļţéŕš~~~~~~~~~~~~~]</value>
     <comment>Title of the state when a search and its filters leave nothing.</comment>
   </data>
   <data name="SearchTryFewerFilters" xml:space="preserve">
@@ -9887,7 +10087,7 @@
     <comment>Filter name: only shows with a legal licence.</comment>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>[Ţîţļéš öñ ɱý ļîšţ~~~~~~]</value>
+    <value>[Ţîţļéš öñ ýöüŕ ļîšţ~~~~~~]</value>
     <comment>Filter name: how titles already on the person's list are treated.</comment>
   </data>
   <data name="FilterShow" xml:space="preserve">
@@ -10547,7 +10747,7 @@
     <comment>Line on a server's row and page after Sign out.</comment>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>[Éñðš ţĥîš ðéṽîçé'š šîĝñ-îñ öñ ţĥé šéŕṽéŕ. Ţĥé šéŕṽéŕ àñð ýöüŕ ðöŵñļöàðš šţàý àš ţĥéý àŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Šîĝñîñĝ öüţ éñðš ţĥîš ðéṽîçé'š šéššîöñ öñ ţĥé šéŕṽéŕ. Ţĥé šéŕṽéŕ àñð ýöüŕ ðöŵñļöàðš šţàý àš ţĥéý àŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it: what signing out does.</comment>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
@@ -10971,7 +11171,7 @@
     <comment>Line under it.</comment>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>[Öñé ñöţîƒîçàţîöñ ŵĥéñ àñ éþîšöðé öƒ à šĥöŵ ýöü ƒöļļöŵ çöɱéš öüţ: ţĥé šĥöŵ àñð ţĥé éþîšöðé'š ñüɱƀéŕ, ñéṽéŕ îţš ñàɱé. Å šĥöŵ çàñ ţüŕñ îţš öŵñ öƒƒ îñ îţš šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü ĝéţ öñé ñöţîƒîçàţîöñ ŵĥéñ àñ éþîšöðé öƒ à šĥöŵ ýöü ƒöļļöŵ çöɱéš öüţ. Îţ ñàɱéš ţĥé šĥöŵ àñð ţĥé éþîšöðé'š ñüɱƀéŕ, ñéṽéŕ ţĥé éþîšöðé'š ţîţļé. Å šĥöŵ çàñ ţüŕñ îţš öŵñ öƒƒ îñ îţš šéţţîñĝš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line explaining what a notification says.</comment>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
@@ -10987,7 +11187,7 @@
     <comment>Line under it on Android.</comment>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>[Öþéñš Šýšţéɱ Šéţţîñĝš, ŵĥéŕé ţĥé ƀàññéŕ šţýļé, šöüñð àñð ƀàðĝéš àŕé šéţ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Öþéñš Šýšţéɱ Šéţţîñĝš, ŵĥéŕé ýöü šéţ ţĥé ƀàññéŕ šţýļé, šöüñð àñð ƀàðĝéš.~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it on Apple.</comment>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
@@ -11043,7 +11243,7 @@
     <comment>Line under the subtitles row.</comment>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>[Çĥöšéñ îñ ţĥé þļàýéŕ. Ƒöļļöŵîñĝ Šéţţîñĝš › Þļàýƀàçķ.~~~~~~~~~~~~~~~~]</value>
+    <value>[Çĥöšéñ îñ ţĥé þļàýéŕ. Ûñţîļ ţĥéñ, Šéţţîñĝš › Þļàýƀàçķ àþþļîéš.~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the subtitles row, when nothing is remembered.</comment>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
@@ -11155,7 +11355,7 @@
     <comment>Settings row: whether a cover the pointer rests on grows into a card with the title's details and trailer.</comment>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>[Šĥöŵš à ļàŕĝéŕ çàŕð ŵîţĥ ţĥé ţŕàîļéŕ ŵĥéñ ýöü ŕéšţ ţĥé þöîñţéŕ öñ à çöṽéŕ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ŕéšţîñĝ ţĥé þöîñţéŕ öñ à çöṽéŕ öþéñš à ļàŕĝéŕ çàŕð ŵîţĥ îţš ţŕàîļéŕ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.</comment>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
@@ -11479,7 +11679,7 @@
     <comment>Field label.</comment>
   </data>
   <data name="BookServerErrUnreachable" xml:space="preserve">
-    <value>[Çöüļðñ’ţ ŕéàçĥ {host}~~~~~~]</value>
+    <value>[Çöüļðñ'ţ ŕéàçĥ {host}~~~~~~]</value>
     <comment>Error title when the server could not be reached.</comment>
   </data>
   <data name="BookServerErrUnreachableLine" xml:space="preserve">
@@ -11487,7 +11687,7 @@
     <comment>Line under it.</comment>
   </data>
   <data name="BookServerErrPassword" xml:space="preserve">
-    <value>[{host} ðîðñ’ţ àççéþţ ţĥàţ þàššŵöŕð~~~~~~~~~~]</value>
+    <value>[{host} ðîðñ'ţ àççéþţ ţĥàţ þàššŵöŕð~~~~~~~~~~]</value>
     <comment>Error title when the server turned the password down.</comment>
   </data>
   <data name="BookServerErrPasswordLine" xml:space="preserve">
@@ -11495,11 +11695,11 @@
     <comment>Line under it. The kind is Komga, Kavita or OPDS.</comment>
   </data>
   <data name="BookServerErrKey" xml:space="preserve">
-    <value>[{host} ðîðñ’ţ àççéþţ ţĥàţ ķéý~~~~~~~~]</value>
+    <value>[{host} ðîðñ'ţ àççéþţ ţĥàţ ķéý~~~~~~~~]</value>
     <comment>Error title when Kavita turned the key in an OPDS link down.</comment>
   </data>
   <data name="BookServerErrKeyLine" xml:space="preserve">
-    <value>[Ţĥé ķéý çĥàñĝéš ŵĥéñ îţ’š ŕéšéţ îñ Ķàṽîţà. Çöþý ţĥé ÖÞÐŠ ļîñķ àĝàîñ ƒŕöɱ ýöüŕ àççöüñţ šéţţîñĝš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé ķéý çĥàñĝéš ŵĥéñ îţ'š ŕéšéţ îñ Ķàṽîţà. Çöþý ţĥé ÖÞÐŠ ļîñķ àĝàîñ ƒŕöɱ ýöüŕ àççöüñţ šéţţîñĝš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="BookServerEmpty" xml:space="preserve">
@@ -11531,11 +11731,11 @@
     <comment>Line under it: the folder's path, then how many series were matched by their own details.</comment>
   </data>
   <data name="BookFolderUnsupported_one" xml:space="preserve">
-    <value>[Öñé ƒîļé Ķàéŕî çàñ’ţ öþéñ~~~~~~~~]</value>
+    <value>[Öñé ƒîļé Ķàéŕî çàñ'ţ öþéñ~~~~~~~~]</value>
     <comment>Row in the folder result: files that are books in formats Kaeri can't open.</comment>
   </data>
   <data name="BookFolderUnsupported_other" xml:space="preserve">
-    <value>[{count} ƒîļéš Ķàéŕî çàñ’ţ öþéñ~~~~~~~~]</value>
+    <value>[{count} ƒîļéš Ķàéŕî çàñ'ţ öþéñ~~~~~~~~]</value>
     <comment>Row in the folder result: files that are books in formats Kaeri can't open.</comment>
   </data>
   <data name="BookFolderUnsupportedLine" xml:space="preserve">
@@ -11567,7 +11767,7 @@
     <comment>Title when a folder holds nothing Kaeri can open.</comment>
   </data>
   <data name="BookFolderEmptyLine_one" xml:space="preserve">
-    <value>[Îţ ĥöļðš öñé ƒîļé, ŵĥîçĥ îšñ’ţ ÇƁŽ, ÇƁŔ, ÉÞÛƁ, ÞÐƑ öŕ àñ îɱàĝé.~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Îţ ĥöļðš öñé ƒîļé, ŵĥîçĥ îšñ'ţ ÇƁŽ, ÇƁŔ, ÉÞÛƁ, ÞÐƑ öŕ àñ îɱàĝé.~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="BookFolderEmptyLine_other" xml:space="preserve">
@@ -11619,11 +11819,11 @@
     <comment>Primary action when two or more plugins are for reading.</comment>
   </data>
   <data name="StoreInstalled_one" xml:space="preserve">
-    <value>[Öñé þļüĝîñ îñšţàļļéð. Îţ’š îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~]</value>
+    <value>[Öñé þļüĝîñ îñšţàļļéð. Îţ'š îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~]</value>
     <comment>Result after installing.</comment>
   </data>
   <data name="StoreInstalled_other" xml:space="preserve">
-    <value>[{count} þļüĝîñš îñšţàļļéð. Ţĥéý’ŕé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~]</value>
+    <value>[{count} þļüĝîñš îñšţàļļéð. Ţĥéý'ŕé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~]</value>
     <comment>Result after installing.</comment>
   </data>
   <data name="StoreOtherMedium" xml:space="preserve">
@@ -11643,15 +11843,15 @@
     <comment>Info title when a store has no plugins.</comment>
   </data>
   <data name="StoreEmptyLine" xml:space="preserve">
-    <value>[Ýöü’ŕé à ɱéɱƀéŕ, šö ñéŵ þļüĝîñš šĥöŵ îñ Þļüĝîñ šţöŕéš ŵĥéñ {owner} àððš ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü'ŕé à ɱéɱƀéŕ, šö ñéŵ þļüĝîñš šĥöŵ îñ Þļüĝîñ šţöŕéš ŵĥéñ {owner} àððš ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="StoreErrUnreachable" xml:space="preserve">
-    <value>[Çöüļðñ’ţ ŕéàçĥ {host}~~~~~~]</value>
+    <value>[Çöüļðñ'ţ ŕéàçĥ {host}~~~~~~]</value>
     <comment>Error title when the store doesn't answer.</comment>
   </data>
   <data name="StoreErrUnreachableLine" xml:space="preserve">
-    <value>[Ţĥé îñṽîţé ļööķš ŕîĝĥţ, ƀüţ ţĥé šţöŕé îšñ’ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ, öŕ àšķ {owner} îƒ îţ’š ŕüññîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé îñṽîţé ļööķš ŕîĝĥţ, ƀüţ ţĥé šţöŕé îšñ'ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ, öŕ àšķ {owner} îƒ îţ'š ŕüññîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="StoreOtherMediumMore_one" xml:space="preserve">
@@ -11663,15 +11863,15 @@
     <comment>Under the reading group: plugins for watching while watching is off here.</comment>
   </data>
   <data name="StoreTvReadingOnly_one" xml:space="preserve">
-    <value>[Öñé ɱöŕé îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~]</value>
+    <value>[Öñé ɱöŕé îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ'ţ ðö.~~~~~~~~~~~~~~~]</value>
     <comment>On a TV, under the list: plugins for reading, which a TV doesn't do.</comment>
   </data>
   <data name="StoreTvReadingOnly_other" xml:space="preserve">
-    <value>[{count} ɱöŕé àŕé ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~~]</value>
+    <value>[{count} ɱöŕé àŕé ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ'ţ ðö.~~~~~~~~~~~~~~~~]</value>
     <comment>On a TV, under the list: plugins for reading, which a TV doesn't do.</comment>
   </data>
   <data name="StoreTvAllReading" xml:space="preserve">
-    <value>[Éṽéŕý þļüĝîñ îñ {store} îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ’ţ ðö.~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Éṽéŕý þļüĝîñ îñ {store} îš ƒöŕ ŕéàðîñĝ, ŵĥîçĥ ţĥîš ŢṼ ðöéšñ'ţ ðö.~~~~~~~~~~~~~~~~~~~]</value>
     <comment>On a TV, info title when every plugin in a store is for reading.</comment>
   </data>
   <data name="StorePluginRow" xml:space="preserve">
@@ -11691,12 +11891,20 @@
     <comment>Notice after Install all, for 4 seconds.</comment>
   </data>
   <data name="SourceRowServer_one" xml:space="preserve">
-    <value>[{kind} · {series} šéŕîéš · àððéð ĵüšţ ñöŵ~~~~~~~~~~]</value>
-    <comment>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</comment>
+    <value>[{kind} · {series} šéŕîéš îñ {libraries} ļîƀŕàŕý · àððéð ĵüšţ ñöŵ~~~~~~~~~~~~~~~]</value>
+    <comment>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</comment>
   </data>
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>[{kind} · {series} šéŕîéš îñ {libraries} ļîƀŕàŕîéš · àððéð ĵüšţ ñöŵ~~~~~~~~~~~~~~~]</value>
-    <comment>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</comment>
+    <comment>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</comment>
+  </data>
+  <data name="SourceRowServerSeries_one" xml:space="preserve">
+    <value>[{kind} · {series} šéŕîéš îñ {libraries} ļîƀŕàŕý~~~~~~~~~~]</value>
+    <comment>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</comment>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>[{kind} · {series} šéŕîéš îñ {libraries} ļîƀŕàŕîéš~~~~~~~~~~]</value>
+    <comment>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</comment>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>[{kind} · ñö šéŕîéš ýéţ · ļööķš àĝàîñ îñ 30 ɱîñüţéš~~~~~~~~~~~~~~~]</value>
@@ -11987,7 +12195,7 @@
     <comment>Note under the facts on the Torrents page in Sources. Torrents are built in, not a plugin.</comment>
   </data>
   <data name="SourcesRebuilding" xml:space="preserve">
-    <value>[Šöüŕçéš àŕé ƀéîñĝ šéţ üþ àĝàîñ~~~~~~~~~]</value>
+    <value>[Šéţţîñĝ üþ šöüŕçéš àĝàîñ~~~~~~~~]</value>
     <comment>Over the { -source } list while the { -source-pl } are set up again after a change.</comment>
   </data>
   <data name="SourcesResponseMs" xml:space="preserve">
@@ -12047,11 +12255,11 @@
     <comment>Placeholder of the search field in the sheet.</comment>
   </data>
   <data name="MatchSearching" xml:space="preserve">
-    <value>[Šéàŕçĥîñĝ {source} ƒöŕ “{query}”~~~~~~~]</value>
+    <value>[Šéàŕçĥîñĝ {source} ƒöŕ "{query}"~~~~~~~]</value>
     <comment>While a search of the source runs.</comment>
   </data>
   <data name="MatchSearchEmpty" xml:space="preserve">
-    <value>[Ñöţĥîñĝ öñ {source} ƒöŕ “{query}”.~~~~~~~~]</value>
+    <value>[Ñöţĥîñĝ öñ {source} ƒöŕ "{query}".~~~~~~~~]</value>
     <comment>A search of the source that found nothing.</comment>
   </data>
   <data name="MatchSearchEmptyHint" xml:space="preserve">
@@ -12131,7 +12339,7 @@
     <comment>Item in the Add menu: join a plugin store.</comment>
   </data>
   <data name="SourcesEmptyBody" xml:space="preserve">
-    <value>[Šöüŕçéš àŕé ŵĥéŕé éþîšöðéš çöɱé ƒŕöɱ: ƒöļðéŕš öñ ţĥîš ðéṽîçé, ýöüŕ ɱéðîà šéŕṽéŕ, àñð þļüĝîñš ƒŕöɱ šţöŕéš ýöü ĵöîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Šöüŕçéš àŕé ŵĥéŕé éþîšöðéš çöɱé ƒŕöɱ: ƒöļðéŕš öñ ţĥîš ðéṽîçé, ýöüŕ ɱéðîà šéŕṽéŕ, àñð þļüĝîñš ƒŕöɱ þļüĝîñ šţöŕéš ýöü ĵöîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the empty state's title on a computer.</comment>
   </data>
   <data name="SourcesEmptyMore" xml:space="preserve">
@@ -12187,7 +12395,7 @@
     <comment>Link to the makers' site, in the credit block.</comment>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>[Ŕéàçĥéš Ŵîķîɱéðîà Çöɱɱöñš öñļý: üþļöàð.ŵîķîɱéðîà.öŕĝ àñð çöɱɱöñš.ŵîķîɱéðîà.öŕĝ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé ðéɱö ŕéàçĥéš öñļý Ŵîķîɱéðîà Çöɱɱöñš: üþļöàð.ŵîķîɱéðîà.öŕĝ àñð çöɱɱöñš.ŵîķîɱéðîà.öŕĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line on the demo page that names the only two hosts the demo reaches.</comment>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
@@ -12279,7 +12487,7 @@
     <comment>Line under the join form's confirmation: who answers for the store. Shown before Join.</comment>
   </data>
   <data name="StoresNoPlugins" xml:space="preserve">
-    <value>[Ţĥîš þļüĝîñ šţöŕé öƒƒéŕš ñö þļüĝîñš ýéţ.~~~~~~~~~~~~]</value>
+    <value>[Ţĥîš þļüĝîñ šţöŕé ĥàš ñö þļüĝîñš ýéţ.~~~~~~~~~~~~]</value>
     <comment>Line when the store has no plugins.</comment>
   </data>
   <data name="StoresPlugins" xml:space="preserve">
@@ -12327,7 +12535,7 @@
     <comment>Line on a row where the store is gone from the device.</comment>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>[Öƒƒļîñé: {reason}. Ţĥé þļüĝîñš ƀéļöŵ àŕé ţĥé ļàšţ ļîšţ ţĥàţ ŵàš çĥéçķéð.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Öƒƒļîñé: {reason}. Šĥöŵîñĝ ţĥé ļàšţ ļîšţ îţ šéñţ.~~~~~~~~~~~~~~]</value>
     <comment>Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.</comment>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
@@ -12467,7 +12675,7 @@
     <comment>Title of the remove confirmation.</comment>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>[Îţ îš ðéļéţéð ƒŕöɱ ţĥîš ðéṽîçé. Ţĥé þļüĝîñ šţöŕé çàñ îñšţàļļ îţ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Îţ'š ðéļéţéð ƒŕöɱ ţĥîš ðéṽîçé. Ýöü çàñ îñšţàļļ îţ àĝàîñ ƒŕöɱ ţĥé þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under it.</comment>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
@@ -12495,7 +12703,7 @@
     <comment>Line under the form title.</comment>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>[Þàšţé ţĥé îñṽîţé ļîñķ à þļüĝîñ šţöŕé'š öŵñéŕ šéñţ ýöü. Ýöü šéé ŵĥàţ ţĥé þļüĝîñ šţöŕé öƒƒéŕš ƀéƒöŕé àñýţĥîñĝ îš ĵöîñéð öŕ îñšţàļļéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Þàšţé ţĥé îñṽîţé ļîñķ à þļüĝîñ šţöŕé'š öŵñéŕ šéñţ ýöü. Ýöü šéé ŵĥàţ ţĥé þļüĝîñ šţöŕé ĥàš ƀéƒöŕé ýöü ĵöîñ öŕ îñšţàļļ àñýţĥîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the form title on desktop, where nothing happens before the check.</comment>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
@@ -12551,7 +12759,7 @@
     <comment>Line when the key in the link matches the store. The key is shown beside it.</comment>
   </data>
   <data name="StoresAnyoneNote" xml:space="preserve">
-    <value>[Ýöü ĵöîñ ŵîţĥöüţ à ñàɱé. Åñöţĥéŕ ðéṽîçé ĵöîñš ŵîţĥ ţĥé šàɱé ļîñķ.~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü ĵöîñ ŵîţĥöüţ à ñàɱé. Åñöţĥéŕ ðéṽîçé çàñ ĵöîñ ŵîţĥ ţĥé šàɱé ļîñķ.~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line when the link is open to anyone.</comment>
   </data>
   <data name="StoresAlreadyJoinedNote" xml:space="preserve">
@@ -12754,7 +12962,7 @@
     <comment>The same with no end date.</comment>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>[Ŵöŕķš öñçé, ƒöŕ ţĥé þéŕšöñ ýöü šéñð îţ ţö. Ûñţîļ {until}.~~~~~~~~~~~~~~~~]</value>
+    <value>[Ŵöŕķš öñçé, ƒöŕ ţĥé þéŕšöñ ýöü šéñð îţ ţö, üñţîļ {until}.~~~~~~~~~~~~~~~~]</value>
     <comment>Line under a single-use invite with an end date. Replaces stores-invite-once.</comment>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
@@ -12918,7 +13126,7 @@
     <comment>Button of a notice that opens the plugin stores page.</comment>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>[Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ ţĥàţ ĥöļðš šîĝñéð þļüĝîñš àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Îţ öƒƒéŕš šöüŕçéš àš þļüĝîñš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Å þļüĝîñ šţöŕé îš à šɱàļļ šéŕṽéŕ ţĥàţ ĥöļðš šîĝñéð þļüĝîñš àñð ĝîṽéš éàçĥ ðéṽîçé îţš öŵñ ţöķéñ. Îţš þļüĝîñš àðð šöüŕçéš. Ķàéŕî ŕüñš ñö þļüĝîñ šţöŕéš àñð ļîšţš ñöñé, šö ýöü ĵöîñ öñé ŵîţĥ àñ îñṽîţé ļîñķ ƒŕöɱ îţš öŵñéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Explainer on the empty plugin stores page.</comment>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
@@ -12946,7 +13154,7 @@
     <comment>Button that opens the system share sheet for the invite link.</comment>
   </data>
   <data name="CloudBrowserLine" xml:space="preserve">
-    <value>[Ýöüŕ ƀŕöŵšéŕ öþéñéð {service}’š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöüŕ ƀŕöŵšéŕ öþéñéð {service}'š þàĝé. Åļļöŵ àççéšš ţĥéŕé, àñð Ķàéŕî çàŕŕîéš öñ ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Windows and Linux dialog line while the browser is open for a cloud sign-in.</comment>
   </data>
   <data name="CloudBrowserTitle" xml:space="preserve">
@@ -12954,7 +13162,7 @@
     <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
   </data>
   <data name="CloudCloseCarriesOn" xml:space="preserve">
-    <value>[Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ’š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ'š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</comment>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
@@ -13102,7 +13310,7 @@
     <comment>Road sheet row.</comment>
   </data>
   <data name="SyncRoadCloudLine" xml:space="preserve">
-    <value>[Å çļöüð ðŕîṽé ýöü àļŕéàðý üšé, öŕ ýöüŕ öŵñ šéŕṽéŕ. Ŵöŕķš ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à ƀàçķüþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Å çļöüð ðŕîṽé ýöü àļŕéàðý üšé, öŕ ýöüŕ öŵñ šéŕṽéŕ. Îţ ŵöŕķš ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ àñð ķééþš à ƀàçķüþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Road sheet row line. Names no service, since a build may hide some (decision 14).</comment>
   </data>
   <data name="SyncRoadLater" xml:space="preserve">
@@ -13182,7 +13390,7 @@
     <comment>Group heading.</comment>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>[Ƒîļļš îñ ŵĥîļé ýöüŕ ðéṽîçéš àŕé àþàŕţ, àñð ķééþš à šéàļéð ƀàçķüþ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé ƒöļðéŕ ķééþš ýöüŕ ðéṽîçéš îñ šţéþ ŵĥîļé ţĥéý àŕé àþàŕţ, àñð ĥöļðš à šéàļéð ƀàçķüþ. Öñļý ýöüŕ ðéṽîçéš çàñ ŕéàð îţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Group footer.</comment>
   </data>
   <data name="CloudAdd" xml:space="preserve">
@@ -13638,7 +13846,7 @@
     <comment>iPad switch.</comment>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>[Öƒƒ ƀý ðéƒàüļţ. Ƒöŕ àñ îÞàð ţĥé ĥöüšéĥöļð šĥàŕéš. Ţĥé àççöüñţ ŕöŵ šŵîţçĥéš þŕöƒîļéš àţ àñý ţîɱé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Öƒƒ ƀý ðéƒàüļţ. Ţüŕñ îţ öñ ƒöŕ àñ îÞàð ţĥé ŵĥöļé ĥöüšéĥöļð šĥàŕéš. Ýöü çàñ šŵîţçĥ þŕöƒîļéš ƒŕöɱ ţĥé àççöüñţ ŕöŵ àţ àñý ţîɱé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>iPad footer.</comment>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
@@ -14679,7 +14887,7 @@
     <comment>Title of the form.</comment>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>[Ýöüŕ þàššŵöŕð ĝöéš ţö {tracker} öñçé, ƒöŕ à ţöķéñ ķéþţ öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöüŕ þàššŵöŕð ĝöéš ţö {tracker} öñçé, îñ éẋçĥàñĝé ƒöŕ à ţöķéñ ţĥàţ šţàýš öñ ţĥîš ðéṽîçé.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the title: where the password goes.</comment>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
@@ -14775,7 +14983,7 @@
     <comment>Menu item on the title page, as the title is listed there.</comment>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>[{tracker} ðîðñ'ţ àñšŵéŕ.~~~~~~]</value>
+    <value>[{tracker} ðîðñ'ţ àñšŵéŕ. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~]</value>
     <comment>Line when the tracker did not answer.</comment>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
@@ -14859,7 +15067,7 @@
     <comment>Line telling where to open the app on the TV.</comment>
   </data>
   <data name="TvTypeCode" xml:space="preserve">
-    <value>[Ţýþé ţĥé šîẋ ðîĝîţš {name} šĥöŵš. Åƒţéŕ ţĥîš, ţĥîš ðéṽîçé çöññéçţš ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţýþé ţĥé šîẋ ðîĝîţš {name} šĥöŵš. Ƒŕöɱ ţĥéñ öñ, ţĥîš ðéṽîçé çöññéçţš ƀý îţšéļƒ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line telling what to type.</comment>
   </data>
   <data name="TvPairingMoment" xml:space="preserve">
@@ -15259,7 +15467,7 @@
     <comment>The server refused. The code is a number.</comment>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>[Ţĥé ðöŵñļöàð šţöþþéð: ţĥé çöññéçţîöñ ŵàš ļöšţ.~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé ðöŵñļöàð šţöþþéð: ţĥé çöññéçţîöñ ŵàš ļöšţ. Ţŕý àĝàîñ.~~~~~~~~~~~~~~~~~~]</value>
     <comment>The connection broke.</comment>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">

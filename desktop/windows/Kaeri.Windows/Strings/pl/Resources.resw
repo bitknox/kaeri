@@ -63,7 +63,7 @@
     <value>Inne urządzenie uruchomiło coś na {name}, więc przesyłanie zostało przerwane.</value>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>To urządzenie nie jest w tej samej sieci co {name} albo łączy się z nim przez VPN. Przesyłanie wymaga jednej sieci.</value>
+    <value>To urządzenie nie jest w tej samej sieci co {name} albo łączy się z nim przez VPN. Połącz oba w jednej sieci, aby przesyłać.</value>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Utracono połączenie z {name}, więc przesyłanie zostało przerwane.</value>
@@ -411,7 +411,7 @@
     <value>Nie jest włączone.</value>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>Dla tego tytułu będzie używane źródło {source}.</value>
+    <value>Ten tytuł będzie teraz odtwarzany z {source}.</value>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
     <value>Źródło jest znowu wybierane automatycznie.</value>
@@ -627,13 +627,13 @@
     <value>Przeniesiono do rozdziału {chapter}, strona {page}, tam gdzie skończono na: {device}</value>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>Od prawej do lewej, wykryto</value>
+    <value>Raczej od prawej do lewej</value>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>Od lewej do prawej, wykryto</value>
+    <value>Raczej od lewej do prawej</value>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>Długi pasek, wykryto</value>
+    <value>Wygląda na długi pasek</value>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
     <value>Jesteś offline. Pobrane rozdziały nadal się otwierają.</value>
@@ -1212,7 +1212,7 @@
     <value>Nie udało się potwierdzić, że pod {url} jest sklep z wtyczkami z zaproszenia ({reason}). Nic nie dołączono.</value>
   </data>
   <data name="StoreTokenNotKept" xml:space="preserve">
-    <value>Sklep z wtyczkami: nie udało się zapisać tokenu. {reason}</value>
+    <value>Nie udało się zapisać tokenu dla tego sklepu z wtyczkami. {reason}</value>
   </data>
   <data name="StoreInviteUnusable" xml:space="preserve">
     <value>To zaproszenie zostało już użyte, anulowane lub wygasło. Poproś o nowe.</value>
@@ -1278,7 +1278,7 @@
     <value>Serwer {store} jest starszy i nie pozwala nikomu dołączyć linkiem. Najpierw go zaktualizuj.</value>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>Wyłączono {name}. Przy szukaniu odcinków pomija się to źródło.</value>
+    <value>Wyłączono {name}. Kaeri pomija to źródło przy szukaniu odcinków.</value>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
     <value>Włączono {name}.</value>
@@ -1287,7 +1287,7 @@
     <value>Nie wczytano {id}. Sprawdź instalację.</value>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>Dla tego tytułu wybrano: {name}.</value>
+    <value>Ten tytuł używa teraz: {name}.</value>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>Nie udało się zapisać wyboru. {reason}</value>
@@ -1377,10 +1377,10 @@
     <value>Nie udało się otworzyć przeglądarki do logowania. Sprawdź, czy któraś jest zainstalowana, i spróbuj ponownie. {reason}</value>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>Żadne logowanie do {tracker} nie czeka na tę odpowiedź. Rozpocznij logowanie od nowa.</value>
+    <value>Przyszła odpowiedź logowania z {tracker}, ale żadne logowanie na nią nie czekało. Rozpocznij logowanie od nowa.</value>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>Logowanie do {tracker} nie wróciło w odpowiedzi na to żądanie. Rozpocznij logowanie od nowa.</value>
+    <value>Odpowiedź logowania z {tracker} nie pasuje do żądania. Rozpocznij logowanie od nowa.</value>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
     <value>Logowanie do {tracker} wróciło bez tokenu. Spróbuj ponownie.</value>
@@ -1488,7 +1488,7 @@
     <value>Proxy wymaga hosta i portu.</value>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>Adres proxy nie nadaje się do sprawdzenia.</value>
+    <value>Sprawdzenie proxy nie może użyć tego adresu.</value>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>Nie udało się połączyć z serwerem.</value>
@@ -1512,7 +1512,7 @@
     <value>Coś poszło nie tak w Kaeri. Program działa dalej, ale jeśli ekran wygląda na zawieszony, zamknij go i otwórz ponownie.</value>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>Baza danych była uszkodzona, więc Kaeri utworzył nową. Stary plik zachowano w: {path}. Trackery przywrócą swoje dane przy następnej synchronizacji.</value>
+    <value>Baza danych była uszkodzona, więc Kaeri utworzył nową. Stary plik zachowano w: {path}. To, co mają trackery, wróci przy następnej synchronizacji.</value>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
     <value>Kaeri nie mógł utworzyć folderu {path}. Sprawdź, czy na dysku jest miejsce i czy do folderu można zapisywać, a potem spróbuj ponownie. {reason}</value>
@@ -1527,7 +1527,7 @@
     <value>Kaeri nie mógł otworzyć bazy danych w: {path}. Jeśli w tym folderze jest otwarta inna aplikacja Kaeri, zamknij ją i spróbuj ponownie. {reason}</value>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Kaeri nie mógł skonfigurować połączenia sieciowego według ustawień w config.toml. {reason}</value>
+    <value>Z ustawieniami sieci z config.toml Kaeri nie mógł nawiązać połączenia. Sprawdź je i spróbuj ponownie. {reason}</value>
   </data>
   <data name="StartFailed" xml:space="preserve">
     <value>Kaeri nie mógł się uruchomić. Zamknij go i otwórz ponownie. {reason}</value>
@@ -1566,10 +1566,10 @@
     <value>Lista Planowane jest pusta.</value>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>Brak połączenia. Losowanie w wyszukiwaniu wymaga AniList.</value>
+    <value>Brak połączenia. Do losowania tytułu potrzebny jest AniList.</value>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>Nie udało się teraz wylosować tytułu. Spróbuj za chwilę.</value>
+    <value>Nie udało się połączyć z AniList, aby wylosować tytuł. Spróbuj za chwilę.</value>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>Kontynuuj oglądanie</value>
@@ -1827,7 +1827,7 @@
     <value>Kontynuuj pobieranie zostawia Kaeri w obszarze powiadomień, aż pobrania się skończą.</value>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>Okładka, pasek postępu i link do tytułu na stronie {tracker}. Wymaga włączonego pokazywania tytułu.</value>
+    <value>Okładka, pasek postępu i link do tytułu na stronie {tracker}. Działa tylko wtedy, gdy tytuł jest pokazywany.</value>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
     <value>Dodaj kolejny telewizor</value>
@@ -1947,7 +1947,7 @@
     <value>Pojawiają się w Chromecast w sekcji Odtwórz w telewizorze. Ten komputer wysyła im odcinek.</value>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Pozwala telewizorowi z wbudowanym Chromecastem odtwarzać torrenty. Ten komputer wysyła odcinek, dopóki trwa odtwarzanie.</value>
+    <value>Telewizor z wbudowanym Chromecastem może wtedy odtwarzać torrenty. Ten komputer wysyła odcinek, dopóki trwa odtwarzanie.</value>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
     <value>Uruchom ponownie</value>
@@ -1971,7 +1971,7 @@
     <value>Szukaj w ustawieniach</value>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>Wyższa jakość oznacza najlepszą wersję, jaką oferuje źródło, i więcej miejsca.</value>
+    <value>Wyższa jakość wybiera najlepszą wersję, jaką ma źródło. Zajmuje więcej miejsca.</value>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
     <value>Napisy zostają przy odcinku, gdziekolwiek trafi plik.</value>
@@ -1980,7 +1980,7 @@
     <value>Pobieranie, które nadal seeduje, zostaje w pamięci podręcznej aplikacji Kaeri, a nie w folderze pobierania.</value>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>Wczytuje komentarze z wątku na forum AniList dla obejrzanych odcinków.</value>
+    <value>Komentarze pochodzą z wątku na forum AniList, gdy już obejrzysz odcinek.</value>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
     <value>Każdy obraz wczytuje się z witryny, która go hostuje, i ta widzi twój adres IP.</value>
@@ -2139,7 +2139,7 @@
     <value>Kaeri przestał działać</value>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>Część aplikacji, która wykonuje pracę, zatrzymała się. Otwórz Kaeri ponownie, aby kontynuować.</value>
+    <value>Pobieranie i synchronizacja też się zatrzymały. Otwórz Kaeri ponownie, aby kontynuować.</value>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
     <value>Otwórz ponownie</value>
@@ -2244,7 +2244,7 @@
     <value>{name} włączone</value>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>Przestaje być używana przy szukaniu odcinków. Można ją ponownie zainstalować z sklepu z wtyczkami.</value>
+    <value>Kaeri nie będzie już jej używać przy odcinkach. Możesz zainstalować ją ponownie tam, skąd pochodzi: sklep z wtyczkami.</value>
   </data>
   <data name="StoresUpdatesCount_one" xml:space="preserve">
     <value>Jedna aktualizacja</value>
@@ -2451,13 +2451,13 @@
     <value>Zapisuj raporty awarii lokalnie</value>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>Gdy to włączone, Kaeri zachowuje krótki zapis każdej awarii na tym urządzeniu, bez tytułów, adresów i nazw, abyś mógł go dodać do zgłoszenia błędu. Nic nie jest wysyłane samo.</value>
+    <value>Kaeri zachowuje na tym urządzeniu krótki zapis każdej awarii do zgłoszenia błędu, bez tytułów, adresów i nazw. Nic nie jest wysyłane samo.</value>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
     <value>Pytaj po awarii</value>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>Przy następnym uruchomieniu pokazuje powiadomienie z przyciskiem Zgłoś…</value>
+    <value>Przy następnym uruchomieniu Kaeri pokaże powiadomienie z przyciskiem Zgłoś…</value>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
     <value>Zachowane przez: {system}</value>
@@ -2487,7 +2487,7 @@
     <value>Usuń wszystkie</value>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>Raporty awarii zostają na tym urządzeniu. Kaeri niczego nie wysyła sam. Raport wychodzi tylko wtedy, gdy otworzysz go na GitHubie z poziomu Zgłoś błąd. Raporty są usuwane po 30 dniach.</value>
+    <value>Raporty awarii zostają na tym urządzeniu, a Kaeri niczego nie wysyła sam. Raport wychodzi tylko wtedy, gdy otworzysz go na GitHubie z poziomu Zgłoś błąd. Raporty są usuwane po 30 dniach.</value>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
     <value>Poprzedni tydzień</value>
@@ -2613,13 +2613,13 @@
     <value>Pojawiają się w Chromecast w sekcji Odtwórz w telewizorze. Ten iPad wysyła im odcinek.</value>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Pozwala telewizorowi z wbudowanym Chromecastem odtwarzać torrenty. Ten Mac wysyła odcinek, dopóki trwa odtwarzanie.</value>
+    <value>Telewizor z wbudowanym Chromecastem może wtedy odtwarzać torrenty. Ten Mac wysyła odcinek, dopóki trwa odtwarzanie.</value>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Pozwala telewizorowi z wbudowanym Chromecastem odtwarzać torrenty. Ten iPhone wysyła odcinek, dopóki trwa odtwarzanie.</value>
+    <value>Telewizor z wbudowanym Chromecastem może wtedy odtwarzać torrenty. Ten iPhone wysyła odcinek, dopóki trwa odtwarzanie.</value>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Pozwala telewizorowi z wbudowanym Chromecastem odtwarzać torrenty. Ten iPad wysyła odcinek, dopóki trwa odtwarzanie.</value>
+    <value>Telewizor z wbudowanym Chromecastem może wtedy odtwarzać torrenty. Ten iPad wysyła odcinek, dopóki trwa odtwarzanie.</value>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
     <value>Następny · start za {seconds} s</value>
@@ -3378,7 +3378,7 @@
     <value>Usuń pobranie</value>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>Odtworzy się ponownie tylko z połączeniem albo po ponownym pobraniu.</value>
+    <value>Potem odcinek odtworzy się tylko z połączeniem, chyba że pobierzesz go ponownie.</value>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
     <value>Usuń obejrzane pobrania</value>
@@ -3390,7 +3390,7 @@
     <value>Udostępnianie po obejrzeniu</value>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>Obejrzane odcinki są udostępniane zwrotnie, gdy Kaeri jest otwarte, aż do osiągnięcia współczynnika lub limitu czasu ustawionego w Ustawieniach, w sekcji: Źródła.</value>
+    <value>Obejrzane odcinki są udostępniane zwrotnie, gdy Kaeri jest otwarte. Udostępnianie kończy się po osiągnięciu współczynnika lub limitu czasu ustawionego w Ustawieniach, w sekcji: Źródła.</value>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
     <value>Gdy okno zostanie zamknięte podczas pobierania</value>
@@ -3474,10 +3474,10 @@
     <value>Masz już drugie urządzenie z Kaeri?</value>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>Sparuj je, a to urządzenie dostanie Twoje źródła, trackery i historię. Kolejne kroki będą wtedy gotowe.</value>
+    <value>Sparuj je, a to urządzenie dostanie Twoje źródła, trackery i historię, a reszta konfiguracji będzie gotowa.</value>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>Pokazuje kod, który wpiszesz tam, gdzie jest drugie urządzenie. Oba muszą być w tej samej sieci Wi-Fi.</value>
+    <value>Dostaniesz kod, który wpiszesz tam, gdzie jest drugie urządzenie. Oba muszą być w tej samej sieci Wi-Fi.</value>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
     <value>Przywróć z folderu w chmurze</value>
@@ -3597,7 +3597,7 @@
     <value>Zaloguj się do AniList</value>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>Dodaj źródło, aby odtwarzać ze strony Start. Sklepy z wtyczkami mają kilka do wyboru.</value>
+    <value>Dodaj źródło, aby odtwarzać ze strony Start. Wtyczki pochodzą z sekcji Sklepy z wtyczkami.</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>Brak w twoich źródłach</value>
@@ -4080,7 +4080,7 @@
     <value>Twoje pliki zostają tam, gdzie są.</value>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>Nie udało się zapytać AniList. Spróbuję ponownie przy następnym skanowaniu.</value>
+    <value>Nie udało się połączyć z AniList. Następne skanowanie spróbuje ponownie.</value>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
     <value>Wybierz dopasowanie</value>
@@ -4113,7 +4113,7 @@
     <value>Region</value>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>Ukrywa linki, które AniList oznacza dla innych krajów. Większość linków nie podaje kraju, więc wybierz też swoje serwisy.</value>
+    <value>Linki, które AniList oznacza dla innych krajów, są ukryte. Większość linków nie podaje kraju, więc wybierz też swoje serwisy.</value>
   </data>
   <data name="LicensedYours" xml:space="preserve">
     <value>Twoje serwisy</value>
@@ -4557,7 +4557,7 @@
     <value>Masz link z zaproszeniem?</value>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>Wtyczki pochodzą ze sklepów z wtyczkami. Sklep z wtyczkami jest podpisany i daje każdemu urządzeniu własny token, więc dołączasz do niego linkiem z zaproszenia od jego właściciela.</value>
+    <value>Wtyczki pochodzą ze sklepów z wtyczkami. Każdy z nich jest podpisany i daje każdemu urządzeniu własny token, dlatego dołączasz do niego linkiem z zaproszenia od właściciela.</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>Wypróbuj teraz</value>
@@ -4599,7 +4599,7 @@
     <value>Opuszczanie…</value>
   </data>
   <data name="PartyReadyAction" xml:space="preserve">
-    <value>Gotowe</value>
+    <value>Zgłoś gotowość</value>
   </data>
   <data name="PartyCopyInvite" xml:space="preserve">
     <value>Kopiuj link zaproszenia</value>
@@ -4614,7 +4614,7 @@
     <value>Nie teraz</value>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>Przygotowywanie…</value>
+    <value>Wczytywanie propozycji…</value>
   </data>
   <data name="PartyServer" xml:space="preserve">
     <value>Serwer</value>
@@ -4647,7 +4647,7 @@
     <value>Bez własnego serwera? {server} to publiczny serwer prowadzony przez {operator}.</value>
   </data>
   <data name="PartyServerInvited" xml:space="preserve">
-    <value>Serwer wybrany przez osobę, która zaprosiła. Kaeri go nie prowadzi.</value>
+    <value>Osoba, która Cię zaprosiła, wybrała ten serwer. Kaeri go nie prowadzi.</value>
   </data>
   <data name="PartyServerShape" xml:space="preserve">
     <value>Podaj serwer jako host i port, na przykład party.example:8999.</value>
@@ -4863,7 +4863,7 @@
     <value>Odcinek {episode} · z: {names} · {when}</value>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>Pokoje, do których dołączysz, pojawią się tu, ostatnie dziesięć.</value>
+    <value>Tu pojawi się dziesięć ostatnich pokoi, do których dołączysz.</value>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
     <value>Wróć</value>
@@ -5181,7 +5181,7 @@
     <value>Ukryj czat we wspólnych oglądaniach</value>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>Wiadomości, reakcje i ich znaczniki na pasku przewijania nie pojawiają się na wideo, a pole do pisania znika. Lista osób nadal pokazuje, kto jest w pokoju.</value>
+    <value>Wiadomości czatu, reakcje i ich znaczniki na pasku przewijania nie pojawiają się na wideo, a pole czatu znika. Lista osób nadal pokazuje, kto jest w pokoju.</value>
   </data>
   <data name="PartyMute" xml:space="preserve">
     <value>Wycisz: {name}</value>
@@ -5823,10 +5823,10 @@
     <value>Nie udało się otworzyć wyboru pliku. Spróbuj ponownie.</value>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>Nie udało się wczytać tego pliku napisów. Sprawdź, czy to plik napisów.</value>
+    <value>Nie udało się wczytać tego pliku jako napisów. Wybierz plik napisów, na przykład .srt lub .ass.</value>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>Nie udało się wczytać tego pliku dźwiękowego. Sprawdź, czy to plik dźwiękowy.</value>
+    <value>Nie udało się wczytać tego pliku jako dźwięku. Wybierz plik dźwiękowy, na przykład .mka lub .flac.</value>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
     <value>Ścieżka bez nazwy</value>
@@ -5911,6 +5911,9 @@
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
     <value>Przeczytano</value>
+  </data>
+  <data name="ReaderEndTracker" xml:space="preserve">
+    <value>Przeczytano · zaktualizowano: {trackers}</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Kolejny</value>
@@ -6020,11 +6023,56 @@
   <data name="ReaderLookSystem" xml:space="preserve">
     <value>Systemowy</value>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>Koniec rozdziału {chapter}</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>Rozdział {chapter} · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_one" xml:space="preserve">
+    <value>Jedna strona</value>
+  </data>
+  <data name="ReaderEndPages_few" xml:space="preserve">
+    <value>{count} strony</value>
+  </data>
+  <data name="ReaderEndPages_many" xml:space="preserve">
+    <value>{count} stron</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count} strony</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>Z: {source}</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>Rozdział {chapter}</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · z: {source}</value>
+  </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Przesuń, aby czytać</value>
+  </data>
+  <data name="ReaderDividerImages_one" xml:space="preserve">
+    <value>Jeden obraz</value>
+  </data>
+  <data name="ReaderDividerImages_few" xml:space="preserve">
+    <value>{count} obrazy</value>
+  </data>
+  <data name="ReaderDividerImages_many" xml:space="preserve">
+    <value>{count} obrazów</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} obrazu</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Rozdział {chapter} · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Przeczytaj demo</value>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>Demo zawiera krótki komiks i krótkie opowiadanie, które ich twórcy udostępniają na licencji Creative Commons.</value>
+    <value>Krótki komiks i krótkie opowiadanie, udostępnione przez twórców na licencji Creative Commons.</value>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
     <value>Jeden krótki odcinek i jeden krótki komiks, udostępnione przez twórców na licencji Creative Commons.</value>
@@ -6717,7 +6765,7 @@
     <value>Znajdź</value>
   </data>
   <data name="BookSourcesUnmatchedNote" xml:space="preserve">
-    <value>Serie bez dopasowania nadal da się czytać z folderu. Trackery nie zobaczą ich postępu, dopóki ich nie dopasujesz.</value>
+    <value>Serie bez dopasowania nadal możesz czytać z folderu. Trackery nie zobaczą ich postępu, dopóki ich nie dopasujesz.</value>
   </data>
   <data name="LibraryScopeLabel" xml:space="preserve">
     <value>Seriale lub czytanie: Biblioteka i Szukaj</value>
@@ -7161,10 +7209,10 @@
     <value>Gdy wszystkie pobierane rozdziały są gotowe</value>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>Rozdziały mają własny kanał systemowy, więc można je wyciszyć osobno.</value>
+    <value>Rozdziały mają własny kanał systemowy, więc możesz je wyciszyć, a resztę zostawić bez zmian.</value>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>MangaUpdates jest dostępne przez publiczne API.</value>
+    <value>Kaeri łączy się z MangaUpdates przez publiczne API.</value>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
     <value>Nazwa użytkownika</value>
@@ -7248,7 +7296,7 @@
     <value>Filtruj w wyszukiwarce</value>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>Ten sezon w wyszukiwarce, gdzie każdy filtr go zawęża</value>
+    <value>Otwiera ten sezon w wyszukiwarce, gdzie działają wszystkie filtry</value>
   </data>
   <data name="SortPopularity" xml:space="preserve">
     <value>Popularność</value>
@@ -7389,7 +7437,7 @@
     <value>Tylko licencjonowane</value>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>Tytuły z mojej listy</value>
+    <value>Tytuły z twojej listy</value>
   </data>
   <data name="FilterShow" xml:space="preserve">
     <value>Pokaż</value>
@@ -7926,7 +7974,7 @@
     <value>Wylogowano</value>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>Kończy logowanie na tym urządzeniu. Serwer i twoje pobrane odcinki zostają bez zmian.</value>
+    <value>Po wylogowaniu to urządzenie traci sesję na serwerze. Serwer i twoje pobrane odcinki zostają bez zmian.</value>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
     <value>Język</value>
@@ -8250,7 +8298,7 @@
     <value>Dla tytułów z twojej listy oglądanych</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>Jedno powiadomienie, gdy ukaże się odcinek śledzonego tytułu: nazwa tytułu i numer odcinka, nigdy nazwa odcinka. Tytuł może wyłączyć swoje powiadomienia we własnych ustawieniach.</value>
+    <value>Dostajesz jedno powiadomienie, gdy ukaże się odcinek śledzonego tytułu. Zawiera nazwę tytułu i numer odcinka, nigdy nazwę odcinka. Tytuł może wyłączyć swoje powiadomienia we własnych ustawieniach.</value>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
     <value>Wkrótce · najbliższe 7 dni</value>
@@ -8262,7 +8310,7 @@
     <value>Dźwięk, wibracje i ekran blokady</value>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>Otwiera Ustawienia systemowe, gdzie ustawia się styl banera, dźwięk i odznaki.</value>
+    <value>Otwiera Ustawienia systemowe, gdzie ustawisz styl banera, dźwięk i odznaki.</value>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
     <value>Wyłączone: system nie zezwala na powiadomienia dla Kaeri</value>
@@ -8304,7 +8352,7 @@
     <value>Zapamiętane z ostatniego odcinka.</value>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>Wybierane w odtwarzaczu. Zgodnie z ustawieniem: Ustawienia › Odtwarzanie.</value>
+    <value>Wybierane w odtwarzaczu. Do tego czasu obowiązują Ustawienia › Odtwarzanie.</value>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
     <value>Źródło</value>
@@ -8394,7 +8442,7 @@
     <value>Powiększaj okładki po najechaniu</value>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>Pokazuje większą kartę ze zwiastunem, gdy zatrzymasz wskaźnik na okładce.</value>
+    <value>Zatrzymanie wskaźnika na okładce otwiera większą kartę ze zwiastunem.</value>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
     <value>Wierne kontury i tekstury, bez zmiany stylu.</value>
@@ -8850,7 +8898,7 @@
     <value>Z {store} zainstalowane wtyczki: {count}</value>
   </data>
   <data name="SourceRowServer_one" xml:space="preserve">
-    <value>{kind} · Serie: {series} · dodano przed chwilą</value>
+    <value>{kind} · Serie: {series}, biblioteki: {libraries} · dodano przed chwilą</value>
   </data>
   <data name="SourceRowServer_few" xml:space="preserve">
     <value>{kind} · Serie: {series}, biblioteki: {libraries} · dodano przed chwilą</value>
@@ -8860,6 +8908,18 @@
   </data>
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · Serie: {series}, biblioteki: {libraries} · dodano przed chwilą</value>
+  </data>
+  <data name="SourceRowServerSeries_one" xml:space="preserve">
+    <value>{kind} · Serie: {series}, biblioteki: {libraries}</value>
+  </data>
+  <data name="SourceRowServerSeries_few" xml:space="preserve">
+    <value>{kind} · Serie: {series}, biblioteki: {libraries}</value>
+  </data>
+  <data name="SourceRowServerSeries_many" xml:space="preserve">
+    <value>{kind} · Serie: {series}, biblioteki: {libraries}</value>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · Serie: {series}, biblioteki: {libraries}</value>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · jeszcze bez serii · sprawdzi ponownie za 30 minut</value>
@@ -9216,7 +9276,7 @@
     <value>Dołącz do sklepu z wtyczkami…</value>
   </data>
   <data name="SourcesEmptyBody" xml:space="preserve">
-    <value>Źródła to miejsca, skąd pochodzą odcinki: foldery na tym urządzeniu, twój serwer multimediów i wtyczki ze sklepów, do których dołączysz.</value>
+    <value>Źródła to miejsca, skąd pochodzą odcinki: foldery na tym urządzeniu, twój serwer multimediów i wtyczki ze sklepów z wtyczkami, do których dołączysz.</value>
   </data>
   <data name="SourcesEmptyMore" xml:space="preserve">
     <value>Albo {join}.</value>
@@ -9258,7 +9318,7 @@
     <value>OPAP-JP</value>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>Łączy się tylko z Wikimedia Commons: upload.wikimedia.org i commons.wikimedia.org.</value>
+    <value>Demo łączy się tylko z Wikimedia Commons: upload.wikimedia.org i commons.wikimedia.org.</value>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
     <value>Demo nigdzie się nie loguje i niczego nie zapisuje w AniList.</value>
@@ -9363,7 +9423,7 @@
     <value>Sklep z wtyczkami nie jest już dołączony.</value>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>Niedostępny: {reason}. Wtyczki poniżej to ostatnia lista, jaka została sprawdzona.</value>
+    <value>Niedostępny: {reason}. Widzisz ostatnią listę, jaką wysłał.</value>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
     <value>Niedostępny. Pokazano ostatnią listę, jaką wysłał.</value>
@@ -9468,7 +9528,7 @@
     <value>Usunąć {name}?</value>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>Zostanie usunięta z tej listy. Sklep z wtyczkami może zainstalować ją ponownie.</value>
+    <value>Zostanie usunięta na tym urządzeniu. Możesz zainstalować ją ponownie ze sklepu z wtyczkami.</value>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
     <value>Nowe połączenia</value>
@@ -9489,7 +9549,7 @@
     <value>Wklej link z zaproszeniem od właściciela.</value>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>Wklej link z zaproszeniem, który wysłał właściciel. Zanim cokolwiek zostanie dodane lub zainstalowane, zobaczysz, co oferuje sklep z wtyczkami.</value>
+    <value>Wklej link z zaproszeniem, który wysłał ci właściciel sklepu z wtyczkami. Zanim do czegoś dołączysz lub coś zainstalujesz, zobaczysz, co jest w sklepie.</value>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
     <value>Wklej link z zaproszeniem od właściciela. Link Kaeri:// otwarty z Wiadomości wypełnia ten formularz od razu.</value>
@@ -9693,7 +9753,7 @@
     <value>Każdy, kto ma ten link, może dołączyć, dopóki go nie anulujesz.</value>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>Działa raz, dla osoby, której je wyślesz. Do {until}.</value>
+    <value>Działa raz, dla osoby, której je wyślesz, do {until}.</value>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
     <value>Działa raz, dla osoby, której je wyślesz, dopóki nie anulujesz zaproszenia.</value>
@@ -9840,7 +9900,7 @@
     <value>Otwórz sklepy z wtyczkami</value>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>Sklep z wtyczkami to mały serwer, który przechowuje podpisane wtyczki i daje każdemu urządzeniu własny token. Oferuje źródła jako wtyczki. Kaeri nie prowadzi żadnych sklepów z wtyczkami i żadnych nie wymienia, więc dołączasz do jednego linkiem z zaproszenia od jego właściciela.</value>
+    <value>Sklep z wtyczkami to mały serwer, który przechowuje podpisane wtyczki i daje każdemu urządzeniu własny token. Jego wtyczki dodają źródła. Kaeri nie prowadzi żadnych sklepów z wtyczkami i żadnych nie wymienia, więc dołączasz do jednego linkiem z zaproszenia od jego właściciela.</value>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>Czym jest sklep z wtyczkami?</value>
@@ -10038,7 +10098,7 @@
     <value>Folder w chmurze</value>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>Uzupełnia dane, gdy twoje urządzenia są daleko od siebie, i tworzy zaszyfrowaną kopię zapasową. Odczytać ją mogą tylko twoje urządzenia.</value>
+    <value>Folder synchronizuje twoje urządzenia, gdy są daleko od siebie, i przechowuje zaszyfrowaną kopię zapasową. Odczytać ją mogą tylko twoje urządzenia.</value>
   </data>
   <data name="CloudAdd" xml:space="preserve">
     <value>Dodaj folder w chmurze</value>
@@ -10386,7 +10446,7 @@
     <value>Pytaj, kto ogląda, przy uruchomieniu</value>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>Domyślnie wyłączone. Dla iPada, którego używa cały dom. Wiersz konta pozwala zmienić profil w każdej chwili.</value>
+    <value>Domyślnie wyłączone. Włącz na iPadzie, którego używa cały dom. Profil możesz zmienić w każdej chwili w wierszu konta.</value>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
     <value>Zmień profil</value>
@@ -11193,7 +11253,7 @@
     <value>Zaloguj się w {tracker}</value>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>Hasło trafi do {tracker} tylko raz. Token zostanie zapisany lokalnie.</value>
+    <value>Hasło trafi do {tracker} tylko raz, w zamian za token zapisany lokalnie.</value>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
     <value>E-mail lub nazwa użytkownika</value>
@@ -11265,7 +11325,7 @@
     <value>Na liście {tracker}</value>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker} nie odpowiedział.</value>
+    <value>{tracker} nie odpowiedział. Spróbuj ponownie za chwilę.</value>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
     <value>{tracker} nie ma jeszcze obsady, załogi ani rekomendacji dla tego tytułu.</value>
@@ -11328,7 +11388,7 @@
     <value>Otwórz Kaeri w telewizorze. Musi być w tej samej sieci Wi-Fi co to urządzenie.</value>
   </data>
   <data name="TvTypeCode" xml:space="preserve">
-    <value>Wpisz sześć cyfr, które pokazuje {name}. Potem to urządzenie połączy się samo.</value>
+    <value>Wpisz sześć cyfr, które pokazuje {name}. Od tej pory to urządzenie będzie łączyć się samo.</value>
   </data>
   <data name="TvPairingMoment" xml:space="preserve">
     <value>To chwilę potrwa.</value>
@@ -11628,7 +11688,7 @@
     <value>Pobieranie przerwane: serwer je odrzucił ({code}). Spróbuj później.</value>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>Pobieranie przerwane: połączenie zostało utracone.</value>
+    <value>Pobieranie przerwane: połączenie zostało utracone. Spróbuj ponownie.</value>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">
     <value>Nie udało się zapisać pliku: {reason}</value>

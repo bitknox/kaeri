@@ -1,7 +1,7 @@
 licensed-title = Licensierade tjänster
 licensed-body = { -app-name } kan öppna titlar i streamingtjänster du betalar för. Den spelar dem aldrig själv. Länkarna kommer från AniList.
 licensed-region = Region
-licensed-region-line = Döljer länkar som AniList markerat för andra länder. De flesta länkar anger inget land, så välj även dina tjänster.
+licensed-region-line = Länkar som AniList markerat för andra länder döljs. De flesta länkar anger inget land, så välj även dina tjänster.
 licensed-yours = Dina tjänster
 licensed-show-all = Visa alla { $count }
 licensed-region-system = Följ den här { -device }en

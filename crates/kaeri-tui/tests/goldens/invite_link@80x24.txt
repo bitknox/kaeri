@@ -9,7 +9,7 @@ Kaeri                                                  plugins ●  ·  anilist 
   https://plugins.example/join/k3Vb9TqLwX2mPz8RfYc4Hn#Qe7Ga1Ud5Js0Lo6Wi2Ty9
   Rb3Np8
 
-  Copied to the clipboard where the terminal allows it, or select it to co…
+  Copied, if this terminal allows it. If not, select the link to copy it.
   Works once. Expires in 6 days.
   Opening it in a browser shows how to join and does not use it up.
 
@@ -49,8 +49,8 @@ r09 c02-07 fg=text bg=ground mod=BOLD
 r09 c08-79 fg=rule bg=ground
 r10 c00-79 fg=rule bg=ground
 r11 c00-01 fg=rule bg=ground
-r11 c02-74 fg=text-dim bg=ground
-r11 c75-79 fg=rule bg=ground
+r11 c02-72 fg=text-dim bg=ground
+r11 c73-79 fg=rule bg=ground
 r12 c00-01 fg=rule bg=ground
 r12 c02-31 fg=text-dim bg=ground
 r12 c32-79 fg=rule bg=ground

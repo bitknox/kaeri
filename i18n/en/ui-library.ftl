@@ -475,7 +475,7 @@ library-picker-title = Choose a folder with your episodes.
 library-remove-detail = Your files stay where they are.
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = Couldn't ask AniList. It is tried again at the next scan.
+library-reason-offline = Couldn't reach AniList. The next scan tries again.
 
 # Button that opens the match picker for a group.
 # @max 24

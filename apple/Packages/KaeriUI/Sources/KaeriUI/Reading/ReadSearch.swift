@@ -169,6 +169,12 @@ private struct ReadSearchBody: View {
                     Rectangle().fill(Palette.faintRule).frame(height: 1).accessibilityHidden(true)
                 }
                 more
+                if store.demo.state.onlyBooks {
+                    Text(L.searchDemoOnlyBooks)
+                        .font(.plat(mac: 12, touch: 13))
+                        .foregroundStyle(.haze)
+                        .padding(.top, 12)
+                }
                 OtherScopeRow()
             }
             .frame(maxWidth: Device.isMac ? 620 : .infinity, alignment: .leading)
@@ -222,8 +228,21 @@ private struct OtherScopeRow: View {
 
 /// A result: the cover, the title and its facts, and your list on the right.
 private struct ReadResultRow: View {
+    @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
     let tile: WorkTile
+
+    /// On a phone the place in the series goes under the facts, where it has the width.
+    private var compact: Bool {
+        #if os(iOS)
+        sizeClass == .compact
+        #else
+        false
+        #endif
+    }
 
     var body: some View {
         Button {
@@ -236,13 +255,19 @@ private struct ReadResultRow: View {
                         .font(.plat(mac: 13, touch: 17, weight: .semibold))
                         .foregroundStyle(.silk)
                         .lineLimit(1)
-                    Text(tile.facts.map(\.text).joined(separator: " · ")) // i18n-skip
+                    Text(store.reading.series[tile.work]?.demo != nil ? L.searchDemoReads : tile.facts.map(\.text).joined(separator: " · ")) // i18n-skip
                         .font(.plat(mac: 12, touch: 15))
                         .foregroundStyle(.haze)
                         .lineLimit(1)
+                    if compact, let next = tile.next {
+                        Text(next.text)
+                            .font(.plat(mac: 12, touch: 15))
+                            .foregroundStyle(.haze)
+                            .lineLimit(2)
+                    }
                 }
                 Spacer(minLength: 8)
-                if let next = tile.next {
+                if !compact, let next = tile.next {
                     Text(next.text)
                         .font(.plat(mac: 12, touch: 15))
                         .foregroundStyle(.haze)
@@ -256,6 +281,8 @@ private struct ReadResultRow: View {
         .pointerHover()
         .contextMenu { ReadTileMenu(tile: tile) }
         .accessibilityElement(children: .combine)
+        // The demo's own titles are the only ones asked about: the series says whether it is one.
+        .task { if store.demo.reading.works.contains(where: { $0.series == tile.title }) { store.reading.loadSeries(tile.work) } }
     }
 }
 

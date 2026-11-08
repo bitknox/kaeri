@@ -240,6 +240,14 @@ impl BookSources {
         }
     }
 
+    /// The host a reader's line between chapters names for `work`: the book server its chapters
+    /// come from, when that server receives progress.
+    pub fn progress_host(&self, work: &WorkId) -> Option<String> {
+        let (source, _) = self.edition_of(work, None)?;
+        let server = self.store().book_server(&source).ok().flatten()?;
+        server.report_progress.then(|| host_of(&server.address))
+    }
+
     fn queue_report(
         &self,
         work: &WorkId,

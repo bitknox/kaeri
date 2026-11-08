@@ -80,6 +80,7 @@ extension EngineLaunch {
         case "readingupdatesheet": return .readingUpdateSheet
         case "readingjoinask": return .readingJoinAsk
         case "readinghome": return .readingHome
+        case "readingdemo": return .readingDemo
         case "readingseries": return .readingSeries
         case "readingdownloads": return .readingDownloads
         case "readermangartl": return .readerMangaRtl

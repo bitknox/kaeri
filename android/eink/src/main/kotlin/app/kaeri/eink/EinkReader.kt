@@ -75,6 +75,22 @@ import app.kaeri.reader.rememberPagedReaderState
 import app.kaeri.reader.rightToLeft
 import app.kaeri.reader.text
 import app.kaeri.store.text
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.traversalIndex
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.sp
+import app.kaeri.reader.HeldLine
+import app.kaeri.reader.TextThenLink
+import app.kaeri.reader.rememberServerLine
+import app.kaeri.reader.serverLineWords
+import app.kaeri.store.ServerLine
 import kotlinx.coroutines.delay
 
 /** What the e-ink reader leaves to the app around it. */
@@ -84,6 +100,8 @@ class EinkReaderActions(
     val onSettings: () -> Unit,
     val onSeries: () -> Unit,
     val onDownloads: () -> Unit,
+    /** Add a source, from the end of the demo. */
+    val onAddSource: () -> Unit = onBack,
 )
 
 /**
@@ -112,6 +130,14 @@ fun EinkReader(
     fun toggleChrome() {
         chrome = !chrome
         paint(if (chrome) EinkPaint.ChromeOpen else EinkPaint.ChromeClose)
+    }
+
+    // A demo work opens with the chrome, its credit in the top bar, for 3 s.
+    LaunchedEffect(view?.demoCredit != null, view?.chapter?.id) {
+        if (view?.demoCredit == null) return@LaunchedEffect
+        if (!chrome) toggleChrome()
+        delay(DEMO_CREDIT_MILLIS)
+        if (chrome) toggleChrome()
     }
 
     fun act(action: ReaderAction) {
@@ -160,7 +186,7 @@ fun EinkReader(
                     paint(EinkPaint.ImagePage(colour))
                 },
                 motion = false,
-                endPage = { EinkEndPage(state, actions, onContinue = { next -> session.openChapter(next.id) }) },
+                endPage = { EinkEndPage(state, actions, onContinue = { next -> session.openChapter(next.id) }, onFirstPage = { pager.go(0, TurnHow.JUMP) }) },
                 waiting = { page, long -> if (long) EinkPageWaiting(page) },
                 failed = { page, failure, retry -> EinkPageFailed(page, failure, retry, skip = { pager.forward(TurnHow.TURN) }) },
             )
@@ -175,6 +201,7 @@ fun EinkReader(
                 onBack = actions.onBack,
                 onContents = actions.onContents,
                 modifier = Modifier.align(Alignment.TopCenter),
+                subtitle = view.demoCredit?.let { demo -> demo.licence?.let { Strings.readerDemoCredit(LocalContext.current, demo.series, demo.author, it) } ?: demo.credit },
             )
             val page = (leaf?.parts?.firstOrNull()?.page?.toInt() ?: 0) + 1
             EinkBottomBar(
@@ -291,7 +318,15 @@ fun BoxScope.EinkFolio(leaf: Leaf, state: ReaderState) {
 
 /** The top bar: back, the series and chapter, and Contents. Opaque, a 2 dp rule under it. */
 @Composable
-fun EinkTopBar(title: String, chapter: ChapterRow, onBack: () -> Unit, onContents: () -> Unit, modifier: Modifier = Modifier) {
+fun EinkTopBar(
+    title: String,
+    chapter: ChapterRow,
+    onBack: () -> Unit,
+    onContents: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** In place of the chapter line: a demo work's credit while it is held. */
+    subtitle: String? = null,
+) {
     val context = LocalContext.current
     Row(
         modifier.fillMaxWidth().height(EinkSizes.TopBar).background(EinkColours.Paper).bottomRule().padding(horizontal = 8.dp),
@@ -305,7 +340,7 @@ fun EinkTopBar(title: String, chapter: ChapterRow, onBack: () -> Unit, onContent
             Text(title, style = EinkType.ReaderTitle, maxLines = 1)
             val number = chapterNumber(chapter)
             Text(
-                chapter.title?.let { Strings.einkChapterTitled(context, number, it) } ?: Strings.einkChapter(context, number),
+                subtitle ?: chapter.title?.let { Strings.einkChapterTitled(context, number, it) } ?: Strings.einkChapter(context, number),
                 style = EinkType.Secondary,
                 maxLines = 1,
             )
@@ -433,21 +468,47 @@ fun BoxScope.EinkChapterFailed(failure: ReadingFailure, onRetry: () -> Unit, onB
 
 /** The page between chapters: what was read, and what comes next or why nothing does. */
 @Composable
-fun EinkEndPage(state: ReaderState, actions: EinkReaderActions, onContinue: (ChapterRow) -> Unit, modifier: Modifier = Modifier) {
+fun EinkEndPage(
+    state: ReaderState,
+    actions: EinkReaderActions,
+    onContinue: (ChapterRow) -> Unit,
+    modifier: Modifier = Modifier,
+    /** Back to page 1, from the end of the demo. */
+    onFirstPage: () -> Unit = {},
+) {
     val context = LocalContext.current
     val view = state.view ?: return
+    if (view.demoCredit != null) {
+        EinkDemoEnd(actions.onAddSource, onFirstPage, modifier)
+        return
+    }
+    val server = rememberServerLine(view.work, view.chapter.id)
+    val read = view.chapter.id in state.read
+    // Continue, Back to the series, then Try again on the line.
+    val first = remember { FocusRequester() }
+    val second = remember { FocusRequester() }
+    val retry = remember { FocusRequester() }
     val end = state.end
     val next = end?.next ?: view.next
     val number = chapterNumber(view.chapter)
-    Column(modifier.fillMaxSize().background(EinkColours.Paper).padding(horizontal = 44.dp, vertical = 92.dp)) {
+    Column(modifier.fillMaxSize().background(EinkColours.Paper).padding(horizontal = 44.dp, vertical = 92.dp).semantics { isTraversalGroup = true }) {
         Text(Strings.einkEndOfChapter(context, number), style = EinkType.Secondary.copy(fontSize = EinkType.Secondary.fontSize * (16f / 15f)))
         Spacer(Modifier.height(8.dp))
         Text(view.chapter.title ?: view.title, style = EinkType.PageTitle)
-        if (view.chapter.id in state.read) {
+        if (read || server.held) {
             Spacer(Modifier.height(8.dp))
-            Text(Strings.einkCountedRead(context), style = EinkType.Secondary)
+            // With a server line coming the counted line's place is kept, so nothing under it moves.
+            Text(
+                Strings.einkCountedRead(context),
+                style = EinkType.Secondary,
+                modifier = if (read) Modifier else Modifier.alpha(0f).clearAndSetSemantics {},
+            )
         }
-        Spacer(Modifier.height(28.dp))
+        if (server.held) {
+            Spacer(Modifier.height(2.dp))
+            EinkServerLine(server, retry, after = if (next != null) second else FocusRequester.Default, Modifier.fillMaxWidth())
+        }
+        Spacer(Modifier.height(if (server.held) 14.dp else 28.dp))
         Box(Modifier.width(72.dp).height(3.dp).background(EinkColours.Ink))
         Spacer(Modifier.height(28.dp))
         if (next != null) {
@@ -459,9 +520,16 @@ fun EinkEndPage(state: ReaderState, actions: EinkReaderActions, onContinue: (Cha
             Spacer(Modifier.height(8.dp))
             Text(nextFacts(context, next, view.mode, view.direction), style = EinkType.Secondary)
             Spacer(Modifier.height(36.dp))
-            EinkSolidButton(Strings.einkContinueTo(context, nextNumber), { onContinue(next) }, Modifier.fillMaxWidth())
+            EinkSolidButton(Strings.einkContinueTo(context, nextNumber), { onContinue(next) }, Modifier.fillMaxWidth().focusRequester(first).focusProperties { this.next = second })
             Spacer(Modifier.height(14.dp))
-            EinkOutlinedButton(Strings.einkBackToSeries(context), actions.onSeries, Modifier.fillMaxWidth())
+            EinkOutlinedButton(
+                Strings.einkBackToSeries(context),
+                actions.onSeries,
+                Modifier.fillMaxWidth().focusRequester(second).focusProperties {
+                    previous = first
+                    if (server.line?.canRetry == true) this.next = retry
+                },
+            )
             Spacer(Modifier.weight(1f))
             Text(Strings.einkTurnToContinue(context), style = EinkType.Tertiary, modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
@@ -486,6 +554,86 @@ fun EinkEndPage(state: ReaderState, actions: EinkReaderActions, onContinue: (Cha
                 EinkSolidButton(Strings.einkBackToSeries(context), actions.onSeries, Modifier.fillMaxWidth())
             }
         }
+    }
+}
+
+/** How long a demo work's credit stays in the top bar after the reader opens. */
+private const val DEMO_CREDIT_MILLIS = 3_000L
+
+/**
+ * The server line on e-ink: 16 sp in #333, no glyph for offline or trying again, the ink warn
+ * before not saved, and Sending as a still ring; nothing turns or fades. Try again is underlined
+ * in ink. A polite live region, read after the page's buttons.
+ */
+@Composable
+private fun EinkServerLine(server: HeldLine, retry: FocusRequester, after: FocusRequester, modifier: Modifier) {
+    val context = LocalContext.current
+    val line = server.line
+    val style = EinkType.Secondary.copy(fontSize = 16.sp, lineHeight = 21.sp)
+    Box(modifier.semantics { liveRegion = LiveRegionMode.Polite; traversalIndex = 1f }) {
+        // Two lines' space, laid out as the line's own text is, so a second line moves nothing.
+        Text("\n", style = style, modifier = Modifier.alpha(0f).clearAndSetSemantics {})
+        if (line == null) return@Box
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            when (line) {
+                is ServerLine.Sending -> Box(
+                    Modifier.padding(top = 2.5.dp).size(16.dp).border(2.dp, EinkColours.Ink, androidx.compose.foundation.shape.CircleShape),
+                )
+                is ServerLine.Failed -> EinkWarn(Modifier.padding(top = 2.5.dp).size(16.dp))
+                else -> Unit
+            }
+            TextThenLink(
+                text = { onLayout -> Text(serverLineWords(context, line), style = style, onTextLayout = onLayout) },
+                link = {
+                    if (line.canRetry) Text(
+                        Strings.readerTryAgain(context),
+                        style = style.copy(color = EinkColours.Ink, textDecoration = TextDecoration.Underline),
+                        softWrap = false,
+                        modifier = Modifier.focusRequester(retry).focusProperties { previous = after }.einkClick(onClick = server::retry),
+                    )
+                },
+                gap = 5.dp,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+        }
+    }
+}
+
+/** The board's e-ink warn: an ink triangle with the mark cut in paper. */
+@Composable
+private fun EinkWarn(modifier: Modifier) {
+    androidx.compose.foundation.Canvas(modifier) {
+        val s = size.minDimension / 24f
+        val triangle = androidx.compose.ui.graphics.Path().apply {
+            moveTo(12f * s, 3.2f * s)
+            lineTo(1.8f * s, 20.5f * s)
+            lineTo(22.2f * s, 20.5f * s)
+            close()
+        }
+        drawPath(triangle, EinkColours.Ink)
+        drawLine(EinkColours.Paper, Offset(12f * s, 9.5f * s), Offset(12f * s, 14.5f * s), strokeWidth = 2f * s, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        drawCircle(EinkColours.Paper, radius = 1.2f * s, center = Offset(12f * s, 17.4f * s))
+    }
+}
+
+/**
+ * The end of the demo on e-ink: no card, the title and its line centred from 300 dp, Add a source
+ * in ink and Back to page 1 outlined, each as wide as its words.
+ */
+@Composable
+private fun EinkDemoEnd(onAddSource: () -> Unit, onFirstPage: () -> Unit, modifier: Modifier) {
+    val context = LocalContext.current
+    Column(
+        modifier.fillMaxSize().background(EinkColours.Paper).padding(start = 30.dp, end = 30.dp, top = 300.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(Strings.readerDemoEnd(context), style = EinkType.PageTitle, textAlign = TextAlign.Center)
+        Spacer(Modifier.height(12.dp))
+        Text(Strings.readerDemoEndLine(context), style = EinkType.Secondary.copy(fontSize = 18.sp, lineHeight = 24.sp), textAlign = TextAlign.Center)
+        Spacer(Modifier.height(28.dp))
+        EinkSolidButton(Strings.readerDemoAddSource(context), onAddSource)
+        Spacer(Modifier.height(14.dp))
+        EinkOutlinedButton(Strings.readerDemoAgain(context), onFirstPage)
     }
 }
 

@@ -5,7 +5,7 @@
 onboarding-read-demo = Read the demo
 
 # Under the first run's demo heading when the device is for reading.
-onboarding-demo-books-detail = The demo reads a short comic and a short story their makers share under Creative Commons.
+onboarding-demo-books-detail = One short comic and one short story, shared by their makers under Creative Commons.
 
 # Under the first run's demo heading when the device is for both.
 onboarding-demo-both-detail = One short episode and one short comic, shared by their makers under Creative Commons.
@@ -39,7 +39,7 @@ demo-credit-story = { $title } by { $author }. Public domain. It comes with the 
 # @arg title: text
 # @arg artist: text
 # @arg year: text
-demo-credit-cover = Cover: “{ $title }” by { $artist }, { $year }. Public domain. It comes with the app.
+demo-credit-cover = Cover: "{ $title }" by { $artist }, { $year }. Public domain. It comes with the app.
 
 # Credit capsule in the reader's top bar on page 1.
 # @arg title: text
@@ -54,7 +54,7 @@ search-demo-reads = Demo · Reads now
 search-demo-only-books = Only the demo is on. Other titles appear once you add a { -source }.
 
 # Title of the card after the demo's last page.
-reader-demo-end = That’s the end of the demo
+reader-demo-end = That's the end of the demo
 
 # Line under it.
 reader-demo-end-line = To read your own books, add a folder, a server or a { -plugin-store }.
@@ -69,7 +69,7 @@ reader-demo-again = Back to page 1
 sources-demo-books-line = A comic and a story · CC BY 4.0 and public domain
 
 # About the demo, first line, when reading is on.
-sources-demo-books-what = Works their makers share under Creative Commons, so you can try { -app-name } before adding a { -source }. It isn’t a { -source } to keep.
+sources-demo-books-what = Works their makers share under Creative Commons, so you can try { -app-name } before adding a { -source }. It isn't a { -source } to keep.
 
 # About the demo, in place of sources-demo-private when reading is on.
 sources-demo-books-private = The demo never signs in anywhere and never writes to a { -tracker }.

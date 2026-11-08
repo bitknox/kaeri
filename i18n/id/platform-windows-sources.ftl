@@ -22,7 +22,7 @@ sources-status-working = Siap
 sources-version-ready = Versi { $version } siap
 sources-use-this = Gunakan { -source } ini
 sources-use-name = { $name } aktif
-sources-remove-detail = Tidak akan dicoba lagi untuk episode. Anda bisa memasangnya lagi dari { -plugin-store }.
+sources-remove-detail = { -app-name } tidak akan mencobanya lagi untuk episode. Anda bisa memasangnya lagi dari { -plugin-store } asalnya.
 stores-updates-count = { $count ->
    *[other] { $count } perlu update
  }

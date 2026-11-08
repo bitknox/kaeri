@@ -60,26 +60,21 @@ eink-colour-title = Czy ten ekran pokazuje kolory?
 eink-colour-body = To { -device } nie mówi, czy ma kolory, więc { -app-name } nie wie. Spójrz na cztery kwadraty.
 eink-colour-squares = Cztery kwadraty: czerwony, zielony, niebieski i bursztynowy
 eink-colour-hint = Jeśli wyglądają jak cztery szarości, wybierz Tylko szarości. Możesz to zmienić w Ustawienia › Ekran.
-eink-colour-yes = Widzę kolory
+eink-colour-yes = Tak, kolory
 eink-colour-no = Tylko szarości
 eink-colour-skip = Pomiń
-eink-colour-skipped = Pominięto. Obrazy zostają kolorowe, a szary ekran pokaże je w szarościach.
-eink-page-keys-hint = Aby przewracać strony, ustaw przyciski stron na Głośność w ustawieniach systemu.
+eink-colour-skipped = Pominięto. Obrazy zostają kolorowe. Szary ekran pokaże je w szarościach.
+eink-page-keys-hint = Aby przewracać strony przyciskami, ustaw je na Głośność w ustawieniach systemu.
 eink-new = Nowe
 reader-notice-start-over = Zacznij od nowa
 reader-notice-go-back = Wróć
 reader-notice-change = Zmień
 reader-settings = Ustawienia czytnika
-reader-chapter-line = Rozdział { $chapter }
-reader-chapter-line-titled = Rozdział { $chapter } · { $title }
 reader-novel-line-scroll = Rozdział { $chapter } · przewijanie
 reader-minutes-left = { $minutes } min
 reader-zone-next = Następna strona
 reader-grid-title = Strony
-reader-end-of-chapter-number = Koniec rozdziału { $chapter }
-reader-end-facts = Rozdział { $chapter } · { $facts }
 reader-end-continue = Czytaj
-reader-end-swipe = Przesuń, aby czytać
 reader-end-series = Wróć do serii
 reader-end-again = Czytaj od początku
 reader-opening-chapter = Otwieranie rozdziału { $chapter }
@@ -138,7 +133,6 @@ reader-paper-line = Strony zmieniają się od razu i nic w czytniku się nie rus
 reader-grid-page = Przejdź do strony { $page }
 reader-scrubber-in-chapter = Strona w rozdziale
 reader-failed-novel = Nie udało się wyświetlić rozdziału
-reader-end-tracker = Przeczytano · zaktualizowano: { $trackers }
 reader-end-tracker-offline = Przeczytano · { $tracker } zaktualizuje się po powrocie online
 reader-end-none = Twoje { -source-pl } nie mają jeszcze rozdziału { $chapter }
 reader-end-none-line = { -app-name } sprawdza nowe rozdziały w tle i dodaje je w sekcji Aktualizacje.
@@ -165,25 +159,11 @@ reader-zone-previous = Poprzednia strona
 reader-zone-controls = Sterowanie
 reader-size-small = Mniejszy tekst
 reader-size-large = Większy tekst
-reader-end-pages = { $count ->
-    [one] Jedna strona
-    [few] { $count } strony
-    [many] { $count } stron
-   *[other] { $count } strony
- }
 reader-value-on = Włączony
 reader-value-off = Wyłączony
 reader-row-strip-gap = Odstęp między obrazami
 reader-paper-look = Wygląd papieru w dzień
 reader-paper-dim = Przyciemnij stronę
-reader-end-from = Z: { $source }
-reader-divider-images = { $count ->
-    [one] Jeden obraz
-    [few] { $count } obrazy
-    [many] { $count } obrazów
-   *[other] { $count } obrazu
- }
-reader-divider-facts-source = { $facts } · z: { $source }
 reader-opening-waited = { $line } · { $seconds } s
 reader-sources-title = Czytaj ten rozdział z
 reader-paper-parts = Co zmienia

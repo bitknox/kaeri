@@ -58,26 +58,21 @@ eink-colour-title = Cet écran affiche-t-il la couleur ?
 eink-colour-body = { -app-name } n'a pas pu le savoir pour cet { -device }. Regardez les quatre carrés.
 eink-colour-squares = Quatre carrés : rouge, vert, bleu et ambre
 eink-colour-hint = S'ils ressemblent à quatre gris, choisissez Gris seulement. Modifiable dans Réglages › Écran.
-eink-colour-yes = Je vois des couleurs
+eink-colour-yes = Oui, en couleur
 eink-colour-no = Gris seulement
 eink-colour-skip = Passer
-eink-colour-skipped = Passé : les images restent en couleur, affichées en gris sur un écran gris.
-eink-page-keys-hint = Réglez les boutons de page sur Volume dans les réglages de l'{ -device } pour tourner les pages.
+eink-colour-skipped = Passé. Les images restent en couleur. Un écran gris les affiche en gris.
+eink-page-keys-hint = Pour tourner les pages avec les boutons, réglez-les sur Volume dans les réglages de l'{ -device }.
 eink-new = Nouveau
 reader-notice-start-over = Recommencer
 reader-notice-go-back = Revenir
 reader-notice-change = Modifier
 reader-settings = Réglages du lecteur
-reader-chapter-line = Chapitre { $chapter }
-reader-chapter-line-titled = Chapitre { $chapter } · { $title }
 reader-novel-line-scroll = Chapitre { $chapter } · défilement
 reader-minutes-left = { $minutes } min
 reader-zone-next = Page suivante
 reader-grid-title = Pages
-reader-end-of-chapter-number = Fin du chapitre { $chapter }
-reader-end-facts = Chapitre { $chapter } · { $facts }
 reader-end-continue = { -continue-cap }
-reader-end-swipe = Balayez pour lire la suite
 reader-end-series = Retour à la série
 reader-end-again = Relire depuis le début
 reader-opening-chapter = Ouverture du chapitre { $chapter }
@@ -136,7 +131,6 @@ reader-paper-line = Les pages tournent aussitôt et rien ne bouge dans le lecteu
 reader-grid-page = Aller à la page { $page }
 reader-scrubber-in-chapter = Page dans le chapitre
 reader-failed-novel = Impossible d'afficher ce chapitre
-reader-end-tracker = Lu · { $trackers } à jour
 reader-end-tracker-offline = Lu · { $tracker } se mettra à jour une fois en ligne
 reader-end-none = Pas de chapitre { $chapter } dans vos { -source-pl }
 reader-end-none-line = { -app-name } cherche de nouveaux chapitres en arrière-plan et les ajoute à Mises à jour.
@@ -163,23 +157,11 @@ reader-zone-previous = Page précédente
 reader-zone-controls = Commandes
 reader-size-small = Texte plus petit
 reader-size-large = Texte plus grand
-reader-end-pages = { $count ->
-    [one] Une page
-    [many] { $count } pages
-   *[other] { $count } pages
- }
 reader-value-on = Activé
 reader-value-off = Désactivé
 reader-row-strip-gap = Espace entre images
 reader-paper-look = Apparence papier le jour
 reader-paper-dim = Atténuer la page
-reader-end-from = De { $source }
-reader-divider-images = { $count ->
-    [one] Une image
-    [many] { $count } images
-   *[other] { $count } images
- }
-reader-divider-facts-source = { $facts } · de { $source }
 reader-opening-waited = { $line } · { $seconds } s
 reader-sources-title = Lire ce chapitre depuis
 reader-paper-parts = Ce que cela change

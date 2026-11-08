@@ -34,6 +34,16 @@ final class HoverTrailer {
     private(set) var priming: TrailerPage?
     @ObservationIgnored private var primed = false
     @ObservationIgnored private var primeTimeout: Task<Void, Never>?
+    /// The pool let its views go: a page being primed goes too, and the next warm-up primes again.
+    func cool() {
+        primeTimeout?.cancel()
+        if let page = priming {
+            priming = nil
+            page.hear = nil
+            page.close()
+        }
+        primed = false
+    }
 
     /// Load the player once a run, with no title, then prime it with `first`, the first cover on
     /// screen with a trailer: its video loads and plays a moment, hidden and muted, and the page

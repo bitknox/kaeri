@@ -20,13 +20,13 @@ stores-devices-count = { $count ->
    *[other] { $count } { -device-pl }
  }
 stores-replace-by-hand-detail = La { -release } { $version } di { $store } sostituisce la copia aggiunta a mano.
-stores-open-join-on-detail = Si uniscono senza nome. Se lo disattivi, il link smette di funzionare; se lo riattivi, ne viene creato uno nuovo.
-stores-open-join-off-detail = Possono unirsi solo le persone che invito. Se lo attivi, chiunque abbia il link si unisce, senza nome.
+stores-open-join-on-detail = Le persone si uniscono senza nome. Se lo disattivi, il link smette di funzionare. Se lo riattivi, ne ottieni uno nuovo.
+stores-open-join-off-detail = Possono unirsi solo le persone che inviti. Se lo attivi, chiunque abbia il link può unirsi, senza nome.
 stores-open-join-no-names = Non viene salvato nessun nome.
 stores-open-join-keep-working = Continuano a funzionare finché non li rimuovi.
 stores-device-seen-at = Visto { $when }
-stores-device-not-seen = Non visto da
-stores-publish-offered = Il { -plugin-store } offre { $version }
+stores-device-not-seen = Non più visto da quando si è unito
+stores-publish-offered = Il { -plugin-store } ha { $version }
 stores-publish-not-yet = Non ancora nel { -plugin-store }
 torrents-sheet-edit-proxy = Modifica proxy
 torrents-edit-proxy = Modifica proxy
@@ -58,7 +58,7 @@ tv-seen-just-now = adesso
 stores-link-send-once = Invia questo link a { $who }. Funziona una sola volta, fino a { $until }.
 stores-link-send-once-anyone = Invia questo link alla persona a cui è destinato. Funziona una sola volta, fino a { $until }.
 sources-remove-title = Rimuovere { $name }?
-sources-remove-detail-device = Viene eliminato da questo { -device }. Un { -plugin-store } può installarlo di nuovo.
+sources-remove-detail-device = Viene eliminato da questo { -device }. Puoi installarlo di nuovo da un { -plugin-store }.
 library-matched-apple = Abbinati
 servers-row-summary-apple = { $series ->
     [one] 1 serie

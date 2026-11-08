@@ -41,3 +41,25 @@ reader-end-caught-up = Jesteś na bieżąco
 reader-gap-none = Brak
 reader-gap-small = Mały
 reader-look-system = Systemowy
+reader-end-tracker = Przeczytano · zaktualizowano: { $trackers }
+reader-end-of-chapter-number = Koniec rozdziału { $chapter }
+reader-end-facts = Rozdział { $chapter } · { $facts }
+reader-end-pages = { $count ->
+    [one] Jedna strona
+    [few] { $count } strony
+    [many] { $count } stron
+   *[other] { $count } strony
+ }
+reader-end-from = Z: { $source }
+
+reader-chapter-line = Rozdział { $chapter }
+
+reader-divider-facts-source = { $facts } · z: { $source }
+reader-end-swipe = Przesuń, aby czytać
+reader-divider-images = { $count ->
+    [one] Jeden obraz
+    [few] { $count } obrazy
+    [many] { $count } obrazów
+   *[other] { $count } obrazu
+ }
+reader-chapter-line-titled = Rozdział { $chapter } · { $title }

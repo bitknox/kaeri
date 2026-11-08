@@ -44,6 +44,10 @@ runs=(
   # The found skip times' states at the board's size: SIZES=found SHOTS=found.
   "found 960x600 ${SHOTS:-found}"
   "narrow 400x780 ${SHOTS:-home,calendar,title,show-settings,library,downloads,providers,store,join,settings}"
+  # Reading's places, series page and reader on the reading scene: SIZES=reading. The Downloads
+  # place has a queue of its own scene.
+  "reading 1280x800 ${SHOTS:-reading}"
+  "readingdl 1280x800 ${SHOTS:-read-downloads}"
   # A first launch with the demo as the only source: a run of its own, as its shots need it.
   "demo 1280x800 ${SHOTS:-demo-home,demo-search,demo-title,demo-starting,demo-removed}"
 )
@@ -53,7 +57,11 @@ for run in "${runs[@]}"; do
   data="/tmp/kaeri-scene-$name"
   rm -rf "$data"
   extra=(--showcase)
-  case "$name" in demo) extra=(--demo) ;; esac
+  case "$name" in
+    demo) extra=(--demo) ;;
+    reading) extra=(--scene reading) ;;
+    readingdl) extra=(--scene reading-downloads) ;;
+  esac
   case ",$shots," in *,downloads,*|*,all,*) extra+=(--downloading) ;; esac
   # The match picker's shots need the finished title's source to be unsure of its match.
   [ "$name" = match ] && extra+=(--unsure)

@@ -1,5 +1,5 @@
 onboarding-read-demo = Ler a demo
-onboarding-demo-books-detail = A demo lê um quadrinho curto e um conto curto que os autores compartilham sob Creative Commons.
+onboarding-demo-books-detail = Um quadrinho curto e um conto curto, compartilhados pelos autores sob Creative Commons.
 onboarding-demo-both-detail = Um episódio curto e um quadrinho curto, compartilhados pelos autores sob Creative Commons.
 home-demo-only-books = Só a demo está ativa. Adicione uma pasta, um servidor ou uma { -plugin-store } para ler seus próprios livros.
 home-spotlight-read = Ler

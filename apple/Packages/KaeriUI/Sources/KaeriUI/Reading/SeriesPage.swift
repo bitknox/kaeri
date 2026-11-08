@@ -23,15 +23,23 @@ enum ReadSeriesWords {
         case .read(_, let label): L.actionReadChapter(n: label)
         case .continue(_, let label, let page): L.actionContinueChapter(n: label, page: Int(page))
         // A part goes by the source's own name for it where it has one, as its row does.
-        case .continuePart(_, _, let percent?, let named?): L.actionContinueNamed(label: named, percent: Int(percent))
+        case .continuePart(_, _, let percent?, let named?): L.actionContinueNamed(label: midSentence(named), percent: Int(percent))
         case .continuePart(_, let label, let percent?, nil): L.actionContinuePart(n: label, percent: Int(percent))
-        case .continuePart(_, _, nil, let named?): L.actionContinueNamedPlain(label: named)
+        case .continuePart(_, _, nil, let named?): L.actionContinueNamedPlain(label: midSentence(named))
         case .continuePart(_, let label, nil, nil): L.actionContinuePartPlain(n: label)
-        case .readPart(_, _, let named?): L.actionReadNamed(label: named)
+        case .readPart(_, _, let named?): L.actionReadNamed(label: midSentence(named))
         case .readPart(_, let label, nil): L.actionReadPart(n: label)
         case .readAgain: L.actionReadAgain
         case .noSource, .none: nil
         }
+    }
+
+    /// A source's own name for a part, inside a sentence: "Chapter 3" reads "chapter 3" after
+    /// Continue, as the app's own chapter words do.
+    static func midSentence(_ named: String) -> String {
+        let words = ["Chapter ", "Part ", "Volume "] // i18n-skip: a source's own words, matched
+        guard let word = words.first(where: { named.hasPrefix($0) }) else { return named }
+        return word.lowercased() + named.dropFirst(word.count)
     }
 
     @MainActor
@@ -86,12 +94,13 @@ enum ReadSeriesWords {
         return parts.joined(separator: " · ") // i18n-skip
     }
 
-    /// "Volume 9 · chapters 77 to 84 · read", or "Not in a volume yet · chapters 85 to 88".
+    /// "Volume 9 · chapters 77 to 84 · read", or "Not in a volume yet · chapters 85 to 88", for
+    /// manga and novels alike.
     static func volume(_ group: VolumeGroup, novel: Bool) -> (name: String, rest: String) {
         let name = group.volume.map { L.seriesVolume(n: $0) } ?? L.seriesNoVolume
         var rest: [String] = []
         let numbers = group.chapters.compactMap { $0.number.flatMap(Double.init) }
-        if !novel, let low = numbers.min(), let high = numbers.max(), low != high {
+        if let low = numbers.min(), let high = numbers.max(), low != high {
             rest.append(L.seriesChapterRange(from: number(low), to: number(high)))
         }
         if group.allRead { rest.append(L.seriesVolumeRead) }
@@ -114,6 +123,8 @@ struct SeriesPage: View {
     let work: String
     @State private var choosing: Set<String>?
     @State private var newestFirst = true
+    /// The heading has scrolled under the bar: the bar takes the title, as the title page does.
+    @State private var headingGone = false
 
     private var wide: Bool {
         #if os(iOS)
@@ -142,9 +153,20 @@ struct SeriesPage: View {
                         PhoneSeriesHeader(series: series, choosing: $choosing)
                     }
                     if case .send? = navigator.seriesSheet {} else { SendStatusRows(work: work) }
-                    SeriesChapters(series: series, chapters: store.reading.chapters[work],
-                                   choosing: $choosing, newestFirst: $newestFirst)
-                        .padding(.top, wide ? 32 : 24)
+                    if let demo = series.demo {
+                        // The demo's one chapter on its own row: no volumes, order or choosing.
+                        DemoChapter(work: work, demo: demo, chapters: store.reading.chapters[work])
+                            .padding(.top, wide ? 32 : 24)
+                    } else {
+                        SeriesChapters(series: series, chapters: store.reading.chapters[work],
+                                       choosing: $choosing, newestFirst: $newestFirst)
+                            .padding(.top, wide ? 32 : 24)
+                    }
+                    if let demo = series.demo, let other = series.demoOther,
+                       let info = store.demo.reading.works.first(where: { $0.id != demo.id }) {
+                        DemoAlso(id: other, info: info)
+                            .padding(.top, wide ? 32 : 24)
+                    }
                 } else if let failure = store.reading.failures[.series] {
                     ScreenFailed(title: L.titleLoadFailed, reason: failure.words) { store.reading.loadSeries(work) }
                 } else {
@@ -160,6 +182,11 @@ struct SeriesPage: View {
             .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .scrollIndicators(.automatic)
+        .onScrollGeometryChange(for: Bool.self) { geometry in
+            geometry.contentOffset.y + geometry.contentInsets.top > (wide ? 80 : 56)
+        } action: { _, gone in
+            withAnimation(.quick) { headingGone = gone }
+        }
         .background(.ground)
         // The list insets above the bar and fades under it, as a bottom toolbar does.
         .safeAreaBar(edge: .bottom) { chooseBar(series) }
@@ -235,7 +262,7 @@ struct SeriesPage: View {
             Text(L.readAgainLine)
         }
         #if os(iOS)
-        .navigationTitle(choosing.map { L.seriesChosen(n: $0.count) } ?? series?.titles.display ?? "")
+        .navigationTitle(choosing.map { L.seriesChosen(n: $0.count) } ?? (headingGone ? series?.titles.display ?? "" : ""))
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(choosing != nil)
         .toolbar {
@@ -292,6 +319,7 @@ private struct WideSeriesHeader: View {
     let series: SeriesView
     @Binding var choosing: Set<String>?
     @State private var width: CGFloat = 0
+    private var demo: Bool { series.demo != nil }
 
     /// Cover, a text column of about 340 and the panel, with the gaps between.
     private var panelBeside: Bool { Device.isMac || width >= 940 }
@@ -306,12 +334,12 @@ private struct WideSeriesHeader: View {
                         .padding(.top, 20)
                 }
                 .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                if panelBeside {
+                if panelBeside, !demo {
                     SeriesPanel(series: series)
                         .frame(width: Device.isMac ? 300 : 320)
                 }
             }
-            if !panelBeside {
+            if !panelBeside, !demo {
                 SeriesPanel(series: series)
             }
         }
@@ -321,6 +349,7 @@ private struct WideSeriesHeader: View {
 
 /// The iPhone: the cover beside the title and facts, the actions across, then the panel's rows.
 private struct PhoneSeriesHeader: View {
+    @Environment(AppStore.self) private var store
     let series: SeriesView
     @Binding var choosing: Set<String>?
 
@@ -331,16 +360,25 @@ private struct PhoneSeriesHeader: View {
                 SeriesTitleBlock(series: series, compact: true)
             }
             SeriesActions(series: series, stretch: true, choosing: $choosing)
-            SeriesPanel(series: series)
+            if series.demo == nil { SeriesPanel(series: series) }
         }
     }
 }
 
 private struct SeriesTitleBlock: View {
+    @Environment(AppStore.self) private var store
     let series: SeriesView
     let compact: Bool
 
     var body: some View {
+        if let demo = series.demo {
+            DemoSeriesTitle(series: series, demo: demo, compact: compact)
+        } else {
+            standard
+        }
+    }
+
+    private var standard: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(series.titles.display)
                 .font(.showTitle(size: compact ? 22 : (Device.isMac ? 30 : 34), relativeTo: .largeTitle))
@@ -404,6 +442,7 @@ private struct SeriesActions: View {
     let stretch: Bool
     @Binding var choosing: Set<String>?
     @State private var removing = false
+    @Environment(\.dynamicTypeSize) private var type
 
     private var height: CGFloat { Device.isMac ? 34 : (stretch ? 50 : 44) }
     private var font: CGFloat { Device.isMac ? 13 : 17 }
@@ -412,7 +451,17 @@ private struct SeriesActions: View {
 
     var body: some View {
         Group {
-            if stretch {
+            if series.demo != nil {
+                // The demo is for trying the reader: no lists, tracking or downloads.
+                main
+            } else if stretch, type.isAccessibilitySize {
+                // At the largest sizes each action has the width to itself.
+                VStack(spacing: 12) {
+                    main
+                    statusMenu
+                    downloadMenu
+                }
+            } else if stretch {
                 VStack(spacing: 12) {
                     main
                     HStack(spacing: 12) {
@@ -469,7 +518,9 @@ private struct SeriesActions: View {
                     if icon {
                         Image(systemName: "book").font(.ui(font < 15 ? 12 : 15)).accessibilityHidden(true)
                     }
-                    Text(words).lineLimit(1).fixedSize(horizontal: !stretch, vertical: false)
+                    Text(words).lineLimit(type.isAccessibilitySize ? 3 : 1)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: !stretch, vertical: type.isAccessibilitySize)
                 }
                 .frame(maxWidth: stretch ? .infinity : nil)
             }
@@ -626,6 +677,7 @@ private struct SeriesMoreMenu: View {
 private struct SeriesPanel: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(\.dynamicTypeSize) private var type
     let series: SeriesView
 
     var body: some View {
@@ -695,20 +747,34 @@ private struct SeriesPanel: View {
     }
 
     private func row(label: String, value: String, action: String?, perform: @escaping () -> Void) -> some View {
-        HStack(alignment: .center, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label).font(.plat(mac: 11, touch: 13)).foregroundStyle(.haze).lineLimit(1)
-                Text(value).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk).lineLimit(2)
-            }
-            Spacer(minLength: 8)
-            if let action {
-                Button(action, action: perform)
-                    .buttonStyle(.plain)
-                    .font(.plat(mac: 13, touch: 15, weight: .semibold))
-                    .foregroundStyle(.silk)
-                    .frame(minHeight: Device.isMac ? 24 : 44)
-                    .contentShape(.rect)
-                    .pointerHover()
+        let words = VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.plat(mac: 11, touch: 13)).foregroundStyle(.haze).lineLimit(type.isAccessibilitySize ? 3 : 1)
+            Text(value).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk).lineLimit(type.isAccessibilitySize ? 4 : 2)
+        }
+        let button = action.map { action in
+            Button(action, action: perform)
+                .buttonStyle(.plain)
+                .font(.plat(mac: 13, touch: 15, weight: .semibold))
+                .foregroundStyle(.silk)
+                .fixedSize()
+                .frame(minHeight: Device.isMac ? 24 : 44)
+                .contentShape(.rect)
+                .pointerHover()
+        }
+        return Group {
+            // At the largest sizes the button takes a line of its own under the words, whole.
+            if type.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 4) {
+                    words
+                    button
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack(alignment: .center, spacing: 12) {
+                    words
+                    Spacer(minLength: 8)
+                    button
+                }
             }
         }
         .padding(.vertical, Device.isMac ? 8 : 12)

@@ -40,3 +40,23 @@ reader-end-caught-up = Sei in pari
 reader-gap-none = Nessuno
 reader-gap-small = Piccolo
 reader-look-system = Sistema
+reader-end-tracker = Letto · aggiornati: { $trackers }
+reader-end-of-chapter-number = Fine del capitolo { $chapter }
+reader-end-facts = Capitolo { $chapter } · { $facts }
+reader-end-pages = { $count ->
+    [one] Una pagina
+    [many] { $count } pagine
+   *[other] { $count } pagine
+ }
+reader-end-from = Da { $source }
+
+reader-chapter-line = Capitolo { $chapter }
+
+reader-divider-facts-source = { $facts } · da { $source }
+reader-end-swipe = Scorri per proseguire
+reader-divider-images = { $count ->
+    [one] Un'immagine
+    [many] { $count } immagini
+   *[other] { $count } immagini
+ }
+reader-chapter-line-titled = Capitolo { $chapter } · { $title }

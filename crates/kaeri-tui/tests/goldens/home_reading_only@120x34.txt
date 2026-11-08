@@ -3,8 +3,8 @@ Kaeri                                                                           
 ▌ ▸  Home                   │
   ▤  Calendar               │   Reading is in the apps
   ▦  Seasonal               │
-  /  Search                 │   The terminal has no reader. Manga, webtoons and light novels are read in the Kaeri
-  ▥  Library                │   apps, and your reading stays in step through sync.
+  /  Search                 │   The terminal has no reader. Manga, webtoons and light novels open in the Kaeri apps,
+  ▥  Library                │   and sync keeps your progress in step.
   ↓  Downloads              │
   ◇  Sources                │   Press I to change what Kaeri is for.
   ◎  Accounts               │
@@ -55,11 +55,11 @@ r04 c28-28 fg=rule
 r05 c02-02 fg=text-dim
 r05 c05-10 fg=text-dim
 r05 c28-28 fg=rule
-r05 c32-113 fg=text-dim
+r05 c32-115 fg=text-dim
 r06 c02-02 fg=text-dim
 r06 c05-11 fg=text-dim
 r06 c28-28 fg=rule
-r06 c32-81 fg=text-dim
+r06 c32-68 fg=text-dim
 r07 c02-02 fg=text-dim
 r07 c05-13 fg=text-dim
 r07 c28-28 fg=rule

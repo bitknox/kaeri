@@ -202,8 +202,8 @@ pub struct ServeArgs {
 pub enum StoreCommand {
     /// Serve a store, creating it on the first run.
     ///
-    /// Prints an owner invite until someone uses it. Everything after that — inviting people,
-    /// removing them, publishing — is done from the store's page in the app, or its admin page.
+    /// Prints an owner invite until someone uses it. After that, inviting people, removing them
+    /// and publishing happen on the store's page in the app, or on its admin page.
     Serve(ServeArgs),
     /// Print a one-time invite link.
     Invite {
@@ -319,7 +319,7 @@ fn behind_platform_proxy() -> bool {
 async fn open_existing(storage: &StorageArgs) -> Result<(AnyStore, String), String> {
     let storage = storage.storage()?;
     if !storage.exists() {
-        return Err(format!("{} is not a store — `serve` creates one", storage.describe()));
+        return Err(format!("{} is not a store; `serve` creates one", storage.describe()));
     }
     let store = server::open(&storage, None, None).await?;
     let base = store.url().await.ok_or_else(|| {
@@ -556,7 +556,7 @@ pub async fn admin(storage: &StorageArgs, owner: Option<&str>) -> Result<(), Str
     let (store, base) = open_existing(storage).await?;
     let found = store.owner_named(owner).await.map_err(|e| e.to_string())?;
     let owner = found.ok_or_else(|| match owner {
-        Some(name) => format!("no owner named {name} — the members list shows who owns it"),
+        Some(name) => format!("no owner named {name}; the members list shows who owns it"),
         None => {
             "nobody owns this store yet — join it with the owner invite `serve` printed".into()
         }
@@ -564,7 +564,7 @@ pub async fn admin(storage: &StorageArgs, owner: Option<&str>) -> Result<(), Str
     let (link, _) =
         store.create_admin_link(&owner.id, &base, now()).await.map_err(|e| e.to_string())?;
     println!("{link}");
-    eprintln!("signs in as {} — works once, for ten minutes", owner.name);
+    eprintln!("signs in as {}, once, within ten minutes", owner.name);
     Ok(())
 }
 
@@ -576,7 +576,7 @@ pub async fn publish(
 ) -> Result<(), String> {
     let storage = storage.storage()?;
     if !storage.exists() {
-        return Err(format!("{} is not a store — `serve` creates one", storage.describe()));
+        return Err(format!("{} is not a store; `serve` creates one", storage.describe()));
     }
     let store = server::open(&storage, None, None).await?;
     let bytes =

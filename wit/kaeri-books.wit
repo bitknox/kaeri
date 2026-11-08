@@ -7,8 +7,14 @@
 // The rules are the show sources' rules. The sandbox has no sockets and the host lends `fetch`:
 // the host makes each request, enforces `allowed-hosts`, rate-limits and keeps the cookie jar,
 // so a plugin is a parser that says what to ask for and reads the bytes that come back. Page
-// images are fetched by the host too, never by the plugin, with the headers each page carries,
-// so a download can fetch them again later through the same allowlist.
+// images are fetched by the host too, with the headers each page carries, so a download can
+// fetch them again later through the same allowlist.
+//
+// A plugin may also make some pages itself, for a page the host cannot fetch as one plain
+// request: one that sits inside a chapter archive, say, or one that needs a signed request.
+// That is opt-in. Such a plugin is built for `book-plugin-with-pages`, which adds the `pages`
+// interface, and the host asks it for those pages one at a time. A plugin built for
+// `book-plugin` never sees `pages`, and the host fetches all of its pages.
 //
 // Versioning. Major 1. The host tells this world from `kaeri:provider` by the names a component
 // imports and exports, so the kind of a plugin comes from the plugin itself. Kaeri loads any
@@ -21,8 +27,9 @@
 // to a variant, or a function, makes every plugin built before it fail to load. The conformance
 // suite proves this (`a_record_that_grows_a_field_is_a_different_world`). Every change to
 // `source`'s records, variants or functions is therefore a new major. The contract grows
-// without one in two ways: a plugin declares new behaviour as a capability string, and a value
-// a plugin needs from the person comes through `config-get`. Open sets (`media`, `format`,
+// without one in three ways: a plugin declares new behaviour as a capability string, a value
+// a plugin needs from the person comes through `config-get`, and a plugin opts in to an
+// interface of its own beside `source`, as `pages` is, which plugins without it never export. Open sets (`media`, `format`,
 // `status`, `reading-hint`, `capabilities`) are strings rather than enums for the same reason:
 // a value this host does not know is ignored rather than refused.
 
@@ -140,8 +147,9 @@ interface source {
         genres: list<string>,
         format: option<string>,
         origin: option<string>,
-        /// How the pages read: `rtl`, `ltr` or `strip`. One step in the reader's guess of its
-        /// mode, after the person's own choice for the series and the book's own metadata.
+        /// How the pages read: `rtl`, `ltr`, `vertical` (pages one under another) or `strip`
+        /// (one long strip, a webtoon). The reader takes it after the person's own choice for
+        /// the series and before its own guess from the book.
         reading-hint: option<string>,
         /// BCP 47 tags of the languages this series has here.
         languages: list<string>,
@@ -211,4 +219,31 @@ interface source {
 world book-plugin {
     import host;
     export source;
+}
+
+/// Pages a plugin makes itself. Optional: only a plugin built for `book-plugin-with-pages`
+/// exports it, and the host asks only those plugins.
+interface pages {
+    use source.{source-error};
+
+    /// The bytes of one page of chapter `chapter` of series `series`: the page whose `url` this
+    /// plugin gave in `chapter-content`. The url is the plugin's own name for the page and may
+    /// carry whatever the plugin needs to find it again, such as an archive's address and an
+    /// entry in it. `none` asks the host to fetch the url itself, with the page's headers, as it
+    /// does for a plugin without `pages`.
+    ///
+    /// A JPEG, PNG, WebP, GIF or AVIF file, whole. The host asks for one page at a time, when it
+    /// needs that page, under the same limits as every other call, and checks what comes back:
+    /// a page over 16 MiB, one that is no image it knows by its first bytes, or one whose header
+    /// claims more than 40 million pixels is refused before decoding, as this plugin's `parse`
+    /// error. A page made here has no address to expire, so the 403 and 410 rule of
+    /// `chapter-content` does not apply to it.
+    page-bytes: func(series: string, chapter: string, url: string)
+        -> result<option<list<u8>>, source-error>;
+}
+
+/// A book plugin that can also make pages itself.
+world book-plugin-with-pages {
+    include book-plugin;
+    export pages;
 }

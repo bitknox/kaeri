@@ -121,9 +121,16 @@ pub fn crossfade_in(widget: &impl IsA<gtk::Widget>) -> adw::SpringAnimation {
 pub struct Fader {
     running: std::cell::RefCell<Option<adw::TimedAnimation>>,
     shown: std::cell::Cell<bool>,
+    always: bool,
 }
 
 impl Fader {
+    /// A fader that keeps its fades under Reduce Animation, where a fade is what reduced motion
+    /// keeps: the reader's chrome.
+    pub fn always() -> Self {
+        Self { always: true, ..Self::default() }
+    }
+
     /// Whether `widget` is shown or on its way in.
     pub fn shown(&self) -> bool {
         self.shown.get()
@@ -151,6 +158,7 @@ impl Fader {
         };
         let animation = adw::TimedAnimation::new(widget, from, to, ms, opacity(widget));
         animation.set_easing(easing);
+        animation.set_follow_enable_animations_setting(!self.always);
         let done = widget.clone();
         animation.connect_done(move |_| {
             if !show {

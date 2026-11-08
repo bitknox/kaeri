@@ -44,7 +44,7 @@ sync-road-nearby-line = Pair with another { -device } on the same Wi-Fi. Nothing
 sync-road-cloud = Through a cloud folder
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = A cloud drive you already use, or your own server. Works while your { -device-pl } are apart, and keeps a backup.
+sync-road-cloud-line = A cloud drive you already use, or your own server. It works while your { -device-pl } are apart and keeps a backup.
 
 # Road sheet footer.
 sync-road-later = You can add the other way later. Most people use both.
@@ -113,7 +113,7 @@ sync-turn-off-alert-line = This { $kind } stops sharing with your other { -devic
 cloud-group = Cloud folder
 
 # Group footer.
-cloud-foot = Fills in while your { -device-pl } are apart, and keeps a sealed backup. Only your { -device-pl } can read it.
+cloud-foot = The folder keeps your { -device-pl } in step while they are apart, and holds a sealed backup. Only your { -device-pl } can read it.
 
 # Row when only the nearby road is set.
 cloud-add = Add a cloud folder
@@ -497,7 +497,7 @@ profiles-picker = Who’s watching?
 profiles-ask-at-launch = Ask who’s watching at launch
 
 # iPad footer.
-profiles-ask-foot = Off by default. For an iPad the household shares. The account row switches profiles at any time.
+profiles-ask-foot = Off by default. Turn it on for an iPad the whole household shares. You can switch profiles from the account row at any time.
 
 # TV Settings.
 profiles-switch = Switch profile

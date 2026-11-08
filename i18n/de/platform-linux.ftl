@@ -53,7 +53,7 @@ library-row-summary-linux = { $episodes ->
    *[other] { $episodes } Folgen, Serien: { $series }
  }
 library-page-watching-linux = Änderungen werden beobachtet
-library-page-no-watch-linux = Wird erneut geprüft, wenn { -app-name } startet
+library-page-no-watch-linux = Wird beim Start von { -app-name } auf Änderungen geprüft
 library-matched-linux = Zugeordnet
 library-best-guess-linux = Beste Vermutung: { $title }
 library-fix-count-mismatch-linux = { $episodes ->

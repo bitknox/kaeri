@@ -12,7 +12,10 @@
 //! - **Per-tracker cursors.** Each tracker drains independently, so a failing MAL push
 //!   cannot stall AniList.
 
-use kaeri_core::{ids::AnilistId, traits::TrackOp};
+use kaeri_core::{
+    ids::AnilistId,
+    traits::{TrackOp, WatchStatus},
+};
 
 use rusqlite::OptionalExtension;
 
@@ -543,6 +546,34 @@ impl Store {
             )?)
         })
     }
+
+    /// The statuses set here that are still on their way to `tracker_id`: for each title, the
+    /// last one queued. The tracker's list says them once they are sent, so a list cut from
+    /// its answer meanwhile shows them over what it says.
+    pub fn pending_statuses(
+        &self,
+        tracker_id: &str,
+    ) -> Result<std::collections::HashMap<AnilistId, WatchStatus>> {
+        let ops: Vec<String> = self.with_personal(|c| {
+            let mut statement = c.prepare(
+                "SELECT op FROM sync_outbox
+                  WHERE tracker_id = ?1 AND json_extract(op, '$.op') = 'set_status'
+                  ORDER BY id",
+            )?;
+            let ops = statement
+                .query_map([tracker_id], |r| r.get(0))?
+                .collect::<rusqlite::Result<_>>()?;
+            Ok(ops)
+        })?;
+        // In the order queued, so the last one set for a title is the one kept.
+        Ok(ops
+            .iter()
+            .filter_map(|op| match serde_json::from_str(op) {
+                Ok(TrackOp::SetStatus { anilist_id, status, .. }) => Some((anilist_id, status)),
+                _ => None,
+            })
+            .collect())
+    }
 }
 
 /// [`Store::wake_deferred`] on a connection already held, so a mapping refresh can do it
@@ -799,6 +830,29 @@ mod tests {
         store.enqueue("anilist", &progress(5), 0).unwrap();
         store.enqueue("anilist", &progress(9), 0).unwrap();
         assert_eq!(store.pending_progress("anilist", HOSHIKUZU).unwrap(), Some(9));
+    }
+
+    #[test]
+    fn pending_statuses_are_the_last_set_per_title_until_sent() {
+        let store = Store::open_in_memory().unwrap();
+        let other = AnilistId::new(900_777);
+        let status = |anilist_id, status| TrackOp::SetStatus { anilist_id, status, at: 1 };
+        store.enqueue("anilist", &status(HOSHIKUZU, WatchStatus::Current), 1).unwrap();
+        store.enqueue("anilist", &progress(4), 1).unwrap();
+        store.enqueue("anilist", &status(HOSHIKUZU, WatchStatus::Planning), 2).unwrap();
+        store.enqueue("anilist", &status(other, WatchStatus::Dropped), 2).unwrap();
+        store.enqueue("kitsu", &status(other, WatchStatus::Completed), 2).unwrap();
+
+        let pending = store.pending_statuses("anilist").unwrap();
+        assert_eq!(pending.len(), 2);
+        assert_eq!(pending[&HOSHIKUZU], WatchStatus::Planning, "the later one");
+        assert_eq!(pending[&other], WatchStatus::Dropped, "this tracker's own");
+
+        // Sent, it is the tracker's list that says it.
+        for entry in store.claim_ready("anilist", 100, 10).unwrap() {
+            store.complete(entry.id).unwrap();
+        }
+        assert!(store.pending_statuses("anilist").unwrap().is_empty());
     }
 
     #[test]

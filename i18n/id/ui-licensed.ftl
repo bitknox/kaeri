@@ -1,7 +1,7 @@
 licensed-title = Layanan berlisensi
 licensed-body = { -app-name } bisa membuka judul di layanan streaming yang Anda bayar. Aplikasi ini tidak pernah memutarnya sendiri. Tautan berasal dari AniList.
 licensed-region = Wilayah
-licensed-region-line = Menyembunyikan tautan yang ditandai AniList untuk negara lain. Sebagian besar tautan tidak menyebut negara, jadi pilih juga layanan Anda.
+licensed-region-line = Tautan yang ditandai AniList untuk negara lain disembunyikan. Sebagian besar tautan tidak menyebut negara, jadi pilih juga layanan Anda.
 licensed-yours = Layanan Anda
 licensed-show-all = Tampilkan semua { $count }
 licensed-region-system = Ikuti { -device } ini

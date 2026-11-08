@@ -6,5 +6,5 @@ notice-hidden-preview = Nowy odcinek
 notice-summary = Nowe odcinki: jeszcze %u
 notice-dismiss = Odrzuć
 accounts-code-expired-detail = Kod wygasł. Pobierz nowy, aby zalogować się do { $tracker }.
-list-refresh-failed = Nie udało się odświeżyć. Pokazano wczytane dane.
+list-refresh-failed = Nie udało się odświeżyć. Widzisz to, co wczytano ostatnio.
 sign-in-failed = Nie udało się zalogować do { $tracker }. Spróbuj ponownie.

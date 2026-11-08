@@ -53,14 +53,14 @@ book-server-password = Password
 
 # Error title when the server could not be reached.
 # @arg host: text
-book-server-err-unreachable = Couldn’t reach { $host }
+book-server-err-unreachable = Couldn't reach { $host }
 
 # Line under it.
 book-server-err-unreachable-line = Check the address, and that the server is on and on this network.
 
 # Error title when the server turned the password down.
 # @arg host: text
-book-server-err-password = { $host } didn’t accept that password
+book-server-err-password = { $host } didn't accept that password
 
 # Line under it. The kind is Komga, Kavita or OPDS.
 # @arg kind: text
@@ -68,10 +68,10 @@ book-server-err-password-line = Use the username and password you use for { $kin
 
 # Error title when Kavita turned the key in an OPDS link down.
 # @arg host: text
-book-server-err-key = { $host } didn’t accept that key
+book-server-err-key = { $host } didn't accept that key
 
 # Line under it.
-book-server-err-key-line = The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.
+book-server-err-key-line = The key changes when it's reset in Kavita. Copy the OPDS link again from your account settings there.
 
 # Title when the server lets the account in and shows it no series.
 # @arg host: text
@@ -102,8 +102,8 @@ book-folder-found-line = { $path }. { -app-name } matched { $matched } of them b
 # Row in the folder result: files that are books in formats Kaeri can't open.
 # @arg count: int
 book-folder-unsupported = { $count ->
-    [one] One file { -app-name } can’t open
-   *[other] { $count } files { -app-name } can’t open
+    [one] One file { -app-name } can't open
+   *[other] { $count } files { -app-name } can't open
  }
 
 # Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
@@ -133,7 +133,7 @@ book-folder-empty = Nothing in { $folder } that { -app-name } can open
 # Line under it.
 # @arg files: int
 book-folder-empty-line = { $files ->
-    [one] It holds one file, which isn’t CBZ, CBR, EPUB, PDF or an image.
+    [one] It holds one file, which isn't CBZ, CBR, EPUB, PDF or an image.
    *[other] It holds { $files } files, none of them CBZ, CBR, EPUB, PDF or images.
  }
 
@@ -176,8 +176,8 @@ store-install-all-reading = Install all for reading
 # Result after installing.
 # @arg count: int
 store-installed = { $count ->
-    [one] One { -plugin } installed. It’s in Your { -source-pl }.
-   *[other] { $count } { -plugin-pl } installed. They’re in Your { -source-pl }.
+    [one] One { -plugin } installed. It's in Your { -source-pl }.
+   *[other] { $count } { -plugin-pl } installed. They're in Your { -source-pl }.
  }
 
 # Info title when every plugin in a store is for watching, and watching is off here.
@@ -196,15 +196,15 @@ store-empty = { $store } has no { -plugin-pl } yet
 
 # Line under it.
 # @arg owner: text
-store-empty-line = You’re a member, so new { -plugin-pl } show in { -plugin-store-cap-pl } when { $owner } adds them.
+store-empty-line = You're a member, so new { -plugin-pl } show in { -plugin-store-cap-pl } when { $owner } adds them.
 
 # Error title when the store doesn't answer.
 # @arg host: text
-store-err-unreachable = Couldn’t reach { $host }
+store-err-unreachable = Couldn't reach { $host }
 
 # Line under it.
 # @arg owner: text
-store-err-unreachable-line = The invite looks right, but the { -store } isn’t answering. Try again later, or ask { $owner } if it’s running.
+store-err-unreachable-line = The invite looks right, but the { -store } isn't answering. Try again later, or ask { $owner } if it's running.
 
 # Under the reading group: plugins for watching while watching is off here.
 # @arg count: int
@@ -216,13 +216,13 @@ store-other-medium-more = { $count ->
 # On a TV, under the list: plugins for reading, which a TV doesn't do.
 # @arg count: int
 store-tv-reading-only = { $count ->
-    [one] One more is for reading, which this TV doesn’t do.
-   *[other] { $count } more are for reading, which this TV doesn’t do.
+    [one] One more is for reading, which this TV doesn't do.
+   *[other] { $count } more are for reading, which this TV doesn't do.
  }
 
 # On a TV, info title when every plugin in a store is for reading.
 # @arg store: text
-store-tv-all-reading = Every { -plugin } in { $store } is for reading, which this TV doesn’t do.
+store-tv-all-reading = Every { -plugin } in { $store } is for reading, which this TV doesn't do.
 
 # Plugin row in an invite's result.
 # @allow release
@@ -243,14 +243,24 @@ source-added-plugins = { $count ->
    *[other] Installed { $count } { -plugin-pl } from { $store }
  }
 
-# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 # @allow library
 # @arg kind: text
 # @arg series: int
 # @arg libraries: int
 source-row-server = { $libraries ->
-    [one] { $kind } · { $series } series · added just now
+    [one] { $kind } · { $series } series in { $libraries } library · added just now
    *[other] { $kind } · { $series } series in { $libraries } libraries · added just now
+ }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+# @allow library
+# @arg kind: text
+# @arg series: int
+# @arg libraries: int
+source-row-server-series = { $libraries ->
+    [one] { $kind } · { $series } series in { $libraries } library
+   *[other] { $kind } · { $series } series in { $libraries } libraries
  }
 
 # A server's row in Your sources while it shows no series.

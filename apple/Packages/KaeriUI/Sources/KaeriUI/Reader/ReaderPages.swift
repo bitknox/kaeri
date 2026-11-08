@@ -17,9 +17,11 @@ struct PageImage: View {
     let longest: CGFloat
     var tone = PageTone()
     var fill = false
+    /// Called once the image is on screen: after its fade, or at once when it drew on its first
+    /// frame.
     var onPaint: (() -> Void)?
     @State private var image: CGImage?
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.readerPaper) private var paper
 
     init(file: PageFile, longest: CGFloat, tone: PageTone = PageTone(), fill: Bool = false, onPaint: (() -> Void)? = nil) {
         self.file = file
@@ -44,40 +46,66 @@ struct PageImage: View {
                     .transition(.opacity)
             }
         }
-        .animation(reduceMotion ? nil : .fadeIn, value: image != nil)
         .onAppear { if image != nil { onPaint?() } }
-        .task(id: file.path) {
-            image = await PageImages.load(file, longestSide: longest)
-            if image != nil { onPaint?() }
+        .task(id: "\(file.path)|\(Int(longest))") {
+            guard let loaded = await PageImages.load(file, longestSide: longest), !Task.isCancelled else { return }
+            if image === loaded { return }
+            // A page that arrives late fades in over its plate; Reduce Motion keeps the fade,
+            // which moves nothing. Paper mode draws it at once.
+            if image == nil, !paper {
+                withAnimation(.fadeIn, completionCriteria: .logicallyComplete) {
+                    image = loaded
+                } completion: {
+                    onPaint?()
+                }
+            } else {
+                image = loaded
+                onPaint?()
+            }
         }
     }
 }
 
 /// The Raised plate that holds a page's place with its number. Nothing shows for 600 ms, and a
-/// line says it is loading from 4 s.
+/// line says it is loading from 4 s. A chapter that is opening shows it at once: it is the
+/// place the first page comes into.
 struct PagePlate: View {
     let page: Int
     let theme: ReaderTheme
-    @State private var shown = false
+    @State private var shown: Bool
     @State private var line = false
+
+    init(page: Int, theme: ReaderTheme, atOnce: Bool = false) {
+        self.page = page
+        self.theme = theme
+        _shown = State(initialValue: atOnce)
+    }
 
     var body: some View {
         ZStack {
             if shown {
                 Rectangle().fill(theme.raised)
                 VStack(spacing: 6) {
-                    Text("\(page)").font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
+                    Text(verbatim: "\(page)").font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
                     if line {
                         Text(L.readerPageLoading(page: page)).font(.ui(13)).foregroundStyle(theme.haze)
+                            .transition(.opacity)
                     }
                 }
                 .transition(.opacity)
             }
         }
+        .accessibilityHidden(true)
         .task {
-            try? await Task.sleep(for: .milliseconds(600))
-            withAnimation(.fadeIn) { shown = true }
-            try? await Task.sleep(for: .milliseconds(3400))
+            if !shown {
+                try? await Task.sleep(for: .milliseconds(600))
+                guard !Task.isCancelled else { return }
+                withAnimation(.fadeIn) { shown = true }
+                try? await Task.sleep(for: .milliseconds(3400))
+            } else {
+                try? await Task.sleep(for: .seconds(4))
+            }
+            guard !Task.isCancelled else { return }
             withAnimation(.fadeIn) { line = true }
         }
     }
@@ -93,7 +121,7 @@ struct PageFailed: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: "exclamationmark.triangle")
+            Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 22)).foregroundStyle(theme.vermilion)
                 .accessibilityHidden(true)
             Text(L.readerPageFailed(page: page)).font(.ui(17, weight: .semibold)).foregroundStyle(theme.silk)
@@ -115,14 +143,18 @@ struct PageFailed: View {
 struct ReaderPillStyle: ButtonStyle {
     let theme: ReaderTheme
     var height: CGFloat = 40
+    /// Across its row, as the amber button above it.
+    var wide = false
+    /// On a card that is already the raised tone, the page's tone.
+    var fill: Color?
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.ui(15, weight: .semibold))
+            .font(.ui(height < 32 ? 12 : 15, weight: .semibold))
             .foregroundStyle(theme.silk)
             .padding(.horizontal, 18)
-            .frame(minHeight: height)
-            .background(theme.high.opacity(configuration.isPressed ? 0.8 : 1), in: .capsule)
+            .frame(maxWidth: wide ? .infinity : nil, minHeight: height)
+            .background((fill ?? theme.high).opacity(configuration.isPressed ? 0.8 : 1), in: .capsule)
             .contentShape(.capsule)
     }
 }
@@ -134,7 +166,7 @@ struct ReaderAmberStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.ui(17, weight: .semibold))
+            .font(.ui(height < 32 ? 12 : height < 44 ? 15 : 17, weight: .semibold))
             .foregroundStyle(theme.onAmber)
             .frame(maxWidth: .infinity, minHeight: height)
             .background(theme.amber.opacity(configuration.isPressed ? 0.85 : 1), in: .capsule)
@@ -190,11 +222,18 @@ struct PartView: View {
     var fitWidth = false
     @State private var painted = false
 
+    /// The chapter has only just opened: its plate is the one the opening screen showed.
+    private var fresh: Bool {
+        model.openedAt.map { ContinuousClock.now - $0 < .seconds(3) } ?? false
+    }
+
     var body: some View {
         let number = Int(part.page) + 1
         ZStack(alignment: align) {
             // The plate holds the place until the image is on screen, and the image fades in over it.
-            if !painted, model.failure(of: part, chapter: chapter) == nil { PagePlate(page: number, theme: theme) }
+            if !painted, model.failure(of: part, chapter: chapter) == nil {
+                PagePlate(page: number, theme: theme, atOnce: fresh)
+            }
             if let file = model.file(of: part, chapter: chapter) {
                 let image = PageImage(file: file, longest: max(box.width, box.height) * scale, tone: tone, onPaint: { painted = true })
                     .accessibilityElement()

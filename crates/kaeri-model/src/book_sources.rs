@@ -127,7 +127,7 @@ pub struct BookServerRow {
     pub off: bool,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub signed_out: bool,
-    /// The libraries added: "212 series in 2 libraries". Nought for an OPDS catalogue.
+    /// The libraries added: "212 series in 2 libraries". One for an OPDS catalogue, which is one.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub libraries: u32,
     /// It showed no series when last asked: "no series yet · looks again in 30 minutes".

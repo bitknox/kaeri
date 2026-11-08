@@ -333,6 +333,7 @@ impl Store {
         self.with_tx(|tx| {
             tx.execute("DELETE FROM book_server WHERE id = ?1", [id])?;
             tx.execute("DELETE FROM book_chapter_cache WHERE source_id = ?1", [id])?;
+            tx.execute("DELETE FROM book_series_hint WHERE source_id = ?1", [id])?;
             tx.execute("DELETE FROM book_progress_outbox WHERE server = ?1", [id])?;
             tx.execute("DELETE FROM book_progress_state WHERE server = ?1", [id])?;
             Ok(())

@@ -1,7 +1,7 @@
 party-status = { -watch-party-cap } durumu
 party-members = Katılımcılar
 party-choose-a-source = Bir { -source } seçin
-party-sources-none-listed = { $episode }. bölümü hiçbir { -source } listelemiyor. { -source-cap-pl }, bir { -plugin-store } tarafından eklenen { -plugin-pl }den gelir.
+party-sources-none-listed = Hiçbir { -source } { $episode }. bölümü listelemiyor. { -source-cap-pl }, bir { -plugin-store }ndan eklediğiniz { -plugin-pl }den gelir.
 party-sources-found-line = { $count ->
     [one] Bir { -source } bu bölümü içeriyor. Seçtiğiniz { -watch-party } ile oynar.
    *[other] { $count } { -source } bu bölümü içeriyor. Seçtiğiniz { -watch-party } ile oynar.

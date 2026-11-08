@@ -31,7 +31,7 @@ settings-closing-detail = Keep downloading leaves { -app-name } in the notificat
 # Under the rich presence switch: what Discord shows. The tracker is the site the link goes to.
 # @only windows
 # @arg tracker: text
-settings-presence-rich-detail = The cover, a progress bar and a link to the show on { $tracker }. Needs the title shown.
+settings-presence-rich-detail = The cover, a progress bar and a link to the show on { $tracker }. It works only while the title is shown.
 
 # Card in the Play on TV group: pair one more TV, once at least one is paired.
 # @only windows
@@ -213,7 +213,7 @@ settings-note-cast-tvs-pc = They appear under Chromecast in Play on TV. This PC 
 
 # Note under the Torrents while casting setting, shown while torrents are on.
 # @only windows
-settings-note-torrents-while-casting-pc = Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.
+settings-note-torrents-while-casting-pc = A TV with Chromecast built in can then play torrents. This PC sends the episode for as long as it plays.
 
 # Button beside the app language picker once another language is chosen: closes Kaeri and opens it again in that language.
 # @only windows
@@ -240,7 +240,7 @@ settings-search = Search settings
 
 # Note under the download quality row.
 # @only windows
-settings-quality-detail-windows = Higher takes the best version a { -source } offers, and more space.
+settings-quality-detail-windows = Higher picks the best version a { -source } has. It takes more space.
 
 # Note under the merge subtitles row.
 # @only windows
@@ -254,7 +254,7 @@ settings-keep-seeding-detail-windows = A download that keeps seeding stays in { 
 # Note under the switch for episode discussions.
 # @only windows
 # @max 100
-settings-discussions-note-windows = Reads the comments on AniList's forum thread for episodes you have watched.
+settings-discussions-note-windows = Comments come from AniList's forum thread, once you've watched the episode.
 
 # Note under the switch that loads images in comments.
 # @only windows

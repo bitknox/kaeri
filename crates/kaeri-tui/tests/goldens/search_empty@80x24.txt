@@ -13,7 +13,7 @@ Kaeri                                                  plugins ●  ·  anilist 
    │
    │  Type to search
    │
-   │  Press ↵ to browse the most popular.
+   │  Press ↵ to browse the most popular titles.
    │
    │
    │
@@ -99,7 +99,7 @@ r13 c03-03 fg=rule
 r13 c06-19 fg=text-dim
 r14 c03-03 fg=rule
 r15 c03-03 fg=rule
-r15 c06-40 fg=text-dim
+r15 c06-47 fg=text-dim
 r16 c03-03 fg=rule
 r17 c03-03 fg=rule
 r18 c03-03 fg=rule

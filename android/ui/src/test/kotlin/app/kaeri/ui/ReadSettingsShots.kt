@@ -22,7 +22,6 @@ import app.kaeri.store.EngineHome
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.FixtureScene
 import app.kaeri.store.MemorySecrets
-import app.kaeri.store.ServerAnswer
 import app.kaeri.testkit.captureRoboImage
 import app.kaeri.testkit.captureScreenRoboImage
 import app.kaeri.ui.reading.BOOK_SOURCES_ROUTE
@@ -126,6 +125,8 @@ class ReadSettingsShots : ReadingShotHarness() {
     private fun toMedium(choice: Int?) {
         pump("first launch") { compose.onAllNodesWithText(text(R.string.onboarding_continue)).fetchSemanticsNodes().isNotEmpty() }
         tap(text(R.string.onboarding_continue))
+        // The join page: start here.
+        tap(text(R.string.first_other_no))
         choice?.let { tap(text(it)) }
     }
 
@@ -311,7 +312,7 @@ class ReadSettingsShots : ReadingShotHarness() {
             compose.onAllNodes(hasSetTextAction())[0].performTextInput("books.home.example") // i18n-skip: a made-up host
             run(30)
         },
-    ) { it.bookSources.server.value is ServerAnswer.Failed }
+    ) { it.cameIn.outcome.value != null }
 
     // The tablet
 

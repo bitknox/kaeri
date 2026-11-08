@@ -49,7 +49,7 @@ pub async fn stream_url(
         println!("note        {note}");
     }
     if registry.is_empty() {
-        anyhow::bail!("no sources registered — see --doctor");
+        anyhow::bail!("no sources registered; see --doctor");
     }
 
     let media = meta.media(id).await.context("looking up the title")?;
@@ -169,7 +169,7 @@ pub async fn play_cli(
         println!("note        {note}");
     }
     if registry.is_empty() {
-        anyhow::bail!("no sources registered — see --doctor");
+        anyhow::bail!("no sources registered; see --doctor");
     }
     // Kept alive for the whole session: dropping it would close the torrent session.
     let _guard = guard;
@@ -241,9 +241,9 @@ pub async fn play_cli(
     if watched && tracker_ids.is_empty() {
         println!("counted as watched");
     } else if watched {
-        println!("counted as watched — queued for {}", tracker_ids.join(", "));
+        println!("counted as watched and queued for {}", tracker_ids.join(", "));
     } else {
-        println!("stopped early — the position is saved, --continue picks it back up");
+        println!("stopped early; the position is saved and --continue picks it back up");
     }
     Ok(())
 }

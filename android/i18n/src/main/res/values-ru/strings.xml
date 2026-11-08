@@ -11,7 +11,7 @@
     <string name="notice_cast_never_fetches">%1$s не начал читать поток. Возможно, мешает VPN или брандмауэр на этом устройство.</string>
     <string name="notice_cast_refused">%1$s не смог воспроизвести этот поток. Попробуйте другой источник.</string>
     <string name="notice_cast_taken_over">Другое устройство запустило что-то на %1$s, поэтому трансляция остановлена.</string>
-    <string name="notice_cast_not_same_network">Это устройство не в той сети, где %1$s, или подключается к ней через VPN. Для трансляции оба должны быть в одной сети.</string>
+    <string name="notice_cast_not_same_network">Это устройство не в той же сети, что %1$s, или подключается к ней через VPN. Для трансляции подключите оба к одной сети.</string>
     <string name="notice_cast_lost">Связь с %1$s потеряна, трансляция остановлена.</string>
     <string name="notice_cast_no_device">Этот телевизор больше не в сети.</string>
     <string name="notice_cast_unavailable">Эта версия Kaeri не умеет передавать видео на телевизоры.</string>
@@ -133,7 +133,7 @@
     <string name="match_ruled_out_year">Другой год</string>
     <string name="match_search_timed_out">Он не ответил вовремя.</string>
     <string name="match_search_source_off">Он не включён.</string>
-    <string name="notice_source_pinned">%1$s будет использоваться для этого названия.</string>
+    <string name="notice_source_pinned">Теперь этот тайтл воспроизводится из %1$s.</string>
     <string name="notice_source_automatic">Снова автоматический выбор источника для этого названия.</string>
     <string name="notice_source_choice_failed">Не удалось сохранить выбор. %1$s</string>
     <string name="notice_no_source_could_list">Ни один источник не смог перечислить эпизоды этого аниме: %1$s</string>
@@ -217,9 +217,9 @@
     <string name="reader_back_to_page">Назад на страницу %1$d</string>
     <string name="reader_moved">Переход к %1$s, страница %2$d: там остановилось %3$s</string>
     <string name="reader_moved_number">Переход к главе %1$s, страница %2$d: там остановилось %3$s</string>
-    <string name="reader_detected_right_to_left">Справа налево (определено)</string>
-    <string name="reader_detected_left_to_right">Слева направо (определено)</string>
-    <string name="reader_detected_strip">Длинная лента (определено)</string>
+    <string name="reader_detected_right_to_left">Похоже, справа налево</string>
+    <string name="reader_detected_left_to_right">Похоже, слева направо</string>
+    <string name="reader_detected_strip">Похоже, длинная лента</string>
     <string name="reading_failed_offline">Нет подключения. Скачанные главы по-прежнему открываются.</string>
     <string name="reading_failed_source_down">%1$s не отвечает. Повторите попытку позже.</string>
     <string name="reading_failed_not_found">Этого больше нет в этом источнике. Попробуйте другой.</string>
@@ -444,7 +444,7 @@
     <string name="store_moved">%1$s подключён по адресу %2$s, а эта ссылка ведёт на %3$s. Если магазин плагинов переехал, сначала выйдите из него и подключитесь снова.</string>
     <string name="store_join_would_unname">Вы подключились к %1$s как %2$s. Эта ссылка подключила бы вас без имени, поэтому ничего не изменилось.</string>
     <string name="store_not_the_invited">%1$s: это не тот магазин плагинов, что в приглашении (%2$s). Подключения не было.</string>
-    <string name="store_token_not_kept">магазин плагинов: не удалось сохранить токен. %1$s</string>
+    <string name="store_token_not_kept">Не удалось сохранить токен, который выдал магазин плагинов. %1$s</string>
     <string name="store_invite_unusable">Это приглашение уже использовано, отменено или истекло. Попросите новое.</string>
     <string name="store_invite_used_up">Это приглашение уже использовано. Попросите у %1$s новое.</string>
     <string name="store_invite_ended">Срок этого приглашения истёк %2$s. Попросите у %1$s новое.</string>
@@ -466,10 +466,10 @@
     <string name="store_admin_missing">У %1$s нет страницы администрирования. Возможно, его сервер старой версии.</string>
     <string name="store_admin_link_foreign">%1$s прислал ссылку администрирования на другой адрес.</string>
     <string name="store_open_join_unsupported">Сервер %1$s старой версии и не может принимать подключения по ссылке. Сначала обновите его.</string>
-    <string name="source_switched_off">Выключено: %1$s. При поиске эпизодов его пропускают.</string>
+    <string name="source_switched_off">Источник %1$s выключен. Kaeri пропускает его при поиске эпизодов.</string>
     <string name="source_switched_on">Включено: %1$s.</string>
     <string name="plugin_not_loaded">%1$s не загружен. Проверьте, что он установлен, и перезагрузите Источники.</string>
-    <string name="release_pinned">%1$s будет использоваться для этого тайтла.</string>
+    <string name="release_pinned">Теперь для этого тайтла используется %1$s.</string>
     <string name="notice_choice_not_saved">Не удалось сохранить выбор. %1$s</string>
     <string name="torrent_proxy_waiting">Проверка прокси не пройдена. Торренты запустятся, когда она пройдёт.</string>
     <string name="torrent_proxy_unchecked">Торренты запустятся, когда прокси пройдёт проверку.</string>
@@ -499,8 +499,8 @@
     <string name="notice_sign_in_stopped">Вход в %1$s остановился до завершения. Попробуйте ещё раз. %2$s</string>
     <string name="notice_token_exchange_failed">Не удалось получить токен от %1$s. Попробуйте войти снова. %2$s</string>
     <string name="notice_browser_not_opened">Не удалось открыть браузер для входа. Проверьте, что он установлен, и попробуйте ещё раз. %1$s</string>
-    <string name="notice_sign_in_not_waiting">Вход в %1$s сейчас не ожидает ответа. Начните вход заново.</string>
-    <string name="notice_sign_in_wrong_request">Вход в %1$s не вернулся с этого запроса. Начните вход заново.</string>
+    <string name="notice_sign_in_not_waiting">Пришёл ответ на вход из %1$s, но никакой вход его не ждал. Начните вход заново.</string>
+    <string name="notice_sign_in_wrong_request">Ответ на вход из %1$s не совпадает с запросом. Начните вход заново.</string>
     <string name="notice_sign_in_no_token">Вход в %1$s вернулся без токена. Попробуйте ещё раз.</string>
     <string name="notice_mal_client_missing_build">Не удалось завершить вход в MyAnimeList: в этой сборке нет клиента для него.</string>
     <string name="notice_kitsu_signs_in_on_accounts">Kitsu входит через экран «Аккаунты».</string>
@@ -540,7 +540,7 @@
     </plurals>
     <string name="notice_update_available">Вышла версия %1$s. Чтобы установить её, выполните kaeri --update.</string>
     <string name="cause_proxy_needs_address">Для прокси нужны хост и порт.</string>
-    <string name="cause_proxy_address_unusable">Адрес прокси не подходит для проверки.</string>
+    <string name="cause_proxy_address_unusable">Проверка прокси не может использовать этот адрес.</string>
     <string name="cause_server_unreachable">Не удалось связаться с сервером.</string>
     <string name="legal_hosts_no_content">Kaeri не размещает ни сериалов, ни книг. Источники вы добавляете сами.</string>
     <string name="notice_saved">Сохранено: %1$s.</string>
@@ -548,12 +548,12 @@
     <string name="notice_title_load_failed">Не удалось загрузить этот тайтл. Проверьте подключение и попробуйте ещё раз.</string>
     <string name="notice_playback_failed">Ошибка воспроизведения. Попробуйте другой источник.</string>
     <string name="notice_engine_fault">Внутри Kaeri что-то пошло не так. Работа продолжилась, но если экран завис, закройте приложение и откройте его снова.</string>
-    <string name="notice_database_set_aside">База данных была повреждена, поэтому создана новая. Старый файл сохранён в %1$s. Ваши трекеры вернут сохранённые у них данные при следующей синхронизации.</string>
+    <string name="notice_database_set_aside">База данных была повреждена, поэтому Kaeri создал новую. Старый файл сохранён в %1$s. Данные, которые хранят ваши трекеры, вернутся при следующей синхронизации.</string>
     <string name="start_failed_folder">Не удалось создать папку %1$s. Проверьте, есть ли место на диске и можно ли писать в эту папку, и попробуйте снова. %2$s</string>
     <string name="start_failed_config">В %1$s есть настройка, которую Kaeri не может использовать: %2$s. Исправьте или удалите её и попробуйте снова.</string>
     <string name="config_reset_failed">Kaeri не удалось отодвинуть %1$s, чтобы сбросить настройки. %2$s</string>
     <string name="start_failed_database">Не удалось открыть базу данных %1$s. Если в этой папке открыто другое приложение Kaeri, закройте его и попробуйте снова. %2$s</string>
-    <string name="start_failed_network">Не удалось настроить сетевое подключение по сетевым настройкам из config.toml. %1$s</string>
+    <string name="start_failed_network">Kaeri не удалось подключиться с сетевыми настройками из config.toml. Проверьте их и попробуйте снова. %1$s</string>
     <string name="start_failed">Не удалось запустить Kaeri. Закройте и откройте его снова. %1$s</string>
     <string name="start_failed_remote">Не удалось запустить пульт. %1$s</string>
     <string name="start_failed_player">Не удалось запустить плеер. %1$s</string>
@@ -568,8 +568,8 @@
     <string name="crash_notice_tv">Kaeri закрылось после сбоя. Сообщить о нём можно в настройках, в разделе «О программе».</string>
     <string name="notice_surprise_empty_filters">Нет тайтлов, подходящих под эти фильтры.</string>
     <string name="notice_surprise_empty_planning">Список «В планах» пуст.</string>
-    <string name="notice_surprise_offline">Нет сети. Для случайного выбора в поиске нужен AniList.</string>
-    <string name="notice_surprise_failed">Сейчас не удалось выбрать тайтл. Попробуйте чуть позже.</string>
+    <string name="notice_surprise_offline">Нет подключения к сети. Чтобы «Удиви меня» выбрал тайтл, нужен AniList.</string>
+    <string name="notice_surprise_failed">Не удалось обратиться к AniList, чтобы выбрать тайтл. Попробуйте чуть позже.</string>
     <string name="account_button_named">%1$s, аккаунт и настройки</string>
     <string name="calendar_empty_mine_ahead">В вашем списке ничего не выходит в ближайшие 4 недели.</string>
     <string name="calendar_floor_line">Календарь охватывает 3 месяца назад и не дальше.</string>
@@ -582,7 +582,7 @@
     <string name="calendar_show_all_airing">Показать все в эфире</string>
     <string name="calendar_now_label">Сейчас, %1$s</string>
     <string name="settings_discussions_label">Обсуждения серий</string>
-    <string name="settings_discussions_note">Показывает комментарии в теме на форуме AniList для серий, которые вы смотрели.</string>
+    <string name="settings_discussions_note">Комментарии из темы на форуме AniList можно читать для серий, которые вы посмотрели.</string>
     <string name="settings_discussion_images_label">Загружать картинки в комментариях</string>
     <string name="settings_discussion_images_note">Каждая картинка загружается с сайта, который её хранит, и видит ваш IP-адрес.</string>
     <string name="discussion_waiting">Ожидание AniList · %1$s</string>
@@ -621,7 +621,7 @@
     <string name="cast_settings_tvs">Показывать ТВ со встроенным Chromecast</string>
     <string name="cast_settings_tvs_note">Они появятся в разделе Chromecast в «Смотреть на ТВ». Это устройство отправляет им эпизод.</string>
     <string name="cast_settings_torrents">Торренты при трансляции</string>
-    <string name="cast_settings_torrents_note">Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Это устройство передаёт эпизод, пока он идёт.</string>
+    <string name="cast_settings_torrents_note">Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Это устройство передаёт эпизод, пока он идёт.</string>
     <string name="reader_page_failed_swipe">Смахните, чтобы идти дальше без неё.</string>
     <string name="reader_skip_page">Пропустить страницу</string>
     <string name="reader_page_of">Страница %1$d из %2$d</string>
@@ -684,26 +684,21 @@
     <string name="eink_colour_body">Kaeri не смог определить это по устройству. Посмотрите на четыре квадрата.</string>
     <string name="eink_colour_squares">Четыре квадрата: красный, зелёный, синий и янтарный</string>
     <string name="eink_colour_hint">Если они выглядят как четыре серых, выберите «Только серый». Это можно изменить в Настройки › Экран.</string>
-    <string name="eink_colour_yes">Вижу цвета</string>
+    <string name="eink_colour_yes">Да, цветной</string>
     <string name="eink_colour_no">Только серый</string>
     <string name="eink_colour_skip">Пропустить</string>
-    <string name="eink_colour_skipped">Пропущено: картинки остаются цветными, на сером экране они будут серыми.</string>
-    <string name="eink_page_keys_hint">Чтобы листать страницы, выберите для кнопок страниц режим «Громкость» в настройках устройства.</string>
+    <string name="eink_colour_skipped">Пропущено. Картинки остаются цветными. Серый экран покажет их в оттенках серого.</string>
+    <string name="eink_page_keys_hint">Чтобы листать кнопками, выберите для них «Громкость» в настройках системы.</string>
     <string name="eink_new">Новое</string>
     <string name="reader_notice_start_over">Сначала</string>
     <string name="reader_notice_go_back">Вернуться</string>
     <string name="reader_notice_change">Изменить</string>
     <string name="reader_settings">Настройки чтения</string>
-    <string name="reader_chapter_line">Глава %1$s</string>
-    <string name="reader_chapter_line_titled">Глава %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Глава %1$s · прокрутка</string>
     <string name="reader_minutes_left">%1$d мин</string>
     <string name="reader_zone_next">Следующая страница</string>
     <string name="reader_grid_title">Страницы</string>
-    <string name="reader_end_of_chapter_number">Конец главы %1$s</string>
-    <string name="reader_end_facts">Глава %1$s · %2$s</string>
     <string name="reader_end_continue">Продолжить</string>
-    <string name="reader_end_swipe">Смахните, чтобы читать дальше</string>
     <string name="reader_end_series">Назад к серии</string>
     <string name="reader_end_again">Прочитать заново</string>
     <string name="reader_opening_chapter">Открывается глава %1$s</string>
@@ -762,7 +757,6 @@
     <string name="reader_grid_page">Перейти к странице %1$d</string>
     <string name="reader_scrubber_in_chapter">Страница в главе</string>
     <string name="reader_failed_novel">Не удалось показать эту главу</string>
-    <string name="reader_end_tracker">Прочитано · обновлено: %1$s</string>
     <string name="reader_end_tracker_offline">Прочитано · %1$s обновится, когда вы вернётесь в сеть</string>
     <string name="reader_end_none">Ни у одного источника пока нет главы %1$s</string>
     <string name="reader_end_none_line">Kaeri проверяет новые главы в фоне и добавляет их в «Обновления».</string>
@@ -789,25 +783,11 @@
     <string name="reader_zone_controls">Управление</string>
     <string name="reader_size_small">Меньше текст</string>
     <string name="reader_size_large">Больше текст</string>
-    <plurals name="reader_end_pages">
-        <item quantity="one">%1$d страница</item>
-        <item quantity="few">%1$d страницы</item>
-        <item quantity="many">%1$d страниц</item>
-        <item quantity="other">%1$d страницы</item>
-    </plurals>
     <string name="reader_value_on">Вкл.</string>
     <string name="reader_value_off">Выкл.</string>
     <string name="reader_row_strip_gap">Промежуток между картинками</string>
     <string name="reader_paper_look">Бумажный вид днём</string>
     <string name="reader_paper_dim">Приглушить страницу</string>
-    <string name="reader_end_from">Из %1$s</string>
-    <plurals name="reader_divider_images">
-        <item quantity="one">%1$d картинка</item>
-        <item quantity="few">%1$d картинки</item>
-        <item quantity="many">%1$d картинок</item>
-        <item quantity="other">%1$d картинки</item>
-    </plurals>
-    <string name="reader_divider_facts_source">%1$s · из %2$s</string>
     <string name="reader_opening_waited">%1$s · %2$d с</string>
     <string name="reader_sources_title">Читать эту главу из</string>
     <string name="reader_paper_parts">Что меняется</string>
@@ -855,7 +835,7 @@
     <string name="tv_info_from">Откуда</string>
     <string name="tv_info_state">Состояние</string>
     <string name="tv_store_revoked">Больше не пускает этот телевизор</string>
-    <string name="tv_seeding_note">Раздача на этом телевизоре идёт по возможности: только пока открыт Kaeri.</string>
+    <string name="tv_seeding_note">Этот телевизор раздаёт, только пока открыт Kaeri.</string>
     <string name="tv_sign_out_title">Выйти из %1$s?</string>
     <string name="tv_account_not_signed_in">Вход не выполнен</string>
     <string name="tv_account_signed_in_as">Вход выполнен: %1$s</string>
@@ -973,7 +953,7 @@
         <item quantity="many">Уведомления для %1$s выключены в собственных настройках.</item>
         <item quantity="other">Уведомления для %1$s выключены в собственных настройках.</item>
     </plurals>
-    <string name="settings_coming_up_opens">Открывает настройки тайтла.</string>
+    <string name="settings_coming_up_opens">Нажмите на тайтл, чтобы открыть его настройки.</string>
     <string name="torrents_proxy_as">как %1$s</string>
     <string name="title_facts_aired">Вышло %1$s</string>
     <string name="title_facts_airing">Выходит с %1$s</string>
@@ -1105,7 +1085,7 @@
     <string name="settings_titles_note_english">Английские названия, как их указывает AniList, а там, где их нет, ромадзи.</string>
     <string name="settings_titles_note_romaji">Японские названия латиницей, как их указывает AniList.</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
-    <string name="settings_seeding_best_effort">По возможности: раздача идёт, только пока открыт Kaeri.</string>
+    <string name="settings_seeding_best_effort">Это устройство раздаёт, только пока открыт Kaeri.</string>
     <plurals name="settings_downloads_count">
         <item quantity="one">%1$d эпизод</item>
         <item quantity="few">%1$d эпизода</item>
@@ -1126,7 +1106,7 @@
     <string name="settings_libraries_value">JNA и AndroidX, по лицензии Apache License 2.0</string>
     <string name="settings_report_bug_value">Открывает GitHub в браузере</string>
     <string name="downloads_storage_share_description">Загрузки занимают %1$s</string>
-    <string name="settings_aside_notifications">Одно уведомление, когда выходит новый эпизод отслеживаемого тайтла: название тайтла и номер эпизода, но не название эпизода. Тайтл можно отключить в его собственных настройках.</string>
+    <string name="settings_aside_notifications">Одно уведомление, когда выходит эпизод тайтла, за которым вы следите: тайтл и номер эпизода, но не его название. Уведомления тайтла можно выключить в его настройках.</string>
     <string name="settings_aside_downloads">Загрузки хранятся в собственном хранилище Kaeri, которое другие приложения не читают. Удаление приложения удаляет и загрузки.</string>
     <string name="settings_aside_sources">Источники проверяются по порядку, сверху вниз. Тайтл может иметь свой источник, который выбирается на его странице.</string>
     <string name="settings_upscaling_description">Один и тот же кадр: слева оригинал 480p, справа с %1$s</string>
@@ -1219,7 +1199,7 @@
     </plurals>
     <string name="trailer_failed">Не удалось открыть трейлер</string>
     <string name="engine_down_title">Kaeri остановлен</string>
-    <string name="engine_down_stopped">Компонент, который выполняет работу, остановился. Попробуйте снова или перезапустите приложение.</string>
+    <string name="engine_down_stopped">Ничего нового не загрузится, пока он не запустится снова. Попробуйте ещё раз или закройте и снова откройте приложение.</string>
     <string name="engine_down_quit">Закрыть</string>
     <string name="about_title">О программе</string>
     <string name="about_title_app">О Kaeri</string>
@@ -1258,9 +1238,9 @@
     <string name="report_crash_settings">Настройки отчётов о сбоях</string>
     <string name="settings_group_crashes">Отчёты о сбоях</string>
     <string name="settings_crash_save">Сохранять отчёты о сбоях на этом устройстве</string>
-    <string name="settings_crash_save_detail">Когда это включено, Kaeri хранит на этом устройстве краткую запись о каждом сбое без названий, адресов и имён, чтобы вы могли добавить её в отчёт об ошибке. Сами по себе они не отправляются.</string>
+    <string name="settings_crash_save_detail">Kaeri хранит на этом устройстве краткую запись о каждом сбое для «Сообщить об ошибке», убирая из неё названия, адреса и имена. Ничего не отправляется само по себе.</string>
     <string name="settings_crash_ask">Спрашивать после сбоя</string>
-    <string name="settings_crash_ask_detail">При следующем запуске показывает уведомление с кнопкой «Сообщить…»</string>
+    <string name="settings_crash_ask_detail">При следующем запуске Kaeri покажет уведомление с кнопкой «Сообщить…».</string>
     <string name="settings_crash_os_heading">Сохранено системой %1$s</string>
     <string name="settings_crash_os_detail">%1$s сохранила эти сбои до того, как вы включили эту настройку. Из них ничего не сохраняется, пока вы сами не добавите.</string>
     <string name="settings_crash_os_item">Сбой · %1$s</string>
@@ -1270,7 +1250,7 @@
     <string name="settings_crash_view">Открыть</string>
     <string name="settings_crash_delete">Удалить</string>
     <string name="settings_crash_delete_all">Удалить все</string>
-    <string name="settings_crash_footnote">Отчёты о сбоях остаются на этом устройстве. Kaeri ничего не отправляет сам. Отчёт уходит только тогда, когда вы открываете его на GitHub из окна «Сообщить об ошибке». Отчёты удаляются через 30 дней.</string>
+    <string name="settings_crash_footnote">Отчёты о сбоях остаются на этом устройстве, и Kaeri ничего не отправляет сам. Отчёт уходит, только когда вы открываете его на GitHub из «Сообщить об ошибке». Отчёты удаляются через 30 дней.</string>
     <string name="calendar_previous_week">Предыдущая неделя</string>
     <string name="calendar_next_week">Следующая неделя</string>
     <string name="calendar_this_week">Эта неделя</string>
@@ -1312,9 +1292,9 @@
     <string name="cast_tvs_note_mac">Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот Mac отправляет им эпизод.</string>
     <string name="cast_tvs_note_iphone">Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот iPhone отправляет им эпизод.</string>
     <string name="cast_tvs_note_ipad">Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот iPad отправляет им эпизод.</string>
-    <string name="cast_torrents_note_mac">Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.</string>
-    <string name="cast_torrents_note_iphone">Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.</string>
-    <string name="cast_torrents_note_ipad">Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.</string>
+    <string name="cast_torrents_note_mac">Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.</string>
+    <string name="cast_torrents_note_iphone">Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.</string>
+    <string name="cast_torrents_note_ipad">Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.</string>
     <string name="cast_up_next_plays_in">Далее · воспроизведение через %1$d с</string>
     <string name="cast_couldnt_start">Не удалось запустить на %1$s</string>
     <string name="cast_stopped">Трансляция остановлена</string>
@@ -1577,11 +1557,11 @@
     <string name="downloads_delete_title">Удалить %1$s?</string>
     <string name="downloads_delete_detail">Файл будет удалён. Это устройство больше его не хранит.</string>
     <string name="downloads_delete_one_title">Удалить загрузку</string>
-    <string name="downloads_delete_one_detail">Воспроизвести снова получится только с подключением к сети или после новой загрузки.</string>
+    <string name="downloads_delete_one_detail">После этого для воспроизведения эпизода понадобится подключение к сети, если не загрузить его снова.</string>
     <string name="downloads_delete_watched">Удалить просмотренные загрузки</string>
     <string name="downloads_seeding_title">Раздача</string>
     <string name="downloads_seeding_after_watching">Раздача после просмотра</string>
-    <string name="downloads_seeding_note">Просмотренные эпизоды раздаются обратно, пока открыт Kaeri, до достижения коэффициента или лимита времени, заданных в разделе «Источники» настроек.</string>
+    <string name="downloads_seeding_note">Просмотренные эпизоды раздаются обратно, пока открыт Kaeri. Раздача останавливается при достижении коэффициента или лимита времени, заданных в настройках, в разделе «Источники».</string>
     <string name="downloads_seeding_open_only">Раздача работает, только пока открыт Kaeri.</string>
     <string name="downloads_background_title">Когда окно закрывается во время загрузок</string>
     <string name="downloads_background_keep">Продолжать загрузку</string>
@@ -1612,8 +1592,8 @@
     <string name="episode_download_done">Загружено</string>
     <string name="episode_download_failed">Не удалось скачать эпизод %1$d. Попробуйте ещё раз.</string>
     <string name="first_other_title">Есть другое устройство с Kaeri?</string>
-    <string name="first_other_line">Выполните сопряжение, и это устройство получит ваши источники, трекеры и историю. Остальные шаги тогда не нужны.</string>
-    <string name="first_other_pair_line">Покажет код, который нужно ввести на другом. Другое устройство и это должны быть в одной сети Wi-Fi.</string>
+    <string name="first_other_line">Выполните сопряжение, и это устройство получит ваши источники, трекеры и историю, а остальная настройка пройдёт сама.</string>
+    <string name="first_other_pair_line">Вы получите код, который нужно ввести на том устройстве. Оба должны быть в одной сети Wi-Fi.</string>
     <string name="first_other_restore">Восстановить из облачной папки</string>
     <string name="first_other_restore_line">Используется сохранённый вами ключ восстановления</string>
     <string name="first_other_no">Нет, начать здесь</string>
@@ -1626,7 +1606,7 @@
     <string name="first_join_signins_line">%1$s</string>
     <string name="first_join_server">Добавить %1$s</string>
     <string name="first_join_server_line">%1$s · вход по ключу с %2$s, он хранится в %3$s</string>
-    <string name="first_join_folders">Папки остаются на %1$s. Это устройство: свои папки добавьте в «Ваши источники».</string>
+    <string name="first_join_folders">Папки остаются на %1$s. Чтобы добавить папки отсюда, откройте «Ваши источники».</string>
     <string name="first_join_steps_done">Списки и источники настроены, поэтому первый запуск завершён. Их можно изменить в настройках.</string>
     <string name="first_join_store_refused">%1$s не пустил это устройство. %2$s может прислать вам приглашение.</string>
     <string name="first_join_syncing">Синхронизация с %1$s</string>
@@ -1655,7 +1635,7 @@
     <string name="home_end">Пока это всё. Полные списки есть в разделах «Сезон» и «Календарь».</string>
     <string name="home_end_signed_out">Войдите в AniList, чтобы подтянуть свой список и «Запланировано».</string>
     <string name="home_sign_in">Войти в AniList</string>
-    <string name="home_end_no_sources">Добавьте источник, чтобы смотреть с главной. В разделе «Магазины плагинов» есть из чего выбрать.</string>
+    <string name="home_end_no_sources">Добавьте источник, чтобы смотреть с главной. Плагины берутся из раздела «Магазины плагинов».</string>
     <string name="home_not_found">Не найдено в ваших источники</string>
     <string name="home_failed">Не удалось загрузить подборки</string>
     <string name="home_try_again">Повторить</string>
@@ -1834,7 +1814,7 @@
     <string name="title_connect_drive">Подключите диск, чтобы смотреть</string>
     <string name="library_picker_title">Выберите папку с вашими эпизодами.</string>
     <string name="library_remove_detail">Ваши файлы останутся на месте.</string>
-    <string name="library_reason_offline">Не удалось обратиться к AniList. Повторим при следующем сканировании.</string>
+    <string name="library_reason_offline">Не удалось обратиться к AniList. При следующем сканировании будет новая попытка.</string>
     <string name="library_choose_match">Выбрать совпадение</string>
     <string name="library_kept_line">Оставлено как отдельный тайтл</string>
     <string name="library_fix_match">Исправить сопоставление</string>
@@ -1845,7 +1825,7 @@
     <string name="licensed_title">Лицензионные сервисы</string>
     <string name="licensed_body">Kaeri может открывать тайтлы в стриминговых сервисах, за которые вы платите. Сам он их никогда не воспроизводит. Ссылки берутся из AniList.</string>
     <string name="licensed_region">Регион</string>
-    <string name="licensed_region_line">Скрывает ссылки, которые AniList отметил для других стран. У большинства ссылок страна не указана, поэтому выберите ещё и свои сервисы.</string>
+    <string name="licensed_region_line">Ссылки, которые AniList отметил для других стран, скрыты. У большинства ссылок страна не указана, поэтому выберите ещё и свои сервисы.</string>
     <string name="licensed_yours">Ваши сервисы</string>
     <string name="licensed_show_all">Показать все (%1$d)</string>
     <string name="licensed_region_system">Как на этом устройстве</string>
@@ -1993,7 +1973,7 @@
     <string name="onboarding_where_hosts">Kaeri воспроизводит то, что у вас уже есть: файлы на этом устройстве, ваш сервер Jellyfin и плагины из магазинов, к которым вы присоединились.</string>
     <string name="onboarding_own_heading">Есть свои медиафайлы?</string>
     <string name="onboarding_invite_heading">Есть ссылка-приглашение?</string>
-    <string name="onboarding_where_stores">Плагины берутся из магазинов плагинов. Магазин плагинов подписан и выдаёт каждому устройству отдельный токен, поэтому присоединиться к нему можно по ссылке-приглашению от его владельца.</string>
+    <string name="onboarding_where_stores">Плагины берутся из магазинов плагинов. Каждый из них подписан и выдаёт каждому устройству свой токен, поэтому подключиться к нему можно по ссылке-приглашению от владельца.</string>
     <string name="onboarding_demo_heading">Попробуйте сразу</string>
     <string name="onboarding_demo_detail">Демо воспроизводит こうしす！, сериал, которым его авторы делятся по лицензии CC BY 4.0, из Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Смотреть демо</string>
@@ -2007,12 +1987,12 @@
     <string name="party_join">Присоединиться</string>
     <string name="party_leave">Покинуть</string>
     <string name="party_leaving">Выходим…</string>
-    <string name="party_ready_action">Я готов</string>
+    <string name="party_ready_action">Отметить готовность</string>
     <string name="party_copy_invite">Копировать приглашение</string>
     <string name="party_stay">Остаться</string>
     <string name="party_leave_and_close">Выйти и закрыть</string>
     <string name="party_not_now">Не сейчас</string>
-    <string name="party_getting_ready">Готовим…</string>
+    <string name="party_getting_ready">Загрузка предложений…</string>
     <string name="party_server">Сервер</string>
     <string name="party_server_hint">хост:порт</string>
     <string name="party_recent_servers">Недавние серверы</string>
@@ -2023,7 +2003,7 @@
     <string name="party_your_name">Ваше имя в комнате</string>
     <string name="party_server_public">Публичный сервер, которым управляет %1$s, а не Kaeri.</string>
     <string name="party_server_suggest">Нет своего сервера? Можно взять публичный %1$s, им управляет %2$s.</string>
-    <string name="party_server_invited">Сервер выбрал тот, кто вас пригласил. Kaeri его не запускает.</string>
+    <string name="party_server_invited">Этот сервер выбрал тот, кто вас пригласил. Kaeri им не управляет.</string>
     <string name="party_server_shape">Укажите сервер как хост и порт, например party.example:8999.</string>
     <string name="party_privacy">Сервер видит ваше имя, комнату и то, когда кто-то включает, ставит на паузу или перематывает. Каждый из вас смотрит серию через свои источники.</string>
     <string name="party_room_hint">Присоединиться к комнате может любой, кто знает её название. Ссылка-приглашение его содержит, поэтому никому не нужно его диктовать.</string>
@@ -2097,7 +2077,7 @@
     <string name="together_open_player">Открыть плеер</string>
     <string name="together_recent">Недавние комнаты</string>
     <string name="together_recent_row">Эпизод %1$s · с %2$s · %3$s</string>
-    <string name="together_recent_empty">Здесь появятся комнаты, в которые вы заходили, последние десять.</string>
+    <string name="together_recent_empty">Здесь появятся последние десять комнат, в которые вы зайдёте.</string>
     <string name="together_rejoin">Вернуться</string>
     <string name="together_forget_room">Убрать из недавних комнат</string>
     <plurals name="together_someone_here">
@@ -2209,7 +2189,7 @@
     <string name="party_chat_hidden_line">Скрытие чата включено в настройках, в разделе «Воспроизведение».</string>
     <string name="party_chat_show">Показать чат</string>
     <string name="settings_hide_chat">Скрывать чат в совместных просмотрах</string>
-    <string name="settings_hide_chat_line">Сообщения, реакции и их метки на шкале перемотки не показываются на видео, а поле ввода пропадает. Список участников по-прежнему показывает, кто в комнате.</string>
+    <string name="settings_hide_chat_line">Сообщения чата, реакции и их метки на шкале перемотки не показываются поверх видео, а поле чата скрыто. Список участников по-прежнему показывает, кто в комнате.</string>
     <string name="party_mute">Скрыть сообщения: %1$s</string>
     <string name="party_unmute">Показать сообщения: %1$s</string>
     <string name="party_unmute_short">Показать</string>
@@ -2429,8 +2409,8 @@
     <string name="player_load_subtitle_file">Загрузить файл субтитров…</string>
     <string name="player_load_audio_file">Загрузить аудиофайл…</string>
     <string name="player_file_picker_failed">Не удалось открыть выбор файла. Попробуйте ещё раз.</string>
-    <string name="player_subtitle_file_failed">Не удалось загрузить этот файл субтитров. Проверьте, что это файл субтитров.</string>
-    <string name="player_audio_file_failed">Не удалось загрузить этот аудиофайл. Проверьте, что это аудиофайл.</string>
+    <string name="player_subtitle_file_failed">Не удалось загрузить этот файл как субтитры. Выберите файл субтитров, например .srt или .ass.</string>
+    <string name="player_audio_file_failed">Не удалось загрузить этот файл как звук. Выберите аудиофайл, например .mka или .flac.</string>
     <string name="player_track_unnamed">Дорожка без названия</string>
     <string name="player_audio_track_n">Аудио %1$d</string>
     <string name="player_subtitle_track_n">Субтитры %1$d</string>
@@ -2459,6 +2439,7 @@
     <string name="reader_try_again">Повторить</string>
     <string name="reader_close">Закрыть</string>
     <string name="reader_end_read">Прочитано</string>
+    <string name="reader_end_tracker">Прочитано · обновлено: %1$s</string>
     <string name="reader_end_next">Следующая</string>
     <string name="reader_mode_rtl">Справа налево</string>
     <string name="reader_mode_ltr">Слева направо</string>
@@ -2497,8 +2478,27 @@
     <string name="reader_gap_none">Нет</string>
     <string name="reader_gap_small">Малый</string>
     <string name="reader_look_system">Как в системе</string>
+    <string name="reader_end_of_chapter_number">Конец главы %1$s</string>
+    <string name="reader_end_facts">Глава %1$s · %2$s</string>
+    <plurals name="reader_end_pages">
+        <item quantity="one">%1$d страница</item>
+        <item quantity="few">%1$d страницы</item>
+        <item quantity="many">%1$d страниц</item>
+        <item quantity="other">%1$d страницы</item>
+    </plurals>
+    <string name="reader_end_from">Из %1$s</string>
+    <string name="reader_chapter_line">Глава %1$s</string>
+    <string name="reader_divider_facts_source">%1$s · из %2$s</string>
+    <string name="reader_end_swipe">Смахните, чтобы читать дальше</string>
+    <plurals name="reader_divider_images">
+        <item quantity="one">%1$d картинка</item>
+        <item quantity="few">%1$d картинки</item>
+        <item quantity="many">%1$d картинок</item>
+        <item quantity="other">%1$d картинки</item>
+    </plurals>
+    <string name="reader_chapter_line_titled">Глава %1$s · %2$s</string>
     <string name="onboarding_read_demo">Открыть демо</string>
-    <string name="onboarding_demo_books_detail">В демо есть короткий комикс и короткий рассказ, которыми их авторы делятся по лицензии Creative Commons.</string>
+    <string name="onboarding_demo_books_detail">Один короткий комикс и один короткий рассказ, которыми их авторы делятся по лицензии Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Один короткий эпизод и один короткий комикс, которыми их авторы делятся по лицензии Creative Commons.</string>
     <string name="home_demo_only_books">Включено только демо. Добавьте папку, сервер или магазин плагинов, чтобы читать свои книги.</string>
     <string name="home_spotlight_read">Читать</string>
@@ -2510,16 +2510,16 @@
     </plurals>
     <string name="demo_credit_book">%1$s, автор: %2$s. Лицензия: %3$s. Читается с Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s, автор: %2$s. Общественное достояние. Входит в приложение.</string>
-    <string name="demo_credit_cover">Обложка: «%1$s», автор: %2$s, %3$s. Общественное достояние. Входит в приложение.</string>
+    <string name="demo_credit_cover">Обложка: «%1$s», %2$s, %3$s. Общественное достояние. Входит в приложение.</string>
     <string name="reader_demo_credit">%1$s · %2$s · %3$s</string>
     <string name="search_demo_reads">Демо · Можно читать сейчас</string>
     <string name="search_demo_only_books">Включено только демо. Другие названия появятся, когда вы добавите источник.</string>
-    <string name="reader_demo_end">Демо закончилось</string>
+    <string name="reader_demo_end">Это конец демо</string>
     <string name="reader_demo_end_line">Чтобы читать свои книги, добавьте папку, сервер или магазин плагинов.</string>
     <string name="reader_demo_add_source">Добавить источник</string>
     <string name="reader_demo_again">Вернуться к странице 1</string>
     <string name="sources_demo_books_line">Комикс и рассказ · CC BY 4.0 и общественное достояние</string>
-    <string name="sources_demo_books_what">Произведения, которыми их авторы делятся по лицензии Creative Commons, чтобы вы могли попробовать Kaeri, прежде чем добавите источник. Это не постоянный источник.</string>
+    <string name="sources_demo_books_what">Произведения, которыми их авторы делятся по лицензии Creative Commons, чтобы вы могли попробовать Kaeri до того, как добавите источник. Это не источник для постоянного использования.</string>
     <string name="sources_demo_books_private">Демо нигде не входит в учётную запись и никогда не записывает данные в трекер.</string>
     <string name="demo_chapters">Главы</string>
     <string name="demo_also">Ещё в демо</string>
@@ -2753,7 +2753,7 @@
     <string name="book_sources_no_match">Нет совпадения</string>
     <string name="book_sources_keep">Оставить без совпадения</string>
     <string name="book_sources_find">Найти</string>
-    <string name="book_sources_unmatched_note">Серии без совпадения по-прежнему читаются из папки. Прогресса в трекере у них нет, пока совпадение не найдено.</string>
+    <string name="book_sources_unmatched_note">Серии без совпадения можно читать из папки. Трекер не получает по ним прогресс, пока совпадение не найдено.</string>
     <string name="library_scope_label">Сериалы или чтение</string>
     <string name="library_scope_shows">Сериалы</string>
     <string name="library_scope_reading">Чтение</string>
@@ -2915,8 +2915,8 @@
     <string name="settings_delete_after_reading_note">Главы с закладками сохраняются</string>
     <string name="settings_chapter_notifications_note">Серии из вашего списка «Читаю»</string>
     <string name="settings_downloads_finished_note">Когда все скачиваемые главы готовы</string>
-    <string name="settings_chapter_notifications_footer">У глав свой системный канал, поэтому их можно отключить отдельно.</string>
-    <string name="accounts_mangaupdates_credit">MangaUpdates подключается через публичный API.</string>
+    <string name="settings_chapter_notifications_footer">У глав свой системный канал, поэтому их можно отключить, оставив остальные уведомления.</string>
+    <string name="accounts_mangaupdates_credit">Kaeri обращается к MangaUpdates через его публичный API.</string>
     <string name="accounts_username">Имя пользователя</string>
     <plurals name="read_downloads_total">
         <item quantity="one">%1$d глава · %2$s</item>
@@ -2950,7 +2950,7 @@
     <string name="seasonal_empty_format">В этом формате тайтлов нет</string>
     <string name="seasonal_empty_format_detail">Попробуйте все форматы.</string>
     <string name="seasonal_filter_in_search">Фильтровать в поиске</string>
-    <string name="seasonal_filter_help">Этот сезон в поиске, где каждый фильтр что-то сужает</string>
+    <string name="seasonal_filter_help">Открывает этот сезон в поиске, где работают все фильтры</string>
     <string name="sort_popularity">Популярность</string>
     <string name="sort_score">Оценка</string>
     <string name="sort_air_day">День выхода</string>
@@ -2959,7 +2959,7 @@
     <string name="sort_label">Сортировать по: %1$s</string>
     <string name="search_placeholder">Поиск тайтлов</string>
     <string name="search_clear">Очистить поиск</string>
-    <string name="search_searching">Ищем «%1$s»</string>
+    <string name="search_searching">Поиск: «%1$s»</string>
     <string name="search_results_for">Результаты по запросу «%1$s»</string>
     <string name="search_browse">Каталог</string>
     <string name="search_nothing_found">По запросу «%1$s» ничего не найдено</string>
@@ -2997,7 +2997,7 @@
     <string name="filter_released">Выход</string>
     <string name="filter_where_to_watch">Где смотреть</string>
     <string name="filter_licensed_only">Только лицензионные</string>
-    <string name="filter_my_list">Тайтлы из моего списка</string>
+    <string name="filter_my_list">Тайтлы из вашего списка</string>
     <string name="filter_show">Показывать</string>
     <string name="filter_hide">Скрывать</string>
     <string name="filter_only">Только</string>
@@ -3190,7 +3190,7 @@
     <string name="servers_kind_films">Фильмы</string>
     <string name="servers_error_certificate">%1$s использует сертификат, которому это устройство не доверяет. Используйте адрес https:// с сертификатом, которому оно доверяет.</string>
     <string name="servers_row_signed_out_here">Вход не выполнен</string>
-    <string name="servers_sign_out_line">Завершает вход в приложении на сервере. Сам сервер и ваши загрузки остаются как есть.</string>
+    <string name="servers_sign_out_line">Выход завершает сеанс, который это устройство открыло на сервере. Сам сервер и ваши загрузки остаются как есть.</string>
     <string name="settings_language">Язык</string>
     <string name="settings_language_app">Язык приложения</string>
     <string name="language_follow_system">Как в системе</string>
@@ -3300,7 +3300,7 @@
     <string name="settings_artwork_detail">Указание авторства в разделе уведомлений приложения.</string>
     <string name="settings_new_episodes">Новые серии</string>
     <string name="settings_new_episodes_detail">Серии из вашего списка «Смотрю»</string>
-    <string name="settings_notify_detail">Одно уведомление, когда выходит эпизод сериала, за которым вы следите: показываются сериал и номер эпизода, но не название. Для отдельного сериала его можно выключить в его настройках.</string>
+    <string name="settings_notify_detail">Вы получаете одно уведомление, когда выходит эпизод тайтла, за которым вы следите. В нём указаны тайтл и номер эпизода, но не название эпизода. Уведомления для тайтла можно выключить в его настройках.</string>
     <string name="settings_coming_up">Скоро · ближайшие 7 дней</string>
     <string name="settings_system_notifications">Настройки уведомлений</string>
     <string name="settings_system_notifications_detail">Звук, вибрация и экран блокировки</string>
@@ -3318,7 +3318,7 @@
     <string name="show_settings_always">Всегда</string>
     <string name="show_settings_never">Никогда</string>
     <string name="show_settings_subs_remembered">Запомнено с вашей последней серии.</string>
-    <string name="show_settings_subs_follow">Выбирается в плеере. Следует разделу «Настройки › Воспроизведение».</string>
+    <string name="show_settings_subs_follow">Выбираются в плеере. До тех пор действует раздел «Настройки › Воспроизведение».</string>
     <string name="show_settings_source">Источник</string>
     <string name="show_settings_source_detail">Автоматически перебирает ваши источники по порядку.</string>
     <string name="show_settings_reset">Сбросить к значениям по умолчанию</string>
@@ -3350,7 +3350,7 @@
     <string name="settings_upload_unlimited">Без ограничения</string>
     <string name="settings_upscaling_natural">Естественный · ArtCNN</string>
     <string name="settings_label_hover_cards">Увеличивать при наведении</string>
-    <string name="settings_hover_cards_note">Показывает увеличенную карточку с трейлером, когда вы наводите указатель на обложку.</string>
+    <string name="settings_hover_cards_note">Если задержать указатель на обложке, откроется увеличенная карточка с трейлером.</string>
     <string name="settings_upscaling_note_natural">Точные линии и текстура, без изменения стиля.</string>
     <string name="settings_upscaling_note_sharp">Чётче линии и сильнее контуры, ценой части текстуры.</string>
     <string name="settings_after_download">После каждой загрузки</string>
@@ -3440,7 +3440,7 @@
     <string name="book_server_err_password">%1$s не принял этот пароль</string>
     <string name="book_server_err_password_line">Введите имя пользователя и пароль, которые вы используете для %1$s в браузере.</string>
     <string name="book_server_err_key">%1$s не принял этот ключ</string>
-    <string name="book_server_err_key_line">Ключ меняется при сбросе в Kavita. Скопируйте ссылку OPDS заново в настройках своей учётной записи там.</string>
+    <string name="book_server_err_key_line">Ключ меняется, когда его сбрасывают в Kavita. Снова скопируйте ссылку OPDS из настроек своей учётной записи там.</string>
     <string name="book_server_empty">%1$s не показывает для этой учётной записи ни одной серии</string>
     <string name="book_server_empty_line">Вход выполнен, но сервер может ещё сканировать библиотеки, или у этой учётной записи нет доступа к его книгам.</string>
     <string name="book_server_empty_recheck">Вы можете добавить его сейчас. Kaeri проверяет снова каждые 30 минут.</string>
@@ -3456,7 +3456,7 @@
         <item quantity="one">%1$d файл, который Kaeri не может открыть</item>
         <item quantity="few">%1$d файла, которые Kaeri не может открыть</item>
         <item quantity="many">%1$d файлов, которые Kaeri не может открыть</item>
-        <item quantity="other">%1$d файлов, которые Kaeri не может открыть</item>
+        <item quantity="other">%1$d файла, которые Kaeri не может открыть</item>
     </plurals>
     <string name="book_folder_unsupported_line">%1$s. Они остаются в папке как есть.</string>
     <string name="book_folder_drm">Файлов EPUB с защитой DRM: %1$d</string>
@@ -3466,10 +3466,10 @@
     <string name="book_folder_change">Изменить</string>
     <string name="book_folder_empty">В папке %1$s нет ничего, что Kaeri может открыть</string>
     <plurals name="book_folder_empty_line">
-        <item quantity="one">В ней %1$d файл, и он не CBZ, CBR, EPUB, PDF и не изображение.</item>
+        <item quantity="one">В ней %1$d файл, и это не CBZ, CBR, EPUB, PDF и не изображение.</item>
         <item quantity="few">В ней %1$d файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
         <item quantity="many">В ней %1$d файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
-        <item quantity="other">В ней %1$d файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
+        <item quantity="other">В ней %1$d файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
     </plurals>
     <string name="book_folder_choose_other">Выбрать другую папку</string>
     <string name="store_join_title">Подключение: магазин плагинов</string>
@@ -3487,16 +3487,16 @@
     <string name="store_installed_row">Установлено</string>
     <string name="store_install_all_reading">Установить всё для чтения</string>
     <plurals name="store_installed">
-        <item quantity="one">Установлен %1$d плагин. Он в списке «Ваши источники».</item>
-        <item quantity="few">Установлено, плагины: %1$d. Они в списке «Ваши источники».</item>
-        <item quantity="many">Установлено, плагины: %1$d. Они в списке «Ваши источники».</item>
-        <item quantity="other">Установлено, плагины: %1$d. Они в списке «Ваши источники».</item>
+        <item quantity="one">Установлен %1$d плагин. Он в разделе «Ваши источники».</item>
+        <item quantity="few">Установлено, плагины: %1$d. Они в разделе «Ваши источники».</item>
+        <item quantity="many">Установлено, плагины: %1$d. Они в разделе «Ваши источники».</item>
+        <item quantity="other">Установлено, плагины: %1$d. Они в разделе «Ваши источники».</item>
     </plurals>
     <string name="store_other_medium">Каждый плагин в %1$s предназначен для просмотра</string>
     <string name="store_other_medium_line">Это устройство: просмотр выключен, поэтому ни один из них не показан в списке «Ваши источники».</string>
     <string name="store_turn_on_watching">Включить просмотр</string>
     <string name="store_empty">%1$s: плагины пока нет</string>
-    <string name="store_empty_line">Вы участник, поэтому, когда %1$s добавит новые плагины, они появятся в разделе «Магазины плагинов».</string>
+    <string name="store_empty_line">Вы участник, поэтому новые плагины появятся в разделе «Магазины плагинов», когда %1$s их добавит.</string>
     <string name="store_err_unreachable">Не удалось подключиться к %1$s</string>
     <string name="store_err_unreachable_line">Приглашение выглядит верным, но магазин не отвечает. Повторите попытку позже или спросите у %1$s, работает ли он.</string>
     <plurals name="store_other_medium_more">
@@ -3506,12 +3506,12 @@
         <item quantity="other">Ещё %1$d для просмотра. Это устройство: просмотр выключен.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
-        <item quantity="one">Ещё %1$d для чтения, а телевизор этого не умеет.</item>
-        <item quantity="few">Ещё %1$d для чтения, а телевизор этого не умеет.</item>
-        <item quantity="many">Ещё %1$d для чтения, а телевизор этого не умеет.</item>
-        <item quantity="other">Ещё %1$d для чтения, а телевизор этого не умеет.</item>
+        <item quantity="one">Ещё %1$d предназначен для чтения, а на этом телевизоре чтения нет.</item>
+        <item quantity="few">Ещё %1$d предназначены для чтения, а на этом телевизоре чтения нет.</item>
+        <item quantity="many">Ещё %1$d предназначены для чтения, а на этом телевизоре чтения нет.</item>
+        <item quantity="other">Ещё %1$d предназначены для чтения, а на этом телевизоре чтения нет.</item>
     </plurals>
-    <string name="store_tv_all_reading">Каждый плагин в %1$s предназначен для чтения, а телевизор этого не умеет.</string>
+    <string name="store_tv_all_reading">Все плагины в %1$s предназначены для чтения, а на этом телевизоре чтения нет.</string>
     <string name="store_plugin_row">Версия %1$s · может обращаться к %2$s</string>
     <string name="source_added">Добавлено: %1$s · серий: %2$d</string>
     <plurals name="source_added_plugins">
@@ -3525,6 +3525,12 @@
         <item quantity="few">%1$s · серий: %2$d · библиотек: %3$d · добавлено только что</item>
         <item quantity="many">%1$s · серий: %2$d · библиотек: %3$d · добавлено только что</item>
         <item quantity="other">%1$s · серий: %2$d · библиотек: %3$d · добавлено только что</item>
+    </plurals>
+    <plurals name="source_row_server_series">
+        <item quantity="one">%1$s · серий: %2$d · библиотек: %3$d</item>
+        <item quantity="few">%1$s · серий: %2$d · библиотек: %3$d</item>
+        <item quantity="many">%1$s · серий: %2$d · библиотек: %3$d</item>
+        <item quantity="other">%1$s · серий: %2$d · библиотек: %3$d</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · серий пока нет · проверка снова через 30 минут</string>
     <plurals name="source_row_folder">
@@ -3634,8 +3640,8 @@
     <string name="match_similarity">%1$s совп.</string>
     <string name="match_search_field">Искать на %1$s</string>
     <string name="match_search_another">Искать другой тайтл</string>
-    <string name="match_searching">Ищем на %1$s «%2$s»</string>
-    <string name="match_search_empty">На %1$s ничего нет по запросу «%2$s».</string>
+    <string name="match_searching">Поиск «%2$s» на %1$s</string>
+    <string name="match_search_empty">На %1$s ничего не найдено по запросу «%2$s».</string>
     <string name="match_search_empty_hint">Попробуйте меньше слов или название на другом языке.</string>
     <string name="match_search_failed">Не удалось выполнить поиск на %1$s.</string>
     <string name="match_picking">Сопоставляем</string>
@@ -3655,7 +3661,7 @@
     <string name="sources_add_folder">Папка…</string>
     <string name="sources_add_server">Медиасервер…</string>
     <string name="sources_add_store">Присоединиться к магазину плагинов…</string>
-    <string name="sources_empty_body">Источники: то, откуда берутся эпизоды. Это папки на этом устройстве, ваш медиасервер и плагины из магазинов, к которым вы присоединились.</string>
+    <string name="sources_empty_body">Источники дают эпизоды: это папки на этом устройстве, ваш медиасервер и плагины из магазинов плагинов, к которым вы присоединились.</string>
     <string name="sources_empty_more">Можно также %1$s.</string>
     <string name="sources_empty_join_link">присоединиться к магазину плагинов</string>
     <string name="sources_add_folder_button">Добавить папку</string>
@@ -3669,7 +3675,7 @@
     <string name="sources_demo_link_licence">Лицензия</string>
     <string name="sources_demo_link_commons">Wikimedia Commons</string>
     <string name="sources_demo_link_maker">OPAP-JP</string>
-    <string name="sources_demo_hosts">Обращается только к Wikimedia Commons: upload.wikimedia.org и commons.wikimedia.org.</string>
+    <string name="sources_demo_hosts">Демо обращается только к Wikimedia Commons: upload.wikimedia.org и commons.wikimedia.org.</string>
     <string name="sources_demo_private">Демо никуда не входит и ничего не записывает в AniList.</string>
     <string name="sources_demo_remove">Удалить демо</string>
     <string name="sources_demo_add">Добавить демо</string>
@@ -3692,7 +3698,7 @@
     <string name="stores_intro">Плагины добавляют источники. Каждый показывает серверы, с которыми связывается, до установки.</string>
     <string name="stores_not_from_app">Плагины приходят от владельца магазина, а не от Kaeri. Выйти из магазина можно в любой момент.</string>
     <string name="stores_join_owner_responsible">%1$s ведёт этот магазин плагинов и выбрал его плагины. Kaeri не создавал, не проверял и не одобрял их.</string>
-    <string name="stores_no_plugins">Этот магазин плагинов пока не предлагает плагины.</string>
+    <string name="stores_no_plugins">Этот магазин плагинов пока пуст: плагины ещё не добавлены.</string>
     <string name="stores_plugins">Плагины</string>
     <string name="stores_plugin_limits">Каждый плагин может обращаться только к серверам, указанным вместе с ним, и не может читать ваши файлы.</string>
     <string name="stores_plugin_limits_short">Плагины не могут читать ваши файлы или обращаться к серверу, которого нет в списке.</string>
@@ -3704,7 +3710,7 @@
     <string name="stores_access_ended_detail">Владелец магазина закрыл вам доступ. Установленные плагины продолжают работать, но обновляться больше не будут.</string>
     <string name="stores_access_ended_page">Этот магазин плагинов больше не пускает это устройство. Его плагины остаются установленными, пока вы их не удалите.</string>
     <string name="stores_no_longer_joined">Этот магазин плагинов больше не подключён.</string>
-    <string name="stores_offline_last_list">Не в сети: %1$s. Плагины ниже взяты из последнего проверенного списка.</string>
+    <string name="stores_offline_last_list">Нет сети: %1$s. Показан последний список, который он прислал.</string>
     <string name="stores_offline_last_list_plain">Не в сети. Показан последний полученный список.</string>
     <string name="stores_key_line">Ключ магазина %1$s · %2$s</string>
     <string name="stores_device_joined_as">Подключено как %1$s</string>
@@ -3739,14 +3745,14 @@
     <string name="stores_install_label">Установить %1$s</string>
     <string name="stores_replace_label">Заменить копию %1$s, добавленную вручную</string>
     <string name="stores_remove_plugin_title">Удалить %1$s?</string>
-    <string name="stores_remove_plugin_detail">Он удаляется отсюда. Магазин плагинов сможет установить его снова.</string>
+    <string name="stores_remove_plugin_detail">Он будет удалён отсюда. Установить его снова можно через магазин плагинов.</string>
     <string name="stores_newly_contacts">Новые серверы</string>
     <string name="stores_update_contacts">Это обновление также обращается к серверам: %1$s.</string>
     <string name="stores_new_in">Новое в %1$s</string>
     <string name="stores_join_title">Подключить магазин плагинов</string>
     <string name="stores_add_title">Добавить магазин плагинов</string>
     <string name="stores_join_detail">Вставьте ссылку, которую прислал владелец магазина.</string>
-    <string name="stores_join_detail_desktop">Вставьте пригласительную ссылку, которую прислал владелец магазина. До подключения и установки вы увидите, что предлагает магазин плагинов.</string>
+    <string name="stores_join_detail_desktop">Вставьте ссылку-приглашение, которую вам прислал владелец. До подключения и установки вы увидите, что предлагает магазин плагинов.</string>
     <string name="stores_join_detail_opened">Вставьте ссылку, которую прислал владелец магазина. Ссылка вида Kaeri://, открытая из «Сообщений», сразу заполнит этот лист.</string>
     <string name="stores_invite_link">Ссылка-приглашение</string>
     <string name="stores_invite_link_hint">https://…/join/…</string>
@@ -3760,7 +3766,7 @@
     <string name="stores_join_confirm_title">Подключить %1$s?</string>
     <string name="stores_join_installs_nothing">Подключение ничего не устанавливает. Вы сами выбираете, какие плагины установить, и каждый показывает серверы, с которыми связывается.</string>
     <string name="stores_key_matches">Ключ %1$s совпадает с ключом магазина.</string>
-    <string name="stores_anyone_note">Вы подключаетесь без имени. Другое устройство подключается по той же ссылке.</string>
+    <string name="stores_anyone_note">Вы подключаетесь без имени. Другое устройство может подключиться по той же ссылке.</string>
     <string name="stores_already_joined_note">Это устройство уже подключено к этому магазину.</string>
     <string name="stores_device_name">Имя</string>
     <string name="stores_device_name_detail">Владелец магазина видит это устройство под этим именем.</string>
@@ -3816,7 +3822,7 @@
     <string name="stores_invite_works_times_forever">Использований: %1$d, пока вы её не отмените.</string>
     <string name="stores_invite_works_any">Присоединиться может любой, у кого есть эта ссылка, до %1$s.</string>
     <string name="stores_invite_works_any_forever">Присоединиться может любой, у кого есть эта ссылка, пока вы её не отмените.</string>
-    <string name="stores_invite_once_until">Действует один раз, для того, кому вы её отправите. До %1$s.</string>
+    <string name="stores_invite_once_until">Действует один раз, для того, кому вы её отправите, до %1$s.</string>
     <string name="stores_invite_once_forever">Действует один раз, для того, кому вы её отправите, пока вы её не отмените.</string>
     <string name="stores_invite_contact_needed">Сначала добавьте контакт для этого магазина. Ссылку, которая работает сколько угодно раз, можно передать дальше, как и ссылку самого магазина.</string>
     <string name="stores_invite_owner_once">Приглашения владельцев действуют один раз.</string>
@@ -3873,16 +3879,16 @@
         <item quantity="other">Плагины: %1$d</item>
     </plurals>
     <string name="notice_open_stores">Открыть магазины плагинов</string>
-    <string name="stores_what_is">Магазин плагинов представляет собой небольшой сервер, который хранит подписанные плагины и выдаёт каждому устройству отдельный токен. Он предлагает источники в виде плагины. Kaeri не ведёт магазинов плагинов и не составляет их списков, поэтому присоединиться можно по ссылке-приглашению от владельца.</string>
+    <string name="stores_what_is">Магазин плагинов представляет собой небольшой сервер, который хранит подписанные плагины и выдаёт каждому устройству свой токен. Его плагины добавляют источники. Kaeri не ведёт магазинов плагинов и не составляет их списков, поэтому подключиться к одному из них можно по ссылке-приглашению от владельца.</string>
     <string name="stores_what_is_link">Что такое магазин плагинов?</string>
     <string name="stores_invite_rules">Ссылка-приглашение действует один раз, для одного человека, и семь дней. Если срок вашей истёк, попросите у владельца магазина плагинов новую.</string>
     <string name="stores_qr_label">QR-код ссылки-приглашения</string>
     <string name="stores_qr_warning">Любой, кто отсканирует этот код, сможет воспользоваться приглашением. Оно действует один раз и семь дней.</string>
     <string name="stores_qr_warning_device">Отсканируйте это на устройстве, которое хотите связать. Код действует один раз и семь дней.</string>
     <string name="stores_share">Поделиться…</string>
-    <string name="cloud_browser_line">Браузер открыл страницу %1$s. Разрешите доступ там, и Kaeri продолжит сам.</string>
+    <string name="cloud_browser_line">В браузере открылась страница %1$s. Разрешите доступ там, и Kaeri продолжит сам.</string>
     <string name="cloud_browser_title">Войдите в %1$s в браузере</string>
-    <string name="cloud_close_carries_on">Это окно можно закрыть. Kaeri продолжит работу и сам откроет следующий шаг, когда он будет готов.</string>
+    <string name="cloud_close_carries_on">Это окно можно закрыть. Kaeri продолжит работу и сам откроет следующий шаг, когда всё будет готово.</string>
     <string name="device_kind_computer">компьютер</string>
     <string name="devices_enter_code">Ввести код</string>
     <string name="devices_show_key">Показать</string>
@@ -3939,7 +3945,7 @@
     <string name="sync_turn_off_alert">Выключить синхронизацию на: %1$s?</string>
     <string name="sync_turn_off_alert_line">Это устройство (%1$s) перестаёт делиться данными с вашими остальными устройствами. Всё, что есть на нём, остаётся здесь.</string>
     <string name="cloud_group">Облачная папка</string>
-    <string name="cloud_foot">Дополняет данные, пока ваши устройства далеко друг от друга, и хранит зашифрованную резервную копию. Прочитать её могут только ваши устройства.</string>
+    <string name="cloud_foot">Папка синхронизирует ваши устройства, пока они далеко друг от друга, и хранит зашифрованную резервную копию. Прочитать её могут только ваши устройства.</string>
     <string name="cloud_add">Добавить облачную папку</string>
     <string name="cloud_pick_title">Выберите облачную папку</string>
     <string name="cloud_google_line">Скрытая папка Kaeri на вашем Диске</string>
@@ -4057,7 +4063,7 @@
     <string name="profiles_delete_alert_line">История и входы профиля %1$s на этом устройстве будут удалены. Устройства, синхронизируемые с профилем %1$s, сохранят свои.</string>
     <string name="profiles_picker">Кто смотрит?</string>
     <string name="profiles_ask_at_launch">Спрашивать, кто смотрит, при запуске</string>
-    <string name="profiles_ask_foot">По умолчанию выключено. Для iPad, которым пользуется вся семья. Строка аккаунта позволяет сменить профиль в любой момент.</string>
+    <string name="profiles_ask_foot">По умолчанию выключено. Включите для iPad, которым пользуется вся семья. Сменить профиль можно в строке аккаунта в любой момент.</string>
     <string name="profiles_switch">Сменить профиль</string>
     <string name="profiles_manage">Управление профилями</string>
     <string name="first_setup_other">Настроить через другое устройство</string>
@@ -4334,7 +4340,7 @@
     <string name="accounts_tokens_file">Устройство хранит токены входа в файле, доступном для чтения только вам.</string>
     <string name="accounts_tokens_keystore">Устройство хранит токены входа, защищённые ключом из своего хранилища.</string>
     <string name="accounts_form_title">Войти в %1$s</string>
-    <string name="accounts_form_detail">Пароль уходит в %1$s один раз, а токен для входа хранит устройство.</string>
+    <string name="accounts_form_detail">Пароль уходит в %1$s один раз в обмен на токен, который хранит это устройство.</string>
     <string name="accounts_user_or_email">Эл. почта или имя пользователя</string>
     <string name="accounts_password">Пароль</string>
     <string name="accounts_signing_in_action">Входим</string>
@@ -4358,7 +4364,7 @@
     <string name="accounts_keep_theirs">Оставить версию %1$s</string>
     <string name="accounts_open_on">Открыть в %1$s</string>
     <string name="accounts_listed_by">Указано в %1$s</string>
-    <string name="accounts_did_not_answer">%1$s не ответил.</string>
+    <string name="accounts_did_not_answer">%1$s не ответил. Попробуйте чуть позже.</string>
     <string name="accounts_no_extras">У %1$s пока нет актёров, создателей и рекомендаций для этого аниме.</string>
     <string name="accounts_episodes_from">Эпизоды из %1$s. Добавьте источник, чтобы смотреть их.</string>
     <string name="accounts_adds_season">%1$s добавляет названия сезона по мере анонсов.</string>
@@ -4379,7 +4385,7 @@
     <string name="tv_choose_another">Выбрать другой ТВ…</string>
     <string name="tv_pairing_code">Код подключения</string>
     <string name="tv_open_on_tv">Откройте Kaeri на телевизоре. Он должен быть в той же сети Wi-Fi, что и это устройство.</string>
-    <string name="tv_type_code">Введите шесть цифр, которые показывает %1$s. После этого это устройство подключится само.</string>
+    <string name="tv_type_code">Введите шесть цифр, которые показывает %1$s. После этого это устройство будет подключаться само.</string>
     <string name="tv_pairing_moment">Это займёт немного времени.</string>
     <string name="tv_looking">Ищем телевизоры в этой сети</string>
     <string name="tv_none_found">Телевизоры не найдены</string>
@@ -4479,7 +4485,7 @@
     <string name="updates_saved_replace">Версия %1$s сохранена в папку «Загрузки». Чтобы обновиться, замените ею старый файл: %2$s.</string>
     <string name="updates_saved_replace_plain">Версия %1$s сохранена в папку «Загрузки». Чтобы обновиться, замените ею старый файл.</string>
     <string name="updates_why_server">Загрузка остановлена: сервер отказал в запросе (%1$d). Попробуйте позже.</string>
-    <string name="updates_why_connection">Загрузка остановлена: соединение прервалось.</string>
+    <string name="updates_why_connection">Загрузка остановлена: соединение прервалось. Попробуйте ещё раз.</string>
     <string name="updates_why_save">Не удалось сохранить загрузку: %1$s</string>
     <string name="updates_why_size">Размер загрузки %1$s, а для этой версии указан %2$s.</string>
     <string name="updates_why_checksum">Загрузка не совпадает с контрольной суммой, указанной для этой версии.</string>

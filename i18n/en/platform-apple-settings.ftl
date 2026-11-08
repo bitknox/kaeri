@@ -49,7 +49,7 @@ settings-aside-sources-apple = { -source-cap-pl } are tried in order, top to bot
 settings-aside-advanced = An option here can undo a Playback setting, such as upscaling or night mode. Most people never need this pane.
 
 # Note under the download quality row.
-settings-quality-detail = Higher takes the best version a { -source } offers, and more space.
+settings-quality-detail = Higher picks the best version a { -source } has. It takes more space.
 
 # Note under the merge subtitles row.
 settings-merge-subtitles-detail = Subtitles stay with the episode wherever the file goes.
@@ -161,7 +161,7 @@ settings-read-online = Read online
 
 # Footnote of the Discord group.
 # @arg tracker: text
-settings-presence-note = Rich presence shows the cover, a progress bar and a link to the show on { $tracker }. Discord fetches the cover from { $tracker } itself. It needs the title shown.
+settings-presence-note = Rich presence shows the cover, a progress bar and a link to the show on { $tracker }. It works only while the title is shown. Discord loads the cover from { $tracker } itself.
 
 # Preview of the Discord presence: the label of the cover drawing.
 settings-presence-cover = Cover
@@ -250,7 +250,7 @@ settings-week-row-hint = Opens this show's settings
 
 # Under the notification preview while New episodes is on.
 # @arg tracker: text
-settings-notify-explain-on = One notification when an episode of a show in your Watching list comes out, at the time { $tracker } gives. A show's own setting comes first.
+settings-notify-explain-on = You get one notification when an episode of a show in your Watching list comes out, at the time { $tracker } lists. A show's own setting comes first.
 
 # Under the notification preview while New episodes is off.
 settings-notify-explain-off = Off. Only shows turned on in their own settings notify.

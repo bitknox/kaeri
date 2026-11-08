@@ -10,14 +10,15 @@ After the deploy:
 1. Open the service's Variables tab and copy `KAERI_STORE_SETUP_CODE`.
 2. Open `https://<your-service>.up.railway.app/admin/` and enter the code. The page answers with
    an owner invite link.
-3. In Kaeri, go to Providers, press Enter, choose join a store and paste the link.
+3. In Kaeri, go to Sources, press Enter, choose join a store and paste the link.
 
 The deploy log also shows a one-time owner invite, which works the same way.
 
 To pick up new releases on their own, open the service's Settings, choose Configure Auto Updates
-under Source, and pick a maintenance window. Railway redeploys when the `2` tag gets a new image.
-To update by hand, open the service and choose Redeploy. A new major version needs the image tag
-changed under Settings, Source.
+under Source, and pick a maintenance window. Railway redeploys when the template's image tag gets
+a new image. To update by hand, open the service and choose Redeploy. While the major version is 0,
+a new minor version needs the image tag changed under Settings, Source, and from 1.0 on a new major
+does.
 
 ## Making the template
 

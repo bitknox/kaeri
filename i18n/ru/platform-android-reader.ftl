@@ -60,26 +60,21 @@ eink-colour-title = Экран цветной?
 eink-colour-body = { -app-name } не смог определить это по устройству. Посмотрите на четыре квадрата.
 eink-colour-squares = Четыре квадрата: красный, зелёный, синий и янтарный
 eink-colour-hint = Если они выглядят как четыре серых, выберите «Только серый». Это можно изменить в Настройки › Экран.
-eink-colour-yes = Вижу цвета
+eink-colour-yes = Да, цветной
 eink-colour-no = Только серый
 eink-colour-skip = Пропустить
-eink-colour-skipped = Пропущено: картинки остаются цветными, на сером экране они будут серыми.
-eink-page-keys-hint = Чтобы листать страницы, выберите для кнопок страниц режим «Громкость» в настройках { -device-pl }.
+eink-colour-skipped = Пропущено. Картинки остаются цветными. Серый экран покажет их в оттенках серого.
+eink-page-keys-hint = Чтобы листать кнопками, выберите для них «Громкость» в настройках системы.
 eink-new = Новое
 reader-notice-start-over = Сначала
 reader-notice-go-back = Вернуться
 reader-notice-change = Изменить
 reader-settings = Настройки чтения
-reader-chapter-line = Глава { $chapter }
-reader-chapter-line-titled = Глава { $chapter } · { $title }
 reader-novel-line-scroll = Глава { $chapter } · прокрутка
 reader-minutes-left = { $minutes } мин
 reader-zone-next = Следующая страница
 reader-grid-title = Страницы
-reader-end-of-chapter-number = Конец главы { $chapter }
-reader-end-facts = Глава { $chapter } · { $facts }
 reader-end-continue = { -proceed-cap }
-reader-end-swipe = Смахните, чтобы читать дальше
 reader-end-series = Назад к серии
 reader-end-again = Прочитать заново
 reader-opening-chapter = Открывается глава { $chapter }
@@ -138,7 +133,6 @@ reader-paper-line = Страницы листаются сразу, и в чит
 reader-grid-page = Перейти к странице { $page }
 reader-scrubber-in-chapter = Страница в главе
 reader-failed-novel = Не удалось показать эту главу
-reader-end-tracker = Прочитано · обновлено: { $trackers }
 reader-end-tracker-offline = Прочитано · { $tracker } обновится, когда вы вернётесь в сеть
 reader-end-none = Ни у одного { -source }а пока нет главы { $chapter }
 reader-end-none-line = { -app-name } проверяет новые главы в фоне и добавляет их в «Обновления».
@@ -165,25 +159,11 @@ reader-zone-previous = Предыдущая страница
 reader-zone-controls = Управление
 reader-size-small = Меньше текст
 reader-size-large = Больше текст
-reader-end-pages = { $count ->
-    [one] { $count } страница
-    [few] { $count } страницы
-    [many] { $count } страниц
-   *[other] { $count } страницы
- }
 reader-value-on = Вкл.
 reader-value-off = Выкл.
 reader-row-strip-gap = Промежуток между картинками
 reader-paper-look = Бумажный вид днём
 reader-paper-dim = Приглушить страницу
-reader-end-from = Из { $source }
-reader-divider-images = { $count ->
-    [one] { $count } картинка
-    [few] { $count } картинки
-    [many] { $count } картинок
-   *[other] { $count } картинки
- }
-reader-divider-facts-source = { $facts } · из { $source }
 reader-opening-waited = { $line } · { $seconds } с
 reader-sources-title = Читать эту главу из
 reader-paper-parts = Что меняется

@@ -44,6 +44,9 @@ public static class HomeWording
     // Windows' numbers from the board: effective pixels in a 1280 window.
     public const double CardWidth = 280, CardHeight = 157.5, PosterWidth = 132, PosterHeight = 198, Gap = 16, ShelfGap = 40;
 
+    /// <summary>How far a card's hover fill reaches past its art and words, taken back by its margin so nothing moves.</summary>
+    public const double HoverOutset = 8;
+
     /// <summary>The spotlight's art takes this share of the content width, 16:9, and never more than the board's 640.</summary>
     public const double ArtShare = 0.56, ArtMaxWidth = 640;
 

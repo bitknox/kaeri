@@ -228,14 +228,31 @@ struct HoverIntentTests {
         // A scroll before a card opens lets a cue go too.
         var scrolled = HoverIntent()
         _ = rest(&scrolled, at: centre(5), from: 0, to: 0.3)
-        #expect(scrolled.dismiss() == [.uncue(layout.covers[5].id)])
+        #expect(scrolled.scrolled(at: 0.3) == [.uncue(layout.covers[5].id)])
     }
 
-    @Test func aScrollClosesItAndNothingOpensUntilThePointerMoves() throws {
+    @Test func aCoverThatComesToRestUnderAStillPointerOpens() throws {
+        var intent = HoverIntent()
+        _ = rest(&intent, at: centre(3), from: 0, to: 0.5)
+        #expect(intent.scrolled(at: 0.5) == [.close])
+        // The grid moves under the still pointer, one scroll after another: nothing opens.
+        var events = rest(&intent, at: centre(3), from: 0.5, to: 0.6)
+        #expect(intent.scrolled(at: 0.6).isEmpty)
+        events += rest(&intent, at: centre(3), from: 0.6, to: 1.0)
+        #expect(!events.contains { if case .open = $0.1 { true } else { false } })
+        // Still after the last scroll: the cover under the pointer cues at 150 ms, then opens at the dwell.
+        #expect(events.contains { $0.1 == .cue(layout.covers[3].id) && $0.0 >= 0.75 - 1e-9 })
+        events = rest(&intent, at: centre(3), from: 1.01, to: 1.2)
+        let opened = events.first { if case .open = $0.1 { true } else { false } }
+        #expect(opened != nil)
+        #expect((opened?.0 ?? 0) >= 1.05 - 1e-9)
+    }
+
+    @Test func aKeyPressClosesItAndNothingOpensUntilThePointerMoves() throws {
         var intent = HoverIntent()
         _ = rest(&intent, at: centre(3), from: 0, to: 0.5)
         #expect(intent.dismiss() == [.close])
-        // The pointer stays put while the grid moves under it.
+        // The pointer stays put after the key.
         var events = rest(&intent, at: centre(3), from: 0.5, to: 1.5)
         #expect(events.isEmpty)
         events = glide(&intent, from: centre(3), to: CGPoint(x: centre(3).x + 4, y: centre(3).y), start: 1.5, seconds: 0.02)

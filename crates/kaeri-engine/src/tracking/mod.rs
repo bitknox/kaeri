@@ -82,6 +82,9 @@ pub struct Sync {
     /// When the library was last pulled and whether the app is away: the 15-minute loop rests
     /// while it is, and Sync now does not pull again within [`PULL_COALESCE`] of a pull.
     pub pulls: Arc<PullGate>,
+    /// Whether a front end has asked for the Library this run: a status set then has the
+    /// Library's lists answered again, so the one on screen moves the title at once.
+    pub library_shown: Arc<std::sync::atomic::AtomicBool>,
     /// The sign-ins a native app's sheet is showing, each waiting for its redirect.
     pub pending: native::PendingSignIns,
     /// The device-code sign-ins running, one per tracker: see [`device`].
@@ -253,6 +256,7 @@ impl Sync {
             http: http.clone(),
             pull_errors: Arc::default(),
             pulls: Arc::default(),
+            library_shown: Arc::default(),
             pending: native::PendingSignIns::default(),
             device: device::DeviceFlows::default(),
             titles: None,
@@ -606,44 +610,107 @@ impl kaeri_track::kitsu::IdMapping for StoreMapping {
 pub async fn load_library(
     sync: &Sync,
     store: &Store,
-    titles: &kaeri_meta::titles::Titles,
+    meta: &kaeri_meta::Meta,
     segment: LibrarySegment,
 ) -> Event {
+    sync.library_shown.store(true, std::sync::atomic::Ordering::Relaxed);
+    let mut answers = library_answers(sync, store, meta, &[segment]).await;
+    answers.pop().expect("one answer for each segment asked")
+}
+
+/// The Library's `segments`, each answered as [`load_library`] answers it, cut from one answer
+/// of the tracker's.
+///
+/// A status set here and still on its way to the tracker counts over what the tracker's list
+/// says: the list as it is once the outbox drains, and where the title page already has the
+/// title. Without that, a title put on Planning stayed off the Planning list until the drain
+/// sent it and the list was asked for again.
+pub async fn library_answers(
+    sync: &Sync,
+    store: &Store,
+    meta: &kaeri_meta::Meta,
+    segments: &[LibrarySegment],
+) -> Vec<Event> {
     use kaeri_model::catalog::ContentList;
 
     // Tagged with its segment: switching tabs while a pull is in flight must not show this one
     // under the next tab's heading.
-    let answer = |content| Event::Content { view: ContentFor::Library(segment), content };
+    let every = |content: ContentList| -> Vec<Event> {
+        segments
+            .iter()
+            .map(|&segment| Event::Content {
+                view: ContentFor::Library(segment),
+                content: content.clone(),
+            })
+            .collect()
+    };
 
     let Some(tracker) = sync.trackers.first() else {
-        return answer(ContentList::Entries(Vec::new()));
+        return every(ContentList::Entries(Vec::new()));
     };
     if !tracker.is_authenticated() {
         // Not a failure. The Library screen renders its own "no account" state, which explains
         // that history works regardless.
-        return answer(ContentList::Entries(Vec::new()));
+        return every(ContentList::Entries(Vec::new()));
     }
 
     // The concrete handle, kept alongside the trait object rather than reached by downcasting:
     // the trait returns only the syncable projection, but this screen needs covers and titles
     // too, and fetching those per title would cost a request each against thirty a minute.
     let Some(anilist) = sync.anilist.as_ref() else {
-        return answer(ContentList::Entries(Vec::new()));
+        return every(ContentList::Entries(Vec::new()));
     };
 
-    match anilist.library().await {
-        Ok(entries) => {
-            // The whole list, every segment's, kept for the cards that say "Watched".
-            let statuses: Vec<_> =
-                entries.iter().map(|e| (e.media.id, e.status.as_str())).collect();
-            if let Err(e) =
-                store.replace_library_statuses("anilist", &statuses, kaeri_store::now())
-            {
-                tracing::debug!(error = %e, "could not keep the library's statuses");
-            }
+    let entries = match anilist.library().await {
+        Ok(entries) => entries,
+        Err(kaeri_core::Error::Auth(_)) => {
+            return every(ContentList::Failed("sign in again on the Accounts screen".into()));
+        }
+        Err(e) => return every(ContentList::Failed(e.to_string())),
+    };
+
+    let pending = store.pending_statuses(tracker.id()).unwrap_or_else(|e| {
+        tracing::debug!(error = %e, "could not read the statuses on their way");
+        Default::default()
+    });
+    let status_of = |id: AnilistId, said: &str| -> String {
+        pending
+            .get(&id)
+            .map_or_else(|| said.to_owned(), |status| status_wire(*status).to_owned())
+    };
+    // Titles put on the list here that the tracker's list does not have yet, described from
+    // what the cache holds and asked for otherwise.
+    let mut added: Vec<AnilistId> = pending
+        .keys()
+        .filter(|id| !entries.iter().any(|e| e.media.id == **id))
+        .copied()
+        .collect();
+    added.sort_unstable_by_key(|id| std::cmp::Reverse(id.get()));
+    let mut added_media = meta.cached(&added);
+    let uncached: Vec<_> =
+        added.iter().filter(|id| !added_media.iter().any(|m| m.id == **id)).copied().collect();
+    if !uncached.is_empty() {
+        added_media.extend(meta.media_many(&uncached).await.unwrap_or_default());
+    }
+
+    // The whole list, every segment's, kept for the cards that say "Watched".
+    let statuses: Vec<(AnilistId, String)> = entries
+        .iter()
+        .map(|e| (e.media.id, status_of(e.media.id, &e.status)))
+        .chain(added.iter().map(|id| (*id, status_wire(pending[id]).to_owned())))
+        .collect();
+    let kept: Vec<_> = statuses.iter().map(|(id, status)| (*id, status.as_str())).collect();
+    if let Err(e) = store.replace_library_statuses(tracker.id(), &kept, kaeri_store::now()) {
+        tracing::debug!(error = %e, "could not keep the library's statuses");
+    }
+
+    let titles = meta.titles();
+    segments
+        .iter()
+        .map(|&segment| {
             let wanted = segment.wire();
             let mut rows = Vec::new();
-            for entry in entries.iter().filter(|e| e.status == wanted) {
+            for entry in entries.iter().filter(|e| status_of(e.media.id, &e.status) == wanted) {
                 let _ = store.remember_title(entry.media.id, titles.pick(&entry.media.title));
                 let mut row = crate::data::entry_from(&entry.media, Some(store));
                 // The tracker's progress, not the local projection: this screen is a view of
@@ -658,12 +725,39 @@ pub async fn load_library(
                 row.recount();
                 rows.push(row);
             }
-            answer(ContentList::Entries(rows))
-        }
-        Err(kaeri_core::Error::Auth(_)) => {
-            answer(ContentList::Failed("sign in again on the Accounts screen".into()))
-        }
-        Err(e) => answer(ContentList::Failed(e.to_string())),
+            for media in added_media.iter().filter(|m| status_wire(pending[&m.id]) == wanted) {
+                let _ = store.remember_title(media.id, titles.pick(&media.title));
+                let mut row = crate::data::entry_from(media, Some(store));
+                // What the tracker will say once the outbox drains: the progress queued for
+                // it, and none when nothing is.
+                let done =
+                    store.pending_progress(tracker.id(), media.id).ok().flatten().unwrap_or(0);
+                row.progress =
+                    Some(TitleProgress { done, next: next_after_progress(done, row.episodes) });
+                row.list_status = Some(segment);
+                row.recount();
+                rows.push(row);
+            }
+            Event::Content {
+                view: ContentFor::Library(segment),
+                content: ContentList::Entries(rows),
+            }
+        })
+        .collect()
+}
+
+/// A status as AniList words it, the way the Library's lists and the kept statuses say it.
+fn status_wire(status: kaeri_core::traits::WatchStatus) -> &'static str {
+    use kaeri_core::traits::WatchStatus as W;
+    match status {
+        W::Current => "CURRENT",
+        // Kept apart, as AniList's own list says it: keep next follows a rewatch from the
+        // episode rewatched, not from the last one ever watched.
+        W::Repeating => "REPEATING",
+        W::Planning => "PLANNING",
+        W::Completed => "COMPLETED",
+        W::Paused => "PAUSED",
+        W::Dropped => "DROPPED",
     }
 }
 
@@ -688,22 +782,12 @@ fn keep_statuses(
     remote: &[kaeri_core::traits::TrackedEntry],
     now: i64,
 ) {
-    use kaeri_core::traits::WatchStatus as W;
+    // A status set here and not sent yet counts over the list's, as the Library shows it.
+    let pending = store.pending_statuses(tracker).unwrap_or_default();
     let statuses: Vec<_> = remote
         .iter()
-        .map(|entry| {
-            let status = match entry.status {
-                W::Current => "CURRENT",
-                // Kept apart, as AniList's own list says it: keep next follows a rewatch from
-                // the episode rewatched, not from the last one ever watched.
-                W::Repeating => "REPEATING",
-                W::Planning => "PLANNING",
-                W::Completed => "COMPLETED",
-                W::Paused => "PAUSED",
-                W::Dropped => "DROPPED",
-            };
-            (entry.anilist_id, status)
-        })
+        .map(|entry| (entry.anilist_id, status_wire(entry.status)))
+        .chain(pending.iter().map(|(id, status)| (*id, status_wire(*status))))
         .collect();
     if let Err(e) = store.replace_library_statuses(tracker, &statuses, now) {
         tracing::debug!(error = %e, "could not keep the library's statuses");
@@ -1627,11 +1711,23 @@ pub fn disconnect(sync: &Sync, tracker_id: &str, tx: &Outbox) {
 /// outbox exists for.
 pub fn set_status(sync: &Sync, id: AnilistId, status: LibrarySegment) {
     let now = kaeri_store::now();
-    let op = TrackOp::SetStatus { anilist_id: id, status: segment_to_status(status), at: now };
+    let watch = segment_to_status(status);
+    let op = TrackOp::SetStatus { anilist_id: id, status: watch, at: now };
+    let library = sync.trackers.first().map(|t| t.id());
     for tracker in sync.trackers.iter().filter(|t| t.is_authenticated() && t.serves_watching())
     {
-        if let Err(e) = sync.store.enqueue(tracker.id(), &op, now) {
-            tracing::warn!(error = %e, "could not queue a status change");
+        match sync.store.enqueue(tracker.id(), &op, now) {
+            // The Library's tracker's list as kept says it now, as the Library does: see
+            // `library_answers`. Its next answer replaces it.
+            Ok(Some(_)) if Some(tracker.id()) == library => {
+                if let Err(e) =
+                    sync.store.set_library_status(tracker.id(), id, status_wire(watch), now)
+                {
+                    tracing::debug!(error = %e, "could not keep the status set");
+                }
+            }
+            Ok(_) => {}
+            Err(e) => tracing::warn!(error = %e, "could not queue a status change"),
         }
     }
 }

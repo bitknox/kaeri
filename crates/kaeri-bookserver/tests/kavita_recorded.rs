@@ -76,6 +76,8 @@ async fn kavita_signs_in_lists_opens_and_writes_progress_back() {
     assert_eq!(detail.description.as_deref(), Some("A keeper of lanterns."));
     assert_eq!(detail.authors, ["A. Example"]);
     assert_eq!(detail.genres, ["Fantasy"]);
+    // Kavita keeps no direction per series, and its library's type is not taken for one.
+    assert_eq!(detail.reading_hint, None);
 
     let chapters = source.chapters("7", &hints).await.unwrap();
     let ids: Vec<&str> = chapters.iter().map(|c| c.id.as_str()).collect();

@@ -649,24 +649,40 @@ impl SeriesStatus {
     }
 }
 
-/// Which way a source says its pages read: one step in guessing the reader's mode, after the
-/// series' own choice and ComicInfo.
+/// How a source says its pages read. The reader takes it after the person's own choice for the
+/// series and before its own guess from the book.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ReadingHint {
     RightToLeft,
     LeftToRight,
-    /// One long strip.
+    /// Pages one under another, each whole on the screen.
+    Vertical,
+    /// One long strip: a webtoon.
     Strip,
 }
 
 impl ReadingHint {
-    /// `rtl`, `ltr`, `strip`; anything else is no hint.
+    /// `rtl`, `ltr`, `vertical`, `strip`, and the names sources give them (`webtoon`,
+    /// `long strip`); anything else is no hint.
     pub fn parse(name: &str) -> Option<Self> {
-        match name.trim().to_ascii_lowercase().as_str() {
-            "rtl" | "right-to-left" | "right to left" => Some(Self::RightToLeft),
-            "ltr" | "left-to-right" | "left to right" => Some(Self::LeftToRight),
-            "strip" | "vertical" | "webtoon" | "long-strip" => Some(Self::Strip),
+        match name.trim().to_ascii_lowercase().replace(['_', ' '], "-").as_str() {
+            "rtl" | "right-to-left" => Some(Self::RightToLeft),
+            "ltr" | "left-to-right" => Some(Self::LeftToRight),
+            "vertical" => Some(Self::Vertical),
+            "strip" | "webtoon" | "long-strip" | "longstrip" | "continuous" => {
+                Some(Self::Strip)
+            }
             _ => None,
+        }
+    }
+
+    /// The name [`Self::parse`] reads back.
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::RightToLeft => "rtl",
+            Self::LeftToRight => "ltr",
+            Self::Vertical => "vertical",
+            Self::Strip => "strip",
         }
     }
 }
@@ -782,19 +798,43 @@ impl SourceChapter {
     }
 }
 
-/// One page image a source names: the WIT `page`. The host fetches it, never the guest, with the
-/// headers it carries, so a download can fetch it later.
+/// One page image a source names: the WIT `page`. An address the host fetches, never the guest,
+/// with the headers it carries, so a download can fetch it later. A source that may make some
+/// pages itself (a plugin built for `book-plugin-with-pages`) marks its pages with [`MadePage`],
+/// and is asked for each one first.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PageRef {
     pub url: String,
     pub headers: Vec<(String, String)>,
+    /// Set when the source may make this page itself: the chapter it belongs to, for its own
+    /// [`crate::traits::BookSource::fetch_page`] to hand back with the url.
+    pub made: Option<MadePage>,
     pub width: Option<u32>,
     pub height: Option<u32>,
 }
 
 impl PageRef {
     pub fn new(url: impl Into<String>) -> Self {
-        Self { url: url.into(), headers: Vec::new(), width: None, height: None }
+        Self { url: url.into(), headers: Vec::new(), made: None, width: None, height: None }
+    }
+
+    /// A page at `url` of `chapter` of `series` that the source may make itself.
+    pub fn made(series: &str, chapter: &str, url: impl Into<String>) -> Self {
+        Self { made: Some(MadePage::new(series, chapter)), ..Self::new(url) }
+    }
+}
+
+/// The chapter a page belongs to, for a source that may make the page itself rather than have
+/// it fetched.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MadePage {
+    pub series: String,
+    pub chapter: String,
+}
+
+impl MadePage {
+    pub fn new(series: &str, chapter: &str) -> Self {
+        Self { series: series.to_owned(), chapter: chapter.to_owned() }
     }
 }
 
@@ -935,6 +975,18 @@ mod tests {
         assert_eq!(SeriesStatus::parse("paused"), Some(SeriesStatus::Other("paused".into())));
         assert_eq!(ReadingHint::parse("RTL"), Some(ReadingHint::RightToLeft));
         assert_eq!(ReadingHint::parse("sideways"), None);
+        assert_eq!(ReadingHint::parse("Long Strip"), Some(ReadingHint::Strip));
+        assert_eq!(ReadingHint::parse("WEBTOON"), Some(ReadingHint::Strip));
+        assert_eq!(ReadingHint::parse("left_to_right"), Some(ReadingHint::LeftToRight));
+        assert_eq!(ReadingHint::parse("vertical"), Some(ReadingHint::Vertical));
+        for hint in [
+            ReadingHint::RightToLeft,
+            ReadingHint::LeftToRight,
+            ReadingHint::Vertical,
+            ReadingHint::Strip,
+        ] {
+            assert_eq!(ReadingHint::parse(hint.as_str()), Some(hint));
+        }
         assert_eq!(BookSourceKind::Folder.tier(), 0);
         assert!(BookIds::default().is_empty());
     }

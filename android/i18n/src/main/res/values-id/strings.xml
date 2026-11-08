@@ -11,7 +11,7 @@
     <string name="notice_cast_never_fetches">%1$s belum mulai membaca aliran ini. VPN atau firewall di perangkat ini mungkin menghalangi.</string>
     <string name="notice_cast_refused">%1$s tidak bisa memutar aliran ini. Coba sumber lain.</string>
     <string name="notice_cast_taken_over">Penayangan berhenti karena perangkat lain mulai memutar sesuatu di %1$s.</string>
-    <string name="notice_cast_not_same_network">Penayangan hanya bisa jika perangkat ini dan %1$s berada di jaringan yang sama, tanpa lewat VPN.</string>
+    <string name="notice_cast_not_same_network">Perangkat ini tidak berada di jaringan yang sama dengan %1$s, atau terhubung lewat VPN. Sambungkan keduanya ke jaringan yang sama untuk menayangkan.</string>
     <string name="notice_cast_lost">Koneksi ke %1$s terputus, jadi penayangan berhenti.</string>
     <string name="notice_cast_no_device">TV itu sudah tidak ada di jaringan.</string>
     <string name="notice_cast_unavailable">Versi Kaeri ini tidak bisa menayangkan ke TV.</string>
@@ -124,7 +124,7 @@
     <string name="match_ruled_out_year">Tahun berbeda</string>
     <string name="match_search_timed_out">Terlalu lama tidak menjawab.</string>
     <string name="match_search_source_off">Belum diaktifkan.</string>
-    <string name="notice_source_pinned">%1$s akan dipakai untuk judul ini.</string>
+    <string name="notice_source_pinned">Judul ini sekarang diputar dari %1$s.</string>
     <string name="notice_source_automatic">Kembali ke pemilihan sumber otomatis.</string>
     <string name="notice_source_choice_failed">Tidak bisa menyimpan pilihan itu. %1$s</string>
     <string name="notice_no_source_could_list">Tidak ada sumber yang bisa mendaftar judul ini: %1$s</string>
@@ -190,9 +190,9 @@
     <string name="reader_back_to_page">Kembali ke halaman %1$d</string>
     <string name="reader_moved">Pindah ke %1$s, halaman %2$d, tempat %3$s berhenti</string>
     <string name="reader_moved_number">Pindah ke bab %1$s, halaman %2$d, tempat %3$s berhenti</string>
-    <string name="reader_detected_right_to_left">Kanan ke kiri, terdeteksi</string>
-    <string name="reader_detected_left_to_right">Kiri ke kanan, terdeteksi</string>
-    <string name="reader_detected_strip">Strip panjang, terdeteksi</string>
+    <string name="reader_detected_right_to_left">Sepertinya kanan ke kiri</string>
+    <string name="reader_detected_left_to_right">Sepertinya kiri ke kanan</string>
+    <string name="reader_detected_strip">Sepertinya strip panjang</string>
     <string name="reading_failed_offline">Anda sedang offline. Bab yang diunduh tetap bisa dibuka.</string>
     <string name="reading_failed_source_down">%1$s tidak menjawab. Coba lagi nanti.</string>
     <string name="reading_failed_not_found">Sumber ini sudah tidak memilikinya. Coba sumber lain.</string>
@@ -391,10 +391,10 @@
     <string name="store_admin_missing">%1$s tidak punya halaman admin. Servernya mungkin versi lama.</string>
     <string name="store_admin_link_foreign">%1$s mengirim tautan admin untuk alamat lain.</string>
     <string name="store_open_join_unsupported">Server %1$s versi lama dan tidak bisa mengizinkan siapa pun bergabung lewat tautan. Perbarui dulu.</string>
-    <string name="source_switched_off">%1$s dimatikan. Tidak diperiksa saat mencari episode.</string>
+    <string name="source_switched_off">%1$s dimatikan. Kaeri melewatinya saat mencari episode.</string>
     <string name="source_switched_on">%1$s dinyalakan.</string>
     <string name="plugin_not_loaded">%1$s tidak dimuat. Periksa apakah sudah terpasang di Sumber-sumber.</string>
-    <string name="release_pinned">%1$s akan dipakai untuk judul ini.</string>
+    <string name="release_pinned">Judul ini sekarang memakai %1$s.</string>
     <string name="notice_choice_not_saved">Pilihan itu tidak bisa disimpan. %1$s</string>
     <string name="torrent_proxy_waiting">Pemeriksaan proxy gagal. Torrent mulai setelah pemeriksaan lolos.</string>
     <string name="torrent_proxy_unchecked">Torrent mulai setelah pemeriksaan proxy lolos.</string>
@@ -424,8 +424,8 @@
     <string name="notice_sign_in_stopped">Proses masuk ke %1$s berhenti sebelum selesai. Coba lagi. %2$s</string>
     <string name="notice_token_exchange_failed">Tidak dapat memperoleh token dari %1$s. Coba masuk lagi. %2$s</string>
     <string name="notice_browser_not_opened">Tidak dapat membuka peramban untuk masuk. Pastikan ada peramban yang terpasang, lalu coba lagi. %1$s</string>
-    <string name="notice_sign_in_not_waiting">Tidak ada proses masuk ke %1$s yang menunggu itu. Mulai masuk lagi.</string>
-    <string name="notice_sign_in_wrong_request">Masuk ke %1$s itu tidak kembali dari permintaan ini. Mulai masuk lagi.</string>
+    <string name="notice_sign_in_not_waiting">Balasan masuk dari %1$s tiba, tetapi tidak ada proses masuk yang menunggunya. Mulai masuk lagi.</string>
+    <string name="notice_sign_in_wrong_request">Balasan masuk dari %1$s tidak cocok dengan permintaannya. Mulai masuk lagi.</string>
     <string name="notice_sign_in_no_token">Proses masuk ke %1$s kembali tanpa token. Coba lagi.</string>
     <string name="notice_mal_client_missing_build">Tidak dapat menyelesaikan masuk ke MyAnimeList: build ini tidak punya klien untuk itu.</string>
     <string name="notice_kitsu_signs_in_on_accounts">Kitsu masuk dari layar Akun.</string>
@@ -459,7 +459,7 @@
     </plurals>
     <string name="notice_update_available">%1$s sudah tersedia. Jalankan kaeri --update untuk memasangnya.</string>
     <string name="cause_proxy_needs_address">Proxy memerlukan host dan port.</string>
-    <string name="cause_proxy_address_unusable">Alamat proxy tidak dapat diperiksa.</string>
+    <string name="cause_proxy_address_unusable">Pemeriksaan proxy tidak bisa memakai alamat ini.</string>
     <string name="cause_server_unreachable">Server tidak dapat dihubungi.</string>
     <string name="legal_hosts_no_content">Kaeri tidak menghosting tayangan atau buku apa pun. Anda menambahkan sumber-sumber Anda sendiri.</string>
     <string name="notice_saved">%1$s disimpan.</string>
@@ -467,12 +467,12 @@
     <string name="notice_title_load_failed">Tidak dapat memuat judul ini. Periksa koneksi Anda, lalu coba lagi.</string>
     <string name="notice_playback_failed">Pemutaran gagal. Coba sumber lain.</string>
     <string name="notice_engine_fault">Terjadi kesalahan di dalam Kaeri. Aplikasi tetap berjalan, tetapi jika layar terlihat macet, keluar lalu buka lagi.</string>
-    <string name="notice_database_set_aside">Basis data rusak, jadi Kaeri membuat yang baru. Berkas lama disimpan di %1$s. Data yang disimpan pelacak-pelacak Anda akan kembali saat sinkronisasi selanjutnya.</string>
+    <string name="notice_database_set_aside">Basis data rusak, jadi Kaeri membuat yang baru. Berkas lama disimpan di %1$s. Apa yang disimpan pelacak-pelacak Anda kembali saat sinkronisasi selanjutnya.</string>
     <string name="start_failed_folder">Kaeri tidak dapat membuat folder %1$s. Pastikan disk masih punya ruang dan folder itu dapat ditulisi, lalu coba lagi. %2$s</string>
     <string name="start_failed_config">%1$s memiliki pengaturan yang tidak dapat digunakan Kaeri: %2$s. Perbaiki atau hapus pengaturan itu, lalu coba lagi.</string>
     <string name="config_reset_failed">Kaeri tidak dapat memindahkan %1$s untuk mengatur ulang pengaturan. %2$s</string>
     <string name="start_failed_database">Kaeri tidak dapat membuka basis datanya di %1$s. Jika aplikasi Kaeri lain sedang terbuka di folder ini, keluar dari aplikasi itu, lalu coba lagi. %2$s</string>
-    <string name="start_failed_network">Kaeri tidak dapat menyiapkan koneksi jaringannya dari pengaturan jaringan di config.toml. %1$s</string>
+    <string name="start_failed_network">Kaeri tidak dapat terhubung dengan pengaturan jaringan di config.toml. Periksa pengaturannya, lalu coba lagi. %1$s</string>
     <string name="start_failed">Kaeri tidak dapat dimulai. Keluar, lalu buka lagi. %1$s</string>
     <string name="start_failed_remote">Kendali jarak jauh tidak dapat dimulai. %1$s</string>
     <string name="start_failed_player">Pemutar tidak dapat dimulai. %1$s</string>
@@ -484,8 +484,8 @@
     <string name="crash_notice_tv">Kaeri tertutup karena masalah. Anda bisa melaporkannya di Pengaturan, Tentang.</string>
     <string name="notice_surprise_empty_filters">Tidak ada judul yang cocok dengan filter ini.</string>
     <string name="notice_surprise_empty_planning">Daftar rencana kosong.</string>
-    <string name="notice_surprise_offline">Sedang offline. Pilihan dari pencarian memerlukan AniList.</string>
-    <string name="notice_surprise_failed">Belum bisa memilih judul sekarang. Coba lagi sebentar lagi.</string>
+    <string name="notice_surprise_offline">Anda sedang offline. Kejutkan saya memerlukan AniList untuk memilih judul.</string>
+    <string name="notice_surprise_failed">Tidak dapat menghubungi AniList untuk memilih judul. Coba lagi sebentar lagi.</string>
     <string name="account_button_named">%1$s, akun dan pengaturan</string>
     <string name="calendar_empty_mine_ahead">Tidak ada judul di daftar Anda yang tayang dalam 4 minggu.</string>
     <string name="calendar_floor_line">Kalender hanya memuat 3 bulan ke belakang.</string>
@@ -498,7 +498,7 @@
     <string name="calendar_show_all_airing">Tampilkan semua yang tayang</string>
     <string name="calendar_now_label">Sekarang, %1$s</string>
     <string name="settings_discussions_label">Diskusi episode</string>
-    <string name="settings_discussions_note">Membaca komentar di utas forum AniList untuk episode yang sudah Anda tonton.</string>
+    <string name="settings_discussions_note">Anda bisa membaca komentar di utas forum AniList untuk episode yang sudah Anda tonton.</string>
     <string name="settings_discussion_images_label">Muat gambar di komentar</string>
     <string name="settings_discussion_images_note">Setiap gambar dimuat dari situs yang menyimpannya, yang dapat melihat alamat IP Anda.</string>
     <string name="discussion_waiting">Menunggu AniList · %1$s</string>
@@ -534,7 +534,7 @@
     <string name="cast_settings_tvs">Tampilkan TV dengan Chromecast bawaan</string>
     <string name="cast_settings_tvs_note">Muncul di bawah Chromecast pada Putar di TV. perangkat ini mengirimkan episode ke TV tersebut.</string>
     <string name="cast_settings_torrents">Torrent saat transmisi</string>
-    <string name="cast_settings_torrents_note">Memungkinkan TV dengan Chromecast bawaan memutar torrent. perangkat ini mengirim episode selama TV masih memutarnya.</string>
+    <string name="cast_settings_torrents_note">TV dengan Chromecast bawaan lalu bisa memutar torrent. Perangkat ini mengirim episode selama TV masih memutarnya.</string>
     <string name="reader_page_failed_swipe">Geser untuk lanjut tanpa halaman ini.</string>
     <string name="reader_skip_page">Lewati halaman</string>
     <string name="reader_page_of">Halaman %1$d dari %2$d</string>
@@ -591,26 +591,21 @@
     <string name="eink_colour_body">Kaeri tidak bisa memastikannya dari perangkat ini. Lihat keempat kotak.</string>
     <string name="eink_colour_squares">Empat kotak: merah, hijau, biru, dan kuning amber</string>
     <string name="eink_colour_hint">Jika tampak seperti empat warna abu-abu, pilih Hanya abu-abu. Anda bisa mengubahnya di Pengaturan › Layar.</string>
-    <string name="eink_colour_yes">Saya lihat warna</string>
+    <string name="eink_colour_yes">Ya, berwarna</string>
     <string name="eink_colour_no">Hanya abu-abu</string>
     <string name="eink_colour_skip">Lewati</string>
-    <string name="eink_colour_skipped">Dilewati, gambar tetap berwarna, dan layar abu-abu menampilkannya sebagai abu-abu.</string>
-    <string name="eink_page_keys_hint">Atur tombol halaman ke Volume di pengaturan perangkat untuk membalik halaman.</string>
+    <string name="eink_colour_skipped">Dilewati. Gambar tetap berwarna. Layar abu-abu menampilkannya sebagai abu-abu.</string>
+    <string name="eink_page_keys_hint">Untuk membalik halaman dengan tombol, atur tombolnya ke Volume di pengaturan perangkat.</string>
     <string name="eink_new">Baru</string>
     <string name="reader_notice_start_over">Mulai ulang</string>
     <string name="reader_notice_go_back">Kembali</string>
     <string name="reader_notice_change">Ubah</string>
     <string name="reader_settings">Pengaturan pembaca</string>
-    <string name="reader_chapter_line">Bab %1$s</string>
-    <string name="reader_chapter_line_titled">Bab %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Bab %1$s · gulir</string>
     <string name="reader_minutes_left">%1$d mnt</string>
     <string name="reader_zone_next">Halaman selanjutnya</string>
     <string name="reader_grid_title">Halaman</string>
-    <string name="reader_end_of_chapter_number">Akhir bab %1$s</string>
-    <string name="reader_end_facts">Bab %1$s · %2$s</string>
     <string name="reader_end_continue">Lanjutkan</string>
-    <string name="reader_end_swipe">Geser untuk terus membaca</string>
     <string name="reader_end_series">Kembali ke seri</string>
     <string name="reader_end_again">Baca ulang dari awal</string>
     <string name="reader_opening_chapter">Membuka bab %1$s</string>
@@ -669,7 +664,6 @@
     <string name="reader_grid_page">Ke halaman %1$d</string>
     <string name="reader_scrubber_in_chapter">Halaman dalam bab</string>
     <string name="reader_failed_novel">Bab ini tidak bisa ditampilkan</string>
-    <string name="reader_end_tracker">Dibaca · %1$s diperbarui</string>
     <string name="reader_end_tracker_offline">Dibaca · %1$s diperbarui saat Anda kembali online</string>
     <string name="reader_end_none">Belum ada bab %1$s di sumber-sumber Anda</string>
     <string name="reader_end_none_line">Kaeri memeriksa bab baru di latar belakang dan menambahkannya ke Pembaruan.</string>
@@ -696,19 +690,11 @@
     <string name="reader_zone_controls">Kontrol</string>
     <string name="reader_size_small">Teks lebih kecil</string>
     <string name="reader_size_large">Teks lebih besar</string>
-    <plurals name="reader_end_pages">
-        <item quantity="other">%1$d halaman</item>
-    </plurals>
     <string name="reader_value_on">Aktif</string>
     <string name="reader_value_off">Mati</string>
     <string name="reader_row_strip_gap">Jarak antar gambar</string>
     <string name="reader_paper_look">Tampilan kertas siang hari</string>
     <string name="reader_paper_dim">Redupkan halaman</string>
-    <string name="reader_end_from">Dari %1$s</string>
-    <plurals name="reader_divider_images">
-        <item quantity="other">%1$d gambar</item>
-    </plurals>
-    <string name="reader_divider_facts_source">%1$s · dari %2$s</string>
     <string name="reader_opening_waited">%1$s · %2$d d</string>
     <string name="reader_sources_title">Baca bab ini dari</string>
     <string name="reader_paper_parts">Yang diubahnya</string>
@@ -753,7 +739,7 @@
     <string name="tv_info_from">Dari</string>
     <string name="tv_info_state">Status</string>
     <string name="tv_store_revoked">Tidak lagi mengizinkan TV ini masuk</string>
-    <string name="tv_seeding_note">Sebatas upaya terbaik di TV ini: seeding hanya berjalan saat Kaeri terbuka.</string>
+    <string name="tv_seeding_note">TV ini hanya melakukan seeding saat Kaeri terbuka.</string>
     <string name="tv_sign_out_title">Keluar dari %1$s?</string>
     <string name="tv_account_not_signed_in">Belum masuk</string>
     <string name="tv_account_signed_in_as">Masuk sebagai %1$s</string>
@@ -850,7 +836,7 @@
     <plurals name="settings_coming_up_switched_off">
         <item quantity="other">%1$s dimatikan di pengaturannya sendiri.</item>
     </plurals>
-    <string name="settings_coming_up_opens">Tayangan membuka pengaturannya.</string>
+    <string name="settings_coming_up_opens">Ketuk tayangan untuk membuka pengaturannya.</string>
     <string name="torrents_proxy_as">sebagai %1$s</string>
     <string name="title_facts_aired">Ditayangkan %1$s</string>
     <string name="title_facts_airing">Tayang sejak %1$s</string>
@@ -961,7 +947,7 @@
     <string name="settings_titles_note_english">Judul Inggris sebagaimana tercantum di AniList, dan romaji jika tidak ada.</string>
     <string name="settings_titles_note_romaji">Judul Jepang dalam huruf Latin, sebagaimana tercantum di AniList.</string>
     <string name="settings_stores_with_updates">%1$d · %2$s</string>
-    <string name="settings_seeding_best_effort">Sebisa mungkin di perangkat ini: seeding hanya berjalan selama Kaeri terbuka.</string>
+    <string name="settings_seeding_best_effort">Perangkat ini hanya melakukan seeding selama Kaeri terbuka.</string>
     <plurals name="settings_downloads_count">
         <item quantity="other">%1$d episode</item>
     </plurals>
@@ -976,7 +962,7 @@
     <string name="settings_libraries_value">JNA dan AndroidX, di bawah Apache License 2.0</string>
     <string name="settings_report_bug_value">Membuka GitHub di peramban Anda</string>
     <string name="downloads_storage_share_description">Unduhan memakan %1$s</string>
-    <string name="settings_aside_notifications">Satu notifikasi saat episode dari tayangan yang Anda ikuti keluar: nama tayangan dan nomor episodenya, tidak pernah judul episodenya. Sebuah tayangan bisa mematikan notifikasinya sendiri di pengaturannya.</string>
+    <string name="settings_aside_notifications">Satu notifikasi saat episode dari tayangan yang Anda ikuti keluar: nama tayangan dan nomor episodenya, tidak pernah judul episodenya. Anda bisa mematikan notifikasi sebuah tayangan di pengaturannya.</string>
     <string name="settings_aside_downloads">Unduhan disimpan di ruang milik Kaeri pada perangkat ini, yang tidak bisa dibaca aplikasi lain. Menghapus aplikasi juga menghapusnya.</string>
     <string name="settings_aside_sources">Sumber-sumber dicoba berurutan, dari atas ke bawah. Sebuah tayangan bisa memakai sumber sendiri, yang dipilih dari halaman judulnya.</string>
     <string name="settings_upscaling_description">Gambar yang sama, setengah kiri sebagai 480p asli, setengah kanan dengan %1$s</string>
@@ -1063,7 +1049,7 @@
     </plurals>
     <string name="trailer_failed">Trailer tidak bisa dibuka</string>
     <string name="engine_down_title">Kaeri berhenti</string>
-    <string name="engine_down_stopped">Bagian yang bekerja telah berhenti. Coba lagi, atau tutup dan buka aplikasi sekali lagi.</string>
+    <string name="engine_down_stopped">Tidak ada yang baru dimuat sampai aplikasi berjalan lagi. Coba lagi, atau tutup dan buka aplikasi sekali lagi.</string>
     <string name="engine_down_quit">Tutup</string>
     <string name="about_title">Tentang</string>
     <string name="about_title_app">Tentang Kaeri</string>
@@ -1102,9 +1088,9 @@
     <string name="report_crash_settings">Pengaturan laporan crash</string>
     <string name="settings_group_crashes">Laporan crash</string>
     <string name="settings_crash_save">Simpan laporan crash di perangkat ini</string>
-    <string name="settings_crash_save_detail">Saat aktif, Kaeri menyimpan catatan singkat setiap crash di perangkat ini, dengan judul, alamat, dan nama dihapus, sehingga Anda bisa menambahkannya ke Laporkan bug. Tidak ada yang dikirim otomatis.</string>
+    <string name="settings_crash_save_detail">Kaeri menyimpan catatan singkat setiap crash di perangkat ini untuk Laporkan bug, dengan judul, alamat, dan nama dihapus. Tidak ada yang dikirim otomatis.</string>
     <string name="settings_crash_ask">Tanya setelah crash</string>
-    <string name="settings_crash_ask_detail">Menampilkan pemberitahuan saat aplikasi dibuka lagi dengan Laporkan…</string>
+    <string name="settings_crash_ask_detail">Kaeri menampilkan pemberitahuan dengan Laporkan… saat dibuka lagi.</string>
     <string name="settings_crash_os_heading">Disimpan oleh %1$s</string>
     <string name="settings_crash_os_detail">%1$s menyimpan crash ini dari sebelum Anda mengaktifkannya. Tidak ada yang disimpan dari crash ini kecuali Anda menambahkannya.</string>
     <string name="settings_crash_os_item">Crash · %1$s</string>
@@ -1114,7 +1100,7 @@
     <string name="settings_crash_view">Lihat</string>
     <string name="settings_crash_delete">Hapus</string>
     <string name="settings_crash_delete_all">Hapus semua</string>
-    <string name="settings_crash_footnote">Laporan crash tetap di perangkat ini. Kaeri tidak mengirim apa pun secara otomatis. Laporan keluar hanya saat Anda membukanya di GitHub dari Laporkan bug. Laporan dihapus setelah 30 hari.</string>
+    <string name="settings_crash_footnote">Laporan crash tetap di perangkat ini, dan Kaeri tidak mengirim apa pun secara otomatis. Laporan keluar hanya saat Anda membukanya di GitHub dari Laporkan bug. Laporan dihapus setelah 30 hari.</string>
     <string name="calendar_previous_week">Minggu sebelumnya</string>
     <string name="calendar_next_week">Minggu depan</string>
     <string name="calendar_this_week">Minggu ini</string>
@@ -1156,9 +1142,9 @@
     <string name="cast_tvs_note_mac">Muncul di bawah Chromecast pada Putar di TV. Mac ini mengirimkan episode ke TV tersebut.</string>
     <string name="cast_tvs_note_iphone">Muncul di bawah Chromecast pada Putar di TV. iPhone ini mengirimkan episode ke TV tersebut.</string>
     <string name="cast_tvs_note_ipad">Muncul di bawah Chromecast pada Putar di TV. iPad ini mengirimkan episode ke TV tersebut.</string>
-    <string name="cast_torrents_note_mac">Memungkinkan TV dengan Chromecast bawaan memutar torrent. Mac ini mengirim episode selama episode diputar.</string>
-    <string name="cast_torrents_note_iphone">Memungkinkan TV dengan Chromecast bawaan memutar torrent. iPhone ini mengirim episode selama episode diputar.</string>
-    <string name="cast_torrents_note_ipad">Memungkinkan TV dengan Chromecast bawaan memutar torrent. iPad ini mengirim episode selama episode diputar.</string>
+    <string name="cast_torrents_note_mac">TV dengan Chromecast bawaan lalu bisa memutar torrent. Mac ini mengirim episode selama episode diputar.</string>
+    <string name="cast_torrents_note_iphone">TV dengan Chromecast bawaan lalu bisa memutar torrent. iPhone ini mengirim episode selama episode diputar.</string>
+    <string name="cast_torrents_note_ipad">TV dengan Chromecast bawaan lalu bisa memutar torrent. iPad ini mengirim episode selama episode diputar.</string>
     <string name="cast_up_next_plays_in">Berikutnya · diputar dalam %1$d dtk</string>
     <string name="cast_couldnt_start">Tidak bisa mulai di %1$s</string>
     <string name="cast_stopped">Casting dihentikan</string>
@@ -1406,11 +1392,11 @@
     <string name="downloads_delete_title">Hapus %1$s?</string>
     <string name="downloads_delete_detail">Berkas dihapus dari perangkat ini.</string>
     <string name="downloads_delete_one_title">Hapus unduhan</string>
-    <string name="downloads_delete_one_detail">Episode hanya bisa diputar lagi dengan koneksi, atau setelah diunduh ulang.</string>
+    <string name="downloads_delete_one_detail">Setelah ini, episode perlu koneksi untuk diputar, kecuali Anda mengunduhnya lagi.</string>
     <string name="downloads_delete_watched">Hapus unduhan yang sudah ditonton</string>
     <string name="downloads_seeding_title">Seeding</string>
     <string name="downloads_seeding_after_watching">Seeding setelah menonton</string>
-    <string name="downloads_seeding_note">Episode yang sudah ditonton dibagikan kembali saat Kaeri terbuka, sampai rasio atau batas waktu di Pengaturan, di bawah Sumber-sumber, tercapai.</string>
+    <string name="downloads_seeding_note">Episode yang sudah ditonton dibagikan kembali saat Kaeri terbuka. Berbagi berhenti saat mencapai rasio atau batas waktu yang Anda atur di Pengaturan, di bawah Sumber-sumber.</string>
     <string name="downloads_seeding_open_only">Seeding hanya berjalan saat Kaeri terbuka.</string>
     <string name="downloads_background_title">Saat jendela ditutup dan unduhan sedang berjalan</string>
     <string name="downloads_background_keep">Terus mengunduh</string>
@@ -1438,8 +1424,8 @@
     <string name="episode_download_done">Diunduh</string>
     <string name="episode_download_failed">Episode %1$d tidak dapat diunduh. Coba lagi.</string>
     <string name="first_other_title">Sudah memakai Kaeri di perangkat lain?</string>
-    <string name="first_other_line">Pasangkan, lalu perangkat ini mendapatkan sumber-sumber, pelacak-pelacak, dan riwayat Anda. Langkah setelah ini pun selesai.</string>
-    <string name="first_other_pair_line">Menampilkan kode untuk dimasukkan di perangkat itu. Keduanya harus memakai Wi-Fi yang sama.</string>
+    <string name="first_other_line">Pasangkan, lalu perangkat ini mendapatkan sumber-sumber, pelacak-pelacak, dan riwayat Anda, dan sisa penyiapan pun selesai untuk Anda.</string>
+    <string name="first_other_pair_line">Anda akan mendapat kode untuk dimasukkan di perangkat itu. Keduanya harus memakai Wi-Fi yang sama.</string>
     <string name="first_other_restore">Pulihkan dari folder cloud</string>
     <string name="first_other_restore_line">Memakai kunci pemulihan yang Anda simpan</string>
     <string name="first_other_no">Tidak, mulai di sini</string>
@@ -1478,7 +1464,7 @@
     <string name="home_end">Itu semua untuk sekarang. Musiman dan Kalender memuat daftar lengkap.</string>
     <string name="home_end_signed_out">Masuk ke AniList untuk mengambil daftar dan Rencana Anda.</string>
     <string name="home_sign_in">Masuk ke AniList</string>
-    <string name="home_end_no_sources">Tambahkan sumber untuk memutar dari Beranda. Toko-toko plugin menyediakan beberapa pilihan.</string>
+    <string name="home_end_no_sources">Tambahkan sumber untuk memutar dari Beranda. Plugin-plugin berasal dari Toko-toko plugin.</string>
     <string name="home_not_found">Tidak ada di sumber-sumber Anda</string>
     <string name="home_failed">Saran tidak dapat dimuat</string>
     <string name="home_try_again">Coba lagi</string>
@@ -1630,7 +1616,7 @@
     <string name="title_connect_drive">Hubungkan drive untuk memutar</string>
     <string name="library_picker_title">Pilih folder berisi episode Anda.</string>
     <string name="library_remove_detail">Berkas Anda tetap di tempatnya.</string>
-    <string name="library_reason_offline">Tidak bisa menghubungi AniList. Akan dicoba lagi saat pemindaian ulang.</string>
+    <string name="library_reason_offline">Tidak bisa menghubungi AniList. Pemindaian selanjutnya akan mencoba lagi.</string>
     <string name="library_choose_match">Pilih kecocokan</string>
     <string name="library_kept_line">Disimpan sebagai judul sendiri</string>
     <string name="library_fix_match">Perbaiki kecocokan ini</string>
@@ -1641,7 +1627,7 @@
     <string name="licensed_title">Layanan berlisensi</string>
     <string name="licensed_body">Kaeri bisa membuka judul di layanan streaming yang Anda bayar. Aplikasi ini tidak pernah memutarnya sendiri. Tautan berasal dari AniList.</string>
     <string name="licensed_region">Wilayah</string>
-    <string name="licensed_region_line">Menyembunyikan tautan yang ditandai AniList untuk negara lain. Sebagian besar tautan tidak menyebut negara, jadi pilih juga layanan Anda.</string>
+    <string name="licensed_region_line">Tautan yang ditandai AniList untuk negara lain disembunyikan. Sebagian besar tautan tidak menyebut negara, jadi pilih juga layanan Anda.</string>
     <string name="licensed_yours">Layanan Anda</string>
     <string name="licensed_show_all">Tampilkan semua %1$d</string>
     <string name="licensed_region_system">Ikuti perangkat ini</string>
@@ -1789,7 +1775,7 @@
     <string name="onboarding_where_hosts">Kaeri memutar apa yang sudah Anda punya: berkas di perangkat ini, server Jellyfin Anda, dan plugin-plugin dari toko-toko plugin yang Anda ikuti.</string>
     <string name="onboarding_own_heading">Punya media sendiri?</string>
     <string name="onboarding_invite_heading">Punya tautan undangan?</string>
-    <string name="onboarding_where_stores">Plugin-plugin berasal dari toko-toko plugin. Toko plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri, jadi Anda bergabung dengan tautan undangan dari pemiliknya.</string>
+    <string name="onboarding_where_stores">Plugin-plugin berasal dari toko-toko plugin. Masing-masing bertanda tangan dan memberi setiap perangkat tokennya sendiri, karena itu Anda bergabung dengan tautan undangan dari pemiliknya.</string>
     <string name="onboarding_demo_heading">Coba sekarang</string>
     <string name="onboarding_demo_detail">Demo memutar こうしす！, serial yang dibagikan pembuatnya dengan lisensi CC BY 4.0, dari Wikimedia Commons.</string>
     <string name="onboarding_play_demo">Putar demo</string>
@@ -1803,12 +1789,12 @@
     <string name="party_join">Gabung nonton bareng</string>
     <string name="party_leave">Keluar nonton bareng</string>
     <string name="party_leaving">Sedang keluar…</string>
-    <string name="party_ready_action">Saya sudah siap</string>
+    <string name="party_ready_action">Siap menonton</string>
     <string name="party_copy_invite">Salin tautan undangan</string>
     <string name="party_stay">Tetap di sini</string>
     <string name="party_leave_and_close">Keluar dan tutup</string>
     <string name="party_not_now">Nanti saja</string>
-    <string name="party_getting_ready">Sedang menyiapkan…</string>
+    <string name="party_getting_ready">Memuat saran…</string>
     <string name="party_server">Server</string>
     <string name="party_server_hint">host:port</string>
     <string name="party_recent_servers">Server yang pernah dipakai</string>
@@ -1819,7 +1805,7 @@
     <string name="party_your_name">Nama Anda di ruang</string>
     <string name="party_server_public">Server publik yang dijalankan oleh %1$s, bukan oleh Kaeri.</string>
     <string name="party_server_suggest">Tidak punya server sendiri? %1$s adalah server publik yang dijalankan oleh %2$s.</string>
-    <string name="party_server_invited">Server ini dipilih oleh orang yang mengundang Anda. Kaeri tidak menjalankannya.</string>
+    <string name="party_server_invited">Orang yang mengundang Anda memilih server ini. Kaeri tidak menjalankannya.</string>
     <string name="party_server_shape">Tulis server sebagai host dan port, seperti party.example:8999.</string>
     <string name="party_privacy">Server melihat nama Anda, ruang, dan kapan pun seseorang memutar, menjeda, atau mencari posisi putar. Masing-masing dari Anda memutar episode dari sumber-sumber sendiri.</string>
     <string name="party_room_hint">Siapa pun yang tahu nama ruang ini bisa bergabung. Tautan undangan sudah memuatnya, jadi tidak perlu dibacakan.</string>
@@ -1890,7 +1876,7 @@
     <string name="together_open_player">Buka pemutar</string>
     <string name="together_recent">Ruang terakhir</string>
     <string name="together_recent_row">Episode %1$s · bersama %2$s · %3$s</string>
-    <string name="together_recent_empty">Ruang yang Anda masuki tampil di sini, sepuluh terakhir.</string>
+    <string name="together_recent_empty">Sepuluh ruang terakhir yang Anda masuki tampil di sini.</string>
     <string name="together_rejoin">Gabung lagi</string>
     <string name="together_forget_room">Hapus dari ruang terakhir</string>
     <plurals name="together_someone_here">
@@ -1993,7 +1979,7 @@
     <string name="party_chat_hidden_line">Sembunyikan obrolan aktif di Pengaturan, bagian Pemutaran.</string>
     <string name="party_chat_show">Tampilkan obrolan</string>
     <string name="settings_hide_chat">Sembunyikan obrolan di nonton bareng</string>
-    <string name="settings_hide_chat_line">Pesan, reaksi, dan tandanya di bilah geser tidak muncul di video, dan kolom tulis hilang. Daftar orang tetap menunjukkan siapa yang ada di ruangan.</string>
+    <string name="settings_hide_chat_line">Pesan obrolan, reaksi, dan tandanya di bilah geser tidak muncul di video, dan kolom obrolan hilang. Daftar orang tetap menunjukkan siapa yang ada di ruangan.</string>
     <string name="party_mute">Bisukan %1$s</string>
     <string name="party_unmute">Aktifkan suara %1$s</string>
     <string name="party_unmute_short">Suarakan</string>
@@ -2204,8 +2190,8 @@
     <string name="player_load_subtitle_file">Muat berkas subtitel…</string>
     <string name="player_load_audio_file">Muat berkas audio…</string>
     <string name="player_file_picker_failed">Pemilih berkas tidak bisa dibuka. Coba lagi.</string>
-    <string name="player_subtitle_file_failed">Berkas subtitel itu tidak bisa dimuat. Pastikan itu berkas subtitel.</string>
-    <string name="player_audio_file_failed">Berkas audio itu tidak bisa dimuat. Pastikan itu berkas audio.</string>
+    <string name="player_subtitle_file_failed">Berkas itu tidak bisa dimuat sebagai subtitel. Pilih berkas subtitel, seperti .srt atau .ass.</string>
+    <string name="player_audio_file_failed">Berkas itu tidak bisa dimuat sebagai audio. Pilih berkas audio, seperti .mka atau .flac.</string>
     <string name="player_track_unnamed">Trek tanpa nama</string>
     <string name="player_audio_track_n">Audio %1$d</string>
     <string name="player_subtitle_track_n">Subtitel %1$d</string>
@@ -2234,6 +2220,7 @@
     <string name="reader_try_again">Coba lagi</string>
     <string name="reader_close">Tutup</string>
     <string name="reader_end_read">Dibaca</string>
+    <string name="reader_end_tracker">Dibaca · %1$s diperbarui</string>
     <string name="reader_end_next">Selanjutnya</string>
     <string name="reader_mode_rtl">Kanan ke kiri</string>
     <string name="reader_mode_ltr">Kiri ke kanan</string>
@@ -2269,8 +2256,21 @@
     <string name="reader_gap_none">Tanpa jarak</string>
     <string name="reader_gap_small">Kecil</string>
     <string name="reader_look_system">Sistem</string>
+    <string name="reader_end_of_chapter_number">Akhir bab %1$s</string>
+    <string name="reader_end_facts">Bab %1$s · %2$s</string>
+    <plurals name="reader_end_pages">
+        <item quantity="other">%1$d halaman</item>
+    </plurals>
+    <string name="reader_end_from">Dari %1$s</string>
+    <string name="reader_chapter_line">Bab %1$s</string>
+    <string name="reader_divider_facts_source">%1$s · dari %2$s</string>
+    <string name="reader_end_swipe">Geser untuk terus membaca</string>
+    <plurals name="reader_divider_images">
+        <item quantity="other">%1$d gambar</item>
+    </plurals>
+    <string name="reader_chapter_line_titled">Bab %1$s · %2$s</string>
     <string name="onboarding_read_demo">Baca demo</string>
-    <string name="onboarding_demo_books_detail">Demo berisi komik pendek dan cerita pendek yang dibagikan pembuatnya di bawah Creative Commons.</string>
+    <string name="onboarding_demo_books_detail">Satu komik pendek dan satu cerita pendek, dibagikan pembuatnya di bawah Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Satu episode pendek dan satu komik pendek, dibagikan pembuatnya di bawah Creative Commons.</string>
     <string name="home_demo_only_books">Hanya demo yang aktif. Tambahkan folder, server, atau toko plugin untuk membaca buku Anda sendiri.</string>
     <string name="home_spotlight_read">Baca</string>
@@ -2489,7 +2489,7 @@
     <string name="book_sources_no_match">Tidak cocok</string>
     <string name="book_sources_keep">Simpan yang belum cocok</string>
     <string name="book_sources_find">Cari</string>
-    <string name="book_sources_unmatched_note">Seri yang belum cocok tetap dibaca dari folder. Seri itu belum punya kemajuan di pelacak sampai dicocokkan.</string>
+    <string name="book_sources_unmatched_note">Anda tetap bisa membaca seri yang belum cocok dari folder. Seri itu belum mendapat kemajuan di pelacak sampai dicocokkan.</string>
     <string name="library_scope_label">Tontonan atau Bacaan</string>
     <string name="library_scope_shows">Tontonan</string>
     <string name="library_scope_reading">Bacaan</string>
@@ -2547,9 +2547,9 @@
     <string name="onboarding_lists_line_read">Kaeri menyelaraskan bacaan Anda dengan %1$s.</string>
     <string name="onboarding_lists_line_both">Kaeri menyelaraskan bacaan dan tontonan Anda dengan %1$s.</string>
     <string name="onboarding_lists_anilist_line">Daftar, kemajuan, dan saran</string>
-    <string name="onboarding_lists_later_watch">MyAnimeList, Kitsu, Simkl, dan Trakt bisa ditambahkan nanti di Pengaturan, bagian Akun.</string>
-    <string name="onboarding_lists_later_read">MyAnimeList, Kitsu, dan MangaUpdates bisa ditambahkan nanti di Pengaturan, bagian Akun.</string>
-    <string name="onboarding_lists_later_both">MyAnimeList, Kitsu, MangaUpdates, Simkl, dan Trakt bisa ditambahkan nanti di Pengaturan, bagian Akun.</string>
+    <string name="onboarding_lists_later_watch">Anda bisa menambahkan MyAnimeList, Kitsu, Simkl, dan Trakt nanti di Pengaturan, bagian Akun.</string>
+    <string name="onboarding_lists_later_read">Anda bisa menambahkan MyAnimeList, Kitsu, dan MangaUpdates nanti di Pengaturan, bagian Akun.</string>
+    <string name="onboarding_lists_later_both">Anda bisa menambahkan MyAnimeList, Kitsu, MangaUpdates, Simkl, dan Trakt nanti di Pengaturan, bagian Akun.</string>
     <string name="onboarding_connect">Sambungkan %1$s</string>
     <string name="onboarding_books_title">Dari mana buku Anda berasal</string>
     <string name="onboarding_books_line">Kaeri tidak menyertakan buku. Tambahkan yang sudah Anda punya, atau ikuti toko plugin dengan undangan dari pemiliknya.</string>
@@ -2630,8 +2630,8 @@
     <string name="settings_delete_after_reading_note">Bab yang diberi penanda tetap disimpan</string>
     <string name="settings_chapter_notifications_note">Seri di daftar Membaca Anda</string>
     <string name="settings_downloads_finished_note">Saat semua bab yang diunduh selesai</string>
-    <string name="settings_chapter_notifications_footer">Bab punya kanal sistem sendiri, jadi bisa dibisukan tersendiri.</string>
-    <string name="accounts_mangaupdates_credit">MangaUpdates diakses lewat API publiknya.</string>
+    <string name="settings_chapter_notifications_footer">Bab punya kanal sistem sendiri, jadi Anda bisa membisukannya tanpa mengubah notifikasi lain.</string>
+    <string name="accounts_mangaupdates_credit">Kaeri terhubung ke MangaUpdates lewat API publiknya.</string>
     <string name="accounts_username">Nama pengguna</string>
     <plurals name="read_downloads_total">
         <item quantity="other">%1$d bab · %2$s</item>
@@ -2656,7 +2656,7 @@
     <string name="seasonal_empty_format">Tidak ada judul dalam format ini</string>
     <string name="seasonal_empty_format_detail">Coba semua format.</string>
     <string name="seasonal_filter_in_search">Filter di Pencarian</string>
-    <string name="seasonal_filter_help">Musim ini di Pencarian, tempat setiap filter mempersempit hasil</string>
+    <string name="seasonal_filter_help">Membuka musim ini di Pencarian, tempat semua filter bisa dipakai</string>
     <string name="sort_popularity">Popularitas</string>
     <string name="sort_score">Skor</string>
     <string name="sort_air_day">Hari tayang</string>
@@ -2703,7 +2703,7 @@
     <string name="filter_released">Tanggal tayang</string>
     <string name="filter_where_to_watch">Tempat menonton</string>
     <string name="filter_licensed_only">Hanya yang berlisensi</string>
-    <string name="filter_my_list">Judul di daftar saya</string>
+    <string name="filter_my_list">Judul di daftar Anda</string>
     <string name="filter_show">Tampilkan</string>
     <string name="filter_hide">Sembunyikan</string>
     <string name="filter_only">Hanya</string>
@@ -2875,7 +2875,7 @@
     <string name="servers_kind_films">Film</string>
     <string name="servers_error_certificate">%1$s memakai sertifikat yang tidak dipercaya perangkat ini. Pakai alamat https:// dengan sertifikat yang dipercaya.</string>
     <string name="servers_row_signed_out_here">Keluar</string>
-    <string name="servers_sign_out_line">Mengakhiri sesi masuk perangkat ini di server. Server dan unduhan Anda tetap seperti semula.</string>
+    <string name="servers_sign_out_line">Keluar mengakhiri sesi perangkat ini di server. Server dan unduhan Anda tetap seperti semula.</string>
     <string name="settings_language">Bahasa</string>
     <string name="settings_language_app">Bahasa aplikasi</string>
     <string name="language_follow_system">Ikuti bahasa sistem</string>
@@ -2982,11 +2982,11 @@
     <string name="settings_artwork_detail">Atribusi ada di pemberitahuan aplikasi</string>
     <string name="settings_new_episodes">Episode baru</string>
     <string name="settings_new_episodes_detail">Muncul di daftar Menonton Anda</string>
-    <string name="settings_notify_detail">Satu notifikasi saat episode dari serial yang Anda ikuti terbit: nama serial dan nomor episodenya, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.</string>
+    <string name="settings_notify_detail">Anda mendapat satu notifikasi saat episode dari serial yang Anda ikuti terbit. Isinya nama serial dan nomor episode, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.</string>
     <string name="settings_coming_up">Segera tayang · 7 hari ke depan</string>
     <string name="settings_system_notifications">Pengaturan notifikasi</string>
     <string name="settings_system_notifications_detail">Suara, getaran, dan layar kunci</string>
-    <string name="settings_system_notifications_apple">Membuka Pengaturan Sistem, tempat gaya banner, suara, dan lencana diatur.</string>
+    <string name="settings_system_notifications_apple">Membuka Pengaturan Sistem, tempat Anda mengatur gaya banner, suara, dan lencana.</string>
     <string name="settings_notifications_blocked">Mati: sistem tidak mengizinkan notifikasi untuk Kaeri</string>
     <string name="settings_notifications_show_on">Aktif di pengaturan serial ini</string>
     <string name="settings_notify_show">Saat episode serial ini terbit</string>
@@ -3000,7 +3000,7 @@
     <string name="show_settings_always">Selalu</string>
     <string name="show_settings_never">Tidak pernah</string>
     <string name="show_settings_subs_remembered">Diingat dari episode terakhir Anda.</string>
-    <string name="show_settings_subs_follow">Dipilih di pemutar. Mengikuti Pengaturan › Pemutaran.</string>
+    <string name="show_settings_subs_follow">Dipilih di pemutar. Sampai saat itu, Pengaturan › Pemutaran yang berlaku.</string>
     <string name="show_settings_source">Sumber</string>
     <string name="show_settings_source_detail">Otomatis mencoba sumber-sumber Anda sesuai urutan.</string>
     <string name="show_settings_reset">Kembalikan ke bawaan</string>
@@ -3029,7 +3029,7 @@
     <string name="settings_upload_unlimited">Tanpa batas</string>
     <string name="settings_upscaling_natural">Alami · ArtCNN</string>
     <string name="settings_label_hover_cards">Perbesar sampul saat disorot</string>
-    <string name="settings_hover_cards_note">Menampilkan kartu yang lebih besar dengan trailer saat kursor diletakkan di sampul.</string>
+    <string name="settings_hover_cards_note">Menahan kursor di atas sampul membuka kartu yang lebih besar dengan trailernya.</string>
     <string name="settings_upscaling_note_natural">Garis dan tekstur asli, tanpa diubah gayanya.</string>
     <string name="settings_upscaling_note_sharp">Garis lebih tajam dan tepi lebih kuat, dengan sedikit mengorbankan tekstur.</string>
     <string name="settings_after_download">Setelah setiap unduhan</string>
@@ -3175,6 +3175,9 @@
     <plurals name="source_row_server">
         <item quantity="other">%1$s · %2$d seri di %3$d pustaka · baru ditambahkan</item>
     </plurals>
+    <plurals name="source_row_server_series">
+        <item quantity="other">%1$s · %2$d seri di %3$d pustaka</item>
+    </plurals>
     <string name="source_row_server_empty">%1$s · belum ada seri · diperiksa lagi dalam 30 menit</string>
     <plurals name="source_row_folder">
         <item quantity="other">%1$s · %2$d seri · %3$d berkas dilewati</item>
@@ -3251,7 +3254,7 @@
     <string name="sources_torrent_source">Pemutaran torrent</string>
     <string name="sources_source_order_row">Urutan Sumber</string>
     <string name="sources_torrents_note">Torrent adalah bagian dari Kaeri, bukan plugin. Proxy dan seeding diatur di Pengaturan, di bawah Sumber-sumber.</string>
-    <string name="sources_rebuilding">Sumber-sumber sedang disiapkan ulang</string>
+    <string name="sources_rebuilding">Menyiapkan ulang sumber-sumber</string>
     <string name="sources_response_ms">%1$d ms</string>
     <string name="match_fix">Perbaiki kecocokan ini</string>
     <string name="match_choose">Pilih judul yang cocok</string>
@@ -3303,7 +3306,7 @@
     <string name="sources_demo_link_licence">Lisensi</string>
     <string name="sources_demo_link_commons">Wikimedia Commons</string>
     <string name="sources_demo_link_maker">OPAP-JP</string>
-    <string name="sources_demo_hosts">Hanya menjangkau Wikimedia Commons: upload.wikimedia.org dan commons.wikimedia.org.</string>
+    <string name="sources_demo_hosts">Demo hanya menjangkau Wikimedia Commons: upload.wikimedia.org dan commons.wikimedia.org.</string>
     <string name="sources_demo_private">Demo tidak pernah masuk ke mana pun dan tidak pernah menulis ke AniList.</string>
     <string name="sources_demo_remove">Hapus demo</string>
     <string name="sources_demo_add">Tambah demo</string>
@@ -3326,7 +3329,7 @@
     <string name="stores_intro">Plugin-plugin menambahkan sumber-sumber. Setiap plugin mencantumkan host yang dihubunginya sebelum Anda memasangnya.</string>
     <string name="stores_not_from_app">Plugin-plugin berasal dari pemilik toko plugin, bukan dari Kaeri. Anda dapat keluar dari toko plugin kapan saja.</string>
     <string name="stores_join_owner_responsible">%1$s mengelola toko plugin ini dan memilih plugin-plugin-nya. Kaeri tidak membuat, meninjau, atau menyetujuinya.</string>
-    <string name="stores_no_plugins">toko plugin ini belum menawarkan plugin-plugin.</string>
+    <string name="stores_no_plugins">Toko plugin ini belum punya plugin-plugin.</string>
     <string name="stores_plugins">Plugin-plugin</string>
     <string name="stores_plugin_limits">Setiap plugin hanya dapat menghubungi host yang tercantum bersamanya dan tidak dapat membaca berkas Anda.</string>
     <string name="stores_plugin_limits_short">Plugin-plugin tidak dapat membaca berkas Anda atau menghubungi host yang tidak tercantum.</string>
@@ -3338,7 +3341,7 @@
     <string name="stores_access_ended_detail">Pemilik toko plugin ini mengakhiri akses Anda. plugin-plugin yang sudah terpasang tetap berfungsi, tetapi tidak akan ada yang diperbarui.</string>
     <string name="stores_access_ended_page">toko plugin ini tidak lagi mengizinkan perangkat ini masuk. plugin-plugin yang terpasang tetap ada sampai Anda menghapusnya.</string>
     <string name="stores_no_longer_joined">Anda tidak lagi bergabung dengan toko plugin ini.</string>
-    <string name="stores_offline_last_list">Luring: %1$s. plugin-plugin di bawah adalah daftar terakhir yang diperiksa.</string>
+    <string name="stores_offline_last_list">Luring: %1$s. Menampilkan daftar terakhir yang dikirimnya.</string>
     <string name="stores_offline_last_list_plain">Luring. Menampilkan daftar terakhir yang dikirimnya.</string>
     <string name="stores_key_line">Kunci toko %1$s · %2$s</string>
     <string name="stores_device_joined_as">Bergabung sebagai %1$s</string>
@@ -3373,14 +3376,14 @@
     <string name="stores_install_label">Pasang %1$s</string>
     <string name="stores_replace_label">Ganti salinan %1$s yang ditambahkan secara manual</string>
     <string name="stores_remove_plugin_title">Hapus %1$s?</string>
-    <string name="stores_remove_plugin_detail">Plugin ini dihapus dari perangkat ini. toko plugin dapat memasangnya lagi.</string>
+    <string name="stores_remove_plugin_detail">Plugin ini dihapus dari perangkat ini. Anda bisa memasangnya lagi dari toko plugin.</string>
     <string name="stores_newly_contacts">Juga menghubungi</string>
     <string name="stores_update_contacts">Pembaruan ini juga menghubungi %1$s.</string>
     <string name="stores_new_in">Yang baru di %1$s</string>
     <string name="stores_join_title">Gabung ke toko plugin</string>
     <string name="stores_add_title">Tambah toko plugin</string>
     <string name="stores_join_detail">Tempel tautan yang dikirim pemilik toko plugin kepada Anda.</string>
-    <string name="stores_join_detail_desktop">Tempel tautan undangan yang dikirim pemilik toko plugin kepada Anda. Anda melihat apa yang ditawarkan toko plugin sebelum ada yang digabung atau dipasang.</string>
+    <string name="stores_join_detail_desktop">Tempel tautan undangan yang dikirim pemilik toko plugin kepada Anda. Anda melihat isi toko plugin sebelum bergabung atau memasang apa pun.</string>
     <string name="stores_join_detail_opened">Tempel tautan yang dikirim pemilik toko plugin kepada Anda. Tautan Kaeri:// yang dibuka dari Pesan akan langsung mengisi lembar ini.</string>
     <string name="stores_invite_link">Tautan undangan</string>
     <string name="stores_invite_link_hint">https://…/join/…</string>
@@ -3394,7 +3397,7 @@
     <string name="stores_join_confirm_title">Gabung ke %1$s?</string>
     <string name="stores_join_installs_nothing">Bergabung tidak memasang apa pun. Anda memilih plugin-plugin yang ingin dipasang, dan setiap plugin menampilkan host yang dihubunginya sebelum dipasang.</string>
     <string name="stores_key_matches">Kunci %1$s cocok dengan toko plugin.</string>
-    <string name="stores_anyone_note">Anda bergabung tanpa nama. perangkat lain bergabung dengan tautan yang sama.</string>
+    <string name="stores_anyone_note">Anda bergabung tanpa nama. Perangkat lain bisa bergabung dengan tautan yang sama.</string>
     <string name="stores_already_joined_note">perangkat ini sudah bergabung dengan toko plugin ini.</string>
     <string name="stores_device_name">Nama Perangkat</string>
     <string name="stores_device_name_detail">Pemilik toko plugin melihat perangkat ini dengan nama tersebut.</string>
@@ -3447,7 +3450,7 @@
     <string name="stores_invite_works_times_forever">Berlaku %1$d kali, sampai Anda membatalkannya.</string>
     <string name="stores_invite_works_any">Siapa pun yang punya tautan ini bisa bergabung, sampai %1$s.</string>
     <string name="stores_invite_works_any_forever">Siapa pun yang punya tautan ini bisa bergabung sampai Anda membatalkannya.</string>
-    <string name="stores_invite_once_until">Berlaku sekali, untuk orang yang Anda kirimi. Sampai %1$s.</string>
+    <string name="stores_invite_once_until">Berlaku sekali, untuk orang yang Anda kirimi, sampai %1$s.</string>
     <string name="stores_invite_once_forever">Berlaku sekali, untuk orang yang Anda kirimi, sampai Anda membatalkannya.</string>
     <string name="stores_invite_contact_needed">Tambahkan kontak untuk toko ini dulu. Tautan yang bisa dipakai berapa kali pun bisa diteruskan, seperti tautan toko itu sendiri.</string>
     <string name="stores_invite_owner_once">Undangan pemilik berlaku sekali.</string>
@@ -3492,7 +3495,7 @@
         <item quantity="other">%1$d plugin</item>
     </plurals>
     <string name="notice_open_stores">Buka toko-toko plugin</string>
-    <string name="stores_what_is">Toko plugin adalah server kecil yang menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Ia menawarkan sumber-sumber sebagai plugin-plugin. Kaeri tidak menjalankan atau mendaftar toko plugin apa pun, jadi Anda bergabung dengan tautan undangan dari pemiliknya.</string>
+    <string name="stores_what_is">Toko plugin adalah server kecil yang menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Plugin-plugin di dalamnya menambahkan sumber-sumber. Kaeri tidak menjalankan atau mendaftar toko plugin apa pun, jadi Anda bergabung dengan tautan undangan dari pemiliknya.</string>
     <string name="stores_what_is_link">Apa itu toko plugin?</string>
     <string name="stores_invite_rules">Tautan undangan berlaku sekali, untuk satu orang, dan bertahan tujuh hari. Minta yang baru ke pemilik toko plugin jika milik Anda sudah kedaluwarsa.</string>
     <string name="stores_qr_label">Kode QR untuk tautan undangan</string>
@@ -3538,7 +3541,7 @@
     <string name="sync_road_nearby">Dengan perangkat di dekat</string>
     <string name="sync_road_nearby_line">Pasangkan dengan perangkat lain di Wi-Fi yang sama. Tidak ada yang disimpan di tempat lain.</string>
     <string name="sync_road_cloud">Lewat folder cloud</string>
-    <string name="sync_road_cloud_line">Drive cloud yang sudah Anda pakai, atau server Anda sendiri. Berfungsi saat perangkat Anda berjauhan, dan menyimpan cadangan.</string>
+    <string name="sync_road_cloud_line">Drive cloud yang sudah Anda pakai, atau server Anda sendiri. Ini tetap berfungsi saat perangkat Anda berjauhan, dan menyimpan cadangan.</string>
     <string name="sync_road_later">Anda bisa menambah cara lainnya nanti. Kebanyakan orang memakai keduanya.</string>
     <string name="devices_yours">Perangkat Anda</string>
     <string name="devices_only_this">Hanya perangkat ini</string>
@@ -3558,7 +3561,7 @@
     <string name="sync_turn_off_alert">Matikan sinkronisasi di %1$s?</string>
     <string name="sync_turn_off_alert_line">%1$s ini berhenti berbagi dengan perangkat Anda yang lain. Semua yang dimilikinya tetap di sini.</string>
     <string name="cloud_group">Folder cloud</string>
-    <string name="cloud_foot">Melengkapi saat perangkat Anda berjauhan, dan menyimpan cadangan tersegel. Hanya perangkat Anda yang dapat membacanya.</string>
+    <string name="cloud_foot">Folder ini menjaga perangkat Anda tetap selaras saat berjauhan, dan menyimpan cadangan tersegel. Hanya perangkat Anda yang dapat membacanya.</string>
     <string name="cloud_add">Tambah folder cloud</string>
     <string name="cloud_pick_title">Pilih folder cloud</string>
     <string name="cloud_google_line">Folder Kaeri tersembunyi di Drive Anda</string>
@@ -3673,7 +3676,7 @@
     <string name="profiles_delete_alert_line">Riwayat dan data masuk profil %1$s di perangkat ini dihapus. Perangkat yang tersinkron dengan %1$s tetap menyimpan miliknya.</string>
     <string name="profiles_picker">Siapa yang menonton?</string>
     <string name="profiles_ask_at_launch">Tanya siapa yang menonton saat dibuka</string>
-    <string name="profiles_ask_foot">Nonaktif secara bawaan. Untuk iPad yang dipakai bersama satu rumah. Baris akun bisa mengganti profil kapan saja.</string>
+    <string name="profiles_ask_foot">Nonaktif secara bawaan. Aktifkan untuk iPad yang dipakai bersama seisi rumah. Anda bisa mengganti profil dari baris akun kapan saja.</string>
     <string name="profiles_switch">Ganti profil</string>
     <string name="profiles_manage">Kelola profil</string>
     <string name="first_setup_other">Siapkan dari perangkat lain</string>
@@ -3938,7 +3941,7 @@
     <string name="accounts_tokens_file">Token masuk disimpan dalam berkas di perangkat ini, hanya bisa dibaca oleh Anda.</string>
     <string name="accounts_tokens_keystore">Token masuk disimpan di perangkat ini, dikunci dengan kunci di keystore-nya.</string>
     <string name="accounts_form_title">Masuk ke %1$s</string>
-    <string name="accounts_form_detail">Kata sandi Anda dikirim ke %1$s sekali saja, untuk token yang disimpan di perangkat ini.</string>
+    <string name="accounts_form_detail">Kata sandi Anda dikirim ke %1$s sekali saja, ditukar dengan token yang tetap tersimpan di perangkat ini.</string>
     <string name="accounts_user_or_email">Email atau nama pengguna</string>
     <string name="accounts_password">Kata sandi</string>
     <string name="accounts_signing_in_action">Sedang masuk</string>
@@ -3962,7 +3965,7 @@
     <string name="accounts_keep_theirs">Pakai milik %1$s</string>
     <string name="accounts_open_on">Buka di %1$s</string>
     <string name="accounts_listed_by">Terdaftar di %1$s</string>
-    <string name="accounts_did_not_answer">%1$s tidak merespons.</string>
+    <string name="accounts_did_not_answer">%1$s tidak merespons. Coba lagi sebentar lagi.</string>
     <string name="accounts_no_extras">%1$s belum punya pemeran, staf, atau rekomendasi untuk judul ini.</string>
     <string name="accounts_episodes_from">Episode dari %1$s. Tambahkan sumber untuk memutarnya.</string>
     <string name="accounts_adds_season">%1$s menambahkan judul musim sesuai pengumumannya.</string>
@@ -3983,7 +3986,7 @@
     <string name="tv_choose_another">Pilih TV lain…</string>
     <string name="tv_pairing_code">Kode pemasangan</string>
     <string name="tv_open_on_tv">Buka Kaeri di TV. TV harus terhubung ke Wi-Fi yang sama dengan perangkat ini.</string>
-    <string name="tv_type_code">Ketik enam digit yang ditampilkan %1$s. Setelah itu, perangkat ini terhubung dengan sendirinya.</string>
+    <string name="tv_type_code">Ketik enam digit yang ditampilkan %1$s. Sejak itu, perangkat ini terhubung dengan sendirinya.</string>
     <string name="tv_pairing_moment">Ini memerlukan sedikit waktu.</string>
     <string name="tv_looking">Mencari TV di jaringan ini</string>
     <string name="tv_none_found">TV tidak ditemukan</string>
@@ -4083,7 +4086,7 @@
     <string name="updates_saved_replace">Versi %1$s disimpan di Unduhan. Ganti berkas lama, %2$s, dengan berkas ini untuk memperbarui.</string>
     <string name="updates_saved_replace_plain">Versi %1$s disimpan di Unduhan. Ganti berkas lama dengan berkas ini untuk memperbarui.</string>
     <string name="updates_why_server">Unduhan berhenti: server menolaknya (%1$d). Coba lagi nanti.</string>
-    <string name="updates_why_connection">Unduhan berhenti: koneksi terputus.</string>
+    <string name="updates_why_connection">Unduhan berhenti: koneksi terputus. Coba lagi.</string>
     <string name="updates_why_save">Unduhan tidak bisa disimpan: %1$s</string>
     <string name="updates_why_size">Ukuran unduhan %1$s, tidak sesuai dengan %2$s yang tercantum untuk versi ini.</string>
     <string name="updates_why_checksum">Unduhan tidak cocok dengan checksum yang tercantum untuk versi ini.</string>

@@ -18,8 +18,8 @@ Kaeri                                                  plugins ●  ·  anilist 
    │
    │    Turn off sync on this computer
    │  ────────────────────────────────────────────────────────────────────────
-   │    Fills in while your devices are apart, and keeps a sealed backup.
-   │    Only your devices can read it.
+   │    The folder keeps your devices in step while they are apart, and
+   │    holds a sealed backup. Only your devices can read it.
 ────────────────────────────────────────────────────────────────────────────────
 plugins · Subbed · 1080p                             ↵ sign in   q back   ? keys
 === styles ===
@@ -85,9 +85,9 @@ r18 c08-37 fg=text
 r19 c03-03 fg=rule
 r19 c06-77 fg=rule
 r20 c03-03 fg=rule
-r20 c08-72 fg=text-dim
+r20 c08-70 fg=text-dim
 r21 c03-03 fg=rule
-r21 c08-37 fg=text-dim
+r21 c08-60 fg=text-dim
 r22 c00-79 fg=rule
 r23 c00-23 fg=text-dim
 r23 c53-53 fg=text

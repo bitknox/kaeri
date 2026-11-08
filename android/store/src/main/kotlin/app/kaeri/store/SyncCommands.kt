@@ -177,6 +177,7 @@ fun AppStore.joinStoresFrom(device: String?, stores: List<String> = emptyList(),
 /** Pair with whichever device on this network shows [code]. */
 fun AppStore.pairWithCode(deviceName: String, code: String) {
     sync.problemSeen()
+    sync.pairingFrom()
     send(Command.SyncGroup(SyncCommand.PairWithCode(deviceName, code)))
 }
 
@@ -200,4 +201,54 @@ fun AppStore.setDeviceRemote(device: String, on: Boolean) {
 fun AppStore.setSyncNetwork(network: app.kaeri.engine.ffi.FfiSyncNetwork) {
     sync.network = network
     engine?.setSyncNetwork(network)
+}
+
+/** Ask [device], or with null the next device this one pairs with, for its setup: stores, book servers, the medium and sign-ins. */
+fun AppStore.askSetupFrom(device: String?, address: String? = null) {
+    send(Command.SyncGroup(SyncCommand.AskSetupFrom(device, address)))
+}
+
+/** Add the book servers [device] handed over, by offer id. Never empty: the engine reads empty as every one. */
+fun AppStore.addBookServersFrom(device: String, servers: List<String>) {
+    if (servers.isNotEmpty()) send(Command.SyncGroup(SyncCommand.AddBookServersFrom(device, servers)))
+}
+
+/** First run's join page shows a code: sign-ins, stores and the setup are asked of whichever device pairs. */
+fun AppStore.joinShowCode(deviceName: String) {
+    sync.join.begin()
+    sync.first(true)
+    copyAllSignIns()
+    askSetupFrom(null)
+    pairInvite(deviceName)
+}
+
+/** Back from the join page's code: the code stops and nothing is held. */
+fun AppStore.joinStop() {
+    pairStop()
+    sync.first(false)
+    sync.copiedSeen()
+    sync.join.reset()
+}
+
+/**
+ * The join page's Continue: what the switches left on comes over from the paired device. Sign-ins
+ * switched off are withdrawn, the servers on are added, and the stores on are joined; returns the
+ * stores asked for now, by name, whose answers the page waits on.
+ */
+fun AppStore.joinContinue(signIns: Boolean, stores: List<app.kaeri.engine.model.SyncStoreOffer>, servers: List<String>): Set<String> {
+    val state = sync.join.state.value
+    val setup = state.setup
+    val first = state.presses == 0
+    val asking = sync.join.proceed(stores.map { it.name })
+    if (setup == null) {
+        if (first && !signIns) sync.status.value?.pairedDevice(state.deviceName.orEmpty())?.let { copyNoSignIns(it.id) }
+        return asking
+    }
+    if (first) {
+        if (!signIns) copyNoSignIns(setup.device)
+        addBookServersFrom(setup.device, servers)
+    }
+    val addresses = stores.filter { it.name in asking }.map { it.address }
+    if (addresses.isNotEmpty()) joinStoresFrom(setup.device, addresses)
+    return asking
 }

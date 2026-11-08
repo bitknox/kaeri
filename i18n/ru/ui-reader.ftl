@@ -41,3 +41,25 @@ reader-end-caught-up = Вы всё прочитали
 reader-gap-none = Нет
 reader-gap-small = Малый
 reader-look-system = Как в системе
+reader-end-tracker = Прочитано · обновлено: { $trackers }
+reader-end-of-chapter-number = Конец главы { $chapter }
+reader-end-facts = Глава { $chapter } · { $facts }
+reader-end-pages = { $count ->
+    [one] { $count } страница
+    [few] { $count } страницы
+    [many] { $count } страниц
+   *[other] { $count } страницы
+ }
+reader-end-from = Из { $source }
+
+reader-chapter-line = Глава { $chapter }
+
+reader-divider-facts-source = { $facts } · из { $source }
+reader-end-swipe = Смахните, чтобы читать дальше
+reader-divider-images = { $count ->
+    [one] { $count } картинка
+    [few] { $count } картинки
+    [many] { $count } картинок
+   *[other] { $count } картинки
+ }
+reader-chapter-line-titled = Глава { $chapter } · { $title }

@@ -80,10 +80,12 @@ pub async fn start(paths: Paths, host: Arc<dyn Host>) -> Result<Started, String>
         Err(reason) => tracing::warn!(%reason, "could not enter the profile used last"),
     }
     let http = HttpClient::new(&config.network).map_err(|e| e.to_string())?;
+    let reading_dev = config.reading.dev;
     let mut options = EngineOptions::new(paths, config.clone(), http, store, theme());
     options.saved = Some(config);
     options.set_aside = set_aside;
     options.hosted_player = true;
+    options.reading = cfg!(feature = "fixtures") || reading_dev;
     // Skip times found from the audio, where the libmpv this runs on has the demuxer tap: the
     // Flatpak's and the AppImage's do, a distribution's may not.
     options.audio_tap = kaeri_mpv_host::audio_tap_available();

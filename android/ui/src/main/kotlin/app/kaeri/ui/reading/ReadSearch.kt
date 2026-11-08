@@ -101,6 +101,7 @@ internal fun ReadSearchScreen(startText: String? = null) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val search by store.reading.search.collectAsStateWithLifecycle()
+    val demo by store.demo.collectAsStateWithLifecycle()
     val failures by store.reading.failures.collectAsStateWithLifecycle()
     val filters = store.reading.filters
     val both = kaeriIsFor() == KaeriIsFor.BOTH
@@ -214,7 +215,8 @@ internal fun ReadSearchScreen(startText: String? = null) {
                     moreItem(search)
                     // Once every match is listed, how many there are: the count matches the rows.
                     val total = search.total
-                    if (!search.hasMore && total != null) {
+                    // Not for the demo's works alone: they are no AniList count.
+                    if (!search.hasMore && total != null && !search.tiles.all { it.fromDemo }) {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "total", contentType = "line") {
                             Column(itemMotion()) {
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -229,6 +231,9 @@ internal fun ReadSearchScreen(startText: String? = null) {
                     }
                     if (both) {
                         item(span = { GridItemSpan(maxLineSpan) }, key = "other", contentType = "line") { Box(itemMotion()) { OtherScopeRow(search) } }
+                    }
+                    if (demo.onlyBooks) {
+                        item(span = { GridItemSpan(maxLineSpan) }, key = "demo", contentType = "line") { Box(itemMotion()) { DemoSearchNote() } }
                     }
                 }
             }
@@ -299,7 +304,8 @@ private fun ResultRow(tile: WorkTile) {
             ReadCover(tile.cover, 40.dp, Modifier.sharedWork(Shared.Cover, tile.work, "read-search"))
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(tile.title, style = ShowTitle.row.copy(fontWeight = FontWeight.SemiBold), color = colors.onSurface)
-                val facts = tile.factsLine(context)
+                // The demo's works say Demo, Reads now.
+                val facts = if (tile.fromDemo) Strings.searchDemoReads(context) else tile.factsLine(context)
                 if (facts.isNotEmpty()) Text(facts, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
             }
             tile.next?.let { Text(it.text(context), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant) }

@@ -334,8 +334,8 @@ impl Lobby {
                 let open = gtk::Button::with_label(&t::party_open_sources());
                 open.add_css_class("flat");
                 open.set_halign(gtk::Align::Start);
-                open.set_action_name(Some("win.go"));
                 open.set_action_target_value(Some(&"providers".to_variant()));
+                open.set_action_name(Some("win.go"));
                 column.append(&open);
             }
         }

@@ -107,7 +107,11 @@ private struct ReadHomeContent: View {
             .padding(.bottom, -12)
         }
         #endif
-        if let tile = home.spotlight, let spot = home.spot {
+        // While the demo is the only thing to read, its own spotlight and end, as its board draws them.
+        let demo = store.demo.state.onlyBooks
+        if demo {
+            DemoHomeSpotlight()
+        } else if let tile = home.spotlight, let spot = home.spot {
             ZStack(alignment: .topLeading) {
                 ReadSpotlightView(tile: tile, spot: spot, contentWidth: contentWidth)
                     .id(tile.work)
@@ -126,18 +130,19 @@ private struct ReadHomeContent: View {
         if !home.upNext.isEmpty {
             shelf(L.homeUpNext, tiles: home.upNext, link: L.homeViewAll) { navigator.readingList(.planning) }
         }
-        if !home.releasing.isEmpty {
+        // Discovery stays away while only the demo is on: nothing there could be read yet.
+        if !demo, !home.releasing.isEmpty {
             shelf(L.homeReadReleasing, tiles: home.releasing, link: L.homeSearch) { navigator.openReadingSearch() }
         }
-        if let title = home.becauseTitle, !home.because.isEmpty {
+        if !demo, let title = home.becauseTitle, !home.because.isEmpty {
             shelf(L.homeBecause(title: title), tiles: home.because)
         }
-        if let genre = home.genre, !home.genreShelf.isEmpty {
+        if !demo, let genre = home.genre, !home.genreShelf.isEmpty {
             shelf(L.homeMoreGenre(genre: genre), tiles: home.genreShelf, link: L.homeSearch) {
                 navigator.openReadingSearch(genre: genre)
             }
         }
-        if home.pending.contains(.discovery) || home.pending.contains(.because) {
+        if !demo, home.pending.contains(.discovery) || home.pending.contains(.because) {
             HomeWait(active: true, activity: "loading home") { HomeShelfPlaceholder(posters: true) } // i18n-skip
         }
         if home.failed {
@@ -147,7 +152,9 @@ private struct ReadHomeContent: View {
                     .fixedSize()
             }
         }
-        if let end = home.end {
+        if demo {
+            ReadHomeEndLine(end: .noSources)
+        } else if let end = home.end {
             ReadHomeEndLine(end: end)
         }
     }
@@ -240,10 +247,13 @@ private struct ReadSpotlightView: View {
         .frame(width: width, height: width * 9 / 16)
     }
 
+    /// Whether the series is the demo's, which says so over its title and Reads, with no tracker.
+    private var demo: Bool { store.reading.series[tile.work]?.demo != nil }
+
     private func text(beside: Bool) -> some View {
         let other = store.reading.series[tile.work].flatMap { ReadSeriesWords.otherTitle($0.titles, shown: tile.title) }
         return VStack(alignment: .leading, spacing: 0) {
-            Text(spot.label.text)
+            Text(demo ? L.homeSpotlightDemo : spot.label.text)
                 .font(.ui(layout.spotLabel, weight: .medium))
                 .foregroundStyle(.haze)
                 .accessibilityAddTraits(.isHeader)
@@ -360,7 +370,7 @@ private struct ReadSpotlightView: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "book").font(.ui(layout.button.font < 15 ? 12 : 15)).accessibilityHidden(true)
-                    Text(words).lineLimit(1).fixedSize(horizontal: !stretch, vertical: false)
+                    Text(demo ? L.homeSpotlightRead : words).lineLimit(1).fixedSize(horizontal: !stretch, vertical: false)
                 }
                 .frame(maxWidth: stretch ? .infinity : nil)
             }
@@ -561,6 +571,7 @@ private struct ReadWeekCell: View {
 
 /// The closing line: Updates and Search as links, or Add a source while there is none.
 private struct ReadHomeEndLine: View {
+    @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     let end: ReadHomeEnd
 
@@ -570,7 +581,7 @@ private struct ReadHomeEndLine: View {
             case .everything:
                 Text(L.homeReadEnd)
             case .noSources:
-                Text(L.homeReadNoSources)
+                Text(store.demo.state.onlyBooks ? L.homeDemoOnlyBooks : L.homeReadNoSources)
                 Button(L.sourcesAddTitle) { navigator.addBookSource = .choose }
                     .buttonStyle(SecondaryCapsuleStyle(height: 40, fontSize: 15))
                     .pointerHover()

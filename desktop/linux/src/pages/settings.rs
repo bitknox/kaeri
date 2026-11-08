@@ -57,6 +57,8 @@ enum Group {
     Mpv,
     Subtitles,
     Crashes,
+    Reading,
+    Feed,
 }
 
 impl Group {
@@ -79,6 +81,8 @@ impl Group {
             // The player's own name.
             Self::Subtitles => t::settings_group_subtitles(),
             Self::Crashes => t::settings_group_crashes(),
+            Self::Reading => t::settings_group_reading(),
+            Self::Feed => t::settings_opds_feed(),
             Self::Mpv => "mpv".to_owned(), // i18n-skip
         }
     }
@@ -91,7 +95,7 @@ struct Pane {
     groups: &'static [(Group, &'static [SettingKey])],
 }
 
-const PANES: [Pane; 12] = [
+const PANES: [Pane; 13] = [
     Pane {
         name: "general",
         icon: "preferences-system-symbolic", // i18n-skip
@@ -137,6 +141,17 @@ const PANES: [Pane; 12] = [
                     K::StyledSubtitles,
                 ],
             ),
+        ],
+    },
+    Pane {
+        name: "reading",
+        icon: "accessories-dictionary-symbolic", // i18n-skip
+        groups: &[
+            (
+                Group::Reading,
+                &[K::KeepChaptersReady, K::ChapterDownloadsOnCellular, K::DeleteAfterReading],
+            ),
+            (Group::Feed, &[K::OpdsFeed, K::OpdsPort, K::OpdsPassword]),
         ],
     },
     Pane {
@@ -255,6 +270,7 @@ pub fn pane_title(name: &str) -> String {
     match name {
         "general" => t::settings_group_general(),
         "playback" => t::settings_group_playback(),
+        "reading" => t::settings_group_reading(),
         "downloads" => t::downloads_title(),
         "notifications" => t::settings_group_notifications(),
         "sources" => t::sources_title(),
@@ -314,6 +330,19 @@ pub fn build(ctx: &Rc<Ctx>) -> SettingsPage {
         line.append(&label);
         let row = gtk::ListBoxRow::builder().child(&line).build();
         row.set_widget_name(pane.name);
+        if pane.name == "reading" {
+            row.set_visible(crate::reading::available(&ctx.hub));
+            ctx.hub.listen({
+                let (row, hub) = (row.downgrade(), Rc::downgrade(&ctx.hub));
+                move |event| {
+                    if matches!(event, Event::Medium(_))
+                        && let (Some(row), Some(hub)) = (row.upgrade(), hub.upgrade())
+                    {
+                        row.set_visible(crate::reading::available(&hub));
+                    }
+                }
+            });
+        }
         list.append(&row);
     }
     let header = adw::HeaderBar::new();
@@ -524,6 +553,7 @@ impl Inner {
                 page.add(&group);
             }
             "general" => page.add(&self.language_group()),
+            "reading" => page.add(&crate::reading::medium::settings_group(&self.ctx)),
             // The TVs paired for Play on TV moved to Devices; whether it lists TVs with
             // Chromecast built in stays with the integrations.
             "integrations" => {

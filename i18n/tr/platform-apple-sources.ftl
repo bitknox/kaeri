@@ -17,13 +17,13 @@ stores-devices-count = { $count ->
    *[other] { $count } { -device }
  }
 stores-replace-by-hand-detail = { $store }: versiyon { $version }, elle eklenen kopyanın yerine geçer.
-stores-open-join-on-detail = Ad girmeden katılırlar. Kapatırsanız bağlantı durur. Yeniden açarsanız yeni bir bağlantı oluşturulur.
-stores-open-join-off-detail = Yalnızca davet ettiğiniz kişiler katılabilir. Açarsanız bağlantısı olan herkes ad girmeden katılır.
+stores-open-join-on-detail = Kişiler ad vermeden katılır. Bunu kapatırsanız bağlantı çalışmayı bırakır. Yeni bir bağlantı için yeniden açın.
+stores-open-join-off-detail = Yalnızca davet ettiğiniz kişiler katılabilir. Bunu açarsanız bağlantısı olan herkes ad vermeden katılabilir.
 stores-open-join-no-names = Hiçbir ad saklanmaz.
 stores-open-join-keep-working = Siz kaldırana kadar çalışmaya devam ederler.
 stores-device-seen-at = Son görülme: { $when }
-stores-device-not-seen = Şundan beri görülmüyor
-stores-publish-offered = { -plugin-store-cap } { $version } sürümünü sunuyor.
+stores-device-not-seen = Katıldığından beri görülmedi
+stores-publish-offered = Bu { -plugin-store }nda { $version } var
 stores-publish-not-yet = Henüz { -plugin-store }nda yok
 torrents-sheet-edit-proxy = Proxy'yi düzenle
 torrents-edit-proxy = Proxy'yi düzenle
@@ -55,7 +55,7 @@ tv-seen-just-now = Az önce
 stores-link-send-once = Bu bağlantıyı { $who } kişisine gönderin. Yalnızca bir kez çalışır ve { $until } tarihine kadar geçerlidir.
 stores-link-send-once-anyone = Bu bağlantıyı kendisi için hazırlanan kişiye gönderin. Yalnızca bir kez çalışır ve { $until } tarihine kadar geçerlidir.
 sources-remove-title = { $name } kaldırılsın mı?
-sources-remove-detail-device = Bu { -device }dan silinir. Bir { -plugin-store } onu yeniden yükleyebilir.
+sources-remove-detail-device = Bu { -device }dan silinir. Bir { -plugin-store }ndan yeniden yükleyebilirsiniz.
 library-matched-apple = Eşleşenler
 servers-row-summary-apple = { $series ->
     [one] 1 dizi

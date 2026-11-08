@@ -168,6 +168,10 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
 
     BackHandler(enabled = chosen != null) { chosen = null }
 
+    // The demo's works have their own page: the credit, Read chapter 1 and the other work.
+    val demo = series?.demoWork
+    if (series != null && demo != null) return DemoSeriesScreen(series, demo, actions)
+
     val failure = failures[ReadingAbout.SERIES]
     val coverKey = readerCoverKey("series", work)
 

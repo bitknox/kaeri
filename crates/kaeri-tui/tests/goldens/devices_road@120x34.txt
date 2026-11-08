@@ -13,8 +13,8 @@ Kaeri                                                                           
     else.
 
   Through a cloud folder
-    A cloud drive you already use, or your own server. Works while your
-    devices are apart, and keeps a backup.
+    A cloud drive you already use, or your own server. It works while your
+    devices are apart and keeps a backup.
 
   You can add the other way later. Most people use both.
 
@@ -65,11 +65,11 @@ r14 c00-01 fg=rule bg=ground
 r14 c02-23 fg=text bg=ground
 r14 c24-119 fg=rule bg=ground
 r15 c00-01 fg=rule bg=ground
-r15 c02-70 fg=text-dim bg=ground
-r15 c71-119 fg=rule bg=ground
+r15 c02-73 fg=text-dim bg=ground
+r15 c74-119 fg=rule bg=ground
 r16 c00-01 fg=rule bg=ground
-r16 c02-41 fg=text-dim bg=ground
-r16 c42-119 fg=rule bg=ground
+r16 c02-40 fg=text-dim bg=ground
+r16 c41-119 fg=rule bg=ground
 r17 c00-119 fg=rule bg=ground
 r18 c00-01 fg=rule bg=ground
 r18 c02-55 fg=text-dim bg=ground

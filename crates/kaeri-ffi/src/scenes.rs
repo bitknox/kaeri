@@ -11,6 +11,7 @@ use kaeri_meta::Media;
 use kaeri_model::Msg;
 use kaeri_providers::{MockProvider, ProviderRegistry};
 use kaeri_store::Store;
+use kaeri_testkit::books as scene_books;
 use kaeri_testkit::{
     Failure, FakeAniList, Operation,
     fixtures::{self, AIRING, AIRING_NO_MAL, FINISHED, ONA},
@@ -22,7 +23,6 @@ use kaeri_track::secret::{Backend, TokenStore};
 use crate::{
     engine::{FfiEngine, Opened, RemoteHome, runtime},
     host::{Adapter, FfiHost},
-    scene_books,
     start::{FfiDirs, FfiError, FfiStart, SecretsMode},
     testing,
 };

@@ -1,7 +1,7 @@
 licensed-title = Dịch vụ có bản quyền
 licensed-body = { -app-name } có thể mở tựa phim trong các dịch vụ phát trực tuyến bạn trả phí. Ứng dụng không bao giờ tự phát chúng. Liên kết lấy từ AniList.
 licensed-region = Khu vực
-licensed-region-line = Ẩn các liên kết AniList đánh dấu cho nước khác. Hầu hết liên kết không ghi nước nào, nên hãy chọn cả dịch vụ của bạn.
+licensed-region-line = Các liên kết AniList đánh dấu cho nước khác sẽ bị ẩn. Hầu hết liên kết không ghi nước nào, nên hãy chọn cả dịch vụ của bạn.
 licensed-yours = Dịch vụ của bạn
 licensed-show-all = Xem tất cả { $count }
 licensed-region-system = Theo { -device } này

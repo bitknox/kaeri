@@ -1,5 +1,5 @@
 onboarding-read-demo = Đọc bản demo
-onboarding-demo-books-detail = Bản demo có một truyện tranh ngắn và một truyện ngắn mà tác giả chia sẻ theo Creative Commons.
+onboarding-demo-books-detail = Một truyện tranh ngắn và một truyện ngắn, do tác giả chia sẻ theo Creative Commons.
 onboarding-demo-both-detail = Một tập ngắn và một truyện tranh ngắn, do tác giả chia sẻ theo Creative Commons.
 home-demo-only-books = Chỉ có bản demo đang bật. Hãy thêm thư mục, máy chủ hoặc { -plugin-store } để đọc sách của bạn.
 home-spotlight-read = Đọc
@@ -12,7 +12,7 @@ demo-credit-cover = Bìa: “{ $title }” của { $artist }, { $year }. Phạm 
 reader-demo-credit = { $title } · { $author } · { $licence }
 search-demo-reads = Demo · Đọc được ngay
 search-demo-only-books = Chỉ có bản demo đang bật. Các tựa khác sẽ hiện khi bạn thêm { -source }.
-reader-demo-end = Bản demo kết thúc ở đây
+reader-demo-end = Bản demo đến đây là hết
 reader-demo-end-line = Để đọc sách của bạn, hãy thêm thư mục, máy chủ hoặc { -plugin-store }.
 reader-demo-add-source = Thêm { -source }
 reader-demo-again = Về trang 1

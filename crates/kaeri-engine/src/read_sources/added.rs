@@ -111,6 +111,12 @@ pub(crate) fn nothing_for(
 }
 
 /// The id a server is kept under: the same on every device for the same address and account.
+/// How many libraries a server's row names. An OPDS catalogue keeps none of its own but is one:
+/// "OPDS · 38 series in 1 library".
+pub(crate) fn row_libraries(kind: BookServerKind, count: u32) -> u32 {
+    if kind == BookServerKind::Opds { count.max(1) } else { count }
+}
+
 pub(crate) fn server_id(address: &str, user: Option<&str>) -> String {
     format!("srv-{}", short_id(&format!("{address}\u{1f}{}", user.unwrap_or("key"))))
 }
@@ -544,6 +550,13 @@ mod tests {
         let full =
             ServerMeta { series: Some(4), checked_at: Some(1_000), ..ServerMeta::default() };
         assert_eq!(full.rechecks_at(), None);
+    }
+
+    #[test]
+    fn an_opds_catalogue_is_one_library() {
+        assert_eq!(row_libraries(BookServerKind::Opds, 0), 1);
+        assert_eq!(row_libraries(BookServerKind::Kavita, 0), 0);
+        assert_eq!(row_libraries(BookServerKind::Kavita, 2), 2);
     }
 
     #[test]

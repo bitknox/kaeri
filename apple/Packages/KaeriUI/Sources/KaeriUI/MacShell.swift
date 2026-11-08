@@ -82,6 +82,12 @@ struct MacShell: View {
                                 .keyboardShortcut("[", modifiers: .command)
                         }
                     }
+                    if navigator.section == .providers, navigator.bookSourcePage != nil {
+                        ToolbarItem(placement: .navigation) {
+                            Button(L.actionBack, systemImage: "chevron.left") { navigator.bookSourcePage = nil }
+                                .keyboardShortcut("[", modifiers: .command)
+                        }
+                    }
                     if navigator.section == .downloads, navigator.seriesOnMac == nil {
                         // The title on the toolbar itself, as a title is, not in a glass capsule.
                         ToolbarItem(placement: .navigation) { DownloadsTitle() }
@@ -92,7 +98,8 @@ struct MacShell: View {
                     }
                     // What has run past 600 ms, quietly, beside the section's own items.
                     ToolbarItem(placement: .primaryAction) { ActivityIndicator() }
-                    if navigator.seriesOnMac == nil {
+                    // A book source's page has no Add a source: Back is all its toolbar adds.
+                    if navigator.seriesOnMac == nil, navigator.bookSourcePage == nil {
                         SectionToolbar(section: navigator.section)
                     }
                     if store.tv.connected != nil {
@@ -145,6 +152,7 @@ struct MacShell: View {
     private var macTitle: String {
         guard navigator.titleOnMac == nil else { return "" }
         if let work = navigator.seriesOnMac { return store.reading.series[work]?.titles.display ?? "" }
+        if navigator.section == .providers, let page = navigator.bookSourcePage { return page.title(store) }
         return navigator.section == .downloads ? "" : navigator.section.title
     }
 

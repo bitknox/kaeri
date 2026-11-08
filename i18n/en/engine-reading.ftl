@@ -65,6 +65,11 @@ reading-split-chapter = Chapter { $chapter } goes to { -tracker-pl } as { $whole
 # @max 32
 reader-resumed = Resumed at page { $page }
 
+# The same notice in a webtoon strip, which counts images rather than pages.
+# @arg image: int
+# @max 32
+reader-resumed-image = Resumed at image { $image }
+
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes
 # back to the page.
 # @arg page: int
@@ -88,16 +93,16 @@ reader-moved-number = Moved to chapter { $chapter }, page { $page }, where { $de
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 # @max 32
-reader-detected-right-to-left = Right to left, detected
+reader-detected-right-to-left = Looks like right to left
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 # @max 32
-reader-detected-left-to-right = Left to right, detected
+reader-detected-left-to-right = Looks like left to right
 
 # A notice the first time a series opens as one long strip, guessed from its pages. It offers
 # Change.
 # @max 32
-reader-detected-strip = Long strip, detected
+reader-detected-strip = Looks like a long strip
 
 # Why a chapter or a list could not load: there is no connection.
 reading-failed-offline = You're offline. Downloaded chapters still open.

@@ -184,9 +184,12 @@
   <!-- A Home card or poster: no chrome of its own, the art and lines are the button. The focus
        ring is the system's, drawn round the whole card. A press dims it at once, as the Mac's
        plain button does, so a click answers before the title page or the player is up. Under the
-       pointer it takes Fluent's subtle fill, as a cover in a grid does, on Fluent's 83 ms. -->
+       pointer it takes Fluent's subtle fill, as a cover in a grid does, on Fluent's 83 ms. The
+       fill reaches 8 past the art and words (HomeWording.HoverOutset), and the margin takes it
+       back, so the card sits where it would with none. -->
   <Style x:Key="HomeCardButtonStyle" TargetType="Button">
-    <Setter Property="Padding" Value="0" />
+    <Setter Property="Padding" Value="8" />
+    <Setter Property="Margin" Value="-8" />
     <Setter Property="BorderThickness" Value="0" />
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="HorizontalContentAlignment" Value="Stretch" />

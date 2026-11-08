@@ -63,7 +63,7 @@
     <value>別のデバイスが{name}で再生を始めたため、キャストを終了しました。</value>
   </data>
   <data name="NoticeCastNotSameNetwork" xml:space="preserve">
-    <value>このデバイスは{name}と同じネットワークにないか、VPN経由で接続しています。キャストには同じネットワークが必要です。</value>
+    <value>このデバイスは{name}と同じネットワークにないか、VPN経由で接続しています。キャストするには両方を同じネットワークに接続してください。</value>
   </data>
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name}との接続が切れたため、キャストを終了しました。</value>
@@ -384,7 +384,7 @@
     <value>オンになっていません。</value>
   </data>
   <data name="NoticeSourcePinned" xml:space="preserve">
-    <value>このタイトルには{source}を使います。</value>
+    <value>このタイトルは今後{source}から再生します。</value>
   </data>
   <data name="NoticeSourceAutomatic" xml:space="preserve">
     <value>ソースの自動選択に戻しました。</value>
@@ -546,13 +546,13 @@
     <value>{device}が止まった第{chapter}話の{page}ページに移動しました</value>
   </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
-    <value>右から左に自動判定しました</value>
+    <value>右から左のようです</value>
   </data>
   <data name="ReaderDetectedLeftToRight" xml:space="preserve">
-    <value>左から右に自動判定しました</value>
+    <value>左から右のようです</value>
   </data>
   <data name="ReaderDetectedStrip" xml:space="preserve">
-    <value>縦スクロールに自動判定しました</value>
+    <value>縦スクロールのようです</value>
   </data>
   <data name="ReadingFailedOffline" xml:space="preserve">
     <value>オフラインです。ダウンロード済みの章は開けます。</value>
@@ -1053,7 +1053,7 @@
     <value>{store}のサーバーは古く、リンクで誰でも参加できるようにはできません。先に更新してください。</value>
   </data>
   <data name="SourceSwitchedOff" xml:space="preserve">
-    <value>{name}をオフにしました。エピソードを探すときは飛ばされます。</value>
+    <value>{name}をオフにしました。Kaeriはエピソードを探すときにこれを飛ばします。</value>
   </data>
   <data name="SourceSwitchedOn" xml:space="preserve">
     <value>{name}をオンにしました。</value>
@@ -1062,7 +1062,7 @@
     <value>{id}は読み込まれていません。ソースの下にインストールされているか確認してください。</value>
   </data>
   <data name="ReleasePinned" xml:space="preserve">
-    <value>このタイトルには{name}を使います。</value>
+    <value>このタイトルは今後{name}を使います。</value>
   </data>
   <data name="NoticeChoiceNotSaved" xml:space="preserve">
     <value>その選択を保存できませんでした。{reason}</value>
@@ -1152,10 +1152,10 @@
     <value>サインイン用のブラウザを開けませんでした。ブラウザがインストールされているか確認して、もう一度試してください。{reason}</value>
   </data>
   <data name="NoticeSignInNotWaiting" xml:space="preserve">
-    <value>待機中の{tracker}のサインインはありません。サインインを最初からやり直してください。</value>
+    <value>{tracker}からサインインの応答が届きましたが、待機中のサインインはありません。サインインを最初からやり直してください。</value>
   </data>
   <data name="NoticeSignInWrongRequest" xml:space="preserve">
-    <value>{tracker}から戻ったサインイン情報が、今回の要求のものではありません。サインインを最初からやり直してください。</value>
+    <value>{tracker}からのサインインの応答が、要求と一致しません。サインインを最初からやり直してください。</value>
   </data>
   <data name="NoticeSignInNoToken" xml:space="preserve">
     <value>{tracker}へのサインインがトークンなしで戻ってきました。もう一度試してください。</value>
@@ -1245,7 +1245,7 @@
     <value>プロキシにはホストとポートが必要です。</value>
   </data>
   <data name="CauseProxyAddressUnusable" xml:space="preserve">
-    <value>プロキシのアドレスは、確認に使えないアドレスです。</value>
+    <value>プロキシの確認では、このアドレスを使えません。</value>
   </data>
   <data name="CauseServerUnreachable" xml:space="preserve">
     <value>サーバーに接続できませんでした。</value>
@@ -1269,7 +1269,7 @@
     <value>Kaeriの内部で問題が発生しました。処理は続行されましたが、画面が止まっているように見える場合は、終了してから開き直してください。</value>
   </data>
   <data name="NoticeDatabaseSetAside" xml:space="preserve">
-    <value>データベースが破損していたため、Kaeriは新しいデータベースを作成しました。古いファイルは{path}に残されています。連携サービスの情報は、次回の同期で戻ります。</value>
+    <value>データベースが破損していたため、Kaeriは新しいデータベースを作成しました。古いファイルは{path}に残っています。連携サービスにある情報は、次回の同期で戻ります。</value>
   </data>
   <data name="StartFailedFolder" xml:space="preserve">
     <value>Kaeriはフォルダ {path}を作成できませんでした。ディスクに空きがあり、フォルダに書き込めることを確認してから、もう一度お試しください。{reason}</value>
@@ -1284,7 +1284,7 @@
     <value>Kaeriは{path}のデータベースを開けませんでした。同じフォルダで別のKaeriアプリが開いている場合は、終了してからもう一度お試しください。{reason}</value>
   </data>
   <data name="StartFailedNetwork" xml:space="preserve">
-    <value>Kaeriは、config.tomlのネットワーク設定から接続を設定できませんでした。{reason}</value>
+    <value>Kaeriは、config.tomlのネットワーク設定で接続できませんでした。設定を確認してから、もう一度お試しください。{reason}</value>
   </data>
   <data name="StartFailed" xml:space="preserve">
     <value>Kaeriを起動できませんでした。一度終了してから、開き直してください。{reason}</value>
@@ -1314,10 +1314,10 @@
     <value>「計画中」リストが空です。</value>
   </data>
   <data name="NoticeSurpriseOffline" xml:space="preserve">
-    <value>オフラインです。検索からのおまかせにはAniListが必要です。</value>
+    <value>オフラインです。おまかせで作品を選ぶにはAniListが必要です。</value>
   </data>
   <data name="NoticeSurpriseFailed" xml:space="preserve">
-    <value>いまは作品を選べませんでした。しばらくしてからもう一度お試しください。</value>
+    <value>AniListに接続できず、作品を選べませんでした。しばらくしてからもう一度お試しください。</value>
   </data>
   <data name="ContinueMenuResume" xml:space="preserve">
     <value>続きを見る</value>
@@ -1539,7 +1539,7 @@
     <value>ダウンロードを続ける場合、完了するまでKaeriは通知領域に残ります。</value>
   </data>
   <data name="SettingsPresenceRichDetail" xml:space="preserve">
-    <value>カバー画像、進捗バー、{tracker}の作品ページへのリンクを表示します。作品名を表示する設定が必要です。</value>
+    <value>カバー画像、進捗バー、{tracker}の作品ページへのリンクです。タイトルを表示しているときだけ機能します。</value>
   </data>
   <data name="SettingsAnotherTv" xml:space="preserve">
     <value>別のテレビ</value>
@@ -1650,7 +1650,7 @@
     <value>「テレビで再生」のChromecastの下に表示されます。このPCがエピソードを送信します。</value>
   </data>
   <data name="SettingsNoteTorrentsWhileCastingPc" xml:space="preserve">
-    <value>Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのPCがエピソードを送信します。</value>
+    <value>Chromecast内蔵のテレビでもトレントを再生できるようになります。再生中はこのPCがエピソードを送信します。</value>
   </data>
   <data name="SettingsLanguageRestart" xml:space="preserve">
     <value>再起動</value>
@@ -1665,7 +1665,7 @@
     <value>設定を検索</value>
   </data>
   <data name="SettingsQualityDetailWindows" xml:space="preserve">
-    <value>高くすると、ソースが提供する最高の版を使い、容量も増えます。</value>
+    <value>「高」ではソースにある最高の版を選びます。そのぶん容量を多く使います。</value>
   </data>
   <data name="SettingsMergeSubtitlesDetailWindows" xml:space="preserve">
     <value>ファイルを移動しても、字幕はエピソードと一緒に残ります。</value>
@@ -1674,7 +1674,7 @@
     <value>シードを続けるダウンロードは、保存フォルダではなくKaeriのキャッシュに置かれます。</value>
   </data>
   <data name="SettingsDiscussionsNoteWindows" xml:space="preserve">
-    <value>視聴済みのエピソードについて、AniList のフォーラムスレッドのコメントを読み込みます。</value>
+    <value>エピソードを視聴すると、AniListのフォーラムスレッドのコメントが表示されます。</value>
   </data>
   <data name="SettingsCommentImagesNoteWindows" xml:space="preserve">
     <value>画像は配信元のサイトから読み込まれ、そのサイトにIPアドレスが伝わります。</value>
@@ -1806,7 +1806,7 @@
     <value>Kaeriが停止しました</value>
   </data>
   <data name="EngineStoppedDetail" xml:space="preserve">
-    <value>アプリの処理を担う部分が停止しました。Kaeriをもう一度開いて再開してください。</value>
+    <value>ダウンロードと同期も止まりました。Kaeriをもう一度開くと続けられます。</value>
   </data>
   <data name="EngineStoppedOpenAgain" xml:space="preserve">
     <value>開き直す</value>
@@ -1911,7 +1911,7 @@
     <value>{name}をオン</value>
   </data>
   <data name="SourcesRemoveDetail" xml:space="preserve">
-    <value>エピソードの検索に使われなくなります。プラグインストアから再度インストールできます。</value>
+    <value>Kaeriはエピソードを探すときにこれを使わなくなります。プラグインストアから再びインストールできます。</value>
   </data>
   <data name="StoresUpdatesCount_other" xml:space="preserve">
     <value>{count}件の更新があります</value>
@@ -2100,13 +2100,13 @@
     <value>このデバイスにクラッシュレポートを保存</value>
   </data>
   <data name="SettingsCrashSaveDetail" xml:space="preserve">
-    <value>オンにすると、Kaeriはクラッシュのたびに、タイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。バグ報告に追加できます。自動では何も送信されません。</value>
+    <value>Kaeriはバグ報告用に、クラッシュのたびにタイトル、アドレス、名前を除いた短い記録をこのデバイスに保存します。自動では何も送信されません。</value>
   </data>
   <data name="SettingsCrashAsk" xml:space="preserve">
     <value>クラッシュ後に確認する</value>
   </data>
   <data name="SettingsCrashAskDetail" xml:space="preserve">
-    <value>次回の起動時に「報告…」付きの通知を表示します。</value>
+    <value>次にKaeriを開いたとき、「報告…」付きの通知を表示します。</value>
   </data>
   <data name="SettingsCrashOsHeading" xml:space="preserve">
     <value>{system}が保持</value>
@@ -2136,7 +2136,7 @@
     <value>すべて削除</value>
   </data>
   <data name="SettingsCrashFootnote" xml:space="preserve">
-    <value>クラッシュレポートはこのデバイスに残ります。Kaeriが自動で送信することはありません。バグ報告からGitHubで開いたときだけ、レポートが外部に送られます。レポートは30日後に削除されます。</value>
+    <value>クラッシュレポートはこのデバイスに残り、Kaeriが自動で送信することはありません。バグ報告からGitHubで開いたときだけ、レポートが外部に送られます。レポートは30日後に削除されます。</value>
   </data>
   <data name="CalendarPreviousWeek" xml:space="preserve">
     <value>前の週</value>
@@ -2262,13 +2262,13 @@
     <value>「テレビで再生」のChromecastの下に表示されます。このiPadがエピソードを送信します。</value>
   </data>
   <data name="CastTorrentsNoteMac" xml:space="preserve">
-    <value>Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのMacがエピソードを送信します。</value>
+    <value>これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのMacがエピソードを送信します。</value>
   </data>
   <data name="CastTorrentsNoteIphone" xml:space="preserve">
-    <value>Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPhoneがエピソードを送信します。</value>
+    <value>これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPhoneがエピソードを送信します。</value>
   </data>
   <data name="CastTorrentsNoteIpad" xml:space="preserve">
-    <value>Chromecast内蔵のテレビでトレントを再生できるようにします。再生中はこのiPadがエピソードを送信します。</value>
+    <value>これで、Chromecast内蔵のテレビでトレントを再生できます。再生中はこのiPadがエピソードを送信します。</value>
   </data>
   <data name="CastUpNextPlaysIn" xml:space="preserve">
     <value>次のエピソード · {seconds}秒後に再生</value>
@@ -2982,7 +2982,7 @@
     <value>ダウンロードを削除</value>
   </data>
   <data name="DownloadsDeleteOneDetail" xml:space="preserve">
-    <value>再び再生するには、接続するか、もう一度ダウンロードしてください。</value>
+    <value>削除後は、もう一度ダウンロードしない限り、再生には接続が必要です。</value>
   </data>
   <data name="DownloadsDeleteWatched" xml:space="preserve">
     <value>視聴済みのダウンロードを削除</value>
@@ -2994,7 +2994,7 @@
     <value>視聴後のシーディング</value>
   </data>
   <data name="DownloadsSeedingNote" xml:space="preserve">
-    <value>視聴済みのエピソードは、Kaeriを開いている間に共有されます。設定のソースで指定した比率か時間の上限に達するまで続きます。</value>
+    <value>視聴済みのエピソードは、Kaeriを開いている間に共有されます。設定のソースで指定した比率か時間の上限に達すると、共有は止まります。</value>
   </data>
   <data name="DownloadsBackgroundTitle" xml:space="preserve">
     <value>ウィンドウを閉じるときにダウンロード中の場合</value>
@@ -3069,10 +3069,10 @@
     <value>ほかのデバイスですでにKaeriを使っていますか？</value>
   </data>
   <data name="FirstOtherLine" xml:space="preserve">
-    <value>ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれます。この後の手順は完了します。</value>
+    <value>ペアリングすると、このデバイスにソース、連携サービス、履歴が引き継がれ、残りの設定も完了します。</value>
   </data>
   <data name="FirstOtherPairLine" xml:space="preserve">
-    <value>そのデバイスに入力するコードを表示します。どちらも同じWi-Fiに接続している必要があります。</value>
+    <value>そのデバイスに入力するコードが表示されます。どちらも同じWi-Fiに接続している必要があります。</value>
   </data>
   <data name="FirstOtherRestore" xml:space="preserve">
     <value>クラウドフォルダーから復元</value>
@@ -3183,7 +3183,7 @@
     <value>AniListにサインイン</value>
   </data>
   <data name="HomeEndNoSources" xml:space="preserve">
-    <value>ホームから再生するにはソースを追加してください。プラグインストアから選べます。</value>
+    <value>ホームから再生するにはソースを追加してください。プラグインはプラグインストアから入手します。</value>
   </data>
   <data name="HomeNotFound" xml:space="preserve">
     <value>あなたのソースには見つかりません</value>
@@ -3585,7 +3585,7 @@
     <value>ファイルは元の場所に残ります。</value>
   </data>
   <data name="LibraryReasonOffline" xml:space="preserve">
-    <value>AniListに問い合わせられませんでした。次回のスキャンで再試行します。</value>
+    <value>AniListに接続できませんでした。次回のスキャンで再試行します。</value>
   </data>
   <data name="LibraryChooseMatch" xml:space="preserve">
     <value>照合先を選ぶ</value>
@@ -3618,7 +3618,7 @@
     <value>地域</value>
   </data>
   <data name="LicensedRegionLine" xml:space="preserve">
-    <value>AniListが他の国向けとしているリンクを非表示にします。国が指定されていないリンクも多いので、利用中のサービスも選んでください。</value>
+    <value>AniListが他の国向けとしているリンクは非表示になります。国が指定されていないリンクも多いので、利用中のサービスも選んでください。</value>
   </data>
   <data name="LicensedYours" xml:space="preserve">
     <value>利用中のサービス</value>
@@ -4062,7 +4062,7 @@
     <value>招待リンクをお持ちですか?</value>
   </data>
   <data name="OnboardingWhereStores" xml:space="preserve">
-    <value>プラグインはプラグインストアから入手します。プラグインストアは署名付きで、デバイスごとに専用のトークンを発行します。参加するには、運営者からの招待リンクを使います。</value>
+    <value>プラグインはプラグインストアから入手します。どれも署名付きで、デバイスごとに専用のトークンを発行します。そのため、参加には運営者からの招待リンクが必要です。</value>
   </data>
   <data name="OnboardingDemoHeading" xml:space="preserve">
     <value>今すぐ試す</value>
@@ -4119,7 +4119,7 @@
     <value>今はしない</value>
   </data>
   <data name="PartyGettingReady" xml:space="preserve">
-    <value>準備しています…</value>
+    <value>候補を読み込んでいます…</value>
   </data>
   <data name="PartyServer" xml:space="preserve">
     <value>サーバー</value>
@@ -4359,7 +4359,7 @@
     <value>エピソード {episode} · {names}と · {when}</value>
   </data>
   <data name="TogetherRecentEmpty" xml:space="preserve">
-    <value>参加したルームが直近10件ここに表示されます。</value>
+    <value>参加したルームのうち、直近10件がここに表示されます。</value>
   </data>
   <data name="TogetherRejoin" xml:space="preserve">
     <value>再参加</value>
@@ -4650,7 +4650,7 @@
     <value>同時視聴でチャットを非表示</value>
   </data>
   <data name="SettingsHideChatLine" xml:space="preserve">
-    <value>メッセージ、リアクション、シークバー上の目印は映像に表示されず、入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。</value>
+    <value>チャットのメッセージ、リアクション、シークバー上の目印は映像に表示されず、チャットの入力欄もなくなります。メンバー一覧では、ルームにいる人を確認できます。</value>
   </data>
   <data name="PartyMute" xml:space="preserve">
     <value>{name}をミュート</value>
@@ -5265,10 +5265,10 @@
     <value>ファイル選択を開けませんでした。もう一度お試しください。</value>
   </data>
   <data name="PlayerSubtitleFileFailed" xml:space="preserve">
-    <value>その字幕ファイルを読み込めませんでした。字幕ファイルかどうか確認してください。</value>
+    <value>そのファイルを字幕として読み込めませんでした。.srtや.assなどの字幕ファイルを選んでください。</value>
   </data>
   <data name="PlayerAudioFileFailed" xml:space="preserve">
-    <value>その音声ファイルを読み込めませんでした。音声ファイルかどうか確認してください。</value>
+    <value>そのファイルを音声として読み込めませんでした。.mkaや.flacなどの音声ファイルを選んでください。</value>
   </data>
   <data name="PlayerTrackUnnamed" xml:space="preserve">
     <value>名称なしのトラック</value>
@@ -5353,6 +5353,9 @@
   </data>
   <data name="ReaderEndRead" xml:space="preserve">
     <value>既読</value>
+  </data>
+  <data name="ReaderEndTracker" xml:space="preserve">
+    <value>既読 · {trackers}を更新しました</value>
   </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>次の章</value>
@@ -5453,11 +5456,38 @@
   <data name="ReaderLookSystem" xml:space="preserve">
     <value>システム</value>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>第{chapter}話の終わり</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>第{chapter}話 · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count}ページ</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>{source}から</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>第{chapter}話</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · {source}から</value>
+  </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>スワイプして読み進める</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count}枚の画像</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>第{chapter}話 · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>デモを読む</value>
   </data>
   <data name="OnboardingDemoBooksDetail" xml:space="preserve">
-    <value>デモでは、作者がCreative Commonsで共有している短いコミックと短い物語を読めます。</value>
+    <value>短いコミックと短い物語が1つずつ。作者がCreative Commonsで共有しています。</value>
   </data>
   <data name="OnboardingDemoBothDetail" xml:space="preserve">
     <value>作者がCreative Commonsで共有している、短いエピソードと短いコミックが1つずつあります。</value>
@@ -6423,10 +6453,10 @@
     <value>ダウンロード中の章がすべて終わったとき</value>
   </data>
   <data name="SettingsChapterNotificationsFooter" xml:space="preserve">
-    <value>章の通知は独自のシステムチャンネルを使うため、単独で消音できます。</value>
+    <value>章の通知は独自のシステムチャンネルを使うため、ほかの通知はそのままで章だけを消音できます。</value>
   </data>
   <data name="AccountsMangaupdatesCredit" xml:space="preserve">
-    <value>MangaUpdates は公開 API 経由で利用します。</value>
+    <value>Kaeriは公開APIでMangaUpdatesに接続します。</value>
   </data>
   <data name="AccountsUsername" xml:space="preserve">
     <value>ユーザー名</value>
@@ -6483,7 +6513,7 @@
     <value>検索で絞り込む</value>
   </data>
   <data name="SeasonalFilterHelp" xml:space="preserve">
-    <value>このシーズンを検索で開き、どのフィルターでも絞り込めます。</value>
+    <value>このシーズンを検索で開き、すべてのフィルターを使えます</value>
   </data>
   <data name="SortPopularity" xml:space="preserve">
     <value>人気</value>
@@ -6624,7 +6654,7 @@
     <value>正規ライセンスのみ</value>
   </data>
   <data name="FilterMyList" xml:space="preserve">
-    <value>マイリストの作品</value>
+    <value>自分のリストにある作品</value>
   </data>
   <data name="FilterShow" xml:space="preserve">
     <value>表示</value>
@@ -7098,7 +7128,7 @@
     <value>サインアウト済み</value>
   </data>
   <data name="ServersSignOutLine" xml:space="preserve">
-    <value>このデバイスのサーバーへのサインインを終了します。サーバーとダウンロードはそのまま残ります。</value>
+    <value>サインアウトすると、このデバイスのサーバー上のセッションが終了します。サーバーとダウンロードはそのまま残ります。</value>
   </data>
   <data name="SettingsLanguage" xml:space="preserve">
     <value>言語</value>
@@ -7413,7 +7443,7 @@
     <value>「視聴中」リストの作品が対象です</value>
   </data>
   <data name="SettingsNotifyDetail" xml:space="preserve">
-    <value>フォローしている作品のエピソードが公開されると、作品名とエピソード番号を一度通知します。エピソード名は表示しません。作品の設定でオフにできます。</value>
+    <value>フォローしている作品のエピソードが公開されると、1件通知が届きます。通知には作品名とエピソード番号だけが表示され、エピソード名は表示されません。作品ごとの設定でオフにできます。</value>
   </data>
   <data name="SettingsComingUp" xml:space="preserve">
     <value>今後7日間の放送</value>
@@ -7425,7 +7455,7 @@
     <value>サウンド、バイブレーション、ロック画面</value>
   </data>
   <data name="SettingsSystemNotificationsApple" xml:space="preserve">
-    <value>システム設定を開きます。バナーの表示、サウンド、バッジの設定はそこで行います。</value>
+    <value>システム設定を開きます。バナーのスタイル、サウンド、バッジはそこで設定します。</value>
   </data>
   <data name="SettingsNotificationsBlocked" xml:space="preserve">
     <value>オフ：システムでKaeriの通知が許可されていません</value>
@@ -7467,7 +7497,7 @@
     <value>最後に見たエピソードの設定を記憶しています。</value>
   </data>
   <data name="ShowSettingsSubsFollow" xml:space="preserve">
-    <value>プレーヤーで選択します。設定 › 再生に従います。</value>
+    <value>プレーヤーで選びます。それまでは 設定 › 再生 が適用されます。</value>
   </data>
   <data name="ShowSettingsSource" xml:space="preserve">
     <value>ソース</value>
@@ -7548,7 +7578,7 @@
     <value>ホバーでカバーを拡大</value>
   </data>
   <data name="SettingsHoverCardsNote" xml:space="preserve">
-    <value>カバーにポインターを重ねると、予告編付きの大きなカードを表示します。</value>
+    <value>カバーにポインターを置くと、予告編付きの大きなカードが開きます。</value>
   </data>
   <data name="SettingsUpscalingNoteNatural" xml:space="preserve">
     <value>線と質感を忠実に保ち、見た目は変えません。</value>
@@ -7925,6 +7955,9 @@
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · {libraries}件のライブラリに{series}シリーズ · 追加したばかり</value>
   </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · {libraries}件のライブラリに{series}シリーズ</value>
+  </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · シリーズはまだありません · 30分後に再確認します</value>
   </data>
@@ -8277,7 +8310,7 @@
     <value>OPAP-JP</value>
   </data>
   <data name="SourcesDemoHosts" xml:space="preserve">
-    <value>接続先はWikimedia Commonsのみです(upload.wikimedia.org と commons.wikimedia.org)。</value>
+    <value>デモの接続先はWikimedia Commonsだけです(upload.wikimedia.org と commons.wikimedia.org)。</value>
   </data>
   <data name="SourcesDemoPrivate" xml:space="preserve">
     <value>デモはどこにもサインインせず、AniListに書き込むこともありません。</value>
@@ -8382,7 +8415,7 @@
     <value>このプラグインストアには、もう参加していません。</value>
   </data>
   <data name="StoresOfflineLastList" xml:space="preserve">
-    <value>オフラインです（{reason}）。下のプラグインは、最後に確認できた一覧です。</value>
+    <value>オフラインです（{reason}）。最後に送られてきた一覧を表示しています。</value>
   </data>
   <data name="StoresOfflineLastListPlain" xml:space="preserve">
     <value>オフラインです。最後に受け取った一覧を表示しています。</value>
@@ -8487,7 +8520,7 @@
     <value>{name}を削除しますか？</value>
   </data>
   <data name="StoresRemovePluginDetail" xml:space="preserve">
-    <value>このデバイスから削除されます。プラグインストアからは再びインストールできます。</value>
+    <value>このデバイスから削除されます。プラグインストアからもう一度インストールできます。</value>
   </data>
   <data name="StoresNewlyContacts" xml:space="preserve">
     <value>新たに接続するホスト</value>
@@ -8508,7 +8541,7 @@
     <value>プラグインストアの運営者から届いたリンクを貼り付けてください。</value>
   </data>
   <data name="StoresJoinDetailDesktop" xml:space="preserve">
-    <value>プラグインストアの運営者から届いた招待リンクを貼り付けてください。参加やインストールの前に、プラグインストアが提供する内容を確認できます。</value>
+    <value>プラグインストアの運営者から届いた招待リンクを貼り付けます。参加やインストールの前に、プラグインストアの内容を確認できます。</value>
   </data>
   <data name="StoresJoinDetailOpened" xml:space="preserve">
     <value>プラグインストアの運営者から届いたリンクを貼り付けてください。メッセージアプリから開いたKaeri://の招待リンクは、このシートに直接入力されます。</value>
@@ -8703,7 +8736,7 @@
     <value>このリンクを持っている人は、取り消すまで誰でも参加できます。</value>
   </data>
   <data name="StoresInviteOnceUntil" xml:space="preserve">
-    <value>送った相手1人が1回だけ使えます。{until}まで。</value>
+    <value>送った相手1人が{until}まで1回だけ使えます。</value>
   </data>
   <data name="StoresInviteOnceForever" xml:space="preserve">
     <value>送った相手1人が1回だけ使えます。取り消すまで有効です。</value>
@@ -8814,7 +8847,7 @@
     <value>プラグインストアを開く</value>
   </data>
   <data name="StoresWhatIs" xml:space="preserve">
-    <value>プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。ソースをプラグインとして提供します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加してください。</value>
+    <value>プラグインストアは、署名付きのプラグインを保管し、デバイスごとに専用のトークンを発行する小さなサーバーです。そのプラグインがソースを追加します。Kaeriはプラグインストアを運営せず、一覧も載せません。所有者からの招待リンクで参加します。</value>
   </data>
   <data name="StoresWhatIsLink" xml:space="preserve">
     <value>プラグインストアとは?</value>
@@ -8952,7 +8985,7 @@
     <value>クラウドフォルダ経由</value>
   </data>
   <data name="SyncRoadCloudLine" xml:space="preserve">
-    <value>すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても使え、バックアップも残ります。</value>
+    <value>すでに使っているクラウドドライブか、自分のサーバーを使います。デバイスが離れていても動作し、バックアップも残ります。</value>
   </data>
   <data name="SyncRoadLater" xml:space="preserve">
     <value>もう一方の方法は、あとから追加できます。ほとんどの人は両方使っています。</value>
@@ -9012,7 +9045,7 @@
     <value>クラウドフォルダ</value>
   </data>
   <data name="CloudFoot" xml:space="preserve">
-    <value>デバイスが離れている間の同期を補い、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。</value>
+    <value>このフォルダーが、離れている間もデバイスの状態をそろえ、封印したバックアップを保管します。読み取れるのは、あなたのデバイスだけです。</value>
   </data>
   <data name="CloudAdd" xml:space="preserve">
     <value>クラウドフォルダを追加</value>
@@ -9351,7 +9384,7 @@
     <value>起動時に「誰が見ますか?」を表示</value>
   </data>
   <data name="ProfilesAskFoot" xml:space="preserve">
-    <value>初期設定ではオフです。家族で共有するiPad向けです。アカウントの行から、いつでもプロファイルを切り替えられます。</value>
+    <value>初期設定ではオフです。家族全員で共有するiPadではオンにしてください。プロファイルは、アカウントの行からいつでも切り替えられます。</value>
   </data>
   <data name="ProfilesSwitch" xml:space="preserve">
     <value>プロファイルを切り替え</value>
@@ -10122,7 +10155,7 @@
     <value>{tracker}にサインイン</value>
   </data>
   <data name="AccountsFormDetail" xml:space="preserve">
-    <value>パスワードは一度だけ{tracker}に送信され、トークンがこのデバイスに保存されます。</value>
+    <value>パスワードは一度だけ{tracker}に送信され、代わりに受け取るトークンがこのデバイスに残ります。</value>
   </data>
   <data name="AccountsUserOrEmail" xml:space="preserve">
     <value>メールアドレスまたはユーザー名</value>
@@ -10194,7 +10227,7 @@
     <value>{tracker}に掲載</value>
   </data>
   <data name="AccountsDidNotAnswer" xml:space="preserve">
-    <value>{tracker}から応答がありませんでした。</value>
+    <value>{tracker}から応答がありませんでした。少し待ってからもう一度お試しください。</value>
   </data>
   <data name="AccountsNoExtras" xml:space="preserve">
     <value>{tracker}には、この作品のキャスト、スタッフ、おすすめがまだありません。</value>
@@ -10257,7 +10290,7 @@
     <value>テレビでKaeriを開いてください。このデバイスと同じWi-Fiに接続しておく必要があります。</value>
   </data>
   <data name="TvTypeCode" xml:space="preserve">
-    <value>{name}に表示される6桁の数字を入力してください。その後、このデバイスは自動で接続されます。</value>
+    <value>{name}に表示される6桁の数字を入力してください。以後、このデバイスは自動で接続されます。</value>
   </data>
   <data name="TvPairingMoment" xml:space="preserve">
     <value>少し時間がかかります。</value>
@@ -10557,7 +10590,7 @@
     <value>サーバーがダウンロードを拒否したため、中断されました（{code}）。しばらくしてからもう一度お試しください。</value>
   </data>
   <data name="UpdatesWhyConnection" xml:space="preserve">
-    <value>ダウンロードが中断されました。接続が切れました。</value>
+    <value>ダウンロードが中断されました。接続が切れました。もう一度お試しください。</value>
   </data>
   <data name="UpdatesWhySave" xml:space="preserve">
     <value>ダウンロードを保存できませんでした: {reason}</value>

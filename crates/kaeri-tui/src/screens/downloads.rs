@@ -414,7 +414,7 @@ mod tests {
         app.go_to_section(Section::Downloads);
         let text = text_of(&render_to_buffer(&mut app, 120, 30));
         assert!(text.contains("Nothing queued"), "got {text:?}");
-        assert!(text.contains("to queue it for offline"), "an empty screen needs a way in");
+        assert!(text.contains("to download it"), "an empty screen needs a way in");
     }
 
     #[test]

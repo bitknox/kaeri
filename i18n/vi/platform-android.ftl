@@ -4,5 +4,5 @@ release-seeders = { $count ->
  }
 trailer-failed = Không mở được trailer
 engine-down-title = { -app-name } đã dừng
-engine-down-stopped = Phần xử lý đã dừng. Thử lại, hoặc thoát và mở lại ứng dụng.
+engine-down-stopped = Sẽ không tải thêm gì mới cho đến khi nó chạy lại. Hãy thử lại, hoặc thoát rồi mở lại ứng dụng.
 engine-down-quit = Thoát

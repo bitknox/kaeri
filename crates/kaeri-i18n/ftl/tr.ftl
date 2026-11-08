@@ -28,7 +28,7 @@ notice-cast-refused = { $name } bu yayını oynatmanın bütün yollarını dene
 notice-cast-taken-over = Başka bir cihaz { $name } üzerinde bir şey başlattı, bu yüzden yayınlama durdu.
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = Bu cihaz, { $name } ile aynı ağda değil ya da VPN üzerinden bağlanıyor. Yayınlamak için ikisinin de aynı ağda olması gerekir.
+notice-cast-not-same-network = Bu cihaz, { $name } ile aynı ağda değil ya da ona VPN üzerinden ulaşıyor. Yayınlamak için ikisini de aynı ağa bağlayın.
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = { $name } ile bağlantı koptu, bu yüzden yayınlama durdu.
@@ -343,7 +343,7 @@ notice-match-save-failed = Bu eşleşme kaydedilemedi. { $reason }
 notice-match-did-not-stick = Bu eşleşme tutmadı. Bu kaynak değişmiş olabilir. Eşleşmeyi yeniden seçmeyi deneyin.
 
 # Toast when a search of the sources for a title found nothing.
-notice-source-search-empty = “{ $query }” için sonuç bulunamadı. Farklı bir arama deneyin.
+notice-source-search-empty = “{ $query }” için bir şey bulunamadı. Farklı bir arama deneyin.
 
 # In the list of titles a source offers for a show, in place of how close a title is: it was ruled out because its format cannot be the show's, as an OVA for a TV series.
 match-ruled-out-format = Farklı biçim
@@ -361,7 +361,7 @@ match-search-timed-out = Yanıt vermesi çok uzun sürdü.
 match-search-source-off = Açık değil.
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = { $source } bu başlık için kullanılacak.
+notice-source-pinned = Bu başlık artık { $source } üzerinden oynatılır.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Otomatik kaynak seçimine dönüldü.
@@ -547,13 +547,13 @@ reader-moved = { $chapter }, sayfa { $page } konumuna geçildi: { $device } bura
 reader-moved-number = Bölüm { $chapter }, sayfa { $page } konumuna geçildi: { $device } burada kaldı
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-right-to-left = Sağdan sola, algılandı
+reader-detected-right-to-left = Sağdan sola gibi görünüyor
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-left-to-right = Soldan sağa, algılandı
+reader-detected-left-to-right = Soldan sağa gibi görünüyor
 
 # A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
-reader-detected-strip = Uzun şerit, algılandı
+reader-detected-strip = Uzun şerit gibi görünüyor
 
 # Why a chapter or a list could not load: there is no connection.
 reading-failed-offline = Çevrimdışısınız. İndirilen bölümler yine de açılır.
@@ -1118,7 +1118,7 @@ store-admin-link-foreign = { $store } başka bir adresi gösteren bir yönetici 
 store-open-join-unsupported = { $store } sunucusu daha eski, bu yüzden bağlantıyla kimse katılamaz. Önce güncelleyin.
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = { $name } kapatıldı. Bölüm ararken atlanır.
+source-switched-off = { $name } kapalı. Kaeri bölüm ararken onu atlar.
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = { $name } açıldı.
@@ -1127,7 +1127,7 @@ source-switched-on = { $name } açıldı.
 plugin-not-loaded = { $id } yüklenmedi. Kaynaklar altında kurulu olduğunu kontrol edin.
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = { $name } bu başlık için kullanılacak.
+release-pinned = Bu başlıkta artık { $name } kullanılıyor.
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Bu seçim kaydedilemedi. { $reason }
@@ -1217,10 +1217,10 @@ notice-token-exchange-failed = Jeton alınamadı: { $tracker }. Yeniden oturum a
 notice-browser-not-opened = Oturum açma için tarayıcı açılamadı. Bir tarayıcının kurulu olup olmadığını denetleyin ve yeniden deneyin. { $reason }
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = Bunu bekleyen bir oturum açma işlemi yok ({ $tracker }). Oturum açmayı yeniden başlatın.
+notice-sign-in-not-waiting = { $tracker } hizmetinden bir oturum açma yanıtı geldi, ama onu bekleyen bir oturum açma yoktu. Oturum açmayı yeniden başlatın.
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = Bu oturum açma ({ $tracker }) bu istekten dönmedi. Oturum açmayı yeniden başlatın.
+notice-sign-in-wrong-request = { $tracker } hizmetinden gelen oturum açma yanıtı istekle eşleşmiyor. Oturum açmayı yeniden başlatın.
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = Oturum açma ({ $tracker }) jetonsuz döndü. Yeniden deneyin.
@@ -1318,7 +1318,7 @@ notice-update-available = { $tag } çıktı. Kurmak için kaeri --update komutun
 cause-proxy-needs-address = Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = Vekil sunucunun adresi denetim için kullanılamıyor.
+cause-proxy-address-unusable = Vekil sunucu denetimi bu adresi kullanamıyor.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Sunucuya ulaşılamadı.
@@ -1342,7 +1342,7 @@ notice-playback-failed = Oynatma başarısız oldu. Başka bir kaynak deneyin.
 notice-engine-fault = Kaeri içinde bir sorun oluştu. Uygulama çalışmaya devam etti, ama bir ekran donmuş görünüyorsa çıkıp uygulamayı yeniden açın.
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = Veritabanı bozulduğu için Kaeri yenisini başlattı. Eski dosya { $path } konumunda saklanıyor. takip hizmetlerinde tutulanlar bir sonraki eşitlemede geri gelir.
+notice-database-set-aside = Veritabanı bozulmuştu, bu yüzden Kaeri yenisini başlattı. Eski dosya { $path } konumunda saklanıyor. takip hizmetlerinizde tutulanlar bir sonraki eşitlemede geri gelir.
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = Kaeri { $path } klasörünü oluşturamadı. Diskte yer olduğunu ve klasöre yazılabildiğini denetleyin, sonra yeniden deneyin. { $reason }
@@ -1357,7 +1357,7 @@ config-reset-failed = Ayarları sıfırlamak için yapılandırma dosyası ({ $p
 start-failed-database = Kaeri veritabanı dosyasını açamadı ({ $path }). Bu klasörde başka bir Kaeri uygulaması açıksa onu kapatıp yeniden deneyin. { $reason }
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = Kaeri, config.toml dosyasındaki ağ ayarlarıyla ağ bağlantısını kuramadı. { $reason }
+start-failed-network = Kaeri, config.toml dosyasındaki ağ ayarlarıyla bağlanamadı. Ayarları kontrol edip yeniden deneyin. { $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = Kaeri başlatılamadı. Çıkın ve yeniden açın. { $reason }
@@ -1391,10 +1391,10 @@ notice-surprise-empty-filters = Bu filtrelere uyan başlık yok.
 notice-surprise-empty-planning = Planlama boş.
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = Çevrimdışısınız. Arama seçimleri için AniList gerekir.
+notice-surprise-offline = Çevrimdışısınız. Beni şaşırt, başlık seçmek için AniList'e ihtiyaç duyar.
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = Şu an bir başlık seçilemedi. Biraz sonra yeniden deneyin.
+notice-surprise-failed = Başlık seçmek için AniList'e ulaşılamadı. Biraz sonra yeniden deneyin.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Proxy'yi düzenle
@@ -1514,7 +1514,7 @@ party-members = Katılımcılar
 party-choose-a-source = Bir kaynak seçin
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = { $episode }. bölümü hiçbir kaynak listelemiyor. Kaynaklar, bir eklenti mağazası tarafından eklenen eklentilerden gelir.
+party-sources-none-listed = Hiçbir kaynak { $episode }. bölümü listelemiyor. Kaynaklar, bir eklenti mağazasından eklediğiniz eklentilerden gelir.
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
@@ -1613,10 +1613,10 @@ settings-caption-sample = Fener yolu son kasabanın ötesinden devam eder.
 settings-caption-note = Düz altyazılar, bölümde varsa { $language } dilinde böyle görünür. Biçimli altyazılar kendi görünümünü korur.
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = İzlediklerim listenizdeki bir dizinin yeni bölümü yayınlandığında, { $tracker } hizmetinin verdiği saatte tek bildirim gelir. Dizinin kendi ayarı önceliklidir.
+settings-notify-note-on = İzleniyor listenizdeki bir dizinin bölümü çıktığında, { $tracker } üzerinde verilen saatte tek bildirim alırsınız. Dizinin kendi ayarı bu ayarın önüne geçer.
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = Kapalı. Yalnızca kendi ayarında açılmış diziler bildirim gönderir.
+settings-notify-note-off = Kapalı. Yalnızca kendi ayarlarında açtığınız diziler bildirim gönderir.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri hesap olmadan çalışır. Oturumu kapattığınızda izleme geçmişiniz bu bilgisayarda kalır.
@@ -1692,7 +1692,7 @@ controller-help-buttons = Denetleyici düğmeleri
 settings-note-cast-tvs-computer = Bunlar, TV'de oynat grubunda Chromecast altında görünür. Bölümü bu bilgisayar onlara gönderir.
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = Yerleşik Chromecast özelliği olan bir TV'nin torrent oynatmasını sağlar. Bu bilgisayar, TV oynattığı sürece bölümü gönderir.
+settings-note-torrents-while-casting-computer = Bu açıkken yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu bilgisayar gönderir.
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = Eklenti mağazalarını aç
@@ -1867,7 +1867,7 @@ stores-owner-needs-connection = Eklenti mağazası bağlantı gerektiriyor
 stores-owner-needs-connection-detail = Bu cihaz çevrimiçi olunca yeniden deneyin.
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = Bağlantı oluşturmak için eklenti mağazasına bağlanmanız gerekir.
+stores-owner-link-offline = Bu cihaz çevrimdışıyken bağlantı oluşturulamaz.
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = Bu bağlantıyı gönderin. Bir kez çalışır ve { $until } kadar geçerli.
@@ -1876,7 +1876,7 @@ stores-send-link-until = Bu bağlantıyı gönderin. Bir kez çalışır ve { $u
 stores-open-on-detail = Ad girmeden katılırlar. Bunu kapatmak bağlantıyı durdurur; yeniden açmak yeni bir bağlantı oluşturur.
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = Yalnızca davet ettiğiniz kişiler katılabilir. Açıldığında bağlantısı olan herkes, ad girmeden katılır.
+stores-open-off-detail = Yalnızca davet ettiğiniz kişiler katılabilir. Bunu açarsanız bağlantısı olan herkes ad vermeden katılabilir.
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = Hiçbir ad tutulmaz.
@@ -1900,7 +1900,7 @@ stores-publish-none-hint = Oluşturduğunuz ya da kurduğunuz bir eklenti burada
 stores-not-published = Eklenti mağazasında henüz yok
 
 # Line under a plugin in the publish dialog that the store has in another version.
-stores-store-offers = Eklenti mağazasında { $version } var.
+stores-store-offers = Bu eklenti mağazasında { $version } var
 
 # Line under a plugin in the publish dialog whose version the store already has.
 stores-published-current = Eklenti mağazasında güncel
@@ -1912,7 +1912,7 @@ stores-published-state = Yayımlandı
 stores-publish-label = { $name } { $version } yayımla
 
 # Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
-rkey-lock-linux = Hesap parolanızdan sonra Ayarlar'da, Cihazlar bölümünde yeniden görebilirsiniz.
+rkey-lock-linux = Hesap parolanızı girdikten sonra Ayarlar'da, Cihazlar bölümünde yeniden görebilirsiniz.
 
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = Kaeri kurtarma anahtarını göster
@@ -2073,7 +2073,7 @@ library-row-summary-linux =
 library-page-watching-linux = Değişiklikler izleniyor
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Kaeri açılırken yeniden bakılır
+library-page-no-watch-linux = Kaeri açılırken değişiklikler denetlenir
 
 # Heading over the matched series.
 library-matched-linux = Eşleşenler
@@ -2239,7 +2239,7 @@ title-no-seasons = Bu başlık için bilinen bağlantılı sezon yok.
 title-pin-off-page = Bir kaynak seçmek için başlığın sayfasını açın.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = Henüz kayıtlı kaynaklar yok. Birazdan yeniden deneyin.
+title-no-sources-yet = Şu an kaynaklar yükleniyor. Birazdan yeniden deneyin.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = Liste durumunuz bir takip hizmeti üzerinde tutulur, ama hiçbirinde oturum açık değil. Oturum açmak için :accounts yazın.
@@ -2913,7 +2913,7 @@ keys-where-elsewhere = başka bir ekranda
 keys-where-surprise = Arama'nın göz atma ekranında ve Planlama'da
 
 # Names a command that has no key, inside a sentence such as "Press … to confirm". The action is its label in lower case.
-keys-unbound = komut paletindeki “{ $action }”
+keys-unbound = paletteki “{ $action }”
 
 # Config problem shown at start-up: a [keys] entry names an action that does not exist. The action is the name as typed.
 keys-error-unknown-action = Bilinmeyen eylem “{ $action }”.
@@ -2925,7 +2925,7 @@ keys-error-bad-key = { $action } için “{ $key }” tuşu okunamıyor.
 keys-error-key-twice = “{ $key }” tuşu hem { $first } hem de { $second } için verilmiş.
 
 # Config problem shown at start-up: a [keys] entry asks for a key another action keeps.
-keys-error-key-taken = “{ $key }” tuşu { $action } için zaten { $holder } tarafından kullanılıyor.
+keys-error-key-taken = { $action } için “{ $key }” tuşu zaten { $holder } eylemine atanmış.
 
 # Label of the one help row that stands for every section jump key.
 keys-help-jump-section = Bölüme git
@@ -3078,7 +3078,7 @@ downloads-column-progress = İlerleme
 downloads-empty-heading = Kuyrukta bir şey yok
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = Çevrimdışı izlemek için bir başlık ya da bölümde { $key } tuşuna basın.
+downloads-empty-hint = İndirmek için bir başlık ya da bölümde { $key } tuşuna basın.
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = B{ $episode }
@@ -3260,16 +3260,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = { $queued } değişiklik bekliyor, { $held } tanesi kimlik eşleştirmesi bekliyor
+accounts-row-queued-held = { $queued } sırada, { $held } tanesi eşleşme bekliyor
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = Bende kalsın
+accounts-conflict-keep-mine = Yerel kalsın
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = Onlarınkini tut
+accounts-conflict-keep-theirs = Uzaktaki kalsın
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = { $title }  ·  { $field }: bende { $local } / onlarda { $remote }
+accounts-conflict-row = { $title }  ·  { $field }: yerel { $local } / takip hizmeti { $remote }
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = Kitaplık
@@ -3302,7 +3302,7 @@ lists-empty-type-to-search = Aramak için yazın
 lists-empty-browse-filtered = Bu filtrelerle göz atmak için ↵ tuşuna basın.
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
-lists-empty-browse-popular = En popülerlere göz atmak için ↵ tuşuna basın.
+lists-empty-browse-popular = En popüler başlıklara göz atmak için ↵ tuşuna basın.
 
 # Heading when a search or a browse found nothing.
 lists-empty-no-matches = Eşleşme yok
@@ -3970,7 +3970,7 @@ settings-label-episode-discussions = Bölüm tartışmaları
 settings-label-comment-images = Yorumlardaki görselleri yükle
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = Takvim yalnızca listemdekileri gösterir
+settings-label-calendar-mine = Takvim yalnızca listenizi gösterir
 
 # Note under the titles row.
 settings-note-titles = AniList'in seçimi, AniList hesabınızı izler. Oturum kapalıyken İngilizce kullanılır.
@@ -4027,13 +4027,13 @@ settings-note-update-check = Başlangıçta günde bir kez, önbelleğe alınmı
 settings-note-presence = Bir sonraki bölümde geçerli olur.
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = İstemci kimliği gerekir. discord.com/developers adresinde bir uygulama kaydedin.
+settings-note-presence-needs-client = Önce bir istemci kimliği girin. Kimlik almak için discord.com/developers adresinde bir uygulama kaydedin.
 
 # Note under the presence title row. The quoted text is what Discord shows.
-settings-note-presence-title = Kapalıyken dizinin adı yerine “Anime izleniyor” gösterilir.
+settings-note-presence-title = Kapalıyken dizinin adı verilmeden “Anime izleniyor” gösterilir.
 
 # Note under the rich presence row.
-settings-note-presence-rich = Kapak, ilerleme çubuğu ve bir AniList bağlantısı ekler. Başlığın gösterilmesi gerekir.
+settings-note-presence-rich = Başlık gösterildiği sürece kapak, ilerleme çubuğu ve bir AniList bağlantısı ekler.
 
 # Note under the torrent playback row.
 settings-note-torrents = Varsayılan olarak kapalı. Hemen uygulanır.
@@ -4190,13 +4190,13 @@ stores-footer-update-hosts = Güncelleme ayrıca { $hosts } ile iletişim kurmak
 stores-footer-may-contact = Şunlarla iletişim kurabilir: { $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = Başka bir bilgisayarınıza sizin olarak katılan tek kullanımlık bağlantı
+stores-footer-link-device = Diğer cihazlarınızdan birinin sizin olarak katılmasını sağlayan tek kullanımlık bağlantı
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = Yeni biri için tek kullanımlık bağlantı
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = Kimlerin katıldığı ve birinin erişimini kaldırma
+stores-footer-members = Kimlerin katıldığını görün ve birinin erişimini kaldırın
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = ↵ Yalnızca davet ettiğiniz kişilerin katılmasına izin ver ve bağlantıyı durdur
@@ -4211,7 +4211,7 @@ stores-footer-publish = Bu bilgisayarın eklenti klasöründen bir eklenti sun
 stores-footer-admin = Üyeleri, davetleri ve eklentiler tarayıcınızda yönetin
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = Eklentiler, bu mağazadan yüklenenler, bu bilgisayarda kalır ve güncellenmeyi durdurur.
+stores-footer-leave = Buradan yüklenen eklentiler bu cihazda kalır ve artık güncellenmez
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = Bağlantısı olan herkes
@@ -4385,7 +4385,7 @@ stores-footer-remove-anonymous = ↵ Bu cihazı kaldır; yalnızca katıldığı
 stores-footer-remove-all-anonymous = ↵ Bağlantıyla katılan bütün cihazları kaldır
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = Terminal izin verdiğinde panoya kopyalandı. Kopyalamak için seçin.
+stores-link-copied = Terminal izin veriyorsa kopyalandı. Vermiyorsa bağlantıyı seçip kopyalayın.
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = Kopyalamak için seçin.
@@ -4458,7 +4458,7 @@ stores-key-matches-invite = { $fingerprint }  (davetle eşleşiyor)
 stores-join-open = Bağlantısı olan herkes katılabilir.
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = Adınızı vermeden katılırsınız ve aynı bağlantıyla başka bir cihaz katılır.
+stores-join-anonymous = Ad vermeden katılırsınız. Başka herhangi bir cihaz aynı bağlantıyla katılabilir.
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = Zaten katıldınız. Yeniden katılmak, bu cihaza yeni bir belirteç verir.
@@ -4467,7 +4467,7 @@ stores-join-already = Zaten katıldınız. Yeniden katılmak, bu cihaza yeni bir
 stores-join-device-note = mağazanın sahibi bu adı görür. Değiştirmek için yazın.
 
 # Lines of the leave confirmation.
-stores-leave-plugins = Eklentiler, bu bilgisayarda kalır ve güncellenmeyi durdurur.
+stores-leave-plugins = Buradan yüklenen eklentiler bu cihazda kalır ve artık güncellenmez.
 
 # Lines of the leave confirmation.
 stores-leave-revoked = Bu cihazın mağazaya erişimi kaldırıldı.
@@ -4480,7 +4480,7 @@ stores-remove-member-devices =
     }
 
 # Line of the remove member confirmation.
-stores-remove-member-plugins = Eklentiler, zaten yükledikleri, kendi bilgisayarlarında kalır.
+stores-remove-member-plugins = Daha önce yükledikleri eklentiler kendi cihazlarında kalır.
 
 # Line of the cancel invite confirmation.
 stores-cancel-invite-link = Bağlantı çalışmayı durdurur.
@@ -4540,7 +4540,7 @@ stores-choice-update = { $version } sürümüne güncelle
 stores-choice-replace = Elle eklenen kopyayı değiştir
 
 # Choice in the plugin overlay: delete the plugin from this machine.
-stores-choice-remove = Bu bilgisayardan kaldır
+stores-choice-remove = Bu cihazdan kaldır
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 stores-choice-unpublish = Bu mağazada sunmayı durdur
@@ -4645,7 +4645,7 @@ sync-tui-profile-restart = { $name } profilini kullanmak için Kaeri uygulaması
 sync-tui-err-no-group = Bu klasörde katılınacak geçmiş yok. Başka bir klasör seçin.
 
 # A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
-sync-tui-err-unavailable = { $service }, bu cihaz cihazda kullanılamıyor.
+sync-tui-err-unavailable = { $service } bu cihazda kullanılamıyor.
 
 # Status line hint: Enter removes the highlighted { -device } from sync, after a question.
 sync-tui-hint-remove = Kaldır
@@ -4681,7 +4681,7 @@ party-no-source-still-in = { $reason } Hâlâ birlikte izlemedesiniz.
 status-reloading-sources = kaynaklar yeniden yükleniyor…
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = Bu başlık için sabitlenen { $name } kullanılamıyor. Bunun yerine diğer kaynaklar deneniyor.
+pin-unavailable = { $name } bu başlık için sabitlendi ama kullanılamıyor. Diğer kaynaklar deneniyor.
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Birlikte
@@ -4810,13 +4810,13 @@ settings-group-crashes = Çökme raporları
 settings-crash-save = Çökme raporlarını bu cihaz üzerinde sakla
 
 # Line under that switch.
-settings-crash-save-detail = Bu açıkken Kaeri, her çökmenin kısa bir kaydını bu cihaz üzerinde tutar. Başlıklar, adresler ve adlar kaldırılır; böylece kaydı Hata bildir'e ekleyebilirsiniz. Kendiliğinden hiçbir şey gönderilmez.
+settings-crash-save-detail = Kaeri, Hata bildir için her çökmenin kısa bir kaydını bu cihazda tutar; başlıklar, adresler ve adlar çıkarılır. Kendiliğinden hiçbir şey gönderilmez.
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = Çökmeden sonra sor
 
 # Line under that switch.
-settings-crash-ask-detail = Bir sonraki açılışta Bildir… ile bir bildirim gösterir.
+settings-crash-ask-detail = Kaeri bir sonraki açılışında Bildir… düğmesiyle bir uyarı gösterir.
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = { $system } tarafından tutulanlar
@@ -4846,7 +4846,7 @@ settings-crash-delete = Sil
 settings-crash-delete-all = Tümünü sil
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = Çökme raporları bu cihaz üzerinde kalır. Kaeri kendiliğinden hiçbir şey göndermez. Bir rapor yalnızca Hata bildir'den GitHub'da açtığında çıkar. Raporlar 30 gün sonra silinir.
+settings-crash-footnote = Çökme raporları bu cihazda kalır ve Kaeri kendiliğinden hiçbir şey göndermez. Bir rapor yalnızca Hata bildir'den GitHub'da açtığınızda dışarı çıkar. Raporlar 30 gün sonra silinir.
 
 # Button that shows the week before.
 calendar-previous-week = Önceki hafta
@@ -4972,13 +4972,13 @@ cast-tvs-note-iphone = Chromecast bölümünde, TV'de oynat altında görünürl
 cast-tvs-note-ipad = Chromecast bölümünde, TV'de oynat altında görünürler. Bölümü bu iPad gönderir.
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Chromecast özellikli TV'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu Mac gönderir.
+cast-torrents-note-mac = Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu Mac gönderir.
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Chromecast özellikli TV'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu iPhone gönderir.
+cast-torrents-note-iphone = Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPhone gönderir.
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Chromecast özellikli TV'lerin torrent oynatmasına izin verir. Oynatma sürdüğü sürece bölümü bu iPad gönderir.
+cast-torrents-note-ipad = Böylece yerleşik Chromecast'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPad gönderir.
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = Sıradaki · { $seconds } sn içinde oynatılır
@@ -5715,7 +5715,7 @@ downloads-delete-detail = Dosya bu cihazdan kaldırılır.
 downloads-delete-one-title = İndirmeyi sil
 
 # Line under it: what you lose.
-downloads-delete-one-detail = Yalnızca bağlantıyla ya da yeniden indirdiğinizde tekrar oynatılır.
+downloads-delete-one-detail = Bundan sonra bölümü yeniden indirmezseniz oynatmak için bağlantı gerekir.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = İzlenen indirmeleri sil
@@ -5727,7 +5727,7 @@ downloads-seeding-title = Paylaşım
 downloads-seeding-after-watching = İzledikten sonra paylaşım
 
 # Line under the seeding heading.
-downloads-seeding-note = İzlenen bölümler, Kaeri açıkken ve Kaynaklar altında belirlenen oran ya da süre sınırına ulaşılana kadar paylaşılır.
+downloads-seeding-note = İzlenen bölümler Kaeri açıkken geri paylaşılır. Paylaşım, Ayarlar'da Kaynaklar altında belirlediğiniz oran ya da süre sınırında durur.
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = Pencere kapanırken indirmeler sürüyorsa
@@ -5806,10 +5806,10 @@ episode-download-failed = Bölüm { $episode } indirilemedi. Yeniden deneyin.
 first-other-title = Başka bir cihazda Kaeri kullanıyor musunuz?
 
 # Under the title.
-first-other-line = Eşleştirirseniz kaynaklar, takip hizmetleri ve geçmiş bu cihaza gelir. Bundan sonraki adımlar da tamamlanmış olur.
+first-other-line = Onunla eşleştirin; bu cihaz kaynaklarınızı, takip hizmetlerinizi ve geçmişinizi alır, kurulumun geri kalanı da sizin için yapılır.
 
 # Line under the pair row.
-first-other-pair-line = Diğer cihazda girilecek bir kod gösterir. İkisi de aynı Wi-Fi ağında olmalı.
+first-other-pair-line = O cihazda girmeniz için bir kod alırsınız. İkisi de aynı Wi-Fi ağında olmalı.
 
 # Row that restores from a sync folder.
 first-other-restore = Bulut klasöründen geri yükle
@@ -5848,13 +5848,13 @@ first-join-server = { $host } ekle
 first-join-server-line = { $kind } · { $device } üzerindeki anahtarla giriş yapar, { $store } içinde saklanır
 
 # Note under the list.
-first-join-folders = Klasörler { $device } üzerinde kalır. Bu cihazın kendi klasörlerini “kaynaklar” bölümünden ekleyin.
+first-join-folders = Klasörler { $device } üzerinde kalır. Bu cihazın kendi klasörlerini “Kaynaklarınız” bölümünde ekleyin.
 
 # Note when the setup answered the remaining pages.
 first-join-steps-done = Listeler ve kaynaklar ayarlandı, bu yüzden ilk çalıştırma burada biter. Bunları Ayarlar’dan değiştirebilirsiniz.
 
 # Row error when a plugin store refused this device.
-first-join-store-refused = { $store } bu cihaza izin vermedi. { $owner } size davet gönderebilir.
+first-join-store-refused = { $store } bu cihazı içeri almadı. { $owner } size bir davet gönderebilir.
 
 # Notice on Home, for 4 seconds.
 first-join-syncing = { $device } ile eşitleniyor
@@ -5924,7 +5924,7 @@ home-end-signed-out = Listenizi ve Planlama'yı almak için AniList'e giriş yap
 home-sign-in = AniList'e giriş yap
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Ana sayfadan oynatmak için bir kaynak ekleyin. Eklenti mağazalarında seçebileceğiniz birkaç tane var.
+home-end-no-sources = Ana sayfadan oynatmak için bir kaynak ekleyin. Eklentiler, Eklenti mağazalarından gelir.
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = Kaynaklarınızda bulunamadı
@@ -6362,7 +6362,7 @@ library-picker-title = Bölümlerinizin olduğu bir klasör seçin.
 library-remove-detail = Dosyalarınız olduğu yerde kalır.
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = AniList'e sorulamadı. Sonraki taramada yeniden denenir.
+library-reason-offline = AniList'e ulaşılamadı. Sonraki tarama yeniden dener.
 
 # Button that opens the match picker for a group.
 library-choose-match = Eşleşmeyi seç
@@ -6395,7 +6395,7 @@ licensed-body = Kaeri, ücretini ödediğiniz yayın hizmetlerindeki başlıklar
 licensed-region = Bölge
 
 # Line under the region menu.
-licensed-region-line = AniList'in başka ülkeler için işaretlediği bağlantıları gizler. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.
+licensed-region-line = AniList'in başka ülkeler için işaretlediği bağlantılar gizlenir. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.
 
 # Heading over the services the viewer pays for.
 licensed-yours = Hizmetleriniz
@@ -6839,7 +6839,7 @@ onboarding-own-heading = Kendi medyanız var mı?
 onboarding-invite-heading = Davet bağlantınız var mı?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Eklentiler, eklenti mağazaları üzerinden gelir. Bir eklenti mağazası imzalıdır ve her cihaz için ayrı bir belirteç verir; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
+onboarding-where-stores = Eklentiler, eklenti mağazaları üzerinden gelir. Her biri imzalıdır ve her cihaza kendi belirtecini verir; bu yüzden sahibinden aldığınız bir davet bağlantısıyla katılırsınız.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Şimdi deneyin
@@ -6881,7 +6881,7 @@ party-leave = Birlikte izlemeden ayrıl
 party-leaving = Ayrılıyor…
 
 # Label of the button that marks you as ready.
-party-ready-action = Hazırım
+party-ready-action = İzlemeye hazır
 
 # Button that copies the link to invite someone.
 party-copy-invite = Davet bağlantısını kopyala
@@ -6896,7 +6896,7 @@ party-leave-and-close = Ayrıl ve kapat
 party-not-now = Şimdi değil
 
 # Line while the form fetches its suggestions.
-party-getting-ready = Hazırlanıyor…
+party-getting-ready = Öneriler yükleniyor…
 
 # Label of the server field.
 party-server = Sunucu
@@ -6929,7 +6929,7 @@ party-server-public = { $operator } tarafından işletilen herkese açık bir su
 party-server-suggest = Kendi sunucunuz yok mu? { $server } herkese açık bir sunucudur ve { $operator } tarafından işletilir.
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = Sizi davet eden kişinin seçtiği bir sunucu. Kaeri bu sunucuyu işletmez.
+party-server-invited = Bu sunucuyu sizi davet eden kişi seçti. Kaeri bu sunucuyu işletmez.
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = Sunucuyu bir ana makine ve bir port olarak yazın, örneğin party.example:8999.
@@ -7140,7 +7140,7 @@ together-recent = Son odalar
 together-recent-row = { $episode }. bölüm · { $names } ile · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = Katıldığınız odalar burada görünür, son on tanesi.
+together-recent-empty = Katıldığınız son on oda burada görünür.
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = Yeniden katıl
@@ -7225,7 +7225,7 @@ party-member-finding = Bir kaynak buluyor
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = { $time } noktasından izliyor
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = Hazır
 
 # Heading of the invite block in the lobby.
@@ -7443,7 +7443,7 @@ party-chat-show = Sohbeti göster
 settings-hide-chat = Birlikte izlemeler içinde sohbeti gizle
 
 # Line under that switch.
-settings-hide-chat-line = Satırlar, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, alan da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.
+settings-hide-chat-line = Sohbet satırları, tepkiler ve bunların arama çubuğundaki işaretleri videoda görünmez, sohbet alanı da kalkar. Kişi listesi odada kimlerin olduğunu yine gösterir.
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = { $name } kişisini sustur
@@ -8047,10 +8047,10 @@ player-load-audio-file = Ses dosyası yükle…
 player-file-picker-failed = Dosya seçici açılamadı. Yeniden deneyin.
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = Bu altyazı dosyası yüklenemedi. Bunun bir altyazı dosyası olduğunu kontrol edin.
+player-subtitle-file-failed = Bu dosya altyazı olarak yüklenemedi. .srt ya da .ass gibi bir altyazı dosyası seçin.
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = Bu ses dosyası yüklenemedi. Bunun bir ses dosyası olduğunu kontrol edin.
+player-audio-file-failed = Bu dosya ses olarak yüklenemedi. .mka ya da .flac gibi bir ses dosyası seçin.
 
 # Name of a track that has no name or language.
 player-track-unnamed = Adsız parça
@@ -8135,6 +8135,9 @@ reader-close = Kapat
 
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = Okundu
+
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = Okundu · { $trackers } güncellendi
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Sonraki
@@ -8239,11 +8242,46 @@ reader-gap-small = Küçük
 # Look choice that follows the system's light or dark.
 reader-look-system = Sistem
 
+# Top line of the page between chapters. The chapter is its number, such as 12.
+reader-end-of-chapter-number = Bölüm { $chapter } sona erdi
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+reader-end-facts = Bölüm { $chapter } · { $facts }
+
+# The next chapter's length on the page between chapters.
+reader-end-pages =
+    { $count ->
+        [one] Bir sayfa
+       *[other] { $count } sayfa
+    }
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+reader-end-from = Şuradan: { $source }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line = Bölüm { $chapter }
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+reader-divider-facts-source = { $facts } · şuradan: { $source }
+
+# Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+reader-end-swipe = Sürdürmek için kaydırın
+
+# The next episode's length on the divider inside a strip.
+reader-divider-images =
+    { $count ->
+        [one] Bir görsel
+       *[other] { $count } görsel
+    }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line-titled = Bölüm { $chapter } · { $title }
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Demoyu oku
 
 # Under the first run's demo heading when the device is for reading.
-onboarding-demo-books-detail = Demo, yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir hikâye sunar.
+onboarding-demo-books-detail = Yapımcılarının Creative Commons altında paylaştığı kısa bir çizgi roman ve kısa bir öykü.
 
 # Under the first run's demo heading when the device is for both.
 onboarding-demo-both-detail = Yapımcılarının Creative Commons altında paylaştığı kısa bir bölüm ve kısa bir çizgi roman.
@@ -8876,7 +8914,7 @@ book-sources-keep = Eşleşmeyenleri koru
 book-sources-find = Bul
 
 # Footnote of the Check matches sheet.
-book-sources-unmatched-note = Eşleşmeyen seriler yine klasörden okunur. Eşleşene kadar takip hizmeti ilerlemesi olmaz.
+book-sources-unmatched-note = Eşleşmeyen serileri yine klasörden okuyabilirsiniz. Eşleşene kadar ilerlemeleri takip hizmetine gitmez.
 
 # Accessibility label of the control that sets Shows or Reading in the Library and Search.
 library-scope-label = Diziler veya Okuma
@@ -9042,13 +9080,13 @@ onboarding-lists-line-both = Kaeri, okuduklarınızı ve izlediklerinizi { $trac
 onboarding-lists-anilist-line = Listeler, ilerleme ve öneriler
 
 # Under AniList on the first-run page after Watch: the other trackers, for later.
-onboarding-lists-later-watch = MyAnimeList, Kitsu, Simkl ve Trakt sonradan Ayarlar'da Hesaplar altından eklenebilir.
+onboarding-lists-later-watch = MyAnimeList, Kitsu, Simkl ve Trakt'ı daha sonra Ayarlar'da Hesaplar altından ekleyebilirsiniz.
 
 # Under AniList on the first-run page after Read: the other trackers, for later.
-onboarding-lists-later-read = MyAnimeList, Kitsu ve MangaUpdates sonradan Ayarlar'da Hesaplar altından eklenebilir.
+onboarding-lists-later-read = MyAnimeList, Kitsu ve MangaUpdates'i daha sonra Ayarlar'da Hesaplar altından ekleyebilirsiniz.
 
 # Under AniList on the first-run page after Both: the other trackers, for later.
-onboarding-lists-later-both = MyAnimeList, Kitsu, MangaUpdates, Simkl ve Trakt sonradan Ayarlar'da Hesaplar altından eklenebilir.
+onboarding-lists-later-both = MyAnimeList, Kitsu, MangaUpdates, Simkl ve Trakt'ı daha sonra Ayarlar'da Hesaplar altından ekleyebilirsiniz.
 
 # The first-run page's main button: sign in to the tracker.
 onboarding-connect = { $tracker } bağla
@@ -9285,10 +9323,10 @@ settings-chapter-notifications-note = Okuma listenizdeki seriler
 settings-downloads-finished-note = İndirilen tüm bölümler bitince
 
 # Under New chapters.
-settings-chapter-notifications-footer = Bölümlerin kendi sistem kanalı vardır, bu yüzden ayrıca sessize alınabilir.
+settings-chapter-notifications-footer = Bölümlerin kendi sistem kanalı vardır; böylece onları sessize alıp gerisini açık tutabilirsiniz.
 
 # Credit under the trackers with reading on.
-accounts-mangaupdates-credit = MangaUpdates, herkese açık API'siyle kullanılır.
+accounts-mangaupdates-credit = Kaeri, MangaUpdates ile herkese açık API'si üzerinden iletişim kurar.
 
 # Placeholder of the user name field when signing in to MangaUpdates.
 accounts-username = Kullanıcı adı
@@ -9357,7 +9395,7 @@ seasonal-empty-format-detail = Tüm biçimleri deneyin.
 seasonal-filter-in-search = Aramada filtrele
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = Bu sezon Arama'da. Her filtre sonuçları daraltır.
+seasonal-filter-help = Bu sezonu, her filtrenin çalıştığı Arama'da açar
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = Popülerlik
@@ -9498,7 +9536,7 @@ filter-where-to-watch = Nerede izlenir
 filter-licensed-only = Yalnızca lisanslı
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = Listemdeki başlıklar
+filter-my-list = Listenizdeki başlıklar
 
 # Value of a three-way filter: include the titles.
 filter-show = Göster
@@ -10000,7 +10038,7 @@ servers-error-certificate = { $host }, bu cihazın güvenmediği bir sertifika k
 servers-row-signed-out-here = Oturum kapalı
 
 # Line under it: what signing out does.
-servers-sign-out-line = Bu cihazın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.
+servers-sign-out-line = Oturumu kapatmak, bu cihazın sunucudaki oturumunu sonlandırır. Sunucu ve indirmeleriniz olduğu gibi kalır.
 
 # Settings group and row title for choosing a language.
 settings-language = Dil
@@ -10319,7 +10357,7 @@ settings-new-episodes = Yeni bölümler
 settings-new-episodes-detail = İzleme listenizdeki diziler
 
 # Line explaining what a notification says.
-settings-notify-detail = İzlediğiniz bir dizinin yeni bölümü çıktığında tek bildirim: dizi ve bölüm numarası, bölümün adı değil. Bir dizi bunu kendi ayarlarında kapatabilir.
+settings-notify-detail = Takip ettiğiniz bir dizinin bölümü çıktığında tek bildirim alırsınız. Bildirim diziyi ve bölüm numarasını belirtir, bölümün adını hiçbir zaman belirtmez. Bir dizinin bildirimlerini kendi ayarlarından kapatabilirsiniz.
 
 # Row: the coming-up digest.
 settings-coming-up = Yaklaşanlar · sonraki 7 gün
@@ -10331,7 +10369,7 @@ settings-system-notifications = Bildirim ayarları
 settings-system-notifications-detail = Ses, titreşim ve kilit ekranı
 
 # Line under it on Apple.
-settings-system-notifications-apple = Sistem Ayarları'nı açar. Afiş stili, ses ve rozetler orada ayarlanır.
+settings-system-notifications-apple = Afiş stilini, sesi ve rozetleri ayarladığınız Sistem Ayarları'nı açar.
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = Kapalı: sistem Kaeri için bildirimlere izin vermiyor
@@ -10373,7 +10411,7 @@ show-settings-never = Hiçbir zaman
 show-settings-subs-remembered = Son bölümünüzden hatırlandı.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Oynatıcıda seçilir. Ayarlar › Oynatma ayarlarını izler.
+show-settings-subs-follow = Oynatıcıda seçilir. O zamana kadar Ayarlar › Oynatma geçerlidir.
 
 # Row: the source for this show.
 show-settings-source = Kaynak
@@ -10458,7 +10496,7 @@ settings-upscaling-natural = Doğal · ArtCNN
 settings-label-hover-cards = Üzerine gelince kapağı büyüt
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = İmleç bir kapağın üzerinde durunca fragmanlı büyük bir kart gösterilir.
+settings-hover-cards-note = İmleç bir kapağın üzerinde durunca fragmanıyla daha büyük bir kart açılır.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Çizgiler ve doku olduğu gibi korunur, hiçbir şey yeniden çizilmez.
@@ -10717,7 +10755,7 @@ book-server-err-password-line = { $kind } için tarayıcıda kullandığınız k
 book-server-err-key = { $host } bu anahtarı kabul etmedi
 
 # Line under it.
-book-server-err-key-line = Anahtar, Kavita’da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.
+book-server-err-key-line = Anahtar, Kavita'da sıfırlandığında değişir. OPDS bağlantısını oradaki hesap ayarlarınızdan yeniden kopyalayın.
 
 # Title when the server lets the account in and shows it no series.
 book-server-empty = { $host } bu hesaba hiç seri göstermiyor
@@ -10813,8 +10851,8 @@ store-install-all-reading = Okuma için hepsini yükle
 # Result after installing.
 store-installed =
     { $count ->
-        [one] Bir eklenti yüklendi. “kaynaklar” bölümünde.
-       *[other] Yüklenen eklentiler: { $count }. Bunlar “kaynaklar” bölümünde.
+        [one] Bir eklenti yüklendi. “Kaynaklarınız” bölümünde.
+       *[other] { $count } eklenti yüklendi. Hepsi “Kaynaklarınız” bölümünde.
     }
 
 # Info title when every plugin in a store is for watching, and watching is off here.
@@ -10830,13 +10868,13 @@ store-turn-on-watching = İzlemeyi aç
 store-empty = { $store } içinde henüz eklentiler yok
 
 # Line under it.
-store-empty-line = Üyesiniz. { $owner } yeni eklentiler eklediğinde bunlar “Eklenti mağazaları” içinde görünür.
+store-empty-line = Üyesiniz, bu yüzden { $owner } yeni eklentiler eklediğinde bunlar Eklenti mağazaları içinde görünür.
 
 # Error title when the store doesn't answer.
 store-err-unreachable = { $host } adresine ulaşılamadı
 
 # Line under it.
-store-err-unreachable-line = Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin veya çalışıp çalışmadığını { $owner } kişisine sorun.
+store-err-unreachable-line = Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin ya da çalışıp çalışmadığını { $owner } kişisine sorun.
 
 # Under the reading group: plugins for watching while watching is off here.
 store-other-medium-more =
@@ -10848,12 +10886,12 @@ store-other-medium-more =
 # On a TV, under the list: plugins for reading, which a TV doesn't do.
 store-tv-reading-only =
     { $count ->
-        [one] Bir tane daha okumak için, ama bu TV okuma yapmıyor.
-       *[other] { $count } tane daha okumak için, ama bu TV okuma yapmıyor.
+        [one] Bir tane daha okuma için; bu TV okuma yapmaz.
+       *[other] { $count } tane daha okuma için; bu TV okuma yapmaz.
     }
 
 # On a TV, info title when every plugin in a store is for reading.
-store-tv-all-reading = { $store } içindeki her eklenti okumak için, ama bu TV okuma yapmıyor.
+store-tv-all-reading = { $store } içindeki her eklenti okuma için; bu TV okuma yapmaz.
 
 # Plugin row in an invite's result.
 store-plugin-row = Sürüm { $version } · { $hosts } ile iletişim kurabilir
@@ -10868,11 +10906,18 @@ source-added-plugins =
        *[other] { $store } içinden yüklenen eklentiler: { $count }
     }
 
-# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 source-row-server =
     { $libraries ->
-        [one] { $kind } · { $series } seri · az önce eklendi
+        [one] { $kind } · { $libraries } kitaplıkta { $series } seri · az önce eklendi
        *[other] { $kind } · { $libraries } kitaplıkta { $series } seri · az önce eklendi
+    }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server-series =
+    { $libraries ->
+        [one] { $kind } · { $libraries } kitaplıkta { $series } seri
+       *[other] { $kind } · { $libraries } kitaplıkta { $series } seri
     }
 
 # A server's row in Your sources while it shows no series.
@@ -11205,7 +11250,7 @@ sources-add-server = Medya sunucusu…
 sources-add-store = Bir eklenti mağazasına katıl…
 
 # Line under the empty state's title on a computer.
-sources-empty-body = Kaynaklar, bölümlerin geldiği yerlerdir: bu cihaz üzerindeki klasörler, medya sunucunuz ve katıldığınız mağazalardan gelen eklentiler.
+sources-empty-body = Kaynaklar, bölümlerin geldiği yerlerdir: bu cihazdaki klasörler, medya sunucunuz ve katıldığınız eklenti mağazalarından gelen eklentiler.
 
 # Line under the empty state's buttons. The link is "join a plugin store".
 sources-empty-more = Ya da { $join }.
@@ -11247,7 +11292,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = Yalnızca Wikimedia Commons'a erişir: upload.wikimedia.org ve commons.wikimedia.org.
+sources-demo-hosts = Demo yalnızca Wikimedia Commons'a erişir: upload.wikimedia.org ve commons.wikimedia.org.
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = Demo hiçbir yerde oturum açmaz ve AniList'e hiçbir şey yazmaz.
@@ -11316,7 +11361,7 @@ stores-not-from-app = Eklentiler eklenti mağazasının sahibinden gelir, Kaeri'
 stores-join-owner-responsible = Bu eklenti mağazası sahibi { $owner } tarafından işletiliyor ve eklentiler onun tarafından seçildi. Kaeri bunları yapmadı, incelemedi ya da onaylamadı.
 
 # Line when the store has no plugins.
-stores-no-plugins = Bu eklenti mağazası henüz eklentiler sunmuyor.
+stores-no-plugins = Bu eklenti mağazasında henüz eklentiler yok.
 
 # Heading of the plugin list of a store.
 stores-plugins = Eklentiler
@@ -11352,7 +11397,7 @@ stores-access-ended-page = Bu eklenti mağazası artık bu cihazı kabul etmiyor
 stores-no-longer-joined = Bu eklenti mağazası artık katılınmış değil.
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = Çevrimdışı: { $reason }. Aşağıdaki eklentiler, kontrol edilen son listedir.
+stores-offline-last-list = Çevrimdışı: { $reason }. Gönderdiği son liste gösteriliyor.
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = Çevrimdışı. Gönderdiği son liste gösteriliyor.
@@ -11457,7 +11502,7 @@ stores-replace-label = Elle eklenen { $name } kopyasını değiştir
 stores-remove-plugin-title = { $name } kaldırılsın mı?
 
 # Line under it.
-stores-remove-plugin-detail = Bu cihazdan silinir. Eklenti mağazası onu yeniden yükleyebilir.
+stores-remove-plugin-detail = Bu cihazdan silinir. eklenti mağazasından yeniden yükleyebilirsiniz.
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = Yeni bağlanılanlar
@@ -11478,7 +11523,7 @@ stores-add-title = Eklenti mağazası ekle
 stores-join-detail = eklenti mağazasının sahibinin gönderdiği davet bağlantısını yapıştırın.
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = eklenti mağazasının sahibinin gönderdiği davet bağlantısını yapıştırın. Hiçbir şey katılmadan ya da yüklenmeden önce eklenti mağazasının sunduklarını görürsünüz.
+stores-join-detail-desktop = Bir eklenti mağazasının sahibinin size gönderdiği davet bağlantısını yapıştırın. Katılmadan ya da bir şey yüklemeden önce eklenti mağazasının neler sunduğunu görürsünüz.
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = eklenti mağazasının sahibinin gönderdiği bağlantıyı yapıştırın. Mesajlar'dan açılan bir Kaeri:// davet bağlantısı bu sayfayı doğrudan doldurur.
@@ -11672,7 +11717,7 @@ stores-invite-works-any = Bu bağlantıya sahip herkes { $until } tarihine kadar
 stores-invite-works-any-forever = Bu bağlantıya sahip herkes siz iptal edene kadar katılabilir.
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = Gönderdiğiniz kişi için bir kez geçerli. { $until } tarihine kadar.
+stores-invite-once-until = Gönderdiğiniz kişi için { $until } tarihine kadar bir kez çalışır.
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = Gönderdiğiniz kişi için bir kez geçerli, siz iptal edene kadar.
@@ -11799,7 +11844,7 @@ stores-offers-plugins =
 notice-open-stores = eklenti mağazalarını aç
 
 # Explainer on the empty plugin stores page.
-stores-what-is = Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaz için ayrı bir belirteç veren küçük bir sunucudur. kaynaklar eklentiler olarak sunar. Kaeri hiçbir eklenti mağazası işletmez ve listelemez; bu yüzden sahibinden aldığınız davet bağlantısıyla katılırsınız.
+stores-what-is = Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaza kendi belirtecini veren küçük bir sunucudur. İçindeki eklentiler kaynaklar ekler. Kaeri eklenti mağazaları işletmez ve hiçbirini listelemez; bu yüzden sahibinden aldığınız bir davet bağlantısıyla birine katılırsınız.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = eklenti mağazası nedir?
@@ -11937,7 +11982,7 @@ sync-road-nearby-line = Aynı Wi-Fi'deki başka bir cihaz ile eşleştirin. Baş
 sync-road-cloud = Bir bulut klasörü üzerinden
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = Zaten kullandığınız bir bulut sürücüsü ya da kendi sunucunuz. cihazlar birbirinden uzaktayken de çalışır ve yedek tutar.
+sync-road-cloud-line = Zaten kullandığınız bir bulut sürücüsü ya da kendi sunucunuz. cihazlarınız birbirinden uzaktayken de çalışır ve bir yedek tutar.
 
 # Road sheet footer.
 sync-road-later = Diğer yolu sonradan ekleyebilirsiniz. Çoğu kişi ikisini birden kullanır.
@@ -11997,7 +12042,7 @@ sync-turn-off-alert-line = Bu { $kind }, diğer cihazlar ile paylaşmayı bırak
 cloud-group = Bulut klasörü
 
 # Group footer.
-cloud-foot = cihazlar birbirinden uzaktayken devreye girer ve mühürlü bir yedek tutar. Yalnızca cihazlar okuyabilir.
+cloud-foot = Klasör, cihazlarınızı birbirinden uzaktayken eşitler ve mühürlü bir yedek saklar. Onu yalnızca cihazlarınız okuyabilir.
 
 # Row when only the nearby road is set.
 cloud-add = Bulut klasörü ekle
@@ -12340,7 +12385,7 @@ profiles-picker = Kim izliyor?
 profiles-ask-at-launch = Açılışta kimin izlediğini sor
 
 # iPad footer.
-profiles-ask-foot = Varsayılan olarak kapalı. Evin paylaştığı bir iPad için. Hesap satırı profilleri istediğiniz zaman değiştirir.
+profiles-ask-foot = Varsayılan olarak kapalıdır. Tüm evin paylaştığı bir iPad için açın. Profilleri istediğiniz zaman hesap satırından değiştirebilirsiniz.
 
 # TV Settings.
 profiles-switch = Profil değiştir
@@ -13124,7 +13169,7 @@ accounts-tokens-keystore = Oturum anahtarları bu cihazda tutulur ve cihazın an
 accounts-form-title = Oturum aç: { $tracker }
 
 # Line under the title: where the password goes.
-accounts-form-detail = Parolanız yalnızca bir kez { $tracker } hizmetine gönderilir. Oturum anahtarı bu cihazda tutulur.
+accounts-form-detail = Parolanız bir kez { $tracker } hizmetine gider; karşılığında bu cihazda kalan bir belirteç alınır.
 
 # Label of the name field.
 accounts-user-or-email = E-posta veya kullanıcı adı
@@ -13196,7 +13241,7 @@ accounts-open-on = { $tracker } üzerinde aç
 accounts-listed-by = { $tracker } tarafından listelendi
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = { $tracker } yanıt vermedi.
+accounts-did-not-answer = { $tracker } yanıt vermedi. Biraz sonra yeniden deneyin.
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = { $tracker } bu dizi için henüz kadro, ekip ya da öneri içermiyor.
@@ -13559,7 +13604,7 @@ updates-saved-replace-plain = { $version } sürümü İndirilenler klasörüne k
 updates-why-server = İndirme durdu: sunucu reddetti ({ $code }). Daha sonra yeniden deneyin.
 
 # The connection broke.
-updates-why-connection = İndirme durdu: bağlantı koptu.
+updates-why-connection = İndirme durdu: bağlantı koptu. Yeniden deneyin.
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = İndirme kaydedilemedi: { $reason }

@@ -677,6 +677,10 @@ object Strings {
     fun readerResumed(context: Context, page: Int): String =
         context.getString(R.string.reader_resumed, page)
 
+    /** The same notice in a webtoon strip, which counts images rather than pages. */
+    fun readerResumedImage(context: Context, image: Int): String =
+        context.getString(R.string.reader_resumed_image, image)
+
     /** A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page. */
     fun readerBackToPage(context: Context, page: Int): String =
         context.getString(R.string.reader_back_to_page, page)
@@ -1945,6 +1949,30 @@ object Strings {
     fun castSettingsTorrentsNote(context: Context): String =
         context.getString(R.string.cast_settings_torrents_note)
 
+    /** Where Android keeps a Kavita key, filling { $store } in "Kaeri keeps the key in … and shows only its last four characters." */
+    fun bookServerKeystoreAndroid(context: Context): String =
+        context.getString(R.string.book_server_keystore_android)
+
+    /** Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters. */
+    fun storeInviteChip(context: Context, last: String): String =
+        context.getString(R.string.store_invite_chip, last)
+
+    /** How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts". */
+    fun storePluginHosts(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.store_plugin_hosts, count, count)
+
+    /** Join page, paired view: the line under "Kaeri is for" when the other device's answer is Watch. */
+    fun joinMediumLineWatch(context: Context, device: String): String =
+        context.getString(R.string.join_medium_line_watch, device)
+
+    /** Join page, paired view: the line under "Kaeri is for" when the other device's answer is Both. */
+    fun joinMediumLineBoth(context: Context, device: String): String =
+        context.getString(R.string.join_medium_line_both, device)
+
+    /** Join page, paired view: where this device keeps a book server's key, filling $store in "kept in { $store }". */
+    fun joinKeyStore(context: Context): String =
+        context.getString(R.string.join_key_store)
+
     /** Under the failed page's reason on a phone: turning on skips the missing page. */
     fun readerPageFailedSwipe(context: Context): String =
         context.getString(R.string.reader_page_failed_swipe)
@@ -2193,14 +2221,6 @@ object Strings {
     fun readerSettings(context: Context): String =
         context.getString(R.string.reader_settings)
 
-    /** Under the series title in the reader's controls. The chapter is its number, such as 12. */
-    fun readerChapterLine(context: Context, chapter: String): String =
-        context.getString(R.string.reader_chapter_line, chapter)
-
-    /** Under the series title in the reader's controls. The chapter is its number, such as 12. */
-    fun readerChapterLineTitled(context: Context, chapter: String, title: String): String =
-        context.getString(R.string.reader_chapter_line_titled, chapter, title)
-
     /** Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. */
     fun readerNovelLineScroll(context: Context, chapter: String): String =
         context.getString(R.string.reader_novel_line_scroll, chapter)
@@ -2217,21 +2237,9 @@ object Strings {
     fun readerGridTitle(context: Context): String =
         context.getString(R.string.reader_grid_title)
 
-    /** Top line of the page between chapters. The chapter is its number, such as 12. */
-    fun readerEndOfChapterNumber(context: Context, chapter: String): String =
-        context.getString(R.string.reader_end_of_chapter_number, chapter)
-
-    /** The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. */
-    fun readerEndFacts(context: Context, chapter: String, facts: String): String =
-        context.getString(R.string.reader_end_facts, chapter, facts)
-
     /** Main button on the page between chapters. */
     fun readerEndContinue(context: Context): String =
         context.getString(R.string.reader_end_continue)
-
-    /** Line above the main button on the page between chapters. */
-    fun readerEndSwipe(context: Context): String =
-        context.getString(R.string.reader_end_swipe)
 
     /** Quiet button on the page between chapters that leaves the reader for the series page. */
     fun readerEndSeries(context: Context): String =
@@ -2465,10 +2473,6 @@ object Strings {
     fun readerFailedNovel(context: Context): String =
         context.getString(R.string.reader_failed_novel)
 
-    /** Under the end of chapter line, naming the trackers the read went to. */
-    fun readerEndTracker(context: Context, trackers: String): String =
-        context.getString(R.string.reader_end_tracker, trackers)
-
     /** Under the end of chapter line when the phone is offline. */
     fun readerEndTrackerOffline(context: Context, tracker: String): String =
         context.getString(R.string.reader_end_tracker_offline, tracker)
@@ -2573,10 +2577,6 @@ object Strings {
     fun readerSizeLarge(context: Context): String =
         context.getString(R.string.reader_size_large)
 
-    /** The next chapter's length on the page between chapters. */
-    fun readerEndPages(context: Context, count: Int): String =
-        context.resources.getQuantityString(R.plurals.reader_end_pages, count, count)
-
     /** The value of Paper mode in the settings list when it is on. */
     fun readerValueOn(context: Context): String =
         context.getString(R.string.reader_value_on)
@@ -2596,18 +2596,6 @@ object Strings {
     /** Paper mode part: a slider for how far the page's white is dimmed. */
     fun readerPaperDim(context: Context): String =
         context.getString(R.string.reader_paper_dim)
-
-    /** Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from. */
-    fun readerEndFrom(context: Context, source: String): String =
-        context.getString(R.string.reader_end_from, source)
-
-    /** The next episode's length on the divider inside a strip. */
-    fun readerDividerImages(context: Context, count: Int): String =
-        context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)
-
-    /** The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. */
-    fun readerDividerFactsSource(context: Context, facts: String, source: String): String =
-        context.getString(R.string.reader_divider_facts_source, facts, source)
 
     /** The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s". */
     fun readerOpeningWaited(context: Context, line: String, seconds: Int): String =
@@ -4884,6 +4872,34 @@ object Strings {
     /** Name of the controller's right stick, in the controller help. */
     fun padButtonRightStick(context: Context): String =
         context.getString(R.string.pad_button_right_stick)
+
+    /** Controller help: the D-pad in the reader turns the page, the way the book reads. */
+    fun padHelpTurnPage(context: Context): String =
+        context.getString(R.string.pad_help_turn_page)
+
+    /** Controller help: the left shoulder button in the reader. */
+    fun padHelpPreviousChapter(context: Context): String =
+        context.getString(R.string.pad_help_previous_chapter)
+
+    /** Controller help: the right shoulder button in the reader. */
+    fun padHelpNextChapter(context: Context): String =
+        context.getString(R.string.pad_help_next_chapter)
+
+    /** Controller help: the A button in the reader shows or hides the bar with the title and settings. */
+    fun padHelpReaderBar(context: Context): String =
+        context.getString(R.string.pad_help_reader_bar)
+
+    /** Controller help: the menu button in the reader. */
+    fun padHelpReaderSettings(context: Context): String =
+        context.getString(R.string.pad_help_reader_settings)
+
+    /** Controller help: the B button in the reader. */
+    fun padHelpCloseReader(context: Context): String =
+        context.getString(R.string.pad_help_close_reader)
+
+    /** Heading in the controller help for the buttons in the reader. */
+    fun padHelpReader(context: Context): String =
+        context.getString(R.string.pad_help_reader)
 
     /** Checkbox of the close question. */
     fun closeDontAsk(context: Context): String =
@@ -7237,7 +7253,7 @@ object Strings {
     fun partyMemberWatchingFrom(context: Context, time: String): String =
         context.getString(R.string.party_member_watching_from, time)
 
-    /** Label of the I'm ready button once you are ready. */
+    /** Label of the Ready to watch button once you are ready. */
     fun partyReadyOn(context: Context): String =
         context.getString(R.string.party_ready_on)
 
@@ -8438,6 +8454,10 @@ object Strings {
     fun readerEndRead(context: Context): String =
         context.getString(R.string.reader_end_read)
 
+    /** Under the end of chapter line, naming the trackers the read went to. */
+    fun readerEndTracker(context: Context, trackers: String): String =
+        context.getString(R.string.reader_end_tracker, trackers)
+
     /** Small heading above the next chapter on the page between chapters. */
     fun readerEndNext(context: Context): String =
         context.getString(R.string.reader_end_next)
@@ -8570,6 +8590,42 @@ object Strings {
     fun readerLookSystem(context: Context): String =
         context.getString(R.string.reader_look_system)
 
+    /** Top line of the page between chapters. The chapter is its number, such as 12. */
+    fun readerEndOfChapterNumber(context: Context, chapter: String): String =
+        context.getString(R.string.reader_end_of_chapter_number, chapter)
+
+    /** The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. */
+    fun readerEndFacts(context: Context, chapter: String, facts: String): String =
+        context.getString(R.string.reader_end_facts, chapter, facts)
+
+    /** The next chapter's length on the page between chapters. */
+    fun readerEndPages(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reader_end_pages, count, count)
+
+    /** Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from. */
+    fun readerEndFrom(context: Context, source: String): String =
+        context.getString(R.string.reader_end_from, source)
+
+    /** Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. */
+    fun readerChapterLine(context: Context, chapter: String): String =
+        context.getString(R.string.reader_chapter_line, chapter)
+
+    /** The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. */
+    fun readerDividerFactsSource(context: Context, facts: String, source: String): String =
+        context.getString(R.string.reader_divider_facts_source, facts, source)
+
+    /** Line on the page between chapters, near its buttons: one more swipe opens the next chapter. */
+    fun readerEndSwipe(context: Context): String =
+        context.getString(R.string.reader_end_swipe)
+
+    /** The next episode's length on the divider inside a strip. */
+    fun readerDividerImages(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reader_divider_images, count, count)
+
+    /** Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. */
+    fun readerChapterLineTitled(context: Context, chapter: String, title: String): String =
+        context.getString(R.string.reader_chapter_line_titled, chapter, title)
+
     /** Button in the first run that opens the reading demo. */
     fun onboardingReadDemo(context: Context): String =
         context.getString(R.string.onboarding_read_demo)
@@ -8669,6 +8725,66 @@ object Strings {
     /** Primary action on the demo's series page. */
     fun demoReadChapter(context: Context, number: String): String =
         context.getString(R.string.demo_read_chapter, number)
+
+    /** Page between chapters, under the tracker line: the server has the progress. */
+    fun progressServerSaved(context: Context, server: String): String =
+        context.getString(R.string.progress_server_saved, server)
+
+    /** Same place, only after 600 ms without an answer. */
+    fun progressServerSending(context: Context, server: String): String =
+        context.getString(R.string.progress_server_sending, server)
+
+    /** Same place, offline: the send waits in the queue. */
+    fun progressServerOffline(context: Context, server: String): String =
+        context.getString(R.string.progress_server_offline, server)
+
+    /** Same place, the send failed for a reason that can pass. */
+    fun progressServerRetrying(context: Context, server: String): String =
+        context.getString(R.string.progress_server_retrying, server)
+
+    /** Same place, the server said no. Try again follows it. */
+    fun progressServerFailed(context: Context, server: String, reason: String): String =
+        context.getString(R.string.progress_server_failed, server, reason)
+
+    /** Reason: a Kavita key. */
+    fun progressWhyKey(context: Context): String =
+        context.getString(R.string.progress_why_key)
+
+    /** Reason: a Komga or OPDS password. */
+    fun progressWhyPassword(context: Context): String =
+        context.getString(R.string.progress_why_password)
+
+    /** Reason. */
+    fun progressWhyGone(context: Context): String =
+        context.getString(R.string.progress_why_gone)
+
+    /** Reason, after a day of retries. */
+    fun progressWhyGaveUp(context: Context): String =
+        context.getString(R.string.progress_why_gave_up)
+
+    /** Your sources, the server's row, second line. */
+    fun progressRowSaved(context: Context, ago: String): String =
+        context.getString(R.string.progress_row_saved, ago)
+
+    /** The server's row, after 600 ms without an answer. */
+    fun progressRowSending(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.progress_row_sending, count, count)
+
+    /** The server's row, offline. */
+    fun progressRowOffline(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.progress_row_offline, count, count)
+
+    /** The server's row, the last try failed for a reason that can pass. */
+    fun progressRowRetrying(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.progress_row_retrying, count, count)
+
+    /** The server's row, the server said no. Try again sits beside it. */
+    fun progressRowFailed(context: Context, count: Int, reason: String): String =
+        context.resources.getQuantityString(R.plurals.progress_row_failed, count, count, reason)
+
+    /** The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. */
+    fun progressRowOff(context: Context, kind: String): String =
+        context.getString(R.string.progress_row_off, kind)
 
     /** Sidebar and tab label: the shows' Home when both media are on. */
     fun navWatch(context: Context): String =
@@ -12146,9 +12262,13 @@ object Strings {
     fun sourceAddedPlugins(context: Context, count: Int, store: String): String =
         context.resources.getQuantityString(R.plurals.source_added_plugins, count, count, store)
 
-    /** A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS. */
+    /** A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library. */
     fun sourceRowServer(context: Context, kind: String, series: Int, libraries: Int): String =
         context.resources.getQuantityString(R.plurals.source_row_server, libraries, kind, series, libraries)
+
+    /** A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library. */
+    fun sourceRowServerSeries(context: Context, kind: String, series: Int, libraries: Int): String =
+        context.resources.getQuantityString(R.plurals.source_row_server_series, libraries, kind, series, libraries)
 
     /** A server's row in Your sources while it shows no series. */
     fun sourceRowServerEmpty(context: Context, kind: String): String =

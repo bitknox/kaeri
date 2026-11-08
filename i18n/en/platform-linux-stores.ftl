@@ -37,7 +37,7 @@ stores-owner-needs-connection-detail = Try again once this { -device } is back o
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
 # @only linux
-stores-owner-link-offline = Making a link needs a connection to the { -plugin-store }.
+stores-owner-link-offline = Can't make a link while this { -device } is offline.
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 # @only linux
@@ -50,7 +50,7 @@ stores-open-on-detail = They join without a name. Turning this off stops the lin
 
 # Row subtitle in who-can-join while it is off.
 # @only linux
-stores-open-off-detail = Only people you invite can join. Turned on, anyone with the link joins, without a name.
+stores-open-off-detail = Only people you invite can join. Turn this on and anyone with the link can join, without a name.
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 # @only linux
@@ -86,7 +86,7 @@ stores-not-published = Not in the { -plugin-store } yet
 # Line under a plugin in the publish dialog that the store has in another version.
 # @only linux
 # @arg version: text
-stores-store-offers = The { -plugin-store } offers { $version }
+stores-store-offers = The { -plugin-store } has { $version }
 
 # Line under a plugin in the publish dialog whose version the store already has.
 # @only linux

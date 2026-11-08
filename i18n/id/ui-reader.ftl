@@ -38,3 +38,19 @@ reader-end-caught-up = Anda sudah menyusul
 reader-gap-none = Tanpa jarak
 reader-gap-small = Kecil
 reader-look-system = Sistem
+reader-end-tracker = Dibaca · { $trackers } diperbarui
+reader-end-of-chapter-number = Akhir bab { $chapter }
+reader-end-facts = Bab { $chapter } · { $facts }
+reader-end-pages = { $count ->
+   *[other] { $count } halaman
+ }
+reader-end-from = Dari { $source }
+
+reader-chapter-line = Bab { $chapter }
+
+reader-divider-facts-source = { $facts } · dari { $source }
+reader-end-swipe = Geser untuk terus membaca
+reader-divider-images = { $count ->
+   *[other] { $count } gambar
+ }
+reader-chapter-line-titled = Bab { $chapter } · { $title }

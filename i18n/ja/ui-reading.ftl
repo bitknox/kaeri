@@ -330,8 +330,8 @@ settings-keep-chapters-ready-note = 「読書中」リストの作品の次の�
 settings-delete-after-reading-note = しおり付きの章は残ります
 settings-chapter-notifications-note = 「読書中」リストの作品
 settings-downloads-finished-note = ダウンロード中の章がすべて終わったとき
-settings-chapter-notifications-footer = 章の通知は独自のシステムチャンネルを使うため、単独で消音できます。
-accounts-mangaupdates-credit = MangaUpdates は公開 API 経由で利用します。
+settings-chapter-notifications-footer = 章の通知は独自のシステムチャンネルを使うため、ほかの通知はそのままで章だけを消音できます。
+accounts-mangaupdates-credit = { -app-name }は公開APIでMangaUpdatesに接続します。
 accounts-username = ユーザー名
 read-downloads-total = { $n ->
    *[other] { $n }話 · { $size }

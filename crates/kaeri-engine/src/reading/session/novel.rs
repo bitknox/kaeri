@@ -36,7 +36,7 @@ use crate::{
     outbox::{Internal, Outbox, ReaderWake},
     reading::{
         novel::{self as served, EinkImages, NovelBook, Opened, Opening, ServedBook},
-        pages::Pages,
+        pages::{Pages, PeekJob},
         shelf::ShelfChapter,
     },
 };
@@ -122,6 +122,92 @@ impl Open {
 /// Whether a chapter opens off the actor before it is laid out.
 pub(super) fn prepares(chapter: &ShelfChapter) -> bool {
     chapter.format == "epub" || chapter.format == SOURCE
+}
+
+/// The folder a session's chapters of pictures from a source are fetched into, one folder per
+/// layout. It goes when the session closes.
+pub(super) fn streamed_dir(cache: &Path, session: u64) -> PathBuf {
+    cache_dir(cache).join(format!("{session}-pages"))
+}
+
+/// Fetch every page of a source's chapter of pictures into `dir`, named in reading order with
+/// the type their bytes are, so the page worker opens the folder as a book.
+async fn fetch_pages(
+    sources: &crate::read_sources::BookSources,
+    opened: &mut crate::read_sources::Opened,
+    dir: &Path,
+    now: i64,
+) -> Prepared {
+    let ChapterContent::Images(pages) = &opened.content else {
+        return Prepared::Failed(ReadingFailure::NotFound);
+    };
+    let total = pages.len();
+    if total == 0 {
+        return Prepared::Failed(ReadingFailure::NotFound);
+    }
+    let io = |e: std::io::Error| ReadingFailure::Other { reason: e.to_string() };
+    if let Err(e) = tokio::fs::create_dir_all(dir).await {
+        return Prepared::Failed(io(e));
+    }
+    for index in 0..total {
+        let bytes = match sources.page(opened, index, now).await {
+            Ok(bytes) => bytes,
+            Err(failure) => return Prepared::Failed(failure),
+        };
+        let Some(ext) = page_extension(&bytes) else {
+            return Prepared::Failed(ReadingFailure::Unsupported { extension: "page".into() });
+        };
+        if let Err(e) =
+            tokio::fs::write(dir.join(format!("{:05}.{ext}", index + 1)), &bytes).await
+        {
+            return Prepared::Failed(io(e));
+        }
+    }
+    Prepared::Pages(dir.to_owned())
+}
+
+/// The extension a page's bytes are of, by their first bytes, for the page worker.
+fn page_extension(bytes: &[u8]) -> Option<&'static str> {
+    let ext = kaeri_books::mime::sniff_image(bytes)?.strip_prefix("image/")?;
+    Some(if ext == "jpeg" { "jpg" } else { ext })
+}
+
+/// Make the end page's preview of the next chapter, one from a source, as a shelf chapter's is
+/// made: its first page alone is fetched, off the actor, into a folder of the session that the
+/// page worker opens as a book. Nothing waits on it. A chapter of text, or one only a whole
+/// file's download would open, has no preview, and neither has one that fails.
+pub(super) fn peek_source(
+    cx: &Cx<'_>,
+    pages: &Pages,
+    session: u64,
+    work: &WorkId,
+    next: (usize, &ShelfChapter),
+) {
+    let (index, next) = next;
+    let sources = cx.services.book_sources.clone();
+    let work = work.clone();
+    let chapter = next.id.clone();
+    let now = cx.now();
+    let dir = streamed_dir(&cx.services.paths.cache_dir, session).join(format!("next-{index}"));
+    let pages = pages.clone();
+    let out = cx.tx.clone();
+    tokio::spawn(async move {
+        let bytes = match sources.first_page(&work, &chapter, now).await {
+            Ok(Some(bytes)) => bytes,
+            Ok(None) => return,
+            Err(failure) => {
+                tracing::debug!(?failure, "no preview of the next chapter");
+                return;
+            }
+        };
+        let Some(ext) = page_extension(&bytes) else { return };
+        if tokio::fs::create_dir_all(&dir).await.is_err()
+            || tokio::fs::write(dir.join(format!("00001.{ext}")), &bytes).await.is_err()
+        {
+            return;
+        }
+        pages.peek(PeekJob { session, chapter, path: dir, out });
+    });
 }
 
 /// The format of a chapter read from a source rather than a file on the shelf.
@@ -229,8 +315,35 @@ pub(super) fn list(cx: &Cx<'_>, session: u64, work: &WorkId) -> Option<Listed> {
     let done = wake(cx.tx, session, ReaderWake::Listed);
     tokio::spawn(async move {
         let listed = sources.chapters(&work, None, now).await.map(|(_, g)| source_chapters(g));
+        // The listing asked the source how the series reads, if it had not said lately.
+        if let Some(lookup) = sources.hint_lookup(&work) {
+            crate::read_sources::settle_hint(lookup).await;
+        }
         if let Ok(mut s) = out.lock() {
             *s = Some(listed);
+        }
+        done();
+    });
+    Some(slot)
+}
+
+/// A work on the shelf whose source is being asked how it reads, with no answer kept: its open
+/// waits a moment for the answer, then goes on with what is kept.
+pub(super) fn after_hint(
+    cx: &Cx<'_>,
+    session: u64,
+    work: &WorkId,
+    chapters: &[ShelfChapter],
+) -> Option<Listed> {
+    let lookup = cx.services.book_sources.hint_lookup(work)?;
+    let slot = Listed::default();
+    let out = slot.clone();
+    let chapters = chapters.to_vec();
+    let done = wake(cx.tx, session, ReaderWake::Listed);
+    tokio::spawn(async move {
+        crate::read_sources::settle_hint(lookup).await;
+        if let Ok(mut s) = out.lock() {
+            *s = Some(Ok(chapters));
         }
         done();
     });
@@ -285,9 +398,15 @@ impl Session {
         let id = chapter.id.clone();
         let label = chapter.label.clone();
         let now = cx.now();
+        let streamed =
+            streamed_dir(&cx.services.paths.cache_dir, self.id).join(generation.to_string());
         tokio::spawn(async move {
             let prepared = match sources.open(&work, &id, None, now).await {
                 Err(failure) => Prepared::Failed(failure),
+                // A source's pictures are fetched into a folder the page worker reads as a book.
+                Ok(mut opened) if matches!(opened.content, ChapterContent::Images(_)) => {
+                    fetch_pages(&sources, &mut opened, &streamed, now).await
+                }
                 Ok(opened) => match opened.content {
                     ChapterContent::Text(xhtml) => {
                         let title = opened.chapter.title.clone().unwrap_or(label);
@@ -309,12 +428,7 @@ impl Session {
                             }),
                         }
                     }
-                    // Streamed page images reach the reader with the sources' page fetches.
-                    ChapterContent::Images(_) => {
-                        Prepared::Failed(ReadingFailure::Unsupported {
-                            extension: "images".into(),
-                        })
-                    }
+                    ChapterContent::Images(_) => Prepared::Failed(ReadingFailure::NotFound),
                 },
             };
             put(prepared);
@@ -568,7 +682,8 @@ impl Session {
         }
         self.place = Some(here);
         self.note_place(cx);
-        if std::mem::take(&mut self.novel_resumed) {
+        // Nothing to start over from at the chapter's first page.
+        if std::mem::take(&mut self.novel_resumed) && shown > 0 {
             let msg = ReadingMsg::ReaderResumed { page: i64::from(shown) + 1 };
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, self.eink()));
         }

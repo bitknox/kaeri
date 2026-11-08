@@ -16,7 +16,7 @@ use kaeri_model::reader::{BookBody, BookResource, NovelOpenView, NovelPos};
 
 use super::*;
 
-/// A two-document novel, with a stylesheet and a picture.
+/// A two-document novel, with a stylesheet, a font and a picture.
 fn epub(path: &Path, title: &str) {
     let mut w = EpubWriter::new(
         Cursor::new(Vec::new()),
@@ -30,6 +30,7 @@ fn epub(path: &Path, title: &str) {
     picture.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
     w.add_resource("images/lamp.png", "image/png", &png).unwrap();
     w.add_resource("style.css", "text/css", b"p { text-indent: 1em }").unwrap();
+    w.add_resource("fonts/lantern.woff2", "font/woff2", b"wOF2 a made-up font").unwrap();
     w.add_chapter("One", "<h1>One</h1><p>The lantern keeper climbed the stair.</p><img src=\"images/lamp.png\" alt=\"\"/>").unwrap();
     w.add_chapter("Two", "<h1>Two</h1><p>The tide came in under the pier.</p>").unwrap();
     std::fs::write(path, w.finish().unwrap().into_inner()).unwrap();
@@ -164,11 +165,30 @@ async fn an_epub_opens_in_the_web_view_with_its_files_served_cleaned() {
     assert_eq!(h.get(&format!("{base}/style.css")).mime, "text/css");
     assert_eq!(h.get(&format!("{base}/nothing.css")).status, 404);
 
+    // A document is never kept by the web view, as its settings change; the book's other
+    // files are, and a font is read out of the book once, into a file, for every document.
+    let cache = |r: &BookResource| {
+        r.headers.iter().find(|h| h.name == "Cache-Control").map(|h| h.value.clone()).unwrap()
+    };
+    assert_eq!(cache(&doc), "no-store");
+    assert!(cache(&picture).contains("max-age"), "{}", cache(&picture));
+    let sheet = h.get(&format!("{base}/style.css"));
+    assert!(cache(&sheet).contains("max-age"), "{}", cache(&sheet));
+    assert_eq!(text(&sheet), text(&h.get(&format!("{base}/style.css"))));
+    let font = h.get(&format!("{base}/fonts/lantern.woff2"));
+    assert_eq!((font.status, font.mime.as_str()), (200, "font/woff2"));
+    assert!(cache(&font).contains("immutable"), "{}", cache(&font));
+    let BookBody::File { path: font_file } = &font.body else { panic!("a file") };
+    assert_eq!(std::fs::read(font_file).unwrap(), b"wOF2 a made-up font");
+    let again = h.get(&format!("{base}/fonts/lantern.woff2"));
+    assert!(matches!(&again.body, BookBody::File { path } if path == font_file));
+
     // Closed, nothing is served and the files are gone.
     let session = h.session();
     h.send(ReaderCommand::Close { session });
     assert_eq!(h.get(first).status, 404);
     assert!(!Path::new(path).exists());
+    assert!(!Path::new(font_file).exists());
 }
 
 #[tokio::test(start_paused = true)]
@@ -243,6 +263,16 @@ async fn novel_places_are_text_positions_that_resume_with_back_to_page() {
         })
         .await;
     assert_eq!(start.novel, Some(pos(first, &[], 0)));
+
+    // Kept at the first page, it opens there with nothing to start over from.
+    h.at(pos(first, &[], 0), 0, 4, TurnHow::Turn);
+    tokio::time::advance(WRITE_EVERY).await;
+    let session = h.session();
+    h.send(ReaderCommand::Close { session });
+    h.drain();
+    h.open_novel(OpenAt::Resume).await;
+    h.at(pos(first, &[], 0), 0, 4, TurnHow::Turn);
+    assert!(notices(&h.drain()).is_empty(), "no Resumed at page 1");
 }
 
 #[tokio::test(start_paused = true)]
@@ -480,12 +510,107 @@ async fn a_sources_text_chapter_is_served_like_a_book() {
     let doc = text(&h.get(&novel.entry));
     assert!(doc.contains("Chapter c1 begins at the pier."), "{doc}");
     assert!(!doc.contains("<script") && !doc.contains("tracker.example"), "{doc}");
-    assert!(doc.contains("_kaeri/reader.css"), "{doc}");
+    // Kaeri's stylesheet comes with the paginator, as a book's documents get it: none is linked.
+    assert!(!doc.contains("<link"), "{doc}");
 
     // Its place is kept like a book's.
     h.at(pos(0, &[0], 4), 0, 1, TurnHow::Turn);
     let chapter = view.chapter.id.as_str().to_owned();
     assert_eq!(h.kept(&chapter).and_then(|c| c.novel_pos).as_deref(), Some("0/0/4"));
+}
+
+/// A source whose chapters are pictures, three pages each, fetched through the source. With
+/// `made`, the source makes each page's bytes itself (a plugin built for the
+/// `book-plugin-with-pages` world), its own id standing where an address would.
+struct PictureSource {
+    manifest: BookSourceManifest,
+    made: bool,
+}
+
+impl PictureSource {
+    fn new(made: bool) -> Self {
+        let manifest = BookSourceManifest {
+            id: "pictures".into(),
+            name: "Pictures".into(),
+            version: "1".into(),
+            kind: BookSourceKind::Plugin,
+            media: vec![Medium::Manga],
+            languages: vec!["en".into()],
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        Self { manifest, made }
+    }
+}
+
+#[async_trait]
+impl kaeri_core::traits::BookSource for PictureSource {
+    fn manifest(&self) -> &BookSourceManifest {
+        &self.manifest
+    }
+
+    async fn search(&self, _: &str, _: &BookHints) -> Result<Vec<SeriesHit>, ProviderError> {
+        Ok(Vec::new())
+    }
+
+    async fn series(&self, id: &str, _: &BookHints) -> Result<SeriesDetail, ProviderError> {
+        Ok(SeriesDetail::new(id, id))
+    }
+
+    async fn chapters(
+        &self,
+        _: &str,
+        _: &BookHints,
+    ) -> Result<Vec<SourceChapter>, ProviderError> {
+        Ok(vec![SourceChapter::new("c1", "1")])
+    }
+
+    async fn content(
+        &self,
+        series: &str,
+        chapter: &str,
+    ) -> Result<ChapterContent, ProviderError> {
+        use kaeri_core::books::PageRef;
+        Ok(ChapterContent::Images(
+            (1..=3)
+                .map(|n| match self.made {
+                    true => PageRef::made(series, chapter, format!("{chapter}-{n}")),
+                    false => PageRef::new(format!("https://pages.example/{chapter}/{n}")),
+                })
+                .collect(),
+        ))
+    }
+
+    async fn fetch_page(
+        &self,
+        page: &kaeri_core::books::PageRef,
+    ) -> Result<Vec<u8>, kaeri_core::traits::PageError> {
+        // A made page reaches its source with the chapter it belongs to.
+        let made = page.made.as_ref().map(|m| (m.series.as_str(), m.chapter.as_str()));
+        assert_eq!(made, self.made.then_some(("series-1", "c1")), "{page:?}");
+        let shade = page.url.bytes().last().unwrap_or(b'1');
+        let picture = image::GrayImage::from_pixel(300, 450, image::Luma([shade]));
+        let mut png = Vec::new();
+        picture.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
+        Ok(png)
+    }
+}
+
+/// A chapter of pictures from a source, with nothing on the shelf, opens in the page reader:
+/// pages it names by address and pages it makes itself alike.
+#[tokio::test(start_paused = true)]
+async fn a_sources_chapter_of_pictures_opens_as_pages() {
+    for made in [false, true] {
+        let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
+        h.services.book_sources.registry.put(Arc::new(PictureSource::new(made)));
+        h.services
+            .store
+            .set_book_match("pictures", "series-1", WORK, 90, true, false, 1)
+            .unwrap();
+        let (view, leaves, _) = h.open(OpenAt::Start).await;
+        assert_eq!(view.medium, Medium::Manga, "made: {made}");
+        assert_eq!(leaves.len(), 4, "three pages and the end page, made: {made}");
+    }
 }
 
 /// The server a chapter came from, when the person lets Kaeri write progress to it, is told
@@ -591,6 +716,22 @@ async fn a_vertical_book_opens_vertical_and_reads_right_to_left() {
     let sheet = h.get(&format!("{base}/style/book.css"));
     assert_eq!((sheet.status, sheet.mime.as_str()), (200, "text/css"));
     assert!(text(&sheet).contains("vertical-rl"), "{}", text(&sheet));
+}
+
+/// The demo's comic, never fetched from the catalogue, opens under its series' name and reads
+/// left to right, as its source says: it is a European comic, not a manga.
+#[tokio::test(start_paused = true)]
+async fn the_demo_comic_opens_under_its_name_and_reads_left_to_right() {
+    let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
+    h.services.book_sources.registry.put(Arc::new(PictureSource::new(false)));
+    let comic = kaeri_core::reading_demo::COMIC.work_id();
+    h.services
+        .store
+        .set_book_match("pictures", "series-1", comic.as_str(), 90, true, false, 1)
+        .unwrap();
+    let (view, _, _) = h.open_work(comic, OpenAt::Start).await;
+    assert_eq!(view.title, "Pepper&Carrot");
+    assert_eq!(view.direction, kaeri_model::reader::ReadDirection::LeftToRight);
 }
 
 /// Two chapters opened one after the other can finish out of order: the first one's open,

@@ -53,7 +53,7 @@ library-row-summary-linux = { $episodes ->
    *[other] { $series } dizinin { $episodes } bölümü
  }
 library-page-watching-linux = Değişiklikler izleniyor
-library-page-no-watch-linux = { -app-name } açılırken yeniden bakılır
+library-page-no-watch-linux = { -app-name } açılırken değişiklikler denetlenir
 library-matched-linux = Eşleşenler
 library-best-guess-linux = En iyi tahmin: { $title }
 library-fix-count-mismatch-linux = { $episodes ->

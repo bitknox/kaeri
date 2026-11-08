@@ -56,26 +56,21 @@ eink-colour-title = Bu ekran renk gösteriyor mu?
 eink-colour-body = { -app-name } bunu bu { -device }dan anlayamadı. Dört kareye bakın.
 eink-colour-squares = Dört kare: kırmızı, yeşil, mavi ve kehribar
 eink-colour-hint = Dördü de gri görünüyorsa Yalnızca gri seçeneğini seçin. Bunu Ayarlar › Ekran'dan değiştirebilirsiniz.
-eink-colour-yes = Renk görüyorum
+eink-colour-yes = Evet, renkli
 eink-colour-no = Yalnızca gri
 eink-colour-skip = Atla
-eink-colour-skipped = Atlandı. Resimler renkli kalır; gri ekran bunları gri tonlarda gösterir.
-eink-page-keys-hint = Sayfa çevirmek için { -device } ayarlarında sayfa tuşlarını Ses olarak ayarlayın.
+eink-colour-skipped = Atlandı. Resimler renkli kalır. Gri bir ekran onları gri tonlarda gösterir.
+eink-page-keys-hint = Tuşlarla sayfa çevirmek için { -device } ayarlarında tuşları Ses olarak ayarlayın.
 eink-new = Yeni
 reader-notice-start-over = Baştan başla
 reader-notice-go-back = Geri dön
 reader-notice-change = Değiştir
 reader-settings = Okuyucu ayarları
-reader-chapter-line = Bölüm { $chapter }
-reader-chapter-line-titled = Bölüm { $chapter } · { $title }
 reader-novel-line-scroll = Bölüm { $chapter } · kaydırma
 reader-minutes-left = { $minutes } dk
 reader-zone-next = Sonraki sayfa
 reader-grid-title = Sayfalar
-reader-end-of-chapter-number = Bölüm { $chapter } sona erdi
-reader-end-facts = Bölüm { $chapter } · { $facts }
 reader-end-continue = Okumayı sürdür
-reader-end-swipe = Sürdürmek için kaydırın
 reader-end-series = Seriye dön
 reader-end-again = Baştan yeniden oku
 reader-opening-chapter = Bölüm { $chapter } açılıyor
@@ -134,7 +129,6 @@ reader-paper-line = Sayfalar anında döner ve okuyucuda hiçbir şey hareket et
 reader-grid-page = Sayfa { $page } konumuna git
 reader-scrubber-in-chapter = Bölümdeki sayfa
 reader-failed-novel = Bu bölüm gösterilemedi
-reader-end-tracker = Okundu · { $trackers } güncellendi
 reader-end-tracker-offline = Okundu · çevrimiçi olunca { $tracker } güncellenir
 reader-end-none = Bölüm { $chapter } henüz { -source-pl } arasında yok
 reader-end-none-line = { -app-name } yeni bölümleri arka planda arar ve Güncellemeler'e ekler.
@@ -161,21 +155,11 @@ reader-zone-previous = Önceki sayfa
 reader-zone-controls = Kontroller
 reader-size-small = Daha küçük metin
 reader-size-large = Daha büyük metin
-reader-end-pages = { $count ->
-    [one] Bir sayfa
-   *[other] { $count } sayfa
- }
 reader-value-on = Açık
 reader-value-off = Kapalı
 reader-row-strip-gap = Görseller arası boşluk
 reader-paper-look = Gündüz kâğıt görünümü
 reader-paper-dim = Sayfayı karart
-reader-end-from = Şuradan: { $source }
-reader-divider-images = { $count ->
-    [one] Bir görsel
-   *[other] { $count } görsel
- }
-reader-divider-facts-source = { $facts } · şuradan: { $source }
 reader-opening-waited = { $line } · { $seconds } sn
 reader-sources-title = Bu bölümü şuradan oku
 reader-paper-parts = Neleri değiştirir

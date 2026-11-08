@@ -70,4 +70,4 @@ servers-needs-look = { $count } tidak cocok dengan AniList
 servers-kind-films = Film
 servers-error-certificate = { $host } memakai sertifikat yang tidak dipercaya { -device } ini. Pakai alamat https:// dengan sertifikat yang dipercaya.
 servers-row-signed-out-here = Keluar
-servers-sign-out-line = Mengakhiri sesi masuk { -device } ini di server. Server dan unduhan Anda tetap seperti semula.
+servers-sign-out-line = Keluar mengakhiri sesi { -device } ini di server. Server dan unduhan Anda tetap seperti semula.

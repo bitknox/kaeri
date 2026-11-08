@@ -30,7 +30,7 @@ downloads-empty-heading = Nothing queued
 # @arg key: text
 # @max 80
 # @only tui
-downloads-empty-hint = Press { $key } on a title or episode to queue it for offline.
+downloads-empty-hint = Press { $key } on a title or episode to download it.
 
 # A download's row: the episode number after the title. The title is cut before this is.
 # @arg episode: text
@@ -339,17 +339,17 @@ accounts-row-queued = { $count ->
 # @arg queued: int
 # @arg held: int
 # @only tui
-accounts-row-queued-held = { $queued } queued, { $held } waiting for an id mapping
+accounts-row-queued-held = { $queued } queued, { $held } waiting for a match
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
 # @max 12
 # @only tui
-accounts-conflict-keep-mine = Keep mine
+accounts-conflict-keep-mine = Use local
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
 # @max 16
 # @only tui
-accounts-conflict-keep-theirs = Keep theirs
+accounts-conflict-keep-theirs = Use { -tracker }
 
 # A sync difference in the overlay: the title, the field that differs, then this device's
 # value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
@@ -358,7 +358,7 @@ accounts-conflict-keep-theirs = Keep theirs
 # @arg local: text
 # @arg remote: text
 # @only tui
-accounts-conflict-row = { $title }  ·  { $field }: mine { $local } / theirs { $remote }
+accounts-conflict-row = { $title }  ·  { $field }: local { $local } / { -tracker } { $remote }
 
 ## Library, search, calendar and the other lists
 
@@ -406,7 +406,7 @@ lists-empty-browse-filtered = Press ↵ to browse with these filters.
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
 # @only tui
-lists-empty-browse-popular = Press ↵ to browse the most popular.
+lists-empty-browse-popular = Press ↵ to browse the most popular titles.
 
 # Heading when a search or a browse found nothing.
 # @only tui

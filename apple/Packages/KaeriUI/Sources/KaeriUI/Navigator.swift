@@ -15,6 +15,7 @@ public final class Navigator {
             if section != oldValue {
                 titleOnMac = nil
                 seriesOnMac = nil
+                bookSourcePage = nil
                 pageGone()
             }
         }
@@ -27,6 +28,9 @@ public final class Navigator {
     /// The series page open over the section on the Mac, by work id. On iPhone and iPad it is
     /// pushed on the tab's stack.
     public var seriesOnMac: String?
+    /// A book source's page open in place of Your sources' list on the Mac. On iPhone and iPad it
+    /// is pushed on the stack.
+    var bookSourcePage: BookSourcePage?
     /// Whether the Library shows reading rather than shows, with both media on. Each screen
     /// keeps its own.
     public var libraryReading = false
@@ -217,7 +221,12 @@ public final class Navigator {
         launchSourceKey = route.source
         libraryReading = route.reading
         searchReading = route.reading
-        if let work = route.work {
+        if var work = route.work {
+            // Shots: the reading demo's works by name, since their ids are hashes.
+            if work == "demo-comic" || work == "demo-story",
+               let demo = readingDemoInfo().works.first(where: { $0.novel == (work == "demo-story") }) {
+                work = demo.work
+            }
             #if os(macOS)
             seriesOnMac = work
             #else
@@ -255,6 +264,17 @@ public final class Navigator {
         #else
         paths[section, default: []].append(TitleRoute(work: work))
         #endif
+    }
+
+    /// The series' version and source picker, over its page: the reader's Choose source. The
+    /// page opens first when it is not the one on top.
+    public func chooseSource(for work: String) {
+        #if os(macOS)
+        if seriesOnMac != work { openSeries(work) }
+        #else
+        if paths[section]?.last?.work != work { openSeries(work) }
+        #endif
+        seriesSheet = .source(work)
     }
 
     /// A reading list in the Library.

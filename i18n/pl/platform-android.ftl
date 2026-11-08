@@ -7,5 +7,5 @@ release-seeders = { $count ->
  }
 trailer-failed = Nie udało się otworzyć zwiastuna
 engine-down-title = { -app-name } zatrzymany
-engine-down-stopped = Część, która wykonuje pracę, została zatrzymana. Spróbuj ponownie albo zamknij i otwórz aplikację jeszcze raz.
+engine-down-stopped = Nic nowego się nie wczyta, dopóki znów nie ruszy. Spróbuj ponownie albo zamknij i otwórz aplikację jeszcze raz.
 engine-down-quit = Zamknij

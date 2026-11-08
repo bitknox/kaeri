@@ -1,6 +1,6 @@
 first-other-title = Masz już drugie { -device } z { -app-name }?
-first-other-line = Sparuj je, a to { -device } dostanie Twoje { -source-pl }, { -tracker-pl } i historię. Kolejne kroki będą wtedy gotowe.
-first-other-pair-line = Pokazuje kod, który wpiszesz tam, gdzie jest drugie { -device }. Oba muszą być w tej samej sieci Wi-Fi.
+first-other-line = Sparuj je, a to { -device } dostanie Twoje { -source-pl }, { -tracker-pl } i historię, a reszta konfiguracji będzie gotowa.
+first-other-pair-line = Dostaniesz kod, który wpiszesz tam, gdzie jest drugie { -device }. Oba muszą być w tej samej sieci Wi-Fi.
 first-other-restore = Przywróć z folderu w chmurze
 first-other-restore-line = Używa zapisanego klucza odzyskiwania
 first-other-no = Nie, zaczynam tutaj

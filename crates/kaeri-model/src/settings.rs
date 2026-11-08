@@ -720,7 +720,7 @@ impl SettingKey {
             Self::CommentImages => "load images in comments",
             Self::ControllerInput => "use a controller",
             Self::SwapFaceButtons => "swap a and b",
-            Self::CalendarMine => "calendar shows only my list",
+            Self::CalendarMine => "calendar shows only your list",
             Self::CastTvs => "show tvs with chromecast built in",
             Self::TorrentsWhileCasting => "torrents while casting",
             Self::HoverCards => "expand covers on hover",

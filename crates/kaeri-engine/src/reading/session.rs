@@ -14,7 +14,7 @@ use std::{sync::Arc, time::Duration};
 
 use kaeri_core::{
     books::{ChapterId, WorkId},
-    config::{CountsAsRead, SendProgressAfter, WebtoonMode},
+    config::{CountsAsRead, SendProgressAfter},
     ids::AnilistId,
     media::Medium,
     traits::TrackOp,
@@ -37,7 +37,7 @@ use tokio::time::Instant;
 use super::{
     eink,
     pages::{Laid, OpenJob, Pages, PeekJob, Plan, Shared},
-    settings::{self, Layers, Screen},
+    settings::{self, Layers, Screen, SourceWord},
     shelf::{self, ShelfChapter},
 };
 use crate::{
@@ -75,18 +75,60 @@ impl Cx<'_> {
     }
 
     fn layers(&self, medium: Medium, work: Option<&str>) -> Layers {
-        Layers::read(
+        let source = work.map(|w| self.source_word(&WorkId::new(w)));
+        self.layers_with(medium, work, source)
+    }
+
+    /// The layers with the source's word as given: a session's, read once when it opened, so a
+    /// hint that comes later changes nothing until the series is opened again.
+    fn layers_with(
+        &self,
+        medium: Medium,
+        work: Option<&str>,
+        source: Option<SourceWord>,
+    ) -> Layers {
+        let layers = Layers::read(
             &self.services.store,
             &self.config.effective().reading,
             medium,
             work,
             self.screen,
-        )
+        );
+        match source {
+            Some(source) => layers.with_source(source),
+            None => layers,
+        }
+    }
+
+    /// What the series' source and the catalogue say of how it reads.
+    fn source_word(&self, work: &WorkId) -> SourceWord {
+        let kind = self.services.store.book_work_kind(work.as_str()).ok().flatten();
+        // A demo work says it itself: opened before its page was ever loaded, its source was
+        // never asked.
+        let demo = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == *work);
+        SourceWord {
+            hint: self.services.book_sources.hint_of(work).or_else(|| demo?.reading),
+            webtoon: kind.as_ref().is_some_and(BookWorkKind::webtoon),
+        }
     }
 
     pub fn settings_view(&self, medium: Medium, work: Option<&WorkId>) -> ReaderSettingsView {
-        let rows = self.layers(medium, work.map(WorkId::as_str)).rows();
-        ReaderSettingsView { medium, work: work.cloned(), rows }
+        self.settings_view_with(medium, work, None)
+    }
+
+    /// The sheet as the open session reads it: with its source's word, when it is the work's.
+    fn settings_view_with(
+        &self,
+        medium: Medium,
+        work: Option<&WorkId>,
+        session: Option<SourceWord>,
+    ) -> ReaderSettingsView {
+        let id = work.map(WorkId::as_str);
+        let layers = match session {
+            Some(source) => self.layers_with(medium, id, Some(source)),
+            None => self.layers(medium, id),
+        };
+        ReaderSettingsView { medium, work: work.cloned(), rows: layers.rows() }
     }
 }
 
@@ -152,8 +194,6 @@ pub struct Session {
     place: Option<ReadPlace>,
     /// Show "Resumed at page N" once the leaves are out.
     resumed: Option<u32>,
-    /// The Webtoons default, for a webtoon with no mode of its own.
-    webtoon: Option<WebtoonMode>,
     /// The catalogue says no more chapters are coming.
     ended: bool,
     /// The next chapter's first page was asked of the worker.
@@ -182,6 +222,8 @@ pub struct Session {
     novel_resumed: bool,
     /// A work of the reading demo, whose credit the reader shows.
     demo: Option<kaeri_model::sources::DemoWorkInfo>,
+    /// What the source and the catalogue said of how the series reads, when it opened.
+    source: SourceWord,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -250,7 +292,12 @@ impl Reader {
                 self.open(cx, work, chapter, at, surface)
             }
             ReaderCommand::LoadSettings { medium, work } => {
-                cx.send(ReaderEvent::Settings(cx.settings_view(medium, work.as_ref())));
+                let session = self.source_of(work.as_ref());
+                cx.send(ReaderEvent::Settings(cx.settings_view_with(
+                    medium,
+                    work.as_ref(),
+                    session,
+                )));
             }
             ReaderCommand::SetSetting { session, medium, work, key, scope, value } => {
                 let now = cx.now();
@@ -306,14 +353,15 @@ impl Reader {
         work: Option<WorkId>,
         key: Key,
     ) {
-        cx.send(ReaderEvent::Settings(cx.settings_view(medium, work.as_ref())));
+        let source = self.source_of(work.as_ref());
+        cx.send(ReaderEvent::Settings(cx.settings_view_with(medium, work.as_ref(), source)));
         let pages = self.pages(cx);
         if let Some(s) = self
             .session
             .as_mut()
             .filter(|s| Some(s.id) == session || Some(&s.work) == work.as_ref())
         {
-            s.layers = cx.layers(s.medium, Some(s.work.as_str()));
+            s.layers = cx.layers_with(s.medium, Some(s.work.as_str()), Some(s.source));
             if s.novel.is_some() {
                 s.restyle(cx);
             } else if settings::relays(key) {
@@ -340,6 +388,10 @@ impl Reader {
             let _ = std::fs::remove_dir_all(
                 novel::cache_dir(&cx.services.paths.cache_dir).join(format!("{}-fixed", s.id)),
             );
+            let _ = std::fs::remove_dir_all(novel::streamed_dir(
+                &cx.services.paths.cache_dir,
+                s.id,
+            ));
         }
     }
 
@@ -367,6 +419,14 @@ impl Reader {
         ) {
             shelf::name_downloads(&mut chapters, &list);
         }
+        // No word kept yet on how the series reads, and a source being asked: the open waits
+        // a moment for its answer.
+        if !chapters.is_empty()
+            && let Some(slot) = novel::after_hint(cx, id, &work, &chapters)
+        {
+            self.listing = Some(Listing { id, work, chapter, at, surface, slot });
+            return;
+        }
         if chapters.is_empty()
             && let Some(slot) = novel::list(cx, id, &work)
         {
@@ -378,6 +438,11 @@ impl Reader {
             return;
         }
         self.open_with(cx, id, work, chapters, chapter, at, surface);
+    }
+
+    /// The open session's word from its source, when it reads `work`.
+    fn source_of(&self, work: Option<&WorkId>) -> Option<SourceWord> {
+        self.session.as_ref().filter(|s| Some(&s.work) == work).map(|s| s.source)
     }
 
     /// A source listed the chapters an open waited for.
@@ -418,7 +483,11 @@ impl Reader {
         let store = &cx.services.store;
         let form = crate::data::title_form(cx.services.meta.titles());
         let kind = store.book_work_kind(work.as_str()).ok().flatten();
+        // A demo work says its own medium: opened from Home or the first run before its page was
+        // ever loaded, the catalogue has not fetched it, and its chapters come from the demo.
+        let demo_work = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == work);
         let medium = match (kind.as_ref().map(|k| k.medium.as_str()), chapters.first()) {
+            _ if demo_work.is_some() => demo_work.map_or(Medium::Manga, |w| w.medium()),
             (Some("novel"), _) => Medium::Novel,
             (None, Some(c)) if c.is_text() => Medium::Novel,
             (Some(other), _) if other != "manga" && other != "comic" => {
@@ -441,7 +510,8 @@ impl Reader {
             chapter: Some(chapters[index].row(&marks)),
             wait: None,
         });
-        let layers = cx.layers(medium, Some(work.as_str()));
+        let source = cx.source_word(&work);
+        let layers = cx.layers_with(medium, Some(work.as_str()), Some(source));
         // A novel opens at its kept text position, or the one asked for.
         let restore = match &at {
             OpenAt::Place { place } if place.chapter == chapters[index].id => {
@@ -456,13 +526,6 @@ impl Reader {
             // A kept place in a long strip comes back to the same spot in its image.
             _ => ReadPlace { strip, ..place(&work, &chapters[index].id, Some(page)) },
         };
-        // The catalogue's word comes before the pages' shape: a webtoon (tagged a long strip,
-        // or from Korea or China) opens as the Webtoons default says, unless the series has a
-        // mode of its own.
-        let webtoon = (!layers.series_has(Key::Mode)
-            && medium == Medium::Manga
-            && kind.as_ref().is_some_and(BookWorkKind::webtoon))
-        .then(|| cx.config.effective().reading.webtoon.mode);
         let ended = kind.as_ref().is_some_and(BookWorkKind::ended);
         let demo = cx
             .services
@@ -473,10 +536,15 @@ impl Reader {
             .map(kaeri_model::sources::DemoWorkInfo::of);
         let mut session = Session {
             demo,
+            source,
             id,
             work,
             medium,
-            title: kind.and_then(|k| k.title_in(form)).unwrap_or_default(),
+            // The demo's works are never fetched from the catalogue: their series names them.
+            title: kind
+                .and_then(|k| k.title_in(form))
+                .or_else(|| demo_work.map(|w| w.series.to_owned()))
+                .unwrap_or_default(),
             ended,
             chapters,
             at: index,
@@ -494,7 +562,6 @@ impl Reader {
             start,
             place: None,
             resumed: resumed.then_some(page),
-            webtoon,
             peeked: false,
             back_to: None,
             moved_back: None,
@@ -674,8 +741,13 @@ impl Session {
                 .checked_sub(1)
                 .and_then(|i| self.chapters.get(i))
                 .map(|c| c.row(&marks)),
-            settings: Some(cx.settings_view(self.medium, Some(&self.work))),
+            settings: Some(cx.settings_view_with(
+                self.medium,
+                Some(&self.work),
+                Some(self.source),
+            )),
             demo_credit: self.demo.clone(),
+            progress_host: cx.services.book_sources.progress_host(&self.work),
         }
     }
 
@@ -741,10 +813,10 @@ impl Session {
             ..Look::default()
         };
         let layout = l.word(Key::PageLayout);
-        let strip = match self.webtoon {
-            Some(mode) if !l.series_has(Key::Mode) => mode == WebtoonMode::Strip,
-            _ => l.word(Key::Mode) == "strip",
-        };
+        // The layers give the mode and direction in order: the person's own choice for the
+        // series, its source's word (a webtoon opens as the Webtoons default), the reader's kept
+        // guess, then the medium. Where the source said, the book's shape is not guessed from.
+        let strip = l.word(Key::Mode) == "strip";
         let vertical = l.word(Key::Mode) == "vertical" && !self.surface.eink;
         Plan {
             target: Target {
@@ -771,8 +843,8 @@ impl Session {
             } else {
                 ReadDirection::RightToLeft
             },
-            guess_mode: self.webtoon.is_none() && !l.series_has(Key::Mode),
-            guess_direction: !l.series_has(Key::Direction),
+            guess_mode: !l.series_has(Key::Mode) && !l.sourced(Key::Mode),
+            guess_direction: !l.series_has(Key::Direction) && !l.sourced(Key::Direction),
         }
     }
 
@@ -849,7 +921,8 @@ impl Session {
             }
         }
         if said.is_some() {
-            self.layers = cx.layers(self.medium, Some(self.work.as_str()));
+            self.layers =
+                cx.layers_with(self.medium, Some(self.work.as_str()), Some(self.source));
         }
         if !self.opened {
             self.opened = true;
@@ -866,8 +939,9 @@ impl Session {
         if let Some(msg) = said {
             cx.send(notice(msg, Some(ReaderAction::ChangeMode), RESUMED_MS, eink));
         }
-        if let Some(page) = self.resumed.take() {
-            let msg = ReadingMsg::ReaderResumed { page: i64::from(page) + 1 };
+        if let Some(page) = self.resumed.take()
+            && let Some(msg) = resumed_msg(self.mode, page, self.start.strip)
+        {
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, eink));
         }
         let start = match self.start.strip {
@@ -926,12 +1000,15 @@ impl Session {
                 if index == self.at + 1 {
                     self.chapter_read(cx, Reached::MovedOn);
                 }
+                // A strip flows into the next chapter in the same scroll, under its marker:
+                // it starts at its first image, never at a place kept from before.
+                let flowing = self.mode == ReaderMode::Strip && index == self.at + 1;
                 let store = &cx.services.store;
                 let page = store
                     .read_chapters(self.work.as_str())
                     .unwrap_or_default()
                     .into_iter()
-                    .find(|k| k.chapter == chapter.as_str() && !k.read)
+                    .find(|k| k.chapter == chapter.as_str() && !k.read && !flowing)
                     .and_then(|k| k.last_page)
                     .unwrap_or(0);
                 let novel = novel::kept_novel(cx, &self.work, &chapter);
@@ -1000,12 +1077,17 @@ impl Session {
         }
     }
 
-    /// Ask the worker for the next chapter's first page, once a chapter.
+    /// Ask the worker for the next chapter's first page, once a chapter. A chapter from a
+    /// source has that page fetched first, and only that page.
     fn peek(&mut self, cx: &Cx<'_>, pages: &Pages) {
         if std::mem::replace(&mut self.peeked, true) {
             return;
         }
         let Some(next) = self.chapters.get(self.at + 1) else { return };
+        if next.format == novel::SOURCE {
+            novel::peek_source(cx, pages, self.id, &self.work, (self.at + 1, next));
+            return;
+        }
         if novel::prepares(next) {
             return;
         }
@@ -1225,6 +1307,20 @@ impl Session {
     }
 }
 
+/// "Resumed at page 8", or at an image in a strip. Nothing at the chapter's very start, where
+/// Start over would have nothing to do.
+fn resumed_msg(mode: ReaderMode, page: u32, strip: Option<StripPos>) -> Option<ReadingMsg> {
+    let into = strip.filter(|s| s.image == page).map_or(0.0, |s| s.offset);
+    if page == 0 && into < 0.05 {
+        return None;
+    }
+    Some(if mode == ReaderMode::Strip {
+        ReadingMsg::ReaderResumedImage { image: i64::from(page) + 1 }
+    } else {
+        ReadingMsg::ReaderResumed { page: i64::from(page) + 1 }
+    })
+}
+
 /// The Moved notice for a chapter's label. A label that is only a number, with or without a
 /// chapter word (`14`, `14.5`, `Chapter 14`), reads "chapter 14"; any other label is shown whole.
 fn moved_msg(label: &str, page: i64, device: String) -> ReadingMsg {
@@ -1331,7 +1427,9 @@ mod tests {
     use super::*;
     use crate::{host::QuietHost, outbox::Envelope};
 
+    mod hints;
     mod novels;
+    mod peek;
 
     const WORK: &str = "a:4242";
 
@@ -1573,7 +1671,15 @@ mod tests {
 
         /// Open at `at` and wait for the view and its leaves.
         async fn open(&mut self, at: OpenAt) -> (ReaderView, Vec<Leaf>, Vec<ReaderEvent>) {
-            let work = WorkId::new(WORK);
+            self.open_work(WorkId::new(WORK), at).await
+        }
+
+        /// As [`Self::open`], for another work than [`WORK`].
+        async fn open_work(
+            &mut self,
+            work: WorkId,
+            at: OpenAt,
+        ) -> (ReaderView, Vec<Leaf>, Vec<ReaderEvent>) {
             self.send(ReaderCommand::Open { work, chapter: None, at, surface: surface() });
             let view = self
                 .until(|e| match e {
@@ -1763,7 +1869,7 @@ mod tests {
         h.send(ReaderCommand::Close { session });
 
         // Paged for webtoons, and the series opens paged: the default is read at each open.
-        h.config.effective_mut().reading.webtoon.mode = WebtoonMode::Paged;
+        h.config.effective_mut().reading.webtoon.mode = kaeri_core::config::WebtoonMode::Paged;
         let (view, _, _) = h.open(OpenAt::Resume).await;
         assert_eq!(view.mode, ReaderMode::Paged);
         let session = h.session();
@@ -1977,19 +2083,19 @@ mod tests {
 
         let (view, _, said) = h.open(OpenAt::Resume).await;
         assert_eq!((view.start.page, view.start.strip), (Some(1), Some(at)));
-        assert_eq!(notices(&said), [ReadingMsg::ReaderResumed { page: 2 }]);
+        assert_eq!(notices(&said), [ReadingMsg::ReaderResumedImage { image: 2 }]);
         let session = h.session();
         h.send(ReaderCommand::Close { session });
-        // The first folder stays: the store still lists its files beside the second's, and
-        // either may be the chapter opened.
-        let Harness { _dir: _first_folder, .. } = h;
+        // The book stays where the first run laid it; only the app is started again.
+        let _books = h._dir;
+        drop((h.reader, h.services, h.tx, h.inbox));
 
         // Started again on the same store.
         let mut h = harness(Store::open(&db).unwrap());
         let (view, _, said) = h.open(OpenAt::Resume).await;
         assert_eq!(view.mode, ReaderMode::Strip);
         assert_eq!((view.start.page, view.start.strip), (Some(1), Some(at)));
-        assert_eq!(notices(&said), [ReadingMsg::ReaderResumed { page: 2 }]);
+        assert_eq!(notices(&said), [ReadingMsg::ReaderResumedImage { image: 2 }]);
 
         // Partway down the first image is a place too.
         let top = StripPos { image: 0, offset: 0.25 };
@@ -2002,6 +2108,68 @@ mod tests {
         // From the start, nothing of the strip's place.
         let (view, _, _) = h.open(OpenAt::Start).await;
         assert_eq!((view.start.page, view.start.strip), (Some(0), None));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_chapter_kept_at_its_start_opens_without_a_resumed_notice() {
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Resume).await;
+        h.shown(1, TurnHow::Turn).await;
+        h.shown(0, TurnHow::Turn).await;
+        let session = h.session();
+        h.send(ReaderCommand::Close { session });
+        assert_eq!(h.kept("1").and_then(|c| c.last_page), Some(0));
+
+        let (view, _, said) = h.open(OpenAt::Resume).await;
+        assert_eq!(view.start.page, Some(0));
+        assert!(notices(&said).is_empty(), "no Resumed at page 1: {said:?}");
+    }
+
+    /// A strip runs on into the next chapter under its marker, so that chapter opens at its
+    /// first image even where a place in it was kept; Continue on a paged chapter goes back to
+    /// the kept page.
+    #[tokio::test(start_paused = true)]
+    async fn a_strip_flows_into_the_next_chapter_at_its_first_image() {
+        let store = Store::open_in_memory().unwrap();
+        let mut h = harness(store);
+        // Chapter 2 was left at its second image.
+        h.services.store.set_series_setting(WORK, "mode", Some("strip"), true, 2).unwrap();
+        let work = WorkId::new(WORK);
+        let at = OpenAt::Resume;
+        h.send(ReaderCommand::Open {
+            work,
+            chapter: Some(ChapterId::new("2")),
+            at,
+            surface: surface(),
+        });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        let session = h.session();
+        let chapter = ChapterId::new("2");
+        let at = StripPos { image: 1, offset: 0.5 };
+        h.send(ReaderCommand::StripAt { session, chapter, at, foot_visible: false });
+        h.send(ReaderCommand::Close { session });
+        assert_eq!(h.kept("2").and_then(|c| c.last_page), Some(1));
+
+        let work = WorkId::new(WORK);
+        let chapter = Some(ChapterId::new("1"));
+        h.send(ReaderCommand::Open { work, chapter, at: OpenAt::Start, surface: surface() });
+        h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+        h.drain();
+        let session = h.session();
+        let foot = StripPos { image: 2, offset: 1.0 };
+        let chapter = ChapterId::new("1");
+        h.send(ReaderCommand::StripAt { session, chapter, at: foot, foot_visible: true });
+        h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+        let view = h
+            .until(|e| match e {
+                ReaderEvent::Opened(view) => Some(view.clone()),
+                _ => None,
+            })
+            .await;
+        assert_eq!(view.chapter.id.as_str(), "2");
+        assert_eq!((view.start.page, view.start.strip), (Some(0), None));
+        let said = h.drain();
+        assert!(notices(&said).is_empty(), "flowing on says nothing: {said:?}");
     }
 
     #[tokio::test(start_paused = true)]

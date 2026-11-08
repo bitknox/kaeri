@@ -2,7 +2,11 @@
 //! for the drain; and which trackers a finished episode is queued for.
 
 use kaeri_core::ids::AnilistId;
-use kaeri_model::{catalog::LibrarySegment, event::Event, stores::Secret};
+use kaeri_model::{
+    catalog::{ContentList, LibrarySegment},
+    event::Event,
+    stores::Secret,
+};
 
 use crate::{jobs::JobGuard, outbox::Outbox, services::Services, tracking};
 
@@ -122,7 +126,7 @@ pub fn connect_kitsu(
 
 /// Move a title to another of the trackers' lists, queued for the drain.
 pub fn set_status(id: AnilistId, status: LibrarySegment, services: &Services, tx: &Outbox) {
-    let Services { sync, store, .. } = services;
+    let Services { sync, store, meta, .. } = services;
     tracking::set_status(sync, id, status);
     // And as the person set it on this device, for the devices that have no tracker to ask. The
     // tracker's own list wins where it has the title; this fills where it has not.
@@ -133,6 +137,21 @@ pub fn set_status(id: AnilistId, status: LibrarySegment, services: &Services, tx
     // makes the badge move immediately.
     for state in sync.state_after_enqueue() {
         let _ = tx.send(Event::Sync(Box::new(state)));
+    }
+    // The Library's lists as they are now, for a front end that has shown them: the title
+    // leaves one list and joins the other without the Library being asked again. An answer
+    // that failed is left out, so a status set offline keeps the lists on screen.
+    if sync.library_shown.load(std::sync::atomic::Ordering::Relaxed) {
+        let (sync, store, meta, tx) = (sync.clone(), store.clone(), meta.clone(), tx.clone());
+        tokio::spawn(async move {
+            let answers =
+                tracking::library_answers(&sync, &store, &meta, &LibrarySegment::ALL).await;
+            for answer in answers {
+                if matches!(&answer, Event::Content { content: ContentList::Entries(_), .. }) {
+                    let _ = tx.send(answer);
+                }
+            }
+        });
     }
 }
 
@@ -156,11 +175,10 @@ pub fn load_library(
     tx: &Outbox,
 ) {
     let Services { store, sync, meta, .. } = services;
-    let (sync, tx, store, titles) =
-        (sync.clone(), tx.clone(), store.clone(), meta.titles().clone());
+    let (sync, tx, store, meta) = (sync.clone(), tx.clone(), store.clone(), meta.clone());
     tokio::spawn(async move {
         let _job = job;
-        let update = tracking::load_library(&sync, &store, &titles, segment).await;
+        let update = tracking::load_library(&sync, &store, &meta, segment).await;
         let _ = tx.send(update);
     });
 }

@@ -12,7 +12,7 @@ Kaeri                                                                           
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   https://plugins.example/join/Wd3Kp8Lq2Zx7Nv5Rt1Yb0g?open#Qe7Ga1Ud5Js0Lo6Wi2Ty9Rb3Np8
 
-  Copied to the clipboard where the terminal allows it, or select it to copy.
+  Copied, if this terminal allows it. If not, select the link to copy it.
   Anyone with it can join, without a name, as often as they like.
   It works until the store goes back to invites only.
 
@@ -60,8 +60,8 @@ r12 c02-85 fg=text bg=ground mod=BOLD
 r12 c86-119 fg=rule bg=ground
 r13 c00-119 fg=rule bg=ground
 r14 c00-01 fg=rule bg=ground
-r14 c02-76 fg=text-dim bg=ground
-r14 c77-119 fg=rule bg=ground
+r14 c02-72 fg=text-dim bg=ground
+r14 c73-119 fg=rule bg=ground
 r15 c00-01 fg=rule bg=ground
 r15 c02-64 fg=text-dim bg=ground
 r15 c65-119 fg=rule bg=ground

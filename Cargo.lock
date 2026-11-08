@@ -3327,7 +3327,6 @@ version = "0.4.0"
 dependencies = [
  "async-trait",
  "futures",
- "image",
  "jiff",
  "kaeri-audio-tap",
  "kaeri-cast",
@@ -3352,7 +3351,6 @@ dependencies = [
  "tracing-appender",
  "tracing-subscriber",
  "uniffi",
- "zip",
 ]
 
 [[package]]
@@ -3505,6 +3503,7 @@ dependencies = [
  "jiff",
  "kaeri-core",
  "kaeri-net",
+ "kaeri-pages",
  "regex",
  "reqwest 0.13.1",
  "tempfile",
@@ -3668,6 +3667,7 @@ dependencies = [
 name = "kaeri-testkit"
 version = "0.4.0"
 dependencies = [
+ "image",
  "jiff",
  "kaeri-core",
  "kaeri-meta",
@@ -3677,6 +3677,8 @@ dependencies = [
  "serde_json",
  "tempfile",
  "tokio",
+ "tracing",
+ "zip",
 ]
 
 [[package]]

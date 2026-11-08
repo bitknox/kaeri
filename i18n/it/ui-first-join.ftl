@@ -1,6 +1,6 @@
 first-other-title = Usi già { -app-name } su un altro { -device }?
-first-other-line = Abbinalo e questo { -device } riceve le tue { -source-pl }, i tuoi { -tracker-pl } e la cronologia. I passaggi successivi sono quindi completati.
-first-other-pair-line = Mostra un codice da inserire sull’altro { -device }. Entrambi devono essere sullo stesso Wi-Fi.
+first-other-line = Abbinalo e questo { -device } riceve le tue { -source-pl }, i tuoi { -tracker-pl } e la cronologia, e il resto della configurazione è già fatto.
+first-other-pair-line = Ricevi un codice da inserire sull’altro { -device }. Entrambi devono essere sullo stesso Wi-Fi.
 first-other-restore = Ripristina da una cartella cloud
 first-other-restore-line = Usa la chiave di recupero che hai salvato
 first-other-no = No, inizia qui

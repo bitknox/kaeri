@@ -52,22 +52,22 @@ store-install = Cài đặt
 store-installed-row = Đã cài
 store-install-all-reading = Cài tất cả để đọc
 store-installed = { $count ->
-   *[other] Đã cài, { -plugin-pl }: { $count }. Chúng nằm trong mục “{ -source-pl }”.
+   *[other] Đã cài { $count } { -plugin }. Chúng nằm trong mục { -source-cap-pl } của bạn.
  }
 store-other-medium = Mọi { -plugin } trong { $store } đều để xem
 store-other-medium-line = Xem đang tắt trên { -device } này, nên không cái nào hiện trong mục “{ -source-pl }”.
 store-turn-on-watching = Bật xem
 store-empty = { $store } chưa có { -plugin-pl }
-store-empty-line = Bạn là thành viên, nên { -plugin-pl } mới sẽ hiện trong “{ -plugin-store-cap-pl }” khi { $owner } thêm chúng.
+store-empty-line = Bạn là thành viên, nên { -plugin-pl } mới sẽ hiện trong { -plugin-store-cap-pl } khi { $owner } thêm chúng.
 store-err-unreachable = Không kết nối được với { $host }
 store-err-unreachable-line = Lời mời có vẻ đúng, nhưng { -store } không phản hồi. Hãy thử lại sau, hoặc hỏi { $owner } xem nó có đang chạy không.
 store-other-medium-more = { $count ->
    *[other] Còn { $count } cái để xem, nhưng xem đang tắt trên { -device } này.
  }
 store-tv-reading-only = { $count ->
-   *[other] Còn { $count } cái để đọc, nhưng TV này không hỗ trợ đọc.
+   *[other] Còn { $count } { -plugin } khác dành cho việc đọc, mà TV này không hỗ trợ.
  }
-store-tv-all-reading = Mọi { -plugin } trong { $store } đều để đọc, nhưng TV này không hỗ trợ đọc.
+store-tv-all-reading = Mọi { -plugin } trong { $store } đều dành cho việc đọc, mà TV này không hỗ trợ.
 store-plugin-row = Phiên bản { $version } · có thể kết nối tới { $hosts }
 source-added = Đã thêm { $name } · { $series } bộ
 source-added-plugins = { $count ->
@@ -75,6 +75,9 @@ source-added-plugins = { $count ->
  }
 source-row-server = { $libraries ->
    *[other] { $kind } · { $series } bộ trong { $libraries } thư viện · vừa thêm
+ }
+source-row-server-series = { $libraries ->
+   *[other] { $kind } · { $series } bộ trong { $libraries } thư viện
  }
 source-row-server-empty = { $kind } · chưa có bộ nào · sẽ kiểm tra lại sau 30 phút
 source-row-folder = { $skipped ->

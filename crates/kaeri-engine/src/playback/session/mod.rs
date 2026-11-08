@@ -515,7 +515,7 @@ pub async fn play(
         if let Some(previous) = current.tracks_for.replace(key) {
             for action in owed {
                 if let TrackAction::Remember(memory) = action {
-                    remember_tracks(&store, settings.remember_tracks, previous, memory);
+                    remember_tracks(&store, settings.remember_tracks, previous, memory).await;
                 }
             }
         }

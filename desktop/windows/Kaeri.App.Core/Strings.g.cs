@@ -516,6 +516,9 @@ public static partial class T
     /// <summary>A notice over the page when a chapter opens where it was left. It offers Start over.</summary>
     public static string ReaderResumed(long page) => Fill(Get("ReaderResumed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The same notice in a webtoon strip, which counts images rather than pages.</summary>
+    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</summary>
     public static string ReaderBackToPage(long page) => Fill(Get("ReaderBackToPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -1376,6 +1379,39 @@ public static partial class T
 
     /// <summary>Search: a filter drop-down with three or more values picked: the first, then how many more.</summary>
     public static string FilterPickedMore(string first, long more) => Fill(Get("FilterPickedMore"), ("first", first), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Search: a genre left out of the results, as the Genre drop-down and its chip say it.</summary>
+    public static string SearchGenreLeftOut(string genre) => Fill(Get("SearchGenreLeftOut"), ("genre", genre));
+
+    /// <summary>Search: the screen reader's name for the Filters button while some of the panel's filters are set.</summary>
+    public static string SearchFiltersButtonSet(long count) => Fill(Get("SearchFiltersButtonSet"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Search: the shortcut list's line for opening and closing the filters panel.</summary>
+    public static string ShortcutsSearchFilters => Get("ShortcutsSearchFilters");
+
+    /// <summary>Search filters panel: how a genre or tag is picked with the pointer. A right-click offers each choice.</summary>
+    public static string FilterHintClick => Get("FilterHintClick");
+
+    /// <summary>Search filters panel: context menu item that includes a genre or tag in the results.</summary>
+    public static string SearchPickInclude => Get("SearchPickInclude");
+
+    /// <summary>Search filters panel: context menu item that leaves a genre or tag out of the results.</summary>
+    public static string SearchPickLeaveOut => Get("SearchPickLeaveOut");
+
+    /// <summary>Search filters panel: placeholder of the lower bound of a range, such as the first year.</summary>
+    public static string SearchRangeFrom => Get("SearchRangeFrom");
+
+    /// <summary>Search filters panel: placeholder of the upper bound of a range, such as the last year.</summary>
+    public static string SearchRangeTo => Get("SearchRangeTo");
+
+    /// <summary>Search filters panel: the unit after the episode length's bounds, in minutes.</summary>
+    public static string SearchMinutesUnit => Get("SearchMinutesUnit");
+
+    /// <summary>Search filters panel: the score slider's value while no minimum is set.</summary>
+    public static string SearchScoreAny => Get("SearchScoreAny");
+
+    /// <summary>Title bar search box: a suggestion that adds a genre or tag as a filter, rather than searching for the words.</summary>
+    public static string SearchSuggestFilter(string name) => Fill(Get("SearchSuggestFilter"), ("name", name));
 
     /// <summary>Title page: a season in the season picker with when it aired, such as "Season 2 · Spring 2025".</summary>
     public static string TitleSeasonWhen(string season, string when) => Fill(Get("TitleSeasonWhen"), ("season", season), ("when", when));
@@ -2978,6 +3014,27 @@ public static partial class T
 
     /// <summary>Name of the controller's right stick, in the controller help.</summary>
     public static string PadButtonRightStick => Get("PadButtonRightStick");
+
+    /// <summary>Controller help: the D-pad in the reader turns the page, the way the book reads.</summary>
+    public static string PadHelpTurnPage => Get("PadHelpTurnPage");
+
+    /// <summary>Controller help: the left shoulder button in the reader.</summary>
+    public static string PadHelpPreviousChapter => Get("PadHelpPreviousChapter");
+
+    /// <summary>Controller help: the right shoulder button in the reader.</summary>
+    public static string PadHelpNextChapter => Get("PadHelpNextChapter");
+
+    /// <summary>Controller help: the A button in the reader shows or hides the bar with the title and settings.</summary>
+    public static string PadHelpReaderBar => Get("PadHelpReaderBar");
+
+    /// <summary>Controller help: the menu button in the reader.</summary>
+    public static string PadHelpReaderSettings => Get("PadHelpReaderSettings");
+
+    /// <summary>Controller help: the B button in the reader.</summary>
+    public static string PadHelpCloseReader => Get("PadHelpCloseReader");
+
+    /// <summary>Heading in the controller help for the buttons in the reader.</summary>
+    public static string PadHelpReader => Get("PadHelpReader");
 
     /// <summary>Checkbox of the close question.</summary>
     public static string CloseDontAsk => Get("CloseDontAsk");
@@ -4740,7 +4797,7 @@ public static partial class T
     /// <summary>State of a member who is watching. The time is already formatted, such as 2:14.</summary>
     public static string PartyMemberWatchingFrom(string time) => Fill(Get("PartyMemberWatchingFrom"), ("time", time));
 
-    /// <summary>Label of the I'm ready button once you are ready.</summary>
+    /// <summary>Label of the Ready to watch button once you are ready.</summary>
     public static string PartyReadyOn => Get("PartyReadyOn");
 
     /// <summary>Heading of the invite block in the lobby.</summary>
@@ -5635,6 +5692,9 @@ public static partial class T
     /// <summary>Under the top line of the page between chapters, once the chapter counts as read.</summary>
     public static string ReaderEndRead => Get("ReaderEndRead");
 
+    /// <summary>Under the end of chapter line, naming the trackers the read went to.</summary>
+    public static string ReaderEndTracker(string trackers) => Fill(Get("ReaderEndTracker"), ("trackers", trackers));
+
     /// <summary>Small heading above the next chapter on the page between chapters.</summary>
     public static string ReaderEndNext => Get("ReaderEndNext");
 
@@ -5734,6 +5794,33 @@ public static partial class T
     /// <summary>Look choice that follows the system's light or dark.</summary>
     public static string ReaderLookSystem => Get("ReaderLookSystem");
 
+    /// <summary>Top line of the page between chapters. The chapter is its number, such as 12.</summary>
+    public static string ReaderEndOfChapterNumber(string chapter) => Fill(Get("ReaderEndOfChapterNumber"), ("chapter", chapter));
+
+    /// <summary>The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.</summary>
+    public static string ReaderEndFacts(string chapter, string facts) => Fill(Get("ReaderEndFacts"), ("chapter", chapter), ("facts", facts));
+
+    /// <summary>The next chapter's length on the page between chapters.</summary>
+    public static string ReaderEndPages(long count) => Fill(GetPlural("ReaderEndPages", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.</summary>
+    public static string ReaderEndFrom(string source) => Fill(Get("ReaderEndFrom"), ("source", source));
+
+    /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
+    public static string ReaderChapterLine(string chapter) => Fill(Get("ReaderChapterLine"), ("chapter", chapter));
+
+    /// <summary>The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.</summary>
+    public static string ReaderDividerFactsSource(string facts, string source) => Fill(Get("ReaderDividerFactsSource"), ("facts", facts), ("source", source));
+
+    /// <summary>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</summary>
+    public static string ReaderEndSwipe => Get("ReaderEndSwipe");
+
+    /// <summary>The next episode's length on the divider inside a strip.</summary>
+    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
+    public static string ReaderChapterLineTitled(string chapter, string title) => Fill(Get("ReaderChapterLineTitled"), ("chapter", chapter), ("title", title));
+
     /// <summary>Button in the first run that opens the reading demo.</summary>
     public static string OnboardingReadDemo => Get("OnboardingReadDemo");
 
@@ -5808,6 +5895,51 @@ public static partial class T
 
     /// <summary>Primary action on the demo's series page.</summary>
     public static string DemoReadChapter(string number) => Fill(Get("DemoReadChapter"), ("number", number));
+
+    /// <summary>Page between chapters, under the tracker line: the server has the progress.</summary>
+    public static string ProgressServerSaved(string server) => Fill(Get("ProgressServerSaved"), ("server", server));
+
+    /// <summary>Same place, only after 600 ms without an answer.</summary>
+    public static string ProgressServerSending(string server) => Fill(Get("ProgressServerSending"), ("server", server));
+
+    /// <summary>Same place, offline: the send waits in the queue.</summary>
+    public static string ProgressServerOffline(string server) => Fill(Get("ProgressServerOffline"), ("server", server));
+
+    /// <summary>Same place, the send failed for a reason that can pass.</summary>
+    public static string ProgressServerRetrying(string server) => Fill(Get("ProgressServerRetrying"), ("server", server));
+
+    /// <summary>Same place, the server said no. Try again follows it.</summary>
+    public static string ProgressServerFailed(string server, string reason) => Fill(Get("ProgressServerFailed"), ("server", server), ("reason", reason));
+
+    /// <summary>Reason: a Kavita key.</summary>
+    public static string ProgressWhyKey => Get("ProgressWhyKey");
+
+    /// <summary>Reason: a Komga or OPDS password.</summary>
+    public static string ProgressWhyPassword => Get("ProgressWhyPassword");
+
+    /// <summary>Reason.</summary>
+    public static string ProgressWhyGone => Get("ProgressWhyGone");
+
+    /// <summary>Reason, after a day of retries.</summary>
+    public static string ProgressWhyGaveUp => Get("ProgressWhyGaveUp");
+
+    /// <summary>Your sources, the server's row, second line.</summary>
+    public static string ProgressRowSaved(string ago) => Fill(Get("ProgressRowSaved"), ("ago", ago));
+
+    /// <summary>The server's row, after 600 ms without an answer.</summary>
+    public static string ProgressRowSending(long count) => Fill(GetPlural("ProgressRowSending", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The server's row, offline.</summary>
+    public static string ProgressRowOffline(long count) => Fill(GetPlural("ProgressRowOffline", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The server's row, the last try failed for a reason that can pass.</summary>
+    public static string ProgressRowRetrying(long count) => Fill(GetPlural("ProgressRowRetrying", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The server's row, the server said no. Try again sits beside it.</summary>
+    public static string ProgressRowFailed(long count, string reason) => Fill(GetPlural("ProgressRowFailed", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("reason", reason));
+
+    /// <summary>The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.</summary>
+    public static string ProgressRowOff(string kind) => Fill(Get("ProgressRowOff"), ("kind", kind));
 
     /// <summary>Sidebar and tab label: the shows' Home when both media are on.</summary>
     public static string NavWatch => Get("NavWatch");
@@ -8416,8 +8548,11 @@ public static partial class T
     /// <summary>Notice after Install all, for 4 seconds.</summary>
     public static string SourceAddedPlugins(long count, string store) => Fill(GetPlural("SourceAddedPlugins", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("store", store));
 
-    /// <summary>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</summary>
+    /// <summary>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</summary>
     public static string SourceRowServer(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServer", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</summary>
+    public static string SourceRowServerSeries(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServerSeries", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A server's row in Your sources while it shows no series.</summary>
     public static string SourceRowServerEmpty(string kind) => Fill(Get("SourceRowServerEmpty"), ("kind", kind));
@@ -11149,7 +11284,7 @@ public static partial class T
         ["NoticeCastNeverFetches"] = "{name} didn't start reading the stream. A VPN or a firewall on this device may be in the way.",
         ["NoticeCastRefused"] = "{name} couldn't play this stream. Try another source.",
         ["NoticeCastTakenOver"] = "Another device started something on {name}, so casting stopped.",
-        ["NoticeCastNotSameNetwork"] = "This device isn't on the network {name} is on, or reaches it through a VPN. Casting needs both on the same network.",
+        ["NoticeCastNotSameNetwork"] = "This device isn't on the network {name} is on, or reaches it through a VPN. Connect both to the same network to cast.",
         ["NoticeCastLost"] = "Lost {name}, so casting stopped.",
         ["NoticeCastNoDevice"] = "That TV is no longer on the network.",
         ["NoticeCastUnavailable"] = "This version of Kaeri can't cast to TVs.",
@@ -11253,13 +11388,13 @@ public static partial class T
         ["NoticeMatchResetFailed"] = "Couldn't reset the match. {reason}",
         ["NoticeMatchSaveFailed"] = "Couldn't save that match. {reason}",
         ["NoticeMatchDidNotStick"] = "That match didn't stick. The source may have changed. Try choosing it again.",
-        ["NoticeSourceSearchEmpty"] = "Nothing found for “{query}”. Try a different search.",
+        ["NoticeSourceSearchEmpty"] = "Nothing found for \"{query}\". Try a different search.",
         ["MatchRuledOutFormat"] = "Different format",
         ["MatchRuledOutEpisodes"] = "More episodes than this title",
         ["MatchRuledOutYear"] = "Different year",
         ["MatchSearchTimedOut"] = "It didn't answer in time.",
         ["MatchSearchSourceOff"] = "It isn't switched on.",
-        ["NoticeSourcePinned"] = "{source} will be used for this title.",
+        ["NoticeSourcePinned"] = "This title now plays from {source}.",
         ["NoticeSourceAutomatic"] = "Back to automatic source selection.",
         ["NoticeSourceChoiceFailed"] = "Couldn't save that choice. {reason}",
         ["NoticeNoSourceCouldList"] = "No source could list this show: {reason}",
@@ -11316,12 +11451,13 @@ public static partial class T
         ["ReadingAlsoABook"] = "Also a book",
         ["ReadingSplitChapter"] = "Chapter {chapter} goes to trackers as {whole}.",
         ["ReaderResumed"] = "Resumed at page {page}",
+        ["ReaderResumedImage"] = "Resumed at image {image}",
         ["ReaderBackToPage"] = "Back to page {page}",
         ["ReaderMoved"] = "Moved to {chapter}, page {page}, where {device} stopped",
         ["ReaderMovedNumber"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
-        ["ReaderDetectedRightToLeft"] = "Right to left, detected",
-        ["ReaderDetectedLeftToRight"] = "Left to right, detected",
-        ["ReaderDetectedStrip"] = "Long strip, detected",
+        ["ReaderDetectedRightToLeft"] = "Looks like right to left",
+        ["ReaderDetectedLeftToRight"] = "Looks like left to right",
+        ["ReaderDetectedStrip"] = "Looks like a long strip",
         ["ReadingFailedOffline"] = "You're offline. Downloaded chapters still open.",
         ["ReadingFailedSourceDown"] = "{source} isn't answering. Try again later.",
         ["ReadingFailedNotFound"] = "This source doesn't have it anymore. Try another source.",
@@ -11490,7 +11626,7 @@ public static partial class T
         ["StoreMoved"] = "{store} is joined at {current}, but this link points to {target}. If the plugin store has moved, leave it first and join again.",
         ["StoreJoinWouldUnname"] = "You joined {store} as {member}. This link would join it again without your name, so nothing was changed.",
         ["StoreNotTheInvited"] = "{url} is not the plugin store in the invite ({reason}). Nothing was joined.",
-        ["StoreTokenNotKept"] = "Couldn't keep the token for this plugin store. {reason}",
+        ["StoreTokenNotKept"] = "Couldn't save the token for this plugin store. {reason}",
         ["StoreInviteUnusable"] = "That invite was already used, was cancelled or has expired. Ask for a new one.",
         ["StoreInviteUsedUp"] = "This invite has been used up. Ask {owners} for a new one.",
         ["StoreInviteEnded"] = "This invite ended {when}. Ask {owners} for a new one.",
@@ -11512,10 +11648,10 @@ public static partial class T
         ["StoreAdminMissing"] = "{store} has no admin page. Its server may be older.",
         ["StoreAdminLinkForeign"] = "{store} sent an admin link for another address.",
         ["StoreOpenJoinUnsupported"] = "{store}'s server is older and can't let anyone join with a link. Update it first.",
-        ["SourceSwitchedOff"] = "{name} is off. It is skipped when looking for episodes.",
+        ["SourceSwitchedOff"] = "{name} is off. Kaeri skips it when looking for episodes.",
         ["SourceSwitchedOn"] = "{name} is on.",
         ["PluginNotLoaded"] = "{id} isn't loaded. Check that it's installed under Sources.",
-        ["ReleasePinned"] = "{name} will be used for this title.",
+        ["ReleasePinned"] = "This title now uses {name}.",
         ["NoticeChoiceNotSaved"] = "Couldn't save that choice. {reason}",
         ["TorrentProxyWaiting"] = "The proxy check failed. Torrents start once it passes.",
         ["TorrentProxyUnchecked"] = "Torrents start once the proxy check passes.",
@@ -11546,8 +11682,8 @@ public static partial class T
         ["NoticeSignInStopped"] = "The sign-in to {tracker} stopped before it finished. Try again. {reason}",
         ["NoticeTokenExchangeFailed"] = "Couldn't get a token from {tracker}. Try signing in again. {reason}",
         ["NoticeBrowserNotOpened"] = "Couldn't open a browser for the sign-in. Check that one is installed and try again. {reason}",
-        ["NoticeSignInNotWaiting"] = "No sign-in to {tracker} is waiting for that. Start the sign-in again.",
-        ["NoticeSignInWrongRequest"] = "That sign-in to {tracker} didn't come back from this request. Start the sign-in again.",
+        ["NoticeSignInNotWaiting"] = "A sign-in reply from {tracker} arrived, but no sign-in was waiting for it. Start the sign-in again.",
+        ["NoticeSignInWrongRequest"] = "The sign-in reply from {tracker} doesn't match the request. Start the sign-in again.",
         ["NoticeSignInNoToken"] = "The sign-in to {tracker} came back without a token. Try again.",
         ["NoticeMalClientMissingBuild"] = "Couldn't finish signing in to MyAnimeList: this build has no client for it.",
         ["NoticeKitsuSignsInOnAccounts"] = "Kitsu signs in from the Accounts screen.",
@@ -11579,7 +11715,7 @@ public static partial class T
         ["NoticeEpisodesAired_other"] = "{count} new episodes of shows you watch aired. The calendar has them.",
         ["NoticeUpdateAvailable"] = "{tag} is out. Run kaeri --update to install it.",
         ["CauseProxyNeedsAddress"] = "A proxy needs a host and a port.",
-        ["CauseProxyAddressUnusable"] = "The proxy's address is not one a check can use.",
+        ["CauseProxyAddressUnusable"] = "The proxy check can't use this address.",
         ["CauseServerUnreachable"] = "The server couldn't be reached.",
         ["LegalHostsNoContent"] = "Kaeri doesn't host any shows or books. You add your own sources.",
         ["NoticeSaved"] = "Saved {label}.",
@@ -11587,12 +11723,12 @@ public static partial class T
         ["NoticeTitleLoadFailed"] = "Couldn't load this title. Check your connection and try again.",
         ["NoticePlaybackFailed"] = "Playback failed. Try another source.",
         ["NoticeEngineFault"] = "Something went wrong inside Kaeri. It carried on, but if a screen looks stuck, quit and open it again.",
-        ["NoticeDatabaseSetAside"] = "The database was damaged, so Kaeri started a new one. The old file is kept at {path}. Your trackers bring back what they hold at the next sync.",
+        ["NoticeDatabaseSetAside"] = "The database was damaged, so Kaeri started a new one. The old file is kept at {path}. What your trackers hold comes back at the next sync.",
         ["StartFailedFolder"] = "Kaeri couldn't create the folder {path}. Check that the disk has room and the folder can be written to, then try again. {reason}",
         ["StartFailedConfig"] = "{path} has a setting Kaeri can't use: {problem}. Fix or remove it, then try again.",
         ["ConfigResetFailed"] = "Kaeri couldn't move {path} aside to reset the settings. {reason}",
         ["StartFailedDatabase"] = "Kaeri couldn't open its database at {path}. If another Kaeri app is open on this folder, quit it and try again. {reason}",
-        ["StartFailedNetwork"] = "Kaeri couldn't set up its network connection from the network settings in config.toml. {reason}",
+        ["StartFailedNetwork"] = "Kaeri couldn't connect with the network settings in config.toml. Check them, then try again. {reason}",
         ["StartFailed"] = "Kaeri couldn't start. Quit and open it again. {reason}",
         ["StartFailedRemote"] = "The remote couldn't start. {reason}",
         ["StartFailedPlayer"] = "The player couldn't start. {reason}",
@@ -11603,8 +11739,8 @@ public static partial class T
         ["CrashNoticeTv"] = "Kaeri closed after a problem. You can report it from Settings, About.",
         ["NoticeSurpriseEmptyFilters"] = "No titles match these filters.",
         ["NoticeSurpriseEmptyPlanning"] = "Planning is empty.",
-        ["NoticeSurpriseOffline"] = "Offline. Search picks need AniList.",
-        ["NoticeSurpriseFailed"] = "Couldn't pick a title right now. Try again in a moment.",
+        ["NoticeSurpriseOffline"] = "You're offline. Surprise me needs AniList to pick a title.",
+        ["NoticeSurpriseFailed"] = "Couldn't reach AniList to pick a title. Try again in a moment.",
         ["ContinueMenuResume"] = "Continue",
         ["ContinueSyncWaiting_one"] = "One change waiting to sync",
         ["ContinueSyncWaiting_other"] = "{count} changes waiting to sync",
@@ -11623,6 +11759,17 @@ public static partial class T
         ["SearchSortName"] = "Sort",
         ["FilterPickedTwo"] = "{first}, {second}",
         ["FilterPickedMore"] = "{first} +{more}",
+        ["SearchGenreLeftOut"] = "Not {genre}",
+        ["SearchFiltersButtonSet"] = "Filters, {count} set",
+        ["ShortcutsSearchFilters"] = "Search filters",
+        ["FilterHintClick"] = "Click once to include, twice to leave out.",
+        ["SearchPickInclude"] = "Include",
+        ["SearchPickLeaveOut"] = "Leave out",
+        ["SearchRangeFrom"] = "From",
+        ["SearchRangeTo"] = "To",
+        ["SearchMinutesUnit"] = "min",
+        ["SearchScoreAny"] = "Any",
+        ["SearchSuggestFilter"] = "Filter by {name}",
         ["TitleSeasonWhen"] = "{season} · {when}",
         ["EpisodeDownloadText"] = "Download episode {episode}",
         ["EpisodeDownloadFailedText"] = "Couldn't download episode {episode}. Try again.",
@@ -11784,7 +11931,7 @@ public static partial class T
         ["SettingsCardState"] = "{title}, {state}",
         ["SettingsCardCheck"] = "{title}, {word}, {note}",
         ["SettingsClosingDetail"] = "Keep downloading leaves Kaeri in the notification area until they finish.",
-        ["SettingsPresenceRichDetail"] = "The cover, a progress bar and a link to the show on {tracker}. Needs the title shown.",
+        ["SettingsPresenceRichDetail"] = "The cover, a progress bar and a link to the show on {tracker}. It works only while the title is shown.",
         ["SettingsAnotherTv"] = "Another TV",
         ["SettingsTheme"] = "Theme",
         ["SettingsMotion"] = "Motion",
@@ -11824,16 +11971,16 @@ public static partial class T
         ["TorrentsDialogEditProxy"] = "Edit proxy",
         ["SettingsNoteTrailersWindows"] = "Trailers play muted from YouTube, which sees your IP address. They don't play on a metered connection, with animation effects off, in energy saver mode or with Narrator running.",
         ["SettingsNoteCastTvsPc"] = "They appear under Chromecast in Play on TV. This PC sends them the episode.",
-        ["SettingsNoteTorrentsWhileCastingPc"] = "Lets a TV with Chromecast built in play torrents. This PC sends the episode for as long as it plays.",
+        ["SettingsNoteTorrentsWhileCastingPc"] = "A TV with Chromecast built in can then play torrents. This PC sends the episode for as long as it plays.",
         ["SettingsLanguageRestart"] = "Restart",
         ["SettingsDifferences_one"] = "One title differs from {tracker}",
         ["SettingsDifferences_other"] = "{count} titles differ from {tracker}",
         ["SettingsDifferencesReview"] = "Review",
         ["SettingsSearch"] = "Search settings",
-        ["SettingsQualityDetailWindows"] = "Higher takes the best version a source offers, and more space.",
+        ["SettingsQualityDetailWindows"] = "Higher picks the best version a source has. It takes more space.",
         ["SettingsMergeSubtitlesDetailWindows"] = "Subtitles stay with the episode wherever the file goes.",
         ["SettingsKeepSeedingDetailWindows"] = "A download that keeps seeding stays in Kaeri's cache, not the download folder.",
-        ["SettingsDiscussionsNoteWindows"] = "Reads the comments on AniList's forum thread for episodes you have watched.",
+        ["SettingsDiscussionsNoteWindows"] = "Comments come from AniList's forum thread, once you've watched the episode.",
         ["SettingsCommentImagesNoteWindows"] = "Each image loads from the site that hosts it, which sees your IP address.",
         ["SettingsFolderBrowse"] = "Browse…",
         ["TrayStillDownloading"] = "Kaeri is still downloading",
@@ -11880,7 +12027,7 @@ public static partial class T
         ["StartFailedOpenFolder"] = "Open the folder",
         ["StartFailedQuit"] = "Quit",
         ["EngineStoppedTitle"] = "Kaeri stopped working",
-        ["EngineStoppedDetail"] = "The part of the app that does the work has stopped. Open Kaeri again to carry on.",
+        ["EngineStoppedDetail"] = "Downloads and sync stopped with it. Open Kaeri again to carry on.",
         ["EngineStoppedOpenAgain"] = "Open again",
         ["TitlebarSynced"] = "{tracker} synced",
         ["TitlebarNotSynced"] = "{tracker} not synced",
@@ -11915,7 +12062,7 @@ public static partial class T
         ["SourcesVersionReady"] = "Version {version} is ready",
         ["SourcesUseThis"] = "Use this source",
         ["SourcesUseName"] = "{name} on",
-        ["SourcesRemoveDetail"] = "It stops being tried for episodes. You can install it again from its plugin store.",
+        ["SourcesRemoveDetail"] = "Kaeri won't try it for episodes any more. You can install it again from its plugin store.",
         ["StoresUpdatesCount_one"] = "One to update",
         ["StoresUpdatesCount_other"] = "{count} to update",
         ["StoresOfflineKeepWorking"] = "It didn't answer when this device last asked. The plugins you installed keep working.",
@@ -11980,9 +12127,9 @@ public static partial class T
         ["ReportCrashSettings"] = "Crash report settings",
         ["SettingsGroupCrashes"] = "Crash reports",
         ["SettingsCrashSave"] = "Save crash reports on this device",
-        ["SettingsCrashSaveDetail"] = "When this is on, Kaeri keeps a short record of each crash on this device, with titles, addresses and names removed, so you can add it to Report a bug. Nothing is sent by itself.",
+        ["SettingsCrashSaveDetail"] = "Kaeri keeps a short record of each crash on this device for Report a bug, with titles, addresses and names removed. Nothing is sent by itself.",
         ["SettingsCrashAsk"] = "Ask after a crash",
-        ["SettingsCrashAskDetail"] = "Shows a notice at the next launch with Report…",
+        ["SettingsCrashAskDetail"] = "Kaeri shows a notice with Report… the next time it opens.",
         ["SettingsCrashOsHeading"] = "Kept by {system}",
         ["SettingsCrashOsDetail"] = "{system} kept these crashes from before you turned this on. Nothing from them is saved unless you add it.",
         ["SettingsCrashOsItem"] = "Crash · {when}",
@@ -11992,7 +12139,7 @@ public static partial class T
         ["SettingsCrashView"] = "View",
         ["SettingsCrashDelete"] = "Delete",
         ["SettingsCrashDeleteAll"] = "Delete all",
-        ["SettingsCrashFootnote"] = "Crash reports stay on this device. Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.",
+        ["SettingsCrashFootnote"] = "Crash reports stay on this device, and Kaeri sends nothing by itself. A report leaves only when you open it on GitHub from Report a bug. Reports are deleted after 30 days.",
         ["CalendarPreviousWeek"] = "Previous week",
         ["CalendarNextWeek"] = "Next week",
         ["CalendarThisWeek"] = "This week",
@@ -12034,9 +12181,9 @@ public static partial class T
         ["CastTvsNoteMac"] = "They appear under Chromecast in Play on TV. This Mac sends them the episode.",
         ["CastTvsNoteIphone"] = "They appear under Chromecast in Play on TV. This iPhone sends them the episode.",
         ["CastTvsNoteIpad"] = "They appear under Chromecast in Play on TV. This iPad sends them the episode.",
-        ["CastTorrentsNoteMac"] = "Lets a TV with Chromecast built in play torrents. This Mac sends the episode for as long as it plays.",
-        ["CastTorrentsNoteIphone"] = "Lets a TV with Chromecast built in play torrents. This iPhone sends the episode for as long as it plays.",
-        ["CastTorrentsNoteIpad"] = "Lets a TV with Chromecast built in play torrents. This iPad sends the episode for as long as it plays.",
+        ["CastTorrentsNoteMac"] = "A TV with Chromecast built in can then play torrents. This Mac sends the episode for as long as it plays.",
+        ["CastTorrentsNoteIphone"] = "A TV with Chromecast built in can then play torrents. This iPhone sends the episode for as long as it plays.",
+        ["CastTorrentsNoteIpad"] = "A TV with Chromecast built in can then play torrents. This iPad sends the episode for as long as it plays.",
         ["CastUpNextPlaysIn"] = "Up next · plays in {seconds} s",
         ["CastCouldntStart"] = "Couldn't start on {name}",
         ["CastStopped"] = "Casting stopped",
@@ -12174,6 +12321,13 @@ public static partial class T
         ["PadButtonView"] = "View",
         ["PadButtonLeftStick"] = "Left stick",
         ["PadButtonRightStick"] = "Right stick",
+        ["PadHelpTurnPage"] = "Turn the page",
+        ["PadHelpPreviousChapter"] = "Previous chapter",
+        ["PadHelpNextChapter"] = "Next chapter",
+        ["PadHelpReaderBar"] = "Show or hide the bar",
+        ["PadHelpReaderSettings"] = "Reader settings",
+        ["PadHelpCloseReader"] = "Close the reader",
+        ["PadHelpReader"] = "Reader",
         ["CloseDontAsk"] = "Don't ask again",
         ["CloseKeepGoing"] = "Keep going",
         ["PartyLookingSources"] = "Looking through your sources…",
@@ -12279,11 +12433,11 @@ public static partial class T
         ["DownloadsDeleteTitle"] = "Delete {name}?",
         ["DownloadsDeleteDetail"] = "The file is removed from this device.",
         ["DownloadsDeleteOneTitle"] = "Delete download",
-        ["DownloadsDeleteOneDetail"] = "It plays again only with a connection, or once you download it again.",
+        ["DownloadsDeleteOneDetail"] = "After this, the episode needs a connection to play, unless you download it again.",
         ["DownloadsDeleteWatched"] = "Delete watched downloads",
         ["DownloadsSeedingTitle"] = "Seeding",
         ["DownloadsSeedingAfterWatching"] = "Seeding after watching",
-        ["DownloadsSeedingNote"] = "Watched episodes are shared back while Kaeri is open, until the ratio or the time limit set in Settings, under Sources, is reached.",
+        ["DownloadsSeedingNote"] = "Watched episodes are shared back while Kaeri is open. Sharing stops at the ratio or time limit you set in Settings, under Sources.",
         ["DownloadsBackgroundTitle"] = "When the window closes with downloads running",
         ["DownloadsBackgroundKeep"] = "Keep downloading",
         ["DownloadsBackgroundStop"] = "Stop downloading",
@@ -12309,8 +12463,8 @@ public static partial class T
         ["EpisodeDownloadDone"] = "Downloaded",
         ["EpisodeDownloadFailed"] = "Couldn't download episode {episode}. Try again.",
         ["FirstOtherTitle"] = "Already use Kaeri on another device?",
-        ["FirstOtherLine"] = "Pair with it and this device gets your sources, trackers and history. The steps after this are then done.",
-        ["FirstOtherPairLine"] = "Shows a code to enter on that device. Both need the same Wi-Fi.",
+        ["FirstOtherLine"] = "Pair with it and this device gets your sources, trackers and history, and the rest of setup is done for you.",
+        ["FirstOtherPairLine"] = "You get a code to enter on that device. Both need the same Wi-Fi.",
         ["FirstOtherRestore"] = "Restore from a cloud folder",
         ["FirstOtherRestoreLine"] = "Uses the recovery key you saved",
         ["FirstOtherNo"] = "No, start here",
@@ -12323,9 +12477,9 @@ public static partial class T
         ["FirstJoinSigninsLine"] = "{trackers}",
         ["FirstJoinServer"] = "Add {host}",
         ["FirstJoinServerLine"] = "{kind} · signs in with the key from {device}, kept in {store}",
-        ["FirstJoinFolders"] = "Folders stay on {device}. Add this device’s own folders in Your sources.",
+        ["FirstJoinFolders"] = "Folders stay on {device}. Add this device's own folders in Your sources.",
         ["FirstJoinStepsDone"] = "Lists and sources are set up, so first run ends here. You can change them in Settings.",
-        ["FirstJoinStoreRefused"] = "{store} didn’t let this device in. {owner} can send you an invite.",
+        ["FirstJoinStoreRefused"] = "{store} didn't let this device in. {owner} can send you an invite.",
         ["FirstJoinSyncing"] = "Syncing with {device}",
         ["HomeTitle"] = "Home",
         ["HomeResumeEpisode"] = "Resume episode {episode}",
@@ -12348,7 +12502,7 @@ public static partial class T
         ["HomeEnd"] = "That's everything for now. Seasonal and Calendar have the full lists.",
         ["HomeEndSignedOut"] = "Sign in to AniList to bring in your list and Planning.",
         ["HomeSignIn"] = "Sign in to AniList",
-        ["HomeEndNoSources"] = "Add a source to play from Home. Plugin stores has some to choose from.",
+        ["HomeEndNoSources"] = "Add a source to play from Home. Plugins come from Plugin stores.",
         ["HomeNotFound"] = "Not found in your sources",
         ["HomeFailed"] = "Couldn't load suggestions",
         ["HomeTryAgain"] = "Try again",
@@ -12491,7 +12645,7 @@ public static partial class T
         ["TitleConnectDrive"] = "Connect the drive to play",
         ["LibraryPickerTitle"] = "Choose a folder with your episodes.",
         ["LibraryRemoveDetail"] = "Your files stay where they are.",
-        ["LibraryReasonOffline"] = "Couldn't ask AniList. It is tried again at the next scan.",
+        ["LibraryReasonOffline"] = "Couldn't reach AniList. The next scan tries again.",
         ["LibraryChooseMatch"] = "Choose the match",
         ["LibraryKeptLine"] = "Kept as its own title",
         ["LibraryFixMatch"] = "Fix this match",
@@ -12502,7 +12656,7 @@ public static partial class T
         ["LicensedTitle"] = "Licensed services",
         ["LicensedBody"] = "Kaeri can open titles in streaming services you pay for. It never plays them itself. Links come from AniList.",
         ["LicensedRegion"] = "Region",
-        ["LicensedRegionLine"] = "Hides links AniList marks for other countries. Most links name no country, so choose your services too.",
+        ["LicensedRegionLine"] = "Links AniList marks for other countries are hidden. Most links name no country, so choose your services too.",
         ["LicensedYours"] = "Your services",
         ["LicensedShowAll"] = "Show all {count}",
         ["LicensedRegionSystem"] = "Follow this device",
@@ -12650,7 +12804,7 @@ public static partial class T
         ["OnboardingWhereHosts"] = "Kaeri plays what you already have: files on this device, your Jellyfin server, and plugins from stores you join.",
         ["OnboardingOwnHeading"] = "Have your own media?",
         ["OnboardingInviteHeading"] = "Have an invite link?",
-        ["OnboardingWhereStores"] = "Plugins come from plugin stores. A plugin store is signed and gives each device its own token, so you join one with an invite link from its owner.",
+        ["OnboardingWhereStores"] = "Plugins come from plugin stores. Each one is signed and gives every device its own token, which is why you join with an invite link from its owner.",
         ["OnboardingDemoHeading"] = "Try it now",
         ["OnboardingDemoDetail"] = "The demo plays こうしす！, a series its makers share under CC BY 4.0, from Wikimedia Commons.",
         ["OnboardingPlayDemo"] = "Play the demo",
@@ -12664,12 +12818,12 @@ public static partial class T
         ["PartyJoin"] = "Join watch party",
         ["PartyLeave"] = "Leave watch party",
         ["PartyLeaving"] = "Leaving…",
-        ["PartyReadyAction"] = "I'm ready",
+        ["PartyReadyAction"] = "Ready to watch",
         ["PartyCopyInvite"] = "Copy invite link",
         ["PartyStay"] = "Stay",
         ["PartyLeaveAndClose"] = "Leave and close",
         ["PartyNotNow"] = "Not now",
-        ["PartyGettingReady"] = "Getting things ready…",
+        ["PartyGettingReady"] = "Loading suggestions…",
         ["PartyServer"] = "Server",
         ["PartyServerHint"] = "host:port",
         ["PartyRecentServers"] = "Recent servers",
@@ -12680,7 +12834,7 @@ public static partial class T
         ["PartyYourName"] = "Your name in the room",
         ["PartyServerPublic"] = "A public server run by {operator}, not by Kaeri.",
         ["PartyServerSuggest"] = "No server of your own? {server} is a public one, run by {operator}.",
-        ["PartyServerInvited"] = "A server the person who invited you chose. Kaeri doesn't run it.",
+        ["PartyServerInvited"] = "The person who invited you chose this server. Kaeri doesn't run it.",
         ["PartyServerShape"] = "Write the server as a host and a port, like party.example:8999.",
         ["PartyPrivacy"] = "The server sees your name, the room, and when anyone plays, pauses or seeks. Each of you plays the episode from your own sources.",
         ["PartyRoomHint"] = "Anyone who knows the room's name can join it. The invite link carries it, so nobody has to read it out.",
@@ -12750,7 +12904,7 @@ public static partial class T
         ["TogetherOpenPlayer"] = "Open player",
         ["TogetherRecent"] = "Recent rooms",
         ["TogetherRecentRow"] = "Episode {episode} · with {names} · {when}",
-        ["TogetherRecentEmpty"] = "Rooms you join show here, the last ten.",
+        ["TogetherRecentEmpty"] = "The last ten rooms you join show here.",
         ["TogetherRejoin"] = "Rejoin",
         ["TogetherForgetRoom"] = "Remove from recent rooms",
         ["TogetherSomeoneHere_one"] = "{names} is in the room",
@@ -12850,7 +13004,7 @@ public static partial class T
         ["PartyChatHiddenLine"] = "Hide chat is on in Settings, under Playback.",
         ["PartyChatShow"] = "Show chat",
         ["SettingsHideChat"] = "Hide chat in watch parties",
-        ["SettingsHideChatLine"] = "Lines, reactions and their ticks on the seek bar stay off the video, and the field is gone. The people list still shows who is in the room.",
+        ["SettingsHideChatLine"] = "Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.",
         ["PartyMute"] = "Mute {name}",
         ["PartyUnmute"] = "Unmute {name}",
         ["PartyUnmuteShort"] = "Unmute",
@@ -13058,8 +13212,8 @@ public static partial class T
         ["PlayerLoadSubtitleFile"] = "Load subtitle file…",
         ["PlayerLoadAudioFile"] = "Load audio file…",
         ["PlayerFilePickerFailed"] = "Couldn't open the file chooser. Try again.",
-        ["PlayerSubtitleFileFailed"] = "Couldn't load that subtitle file. Check that it is a subtitle file.",
-        ["PlayerAudioFileFailed"] = "Couldn't load that audio file. Check that it is an audio file.",
+        ["PlayerSubtitleFileFailed"] = "Couldn't load that file as subtitles. Choose a subtitle file, such as .srt or .ass.",
+        ["PlayerAudioFileFailed"] = "Couldn't load that file as audio. Choose an audio file, such as .mka or .flac.",
         ["PlayerTrackUnnamed"] = "Unnamed track",
         ["PlayerAudioTrackN"] = "Audio {id}",
         ["PlayerSubtitleTrackN"] = "Subtitles {id}",
@@ -13088,6 +13242,7 @@ public static partial class T
         ["ReaderTryAgain"] = "Try again",
         ["ReaderClose"] = "Close",
         ["ReaderEndRead"] = "Read",
+        ["ReaderEndTracker"] = "Read · {trackers} updated",
         ["ReaderEndNext"] = "Next",
         ["ReaderModeRtl"] = "Right to left",
         ["ReaderModeLtr"] = "Left to right",
@@ -13122,8 +13277,19 @@ public static partial class T
         ["ReaderGapNone"] = "None",
         ["ReaderGapSmall"] = "Small",
         ["ReaderLookSystem"] = "System",
+        ["ReaderEndOfChapterNumber"] = "End of chapter {chapter}",
+        ["ReaderEndFacts"] = "Chapter {chapter} · {facts}",
+        ["ReaderEndPages_one"] = "One page",
+        ["ReaderEndPages_other"] = "{count} pages",
+        ["ReaderEndFrom"] = "From {source}",
+        ["ReaderChapterLine"] = "Chapter {chapter}",
+        ["ReaderDividerFactsSource"] = "{facts} · from {source}",
+        ["ReaderEndSwipe"] = "Swipe to keep reading",
+        ["ReaderDividerImages_one"] = "One image",
+        ["ReaderDividerImages_other"] = "{count} images",
+        ["ReaderChapterLineTitled"] = "Chapter {chapter} · {title}",
         ["OnboardingReadDemo"] = "Read the demo",
-        ["OnboardingDemoBooksDetail"] = "The demo reads a short comic and a short story their makers share under Creative Commons.",
+        ["OnboardingDemoBooksDetail"] = "One short comic and one short story, shared by their makers under Creative Commons.",
         ["OnboardingDemoBothDetail"] = "One short episode and one short comic, shared by their makers under Creative Commons.",
         ["HomeDemoOnlyBooks"] = "Only the demo is on. Add a folder, a server or a plugin store to read your own books.",
         ["HomeSpotlightRead"] = "Read",
@@ -13131,16 +13297,16 @@ public static partial class T
         ["DemoSeriesFacts_other"] = "Demo · Comic · {pages} pages",
         ["DemoCreditBook"] = "{title} by {author}. Licensed {licence}. Read from Wikimedia Commons.",
         ["DemoCreditStory"] = "{title} by {author}. Public domain. It comes with the app.",
-        ["DemoCreditCover"] = "Cover: “{title}” by {artist}, {year}. Public domain. It comes with the app.",
+        ["DemoCreditCover"] = "Cover: \"{title}\" by {artist}, {year}. Public domain. It comes with the app.",
         ["ReaderDemoCredit"] = "{title} · {author} · {licence}",
         ["SearchDemoReads"] = "Demo · Reads now",
         ["SearchDemoOnlyBooks"] = "Only the demo is on. Other titles appear once you add a source.",
-        ["ReaderDemoEnd"] = "That’s the end of the demo",
+        ["ReaderDemoEnd"] = "That's the end of the demo",
         ["ReaderDemoEndLine"] = "To read your own books, add a folder, a server or a plugin store.",
         ["ReaderDemoAddSource"] = "Add a source",
         ["ReaderDemoAgain"] = "Back to page 1",
         ["SourcesDemoBooksLine"] = "A comic and a story · CC BY 4.0 and public domain",
-        ["SourcesDemoBooksWhat"] = "Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn’t a source to keep.",
+        ["SourcesDemoBooksWhat"] = "Works their makers share under Creative Commons, so you can try Kaeri before adding a source. It isn't a source to keep.",
         ["SourcesDemoBooksPrivate"] = "The demo never signs in anywhere and never writes to a tracker.",
         ["DemoChapters"] = "Chapters",
         ["DemoAlso"] = "Also in the demo",
@@ -13149,6 +13315,25 @@ public static partial class T
         ["DemoPages_other"] = "{pages} pages",
         ["DemoStoryRow"] = "Story · {author} · {licence}",
         ["DemoReadChapter"] = "Read chapter {number}",
+        ["ProgressServerSaved"] = "Saved to {server}",
+        ["ProgressServerSending"] = "Sending to {server}…",
+        ["ProgressServerOffline"] = "Will send to {server} when you’re back online",
+        ["ProgressServerRetrying"] = "{server} didn’t answer. Kaeri will try again.",
+        ["ProgressServerFailed"] = "Not saved to {server}: {reason}.",
+        ["ProgressWhyKey"] = "the server refused the key",
+        ["ProgressWhyPassword"] = "the server refused the password",
+        ["ProgressWhyGone"] = "this series isn’t on the server any more",
+        ["ProgressWhyGaveUp"] = "no answer for a day",
+        ["ProgressRowSaved"] = "Progress saved {ago}",
+        ["ProgressRowSending_one"] = "Sending 1 chapter…",
+        ["ProgressRowSending_other"] = "Sending {count} chapters…",
+        ["ProgressRowOffline_one"] = "1 chapter will send when you’re back online",
+        ["ProgressRowOffline_other"] = "{count} chapters will send when you’re back online",
+        ["ProgressRowRetrying_one"] = "1 chapter waiting. Kaeri will try again.",
+        ["ProgressRowRetrying_other"] = "{count} chapters waiting. Kaeri will try again.",
+        ["ProgressRowFailed_one"] = "1 chapter not saved: {reason}",
+        ["ProgressRowFailed_other"] = "{count} chapters not saved: {reason}",
+        ["ProgressRowOff"] = "Progress stays on this {kind}",
         ["NavWatch"] = "Watch",
         ["NavRead"] = "Read",
         ["NavUpdates"] = "Updates",
@@ -13333,7 +13518,7 @@ public static partial class T
         ["BookSourcesNoMatch"] = "No match",
         ["BookSourcesKeep"] = "Keep unmatched",
         ["BookSourcesFind"] = "Find",
-        ["BookSourcesUnmatchedNote"] = "Unmatched series still read from the folder. They have no tracker progress until matched.",
+        ["BookSourcesUnmatchedNote"] = "You can still read unmatched series from the folder. They get no tracker progress until they're matched.",
         ["LibraryScopeLabel"] = "Shows or Reading",
         ["LibraryScopeShows"] = "Shows",
         ["LibraryScopeReading"] = "Reading",
@@ -13387,9 +13572,9 @@ public static partial class T
         ["OnboardingListsLineRead"] = "Kaeri keeps your reading in step with {tracker}.",
         ["OnboardingListsLineBoth"] = "Kaeri keeps your reading and watching in step with {tracker}.",
         ["OnboardingListsAnilistLine"] = "Lists, progress and suggestions",
-        ["OnboardingListsLaterWatch"] = "MyAnimeList, Kitsu, Simkl and Trakt can be added later in Settings, under Accounts.",
-        ["OnboardingListsLaterRead"] = "MyAnimeList, Kitsu and MangaUpdates can be added later in Settings, under Accounts.",
-        ["OnboardingListsLaterBoth"] = "MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt can be added later in Settings, under Accounts.",
+        ["OnboardingListsLaterWatch"] = "You can add MyAnimeList, Kitsu, Simkl and Trakt later in Settings, under Accounts.",
+        ["OnboardingListsLaterRead"] = "You can add MyAnimeList, Kitsu and MangaUpdates later in Settings, under Accounts.",
+        ["OnboardingListsLaterBoth"] = "You can add MyAnimeList, Kitsu, MangaUpdates, Simkl and Trakt later in Settings, under Accounts.",
         ["OnboardingConnect"] = "Connect {tracker}",
         ["OnboardingBooksTitle"] = "Where your books come from",
         ["OnboardingBooksLine"] = "Kaeri comes with no books. Add what you already have, or join a plugin store with an invite from its owner.",
@@ -13467,8 +13652,8 @@ public static partial class T
         ["SettingsDeleteAfterReadingNote"] = "Bookmarked chapters are kept",
         ["SettingsChapterNotificationsNote"] = "Series on your Reading list",
         ["SettingsDownloadsFinishedNote"] = "When the chapters downloading are all done",
-        ["SettingsChapterNotificationsFooter"] = "Chapters have their own system channel, so they can be silenced on their own.",
-        ["AccountsMangaupdatesCredit"] = "MangaUpdates is reached through its public API.",
+        ["SettingsChapterNotificationsFooter"] = "Chapters have their own system channel, so you can silence them and keep the rest.",
+        ["AccountsMangaupdatesCredit"] = "Kaeri talks to MangaUpdates through its public API.",
         ["AccountsUsername"] = "User name",
         ["ReadDownloadsTotal_one"] = "{n} chapter · {size}",
         ["ReadDownloadsTotal_other"] = "{n} chapters · {size}",
@@ -13515,25 +13700,25 @@ public static partial class T
         ["SendTargetLine"] = "{format} · {width} × {height}",
         ["StopTitle"] = "Where did you stop?",
         ["StopNote"] = "You sent chapters to {device}. Where did you stop?",
-        ["StopNoteAction"] = "Set my place",
+        ["StopNoteAction"] = "Set your place",
         ["StopSentOne"] = "Chapter {chapter} went to {device} on {date}.",
         ["StopSentRange"] = "Chapters {first} to {last} went to {device} on {date}.",
-        ["StopFinished"] = "I finished chapter {chapter}",
-        ["StopSet"] = "Set my place",
+        ["StopFinished"] = "Finished chapter {chapter}",
+        ["StopSet"] = "Set your place",
         ["StopKeep"] = "Keep chapter {chapter} · page {page}",
-        ["StopKeepPlain"] = "Keep my place",
+        ["StopKeepPlain"] = "Keep current place",
         ["EreadersGroup"] = "E-readers",
         ["EreadersSendRow"] = "Send to e-reader",
         ["EreadersFeedRow"] = "OPDS feed",
         ["OpdsShareNote"] = "An OPDS catalogue e-readers at home can browse",
-        ["OpdsFooter"] = "Only while Kaeri is open on this {device}. Progress on those e-readers stays there.",
+        ["OpdsFooter"] = "The feed runs only while Kaeri is open on this {device}. Progress on those e-readers stays there.",
         ["OpdsAddress"] = "Address",
         ["OpdsAddressOff"] = "Turn the feed on to get its address.",
         ["OpdsPassword"] = "Password",
         ["OpdsPasswordNote"] = "E-readers ask for it once",
         ["OpdsNewPassword"] = "New password",
         ["OpdsPort"] = "Port",
-        ["OpdsPortNote"] = "Leave it empty to pick a free port, or use 1024 to 65535",
+        ["OpdsPortNote"] = "Leave it empty for any free port, or pick one from 1024 to 65535",
         ["OpdsPortMoved"] = "Port {wanted} was busy, so the feed uses {port}.",
         ["OpdsShares"] = "What it shares",
         ["OpdsShareDownloads"] = "Downloads",
@@ -13563,7 +13748,7 @@ public static partial class T
         ["SeasonalEmptyFormat"] = "No titles in this format",
         ["SeasonalEmptyFormatDetail"] = "Try all formats.",
         ["SeasonalFilterInSearch"] = "Filter in Search",
-        ["SeasonalFilterHelp"] = "This season in Search, where every filter narrows it",
+        ["SeasonalFilterHelp"] = "Opens this season in Search, where every filter works",
         ["SortPopularity"] = "Popularity",
         ["SortScore"] = "Score",
         ["SortAirDay"] = "Air day",
@@ -13572,13 +13757,13 @@ public static partial class T
         ["SortLabel"] = "Sort by {sort}",
         ["SearchPlaceholder"] = "Search titles",
         ["SearchClear"] = "Clear search",
-        ["SearchSearching"] = "Searching for “{query}”",
-        ["SearchResultsFor"] = "Results for “{query}”",
+        ["SearchSearching"] = "Searching for \"{query}\"",
+        ["SearchResultsFor"] = "Results for \"{query}\"",
         ["SearchBrowse"] = "Browse",
-        ["SearchNothingFound"] = "Nothing found for “{query}”",
+        ["SearchNothingFound"] = "Nothing found for \"{query}\"",
         ["SearchNothingFoundDetail"] = "Check the spelling, or try the English or Japanese title.",
         ["SearchNothingWithFilters"] = "Nothing found with these filters",
-        ["SearchNothingFoundWithFilters"] = "Nothing found for “{query}” with these filters",
+        ["SearchNothingFoundWithFilters"] = "Nothing found for \"{query}\" with these filters",
         ["SearchTryFewerFilters"] = "Try fewer filters.",
         ["SearchClearFilters"] = "Clear filters",
         ["SearchFailed"] = "Couldn't search",
@@ -13610,7 +13795,7 @@ public static partial class T
         ["FilterReleased"] = "Released",
         ["FilterWhereToWatch"] = "Where to watch",
         ["FilterLicensedOnly"] = "Licensed only",
-        ["FilterMyList"] = "Titles on my list",
+        ["FilterMyList"] = "Titles on your list",
         ["FilterShow"] = "Show",
         ["FilterHide"] = "Hide",
         ["FilterOnly"] = "Only",
@@ -13775,7 +13960,7 @@ public static partial class T
         ["ServersKindFilms"] = "Films",
         ["ServersErrorCertificate"] = "{host} uses a certificate this device doesn't trust. Use an https:// address with a certificate it trusts.",
         ["ServersRowSignedOutHere"] = "Signed out",
-        ["ServersSignOutLine"] = "Ends this device's sign-in on the server. The server and your downloads stay as they are.",
+        ["ServersSignOutLine"] = "Signing out ends this device's session on the server. The server and your downloads stay as they are.",
         ["SettingsLanguage"] = "Language",
         ["SettingsLanguageApp"] = "App language",
         ["LanguageFollowSystem"] = "Follow system language",
@@ -13881,11 +14066,11 @@ public static partial class T
         ["SettingsArtworkDetail"] = "Attribution in the app's notices",
         ["SettingsNewEpisodes"] = "New episodes",
         ["SettingsNewEpisodesDetail"] = "Shows on your Watching list",
-        ["SettingsNotifyDetail"] = "One notification when an episode of a show you follow comes out: the show and the episode's number, never its name. A show can turn its own off in its settings.",
+        ["SettingsNotifyDetail"] = "You get one notification when an episode of a show you follow comes out. It names the show and the episode's number, never the episode's title. A show can turn its own off in its settings.",
         ["SettingsComingUp"] = "Coming up · next 7 days",
         ["SettingsSystemNotifications"] = "Notification settings",
         ["SettingsSystemNotificationsDetail"] = "Sound, vibration and the lock screen",
-        ["SettingsSystemNotificationsApple"] = "Opens System Settings, where the banner style, sound and badges are set.",
+        ["SettingsSystemNotificationsApple"] = "Opens System Settings, where you set the banner style, sound and badges.",
         ["SettingsNotificationsBlocked"] = "Off: the system isn't allowing notifications for Kaeri",
         ["SettingsNotificationsShowOn"] = "On in this show's settings",
         ["SettingsNotifyShow"] = "When an episode of this show comes out",
@@ -13899,7 +14084,7 @@ public static partial class T
         ["ShowSettingsAlways"] = "Always",
         ["ShowSettingsNever"] = "Never",
         ["ShowSettingsSubsRemembered"] = "Remembered from your last episode.",
-        ["ShowSettingsSubsFollow"] = "Chosen in the player. Following Settings › Playback.",
+        ["ShowSettingsSubsFollow"] = "Chosen in the player. Until then, Settings › Playback applies.",
         ["ShowSettingsSource"] = "Source",
         ["ShowSettingsSourceDetail"] = "Automatic tries your sources in order.",
         ["ShowSettingsReset"] = "Reset to defaults",
@@ -13927,7 +14112,7 @@ public static partial class T
         ["SettingsUploadUnlimited"] = "Unlimited",
         ["SettingsUpscalingNatural"] = "Natural · ArtCNN",
         ["SettingsLabelHoverCards"] = "Expand covers on hover",
-        ["SettingsHoverCardsNote"] = "Shows a larger card with the trailer when you rest the pointer on a cover.",
+        ["SettingsHoverCardsNote"] = "Resting the pointer on a cover opens a larger card with its trailer.",
         ["SettingsUpscalingNoteNatural"] = "Faithful line work and texture, nothing restyled.",
         ["SettingsUpscalingNoteSharp"] = "Crisper lines and stronger edges, at some cost to texture.",
         ["SettingsAfterDownload"] = "After each download",
@@ -14008,12 +14193,12 @@ public static partial class T
         ["BookServerSyncProgressLine"] = "Pages you read here go back to {host}, and its progress comes here.",
         ["BookServerUsername"] = "Username",
         ["BookServerPassword"] = "Password",
-        ["BookServerErrUnreachable"] = "Couldn’t reach {host}",
+        ["BookServerErrUnreachable"] = "Couldn't reach {host}",
         ["BookServerErrUnreachableLine"] = "Check the address, and that the server is on and on this network.",
-        ["BookServerErrPassword"] = "{host} didn’t accept that password",
+        ["BookServerErrPassword"] = "{host} didn't accept that password",
         ["BookServerErrPasswordLine"] = "Use the username and password you use for {kind} in a browser.",
-        ["BookServerErrKey"] = "{host} didn’t accept that key",
-        ["BookServerErrKeyLine"] = "The key changes when it’s reset in Kavita. Copy the OPDS link again from your account settings there.",
+        ["BookServerErrKey"] = "{host} didn't accept that key",
+        ["BookServerErrKeyLine"] = "The key changes when it's reset in Kavita. Copy the OPDS link again from your account settings there.",
         ["BookServerEmpty"] = "{host} shows this account no series",
         ["BookServerEmptyLine"] = "It lets you in, but the server may still be scanning, or this account may not have access to its books.",
         ["BookServerEmptyRecheck"] = "You can add it now. Kaeri looks again every 30 minutes.",
@@ -14021,8 +14206,8 @@ public static partial class T
         ["BookFolderFound_one"] = "Found {series} series in one file",
         ["BookFolderFound_other"] = "Found {series} series in {files} files",
         ["BookFolderFoundLine"] = "{path}. Kaeri matched {matched} of them by their details.",
-        ["BookFolderUnsupported_one"] = "One file Kaeri can’t open",
-        ["BookFolderUnsupported_other"] = "{count} files Kaeri can’t open",
+        ["BookFolderUnsupported_one"] = "One file Kaeri can't open",
+        ["BookFolderUnsupported_other"] = "{count} files Kaeri can't open",
         ["BookFolderUnsupportedLine"] = "{kinds}. They stay in the folder as they are.",
         ["BookFolderDrm"] = "{count} EPUB locked with DRM",
         ["BookFolderOpens"] = "Kaeri opens CBZ, CBR, EPUB and PDF files, and folders of images.",
@@ -14030,7 +14215,7 @@ public static partial class T
         ["BookFolderAdd"] = "Add folder",
         ["BookFolderChange"] = "Change",
         ["BookFolderEmpty"] = "Nothing in {folder} that Kaeri can open",
-        ["BookFolderEmptyLine_one"] = "It holds one file, which isn’t CBZ, CBR, EPUB, PDF or an image.",
+        ["BookFolderEmptyLine_one"] = "It holds one file, which isn't CBZ, CBR, EPUB, PDF or an image.",
         ["BookFolderEmptyLine_other"] = "It holds {files} files, none of them CBZ, CBR, EPUB, PDF or images.",
         ["BookFolderChooseOther"] = "Choose another folder",
         ["StoreJoinTitle"] = "Join a plugin store",
@@ -14043,26 +14228,28 @@ public static partial class T
         ["StoreInstall"] = "Install",
         ["StoreInstalledRow"] = "Installed",
         ["StoreInstallAllReading"] = "Install all for reading",
-        ["StoreInstalled_one"] = "One plugin installed. It’s in Your sources.",
-        ["StoreInstalled_other"] = "{count} plugins installed. They’re in Your sources.",
+        ["StoreInstalled_one"] = "One plugin installed. It's in Your sources.",
+        ["StoreInstalled_other"] = "{count} plugins installed. They're in Your sources.",
         ["StoreOtherMedium"] = "Every plugin in {store} is for watching",
         ["StoreOtherMediumLine"] = "Watching is off on this device, so none of them show in Your sources.",
         ["StoreTurnOnWatching"] = "Turn on watching",
         ["StoreEmpty"] = "{store} has no plugins yet",
-        ["StoreEmptyLine"] = "You’re a member, so new plugins show in Plugin stores when {owner} adds them.",
-        ["StoreErrUnreachable"] = "Couldn’t reach {host}",
-        ["StoreErrUnreachableLine"] = "The invite looks right, but the store isn’t answering. Try again later, or ask {owner} if it’s running.",
+        ["StoreEmptyLine"] = "You're a member, so new plugins show in Plugin stores when {owner} adds them.",
+        ["StoreErrUnreachable"] = "Couldn't reach {host}",
+        ["StoreErrUnreachableLine"] = "The invite looks right, but the store isn't answering. Try again later, or ask {owner} if it's running.",
         ["StoreOtherMediumMore_one"] = "One more is for watching, which is off on this device.",
         ["StoreOtherMediumMore_other"] = "{count} more are for watching, which is off on this device.",
-        ["StoreTvReadingOnly_one"] = "One more is for reading, which this TV doesn’t do.",
-        ["StoreTvReadingOnly_other"] = "{count} more are for reading, which this TV doesn’t do.",
-        ["StoreTvAllReading"] = "Every plugin in {store} is for reading, which this TV doesn’t do.",
+        ["StoreTvReadingOnly_one"] = "One more is for reading, which this TV doesn't do.",
+        ["StoreTvReadingOnly_other"] = "{count} more are for reading, which this TV doesn't do.",
+        ["StoreTvAllReading"] = "Every plugin in {store} is for reading, which this TV doesn't do.",
         ["StorePluginRow"] = "Version {version} · may contact {hosts}",
         ["SourceAdded"] = "Added {name} · {series} series",
         ["SourceAddedPlugins_one"] = "Installed one plugin from {store}",
         ["SourceAddedPlugins_other"] = "Installed {count} plugins from {store}",
-        ["SourceRowServer_one"] = "{kind} · {series} series · added just now",
+        ["SourceRowServer_one"] = "{kind} · {series} series in {libraries} library · added just now",
         ["SourceRowServer_other"] = "{kind} · {series} series in {libraries} libraries · added just now",
+        ["SourceRowServerSeries_one"] = "{kind} · {series} series in {libraries} library",
+        ["SourceRowServerSeries_other"] = "{kind} · {series} series in {libraries} libraries",
         ["SourceRowServerEmpty"] = "{kind} · no series yet · looks again in 30 minutes",
         ["SourceRowFolder_one"] = "{path} · {series} series · one file skipped",
         ["SourceRowFolder_other"] = "{path} · {series} series · {skipped} files skipped",
@@ -14135,7 +14322,7 @@ public static partial class T
         ["SourcesTorrentSource"] = "Torrent playback",
         ["SourcesSourceOrderRow"] = "Source order",
         ["SourcesTorrentsNote"] = "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.",
-        ["SourcesRebuilding"] = "Sources are being set up again",
+        ["SourcesRebuilding"] = "Setting up sources again",
         ["SourcesResponseMs"] = "{ms} ms",
         ["MatchFix"] = "Fix this match",
         ["MatchChoose"] = "Choose the match",
@@ -14150,8 +14337,8 @@ public static partial class T
         ["MatchChosenAutomatically"] = "Chosen automatically",
         ["MatchSimilarity"] = "{similarity} match",
         ["MatchSearchField"] = "Search {source}",
-        ["MatchSearching"] = "Searching {source} for “{query}”",
-        ["MatchSearchEmpty"] = "Nothing on {source} for “{query}”.",
+        ["MatchSearching"] = "Searching {source} for \"{query}\"",
+        ["MatchSearchEmpty"] = "Nothing on {source} for \"{query}\".",
         ["MatchSearchEmptyHint"] = "Try fewer words, or the title in another language.",
         ["MatchSearchFailed"] = "Couldn't search {source}.",
         ["MatchPicking"] = "Matching",
@@ -14171,7 +14358,7 @@ public static partial class T
         ["SourcesAddFolder"] = "Folder…",
         ["SourcesAddServer"] = "Media server…",
         ["SourcesAddStore"] = "Join a plugin store…",
-        ["SourcesEmptyBody"] = "Sources are where episodes come from: folders on this device, your media server, and plugins from stores you join.",
+        ["SourcesEmptyBody"] = "Sources are where episodes come from: folders on this device, your media server, and plugins from plugin stores you join.",
         ["SourcesEmptyMore"] = "Or {join}.",
         ["SourcesEmptyJoinLink"] = "join a plugin store",
         ["SourcesAddFolderButton"] = "Add a folder",
@@ -14185,7 +14372,7 @@ public static partial class T
         ["SourcesDemoLinkLicence"] = "Licence",
         ["SourcesDemoLinkCommons"] = "Wikimedia Commons",
         ["SourcesDemoLinkMaker"] = "OPAP-JP",
-        ["SourcesDemoHosts"] = "Reaches Wikimedia Commons only: upload.wikimedia.org and commons.wikimedia.org.",
+        ["SourcesDemoHosts"] = "The demo reaches only Wikimedia Commons: upload.wikimedia.org and commons.wikimedia.org.",
         ["SourcesDemoPrivate"] = "The demo never signs in anywhere and never writes to AniList.",
         ["SourcesDemoRemove"] = "Remove demo",
         ["SourcesDemoAdd"] = "Add the demo",
@@ -14208,7 +14395,7 @@ public static partial class T
         ["StoresIntro"] = "Plugins add sources. Each one lists the hosts it contacts before you install it.",
         ["StoresNotFromApp"] = "Plugins come from the plugin store's owner, not from Kaeri. You can leave a plugin store at any time.",
         ["StoresJoinOwnerResponsible"] = "{owner} runs this plugin store and chose its plugins. Kaeri did not make, review or approve them.",
-        ["StoresNoPlugins"] = "This plugin store offers no plugins yet.",
+        ["StoresNoPlugins"] = "This plugin store has no plugins yet.",
         ["StoresPlugins"] = "Plugins",
         ["StoresPluginLimits"] = "Each plugin can contact only the hosts listed with it and cannot read your files.",
         ["StoresPluginLimitsShort"] = "Plugins cannot read your files or contact a host that is not listed.",
@@ -14220,7 +14407,7 @@ public static partial class T
         ["StoresAccessEndedDetail"] = "This plugin store's owner ended your access. Installed plugins keep working, and none will update.",
         ["StoresAccessEndedPage"] = "This plugin store no longer lets this device in. Its plugins stay installed until you remove them.",
         ["StoresNoLongerJoined"] = "This plugin store is no longer joined.",
-        ["StoresOfflineLastList"] = "Offline: {reason}. The plugins below are the last list that was checked.",
+        ["StoresOfflineLastList"] = "Offline: {reason}. Showing the last list it sent.",
         ["StoresOfflineLastListPlain"] = "Offline. Showing the last list it sent.",
         ["StoresKeyLine"] = "Store key {key} · {joined}",
         ["StoresDeviceJoinedAs"] = "Joined as {name}",
@@ -14255,14 +14442,14 @@ public static partial class T
         ["StoresInstallLabel"] = "Install {name}",
         ["StoresReplaceLabel"] = "Replace the copy of {name} added by hand",
         ["StoresRemovePluginTitle"] = "Remove {name}?",
-        ["StoresRemovePluginDetail"] = "It is deleted from this device. The plugin store can install it again.",
+        ["StoresRemovePluginDetail"] = "It's deleted from this device. You can install it again from the plugin store.",
         ["StoresNewlyContacts"] = "Newly contacts",
         ["StoresUpdateContacts"] = "This update also contacts {hosts}.",
         ["StoresNewIn"] = "New in {version}",
         ["StoresJoinTitle"] = "Join a plugin store",
         ["StoresAddTitle"] = "Add a plugin store",
         ["StoresJoinDetail"] = "Paste the link the plugin store's owner sent you.",
-        ["StoresJoinDetailDesktop"] = "Paste the invite link a plugin store's owner sent you. You see what the plugin store offers before anything is joined or installed.",
+        ["StoresJoinDetailDesktop"] = "Paste the invite link a plugin store's owner sent you. You see what the plugin store has before you join or install anything.",
         ["StoresJoinDetailOpened"] = "Paste the link the plugin store's owner sent you. A Kaeri:// invite link opened from Messages fills this sheet in directly.",
         ["StoresInviteLink"] = "Invite link",
         ["StoresInviteLinkHint"] = "https://…/join/…",
@@ -14276,7 +14463,7 @@ public static partial class T
         ["StoresJoinConfirmTitle"] = "Join {name}?",
         ["StoresJoinInstallsNothing"] = "Joining installs nothing. You choose which plugins to install, and each one asks for the hosts it contacts.",
         ["StoresKeyMatches"] = "Key {key} matches the plugin store.",
-        ["StoresAnyoneNote"] = "You join without a name. Another device joins with the same link.",
+        ["StoresAnyoneNote"] = "You join without a name. Another device can join with the same link.",
         ["StoresAlreadyJoinedNote"] = "This device has joined this plugin store already.",
         ["StoresDeviceName"] = "Device name",
         ["StoresDeviceNameDetail"] = "The plugin store's owner sees this device by this name.",
@@ -14328,7 +14515,7 @@ public static partial class T
         ["StoresInviteWorksTimesForever"] = "Works {count} times, until you cancel it.",
         ["StoresInviteWorksAny"] = "Anyone who has this link can join, until {until}.",
         ["StoresInviteWorksAnyForever"] = "Anyone who has this link can join until you cancel it.",
-        ["StoresInviteOnceUntil"] = "Works once, for the person you send it to. Until {until}.",
+        ["StoresInviteOnceUntil"] = "Works once, for the person you send it to, until {until}.",
         ["StoresInviteOnceForever"] = "Works once, for the person you send it to, until you cancel it.",
         ["StoresInviteContactNeeded"] = "Add a contact for this store first. A link that works any number of times can be passed on, like the store's own link.",
         ["StoresInviteOwnerOnce"] = "Owner invites work once.",
@@ -14369,16 +14556,16 @@ public static partial class T
         ["StoresOffersPlugins_one"] = "One plugin",
         ["StoresOffersPlugins_other"] = "{count} plugins",
         ["NoticeOpenStores"] = "Open plugin stores",
-        ["StoresWhatIs"] = "A plugin store is a small server that holds signed plugins and gives each device its own token. It offers sources as plugins. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.",
+        ["StoresWhatIs"] = "A plugin store is a small server that holds signed plugins and gives each device its own token. Its plugins add sources. Kaeri runs no plugin stores and lists none, so you join one with an invite link from its owner.",
         ["StoresWhatIsLink"] = "What is a plugin store?",
         ["StoresInviteRules"] = "An invite link works once, for one person, and lasts seven days. Ask the plugin store's owner for a new one if yours has expired.",
         ["StoresQrLabel"] = "QR code for the invite link",
         ["StoresQrWarning"] = "Anyone who scans this code can use the invite. It works once and lasts seven days.",
         ["StoresQrWarningDevice"] = "Scan this with the device you want to link. It works once and lasts seven days.",
         ["StoresShare"] = "Share…",
-        ["CloudBrowserLine"] = "Your browser opened {service}’s page. Allow access there, and Kaeri carries on by itself.",
+        ["CloudBrowserLine"] = "Your browser opened {service}'s page. Allow access there, and Kaeri carries on by itself.",
         ["CloudBrowserTitle"] = "Sign in to {service} in your browser",
-        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.",
+        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it's ready.",
         ["DeviceKindComputer"] = "computer",
         ["DevicesEnterCode"] = "Enter a code",
         ["DevicesShowKey"] = "Show",
@@ -14415,7 +14602,7 @@ public static partial class T
         ["SyncRoadNearby"] = "With a device nearby",
         ["SyncRoadNearbyLine"] = "Pair with another device on the same Wi-Fi. Nothing is stored anywhere else.",
         ["SyncRoadCloud"] = "Through a cloud folder",
-        ["SyncRoadCloudLine"] = "A cloud drive you already use, or your own server. Works while your devices are apart, and keeps a backup.",
+        ["SyncRoadCloudLine"] = "A cloud drive you already use, or your own server. It works while your devices are apart and keeps a backup.",
         ["SyncRoadLater"] = "You can add the other way later. Most people use both.",
         ["DevicesYours"] = "Your devices",
         ["DevicesOnlyThis"] = "Only this device",
@@ -14435,7 +14622,7 @@ public static partial class T
         ["SyncTurnOffAlert"] = "Turn off sync on {device}?",
         ["SyncTurnOffAlertLine"] = "This {kind} stops sharing with your other devices. Everything it has stays here.",
         ["CloudGroup"] = "Cloud folder",
-        ["CloudFoot"] = "Fills in while your devices are apart, and keeps a sealed backup. Only your devices can read it.",
+        ["CloudFoot"] = "The folder keeps your devices in step while they are apart, and holds a sealed backup. Only your devices can read it.",
         ["CloudAdd"] = "Add a cloud folder",
         ["CloudPickTitle"] = "Choose a cloud folder",
         ["CloudGoogleLine"] = "A hidden Kaeri folder in your Drive",
@@ -14549,7 +14736,7 @@ public static partial class T
         ["ProfilesDeleteAlertLine"] = "{name}’s history and sign-ins on this device are removed. Devices that sync with {name} keep theirs.",
         ["ProfilesPicker"] = "Who’s watching?",
         ["ProfilesAskAtLaunch"] = "Ask who’s watching at launch",
-        ["ProfilesAskFoot"] = "Off by default. For an iPad the household shares. The account row switches profiles at any time.",
+        ["ProfilesAskFoot"] = "Off by default. Turn it on for an iPad the whole household shares. You can switch profiles from the account row at any time.",
         ["ProfilesSwitch"] = "Switch profile",
         ["ProfilesManage"] = "Manage profiles",
         ["FirstSetupOther"] = "Set up from another device",
@@ -14810,7 +14997,7 @@ public static partial class T
         ["AccountsTokensFile"] = "Sign-in tokens are kept in a file on this device, readable only by you.",
         ["AccountsTokensKeystore"] = "Sign-in tokens are kept on this device, sealed with a key in its keystore.",
         ["AccountsFormTitle"] = "Sign in to {tracker}",
-        ["AccountsFormDetail"] = "Your password goes to {tracker} once, for a token kept on this device.",
+        ["AccountsFormDetail"] = "Your password goes to {tracker} once, in exchange for a token that stays on this device.",
         ["AccountsUserOrEmail"] = "Email or user name",
         ["AccountsPassword"] = "Password",
         ["AccountsSigningInAction"] = "Signing in",
@@ -14834,7 +15021,7 @@ public static partial class T
         ["AccountsKeepTheirs"] = "Keep {tracker}'s",
         ["AccountsOpenOn"] = "Open on {tracker}",
         ["AccountsListedBy"] = "Listed by {tracker}",
-        ["AccountsDidNotAnswer"] = "{tracker} didn't answer.",
+        ["AccountsDidNotAnswer"] = "{tracker} didn't answer. Try again in a moment.",
         ["AccountsNoExtras"] = "{tracker} has no cast, staff or recommendations for this show yet.",
         ["AccountsEpisodesFrom"] = "Episodes from {tracker}. Add a source to play them.",
         ["AccountsAddsSeason"] = "{tracker} adds a season's titles as they're announced.",
@@ -14855,7 +15042,7 @@ public static partial class T
         ["TvChooseAnother"] = "Choose another TV…",
         ["TvPairingCode"] = "Pairing code",
         ["TvOpenOnTv"] = "Open Kaeri on the TV. It needs to be on the same Wi-Fi as this device.",
-        ["TvTypeCode"] = "Type the six digits {name} shows. After this, this device connects by itself.",
+        ["TvTypeCode"] = "Type the six digits {name} shows. From then on, this device connects by itself.",
         ["TvPairingMoment"] = "This takes a moment.",
         ["TvLooking"] = "Looking for TVs on this network",
         ["TvNoneFound"] = "No TVs found",
@@ -14955,7 +15142,7 @@ public static partial class T
         ["UpdatesSavedReplace"] = "Version {version} saved to Downloads. Replace the old file, {file}, with it to update.",
         ["UpdatesSavedReplacePlain"] = "Version {version} saved to Downloads. Replace the old file with it to update.",
         ["UpdatesWhyServer"] = "The download stopped: the server refused it ({code}). Try again later.",
-        ["UpdatesWhyConnection"] = "The download stopped: the connection was lost.",
+        ["UpdatesWhyConnection"] = "The download stopped: the connection was lost. Try again.",
         ["UpdatesWhySave"] = "The download couldn't be saved: {reason}",
         ["UpdatesWhySize"] = "The download is {got}, not the {expected} listed for this version.",
         ["UpdatesWhyChecksum"] = "The download doesn't match the checksum listed for this version.",

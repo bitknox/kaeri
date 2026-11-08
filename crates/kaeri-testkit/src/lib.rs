@@ -16,6 +16,7 @@
 
 pub mod anilist;
 pub mod art;
+pub mod books;
 pub mod fixtures;
 pub mod golden;
 pub mod home_world;

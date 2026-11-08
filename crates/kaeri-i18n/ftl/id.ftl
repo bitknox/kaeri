@@ -28,7 +28,7 @@ notice-cast-refused = { $name } tidak bisa memutar aliran ini. Coba sumber lain.
 notice-cast-taken-over = Penayangan berhenti karena perangkat lain mulai memutar sesuatu di { $name }.
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = Penayangan hanya bisa jika perangkat ini dan { $name } berada di jaringan yang sama, tanpa lewat VPN.
+notice-cast-not-same-network = Perangkat ini tidak berada di jaringan yang sama dengan { $name }, atau terhubung lewat VPN. Sambungkan keduanya ke jaringan yang sama untuk menayangkan.
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Koneksi ke { $name } terputus, jadi penayangan berhenti.
@@ -358,7 +358,7 @@ match-search-timed-out = Terlalu lama tidak menjawab.
 match-search-source-off = Belum diaktifkan.
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = { $source } akan dipakai untuk judul ini.
+notice-source-pinned = Judul ini sekarang diputar dari { $source }.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Kembali ke pemilihan sumber otomatis.
@@ -538,13 +538,13 @@ reader-moved = Pindah ke { $chapter }, halaman { $page }, tempat { $device } ber
 reader-moved-number = Pindah ke bab { $chapter }, halaman { $page }, tempat { $device } berhenti
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-right-to-left = Kanan ke kiri, terdeteksi
+reader-detected-right-to-left = Sepertinya kanan ke kiri
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-left-to-right = Kiri ke kanan, terdeteksi
+reader-detected-left-to-right = Sepertinya kiri ke kanan
 
 # A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
-reader-detected-strip = Strip panjang, terdeteksi
+reader-detected-strip = Sepertinya strip panjang
 
 # Why a chapter or a list could not load: there is no connection.
 reading-failed-offline = Anda sedang offline. Bab yang diunduh tetap bisa dibuka.
@@ -1093,7 +1093,7 @@ store-admin-link-foreign = { $store } mengirim tautan admin untuk alamat lain.
 store-open-join-unsupported = Server { $store } versi lama dan tidak bisa mengizinkan siapa pun bergabung lewat tautan. Perbarui dulu.
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = { $name } dimatikan. Tidak diperiksa saat mencari episode.
+source-switched-off = { $name } dimatikan. Kaeri melewatinya saat mencari episode.
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = { $name } dinyalakan.
@@ -1102,7 +1102,7 @@ source-switched-on = { $name } dinyalakan.
 plugin-not-loaded = { $id } tidak dimuat. Periksa apakah sudah terpasang di Sumber-sumber.
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = { $name } akan dipakai untuk judul ini.
+release-pinned = Judul ini sekarang memakai { $name }.
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Pilihan itu tidak bisa disimpan. { $reason }
@@ -1192,10 +1192,10 @@ notice-token-exchange-failed = Tidak dapat memperoleh token dari { $tracker }. C
 notice-browser-not-opened = Tidak dapat membuka peramban untuk masuk. Pastikan ada peramban yang terpasang, lalu coba lagi. { $reason }
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = Tidak ada proses masuk ke { $tracker } yang menunggu itu. Mulai masuk lagi.
+notice-sign-in-not-waiting = Balasan masuk dari { $tracker } tiba, tetapi tidak ada proses masuk yang menunggunya. Mulai masuk lagi.
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = Masuk ke { $tracker } itu tidak kembali dari permintaan ini. Mulai masuk lagi.
+notice-sign-in-wrong-request = Balasan masuk dari { $tracker } tidak cocok dengan permintaannya. Mulai masuk lagi.
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = Proses masuk ke { $tracker } kembali tanpa token. Coba lagi.
@@ -1291,7 +1291,7 @@ notice-update-available = { $tag } sudah tersedia. Jalankan kaeri --update untuk
 cause-proxy-needs-address = Proxy memerlukan host dan port.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = Alamat proxy tidak dapat diperiksa.
+cause-proxy-address-unusable = Pemeriksaan proxy tidak bisa memakai alamat ini.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Server tidak dapat dihubungi.
@@ -1315,7 +1315,7 @@ notice-playback-failed = Pemutaran gagal. Coba sumber lain.
 notice-engine-fault = Terjadi kesalahan di dalam Kaeri. Aplikasi tetap berjalan, tetapi jika layar terlihat macet, keluar lalu buka lagi.
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = Basis data rusak, jadi Kaeri membuat yang baru. Berkas lama disimpan di { $path }. Data yang disimpan pelacak-pelacak Anda akan kembali saat sinkronisasi selanjutnya.
+notice-database-set-aside = Basis data rusak, jadi Kaeri membuat yang baru. Berkas lama disimpan di { $path }. Apa yang disimpan pelacak-pelacak Anda kembali saat sinkronisasi selanjutnya.
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = Kaeri tidak dapat membuat folder { $path }. Pastikan disk masih punya ruang dan folder itu dapat ditulisi, lalu coba lagi. { $reason }
@@ -1330,7 +1330,7 @@ config-reset-failed = Kaeri tidak dapat memindahkan { $path } untuk mengatur ula
 start-failed-database = Kaeri tidak dapat membuka basis datanya di { $path }. Jika aplikasi Kaeri lain sedang terbuka di folder ini, keluar dari aplikasi itu, lalu coba lagi. { $reason }
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = Kaeri tidak dapat menyiapkan koneksi jaringannya dari pengaturan jaringan di config.toml. { $reason }
+start-failed-network = Kaeri tidak dapat terhubung dengan pengaturan jaringan di config.toml. Periksa pengaturannya, lalu coba lagi. { $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = Kaeri tidak dapat dimulai. Keluar, lalu buka lagi. { $reason }
@@ -1363,10 +1363,10 @@ notice-surprise-empty-filters = Tidak ada judul yang cocok dengan filter ini.
 notice-surprise-empty-planning = Daftar rencana kosong.
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = Sedang offline. Pilihan dari pencarian memerlukan AniList.
+notice-surprise-offline = Anda sedang offline. Kejutkan saya memerlukan AniList untuk memilih judul.
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = Belum bisa memilih judul sekarang. Coba lagi sebentar lagi.
+notice-surprise-failed = Tidak dapat menghubungi AniList untuk memilih judul. Coba lagi sebentar lagi.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Ubah proxy
@@ -1483,7 +1483,7 @@ party-members = Anggota
 party-choose-a-source = Pilih sumber
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = Tidak ada sumber yang mencantumkan episode { $episode }. Sumber-sumber berasal dari plugin-plugin dari toko plugin.
+party-sources-none-listed = Tidak ada sumber dengan episode { $episode }. Sumber-sumber berasal dari plugin-plugin yang Anda tambahkan dari toko plugin.
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
@@ -1579,10 +1579,10 @@ settings-caption-sample = Jalan lentera terus berlanjut melewati kota terakhir.
 settings-caption-note = Subtitel biasa tampak seperti ini, dalam { $language } bila sebuah episode memilikinya. Subtitel bergaya tetap memakai tampilannya sendiri.
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = Satu notifikasi saat episode dari acara dalam daftar yang Anda tonton terbit, pada waktu yang diberikan { $tracker }. Pengaturan tiap acara didahulukan.
+settings-notify-note-on = Anda mendapat satu notifikasi saat episode dari acara dalam daftar yang Anda tonton terbit, pada waktu yang diberikan { $tracker }. Pengaturan tiap acara didahulukan.
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = Nonaktif. Hanya acara yang diaktifkan di pengaturannya sendiri yang memberi notifikasi.
+settings-notify-note-off = Nonaktif. Hanya acara yang Anda aktifkan di pengaturannya sendiri yang mengirim notifikasi.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri berfungsi tanpa akun. Riwayat tontonan Anda tetap tersimpan di komputer ini saat Anda keluar.
@@ -1657,7 +1657,7 @@ controller-help-buttons = Tombol pengontrol
 settings-note-cast-tvs-computer = Muncul di bawah Chromecast pada Putar di TV. Komputer ini yang mengirim episodenya.
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = Memungkinkan TV dengan Chromecast bawaan memutar torrent. Komputer ini mengirim episode selama TV memutarnya.
+settings-note-torrents-while-casting-computer = Jika ini aktif, TV dengan Chromecast bawaan bisa memutar torrent. Komputer ini mengirim episode selama TV memutarnya.
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = Buka toko-toko plugin
@@ -1828,7 +1828,7 @@ stores-owner-needs-connection = Diperlukan koneksi ke toko plugin
 stores-owner-needs-connection-detail = Coba lagi setelah perangkat ini kembali daring.
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = Membuat tautan memerlukan koneksi ke toko plugin.
+stores-owner-link-offline = Tidak bisa membuat tautan saat perangkat ini luring.
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = Kirim tautan ini. Tautan hanya berfungsi sekali, sampai { $until }.
@@ -1837,7 +1837,7 @@ stores-send-link-until = Kirim tautan ini. Tautan hanya berfungsi sekali, sampai
 stores-open-on-detail = Mereka bergabung tanpa nama. Menonaktifkannya menghentikan tautan; mengaktifkannya lagi membuat tautan baru.
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = Hanya orang yang Anda undang yang dapat bergabung. Jika diaktifkan, siapa pun dengan tautan dapat bergabung tanpa nama.
+stores-open-off-detail = Hanya orang yang Anda undang yang dapat bergabung. Aktifkan ini, dan siapa pun dengan tautan dapat bergabung tanpa nama.
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = Tidak ada nama yang disimpan.
@@ -2029,7 +2029,7 @@ library-row-summary-linux =
 library-page-watching-linux = Perubahan dipantau
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Diperiksa lagi saat Kaeri dimulai
+library-page-no-watch-linux = Perubahan diperiksa saat Kaeri dimulai
 
 # Heading over the matched series.
 library-matched-linux = Cocok
@@ -2194,7 +2194,7 @@ title-no-seasons = Belum ada musim terhubung yang diketahui untuk judul ini.
 title-pin-off-page = Buka halaman judul untuk memilih sumber untuknya.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = Belum ada sumber-sumber yang terdaftar. Coba lagi sebentar lagi.
+title-no-sources-yet = Sumber-sumber masih dimuat. Coba lagi sebentar lagi.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = Status daftar Anda disimpan di pelacak, dan belum ada akun yang masuk. Gunakan :accounts untuk masuk ke salah satunya.
@@ -2368,7 +2368,7 @@ episodes-empty-none-listed = Tidak ada episode yang tercantum
 episodes-empty-none-listed-hint = Sumber tidak mencantumkan episode untuk judul ini. Tekan { $search } untuk mencari kecocokan yang tepat, atau { $pick } untuk memilih sumber lain.
 
 # Toast when an episode has no { -release } to pick from.
-episodes-no-releases = Tidak ada rilis yang bisa dipilih untuk episode ini.
+episodes-no-releases = Episode ini tidak punya rilis untuk dipilih.
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 episodes-add-source-to-download = Tambahkan sumber sebelum mengunduh. Tekan { $key } untuk membuka layar Sumber-sumber.
@@ -3031,7 +3031,7 @@ downloads-column-progress = Kemajuan
 downloads-empty-heading = Tidak ada antrean
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = Tekan { $key } pada judul atau episode untuk mengunduhnya offline.
+downloads-empty-hint = Tekan { $key } pada judul atau episode untuk mengunduhnya.
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = E{ $episode }
@@ -3211,16 +3211,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = { $queued } antre, { $held } menunggu pemetaan id
+accounts-row-queued-held = { $queued } antre, { $held } menunggu pencocokan
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = Simpan ini
+accounts-conflict-keep-mine = Pakai lokal
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = Simpan miliknya
+accounts-conflict-keep-theirs = Pakai pelacak
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = { $title }  ·  { $field }: milik saya { $local } / milik mereka { $remote }
+accounts-conflict-row = { $title }  ·  { $field }: lokal { $local } / pelacak { $remote }
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = Pustaka
@@ -3253,7 +3253,7 @@ lists-empty-type-to-search = Ketik untuk mencari
 lists-empty-browse-filtered = Tekan ↵ untuk menelusuri dengan filter ini.
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
-lists-empty-browse-popular = Tekan ↵ untuk menelusuri yang paling populer.
+lists-empty-browse-popular = Tekan ↵ untuk menelusuri judul paling populer.
 
 # Heading when a search or a browse found nothing.
 lists-empty-no-matches = Tidak ada hasil
@@ -3917,7 +3917,7 @@ settings-label-episode-discussions = Diskusi episode
 settings-label-comment-images = Muat gambar di komentar
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = Kalender hanya menampilkan daftar pribadi
+settings-label-calendar-mine = Kalender hanya menampilkan daftar Anda
 
 # Note under the titles row.
 settings-note-titles = Pilihan AniList mengikuti akun AniList Anda, dan memakai bahasa Inggris saat Anda belum masuk.
@@ -3974,13 +3974,13 @@ settings-note-update-check = Satu permintaan tersimpan per hari, dibuat saat mul
 settings-note-presence = Berlaku mulai episode berikutnya.
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = Perlu client ID. Daftarkan aplikasi di discord.com/developers.
+settings-note-presence-needs-client = Atur client ID dulu. Daftarkan aplikasi di discord.com/developers untuk mendapatkannya.
 
 # Note under the presence title row. The quoted text is what Discord shows.
 settings-note-presence-title = Nonaktif menampilkan “Sedang menonton anime” tanpa menyebut judulnya.
 
 # Note under the rich presence row.
-settings-note-presence-rich = Menambahkan sampul, bilah kemajuan, dan tautan AniList. Perlu judul ditampilkan.
+settings-note-presence-rich = Menambahkan sampul, bilah kemajuan, dan tautan AniList, selama judulnya ditampilkan.
 
 # Note under the torrent playback row.
 settings-note-torrents = Nonaktif secara bawaan. Berlaku seketika.
@@ -4136,13 +4136,13 @@ stores-footer-update-hosts = Pembaruan ini juga ingin menghubungi { $hosts }
 stores-footer-may-contact = Boleh menghubungi { $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = Tautan sekali pakai untuk bergabung dengan komputer Anda yang lain, sebagai Anda
+stores-footer-link-device = Tautan sekali pakai yang menggabungkan perangkat Anda yang lain sebagai Anda
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = Tautan sekali pakai untuk seseorang yang baru
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = Siapa saja yang sudah bergabung, dan mencabut akses seseorang
+stores-footer-members = Lihat siapa yang sudah bergabung, dan cabut akses seseorang
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = ↵ Hanya izinkan orang yang Anda undang untuk bergabung, dan hentikan tautannya
@@ -4157,7 +4157,7 @@ stores-footer-publish = Tawarkan plugin dari direktori plugin di mesin ini
 stores-footer-admin = Kelola anggota, undangan, dan plugin-plugin di peramban Anda
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = Plugin-plugin yang dipasang darinya tetap ada di mesin ini dan tidak lagi diperbarui
+stores-footer-leave = Plugin-plugin yang dipasang darinya tetap ada di perangkat ini dan tidak lagi diperbarui
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = Siapa pun dengan tautan
@@ -4325,7 +4325,7 @@ stores-footer-remove-anonymous = ↵ Hapus perangkat ini, hanya dikenali dari wa
 stores-footer-remove-all-anonymous = ↵ Hapus semua perangkat yang bergabung lewat tautan
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = Disalin ke papan klip jika terminal mengizinkan, atau pilih untuk menyalin.
+stores-link-copied = Disalin, jika terminal mengizinkan. Jika tidak, pilih tautannya untuk menyalin.
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = Pilih untuk menyalin.
@@ -4397,7 +4397,7 @@ stores-key-matches-invite = { $fingerprint }  (cocok dengan undangan)
 stores-join-open = Siapa pun dengan tautan bisa bergabung.
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = Anda bergabung tanpa nama, dan perangkat lain bergabung dengan tautan yang sama.
+stores-join-anonymous = Anda bergabung tanpa nama. Perangkat lain mana pun bisa bergabung dengan tautan yang sama.
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = Sudah bergabung. Bergabung lagi akan memberi perangkat ini token baru.
@@ -4406,7 +4406,7 @@ stores-join-already = Sudah bergabung. Bergabung lagi akan memberi perangkat ini
 stores-join-device-note = Pemilik toko melihat nama ini. Ketik untuk mengubahnya.
 
 # Lines of the leave confirmation.
-stores-leave-plugins = Plugin-plugin yang dipasang darinya tetap ada di mesin ini dan tidak lagi diperbarui.
+stores-leave-plugins = Plugin-plugin yang dipasang darinya tetap ada di perangkat ini dan tidak lagi diperbarui.
 
 # Lines of the leave confirmation.
 stores-leave-revoked = Akses perangkat ini ke toko dicabut.
@@ -4418,7 +4418,7 @@ stores-remove-member-devices =
     }
 
 # Line of the remove member confirmation.
-stores-remove-member-plugins = Plugin-plugin yang sudah mereka pasang tetap ada di mesin mereka.
+stores-remove-member-plugins = Plugin-plugin yang sudah mereka pasang tetap ada di perangkat mereka.
 
 # Line of the cancel invite confirmation.
 stores-cancel-invite-link = Tautan itu berhenti berfungsi.
@@ -4478,7 +4478,7 @@ stores-choice-update = Perbarui ke { $version }
 stores-choice-replace = Ganti salinan yang ditambahkan manual
 
 # Choice in the plugin overlay: delete the plugin from this machine.
-stores-choice-remove = Hapus dari mesin ini
+stores-choice-remove = Hapus dari perangkat ini
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 stores-choice-unpublish = Berhenti menawarkan di toko ini
@@ -4619,7 +4619,7 @@ party-no-source-still-in = { $reason } Anda masih berada di nonton bareng.
 status-reloading-sources = Memuat ulang sumber-sumber…
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = { $name } disematkan untuk judul ini tetapi tidak tersedia, jadi sumber-sumber lain yang dipakai.
+pin-unavailable = { $name } disematkan untuk judul ini tetapi tidak tersedia. Mencoba sumber-sumber lain.
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Nonton bareng
@@ -4748,13 +4748,13 @@ settings-group-crashes = Laporan crash
 settings-crash-save = Simpan laporan crash di perangkat ini
 
 # Line under that switch.
-settings-crash-save-detail = Saat aktif, Kaeri menyimpan catatan singkat setiap crash di perangkat ini, dengan judul, alamat, dan nama dihapus, sehingga Anda bisa menambahkannya ke Laporkan bug. Tidak ada yang dikirim otomatis.
+settings-crash-save-detail = Kaeri menyimpan catatan singkat setiap crash di perangkat ini untuk Laporkan bug, dengan judul, alamat, dan nama dihapus. Tidak ada yang dikirim otomatis.
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = Tanya setelah crash
 
 # Line under that switch.
-settings-crash-ask-detail = Menampilkan pemberitahuan saat aplikasi dibuka lagi dengan Laporkan…
+settings-crash-ask-detail = Kaeri menampilkan pemberitahuan dengan Laporkan… saat dibuka lagi.
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = Disimpan oleh { $system }
@@ -4784,7 +4784,7 @@ settings-crash-delete = Hapus
 settings-crash-delete-all = Hapus semua
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = Laporan crash tetap di perangkat ini. Kaeri tidak mengirim apa pun secara otomatis. Laporan keluar hanya saat Anda membukanya di GitHub dari Laporkan bug. Laporan dihapus setelah 30 hari.
+settings-crash-footnote = Laporan crash tetap di perangkat ini, dan Kaeri tidak mengirim apa pun secara otomatis. Laporan keluar hanya saat Anda membukanya di GitHub dari Laporkan bug. Laporan dihapus setelah 30 hari.
 
 # Button that shows the week before.
 calendar-previous-week = Minggu sebelumnya
@@ -4910,13 +4910,13 @@ cast-tvs-note-iphone = Muncul di bawah Chromecast pada Putar di TV. iPhone ini m
 cast-tvs-note-ipad = Muncul di bawah Chromecast pada Putar di TV. iPad ini mengirimkan episode ke TV tersebut.
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Memungkinkan TV dengan Chromecast bawaan memutar torrent. Mac ini mengirim episode selama episode diputar.
+cast-torrents-note-mac = TV dengan Chromecast bawaan lalu bisa memutar torrent. Mac ini mengirim episode selama episode diputar.
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Memungkinkan TV dengan Chromecast bawaan memutar torrent. iPhone ini mengirim episode selama episode diputar.
+cast-torrents-note-iphone = TV dengan Chromecast bawaan lalu bisa memutar torrent. iPhone ini mengirim episode selama episode diputar.
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Memungkinkan TV dengan Chromecast bawaan memutar torrent. iPad ini mengirim episode selama episode diputar.
+cast-torrents-note-ipad = TV dengan Chromecast bawaan lalu bisa memutar torrent. iPad ini mengirim episode selama episode diputar.
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = Berikutnya · diputar dalam { $seconds } dtk
@@ -5648,7 +5648,7 @@ downloads-delete-detail = Berkas dihapus dari perangkat ini.
 downloads-delete-one-title = Hapus unduhan
 
 # Line under it: what you lose.
-downloads-delete-one-detail = Episode hanya bisa diputar lagi dengan koneksi, atau setelah diunduh ulang.
+downloads-delete-one-detail = Setelah ini, episode perlu koneksi untuk diputar, kecuali Anda mengunduhnya lagi.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = Hapus unduhan yang sudah ditonton
@@ -5660,7 +5660,7 @@ downloads-seeding-title = Seeding
 downloads-seeding-after-watching = Seeding setelah menonton
 
 # Line under the seeding heading.
-downloads-seeding-note = Episode yang sudah ditonton dibagikan kembali saat Kaeri terbuka, sampai rasio atau batas waktu di Pengaturan, di bawah Sumber-sumber, tercapai.
+downloads-seeding-note = Episode yang sudah ditonton dibagikan kembali saat Kaeri terbuka. Berbagi berhenti saat mencapai rasio atau batas waktu yang Anda atur di Pengaturan, di bawah Sumber-sumber.
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = Saat jendela ditutup dan unduhan sedang berjalan
@@ -5738,10 +5738,10 @@ episode-download-failed = Episode { $episode } tidak dapat diunduh. Coba lagi.
 first-other-title = Sudah memakai Kaeri di perangkat lain?
 
 # Under the title.
-first-other-line = Pasangkan, lalu perangkat ini mendapatkan sumber-sumber, pelacak-pelacak, dan riwayat Anda. Langkah setelah ini pun selesai.
+first-other-line = Pasangkan, lalu perangkat ini mendapatkan sumber-sumber, pelacak-pelacak, dan riwayat Anda, dan sisa penyiapan pun selesai untuk Anda.
 
 # Line under the pair row.
-first-other-pair-line = Menampilkan kode untuk dimasukkan di perangkat itu. Keduanya harus memakai Wi-Fi yang sama.
+first-other-pair-line = Anda akan mendapat kode untuk dimasukkan di perangkat itu. Keduanya harus memakai Wi-Fi yang sama.
 
 # Row that restores from a sync folder.
 first-other-restore = Pulihkan dari folder cloud
@@ -5855,7 +5855,7 @@ home-end-signed-out = Masuk ke AniList untuk mengambil daftar dan Rencana Anda.
 home-sign-in = Masuk ke AniList
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Tambahkan sumber untuk memutar dari Beranda. Toko-toko plugin menyediakan beberapa pilihan.
+home-end-no-sources = Tambahkan sumber untuk memutar dari Beranda. Plugin-plugin berasal dari Toko-toko plugin.
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = Tidak ada di sumber-sumber Anda
@@ -6284,7 +6284,7 @@ library-picker-title = Pilih folder berisi episode Anda.
 library-remove-detail = Berkas Anda tetap di tempatnya.
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = Tidak bisa menghubungi AniList. Akan dicoba lagi saat pemindaian ulang.
+library-reason-offline = Tidak bisa menghubungi AniList. Pemindaian selanjutnya akan mencoba lagi.
 
 # Button that opens the match picker for a group.
 library-choose-match = Pilih kecocokan
@@ -6317,7 +6317,7 @@ licensed-body = Kaeri bisa membuka judul di layanan streaming yang Anda bayar. A
 licensed-region = Wilayah
 
 # Line under the region menu.
-licensed-region-line = Menyembunyikan tautan yang ditandai AniList untuk negara lain. Sebagian besar tautan tidak menyebut negara, jadi pilih juga layanan Anda.
+licensed-region-line = Tautan yang ditandai AniList untuk negara lain disembunyikan. Sebagian besar tautan tidak menyebut negara, jadi pilih juga layanan Anda.
 
 # Heading over the services the viewer pays for.
 licensed-yours = Layanan Anda
@@ -6761,7 +6761,7 @@ onboarding-own-heading = Punya media sendiri?
 onboarding-invite-heading = Punya tautan undangan?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Plugin-plugin berasal dari toko-toko plugin. Toko plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri, jadi Anda bergabung dengan tautan undangan dari pemiliknya.
+onboarding-where-stores = Plugin-plugin berasal dari toko-toko plugin. Masing-masing bertanda tangan dan memberi setiap perangkat tokennya sendiri, karena itu Anda bergabung dengan tautan undangan dari pemiliknya.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Coba sekarang
@@ -6803,7 +6803,7 @@ party-leave = Keluar nonton bareng
 party-leaving = Sedang keluar…
 
 # Label of the button that marks you as ready.
-party-ready-action = Saya sudah siap
+party-ready-action = Siap menonton
 
 # Button that copies the link to invite someone.
 party-copy-invite = Salin tautan undangan
@@ -6818,7 +6818,7 @@ party-leave-and-close = Keluar dan tutup
 party-not-now = Nanti saja
 
 # Line while the form fetches its suggestions.
-party-getting-ready = Sedang menyiapkan…
+party-getting-ready = Memuat saran…
 
 # Label of the server field.
 party-server = Server
@@ -6851,7 +6851,7 @@ party-server-public = Server publik yang dijalankan oleh { $operator }, bukan ol
 party-server-suggest = Tidak punya server sendiri? { $server } adalah server publik yang dijalankan oleh { $operator }.
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = Server ini dipilih oleh orang yang mengundang Anda. Kaeri tidak menjalankannya.
+party-server-invited = Orang yang mengundang Anda memilih server ini. Kaeri tidak menjalankannya.
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = Tulis server sebagai host dan port, seperti party.example:8999.
@@ -7061,7 +7061,7 @@ together-recent = Ruang terakhir
 together-recent-row = Episode { $episode } · bersama { $names } · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = Ruang yang Anda masuki tampil di sini, sepuluh terakhir.
+together-recent-empty = Sepuluh ruang terakhir yang Anda masuki tampil di sini.
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = Gabung lagi
@@ -7144,7 +7144,7 @@ party-member-finding = Mencari sumber
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = Menonton dari { $time }
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = Siap
 
 # Heading of the invite block in the lobby.
@@ -7361,7 +7361,7 @@ party-chat-show = Tampilkan obrolan
 settings-hide-chat = Sembunyikan obrolan di nonton bareng
 
 # Line under that switch.
-settings-hide-chat-line = Pesan, reaksi, dan tandanya di bilah geser tidak muncul di video, dan kolom tulis hilang. Daftar orang tetap menunjukkan siapa yang ada di ruangan.
+settings-hide-chat-line = Pesan obrolan, reaksi, dan tandanya di bilah geser tidak muncul di video, dan kolom obrolan hilang. Daftar orang tetap menunjukkan siapa yang ada di ruangan.
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = Bisukan { $name }
@@ -7962,10 +7962,10 @@ player-load-audio-file = Muat berkas audio…
 player-file-picker-failed = Pemilih berkas tidak bisa dibuka. Coba lagi.
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = Berkas subtitel itu tidak bisa dimuat. Pastikan itu berkas subtitel.
+player-subtitle-file-failed = Berkas itu tidak bisa dimuat sebagai subtitel. Pilih berkas subtitel, seperti .srt atau .ass.
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = Berkas audio itu tidak bisa dimuat. Pastikan itu berkas audio.
+player-audio-file-failed = Berkas itu tidak bisa dimuat sebagai audio. Pilih berkas audio, seperti .mka atau .flac.
 
 # Name of a track that has no name or language.
 player-track-unnamed = Trek tanpa nama
@@ -8050,6 +8050,9 @@ reader-close = Tutup
 
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = Dibaca
+
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = Dibaca · { $trackers } diperbarui
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Selanjutnya
@@ -8153,11 +8156,44 @@ reader-gap-small = Kecil
 # Look choice that follows the system's light or dark.
 reader-look-system = Sistem
 
+# Top line of the page between chapters. The chapter is its number, such as 12.
+reader-end-of-chapter-number = Akhir bab { $chapter }
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+reader-end-facts = Bab { $chapter } · { $facts }
+
+# The next chapter's length on the page between chapters.
+reader-end-pages =
+    { $count ->
+       *[other] { $count } halaman
+    }
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+reader-end-from = Dari { $source }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line = Bab { $chapter }
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+reader-divider-facts-source = { $facts } · dari { $source }
+
+# Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+reader-end-swipe = Geser untuk terus membaca
+
+# The next episode's length on the divider inside a strip.
+reader-divider-images =
+    { $count ->
+       *[other] { $count } gambar
+    }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line-titled = Bab { $chapter } · { $title }
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Baca demo
 
 # Under the first run's demo heading when the device is for reading.
-onboarding-demo-books-detail = Demo berisi komik pendek dan cerita pendek yang dibagikan pembuatnya di bawah Creative Commons.
+onboarding-demo-books-detail = Satu komik pendek dan satu cerita pendek, dibagikan pembuatnya di bawah Creative Commons.
 
 # Under the first run's demo heading when the device is for both.
 onboarding-demo-both-detail = Satu episode pendek dan satu komik pendek, dibagikan pembuatnya di bawah Creative Commons.
@@ -8778,7 +8814,7 @@ book-sources-keep = Simpan yang belum cocok
 book-sources-find = Cari
 
 # Footnote of the Check matches sheet.
-book-sources-unmatched-note = Seri yang belum cocok tetap dibaca dari folder. Seri itu belum punya kemajuan di pelacak sampai dicocokkan.
+book-sources-unmatched-note = Anda tetap bisa membaca seri yang belum cocok dari folder. Seri itu belum mendapat kemajuan di pelacak sampai dicocokkan.
 
 # Accessibility label of the control that sets Shows or Reading in the Library and Search.
 library-scope-label = Tontonan atau Bacaan
@@ -8940,13 +8976,13 @@ onboarding-lists-line-both = Kaeri menyelaraskan bacaan dan tontonan Anda dengan
 onboarding-lists-anilist-line = Daftar, kemajuan, dan saran
 
 # Under AniList on the first-run page after Watch: the other trackers, for later.
-onboarding-lists-later-watch = MyAnimeList, Kitsu, Simkl, dan Trakt bisa ditambahkan nanti di Pengaturan, bagian Akun.
+onboarding-lists-later-watch = Anda bisa menambahkan MyAnimeList, Kitsu, Simkl, dan Trakt nanti di Pengaturan, bagian Akun.
 
 # Under AniList on the first-run page after Read: the other trackers, for later.
-onboarding-lists-later-read = MyAnimeList, Kitsu, dan MangaUpdates bisa ditambahkan nanti di Pengaturan, bagian Akun.
+onboarding-lists-later-read = Anda bisa menambahkan MyAnimeList, Kitsu, dan MangaUpdates nanti di Pengaturan, bagian Akun.
 
 # Under AniList on the first-run page after Both: the other trackers, for later.
-onboarding-lists-later-both = MyAnimeList, Kitsu, MangaUpdates, Simkl, dan Trakt bisa ditambahkan nanti di Pengaturan, bagian Akun.
+onboarding-lists-later-both = Anda bisa menambahkan MyAnimeList, Kitsu, MangaUpdates, Simkl, dan Trakt nanti di Pengaturan, bagian Akun.
 
 # The first-run page's main button: sign in to the tracker.
 onboarding-connect = Sambungkan { $tracker }
@@ -9180,10 +9216,10 @@ settings-chapter-notifications-note = Seri di daftar Membaca Anda
 settings-downloads-finished-note = Saat semua bab yang diunduh selesai
 
 # Under New chapters.
-settings-chapter-notifications-footer = Bab punya kanal sistem sendiri, jadi bisa dibisukan tersendiri.
+settings-chapter-notifications-footer = Bab punya kanal sistem sendiri, jadi Anda bisa membisukannya tanpa mengubah notifikasi lain.
 
 # Credit under the trackers with reading on.
-accounts-mangaupdates-credit = MangaUpdates diakses lewat API publiknya.
+accounts-mangaupdates-credit = Kaeri terhubung ke MangaUpdates lewat API publiknya.
 
 # Placeholder of the user name field when signing in to MangaUpdates.
 accounts-username = Nama pengguna
@@ -9249,7 +9285,7 @@ seasonal-empty-format-detail = Coba semua format.
 seasonal-filter-in-search = Filter di Pencarian
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = Musim ini di Pencarian, tempat setiap filter mempersempit hasil
+seasonal-filter-help = Membuka musim ini di Pencarian, tempat semua filter bisa dipakai
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = Popularitas
@@ -9390,7 +9426,7 @@ filter-where-to-watch = Tempat menonton
 filter-licensed-only = Hanya yang berlisensi
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = Judul di daftar saya
+filter-my-list = Judul di daftar Anda
 
 # Value of a three-way filter: include the titles.
 filter-show = Tampilkan
@@ -9885,7 +9921,7 @@ servers-error-certificate = { $host } memakai sertifikat yang tidak dipercaya pe
 servers-row-signed-out-here = Keluar
 
 # Line under it: what signing out does.
-servers-sign-out-line = Mengakhiri sesi masuk perangkat ini di server. Server dan unduhan Anda tetap seperti semula.
+servers-sign-out-line = Keluar mengakhiri sesi perangkat ini di server. Server dan unduhan Anda tetap seperti semula.
 
 # Settings group and row title for choosing a language.
 settings-language = Bahasa
@@ -10203,7 +10239,7 @@ settings-new-episodes = Episode baru
 settings-new-episodes-detail = Muncul di daftar Menonton Anda
 
 # Line explaining what a notification says.
-settings-notify-detail = Satu notifikasi saat episode dari serial yang Anda ikuti terbit: nama serial dan nomor episodenya, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.
+settings-notify-detail = Anda mendapat satu notifikasi saat episode dari serial yang Anda ikuti terbit. Isinya nama serial dan nomor episode, tanpa judul episodenya. Serial bisa mematikan notifikasinya sendiri di pengaturannya.
 
 # Row: the coming-up digest.
 settings-coming-up = Segera tayang · 7 hari ke depan
@@ -10215,7 +10251,7 @@ settings-system-notifications = Pengaturan notifikasi
 settings-system-notifications-detail = Suara, getaran, dan layar kunci
 
 # Line under it on Apple.
-settings-system-notifications-apple = Membuka Pengaturan Sistem, tempat gaya banner, suara, dan lencana diatur.
+settings-system-notifications-apple = Membuka Pengaturan Sistem, tempat Anda mengatur gaya banner, suara, dan lencana.
 
 # Line when the system blocks notifications.
 settings-notifications-blocked = Mati: sistem tidak mengizinkan notifikasi untuk Kaeri
@@ -10257,7 +10293,7 @@ show-settings-never = Tidak pernah
 show-settings-subs-remembered = Diingat dari episode terakhir Anda.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Dipilih di pemutar. Mengikuti Pengaturan › Pemutaran.
+show-settings-subs-follow = Dipilih di pemutar. Sampai saat itu, Pengaturan › Pemutaran yang berlaku.
 
 # Row: the source for this show.
 show-settings-source = Sumber
@@ -10341,7 +10377,7 @@ settings-upscaling-natural = Alami · ArtCNN
 settings-label-hover-cards = Perbesar sampul saat disorot
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = Menampilkan kartu yang lebih besar dengan trailer saat kursor diletakkan di sampul.
+settings-hover-cards-note = Menahan kursor di atas sampul membuka kartu yang lebih besar dengan trailernya.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Garis dan tekstur asli, tanpa diubah gayanya.
@@ -10742,10 +10778,16 @@ source-added-plugins =
        *[other] Terpasang dari { $store }, plugin-plugin: { $count }
     }
 
-# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 source-row-server =
     { $libraries ->
        *[other] { $kind } · { $series } seri di { $libraries } pustaka · baru ditambahkan
+    }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server-series =
+    { $libraries ->
+       *[other] { $kind } · { $series } seri di { $libraries } pustaka
     }
 
 # A server's row in Your sources while it shows no series.
@@ -10965,7 +11007,7 @@ sources-source-order-row = Urutan Sumber
 sources-torrents-note = Torrent adalah bagian dari Kaeri, bukan plugin. Proxy dan seeding diatur di Pengaturan, di bawah Sumber-sumber.
 
 # Over the { -source } list while the { -source-pl } are set up again after a change.
-sources-rebuilding = Sumber-sumber sedang disiapkan ulang
+sources-rebuilding = Menyiapkan ulang sumber-sumber
 
 # Value of a plugin's response time, in milliseconds.
 sources-response-ms = { $ms } ms
@@ -11115,7 +11157,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = Hanya menjangkau Wikimedia Commons: upload.wikimedia.org dan commons.wikimedia.org.
+sources-demo-hosts = Demo hanya menjangkau Wikimedia Commons: upload.wikimedia.org dan commons.wikimedia.org.
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = Demo tidak pernah masuk ke mana pun dan tidak pernah menulis ke AniList.
@@ -11184,7 +11226,7 @@ stores-not-from-app = Plugin-plugin berasal dari pemilik toko plugin, bukan dari
 stores-join-owner-responsible = { $owner } mengelola toko plugin ini dan memilih plugin-plugin-nya. Kaeri tidak membuat, meninjau, atau menyetujuinya.
 
 # Line when the store has no plugins.
-stores-no-plugins = toko plugin ini belum menawarkan plugin-plugin.
+stores-no-plugins = Toko plugin ini belum punya plugin-plugin.
 
 # Heading of the plugin list of a store.
 stores-plugins = Plugin-plugin
@@ -11220,7 +11262,7 @@ stores-access-ended-page = toko plugin ini tidak lagi mengizinkan perangkat ini 
 stores-no-longer-joined = Anda tidak lagi bergabung dengan toko plugin ini.
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = Luring: { $reason }. plugin-plugin di bawah adalah daftar terakhir yang diperiksa.
+stores-offline-last-list = Luring: { $reason }. Menampilkan daftar terakhir yang dikirimnya.
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = Luring. Menampilkan daftar terakhir yang dikirimnya.
@@ -11325,7 +11367,7 @@ stores-replace-label = Ganti salinan { $name } yang ditambahkan secara manual
 stores-remove-plugin-title = Hapus { $name }?
 
 # Line under it.
-stores-remove-plugin-detail = Plugin ini dihapus dari perangkat ini. toko plugin dapat memasangnya lagi.
+stores-remove-plugin-detail = Plugin ini dihapus dari perangkat ini. Anda bisa memasangnya lagi dari toko plugin.
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = Juga menghubungi
@@ -11346,7 +11388,7 @@ stores-add-title = Tambah toko plugin
 stores-join-detail = Tempel tautan yang dikirim pemilik toko plugin kepada Anda.
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = Tempel tautan undangan yang dikirim pemilik toko plugin kepada Anda. Anda melihat apa yang ditawarkan toko plugin sebelum ada yang digabung atau dipasang.
+stores-join-detail-desktop = Tempel tautan undangan yang dikirim pemilik toko plugin kepada Anda. Anda melihat isi toko plugin sebelum bergabung atau memasang apa pun.
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = Tempel tautan yang dikirim pemilik toko plugin kepada Anda. Tautan Kaeri:// yang dibuka dari Pesan akan langsung mengisi lembar ini.
@@ -11388,7 +11430,7 @@ stores-join-installs-nothing = Bergabung tidak memasang apa pun. Anda memilih pl
 stores-key-matches = Kunci { $key } cocok dengan toko plugin.
 
 # Line when the link is open to anyone.
-stores-anyone-note = Anda bergabung tanpa nama. perangkat lain bergabung dengan tautan yang sama.
+stores-anyone-note = Anda bergabung tanpa nama. Perangkat lain bisa bergabung dengan tautan yang sama.
 
 # Line when the device joined this store already.
 stores-already-joined-note = perangkat ini sudah bergabung dengan toko plugin ini.
@@ -11539,7 +11581,7 @@ stores-invite-works-any = Siapa pun yang punya tautan ini bisa bergabung, sampai
 stores-invite-works-any-forever = Siapa pun yang punya tautan ini bisa bergabung sampai Anda membatalkannya.
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = Berlaku sekali, untuk orang yang Anda kirimi. Sampai { $until }.
+stores-invite-once-until = Berlaku sekali, untuk orang yang Anda kirimi, sampai { $until }.
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = Berlaku sekali, untuk orang yang Anda kirimi, sampai Anda membatalkannya.
@@ -11662,7 +11704,7 @@ stores-offers-plugins =
 notice-open-stores = Buka toko-toko plugin
 
 # Explainer on the empty plugin stores page.
-stores-what-is = Toko plugin adalah server kecil yang menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Ia menawarkan sumber-sumber sebagai plugin-plugin. Kaeri tidak menjalankan atau mendaftar toko plugin apa pun, jadi Anda bergabung dengan tautan undangan dari pemiliknya.
+stores-what-is = Toko plugin adalah server kecil yang menyimpan plugin-plugin bertanda tangan dan memberi setiap perangkat tokennya sendiri. Plugin-plugin di dalamnya menambahkan sumber-sumber. Kaeri tidak menjalankan atau mendaftar toko plugin apa pun, jadi Anda bergabung dengan tautan undangan dari pemiliknya.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Apa itu toko plugin?
@@ -11800,7 +11842,7 @@ sync-road-nearby-line = Pasangkan dengan perangkat lain di Wi-Fi yang sama. Tida
 sync-road-cloud = Lewat folder cloud
 
 # Road sheet row line. Names no service, since a build may hide some (decision 14).
-sync-road-cloud-line = Drive cloud yang sudah Anda pakai, atau server Anda sendiri. Berfungsi saat perangkat Anda berjauhan, dan menyimpan cadangan.
+sync-road-cloud-line = Drive cloud yang sudah Anda pakai, atau server Anda sendiri. Ini tetap berfungsi saat perangkat Anda berjauhan, dan menyimpan cadangan.
 
 # Road sheet footer.
 sync-road-later = Anda bisa menambah cara lainnya nanti. Kebanyakan orang memakai keduanya.
@@ -11860,7 +11902,7 @@ sync-turn-off-alert-line = { $kind } ini berhenti berbagi dengan perangkat Anda 
 cloud-group = Folder cloud
 
 # Group footer.
-cloud-foot = Melengkapi saat perangkat Anda berjauhan, dan menyimpan cadangan tersegel. Hanya perangkat Anda yang dapat membacanya.
+cloud-foot = Folder ini menjaga perangkat Anda tetap selaras saat berjauhan, dan menyimpan cadangan tersegel. Hanya perangkat Anda yang dapat membacanya.
 
 # Row when only the nearby road is set.
 cloud-add = Tambah folder cloud
@@ -12202,7 +12244,7 @@ profiles-picker = Siapa yang menonton?
 profiles-ask-at-launch = Tanya siapa yang menonton saat dibuka
 
 # iPad footer.
-profiles-ask-foot = Nonaktif secara bawaan. Untuk iPad yang dipakai bersama satu rumah. Baris akun bisa mengganti profil kapan saja.
+profiles-ask-foot = Nonaktif secara bawaan. Aktifkan untuk iPad yang dipakai bersama seisi rumah. Anda bisa mengganti profil dari baris akun kapan saja.
 
 # TV Settings.
 profiles-switch = Ganti profil
@@ -12982,7 +13024,7 @@ accounts-tokens-keystore = Token masuk disimpan di perangkat ini, dikunci dengan
 accounts-form-title = Masuk ke { $tracker }
 
 # Line under the title: where the password goes.
-accounts-form-detail = Kata sandi Anda dikirim ke { $tracker } sekali saja, untuk token yang disimpan di perangkat ini.
+accounts-form-detail = Kata sandi Anda dikirim ke { $tracker } sekali saja, ditukar dengan token yang tetap tersimpan di perangkat ini.
 
 # Label of the name field.
 accounts-user-or-email = Email atau nama pengguna
@@ -13054,7 +13096,7 @@ accounts-open-on = Buka di { $tracker }
 accounts-listed-by = Terdaftar di { $tracker }
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = { $tracker } tidak merespons.
+accounts-did-not-answer = { $tracker } tidak merespons. Coba lagi sebentar lagi.
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = { $tracker } belum punya pemeran, staf, atau rekomendasi untuk judul ini.
@@ -13117,7 +13159,7 @@ tv-pairing-code = Kode pemasangan
 tv-open-on-tv = Buka Kaeri di TV. TV harus terhubung ke Wi-Fi yang sama dengan perangkat ini.
 
 # Line telling what to type.
-tv-type-code = Ketik enam digit yang ditampilkan { $name }. Setelah itu, perangkat ini terhubung dengan sendirinya.
+tv-type-code = Ketik enam digit yang ditampilkan { $name }. Sejak itu, perangkat ini terhubung dengan sendirinya.
 
 # Line while pairing is under way.
 tv-pairing-moment = Ini memerlukan sedikit waktu.
@@ -13417,7 +13459,7 @@ updates-saved-replace-plain = Versi { $version } disimpan di Unduhan. Ganti berk
 updates-why-server = Unduhan berhenti: server menolaknya ({ $code }). Coba lagi nanti.
 
 # The connection broke.
-updates-why-connection = Unduhan berhenti: koneksi terputus.
+updates-why-connection = Unduhan berhenti: koneksi terputus. Coba lagi.
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = Unduhan tidak bisa disimpan: { $reason }

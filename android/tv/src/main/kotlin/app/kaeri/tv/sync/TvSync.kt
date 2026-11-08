@@ -384,6 +384,8 @@ fun TvSyncHost() {
     val signIn by store.sync.signIn.collectAsStateWithLifecycle()
     val status by store.sync.status.collectAsStateWithLifecycle()
     val copied by store.sync.copied.collectAsStateWithLifecycle()
+    // First run's join page says what came over itself.
+    val joining = store.sync.join.state.collectAsStateWithLifecycle().value.stage != app.kaeri.store.JoinStage.ASK
     AskAtLaunch()
     val problem by store.sync.problem.collectAsStateWithLifecycle()
     val shown = signIn
@@ -392,7 +394,7 @@ fun TvSyncHost() {
     val lastCode by store.sync.lastCode.collectAsStateWithLifecycle()
     val failed = problem?.takeIf { shown == null && it.endsSetUp() }
     when {
-        copied != null -> PairOkPage(copied!!)
+        copied != null && !joining -> PairOkPage(copied!!)
         shown != null && step is SyncSignInStep.Code -> CloudCodePage(shown.service, step, null)
         failed != null && lastCode != null -> lastCode?.let { (service, code) -> CloudCodePage(service, code, failed) }
         shown != null && step is SyncSignInStep.Page -> NextcloudQrPage(step)

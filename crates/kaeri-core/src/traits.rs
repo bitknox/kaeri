@@ -258,6 +258,22 @@ pub trait BookSource: Send + Sync {
         chapter: &str,
     ) -> Result<ChapterContent, ProviderError>;
 
+    /// The page images chapter `chapter` of series `series` is made of, found without fetching
+    /// a whole book file: `None` for text, or for a chapter only a download would open. The
+    /// reader's preview of the next chapter asks this. The default asks [`Self::content`], which
+    /// fetches no file for a source that names pages or text; a source that downloads in
+    /// `content` answers on its own.
+    async fn chapter_pages(
+        &self,
+        series: &str,
+        chapter: &str,
+    ) -> Result<Option<Vec<PageRef>>, ProviderError> {
+        Ok(match self.content(series, chapter).await? {
+            ChapterContent::Images(pages) => Some(pages),
+            ChapterContent::Text(_) | ChapterContent::Book(_) => None,
+        })
+    }
+
     /// Find a series by the ids other services know it by, with no fuzzy matching. A source
     /// with its own index (a server, a folder) answers from it; the default answers `None`, so
     /// the caller falls back to [`Self::search`].
@@ -290,8 +306,9 @@ pub trait BookSource: Send + Sync {
 
     /// Fetch one page image this source named, with the headers it carries. A source that
     /// names pages the host can fetch plainly (a server's, with its sign-in header) keeps the
-    /// default, which the engine's own client answers; a plugin's goes through its allowlist.
-    /// The status is told as it came, so the registry can ask for fresh addresses on a 403 or 410.
+    /// default, which the engine's own client answers; a plugin's goes through its allowlist,
+    /// and a page a plugin makes itself ([`PageRef::made`]) comes from the plugin. The status is
+    /// told as it came, so the registry can ask for fresh addresses on a 403 or 410.
     async fn fetch_page(&self, _page: &PageRef) -> Result<Vec<u8>, PageError> {
         Err(PageError::Unsupported)
     }

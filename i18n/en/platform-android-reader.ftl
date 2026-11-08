@@ -288,7 +288,7 @@ eink-colour-hint = If they look like four greys, choose Only greys. You can chan
 # The answer for a colour screen.
 # @only android
 # @max 20
-eink-colour-yes = I see colour
+eink-colour-yes = Yes, colour
 
 # The answer for a grey screen.
 # @only android
@@ -303,12 +303,12 @@ eink-colour-skip = Skip
 # Shown after the colour question was skipped.
 # @only android
 # @max 90
-eink-colour-skipped = Skipped, pictures stay in colour, which a grey screen shows as greys.
+eink-colour-skipped = Skipped. Pictures stay in colour. A grey screen shows them as greys.
 
 # A one-line hint on e-readers whose page buttons may be set to something other than Volume.
 # @only android
 # @max 100
-eink-page-keys-hint = Set the page buttons to Volume in the { -device }'s settings to turn pages.
+eink-page-keys-hint = To turn pages with the buttons, set them to Volume in the { -device }'s settings.
 
 # Beside a dot on a chapter or series that is new since it was last opened.
 # @only android
@@ -335,19 +335,6 @@ reader-notice-change = Change
 # @max 24
 reader-settings = Reader settings
 
-# Under the series title in the reader's controls. The chapter is its number, such as 12.
-# @only android
-# @arg chapter: text
-# @max 30
-reader-chapter-line = Chapter { $chapter }
-
-# Under the series title in the reader's controls. The chapter is its number, such as 12.
-# @only android
-# @arg chapter: text
-# @arg title: text
-# @max 60
-reader-chapter-line-titled = Chapter { $chapter } · { $title }
-
 # Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4.
 # @only android
 # @arg chapter: text
@@ -370,28 +357,10 @@ reader-zone-next = Next page
 # @max 20
 reader-grid-title = Pages
 
-# Top line of the page between chapters. The chapter is its number, such as 12.
-# @only android
-# @arg chapter: text
-# @max 40
-reader-end-of-chapter-number = End of chapter { $chapter }
-
-# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
-# @only android
-# @arg chapter: text
-# @arg facts: text
-# @max 60
-reader-end-facts = Chapter { $chapter } · { $facts }
-
 # Main button on the page between chapters.
 # @only android
 # @max 16
 reader-end-continue = { -continue-cap }
-
-# Line above the main button on the page between chapters.
-# @only android
-# @max 30
-reader-end-swipe = Swipe to keep reading
 
 # Quiet button on the page between chapters that leaves the reader for the series page.
 # @only android
@@ -689,12 +658,6 @@ reader-scrubber-in-chapter = Page in chapter
 # @max 40
 reader-failed-novel = Couldn't show this chapter
 
-# Under the end of chapter line, naming the trackers the read went to.
-# @only android
-# @arg trackers: text
-# @max 60
-reader-end-tracker = Read · { $trackers } updated
-
 # Under the end of chapter line when the phone is offline.
 # @only android
 # @arg tracker: text
@@ -831,15 +794,6 @@ reader-size-small = Smaller text
 # @max 24
 reader-size-large = Larger text
 
-# The next chapter's length on the page between chapters.
-# @only android
-# @arg count: int
-# @max 24
-reader-end-pages = { $count ->
-    [one] One page
-   *[other] { $count } pages
- }
-
 # The value of Paper mode in the settings list when it is on.
 # @only android
 # @max 12
@@ -864,28 +818,6 @@ reader-paper-look = Paper look by day
 # @only android
 # @max 30
 reader-paper-dim = Dim the page
-
-# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
-# @only android
-# @arg source: text
-# @max 40
-reader-end-from = From { $source }
-
-# The next episode's length on the divider inside a strip.
-# @only android
-# @arg count: int
-# @max 24
-reader-divider-images = { $count ->
-    [one] One image
-   *[other] { $count } images
- }
-
-# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
-# @only android
-# @arg facts: text
-# @arg source: text
-# @max 60
-reader-divider-facts-source = { $facts } · from { $source }
 
 # The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s".
 # @only android

@@ -18,7 +18,7 @@ discussion-apple-player-note = { $count ->
    *[other] { $count } comentários · pausa
  }
 settings-apple-discussions = Discussões de episódios
-settings-apple-discussions-note = Lê os comentários do fórum do AniList para os episódios que você já assistiu.
+settings-apple-discussions-note = Os comentários vêm do tópico do fórum do AniList, depois que você assiste ao episódio.
 settings-apple-comment-images = Carregar imagens nos comentários
 settings-apple-comment-images-note = Cada imagem carrega do site que a hospeda, que vê seu endereço IP.
 discussion-apple-key-hint = ⌘Return envia. Return adiciona uma linha.

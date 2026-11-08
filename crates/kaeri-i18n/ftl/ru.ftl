@@ -28,7 +28,7 @@ notice-cast-refused = { $name } не смог воспроизвести это�
 notice-cast-taken-over = Другое устройство запустило что-то на { $name }, поэтому трансляция остановлена.
 
 # This device isn't on the TV's network, or reaches it through a VPN. The name is the TV's own.
-notice-cast-not-same-network = Это устройство не в той сети, где { $name }, или подключается к ней через VPN. Для трансляции оба должны быть в одной сети.
+notice-cast-not-same-network = Это устройство не в той же сети, что { $name }, или подключается к ней через VPN. Для трансляции подключите оба к одной сети.
 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Связь с { $name } потеряна, трансляция остановлена.
@@ -367,7 +367,7 @@ match-search-timed-out = Он не ответил вовремя.
 match-search-source-off = Он не включён.
 
 # Toast after the person picked a source for one title.
-notice-source-pinned = { $source } будет использоваться для этого названия.
+notice-source-pinned = Теперь этот тайтл воспроизводится из { $source }.
 
 # Toast after the person went back to automatic source selection for one title.
 notice-source-automatic = Снова автоматический выбор источника для этого названия.
@@ -565,13 +565,13 @@ reader-moved = Переход к { $chapter }, страница { $page }: та�
 reader-moved-number = Переход к главе { $chapter }, страница { $page }: там остановилось { $device }
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-right-to-left = Справа налево (определено)
+reader-detected-right-to-left = Похоже, справа налево
 
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
-reader-detected-left-to-right = Слева направо (определено)
+reader-detected-left-to-right = Похоже, слева направо
 
 # A notice the first time a series opens as one long strip, guessed from its pages. It offers Change.
-reader-detected-strip = Длинная лента (определено)
+reader-detected-strip = Похоже, длинная лента
 
 # Why a chapter or a list could not load: there is no connection.
 reading-failed-offline = Нет подключения. Скачанные главы по-прежнему открываются.
@@ -1102,7 +1102,7 @@ store-join-would-unname = Вы подключились к { $store } как { $
 store-not-the-invited = { $url }: это не тот магазин плагинов, что в приглашении ({ $reason }). Подключения не было.
 
 # Error: the token for a joined store could not be saved on this device. The reason comes from the system.
-store-token-not-kept = магазин плагинов: не удалось сохранить токен. { $reason }
+store-token-not-kept = Не удалось сохранить токен, который выдал магазин плагинов. { $reason }
 
 # Error: an invite that cannot be used any more.
 store-invite-unusable = Это приглашение уже использовано, отменено или истекло. Попросите новое.
@@ -1168,7 +1168,7 @@ store-admin-link-foreign = { $store } прислал ссылку админис
 store-open-join-unsupported = Сервер { $store } старой версии и не может принимать подключения по ссылке. Сначала обновите его.
 
 # Toast after a source (plugin) is switched off. It is skipped when looking for episodes.
-source-switched-off = Выключено: { $name }. При поиске эпизодов его пропускают.
+source-switched-off = Источник { $name } выключен. Kaeri пропускает его при поиске эпизодов.
 
 # Toast after a source (plugin) is switched on.
 source-switched-on = Включено: { $name }.
@@ -1177,7 +1177,7 @@ source-switched-on = Включено: { $name }.
 plugin-not-loaded = { $id } не загружен. Проверьте, что он установлен, и перезагрузите Источники.
 
 # Toast after a release is chosen for a title. The name is the release's title.
-release-pinned = { $name } будет использоваться для этого тайтла.
+release-pinned = Теперь для этого тайтла используется { $name }.
 
 # Toast when the chosen source or release for a title could not be saved. The reason comes from the database.
 notice-choice-not-saved = Не удалось сохранить выбор. { $reason }
@@ -1267,10 +1267,10 @@ notice-token-exchange-failed = Не удалось получить токен �
 notice-browser-not-opened = Не удалось открыть браузер для входа. Проверьте, что он установлен, и попробуйте ещё раз. { $reason }
 
 # Toast when a sign-in redirect arrives and no sign-in is waiting for it.
-notice-sign-in-not-waiting = Вход в { $tracker } сейчас не ожидает ответа. Начните вход заново.
+notice-sign-in-not-waiting = Пришёл ответ на вход из { $tracker }, но никакой вход его не ждал. Начните вход заново.
 
 # Toast when a sign-in redirect does not match the request that was made.
-notice-sign-in-wrong-request = Вход в { $tracker } не вернулся с этого запроса. Начните вход заново.
+notice-sign-in-wrong-request = Ответ на вход из { $tracker } не совпадает с запросом. Начните вход заново.
 
 # Toast when a tracker sent the person back without a token.
 notice-sign-in-no-token = Вход в { $tracker } вернулся без токена. Попробуйте ещё раз.
@@ -1372,7 +1372,7 @@ notice-update-available = Вышла версия { $tag }. Чтобы уста�
 cause-proxy-needs-address = Для прокси нужны хост и порт.
 
 # The reason a proxy could not be checked: its address is not one the check can use.
-cause-proxy-address-unusable = Адрес прокси не подходит для проверки.
+cause-proxy-address-unusable = Проверка прокси не может использовать этот адрес.
 
 # The reason a request failed: it never reached the server.
 cause-server-unreachable = Не удалось связаться с сервером.
@@ -1396,7 +1396,7 @@ notice-playback-failed = Ошибка воспроизведения. Попро
 notice-engine-fault = Внутри Kaeri что-то пошло не так. Работа продолжилась, но если экран завис, закройте приложение и откройте его снова.
 
 # Toast at launch when the database was damaged, so a fresh one was started. The path is where the damaged file was moved, kept for recovery. Watch history and downloads start over; what the trackers hold comes back with the next sync.
-notice-database-set-aside = База данных была повреждена, поэтому создана новая. Старый файл сохранён в { $path }. Ваши трекеры вернут сохранённые у них данные при следующей синхронизации.
+notice-database-set-aside = База данных была повреждена, поэтому Kaeri создал новую. Старый файл сохранён в { $path }. Данные, которые хранят ваши трекеры, вернутся при следующей синхронизации.
 
 # Message when Kaeri could not start because a folder could not be made. The path is the folder, the reason comes from the system.
 start-failed-folder = Не удалось создать папку { $path }. Проверьте, есть ли место на диске и можно ли писать в эту папку, и попробуйте снова. { $reason }
@@ -1411,7 +1411,7 @@ config-reset-failed = Kaeri не удалось отодвинуть { $path }, 
 start-failed-database = Не удалось открыть базу данных { $path }. Если в этой папке открыто другое приложение Kaeri, закройте его и попробуйте снова. { $reason }
 
 # Message when Kaeri could not start its network connection from the network settings.
-start-failed-network = Не удалось настроить сетевое подключение по сетевым настройкам из config.toml. { $reason }
+start-failed-network = Kaeri не удалось подключиться с сетевыми настройками из config.toml. Проверьте их и попробуйте снова. { $reason }
 
 # Message when Kaeri itself could not start. The reason comes from the system or the engine.
 start-failed = Не удалось запустить Kaeri. Закройте и откройте его снова. { $reason }
@@ -1447,10 +1447,10 @@ notice-surprise-empty-filters = Нет тайтлов, подходящих по
 notice-surprise-empty-planning = Список «В планах» пуст.
 
 # Toast: Surprise me on the filters while the device is offline; AniList is how a title is picked.
-notice-surprise-offline = Нет сети. Для случайного выбора в поиске нужен AniList.
+notice-surprise-offline = Нет подключения к сети. Чтобы «Удиви меня» выбрал тайтл, нужен AniList.
 
 # Toast: Surprise me on the filters, and AniList could not be asked.
-notice-surprise-failed = Сейчас не удалось выбрать тайтл. Попробуйте чуть позже.
+notice-surprise-failed = Не удалось обратиться к AniList, чтобы выбрать тайтл. Попробуйте чуть позже.
 
 # Title of the dialog that edits the proxy.
 torrents-linux-edit-proxy-title = Изменить прокси
@@ -1576,7 +1576,7 @@ party-members = Участники
 party-choose-a-source = Выберите источник
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
-party-sources-none-listed = Ни один источник не содержит эпизод { $episode }. Источники дают плагины, которые магазин плагинов добавляет.
+party-sources-none-listed = Ни один источник не содержит эпизод { $episode }. Источники дают плагины, а их добавляют через магазин плагинов.
 
 # Line above the list of sources that have the watch party's episode.
 party-sources-found-line =
@@ -1681,10 +1681,10 @@ settings-caption-sample = Фонарная дорога уходит дальш�
 settings-caption-note = Обычные субтитры выглядят так, если в серии есть такие, на языке «{ $language }». Субтитры с собственным оформлением сохраняют свой вид.
 
 # Preview note for new-episode notifications when they are on. The tracker is a name such as AniList.
-settings-notify-note-on = Одно уведомление, когда выходит новая серия сериала из списка «Смотрю». Время выхода берётся из { $tracker }. Сначала действует настройка самого сериала.
+settings-notify-note-on = Вы получаете одно уведомление, когда выходит эпизод тайтла из списка «Смотрю», в то время, которое указывает { $tracker }. Настройка самого тайтла важнее этой.
 
 # Preview note for new-episode notifications when they are off.
-settings-notify-note-off = Выключено. Уведомляют только сериалы, включённые в их собственных настройках.
+settings-notify-note-off = Выключено. Уведомления приходят только от тайтлов, для которых они включены в их собственных настройках.
 
 # Preview note beside the accounts settings.
 settings-accounts-note = Kaeri работает без аккаунта. История просмотра остаётся на этом компьютере после выхода из аккаунта.
@@ -1762,7 +1762,7 @@ controller-help-buttons = Кнопки контроллера
 settings-note-cast-tvs-computer = Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот компьютер отправляет им эпизод.
 
 # Note under the Torrents while casting setting, shown while torrents are on.
-settings-note-torrents-while-casting-computer = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот компьютер передаёт эпизод, пока он идёт.
+settings-note-torrents-while-casting-computer = Когда это включено, ТВ со встроенным Chromecast может воспроизводить торренты. Этот компьютер передаёт эпизод, пока он идёт.
 
 # Button on a notice that asks to open the plugin stores.
 shell-open-stores = Открыть магазины
@@ -1945,7 +1945,7 @@ stores-owner-needs-connection = Магазин плагинов требует �
 stores-owner-needs-connection-detail = Повторите попытку, когда устройство снова будет в сети.
 
 # Red line in the invite dialog when this device is offline and a link cannot be made.
-stores-owner-link-offline = Для создания ссылки нужно, чтобы магазин плагинов был в сети.
+stores-owner-link-offline = Нельзя создать ссылку, пока это устройство не в сети.
 
 # Line over a new invite link made for a named person. The time is the one the link stops working.
 stores-send-link-until = Отправьте эту ссылку. Она работает один раз, до { $until }.
@@ -1954,7 +1954,7 @@ stores-send-link-until = Отправьте эту ссылку. Она рабо
 stores-open-on-detail = Они присоединяются без имени. Если выключить, ссылка перестанет работать. Если включить снова, появится новая.
 
 # Row subtitle in who-can-join while it is off.
-stores-open-off-detail = Присоединиться могут только приглашённые вами. Если включить, любой, у кого есть ссылка, присоединится без имени.
+stores-open-off-detail = Подключиться могут только те, кого вы пригласите. Если включить, подключиться сможет любой, у кого есть ссылка, без имени.
 
 # Line on the summary row of devices that joined with the link, when joining is on.
 stores-open-no-names = Имена не сохраняются.
@@ -1978,7 +1978,7 @@ stores-publish-none-hint = Здесь показывается плагин, к�
 stores-not-published = Ещё не опубликован
 
 # Line under a plugin in the publish dialog that the store has in another version.
-stores-store-offers = Магазин плагинов предлагает { $version }
+stores-store-offers = Магазин плагинов: { $version }
 
 # Line under a plugin in the publish dialog whose version the store already has.
 stores-published-current = Актуальная версия уже опубликована
@@ -1990,7 +1990,7 @@ stores-published-state = Опубликовано
 stores-publish-label = Опубликовать { $name } { $version }
 
 # Footnote on the recovery key dialog; the lock is the account password, asked through polkit.
-rkey-lock-linux = Увидеть его снова можно в настройках, в разделе «Устройства», после ввода пароля учётной записи.
+rkey-lock-linux = Его можно снова увидеть в настройках, в разделе «Устройства», после ввода пароля учётной записи.
 
 # Reason polkit shows when it asks for the account password before the recovery key.
 rkey-lock-reason = Показать ключ восстановления Kaeri
@@ -2161,7 +2161,7 @@ library-row-summary-linux =
 library-page-watching-linux = Изменения отслеживаются
 
 # A folder page's line when changes are found only when the app starts or is asked.
-library-page-no-watch-linux = Проверяется заново при запуске Kaeri
+library-page-no-watch-linux = Изменения проверяются при запуске Kaeri
 
 # Heading over the matched series.
 library-matched-linux = Сопоставлено
@@ -2329,7 +2329,7 @@ title-no-seasons = Связанных сезонов для этого тайт�
 title-pin-off-page = Откройте страницу тайтла, чтобы выбрать источник для него.
 
 # Toast when the { -source } picker is asked for and no { -source } is registered. They register a moment after launch.
-title-no-sources-yet = Источники пока не подключены. Попробуйте ещё раз через минуту.
+title-no-sources-yet = Источники ещё загружаются. Попробуйте чуть позже.
 
 # Toast when a list status or rating is asked for and no { -tracker } is signed in. The command is typed as it is.
 title-status-needs-tracker = Статус в списке хранится на трекере, но ни один не подключён. Чтобы войти, используйте :accounts.
@@ -2503,7 +2503,7 @@ episodes-empty-none-listed = Список эпизодов пуст
 episodes-empty-none-listed-hint = Источник не показал эпизоды для этого тайтла. Нажмите { $search }, чтобы найти нужное совпадение вручную, или { $pick }, чтобы выбрать другой источник.
 
 # Toast when an episode has no { -release } to pick from.
-episodes-no-releases = Для этого эпизода нет релизов для выбора.
+episodes-no-releases = Релизы для этого эпизода не найдены.
 
 # Toast when a download is asked for from a table listed from AniList alone. The key opens the { -source-pl } screen.
 episodes-add-source-to-download = Перед загрузкой добавьте источник. Нажмите { $key }, чтобы открыть экран «Источники».
@@ -3172,7 +3172,7 @@ downloads-column-progress = Прогресс
 downloads-empty-heading = Очередь пуста
 
 # Hint under the empty Downloads screen. The key is the one bound to downloading, as the key map draws it.
-downloads-empty-hint = Нажмите { $key } на тайтл или серию, чтобы поставить их в очередь на загрузку.
+downloads-empty-hint = Нажмите { $key } на тайтле или эпизоде, чтобы загрузить его.
 
 # A download's row: the episode number after the title. The title is cut before this is.
 downloads-row-episode = Серия { $episode }
@@ -3358,16 +3358,16 @@ accounts-row-queued =
     }
 
 # Part of an account's overlay row: changes waiting to be sent, and some of them held back until the title is matched to the { -tracker }'s own id.
-accounts-row-queued-held = { $queued } в очереди, { $held } ждут привязки к id трекера
+accounts-row-queued-held = { $queued } в очереди, { $held } ждут сопоставления
 
 # Action beside a sync difference in the overlay: Enter keeps the value on this device.
-accounts-conflict-keep-mine = Оставить моё
+accounts-conflict-keep-mine = Локальное
 
 # Action under a sync difference in the overlay: Enter keeps the { -tracker }'s value instead.
-accounts-conflict-keep-theirs = Взять из трекера
+accounts-conflict-keep-theirs = Трекер
 
 # A sync difference in the overlay: the title, the field that differs, then this device's value and the { -tracker }'s. The title is cut to 34 characters before it goes in.
-accounts-conflict-row = { $title }  ·  { $field }: у меня { $local } / у трекера { $remote }
+accounts-conflict-row = { $title }  ·  { $field }: локально { $local } / трекер { $remote }
 
 # Title of the Library screen, shown in the placeholder when the terminal is too small.
 lists-library-title = Библиотека
@@ -3400,7 +3400,7 @@ lists-empty-type-to-search = Введите запрос для поиска
 lists-empty-browse-filtered = Нажмите ↵, чтобы просмотреть с этими фильтрами.
 
 # Hint under the Search heading when no filter is set. ↵ is the Enter key.
-lists-empty-browse-popular = Нажмите ↵, чтобы посмотреть самые популярные.
+lists-empty-browse-popular = Нажмите ↵, чтобы посмотреть самые популярные тайтлы.
 
 # Heading when a search or a browse found nothing.
 lists-empty-no-matches = Ничего не найдено
@@ -4076,7 +4076,7 @@ settings-label-episode-discussions = Обсуждения эпизодов
 settings-label-comment-images = Картинки в комментариях
 
 # Settings row: whether Calendar shows only the shows on the person's list.
-settings-label-calendar-mine = В календаре только мой список
+settings-label-calendar-mine = В календаре только ваш список
 
 # Note under the titles row.
 settings-note-titles = По выбору AniList: язык следует за вашим аккаунтом, а без входа будет английский.
@@ -4133,13 +4133,13 @@ settings-note-update-check = Один кэшированный запрос в �
 settings-note-presence = Действует со следующего эпизода.
 
 # Note under the Discord presence row when no client ID is set. The address is a web address.
-settings-note-presence-needs-client = Нужен ID клиента. Зарегистрируйте приложение на discord.com/developers.
+settings-note-presence-needs-client = Сначала укажите ID клиента. Чтобы его получить, зарегистрируйте приложение на discord.com/developers.
 
 # Note under the presence title row. The quoted text is what Discord shows.
-settings-note-presence-title = При выключении показывается «Смотрю аниме» без названия тайтла.
+settings-note-presence-title = Если выключено, показывается «Смотрю аниме» без названия тайтла.
 
 # Note under the rich presence row.
-settings-note-presence-rich = Добавляет обложку, полосу прогресса и ссылку на AniList. Нужно, чтобы название было показано.
+settings-note-presence-rich = Добавляет обложку, полосу прогресса и ссылку на AniList, пока название показывается.
 
 # Note under the torrent playback row.
 settings-note-torrents = По умолчанию выключено. Действует сразу.
@@ -4298,13 +4298,13 @@ stores-footer-update-hosts = Обновление также хочет обра
 stores-footer-may-contact = Может обращаться к { $hosts }
 
 # Footer of a store's page on the row that makes a link for another of this person's computers.
-stores-footer-link-device = Одноразовая ссылка, которая присоединит другое ваше устройство от вашего имени
+stores-footer-link-device = Одноразовая ссылка, по которой другое ваше устройство подключится от вашего имени
 
 # Footer of a store's page on the row that makes an invite.
 stores-footer-invite = Одноразовая ссылка для нового человека
 
 # Footer of a store's page on the row that opens the members screen.
-stores-footer-members = Кто присоединился, и как отозвать доступ
+stores-footer-members = Посмотреть, кто присоединился, и отозвать чей-то доступ
 
 # Footer of a store's page on the row that changes who can join, while the store is open to anyone with its link. Enter is the key on this screen.
 stores-footer-close-join = ↵ Пускать только приглашённых и остановить ссылку
@@ -4319,7 +4319,7 @@ stores-footer-publish = Предложить плагин из папки пла
 stores-footer-admin = Управлять участниками, приглашениями и плагины в браузере
 
 # Footer of a store's page on the row that leaves the store.
-stores-footer-leave = Плагины, установленные из него, остаются на этом компьютере и перестают обновляться
+stores-footer-leave = Это устройство сохранит плагины, установленные из него, но они перестанут обновляться
 
 # Value beside the "who can join" row while anyone with the store's link can join. Takes the rest of the row.
 stores-who-open = Любой, у кого есть ссылка
@@ -4505,7 +4505,7 @@ stores-footer-remove-anonymous = ↵ Удалить это устройство,
 stores-footer-remove-all-anonymous = ↵ Удалить все устройства, которые присоединились по ссылке
 
 # Line in the store's link overlay, once the link was copied.
-stores-link-copied = Скопировано в буфер обмена, если терминал это позволяет, или выделите ссылку, чтобы скопировать.
+stores-link-copied = Скопировано, если терминал это позволяет. Если нет, выделите ссылку, чтобы скопировать её.
 
 # Line in a link overlay before the link was copied, or when the terminal cannot copy.
 stores-link-select = Выделите, чтобы скопировать.
@@ -4580,7 +4580,7 @@ stores-key-matches-invite = { $fingerprint }  (совпадает с пригл�
 stores-join-open = Присоединиться может любой, у кого есть ссылка.
 
 # Line of the join confirmation when it is an open link, which keeps no name.
-stores-join-anonymous = Вы присоединитесь без имени, и другое устройство присоединится по той же ссылке.
+stores-join-anonymous = Вы подключитесь без имени. Любое другое устройство может подключиться по той же ссылке.
 
 # Line of the join confirmation when this device has already joined.
 stores-join-already = Уже присоединено. Повторное присоединение даст этому устройство новый токен.
@@ -4589,7 +4589,7 @@ stores-join-already = Уже присоединено. Повторное при
 stores-join-device-note = Владелец магазина видит это имя. Введите другое, чтобы изменить его.
 
 # Lines of the leave confirmation.
-stores-leave-plugins = Плагины, установленные из него, остаются на этом компьютере и перестают обновляться.
+stores-leave-plugins = Это устройство сохранит плагины, установленные из него, но они перестанут обновляться.
 
 # Lines of the leave confirmation.
 stores-leave-revoked = Доступ этого устройствоа к магазину отозван.
@@ -4604,7 +4604,7 @@ stores-remove-member-devices =
     }
 
 # Line of the remove member confirmation.
-stores-remove-member-plugins = Плагины, которые они уже установили, остаются на их компьютерах.
+stores-remove-member-plugins = Устройства участника сохранят уже установленные плагины.
 
 # Line of the cancel invite confirmation.
 stores-cancel-invite-link = Ссылка перестанет работать.
@@ -4664,7 +4664,7 @@ stores-choice-update = Обновить до { $version }
 stores-choice-replace = Заменить копию, добавленную вручную
 
 # Choice in the plugin overlay: delete the plugin from this machine.
-stores-choice-remove = Удалить с этого компьютера
+stores-choice-remove = Удалить отсюда
 
 # Choice in the plugin overlay: owners stop offering the plugin in the store.
 stores-choice-unpublish = Перестать предлагать в этом магазине
@@ -4706,7 +4706,7 @@ sync-tui-device-never = Ещё не синхронизировалось
 sync-tui-profile-in-use = Используется
 
 # The wait while the browser shows a cloud service's sign-in page. The service is a name such as Dropbox.
-sync-tui-browser-line = Браузер открыл страницу { $service }. Разрешите доступ там, и Kaeri продолжит сам.
+sync-tui-browser-line = В браузере открылась страница { $service }. Разрешите доступ там, и Kaeri продолжит сам.
 
 # Under Open the page again: the page's address follows on the next line, for a browser that did not open.
 sync-tui-browser-address = Или откройте этот адрес сами:
@@ -4763,13 +4763,13 @@ sync-tui-rkey-again = Увидеть его снова можно в настр�
 sync-tui-add-kids = Добавить как детский профиль
 
 # Said when the terminal closes to start again on another profile, and printed when it cannot start again by itself.
-sync-tui-profile-restart = Запустите Kaeri снова, чтобы использовать профиль: { $name }.
+sync-tui-profile-restart = Запустите Kaeri снова, чтобы открыть профиль «{ $name }».
 
 # A sync problem: the folder holds nothing to join.
 sync-tui-err-no-group = В этой папке нет истории, к которой можно присоединиться. Выберите другую папку.
 
 # A sync problem: a cloud service that this build can't sign in to. The service is a name such as Dropbox.
-sync-tui-err-unavailable = { $service } недоступен на этом устройстве.
+sync-tui-err-unavailable = Это устройство не поддерживает { $service }.
 
 # Status line hint: Enter removes the highlighted { -device } from sync, after a question.
 sync-tui-hint-remove = Удалить
@@ -4805,7 +4805,7 @@ party-no-source-still-in = { $reason } Вы остаётесь в совмест
 status-reloading-sources = Перезагружаем источники…
 
 # Toast when the { -source } pinned for a title can't be used and the others are tried instead.
-pin-unavailable = { $name } закреплён для этого тайтла, но недоступен, поэтому используются другие источники.
+pin-unavailable = { $name } закреплён для этого тайтла, но недоступен. Используются другие источники.
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Смотреть вместе
@@ -4934,13 +4934,13 @@ settings-group-crashes = Отчёты о сбоях
 settings-crash-save = Сохранять отчёты о сбоях на этом устройстве
 
 # Line under that switch.
-settings-crash-save-detail = Когда это включено, Kaeri хранит на этом устройстве краткую запись о каждом сбое без названий, адресов и имён, чтобы вы могли добавить её в отчёт об ошибке. Сами по себе они не отправляются.
+settings-crash-save-detail = Kaeri хранит на этом устройстве краткую запись о каждом сбое для «Сообщить об ошибке», убирая из неё названия, адреса и имена. Ничего не отправляется само по себе.
 
 # Switch that turns the notice after a crash on or off.
 settings-crash-ask = Спрашивать после сбоя
 
 # Line under that switch.
-settings-crash-ask-detail = При следующем запуске показывает уведомление с кнопкой «Сообщить…»
+settings-crash-ask-detail = При следующем запуске Kaeri покажет уведомление с кнопкой «Сообщить…».
 
 # Heading of crashes the system kept from before saving was turned on. The system is macOS, iOS, iPadOS or Android.
 settings-crash-os-heading = Сохранено системой { $system }
@@ -4970,7 +4970,7 @@ settings-crash-delete = Удалить
 settings-crash-delete-all = Удалить все
 
 # Footnote of the Crash reports group.
-settings-crash-footnote = Отчёты о сбоях остаются на этом устройстве. Kaeri ничего не отправляет сам. Отчёт уходит только тогда, когда вы открываете его на GitHub из окна «Сообщить об ошибке». Отчёты удаляются через 30 дней.
+settings-crash-footnote = Отчёты о сбоях остаются на этом устройстве, и Kaeri ничего не отправляет сам. Отчёт уходит, только когда вы открываете его на GitHub из «Сообщить об ошибке». Отчёты удаляются через 30 дней.
 
 # Button that shows the week before.
 calendar-previous-week = Предыдущая неделя
@@ -5096,13 +5096,13 @@ cast-tvs-note-iphone = Они появятся в разделе Chromecast в �
 cast-tvs-note-ipad = Они появятся в разделе Chromecast в «Смотреть на ТВ». Этот iPad отправляет им эпизод.
 
 # Note under the Settings row that lets a cast play torrents, on a Mac.
-cast-torrents-note-mac = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.
+cast-torrents-note-mac = Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.
 
 # Note under the Settings row that lets a cast play torrents, on an iPhone.
-cast-torrents-note-iphone = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.
+cast-torrents-note-iphone = Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.
 
 # Note under the Settings row that lets a cast play torrents, on an iPad.
-cast-torrents-note-ipad = Позволяет ТВ со встроенным Chromecast воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.
+cast-torrents-note-ipad = Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.
 
 # Line on the casting card while the next episode counts down. The seconds are whole.
 cast-up-next-plays-in = Далее · воспроизведение через { $seconds } с
@@ -5849,7 +5849,7 @@ downloads-delete-detail = Файл будет удалён. Это устрой�
 downloads-delete-one-title = Удалить загрузку
 
 # Line under it: what you lose.
-downloads-delete-one-detail = Воспроизвести снова получится только с подключением к сети или после новой загрузки.
+downloads-delete-one-detail = После этого для воспроизведения эпизода понадобится подключение к сети, если не загрузить его снова.
 
 # Button on the settings page that removes watched files.
 downloads-delete-watched = Удалить просмотренные загрузки
@@ -5861,7 +5861,7 @@ downloads-seeding-title = Раздача
 downloads-seeding-after-watching = Раздача после просмотра
 
 # Line under the seeding heading.
-downloads-seeding-note = Просмотренные эпизоды раздаются обратно, пока открыт Kaeri, до достижения коэффициента или лимита времени, заданных в разделе «Источники» настроек.
+downloads-seeding-note = Просмотренные эпизоды раздаются обратно, пока открыт Kaeri. Раздача останавливается при достижении коэффициента или лимита времени, заданных в настройках, в разделе «Источники».
 
 # Heading of the setting. Shown on desktop only.
 downloads-background-title = Когда окно закрывается во время загрузок
@@ -5942,10 +5942,10 @@ episode-download-failed = Не удалось скачать эпизод { $epi
 first-other-title = Есть другое устройство с Kaeri?
 
 # Under the title.
-first-other-line = Выполните сопряжение, и это устройство получит ваши источники, трекеры и историю. Остальные шаги тогда не нужны.
+first-other-line = Выполните сопряжение, и это устройство получит ваши источники, трекеры и историю, а остальная настройка пройдёт сама.
 
 # Line under the pair row.
-first-other-pair-line = Покажет код, который нужно ввести на другом. Другое устройство и это должны быть в одной сети Wi-Fi.
+first-other-pair-line = Вы получите код, который нужно ввести на том устройстве. Оба должны быть в одной сети Wi-Fi.
 
 # Row that restores from a sync folder.
 first-other-restore = Восстановить из облачной папки
@@ -5984,7 +5984,7 @@ first-join-server = Добавить { $host }
 first-join-server-line = { $kind } · вход по ключу с { $device }, он хранится в { $store }
 
 # Note under the list.
-first-join-folders = Папки остаются на { $device }. Это устройство: свои папки добавьте в «Ваши источники».
+first-join-folders = Папки остаются на { $device }. Чтобы добавить папки отсюда, откройте «Ваши источники».
 
 # Note when the setup answered the remaining pages.
 first-join-steps-done = Списки и источники настроены, поэтому первый запуск завершён. Их можно изменить в настройках.
@@ -6062,7 +6062,7 @@ home-end-signed-out = Войдите в AniList, чтобы подтянуть �
 home-sign-in = Войти в AniList
 
 # The closing line at the end of Home when no { -source } is installed. Plugin stores is a link.
-home-end-no-sources = Добавьте источник, чтобы смотреть с главной. В разделе «Магазины плагинов» есть из чего выбрать.
+home-end-no-sources = Добавьте источник, чтобы смотреть с главной. Плагины берутся из раздела «Магазины плагинов».
 
 # Line on a title that no installed { -source } has. The main action becomes Add to Planning.
 home-not-found = Не найдено в ваших источники
@@ -6518,7 +6518,7 @@ library-picker-title = Выберите папку с вашими эпизод�
 library-remove-detail = Ваши файлы останутся на месте.
 
 # Why a group of files is not matched: AniList could not be asked.
-library-reason-offline = Не удалось обратиться к AniList. Повторим при следующем сканировании.
+library-reason-offline = Не удалось обратиться к AniList. При следующем сканировании будет новая попытка.
 
 # Button that opens the match picker for a group.
 library-choose-match = Выбрать совпадение
@@ -6551,7 +6551,7 @@ licensed-body = Kaeri может открывать тайтлы в стрими
 licensed-region = Регион
 
 # Line under the region menu.
-licensed-region-line = Скрывает ссылки, которые AniList отметил для других стран. У большинства ссылок страна не указана, поэтому выберите ещё и свои сервисы.
+licensed-region-line = Ссылки, которые AniList отметил для других стран, скрыты. У большинства ссылок страна не указана, поэтому выберите ещё и свои сервисы.
 
 # Heading over the services the viewer pays for.
 licensed-yours = Ваши сервисы
@@ -6995,7 +6995,7 @@ onboarding-own-heading = Есть свои медиафайлы?
 onboarding-invite-heading = Есть ссылка-приглашение?
 
 # Second line of that page. Explains that plugins come from plugin stores and that a store is joined with an invite link.
-onboarding-where-stores = Плагины берутся из магазинов плагинов. Магазин плагинов подписан и выдаёт каждому устройству отдельный токен, поэтому присоединиться к нему можно по ссылке-приглашению от его владельца.
+onboarding-where-stores = Плагины берутся из магазинов плагинов. Каждый из них подписан и выдаёт каждому устройству свой токен, поэтому подключиться к нему можно по ссылке-приглашению от владельца.
 
 # Heading above the Play the demo button on the welcome page.
 onboarding-demo-heading = Попробуйте сразу
@@ -7037,7 +7037,7 @@ party-leave = Покинуть
 party-leaving = Выходим…
 
 # Label of the button that marks you as ready.
-party-ready-action = Я готов
+party-ready-action = Отметить готовность
 
 # Button that copies the link to invite someone.
 party-copy-invite = Копировать приглашение
@@ -7052,7 +7052,7 @@ party-leave-and-close = Выйти и закрыть
 party-not-now = Не сейчас
 
 # Line while the form fetches its suggestions.
-party-getting-ready = Готовим…
+party-getting-ready = Загрузка предложений…
 
 # Label of the server field.
 party-server = Сервер
@@ -7085,7 +7085,7 @@ party-server-public = Публичный сервер, которым управ
 party-server-suggest = Нет своего сервера? Можно взять публичный { $server }, им управляет { $operator }.
 
 # Line under an invite's room when the server is not the public one.
-party-server-invited = Сервер выбрал тот, кто вас пригласил. Kaeri его не запускает.
+party-server-invited = Этот сервер выбрал тот, кто вас пригласил. Kaeri им не управляет.
 
 # Line when the server was typed in a shape that cannot be used.
 party-server-shape = Укажите сервер как хост и порт, например party.example:8999.
@@ -7298,7 +7298,7 @@ together-recent = Недавние комнаты
 together-recent-row = Эпизод { $episode } · с { $names } · { $when }
 
 # Line shown when no recent rooms are kept yet.
-together-recent-empty = Здесь появятся комнаты, в которые вы заходили, последние десять.
+together-recent-empty = Здесь появятся последние десять комнат, в которые вы зайдёте.
 
 # Button on a recent room that goes straight to its lobby with the next episode.
 together-rejoin = Вернуться
@@ -7387,7 +7387,7 @@ party-member-finding = Ищет источник
 # State of a member who is watching. The time is already formatted, such as 2:14.
 party-member-watching-from = Смотрит с { $time }
 
-# Label of the I'm ready button once you are ready.
+# Label of the Ready to watch button once you are ready.
 party-ready-on = Готов
 
 # Heading of the invite block in the lobby.
@@ -7607,7 +7607,7 @@ party-chat-show = Показать чат
 settings-hide-chat = Скрывать чат в совместных просмотрах
 
 # Line under that switch.
-settings-hide-chat-line = Сообщения, реакции и их метки на шкале перемотки не показываются на видео, а поле ввода пропадает. Список участников по-прежнему показывает, кто в комнате.
+settings-hide-chat-line = Сообщения чата, реакции и их метки на шкале перемотки не показываются поверх видео, а поле чата скрыто. Список участников по-прежнему показывает, кто в комнате.
 
 # Member menu item and accessibility action that hides a member's lines and reactions for this party.
 party-mute = Скрыть сообщения: { $name }
@@ -8217,10 +8217,10 @@ player-load-audio-file = Загрузить аудиофайл…
 player-file-picker-failed = Не удалось открыть выбор файла. Попробуйте ещё раз.
 
 # Notice when a chosen subtitle file could not be loaded.
-player-subtitle-file-failed = Не удалось загрузить этот файл субтитров. Проверьте, что это файл субтитров.
+player-subtitle-file-failed = Не удалось загрузить этот файл как субтитры. Выберите файл субтитров, например .srt или .ass.
 
 # Notice when a chosen audio file could not be loaded.
-player-audio-file-failed = Не удалось загрузить этот аудиофайл. Проверьте, что это аудиофайл.
+player-audio-file-failed = Не удалось загрузить этот файл как звук. Выберите аудиофайл, например .mka или .flac.
 
 # Name of a track that has no name or language.
 player-track-unnamed = Дорожка без названия
@@ -8305,6 +8305,9 @@ reader-close = Закрыть
 
 # Under the top line of the page between chapters, once the chapter counts as read.
 reader-end-read = Прочитано
+
+# Under the end of chapter line, naming the trackers the read went to.
+reader-end-tracker = Прочитано · обновлено: { $trackers }
 
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Следующая
@@ -8411,11 +8414,50 @@ reader-gap-small = Малый
 # Look choice that follows the system's light or dark.
 reader-look-system = Как в системе
 
+# Top line of the page between chapters. The chapter is its number, such as 12.
+reader-end-of-chapter-number = Конец главы { $chapter }
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+reader-end-facts = Глава { $chapter } · { $facts }
+
+# The next chapter's length on the page between chapters.
+reader-end-pages =
+    { $count ->
+        [one] { $count } страница
+        [few] { $count } страницы
+        [many] { $count } страниц
+       *[other] { $count } страницы
+    }
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+reader-end-from = Из { $source }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line = Глава { $chapter }
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+reader-divider-facts-source = { $facts } · из { $source }
+
+# Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+reader-end-swipe = Смахните, чтобы читать дальше
+
+# The next episode's length on the divider inside a strip.
+reader-divider-images =
+    { $count ->
+        [one] { $count } картинка
+        [few] { $count } картинки
+        [many] { $count } картинок
+       *[other] { $count } картинки
+    }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line-titled = Глава { $chapter } · { $title }
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Открыть демо
 
 # Under the first run's demo heading when the device is for reading.
-onboarding-demo-books-detail = В демо есть короткий комикс и короткий рассказ, которыми их авторы делятся по лицензии Creative Commons.
+onboarding-demo-books-detail = Один короткий комикс и один короткий рассказ, которыми их авторы делятся по лицензии Creative Commons.
 
 # Under the first run's demo heading when the device is for both.
 onboarding-demo-both-detail = Один короткий эпизод и один короткий комикс, которыми их авторы делятся по лицензии Creative Commons.
@@ -8442,7 +8484,7 @@ demo-credit-book = { $title }, автор: { $author }. Лицензия: { $lic
 demo-credit-story = { $title }, автор: { $author }. Общественное достояние. Входит в приложение.
 
 # The story's cover credit in About the demo, under the story's own credit. The title is the art's caption in English, "Blowing her breath upon him", and the year is 1904.
-demo-credit-cover = Обложка: «{ $title }», автор: { $artist }, { $year }. Общественное достояние. Входит в приложение.
+demo-credit-cover = Обложка: «{ $title }», { $artist }, { $year }. Общественное достояние. Входит в приложение.
 
 # Credit capsule in the reader's top bar on page 1.
 reader-demo-credit = { $title } · { $author } · { $licence }
@@ -8454,7 +8496,7 @@ search-demo-reads = Демо · Можно читать сейчас
 search-demo-only-books = Включено только демо. Другие названия появятся, когда вы добавите источник.
 
 # Title of the card after the demo's last page.
-reader-demo-end = Демо закончилось
+reader-demo-end = Это конец демо
 
 # Line under it.
 reader-demo-end-line = Чтобы читать свои книги, добавьте папку, сервер или магазин плагинов.
@@ -8469,7 +8511,7 @@ reader-demo-again = Вернуться к странице 1
 sources-demo-books-line = Комикс и рассказ · CC BY 4.0 и общественное достояние
 
 # About the demo, first line, when reading is on.
-sources-demo-books-what = Произведения, которыми их авторы делятся по лицензии Creative Commons, чтобы вы могли попробовать Kaeri, прежде чем добавите источник. Это не постоянный источник.
+sources-demo-books-what = Произведения, которыми их авторы делятся по лицензии Creative Commons, чтобы вы могли попробовать Kaeri до того, как добавите источник. Это не источник для постоянного использования.
 
 # About the demo, in place of sources-demo-private when reading is on.
 sources-demo-books-private = Демо нигде не входит в учётную запись и никогда не записывает данные в трекер.
@@ -9072,7 +9114,7 @@ book-sources-keep = Оставить без совпадения
 book-sources-find = Найти
 
 # Footnote of the Check matches sheet.
-book-sources-unmatched-note = Серии без совпадения по-прежнему читаются из папки. Прогресса в трекере у них нет, пока совпадение не найдено.
+book-sources-unmatched-note = Серии без совпадения можно читать из папки. Трекер не получает по ним прогресс, пока совпадение не найдено.
 
 # Accessibility label of the control that sets Shows or Reading in the Library and Search.
 library-scope-label = Сериалы или чтение
@@ -9495,10 +9537,10 @@ settings-chapter-notifications-note = Серии из вашего списка 
 settings-downloads-finished-note = Когда все скачиваемые главы готовы
 
 # Under New chapters.
-settings-chapter-notifications-footer = У глав свой системный канал, поэтому их можно отключить отдельно.
+settings-chapter-notifications-footer = У глав свой системный канал, поэтому их можно отключить, оставив остальные уведомления.
 
 # Credit under the trackers with reading on.
-accounts-mangaupdates-credit = MangaUpdates подключается через публичный API.
+accounts-mangaupdates-credit = Kaeri обращается к MangaUpdates через его публичный API.
 
 # Placeholder of the user name field when signing in to MangaUpdates.
 accounts-username = Имя пользователя
@@ -9573,7 +9615,7 @@ seasonal-empty-format-detail = Попробуйте все форматы.
 seasonal-filter-in-search = Фильтровать в поиске
 
 # Tooltip of the Filter in Search button.
-seasonal-filter-help = Этот сезон в поиске, где каждый фильтр что-то сужает
+seasonal-filter-help = Открывает этот сезон в поиске, где работают все фильтры
 
 # Sort option on Seasonal and Search: most popular first.
 sort-popularity = Популярность
@@ -9600,7 +9642,7 @@ search-placeholder = Поиск тайтлов
 search-clear = Очистить поиск
 
 # Row under the field while a search runs. The query is what the person typed.
-search-searching = Ищем «{ $query }»
+search-searching = Поиск: «{ $query }»
 
 # Heading over the results of a search.
 search-results-for = Результаты по запросу «{ $query }»
@@ -9714,7 +9756,7 @@ filter-where-to-watch = Где смотреть
 filter-licensed-only = Только лицензионные
 
 # Filter name: how titles already on the person's list are treated.
-filter-my-list = Тайтлы из моего списка
+filter-my-list = Тайтлы из вашего списка
 
 # Value of a three-way filter: include the titles.
 filter-show = Показывать
@@ -10230,7 +10272,7 @@ servers-error-certificate = { $host } использует сертификат,
 servers-row-signed-out-here = Вход не выполнен
 
 # Line under it: what signing out does.
-servers-sign-out-line = Завершает вход в приложении на сервере. Сам сервер и ваши загрузки остаются как есть.
+servers-sign-out-line = Выход завершает сеанс, который это устройство открыло на сервере. Сам сервер и ваши загрузки остаются как есть.
 
 # Settings group and row title for choosing a language.
 settings-language = Язык
@@ -10551,7 +10593,7 @@ settings-new-episodes = Новые серии
 settings-new-episodes-detail = Серии из вашего списка «Смотрю»
 
 # Line explaining what a notification says.
-settings-notify-detail = Одно уведомление, когда выходит эпизод сериала, за которым вы следите: показываются сериал и номер эпизода, но не название. Для отдельного сериала его можно выключить в его настройках.
+settings-notify-detail = Вы получаете одно уведомление, когда выходит эпизод тайтла, за которым вы следите. В нём указаны тайтл и номер эпизода, но не название эпизода. Уведомления для тайтла можно выключить в его настройках.
 
 # Row: the coming-up digest.
 settings-coming-up = Скоро · ближайшие 7 дней
@@ -10605,7 +10647,7 @@ show-settings-never = Никогда
 show-settings-subs-remembered = Запомнено с вашей последней серии.
 
 # Line under the subtitles row, when nothing is remembered.
-show-settings-subs-follow = Выбирается в плеере. Следует разделу «Настройки › Воспроизведение».
+show-settings-subs-follow = Выбираются в плеере. До тех пор действует раздел «Настройки › Воспроизведение».
 
 # Row: the source for this show.
 show-settings-source = Источник
@@ -10692,7 +10734,7 @@ settings-upscaling-natural = Естественный · ArtCNN
 settings-label-hover-cards = Увеличивать при наведении
 
 # Note under the Expand covers on hover setting. The trailer plays only where the trailers setting lets it.
-settings-hover-cards-note = Показывает увеличенную карточку с трейлером, когда вы наводите указатель на обложку.
+settings-hover-cards-note = Если задержать указатель на обложке, откроется увеличенная карточка с трейлером.
 
 # Preview note under the upscaling frame for the natural look.
 settings-upscaling-note-natural = Точные линии и текстура, без изменения стиля.
@@ -10953,7 +10995,7 @@ book-server-err-password-line = Введите имя пользователя �
 book-server-err-key = { $host } не принял этот ключ
 
 # Line under it.
-book-server-err-key-line = Ключ меняется при сбросе в Kavita. Скопируйте ссылку OPDS заново в настройках своей учётной записи там.
+book-server-err-key-line = Ключ меняется, когда его сбрасывают в Kavita. Снова скопируйте ссылку OPDS из настроек своей учётной записи там.
 
 # Title when the server lets the account in and shows it no series.
 book-server-empty = { $host } не показывает для этой учётной записи ни одной серии
@@ -10985,7 +11027,7 @@ book-folder-unsupported =
         [one] { $count } файл, который Kaeri не может открыть
         [few] { $count } файла, которые Kaeri не может открыть
         [many] { $count } файлов, которые Kaeri не может открыть
-       *[other] { $count } файлов, которые Kaeri не может открыть
+       *[other] { $count } файла, которые Kaeri не может открыть
     }
 
 # Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3".
@@ -11012,10 +11054,10 @@ book-folder-empty = В папке { $folder } нет ничего, что Kaeri 
 # Line under it.
 book-folder-empty-line =
     { $files ->
-        [one] В ней { $files } файл, и он не CBZ, CBR, EPUB, PDF и не изображение.
+        [one] В ней { $files } файл, и это не CBZ, CBR, EPUB, PDF и не изображение.
         [few] В ней { $files } файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
         [many] В ней { $files } файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
-       *[other] В ней { $files } файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
+       *[other] В ней { $files } файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.
     }
 
 # Primary action after an empty folder.
@@ -11057,10 +11099,10 @@ store-install-all-reading = Установить всё для чтения
 # Result after installing.
 store-installed =
     { $count ->
-        [one] Установлен { $count } плагин. Он в списке «Ваши источники».
-        [few] Установлено, плагины: { $count }. Они в списке «Ваши источники».
-        [many] Установлено, плагины: { $count }. Они в списке «Ваши источники».
-       *[other] Установлено, плагины: { $count }. Они в списке «Ваши источники».
+        [one] Установлен { $count } плагин. Он в разделе «Ваши источники».
+        [few] Установлено, плагины: { $count }. Они в разделе «Ваши источники».
+        [many] Установлено, плагины: { $count }. Они в разделе «Ваши источники».
+       *[other] Установлено, плагины: { $count }. Они в разделе «Ваши источники».
     }
 
 # Info title when every plugin in a store is for watching, and watching is off here.
@@ -11076,7 +11118,7 @@ store-turn-on-watching = Включить просмотр
 store-empty = { $store }: плагины пока нет
 
 # Line under it.
-store-empty-line = Вы участник, поэтому, когда { $owner } добавит новые плагины, они появятся в разделе «Магазины плагинов».
+store-empty-line = Вы участник, поэтому новые плагины появятся в разделе «Магазины плагинов», когда { $owner } их добавит.
 
 # Error title when the store doesn't answer.
 store-err-unreachable = Не удалось подключиться к { $host }
@@ -11096,14 +11138,14 @@ store-other-medium-more =
 # On a TV, under the list: plugins for reading, which a TV doesn't do.
 store-tv-reading-only =
     { $count ->
-        [one] Ещё { $count } для чтения, а телевизор этого не умеет.
-        [few] Ещё { $count } для чтения, а телевизор этого не умеет.
-        [many] Ещё { $count } для чтения, а телевизор этого не умеет.
-       *[other] Ещё { $count } для чтения, а телевизор этого не умеет.
+        [one] Ещё { $count } предназначен для чтения, а на этом телевизоре чтения нет.
+        [few] Ещё { $count } предназначены для чтения, а на этом телевизоре чтения нет.
+        [many] Ещё { $count } предназначены для чтения, а на этом телевизоре чтения нет.
+       *[other] Ещё { $count } предназначены для чтения, а на этом телевизоре чтения нет.
     }
 
 # On a TV, info title when every plugin in a store is for reading.
-store-tv-all-reading = Каждый плагин в { $store } предназначен для чтения, а телевизор этого не умеет.
+store-tv-all-reading = Все плагины в { $store } предназначены для чтения, а на этом телевизоре чтения нет.
 
 # Plugin row in an invite's result.
 store-plugin-row = Версия { $version } · может обращаться к { $hosts }
@@ -11120,13 +11162,22 @@ source-added-plugins =
        *[other] Установлено из { $store }, плагины: { $count }
     }
 
-# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 source-row-server =
     { $libraries ->
         [one] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
         [few] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
         [many] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
        *[other] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
+    }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server-series =
+    { $libraries ->
+        [one] { $kind } · серий: { $series } · библиотек: { $libraries }
+        [few] { $kind } · серий: { $series } · библиотек: { $libraries }
+        [many] { $kind } · серий: { $series } · библиотек: { $libraries }
+       *[other] { $kind } · серий: { $series } · библиотек: { $libraries }
     }
 
 # A server's row in Your sources while it shows no series.
@@ -11406,10 +11457,10 @@ match-similarity = { $similarity } совп.
 match-search-field = Искать на { $source }
 
 # While a search of the source runs.
-match-searching = Ищем на { $source } «{ $query }»
+match-searching = Поиск «{ $query }» на { $source }
 
 # A search of the source that found nothing.
-match-search-empty = На { $source } ничего нет по запросу «{ $query }».
+match-search-empty = На { $source } ничего не найдено по запросу «{ $query }».
 
 # Under match-search-empty: what to try.
 match-search-empty-hint = Попробуйте меньше слов или название на другом языке.
@@ -11469,7 +11520,7 @@ sources-add-server = Медиасервер…
 sources-add-store = Присоединиться к магазину плагинов…
 
 # Line under the empty state's title on a computer.
-sources-empty-body = Источники: то, откуда берутся эпизоды. Это папки на этом устройстве, ваш медиасервер и плагины из магазинов, к которым вы присоединились.
+sources-empty-body = Источники дают эпизоды: это папки на этом устройстве, ваш медиасервер и плагины из магазинов плагинов, к которым вы присоединились.
 
 # Line under the empty state's buttons. The link is "join a plugin store".
 sources-empty-more = Можно также { $join }.
@@ -11511,7 +11562,7 @@ sources-demo-link-commons = Wikimedia Commons
 sources-demo-link-maker = OPAP-JP
 
 # Line on the demo page that names the only two hosts the demo reaches.
-sources-demo-hosts = Обращается только к Wikimedia Commons: upload.wikimedia.org и commons.wikimedia.org.
+sources-demo-hosts = Демо обращается только к Wikimedia Commons: upload.wikimedia.org и commons.wikimedia.org.
 
 # Line on the demo page about accounts and trackers.
 sources-demo-private = Демо никуда не входит и ничего не записывает в AniList.
@@ -11580,7 +11631,7 @@ stores-not-from-app = Плагины приходят от владельца м
 stores-join-owner-responsible = { $owner } ведёт этот магазин плагинов и выбрал его плагины. Kaeri не создавал, не проверял и не одобрял их.
 
 # Line when the store has no plugins.
-stores-no-plugins = Этот магазин плагинов пока не предлагает плагины.
+stores-no-plugins = Этот магазин плагинов пока пуст: плагины ещё не добавлены.
 
 # Heading of the plugin list of a store.
 stores-plugins = Плагины
@@ -11616,7 +11667,7 @@ stores-access-ended-page = Этот магазин плагинов больше
 stores-no-longer-joined = Этот магазин плагинов больше не подключён.
 
 # Line when the store cannot be reached but a list was kept. The reason is a sentence fragment.
-stores-offline-last-list = Не в сети: { $reason }. Плагины ниже взяты из последнего проверенного списка.
+stores-offline-last-list = Нет сети: { $reason }. Показан последний список, который он прислал.
 
 # Line when offline, without a reason.
 stores-offline-last-list-plain = Не в сети. Показан последний полученный список.
@@ -11721,7 +11772,7 @@ stores-replace-label = Заменить копию { $name }, добавленн
 stores-remove-plugin-title = Удалить { $name }?
 
 # Line under it.
-stores-remove-plugin-detail = Он удаляется отсюда. Магазин плагинов сможет установить его снова.
+stores-remove-plugin-detail = Он будет удалён отсюда. Установить его снова можно через магазин плагинов.
 
 # Label before the hosts a new version also contacts.
 stores-newly-contacts = Новые серверы
@@ -11742,7 +11793,7 @@ stores-add-title = Добавить магазин плагинов
 stores-join-detail = Вставьте ссылку, которую прислал владелец магазина.
 
 # Line under the form title on desktop, where nothing happens before the check.
-stores-join-detail-desktop = Вставьте пригласительную ссылку, которую прислал владелец магазина. До подключения и установки вы увидите, что предлагает магазин плагинов.
+stores-join-detail-desktop = Вставьте ссылку-приглашение, которую вам прислал владелец. До подключения и установки вы увидите, что предлагает магазин плагинов.
 
 # Line under the field on a phone when a link was opened from another app.
 stores-join-detail-opened = Вставьте ссылку, которую прислал владелец магазина. Ссылка вида Kaeri://, открытая из «Сообщений», сразу заполнит этот лист.
@@ -11784,7 +11835,7 @@ stores-join-installs-nothing = Подключение ничего не уста
 stores-key-matches = Ключ { $key } совпадает с ключом магазина.
 
 # Line when the link is open to anyone.
-stores-anyone-note = Вы подключаетесь без имени. Другое устройство подключается по той же ссылке.
+stores-anyone-note = Вы подключаетесь без имени. Другое устройство может подключиться по той же ссылке.
 
 # Line when the device joined this store already.
 stores-already-joined-note = Это устройство уже подключено к этому магазину.
@@ -11938,7 +11989,7 @@ stores-invite-works-any = Присоединиться может любой, у
 stores-invite-works-any-forever = Присоединиться может любой, у кого есть эта ссылка, пока вы её не отмените.
 
 # Line under a single-use invite with an end date. Replaces stores-invite-once.
-stores-invite-once-until = Действует один раз, для того, кому вы её отправите. До { $until }.
+stores-invite-once-until = Действует один раз, для того, кому вы её отправите, до { $until }.
 
 # Line under a single-use invite with no end date.
 stores-invite-once-forever = Действует один раз, для того, кому вы её отправите, пока вы её не отмените.
@@ -12073,7 +12124,7 @@ stores-offers-plugins =
 notice-open-stores = Открыть магазины плагинов
 
 # Explainer on the empty plugin stores page.
-stores-what-is = Магазин плагинов представляет собой небольшой сервер, который хранит подписанные плагины и выдаёт каждому устройству отдельный токен. Он предлагает источники в виде плагины. Kaeri не ведёт магазинов плагинов и не составляет их списков, поэтому присоединиться можно по ссылке-приглашению от владельца.
+stores-what-is = Магазин плагинов представляет собой небольшой сервер, который хранит подписанные плагины и выдаёт каждому устройству свой токен. Его плагины добавляют источники. Kaeri не ведёт магазинов плагинов и не составляет их списков, поэтому подключиться к одному из них можно по ссылке-приглашению от владельца.
 
 # Button on the empty plugin stores page that opens the docs page in the browser.
 stores-what-is-link = Что такое магазин плагинов?
@@ -12094,13 +12145,13 @@ stores-qr-warning-device = Отсканируйте это на устройст
 stores-share = Поделиться…
 
 # Windows and Linux dialog line while the browser is open for a cloud sign-in.
-cloud-browser-line = Браузер открыл страницу { $service }. Разрешите доступ там, и Kaeri продолжит сам.
+cloud-browser-line = В браузере открылась страница { $service }. Разрешите доступ там, и Kaeri продолжит сам.
 
 # Windows and Linux dialog title while the browser is open for a cloud sign-in.
 cloud-browser-title = Войдите в { $service } в браузере
 
 # Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
-cloud-close-carries-on = Это окно можно закрыть. Kaeri продолжит работу и сам откроет следующий шаг, когда он будет готов.
+cloud-close-carries-on = Это окно можно закрыть. Kaeri продолжит работу и сам откроет следующий шаг, когда всё будет готово.
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = компьютер
@@ -12271,7 +12322,7 @@ sync-turn-off-alert-line = Это устройство ({ $kind }) перест�
 cloud-group = Облачная папка
 
 # Group footer.
-cloud-foot = Дополняет данные, пока ваши устройства далеко друг от друга, и хранит зашифрованную резервную копию. Прочитать её могут только ваши устройства.
+cloud-foot = Папка синхронизирует ваши устройства, пока они далеко друг от друга, и хранит зашифрованную резервную копию. Прочитать её могут только ваши устройства.
 
 # Row when only the nearby road is set.
 cloud-add = Добавить облачную папку
@@ -12616,7 +12667,7 @@ profiles-picker = Кто смотрит?
 profiles-ask-at-launch = Спрашивать, кто смотрит, при запуске
 
 # iPad footer.
-profiles-ask-foot = По умолчанию выключено. Для iPad, которым пользуется вся семья. Строка аккаунта позволяет сменить профиль в любой момент.
+profiles-ask-foot = По умолчанию выключено. Включите для iPad, которым пользуется вся семья. Сменить профиль можно в строке аккаунта в любой момент.
 
 # TV Settings.
 profiles-switch = Сменить профиль
@@ -13408,7 +13459,7 @@ accounts-tokens-keystore = Устройство хранит токены вхо
 accounts-form-title = Войти в { $tracker }
 
 # Line under the title: where the password goes.
-accounts-form-detail = Пароль уходит в { $tracker } один раз, а токен для входа хранит устройство.
+accounts-form-detail = Пароль уходит в { $tracker } один раз в обмен на токен, который хранит это устройство.
 
 # Label of the name field.
 accounts-user-or-email = Эл. почта или имя пользователя
@@ -13480,7 +13531,7 @@ accounts-open-on = Открыть в { $tracker }
 accounts-listed-by = Указано в { $tracker }
 
 # Line when the tracker did not answer.
-accounts-did-not-answer = { $tracker } не ответил.
+accounts-did-not-answer = { $tracker } не ответил. Попробуйте чуть позже.
 
 # Line when the tracker has nothing for the show.
 accounts-no-extras = У { $tracker } пока нет актёров, создателей и рекомендаций для этого аниме.
@@ -13543,7 +13594,7 @@ tv-pairing-code = Код подключения
 tv-open-on-tv = Откройте Kaeri на телевизоре. Он должен быть в той же сети Wi-Fi, что и это устройство.
 
 # Line telling what to type.
-tv-type-code = Введите шесть цифр, которые показывает { $name }. После этого это устройство подключится само.
+tv-type-code = Введите шесть цифр, которые показывает { $name }. После этого это устройство будет подключаться само.
 
 # Line while pairing is under way.
 tv-pairing-moment = Это займёт немного времени.
@@ -13843,7 +13894,7 @@ updates-saved-replace-plain = Версия { $version } сохранена в п
 updates-why-server = Загрузка остановлена: сервер отказал в запросе ({ $code }). Попробуйте позже.
 
 # The connection broke.
-updates-why-connection = Загрузка остановлена: соединение прервалось.
+updates-why-connection = Загрузка остановлена: соединение прервалось. Попробуйте ещё раз.
 
 # The file could not be saved. The reason is a sentence fragment.
 updates-why-save = Не удалось сохранить загрузку: { $reason }

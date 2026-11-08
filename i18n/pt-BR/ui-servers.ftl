@@ -76,4 +76,4 @@ servers-needs-look = { $count } não identificadas no AniList
 servers-kind-films = Filmes
 servers-error-certificate = { $host } usa um certificado em que este { -device } não confia. Use um endereço https:// com um certificado em que ele confie.
 servers-row-signed-out-here = Desconectado
-servers-sign-out-line = Encerra o acesso deste { -device } ao servidor. O servidor e seus downloads continuam como estão.
+servers-sign-out-line = Sair encerra a sessão deste { -device } no servidor. O servidor e seus downloads continuam como estão.

@@ -130,7 +130,15 @@ final class HoverCards {
         run()
     }
 
-    /// A scroll, a key press, the window losing key status: the card closes at once.
+    /// A scroll: the card closes, and the cover the grid brings under the pointer opens once the
+    /// grid has been still for the dwell.
+    func scrolled() {
+        stirred = .now
+        apply(intent.scrolled(at: now))
+        run()
+    }
+
+    /// A key press, the window losing key status: the card closes at once.
     func dismiss(holding: Bool = true) {
         stirred = .now
         apply(intent.dismiss(holding: holding))
@@ -202,6 +210,14 @@ final class HoverCards {
     }
 }
 
+/// When the warm player loads: a grid with covers, cards and trailers on, and again when the
+/// window comes back to the front, after the pool let its views go in the background.
+private struct Warming: Equatable {
+    let covers: Bool
+    let on: Bool
+    let key: Bool
+}
+
 /// The layer itself, over the scroll view it modifies.
 private struct HoverCardLayer: ViewModifier {
     @Environment(AppStore.self) private var store
@@ -265,7 +281,8 @@ private struct HoverCardLayer: ViewModifier {
                             toggle: { [store] id in store.titles[id].map { store.trailerMayAutoplay($0) } ?? false }
                         )
                     }
-                    .task(id: !place.covers.isEmpty && store.hoverCardsOn && store.trailersMayAutoplay) {
+                    .task(id: Warming(covers: !place.covers.isEmpty, on: store.hoverCardsOn && store.trailersMayAutoplay,
+                                      key: activeState == .key)) {
                         // The warm player loads once a grid that can show cards is here (decision 3),
                         // and only while cards are on and trailers may play: 2 s after, so the first
                         // screen has drawn and the engine has started, and at a still moment, as
@@ -296,6 +313,7 @@ private struct HoverCardLayer: ViewModifier {
                 }
             }
             .onAppear {
+                TrailerPool.shared.screenShown()
                 cards.cue = { [store, trailer, navigator] id in
                     guard let entry = store.titles[id] else { return }
                     // A hover costs no request when the list that showed the cover carried the
@@ -319,7 +337,7 @@ private struct HoverCardLayer: ViewModifier {
                 }
                 cards.allowed = allowed
                 monitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel, .keyDown]) { [cards] event in
-                    cards.dismiss()
+                    if event.type == .scrollWheel { cards.scrolled() } else { cards.dismiss() }
                     return event
                 }
             }
@@ -328,6 +346,7 @@ private struct HoverCardLayer: ViewModifier {
                 monitor = nil
                 cards.dismiss(holding: false)
                 trailer.stop()
+                TrailerPool.shared.screenGone()
             }
             .onChange(of: allowed) { _, now in cards.allowed = now }
             // The Fixtures app's Mac video: a scripted pointer onto a cover, see VideoHover.

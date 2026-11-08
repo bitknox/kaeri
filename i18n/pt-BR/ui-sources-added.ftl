@@ -79,11 +79,11 @@ store-other-medium-more = { $count ->
    *[other] Mais { $count } são para assistir, o que está desativado neste { -device }.
  }
 store-tv-reading-only = { $count ->
-    [one] Mais um é para ler, o que esta TV não faz.
-    [many] Mais { $count } de são para ler, o que esta TV não faz.
-   *[other] Mais { $count } são para ler, o que esta TV não faz.
+    [one] Mais um é para leitura, o que esta TV não faz.
+    [many] Mais { $count } de { -plugin-pl } são para leitura, o que esta TV não faz.
+   *[other] Mais { $count } são para leitura, o que esta TV não faz.
  }
-store-tv-all-reading = Todo { -plugin } em { $store } é para ler, o que esta TV não faz.
+store-tv-all-reading = Todos os { -plugin-pl } de { $store } são para leitura, o que esta TV não faz.
 store-plugin-row = Versão { $version } · pode contatar { $hosts }
 source-added = Adicionado: { $name } · { $series } séries
 source-added-plugins = { $count ->
@@ -92,9 +92,14 @@ source-added-plugins = { $count ->
    *[other] { $count } { -plugin-pl } instalados de { $store }
  }
 source-row-server = { $libraries ->
-    [one] { $kind } · { $series } séries · adicionado agora há pouco
+    [one] { $kind } · { $series } séries em { $libraries } biblioteca · adicionado agora há pouco
     [many] { $kind } · { $series } séries em { $libraries } de bibliotecas · adicionado agora há pouco
    *[other] { $kind } · { $series } séries em { $libraries } bibliotecas · adicionado agora há pouco
+ }
+source-row-server-series = { $libraries ->
+    [one] { $kind } · { $series } séries em { $libraries } biblioteca
+    [many] { $kind } · { $series } séries em { $libraries } de bibliotecas
+   *[other] { $kind } · { $series } séries em { $libraries } bibliotecas
  }
 source-row-server-empty = { $kind } · ainda sem séries · confere de novo em 30 minutos
 source-row-folder = { $skipped ->

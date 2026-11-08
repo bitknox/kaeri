@@ -23,13 +23,13 @@ stores-devices-count = { $count ->
    *[other] { -device-pl }: { $count }
  }
 stores-replace-by-hand-detail = Версия { $version } из { $store } заменит копию, добавленную вручную.
-stores-open-join-on-detail = Они подключаются без имени. Если выключить, ссылка перестанет работать. Если включить снова, будет создана новая.
-stores-open-join-off-detail = Подключаются только приглашённые. Если включить, по ссылке сможет зайти любой, без имени.
+stores-open-join-on-detail = Люди подключаются без имени. Если выключить, ссылка перестанет работать. Если включить снова, появится новая ссылка.
+stores-open-join-off-detail = Подключиться могут только те, кого вы пригласите. Если включить, подключиться сможет любой, у кого есть ссылка, без имени.
 stores-open-join-no-names = Имена не сохраняются.
 stores-open-join-keep-working = Они продолжают работать, пока вы их не удалите.
 stores-device-seen-at = Заходило { $when }
-stores-device-not-seen = Больше не появлялось
-stores-publish-offered = { -plugin-store } предлагает { $version }
+stores-device-not-seen = Не появлялось с момента подключения
+stores-publish-offered = { -plugin-store-cap }: { $version }
 stores-publish-not-yet = { -plugin-store } пока не предлагает его.
 torrents-sheet-edit-proxy = Изменить прокси
 torrents-edit-proxy = Изменить прокси
@@ -61,7 +61,7 @@ tv-seen-just-now = только что
 stores-link-send-once = Отправьте эту ссылку для { $who }. Она работает один раз, до { $until }.
 stores-link-send-once-anyone = Отправьте эту ссылку тому, для кого она. Она работает один раз, до { $until }.
 sources-remove-title = Удалить { $name }?
-sources-remove-detail-device = { -device } потеряет его. { -plugin-store } сможет установить его снова.
+sources-remove-detail-device = Он будет удалён отсюда. Установить его снова можно через { -plugin-store }.
 library-matched-apple = Сопоставлено
 servers-row-summary-apple = { $series ->
     [one] { $series } сериал

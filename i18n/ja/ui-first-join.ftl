@@ -1,6 +1,6 @@
 first-other-title = ほかの{ -device }ですでに{ -app-name }を使っていますか？
-first-other-line = ペアリングすると、この{ -device }に{ -source-pl }、{ -tracker-pl }、履歴が引き継がれます。この後の手順は完了します。
-first-other-pair-line = その{ -device }に入力するコードを表示します。どちらも同じWi-Fiに接続している必要があります。
+first-other-line = ペアリングすると、この{ -device }に{ -source-pl }、{ -tracker-pl }、履歴が引き継がれ、残りの設定も完了します。
+first-other-pair-line = その{ -device }に入力するコードが表示されます。どちらも同じWi-Fiに接続している必要があります。
 first-other-restore = クラウドフォルダーから復元
 first-other-restore-line = 保存した復元キーを使います
 first-other-no = いいえ、ここから始める

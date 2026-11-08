@@ -194,3 +194,12 @@ title-linux-episode-watched = Episode { $episode } watched
 # Line in a day's column when nothing airs that day.
 # @only linux
 calendar-linux-day-empty = Nothing airs
+
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+# @only linux
+# @max 16
+linux-read-library-list = List
+
+# Under No downloads on Downloads, Reading side.
+# @only linux
+linux-read-downloads-empty = Downloaded chapters open without a connection.

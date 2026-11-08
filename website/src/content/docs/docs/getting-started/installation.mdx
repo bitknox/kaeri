@@ -69,7 +69,7 @@ also allows only three apps signed this way at a time, AltStore or SideStore amo
 2. Android asks once whether the app you opened it from, your browser or your file manager, may
    install apps. Allow it, go back, and choose **Install**.
 
-The APK is signed with Kaeri’s release key, so each release installs over the one before and
+The APK is signed with Kaeri's release key, so each release installs over the one before and
 keeps your data. It is not on Google Play, and Play Protect may offer to scan it. To take the
 permission back afterwards, go to **Settings › Apps › Special app access › Install unknown apps**.
 
@@ -129,7 +129,7 @@ It adds Kaeri to the Start menu and to **Settings › Apps**, where you can unin
 lets the app open `kaeri://` links. The installer is not code-signed, so SmartScreen stops it
 the first time:
 
-1. When Windows says “Windows protected your PC”, choose **More info**.
+1. When Windows says "Windows protected your PC", choose **More info**.
 2. Choose **Run anyway**.
 
 A new release installs over the one before and keeps your library and settings. Uninstalling
@@ -181,7 +181,7 @@ The terminal app is not signed either, so the first open takes one extra step:
   choose **Open Anyway**.
 - On macOS, a binary from an archive downloaded with a browser is refused the first time it runs.
   Clear the download flag once with `xattr -d com.apple.quarantine kaeri`.
-- On Windows, SmartScreen shows “Windows protected your PC”. Choose **More info**, then
+- On Windows, SmartScreen shows "Windows protected your PC". Choose **More info**, then
   **Run anyway**.
 
 Updates through `kaeri --update` are not downloaded by a browser and open without these

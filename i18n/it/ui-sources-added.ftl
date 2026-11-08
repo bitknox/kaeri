@@ -92,9 +92,14 @@ source-added-plugins = { $count ->
    *[other] Installati { $count } { -plugin-pl } da { $store }
  }
 source-row-server = { $libraries ->
-    [one] { $kind } · Serie: { $series } · aggiunto proprio ora
+    [one] { $kind } · Serie: { $series } in { $libraries } libreria · aggiunto proprio ora
     [many] { $kind } · Serie: { $series } in { $libraries } librerie · aggiunto proprio ora
    *[other] { $kind } · Serie: { $series } in { $libraries } librerie · aggiunto proprio ora
+ }
+source-row-server-series = { $libraries ->
+    [one] { $kind } · Serie: { $series } in { $libraries } libreria
+    [many] { $kind } · Serie: { $series } in { $libraries } librerie
+   *[other] { $kind } · Serie: { $series } in { $libraries } librerie
  }
 source-row-server-empty = { $kind } · ancora nessuna serie · ricontrolla tra 30 minuti
 source-row-folder = { $skipped ->

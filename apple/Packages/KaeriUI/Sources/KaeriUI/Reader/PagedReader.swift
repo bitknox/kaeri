@@ -186,49 +186,241 @@ struct ReaderEndPage: View {
     let theme: ReaderTheme
     let size: CGSize
     @Environment(\.readerClose) private var closeReader
+    @Environment(Navigator.self) private var navigator
+    @Environment(AppStore.self) private var store
+    @Environment(\.dynamicTypeSize) private var type
+
+    /// One more swipe opens the next chapter: in the paged reader, not a strip's foot or a novel.
+    private var swipes: Bool { model.novel == nil && model.view?.mode != .strip }
 
     var body: some View {
-        let chapter = model.view?.chapter.label ?? ""
-        let next = model.end?.next ?? model.view?.next
-        VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: 0)
-            Text(L.readerEndOfChapter(chapter: chapter)).font(.ui(24, weight: .semibold)).foregroundStyle(theme.silk)
-            Text(model.read ? L.readerEndRead : L.readerEndNotRead).font(.ui(15)).foregroundStyle(theme.haze)
-                .padding(.top, 6)
-            if let next {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(L.readerEndNext).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze).textCase(nil)
-                    Text(next.title ?? next.label).font(.ui(20, weight: .semibold)).foregroundStyle(theme.silk)
-                    Text(detail(next)).font(.ui(15)).foregroundStyle(theme.haze)
-                }
-                .padding(.top, 28)
-            } else if let why = model.end?.why {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(title(why, chapter)).font(.ui(20, weight: .semibold)).foregroundStyle(theme.silk)
-                    if let body = body(why) { Text(body).font(.ui(15)).foregroundStyle(theme.haze) }
-                }
-                .padding(.top, 28)
-            }
-            Spacer(minLength: 0)
-            if let next {
-                Button(L.readerContinue) { model.openChapter(next.id) }
-                    .buttonStyle(ReaderAmberStyle(theme: theme))
-                Text(L.readerSwipeToContinue).font(.ui(13)).foregroundStyle(theme.haze)
-                    .frame(maxWidth: .infinity).padding(.top, 12)
-            }
-            Button(L.readerBackToSeries) { closeReader() }
-                .buttonStyle(ReaderPillStyle(theme: theme))
-                .padding(.top, 12)
+        if model.view?.demoCredit != nil {
+            demoEnd
+        } else {
+            standard
         }
-        .padding(.horizontal, 28)
-        .padding(.bottom, 72)
-        .frame(width: size.width, height: size.height, alignment: .leading)
+    }
+
+    /// The end of the demo: a card with the work's cover, what it was, the way to add a source,
+    /// and back to page 1. The reader's close button leads back to the series.
+    private var demoEnd: some View {
+        VStack(spacing: 0) {
+            if let cover = model.view?.demoCredit?.cover {
+                BookCover(url: cover, width: Device.isMac ? 40 : 48)
+                    .padding(.bottom, 14)
+            }
+            Text(L.readerDemoEnd)
+                .font(.ui(Device.isMac ? 15 : 17, weight: .semibold))
+                .foregroundStyle(theme.silk)
+            Text(L.readerDemoEndLine)
+                .font(.ui(Device.isMac ? 12 : 14))
+                .foregroundStyle(theme.haze)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 4)
+            Button(L.readerDemoAddSource) {
+                closeReader()
+                navigator.addBookSource = .choose
+            }
+            .buttonStyle(ReaderAmberStyle(theme: theme, height: Device.isMac ? 26 : 40))
+            .padding(.top, Device.isMac ? 16 : 18)
+            if Device.isMac {
+                Button(L.readerDemoAgain) { model.requestJump(0) }
+                    .buttonStyle(ReaderPillStyle(theme: theme, height: 26, wide: true, fill: theme.page.opacity(0.7)))
+                    .padding(.top, 8)
+            } else {
+                Button(L.readerDemoAgain) { model.requestJump(0) }
+                    .font(.ui(15, weight: .semibold))
+                    .foregroundStyle(theme.silk)
+                    .frame(minHeight: 44)
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
+            }
+        }
+        .padding(EdgeInsets(top: 20, leading: 18, bottom: Device.isMac ? 18 : 10, trailing: 18))
+        .frame(maxWidth: Device.isMac ? 300 : 340)
+        .background(theme.high, in: .rect(cornerRadius: 14))
+        .padding(.horizontal, 16)
+        .frame(width: size.width, height: size.height)
         .background(theme.page)
     }
 
-    private func detail(_ next: ChapterRow) -> String {
-        if let pages = next.pages { return L.readerEndNextDetail(chapter: next.label, pages: Int(pages)) }
-        return next.label
+    /// The page between chapters, as the board lays it: what was read and where it went, the
+    /// next chapter with its facts and its first page, and Continue. On a phone the buttons are
+    /// pinned at the foot; wider, the column is centred with the buttons under it.
+    private var standard: some View {
+        let next = model.end?.next ?? model.view?.next
+        let phone = size.width < 600
+        // At the largest sizes nothing is pinned: the buttons follow the column in the scroll.
+        let pinned = phone && !type.isAccessibilitySize
+        return ZStack(alignment: .topLeading) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    column(next, phone: phone)
+                    if phone && !pinned {
+                        buttons(next)
+                            .padding(.top, 28)
+                    }
+                }
+                .frame(width: phone ? size.width - 56 : 440, alignment: .leading)
+                .padding(.top, phone ? 100 : (Device.isMac ? 120 : 150))
+                .padding(.bottom, pinned ? 230 : 40)
+                .frame(maxWidth: .infinity, alignment: phone ? .leading : .center)
+                .padding(.leading, phone ? 28 : 0)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(type.isAccessibilitySize ? .visible : .hidden)
+            if pinned {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    buttons(next)
+                }
+                .padding(.horizontal, 28)
+                .padding(.bottom, 23)
+            }
+        }
+        .frame(width: size.width, height: size.height)
+        .background(theme.page)
+    }
+
+    /// The phone's buttons: the swipe line, Continue in amber and Back to the series under it.
+    @ViewBuilder
+    private func buttons(_ next: ChapterRow?) -> some View {
+        VStack(spacing: 0) {
+            if let next {
+                if swipes {
+                    Text(L.readerEndSwipe).font(.ui(13)).foregroundStyle(theme.haze)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 10)
+                }
+                Button(L.readerContinue) { model.openChapter(next.id) }
+                    .buttonStyle(ReaderAmberStyle(theme: theme))
+                Button(L.readerBackToSeries) { closeReader() }
+                    .font(.ui(15, weight: .semibold))
+                    .foregroundStyle(theme.silk)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(.rect)
+                    .buttonStyle(.plain)
+                    .padding(.top, 5)
+            } else {
+                Button(L.readerBackToSeries) { closeReader() }
+                    .buttonStyle(ReaderAmberStyle(theme: theme))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func column(_ next: ChapterRow?, phone: Bool) -> some View {
+        let chapter = model.view?.chapter
+        VStack(alignment: .leading, spacing: 0) {
+            Text(L.readerEndOfChapterNumber(chapter: chapter.map { $0.number ?? $0.label } ?? ""))
+                .font(.ui(15)).foregroundStyle(theme.haze)
+            Text(readLine).font(.ui(13)).foregroundStyle(theme.haze)
+                .padding(.top, 4)
+            if let work = model.view?.work, let chapterId = chapter?.id,
+               store.serverProgress.holds(work: work, chapter: chapterId) {
+                ReaderServerLine(line: store.serverProgress.lines[chapterId], theme: theme) {
+                    store.serverProgress.retry(chapter: chapterId)
+                }
+                .padding(.top, 2)
+            }
+            if let next {
+                Text(L.readerEndNext).font(.ui(13)).foregroundStyle(theme.haze)
+                    .padding(.top, phone ? 18 : 22)
+                Text(next.title ?? next.label)
+                    .font(.showTitle(size: 30, relativeTo: .title))
+                    .fontWeight(.bold)
+                    .foregroundStyle(theme.silk)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+                let facts = Self.facts(next, model: model)
+                if !facts.isEmpty {
+                    Text(facts).font(.ui(14)).foregroundStyle(theme.haze)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
+                }
+                // The next chapter's first page once the engine made it, its plate until then. A
+                // novel's chapter has no page to show.
+                if model.medium != .novel {
+                    preview(next, width: phone ? 150 : 180)
+                        .padding(.top, 18)
+                }
+            } else if let why = model.end?.why {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title(why, chapter?.label ?? ""))
+                        .font(.showTitle(size: 22, relativeTo: .title2)).fontWeight(.semibold)
+                        .foregroundStyle(theme.silk)
+                    if let body = body(why) { Text(body).font(.ui(15)).foregroundStyle(theme.haze) }
+                }
+                .padding(.top, phone ? 18 : 22)
+            }
+            if !phone {
+                let row = Group {
+                    if let next {
+                        Button { model.openChapter(next.id) } label: {
+                            Text(L.readerContinue).padding(.horizontal, 18)
+                        }
+                        .buttonStyle(ReaderAmberStyle(theme: theme, height: Device.isMac ? 28 : 44))
+                    }
+                    Button(L.readerBackToSeries) { closeReader() }
+                        .buttonStyle(ReaderPillStyle(theme: theme, height: Device.isMac ? 28 : 44))
+                }
+                if type.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 10) { row }.padding(.top, 22)
+                } else {
+                    HStack(spacing: 10) { row }.fixedSize().padding(.top, 22)
+                }
+                if next != nil, swipes, !Device.isMac {
+                    Text(L.readerEndSwipe).font(.ui(13)).foregroundStyle(theme.haze)
+                        .padding(.top, 14)
+                }
+            }
+        }
+    }
+
+    private func preview(_ next: ChapterRow, width: CGFloat) -> some View {
+        let height = (width * 1.42).rounded()
+        return ZStack {
+            theme.high
+            // With no picture of its first page yet, the plate carries the chapter's number.
+            Text(verbatim: next.number ?? next.label)
+                .font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
+                .lineLimit(2).multilineTextAlignment(.center).padding(8)
+            if let file = model.previews[next.id] {
+                PageImage(file: file, longest: height * 3, fill: true)
+            }
+        }
+        .frame(width: width, height: height)
+        .clipShape(.rect(cornerRadius: 4))
+        .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(theme.haze.opacity(0.18), lineWidth: 1))
+        .shadow(color: theme.shadow, radius: 15, y: 10)
+        .accessibilityHidden(true)
+    }
+
+    /// "Chapter 13 · 34 pages · from books.home.example": the chapter's number when it has a
+    /// title of its own, its length, and the source it came from.
+    static func facts(_ next: ChapterRow, model: ReaderModel) -> String {
+        let chapter = next.title.map { _ in next.number ?? next.label }
+        let pages = next.pages.flatMap { $0 > 0 ? L.readerEndPages(count: Int($0)) : nil }
+        let facts: String? = switch (chapter, pages) {
+        case (let chapter?, let pages?): L.readerEndFacts(chapter: chapter, facts: pages)
+        case (let chapter?, nil): L.readerChapterLine(chapter: chapter)
+        case (nil, let pages): pages
+        }
+        let source = model.end?.next?.id == next.id ? model.end?.nextSource : nil
+        switch (facts, source) {
+        case (let facts?, let source?): return L.readerDividerFactsSource(facts: facts, source: source)
+        case (nil, let source?): return L.readerEndFrom(source: source)
+        case (let facts, nil): return facts ?? ""
+        }
+    }
+
+    /// "Read · AniList updated", or Read alone when no tracker took it.
+    private var readLine: String {
+        guard model.read else { return L.readerEndNotRead }
+        guard !model.readTrackers.isEmpty else { return L.readerEndRead }
+        return L.readerEndTracker(trackers: model.readTrackers.formatted(.list(type: .and).locale(AirTime.locale)))
     }
 
     private func title(_ why: NoNext, _ chapter: String) -> String {
@@ -248,6 +440,85 @@ struct ReaderEndPage: View {
         case .finished: L.readerEndFinishedBody
         case .noSourceHasIt: nil
         case .offline: L.readerEndOfflineBody
+        }
+    }
+}
+
+// MARK: The server line
+
+/// Did my server get it: one line under the tracker line, its two lines of room held from the
+/// first frame so Next and Continue never move. Each change crossfades in place (0.3 s reveal);
+/// Reduce Motion keeps the crossfade, which moves nothing.
+struct ReaderServerLine: View {
+    let line: ServerLine?
+    let theme: ReaderTheme
+    let retry: () -> Void
+    @ScaledMetric(relativeTo: .footnote) private var room: CGFloat = 36
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            if let line {
+                content(line)
+                    .id(Self.key(line))
+                    .transition(.opacity)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: room, alignment: .topLeading)
+        .animation(.reveal, value: line.map(Self.key))
+        .environment(\.openURL, OpenURLAction { _ in
+            retry()
+            return .handled
+        })
+    }
+
+    private func content(_ line: ServerLine) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            glyph(line)
+            words(line)
+                .font(.ui(13))
+                .foregroundStyle(Self.failed(line) ? theme.silk : theme.haze)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAction(named: L.readerTryAgain) { if line.canRetry { retry() } }
+    }
+
+    @ViewBuilder
+    private func glyph(_ line: ServerLine) -> some View {
+        switch line {
+        case .saved: EmptyView()
+        case .sending:
+            ProgressView().controlSize(.mini).tint(theme.haze)
+                .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+        case .offline: Image(systemName: "wifi.slash").font(.ui(12)).foregroundStyle(theme.haze)
+        case .retrying: Image(systemName: "arrow.triangle.2.circlepath").font(.ui(12)).foregroundStyle(theme.haze)
+        case .failed: Image(systemName: "exclamationmark.triangle.fill").font(.ui(12)).foregroundStyle(theme.vermilion)
+        }
+    }
+
+    /// The words, with Try again as a link after them where the line can be tried again.
+    private func words(_ line: ServerLine) -> Text {
+        let said = Text(ServerProgressWords.line(line))
+        guard line.canRetry, let url = URL(string: "kaeri-retry:progress") else { return said } // i18n-skip: never shown
+        var link = AttributedString(L.readerTryAgain)
+        link.link = url
+        link.underlineStyle = .single
+        link.foregroundColor = theme.silk
+        return said + Text(" ") + Text(link)
+    }
+
+    private static func failed(_ line: ServerLine) -> Bool {
+        if case .failed = line { true } else { false }
+    }
+
+    /// One key per kind of line, so a change of kind crossfades and a same kind stays.
+    static func key(_ line: ServerLine) -> String {
+        switch line {
+        case .saved: "saved" // i18n-skip: an animation key
+        case .sending: "sending" // i18n-skip: an animation key
+        case .offline: "offline" // i18n-skip: an animation key
+        case .retrying: "retrying" // i18n-skip: an animation key
+        case .failed: "failed" // i18n-skip: an animation key
         }
     }
 }

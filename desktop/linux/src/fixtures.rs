@@ -200,6 +200,10 @@ pub enum HomeScene {
     Failed,
     /// Nothing watched and no network.
     Offline,
+    /// Watching, with reading on and set to Both: a manga, a novel and a strip with a history.
+    Reading,
+    /// [`Self::Reading`] with keeping chapters ready on and the Downloads place filled.
+    ReadingDownloads,
     /// Watching with no source installed.
     Sourceless,
 }
@@ -217,6 +221,8 @@ impl HomeScene {
             "failed" => Self::Failed,
             "offline" => Self::Offline,
             "sourceless" => Self::Sourceless,
+            "reading" => Self::Reading,
+            "reading-downloads" => Self::ReadingDownloads,
             _ => return None,
         })
     }
@@ -261,7 +267,7 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     let paths = paths_under(root);
     let signed_in = scene.home.signed_in();
     if signed_in {
-        write_config(&paths.config_file, scene.demo)?;
+        write_config(&paths.config_file, scene.demo, scene.home)?;
     }
     let (config, store, _) = open(&paths)?;
     let clock = Clock::default();
@@ -269,6 +275,9 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     let world = world_asked().then(|| HomeWorld::at(HomeClock::in_zone(now, &clock.zone())));
     if !scene.demo {
         seed_scene(&store, scene.home, now);
+        if matches!(scene.home, HomeScene::Reading | HomeScene::ReadingDownloads) {
+            crate::fixtures_reading::seed_books(&store, &paths.data_dir, now);
+        }
     }
     if let Some(world) = world.as_ref().filter(|_| scene.home.world_history()) {
         world.seed_history(&store, now);
@@ -296,6 +305,9 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     server.set_now(now);
     server.add_titles(fixtures::long_franchise());
     server.serve_art();
+    if !scene.demo && matches!(scene.home, HomeScene::Reading | HomeScene::ReadingDownloads) {
+        crate::fixtures_reading::keep_books(&store, &server.art_base(), now);
+    }
     // Home's world: this season's titles, the rest in the browse, and their broadcasts.
     if let Some(world) = &world {
         let (season, rest): (Vec<_>, Vec<_>) = world
@@ -347,6 +359,7 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
     let mut options = EngineOptions::new(paths, config.clone(), http, store, theme());
     options.saved = Some(config);
     options.hosted_player = true;
+    options.reading = true;
     options.background = Background::none();
     let provided = world.as_ref().map(HomeWorld::provided).unwrap_or_default();
     let chain = match scene.home {
@@ -481,7 +494,7 @@ fn unsure_source(art: &str, clip: &Stream) -> MockProvider {
 }
 
 /// AniList on, as a signed-in user has it, tokens in files, and skips offered rather than taken.
-fn write_config(file: &Path, demo: bool) -> Result<(), String> {
+fn write_config(file: &Path, demo: bool, home: HomeScene) -> Result<(), String> {
     if file.exists() {
         return Ok(());
     }
@@ -493,8 +506,15 @@ fn write_config(file: &Path, demo: bool) -> Result<(), String> {
                 format!(
                     "[trackers]\nenabled = [\"anilist\"]\ntoken_storage = \"file\"\n\n\
                  [trackers.anilist]\nclient_id = \"fixture\"\nclient_secret = \"fixture\"\n\n\
-                 [playback]\nskip_opening = false\nupscaling = \"off\"\n{}",
-                    if demo { "\n[sources]\ndemo = true\n" } else { "" }
+                 [playback]\nskip_opening = false\nupscaling = \"off\"\n{}{}",
+                    if demo { "\n[sources]\ndemo = true\n" } else { "" },
+                    match home {
+                        HomeScene::Reading => "\n[reading]\nkaeri_is_for = \"both\"\n",
+                        HomeScene::ReadingDownloads => {
+                            "\n[reading]\nkaeri_is_for = \"both\"\nkeep_chapters_ready = true\n"
+                        }
+                        _ => "",
+                    }
                 ),
             )
         })
@@ -522,6 +542,14 @@ fn seed_scene(store: &Store, scene: HomeScene, now: i64) {
         }
         HomeScene::Watching | HomeScene::Slow | HomeScene::Failed | HomeScene::Sourceless => {
             seed_history(store, now)
+        }
+        HomeScene::Reading | HomeScene::ReadingDownloads => {
+            seed_history(store, now);
+            crate::fixtures_reading::seed_reading(
+                store,
+                scene == HomeScene::ReadingDownloads,
+                now,
+            );
         }
     }
 }

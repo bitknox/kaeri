@@ -6,8 +6,12 @@
 //! interface differs, so this module is the bindings for it, the host side of its own copy of
 //! `host`, and a loaded plugin's calls.
 //!
-//! Page images are fetched by the host, never by the guest. [`LoadedBookPlugin::fetch_page`]
-//! does that with the plugin's own `allowed-hosts`, outside any guest call.
+//! A page image is fetched by the host, never by the guest: [`LoadedBookPlugin::fetch_page`]
+//! does that with the plugin's own `allowed-hosts`, outside any guest call. A plugin built for the
+//! optional `book-plugin-with-pages` world may make pages itself as well. The host tells it from
+//! its exports at load ([`LoadedBookPlugin::makes_pages`]), asks it with
+//! [`LoadedBookPlugin::page_bytes`], a guest call like any other, and checks the bytes it hands
+//! back before keeping them: [`check_page`]. A plugin built for `book-plugin` is never asked.
 
 use std::path::Path;
 
@@ -31,9 +35,74 @@ pub use self::exports::kaeri::books::source::{
 };
 use self::kaeri::books::host::{HostError as GuestHostError, HttpRequest, HttpResponse};
 
+/// The optional world: `book-plugin` and the `pages` export, for a plugin that makes some pages
+/// itself. Its `host` is the one above, so one linker serves both worlds.
+mod with_pages {
+    wasmtime::component::bindgen!({
+        path: "../../wit/kaeri-books.wit",
+        world: "book-plugin-with-pages",
+        imports: { default: async | trappable },
+        exports: { default: async },
+        with: { "kaeri:books/host": super::kaeri::books::host },
+    });
+}
+
+/// The export a plugin built for `book-plugin-with-pages` has and one built for `book-plugin`
+/// does not.
+const PAGES_EXPORT: &str = "kaeri:books/pages@";
+
 /// The major version of the book source ABI this host speaks: the major of the WIT package in
 /// `wit/kaeri-books.wit`. It moves apart from [`crate::engine::ABI_MAJOR`].
 pub const BOOKS_ABI_MAJOR: u64 = 1;
+
+/// The largest page image a plugin may hand over from `page-bytes`. Twice the ceiling on one
+/// fetched response, for a page a plugin assembled and encoded itself; a quarter of the guest's
+/// default memory, which has to hold the page while it is made.
+pub const MAX_PAGE_BYTES: usize = 16 * 1024 * 1024;
+
+/// The most pixels a plugin's page may claim in its header: the reader's own decode cap, so a
+/// page is refused here rather than after it is kept.
+pub const MAX_PAGE_PIXELS: u64 = 40_000_000;
+
+/// Whether bytes a plugin made are a page the host will keep: under [`MAX_PAGE_BYTES`], an image
+/// format the reader knows by its first bytes (JPEG, PNG, WebP, GIF or AVIF), and a header that
+/// claims at most [`MAX_PAGE_PIXELS`]. Only the header is read, so a page that would decompress
+/// to gigabytes is refused before anything is decoded. The reason is for the log and the
+/// source's health, as a `parse` error.
+pub fn check_page(bytes: &[u8]) -> Result<(), String> {
+    if bytes.len() > MAX_PAGE_BYTES {
+        return Err(format!(
+            "the page is {} bytes, over the {MAX_PAGE_BYTES} byte limit",
+            bytes.len()
+        ));
+    }
+    measure(bytes)
+}
+
+#[cfg(feature = "fetch")]
+fn measure(bytes: &[u8]) -> Result<(), String> {
+    if kaeri_pages::SourceFormat::sniff(bytes).is_none() {
+        return Err("the page is not an image Kaeri shows".into());
+    }
+    let info = kaeri_pages::inspect(bytes).map_err(|e| format!("the page has no size: {e}"))?;
+    let pixels = u64::from(info.width) * u64::from(info.height);
+    if info.width == 0 || info.height == 0 {
+        return Err("the page has no size".into());
+    }
+    if pixels > MAX_PAGE_PIXELS {
+        return Err(format!(
+            "the page is {}x{}, over the {MAX_PAGE_PIXELS} pixel limit",
+            info.width, info.height
+        ));
+    }
+    Ok(())
+}
+
+/// A host built without `fetch` reads no pages: it has nothing to show them with.
+#[cfg(not(feature = "fetch"))]
+fn measure(_: &[u8]) -> Result<(), String> {
+    Err("this build of Kaeri reads no pages".into())
+}
 
 /// Ids a book plugin may not take: Kaeri's own book sources, and the demo.
 const RESERVED: &[&str] = &["folders", "servers"];
@@ -132,6 +201,8 @@ pub struct LoadedBookPlugin {
     limits: Limits,
     http: Option<crate::HttpClient>,
     settings: std::collections::BTreeMap<String, String>,
+    /// Built for `book-plugin-with-pages`.
+    makes_pages: bool,
 }
 
 impl std::fmt::Debug for LoadedBookPlugin {
@@ -141,6 +212,7 @@ impl std::fmt::Debug for LoadedBookPlugin {
             .field("version", &self.manifest.version)
             .field("allowed_hosts", &self.manifest.allowed_hosts)
             .field("limits", &self.limits)
+            .field("makes_pages", &self.makes_pages)
             .finish_non_exhaustive()
     }
 }
@@ -154,6 +226,10 @@ impl LoadedBookPlugin {
     ) -> Result<Self, PluginError> {
         let display = path.display().to_string();
         let linker = host.linker(&display, PluginKind::Books)?;
+        let makes_pages = component
+            .component_type()
+            .exports(host.engine())
+            .any(|(name, _)| name.starts_with(PAGES_EXPORT));
         let plugin = Self {
             engine: host.engine().clone(),
             linker,
@@ -170,6 +246,7 @@ impl LoadedBookPlugin {
             limits: host.limits(),
             http: host.http(),
             settings: Default::default(),
+            makes_pages,
         };
         // As for show sources: describing itself is the one call made with no capabilities.
         let manifest = plugin
@@ -182,6 +259,7 @@ impl LoadedBookPlugin {
             version = %manifest.version,
             hosts = ?manifest.allowed_hosts,
             media = ?manifest.media,
+            makes_pages,
             "book plugin loaded"
         );
         let settings = host.settings_for(path, &manifest.id);
@@ -198,6 +276,11 @@ impl LoadedBookPlugin {
 
     pub fn limits(&self) -> Limits {
         self.limits
+    }
+
+    /// Whether the plugin was built for `book-plugin-with-pages`, and so may make pages itself.
+    pub fn makes_pages(&self) -> bool {
+        self.makes_pages
     }
 
     fn capabilities(&self) -> Capabilities {
@@ -300,6 +383,48 @@ impl LoadedBookPlugin {
             .map_err(|e| self.deadline_error(&e))
     }
 
+    /// The bytes of the page at `url` of `chapter`, if the plugin makes that page itself; `None`
+    /// when the host is to fetch it. Asked only of a plugin that [makes pages](Self::makes_pages),
+    /// under the same limits as every other call, and checked by [`check_page`]: a page that fails
+    /// the check is the plugin's `parse` error. A plugin built for `book-plugin` answers `None`
+    /// without a call.
+    pub async fn page_bytes(
+        &self,
+        series: &str,
+        chapter: &str,
+        url: &str,
+    ) -> Result<Result<Option<Vec<u8>>, SourceError>, PluginError> {
+        if !self.makes_pages {
+            return Ok(Ok(None));
+        }
+        let mut store = new_store(&self.engine, self.limits, self.capabilities());
+        let instance = with_pages::BookPluginWithPages::instantiate_async(
+            &mut store,
+            &self.component,
+            &self.linker,
+        )
+        .await
+        .map_err(|e| self.deadline_error(&e))?;
+        let made = instance
+            .kaeri_books_pages()
+            .call_page_bytes(&mut store, series, chapter, url)
+            .await
+            .map_err(|e| self.deadline_error(&e))?;
+        // The store, and the guest memory the page was made in, go before the check runs.
+        drop(store);
+        Ok(match made {
+            Ok(Some(bytes)) => match check_page(&bytes) {
+                Ok(()) => Ok(Some(bytes)),
+                Err(reason) => {
+                    tracing::warn!(plugin = %self.manifest.id, %reason, "a plugin's page was refused");
+                    Err(SourceError::Parse(reason))
+                }
+            },
+            Ok(None) => Ok(None),
+            Err(error) => Err(same_error(error)),
+        })
+    }
+
     /// Fetch one page image a chapter named, as the host does for every page: a GET through the
     /// plugin's own `allowed-hosts`, with the headers the page carries, under the same size
     /// ceiling as any fetch. Outside any guest call, so the plugin never sees the bytes.
@@ -322,6 +447,17 @@ impl LoadedBookPlugin {
                 body: None,
             })
             .await
+    }
+}
+
+/// The `pages` world's copy of `source-error`, as the `source` one.
+fn same_error(error: with_pages::exports::kaeri::books::source::SourceError) -> SourceError {
+    use with_pages::exports::kaeri::books::source::SourceError as Pages;
+    match error {
+        Pages::NotFound => SourceError::NotFound,
+        Pages::Blocked(reason) => SourceError::Blocked(reason),
+        Pages::Parse(reason) => SourceError::Parse(reason),
+        Pages::Other(reason) => SourceError::Other(reason),
     }
 }
 

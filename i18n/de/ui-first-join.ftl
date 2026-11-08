@@ -1,6 +1,6 @@
 first-other-title = Nutzt du { -app-name } schon auf einem anderen { -device }?
-first-other-line = Koppel es, dann bekommt dieses { -device } deine { -source-pl }, { -tracker-pl } und den Verlauf. Die weiteren Schritte entfallen dann.
-first-other-pair-line = Zeigt einen Code, den du auf dem anderen { -device } eingibst. Beide brauchen dasselbe Wi-Fi.
+first-other-line = Koppel es, dann bekommt dieses { -device } deine { -source-pl }, { -tracker-pl } und den Verlauf, und der Rest der Einrichtung ist für dich erledigt.
+first-other-pair-line = Du bekommst einen Code, den du auf dem anderen { -device } eingibst. Beide brauchen dasselbe Wi-Fi.
 first-other-restore = Aus einem Cloud-Ordner wiederherstellen
 first-other-restore-line = Nutzt den gespeicherten Wiederherstellungsschlüssel
 first-other-no = Nein, hier starten
