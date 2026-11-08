@@ -1209,6 +1209,73 @@ public enum L {
         Self.format("reading-downloads-done-series", fallback: "Chapters of %1$lld series are ready to read offline.", count)
     }
 
+    /// Row heading on reading's Home: manga that are trending on AniList now.
+    public static var readHomeTrendingManga: String { string("read-home-trending-manga", fallback: "Trending manga") }
+
+    /// Row heading on reading's Home: webtoons that are trending on AniList now.
+    public static var readHomeTrendingWebtoons: String { string("read-home-trending-webtoons", fallback: "Trending webtoons") }
+
+    /// Row heading on reading's Home: light novels that are trending on AniList now.
+    public static var readHomeTrendingNovels: String { string("read-home-trending-novels", fallback: "Trending light novels") }
+
+    /// Row heading on reading's Home: the most popular manga that started in the last 12 months.
+    public static var readHomeNewManga: String { string("read-home-new-manga", fallback: "New manga") }
+
+    /// Row heading on reading's Home: the most popular webtoons that started in the last 12 months.
+    public static var readHomeNewWebtoons: String { string("read-home-new-webtoons", fallback: "New webtoons") }
+
+    /// Row heading on reading's Home: the most popular light novels that started in the last 12 months.
+    public static var readHomeNewNovels: String { string("read-home-new-novels", fallback: "New light novels") }
+
+    /// Side text beside a New row's heading, in a quieter style: what the row covers.
+    public static var readHomeNewSide: String { string("read-home-new-side", fallback: "Last 12 months") }
+
+    /// Row heading on reading's Home: the most popular manga that have finished.
+    public static var readHomeFinishedManga: String { string("read-home-finished-manga", fallback: "Finished manga") }
+
+    /// Row heading on reading's Home: the most popular webtoons that have finished.
+    public static var readHomeFinishedWebtoons: String { string("read-home-finished-webtoons", fallback: "Finished webtoons") }
+
+    /// Row heading on reading's Home: the most popular light novels that have finished.
+    public static var readHomeFinishedNovels: String { string("read-home-finished-novels", fallback: "Finished light novels") }
+
+    /// Side text beside a Finished row's heading, in a quieter style: how the row is sorted.
+    public static var readHomeFinishedSide: String { string("read-home-finished-side", fallback: "Most popular") }
+
+    /// A choice of reading Search's Started filter: series that started at any time.
+    public static var readSearchStartedAny: String { string("read-search-started-any", fallback: "Any time") }
+
+    /// A choice of reading Search's Started filter: series that started in the last 12 months.
+    public static var readSearchStartedYear: String { string("read-search-started-year", fallback: "Last 12 months") }
+
+    /// A choice of reading Search's Started filter: series that started in the last 3 years.
+    public static var readSearchStarted3Years: String { string("read-search-started-3-years", fallback: "Last 3 years") }
+
+    /// Under a source's hit in Search: the chapters it holds, from the first.
+    public static func readHitChapters(last: Int) -> String {
+        Self.format("read-hit-chapters", fallback: "Chapters 1 to %1$lld", last)
+    }
+
+    /// Under a source's hit in Search: a web novel's episodes it holds, from the first.
+    public static func readHitEpisodes(last: Int) -> String {
+        Self.format("read-hit-episodes", fallback: "Episodes 1 to %1$lld", last)
+    }
+
+    /// Under a source's hit in Search: a light novel's parts it holds.
+    public static func readHitParts(count: Int) -> String {
+        Self.format("read-hit-parts", fallback: "%1$lld parts", count)
+    }
+
+    /// Under a source's hit in Search: the book files it holds.
+    public static func readHitFiles(count: Int) -> String {
+        Self.format("read-hit-files", fallback: "%1$lld files", count)
+    }
+
+    /// Under a source's hit in Search: the book files it holds, all in one format ("CBZ").
+    public static func readHitFilesFormat(count: Int, format: String) -> String {
+        Self.format("read-hit-files-format", fallback: "%1$lld files · %2$@", count, format)
+    }
+
     /// Toast after joining a plugin store with an invite that names this device's owner.
     public static func storeJoined(store: String, member: String) -> String {
         Self.format("store-joined", fallback: "Joined %1$@ as %2$@.", store, member)
@@ -8378,6 +8445,28 @@ public enum L {
     /// Line at the end of Read with no book sources yet. A button to add one follows it.
     public static var homeReadNoSources: String { string("home-read-no-sources", fallback: "Add a folder, a server or a plugin store to read from Home.") }
 
+    /// In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+    public static var readHomeOfflineRows: String { string("read-home-offline-rows", fallback: "Trending and new series show once you're online.") }
+
+    /// E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+    public static var readHomeBrowse: String { string("read-home-browse", fallback: "Browse") }
+
+    /// E-ink: the line under Browse on Read's Home.
+    public static var readHomeBrowseLine: String { string("read-home-browse-line", fallback: "Trending, new and finished, by format") }
+
+    /// E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+    public static func readHomeBrowseRow(first: String, second: String, more: Int) -> String {
+        Self.format("read-home-browse-row", fallback: "%1$@, %2$@ and %3$lld more", first, second, more)
+    }
+
+    /// E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.
+    public static var readHomeBrowseNote: String { string("read-home-browse-note", fallback: "From AniList. Your sources are asked when you open a series.") }
+
+    /// E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+    public static func readHomeBrowseKept(time: String) -> String {
+        Self.format("read-home-browse-kept", fallback: "Lists kept from %1$@ still open.", time)
+    }
+
     /// Under a day in Read's week: what usually comes out that day, when the time isn't known.
     public static var weekUsually: String { string("week-usually", fallback: "Usually") }
 
@@ -9115,6 +9204,85 @@ public enum L {
 
     /// A genre's state: no series with it.
     public static var readFilterLeftOut: String { string("read-filter-left-out", fallback: "Left out") }
+
+    /// A filter of reading's Search: when a series started.
+    public static var readSearchStarted: String { string("read-search-started", fallback: "Started") }
+
+    /// The filter bar's chip that searches only the person's own sources, leaving AniList out.
+    public static var readSearchSourcesOnly: String { string("read-search-sources-only", fallback: "Your sources only") }
+
+    /// Search's section heading under AniList's results: one group per source of the person's.
+    public static var readSearchFromSources: String { string("read-search-from-sources", fallback: "From your sources") }
+
+    /// E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.
+    public static func readSearchAsking(source: String) -> String {
+        Self.format("read-search-asking", fallback: "Asking %1$@…", source)
+    }
+
+    /// A source group whose source failed to answer. The reason and Try again follow.
+    public static func readSearchSourceFailed(source: String) -> String {
+        Self.format("read-search-source-failed", fallback: "%1$@ didn't answer.", source)
+    }
+
+    /// The reason under it when the source gave no answer in time.
+    public static func readSearchSourceTimeout(seconds: Int) -> String {
+        Self.format("read-search-source-timeout", fallback: "No answer in %1$lld s.", seconds)
+    }
+
+    /// One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.
+    public static func readSearchSourceNothing(sources: String) -> String {
+        Self.format("read-search-source-nothing", fallback: "Nothing found in %1$@.", sources)
+    }
+
+    /// On an AniList result that one of the person's sources has. The source is its name.
+    public static func readSearchInSource(source: String) -> String {
+        Self.format("read-search-in-source", fallback: "In %1$@", source)
+    }
+
+    /// On an AniList result that more than one of the person's sources has. Always 2 or more.
+    public static func readSearchInSources(n: Int) -> String {
+        Self.format("read-search-in-sources", fallback: "In %1$lld of your sources", n)
+    }
+
+    /// Search, when AniList found nothing but the person's sources did.
+    public static var readSearchAnilistNothing: String { string("read-search-anilist-nothing", fallback: "AniList found nothing for these words.") }
+
+    /// Search, when AniList could not be reached.
+    public static var readSearchAnilistFailed: String { string("read-search-anilist-failed", fallback: "AniList didn't answer.") }
+
+    /// The line under it.
+    public static var readSearchAnilistFailedLine: String { string("read-search-anilist-failed-line", fallback: "Your sources were still asked.") }
+
+    /// Search, when nothing was found anywhere: under the line saying AniList found nothing.
+    public static var readSearchSourcesNothing: String { string("read-search-sources-nothing", fallback: "Nothing in your sources either.") }
+
+    /// Over reading's results while more pages are to come, so AniList's count is not known yet.
+    public static var readSearchTotalUnknown: String { string("read-search-total-unknown", fallback: "Series from AniList") }
+
+    /// The link under From your sources that shows the rest of AniList's results.
+    public static var readSearchMoreAnilist: String { string("read-search-more-anilist", fallback: "More from AniList") }
+
+    /// Beside More from AniList: how many of AniList's results show.
+    public static func readSearchShown(shown: Int, total: Int) -> String {
+        Self.format("read-search-shown", fallback: "%1$lld of %2$lld shown", shown, total)
+    }
+
+    /// Beside More from AniList while AniList's count is not known yet: how many results show.
+    public static func readSearchShownSome(shown: Int) -> String {
+        Self.format("read-search-shown-some", fallback: "%1$lld shown", shown)
+    }
+
+    /// Beside a source's name in Search: the kind of source it is.
+    public static var readSearchSourceKindServer: String { string("read-search-source-kind-server", fallback: "Server") }
+
+    public static var readSearchSourceKindFolder: String { string("read-search-source-kind-folder", fallback: "Folder") }
+
+    public static var readSearchSourceKindPlugin: String { string("read-search-source-kind-plugin", fallback: "Plugin") }
+
+    /// The button of a source group with more than five hits.
+    public static func readSearchSourceMore(n: Int) -> String {
+        Self.format("read-search-source-more", fallback: "Show %1$lld more", n)
+    }
 
     /// Over a first-run page's title: which page of how many.
     public static func onboardingStep(step: Int, total: Int) -> String {

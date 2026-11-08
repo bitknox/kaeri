@@ -947,6 +947,20 @@ impl Store {
         })
     }
 
+    /// How many chapters of each work were read at or after `since` (Unix seconds): the reading
+    /// mix's recent part.
+    pub fn chapters_read_since(&self, since: i64) -> Result<Vec<(String, u32)>> {
+        self.with_personal(|c| {
+            let mut stmt = c.prepare(
+                "SELECT work, COUNT(*) FROM read_chapter
+                  WHERE read = 1 AND read_at >= ?1 GROUP BY work ORDER BY work",
+            )?;
+            Ok(stmt
+                .query_map([since], |r| Ok((r.get(0)?, r.get::<_, u32>(1)?)))?
+                .collect::<rusqlite::Result<_>>()?)
+        })
+    }
+
     pub fn read_work(&self, work: &str) -> Result<Option<ReadWork>> {
         self.with_personal(|c| {
             Ok(c.query_row(

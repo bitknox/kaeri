@@ -193,6 +193,7 @@ fn hit_from(hit: books::SeriesHit) -> SeriesHit {
         year: hit.year,
         cover: some(hit.cover),
         language: some(hit.language),
+        amount: None,
     }
 }
 

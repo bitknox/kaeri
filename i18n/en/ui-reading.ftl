@@ -30,6 +30,30 @@ home-read-end = That's everything for now. Updates and Search have the full list
 # Line at the end of Read with no book sources yet. A button to add one follows it.
 home-read-no-sources = Add a folder, a server or a { -plugin-store } to read from Home.
 
+# In place of Read's discovery rows on a first run with no connection: nothing was kept yet.
+read-home-offline-rows = Trending and new series show once you're online.
+
+# E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.
+# @max 24
+read-home-browse = Browse
+
+# E-ink: the line under Browse on Read's Home.
+read-home-browse-line = Trending, new and finished, by format
+
+# E-ink: a discovery row in the Browse list, naming its first two series and how many follow.
+# @arg first: text
+# @arg second: text
+# @arg more: int
+read-home-browse-row = { $first }, { $second } and { $more } more
+
+# E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only
+# when a series is opened.
+read-home-browse-note = From AniList. Your { -source-pl } are asked when you open a series.
+
+# E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.
+# @arg time: text
+read-home-browse-kept = Lists kept from { $time } still open.
+
 # Under a day in Read's week: what usually comes out that day, when the time isn't known.
 week-usually = Usually
 
@@ -792,6 +816,81 @@ read-filter-included = Included
 
 # A genre's state: no series with it.
 read-filter-left-out = Left out
+
+# A filter of reading's Search: when a series started.
+read-search-started = Started
+
+# The filter bar's chip that searches only the person's own sources, leaving AniList out.
+# @max 24
+read-search-sources-only = Your { -source-pl } only
+
+# Search's section heading under AniList's results: one group per source of the person's.
+read-search-from-sources = From your { -source-pl }
+
+# E-ink and the terminal: a source group still waiting for its answer. Also its screen reader
+# label. The source is its name.
+# @arg source: text
+read-search-asking = Asking { $source }…
+
+# A source group whose source failed to answer. The reason and Try again follow.
+# @arg source: text
+read-search-source-failed = { $source } didn't answer.
+
+# The reason under it when the source gave no answer in time.
+# @arg seconds: int
+read-search-source-timeout = No answer in { $seconds } s.
+
+# One line at the end of the sources' groups for every source that found nothing. The sources
+# are their names, joined as a list.
+# @arg sources: text
+read-search-source-nothing = Nothing found in { $sources }.
+
+# On an AniList result that one of the person's sources has. The source is its name.
+# @arg source: text
+read-search-in-source = In { $source }
+
+# On an AniList result that more than one of the person's sources has. Always 2 or more.
+# @arg n: int
+read-search-in-sources = { $n ->
+    [one] In { $n } of your { -source-pl }
+   *[other] In { $n } of your { -source-pl }
+ }
+
+# Search, when AniList found nothing but the person's sources did.
+read-search-anilist-nothing = AniList found nothing for these words.
+
+# Search, when AniList could not be reached.
+read-search-anilist-failed = AniList didn't answer.
+
+# The line under it.
+read-search-anilist-failed-line = Your { -source-pl } were still asked.
+
+# Search, when nothing was found anywhere: under the line saying AniList found nothing.
+read-search-sources-nothing = Nothing in your { -source-pl } either.
+
+# Over reading's results while more pages are to come, so AniList's count is not known yet.
+read-search-total-unknown = Series from AniList
+
+# The link under From your sources that shows the rest of AniList's results.
+read-search-more-anilist = More from AniList
+
+# Beside More from AniList: how many of AniList's results show.
+# @arg shown: int
+# @arg total: int
+read-search-shown = { $shown } of { $total } shown
+
+# Beside More from AniList while AniList's count is not known yet: how many results show.
+# @arg shown: int
+read-search-shown-some = { $shown } shown
+
+# Beside a source's name in Search: the kind of source it is.
+read-search-source-kind-server = Server
+read-search-source-kind-folder = Folder
+read-search-source-kind-plugin = { -plugin-cap }
+
+# The button of a source group with more than five hits.
+# @arg n: int
+read-search-source-more = Show { $n } more
 
 ## First run with reading on
 

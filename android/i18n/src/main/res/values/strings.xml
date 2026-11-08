@@ -653,6 +653,53 @@
     </plurals>
     <!-- The notification's text: chapters of several series are downloaded. -->
     <string name="reading_downloads_done_series">Chapters of %1$d series are ready to read offline.</string>
+    <!-- Row heading on reading's Home: manga that are trending on AniList now. -->
+    <string name="read_home_trending_manga">Trending manga</string>
+    <!-- Row heading on reading's Home: webtoons that are trending on AniList now. -->
+    <string name="read_home_trending_webtoons">Trending webtoons</string>
+    <!-- Row heading on reading's Home: light novels that are trending on AniList now. -->
+    <string name="read_home_trending_novels">Trending light novels</string>
+    <!-- Row heading on reading's Home: the most popular manga that started in the last 12 months. -->
+    <string name="read_home_new_manga">New manga</string>
+    <!-- Row heading on reading's Home: the most popular webtoons that started in the last 12 months. -->
+    <string name="read_home_new_webtoons">New webtoons</string>
+    <!-- Row heading on reading's Home: the most popular light novels that started in the last 12 months. -->
+    <string name="read_home_new_novels">New light novels</string>
+    <!-- Side text beside a New row's heading, in a quieter style: what the row covers. -->
+    <string name="read_home_new_side">Last 12 months</string>
+    <!-- Row heading on reading's Home: the most popular manga that have finished. -->
+    <string name="read_home_finished_manga">Finished manga</string>
+    <!-- Row heading on reading's Home: the most popular webtoons that have finished. -->
+    <string name="read_home_finished_webtoons">Finished webtoons</string>
+    <!-- Row heading on reading's Home: the most popular light novels that have finished. -->
+    <string name="read_home_finished_novels">Finished light novels</string>
+    <!-- Side text beside a Finished row's heading, in a quieter style: how the row is sorted. -->
+    <string name="read_home_finished_side">Most popular</string>
+    <!-- A choice of reading Search's Started filter: series that started at any time. -->
+    <string name="read_search_started_any">Any time</string>
+    <!-- A choice of reading Search's Started filter: series that started in the last 12 months. -->
+    <string name="read_search_started_year">Last 12 months</string>
+    <!-- A choice of reading Search's Started filter: series that started in the last 3 years. -->
+    <string name="read_search_started_3_years">Last 3 years</string>
+    <!-- Under a source's hit in Search: the chapters it holds, from the first. -->
+    <string name="read_hit_chapters">Chapters 1 to %1$d</string>
+    <!-- Under a source's hit in Search: a web novel's episodes it holds, from the first. -->
+    <string name="read_hit_episodes">Episodes 1 to %1$d</string>
+    <!-- Under a source's hit in Search: a light novel's parts it holds. -->
+    <plurals name="read_hit_parts">
+        <item quantity="one">1 part</item>
+        <item quantity="other">%1$d parts</item>
+    </plurals>
+    <!-- Under a source's hit in Search: the book files it holds. -->
+    <plurals name="read_hit_files">
+        <item quantity="one">1 file</item>
+        <item quantity="other">%1$d files</item>
+    </plurals>
+    <!-- Under a source's hit in Search: the book files it holds, all in one format ("CBZ"). -->
+    <plurals name="read_hit_files_format">
+        <item quantity="one">1 file · %2$s</item>
+        <item quantity="other">%1$d files · %2$s</item>
+    </plurals>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->
@@ -4665,6 +4712,18 @@
     <string name="home_read_end">That\'s everything for now. Updates and Search have the full lists.</string>
     <!-- Line at the end of Read with no book sources yet. A button to add one follows it. -->
     <string name="home_read_no_sources">Add a folder, a server or a plugin store to read from Home.</string>
+    <!-- In place of Read's discovery rows on a first run with no connection: nothing was kept yet. -->
+    <string name="read_home_offline_rows">Trending and new series show once you\'re online.</string>
+    <!-- E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title. -->
+    <string name="read_home_browse">Browse</string>
+    <!-- E-ink: the line under Browse on Read's Home. -->
+    <string name="read_home_browse_line">Trending, new and finished, by format</string>
+    <!-- E-ink: a discovery row in the Browse list, naming its first two series and how many follow. -->
+    <string name="read_home_browse_row">%1$s, %2$s and %3$d more</string>
+    <!-- E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened. -->
+    <string name="read_home_browse_note">From AniList. Your sources are asked when you open a series.</string>
+    <!-- E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept. -->
+    <string name="read_home_browse_kept">Lists kept from %1$s still open.</string>
     <!-- Under a day in Read's week: what usually comes out that day, when the time isn't known. -->
     <string name="week_usually">Usually</string>
     <!-- Under a day in Read's week with nothing due. -->
@@ -5119,6 +5178,49 @@
     <string name="read_filter_included">Included</string>
     <!-- A genre's state: no series with it. -->
     <string name="read_filter_left_out">Left out</string>
+    <!-- A filter of reading's Search: when a series started. -->
+    <string name="read_search_started">Started</string>
+    <!-- The filter bar's chip that searches only the person's own sources, leaving AniList out. -->
+    <string name="read_search_sources_only">Your sources only</string>
+    <!-- Search's section heading under AniList's results: one group per source of the person's. -->
+    <string name="read_search_from_sources">From your sources</string>
+    <!-- E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name. -->
+    <string name="read_search_asking">Asking %1$s…</string>
+    <!-- A source group whose source failed to answer. The reason and Try again follow. -->
+    <string name="read_search_source_failed">%1$s didn\'t answer.</string>
+    <!-- The reason under it when the source gave no answer in time. -->
+    <string name="read_search_source_timeout">No answer in %1$d s.</string>
+    <!-- One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list. -->
+    <string name="read_search_source_nothing">Nothing found in %1$s.</string>
+    <!-- On an AniList result that one of the person's sources has. The source is its name. -->
+    <string name="read_search_in_source">In %1$s</string>
+    <!-- On an AniList result that more than one of the person's sources has. Always 2 or more. -->
+    <plurals name="read_search_in_sources">
+        <item quantity="one">In %1$d of your sources</item>
+        <item quantity="other">In %1$d of your sources</item>
+    </plurals>
+    <!-- Search, when AniList found nothing but the person's sources did. -->
+    <string name="read_search_anilist_nothing">AniList found nothing for these words.</string>
+    <!-- Search, when AniList could not be reached. -->
+    <string name="read_search_anilist_failed">AniList didn\'t answer.</string>
+    <!-- The line under it. -->
+    <string name="read_search_anilist_failed_line">Your sources were still asked.</string>
+    <!-- Search, when nothing was found anywhere: under the line saying AniList found nothing. -->
+    <string name="read_search_sources_nothing">Nothing in your sources either.</string>
+    <!-- Over reading's results while more pages are to come, so AniList's count is not known yet. -->
+    <string name="read_search_total_unknown">Series from AniList</string>
+    <!-- The link under From your sources that shows the rest of AniList's results. -->
+    <string name="read_search_more_anilist">More from AniList</string>
+    <!-- Beside More from AniList: how many of AniList's results show. -->
+    <string name="read_search_shown">%1$d of %2$d shown</string>
+    <!-- Beside More from AniList while AniList's count is not known yet: how many results show. -->
+    <string name="read_search_shown_some">%1$d shown</string>
+    <!-- Beside a source's name in Search: the kind of source it is. -->
+    <string name="read_search_source_kind_server">Server</string>
+    <string name="read_search_source_kind_folder">Folder</string>
+    <string name="read_search_source_kind_plugin">Plugin</string>
+    <!-- The button of a source group with more than five hits. -->
+    <string name="read_search_source_more">Show %1$d more</string>
     <!-- Over a first-run page's title: which page of how many. -->
     <string name="onboarding_step">%1$d of %2$d</string>
     <!-- Line under "Welcome to Kaeri" on the first page, naming both media. -->

@@ -421,6 +421,32 @@ impl AniList {
         Ok(found)
     }
 
+    /// Several books with their makers, relations and recommendations, in one request with each
+    /// under an alias, in the order asked. A book AniList does not have is left out.
+    pub async fn book_details(&self, ids: &[AnilistId]) -> Result<Vec<Book>> {
+        if let [id] = ids {
+            return match self.book(*id).await {
+                Ok(book) => Ok(vec![book]),
+                Err(AniListError::NotFound) => Ok(Vec::new()),
+                Err(e) => Err(e),
+            };
+        }
+        let parts: Vec<_> = ids
+            .iter()
+            .map(|id| (book_by_id(), serde_json::json!({ "id": id.get() })))
+            .collect();
+        let answers = self.execute_together(&parts).await?;
+        Ok(answers
+            .into_iter()
+            .filter_map(|answer| {
+                let node = answer.get("Media").filter(|m| !m.is_null())?;
+                serde_json::from_value(node.clone())
+                    .map_err(|e| tracing::warn!(error = %e, "skipping undecodable book"))
+                    .ok()
+            })
+            .collect())
+    }
+
     /// One book with its makers, relations and recommendations.
     pub async fn book(&self, id: AnilistId) -> Result<Book> {
         let data: serde_json::Value =

@@ -606,6 +606,25 @@ pub struct SeriesHit {
     pub year: Option<u32>,
     pub cover: Option<String>,
     pub language: Option<String>,
+    /// How much of the series the source holds, when its search says.
+    pub amount: Option<HitAmount>,
+}
+
+/// How much of a series a source holds, as its search says: the line under a hit's title.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum HitAmount {
+    Volumes(u32),
+    /// Chapters 1 to this one.
+    Chapters(u32),
+    /// A web novel's episodes, 1 to this one.
+    Episodes(u32),
+    /// A light novel's parts.
+    Parts(u32),
+    /// Book files, with their format when they share one ("CBZ").
+    Files {
+        count: u32,
+        format: Option<String>,
+    },
 }
 
 impl SeriesHit {
@@ -619,6 +638,7 @@ impl SeriesHit {
             year: None,
             cover: None,
             language: None,
+            amount: None,
         }
     }
 }

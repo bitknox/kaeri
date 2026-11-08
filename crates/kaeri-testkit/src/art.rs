@@ -90,7 +90,7 @@ const WORLD_ART: [Art; 36] = [
 
 /// The first of [`crate::fixtures::books`]' ids, and how many there are.
 const BOOKS_FIRST: u32 = 900_301;
-const BOOKS: u32 = 14;
+const BOOKS: u32 = 80;
 
 fn of(id: u32) -> Option<&'static Art> {
     if let Some(n) = id.checked_sub(crate::home_world::FIRST)
@@ -98,9 +98,10 @@ fn of(id: u32) -> Option<&'static Art> {
     {
         return Some(art);
     }
-    // The books borrow the catalogue's and the world's drawings, one each.
+    // The books borrow the catalogue's and the world's drawings, one each until they run out,
+    // then round again.
     if let Some(n) = id.checked_sub(BOOKS_FIRST).filter(|n| *n < BOOKS) {
-        let n = n as usize;
+        let n = n as usize % (CATALOGUE_ART.len() + WORLD_ART.len());
         return CATALOGUE_ART.get(n).or_else(|| WORLD_ART.get(n - CATALOGUE_ART.len()));
     }
     let id = kaeri_core::ids::AnilistId::new(id);

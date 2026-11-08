@@ -897,6 +897,63 @@ public static partial class T
     /// <summary>The notification's text: chapters of several series are downloaded.</summary>
     public static string ReadingDownloadsDoneSeries(long count) => Fill(Get("ReadingDownloadsDoneSeries"), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Row heading on reading's Home: manga that are trending on AniList now.</summary>
+    public static string ReadHomeTrendingManga => Get("ReadHomeTrendingManga");
+
+    /// <summary>Row heading on reading's Home: webtoons that are trending on AniList now.</summary>
+    public static string ReadHomeTrendingWebtoons => Get("ReadHomeTrendingWebtoons");
+
+    /// <summary>Row heading on reading's Home: light novels that are trending on AniList now.</summary>
+    public static string ReadHomeTrendingNovels => Get("ReadHomeTrendingNovels");
+
+    /// <summary>Row heading on reading's Home: the most popular manga that started in the last 12 months.</summary>
+    public static string ReadHomeNewManga => Get("ReadHomeNewManga");
+
+    /// <summary>Row heading on reading's Home: the most popular webtoons that started in the last 12 months.</summary>
+    public static string ReadHomeNewWebtoons => Get("ReadHomeNewWebtoons");
+
+    /// <summary>Row heading on reading's Home: the most popular light novels that started in the last 12 months.</summary>
+    public static string ReadHomeNewNovels => Get("ReadHomeNewNovels");
+
+    /// <summary>Side text beside a New row's heading, in a quieter style: what the row covers.</summary>
+    public static string ReadHomeNewSide => Get("ReadHomeNewSide");
+
+    /// <summary>Row heading on reading's Home: the most popular manga that have finished.</summary>
+    public static string ReadHomeFinishedManga => Get("ReadHomeFinishedManga");
+
+    /// <summary>Row heading on reading's Home: the most popular webtoons that have finished.</summary>
+    public static string ReadHomeFinishedWebtoons => Get("ReadHomeFinishedWebtoons");
+
+    /// <summary>Row heading on reading's Home: the most popular light novels that have finished.</summary>
+    public static string ReadHomeFinishedNovels => Get("ReadHomeFinishedNovels");
+
+    /// <summary>Side text beside a Finished row's heading, in a quieter style: how the row is sorted.</summary>
+    public static string ReadHomeFinishedSide => Get("ReadHomeFinishedSide");
+
+    /// <summary>A choice of reading Search's Started filter: series that started at any time.</summary>
+    public static string ReadSearchStartedAny => Get("ReadSearchStartedAny");
+
+    /// <summary>A choice of reading Search's Started filter: series that started in the last 12 months.</summary>
+    public static string ReadSearchStartedYear => Get("ReadSearchStartedYear");
+
+    /// <summary>A choice of reading Search's Started filter: series that started in the last 3 years.</summary>
+    public static string ReadSearchStarted3Years => Get("ReadSearchStarted3Years");
+
+    /// <summary>Under a source's hit in Search: the chapters it holds, from the first.</summary>
+    public static string ReadHitChapters(long last) => Fill(Get("ReadHitChapters"), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: a web novel's episodes it holds, from the first.</summary>
+    public static string ReadHitEpisodes(long last) => Fill(Get("ReadHitEpisodes"), ("last", last.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: a light novel's parts it holds.</summary>
+    public static string ReadHitParts(long count) => Fill(GetPlural("ReadHitParts", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: the book files it holds.</summary>
+    public static string ReadHitFiles(long count) => Fill(GetPlural("ReadHitFiles", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under a source's hit in Search: the book files it holds, all in one format ("CBZ").</summary>
+    public static string ReadHitFilesFormat(long count, string format) => Fill(GetPlural("ReadHitFilesFormat", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("format", format));
+
     /// <summary>Toast after joining a plugin store with an invite that names this device's owner.</summary>
     public static string StoreJoined(string store, string member) => Fill(Get("StoreJoined"), ("store", store), ("member", member));
 
@@ -5932,6 +5989,24 @@ public static partial class T
     /// <summary>Line at the end of Read with no book sources yet. A button to add one follows it.</summary>
     public static string HomeReadNoSources => Get("HomeReadNoSources");
 
+    /// <summary>In place of Read's discovery rows on a first run with no connection: nothing was kept yet.</summary>
+    public static string ReadHomeOfflineRows => Get("ReadHomeOfflineRows");
+
+    /// <summary>E-ink: the one row on Read's Home that opens the list of discovery rows, and that page's title.</summary>
+    public static string ReadHomeBrowse => Get("ReadHomeBrowse");
+
+    /// <summary>E-ink: the line under Browse on Read's Home.</summary>
+    public static string ReadHomeBrowseLine => Get("ReadHomeBrowseLine");
+
+    /// <summary>E-ink: a discovery row in the Browse list, naming its first two series and how many follow.</summary>
+    public static string ReadHomeBrowseRow(string first, string second, long more) => Fill(Get("ReadHomeBrowseRow"), ("first", first), ("second", second), ("more", more.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened.</summary>
+    public static string ReadHomeBrowseNote => Get("ReadHomeBrowseNote");
+
+    /// <summary>E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept.</summary>
+    public static string ReadHomeBrowseKept(string time) => Fill(Get("ReadHomeBrowseKept"), ("time", time));
+
     /// <summary>Under a day in Read's week: what usually comes out that day, when the time isn't known.</summary>
     public static string WeekUsually => Get("WeekUsually");
 
@@ -6549,6 +6624,67 @@ public static partial class T
 
     /// <summary>A genre's state: no series with it.</summary>
     public static string ReadFilterLeftOut => Get("ReadFilterLeftOut");
+
+    /// <summary>A filter of reading's Search: when a series started.</summary>
+    public static string ReadSearchStarted => Get("ReadSearchStarted");
+
+    /// <summary>The filter bar's chip that searches only the person's own sources, leaving AniList out.</summary>
+    public static string ReadSearchSourcesOnly => Get("ReadSearchSourcesOnly");
+
+    /// <summary>Search's section heading under AniList's results: one group per source of the person's.</summary>
+    public static string ReadSearchFromSources => Get("ReadSearchFromSources");
+
+    /// <summary>E-ink and the terminal: a source group still waiting for its answer. Also its screen reader label. The source is its name.</summary>
+    public static string ReadSearchAsking(string source) => Fill(Get("ReadSearchAsking"), ("source", source));
+
+    /// <summary>A source group whose source failed to answer. The reason and Try again follow.</summary>
+    public static string ReadSearchSourceFailed(string source) => Fill(Get("ReadSearchSourceFailed"), ("source", source));
+
+    /// <summary>The reason under it when the source gave no answer in time.</summary>
+    public static string ReadSearchSourceTimeout(long seconds) => Fill(Get("ReadSearchSourceTimeout"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list.</summary>
+    public static string ReadSearchSourceNothing(string sources) => Fill(Get("ReadSearchSourceNothing"), ("sources", sources));
+
+    /// <summary>On an AniList result that one of the person's sources has. The source is its name.</summary>
+    public static string ReadSearchInSource(string source) => Fill(Get("ReadSearchInSource"), ("source", source));
+
+    /// <summary>On an AniList result that more than one of the person's sources has. Always 2 or more.</summary>
+    public static string ReadSearchInSources(long n) => Fill(GetPlural("ReadSearchInSources", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Search, when AniList found nothing but the person's sources did.</summary>
+    public static string ReadSearchAnilistNothing => Get("ReadSearchAnilistNothing");
+
+    /// <summary>Search, when AniList could not be reached.</summary>
+    public static string ReadSearchAnilistFailed => Get("ReadSearchAnilistFailed");
+
+    /// <summary>The line under it.</summary>
+    public static string ReadSearchAnilistFailedLine => Get("ReadSearchAnilistFailedLine");
+
+    /// <summary>Search, when nothing was found anywhere: under the line saying AniList found nothing.</summary>
+    public static string ReadSearchSourcesNothing => Get("ReadSearchSourcesNothing");
+
+    /// <summary>Over reading's results while more pages are to come, so AniList's count is not known yet.</summary>
+    public static string ReadSearchTotalUnknown => Get("ReadSearchTotalUnknown");
+
+    /// <summary>The link under From your sources that shows the rest of AniList's results.</summary>
+    public static string ReadSearchMoreAnilist => Get("ReadSearchMoreAnilist");
+
+    /// <summary>Beside More from AniList: how many of AniList's results show.</summary>
+    public static string ReadSearchShown(long shown, long total) => Fill(Get("ReadSearchShown"), ("shown", shown.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Beside More from AniList while AniList's count is not known yet: how many results show.</summary>
+    public static string ReadSearchShownSome(long shown) => Fill(Get("ReadSearchShownSome"), ("shown", shown.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Beside a source's name in Search: the kind of source it is.</summary>
+    public static string ReadSearchSourceKindServer => Get("ReadSearchSourceKindServer");
+
+    public static string ReadSearchSourceKindFolder => Get("ReadSearchSourceKindFolder");
+
+    public static string ReadSearchSourceKindPlugin => Get("ReadSearchSourceKindPlugin");
+
+    /// <summary>The button of a source group with more than five hits.</summary>
+    public static string ReadSearchSourceMore(long n) => Fill(Get("ReadSearchSourceMore"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Over a first-run page's title: which page of how many.</summary>
     public static string OnboardingStep(long step, long total) => Fill(Get("OnboardingStep"), ("step", step.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -11560,6 +11696,28 @@ public static partial class T
         ["ReadingDownloadsDoneParts_one"] = "A part of {title} is ready to read offline.",
         ["ReadingDownloadsDoneParts_other"] = "{count} parts of {title} are ready to read offline.",
         ["ReadingDownloadsDoneSeries"] = "Chapters of {count} series are ready to read offline.",
+        ["ReadHomeTrendingManga"] = "Trending manga",
+        ["ReadHomeTrendingWebtoons"] = "Trending webtoons",
+        ["ReadHomeTrendingNovels"] = "Trending light novels",
+        ["ReadHomeNewManga"] = "New manga",
+        ["ReadHomeNewWebtoons"] = "New webtoons",
+        ["ReadHomeNewNovels"] = "New light novels",
+        ["ReadHomeNewSide"] = "Last 12 months",
+        ["ReadHomeFinishedManga"] = "Finished manga",
+        ["ReadHomeFinishedWebtoons"] = "Finished webtoons",
+        ["ReadHomeFinishedNovels"] = "Finished light novels",
+        ["ReadHomeFinishedSide"] = "Most popular",
+        ["ReadSearchStartedAny"] = "Any time",
+        ["ReadSearchStartedYear"] = "Last 12 months",
+        ["ReadSearchStarted3Years"] = "Last 3 years",
+        ["ReadHitChapters"] = "Chapters 1 to {last}",
+        ["ReadHitEpisodes"] = "Episodes 1 to {last}",
+        ["ReadHitParts_one"] = "1 part",
+        ["ReadHitParts_other"] = "{count} parts",
+        ["ReadHitFiles_one"] = "1 file",
+        ["ReadHitFiles_other"] = "{count} files",
+        ["ReadHitFilesFormat_one"] = "1 file · {format}",
+        ["ReadHitFilesFormat_other"] = "{count} files · {format}",
         ["StoreJoined"] = "Joined {store} as {member}.",
         ["StoreJoinedUnnamed"] = "Joined {store} without a name.",
         ["StoreLeft"] = "Left {store}. Its plugins stay installed.",
@@ -13300,6 +13458,12 @@ public static partial class T
         ["HomeReadCheckedOnOpen"] = "Checked when you open Kaeri",
         ["HomeReadEnd"] = "That's everything for now. Updates and Search have the full lists.",
         ["HomeReadNoSources"] = "Add a folder, a server or a plugin store to read from Home.",
+        ["ReadHomeOfflineRows"] = "Trending and new series show once you're online.",
+        ["ReadHomeBrowse"] = "Browse",
+        ["ReadHomeBrowseLine"] = "Trending, new and finished, by format",
+        ["ReadHomeBrowseRow"] = "{first}, {second} and {more} more",
+        ["ReadHomeBrowseNote"] = "From AniList. Your sources are asked when you open a series.",
+        ["ReadHomeBrowseKept"] = "Lists kept from {time} still open.",
         ["WeekUsually"] = "Usually",
         ["WeekNothingUsually"] = "Nothing usually",
         ["UpdatesChecked"] = "Checked {ago}",
@@ -13520,6 +13684,28 @@ public static partial class T
         ["ReadFilterGenresCount_other"] = "{n} genres",
         ["ReadFilterIncluded"] = "Included",
         ["ReadFilterLeftOut"] = "Left out",
+        ["ReadSearchStarted"] = "Started",
+        ["ReadSearchSourcesOnly"] = "Your sources only",
+        ["ReadSearchFromSources"] = "From your sources",
+        ["ReadSearchAsking"] = "Asking {source}…",
+        ["ReadSearchSourceFailed"] = "{source} didn't answer.",
+        ["ReadSearchSourceTimeout"] = "No answer in {seconds} s.",
+        ["ReadSearchSourceNothing"] = "Nothing found in {sources}.",
+        ["ReadSearchInSource"] = "In {source}",
+        ["ReadSearchInSources_one"] = "In {n} of your sources",
+        ["ReadSearchInSources_other"] = "In {n} of your sources",
+        ["ReadSearchAnilistNothing"] = "AniList found nothing for these words.",
+        ["ReadSearchAnilistFailed"] = "AniList didn't answer.",
+        ["ReadSearchAnilistFailedLine"] = "Your sources were still asked.",
+        ["ReadSearchSourcesNothing"] = "Nothing in your sources either.",
+        ["ReadSearchTotalUnknown"] = "Series from AniList",
+        ["ReadSearchMoreAnilist"] = "More from AniList",
+        ["ReadSearchShown"] = "{shown} of {total} shown",
+        ["ReadSearchShownSome"] = "{shown} shown",
+        ["ReadSearchSourceKindServer"] = "Server",
+        ["ReadSearchSourceKindFolder"] = "Folder",
+        ["ReadSearchSourceKindPlugin"] = "Plugin",
+        ["ReadSearchSourceMore"] = "Show {n} more",
         ["OnboardingStep"] = "{step} of {total}",
         ["OnboardingWelcomeLine"] = "Keep track of what you watch and read, from your own sources.",
         ["OnboardingWelcomeNote"] = "Your lists and progress stay on your devices. Trackers and sources are yours to add.",

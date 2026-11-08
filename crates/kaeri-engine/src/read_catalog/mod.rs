@@ -6,11 +6,14 @@
 //! queue. Every AniList request a screen needs goes as one, with its parts under aliases.
 
 pub(crate) mod chapters;
+pub(crate) mod discovery;
 pub(crate) mod editions;
 pub(crate) mod home;
 pub(crate) mod rows;
 pub(crate) mod search;
 pub(crate) mod series;
+#[cfg(test)]
+mod tests;
 pub(crate) mod tiles;
 pub(crate) mod updates;
 
@@ -37,6 +40,11 @@ pub struct Memory {
     pub(crate) failures: Arc<Mutex<Vec<kaeri_model::reading::UpdateFailure>>>,
     /// The sources searched for a series without a match, for "Not found in".
     pub(crate) misses: Arc<Mutex<editions::Misses>>,
+    /// The search with words whose sources are being asked.
+    pub(crate) search: Arc<Mutex<search::Run>>,
+    /// The series opened that no source had, with when that was found: a Home tile says so for
+    /// the rest of its row's 30 minutes.
+    pub(crate) not_found: Arc<Mutex<std::collections::HashMap<String, i64>>>,
 }
 
 /// The handles the catalogue's tasks are lent, cloned.
@@ -109,6 +117,7 @@ pub(crate) fn handles(command: &ReadingCommand) -> bool {
             | ReadingCommand::LoadLibrary { .. }
             | ReadingCommand::Search { .. }
             | ReadingCommand::SearchMore { .. }
+            | ReadingCommand::RetrySourceSearch { .. }
             | ReadingCommand::LoadSeries { .. }
             | ReadingCommand::LoadVersions { .. }
             | ReadingCommand::HideFromContinue { .. }
@@ -146,6 +155,9 @@ pub(crate) fn command(
         ReadingCommand::Search { query } => search::search(kit, ask, query, 0, tx),
         ReadingCommand::SearchMore { query, page } => {
             search::search(kit, ask, query, page, tx);
+        }
+        ReadingCommand::RetrySourceSearch { query, source_id } => {
+            search::retry_source(kit, ask, query, source_id, tx);
         }
         ReadingCommand::LoadSeries { work } => series::load(kit, ask, work, tx),
         ReadingCommand::LoadVersions { work, chapter } => {
