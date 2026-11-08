@@ -400,7 +400,7 @@
     <!-- A notice over the page when a chapter opens where it was left. It offers Start over. -->
     <string name="reader_resumed">Resumed at page %1$d</string>
     <!-- The same notice in a webtoon strip, which counts images rather than pages. -->
-    <string name="reader_resumed_image">Resumed at image %1$d</string>
+    <string name="reader_resumed_image">Resumed at image %1$,d</string>
     <!-- A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page. -->
     <string name="reader_back_to_page">Back to page %1$d</string>
     <!-- A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message. -->
@@ -1521,14 +1521,6 @@
     <string name="reader_paper_look">Paper look by day</string>
     <!-- Paper mode part: a slider for how far the page's white is dimmed. -->
     <string name="reader_paper_dim">Dim the page</string>
-<<<<<<< HEAD
-=======
-    <!-- The next episode's length on the divider inside a strip. -->
-    <plurals name="reader_divider_images">
-        <item quantity="one">One image</item>
-        <item quantity="other">%1$,d images</item>
-    </plurals>
->>>>>>> origin/read/discovery-engine-polish
     <!-- The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s". -->
     <string name="reader_opening_waited">%1$s · %2$,d s</string>
     <!-- Heading of the list of other sources a failed chapter can be read from. -->
@@ -4684,7 +4676,7 @@
     <!-- The next episode's length on the divider inside a strip. -->
     <plurals name="reader_divider_images">
         <item quantity="one">One image</item>
-        <item quantity="other">%1$d images</item>
+        <item quantity="other">%1$,d images</item>
     </plurals>
     <!-- Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. -->
     <string name="reader_chapter_line_titled">Chapter %1$s · %2$s</string>

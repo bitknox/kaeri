@@ -571,7 +571,7 @@ public static partial class T
     public static string ReaderResumed(long page) => Fill(Get("ReaderResumed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The same notice in a webtoon strip, which counts images rather than pages.</summary>
-    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</summary>
     public static string ReaderBackToPage(long page) => Fill(Get("ReaderBackToPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -1753,7 +1753,7 @@ public static partial class T
     public static string WindowsReaderOpening(string chapter) => Fill(Get("WindowsReaderOpening"), ("chapter", chapter));
 
     /// <summary>The opening screen's line after a few seconds of waiting for a source to answer.</summary>
-    public static string WindowsReaderOpeningSlow(long seconds) => Fill(Get("WindowsReaderOpeningSlow"), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderOpeningSlow(long seconds) => Fill(Get("WindowsReaderOpeningSlow"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Heading of the error when a chapter would not open.</summary>
     public static string WindowsReaderChapterFailed(string chapter) => Fill(Get("WindowsReaderChapterFailed"), ("chapter", chapter));
@@ -1807,22 +1807,22 @@ public static partial class T
     public static string WindowsReaderEndOfflineBody => Get("WindowsReaderEndOfflineBody");
 
     /// <summary>The group's line under the series title. The chapter label comes from the source.</summary>
-    public static string WindowsReaderGroupLine(string chapter, long page, long total) => Fill(Get("WindowsReaderGroupLine"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGroupLine(string chapter, long page, long total) => Fill(Get("WindowsReaderGroupLine"), ("chapter", chapter), ("page", page.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The group's line when a spread shows two pages.</summary>
-    public static string WindowsReaderGroupLineSpread(string chapter, long first, long second) => Fill(Get("WindowsReaderGroupLineSpread"), ("chapter", chapter), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGroupLineSpread(string chapter, long first, long second) => Fill(Get("WindowsReaderGroupLineSpread"), ("chapter", chapter), ("first", first.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The group's line for a strip of images.</summary>
-    public static string WindowsReaderGroupLineStrip(string chapter, long image, long total) => Fill(Get("WindowsReaderGroupLineStrip"), ("chapter", chapter), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGroupLineStrip(string chapter, long image, long total) => Fill(Get("WindowsReaderGroupLineStrip"), ("chapter", chapter), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The group's line for a novel in one long scroll.</summary>
-    public static string WindowsReaderGroupLineScroll(string chapter, long percent) => Fill(Get("WindowsReaderGroupLineScroll"), ("chapter", chapter), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGroupLineScroll(string chapter, long percent) => Fill(Get("WindowsReaderGroupLineScroll"), ("chapter", chapter), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says when the page turns.</summary>
-    public static string WindowsReaderPageLabel(long page, long total) => Fill(Get("WindowsReaderPageLabel"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderPageLabel(long page, long total) => Fill(Get("WindowsReaderPageLabel"), ("page", page.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>What a screen reader says when a spread turns.</summary>
-    public static string WindowsReaderPagesLabel(long first, long second, long total) => Fill(Get("WindowsReaderPagesLabel"), ("first", first.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderPagesLabel(long first, long second, long total) => Fill(Get("WindowsReaderPagesLabel"), ("first", first.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("second", second.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of the scrubber, spoken.</summary>
     public static string WindowsReaderScrubber => Get("WindowsReaderScrubber");
@@ -1932,7 +1932,7 @@ public static partial class T
     public static string WindowsReaderLook => Get("WindowsReaderLook");
 
     /// <summary>The text size's value.</summary>
-    public static string WindowsReaderPercent(long percent) => Fill(Get("WindowsReaderPercent"), ("percent", percent.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderPercent(long percent) => Fill(Get("WindowsReaderPercent"), ("percent", percent.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button names of the text size row.</summary>
     public static string WindowsReaderSmaller => Get("WindowsReaderSmaller");
@@ -1948,13 +1948,13 @@ public static partial class T
     public static string WindowsReaderVolume(string volume) => Fill(Get("WindowsReaderVolume"), ("volume", volume));
 
     /// <summary>A chapter's length in the chapter list.</summary>
-    public static string WindowsReaderChapterPages(long pages) => Fill(GetPlural("WindowsReaderChapterPages", pages), ("pages", pages.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderChapterPages(long pages) => Fill(GetPlural("WindowsReaderChapterPages", pages), ("pages", pages.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of a page in the page grid, spoken.</summary>
-    public static string WindowsReaderGridPage(long page) => Fill(Get("WindowsReaderGridPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderGridPage(long page) => Fill(Get("WindowsReaderGridPage"), ("page", page.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name of an image in a strip, spoken when the strip settles on it and read by Narrator.</summary>
-    public static string WindowsReaderImageLabel(long image, long count) => Fill(Get("WindowsReaderImageLabel"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReaderImageLabel(long image, long count) => Fill(Get("WindowsReaderImageLabel"), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Name and tooltip of the button that closes a novel's footnote.</summary>
     public static string WindowsReaderNoteClose => Get("WindowsReaderNoteClose");
@@ -1981,16 +1981,16 @@ public static partial class T
     public static string WindowsReadDownloadsEmptyDetail => Get("WindowsReadDownloadsEmptyDetail");
 
     /// <summary>Said once by Narrator when a search with words has heard from AniList and every source. Failed sources follow as their own sentences.</summary>
-    public static string WindowsReadSearchFinished(long anilist, long sources) => Fill(Get("WindowsReadSearchFinished"), ("anilist", anilist.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReadSearchFinished(long anilist, long sources) => Fill(Get("WindowsReadSearchFinished"), ("anilist", anilist.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Said once by Narrator when a search with Your sources only on has heard from every source.</summary>
-    public static string WindowsReadSearchFinishedSources(long sources) => Fill(Get("WindowsReadSearchFinishedSources"), ("sources", sources.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReadSearchFinishedSources(long sources) => Fill(Get("WindowsReadSearchFinishedSources"), ("sources", sources.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Said once by Narrator when Your sources only is turned on in Search.</summary>
     public static string WindowsReadSearchAnilistHidden => Get("WindowsReadSearchAnilistHidden");
 
     /// <summary>Narrator's words for a source that ran out of time in Search, read with its Try again.</summary>
-    public static string WindowsReadSearchSourceTimeoutSaid(long seconds) => Fill(GetPlural("WindowsReadSearchSourceTimeoutSaid", seconds), ("seconds", seconds.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string WindowsReadSearchSourceTimeoutSaid(long seconds) => Fill(GetPlural("WindowsReadSearchSourceTimeoutSaid", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Narrator's help on Search's filters while Your sources only is on.</summary>
     public static string WindowsReadSearchFiltersDimmed => Get("WindowsReadSearchFiltersDimmed");
@@ -2002,7 +2002,7 @@ public static partial class T
     public static string SendSaveFilesWindows => Get("SendSaveFilesWindows");
 
     /// <summary>Notice after the files for an e-reader were saved.</summary>
-    public static string SendSavedWindows(long n) => Fill(GetPlural("SendSavedWindows", n), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string SendSavedWindows(long n) => Fill(GetPlural("SendSavedWindows", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice when the files for an e-reader could not be saved where the person picked.</summary>
     public static string SendSaveFailedWindows => Get("SendSaveFailedWindows");
@@ -5978,7 +5978,7 @@ public static partial class T
     public static string ReaderEndSwipe => Get("ReaderEndSwipe");
 
     /// <summary>The next episode's length on the divider inside a strip.</summary>
-    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
     public static string ReaderChapterLineTitled(string chapter, string title) => Fill(Get("ReaderChapterLineTitled"), ("chapter", chapter), ("title", title));

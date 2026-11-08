@@ -1424,8 +1424,15 @@ impl BookSources {
         let bookmarks: HashSet<String> =
             self.store.bookmarks(work.as_str()).unwrap_or_default().into_iter().collect();
         let mut groups: Vec<VolumeGroup> = Vec::new();
+        let mut listed: HashSet<ChapterId> = HashSet::new();
+        let mut group_of: HashMap<Option<String>, usize> = HashMap::new();
         for chapter in &chapters {
             let id = chapter.key(restarts).id();
+            // Two versions of one chapter, as two groups' releases of it, are one row: the first
+            // listed, which is the one that opens. Its row counts the others as versions.
+            if !listed.insert(id.clone()) {
+                continue;
+            }
             let state = match read.get(id.as_str()) {
                 Some(r) if r.read => ChapterReadState::Read,
                 Some(r) => match r.last_page {
@@ -1465,15 +1472,16 @@ impl BookSources {
                 line: Vec::new(),
                 gone_from_source: false,
             };
-            match groups.iter_mut().find(|g| g.volume == chapter.volume) {
-                Some(group) => group.chapters.push(row),
-                None => groups.push(VolumeGroup {
+            let at = *group_of.entry(chapter.volume.clone()).or_insert_with(|| {
+                groups.push(VolumeGroup {
                     volume: chapter.volume.clone(),
                     title: None,
-                    chapters: vec![row],
+                    chapters: Vec::new(),
                     all_read: false,
-                }),
-            }
+                });
+                groups.len() - 1
+            });
+            groups[at].chapters.push(row);
         }
         keep_dropped(&self.store, work, &read, &bookmarks, &mut groups);
         for group in &mut groups {
