@@ -7095,6 +7095,41 @@ pub fn tui_read_hint_sources_only_short() -> String {
     text("tui-read-hint-sources-only-short", &[])
 }
 
+/// Hint in the status line on the shows' Home and Search while Kaeri is for shows and reading: the key that turns Home and Search to reading's. Shown in lower case.
+pub fn tui_read_hint_to_reading() -> String {
+    text("tui-read-hint-to-reading", &[])
+}
+
+/// Hint in the status line on reading's Home and Search while Kaeri is for shows and reading: the key that turns Home and Search back to the shows'. Shown in lower case.
+pub fn tui_read_hint_to_shows() -> String {
+    text("tui-read-hint-to-shows", &[])
+}
+
+/// Hint in the status line on a reading title the Planning list can take. Shown in lower case.
+pub fn tui_read_hint_planning() -> String {
+    text("tui-read-hint-planning", &[])
+}
+
+/// Left of the status line on the shows' Home and Search while Kaeri is for shows and reading, before what the line says there anyway, such as "Demo · Subbed · 1080p".
+pub fn tui_read_status_shows(state: &str) -> String {
+    text("tui-read-status-shows", &[("state", Arg::Text(state))])
+}
+
+/// Action label in the key reference and the command palette: turns Home and Search between the shows' and reading's, while Kaeri is for both.
+pub fn tui_read_action_switch() -> String {
+    text("tui-read-action-switch", &[])
+}
+
+/// Ends the toast that says a command does nothing here: it follows the command's name and "works", and names where it does.
+pub fn tui_read_where_switch() -> String {
+    text("tui-read-where-switch", &[])
+}
+
+/// In the key reference's reading keys: puts the title under the cursor on the Planning list. Works on Home's discovery rows and AniList's results.
+pub fn tui_read_keys_planning() -> String {
+    text("tui-read-keys-planning", &[])
+}
+
 /// Heading of the reading keys in the key reference.
 pub fn tui_read_keys_heading() -> String {
     text("tui-read-keys-heading", &[])

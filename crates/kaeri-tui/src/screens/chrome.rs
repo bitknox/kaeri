@@ -205,16 +205,32 @@ pub(super) fn render_status(buf: &mut Buffer, app: &App, geometry: &Frame, help_
         StatusLine::new(&app.palette, &state).hints(&hints).render(geometry.status, buf);
         return;
     }
+    // While Kaeri is for both, the shows' Home and Search say whose they are, and the key that
+    // turns them to reading's.
+    let shows_side = app.status.is_empty() && app.shows_side_here();
     let state = if app.status.is_empty() {
         let audio = match app.settings.translation {
             kaeri_core::media::Translation::Sub => t::audio_subbed(),
             kaeri_core::media::Translation::Dub => t::audio_dubbed(),
         };
-        t::chrome_status_state(&app.source_label(), &audio, i64::from(app.settings.quality))
+        let state = t::chrome_status_state(
+            &app.source_label(),
+            &audio,
+            i64::from(app.settings.quality),
+        );
+        if shows_side { t::tui_read_status_shows(&state) } else { state }
     } else {
         app.status.clone()
     };
-    let hints = status_hints_paged(app, help_pages);
+    let mut hints = status_hints_paged(app, help_pages);
+    if shows_side
+        && !app.is_typing()
+        && let Some(key) = app.keymap.keys_for(crate::keymap::Action::SwitchMedium).first()
+    {
+        // Before `? keys`, which stays last.
+        let at = hints.len().saturating_sub(1);
+        hints.insert(at, (key.render(), crate::keymap::hint_to_reading()));
+    }
     StatusLine::new(&app.palette, &state).hints(&hints).render(geometry.status, buf);
 }
 

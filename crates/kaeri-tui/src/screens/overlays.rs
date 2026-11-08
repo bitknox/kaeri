@@ -35,7 +35,7 @@ fn search_filter_rows(app: &App) -> Vec<(String, String)> {
     use crate::app::{
         read_filter_labels, read_filter_value, search_filter_labels, search_filter_value,
     };
-    if app.reading_only() && matches!(app.nav.section(), crate::nav::Section::Search) {
+    if app.reading_shown() && matches!(app.nav.section(), crate::nav::Section::Search) {
         return read_filter_labels()
             .into_iter()
             .enumerate()
@@ -508,7 +508,7 @@ pub(super) fn field_text(app: &App, field: Field) -> String {
 fn help_rows(app: &App) -> Vec<(String, String)> {
     let mut rows = Vec::new();
     // Reading's own keys first, while Home and Search are reading's.
-    if app.reading_only() {
+    if app.reading_shown() {
         use crate::keymap::Action;
         rows.push((String::new(), t::tui_read_keys_heading()));
         for (action, label) in [
@@ -516,6 +516,7 @@ fn help_rows(app: &App) -> Vec<(String, String)> {
             (Action::ShowSources, t::tui_read_keys_sources_only()),
             (Action::Refresh, t::tui_read_keys_try_again()),
             (Action::Filter, t::tui_read_keys_filters()),
+            (Action::SetListStatus, t::tui_read_keys_planning()),
         ] {
             if let Some(key) = app.keymap.keys_for(action).first() {
                 rows.push((key.render(), format!("  {}", label)));

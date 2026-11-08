@@ -158,7 +158,7 @@ fn render_stage(buf: &mut Buffer, app: &App, area: Rect) -> Option<usize> {
         StageView::StoreMembers(id) => render_store_members(buf, app, inner, id),
         StageView::Devices => render_devices(buf, app, inner),
         StageView::Section(section) => match section {
-            Section::Home | Section::Search if app.reading_only() => {
+            Section::Home | Section::Search if app.reading_shown() => {
                 reading::render_reading(buf, app, inner)
             }
             Section::Home | Section::Seasonal | Section::Search | Section::Calendar => {

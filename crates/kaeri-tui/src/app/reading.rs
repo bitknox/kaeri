@@ -16,9 +16,9 @@ use kaeri_model::{
     book_sources::{BookSourceCommand, BookSourcesView},
     command::Command,
     reading::{
-        ReadAnilistState, ReadHomeEnd, ReadSearchQuery, ReadSourceKind, ReadSourceSearch,
-        ReadSourceState, ReadingAbout, ReadingCommand, ReadingEvent, ReadingFailure,
-        ReadingHomeView, WorkTile,
+        LibrarySegmentRead, ReadAnilistState, ReadHomeEnd, ReadSearchQuery, ReadSourceKind,
+        ReadSourceSearch, ReadSourceState, ReadingAbout, ReadingCommand, ReadingEvent,
+        ReadingFailure, ReadingHomeView, WorkTile,
     },
 };
 
@@ -82,6 +82,8 @@ pub struct Reading {
     pub expanded: HashSet<String>,
     /// How many sources are on, from the Sources view.
     on: usize,
+    /// While Kaeri is for both: Home and Search are turned to reading's.
+    pub side: bool,
 }
 
 /// Which part of the screen a line belongs to: Tab moves between them.
@@ -118,6 +120,8 @@ pub enum ReadLine {
         joined: Option<String>,
         /// A new chapter, or another line worth the state role.
         fresh: bool,
+        /// Whether `a` puts it on Planning: a discovery row's title or an AniList result.
+        plannable: bool,
         part: Part,
     },
     /// View all under a Home shelf: Search with the shelf's filters.
@@ -215,7 +219,19 @@ pub fn read_query_blank(query: &ReadSearchQuery) -> bool {
 impl App {
     /// Whether reading's Home or Search is the view on top.
     pub fn reading_here(&self) -> bool {
-        self.reading_only()
+        self.reading_shown()
+            && matches!(
+                self.nav.current(),
+                StageView::Section(Section::Home) | StageView::Section(Section::Search)
+            )
+    }
+
+    /// Whether the shows' Home or Search is on top while Kaeri is for both, so the status line
+    /// says whose they are.
+    pub fn shows_side_here(&self) -> bool {
+        self.both()
+            && !self.reading.side
+            && !self.nav.has_overlay()
             && matches!(
                 self.nav.current(),
                 StageView::Section(Section::Home) | StageView::Section(Section::Search)
@@ -224,7 +240,7 @@ impl App {
 
     /// Whether the section on screen is one reading draws, under whatever is pushed over it.
     pub(super) fn reading_section(&self) -> bool {
-        self.reading_only() && matches!(self.nav.section(), Section::Home | Section::Search)
+        self.reading_shown() && matches!(self.nav.section(), Section::Home | Section::Search)
     }
 
     /// The search the field and the reading filters make.
@@ -347,7 +363,7 @@ impl App {
             }
             // Opening a series is the one other thing asked from here.
             ReadingEvent::Failed { about: ReadingAbout::Series, failure }
-                if self.reading_only() =>
+                if self.reading_shown() =>
             {
                 self.push_toast(alert(say(&failure.msg())));
             }
@@ -420,7 +436,9 @@ impl App {
                 lines.push(ReadLine::Gap);
             }
             lines.push(ReadLine::Shelf { title, side: None });
-            lines.extend(tiles.iter().take(SHELF_TILES).map(|tile| home_tile(tile, shelf)));
+            lines.extend(
+                tiles.iter().take(SHELF_TILES).map(|tile| home_tile(tile, shelf, false)),
+            );
             shelf += 1;
         }
         for row in &view.rows {
@@ -439,7 +457,12 @@ impl App {
                 shelf += 1;
                 continue;
             }
-            lines.extend(row.tiles.iter().take(SHELF_TILES).map(|tile| home_tile(tile, shelf)));
+            lines.extend(
+                row.tiles
+                    .iter()
+                    .take(SHELF_TILES)
+                    .map(|tile| home_tile(tile, shelf, !tile.demo)),
+            );
             if let Some(query) = &row.view_all {
                 lines.push(ReadLine::ViewAll {
                     query: Box::new(query.clone()),
@@ -522,6 +545,7 @@ impl App {
                             facts: anilist_facts(tile),
                             joined,
                             fresh: false,
+                            plannable: !tile.demo,
                             part: Part::Anilist,
                         });
                     }
@@ -582,6 +606,7 @@ impl App {
                             facts: hit_facts(tile),
                             joined: None,
                             fresh: false,
+                            plannable: false,
                             part: Part::Sources,
                         });
                     }
@@ -643,6 +668,7 @@ impl App {
                 self.works_elsewhere(action);
                 Some(None)
             }
+            Action::SetListStatus if on_stage => Some(self.plan_read_line()),
             _ if action.acts_on_a_title() => {
                 self.works_elsewhere(action);
                 Some(None)
@@ -682,6 +708,38 @@ impl App {
             ReadLine::SourceFailed { source_id, .. } => self.retry_source(source_id),
             _ => None,
         }
+    }
+
+    /// `a`: the title under the cursor onto Planning, on a discovery row or AniList's results.
+    fn plan_read_line(&mut self) -> Option<Command> {
+        match self.read_selected() {
+            Some(ReadLine::Work { work, plannable: true, .. }) => {
+                self.push_toast(info(t::library_added_planning()));
+                Some(Command::Reading(ReadingCommand::SetStatus {
+                    work,
+                    status: LibrarySegmentRead::Planning,
+                }))
+            }
+            _ => {
+                self.works_elsewhere(Action::SetListStatus);
+                None
+            }
+        }
+    }
+
+    /// `W`, while Kaeri is for both: Home and Search turn between the shows' and reading's.
+    pub(super) fn switch_medium(&mut self) -> Option<Command> {
+        let section = self.nav.section();
+        if !self.both()
+            || !matches!(section, Section::Home | Section::Search)
+            || !matches!(self.nav.current(), StageView::Section(_))
+        {
+            self.works_elsewhere(Action::SwitchMedium);
+            return None;
+        }
+        self.reading.side = !self.reading.side;
+        *self.cursors.section_mut(section) = Default::default();
+        self.reload()
     }
 
     /// The next page of AniList's results.
@@ -785,7 +843,8 @@ impl App {
 
 /// A Home tile as a line: Not found in your sources when a source was asked and had nothing,
 /// else what the engine says is next, else its facts.
-fn home_tile(tile: &WorkTile, shelf: usize) -> ReadLine {
+/// A Home title as a line. `plannable` for a discovery row's, which `a` puts on Planning.
+fn home_tile(tile: &WorkTile, shelf: usize, plannable: bool) -> ReadLine {
     let facts = if tile.not_in_sources {
         t::home_not_found()
     } else if let Some(next) = &tile.next {
@@ -799,6 +858,7 @@ fn home_tile(tile: &WorkTile, shelf: usize) -> ReadLine {
         facts,
         joined: None,
         fresh: tile.new_chapter && !tile.not_in_sources,
+        plannable,
         part: Part::Shelf(shelf),
     }
 }
@@ -970,8 +1030,9 @@ mod tests {
         event::Event,
         medium::{AppEdition, KaeriIsFor, MediumView},
         reading::{
-            ReadAnilistState, ReadSourceGroup, ReadSourceJoin, ReadSourceSearch,
-            ReadSourceState, ReadingCommand, ReadingEvent, WorkTile, kind_words,
+            ReadAnilistState, ReadHomeRow, ReadRowKind, ReadSourceGroup, ReadSourceJoin,
+            ReadSourceSearch, ReadSourceState, ReadingCommand, ReadingEvent, WorkTile,
+            kind_words,
         },
     };
 
@@ -1232,6 +1293,114 @@ mod tests {
         );
         assert!(
             matches!(&items[3], ReadLine::SourceFailed { source_id, .. } if source_id == "northwind")
+        );
+    }
+
+    fn medium(a: &mut App, answer: KaeriIsFor) {
+        a.apply(Event::Medium(MediumView {
+            answer,
+            edition: AppEdition::Full,
+            fixed: false,
+            reading_available: true,
+            ask: None,
+            account: None,
+        }));
+    }
+
+    /// Reading's Home: Continue with one title, then a Trending row with one.
+    fn home_view() -> ReadingHomeView {
+        ReadingHomeView {
+            continue_reading: vec![tile("a:5", "Saltwind Diary")],
+            rows: vec![ReadHomeRow {
+                id: "trending-manga".into(),
+                kind: ReadRowKind::Trending,
+                format: None,
+                title: Msg::Reading(ReadingMsg::ReadHomeTrendingManga),
+                side: None,
+                tiles: vec![tile("a:6", "Iron Kite Brigade")],
+                view_all: None,
+                pending: false,
+            }],
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn both_turns_home_between_the_shows_and_reading() {
+        let mut a = app();
+        medium(&mut a, KaeriIsFor::Both);
+        a.go_to_section(Section::Home);
+        a.take_commands();
+        assert!(!a.reading_here() && a.shows_side_here());
+        let task = a.handle(Action::SwitchMedium, 10);
+        assert_eq!(task, Some(Command::Reading(ReadingCommand::LoadHome { refresh: false })));
+        assert!(a.reading_here() && !a.shows_side_here());
+        let task = a.handle(Action::SwitchMedium, 10);
+        assert_eq!(task, Some(Command::LoadHome { refresh: false }));
+        assert!(!a.reading_here());
+    }
+
+    #[test]
+    fn the_switch_says_where_it_works_when_kaeri_is_for_one_thing() {
+        let mut a = app();
+        medium(&mut a, KaeriIsFor::Watch);
+        a.go_to_section(Section::Home);
+        a.take_commands();
+        assert_eq!(a.handle(Action::SwitchMedium, 10), None);
+        assert!(!a.toasts.is_empty());
+        assert!(!a.reading_here());
+    }
+
+    #[test]
+    fn leaving_both_gives_home_back_to_the_shows() {
+        let mut a = app();
+        medium(&mut a, KaeriIsFor::Both);
+        a.go_to_section(Section::Home);
+        a.handle(Action::SwitchMedium, 10);
+        assert!(a.reading_here());
+        medium(&mut a, KaeriIsFor::Watch);
+        assert!(!a.reading_here());
+        medium(&mut a, KaeriIsFor::Both);
+        assert!(!a.reading_here(), "Both starts on the shows' again");
+    }
+
+    #[test]
+    fn a_puts_an_anilist_result_on_planning_but_not_a_source_hit() {
+        let mut a = searched();
+        a.handle(Action::Down, 10);
+        let task = a.handle(Action::SetListStatus, 10);
+        assert_eq!(
+            task,
+            Some(Command::Reading(ReadingCommand::SetStatus {
+                work: WorkId::new("a:1"),
+                status: LibrarySegmentRead::Planning,
+            }))
+        );
+        // The source's hit, after AniList's two results.
+        a.handle(Action::Down, 10);
+        a.handle(Action::Down, 10);
+        assert!(matches!(a.read_selected(), Some(ReadLine::Work { part: Part::Sources, .. })));
+        a.toasts.clear();
+        assert_eq!(a.handle(Action::SetListStatus, 10), None);
+        assert!(!a.toasts.is_empty(), "says where it works");
+    }
+
+    #[test]
+    fn a_puts_a_discovery_row_title_on_planning_but_not_a_continue_one() {
+        let mut a = app();
+        medium(&mut a, KaeriIsFor::Read);
+        a.go_to_section(Section::Home);
+        a.apply(Event::Reading(ReadingEvent::Home(Box::new(home_view()))));
+        a.take_commands();
+        a.nav.focus_stage();
+        assert_eq!(a.handle(Action::SetListStatus, 10), None, "Continue's title");
+        a.handle(Action::Down, 10);
+        assert_eq!(
+            a.handle(Action::SetListStatus, 10),
+            Some(Command::Reading(ReadingCommand::SetStatus {
+                work: WorkId::new("a:6"),
+                status: LibrarySegmentRead::Planning,
+            }))
         );
     }
 

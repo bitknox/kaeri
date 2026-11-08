@@ -473,6 +473,8 @@ scenarios! {
     read_search_nothing,
     read_search_filters,
     read_keys,
+    both_home_shows,
+    both_home_reading,
     medium_first_run,
     medium_turn_off,
     settings_kaeri_is_for,
@@ -3825,6 +3827,24 @@ fn read_keys(s: &mut Screen) {
     reading_on(s, 1);
     s.apply(read::home_first_run());
     s.press(&["?"]);
+}
+
+/// Kaeri is for both: the shows' Home, the status line naming it and the key to reading's.
+fn both_home_shows(s: &mut Screen) {
+    home_watching(s);
+    s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Both, None));
+    s.apply(read::sources());
+}
+
+/// Kaeri is for both, `W` pressed on Home: reading's Home, the cursor on a discovery row's title.
+fn both_home_reading(s: &mut Screen) {
+    settled_on(s, 1);
+    s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Both, None));
+    s.apply(read::sources());
+    s.press(&["W"]);
+    s.apply(read::home_first_run());
+    s.press(&["j"]);
+    s.wait(Duration::from_secs(1));
 }
 
 /// Reading's search filters, the format set to manga.

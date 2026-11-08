@@ -4494,6 +4494,27 @@ tui-read-hint-sources-only = [Ýöüŕ šöüŕçéš öñļý~~~~~~]
 # The same hint when the terminal is narrow.
 tui-read-hint-sources-only-short = [Šöüŕçéš öñļý~~~~]
 
+# Hint in the status line on the shows' Home and Search while Kaeri is for shows and reading: the key that turns Home and Search to reading's. Shown in lower case.
+tui-read-hint-to-reading = [Ŕéàðîñĝ~~~]
+
+# Hint in the status line on reading's Home and Search while Kaeri is for shows and reading: the key that turns Home and Search back to the shows'. Shown in lower case.
+tui-read-hint-to-shows = [Šĥöŵš~~]
+
+# Hint in the status line on a reading title the Planning list can take. Shown in lower case.
+tui-read-hint-planning = [Þļàññîñĝ~~~]
+
+# Left of the status line on the shows' Home and Search while Kaeri is for shows and reading, before what the line says there anyway, such as "Demo · Subbed · 1080p".
+tui-read-status-shows = [Šĥöŵš · { $state }~~~~]
+
+# Action label in the key reference and the command palette: turns Home and Search between the shows' and reading's, while Kaeri is for both.
+tui-read-action-switch = [Šĥöŵš öŕ ŕéàðîñĝ öñ Ĥöɱé àñð Šéàŕçĥ~~~~~~~~~~~]
+
+# Ends the toast that says a command does nothing here: it follows the command's name and "works", and names where it does.
+tui-read-where-switch = [öñ Ĥöɱé àñð Šéàŕçĥ ŵĥîļé Ķàéŕî îš ƒöŕ šĥöŵš àñð ŕéàðîñĝ~~~~~~~~~~~~~~~~~]
+
+# In the key reference's reading keys: puts the title under the cursor on the Planning list. Works on Home's discovery rows and AniList's results.
+tui-read-keys-planning = [Åðð ţö Þļàññîñĝ~~~~~]
+
 # Heading of the reading keys in the key reference.
 tui-read-keys-heading = [Ŕéàðîñĝ~~~]
 

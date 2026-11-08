@@ -52,10 +52,13 @@ pub struct MediumOff {
 impl App {
     /// The engine's word on what Kaeri is for here. A question it carries is asked once.
     pub(super) fn apply_medium(&mut self, view: MediumView) {
-        let was = self.reading_only();
+        let was = self.reading_shown();
         self.medium = Some(view);
+        if !self.both() {
+            self.reading.side = false;
+        }
         // Home and Search are reading's now, or the shows' again: what they show is asked anew.
-        if was != self.reading_only()
+        if was != self.reading_shown()
             && matches!(self.nav.section(), Section::Home | Section::Search)
             && let Some(task) = self.reload()
         {
@@ -103,6 +106,19 @@ impl App {
         self.medium
             .as_ref()
             .is_some_and(|view| view.reading_available && view.answer == KaeriIsFor::Read)
+    }
+
+    /// Whether this computer is set to both shows and reading, so Home and Search turn between
+    /// the two.
+    pub fn both(&self) -> bool {
+        self.medium
+            .as_ref()
+            .is_some_and(|view| view.reading_available && view.answer == KaeriIsFor::Both)
+    }
+
+    /// Whether Home and Search are reading's: reading alone, or both with reading's turned to.
+    pub fn reading_shown(&self) -> bool {
+        self.reading_only() || (self.both() && self.reading.side)
     }
 
     /// Whether the answer is this computer's to change.

@@ -326,6 +326,7 @@ impl App {
             Action::Refresh => return self.refresh_section(),
             Action::ToggleTranslation => return self.toggle_translation(),
             Action::ChooseMedium => self.choose_medium(),
+            Action::SwitchMedium => return self.switch_medium(),
             _ => self.works_elsewhere(action),
         }
         None

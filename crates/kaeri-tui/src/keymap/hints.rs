@@ -495,6 +495,17 @@ pub(crate) fn reading_hints(
             ));
         }
     }
+    if wide
+        && matches!(
+            app.read_selected(),
+            Some(crate::app::ReadLine::Work { plannable: true, .. })
+        )
+    {
+        wanted.push((Action::SetListStatus, said(t::tui_read_hint_planning())));
+    }
+    if app.both() {
+        wanted.push((Action::SwitchMedium, said(t::tui_read_hint_to_shows())));
+    }
     if search {
         if wide {
             wanted.push((Action::Filter, said(t::keys_hint_filters())));
@@ -511,6 +522,11 @@ pub(crate) fn reading_hints(
     let hints =
         wanted.into_iter().filter_map(|(action, label)| Some((key(action)?, label))).collect();
     Some(with_help(keymap, hints))
+}
+
+/// The hint for the key that turns Home and Search to reading's, while Kaeri is for both.
+pub(crate) fn hint_to_reading() -> &'static str {
+    said(t::tui_read_hint_to_reading())
 }
 
 /// `? keys` last, so it is the hint a narrow status line keeps.
