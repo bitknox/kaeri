@@ -126,9 +126,10 @@ struct HoverLayout {
 ///   and the next cover waits the full 450 ms from there.
 /// - A 150 ms rest in a flank hands the card to that neighbour; 450 ms when the pointer came in
 ///   heading down, for the details and the action.
-/// - A scroll, a key press or the window losing key status closes it, and nothing opens again
-///   until the pointer moves, so covers sliding under a still pointer stay closed and a card does
-///   not come back under the keys.
+/// - A scroll closes it and starts the wait again from the last scroll, so the cover that comes
+///   to rest under a still pointer opens 450 ms after the grid stops, as one pointed at does.
+/// - A key press or the window losing key status closes it, and nothing opens again until the
+///   pointer moves, so a card does not come back under the keys.
 struct HoverIntent {
     static let cue: Double = 0.15
     static let dwell: Double = 0.45
@@ -162,7 +163,7 @@ struct HoverIntent {
 
     /// The open card's title and frame.
     private(set) var open: (id: AnilistId, frame: CGRect)?
-    /// Whether nothing opens until the pointer moves: after a scroll.
+    /// Whether nothing opens until the pointer moves: after a key press.
     private(set) var suppressed = false
 
     private var pointer: CGPoint?
@@ -186,7 +187,16 @@ struct HoverIntent {
         prune(time)
     }
 
-    /// A scroll, a key press, the window losing key status, a sheet or the player: the card
+    /// A scroll: the card closes, and the wait starts again from `time`, so a cover the grid
+    /// brings under a still pointer waits the full dwell from the last scroll and then opens.
+    mutating func scrolled(at time: Double) -> [Event] {
+        suppressed = false
+        let events = dismiss(holding: false)
+        enteredAt = time
+        return events
+    }
+
+    /// A key press, the window losing key status, a sheet or the player: the card
     /// closes, and with `holding` nothing opens again until the pointer moves.
     mutating func dismiss(holding: Bool = true) -> [Event] {
         if holding { suppressed = true }

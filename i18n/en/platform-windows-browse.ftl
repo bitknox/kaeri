@@ -99,6 +99,53 @@ filter-picked-two = { $first }, { $second }
 # @arg more: int
 filter-picked-more = { $first } +{ $more }
 
+# Search: a genre left out of the results, as the Genre drop-down and its chip say it.
+# @only windows
+# @arg genre: text
+search-genre-left-out = Not { $genre }
+
+# Search: the screen reader's name for the Filters button while some of the panel's filters are set.
+# @only windows
+# @arg count: int
+search-filters-button-set = Filters, { $count } set
+
+# Search: the shortcut list's line for opening and closing the filters panel.
+# @only windows
+shortcuts-search-filters = Search filters
+
+# Search filters panel: how a genre or tag is picked with the pointer. A right-click offers each choice.
+# @only windows
+filter-hint-click = Click once to include, twice to leave out.
+
+# Search filters panel: context menu item that includes a genre or tag in the results.
+# @only windows
+search-pick-include = Include
+
+# Search filters panel: context menu item that leaves a genre or tag out of the results.
+# @only windows
+search-pick-leave-out = Leave out
+
+# Search filters panel: placeholder of the lower bound of a range, such as the first year.
+# @only windows
+search-range-from = From
+
+# Search filters panel: placeholder of the upper bound of a range, such as the last year.
+# @only windows
+search-range-to = To
+
+# Search filters panel: the unit after the episode length's bounds, in minutes.
+# @only windows
+search-minutes-unit = min
+
+# Search filters panel: the score slider's value while no minimum is set.
+# @only windows
+search-score-any = Any
+
+# Title bar search box: a suggestion that adds a genre or tag as a filter, rather than searching for the words.
+# @only windows
+# @arg name: text
+search-suggest-filter = Filter by { $name }
+
 # Title page: a season in the season picker with when it aired, such as "Season 2 · Spring 2025".
 # @only windows
 # @arg season: text

@@ -6,86 +6,120 @@
     xmlns:k="using:Kaeri.Windows"
     xmlns:app="using:Kaeri.Windows"
     xmlns:local="using:Kaeri.Windows.Pages"
+    xmlns:p="using:Kaeri.Windows.Player"
     xmlns:s="using:Kaeri.App"
     Background="{ThemeResource GroundBrush}">
-  <Grid Padding="36,20,36,0" RowSpacing="12">
-    <Grid.RowDefinitions>
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="Auto" />
-      <RowDefinition Height="*" />
-    </Grid.RowDefinitions>
-    <StackPanel>
-      <Grid ColumnSpacing="12">
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="*" />
+      <!-- Every filter, in a panel at the right edge that Filters and Ctrl+Shift+F open and Esc closes. -->
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+    <Grid Padding="36,20,36,0" RowSpacing="12">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+      <StackPanel>
+        <Grid ColumnSpacing="12">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <!-- One line, cut short, so a long query never pushes the filters and results down. -->
+          <TextBlock x:Name="Heading" Text="{x:Bind s:T.NavSearch}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1"
+                     MaxLines="1" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
+          <ContentControl x:Name="SurpriseHost" Grid.Column="1" VerticalAlignment="Center" />
+        </Grid>
+        <local:OfflineLine />
+        <!-- While the demo is the only source. -->
+        <TextBlock x:Name="DemoLine" Text="{x:Bind s:T.SearchDemoOnly}" Style="{StaticResource HazeBodyStyle}" Visibility="Collapsed" />
+      </StackPanel>
+      <!-- The filters: each drop-down says its name until set, then what it has, in amber. They
+           scroll sideways where they don't fit; Filters stays at the end, outside the scroll, so the
+           button that closes the panel is never scrolled away. -->
+      <Grid Grid.Row="1" ColumnSpacing="8">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-        <!-- One line, cut short, so a long query never pushes the filters and results down. -->
-        <TextBlock x:Name="Heading" Text="{x:Bind s:T.NavSearch}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1"
-                   MaxLines="1" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" />
-        <ContentControl x:Name="SurpriseHost" Grid.Column="1" VerticalAlignment="Center" />
+        <ScrollViewer HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled">
+          <StackPanel x:Name="FilterRow" Orientation="Horizontal" Spacing="8">
+            <DropDownButton x:Name="GenreButton" Content="{x:Bind s:T.FilterGenre}" MinHeight="32" MinWidth="96" AutomationProperties.Name="{x:Bind s:T.FilterGenre}">
+              <DropDownButton.Flyout>
+                <Flyout x:Name="GenreFlyout" Placement="BottomEdgeAlignedLeft">
+                  <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="GenreList" Spacing="2" MinWidth="200" />
+                  </ScrollViewer>
+                </Flyout>
+              </DropDownButton.Flyout>
+            </DropDownButton>
+            <DropDownButton x:Name="FormatButton" Content="{x:Bind s:T.FilterFormat}" MinHeight="32" MinWidth="96" AutomationProperties.Name="{x:Bind s:T.FilterFormat}">
+              <DropDownButton.Flyout>
+                <Flyout x:Name="FormatFlyout" Placement="BottomEdgeAlignedLeft">
+                  <StackPanel x:Name="FormatList" Spacing="2" MinWidth="180" />
+                </Flyout>
+              </DropDownButton.Flyout>
+            </DropDownButton>
+            <DropDownButton x:Name="StatusButton" Content="{x:Bind s:T.FilterStatus}" MinHeight="32" MinWidth="96" AutomationProperties.Name="{x:Bind s:T.FilterStatus}">
+              <DropDownButton.Flyout>
+                <Flyout x:Name="StatusFlyout" Placement="BottomEdgeAlignedLeft">
+                  <StackPanel x:Name="StatusList" Spacing="2" MinWidth="180" />
+                </Flyout>
+              </DropDownButton.Flyout>
+            </DropDownButton>
+            <DropDownButton x:Name="SeasonButton" Content="{x:Bind s:T.FilterSeason}" MinHeight="32" MinWidth="96" AutomationProperties.Name="{x:Bind s:T.FilterSeason}">
+              <DropDownButton.Flyout>
+                <MenuFlyout x:Name="SeasonMenu" Placement="BottomEdgeAlignedLeft" />
+              </DropDownButton.Flyout>
+            </DropDownButton>
+            <DropDownButton x:Name="YearButton" Content="{x:Bind s:T.FilterYear}" MinHeight="32" MinWidth="88" AutomationProperties.Name="{x:Bind s:T.FilterYear}">
+              <DropDownButton.Flyout>
+                <MenuFlyout x:Name="YearMenu" Placement="BottomEdgeAlignedLeft" />
+              </DropDownButton.Flyout>
+            </DropDownButton>
+            <DropDownButton x:Name="AvailableButton" Content="{x:Bind s:T.SearchAvailableName}" MinHeight="32" MinWidth="96" AutomationProperties.Name="{x:Bind s:T.SearchAvailableName}">
+              <DropDownButton.Flyout>
+                <MenuFlyout x:Name="AvailableMenu" />
+              </DropDownButton.Flyout>
+            </DropDownButton>
+            <DropDownButton x:Name="SortButton" Content="{x:Bind s:T.SearchSortName}" MinHeight="32" MinWidth="88" AutomationProperties.Name="{x:Bind s:T.SearchSortName}">
+              <DropDownButton.Flyout>
+                <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedLeft" />
+              </DropDownButton.Flyout>
+            </DropDownButton>
+            <HyperlinkButton x:Name="ClearButton" Content="{x:Bind s:T.SearchClearFilters}" Click="OnClear" Style="{StaticResource SilkLinkStyle}" VerticalAlignment="Center" Visibility="Collapsed" />
+          </StackPanel>
+        </ScrollViewer>
+        <!-- Filters: the panel's toggle, with how many of its filters are set. -->
+        <ToggleButton x:Name="FiltersButton" Grid.Column="1" MinHeight="32" Click="OnFilters" AutomationProperties.Name="{x:Bind s:T.FiltersTitle}">
+          <StackPanel Orientation="Horizontal" Spacing="8">
+            <FontIcon Glyph="&#xE71C;" FontSize="14" />
+            <TextBlock Text="{x:Bind s:T.FiltersTitle}" />
+            <InfoBadge x:Name="FiltersBadge" Visibility="Collapsed" VerticalAlignment="Center" />
+          </StackPanel>
+        </ToggleButton>
       </Grid>
-      <local:OfflineLine />
-      <!-- While the demo is the only source. -->
-      <TextBlock x:Name="DemoLine" Text="{x:Bind s:T.SearchDemoOnly}" Style="{StaticResource HazeBodyStyle}" Visibility="Collapsed" />
-    </StackPanel>
-    <!-- The filters: each drop-down says its name until set, then what it has, in amber. -->
-    <ScrollViewer Grid.Row="1" HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled" Margin="0,0,-36,0">
-      <StackPanel x:Name="FilterRow" Orientation="Horizontal" Spacing="8" Padding="0,0,36,0">
-        <DropDownButton x:Name="GenreButton" Content="{x:Bind s:T.FilterGenre}" MinHeight="32" MinWidth="96" AutomationProperties.Name="{x:Bind s:T.FilterGenre}">
-          <DropDownButton.Flyout>
-            <Flyout x:Name="GenreFlyout" Placement="BottomEdgeAlignedLeft">
-              <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
-                <StackPanel x:Name="GenreList" Spacing="2" MinWidth="200" />
-              </ScrollViewer>
-            </Flyout>
-          </DropDownButton.Flyout>
-        </DropDownButton>
-        <DropDownButton x:Name="FormatButton" Content="{x:Bind s:T.FilterFormat}" MinHeight="32" MinWidth="96" AutomationProperties.Name="{x:Bind s:T.FilterFormat}">
-          <DropDownButton.Flyout>
-            <Flyout x:Name="FormatFlyout" Placement="BottomEdgeAlignedLeft">
-              <StackPanel x:Name="FormatList" Spacing="2" MinWidth="180" />
-            </Flyout>
-          </DropDownButton.Flyout>
-        </DropDownButton>
-        <DropDownButton x:Name="SeasonButton" Content="{x:Bind s:T.FilterSeason}" MinHeight="32" MinWidth="96" AutomationProperties.Name="{x:Bind s:T.FilterSeason}">
-          <DropDownButton.Flyout>
-            <MenuFlyout x:Name="SeasonMenu" Placement="BottomEdgeAlignedLeft" />
-          </DropDownButton.Flyout>
-        </DropDownButton>
-        <DropDownButton x:Name="YearButton" Content="{x:Bind s:T.FilterYear}" MinHeight="32" MinWidth="88" AutomationProperties.Name="{x:Bind s:T.FilterYear}">
-          <DropDownButton.Flyout>
-            <MenuFlyout x:Name="YearMenu" Placement="BottomEdgeAlignedLeft" />
-          </DropDownButton.Flyout>
-        </DropDownButton>
-        <DropDownButton x:Name="AvailableButton" Content="{x:Bind s:T.SearchAvailableName}" MinHeight="32" MinWidth="96" AutomationProperties.Name="{x:Bind s:T.SearchAvailableName}">
-          <DropDownButton.Flyout>
-            <MenuFlyout x:Name="AvailableMenu" />
-          </DropDownButton.Flyout>
-        </DropDownButton>
-        <DropDownButton x:Name="SortButton" Content="{x:Bind s:T.SearchSortName}" MinHeight="32" MinWidth="88" AutomationProperties.Name="{x:Bind s:T.SearchSortName}">
-          <DropDownButton.Flyout>
-            <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedLeft" />
-          </DropDownButton.Flyout>
-        </DropDownButton>
-        <HyperlinkButton x:Name="ClearButton" Content="{x:Bind s:T.SearchClearFilters}" Click="OnClear" Style="{StaticResource SilkLinkStyle}" VerticalAlignment="Center" Visibility="Collapsed" />
-      </StackPanel>
-    </ScrollViewer>
-    <ScrollViewer x:Name="Scroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" ViewChanged="OnScrolled" k:SmoothWheel.On="True">
-      <StackPanel Padding="0,4,0,24" Spacing="12">
-        <!-- While AniList's limit holds searching as you type back: Enter searches at once. -->
-        <TextBlock x:Name="PausedLine" Text="{x:Bind s:T.SearchRateLimitEnter}" Style="{StaticResource HazeBodyStyle}" TextWrapping="WrapWholeWords" Visibility="Collapsed" />
-        <!-- What the engine says about the list, such as filters it could not apply. -->
-        <TextBlock x:Name="CaptionLine" Style="{StaticResource HazeCaptionStyle}" TextWrapping="WrapWholeWords" Visibility="Collapsed" />
-        <ContentControl x:Name="RailHost" />
-        <TextBlock x:Name="Section" Style="{StaticResource SectionTitleStyle}" Visibility="Collapsed" />
-        <local:StateHost x:Name="State">
-          <app:CoverGrid x:Name="Grid" />
-        </local:StateHost>
-        <!-- More results than the first page: a row of plates in the cells' size, asking for the
-             next page as it comes into sight. -->
-        <StackPanel x:Name="MoreRow" Visibility="Collapsed" Spacing="8" AutomationProperties.Name="{x:Bind s:T.SearchLoadingMore}" />
-      </StackPanel>
-    </ScrollViewer>
+      <ScrollViewer x:Name="Scroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" ViewChanged="OnScrolled" k:SmoothWheel.On="True">
+        <StackPanel Padding="0,4,0,24" Spacing="12">
+          <!-- Each filter set, as a chip that takes it off. -->
+          <p:WrapRow x:Name="ChipRow" Gap="8" Visibility="Collapsed" />
+          <!-- While AniList's limit holds searching as you type back: Enter searches at once. -->
+          <TextBlock x:Name="PausedLine" Text="{x:Bind s:T.SearchRateLimitEnter}" Style="{StaticResource HazeBodyStyle}" TextWrapping="WrapWholeWords" Visibility="Collapsed" />
+          <!-- What the engine says about the list, such as filters it could not apply. -->
+          <TextBlock x:Name="CaptionLine" Style="{StaticResource HazeCaptionStyle}" TextWrapping="WrapWholeWords" Visibility="Collapsed" />
+          <ContentControl x:Name="RailHost" />
+          <TextBlock x:Name="Section" Style="{StaticResource SectionTitleStyle}" Visibility="Collapsed" />
+          <local:StateHost x:Name="State">
+            <app:CoverGrid x:Name="Grid" />
+          </local:StateHost>
+          <!-- More results than the first page: a row of plates in the cells' size, asking for the
+               next page as it comes into sight. -->
+          <StackPanel x:Name="MoreRow" Visibility="Collapsed" Spacing="8" AutomationProperties.Name="{x:Bind s:T.SearchLoadingMore}" />
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+    <Border x:Name="PanelHost" Grid.Column="1" Visibility="Collapsed" />
   </Grid>
 </Page>

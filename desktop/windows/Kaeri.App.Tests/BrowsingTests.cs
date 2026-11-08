@@ -40,9 +40,9 @@ public class BrowsingTests
     [Fact]
     public void ASortCarriesItsPeriodOnlyForTrendingWeekAndMonth()
     {
-        var week = Searches.With("", SearchFilters.None with { Sort = SearchSort.Trending, Period = TrendPeriod.Week });
+        var week = Searches.With("", Searches.Nothing with { Sort = SearchSort.Trending, Period = TrendPeriod.Week });
         Assert.Equal(TrendPeriod.Week, week.Period);
-        var score = Searches.With("", SearchFilters.None with { Sort = SearchSort.Score, Period = TrendPeriod.Week });
+        var score = Searches.With("", Searches.Nothing with { Sort = SearchSort.Score, Period = TrendPeriod.Week });
         Assert.Null(score.Period);
         Assert.Equal(T.TrendingMonth, Searches.SortName(SearchSort.Trending, TrendPeriod.Month));
     }

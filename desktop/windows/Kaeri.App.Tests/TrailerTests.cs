@@ -104,6 +104,200 @@ public class TrailerTests
     }
 
     [Fact]
+    public void AKeptPageStartsWithNoVideoAndOnlyTheEnginesPagesAreSwitched()
+    {
+        var warm = Trailers.WarmPage("eng");
+        Assert.NotNull(warm);
+        Assert.Contains(Trailers.Origin, warm);
+        Assert.Contains("videoId: \"\"", warm);
+        Assert.Equal(KaeriFfiMethods.TrailerLoadScript(Clip), Trailers.Switch(Titled(1, Clip)));
+        Assert.Null(Trailers.Switch(Titled(2)));
+        // Not YouTube's: the app does not play it.
+        Assert.Null(Trailers.Switch(Titled(3, new Trailer(TrailerHost.Dailymotion, "clip0002"))));
+#if KAERI_TESTING
+        // The fixture scene's trailers play their own pages, which have no player to switch.
+        Assert.Null(Trailers.Switch(Titled(4, new Trailer(TrailerHost.YouTube, Trailers.FixtureId))));
+        Assert.Null(Trailers.Switch(Titled(5, new Trailer(TrailerHost.YouTube, Trailers.FixtureStuckId))));
+#endif
+    }
+
+    [Fact]
+    public void AHeldTrailerPlaysUnseenAndShowsAsSoonAsItIsUnheld()
+    {
+        var flow = new TrailerFlow();
+        flow.Hold();
+        Assert.True(flow.Start());
+        Assert.True(flow.Held);
+        Assert.Equal(TrailerEffect.None, flow.Heard(new TrailerMessage.Playing()));
+        Assert.Equal(TrailerPhase.Playing, flow.Phase);
+        Assert.False(flow.Showing);
+        Assert.Equal(TrailerEffect.ShowVideo, flow.Unhold());
+        Assert.True(flow.Showing);
+        Assert.Equal(TrailerEffect.None, flow.Unhold());
+    }
+
+    [Fact]
+    public void AHeldTrailerUnheldBeforeItPlaysShowsWhenAFrameDoes()
+    {
+        var flow = new TrailerFlow();
+        flow.Hold();
+        flow.Start();
+        Assert.Equal(TrailerEffect.None, flow.Unhold());
+        Assert.Equal(TrailerEffect.ShowVideo, flow.Heard(new TrailerMessage.Playing()));
+    }
+
+    [Fact]
+    public void LettingGoOfAHeldTrailerHasNoVideoToHide()
+    {
+        var flow = new TrailerFlow();
+        flow.Hold();
+        flow.Start();
+        flow.Heard(new TrailerMessage.Playing());
+        Assert.Equal(TrailerEffect.Release, flow.Stop());
+        Assert.False(flow.Held);
+        // The next visit is seen from the start unless it is held again.
+        Assert.True(flow.Start());
+        Assert.Equal(TrailerEffect.ShowVideo, flow.Heard(new TrailerMessage.Playing()));
+    }
+
+    sealed class Page(EmbedStyle style, string subtitles = "", bool broken = false) : IWarmPage
+    {
+        public EmbedStyle Style => style;
+        public string Subtitles => subtitles;
+        public bool Broken => broken;
+    }
+
+    [Fact]
+    public void TheShelfKeepsTwoPagesOfAStyleAndHandsOneBackToSwitch()
+    {
+        var shelf = new TrailerShelf<Page>();
+        Assert.True(shelf.Warm());
+        Assert.False(shelf.Warm());
+        var (a, b, c) = (new Page(EmbedStyle.Banner), new Page(EmbedStyle.Banner), new Page(EmbedStyle.Banner));
+        Assert.True(shelf.Give(a));
+        Assert.False(shelf.Give(a));
+        Assert.True(shelf.Give(b));
+        Assert.False(shelf.Give(c));
+        Assert.True(shelf.Give(new Page(EmbedStyle.Full)));
+        var drop = new List<Page>();
+        Assert.Same(a, shelf.Take(EmbedStyle.Banner, "", drop));
+        Assert.Same(b, shelf.Take(EmbedStyle.Banner, "", drop));
+        Assert.Null(shelf.Take(EmbedStyle.Banner, "", drop));
+        Assert.Empty(drop);
+    }
+
+    [Fact]
+    public void ThePagesOfAnotherSubtitleLanguageOrBrokenOnesAreLetGo()
+    {
+        var shelf = new TrailerShelf<Page>();
+        var english = new Page(EmbedStyle.Banner, "eng");
+        var german = new Page(EmbedStyle.Banner, "ger");
+        shelf.Give(english);
+        shelf.Give(german);
+        Assert.False(shelf.Give(new Page(EmbedStyle.Banner, "eng", broken: true)));
+        var drop = new List<Page>();
+        Assert.Same(german, shelf.Take(EmbedStyle.Banner, "ger", drop));
+        Assert.Equal([english], drop);
+        Assert.Empty(shelf.Idle);
+    }
+
+    [Fact]
+    public void TheTrailerIsCuedWhileThePointerRestsAndLetGoWhenItLeavesBeforeTheCard()
+    {
+        Assert.Equal(TimeSpan.FromMilliseconds(150), HoverCue.After(TimeSpan.FromMilliseconds(450)));
+        // Scanning a row, the card opens as soon as a cue would.
+        Assert.Null(HoverCue.After(TimeSpan.FromMilliseconds(150)));
+        var cue = new HoverCue();
+        Assert.Equal(HoverTrailerStep.Start, cue.Cue(7));
+        Assert.Equal(HoverTrailerStep.None, cue.Cue(7));
+        Assert.Equal(HoverTrailerStep.None, cue.Uncue(8));
+        Assert.Equal(HoverTrailerStep.Stop, cue.Uncue(7));
+        Assert.Null(cue.Id);
+        Assert.Equal(HoverTrailerStep.Start, cue.Cue(8));
+        Assert.Equal(HoverTrailerStep.Replace, cue.Cue(9));
+        Assert.Equal(9u, cue.Id);
+    }
+
+    [Fact]
+    public void TheCardTakesTheTrailerCuedForItAndStartsOneOtherwise()
+    {
+        var cue = new HoverCue();
+        cue.Cue(7);
+        Assert.Equal(HoverTrailerStep.Adopt, cue.Open(7, live: true, plays: true));
+        Assert.True(cue.Adopted);
+        // The open card keeps its trailer: leaving the cover for the card lets nothing go.
+        Assert.Equal(HoverTrailerStep.None, cue.Uncue(7));
+        Assert.Equal(HoverTrailerStep.Stop, cue.Closed());
+        Assert.Equal(HoverTrailerStep.None, cue.Closed());
+
+        // Cued, but it gave up or another cover's was cued: the card starts its own.
+        cue.Cue(7);
+        Assert.Equal(HoverTrailerStep.Replace, cue.Open(7, live: false, plays: true));
+        cue.Closed();
+        cue.Cue(8);
+        Assert.Equal(HoverTrailerStep.Replace, cue.Open(7, live: true, plays: true));
+        cue.Closed();
+        Assert.Equal(HoverTrailerStep.Start, cue.Open(7, live: false, plays: true));
+        cue.Closed();
+
+        // A card with no trailer that may play lets a cued one go.
+        cue.Cue(7);
+        Assert.Equal(HoverTrailerStep.Stop, cue.Open(7, live: true, plays: false));
+        Assert.Null(cue.Id);
+        Assert.Equal(HoverTrailerStep.None, cue.Open(7, live: false, plays: false));
+    }
+
+    [Fact]
+    public void ACueWhileACardHasItsTrailerStartsWhenThatCardCloses()
+    {
+        var cue = new HoverCue();
+        cue.Cue(7);
+        cue.Open(7, live: true, plays: true);
+        // Straight from the card onto a neighbour: its cue comes before the card has closed.
+        Assert.Equal(HoverTrailerStep.None, cue.Cue(8));
+        Assert.Equal(8u, cue.Queued);
+        Assert.Equal(7u, cue.Id);
+        Assert.Equal(HoverTrailerStep.Replace, cue.Closed());
+        Assert.Equal(8u, cue.Id);
+        Assert.Null(cue.Queued);
+        Assert.False(cue.Adopted);
+
+        // Leaving the neighbour before then lets the queued cue go.
+        cue.Open(8, live: true, plays: true);
+        cue.Cue(9);
+        cue.Uncue(9);
+        Assert.Equal(HoverTrailerStep.Stop, cue.Closed());
+        Assert.Null(cue.Id);
+    }
+
+    [Fact]
+    public void AScrollOrStoppingEveryTrailerLeavesNothingCued()
+    {
+        var cue = new HoverCue();
+        cue.Cue(7);
+        Assert.Equal(HoverTrailerStep.Stop, cue.Scrolled());
+        Assert.Null(cue.Id);
+        Assert.Equal(HoverTrailerStep.None, cue.Scrolled());
+
+        // A scroll closes the open card by itself; only the queued cue goes here.
+        cue.Cue(7);
+        cue.Open(7, live: true, plays: true);
+        cue.Cue(8);
+        Assert.Equal(HoverTrailerStep.None, cue.Scrolled());
+        Assert.Null(cue.Queued);
+        Assert.Equal(HoverTrailerStep.Stop, cue.Closed());
+
+        cue.Cue(7);
+        cue.Open(7, live: true, plays: true);
+        cue.Cue(8);
+        Assert.Equal(HoverTrailerStep.Stop, cue.Reset());
+        Assert.Null(cue.Id);
+        Assert.Null(cue.Queued);
+        Assert.False(cue.Adopted);
+        Assert.Equal(HoverTrailerStep.None, cue.Closed());
+    }
+
+    [Fact]
     public void MessagesFromThePageAreReadByTheEngine()
     {
         Assert.IsType<TrailerMessage.Playing>(KaeriFfiMethods.TrailerMessage("playing"));
