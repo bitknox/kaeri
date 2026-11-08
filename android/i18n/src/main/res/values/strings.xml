@@ -5260,6 +5260,8 @@
     <string name="read_filter_included">Included</string>
     <!-- A genre's state: no series with it. -->
     <string name="read_filter_left_out">Left out</string>
+    <!-- The last entry of the Genres menu, which holds the genres the menu has no room for. -->
+    <string name="read_filter_more_genres">More genres</string>
     <!-- A filter of reading's Search: when a series started. -->
     <string name="read_search_started">Started</string>
     <!-- The filter bar's chip that searches only the person's own sources, leaving AniList out. -->
@@ -5307,6 +5309,45 @@
     <string name="read_search_source_kind_plugin">Plugin</string>
     <!-- The button of a source group with more than five hits. -->
     <string name="read_search_source_more">Show %1$,d more</string>
+    <!-- The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList". -->
+    <string name="read_search_line_total">%1$s · %2$s</string>
+    <!-- Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular". -->
+    <string name="read_search_browse_parts">%1$s, %2$s</string>
+    <!-- A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing". -->
+    <string name="read_caption_two">%1$s · %2$s</string>
+    <!-- A filter's button once set, as shown: its name, then the value. As in "Format: Manga". -->
+    <string name="read_filter_shown">%1$s: %2$s</string>
+    <!-- A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan". -->
+    <string name="read_name_tile">%1$s, %2$s</string>
+    <!-- A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders". -->
+    <string name="read_name_tile_placed">%1$s, %2$s, %3$s</string>
+    <!-- A tile with only its title and the source that has it. As in "Paper Lantern, In Folders". -->
+    <string name="read_name_tile_only_placed">%1$s, %2$s</string>
+    <!-- An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42". -->
+    <string name="read_name_week_tile">%1$s, %2$s, %3$s</string>
+    <!-- An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday". -->
+    <string name="read_name_week_tile_time">%1$s, %2$s</string>
+    <!-- The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details". -->
+    <string name="read_name_spotlight_art">%1$s, Details</string>
+    <!-- A row heading with its side words. As in "New manga, Last 12 months". -->
+    <string name="read_name_heading">%1$s, %2$s</string>
+    <!-- A row or its heading while its covers load. As in "Trending manga, loading". -->
+    <string name="read_name_loading">%1$s, loading</string>
+    <!-- A row heading with side words while its covers load. As in "New manga, Last 12 months, loading". -->
+    <string name="read_name_heading_loading">%1$s, %2$s, loading</string>
+    <!-- A row's View all link. As in "View all, Trending manga". -->
+    <string name="read_name_view_all">View all, %1$s</string>
+    <!-- A filter button once set. As in "Format, Manga". -->
+    <string name="read_name_filter">%1$s, %2$s</string>
+    <!-- A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds". -->
+    <string name="read_name_failure">%1$s, %2$s</string>
+    <!-- A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder". -->
+    <string name="read_name_source">%1$s, %2$s</string>
+    <!-- A source row's button for its other hits. As in "Show 12 more from Folders". -->
+    <plurals name="read_name_source_more">
+        <item quantity="one">Show 1 more from %2$s</item>
+        <item quantity="other">Show %1$,d more from %2$s</item>
+    </plurals>
     <!-- Over a first-run page's title: which page of how many. -->
     <string name="onboarding_step">%1$,d of %2$,d</string>
     <!-- Line under "Welcome to Kaeri" on the first page, naming both media. -->

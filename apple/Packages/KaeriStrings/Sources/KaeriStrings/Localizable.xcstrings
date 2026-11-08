@@ -197281,6 +197281,18 @@
         }
       }
     },
+    "read-caption-two" : {
+      "comment" : "A tile's caption under its cover: two facts. As in \"Manga · Japan\" or \"Manga · Releasing\". Argument 1: first (Text). Argument 2: second (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "read-downloads-active" : {
       "comment" : "A series' line in Downloads while a chapter downloads. Argument 1: chapter (Text). Argument 2: done (Int). Argument 3: total (Int).",
       "extractionState" : "manual",
@@ -199817,6 +199829,18 @@
         }
       }
     },
+    "read-filter-more-genres" : {
+      "comment" : "The last entry of the Genres menu, which holds the genres the menu has no room for.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More genres"
+          }
+        }
+      }
+    },
     "read-filter-not-genre" : {
       "comment" : "A genre left out. Argument 1: genre (Text).",
       "extractionState" : "manual",
@@ -200149,6 +200173,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@:"
+          }
+        }
+      }
+    },
+    "read-filter-shown" : {
+      "comment" : "A filter's button once set, as shown: its name, then the value. As in \"Format: Manga\". Argument 1: name (Text). Argument 2: value (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
           }
         }
       }
@@ -202479,6 +202515,196 @@
         }
       }
     },
+    "read-name-failure" : {
+      "comment" : "A failure block: what failed, then why. As in \"Folders didn't answer, No answer in 15 seconds\". Argument 1: line (Text). Argument 2: reason (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "read-name-filter" : {
+      "comment" : "A filter button once set. As in \"Format, Manga\". Argument 1: name (Text). Argument 2: value (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "read-name-heading" : {
+      "comment" : "A row heading with its side words. As in \"New manga, Last 12 months\". Argument 1: heading (Text). Argument 2: side (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "read-name-heading-loading" : {
+      "comment" : "A row heading with side words while its covers load. As in \"New manga, Last 12 months, loading\". Argument 1: heading (Text). Argument 2: side (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, loading"
+          }
+        }
+      }
+    },
+    "read-name-loading" : {
+      "comment" : "A row or its heading while its covers load. As in \"Trending manga, loading\". Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, loading"
+          }
+        }
+      }
+    },
+    "read-name-source" : {
+      "comment" : "A source row's heading: the source's name, then what kind of source it is. As in \"Home shelf, Folder\". Argument 1: source (Text). Argument 2: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "read-name-source-more" : {
+      "comment" : "A source row's button for its other hits. As in \"Show 12 more from Folders\". Argument 1: n (Int). Argument 2: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Show 1 more from %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Show %1$lld more from %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "read-name-spotlight-art" : {
+      "comment" : "The cover art of Home's spotlight, which opens the series. As in \"Paper Lantern, Details\". Argument 1: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Details"
+          }
+        }
+      }
+    },
+    "read-name-tile" : {
+      "comment" : "A cover tile: its title, then its caption. As in \"Paper Lantern, Manga, Japan\". Argument 1: title (Text). Argument 2: line (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "read-name-tile-only-placed" : {
+      "comment" : "A tile with only its title and the source that has it. As in \"Paper Lantern, In Folders\". Argument 1: title (Text). Argument 2: placed (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "read-name-tile-placed" : {
+      "comment" : "A cover tile a source already has: title, caption, then the source. As in \"Paper Lantern, Manga, In Folders\". Argument 1: title (Text). Argument 2: line (Text). Argument 3: placed (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "read-name-view-all" : {
+      "comment" : "A row's View all link. As in \"View all, Trending manga\". Argument 1: row (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View all, %1$@"
+          }
+        }
+      }
+    },
+    "read-name-week-tile" : {
+      "comment" : "An Up next or This week tile: title, when, and the chapter. As in \"Paper Lantern, Tuesday, Chapter 42\". Argument 1: title (Text). Argument 2: time (Text). Argument 3: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "read-name-week-tile-time" : {
+      "comment" : "An Up next or This week tile without a chapter. As in \"Paper Lantern, Tuesday\". Argument 1: title (Text). Argument 2: time (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
     "read-search-anilist-failed" : {
       "comment" : "Search, when AniList could not be reached.",
       "extractionState" : "manual",
@@ -202607,6 +202833,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · từ AniList"
+          }
+        }
+      }
+    },
+    "read-search-browse-parts" : {
+      "comment" : "Joins the parts of the browse line, one more at a time. As in \"Manga, Japan, Popular\". Argument 1: list (Text). Argument 2: next (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
           }
         }
       }
@@ -202833,6 +203071,18 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "read-search-line-total" : {
+      "comment" : "The line over browsing once every result is listed: the browse line, then the total. As in \"Manga, trending · 1,204 series from AniList\". Argument 1: line (Text). Argument 2: total (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
           }
         }
       }

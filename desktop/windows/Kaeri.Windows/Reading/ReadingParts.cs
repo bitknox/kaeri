@@ -69,8 +69,8 @@ static class ReadingParts
             Width = width,
             Height = Math.Round(width * 1.5),
             CornerRadius = new CornerRadius(radius),
-            Background = Ui.Res<Brush>("RaisedBrush"),
-            BorderBrush = Ui.Res<Brush>("EdgeBrush"),
+            Background = LiveBrush.Of("RaisedBrush"),
+            BorderBrush = LiveBrush.Of("EdgeBrush"),
             BorderThickness = new Thickness(1),
             Child = image,
         };
@@ -97,13 +97,13 @@ static class ReadingParts
             FontSize = size,
             LineHeight = Math.Round(size * 1.3),
             LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
-            Foreground = Ui.Res<Brush>("SilkBrush"),
+            Foreground = LiveBrush.Of("SilkBrush"),
             TextWrapping = TextWrapping.WrapWholeWords,
             TextTrimming = TextTrimming.CharacterEllipsis,
             MaxLines = 5,
             IsTextScaleFactorEnabled = false,
         });
-        var glyph = new FontIcon { Glyph = "\uE736", FontSize = 16, Foreground = Ui.Res<Brush>("HazeBrush"), HorizontalAlignment = HorizontalAlignment.Left };
+        var glyph = new FontIcon { Glyph = "\uE736", FontSize = 16, Foreground = LiveBrush.Of("HazeBrush"), HorizontalAlignment = HorizontalAlignment.Left };
         Grid.SetRow(glyph, 1);
         inside.Children.Add(glyph);
         AutomationProperties.SetAccessibilityView(inside, AccessibilityView.Raw);
@@ -112,8 +112,8 @@ static class ReadingParts
             Width = width,
             Height = Math.Round(width * 1.5),
             CornerRadius = new CornerRadius(radius),
-            Background = Ui.Res<Brush>("RaisedBrush"),
-            BorderBrush = Ui.Res<Brush>("EdgeBrush"),
+            Background = LiveBrush.Of("RaisedBrush"),
+            BorderBrush = LiveBrush.Of("EdgeBrush"),
             BorderThickness = new Thickness(1),
             Child = inside,
         };
@@ -136,7 +136,7 @@ static class ReadingParts
             Height = height,
             HorizontalAlignment = HorizontalAlignment.Left,
             CornerRadius = new CornerRadius(height / 2),
-            Background = Ui.Res<Brush>("SilkBrush"),
+            Background = LiveBrush.Of("SilkBrush"),
             Width = width * Math.Clamp(progress ?? 0, 0, 1),
         };
         return new Border
@@ -144,7 +144,7 @@ static class ReadingParts
             Width = width,
             Height = height,
             CornerRadius = new CornerRadius(height / 2),
-            Background = progress is null ? null : Ui.Res<Brush>("RuleBrush"),
+            Background = progress is null ? null : LiveBrush.Of("RuleBrush"),
             Child = fill,
         };
     }
@@ -199,7 +199,7 @@ static class ReadingParts
             MaxWidth = width - (tile.NewChapter ? 12 : 0),
         };
         if (tile.NewChapter)
-            words.Foreground = Ui.Res<Brush>("SilkBrush");
+            words.Foreground = LiveBrush.Of("SilkBrush");
         line.Children.Add(words);
         stack.Children.Add(line);
         if (placed is not null || placedRoom)
@@ -208,7 +208,7 @@ static class ReadingParts
             {
                 Text = placed ?? "",
                 Style = Ui.Res<Style>("HazeCaptionStyle"),
-                Foreground = Ui.Res<Brush>("SilkBrush"),
+                Foreground = LiveBrush.Of("SilkBrush"),
                 FontWeight = FontWeights.SemiBold,
                 TextWrapping = TextWrapping.WrapWholeWords,
                 MaxLines = 2,
@@ -225,7 +225,7 @@ static class ReadingParts
             Width = width + 2 * HomeWording.HoverOutset,
             Tag = tile.Work,
         };
-        AutomationProperties.SetName(button, Joined(tile.Title, said, placed));
+        AutomationProperties.SetName(button, TileName(tile.Title, said, placed));
         button.Click += (_, _) => ctx.Window.OpenSeries(tile.Work);
         button.ContextFlyout = continuing ? ContinueMenu(ctx, tile.Work) : lists ? TileMenu(ctx, tile.Work) : DetailsMenu(ctx, tile.Work);
         return button;
@@ -249,7 +249,7 @@ static class ReadingParts
         if (said.Length > 0)
             words.Children.Add(new TextBlock { Text = said, Style = Ui.Res<Style>("HazeCaptionStyle"), TextWrapping = TextWrapping.WrapWholeWords });
         if (placed is not null)
-            words.Children.Add(new TextBlock { Text = placed, Style = Ui.Res<Style>("HazeCaptionStyle"), Foreground = Ui.Res<Brush>("SilkBrush"), FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.WrapWholeWords });
+            words.Children.Add(new TextBlock { Text = placed, Style = Ui.Res<Style>("HazeCaptionStyle"), Foreground = LiveBrush.Of("SilkBrush"), FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.WrapWholeWords });
         Grid.SetColumn(words, 1);
         grid.Children.Add(words);
         var button = new Button
@@ -260,7 +260,7 @@ static class ReadingParts
             HorizontalContentAlignment = HorizontalAlignment.Stretch,
             Tag = tile.Work,
         };
-        AutomationProperties.SetName(button, Joined(tile.Title, said, placed));
+        AutomationProperties.SetName(button, TileName(tile.Title, said, placed));
         button.Click += (_, _) => ctx.Window.OpenSeries(tile.Work);
         button.ContextFlyout = lists ? TileMenu(ctx, tile.Work) : DetailsMenu(ctx, tile.Work);
         return button;
@@ -359,6 +359,15 @@ static class ReadingParts
     }
 
     // Words
+
+    /// <summary>A tile's Narrator name: its title, then its caption and the source that has it when there are.</summary>
+    public static string TileName(string title, string? line, string? placed) => (line is { Length: > 0 }, placed is { Length: > 0 }) switch
+    {
+        (true, true) => T.ReadNameTilePlaced(title, line!, placed!),
+        (true, false) => T.ReadNameTile(title, line!),
+        (false, true) => T.ReadNameTileOnlyPlaced(title, placed!),
+        _ => title,
+    };
 
     public static string Joined(params string?[] parts) => string.Join(" · ", parts.Where(p => p is { Length: > 0 }));
 

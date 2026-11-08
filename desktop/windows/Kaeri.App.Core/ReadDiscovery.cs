@@ -73,8 +73,9 @@ public static class ReadDiscovery
 
     static string? Two(string? first, string? second)
     {
-        var parts = new[] { first, second }.Where(p => !string.IsNullOrEmpty(p)).Cast<string>().ToArray();
-        return parts.Length == 0 ? null : string.Join(" · ", parts);
+        if (string.IsNullOrEmpty(first))
+            return string.IsNullOrEmpty(second) ? null : second;
+        return string.IsNullOrEmpty(second) ? first : T.ReadCaptionTwo(first, second);
     }
 
     /// <summary>

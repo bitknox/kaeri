@@ -624,3 +624,58 @@ fn updates_asked_first_get_their_covers_and_medium_without_home() {
     assert!(rows.iter().all(|r| r.tile.cover.is_some()), "{rows:?}");
     engine.shutdown();
 }
+
+/// The sources' part of a search once every source has answered, failed or run out of time.
+fn sources_done(
+    engine: &Arc<FfiEngine>,
+    query: ReadSearchQuery,
+) -> kaeri_model::reading::ReadSourceSearch {
+    engine.send(Command::Reading(ReadingCommand::Search { query: query.clone() }));
+    let done = move |event: &Event| matches!(event, Event::Reading(ReadingEvent::SourceSearch(part)) if part.query == query && part.done);
+    let read = read_until(engine, done);
+    read.into_iter()
+        .rev()
+        .find_map(|event| match event {
+            Event::Reading(ReadingEvent::SourceSearch(part)) => Some(*part),
+            _ => None,
+        })
+        .expect("the sources' part")
+}
+
+#[test]
+fn the_failing_source_scene_runs_out_of_time_on_northwind_alone() {
+    use kaeri_model::reading::{ReadAnilistState, ReadSourceKind, ReadSourceState};
+    let (_root, engine) = start(FfiScene::ReadingSourceFailed);
+    let part = sources_done(
+        &engine,
+        ReadSearchQuery { text: "lantern".into(), ..ReadSearchQuery::default() },
+    );
+    assert_eq!(part.anilist, ReadAnilistState::Answered);
+    let northwind =
+        part.groups.iter().find(|g| g.source_name == "Northwind").expect("Northwind is asked");
+    assert_eq!(northwind.kind, Some(ReadSourceKind::Server));
+    assert_eq!(northwind.state, ReadSourceState::TimedOut { seconds: 15 });
+    assert!(
+        part.groups.iter().any(|g| g.source_name != "Northwind"
+            && !matches!(
+                g.state,
+                ReadSourceState::TimedOut { .. } | ReadSourceState::Failed { .. }
+            )),
+        "the other sources answer: {:?}",
+        part.groups
+    );
+    engine.shutdown();
+}
+
+#[test]
+fn the_anilist_failed_scene_fails_reading_search_and_still_asks_the_sources() {
+    use kaeri_model::reading::ReadAnilistState;
+    let (_root, engine) = start(FfiScene::ReadingAnilistFailed);
+    let part = sources_done(
+        &engine,
+        ReadSearchQuery { text: "lantern".into(), ..ReadSearchQuery::default() },
+    );
+    assert_eq!(part.anilist, ReadAnilistState::Failed);
+    assert!(!part.groups.is_empty(), "the sources are still asked");
+    engine.shutdown();
+}

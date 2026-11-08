@@ -9328,6 +9328,9 @@ public enum L {
     /// A genre's state: no series with it.
     public static var readFilterLeftOut: String { string("read-filter-left-out", fallback: "Left out") }
 
+    /// The last entry of the Genres menu, which holds the genres the menu has no room for.
+    public static var readFilterMoreGenres: String { string("read-filter-more-genres", fallback: "More genres") }
+
     /// A filter of reading's Search: when a series started.
     public static var readSearchStarted: String { string("read-search-started", fallback: "Started") }
 
@@ -9411,6 +9414,96 @@ public enum L {
     /// The button of a source group with more than five hits.
     public static func readSearchSourceMore(n: Int) -> String {
         Self.format("read-search-source-more", fallback: "Show %1$lld more", n)
+    }
+
+    /// The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList".
+    public static func readSearchLineTotal(line: String, total: String) -> String {
+        Self.format("read-search-line-total", fallback: "%1$@ · %2$@", line, total)
+    }
+
+    /// Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular".
+    public static func readSearchBrowseParts(list: String, next: String) -> String {
+        Self.format("read-search-browse-parts", fallback: "%1$@, %2$@", list, next)
+    }
+
+    /// A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing".
+    public static func readCaptionTwo(first: String, second: String) -> String {
+        Self.format("read-caption-two", fallback: "%1$@ · %2$@", first, second)
+    }
+
+    /// A filter's button once set, as shown: its name, then the value. As in "Format: Manga".
+    public static func readFilterShown(name: String, value: String) -> String {
+        Self.format("read-filter-shown", fallback: "%1$@: %2$@", name, value)
+    }
+
+    /// A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan".
+    public static func readNameTile(title: String, line: String) -> String {
+        Self.format("read-name-tile", fallback: "%1$@, %2$@", title, line)
+    }
+
+    /// A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders".
+    public static func readNameTilePlaced(title: String, line: String, placed: String) -> String {
+        Self.format("read-name-tile-placed", fallback: "%1$@, %2$@, %3$@", title, line, placed)
+    }
+
+    /// A tile with only its title and the source that has it. As in "Paper Lantern, In Folders".
+    public static func readNameTileOnlyPlaced(title: String, placed: String) -> String {
+        Self.format("read-name-tile-only-placed", fallback: "%1$@, %2$@", title, placed)
+    }
+
+    /// An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42".
+    public static func readNameWeekTile(title: String, time: String, chapter: String) -> String {
+        Self.format("read-name-week-tile", fallback: "%1$@, %2$@, %3$@", title, time, chapter)
+    }
+
+    /// An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday".
+    public static func readNameWeekTileTime(title: String, time: String) -> String {
+        Self.format("read-name-week-tile-time", fallback: "%1$@, %2$@", title, time)
+    }
+
+    /// The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details".
+    public static func readNameSpotlightArt(title: String) -> String {
+        Self.format("read-name-spotlight-art", fallback: "%1$@, Details", title)
+    }
+
+    /// A row heading with its side words. As in "New manga, Last 12 months".
+    public static func readNameHeading(heading: String, side: String) -> String {
+        Self.format("read-name-heading", fallback: "%1$@, %2$@", heading, side)
+    }
+
+    /// A row or its heading while its covers load. As in "Trending manga, loading".
+    public static func readNameLoading(name: String) -> String {
+        Self.format("read-name-loading", fallback: "%1$@, loading", name)
+    }
+
+    /// A row heading with side words while its covers load. As in "New manga, Last 12 months, loading".
+    public static func readNameHeadingLoading(heading: String, side: String) -> String {
+        Self.format("read-name-heading-loading", fallback: "%1$@, %2$@, loading", heading, side)
+    }
+
+    /// A row's View all link. As in "View all, Trending manga".
+    public static func readNameViewAll(row: String) -> String {
+        Self.format("read-name-view-all", fallback: "View all, %1$@", row)
+    }
+
+    /// A filter button once set. As in "Format, Manga".
+    public static func readNameFilter(name: String, value: String) -> String {
+        Self.format("read-name-filter", fallback: "%1$@, %2$@", name, value)
+    }
+
+    /// A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds".
+    public static func readNameFailure(line: String, reason: String) -> String {
+        Self.format("read-name-failure", fallback: "%1$@, %2$@", line, reason)
+    }
+
+    /// A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder".
+    public static func readNameSource(source: String, kind: String) -> String {
+        Self.format("read-name-source", fallback: "%1$@, %2$@", source, kind)
+    }
+
+    /// A source row's button for its other hits. As in "Show 12 more from Folders".
+    public static func readNameSourceMore(n: Int, source: String) -> String {
+        Self.format("read-name-source-more", fallback: "Show %1$lld more from %2$@", n, source)
     }
 
     /// Over a first-run page's title: which page of how many.

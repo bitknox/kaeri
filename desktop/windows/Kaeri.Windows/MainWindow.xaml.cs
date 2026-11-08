@@ -414,6 +414,8 @@ public sealed partial class MainWindow : Window
                 "reader-moved" => new FfiScene.ReaderMoved(),
                 "reading-dark" => new FfiScene.ReadingDark(),
                 "reading-demo" => new FfiScene.ReadingDemo(),
+                "reading-source-failed" => new FfiScene.ReadingSourceFailed(),
+                "reading-anilist-failed" => new FfiScene.ReadingAnilistFailed(),
                 _ => new FfiScene.Watching(),
             };
             return (FfiEngine.StartScene(scratch, host, scene, EngineSession.AppStart(signIn: false)), scratch);

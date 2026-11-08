@@ -308,7 +308,7 @@ sealed partial class CoverStrip : Grid
             HorizontalAlignment = forward ? HorizontalAlignment.Right : HorizontalAlignment.Left,
             VerticalAlignment = VerticalAlignment.Top,
             Margin = new Thickness(forward ? 0 : -18, artHeight / 2 - 18, forward ? -18 : 0, 0),
-            Background = Ui.Res<Brush>("RaisedBrush"),
+            Background = LiveBrush.Of("RaisedBrush"),
             Content = new FontIcon { Glyph = glyph, FontSize = 14 },
             Opacity = 0,
             IsHitTestVisible = false,
@@ -425,7 +425,7 @@ sealed partial class CoverSlot : Grid
             label = value;
             if (strip is not null)
                 strip.Label = value;
-            AutomationProperties.SetName(plates, $"{value}, {T.StateLoading}");
+            AutomationProperties.SetName(plates, T.ReadNameLoading(value));
         }
     }
 
@@ -742,11 +742,12 @@ sealed partial class CoverSlot : Grid
         }
         var again = new Button { Content = T.ActionTryAgain, MinHeight = 32, Margin = new Thickness(0, 10, 0, 0) };
         AutomationProperties.SetName(again, T.ActionTryAgain);
-        AutomationProperties.SetHelpText(again, ReadingParts.Joined(line, said ?? reason));
+        var named = (said ?? reason) is { Length: > 0 } why2 ? T.ReadNameFailure(line, why2) : line;
+        AutomationProperties.SetHelpText(again, named);
         again.Click += (_, _) => retry();
         words.Children.Add(again);
         block.Children.Add(words);
-        AutomationProperties.SetName(block, ReadingParts.Joined(line, said ?? reason));
+        AutomationProperties.SetName(block, named);
         AutomationProperties.SetLiveSetting(block, AutomationLiveSetting.Polite);
         // The live region speaks when it shows, not when it is built.
         block.RegisterPropertyChangedCallback(VisibilityProperty, (_, _) =>
@@ -802,7 +803,7 @@ sealed partial class ReadHomeRowView : Grid
         title.FontWeight = FontWeights.Bold;
         side.FontSize = 12;
         side.FontWeight = FontWeights.Normal;
-        side.Foreground = Ui.Res<Brush>("HazeBrush");
+        side.Foreground = LiveBrush.Of("HazeBrush");
         heading.Inlines.Add(lead);
         heading.Inlines.Add(title);
         heading.Inlines.Add(tail);
@@ -864,7 +865,7 @@ sealed partial class ReadHomeRowView : Grid
         // An em space keeps the side words apart from the heading.
         Set(side, aside is null ? "" : " " + aside);
         viewAll.Visibility = now.ViewAll is null ? Visibility.Collapsed : Visibility.Visible;
-        AutomationProperties.SetName(viewAll, $"{T.HomeViewAll}, {words}");
+        AutomationProperties.SetName(viewAll, T.ReadNameViewAll(words.ToString()));
         slot.Label = words.ToString();
         var tiles = now.Tiles ?? [];
         if (tiles.Length == 0)
@@ -893,12 +894,15 @@ sealed partial class ReadHomeRowView : Grid
     void Say()
     {
         var words = ReadDiscovery.Heading(row.Title).ToString();
-        var parts = new List<string> { words };
-        if (row.Side?.Text() is { Length: > 0 } aside)
-            parts.Add(aside);
-        if ((row.Tiles?.Length ?? 0) == 0 && row.Pending)
-            parts.Add(T.StateLoading);
-        AutomationProperties.SetName(heading, string.Join(", ", parts));
+        var aside = row.Side?.Text() is { Length: > 0 } a ? a : null;
+        var loading = (row.Tiles?.Length ?? 0) == 0 && row.Pending;
+        AutomationProperties.SetName(heading, (aside, loading) switch
+        {
+            (not null, true) => T.ReadNameHeadingLoading(words, aside!),
+            (not null, false) => T.ReadNameHeading(words, aside!),
+            (null, true) => T.ReadNameLoading(words),
+            _ => words,
+        });
     }
 
     /// <summary>
@@ -954,7 +958,7 @@ sealed partial class SourceRowView : StackPanel
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         heading = new TextBlock { FontSize = 14, LineHeight = 19, TextWrapping = TextWrapping.NoWrap, TextTrimming = TextTrimming.CharacterEllipsis, HorizontalAlignment = HorizontalAlignment.Left };
         name.FontWeight = FontWeights.SemiBold;
-        kind.Foreground = Ui.Res<Brush>("HazeBrush");
+        kind.Foreground = LiveBrush.Of("HazeBrush");
         heading.Inlines.Add(name);
         heading.Inlines.Add(kind);
         AutomationProperties.SetHeadingLevel(heading, AutomationHeadingLevel.Level3);
@@ -1014,7 +1018,7 @@ sealed partial class SourceRowView : StackPanel
         var aside = kindWords is null ? "" : " " + kindWords;
         if (kind.Text != aside)
             kind.Text = aside;
-        var said = kindWords is null ? group.SourceName : $"{group.SourceName}, {kindWords}";
+        var said = kindWords is null ? group.SourceName : T.ReadNameSource(group.SourceName, kindWords);
         slot.Label = said;
         // The source is named once; the placeholders add that it is loading.
         AutomationProperties.SetName(heading, said);
@@ -1067,7 +1071,7 @@ sealed partial class SourceRowView : StackPanel
         if (left > 0)
         {
             more.Content = T.ReadSearchSourceMore(left);
-            AutomationProperties.SetName(more, ReadingParts.Joined(T.ReadSearchSourceMore(left), name.Text));
+            AutomationProperties.SetName(more, T.ReadNameSourceMore(left, name.Text));
             more.Visibility = Visibility.Visible;
             more.Opacity = 1;
         }

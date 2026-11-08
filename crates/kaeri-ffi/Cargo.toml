@@ -38,6 +38,7 @@ opds-feed = ["kaeri-engine/opds-feed"]
 testing = [
     "kaeri-engine/testing",
     "dep:kaeri-testkit",
+    "dep:async-trait",
     "dep:kaeri-meta",
     "dep:kaeri-providers",
     "dep:kaeri-track",
@@ -70,6 +71,8 @@ cli = ["uniffi/cli", "uniffi/cargo-metadata"]
 
 # No terminal crate, not even transitively: tools/check-boundaries.sh holds it to that in CI.
 [dependencies]
+# The reading scenes' own fake book source, with `testing`.
+async-trait = { workspace = true, optional = true }
 kaeri-audio-tap.workspace = true
 kaeri-core.workspace = true
 kaeri-engine.workspace = true

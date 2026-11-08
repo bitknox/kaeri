@@ -817,6 +817,10 @@ read-filter-included = Included
 # A genre's state: no series with it.
 read-filter-left-out = Left out
 
+# The last entry of the Genres menu, which holds the genres the menu has no room for.
+# @max 24
+read-filter-more-genres = More genres
+
 # A filter of reading's Search: when a series started.
 read-search-started = Started
 
@@ -897,6 +901,106 @@ read-search-source-kind-plugin = { -plugin-cap }
 # The button of a source group with more than five hits.
 # @arg n: int
 read-search-source-more = Show { $n } more
+
+# The line over browsing once every result is listed: the browse line, then the total.
+# As in "Manga, trending · 1,204 series from AniList".
+# @arg line: text
+# @arg total: text
+read-search-line-total = { $line } · { $total }
+
+# Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular".
+# @arg list: text
+# @arg next: text
+read-search-browse-parts = { $list }, { $next }
+
+# A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing".
+# @arg first: text
+# @arg second: text
+read-caption-two = { $first } · { $second }
+
+# A filter's button once set, as shown: its name, then the value. As in "Format: Manga".
+# @arg name: text
+# @arg value: text
+read-filter-shown = { $name }: { $value }
+
+## Names Narrator reads in reading's Home and Search. The commas give Narrator a pause; put the
+## parts in the order that reads best.
+
+# A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan".
+# @arg title: text
+# @arg line: text
+read-name-tile = { $title }, { $line }
+
+# A cover tile a source already has: title, caption, then the source. As in
+# "Paper Lantern, Manga, In Folders".
+# @arg title: text
+# @arg line: text
+# @arg placed: text
+read-name-tile-placed = { $title }, { $line }, { $placed }
+
+# A tile with only its title and the source that has it. As in "Paper Lantern, In Folders".
+# @arg title: text
+# @arg placed: text
+read-name-tile-only-placed = { $title }, { $placed }
+
+# An Up next or This week tile: title, when, and the chapter. As in
+# "Paper Lantern, Tuesday, Chapter 42".
+# @arg title: text
+# @arg time: text
+# @arg chapter: text
+read-name-week-tile = { $title }, { $time }, { $chapter }
+
+# An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday".
+# @arg title: text
+# @arg time: text
+read-name-week-tile-time = { $title }, { $time }
+
+# The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details".
+# @arg title: text
+read-name-spotlight-art = { $title }, Details
+
+# A row heading with its side words. As in "New manga, Last 12 months".
+# @arg heading: text
+# @arg side: text
+read-name-heading = { $heading }, { $side }
+
+# A row or its heading while its covers load. As in "Trending manga, loading".
+# @arg name: text
+read-name-loading = { $name }, loading
+
+# A row heading with side words while its covers load. As in
+# "New manga, Last 12 months, loading".
+# @arg heading: text
+# @arg side: text
+read-name-heading-loading = { $heading }, { $side }, loading
+
+# A row's View all link. As in "View all, Trending manga".
+# @arg row: text
+read-name-view-all = View all, { $row }
+
+# A filter button once set. As in "Format, Manga".
+# @arg name: text
+# @arg value: text
+read-name-filter = { $name }, { $value }
+
+# A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds".
+# @arg line: text
+# @arg reason: text
+read-name-failure = { $line }, { $reason }
+
+# A source row's heading: the source's name, then what kind of source it is. As in
+# "Home shelf, Folder".
+# @arg source: text
+# @arg kind: text
+read-name-source = { $source }, { $kind }
+
+# A source row's button for its other hits. As in "Show 12 more from Folders".
+# @arg n: int
+# @arg source: text
+read-name-source-more = { $n ->
+    [one] Show 1 more from { $source }
+   *[other] Show { $n } more from { $source }
+ }
 
 ## First run with reading on
 

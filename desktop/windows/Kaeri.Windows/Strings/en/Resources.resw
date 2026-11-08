@@ -9406,6 +9406,10 @@
     <value>Left out</value>
     <comment>A genre's state: no series with it.</comment>
   </data>
+  <data name="ReadFilterMoreGenres" xml:space="preserve">
+    <value>More genres</value>
+    <comment>The last entry of the Genres menu, which holds the genres the menu has no room for.</comment>
+  </data>
   <data name="ReadSearchStarted" xml:space="preserve">
     <value>Started</value>
     <comment>A filter of reading's Search: when a series started.</comment>
@@ -9499,6 +9503,82 @@
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Show {n} more</value>
     <comment>The button of a source group with more than five hits.</comment>
+  </data>
+  <data name="ReadSearchLineTotal" xml:space="preserve">
+    <value>{line} · {total}</value>
+    <comment>The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList".</comment>
+  </data>
+  <data name="ReadSearchBrowseParts" xml:space="preserve">
+    <value>{list}, {next}</value>
+    <comment>Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular".</comment>
+  </data>
+  <data name="ReadCaptionTwo" xml:space="preserve">
+    <value>{first} · {second}</value>
+    <comment>A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing".</comment>
+  </data>
+  <data name="ReadFilterShown" xml:space="preserve">
+    <value>{name}: {value}</value>
+    <comment>A filter's button once set, as shown: its name, then the value. As in "Format: Manga".</comment>
+  </data>
+  <data name="ReadNameTile" xml:space="preserve">
+    <value>{title}, {line}</value>
+    <comment>A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan".</comment>
+  </data>
+  <data name="ReadNameTilePlaced" xml:space="preserve">
+    <value>{title}, {line}, {placed}</value>
+    <comment>A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders".</comment>
+  </data>
+  <data name="ReadNameTileOnlyPlaced" xml:space="preserve">
+    <value>{title}, {placed}</value>
+    <comment>A tile with only its title and the source that has it. As in "Paper Lantern, In Folders".</comment>
+  </data>
+  <data name="ReadNameWeekTile" xml:space="preserve">
+    <value>{title}, {time}, {chapter}</value>
+    <comment>An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42".</comment>
+  </data>
+  <data name="ReadNameWeekTileTime" xml:space="preserve">
+    <value>{title}, {time}</value>
+    <comment>An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday".</comment>
+  </data>
+  <data name="ReadNameSpotlightArt" xml:space="preserve">
+    <value>{title}, Details</value>
+    <comment>The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details".</comment>
+  </data>
+  <data name="ReadNameHeading" xml:space="preserve">
+    <value>{heading}, {side}</value>
+    <comment>A row heading with its side words. As in "New manga, Last 12 months".</comment>
+  </data>
+  <data name="ReadNameLoading" xml:space="preserve">
+    <value>{name}, loading</value>
+    <comment>A row or its heading while its covers load. As in "Trending manga, loading".</comment>
+  </data>
+  <data name="ReadNameHeadingLoading" xml:space="preserve">
+    <value>{heading}, {side}, loading</value>
+    <comment>A row heading with side words while its covers load. As in "New manga, Last 12 months, loading".</comment>
+  </data>
+  <data name="ReadNameViewAll" xml:space="preserve">
+    <value>View all, {row}</value>
+    <comment>A row's View all link. As in "View all, Trending manga".</comment>
+  </data>
+  <data name="ReadNameFilter" xml:space="preserve">
+    <value>{name}, {value}</value>
+    <comment>A filter button once set. As in "Format, Manga".</comment>
+  </data>
+  <data name="ReadNameFailure" xml:space="preserve">
+    <value>{line}, {reason}</value>
+    <comment>A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds".</comment>
+  </data>
+  <data name="ReadNameSource" xml:space="preserve">
+    <value>{source}, {kind}</value>
+    <comment>A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder".</comment>
+  </data>
+  <data name="ReadNameSourceMore_one" xml:space="preserve">
+    <value>Show 1 more from {source}</value>
+    <comment>A source row's button for its other hits. As in "Show 12 more from Folders".</comment>
+  </data>
+  <data name="ReadNameSourceMore_other" xml:space="preserve">
+    <value>Show {n} more from {source}</value>
+    <comment>A source row's button for its other hits. As in "Show 12 more from Folders".</comment>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} of {total}</value>
