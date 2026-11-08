@@ -259,6 +259,27 @@ impl Store {
         })
     }
 
+    /// The file is whole, for a fetch still wanted: false, and nothing changes, when the row
+    /// was cancelled or deleted while it was being fetched.
+    pub fn book_download_fetched(
+        &self,
+        id: i64,
+        path: &str,
+        pages: Option<u32>,
+        bytes: u64,
+        now: i64,
+    ) -> Result<bool> {
+        self.with_conn(|c| {
+            let changed = c.execute(
+                "UPDATE book_download SET state = 'done', path = ?2, pages_total = ?3,
+                    pages_done = COALESCE(?3, pages_done), bytes = ?4, error = NULL,
+                    updated_at = ?5 WHERE id = ?1 AND state = 'downloading'",
+                params![id, path, pages, i64::try_from(bytes).unwrap_or(i64::MAX), now],
+            )?;
+            Ok(changed > 0)
+        })
+    }
+
     /// The fetch failed for `error`.
     pub fn book_download_failed(&self, id: i64, error: &str, now: i64) -> Result<()> {
         self.with_conn(|c| {

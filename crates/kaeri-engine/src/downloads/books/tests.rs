@@ -34,6 +34,9 @@ struct Shelf {
     asked: Mutex<Vec<String>>,
     /// Pages at these addresses answer 404.
     broken: Mutex<Vec<String>>,
+    /// The page at this address waits: the first notify says it was asked, the second lets it
+    /// answer.
+    held: Mutex<Option<(String, Arc<tokio::sync::Notify>, Arc<tokio::sync::Notify>)>>,
 }
 
 #[async_trait]
@@ -88,6 +91,11 @@ impl BookSource for Shelf {
             None => page_ref.url.clone(),
         };
         self.asked.lock().unwrap().push(asked);
+        let held = self.held.lock().unwrap().clone();
+        if let Some((_, asked, answer)) = held.filter(|(url, ..)| *url == page_ref.url) {
+            asked.notify_one();
+            answer.notified().await;
+        }
         if self.broken.lock().unwrap().contains(&page_ref.url) {
             return Err(PageError::Status(404));
         }
@@ -172,6 +180,7 @@ fn kit(chapters: &[&str]) -> Kit {
         fetched: Mutex::new(0),
         asked: Mutex::default(),
         broken: Mutex::default(),
+        held: Mutex::default(),
     });
     sources.registry.put(shelf.clone());
     store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
@@ -474,6 +483,38 @@ async fn cancel_takes_queued_chapters_out_and_leaves_finished_ones() {
     kit.queue.cancel(&kit.lent, &work, &[]);
     let left: Vec<_> = kit.states().into_iter().map(|(c, _)| c).collect();
     assert_eq!(left, ["1"]);
+}
+
+/// A chapter cancelled while its last page is fetched leaves no file and no row, and one kept
+/// ready, whose row stays as removed, does not come back as downloaded.
+#[tokio::test]
+async fn a_chapter_cancelled_during_its_last_page_leaves_nothing_behind() {
+    for keep_ready in [false, true] {
+        let kit = kit(&["1", "2"]);
+        let work = WorkId::new(WORK);
+        let asked = Arc::new(tokio::sync::Notify::new());
+        let answer = Arc::new(tokio::sync::Notify::new());
+        *kit.shelf.held.lock().unwrap() =
+            Some(("https://pages.example/1/3".into(), asked.clone(), answer.clone()));
+        if keep_ready {
+            let wanted = [Wanted { chapter: ChapterId::new("1"), version_label: None }];
+            assert_eq!(kit.queue.queue(kit.store(), &work, "shelf", &wanted, true, 1), 1);
+            kit.queue.start(&kit.lent);
+        } else {
+            let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+            kit.queue.download(&kit.lent, work.clone(), pick).await;
+        }
+        asked.notified().await;
+        kit.queue.cancel(&kit.lent, &work, &ids(&["1"]));
+        answer.notify_one();
+        kit.settle().await;
+        assert!(kit.states().is_empty(), "keep ready {keep_ready}: {:?}", kit.states());
+        assert!(kit.store().shelf(WORK).unwrap().is_empty());
+        let left: Vec<_> = std::fs::read_dir(kit.queue.dir().join(safe(WORK)))
+            .map(|d| d.flatten().map(|e| e.path()).collect())
+            .unwrap_or_default();
+        assert!(left.is_empty(), "keep ready {keep_ready}: files left {left:?}");
+    }
 }
 
 #[tokio::test]
