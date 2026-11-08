@@ -48,7 +48,7 @@ static class ReadPlates
     }
 
     /// <summary>The cover grid's cells as plates: the same layout as <see cref="ReadGrid"/>, so the covers take their room.</summary>
-    public static UIElement Grid(int count = 12)
+    public static FrameworkElement Grid(int count = 12)
     {
         var grid = new ItemsRepeater
         {
