@@ -5190,6 +5190,18 @@
     <string name="read_search_shown">%1$d of %2$d shown</string>
     <!-- The button of a source group with more than five hits. -->
     <string name="read_search_source_more">Show %1$d more</string>
+    <!-- Beside a source row's name in Search: the kind of source it is. -->
+    <string name="read_search_source_kind_server">Server</string>
+    <!-- Beside a source row's name in Search: the kind of source it is. -->
+    <string name="read_search_source_kind_folder">Folder</string>
+    <!-- Beside a source row's name in Search: the kind of source it is. -->
+    <string name="read_search_source_kind_plugin">Plugin</string>
+    <!-- Under the Your sources only switch in the iPhone and iPad Filters sheet. -->
+    <string name="read_search_sources_only_line">AniList\'s results are hidden. The filters below apply to AniList\'s results only.</string>
+    <!-- What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence. -->
+    <string name="read_search_done">%1$d from AniList, %2$d from your sources.</string>
+    <!-- A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga". -->
+    <string name="read_home_row_loading">%1$s, loading</string>
     <!-- Over a first-run page's title: which page of how many. -->
     <string name="onboarding_step">%1$d of %2$d</string>
     <!-- Line under "Welcome to Kaeri" on the first page, naming both media. -->

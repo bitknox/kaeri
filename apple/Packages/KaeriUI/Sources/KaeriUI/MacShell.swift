@@ -88,6 +88,13 @@ struct MacShell: View {
                                 .keyboardShortcut("[", modifiers: .command)
                         }
                     }
+                    // Search opened by a Home row's View all: Back returns to Home where it was.
+                    if navigator.section == .search, navigator.seriesOnMac == nil, navigator.readSearchBack != nil {
+                        ToolbarItem(placement: .navigation) {
+                            Button(L.actionBack, systemImage: "chevron.left") { navigator.closeReadSearch() }
+                                .keyboardShortcut("[", modifiers: .command)
+                        }
+                    }
                     if navigator.section == .downloads, navigator.seriesOnMac == nil {
                         // The title on the toolbar itself, as a title is, not in a glass capsule.
                         ToolbarItem(placement: .navigation) { DownloadsTitle() }

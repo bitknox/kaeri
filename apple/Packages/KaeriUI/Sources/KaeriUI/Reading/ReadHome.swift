@@ -1,7 +1,7 @@
 // Reading's Home: the spotlight, Continue as covers with a silk track, This week by day, Up next
-// for you, Releasing now, Because you finished, one genre shelf and the closing line. The engine
-// sends the whole view; this draws it in Home's sizes. There is no empty state: a section with
-// nothing leaves with its heading.
+// for you, then the discovery rows from AniList (Trending, New, Finished, Because you finished,
+// More of a genre) and the closing line. The engine sends the whole view; this draws it in Home's
+// sizes. There is no empty state: a section with nothing leaves with its heading.
 
 import KaeriDesign
 import KaeriKit
@@ -25,6 +25,8 @@ struct ReadHomeScreen: View {
         #endif
     }
 
+    @State private var position = ScrollPosition()
+
     var body: some View {
         let layout = self.layout
         ScrollView {
@@ -35,6 +37,19 @@ struct ReadHomeScreen: View {
                 .frame(maxWidth: .infinity, alignment: .topLeading)
         }
         .scrollIndicators(.never)
+        // Back from a row's View all, Home is where it was left.
+        .scrollPosition($position)
+        .onScrollGeometryChange(for: CGFloat.self) { $0.contentOffset.y + $0.contentInsets.top } action: { _, y in
+            navigator.readHomeOffset = y
+        }
+        .onAppear {
+            if navigator.readHomeOffset > 1 { position.scrollTo(y: navigator.readHomeOffset) }
+        }
+        #if os(iOS)
+        .navigationDestination(item: Binding(get: { navigator.readViewAll }, set: { navigator.readViewAll = $0 })) { page in
+            ReadViewAllPage(page: page)
+        }
+        #endif
         .environment(\.homeLayout, layout)
         .onOfferedWidth { width = $0 }
         #if os(iOS)
@@ -86,12 +101,13 @@ private struct ReadHomeContent: View {
         .animation(.standard, value: home == nil)
         .animation(.standard, value: home?.spotlight?.work)
         .animation(.standard, value: home.map(ReadHomeContent.shape) ?? [])
+        // A row that comes or goes, as one dropped when AniList fails, opens or closes its gap.
+        .animation(.standard, value: home?.rows.map(\.id) ?? [])
     }
 
     /// Which sections there are, for the gap to close or open when one comes or goes.
     private static func shape(_ home: ReadingHomeView) -> [Bool] {
-        [home.continueReading.isEmpty, home.week.isEmpty, home.upNext.isEmpty, home.releasing.isEmpty,
-         home.because.isEmpty, home.genreShelf.isEmpty]
+        [home.continueReading.isEmpty, home.week.isEmpty, home.upNext.isEmpty, home.failed, home.rows.isEmpty]
     }
 
     @ViewBuilder
@@ -111,6 +127,7 @@ private struct ReadHomeContent: View {
         let demo = store.demo.state.onlyBooks
         if demo {
             DemoHomeSpotlight()
+            ReadDemoLine()
         } else if let tile = home.spotlight, let spot = home.spot {
             ZStack(alignment: .topLeading) {
                 ReadSpotlightView(tile: tile, spot: spot, contentWidth: contentWidth)
@@ -130,20 +147,18 @@ private struct ReadHomeContent: View {
         if !home.upNext.isEmpty {
             shelf(L.homeUpNext, tiles: home.upNext, link: L.homeViewAll) { navigator.readingList(.planning) }
         }
-        // Discovery stays away while only the demo is on: nothing there could be read yet.
-        if !demo, !home.releasing.isEmpty {
-            shelf(L.homeReadReleasing, tiles: home.releasing, link: L.homeSearch) { navigator.openReadingSearch() }
+        // AniList's rows, the demo's first run included: they show what there is to read once a
+        // source is added.
+        ForEach(home.rows, id: \.id) { row in
+            ReadHomeRowView(row: row)
+                .transition(.opacity)
         }
-        if !demo, let title = home.becauseTitle, !home.because.isEmpty {
-            shelf(L.homeBecause(title: title), tiles: home.because)
-        }
-        if !demo, let genre = home.genre, !home.genreShelf.isEmpty {
-            shelf(L.homeMoreGenre(genre: genre), tiles: home.genreShelf, link: L.homeSearch) {
-                navigator.openReadingSearch(genre: genre)
-            }
-        }
-        if !demo, home.pending.contains(.discovery) || home.pending.contains(.because) {
-            HomeWait(active: true, activity: "loading home") { HomeShelfPlaceholder(posters: true) } // i18n-skip
+        if home.rows.isEmpty, home.offline {
+            Text(L.readHomeOfflineRows)
+                .font(.ui(15))
+                .foregroundStyle(.haze)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .transition(.opacity)
         }
         if home.failed {
             PlainEmpty(title: L.homeFailed, line: store.reading.failures[.home]?.words ?? "") {
@@ -153,7 +168,8 @@ private struct ReadHomeContent: View {
             }
         }
         if demo {
-            ReadHomeEndLine(end: .noSources)
+            // The demo line under the spotlight says what to add; the end closes the rows.
+            if !home.rows.isEmpty { ReadHomeEndLine(end: .everything) }
         } else if let end = home.end {
             ReadHomeEndLine(end: end)
         }
@@ -175,6 +191,30 @@ private struct ReadHomeContent: View {
         }
         .transition(.opacity)
         .animation(.standard, value: tiles.map(\.work))
+    }
+}
+
+/// Under the demo's spotlight while it is the only thing to read: what to add, and Add a source,
+/// beside it where there is room and under it on a phone.
+private struct ReadDemoLine: View {
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.homeLayout) private var layout
+
+    var body: some View {
+        let button = Button(L.sourcesAddTitle) { navigator.addBookSource = .choose }
+            .buttonStyle(SecondaryCapsuleStyle(height: layout.surface == .mac ? 32 : 36, fontSize: layout.surface == .mac ? 13 : 15))
+            .fixedSize()
+            .pointerHover()
+        let line = Text(L.homeDemoOnlyBooks)
+            .font(.ui(layout.secondary))
+            .foregroundStyle(.haze)
+            .fixedSize(horizontal: false, vertical: true)
+        HStack(alignment: .center, spacing: 16) {
+            line.frame(maxWidth: .infinity, alignment: .leading)
+            button
+        }
+        .padding(.top, layout.wide ? 0 : -8)
+        .transition(.opacity)
     }
 }
 

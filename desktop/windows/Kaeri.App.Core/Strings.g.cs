@@ -6385,6 +6385,24 @@ public static partial class T
     /// <summary>The button of a source group with more than five hits.</summary>
     public static string ReadSearchSourceMore(long n) => Fill(Get("ReadSearchSourceMore"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>Beside a source row's name in Search: the kind of source it is.</summary>
+    public static string ReadSearchSourceKindServer => Get("ReadSearchSourceKindServer");
+
+    /// <summary>Beside a source row's name in Search: the kind of source it is.</summary>
+    public static string ReadSearchSourceKindFolder => Get("ReadSearchSourceKindFolder");
+
+    /// <summary>Beside a source row's name in Search: the kind of source it is.</summary>
+    public static string ReadSearchSourceKindPlugin => Get("ReadSearchSourceKindPlugin");
+
+    /// <summary>Under the Your sources only switch in the iPhone and iPad Filters sheet.</summary>
+    public static string ReadSearchSourcesOnlyLine => Get("ReadSearchSourcesOnlyLine");
+
+    /// <summary>What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.</summary>
+    public static string ReadSearchDone(long anilist, long sources) => Fill(Get("ReadSearchDone"), ("anilist", anilist.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".</summary>
+    public static string ReadHomeRowLoading(string row) => Fill(Get("ReadHomeRowLoading"), ("row", row));
+
     /// <summary>Over a first-run page's title: which page of how many.</summary>
     public static string OnboardingStep(long step, long total) => Fill(Get("OnboardingStep"), ("step", step.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -13296,6 +13314,12 @@ public static partial class T
         ["ReadSearchMoreAnilist"] = "More from AniList",
         ["ReadSearchShown"] = "{shown} of {total} shown",
         ["ReadSearchSourceMore"] = "Show {n} more",
+        ["ReadSearchSourceKindServer"] = "Server",
+        ["ReadSearchSourceKindFolder"] = "Folder",
+        ["ReadSearchSourceKindPlugin"] = "Plugin",
+        ["ReadSearchSourcesOnlyLine"] = "AniList's results are hidden. The filters below apply to AniList's results only.",
+        ["ReadSearchDone"] = "{anilist} from AniList, {sources} from your sources.",
+        ["ReadHomeRowLoading"] = "{row}, loading",
         ["OnboardingStep"] = "{step} of {total}",
         ["OnboardingWelcomeLine"] = "Keep track of what you watch and read, from your own sources.",
         ["OnboardingWelcomeNote"] = "Your lists and progress stay on your devices. Trackers and sources are yours to add.",

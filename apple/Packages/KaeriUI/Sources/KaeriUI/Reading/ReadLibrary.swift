@@ -202,6 +202,10 @@ private struct ReadListMenu: View {
 /// Covers in as many columns of at least the cover's width as fit, sharing the width.
 struct ReadGrid: View {
     let tiles: [WorkTile]
+    /// Two lines kept for every title, as Search's covers have.
+    var twoLines = false
+    /// The silk line under a cover's facts, such as the source a Search result is in.
+    var note: (WorkTile) -> String? = { _ in nil }
     @State private var width: CGFloat = 0
 
     var body: some View {
@@ -212,7 +216,7 @@ struct ReadGrid: View {
             spacing: Device.isMac ? 24 : 20
         ) {
             ForEach(tiles, id: \.work) { tile in
-                ReadTileCard(tile: tile, width: cell)
+                ReadTileCard(tile: tile, width: cell, twoLines: twoLines, note: note(tile), planAction: twoLines)
                     .contextMenu { ReadTileMenu(tile: tile) }
             }
         }

@@ -8876,6 +8876,30 @@
     <value>[Šĥöŵ {n} ɱöŕé~~~~]</value>
     <comment>The button of a source group with more than five hits.</comment>
   </data>
+  <data name="ReadSearchSourceKindServer" xml:space="preserve">
+    <value>[Šéŕṽéŕ~~]</value>
+    <comment>Beside a source row's name in Search: the kind of source it is.</comment>
+  </data>
+  <data name="ReadSearchSourceKindFolder" xml:space="preserve">
+    <value>[Ƒöļðéŕ~~]</value>
+    <comment>Beside a source row's name in Search: the kind of source it is.</comment>
+  </data>
+  <data name="ReadSearchSourceKindPlugin" xml:space="preserve">
+    <value>[Þļüĝîñ~~]</value>
+    <comment>Beside a source row's name in Search: the kind of source it is.</comment>
+  </data>
+  <data name="ReadSearchSourcesOnlyLine" xml:space="preserve">
+    <value>[ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ. Ţĥé ƒîļţéŕš ƀéļöŵ àþþļý ţö ÅñîĻîšţ'š ŕéšüļţš öñļý.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under the Your sources only switch in the iPhone and iPad Filters sheet.</comment>
+  </data>
+  <data name="ReadSearchDone" xml:space="preserve">
+    <value>[{anilist} ƒŕöɱ ÅñîĻîšţ, {sources} ƒŕöɱ ýöüŕ šöüŕçéš.~~~~~~~~~~~~]</value>
+    <comment>What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.</comment>
+  </data>
+  <data name="ReadHomeRowLoading" xml:space="preserve">
+    <value>[{row}, ļöàðîñĝ~~~~]</value>
+    <comment>A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".</comment>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>[{step} öƒ {total}~~~]</value>
     <comment>Over a first-run page's title: which page of how many.</comment>

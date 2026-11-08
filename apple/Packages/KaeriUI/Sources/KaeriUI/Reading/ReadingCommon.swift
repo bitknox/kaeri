@@ -41,20 +41,42 @@ public enum AddBookSourceStep: Hashable, Identifiable, Sendable {
 
 // MARK: - Covers
 
-/// A book's cover at 2:3 from its URL, rounded and edged like a show's.
+/// A book's cover at 2:3 from its URL, rounded and edged like a show's. With no art at all, a
+/// title given goes on the plate, with the book glyph under it, so the cover is still told apart.
 struct BookCover: View {
     @Environment(\.displayScale) private var scale
     let url: String?
     let width: CGFloat
     var radius: CGFloat?
+    /// The title for the plate of a series with no cover.
+    var title: String?
 
     var body: some View {
         let r = radius ?? ArtShape.coverRadius(width: width)
-        ArtworkView(url: url, maxPixelSize: Int(width * 1.5 * scale))
+        ArtworkView(url: url, maxPixelSize: Int(width * 1.5 * scale), flat: url == nil && title != nil ? Palette.raised : nil)
+            .overlay(alignment: .topLeading) {
+                if url == nil, let title { plate(title) }
+            }
             .frame(width: width, height: (width * 3 / 2).rounded())
             .clipShape(.rect(cornerRadius: r))
             .overlay(RoundedRectangle(cornerRadius: r).strokeBorder(Palette.glassEdge.opacity(1.25), lineWidth: 1))
             .accessibilityHidden(true)
+    }
+
+    private func plate(_ title: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .font(.ui(width < 120 ? 12 : 13, weight: .semibold))
+                .foregroundStyle(.silk)
+                .lineLimit(4)
+            Spacer(minLength: 8)
+            Image(systemName: "book")
+                .font(.ui(width < 120 ? 11 : 12))
+                .foregroundStyle(.haze)
+        }
+        .padding(width < 120 ? 10 : 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .dynamicTypeSize(...DynamicTypeSize.large)
     }
 }
 
@@ -72,9 +94,17 @@ struct WaterDot: View {
 enum ReadWords {
     /// The line under a cover: what comes next, else its facts joined.
     static func line(_ tile: WorkTile) -> String {
+        if tile.notInSources { return L.homeNotFound }
         if let next = tile.next { return next.text }
         if let label = tile.formatLabel, tile.facts.isEmpty { return label }
         return tile.facts.map(\.text).joined(separator: " · ") // i18n-skip
+    }
+
+    /// The line as a screen reader hears it after the title: the facts as a list, or the line.
+    static func spoken(_ tile: WorkTile) -> String {
+        if tile.notInSources { return L.homeNotFound }
+        if tile.next == nil, !tile.facts.isEmpty { return tile.facts.map(\.text).joined(separator: ", ") } // i18n-skip
+        return line(tile)
     }
 
     static func list(_ segment: LibrarySegmentRead) -> String {
@@ -197,12 +227,20 @@ extension PlainEmpty where Action == EmptyView {
 
 /// A series to open: its cover, the title and one line under it.
 struct ReadTileCard: View {
+    @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.homeLayout) private var layout
     let tile: WorkTile
     var width: CGFloat?
     /// The silk track under the cover, for Continue.
     var track = false
+    /// Two lines kept for the title whatever its length, so a row's or grid's covers and lines
+    /// stand level: discovery rows, Search's grid and the sources' rows.
+    var twoLines = false
+    /// A silk line under the facts, which wraps: "In Home library" on a joined AniList result.
+    var note: String?
+    /// Add to Planning as a screen reader's action, for a series not on a list yet.
+    var planAction = false
     /// Narrower than this, as a phone's grid cells are, the line may wrap once.
     static let narrow: CGFloat = 130
 
@@ -212,7 +250,7 @@ struct ReadTileCard: View {
             navigator.openSeries(tile.work)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                BookCover(url: tile.cover, width: width)
+                BookCover(url: tile.cover, width: width, title: tile.title)
                 if track {
                     Group {
                         if let progress = tile.progress, !tile.newChapter {
@@ -227,19 +265,30 @@ struct ReadTileCard: View {
                     .font(.showTitle(size: layout.posterTitle.size, relativeTo: .body))
                     .fixedLineHeight(layout.posterTitle.line)
                     .foregroundStyle(.silk)
-                    .lineLimit(1)
+                    .lineLimit(twoLines ? 2 : 1, reservesSpace: twoLines)
+                    .fixedSize(horizontal: false, vertical: twoLines)
                     .padding(.top, track ? 6 : 8)
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     if tile.newChapter { WaterDot() }
-                    // A phone's grid cell is narrow: its line takes a second line, not an ellipsis.
+                    // A phone's grid cell is narrow: its line takes a second line, not an ellipsis,
+                    // and so does Not found in your sources anywhere.
                     Text(ReadWords.line(tile))
-                        .lineLimit(width < Self.narrow ? 2 : 1)
+                        .lineLimit(width < Self.narrow || tile.notInSources ? 2 : 1)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .font(.ui(layout.posterLine.size))
                 .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)
                 .foregroundStyle(tile.newChapter ? .silk : .haze)
                 .padding(.top, 2)
+                if let note {
+                    Text(note)
+                        .font(.ui(layout.posterLine.size, weight: .semibold))
+                        .fixedLineHeight(layout.posterLine.line, relativeTo: .footnote)
+                        .foregroundStyle(.silk)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
+                        .transition(.opacity)
+                }
             }
             .frame(width: width, alignment: .leading)
             .contentShape(.rect)
@@ -247,27 +296,49 @@ struct ReadTileCard: View {
         }
         .buttonStyle(.plain)
         .pointerHover()
+        .animation(.fadeIn, value: note)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(tile.title))
-        .accessibilityValue(Text(ReadWords.line(tile)))
+        // The source a joined result is in comes last.
+        .accessibilityValue(Text([ReadWords.spoken(tile), note].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
         .accessibilityAddTraits(.isButton)
+        .accessibilityActions {
+            if planAction {
+                Button(L.libraryAddPlanning) { store.reading.setStatus(tile.work, .planning) }
+            }
+        }
     }
 }
 
-/// A shelf's heading with its link at the end, as Home's shelves have it.
+/// A shelf's heading with its link at the end, as Home's shelves have it, and the small line
+/// beside the heading some rows have ("Last 12 months").
 struct ReadShelfHeader: View {
     @Environment(\.homeLayout) private var layout
     let title: String
+    var side: String?
     var link: String?
+    /// What a screen reader hears for the heading, where it differs: "Trending manga, loading".
+    var spoken: String?
     var action: (() -> Void)?
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(title)
-                .font(.ui(layout.heading.size, weight: layout.heading.weight))
-                .fixedLineHeight(layout.heading.line, relativeTo: .title3)
-                .foregroundStyle(.silk)
-                .accessibilityAddTraits(.isHeader)
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(title)
+                    .font(.ui(layout.heading.size, weight: layout.heading.weight))
+                    .fixedLineHeight(layout.heading.line, relativeTo: .title3)
+                    .foregroundStyle(.silk)
+                    .lineLimit(1)
+                if let side {
+                    Text(side)
+                        .font(.ui(13))
+                        .foregroundStyle(.haze)
+                        .lineLimit(1)
+                }
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(spoken.map { Text($0) } ?? Text([title, side].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
+            .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
             if let link, let action {
                 Button(action: action) {
@@ -284,6 +355,9 @@ struct ReadShelfHeader: View {
                 }
                 .buttonStyle(.plain)
                 .pointerHover()
+                // "View all, Trending manga".
+                .accessibilityLabel(link)
+                .accessibilityValue(title)
             }
         }
     }

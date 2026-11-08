@@ -14935,6 +14935,36 @@ pub fn read_search_source_more(n: i64) -> String {
     text("read-search-source-more", &[("n", Arg::Int(n))])
 }
 
+/// Beside a source row's name in Search: the kind of source it is.
+pub fn read_search_source_kind_server() -> String {
+    text("read-search-source-kind-server", &[])
+}
+
+/// Beside a source row's name in Search: the kind of source it is.
+pub fn read_search_source_kind_folder() -> String {
+    text("read-search-source-kind-folder", &[])
+}
+
+/// Beside a source row's name in Search: the kind of source it is.
+pub fn read_search_source_kind_plugin() -> String {
+    text("read-search-source-kind-plugin", &[])
+}
+
+/// Under the Your sources only switch in the iPhone and iPad Filters sheet.
+pub fn read_search_sources_only_line() -> String {
+    text("read-search-sources-only-line", &[])
+}
+
+/// What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.
+pub fn read_search_done(anilist: i64, sources: i64) -> String {
+    text("read-search-done", &[("anilist", Arg::Int(anilist)), ("sources", Arg::Int(sources))])
+}
+
+/// A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".
+pub fn read_home_row_loading(row: &str) -> String {
+    text("read-home-row-loading", &[("row", Arg::Text(row))])
+}
+
 /// Over a first-run page's title: which page of how many.
 pub fn onboarding_step(step: i64, total: i64) -> String {
     text("onboarding-step", &[("step", Arg::Int(step)), ("total", Arg::Int(total))])

@@ -17,6 +17,8 @@ public final class Navigator {
                 seriesOnMac = nil
                 bookSourcePage = nil
                 pageGone()
+                // Search's Back to Home lasts while Search does.
+                if section != .search { readSearchBack = nil }
             }
         }
     }
@@ -38,6 +40,13 @@ public final class Navigator {
     public var searchReading = false
     /// A genre to browse in reading's Search, from Home's genre shelf.
     public var readingGenre: String?
+    /// The section a discovery row's View all opened reading's Search from, on the Mac and a wide
+    /// iPad: Search's Back returns there, to the same scroll.
+    public var readSearchBack: AppSection?
+    /// On iPhone and in a narrow window, the row whose View all pushed its results onto Home.
+    public var readViewAll: ReadViewAll?
+    /// How far reading's Home was scrolled when it was left, for coming back to the same place.
+    @ObservationIgnored var readHomeOffset: CGFloat = 0
     /// The Library's reading list on screen.
     public var readingSegment: LibrarySegmentRead = .reading
     /// The series whose sheet is up, and which: change source, tracking, choose chapters.
@@ -280,6 +289,29 @@ public final class Navigator {
         open(.search)
     }
 
+    /// A discovery row's View all: Search with exactly the row's filter and sort, whose first
+    /// results are the row's titles. Wide, the Search place opens with Back to Home; narrow, the
+    /// results push onto Home with the row's name as their title.
+    public func openReadViewAll(_ query: ReadSearchQuery, title: String, wide: Bool, store: AppStore) {
+        store.reading.runSearch(query)
+        // The field says what the search has, so typing starts from it, and nothing more is asked.
+        self.query = query.text
+        if wide {
+            let from = section
+            searchReading = true
+            section = .search
+            readSearchBack = from
+        } else {
+            readViewAll = ReadViewAll(title: title, query: query)
+        }
+    }
+
+    /// Search's Back to the Home a View all came from.
+    public func closeReadSearch() {
+        guard let back = readSearchBack else { return }
+        section = back
+    }
+
     /// Back from a series' page on the Mac.
     public func closeSeries() {
         withAnimation(.standard) { seriesOnMac = nil }
@@ -367,4 +399,11 @@ public final class Navigator {
         query.text = text
         search(query, in: store)
     }
+}
+
+/// A discovery row's results pushed onto Home: the row's name and its search.
+public struct ReadViewAll: Hashable, Identifiable {
+    public let title: String
+    public let query: ReadSearchQuery
+    public var id: Self { self }
 }

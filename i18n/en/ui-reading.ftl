@@ -877,6 +877,32 @@ read-search-shown = { $shown } of { $total } shown
 # @arg n: int
 read-search-source-more = Show { $n } more
 
+# Beside a source row's name in Search: the kind of source it is.
+# @max 16
+read-search-source-kind-server = Server
+
+# Beside a source row's name in Search: the kind of source it is.
+# @max 16
+read-search-source-kind-folder = Folder
+
+# Beside a source row's name in Search: the kind of source it is.
+# @max 16
+read-search-source-kind-plugin = Plugin
+
+# Under the Your sources only switch in the iPhone and iPad Filters sheet.
+read-search-sources-only-line = AniList's results are hidden. The filters below apply to AniList's results only.
+
+# What a screen reader hears once, when AniList and every source have answered or run out of
+# time. Sources that didn't answer follow it, each as its own sentence.
+# @arg anilist: int
+# @arg sources: int
+read-search-done = { $anilist } from AniList, { $sources } from your { -source-pl }.
+
+# A screen reader's label for a discovery row's heading on reading's Home while its covers are
+# on their way. The row is its heading, such as "Trending manga".
+# @arg row: text
+read-home-row-loading = { $row }, loading
+
 ## First run with reading on
 
 # Over a first-run page's title: which page of how many.
