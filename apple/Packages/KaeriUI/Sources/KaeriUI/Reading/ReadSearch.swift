@@ -230,7 +230,19 @@ private struct OtherScopeRow: View {
 private struct ReadResultRow: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
     let tile: WorkTile
+
+    /// On a phone the place in the series goes under the facts, where it has the width.
+    private var compact: Bool {
+        #if os(iOS)
+        sizeClass == .compact
+        #else
+        false
+        #endif
+    }
 
     var body: some View {
         Button {
@@ -247,9 +259,15 @@ private struct ReadResultRow: View {
                         .font(.plat(mac: 12, touch: 15))
                         .foregroundStyle(.haze)
                         .lineLimit(1)
+                    if compact, let next = tile.next {
+                        Text(next.text)
+                            .font(.plat(mac: 12, touch: 15))
+                            .foregroundStyle(.haze)
+                            .lineLimit(2)
+                    }
                 }
                 Spacer(minLength: 8)
-                if let next = tile.next {
+                if !compact, let next = tile.next {
                     Text(next.text)
                         .font(.plat(mac: 12, touch: 15))
                         .foregroundStyle(.haze)

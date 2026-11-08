@@ -5474,6 +5474,15 @@
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · từ {source}</value>
   </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Vuốt để đọc tiếp</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} ảnh</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Chương {chapter} · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Đọc bản demo</value>
   </data>

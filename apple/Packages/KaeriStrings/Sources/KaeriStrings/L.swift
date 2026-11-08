@@ -684,6 +684,11 @@ public enum L {
         Self.format("reader-resumed", fallback: "Resumed at page %1$lld", page)
     }
 
+    /// The same notice in a webtoon strip, which counts images rather than pages.
+    public static func readerResumedImage(image: Int) -> String {
+        Self.format("reader-resumed-image", fallback: "Resumed at image %1$lld", image)
+    }
+
     /// A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
     public static func readerBackToPage(page: Int) -> String {
         Self.format("reader-back-to-page", fallback: "Back to page %1$lld", page)
@@ -2471,6 +2476,9 @@ public enum L {
         Self.format("reader-go-to-page-field", fallback: "1 to %1$lld", total)
     }
 
+    /// Button beside the Go to page field that goes to the typed page.
+    public static var readerGoToPageSubmit: String { string("reader-go-to-page-submit", fallback: "Go") }
+
     /// Line on the end page for a chapter that has not counted yet.
     public static var readerEndNotRead: String { string("reader-end-not-read", fallback: "Not marked read yet") }
 
@@ -2510,9 +2518,9 @@ public enum L {
     /// End page text when the next chapter is not downloaded and the device is offline.
     public static var readerEndOfflineBody: String { string("reader-end-offline-body", fallback: "You're offline. It opens here once you're connected.") }
 
-    /// Line that opens a chapter, over the cover.
+    /// Line on the page plate while a chapter opens. The chapter is its number, such as 12.
     public static func readerOpening(chapter: String) -> String {
-        Self.format("reader-opening", fallback: "Opening %1$@", chapter)
+        Self.format("reader-opening", fallback: "Opening chapter %1$@", chapter)
     }
 
     /// The opening line after a few seconds of waiting.
@@ -2523,9 +2531,9 @@ public enum L {
     /// Hint under a page's error.
     public static var readerPageFailedHint: String { string("reader-page-failed-hint", fallback: "Swipe to go on without it.") }
 
-    /// Heading of the error when a chapter would not open.
+    /// Heading of the error when a chapter would not open. The chapter is its number, such as 13.
     public static func readerChapterFailed(chapter: String) -> String {
-        Self.format("reader-chapter-failed", fallback: "Couldn't open %1$@", chapter)
+        Self.format("reader-chapter-failed", fallback: "Couldn't open chapter %1$@", chapter)
     }
 
     /// Button of the error when a chapter would not open.
@@ -2560,6 +2568,9 @@ public enum L {
 
     /// Heading of the web comic settings.
     public static var readerAllStrips: String { string("reader-all-strips", fallback: "All webtoons") }
+
+    /// Heading of the webtoon settings on a device: it names the device kind.
+    public static var readerAllStripsHere: String { string("reader-all-strips-here", fallback: "All webtoons on this device") }
 
     /// Row: how the series reads.
     public static var readerReadingMode: String { string("reader-reading-mode", fallback: "Reading mode") }
@@ -2707,7 +2718,7 @@ public enum L {
     /// Chapters sheet: the offline line.
     public static var readerOfflineLine: String { string("reader-offline-line", fallback: "Offline. Downloaded chapters still open.") }
 
-    /// Mac menu: the Go menu and its items.
+    /// The Go menu and its items, on the Mac and with a keyboard on iPad.
     public static var readerMenuGo: String { string("reader-menu-go", fallback: "Go") }
 
     public static var readerMenuNextPage: String { string("reader-menu-next-page", fallback: "Next Page") }
@@ -2729,6 +2740,10 @@ public enum L {
     public static var readerMenuZoomOut: String { string("reader-menu-zoom-out", fallback: "Zoom Out") }
 
     public static var readerMenuZoomFit: String { string("reader-menu-zoom-fit", fallback: "Fit to Window") }
+
+    public static var readerMenuFirstPage: String { string("reader-menu-first-page", fallback: "First Page") }
+
+    public static var readerMenuLastPage: String { string("reader-menu-last-page", fallback: "Last Page") }
 
     /// Mac menu item: back to where the person was before a jump.
     public static func readerMenuBackToPage(page: Int) -> String {
@@ -2757,6 +2772,14 @@ public enum L {
     public static var readerZoneForward: String { string("reader-zone-forward", fallback: "Forward") }
 
     public static var readerZoneMenu: String { string("reader-zone-menu", fallback: "Menu") }
+
+    /// A jump button above the page grid in the chapters sheet, for a band of pages.
+    public static func readerPagesRange(from: Int, to: Int) -> String {
+        Self.format("reader-pages-range", fallback: "%1$lld–%2$lld", from, to)
+    }
+
+    /// Why an e-reader send failed while offline, after "Couldn't prepare chapter 12."
+    public static var sendFailedOffline: String { string("send-failed-offline", fallback: "Try again when you're online.") }
 
     /// Line while results wait for the rate limit to recover, on a phone where a Search key runs the search.
     public static var searchRateLimitSearch: String { string("search-rate-limit-search", fallback: "Searching as you type is paused for a moment, to stay within AniList's limits. Press Search to search now.") }
@@ -3692,6 +3715,11 @@ public enum L {
     /// Restore sheet line when the folder's device count is not known.
     public static func rkeyEnterLineGeneric(service: String) -> String {
         Self.format("rkey-enter-line-generic", fallback: "%1$@ holds history from your other devices. The key you saved when sync was turned on opens it.", service)
+    }
+
+    /// Code screen: how long the code still works, as a countdown such as 1:58.
+    public static func pairCodeLeft(left: String) -> String {
+        Self.format("pair-code-left", fallback: "This code works for another %1$@.", left)
     }
 
     /// Name of the fact on the title page that lists where else a show can be watched.
@@ -8187,7 +8215,7 @@ public enum L {
         Self.format("reader-end-from", fallback: "From %1$@", source)
     }
 
-    /// Under the series title in the reader's controls. The chapter is its number, such as 12.
+    /// Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
     public static func readerChapterLine(chapter: String) -> String {
         Self.format("reader-chapter-line", fallback: "Chapter %1$@", chapter)
     }
@@ -8195,6 +8223,19 @@ public enum L {
     /// The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
     public static func readerDividerFactsSource(facts: String, source: String) -> String {
         Self.format("reader-divider-facts-source", fallback: "%1$@ · from %2$@", facts, source)
+    }
+
+    /// Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+    public static var readerEndSwipe: String { string("reader-end-swipe", fallback: "Swipe to keep reading") }
+
+    /// The next episode's length on the divider inside a strip.
+    public static func readerDividerImages(count: Int) -> String {
+        Self.format("reader-divider-images", fallback: "%1$lld images", count)
+    }
+
+    /// Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+    public static func readerChapterLineTitled(chapter: String, title: String) -> String {
+        Self.format("reader-chapter-line-titled", fallback: "Chapter %1$@ · %2$@", chapter, title)
     }
 
     /// Button in the first run that opens the reading demo.

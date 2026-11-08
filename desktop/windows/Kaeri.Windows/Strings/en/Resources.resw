@@ -739,6 +739,10 @@
     <value>Resumed at page {page}</value>
     <comment>A notice over the page when a chapter opens where it was left. It offers Start over.</comment>
   </data>
+  <data name="ReaderResumedImage" xml:space="preserve">
+    <value>Resumed at image {image}</value>
+    <comment>The same notice in a webtoon strip, which counts images rather than pages.</comment>
+  </data>
   <data name="ReaderBackToPage" xml:space="preserve">
     <value>Back to page {page}</value>
     <comment>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</comment>
@@ -7686,11 +7690,27 @@
   </data>
   <data name="ReaderChapterLine" xml:space="preserve">
     <value>Chapter {chapter}</value>
-    <comment>Under the series title in the reader's controls. The chapter is its number, such as 12.</comment>
+    <comment>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</comment>
   </data>
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · from {source}</value>
     <comment>The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.</comment>
+  </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Swipe to keep reading</value>
+    <comment>Line on the page between chapters, near its buttons: one more swipe opens the next chapter.</comment>
+  </data>
+  <data name="ReaderDividerImages_one" xml:space="preserve">
+    <value>One image</value>
+    <comment>The next episode's length on the divider inside a strip.</comment>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} images</value>
+    <comment>The next episode's length on the divider inside a strip.</comment>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Chapter {chapter} · {title}</value>
+    <comment>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</comment>
   </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Read the demo</value>

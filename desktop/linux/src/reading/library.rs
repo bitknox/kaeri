@@ -17,7 +17,6 @@ use kaeri_model::{
 
 use super::{Dest, WorkGrid, listen, scope, send};
 use crate::{
-    nagare,
     states::{Shape, States},
     widgets,
     window::Ctx,
@@ -204,10 +203,9 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         .hscrollbar_policy(gtk::PolicyType::Never)
         .child(&grid.widget)
         .build();
-    let empty = nagare::status_page(
+    let empty = crate::states::plain(
         &t::read_library_files_empty_title(),
         &t::read_library_files_empty_line(),
-        None,
     );
     let states = States::new(&ctx.hub, &scroll, Shape::Grid, &empty, &t::error_generic());
 

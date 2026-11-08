@@ -368,6 +368,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     if let Some(settle) = crate::shots_reading::stage(shell, shot) {
         return settle;
     }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
+        return settle;
+    }
     let window = &shell.ctx.window;
     match shot {
         "home" => {
@@ -1368,6 +1372,8 @@ fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f6
 fn unstage(shell: &Rc<Shell>, shot: &str) {
     #[cfg(feature = "fixtures")]
     crate::shots_reading::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_prelaunch::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -1991,8 +1997,14 @@ fn capture(
     // A popover is a surface of its own, which the window's drawing leaves out: drawn on top.
     if let Some((widget, x, y)) = over {
         let popover = gtk::WidgetPaintable::new(Some(&widget));
+        // The window draws its frame's bounds squeezed into its size: the popover goes through
+        // the same, so it lands where it sits over the window.
+        let frame = window
+            .compute_bounds(window)
+            .unwrap_or_else(|| gtk::graphene::Rect::new(0.0, 0.0, width as f32, height as f32));
         snapshot.save();
-        snapshot.translate(&gtk::graphene::Point::new(x, y));
+        snapshot.scale(width as f32 / frame.width(), height as f32 / frame.height());
+        snapshot.translate(&gtk::graphene::Point::new(x - frame.x(), y - frame.y()));
         popover.snapshot(&snapshot, f64::from(widget.width()), f64::from(widget.height()));
         snapshot.restore();
     }
@@ -2035,6 +2047,8 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 "read-library-filters"
                 | "read-search-filters"
                 | "read-paged-settings"
+                | "read-mode"
+                | "read-strip-mode"
                 | "read-chapters"
                 | "read-chapters-list"
                 | "read-novel-paper" => open_popover(&window),
@@ -2094,6 +2108,14 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 #[cfg(feature = "fixtures")]
                 "reading" => {
                     crate::shots_reading::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "prelaunch" => {
+                    crate::shots_prelaunch::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "prelaunch-demo" => {
+                    crate::shots_prelaunch::DEMO.iter().map(|p| (*p).to_owned()).collect()
                 }
                 "match" => MATCH.iter().map(|p| (*p).to_owned()).collect(),
                 one => vec![one.to_owned()],
@@ -3298,9 +3320,12 @@ fn open_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f3
     let width = popover.width() as f32;
     let x = (bounds.x() + bounds.width() / 2.0 - width / 2.0)
         .clamp(0.0, (window.width() as f32 - width).max(0.0));
-    // Under the button, or over it for one that opens upwards, as the reader's do.
+    // Under the button, or over it for one that opens upwards, as the reader's do: over the
+    // place the popover points at, when it points somewhere of its own.
     let y = if button.direction() == gtk::ArrowType::Up {
-        bounds.y() - popover.height() as f32
+        let (aimed, at) = popover.pointing_to();
+        let top = if aimed { at.y() as f32 } else { 0.0 };
+        bounds.y() + top - popover.height() as f32
     } else {
         bounds.y() + bounds.height()
     };

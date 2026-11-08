@@ -694,13 +694,11 @@
     <string name="reader_notice_go_back">Вернуться</string>
     <string name="reader_notice_change">Изменить</string>
     <string name="reader_settings">Настройки чтения</string>
-    <string name="reader_chapter_line_titled">Глава %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Глава %1$s · прокрутка</string>
     <string name="reader_minutes_left">%1$d мин</string>
     <string name="reader_zone_next">Следующая страница</string>
     <string name="reader_grid_title">Страницы</string>
     <string name="reader_end_continue">Продолжить</string>
-    <string name="reader_end_swipe">Смахните, чтобы читать дальше</string>
     <string name="reader_end_series">Назад к серии</string>
     <string name="reader_end_again">Прочитать заново</string>
     <string name="reader_opening_chapter">Открывается глава %1$s</string>
@@ -790,12 +788,6 @@
     <string name="reader_row_strip_gap">Промежуток между картинками</string>
     <string name="reader_paper_look">Бумажный вид днём</string>
     <string name="reader_paper_dim">Приглушить страницу</string>
-    <plurals name="reader_divider_images">
-        <item quantity="one">%1$d картинка</item>
-        <item quantity="few">%1$d картинки</item>
-        <item quantity="many">%1$d картинок</item>
-        <item quantity="other">%1$d картинки</item>
-    </plurals>
     <string name="reader_opening_waited">%1$s · %2$d с</string>
     <string name="reader_sources_title">Читать эту главу из</string>
     <string name="reader_paper_parts">Что меняется</string>
@@ -2497,6 +2489,14 @@
     <string name="reader_end_from">Из %1$s</string>
     <string name="reader_chapter_line">Глава %1$s</string>
     <string name="reader_divider_facts_source">%1$s · из %2$s</string>
+    <string name="reader_end_swipe">Смахните, чтобы читать дальше</string>
+    <plurals name="reader_divider_images">
+        <item quantity="one">%1$d картинка</item>
+        <item quantity="few">%1$d картинки</item>
+        <item quantity="many">%1$d картинок</item>
+        <item quantity="other">%1$d картинки</item>
+    </plurals>
+    <string name="reader_chapter_line_titled">Глава %1$s · %2$s</string>
     <string name="onboarding_read_demo">Открыть демо</string>
     <string name="onboarding_demo_books_detail">Один короткий комикс и один короткий рассказ, которыми их авторы делятся по лицензии Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Один короткий эпизод и один короткий комикс, которыми их авторы делятся по лицензии Creative Commons.</string>

@@ -65,6 +65,11 @@ reading-split-chapter = Chapter { $chapter } goes to { -tracker-pl } as { $whole
 # @max 32
 reader-resumed = Resumed at page { $page }
 
+# The same notice in a webtoon strip, which counts images rather than pages.
+# @arg image: int
+# @max 32
+reader-resumed-image = Resumed at image { $image }
+
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes
 # back to the page.
 # @arg page: int

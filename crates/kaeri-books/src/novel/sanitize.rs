@@ -268,15 +268,12 @@ pub fn stylesheet(text: &str, path: &str, limits: &Limits) -> String {
 /// What a book's own `<meta name="viewport">` is renamed to: its size, for fixed layout.
 const BOOK_VIEWPORT: &str = "kaeri-viewport";
 
-/// Kaeri's stylesheet, linked from text chapters; the engine serves it beside them.
-pub const READER_CSS: &str = "_kaeri/reader.css";
-
 fn wrap(title: &str, body: &str, lang: Option<&str>) -> String {
     let lang = lang
         .map(|l| format!(" lang=\"{0}\" xml:lang=\"{0}\"", escape_attr(l)))
         .unwrap_or_default();
     format!(
-        "<html xmlns=\"{XHTML_NS}\" xmlns:epub=\"http://www.idpf.org/2007/ops\"{lang}><head><title>{}</title><link rel=\"stylesheet\" type=\"text/css\" href=\"{READER_CSS}\"/></head><body>{body}</body></html>",
+        "<html xmlns=\"{XHTML_NS}\" xmlns:epub=\"http://www.idpf.org/2007/ops\"{lang}><head><title>{}</title></head><body>{body}</body></html>",
         escape_text(title)
     )
 }

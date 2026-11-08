@@ -5474,6 +5474,15 @@
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · dari {source}</value>
   </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Geser untuk terus membaca</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} gambar</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Bab {chapter} · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Baca demo</value>
   </data>

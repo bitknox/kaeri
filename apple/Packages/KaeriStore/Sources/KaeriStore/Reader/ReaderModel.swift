@@ -32,6 +32,27 @@ public struct ReaderNoticeLine: Equatable, Sendable {
     public let id: Int
     public let text: String
     public let action: ReaderAction?
+
+    public init(id: Int, text: String, action: ReaderAction?) {
+        self.id = id
+        self.text = text
+        self.action = action
+    }
+}
+
+/// The chapters a strip ran on from, kept above the open one so the scroll goes on: each one's
+/// images with their files, and the marker into the chapter after it.
+public struct StripTrail: Equatable, Sendable {
+    public struct Chapter: Equatable, Sendable {
+        public let id: String
+        public let label: String
+        public let parts: [LeafPart]
+        /// The chapter it ran into, which its marker names.
+        public let next: ChapterRow
+        public let nextSource: String?
+    }
+
+    public var chapters: [Chapter] = []
 }
 
 @Observable @MainActor
@@ -61,6 +82,15 @@ public final class ReaderModel {
     public internal(set) var notice: ReaderNoticeLine?
     /// "Back to page 8", waiting in the corner.
     public internal(set) var backTo: ReaderNoticeLine?
+    /// The reader is out of sight: the app is inactive or in the background. Notices wait.
+    public var away = false
+    /// VoiceOver rests on the notice, or the pointer is over it. It waits.
+    public var noticeHeld = false
+    private var noticesPaused: Bool { away || noticeHeld }
+    /// The chapters a strip ran on from, above the open one.
+    public private(set) var trail = StripTrail()
+    /// The strip is scrolled back above the open chapter's marker, into the trail.
+    public var inTrail: StripTrail.Chapter?
     /// The leaf shown now.
     public internal(set) var current = 0
     /// Where the person was before the last jump, as a leaf, for the ring on the scrubber.
@@ -108,6 +138,7 @@ public final class ReaderModel {
     func hold(_ phase: Phase) {
         self.phase = phase
         openedAt = .now
+        clearNotices()
     }
 
     /// Go to page is open.
@@ -161,10 +192,8 @@ public final class ReaderModel {
         let line = ReaderNoticeLine(id: bump(), text: L.readerFocusPaper, action: nil)
         notice = line
         noticeTask?.cancel()
-        noticeTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(4))
-            guard !Task.isCancelled, self?.notice?.id == line.id else { return }
-            self?.notice = nil
+        noticeTask = countdown(holdFor(4_000, text: line.text, action: false)) { [weak self] in
+            if self?.notice?.id == line.id { self?.notice = nil }
         }
     }
 
@@ -285,27 +314,44 @@ public final class ReaderModel {
         end = nil
         read = false
         readTrackers = []
+        trail = StripTrail()
+        inTrail = nil
+        flowing = nil
+        clearNotices()
         send?(.reader(.openChapter(session: session, chapter: id)))
         phase = .opening
         openedAt = .now
         sheet = nil
     }
 
-    /// A strip reached its foot and the next chapter follows: it opens without the opening screen,
-    /// so the reader goes on from the divider.
+    /// A strip's marker into the next chapter crossed the middle of the screen: that chapter
+    /// opens in the same scroll, under the marker, with no opening screen. The images read so
+    /// far stay above it.
     public func flowOn() {
-        guard session != 0, let next = view?.next else { return }
+        guard session != 0, flowing == nil, let view, view.mode == .strip, let next = end?.next ?? view.next else { return }
+        let chapter = view.chapter.id
+        let parts = leaves.filter { !$0.endPage }.flatMap(\.parts).map { part in
+            var part = part
+            if part.file == nil { part.file = file(of: part, chapter: chapter) }
+            return part
+        }
+        trail.chapters.append(StripTrail.Chapter(
+            id: chapter, label: view.chapter.label, parts: parts, next: next, nextSource: end?.nextSource))
+        flowing = next.id
         end = nil
         read = false
         readTrackers = []
         send?(.reader(.openChapter(session: session, chapter: next.id)))
     }
 
+    /// The chapter a strip is flowing into, until it has opened.
+    public private(set) var flowing: ChapterId?
+
     public func retry(page: UInt32?) {
         guard session != 0, let chapter = view?.chapter.id else { return }
         if let page { failures = failures.filter { $0.key.page != page } }
         send?(.reader(.retry(session: session, chapter: chapter, page: page)))
-        if page == nil { phase = .opening; openedAt = .now }
+        if page == nil { phase = .opening; openedAt = .now; clearNotices() }
     }
 
     public func needPage(_ page: UInt32) {
@@ -327,6 +373,14 @@ public final class ReaderModel {
     /// The person went back to the page; the pill leaves.
     public func dismissNotice(_ action: ReaderAction?) {
         if action == .backTo { backTo = nil; backTask?.cancel() } else { notice = nil; noticeTask?.cancel() }
+    }
+
+    /// Notices belong to an open chapter: opening and failing screens show none.
+    private func clearNotices() {
+        noticeTask?.cancel()
+        backTask?.cancel()
+        notice = nil
+        backTo = nil
     }
 
     /// A turn the menu or a key asked for; the reader on screen answers it.
@@ -437,6 +491,12 @@ public final class ReaderModel {
     func apply(_ event: ReaderEvent) {
         switch event {
         case .opened(let opened):
+            // A strip that flowed on keeps the chapters above; any other open starts clean.
+            if flowing != opened.chapter.id || opened.mode != .strip {
+                trail = StripTrail()
+                inTrail = nil
+            }
+            flowing = nil
             session = opened.session
             view = opened
             phase = .open
@@ -471,6 +531,7 @@ public final class ReaderModel {
             guard session == self.session else { return }
             if leaves.isEmpty, page == 0 {
                 phase = .failed(failure)
+                clearNotices()
             }
             failures[ReaderPageKey(chapter: chapter, page: page)] = failure
         case .novelOpen(let open):
@@ -500,6 +561,8 @@ public final class ReaderModel {
             // The Android reader's opening screen; this reader has none.
             break
         case .notice(let notice):
+            // A notice belongs to the chapter on screen; the opening and failing screens have none.
+            guard phase == .open else { return }
             show(notice)
         case .moved(let session, _, _, _):
             guard session == self.session else { return }
@@ -556,26 +619,41 @@ public final class ReaderModel {
     private func show(_ incoming: ReaderNotice) {
         noticeCount += 1
         let line = ReaderNoticeLine(id: noticeCount, text: incoming.msg.text, action: incoming.action)
+        let hold = holdFor(incoming.lastsMs, text: line.text, action: incoming.action != nil)
         if incoming.action == .backTo {
             backTo = line
             backTask?.cancel()
-            if incoming.lastsMs > 0 {
-                backTask = Task { [weak self] in
-                    try? await Task.sleep(for: .milliseconds(Int(incoming.lastsMs)))
-                    guard !Task.isCancelled else { return }
-                    self?.backTo = nil
-                }
+            backTask = countdown(hold) { [weak self] in
+                if self?.backTo?.id == line.id { self?.backTo = nil }
             }
             return
         }
         notice = line
         noticeTask?.cancel()
-        if incoming.lastsMs > 0 {
-            noticeTask = Task { [weak self] in
-                try? await Task.sleep(for: .milliseconds(Int(incoming.lastsMs)))
-                guard !Task.isCancelled else { return }
-                if self?.notice?.id == line.id { self?.notice = nil }
+        noticeTask = countdown(hold) { [weak self] in
+            if self?.notice?.id == line.id { self?.notice = nil }
+        }
+    }
+
+    /// How long a notice stays, by the engine's rule: longer for long text, and until it is
+    /// dismissed when it carries a button and VoiceOver runs. Nil when it waits.
+    private func holdFor(_ lastsMs: UInt32, text: String, action: Bool) -> UInt32? {
+        let words = text.split(whereSeparator: \.isWhitespace).count
+        let hold = readerNoticeHold(lastsMs: lastsMs, words: UInt32(words), hasAction: action, screenReader: pinChrome)
+        return hold == 0 ? nil : hold
+    }
+
+    /// Counts `ms` down, only while notices are not paused, then calls `done`. Nothing for nil.
+    private func countdown(_ ms: UInt32?, done: @escaping @MainActor () -> Void) -> Task<Void, Never>? {
+        guard let ms else { return nil }
+        return Task { [weak self] in
+            var left = Int(ms)
+            while left > 0 {
+                try? await Task.sleep(for: .milliseconds(100))
+                guard !Task.isCancelled, let self else { return }
+                if !self.noticesPaused { left -= 100 }
             }
+            done()
         }
     }
 
@@ -613,6 +691,9 @@ public final class ReaderModel {
         opened = false
         pendingGoTo = nil
         lastStrip = nil
+        trail = StripTrail()
+        inTrail = nil
+        flowing = nil
         phase = .closed
     }
 
@@ -678,5 +759,12 @@ extension ReadingFailure {
         case .sendTooLarge, .sendCheck: readingFailureMsg(failure: self)
         }
         return msg.text
+    }
+
+    /// The failure as the cause of a send that failed: offline says to try again online rather
+    /// than the reader's line about downloaded chapters.
+    public var sendWords: String {
+        if case .offline = self { return L.sendFailedOffline }
+        return words
     }
 }
