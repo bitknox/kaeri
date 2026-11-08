@@ -106,6 +106,12 @@ source-row-server = { $libraries ->
     [many] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
    *[other] { $kind } · серий: { $series } · библиотек: { $libraries } · добавлено только что
  }
+source-row-server-series = { $libraries ->
+    [one] { $kind } · серий: { $series } · библиотек: { $libraries }
+    [few] { $kind } · серий: { $series } · библиотек: { $libraries }
+    [many] { $kind } · серий: { $series } · библиотек: { $libraries }
+   *[other] { $kind } · серий: { $series } · библиотек: { $libraries }
+ }
 source-row-server-empty = { $kind } · серий пока нет · проверка снова через 30 минут
 source-row-folder = { $skipped ->
     [one] { $path } · серий: { $series } · пропущено файлов: { $skipped }

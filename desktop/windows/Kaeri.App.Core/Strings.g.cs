@@ -5446,6 +5446,24 @@ public static partial class T
     /// <summary>Look choice that follows the system's light or dark.</summary>
     public static string ReaderLookSystem => Get("ReaderLookSystem");
 
+    /// <summary>Top line of the page between chapters. The chapter is its number, such as 12.</summary>
+    public static string ReaderEndOfChapterNumber(string chapter) => Fill(Get("ReaderEndOfChapterNumber"), ("chapter", chapter));
+
+    /// <summary>The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.</summary>
+    public static string ReaderEndFacts(string chapter, string facts) => Fill(Get("ReaderEndFacts"), ("chapter", chapter), ("facts", facts));
+
+    /// <summary>The next chapter's length on the page between chapters.</summary>
+    public static string ReaderEndPages(long count) => Fill(GetPlural("ReaderEndPages", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.</summary>
+    public static string ReaderEndFrom(string source) => Fill(Get("ReaderEndFrom"), ("source", source));
+
+    /// <summary>Under the series title in the reader's controls. The chapter is its number, such as 12.</summary>
+    public static string ReaderChapterLine(string chapter) => Fill(Get("ReaderChapterLine"), ("chapter", chapter));
+
+    /// <summary>The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.</summary>
+    public static string ReaderDividerFactsSource(string facts, string source) => Fill(Get("ReaderDividerFactsSource"), ("facts", facts), ("source", source));
+
     /// <summary>Button in the first run that opens the reading demo.</summary>
     public static string OnboardingReadDemo => Get("OnboardingReadDemo");
 
@@ -8173,10 +8191,10 @@ public static partial class T
     /// <summary>Notice after Install all, for 4 seconds.</summary>
     public static string SourceAddedPlugins(long count, string store) => Fill(GetPlural("SourceAddedPlugins", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("store", store));
 
-    /// <summary>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.</summary>
+    /// <summary>A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</summary>
     public static string SourceRowServer(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServer", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.</summary>
+    /// <summary>A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.</summary>
     public static string SourceRowServerSeries(string kind, long series, long libraries) => Fill(GetPlural("SourceRowServerSeries", libraries), ("kind", kind), ("series", series.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("libraries", libraries.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A server's row in Your sources while it shows no series.</summary>
@@ -12781,6 +12799,13 @@ public static partial class T
         ["ReaderGapNone"] = "None",
         ["ReaderGapSmall"] = "Small",
         ["ReaderLookSystem"] = "System",
+        ["ReaderEndOfChapterNumber"] = "End of chapter {chapter}",
+        ["ReaderEndFacts"] = "Chapter {chapter} · {facts}",
+        ["ReaderEndPages_one"] = "One page",
+        ["ReaderEndPages_other"] = "{count} pages",
+        ["ReaderEndFrom"] = "From {source}",
+        ["ReaderChapterLine"] = "Chapter {chapter}",
+        ["ReaderDividerFactsSource"] = "{facts} · from {source}",
         ["OnboardingReadDemo"] = "Read the demo",
         ["OnboardingDemoBooksDetail"] = "The demo reads a short comic and a short story their makers share under Creative Commons.",
         ["OnboardingDemoBothDetail"] = "One short episode and one short comic, shared by their makers under Creative Commons.",
@@ -13739,9 +13764,9 @@ public static partial class T
         ["SourceAdded"] = "Added {name} · {series} series",
         ["SourceAddedPlugins_one"] = "Installed one plugin from {store}",
         ["SourceAddedPlugins_other"] = "Installed {count} plugins from {store}",
-        ["SourceRowServer_one"] = "{kind} · {series} series · added just now",
+        ["SourceRowServer_one"] = "{kind} · {series} series in {libraries} library · added just now",
         ["SourceRowServer_other"] = "{kind} · {series} series in {libraries} libraries · added just now",
-        ["SourceRowServerSeries_one"] = "{kind} · {series} series",
+        ["SourceRowServerSeries_one"] = "{kind} · {series} series in {libraries} library",
         ["SourceRowServerSeries_other"] = "{kind} · {series} series in {libraries} libraries",
         ["SourceRowServerEmpty"] = "{kind} · no series yet · looks again in 30 minutes",
         ["SourceRowFolder_one"] = "{path} · {series} series · one file skipped",

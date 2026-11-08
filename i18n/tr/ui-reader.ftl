@@ -40,3 +40,14 @@ reader-gap-none = Yok
 reader-gap-small = Küçük
 reader-look-system = Sistem
 reader-end-tracker = Okundu · { $trackers } güncellendi
+reader-end-of-chapter-number = Bölüm { $chapter } sona erdi
+reader-end-facts = Bölüm { $chapter } · { $facts }
+reader-end-pages = { $count ->
+    [one] Bir sayfa
+   *[other] { $count } sayfa
+ }
+reader-end-from = Şuradan: { $source }
+
+reader-chapter-line = Bölüm { $chapter }
+
+reader-divider-facts-source = { $facts } · şuradan: { $source }

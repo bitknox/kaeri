@@ -338,12 +338,6 @@ reader-settings = Reader settings
 # Under the series title in the reader's controls. The chapter is its number, such as 12.
 # @only android
 # @arg chapter: text
-# @max 30
-reader-chapter-line = Chapter { $chapter }
-
-# Under the series title in the reader's controls. The chapter is its number, such as 12.
-# @only android
-# @arg chapter: text
 # @arg title: text
 # @max 60
 reader-chapter-line-titled = Chapter { $chapter } · { $title }
@@ -369,19 +363,6 @@ reader-zone-next = Next page
 # @only android
 # @max 20
 reader-grid-title = Pages
-
-# Top line of the page between chapters. The chapter is its number, such as 12.
-# @only android
-# @arg chapter: text
-# @max 40
-reader-end-of-chapter-number = End of chapter { $chapter }
-
-# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
-# @only android
-# @arg chapter: text
-# @arg facts: text
-# @max 60
-reader-end-facts = Chapter { $chapter } · { $facts }
 
 # Main button on the page between chapters.
 # @only android
@@ -825,15 +806,6 @@ reader-size-small = Smaller text
 # @max 24
 reader-size-large = Larger text
 
-# The next chapter's length on the page between chapters.
-# @only android
-# @arg count: int
-# @max 24
-reader-end-pages = { $count ->
-    [one] One page
-   *[other] { $count } pages
- }
-
 # The value of Paper mode in the settings list when it is on.
 # @only android
 # @max 12
@@ -859,12 +831,6 @@ reader-paper-look = Paper look by day
 # @max 30
 reader-paper-dim = Dim the page
 
-# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
-# @only android
-# @arg source: text
-# @max 40
-reader-end-from = From { $source }
-
 # The next episode's length on the divider inside a strip.
 # @only android
 # @arg count: int
@@ -873,13 +839,6 @@ reader-divider-images = { $count ->
     [one] One image
    *[other] { $count } images
  }
-
-# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
-# @only android
-# @arg facts: text
-# @arg source: text
-# @max 60
-reader-divider-facts-source = { $facts } · from { $source }
 
 # The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s".
 # @only android

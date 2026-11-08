@@ -92,9 +92,14 @@ source-added-plugins = { $count ->
    *[other] { $count } { -plugin-pl } installés depuis { $store }
  }
 source-row-server = { $libraries ->
-    [one] { $kind } · Séries : { $series } · ajouté à l’instant
+    [one] { $kind } · Séries : { $series } dans { $libraries } bibliothèque · ajouté à l’instant
     [many] { $kind } · Séries : { $series } dans { $libraries } bibliothèques · ajouté à l’instant
    *[other] { $kind } · Séries : { $series } dans { $libraries } bibliothèques · ajouté à l’instant
+ }
+source-row-server-series = { $libraries ->
+    [one] { $kind } · Séries : { $series } dans { $libraries } bibliothèque
+    [many] { $kind } · Séries : { $series } dans { $libraries } bibliothèques
+   *[other] { $kind } · Séries : { $series } dans { $libraries } bibliothèques
  }
 source-row-server-empty = { $kind } · aucune série pour l’instant · nouvelle vérification dans 30 minutes
 source-row-folder = { $skipped ->

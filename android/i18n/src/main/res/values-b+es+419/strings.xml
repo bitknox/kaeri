@@ -663,14 +663,11 @@
     <string name="reader_notice_go_back">Volver</string>
     <string name="reader_notice_change">Cambiar</string>
     <string name="reader_settings">Ajustes del lector</string>
-    <string name="reader_chapter_line">Capítulo %1$s</string>
     <string name="reader_chapter_line_titled">Capítulo %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Capítulo %1$s · desplazamiento</string>
     <string name="reader_minutes_left">%1$d min</string>
     <string name="reader_zone_next">Avanzar página</string>
     <string name="reader_grid_title">Páginas</string>
-    <string name="reader_end_of_chapter_number">Fin del capítulo %1$s</string>
-    <string name="reader_end_facts">Capítulo %1$s · %2$s</string>
     <string name="reader_end_continue">Seguir leyendo</string>
     <string name="reader_end_swipe">Desliza para seguir leyendo</string>
     <string name="reader_end_series">Volver a la serie</string>
@@ -757,23 +754,16 @@
     <string name="reader_zone_controls">Controles</string>
     <string name="reader_size_small">Texto más pequeño</string>
     <string name="reader_size_large">Texto más grande</string>
-    <plurals name="reader_end_pages">
-        <item quantity="one">Una página</item>
-        <item quantity="many">%1$d páginas</item>
-        <item quantity="other">%1$d páginas</item>
-    </plurals>
     <string name="reader_value_on">Activado</string>
     <string name="reader_value_off">Desactivado</string>
     <string name="reader_row_strip_gap">Espacio entre imágenes</string>
     <string name="reader_paper_look">Aspecto Papel de día</string>
     <string name="reader_paper_dim">Atenuar la página</string>
-    <string name="reader_end_from">De %1$s</string>
     <plurals name="reader_divider_images">
         <item quantity="one">Una imagen</item>
         <item quantity="many">%1$d imágenes</item>
         <item quantity="other">%1$d imágenes</item>
     </plurals>
-    <string name="reader_divider_facts_source">%1$s · de %2$s</string>
     <string name="reader_opening_waited">%1$s · %2$d s</string>
     <string name="reader_sources_title">Leer este capítulo desde</string>
     <string name="reader_paper_parts">Qué cambia</string>
@@ -2421,6 +2411,16 @@
     <string name="reader_gap_none">Ninguno</string>
     <string name="reader_gap_small">Pequeño</string>
     <string name="reader_look_system">Sistema</string>
+    <string name="reader_end_of_chapter_number">Fin del capítulo %1$s</string>
+    <string name="reader_end_facts">Capítulo %1$s · %2$s</string>
+    <plurals name="reader_end_pages">
+        <item quantity="one">Una página</item>
+        <item quantity="many">%1$d páginas</item>
+        <item quantity="other">%1$d páginas</item>
+    </plurals>
+    <string name="reader_end_from">De %1$s</string>
+    <string name="reader_chapter_line">Capítulo %1$s</string>
+    <string name="reader_divider_facts_source">%1$s · de %2$s</string>
     <string name="onboarding_read_demo">Leer la demo</string>
     <string name="onboarding_demo_books_detail">La demo lee un cómic corto y un cuento corto que sus autores comparten bajo Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Un episodio corto y un cómic corto, compartidos por sus autores bajo Creative Commons.</string>
@@ -3405,9 +3405,14 @@
         <item quantity="other">Se instalaron %1$d complementos de %2$s</item>
     </plurals>
     <plurals name="source_row_server">
-        <item quantity="one">%1$s · %2$d series · agregado ahora mismo</item>
+        <item quantity="one">%1$s · %2$d series en %3$d biblioteca · agregado ahora mismo</item>
         <item quantity="many">%1$s · %2$d series en %3$d de bibliotecas · agregado ahora mismo</item>
         <item quantity="other">%1$s · %2$d series en %3$d bibliotecas · agregado ahora mismo</item>
+    </plurals>
+    <plurals name="source_row_server_series">
+        <item quantity="one">%1$s · %2$d series en %3$d biblioteca</item>
+        <item quantity="many">%1$s · %2$d series en %3$d de bibliotecas</item>
+        <item quantity="other">%1$s · %2$d series en %3$d bibliotecas</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · aún sin series · vuelve a revisar en 30 minutos</string>
     <plurals name="source_row_folder">

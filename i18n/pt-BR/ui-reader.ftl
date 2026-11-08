@@ -41,3 +41,15 @@ reader-gap-none = Nenhum
 reader-gap-small = Pequeno
 reader-look-system = Sistema
 reader-end-tracker = Lido · { $trackers } atualizado
+reader-end-of-chapter-number = Fim do capítulo { $chapter }
+reader-end-facts = Capítulo { $chapter } · { $facts }
+reader-end-pages = { $count ->
+    [one] Uma página
+    [many] { $count } de páginas
+   *[other] { $count } páginas
+ }
+reader-end-from = De { $source }
+
+reader-chapter-line = Capítulo { $chapter }
+
+reader-divider-facts-source = { $facts } · de { $source }

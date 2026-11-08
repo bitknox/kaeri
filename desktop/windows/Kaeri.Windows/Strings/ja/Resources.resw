@@ -5456,6 +5456,24 @@
   <data name="ReaderLookSystem" xml:space="preserve">
     <value>システム</value>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>第{chapter}話の終わり</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>第{chapter}話 · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count}ページ</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>{source}から</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>第{chapter}話</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · {source}から</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>デモを読む</value>
   </data>
@@ -7927,6 +7945,9 @@
   </data>
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · {libraries}件のライブラリに{series}シリーズ · 追加したばかり</value>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · {libraries}件のライブラリに{series}シリーズ</value>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · シリーズはまだありません · 30分後に再確認します</value>

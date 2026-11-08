@@ -76,6 +76,9 @@ source-added-plugins = { $count ->
 source-row-server = { $libraries ->
    *[other] { $kind } · { $libraries }件のライブラリに{ $series }シリーズ · 追加したばかり
  }
+source-row-server-series = { $libraries ->
+   *[other] { $kind } · { $libraries }件のライブラリに{ $series }シリーズ
+ }
 source-row-server-empty = { $kind } · シリーズはまだありません · 30分後に再確認します
 source-row-folder = { $skipped ->
    *[other] { $path } · { $series }シリーズ · { $skipped }個のファイルをスキップ

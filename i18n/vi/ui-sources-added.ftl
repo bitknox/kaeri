@@ -76,6 +76,9 @@ source-added-plugins = { $count ->
 source-row-server = { $libraries ->
    *[other] { $kind } · { $series } bộ trong { $libraries } thư viện · vừa thêm
  }
+source-row-server-series = { $libraries ->
+   *[other] { $kind } · { $series } bộ trong { $libraries } thư viện
+ }
 source-row-server-empty = { $kind } · chưa có bộ nào · sẽ kiểm tra lại sau 30 phút
 source-row-folder = { $skipped ->
    *[other] { $path } · { $series } bộ · đã bỏ qua { $skipped } tệp

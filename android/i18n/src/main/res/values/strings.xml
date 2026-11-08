@@ -1188,8 +1188,6 @@
     <!-- Button in the reader's controls that opens its settings, drawn as Aa. -->
     <string name="reader_settings">Reader settings</string>
     <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
-    <string name="reader_chapter_line">Chapter %1$s</string>
-    <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
     <string name="reader_chapter_line_titled">Chapter %1$s · %2$s</string>
     <!-- Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. -->
     <string name="reader_novel_line_scroll">Chapter %1$s · scroll</string>
@@ -1199,10 +1197,6 @@
     <string name="reader_zone_next">Next page</string>
     <!-- Heading of the page grid. -->
     <string name="reader_grid_title">Pages</string>
-    <!-- Top line of the page between chapters. The chapter is its number, such as 12. -->
-    <string name="reader_end_of_chapter_number">End of chapter %1$s</string>
-    <!-- The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. -->
-    <string name="reader_end_facts">Chapter %1$s · %2$s</string>
     <!-- Main button on the page between chapters. -->
     <string name="reader_end_continue">Continue</string>
     <!-- Line above the main button on the page between chapters. -->
@@ -1375,11 +1369,6 @@
     <string name="reader_size_small">Smaller text</string>
     <!-- Description of the large A at the end of the text size slider. -->
     <string name="reader_size_large">Larger text</string>
-    <!-- The next chapter's length on the page between chapters. -->
-    <plurals name="reader_end_pages">
-        <item quantity="one">One page</item>
-        <item quantity="other">%1$d pages</item>
-    </plurals>
     <!-- The value of Paper mode in the settings list when it is on. -->
     <string name="reader_value_on">On</string>
     <!-- The value of Paper mode in the settings list when it is off. -->
@@ -1390,15 +1379,11 @@
     <string name="reader_paper_look">Paper look by day</string>
     <!-- Paper mode part: a slider for how far the page's white is dimmed. -->
     <string name="reader_paper_dim">Dim the page</string>
-    <!-- Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from. -->
-    <string name="reader_end_from">From %1$s</string>
     <!-- The next episode's length on the divider inside a strip. -->
     <plurals name="reader_divider_images">
         <item quantity="one">One image</item>
         <item quantity="other">%1$d images</item>
     </plurals>
-    <!-- The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. -->
-    <string name="reader_divider_facts_source">%1$s · from %2$s</string>
     <!-- The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s". -->
     <string name="reader_opening_waited">%1$s · %2$d s</string>
     <!-- Heading of the list of other sources a failed chapter can be read from. -->
@@ -4520,6 +4505,21 @@
     <string name="reader_gap_small">Small</string>
     <!-- Look choice that follows the system's light or dark. -->
     <string name="reader_look_system">System</string>
+    <!-- Top line of the page between chapters. The chapter is its number, such as 12. -->
+    <string name="reader_end_of_chapter_number">End of chapter %1$s</string>
+    <!-- The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written. -->
+    <string name="reader_end_facts">Chapter %1$s · %2$s</string>
+    <!-- The next chapter's length on the page between chapters. -->
+    <plurals name="reader_end_pages">
+        <item quantity="one">One page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
+    <!-- Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from. -->
+    <string name="reader_end_from">From %1$s</string>
+    <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
+    <string name="reader_chapter_line">Chapter %1$s</string>
+    <!-- The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. -->
+    <string name="reader_divider_facts_source">%1$s · from %2$s</string>
     <!-- Button in the first run that opens the reading demo. -->
     <string name="onboarding_read_demo">Read the demo</string>
     <!-- Under the first run's demo heading when the device is for reading. -->
@@ -6485,14 +6485,14 @@
         <item quantity="one">Installed one plugin from %2$s</item>
         <item quantity="other">Installed %1$d plugins from %2$s</item>
     </plurals>
-    <!-- A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS. -->
+    <!-- A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library. -->
     <plurals name="source_row_server">
-        <item quantity="one">%1$s · %2$d series · added just now</item>
+        <item quantity="one">%1$s · %2$d series in %3$d library · added just now</item>
         <item quantity="other">%1$s · %2$d series in %3$d libraries · added just now</item>
     </plurals>
-    <!-- A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS. -->
+    <!-- A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library. -->
     <plurals name="source_row_server_series">
-        <item quantity="one">%1$s · %2$d series</item>
+        <item quantity="one">%1$s · %2$d series in %3$d library</item>
         <item quantity="other">%1$s · %2$d series in %3$d libraries</item>
     </plurals>
     <!-- A server's row in Your sources while it shows no series. -->

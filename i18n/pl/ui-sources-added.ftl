@@ -101,10 +101,16 @@ source-added-plugins = { $count ->
    *[other] Z { $store } zainstalowane { -plugin-pl }: { $count }
  }
 source-row-server = { $libraries ->
-    [one] { $kind } · Serie: { $series } · dodano przed chwilą
+    [one] { $kind } · Serie: { $series }, biblioteki: { $libraries } · dodano przed chwilą
     [few] { $kind } · Serie: { $series }, biblioteki: { $libraries } · dodano przed chwilą
     [many] { $kind } · Serie: { $series }, biblioteki: { $libraries } · dodano przed chwilą
    *[other] { $kind } · Serie: { $series }, biblioteki: { $libraries } · dodano przed chwilą
+ }
+source-row-server-series = { $libraries ->
+    [one] { $kind } · Serie: { $series }, biblioteki: { $libraries }
+    [few] { $kind } · Serie: { $series }, biblioteki: { $libraries }
+    [many] { $kind } · Serie: { $series }, biblioteki: { $libraries }
+   *[other] { $kind } · Serie: { $series }, biblioteki: { $libraries }
  }
 source-row-server-empty = { $kind } · jeszcze bez serii · sprawdzi ponownie za 30 minut
 source-row-folder = { $skipped ->

@@ -41,55 +41,49 @@ enum ServerProgressWords {
     }
 }
 
-/// A book server in Your sources: its name, "Kavita · 212 series in 2 libraries", and what became
-/// of the progress sent to it. Try again sits beside the line it answers; a press dims it to 38%
-/// until the engine answers, and the line, the button and the menu then follow together.
-struct BookServerSourceRow<Menu: View>: View {
+/// A book server in Your sources: its tile, its name, "Kavita · 212 series in 2 libraries", and
+/// what became of the progress sent to it. Try again takes the chevron's place while the line asks
+/// for it; a press dims it to 38% until the engine answers. A tap anywhere else opens the server.
+struct BookServerSourceRow<Health: View>: View {
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let server: BookServerRow
     let note: String
-    @ViewBuilder let menu: Menu
+    /// Opens the server's page; nil on that page itself, where the row ends in no chevron.
+    let open: (() -> Void)?
+    @ViewBuilder let health: Health
 
     var body: some View {
         let line = store.serverProgress.rowLines[server.id]
         let pressed = store.serverProgress.retrying.contains(server.id)
-        HStack(spacing: 16) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(server.name)
-                    .font(.plat(mac: 13, touch: 17))
-                    .foregroundStyle(.silk)
-                Text(note)
-                    .font(.plat(mac: 12, touch: 15))
-                    .foregroundStyle(.haze)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let line {
-                    progress(line)
-                        .id(Self.key(line))
-                        .transition(.opacity)
-                }
+        let retry = line?.canRetry == true
+        BookSourceRow(title: server.name, note: note, open: open) {
+            SourceTile(systemImage: "server.rack")
+        } extra: {
+            if let line {
+                progress(line)
+                    .id(Self.key(line))
+                    .transition(.opacity)
             }
-            .macLineHeight(16)
-            Spacer(minLength: 0)
+        } trailing: {
             HStack(spacing: 8) {
-                if let line, line.canRetry {
-                    Button(L.readerTryAgain) { store.serverProgress.retryRow(server.id) }
-                        .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 24 : 32, fontSize: Device.isMac ? 12 : 15))
-                        .fixedSize()
-                        .opacity(pressed ? 0.38 : 1)
-                        .disabled(pressed)
-                        .transition(.opacity)
+                health
+                ZStack(alignment: .trailing) {
+                    if retry {
+                        Button(L.readerTryAgain) { store.serverProgress.retryRow(server.id) }
+                            .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 36, fontSize: Device.isMac ? 13 : 15))
+                            .fixedSize()
+                            .opacity(pressed ? 0.38 : 1)
+                            .disabled(pressed)
+                            .transition(.opacity)
+                    } else if open != nil {
+                        RowChevron().transition(.opacity)
+                    }
                 }
-                menu
             }
         }
         .animation(reduceMotion ? .easeInOut(duration: 0.2) : .reveal, value: line.map(Self.key))
         .animation(.quick, value: pressed)
-        .padding(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 6))
-        .frame(minHeight: 50)
-        .contentShape(.rect)
-        .padding(.horizontal, 4)
-        .accessibilityElement(children: .combine)
     }
 
     private func progress(_ line: ServerRowLine) -> some View {
@@ -121,5 +115,86 @@ struct BookServerSourceRow<Menu: View>: View {
         case .retrying: "retrying" // i18n-skip: an animation key
         case .failed: "failed" // i18n-skip: an animation key
         }
+    }
+}
+
+/// A source's row in Your sources: a tile or cover at the lead, its name and line, what else it
+/// says beneath, and what it ends in. With `open`, a tap on the row opens the source's page; a
+/// button at its end keeps its own press.
+struct BookSourceRow<Lead: View, Extra: View, Trailing: View>: View {
+    let title: String
+    var note: String?
+    var noteColor: Color = .haze
+    let open: (() -> Void)?
+    @ViewBuilder let lead: Lead
+    @ViewBuilder let extra: Extra
+    @ViewBuilder let trailing: Trailing
+
+    init(title: String, note: String? = nil, noteColor: Color = .haze, open: (() -> Void)?,
+         @ViewBuilder lead: () -> Lead, @ViewBuilder extra: () -> Extra = { EmptyView() },
+         @ViewBuilder trailing: () -> Trailing) {
+        self.title = title
+        self.note = note
+        self.noteColor = noteColor
+        self.open = open
+        self.lead = lead()
+        self.extra = extra()
+        self.trailing = trailing()
+    }
+
+    var body: some View {
+        HStack(spacing: Device.isMac ? 12 : 14) {
+            lead
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.plat(mac: 13, touch: 17))
+                    .foregroundStyle(.silk)
+                if let note {
+                    Text(note)
+                        .font(.plat(mac: 12, touch: 15))
+                        .foregroundStyle(noteColor)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                extra
+            }
+            .macLineHeight(16)
+            Spacer(minLength: 0)
+            trailing
+        }
+        .padding(EdgeInsets(top: Device.isMac ? 8 : 12, leading: 10, bottom: Device.isMac ? 8 : 12, trailing: 10))
+        .frame(minHeight: Device.isMac ? 50 : 64)
+        .contentShape(.rect)
+        .onTapGesture { open?() }
+        .rowHover()
+        .padding(.horizontal, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(open == nil ? [] : .isButton)
+        .accessibilityAction { open?() }
+    }
+}
+
+/// The square at a source row's lead: its kind's glyph on the selected raised fill.
+struct SourceTile: View {
+    let systemImage: String
+
+    var body: some View {
+        let side: CGFloat = Device.isMac ? 28 : 36
+        Image(systemName: systemImage)
+            .font(.ui(Device.isMac ? 15 : 18))
+            .foregroundStyle(.silk)
+            .frame(width: side, height: side)
+            .background(.raisedSelected, in: .rect(cornerRadius: Device.isMac ? 7 : 9))
+            .accessibilityHidden(true)
+    }
+}
+
+/// The chevron at the end of a row that opens a page.
+struct RowChevron: View {
+    var body: some View {
+        Image(systemName: "chevron.right")
+            .font(.ui(Device.isMac ? 12 : 14, weight: .semibold))
+            .foregroundStyle(.haze)
+            .opacity(0.7)
+            .accessibilityHidden(true)
     }
 }

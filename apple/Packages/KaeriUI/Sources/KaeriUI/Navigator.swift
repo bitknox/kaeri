@@ -15,6 +15,7 @@ public final class Navigator {
             if section != oldValue {
                 titleOnMac = nil
                 seriesOnMac = nil
+                bookSourcePage = nil
                 pageGone()
             }
         }
@@ -27,6 +28,9 @@ public final class Navigator {
     /// The series page open over the section on the Mac, by work id. On iPhone and iPad it is
     /// pushed on the tab's stack.
     public var seriesOnMac: String?
+    /// A book source's page open in place of Your sources' list on the Mac. On iPhone and iPad it
+    /// is pushed on the stack.
+    var bookSourcePage: BookSourcePage?
     /// Whether the Library shows reading rather than shows, with both media on. Each screen
     /// keeps its own.
     public var libraryReading = false

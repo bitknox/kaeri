@@ -8281,6 +8281,28 @@ reader-gap-small = Small
 # Look choice that follows the system's light or dark.
 reader-look-system = System
 
+# Top line of the page between chapters. The chapter is its number, such as 12.
+reader-end-of-chapter-number = End of chapter { $chapter }
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+reader-end-facts = Chapter { $chapter } · { $facts }
+
+# The next chapter's length on the page between chapters.
+reader-end-pages =
+    { $count ->
+        [one] One page
+       *[other] { $count } pages
+    }
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+reader-end-from = From { $source }
+
+# Under the series title in the reader's controls. The chapter is its number, such as 12.
+reader-chapter-line = Chapter { $chapter }
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+reader-divider-facts-source = { $facts } · from { $source }
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Read the demo
 
@@ -11204,17 +11226,17 @@ source-added-plugins =
        *[other] Installed { $count } plugins from { $store }
     }
 
-# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 source-row-server =
     { $libraries ->
-        [one] { $kind } · { $series } series · added just now
+        [one] { $kind } · { $series } series in { $libraries } library · added just now
        *[other] { $kind } · { $series } series in { $libraries } libraries · added just now
     }
 
-# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 source-row-server-series =
     { $libraries ->
-        [one] { $kind } · { $series } series
+        [one] { $kind } · { $series } series in { $libraries } library
        *[other] { $kind } · { $series } series in { $libraries } libraries
     }
 

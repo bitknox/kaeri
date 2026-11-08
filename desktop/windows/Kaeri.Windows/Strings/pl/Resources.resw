@@ -6023,6 +6023,33 @@
   <data name="ReaderLookSystem" xml:space="preserve">
     <value>Systemowy</value>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>Koniec rozdziału {chapter}</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>Rozdział {chapter} · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_one" xml:space="preserve">
+    <value>Jedna strona</value>
+  </data>
+  <data name="ReaderEndPages_few" xml:space="preserve">
+    <value>{count} strony</value>
+  </data>
+  <data name="ReaderEndPages_many" xml:space="preserve">
+    <value>{count} stron</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count} strony</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>Z: {source}</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>Rozdział {chapter}</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · z: {source}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Przeczytaj demo</value>
   </data>
@@ -8853,7 +8880,7 @@
     <value>Z {store} zainstalowane wtyczki: {count}</value>
   </data>
   <data name="SourceRowServer_one" xml:space="preserve">
-    <value>{kind} · Serie: {series} · dodano przed chwilą</value>
+    <value>{kind} · Serie: {series}, biblioteki: {libraries} · dodano przed chwilą</value>
   </data>
   <data name="SourceRowServer_few" xml:space="preserve">
     <value>{kind} · Serie: {series}, biblioteki: {libraries} · dodano przed chwilą</value>
@@ -8863,6 +8890,18 @@
   </data>
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · Serie: {series}, biblioteki: {libraries} · dodano przed chwilą</value>
+  </data>
+  <data name="SourceRowServerSeries_one" xml:space="preserve">
+    <value>{kind} · Serie: {series}, biblioteki: {libraries}</value>
+  </data>
+  <data name="SourceRowServerSeries_few" xml:space="preserve">
+    <value>{kind} · Serie: {series}, biblioteki: {libraries}</value>
+  </data>
+  <data name="SourceRowServerSeries_many" xml:space="preserve">
+    <value>{kind} · Serie: {series}, biblioteki: {libraries}</value>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · Serie: {series}, biblioteki: {libraries}</value>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · jeszcze bez serii · sprawdzi ponownie za 30 minut</value>

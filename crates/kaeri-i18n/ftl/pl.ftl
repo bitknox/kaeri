@@ -8414,6 +8414,30 @@ reader-gap-small = Mały
 # Look choice that follows the system's light or dark.
 reader-look-system = Systemowy
 
+# Top line of the page between chapters. The chapter is its number, such as 12.
+reader-end-of-chapter-number = Koniec rozdziału { $chapter }
+
+# The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+reader-end-facts = Rozdział { $chapter } · { $facts }
+
+# The next chapter's length on the page between chapters.
+reader-end-pages =
+    { $count ->
+        [one] Jedna strona
+        [few] { $count } strony
+        [many] { $count } stron
+       *[other] { $count } strony
+    }
+
+# Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+reader-end-from = Z: { $source }
+
+# Under the series title in the reader's controls. The chapter is its number, such as 12.
+reader-chapter-line = Rozdział { $chapter }
+
+# The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+reader-divider-facts-source = { $facts } · z: { $source }
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Przeczytaj demo
 
@@ -11123,13 +11147,22 @@ source-added-plugins =
        *[other] Z { $store } zainstalowane wtyczki: { $count }
     }
 
-# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+# A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 source-row-server =
     { $libraries ->
-        [one] { $kind } · Serie: { $series } · dodano przed chwilą
+        [one] { $kind } · Serie: { $series }, biblioteki: { $libraries } · dodano przed chwilą
         [few] { $kind } · Serie: { $series }, biblioteki: { $libraries } · dodano przed chwilą
         [many] { $kind } · Serie: { $series }, biblioteki: { $libraries } · dodano przed chwilą
        *[other] { $kind } · Serie: { $series }, biblioteki: { $libraries } · dodano przed chwilą
+    }
+
+# A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
+source-row-server-series =
+    { $libraries ->
+        [one] { $kind } · Serie: { $series }, biblioteki: { $libraries }
+        [few] { $kind } · Serie: { $series }, biblioteki: { $libraries }
+        [many] { $kind } · Serie: { $series }, biblioteki: { $libraries }
+       *[other] { $kind } · Serie: { $series }, biblioteki: { $libraries }
     }
 
 # A server's row in Your sources while it shows no series.

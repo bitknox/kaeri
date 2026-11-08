@@ -2429,27 +2429,14 @@ public enum L {
         Self.format("reader-go-to-page-field", fallback: "1 to %1$lld", total)
     }
 
-    /// Label of the end page: what just ended.
-    public static func readerEndOfChapter(chapter: String) -> String {
-        Self.format("reader-end-of-chapter", fallback: "End of %1$@", chapter)
-    }
-
     /// Line on the end page for a chapter that has not counted yet.
     public static var readerEndNotRead: String { string("reader-end-not-read", fallback: "Not marked read yet") }
-
-    /// Detail line under the next chapter's title. The chapter label is the source's own words.
-    public static func readerEndNextDetail(chapter: String, pages: Int) -> String {
-        Self.format("reader-end-next-detail", fallback: "%1$@ · %2$lld pages", chapter, pages)
-    }
 
     /// The one amber button of the end page: opens the next chapter.
     public static var readerContinue: String { string("reader-continue", fallback: "Continue") }
 
     /// Button on the end page that goes back to the series page.
     public static var readerBackToSeries: String { string("reader-back-to-series", fallback: "Back to the series") }
-
-    /// Hint under Continue on the end page.
-    public static var readerSwipeToContinue: String { string("reader-swipe-to-continue", fallback: "Swipe to keep reading") }
 
     /// End page heading when the next chapter is not out yet.
     public static func readerEndNotOut(chapter: String) -> String {
@@ -8117,6 +8104,36 @@ public enum L {
     /// Look choice that follows the system's light or dark.
     public static var readerLookSystem: String { string("reader-look-system", fallback: "System") }
 
+    /// Top line of the page between chapters. The chapter is its number, such as 12.
+    public static func readerEndOfChapterNumber(chapter: String) -> String {
+        Self.format("reader-end-of-chapter-number", fallback: "End of chapter %1$@", chapter)
+    }
+
+    /// The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+    public static func readerEndFacts(chapter: String, facts: String) -> String {
+        Self.format("reader-end-facts", fallback: "Chapter %1$@ · %2$@", chapter, facts)
+    }
+
+    /// The next chapter's length on the page between chapters.
+    public static func readerEndPages(count: Int) -> String {
+        Self.format("reader-end-pages", fallback: "%1$lld pages", count)
+    }
+
+    /// Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+    public static func readerEndFrom(source: String) -> String {
+        Self.format("reader-end-from", fallback: "From %1$@", source)
+    }
+
+    /// Under the series title in the reader's controls. The chapter is its number, such as 12.
+    public static func readerChapterLine(chapter: String) -> String {
+        Self.format("reader-chapter-line", fallback: "Chapter %1$@", chapter)
+    }
+
+    /// The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+    public static func readerDividerFactsSource(facts: String, source: String) -> String {
+        Self.format("reader-divider-facts-source", fallback: "%1$@ · from %2$@", facts, source)
+    }
+
     /// Button in the first run that opens the reading demo.
     public static var onboardingReadDemo: String { string("onboarding-read-demo", fallback: "Read the demo") }
 
@@ -11286,12 +11303,12 @@ public enum L {
         Self.format("source-added-plugins", fallback: "Installed %1$lld plugins from %2$@", count, store)
     }
 
-    /// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+    /// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
     public static func sourceRowServer(kind: String, series: Int, libraries: Int) -> String {
         Self.format("source-row-server", fallback: "%1$@ · %2$lld series in %3$lld libraries · added just now", kind, series, libraries)
     }
 
-    /// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+    /// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
     public static func sourceRowServerSeries(kind: String, series: Int, libraries: Int) -> String {
         Self.format("source-row-server-series", fallback: "%1$@ · %2$lld series in %3$lld libraries", kind, series, libraries)
     }

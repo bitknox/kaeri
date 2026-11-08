@@ -39,3 +39,13 @@ reader-gap-none = Không
 reader-gap-small = Nhỏ
 reader-look-system = Theo hệ thống
 reader-end-tracker = Đã đọc · đã cập nhật { $trackers }
+reader-end-of-chapter-number = Hết chương { $chapter }
+reader-end-facts = Chương { $chapter } · { $facts }
+reader-end-pages = { $count ->
+   *[other] { $count } trang
+ }
+reader-end-from = Từ { $source }
+
+reader-chapter-line = Chương { $chapter }
+
+reader-divider-facts-source = { $facts } · từ { $source }

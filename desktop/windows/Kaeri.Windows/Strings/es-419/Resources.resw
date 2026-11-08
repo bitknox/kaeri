@@ -5834,6 +5834,30 @@
   <data name="ReaderLookSystem" xml:space="preserve">
     <value>Sistema</value>
   </data>
+  <data name="ReaderEndOfChapterNumber" xml:space="preserve">
+    <value>Fin del capítulo {chapter}</value>
+  </data>
+  <data name="ReaderEndFacts" xml:space="preserve">
+    <value>Capítulo {chapter} · {facts}</value>
+  </data>
+  <data name="ReaderEndPages_one" xml:space="preserve">
+    <value>Una página</value>
+  </data>
+  <data name="ReaderEndPages_many" xml:space="preserve">
+    <value>{count} páginas</value>
+  </data>
+  <data name="ReaderEndPages_other" xml:space="preserve">
+    <value>{count} páginas</value>
+  </data>
+  <data name="ReaderEndFrom" xml:space="preserve">
+    <value>De {source}</value>
+  </data>
+  <data name="ReaderChapterLine" xml:space="preserve">
+    <value>Capítulo {chapter}</value>
+  </data>
+  <data name="ReaderDividerFactsSource" xml:space="preserve">
+    <value>{facts} · de {source}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Leer la demo</value>
   </data>
@@ -8544,13 +8568,22 @@
     <value>Se instalaron {count} complementos de {store}</value>
   </data>
   <data name="SourceRowServer_one" xml:space="preserve">
-    <value>{kind} · {series} series · agregado ahora mismo</value>
+    <value>{kind} · {series} series en {libraries} biblioteca · agregado ahora mismo</value>
   </data>
   <data name="SourceRowServer_many" xml:space="preserve">
     <value>{kind} · {series} series en {libraries} de bibliotecas · agregado ahora mismo</value>
   </data>
   <data name="SourceRowServer_other" xml:space="preserve">
     <value>{kind} · {series} series en {libraries} bibliotecas · agregado ahora mismo</value>
+  </data>
+  <data name="SourceRowServerSeries_one" xml:space="preserve">
+    <value>{kind} · {series} series en {libraries} biblioteca</value>
+  </data>
+  <data name="SourceRowServerSeries_many" xml:space="preserve">
+    <value>{kind} · {series} series en {libraries} de bibliotecas</value>
+  </data>
+  <data name="SourceRowServerSeries_other" xml:space="preserve">
+    <value>{kind} · {series} series en {libraries} bibliotecas</value>
   </data>
   <data name="SourceRowServerEmpty" xml:space="preserve">
     <value>{kind} · aún sin series · vuelve a revisar en 30 minutos</value>

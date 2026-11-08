@@ -19394,12 +19394,6 @@
     "by": "agent",
     "at": "2026-11-07"
   },
-  "reader-end-next-detail": {
-    "source": "17fd6fdfe3f8",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
   "reader-end-no-source": {
     "source": "6799149dde6b",
     "state": "draft",
@@ -19432,12 +19426,6 @@
   },
   "reader-end-not-read": {
     "source": "a8555163106b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
-  "reader-end-of-chapter": {
-    "source": "9dfd61e866b4",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
@@ -20662,12 +20650,6 @@
   },
   "reader-strip-width": {
     "source": "f21fb4f4b9e8",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
-  "reader-swipe-to-continue": {
-    "source": "ae13414ecd6f",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
@@ -28259,13 +28241,19 @@
     "at": "2026-11-07"
   },
   "source-row-server": {
-    "source": "62f0476bdb00",
+    "source": "acf13aa0afa6",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
   },
   "source-row-server-empty": {
     "source": "40a0d7b67531",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-07"
+  },
+  "source-row-server-series": {
+    "source": "fd9a18ae3644",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"

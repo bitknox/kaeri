@@ -130,7 +130,7 @@ struct StripReader: View {
                 Rectangle().fill(theme.rule).frame(height: 1).padding(.bottom, 28)
                 Text(L.readerEndNext).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze)
                 Text(next.title ?? next.label).font(.ui(20, weight: .semibold)).foregroundStyle(theme.silk)
-                Text(next.pages.map { L.readerEndNextDetail(chapter: next.label, pages: Int($0)) } ?? next.label)
+                Text(ReaderEndPage.facts(next, model: model))
                     .font(.ui(15)).foregroundStyle(theme.haze)
             }
             .padding(.horizontal, 28)

@@ -70,14 +70,11 @@ reader-notice-start-over = Zacznij od nowa
 reader-notice-go-back = Wróć
 reader-notice-change = Zmień
 reader-settings = Ustawienia czytnika
-reader-chapter-line = Rozdział { $chapter }
 reader-chapter-line-titled = Rozdział { $chapter } · { $title }
 reader-novel-line-scroll = Rozdział { $chapter } · przewijanie
 reader-minutes-left = { $minutes } min
 reader-zone-next = Następna strona
 reader-grid-title = Strony
-reader-end-of-chapter-number = Koniec rozdziału { $chapter }
-reader-end-facts = Rozdział { $chapter } · { $facts }
 reader-end-continue = Czytaj
 reader-end-swipe = Przesuń, aby czytać
 reader-end-series = Wróć do serii
@@ -164,25 +161,17 @@ reader-zone-previous = Poprzednia strona
 reader-zone-controls = Sterowanie
 reader-size-small = Mniejszy tekst
 reader-size-large = Większy tekst
-reader-end-pages = { $count ->
-    [one] Jedna strona
-    [few] { $count } strony
-    [many] { $count } stron
-   *[other] { $count } strony
- }
 reader-value-on = Włączony
 reader-value-off = Wyłączony
 reader-row-strip-gap = Odstęp między obrazami
 reader-paper-look = Wygląd papieru w dzień
 reader-paper-dim = Przyciemnij stronę
-reader-end-from = Z: { $source }
 reader-divider-images = { $count ->
     [one] Jeden obraz
     [few] { $count } obrazy
     [many] { $count } obrazów
    *[other] { $count } obrazu
  }
-reader-divider-facts-source = { $facts } · z: { $source }
 reader-opening-waited = { $line } · { $seconds } s
 reader-sources-title = Czytaj ten rozdział z
 reader-paper-parts = Co zmienia

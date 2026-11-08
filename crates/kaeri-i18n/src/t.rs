@@ -13250,6 +13250,36 @@ pub fn reader_look_system() -> String {
     text("reader-look-system", &[])
 }
 
+/// Top line of the page between chapters. The chapter is its number, such as 12.
+pub fn reader_end_of_chapter_number(chapter: &str) -> String {
+    text("reader-end-of-chapter-number", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The next chapter's facts on the page between chapters: its length and how it reads. The chapter is its number, such as 13; the facts are already written.
+pub fn reader_end_facts(chapter: &str, facts: &str) -> String {
+    text("reader-end-facts", &[("chapter", Arg::Text(chapter)), ("facts", Arg::Text(facts))])
+}
+
+/// The next chapter's length on the page between chapters.
+pub fn reader_end_pages(count: i64) -> String {
+    text("reader-end-pages", &[("count", Arg::Int(count))])
+}
+
+/// Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
+pub fn reader_end_from(source: &str) -> String {
+    text("reader-end-from", &[("source", Arg::Text(source))])
+}
+
+/// Under the series title in the reader's controls. The chapter is its number, such as 12.
+pub fn reader_chapter_line(chapter: &str) -> String {
+    text("reader-chapter-line", &[("chapter", Arg::Text(chapter))])
+}
+
+/// The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
+pub fn reader_divider_facts_source(facts: &str, source: &str) -> String {
+    text("reader-divider-facts-source", &[("facts", Arg::Text(facts)), ("source", Arg::Text(source))])
+}
+
 /// Button in the first run that opens the reading demo.
 pub fn onboarding_read_demo() -> String {
     text("onboarding-read-demo", &[])
@@ -17795,12 +17825,12 @@ pub fn source_added_plugins(count: i64, store: &str) -> String {
     text("source-added-plugins", &[("count", Arg::Int(count)), ("store", Arg::Text(store))])
 }
 
-/// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS.
+/// A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 pub fn source_row_server(kind: &str, series: i64, libraries: i64) -> String {
     text("source-row-server", &[("kind", Arg::Text(kind)), ("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
 }
 
-/// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS.
+/// A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library.
 pub fn source_row_server_series(kind: &str, series: i64, libraries: i64) -> String {
     text("source-row-server-series", &[("kind", Arg::Text(kind)), ("series", Arg::Int(series)), ("libraries", Arg::Int(libraries))])
 }
