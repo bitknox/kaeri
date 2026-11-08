@@ -142107,6 +142107,18 @@
         }
       }
     },
+    "pair-code-left" : {
+      "comment" : "Code screen: how long the code still works, as a countdown such as 1:58. Argument 1: left (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This code works for another %1$@."
+          }
+        }
+      }
+    },
     "pair-code-placeholder" : {
       "comment" : "Placeholder of the pairing code field.",
       "extractionState" : "manual",
@@ -196793,6 +196805,18 @@
         }
       }
     },
+    "reader-all-strips-here" : {
+      "comment" : "Heading of the webtoon settings on a device: it names the device kind.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All webtoons on this device"
+          }
+        }
+      }
+    },
     "reader-back-to-page" : {
       "comment" : "A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page. Argument 1: page (Int).",
       "extractionState" : "manual",
@@ -197382,85 +197406,13 @@
       }
     },
     "reader-chapter-failed" : {
-      "comment" : "Heading of the error when a chapter would not open. Argument 1: chapter (Text).",
+      "comment" : "Heading of the error when a chapter would not open. The chapter is its number, such as 13. Argument 1: chapter (Text).",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ ließ sich nicht öffnen"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Couldn't open %1$@"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No se pudo abrir %1$@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossible d'ouvrir %1$@"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ tidak bisa dibuka"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Impossibile aprire %1$@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@を開けませんでした"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nie udało się otworzyć: %1$@"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Não foi possível abrir %1$@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не удалось открыть: %1$@"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kunde inte öppna %1$@"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ açılamadı"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Không mở được %1$@"
+            "value" : "Couldn't open chapter %1$@"
           }
         }
       }
@@ -197550,7 +197502,7 @@
       }
     },
     "reader-chapter-line" : {
-      "comment" : "Under the series title in the reader's controls. The chapter is its number, such as 12. Argument 1: chapter (Text).",
+      "comment" : "Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. Argument 1: chapter (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -197629,6 +197581,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chương %1$@"
+          }
+        }
+      }
+    },
+    "reader-chapter-line-titled" : {
+      "comment" : "Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. Argument 1: chapter (Text). Argument 2: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapitel %1$@ · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapter %1$@ · %2$@"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capítulo %1$@ · %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapitre %1$@ · %2$@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bab %1$@ · %2$@"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capitolo %1$@ · %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "第%1$@話 · %2$@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rozdział %1$@ · %2$@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Capítulo %1$@ · %2$@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Глава %1$@ · %2$@"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kapitel %1$@ · %2$@"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bölüm %1$@ · %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chương %1$@ · %2$@"
           }
         }
       }
@@ -199225,6 +199261,406 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · từ %2$@"
+          }
+        }
+      }
+    },
+    "reader-divider-images" : {
+      "comment" : "The next episode's length on the divider inside a strip. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Ein Bild"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld Bilder"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One image"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld images"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld imágenes"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Una imagen"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld imágenes"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld images"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Une image"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld images"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld gambar"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld immagini"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Un'immagine"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld immagini"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld枚の画像"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld obrazy"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld obrazów"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Jeden obraz"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld obrazu"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld de imagens"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Uma imagem"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld imagens"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld картинки"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld картинок"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld картинка"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld картинки"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "En bild"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld bilder"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Bir görsel"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld görsel"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld ảnh"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -200889,6 +201325,90 @@
         }
       }
     },
+    "reader-end-swipe" : {
+      "comment" : "Line on the page between chapters, near its buttons: one more swipe opens the next chapter.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wische zum Weiterlesen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Swipe to keep reading"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desliza para seguir leyendo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balayez pour lire la suite"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Geser untuk terus membaca"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scorri per proseguire"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "スワイプして読み進める"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przesuń, aby czytać"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deslize para seguir lendo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смахните, чтобы читать дальше"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Svep för att läsa vidare"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sürdürmek için kaydırın"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vuốt để đọc tiếp"
+          }
+        }
+      }
+    },
     "reader-end-tracker" : {
       "comment" : "Under the end of chapter line, naming the trackers the read went to. Argument 1: trackers (Text).",
       "extractionState" : "manual",
@@ -202397,6 +202917,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "1 đến %1$lld"
+          }
+        }
+      }
+    },
+    "reader-go-to-page-submit" : {
+      "comment" : "Button beside the Go to page field that goes to the typed page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go"
           }
         }
       }
@@ -205341,8 +205873,20 @@
         }
       }
     },
+    "reader-menu-first-page" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First Page"
+          }
+        }
+      }
+    },
     "reader-menu-go" : {
-      "comment" : "Mac menu: the Go menu and its items.",
+      "comment" : "The Go menu and its items, on the Mac and with a keyboard on iPad.",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
@@ -205505,6 +206049,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đi tới trang…"
+          }
+        }
+      }
+    },
+    "reader-menu-last-page" : {
+      "comment" : "",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last Page"
           }
         }
       }
@@ -207778,85 +208334,13 @@
       }
     },
     "reader-opening" : {
-      "comment" : "Line that opens a chapter, over the cover. Argument 1: chapter (Text).",
+      "comment" : "Line on the page plate while a chapter opens. The chapter is its number, such as 12. Argument 1: chapter (Text).",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ wird geöffnet"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Opening %1$@"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abriendo %1$@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouverture de %1$@"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Membuka %1$@"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apertura di %1$@"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@を開いています"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Otwieranie: %1$@"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrindo %1$@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Открывается: %1$@"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Öppnar %1$@"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@ açılıyor"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đang mở %1$@"
+            "value" : "Opening chapter %1$@"
           }
         }
       }
@@ -208849,6 +209333,18 @@
         }
       }
     },
+    "reader-pages-range" : {
+      "comment" : "A jump button above the page grid in the chapters sheet, for a band of pages. Argument 1: from (Int). Argument 2: to (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld–%2$lld"
+          }
+        }
+      }
+    },
     "reader-pages-tab" : {
       "comment" : "Heading in the chapters sheet.",
       "extractionState" : "manual",
@@ -209517,6 +210013,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đọc tiếp từ trang %1$lld"
+          }
+        }
+      }
+    },
+    "reader-resumed-image" : {
+      "comment" : "The same notice in a webtoon strip, which counts images rather than pages. Argument 1: image (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resumed at image %1$lld"
           }
         }
       }
@@ -237353,6 +237861,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Couldn't prepare chapter %1$@. %2$@"
+          }
+        }
+      }
+    },
+    "send-failed-offline" : {
+      "comment" : "Why an e-reader send failed while offline, after \"Couldn't prepare chapter 12.\"",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again when you're online."
           }
         }
       }

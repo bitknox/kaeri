@@ -49,3 +49,8 @@ reader-end-from = Từ { $source }
 reader-chapter-line = Chương { $chapter }
 
 reader-divider-facts-source = { $facts } · từ { $source }
+reader-end-swipe = Vuốt để đọc tiếp
+reader-divider-images = { $count ->
+   *[other] { $count } ảnh
+ }
+reader-chapter-line-titled = Chương { $chapter } · { $title }

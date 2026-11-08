@@ -537,6 +537,9 @@ reading-split-chapter = [Çĥàþţéŕ { $chapter } ĝöéš ţö ţŕàçķé�
 # A notice over the page when a chapter opens where it was left. It offers Start over.
 reader-resumed = [Ŕéšüɱéð àţ þàĝé { $page }~~~~~~]
 
+# The same notice in a webtoon strip, which counts images rather than pages.
+reader-resumed-image = [Ŕéšüɱéð àţ îɱàĝé { $image }~~~~~~]
+
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 reader-back-to-page = [Ɓàçķ ţö þàĝé { $page }~~~~~]
 
@@ -8459,11 +8462,24 @@ reader-end-pages =
 # Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
 reader-end-from = [Ƒŕöɱ { $source }~~~]
 
-# Under the series title in the reader's controls. The chapter is its number, such as 12.
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
 reader-chapter-line = [Çĥàþţéŕ { $chapter }~~~~]
 
 # The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
 reader-divider-facts-source = [{ $facts } · ƒŕöɱ { $source }~~~~~]
+
+# Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+reader-end-swipe = [Šŵîþé ţö ķééþ ŕéàðîñĝ~~~~~~~]
+
+# The next episode's length on the divider inside a strip.
+reader-divider-images =
+    { $count ->
+        [one] [Öñé îɱàĝé~~~]
+       *[other] [{ $count } îɱàĝéš~~~]
+    }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line-titled = [Çĥàþţéŕ { $chapter } · { $title }~~~~~~]
 
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = [Ŕéàð ţĥé ðéɱö~~~~]

@@ -66,13 +66,11 @@ reader-notice-start-over = Börja om
 reader-notice-go-back = Gå tillbaka
 reader-notice-change = Ändra
 reader-settings = Läsarinställningar
-reader-chapter-line-titled = Kapitel { $chapter } · { $title }
 reader-novel-line-scroll = Kapitel { $chapter } · rullning
 reader-minutes-left = { $minutes } min
 reader-zone-next = { -up-next-cap } sida
 reader-grid-title = Sidor
 reader-end-continue = { -proceed-cap }
-reader-end-swipe = Svep för att läsa vidare
 reader-end-series = Tillbaka till serien
 reader-end-again = Läs igen från början
 reader-opening-chapter = Öppnar kapitel { $chapter }
@@ -162,10 +160,6 @@ reader-value-off = Av
 reader-row-strip-gap = Avstånd mellan bilder
 reader-paper-look = Pappersutseende dagtid
 reader-paper-dim = Dämpa sidan
-reader-divider-images = { $count ->
-    [one] En bild
-   *[other] { $count } bilder
- }
 reader-opening-waited = { $line } · { $seconds } s
 reader-sources-title = Läs det här kapitlet från
 reader-paper-parts = Vad det ändrar

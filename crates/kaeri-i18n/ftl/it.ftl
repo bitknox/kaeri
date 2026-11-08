@@ -8345,11 +8345,25 @@ reader-end-pages =
 # Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from.
 reader-end-from = Da { $source }
 
-# Under the series title in the reader's controls. The chapter is its number, such as 12.
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
 reader-chapter-line = Capitolo { $chapter }
 
 # The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters.
 reader-divider-facts-source = { $facts } · da { $source }
+
+# Line on the page between chapters, near its buttons: one more swipe opens the next chapter.
+reader-end-swipe = Scorri per proseguire
+
+# The next episode's length on the divider inside a strip.
+reader-divider-images =
+    { $count ->
+        [one] Un'immagine
+        [many] { $count } immagini
+       *[other] { $count } immagini
+    }
+
+# Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
+reader-chapter-line-titled = Capitolo { $chapter } · { $title }
 
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Leggi la demo

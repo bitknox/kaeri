@@ -4,13 +4,16 @@ namespace Kaeri.Windows;
 
 /// <summary>
 /// What every trailer shares: the one WebView2 environment (private, so nothing a trailer sets is
-/// kept), whether the runtime is there, and the rule that one trailer plays by itself at a time.
+/// kept; the novel reader makes its web view in the same one, in a profile of its own), whether the runtime is there, and the rule that one trailer plays by itself at a time.
 /// The private web views share one in-memory session, which lasts while any of them is open: the
 /// pool's kept pages hold it for the run, so YouTube's player and what it fetched stay cached
 /// between trailers, and none of it reaches the disk.
 /// </summary>
 static class TrailerHub
 {
+    /// <summary>The scheme the novel reader serves a book's files on.</summary>
+    public const string BookScheme = "kaeri-book";
+
     static Task<CoreWebView2Environment>? environment;
     static bool? present;
     static readonly List<TrailerStage> playing = [];
@@ -37,7 +40,10 @@ static class TrailerHub
         }
     }
 
-    /// <summary>The environment every trailer's web view is made in.</summary>
+    /// <summary>
+    /// The environment every trailer's web view and the novel reader's are made in: one browser
+    /// process for both, instead of two.
+    /// </summary>
     public static Task<CoreWebView2Environment> Environment() => environment ??= Make();
 
     static async Task<CoreWebView2Environment> Make()
@@ -49,6 +55,14 @@ static class TrailerHub
             // without a click. The banner and preview ones are muted and need nothing.
             AdditionalBrowserArguments = "--autoplay-policy=no-user-gesture-required",
         };
+        // The book scheme can only be registered as the environment is made. Only the reader's
+        // web view answers it; a trailer's page never asks for it.
+        options.CustomSchemeRegistrations.Add(new CoreWebView2CustomSchemeRegistration(BookScheme)
+        {
+            // The WinRT projection takes the flag as a BOOL.
+            TreatAsSecure = 1,
+            HasAuthorityComponent = true,
+        });
         return await CoreWebView2Environment.CreateWithOptionsAsync(null, folder, options);
     }
 

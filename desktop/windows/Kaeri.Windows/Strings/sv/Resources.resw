@@ -5666,6 +5666,18 @@
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · från {source}</value>
   </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Svep för att läsa vidare</value>
+  </data>
+  <data name="ReaderDividerImages_one" xml:space="preserve">
+    <value>En bild</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} bilder</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Kapitel {chapter} · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Läs demon</value>
   </data>
