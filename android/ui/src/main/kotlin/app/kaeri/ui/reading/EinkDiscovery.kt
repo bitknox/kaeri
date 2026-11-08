@@ -376,7 +376,7 @@ private sealed interface Found {
     data class Failed(val group: ReadSourceGroup, val reason: String) : Found
     data class Note(val text: String, val ruled: Boolean = false) : Found
     data class AnilistFailed(val query: ReadSearchQuery) : Found
-    data object More : Found
+    data class More(val shown: Int, val total: UInt?) : Found
     /** Headings with the line under them, so a page never ends on a heading. */
     data class Together(val lines: List<Found>) : Found
 }
@@ -435,7 +435,7 @@ private fun foundLines(context: android.content.Context, search: ReadSearchState
     }
     val nothing = groups.filter { it.state is ReadSourceState.Nothing }
     if (nothing.isNotEmpty()) add(Found.Note(Strings.readSearchSourceNothing(context, joinedNames(context, nothing.map { it.sourceName })), ruled = true))
-    if (!query.sourcesOnly && search.hasMore) add(Found.More)
+    if (!query.sourcesOnly && search.hasMore) add(Found.More(search.tiles.size, search.total))
 }.let(::keepHeadingsWithNext)
 
 /**
@@ -509,13 +509,14 @@ internal fun EinkSearchPage(
 /** How long typing rests before e-ink Search asks: a little longer, as each refresh costs. */
 private const val TYPING_REST_EINK = 600L
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun FoundLine(line: Found) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     when (line) {
         is Found.Anilist -> PaperResult(line.tile, line.joined)
-        is Found.Hit -> PaperResult(line.tile, null)
+        is Found.Hit -> PaperResult(line.tile, null, hit = true)
         is Found.Heading -> Text(line.text, style = EinkType.RowTitle, modifier = Modifier.padding(top = 16.dp, bottom = 4.dp).semantics { heading() })
         is Found.Source -> Text(line.name, style = EinkType.Label.copy(color = EinkColours.Secondary), modifier = Modifier.padding(top = 10.dp).semantics { heading() })
         is Found.Asking -> Text(Strings.readSearchAsking(context, line.name), style = EinkType.Secondary, modifier = Modifier.padding(vertical = 8.dp))
@@ -533,14 +534,23 @@ private fun FoundLine(line: Found) {
             if (line.ruled) Box(Modifier.fillMaxWidth().height(EinkSizes.Hairline).background(EinkColours.Tertiary))
             Text(line.text, style = EinkType.Secondary, modifier = Modifier.padding(vertical = 8.dp))
         }
-        Found.More -> EinkTextButton(Strings.readSearchMoreAnilist(context), { store.reading.searchMore() }, underline = true)
+        // Wraps under the button at large text rather than squeezing the count.
+        is Found.More -> androidx.compose.foundation.layout.FlowRow(itemVerticalAlignment = Alignment.CenterVertically) {
+            EinkTextButton(Strings.readSearchMoreAnilist(context), { store.reading.searchMore() }, underline = true)
+            // "30 of 212 shown" once the count is exact, "30 shown" until then.
+            Text(
+                if (line.total != null) Strings.readSearchShown(context, line.shown, line.total.toInt()) else Strings.readSearchShownSome(context, line.shown),
+                style = EinkType.Secondary,
+                modifier = Modifier.padding(horizontal = 12.dp),
+            )
+        }
         is Found.Together -> Column { line.lines.forEach { FoundLine(it) } }
     }
 }
 
 /** A result on paper: a small cover, the title, its facts, "In Home library" under them, a chevron. */
 @Composable
-private fun PaperResult(tile: WorkTile, joined: String?) {
+private fun PaperResult(tile: WorkTile, joined: String?, hit: Boolean = false) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     Row(
@@ -555,7 +565,8 @@ private fun PaperResult(tile: WorkTile, joined: String?) {
         ReadCover(tile.cover, ListCover, Modifier.border(EinkSizes.Hairline, EinkColours.Ink), shape = RoundedCornerShape(0.dp), title = tile.title)
         Column(Modifier.weight(1f).padding(start = 16.dp)) {
             Text(tile.title, style = EinkType.Label, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            val facts = tile.line(context)
+            // AniList's "Webtoon · Korea"; a source's hit says how much it holds, or nothing.
+            val facts = if (hit) tile.hitLine(context) else tile.anilistLine(context)
             if (facts.isNotEmpty()) Text(facts, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (joined != null) Text(joined, style = EinkType.Label.copy(fontSize = EinkType.Secondary.fontSize))
         }

@@ -254,7 +254,14 @@ internal fun DiscoveryRow(row: ReadHomeRow, onViewAll: (ReadHomeRow) -> Unit) {
 
 /** Covers in a sideways row, 112 dp on a phone and 128 on a tablet, each with its two lines. */
 @Composable
-internal fun TileStrip(tiles: List<WorkTile>, from: String, rowKey: String, planning: Boolean = true) {
+internal fun TileStrip(
+    tiles: List<WorkTile>,
+    from: String,
+    rowKey: String,
+    planning: Boolean = true,
+    /** The line under each title in place of the tile's own. */
+    caption: ((WorkTile) -> String)? = null,
+) {
     val state = rememberLazyListState()
     LazyRow(
         state = state,
@@ -262,7 +269,7 @@ internal fun TileStrip(tiles: List<WorkTile>, from: String, rowKey: String, plan
         horizontalArrangement = Arrangement.spacedBy(cardGap()),
     ) {
         items(tiles, key = { "$rowKey-${it.work}" }, contentType = { "cover" }) { tile ->
-            ReadTile(tile, posterWidth(), from = from, lines = 1, reserveLine = true, planning = planning)
+            ReadTile(tile, posterWidth(), from = from, lines = 1, reserveLine = true, planning = planning, caption = caption?.invoke(tile))
         }
     }
 }

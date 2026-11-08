@@ -52,6 +52,7 @@ import app.kaeri.design.rememberSystemReducedMotion
 import app.kaeri.design.tabular
 import app.kaeri.engine.model.ReadAnilistState
 import app.kaeri.engine.model.ReadSourceGroup
+import app.kaeri.engine.model.ReadSourceKind
 import app.kaeri.engine.model.ReadSourceJoin
 import app.kaeri.engine.model.ReadSourceSearch
 import app.kaeri.engine.model.ReadSourceState
@@ -117,13 +118,13 @@ internal fun LazyGridScope.wordsResults(search: ReadSearchState, both: Boolean, 
             }
         anilist == ReadAnilistState.ANSWERED -> {
             val total = search.total
-            if (total != null && !search.tiles.all { it.fromDemo }) {
+            if (!search.tiles.all { it.fromDemo }) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "count", contentType = "line") {
                     val context = LocalContext.current
-                    // "4 series from AniList", or with more to come, "30 of 212 shown".
-                    val shownAll = !search.hasMore || search.tiles.size >= total.toInt()
+                    // "4 series from AniList" when the engine knows the count exactly, else
+                    // "Series from AniList": never a number that is not the count.
                     Text(
-                        if (shownAll) Strings.readSearchTotal(context, total.toInt()) else Strings.readSearchShown(context, search.tiles.size, total.toInt()),
+                        if (total != null) Strings.readSearchTotal(context, total.toInt()) else Strings.readSearchTotalUnknown(context),
                         style = MaterialTheme.typography.bodySmall.tabular(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = searchMotion(anilist = true),
@@ -167,7 +168,7 @@ internal fun LazyGridScope.wordsResults(search: ReadSearchState, both: Boolean, 
         val later = search.tiles.drop(search.firstPage)
         if (later.isEmpty() && search.hasMore) {
             item(span = { GridItemSpan(maxLineSpan) }, key = "more-anilist", contentType = "more") {
-                Box(searchMotion(anilist = true)) { MoreFromAnilist(search.loading) }
+                Box(searchMotion(anilist = true)) { MoreFromAnilist(search.loading, search.tiles.size, search.total) }
             }
         } else if (later.isNotEmpty()) {
             items(later, key = { "a-${it.work}" }, contentType = { "cover" }) { tile ->
@@ -200,13 +201,17 @@ private fun ReadSourceGroup.shows(): Boolean = when (state) {
     else -> true
 }
 
-/**
- * A source's kind in words beside its name: Server, Folder or Plugin. The engine names the kind
- * on the group (coming with the contract's next commit); until then the name stands alone.
- */
-@Suppress("UNUSED_PARAMETER")
+/** A source's kind in words beside its name: Server, Folder or Plugin; a built-in one has none. */
 @Composable
-internal fun sourceKind(group: ReadSourceGroup): String? = null
+internal fun sourceKind(group: ReadSourceGroup): String? {
+    val context = LocalContext.current
+    return when (group.kind) {
+        ReadSourceKind.SERVER -> Strings.readSearchSourceKindServer(context)
+        ReadSourceKind.FOLDER -> Strings.readSearchSourceKindFolder(context)
+        ReadSourceKind.PLUGIN -> Strings.readSearchSourceKindPlugin(context)
+        null -> null
+    }
+}
 
 /** An AniList result in the grid, with "In Home library" under its caption when a source has it. */
 @Composable
@@ -223,8 +228,9 @@ private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?) {
             tile,
             maxWidth,
             from = "read-search",
-            // The board's two-line caption: the title, then one line.
+            // The board's two-line caption: the title, then "Format · Origin".
             lines = 1,
+            caption = tile.anilistLine(LocalContext.current),
             reserveLine = true,
             onLongClick = { menu = true },
             extra = extra,
@@ -273,7 +279,10 @@ private fun SourceGroupRow(group: ReadSourceGroup) {
             when (val state = group.state) {
                 is ReadSourceState.Failed -> SourceFailed(group, failureWords(context, state.failure), Modifier.padding(horizontal = 16.dp))
                 is ReadSourceState.TimedOut -> SourceFailed(group, Strings.readSearchSourceTimeout(context, state.seconds.toInt()), Modifier.padding(horizontal = 16.dp))
-                else -> TileStrip(group.tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false)
+                else -> {
+                    val context = LocalContext.current
+                    TileStrip(group.tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false) { it.hitLine(context) }
+                }
             }
         }
     }
@@ -389,12 +398,17 @@ internal fun joinedNames(context: android.content.Context, names: List<String>):
     android.icu.text.ListFormatter.getInstance(context.resources.configuration.locales[0]).format(names)
 
 /** More from AniList: its next page, under the sources. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-private fun MoreFromAnilist(loading: Boolean) {
+private fun MoreFromAnilist(loading: Boolean, shown: Int, total: UInt?) {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val colors = MaterialTheme.colorScheme
-    Box(Modifier.fillMaxWidth().padding(top = 16.dp), contentAlignment = Alignment.CenterStart) {
+    androidx.compose.foundation.layout.FlowRow(
+        Modifier.fillMaxWidth().padding(top = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
         OutlinedButton(
             onClick = { store.reading.searchMore() },
             enabled = !loading,
@@ -406,6 +420,12 @@ private fun MoreFromAnilist(loading: Boolean) {
                 Text(Strings.readSearchMoreAnilist(context))
             }
         }
+        // "30 of 212 shown" once the count is exact, "30 shown" until then.
+        Text(
+            if (total != null) Strings.readSearchShown(context, shown, total.toInt()) else Strings.readSearchShownSome(context, shown),
+            style = MaterialTheme.typography.bodySmall.tabular(),
+            color = colors.onSurfaceVariant,
+        )
     }
 }
 

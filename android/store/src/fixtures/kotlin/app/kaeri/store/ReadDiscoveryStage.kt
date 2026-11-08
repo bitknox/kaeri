@@ -7,15 +7,18 @@
 package app.kaeri.store
 
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.ReadAnilistState
 import app.kaeri.engine.model.ReadSearchQuery
 import app.kaeri.engine.model.ReadSourceGroup
 import app.kaeri.engine.model.ReadSourceJoin
+import app.kaeri.engine.model.ReadSourceKind
 import app.kaeri.engine.model.ReadSourceSearch
 import app.kaeri.engine.model.ReadSourceState
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingEvent
 import app.kaeri.engine.model.ReadingFailure
+import app.kaeri.engine.model.ReadingMsg
 import app.kaeri.engine.model.WorkTile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -24,6 +27,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 object ReadDiscoveryStage {
     val STATES: List<String> = listOf("rd-search-mid", "rd-search-unreachable", "rd-search-sources-only", "rd-search-nothing", "rd-search-done")
+
+    /** The kinds beside the made-up sources' names; the demo is built in and has none. */
+    private val KINDS = mapOf("home-library" to ReadSourceKind.SERVER, "folders" to ReadSourceKind.FOLDER, "northwind" to ReadSourceKind.PLUGIN) // i18n-skip
 
     /** The words every state searches for. */
     const val WORDS = "lantern" // i18n-skip
@@ -54,16 +60,21 @@ object ReadDiscoveryStage {
             tile(2, "The Lantern Keeper"), // i18n-skip
             tile(3, "Lanterns Upriver"), // i18n-skip
         )
-        val library = listOf(tile(4, "Lantern Street Notes, Vol. 2"), tile(5, "Paper Lantern Recipes")) // i18n-skip
-        val folder = listOf(tile(6, "Lantern Festival Sketchbook")) // i18n-skip
-        val northwind = listOf(tile(7, "Lantern Ferry Timetables").copy(cover = null), tile(8, "Lantern Hill"), tile(9, "Lantern Moths")) // i18n-skip
+        // A source's hit says how much the source holds: a server its volumes, a folder its files,
+        // a plugin nothing yet.
+        fun hit(i: Int, title: String, amount: Msg?) = tile(i, title).copy(origin = null, amount = amount)
+        val library = listOf(hit(4, "Lantern Street Notes, Vol. 2", Msg.Reading(ReadingMsg.ReadingVolumes(2L))), hit(5, "Paper Lantern Recipes", Msg.Reading(ReadingMsg.ReadingVolumes(3L)))) // i18n-skip
+        val folder = listOf(hit(6, "Lantern Festival Sketchbook", Msg.Reading(ReadingMsg.ReadHitFilesFormat(1L, "CBZ")))) // i18n-skip
+        val northwind = listOf(hit(7, "Lantern Ferry Timetables", null).copy(cover = null), hit(8, "Lantern Hill", null), hit(9, "Lantern Moths", null)) // i18n-skip
+        val libraryJoined = listOf(hit(0, "Lantern Street Notes", Msg.Reading(ReadingMsg.ReadingVolumes(4L))), hit(1, "Lantern Street Notes, Side Stories", Msg.Reading(ReadingMsg.ReadingVolumes(2L)))) // i18n-skip
         val join = ReadSourceJoin(anilist[1].work, listOf("home-library"), listOf(HOME_LIBRARY)) // i18n-skip
-        fun group(id: String, name: String, state: ReadSourceState, tiles: List<WorkTile> = emptyList()) = ReadSourceGroup(id, name, state, tiles, 0u)
+        fun group(id: String, name: String, state: ReadSourceState, tiles: List<WorkTile> = emptyList()) =
+            ReadSourceGroup(id, name, KINDS[id], state, tiles, 0u)
         val apply = { event: ReadingEvent -> store.apply(Event.Reading(event)) }
         when (state) {
             "rd-search-mid", "rd-search-done" -> {
-                apply(ReadingEvent.Search(query, 0u, anilist, false, null, anilist.size.toUInt()))
                 val done = state == "rd-search-done"
+                // As the engine sends them: the sources and their joins first, then AniList's page.
                 apply(
                     ReadingEvent.SourceSearch(
                         ReadSourceSearch(
@@ -80,6 +91,7 @@ object ReadDiscoveryStage {
                         ),
                     ),
                 )
+                apply(ReadingEvent.Search(query, 0u, anilist, false, null, anilist.size.toUInt()))
             }
             "rd-search-unreachable" -> {
                 apply(ReadingEvent.Failed(ReadingAbout.SEARCH, ReadingFailure.Offline))
@@ -89,7 +101,7 @@ object ReadDiscoveryStage {
                             query,
                             ReadAnilistState.FAILED,
                             listOf(
-                                group("home-library", HOME_LIBRARY, ReadSourceState.Hits, listOf(anilist[0], anilist[1]) + library.drop(1)), // i18n-skip
+                                group("home-library", HOME_LIBRARY, ReadSourceState.Hits, libraryJoined + library.drop(1)), // i18n-skip
                                 group("folders", COMICS, ReadSourceState.Hits, folder), // i18n-skip
                                 group("northwind", NORTHWIND, ReadSourceState.Failed(ReadingFailure.SourceDown(NORTHWIND))), // i18n-skip
                             ),
@@ -99,23 +111,29 @@ object ReadDiscoveryStage {
                     ),
                 )
             }
-            "rd-search-sources-only" -> apply(
-                ReadingEvent.SourceSearch(
-                    ReadSourceSearch(
-                        query,
-                        ReadAnilistState.SKIPPED,
-                        listOf(
-                            group("home-library", HOME_LIBRARY, ReadSourceState.Hits, listOf(anilist[0], anilist[1]) + library.drop(1)), // i18n-skip
-                            group("folders", COMICS, ReadSourceState.Hits, folder), // i18n-skip
-                            group("northwind", NORTHWIND, ReadSourceState.Hits, northwind), // i18n-skip
+            "rd-search-sources-only" -> {
+                // An empty answer first, shown for a moment, so the list is at its top when the
+                // staged groups come in, as for a first answer, rather than kept on the row of the
+                // engine's own answer it was showing.
+                apply(ReadingEvent.SourceSearch(ReadSourceSearch(query, ReadAnilistState.SKIPPED, emptyList(), emptyList(), false)))
+                withContext(Dispatchers.Default) { delay(300) }
+                apply(
+                    ReadingEvent.SourceSearch(
+                        ReadSourceSearch(
+                            query,
+                            ReadAnilistState.SKIPPED,
+                            listOf(
+                                group("home-library", HOME_LIBRARY, ReadSourceState.Hits, libraryJoined + library.drop(1)), // i18n-skip
+                                group("folders", COMICS, ReadSourceState.Hits, folder), // i18n-skip
+                                group("northwind", NORTHWIND, ReadSourceState.Hits, northwind), // i18n-skip
+                            ),
+                            emptyList(),
+                            true,
                         ),
-                        emptyList(),
-                        true,
                     ),
-                ),
-            )
+                )
+            }
             "rd-search-nothing" -> {
-                apply(ReadingEvent.Search(query, 0u, emptyList(), false, null, 0u))
                 apply(
                     ReadingEvent.SourceSearch(
                         ReadSourceSearch(
@@ -131,6 +149,7 @@ object ReadDiscoveryStage {
                         ),
                     ),
                 )
+                apply(ReadingEvent.Search(query, 0u, emptyList(), false, null, 0u))
             }
         }
         return true

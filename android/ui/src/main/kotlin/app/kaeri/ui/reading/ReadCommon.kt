@@ -151,6 +151,8 @@ internal fun ReadTile(
     planning: Boolean = false,
     /** A third line in silk under the facts: "In Home library" on a joined search result. */
     extra: String? = null,
+    /** The line under the title in place of the tile's own: Search's "Manga · Japan", a hit's "2 volumes". */
+    caption: String? = null,
 ) {
     val navigator = LocalNavigator.current
     val store = app.kaeri.ui.LocalAppStore.current
@@ -158,7 +160,7 @@ internal fun ReadTile(
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val colors = MaterialTheme.colorScheme
-    val line = tile.line(context)
+    val line = caption ?: tile.line(context)
     val newWord = stringResource(R.string.poster_new)
     Column(
         modifier
@@ -334,6 +336,13 @@ internal fun listWords(context: Context, segment: LibrarySegmentRead): String = 
 internal fun WorkTile.line(context: Context): String =
     if (notInSources) Strings.homeNotFound(context)
     else next?.text(context) ?: facts.joinToString(" · ") { it.text(context) } // i18n-skip
+
+/** An AniList result's caption: its format and where it comes from, "Light novel · Japan". */
+internal fun WorkTile.anilistLine(context: Context): String =
+    listOfNotNull(facts.firstOrNull()?.text(context), origin?.text(context)).joinToString(" · ") // i18n-skip
+
+/** A source hit's caption: how much the source holds, "2 volumes"; nothing when it does not say. */
+internal fun WorkTile.hitLine(context: Context): String = amount?.text(context).orEmpty()
 
 /** The facts of a series as one line: "Manga · Japan · Releasing". */
 internal fun WorkTile.factsLine(context: Context): String = facts.joinToString(" · ") { it.text(context) } // i18n-skip
