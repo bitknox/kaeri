@@ -20,14 +20,23 @@
 //   end       {spine}                                      a turn past the last page
 //   start     {spine}                                      a turn before the first page
 //   link      {href, internal, note}                       a link was tapped; nothing was followed
-//   tap       {x, y}                                       a tap off any link, as fractions of the view
-//   key       {key}                                        a turning key the page received
+//   tap       {x, y}                                       a tap off any link, as fractions of the view,
+//                                                          that the page did not turn on (see input)
+//   key       {key}                                        a turning key the page did not turn on
 //   selection {text, start, end, rect}  and  unselected {}
 //   failed    {spine, why}                                 the engine could not serve this document
 //
 // The host calls window.kaeriReader: next(how), prev(how), goTo(page, how), goToPos(pos, how),
-// goToFragment(id, how), configure(style), state(). `how` is one of turn, swipe, key, jump,
-// scroll, echoed back in `page`.
+// goToFragment(id, how), configure(style), input(how), state(). `how` is one of turn, swipe,
+// key, jump, scroll, echoed back in `page`.
+//
+// input({edge, forward, keys, hold}) lets the page turn itself on a tap or a key, so a turn is
+// one `page` message instead of a tap, a call back and a `page`. A tap within `edge` (a fraction
+// of the width; 0.5 is every tap) of the side `forward` names ('right' or 'left') turns forward,
+// and within `edge` of the other side turns back; with `keys`, the arrows, Page Up and Down,
+// space, Home and End turn too. `hold` sends every tap and key to the host instead, while the
+// host's chrome or an end page is up. A host that never calls it gets every tap and key, and a
+// new document starts with none: the host calls it again on `ready`.
 (function () {
   'use strict';
   if (window.top !== window) return; // Chromium runs document-start scripts in frames too
@@ -44,14 +53,16 @@
     font: '"Literata", "Iowan Old Style", Charter, Georgia, serif',
     size: 19, line: 1.5, margin: 28, top: 40, bottom: 48,
     justify: true, hyphens: true, mode: 'paged', columns: 'auto', column: 720,
-    eink: false, legacy: false, fixed: false
+    measure: [65, 75], eink: false, legacy: false, fixed: false
   };
 
   var S = {};
   var state = {
     ready: false, axis: 'x', vertical: false, rtl: false, scrolled: false, page: 0, pages: 1,
-    anchor: null, nodes: null, selection: null, settling: 0, resizing: 0, fixedScale: 1
+    anchor: null, nodes: null, width: 0, selection: null, settling: 0, resizing: 0, fixedScale: 1
   };
+  // How taps and keys turn: set by the host through input(), none until it does.
+  var input = { edge: 0, forward: 'right', keys: false, hold: false };
   var rng = document.createRange();
 
   function merge(into, from) {
@@ -132,13 +143,22 @@
     return null;
   }
 
+  // The line's length in characters, at least and at most, as px at the text size. A Latin
+  // character of running text in a book face averages about 0.45 em; CJK characters are a
+  // whole em, and their lines run 30 to 40 where Latin runs 65 to 75.
+  function measure() {
+    var m = S.measure || DEFAULTS.measure;
+    var em = cjk() ? 1 : 0.45;
+    var chars = cjk() ? [m[0] * 6 / 13, m[1] * 8 / 15] : m;
+    return { min: chars[0] * em * S.size, max: chars[1] * em * S.size };
+  }
+
   function columns(width) {
     if (state.vertical || state.scrolled) return 1;
     if (S.columns === 1 || S.columns === 2) return S.columns;
     if (S.eink) return 1;
-    // Two columns where each still holds about 55 characters (Latin) or 20 (CJK).
-    var min = (cjk() ? 20 : 27) * S.size;
-    return (width - 4 * S.margin) / 2 >= min ? 2 : 1;
+    // Two columns only where each still holds the shortest line.
+    return (width - 4 * S.margin) / 2 >= measure().min ? 2 : 1;
   }
 
   function apply() {
@@ -149,15 +169,32 @@
     state.scrolled = S.mode === 'scrolled' && !state.vertical && !S.fixed;
     state.rtl = !state.vertical && getComputedStyle(h).direction === 'rtl';
     state.axis = state.vertical || state.scrolled ? 'y' : 'x';
+    // The mode's classes go on before the view is measured. Until the paged class hides the
+    // overflow, a long document has a vertical scroll bar where scroll bars take room (a Mac
+    // with a mouse, Windows, GTK without overlay scrolling), and the view would measure that
+    // much narrower than the page: a capped page's outer margins would come out uneven.
+    h.classList.toggle('k-fixed', !!S.fixed);
+    h.classList.toggle('k-paged', !state.scrolled && !S.fixed);
+    h.classList.toggle('k-scrolled', state.scrolled);
+    h.classList.toggle('k-v', state.vertical);
+    h.classList.toggle('k-h', !state.vertical);
     var W = vw();
     var cols = columns(W);
     var margin = S.margin;
-    // The column is capped near 720 px and about 75 characters a line (40 for CJK): wider
-    // windows get wider margins.
-    var cap = Math.min(S.column, (cjk() ? 40 : 37) * S.size);
+    // The column is capped near 720 px and the longest line: wider windows get wider margins.
+    // The columns keep the usual gap between them and sit together in the middle, and all the
+    // spare width goes to the two outer margins, so two columns still read as one spread. A
+    // page is then narrower than the view (state.width, the pitch), and the neighbouring
+    // pages' columns that would show in the outer margins are covered.
+    var cap = Math.min(S.column, measure().max);
+    state.width = 0;
+    var side = 0;
     if (!state.vertical && !state.scrolled) {
       var col = (W - 2 * margin * cols) / cols;
-      if (col > cap) margin = (W - cap * cols) / (2 * cols);
+      if (col > cap) {
+        state.width = cols * (cap + 2 * margin);
+        side = (W - state.width) / 2;
+      }
     }
     var look = S.look || {};
     var set = function (k, v) { h.style.setProperty(k, v); };
@@ -168,6 +205,8 @@
     set('--k-size', S.size + 'px');
     set('--k-line', String(S.line));
     set('--k-margin', margin + 'px');
+    set('--k-outer', side + 'px');
+    set('--k-page', state.width ? state.width + 'px' : '100vw');
     set('--k-top', S.top + 'px');
     set('--k-bottom', S.bottom + 'px');
     set('--k-cols', String(cols));
@@ -178,16 +217,16 @@
     h.classList.toggle('k-ink', !!(look.ink || S.eink));
     h.classList.toggle('k-eink', !!S.eink);
     h.classList.toggle('k-legacy', !!S.legacy);
-    h.classList.toggle('k-fixed', !!S.fixed);
-    h.classList.toggle('k-paged', !state.scrolled && !S.fixed);
-    h.classList.toggle('k-scrolled', state.scrolled);
-    h.classList.toggle('k-v', state.vertical);
-    h.classList.toggle('k-h', !state.vertical);
+    h.classList.toggle('k-capped', !!state.width);
+    h.classList.toggle('k-rtl', state.rtl);
     if (S.fixed) fit();
     openingMargins();
     state.nodes = null;
     void (state.axis === 'y' ? scroller().scrollHeight : scroller().scrollWidth); // lay out now
     state.pages = count();
+    // The last page is scrolled to like the others: room past it to the view's far edge, which
+    // the columns alone leave short of a capped page's outer margin.
+    set('--k-reach', state.width ? (state.pages * state.width + side - 1) + 'px' : '0px');
   }
 
   // A margin above the first thing in the text (a chapter title's) is kept at the top of the
@@ -226,12 +265,15 @@
   function vw() { return document.documentElement.clientWidth || window.innerWidth; }
   function vh() { return document.documentElement.clientHeight || window.innerHeight; }
 
-  function pitch() { return state.axis === 'y' ? vh() : vw(); }
-  // Where a client rect starts along the reading axis, in document pixels.
+  // One page along the reading axis: the view, or a capped page's narrower width.
+  function pitch() { return state.axis === 'y' ? vh() : state.width || vw(); }
+  // The outer margin past a capped page, on either side.
+  function outer() { return state.width ? (vw() - state.width) / 2 : 0; }
+  // Where a client rect starts along the reading axis, in document pixels from the first page.
   function along(r) {
     if (state.axis === 'y') return r.top + window.scrollY;
-    if (state.rtl) return vw() - r.right - window.scrollX;
-    return r.left + window.scrollX;
+    if (state.rtl) return vw() - outer() - r.right - window.scrollX;
+    return r.left + window.scrollX - outer();
   }
   function pageAt(px) { return Math.floor((px + 0.5) / pitch()); }
 
@@ -515,15 +557,47 @@
     }
     var sel = document.getSelection();
     if (sel && !sel.isCollapsed) return;
-    post({ type: 'tap', x: e.clientX / vw(), y: e.clientY / vh() });
+    var x = e.clientX / vw();
+    if (state.ready && !input.hold && input.edge > 0) {
+      // The side forward is on, and the other: a tap near either turns that way.
+      var right = input.forward !== 'left';
+      if (x > 1 - input.edge) { if (right) next('turn'); else prev('turn'); return; }
+      if (x < input.edge) { if (right) prev('turn'); else next('turn'); return; }
+    }
+    post({ type: 'tap', x: x, y: e.clientY / vh() });
   }, true);
 
   var KEYS = { ArrowLeft: 1, ArrowRight: 1, ArrowUp: 1, ArrowDown: 1, PageUp: 1, PageDown: 1, ' ': 1, Home: 1, End: 1 };
+
+  // A turning key, turned here: what the host would have asked for.
+  function key(name) {
+    var right = input.forward !== 'left';
+    switch (name) {
+      case 'ArrowRight': return right ? next('key') : prev('key');
+      case 'ArrowLeft': return right ? prev('key') : next('key');
+      case 'ArrowDown': case 'PageDown': case ' ': return next('key');
+      case 'ArrowUp': case 'PageUp': return prev('key');
+      case 'Home': return goTo(0, 'jump');
+      case 'End': return goTo(state.pages - 1, 'jump');
+    }
+    return null;
+  }
+
   document.addEventListener('keydown', function (e) {
     if (!KEYS[e.key] || e.metaKey || e.ctrlKey || e.altKey) return;
     if (!state.scrolled) e.preventDefault();
+    if (state.ready && input.keys && !input.hold) { key(e.key); return; }
     post({ type: 'key', key: e.key });
   }, true);
+
+  function setInput(how) {
+    if (!how || typeof how !== 'object') return input;
+    if (typeof how.edge === 'number') input.edge = Math.max(0, Math.min(0.5, how.edge));
+    if (how.forward === 'left' || how.forward === 'right') input.forward = how.forward;
+    if (typeof how.keys === 'boolean') input.keys = how.keys;
+    if (typeof how.hold === 'boolean') input.hold = how.hold;
+    return input;
+  }
 
   // Paged documents never scroll by themselves: wheels and stray scrolls snap back to the page.
   window.addEventListener('wheel', function (e) { if (!state.scrolled) e.preventDefault(); }, { passive: false, capture: true });
@@ -577,6 +651,7 @@
   window.kaeriReader = {
     next: next, prev: prev, goTo: goTo, goToPos: goToPos, goToFragment: goToFragment,
     configure: relayout,
+    input: setInput,
     state: function () { return report('state'); },
     // For tests and the hidden counting view.
     count: function () { return state.pages; },

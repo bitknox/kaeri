@@ -55,3 +55,4 @@ shell-device-label = Ordinateur Linux
 tv-cast-through-computer = Lecture via cet ordinateur
 tv-cast-inhibit-reason = Envoi d’un épisode à une TV
 tv-network-group = Sur ce réseau
+linux-sidebar-your-sources = Vos { -source-pl }

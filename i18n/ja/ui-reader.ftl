@@ -49,3 +49,8 @@ reader-end-from = { $source }から
 reader-chapter-line = 第{ $chapter }話
 
 reader-divider-facts-source = { $facts } · { $source }から
+reader-chapter-line-titled = 第{ $chapter }話 · { $title }
+reader-end-swipe = スワイプして読み進める
+reader-divider-images = { $count ->
+   *[other] { $count }枚の画像
+ }

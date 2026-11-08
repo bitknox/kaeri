@@ -13,15 +13,13 @@ mod hyphen;
 mod sanitize;
 
 pub use hyphen::{BUILT_IN as HYPHENATES, SHY};
-pub use sanitize::{
-    Clean, Document, Failed, READER_CSS, document, stylesheet, svg, text_chapter,
-};
+pub use sanitize::{Clean, Document, Failed, document, stylesheet, svg, text_chapter};
 
 /// The paginator as written, with a placeholder where [`script`] puts the stylesheet.
 const PAGINATOR: &str = include_str!("../../web/paginator.js");
 
-/// Kaeri's novel stylesheet. The paginator carries it; hosts that inject a stylesheet
-/// separately can use this.
+/// Kaeri's novel stylesheet. The paginator carries it and puts it in every document, a text
+/// chapter's and a book's alike, so no document links it.
 pub const STYLESHEET: &str = include_str!("../../web/reader.css");
 
 /// The book origins every platform serves from, for the content security policy.

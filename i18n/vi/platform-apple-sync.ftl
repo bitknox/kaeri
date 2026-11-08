@@ -19,3 +19,4 @@ pair-enter-code = Nhập mã
 rkey-restores = Khôi phục toàn bộ nếu bạn mất hết mọi { -device }.
 sync-turn-off-button = Tắt
 rkey-enter-line-generic = { $service } đang giữ lịch sử từ các { -device-pl } khác của bạn. Khóa bạn đã lưu khi bật đồng bộ sẽ mở được nó.
+pair-code-left = Mã này còn dùng được trong { $left }.

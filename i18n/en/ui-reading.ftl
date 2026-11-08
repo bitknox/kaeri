@@ -15,6 +15,9 @@ nav-updates = Updates
 
 ## Read, reading's Home
 
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = { -continue-reading-cap }
+
 # Shelf heading on Read: series releasing now.
 home-read-releasing = Releasing now
 
@@ -111,16 +114,16 @@ action-read-chapter = Read chapter { $n }
 # The main action when a chapter is part read.
 # @arg n: text
 # @arg page: int
-action-continue-chapter = { -continue-cap } chapter { $n } · page { $page }
+action-continue-chapter = { -continue-reading-cap } chapter { $n } · page { $page }
 
 # The main action for a light novel part, part read.
 # @arg n: text
 # @arg percent: int
-action-continue-part = { -continue-cap } part { $n } · { $percent }%
+action-continue-part = { -continue-reading-cap } part { $n } · { $percent }%
 
 # The main action for a light novel part, part read, when how far is not known.
 # @arg n: text
-action-continue-part-plain = { -continue-cap } part { $n }
+action-continue-part-plain = { -continue-reading-cap } part { $n }
 
 # The main action for a light novel part not opened yet.
 # @arg n: text
@@ -130,12 +133,12 @@ action-read-part = Read part { $n }
 # "Chapter 3") as its row is.
 # @arg label: text
 # @arg percent: int
-action-continue-named = { -continue-cap } { $label } · { $percent }%
+action-continue-named = { -continue-reading-cap } { $label } · { $percent }%
 
 # The main action for a light novel part, part read, named in the source's own words, when how
 # far is not known.
 # @arg label: text
-action-continue-named-plain = { -continue-cap } { $label }
+action-continue-named-plain = { -continue-reading-cap } { $label }
 
 # The main action for a light novel part not opened yet, named in the source's own words.
 # @arg label: text
@@ -1151,7 +1154,7 @@ settings-counts-read-moving-on-note = Turning past the last page, or opening the
 settings-counts-read-marked = When you mark it
 
 # Line under Counts as read when it is When you mark it.
-settings-counts-read-marked-note = { -continue-cap } and your { -tracker-pl } follow your marks
+settings-counts-read-marked-note = { -continue-reading-cap } and your { -tracker-pl } follow your marks
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Series settings that follow you

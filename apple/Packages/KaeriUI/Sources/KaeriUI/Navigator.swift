@@ -275,6 +275,17 @@ public final class Navigator {
         #endif
     }
 
+    /// The series' version and source picker, over its page: the reader's Choose source. The
+    /// page opens first when it is not the one on top.
+    public func chooseSource(for work: String) {
+        #if os(macOS)
+        if seriesOnMac != work { openSeries(work) }
+        #else
+        if paths[section]?.last?.work != work { openSeries(work) }
+        #endif
+        seriesSheet = .source(work)
+    }
+
     /// A reading list in the Library.
     public func readingList(_ segment: LibrarySegmentRead) {
         libraryReading = true

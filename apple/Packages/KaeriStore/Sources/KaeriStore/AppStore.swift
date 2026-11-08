@@ -121,6 +121,13 @@ public final class AppStore {
     @ObservationIgnored private var early: [Command] = []
     /// The titles whose episodes were asked for their stills.
     @ObservationIgnored private var stillsAsked: Set<AnilistId> = []
+    /// The spotlight's titles whose episodes were asked for its wide art (`loadSpotlightEpisodes`).
+    @ObservationIgnored private var spotlightAsked: Set<AnilistId> = []
+    /// When each title's wide art first waited on its plate (`heroArtWaited`).
+    @ObservationIgnored private var artWaitSince: [AnilistId: ContinuousClock.Instant] = [:]
+    /// The titles whose wide art has waited on its plate for `heroArtWait`: read where the art is
+    /// resolved, so a screen showing the plate draws what follows it when the wait ends.
+    public private(set) var artWaited: Set<AnilistId> = []
     /// When each cover's card and table data was last asked with its screen's (see `prepareCards`).
     @ObservationIgnored private var prepared: [AnilistId: ContinuousClock.Instant] = [:]
     /// The clock the asking rules read; tests move it.
@@ -735,6 +742,54 @@ public final class AppStore {
         else { return false }
         send(.loadStills(id))
         return true
+    }
+
+    /// The spotlight's episodes, for its wide art where neither a banner nor a seen still is
+    /// known: asked at once, at a page's priority rather than as the quiet stills, since the
+    /// spotlight is the first thing Home shows. Once a session per title.
+    public func loadSpotlightEpisodes(_ entry: Entry) {
+        guard entry.bannerUrl == nil, entry.seenStill == nil, titles.episodes[entry.id] == nil,
+              spotlightAsked.insert(entry.id).inserted
+        else { return }
+        loadEpisodes(entry.id)
+    }
+
+    /// Every title's episode table and wide art wait forgotten, and the episodes asked for them:
+    /// a motion demo's way to watch Home's wide art arrive as on a first launch. The testing
+    /// engine's flavour only; elsewhere it keeps what it has.
+    public func forgetArtForDemo() {
+        #if FIXTURES
+        titles.forgetEpisodesForDemo()
+        artWaitSince = [:]
+        artWaited = []
+        spotlightAsked = []
+        stillsAsked = []
+        prepared = [:]
+        asked = asked.filter { question, _ in
+            switch question {
+            case .episodes, .stills: false
+            case .detail, .dub: true
+            }
+        }
+        #endif
+    }
+
+    /// Whether `id`'s wide art has waited on its plate for `heroArtWait`: the wait starts the
+    /// first time it is asked, and ends once a session per title, so art that waited once does not
+    /// wait again.
+    func heroArtWaited(_ id: AnilistId) -> Bool {
+        if artWaited.contains(id) { return true }
+        let now = now()
+        guard let since = artWaitSince[id] else {
+            artWaitSince[id] = now
+            // What redraws the screens showing the plate; the clock decides.
+            Task { [weak self] in
+                try? await Task.sleep(for: Self.heroArtWait)
+                self?.artWaited.insert(id)
+            }
+            return false
+        }
+        return now - since >= Self.heroArtWait
     }
 
     /// Every title is named another way now: the lists that have been shown are asked for again,

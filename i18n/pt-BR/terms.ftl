@@ -43,7 +43,6 @@
 -watch-together-cap = Assistir juntos
 
 # Where releases are looked up.
-
 # One downloadable file in a torrent index. Not a place episodes come from.
 -release = versão
 -release-cap = Versão
@@ -63,6 +62,10 @@
 # The button that resumes the show.
 -continue = continuar assistindo
 -continue-cap = Continuar assistindo
+
+# The button that resumes a book, manga or webtoon: reading's own form of { -continue }. English says continue for both; a language whose { -continue } means "continue watching" says "keep reading" here.
+-continue-reading = continuar lendo
+-continue-reading-cap = Continuar lendo
 
 # The button that goes on to the next step of a flow, such as setup. Not the button that resumes a
 # show; that is { -continue }.

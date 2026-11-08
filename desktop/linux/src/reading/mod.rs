@@ -3,7 +3,9 @@
 //! reports what was painted. Books are made of the same parts the shows are: covers, shelves,
 //! boxed lists and the states with their waiting rule.
 
+pub mod came_in;
 pub mod chapters;
+pub mod demo;
 pub mod downloads;
 pub mod export;
 //pub mod feed;
@@ -15,6 +17,7 @@ pub mod reader;
 pub mod search;
 pub mod series;
 pub mod series_extra;
+pub mod server_progress;
 pub mod sources;
 pub mod updates;
 
@@ -168,20 +171,35 @@ pub fn work_menu(
 /// One work on a shelf or in a grid: the cover, its title, and what the engine says under it.
 pub fn work_card(hub: &Hub, tile: &WorkTile, width: i32) -> gtk::Box {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 6);
-    column.set_size_request(width.min(120), -1);
+    // The card is the cover's width whatever its words: titles wrap to two lines and end in an
+    // ellipsis, and the track keeps its height with no progress so the rows line up.
+    column.set_size_request(width, -1);
+    column.set_hexpand(false);
     column.set_halign(gtk::Align::Start);
     column.add_css_class("read-card");
     column.append(&cover(hub, tile.cover.as_deref(), &tile.title, width));
-    if let Some(progress) = tile.progress {
-        column.append(&track(progress, width));
+    let bar = track(tile.progress.unwrap_or(0.0), width);
+    if tile.progress.is_none() {
+        bar.set_opacity(0.0);
+        bar.set_accessible_role(gtk::AccessibleRole::Presentation);
     }
+    column.append(&bar);
     let title = widgets::show_title(&tile.title, "row");
     title.set_lines(2);
     title.set_ellipsize(gtk::pango::EllipsizeMode::End);
     title.set_tooltip_text(Some(&tile.title));
     title.set_valign(gtk::Align::Start);
-    title.set_max_width_chars(width / 8);
-    column.append(&title);
+    title.set_width_chars(1);
+    title.set_max_width_chars(1);
+    // A wrapping label still asks for its whole line on a shelf's row, so a clamp holds it to
+    // the cover's width.
+    let clamp = adw::Clamp::builder()
+        .maximum_size(width)
+        .tightening_threshold(width)
+        .child(&title)
+        .build();
+    clamp.set_halign(gtk::Align::Start);
+    column.append(&clamp);
     let mut said = vec![tile.title.clone()];
     if tile.new_chapter {
         column.append(&new_words());
@@ -197,7 +215,8 @@ pub fn work_card(hub: &Hub, tile: &WorkTile, width: i32) -> gtk::Box {
         let label = widgets::haze(&line, "caption");
         label.set_wrap(false);
         label.set_ellipsize(gtk::pango::EllipsizeMode::End);
-        label.set_max_width_chars(width / 8);
+        label.set_width_chars(1);
+        label.set_max_width_chars(1);
         column.append(&label);
         said.push(line);
     }
@@ -207,46 +226,61 @@ pub fn work_card(hub: &Hub, tile: &WorkTile, width: i32) -> gtk::Box {
     column
 }
 
-/// A work in a grid, kept in the grid's model.
-type Item = glib::BoxedAnyObject;
+/// A work as a row, for a query's results: the cover, the title and what comes next or its
+/// facts. The row opens the series; right-click opens the work's menu.
+pub fn work_row(hub: &Hub, tile: &WorkTile) -> adw::ActionRow {
+    let line = match &tile.next {
+        Some(next) => say::msg(next),
+        None => dotted(&tile.facts),
+    };
+    let row = adw::ActionRow::builder()
+        .title(glib::markup_escape_text(&tile.title))
+        .subtitle(glib::markup_escape_text(&line))
+        .activatable(true)
+        .build();
+    row.set_title_lines(2);
+    row.set_subtitle_lines(1);
+    row.add_prefix(&cover(hub, tile.cover.as_deref(), &tile.title, 40));
+    if tile.new_chapter {
+        row.add_suffix(&new_words());
+    }
+    row.set_action_name(Some("win.open-series"));
+    row.set_action_target_value(Some(&tile.work.0.to_variant()));
+    work_menu(&row, &tile.work, None);
+    row
+}
 
-/// A grid of covers, as many columns as fit, one work to a cell.
+/// The gap between cards in a grid, both ways, as the board draws it.
+const GRID_GAP: i32 = 16;
+
+/// A grid of covers, as many columns as fit, left-aligned with 16 px between them: the cards
+/// keep their width and the room left over stays at the end of the row.
 pub struct WorkGrid {
-    pub widget: gtk::GridView,
-    store: gio::ListStore,
+    pub widget: gtk::Box,
+    hub: Rc<Hub>,
 }
 
 impl WorkGrid {
     pub fn new(hub: &Rc<Hub>) -> Self {
-        let store = gio::ListStore::new::<Item>();
-        let factory = gtk::SignalListItemFactory::new();
-        factory.connect_bind({
-            let hub = Rc::clone(hub);
-            move |_, item| {
-                let Some(item) = item.downcast_ref::<gtk::ListItem>() else { return };
-                let Some(object) = item.item().and_downcast::<Item>() else { return };
-                let tile = object.borrow::<WorkTile>();
-                item.set_child(Some(&work_card(&hub, &tile, COVER_WIDTH)));
-            }
-        });
-        factory.connect_unbind(|_, item| {
-            if let Some(item) = item.downcast_ref::<gtk::ListItem>() {
-                item.set_child(gtk::Widget::NONE);
-            }
-        });
-        let selection = gtk::NoSelection::new(Some(store.clone()));
-        let widget = gtk::GridView::new(Some(selection), Some(factory));
-        widget.set_max_columns(12);
-        widget.set_min_columns(2);
-        widget.add_css_class("posters");
+        let layout = crate::cards_layout::CardsLayout::new(COVER_WIDTH + 4, GRID_GAP);
+        let widget = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        widget.set_layout_manager(Some(layout));
+        widget.add_css_class("read-grid");
+        widget.set_valign(gtk::Align::Start);
+        widget.set_accessible_role(gtk::AccessibleRole::List);
         widget.update_property(&[gtk::accessible::Property::Label(&t::poster_grid_name())]);
-        widget.set_vexpand(true);
-        Self { widget, store }
+        Self { widget, hub: Rc::clone(hub) }
     }
 
     pub fn set(&self, tiles: &[WorkTile]) {
-        let items: Vec<Item> = tiles.iter().cloned().map(Item::new).collect();
-        self.store.splice(0, self.store.n_items(), &items);
+        while let Some(child) = self.widget.first_child() {
+            self.widget.remove(&child);
+        }
+        for tile in tiles {
+            let card = work_card(&self.hub, tile, COVER_WIDTH);
+            card.set_accessible_role(gtk::AccessibleRole::ListItem);
+            self.widget.append(&card);
+        }
     }
 }
 

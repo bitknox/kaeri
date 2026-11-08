@@ -1,5 +1,6 @@
 // The strip: every image of the chapter in one vertical scroll. Full width on phones, a centred
-// column on iPad and Mac.
+// column on iPad and Mac. The next chapter follows in the same scroll after a slim marker, and
+// the chapters already read stay above it.
 
 import KaeriDesign
 import KaeriKit
@@ -17,17 +18,52 @@ struct StripReader: View {
     @AppStorage(ReaderDefaults.gap) private var gap = "none"
     @Environment(\.displayScale) private var scale
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.readerPaper) private var paper
+    @ScaledMetric(relativeTo: .title2) private var markerHeight: CGFloat = 168
     @State private var position = ScrollPosition()
     @State private var offsetY: CGFloat = 0
     @State private var restoring = true
-    @State private var follow: Task<Void, Never>?
+    /// The next chapter's first image, kept while the strip flows into it: opening it clears the
+    /// model's previews before its own images come.
+    @State private var lead: PageFile?
+    @State private var ahead = Ahead()
 
     private struct Metrics: Equatable {
         var y: CGFloat
-        var atFoot: Bool
+        var height: CGFloat
+    }
+
+    /// One row of the scroll, where it sits and how tall it is, so the place in it is worked out
+    /// without measuring.
+    private struct Row: Identifiable {
+        enum Kind {
+            case image(chapter: String, part: LeafPart)
+            case marker(next: ChapterRow, source: String?)
+            /// Under the marker until the next chapter's images come: its first image when the
+            /// engine made it, over the page plate.
+            case lead
+            case foot
+        }
+
+        let id: String
+        let kind: Kind
+        let top: CGFloat
+        let height: CGFloat
+        /// The trail chapter it belongs to; nil for the open one.
+        let trail: Int?
+
+        var isImage: Bool { if case .image = kind { true } else { false } }
+        var isMarker: Bool { if case .marker = kind { true } else { false } }
     }
 
     private var parts: [LeafPart] { model.leaves.filter { !$0.endPage }.flatMap(\.parts) }
+    private var chapter: String { model.view?.chapter.id ?? "" }
+    private var next: ChapterRow? { model.end?.next ?? model.view?.next }
+    /// The strip ran on and the next chapter's images are not here yet.
+    private var waiting: Bool { model.flowing != nil || (!model.trail.chapters.isEmpty && parts.isEmpty) }
+    /// Paper mode and Reduce Motion jump instead of scrolling.
+    private var instant: Bool { paper || reduceMotion }
 
     private var column: CGFloat {
         if !mac && sizeClass == .compact { return size.width }
@@ -38,50 +74,68 @@ struct StripReader: View {
 
     private var spacing: CGFloat { gap == "small" ? 8 : 0 }
 
-    private func height(of part: LeafPart) -> CGFloat {
-        let chapter = model.view?.chapter.id ?? ""
-        guard let file = model.file(of: part, chapter: chapter) else { return column * 1.5 }
-        let w = CGFloat(file.crop?.width ?? file.width)
-        let h = CGFloat(file.crop?.height ?? file.height)
-        return w > 0 ? column * h / w : column * 1.5
+    /// An image's height at the column's width, from the ratio the book gives before the file is
+    /// made, so nothing moves when it lands.
+    private func height(of part: LeafPart, chapter: String) -> CGFloat {
+        if let ratio = part.ratio, ratio > 0 { return (column / CGFloat(ratio)).rounded() }
+        if let file = model.file(of: part, chapter: chapter) {
+            let w = CGFloat(file.crop?.width ?? file.width)
+            let h = CGFloat(file.crop?.height ?? file.height)
+            if w > 0 { return (column * h / w).rounded() }
+        }
+        return (column * 1.5).rounded()
     }
 
-    private func top(of image: Int) -> CGFloat {
-        parts.prefix(image).reduce(0) { $0 + height(of: $1) + spacing }
+    private var leadHeight: CGFloat {
+        guard let lead, lead.width > 0 else { return size.height }
+        return max(size.height, (column * CGFloat(lead.height) / CGFloat(lead.width)).rounded())
+    }
+
+    private var rows: [Row] {
+        var rows: [Row] = []
+        var y: CGFloat = 0
+        func add(_ id: String, _ kind: Row.Kind, _ h: CGFloat, _ trail: Int?) {
+            rows.append(Row(id: id, kind: kind, top: y, height: h, trail: trail))
+            y += h
+        }
+        for (n, past) in model.trail.chapters.enumerated() {
+            for part in past.parts {
+                add("\(past.id)#\(part.page)", .image(chapter: past.id, part: part), height(of: part, chapter: past.id) + spacing, n)
+            }
+            add("\(past.id)>", .marker(next: past.next, source: past.nextSource), markerHeight, n)
+        }
+        if waiting {
+            add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
+            return rows
+        }
+        for part in parts {
+            add("\(chapter)#\(part.page)", .image(chapter: chapter, part: part), height(of: part, chapter: chapter) + spacing, nil)
+        }
+        guard !parts.isEmpty else { return rows }
+        if let next {
+            add("\(chapter)>", .marker(next: next, source: model.end?.nextSource), markerHeight, nil)
+            add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
+        } else {
+            add("\(chapter)!", .foot, max(size.height * 0.8, 420), nil)
+        }
+        return rows
     }
 
     var body: some View {
-        let chapter = model.view?.chapter.id ?? ""
+        let rows = self.rows
         ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: spacing) {
-                ForEach(0..<parts.count, id: \.self) { index in
-                    let part = parts[index]
-                    let h = height(of: part)
-                    ZStack {
-                        if let file = model.file(of: part, chapter: chapter) {
-                            PageImage(file: file, longest: max(column, h) * scale, tone: tone)
-                        } else if let failure = model.failure(of: part, chapter: chapter) {
-                            PageFailed(page: Int(part.page) + 1, failure: failure, theme: theme) { model.retry(page: part.page) }
-                        } else {
-                            PagePlate(page: Int(part.page) + 1, theme: theme)
-                        }
-                    }
-                    .frame(width: column, height: h)
-                    .clipped()
-                    .onAppear { if model.file(of: part, chapter: chapter) == nil { model.needPage(part.page) } }
+            LazyVStack(spacing: 0) {
+                ForEach(rows) { row in
+                    view(of: row).frame(height: row.height)
                 }
-                foot
             }
             .frame(maxWidth: .infinity)
         }
         .scrollPosition($position)
         .onScrollGeometryChange(for: Metrics.self) { geometry in
-            Metrics(
-                y: geometry.contentOffset.y + geometry.contentInsets.top,
-                atFoot: geometry.contentOffset.y + geometry.containerSize.height >= geometry.contentSize.height - 40)
-        } action: { old, metrics in
+            Metrics(y: geometry.contentOffset.y + geometry.contentInsets.top, height: geometry.containerSize.height)
+        } action: { _, metrics in
             track(metrics)
-            if metrics.atFoot, !old.atFoot, !restoring { followOn() }
         }
         .onScrollPhaseChange { _, phase in
             if phase == .interacting { restoring = false; model.hideChrome() }
@@ -90,87 +144,225 @@ struct StripReader: View {
         .frame(width: size.width, height: size.height)
         .onAppear {
             model.position = (0, max(parts.count, 1))
+            keepLead()
             restore()
         }
         .onChange(of: parts.count) { _, _ in
-            model.position = (model.position.index, max(parts.count, 1))
+            if model.inTrail == nil { model.position = (model.position.index, max(parts.count, 1)) }
             restore()
         }
         .onChange(of: loaded) { _, _ in if restoring { restore() } }
         .onChange(of: model.view?.chapter.id) { _, _ in
-            follow?.cancel()
+            // Flowing on keeps the place: the new chapter's images take the lead's room.
+            if !model.trail.chapters.isEmpty { restoring = false; return }
+            lead = nil
             restoring = true
             position.scrollTo(y: 0)
         }
-        .onChange(of: model.stripRestore) { _, _ in restoring = true; restore() }
+        .onChange(of: next.flatMap { model.previews[$0.id] }?.path) { _, _ in keepLead() }
+        .onChange(of: model.stripRestore) { _, at in
+            guard at != nil else { return }
+            restoring = true
+            restore()
+        }
         .onChange(of: model.jump?.tick) { _, _ in
             guard let index = model.jump?.index else { return }
-            restoring = false
-            withAnimation(.standard) { position.scrollTo(y: top(of: min(max(index, 0), max(parts.count - 1, 0)))) }
+            go(to: index)
         }
         .onChange(of: model.turnRequest) { _, request in
             guard let request else { return }
             let step = request.line ? 120 : size.height * 0.9
             restoring = false
-            withAnimation(.standard) { position.scrollTo(y: max(0, offsetY + (request.forward ? step : -step))) }
+            let to = max(0, offsetY + (request.forward ? step : -step))
+            withAnimation(instant ? nil : .standard) { position.scrollTo(y: to) }
+        }
+    }
+
+    /// To an image of the chapter the line is on.
+    private func go(to index: Int) {
+        restoring = false
+        let images = rows.filter { $0.isImage && $0.trail == trailIndex }
+        guard !images.isEmpty else { return }
+        let to = images[min(max(index, 0), images.count - 1)].top
+        withAnimation(instant ? nil : .standard) { position.scrollTo(y: to) }
+    }
+
+    /// The trail chapter the line is on, by its place in the trail; nil for the open one.
+    private var trailIndex: Int? {
+        guard let inTrail = model.inTrail else { return nil }
+        return model.trail.chapters.firstIndex { $0.id == inTrail.id }
+    }
+
+    @ViewBuilder private func view(of row: Row) -> some View {
+        switch row.kind {
+        case .image(let chapter, let part):
+            StripImage(
+                model: model, chapter: chapter, part: part, theme: theme, tone: tone,
+                width: column, longest: max(column, row.height - spacing) * scale)
+                .frame(width: column, height: row.height - spacing)
+                .padding(.bottom, spacing)
+                .onAppear {
+                    if row.trail == nil, model.file(of: part, chapter: chapter) == nil { model.needPage(part.page) }
+                }
+        case .marker(let next, let source):
+            StripMarker(next: next, facts: Self.facts(next, source: source), theme: theme)
+                .frame(width: column)
+        case .lead:
+            ZStack(alignment: .top) {
+                PagePlate(page: 1, theme: theme, atOnce: true)
+                if let lead {
+                    PageImage(file: lead, longest: leadHeight * scale, tone: tone)
+                        .frame(width: column, height: column * CGFloat(lead.height) / CGFloat(max(lead.width, 1)))
+                }
+            }
+            .frame(width: column)
+            .clipped()
+            .accessibilityHidden(true)
+        case .foot:
+            ReaderEndPage(model: model, theme: theme, size: CGSize(width: column, height: row.height))
+        }
+    }
+
+    /// The marker's facts: "34 images · from books.home.example".
+    static func facts(_ next: ChapterRow, source: String?) -> String {
+        let images = next.pages.flatMap { $0 > 0 ? L.readerDividerImages(count: Int($0)) : nil }
+        switch (images, source) {
+        case (let images?, let source?): return L.readerDividerFactsSource(facts: images, source: source)
+        case (nil, let source?): return L.readerEndFrom(source: source)
+        case (let images?, nil): return images
+        case (nil, nil): return ""
         }
     }
 
     /// How many images have their pixels, so a late arrival can nudge the restore.
     private var loaded: Int {
-        let chapter = model.view?.chapter.id ?? ""
-        return parts.filter { model.file(of: $0, chapter: chapter) != nil }.count
+        parts.filter { model.file(of: $0, chapter: chapter) != nil }.count
     }
 
-    /// After the last image: a divider with the next chapter, and the chapter follows once the
-    /// person has stayed at the foot. The end page is only for the last chapter there is.
-    @ViewBuilder private var foot: some View {
-        if let next = model.end?.next ?? model.view?.next {
-            VStack(alignment: .leading, spacing: 4) {
-                Rectangle().fill(theme.rule).frame(height: 1).padding(.bottom, 28)
-                Text(L.readerEndNext).font(.ui(13, weight: .semibold)).foregroundStyle(theme.haze)
-                Text(next.title ?? next.label).font(.ui(20, weight: .semibold)).foregroundStyle(theme.silk)
-                Text(ReaderEndPage.facts(next, model: model))
-                    .font(.ui(15)).foregroundStyle(theme.haze)
-            }
-            .padding(.horizontal, 28)
-            .frame(width: column, height: max(size.height * 0.6, 320), alignment: .topLeading)
-            .accessibilityElement(children: .combine)
-        } else {
-            ReaderEndPage(model: model, theme: theme, size: CGSize(width: column, height: max(size.height * 0.8, 420)))
-        }
+    private func keepLead() {
+        guard let next, let file = model.previews[next.id] else { return }
+        lead = file
     }
 
     private func restore() {
         let at = model.stripRestore ?? model.view?.start.strip
         guard let at, restoring, !parts.isEmpty else { return }
-        let image = min(Int(at.image), parts.count - 1)
-        position.scrollTo(y: top(of: image) + CGFloat(at.offset) * height(of: parts[image]))
+        let images = rows.filter { $0.isImage && $0.trail == nil }
+        guard !images.isEmpty else { return }
+        let row = images[min(Int(at.image), images.count - 1)]
+        position.scrollTo(y: row.top + CGFloat(at.offset) * (row.height - spacing))
     }
 
-    /// The person reached the foot: a moment later, if they are still there, the next chapter follows.
-    private func followOn() {
-        guard model.view?.next != nil else { return }
-        follow?.cancel()
-        follow = Task {
-            try? await Task.sleep(for: .milliseconds(1400))
-            guard !Task.isCancelled, offsetY > 0 else { return }
-            model.flowOn()
-        }
-    }
-
+    /// Where the person is. The chapter whose rows hold the middle of the screen names the line,
+    /// the image at the top is the place, and the open chapter's marker crossing the middle
+    /// opens the next chapter under it.
     private func track(_ metrics: Metrics) {
         offsetY = metrics.y
-        var run: CGFloat = 0
-        for (index, part) in parts.enumerated() {
-            let h = height(of: part)
-            if metrics.y < run + h + spacing || index == parts.count - 1 {
-                let into = h > 0 ? min(max((metrics.y - run) / h, 0), 1) : 0
-                model.position = (index, max(parts.count, 1))
-                if !restoring { model.stripAt(StripPos(image: UInt32(index), offset: Float(into)), footVisible: metrics.atFoot) }
-                return
+        let rows = self.rows
+        let middle = metrics.y + metrics.height / 2
+        let markers = rows.filter(\.isMarker)
+        let on = markers.first { middle < $0.top + $0.height / 2 }?.trail
+        let inTrail = on.map { model.trail.chapters[$0] }
+        if model.inTrail?.id != inTrail?.id { model.inTrail = inTrail }
+        let images = rows.filter { $0.isImage && $0.trail == on }
+        if !images.isEmpty {
+            let at = images.lastIndex { $0.top <= metrics.y } ?? 0
+            if model.position.index != at || model.position.count != images.count {
+                model.position = (at, images.count)
             }
-            run += h + spacing
+            if on == nil, !restoring, !waiting {
+                let row = images[at]
+                let into = min(max((metrics.y - row.top) / max(row.height - spacing, 1), 0), 1)
+                let foot = images[images.count - 1].top + images[images.count - 1].height <= metrics.y + metrics.height
+                model.stripAt(StripPos(image: UInt32(at), offset: Float(into)), footVisible: foot)
+            }
         }
+        if !restoring, let marker = markers.last, marker.trail == nil, middle > marker.top + marker.height / 2 {
+            model.flowOn()
+        }
+        prepare(rows, from: metrics.y + metrics.height, to: metrics.y + metrics.height * 2)
+    }
+
+    /// The screen below this one, decoded before it scrolls in so it draws on its first frame with
+    /// no fade, and its files asked for.
+    private func prepare(_ rows: [Row], from top: CGFloat, to bottom: CGFloat) {
+        for row in rows where row.top + row.height > top && row.top < bottom {
+            guard case .image(let chapter, let part) = row.kind else { continue }
+            guard let file = model.file(of: part, chapter: chapter) else {
+                if row.trail == nil, !waiting { ahead.ask(row.id) { model.needPage(part.page) } }
+                continue
+            }
+            ahead.decode(file, longest: max(column, row.height - spacing) * scale)
+        }
+    }
+}
+
+/// What the strip asked for ahead of the scroll, so each ask goes once.
+@MainActor
+private final class Ahead {
+    private var asked: Set<String> = []
+
+    func ask(_ id: String, _ ask: () -> Void) {
+        guard asked.insert("ask " + id).inserted else { return } // i18n-skip: a cache key
+        ask()
+    }
+
+    func decode(_ file: PageFile, longest: CGFloat) {
+        guard PageImages.cached(file, longestSide: longest) == nil,
+              asked.insert("decode \(file.path) \(Int(longest))").inserted // i18n-skip: a cache key
+        else { return }
+        Task { _ = await PageImages.load(file, longestSide: longest) }
+    }
+}
+
+/// One image of the strip: the plate holds its place until the image has faded in over it.
+private struct StripImage: View {
+    let model: ReaderModel
+    let chapter: String
+    let part: LeafPart
+    let theme: ReaderTheme
+    let tone: PageTone
+    let width: CGFloat
+    let longest: CGFloat
+    @State private var painted = false
+
+    var body: some View {
+        ZStack {
+            if let file = model.file(of: part, chapter: chapter) {
+                if !painted { PagePlate(page: Int(part.page) + 1, theme: theme) }
+                PageImage(file: file, longest: longest, tone: tone) { painted = true }
+            } else if let failure = model.failure(of: part, chapter: chapter) {
+                PageFailed(page: Int(part.page) + 1, failure: failure, theme: theme) { model.retry(page: part.page) }
+            } else {
+                PagePlate(page: Int(part.page) + 1, theme: theme)
+            }
+        }
+        .frame(width: width)
+        .clipped()
+    }
+}
+
+/// The slim marker into the next chapter: Next, its title and its facts, on the ground. It
+/// scrolls past like an image.
+private struct StripMarker: View {
+    let next: ChapterRow
+    let facts: String
+    let theme: ReaderTheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(L.readerEndNext).font(.ui(13)).foregroundStyle(theme.haze)
+            Text(next.title.map { L.readerChapterLineTitled(chapter: next.number ?? next.label, title: $0) } ?? next.label)
+                .font(.showTitle(size: 22, relativeTo: .title2)).fontWeight(.bold)
+                .foregroundStyle(theme.silk)
+                .lineLimit(3)
+            if !facts.isEmpty {
+                Text(facts).font(.ui(14)).foregroundStyle(theme.haze).padding(.top, 2)
+            }
+        }
+        .padding(.horizontal, 24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .background(theme.ground)
+        .accessibilityElement(children: .combine)
     }
 }

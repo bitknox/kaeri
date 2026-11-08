@@ -7,6 +7,11 @@ import KaeriStore
 import os
 import SwiftUI
 import WebKit
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 /// A trailer playing in one of the pool's web views, made the way the trailers spec asks: the
 /// engine's page loaded under the app's identifier so YouTube sees a Referer, nothing kept past the
@@ -155,6 +160,10 @@ final class TrailerPlayer: NSObject, TrailerSurface {
 /// every view. A view handed back is paused and kept, its player loaded, to play the next trailer
 /// through `loadVideoById`: two of each style, as a preview and Play trailer can be up together
 /// with another on its way out.
+///
+/// The kept views go, and their WebContent processes with them, when the system is short of
+/// memory, when the app goes to the background, and when the last screen with hover cards goes.
+/// The hover layer warms one up again once its screen is back.
 @MainActor
 final class TrailerPool {
     static let shared = TrailerPool()
@@ -163,6 +172,93 @@ final class TrailerPool {
     private var idle: [TrailerPage] = []
     private let keep = 2
     private var warmed = false
+    /// The app is in the background: a view handed back is closed, not kept.
+    private var away = false
+    /// Screens with hover cards up now.
+    private var screens = 0
+    private var watchers: [NSObjectProtocol] = []
+    private var pressure: (any DispatchSourceMemoryPressure)?
+    /// Another app in front on the Mac: the pool empties if it stays there.
+    private var leaving: Task<Void, Never>?
+
+    init() {
+        watch()
+    }
+
+    /// How many views are kept, for the log and the tests.
+    var kept: Int { idle.count }
+
+    /// Close every kept view, so its process and memory go. The next trailer loads its page.
+    func empty(_ why: String) {
+        #if os(macOS)
+        HoverTrailer.shared.cool()
+        #endif
+        guard !idle.isEmpty || warmed else { return }
+        AppLog.debug("trailer", "let go of \(idle.count) kept web views: \(why)")
+        idle.forEach { $0.close() }
+        idle.removeAll()
+        warmed = false
+    }
+
+    /// A screen with hover cards came up.
+    func screenShown() { screens += 1 }
+
+    /// A screen with hover cards went: the last one going empties the pool.
+    func screenGone() {
+        screens = max(screens - 1, 0)
+        if screens == 0 { empty("no screen with hover cards is up") }
+    }
+
+    private func watch() {
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .main)
+        source.setEventHandler { [weak self] in
+            MainActor.assumeIsolated { self?.empty("the system is short of memory") }
+        }
+        source.activate()
+        pressure = source
+        #if os(macOS)
+        observe(NSApplication.didHideNotification) { $0.leave(now: true) }
+        observe(NSApplication.didResignActiveNotification) { $0.leave(now: false) }
+        observe(NSApplication.didUnhideNotification) { $0.back() }
+        observe(NSApplication.didBecomeActiveNotification) { $0.back() }
+        #else
+        observe(UIApplication.didEnterBackgroundNotification) { $0.leave(now: true) }
+        observe(UIApplication.willEnterForegroundNotification) { $0.back() }
+        #endif
+    }
+
+    private func observe(_ name: Notification.Name, _ act: @escaping @MainActor (TrailerPool) -> Void) {
+        let token = NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                if let self { act(self) }
+            }
+        }
+        watchers.append(token)
+    }
+
+    /// Hidden, or out of sight on iPhone and iPad, the pool empties now; with another Mac app
+    /// in front, after a minute of it, so a quick look elsewhere keeps the next hover fast.
+    private func leave(now: Bool) {
+        leaving?.cancel()
+        leaving = nil
+        guard !now else {
+            away = true
+            empty("the app went to the background")
+            return
+        }
+        leaving = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(60))
+            guard !Task.isCancelled, let self else { return }
+            self.away = true
+            self.empty("another app has been in front for a minute")
+        }
+    }
+
+    private func back() {
+        leaving?.cancel()
+        leaving = nil
+        away = false
+    }
 
     /// Signposts round the WKWebView calls the trailers make on the main thread: creating a view,
     /// loading its page and running a script. The page's work runs in WebKit's own processes.
@@ -173,7 +269,7 @@ final class TrailerPool {
     /// and loading it are the main thread's part, and the first web view of the run starts
     /// WebKit's processes, so a caller picks a still moment.
     func prewarm(subtitles: String) async {
-        guard !warmed, Self.standInFree else { return }
+        guard !warmed, !away, Self.standInFree else { return }
         warmed = true
         let identity = TrailerPlayer.identity
         let built = await Task.detached(priority: .utility) {
@@ -234,7 +330,7 @@ final class TrailerPool {
         page.hide()
         page.webView.removeFromSuperview()
         page.run(trailerScript(control: .pause))
-        guard page.pooled, !page.broken, idle.filter({ $0.style == page.style }).count < keep else {
+        guard page.pooled, !page.broken, !away, idle.filter({ $0.style == page.style }).count < keep else {
             page.close()
             return
         }

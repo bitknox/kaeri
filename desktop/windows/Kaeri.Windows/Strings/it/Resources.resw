@@ -590,6 +590,9 @@
   <data name="ReaderResumed" xml:space="preserve">
     <value>Ripreso a pagina {page}</value>
   </data>
+  <data name="ReaderResumedImage" xml:space="preserve">
+    <value>Ripreso all'immagine {image}</value>
+  </data>
   <data name="ReaderBackToPage" xml:space="preserve">
     <value>Torna a pagina {page}</value>
   </data>
@@ -729,7 +732,7 @@
     <value>Nuovo capitolo in una serie che segui</value>
   </data>
   <data name="ReadingSpotlightContinue" xml:space="preserve">
-    <value>Riprendi la lettura</value>
+    <value>Continua a leggere</value>
   </data>
   <data name="ReadingSpotlightUpNext" xml:space="preserve">
     <value>Prossimo per te</value>
@@ -761,20 +764,38 @@
   <data name="ReadingPartNew" xml:space="preserve">
     <value>La parte {part} è nuova</value>
   </data>
+  <data name="ReadingLabelPercent" xml:space="preserve">
+    <value>{label} · {percent}%</value>
+  </data>
+  <data name="ReadingLabelNew" xml:space="preserve">
+    <value>{label} è una novità</value>
+  </data>
   <data name="ReadingPartTitled" xml:space="preserve">
     <value>Parte {part} · {title}</value>
+  </data>
+  <data name="ReadingLabelTitled" xml:space="preserve">
+    <value>{label} · {title}</value>
   </data>
   <data name="ReadingPartOutToday" xml:space="preserve">
     <value>La parte {part} è uscita oggi</value>
   </data>
+  <data name="ReadingLabelOutToday" xml:space="preserve">
+    <value>{label} esce oggi</value>
+  </data>
   <data name="ReadingPartOutTodayTitled" xml:space="preserve">
     <value>Parte {part}, {title}, uscita oggi</value>
+  </data>
+  <data name="ReadingLabelOutTodayTitled" xml:space="preserve">
+    <value>{label}, {title}, esce oggi</value>
   </data>
   <data name="ReadingChapterOf" xml:space="preserve">
     <value>Capitolo {chapter} di {of}</value>
   </data>
   <data name="ReadingVolumePart" xml:space="preserve">
     <value>Volume {volume}, parte {part}</value>
+  </data>
+  <data name="ReadingVolumeLabel" xml:space="preserve">
+    <value>Volume {volume}, {label}</value>
   </data>
   <data name="ReadingOriginJapan" xml:space="preserve">
     <value>Giappone</value>
@@ -856,6 +877,12 @@
   </data>
   <data name="ReadingRowPercent" xml:space="preserve">
     <value>{percent}%</value>
+  </data>
+  <data name="ReadingRowOpened" xml:space="preserve">
+    <value>Aperto</value>
+  </data>
+  <data name="ReadingRowBookmarked" xml:space="preserve">
+    <value>Nei segnalibri</value>
   </data>
   <data name="ReadingRowPages_one" xml:space="preserve">
     <value>1 pagina</value>
@@ -1274,6 +1301,9 @@
   <data name="CloudLoopbackDone" xml:space="preserve">
     <value>Puoi chiudere questa scheda e tornare a Kaeri.</value>
   </data>
+  <data name="SyncDeviceRemoved" xml:space="preserve">
+    <value>Questo dispositivo è stato rimosso dalla sincronizzazione da un altro dispositivo. Unisciti di nuovo per sincronizzarlo.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Accesso effettuato a {tracker}.</value>
   </data>
@@ -1544,6 +1574,39 @@
   <data name="FilterPickedMore" xml:space="preserve">
     <value>{first} +{more}</value>
   </data>
+  <data name="SearchGenreLeftOut" xml:space="preserve">
+    <value>Non {genre}</value>
+  </data>
+  <data name="SearchFiltersButtonSet" xml:space="preserve">
+    <value>Filtri impostati: {count}</value>
+  </data>
+  <data name="ShortcutsSearchFilters" xml:space="preserve">
+    <value>Filtri di ricerca</value>
+  </data>
+  <data name="FilterHintClick" xml:space="preserve">
+    <value>Fai clic una volta per includere, due volte per escludere.</value>
+  </data>
+  <data name="SearchPickInclude" xml:space="preserve">
+    <value>Includi</value>
+  </data>
+  <data name="SearchPickLeaveOut" xml:space="preserve">
+    <value>Escludi</value>
+  </data>
+  <data name="SearchRangeFrom" xml:space="preserve">
+    <value>Da</value>
+  </data>
+  <data name="SearchRangeTo" xml:space="preserve">
+    <value>A</value>
+  </data>
+  <data name="SearchMinutesUnit" xml:space="preserve">
+    <value>min</value>
+  </data>
+  <data name="SearchScoreAny" xml:space="preserve">
+    <value>Qualsiasi</value>
+  </data>
+  <data name="SearchSuggestFilter" xml:space="preserve">
+    <value>Filtra per {name}</value>
+  </data>
   <data name="TitleSeasonWhen" xml:space="preserve">
     <value>{season} · {when}</value>
   </data>
@@ -1741,6 +1804,12 @@
   </data>
   <data name="SettingsMotion" xml:space="preserve">
     <value>Animazioni</value>
+  </data>
+  <data name="SettingsSmoothScrolling" xml:space="preserve">
+    <value>Scorrimento fluido</value>
+  </data>
+  <data name="SettingsSmoothScrollingDetail" xml:space="preserve">
+    <value>Ogni scatto della rotellina fa scivolare la pagina al suo posto. Touchpad e touch scorrono come prima.</value>
   </data>
   <data name="SettingsStartFullscreen" xml:space="preserve">
     <value>Avvia a schermo intero</value>
@@ -2920,6 +2989,27 @@
   </data>
   <data name="PadButtonRightStick" xml:space="preserve">
     <value>Stick destro</value>
+  </data>
+  <data name="PadHelpTurnPage" xml:space="preserve">
+    <value>Gira pagina</value>
+  </data>
+  <data name="PadHelpPreviousChapter" xml:space="preserve">
+    <value>Capitolo precedente</value>
+  </data>
+  <data name="PadHelpNextChapter" xml:space="preserve">
+    <value>Capitolo successivo</value>
+  </data>
+  <data name="PadHelpReaderBar" xml:space="preserve">
+    <value>Mostra o nascondi la barra</value>
+  </data>
+  <data name="PadHelpReaderSettings" xml:space="preserve">
+    <value>Impostazioni del lettore</value>
+  </data>
+  <data name="PadHelpCloseReader" xml:space="preserve">
+    <value>Chiudi il lettore</value>
+  </data>
+  <data name="PadHelpReader" xml:space="preserve">
+    <value>Lettore</value>
   </data>
   <data name="CloseDontAsk" xml:space="preserve">
     <value>Non chiedere più</value>
@@ -5858,6 +5948,21 @@
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · da {source}</value>
   </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Scorri per proseguire</value>
+  </data>
+  <data name="ReaderDividerImages_one" xml:space="preserve">
+    <value>Un'immagine</value>
+  </data>
+  <data name="ReaderDividerImages_many" xml:space="preserve">
+    <value>{count} immagini</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} immagini</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Capitolo {chapter} · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Leggi la demo</value>
   </data>
@@ -5945,6 +6050,75 @@
   <data name="DemoReadChapter" xml:space="preserve">
     <value>Leggi il capitolo {number}</value>
   </data>
+  <data name="ProgressServerSaved" xml:space="preserve">
+    <value>Salvato su {server}</value>
+  </data>
+  <data name="ProgressServerSending" xml:space="preserve">
+    <value>Invio a {server}…</value>
+  </data>
+  <data name="ProgressServerOffline" xml:space="preserve">
+    <value>Verrà inviato a {server} quando torni online</value>
+  </data>
+  <data name="ProgressServerRetrying" xml:space="preserve">
+    <value>{server} non ha risposto. Kaeri riproverà.</value>
+  </data>
+  <data name="ProgressServerFailed" xml:space="preserve">
+    <value>Non salvato su {server}: {reason}.</value>
+  </data>
+  <data name="ProgressWhyKey" xml:space="preserve">
+    <value>il server ha rifiutato la chiave</value>
+  </data>
+  <data name="ProgressWhyPassword" xml:space="preserve">
+    <value>il server ha rifiutato la password</value>
+  </data>
+  <data name="ProgressWhyGone" xml:space="preserve">
+    <value>questa serie non è più sul server</value>
+  </data>
+  <data name="ProgressWhyGaveUp" xml:space="preserve">
+    <value>nessuna risposta per un giorno</value>
+  </data>
+  <data name="ProgressRowSaved" xml:space="preserve">
+    <value>Progressi salvati {ago}</value>
+  </data>
+  <data name="ProgressRowSending_one" xml:space="preserve">
+    <value>Invio di 1 capitolo…</value>
+  </data>
+  <data name="ProgressRowSending_many" xml:space="preserve">
+    <value>Invio di {count} capitoli…</value>
+  </data>
+  <data name="ProgressRowSending_other" xml:space="preserve">
+    <value>Invio di {count} capitoli…</value>
+  </data>
+  <data name="ProgressRowOffline_one" xml:space="preserve">
+    <value>1 capitolo verrà inviato quando torni online</value>
+  </data>
+  <data name="ProgressRowOffline_many" xml:space="preserve">
+    <value>{count} capitoli verranno inviati quando torni online</value>
+  </data>
+  <data name="ProgressRowOffline_other" xml:space="preserve">
+    <value>{count} capitoli verranno inviati quando torni online</value>
+  </data>
+  <data name="ProgressRowRetrying_one" xml:space="preserve">
+    <value>1 capitolo in attesa. Kaeri riproverà.</value>
+  </data>
+  <data name="ProgressRowRetrying_many" xml:space="preserve">
+    <value>{count} capitoli in attesa. Kaeri riproverà.</value>
+  </data>
+  <data name="ProgressRowRetrying_other" xml:space="preserve">
+    <value>{count} capitoli in attesa. Kaeri riproverà.</value>
+  </data>
+  <data name="ProgressRowFailed_one" xml:space="preserve">
+    <value>1 capitolo non salvato: {reason}</value>
+  </data>
+  <data name="ProgressRowFailed_many" xml:space="preserve">
+    <value>{count} capitoli non salvati: {reason}</value>
+  </data>
+  <data name="ProgressRowFailed_other" xml:space="preserve">
+    <value>{count} capitoli non salvati: {reason}</value>
+  </data>
+  <data name="ProgressRowOff" xml:space="preserve">
+    <value>I progressi restano su questo {kind}</value>
+  </data>
   <data name="NavWatch" xml:space="preserve">
     <value>Guarda</value>
   </data>
@@ -5953,6 +6127,9 @@
   </data>
   <data name="NavUpdates" xml:space="preserve">
     <value>Aggiornamenti</value>
+  </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>Continua a leggere</value>
   </data>
   <data name="HomeReadReleasing" xml:space="preserve">
     <value>In uscita ora</value>
@@ -6018,16 +6195,25 @@
     <value>Leggi il capitolo {n}</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>Riprendi il capitolo {n} · pagina {page}</value>
+    <value>Continua a leggere il capitolo {n} · pagina {page}</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>Riprendi la parte {n} · {percent}%</value>
+    <value>Continua a leggere la parte {n} · {percent}%</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>Riprendi la parte {n}</value>
+    <value>Continua a leggere la parte {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Leggi la parte {n}</value>
+  </data>
+  <data name="ActionContinueNamed" xml:space="preserve">
+    <value>Continua a leggere {label} · {percent}%</value>
+  </data>
+  <data name="ActionContinueNamedPlain" xml:space="preserve">
+    <value>Continua a leggere {label}</value>
+  </data>
+  <data name="ActionReadNamed" xml:space="preserve">
+    <value>Leggi {label}</value>
   </data>
   <data name="ActionReadAgain" xml:space="preserve">
     <value>Rileggi</value>
@@ -6888,7 +7074,7 @@
     <value>Quando lo segni</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>Continua a guardare e i tuoi tracker seguono i tuoi segni</value>
+    <value>Continua a leggere e i tuoi tracker seguono i tuoi segni</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Impostazioni della serie che ti seguono</value>
@@ -6991,6 +7177,240 @@
   </data>
   <data name="ReadDownloadsDeleteRead" xml:space="preserve">
     <value>Elimina i letti</value>
+  </data>
+  <data name="SendTitle" xml:space="preserve">
+    <value>Invia all'e-reader</value>
+  </data>
+  <data name="SendFor" xml:space="preserve">
+    <value>Per</value>
+  </data>
+  <data name="SendWhat" xml:space="preserve">
+    <value>Cosa</value>
+  </data>
+  <data name="SendChapters" xml:space="preserve">
+    <value>Capitoli</value>
+  </data>
+  <data name="SendChaptersOne" xml:space="preserve">
+    <value>{chapter}</value>
+  </data>
+  <data name="SendChaptersRange" xml:space="preserve">
+    <value>Da {first} a {last}</value>
+  </data>
+  <data name="SendSize" xml:space="preserve">
+    <value>Dimensione</value>
+  </data>
+  <data name="SendSizeAbout" xml:space="preserve">
+    <value>Circa {size}</value>
+  </data>
+  <data name="SendNoPlace" xml:space="preserve">
+    <value>Kaeri non vede a che punto sei su questo e-reader. Quando torni, la pagina della serie ti chiede dove ti sei fermato.</value>
+  </data>
+  <data name="SendPrepare" xml:space="preserve">
+    <value>Prepara e condividi</value>
+  </data>
+  <data name="SendPreparing_one" xml:space="preserve">
+    <value>Preparazione del capitolo</value>
+  </data>
+  <data name="SendPreparing_many" xml:space="preserve">
+    <value>Preparazione di {done} capitoli su {total}</value>
+  </data>
+  <data name="SendPreparing_other" xml:space="preserve">
+    <value>Preparazione di {done} capitoli su {total}</value>
+  </data>
+  <data name="SendSizedFor" xml:space="preserve">
+    <value>Pagine dimensionate per {device}</value>
+  </data>
+  <data name="SendInParts" xml:space="preserve">
+    <value>Oltre {size}, quindi i file vengono divisi in parti.</value>
+  </data>
+  <data name="SendFailedChapter" xml:space="preserve">
+    <value>Impossibile preparare il capitolo {chapter}. {cause}</value>
+  </data>
+  <data name="SendFailed" xml:space="preserve">
+    <value>Impossibile preparare i file. {cause}</value>
+  </data>
+  <data name="SendSizeWorking" xml:space="preserve">
+    <value>Calcolo in corso</value>
+  </data>
+  <data name="SendChaptersOpen" xml:space="preserve">
+    <value>Aperto</value>
+  </data>
+  <data name="SendChaptersClosed" xml:space="preserve">
+    <value>Chiuso</value>
+  </data>
+  <data name="SendProgressSpoken" xml:space="preserve">
+    <value>{percent} percento</value>
+  </data>
+  <data name="SendChapterAction" xml:space="preserve">
+    <value>Invia all'e-reader</value>
+  </data>
+  <data name="SendPartsOver" xml:space="preserve">
+    <value>in parti oltre {size}</value>
+  </data>
+  <data name="SendWaitingCancel" xml:space="preserve">
+    <value>Annulla invio</value>
+  </data>
+  <data name="SendReady_one" xml:space="preserve">
+    <value>Un file è pronto.</value>
+  </data>
+  <data name="SendReady_many" xml:space="preserve">
+    <value>{n} file sono pronti.</value>
+  </data>
+  <data name="SendReady_other" xml:space="preserve">
+    <value>{n} file sono pronti.</value>
+  </data>
+  <data name="SendShareAgain" xml:space="preserve">
+    <value>Condividi di nuovo</value>
+  </data>
+  <data name="SendBanner" xml:space="preserve">
+    <value>Invio a {device}</value>
+  </data>
+  <data name="SendFormatFixedEpub" xml:space="preserve">
+    <value>EPUB a layout fisso</value>
+  </data>
+  <data name="SendFormatKepub" xml:space="preserve">
+    <value>KEPUB</value>
+  </data>
+  <data name="SendFormatEpub" xml:space="preserve">
+    <value>EPUB</value>
+  </data>
+  <data name="SendFormatCbz" xml:space="preserve">
+    <value>CBZ</value>
+  </data>
+  <data name="SendTargetLine" xml:space="preserve">
+    <value>{format} · {width} × {height}</value>
+  </data>
+  <data name="StopTitle" xml:space="preserve">
+    <value>Dove ti sei fermato?</value>
+  </data>
+  <data name="StopNote" xml:space="preserve">
+    <value>Hai inviato dei capitoli a {device}. Dove ti sei fermato?</value>
+  </data>
+  <data name="StopNoteAction" xml:space="preserve">
+    <value>Indica il punto</value>
+  </data>
+  <data name="StopSentOne" xml:space="preserve">
+    <value>Il capitolo {chapter} è andato a {device} il {date}.</value>
+  </data>
+  <data name="StopSentRange" xml:space="preserve">
+    <value>I capitoli da {first} a {last} sono andati a {device} il {date}.</value>
+  </data>
+  <data name="StopFinished" xml:space="preserve">
+    <value>Capitolo {chapter} finito</value>
+  </data>
+  <data name="StopSet" xml:space="preserve">
+    <value>Indica il punto</value>
+  </data>
+  <data name="StopKeep" xml:space="preserve">
+    <value>Mantieni capitolo {chapter} · pagina {page}</value>
+  </data>
+  <data name="StopKeepPlain" xml:space="preserve">
+    <value>Mantieni il punto attuale</value>
+  </data>
+  <data name="EreadersGroup" xml:space="preserve">
+    <value>E-reader</value>
+  </data>
+  <data name="EreadersSendRow" xml:space="preserve">
+    <value>Invia all'e-reader</value>
+  </data>
+  <data name="EreadersFeedRow" xml:space="preserve">
+    <value>Feed OPDS</value>
+  </data>
+  <data name="OpdsShareNote" xml:space="preserve">
+    <value>Un catalogo OPDS che gli e-reader di casa possono sfogliare</value>
+  </data>
+  <data name="OpdsFooter" xml:space="preserve">
+    <value>Il feed funziona solo mentre Kaeri è aperto su questo {device}. I progressi su quegli e-reader restano lì.</value>
+  </data>
+  <data name="OpdsAddress" xml:space="preserve">
+    <value>Indirizzo</value>
+  </data>
+  <data name="OpdsAddressOff" xml:space="preserve">
+    <value>Attiva il feed per avere il suo indirizzo.</value>
+  </data>
+  <data name="OpdsPassword" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="OpdsPasswordNote" xml:space="preserve">
+    <value>Gli e-reader la chiedono una volta sola</value>
+  </data>
+  <data name="OpdsNewPassword" xml:space="preserve">
+    <value>Nuova password</value>
+  </data>
+  <data name="OpdsPort" xml:space="preserve">
+    <value>Porta</value>
+  </data>
+  <data name="OpdsPortNote" xml:space="preserve">
+    <value>Lascia vuoto per una porta libera qualsiasi, o scegline una da 1024 a 65535</value>
+  </data>
+  <data name="OpdsPortMoved" xml:space="preserve">
+    <value>La porta {wanted} era occupata, quindi il feed usa la {port}.</value>
+  </data>
+  <data name="OpdsShares" xml:space="preserve">
+    <value>Cosa condivide</value>
+  </data>
+  <data name="OpdsShareDownloads" xml:space="preserve">
+    <value>Download</value>
+  </data>
+  <data name="OpdsShareDownloadsCount_one" xml:space="preserve">
+    <value>Un capitolo</value>
+  </data>
+  <data name="OpdsShareDownloadsCount_many" xml:space="preserve">
+    <value>{n} capitoli</value>
+  </data>
+  <data name="OpdsShareDownloadsCount_other" xml:space="preserve">
+    <value>{n} capitoli</value>
+  </data>
+  <data name="OpdsShareManga" xml:space="preserve">
+    <value>Cartella manga</value>
+  </data>
+  <data name="OpdsShareNovels" xml:space="preserve">
+    <value>Cartella light novel</value>
+  </data>
+  <data name="OpdsShareSeriesCount_one" xml:space="preserve">
+    <value>Una serie</value>
+  </data>
+  <data name="OpdsShareSeriesCount_many" xml:space="preserve">
+    <value>{n} serie</value>
+  </data>
+  <data name="OpdsShareSeriesCount_other" xml:space="preserve">
+    <value>{n} serie</value>
+  </data>
+  <data name="OpdsFetchedBy" xml:space="preserve">
+    <value>Scaricato da</value>
+  </data>
+  <data name="OpdsFetchedNone" xml:space="preserve">
+    <value>Nessun e-reader ha ancora scaricato nulla.</value>
+  </data>
+  <data name="OpdsStarting" xml:space="preserve">
+    <value>Avvio…</value>
+  </data>
+  <data name="OpdsPausedNone" xml:space="preserve">
+    <value>In pausa. Questo Mac non è su una rete locale.</value>
+  </data>
+  <data name="OpdsPausedVpn" xml:space="preserve">
+    <value>In pausa. Questo Mac è connesso solo tramite una VPN.</value>
+  </data>
+  <data name="OpdsNewPasswordTitle" xml:space="preserve">
+    <value>Creare una nuova password?</value>
+  </data>
+  <data name="OpdsNewPasswordWarning" xml:space="preserve">
+    <value>Gli e-reader che usano già il feed smettono di funzionare finché non inserisci la nuova password in ciascuno.</value>
+  </data>
+  <data name="OpdsFetchedTime" xml:space="preserve">
+    <value>Ultima richiesta {time}</value>
+  </data>
+  <data name="OpdsFetchedFiles_one" xml:space="preserve">
+    <value>Un file</value>
+  </data>
+  <data name="OpdsFetchedFiles_many" xml:space="preserve">
+    <value>{n} file</value>
+  </data>
+  <data name="OpdsFetchedFiles_other" xml:space="preserve">
+    <value>{n} file</value>
+  </data>
+  <data name="OpdsReaderUnnamed" xml:space="preserve">
+    <value>E-reader a {address}</value>
   </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Stagione precedente</value>
@@ -10740,7 +11160,7 @@
     <value>Importa le tue liste e riempie Continua a guardare con quello che stai guardando.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Importa le tue liste e riempie Continua a guardare con ciò che stai leggendo.</value>
+    <value>Importa le tue liste e riempie Continua a leggere con ciò che stai leggendo.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Importa le tue liste e riempie Continua a guardare con ciò che stai guardando e leggendo.</value>

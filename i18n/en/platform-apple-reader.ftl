@@ -61,6 +61,9 @@ reader-go-to-page = Go to page
 # @arg total: int
 reader-go-to-page-field = 1 to { $total }
 
+# Button beside the Go to page field that goes to the typed page.
+reader-go-to-page-submit = Go
+
 # Line on the end page when the chapter counted as read.
 
 # Line on the end page for a chapter that has not counted yet.
@@ -69,7 +72,7 @@ reader-end-not-read = Not marked read yet
 # Small label above the next chapter's title on the end page.
 
 # The one amber button of the end page: opens the next chapter.
-reader-continue = { -continue-cap }
+reader-continue = { -continue-reading-cap }
 
 # Button on the end page that goes back to the series page.
 reader-back-to-series = Back to the series
@@ -103,9 +106,9 @@ reader-end-offline = { $chapter } isn't downloaded
 # End page text when the next chapter is not downloaded and the device is offline.
 reader-end-offline-body = You're offline. It opens here once you're connected.
 
-# Line that opens a chapter, over the cover.
+# Line on the page plate while a chapter opens. The chapter is its number, such as 12.
 # @arg chapter: text
-reader-opening = Opening { $chapter }
+reader-opening = Opening chapter { $chapter }
 
 # The opening line after a few seconds of waiting.
 # @arg seconds: int
@@ -122,9 +125,9 @@ reader-opening-slow = Finding a { -source } · { $seconds } s
 # Hint under a page's error.
 reader-page-failed-hint = Swipe to go on without it.
 
-# Heading of the error when a chapter would not open.
+# Heading of the error when a chapter would not open. The chapter is its number, such as 13.
 # @arg chapter: text
-reader-chapter-failed = Couldn't open { $chapter }
+reader-chapter-failed = Couldn't open chapter { $chapter }
 
 # Button of the error when a chapter would not open.
 reader-choose-source = Choose { -source }
@@ -158,6 +161,9 @@ reader-all-novels = All light novels
 
 # Heading of the web comic settings.
 reader-all-strips = All webtoons
+
+# Heading of the webtoon settings on a device: it names the device kind.
+reader-all-strips-here = All webtoons on this { -device }
 
 # Row: how the series reads.
 reader-reading-mode = Reading mode
@@ -268,7 +274,7 @@ reader-chapter-pages = { $pages } pages
 # Chapters sheet: the offline line.
 reader-offline-line = Offline. Downloaded chapters still open.
 
-# Mac menu: the Go menu and its items.
+# The Go menu and its items, on the Mac and with a keyboard on iPad.
 reader-menu-go = Go
 reader-menu-next-page = Next Page
 reader-menu-previous-page = Previous Page
@@ -280,6 +286,8 @@ reader-menu-settings = Reader Settings…
 reader-menu-zoom-in = Zoom In
 reader-menu-zoom-out = Zoom Out
 reader-menu-zoom-fit = Fit to Window
+reader-menu-first-page = First Page
+reader-menu-last-page = Last Page
 
 # Mac menu item: back to where the person was before a jump.
 # @arg page: int
@@ -303,3 +311,11 @@ reader-strip-gap = Gap between images
 reader-zone-back = Back
 reader-zone-forward = Forward
 reader-zone-menu = Menu
+
+# A jump button above the page grid in the chapters sheet, for a band of pages.
+# @arg from: int
+# @arg to: int
+reader-pages-range = { $from }–{ $to }
+
+# Why an e-reader send failed while offline, after "Couldn't prepare chapter 12."
+send-failed-offline = Try again when you're online.

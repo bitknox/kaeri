@@ -37,7 +37,7 @@ use kaeri_store::Store;
 use crate::{
     anilist::{
         AiringEntry, AiringPage, AniList, AniListError, BrowseFilter, Facets, LastAired, Media,
-        Page, Season,
+        Page, Season, StreamingEpisode,
     },
     franchise,
     tenrai::{Tenrai, TenraiError},
@@ -642,11 +642,40 @@ impl Meta {
     }
 
     /// Write-through: every successful fetch leaves the cache exactly this fresh.
+    ///
+    /// Except for the streaming listings, which a list's answer never asks for: where it comes
+    /// with none, the ones a fuller answer cached stay, so a title's episode stills outlast the
+    /// lists that show it, for the wide art Home draws where there is no banner.
     fn remember(&self, media: &Media) {
+        let kept;
+        let media = match self.cached_listings(media) {
+            Some(listings) => {
+                kept = Media { streaming_episodes: listings, ..media.clone() };
+                &kept
+            }
+            None => media,
+        };
         let Ok(payload) = serde_json::to_string(media) else { return };
         if let Err(e) = self.store.cache_media(media.id, &payload, kaeri_store::now()) {
             tracing::warn!(error = %e, "could not cache metadata");
         }
+    }
+
+    /// The listings cached for `media`, when it comes with none and the cache holds some.
+    fn cached_listings(&self, media: &Media) -> Option<Vec<StreamingEpisode>> {
+        /// The one field read back, so the rest of the payload is not decoded.
+        #[derive(serde::Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct Listings {
+            #[serde(default)]
+            streaming_episodes: Vec<StreamingEpisode>,
+        }
+        if !media.streaming_episodes.is_empty() {
+            return None;
+        }
+        let (payload, _) = self.store.cached_media(media.id).ok().flatten()?;
+        let cached: Listings = serde_json::from_str(&payload).ok()?;
+        Some(cached.streaming_episodes).filter(|listings| !listings.is_empty())
     }
 
     fn remember_page(&self, page: &Page<Media>) {
@@ -1665,6 +1694,45 @@ mod tests {
             Some(crate::tenrai::Tenrai::new(http, store.clone())),
             store,
         )
+    }
+
+    /// A list's answer asks for no streaming listings: written over a page's answer, it leaves
+    /// the stills that page brought in the cache, and takes everything else of its own.
+    #[test]
+    fn a_list_answer_keeps_the_listings_a_fuller_answer_cached() {
+        let meta = meta();
+        let media = |fields: serde_json::Value| -> Media {
+            let mut wire = serde_json::json!({ "id": 900_005, "episodes": 12 });
+            wire.as_object_mut().unwrap().extend(fields.as_object().unwrap().clone());
+            serde_json::from_value(wire).unwrap()
+        };
+        let listing = serde_json::json!([{
+            "title": "Episode 1 - The Lantern",
+            "url": "https://watch.example/1",
+            "site": "Hikari Library",
+            "thumbnail": "https://img.example/ep/900005/1.jpg",
+        }]);
+        meta.remember(&media(serde_json::json!({ "streamingEpisodes": listing })));
+        meta.remember(&media(serde_json::json!({ "averageScore": 81 })));
+
+        let [cached] = meta.cached(&[AnilistId::new(900_005)]).try_into().unwrap();
+        assert_eq!(cached.average_score, Some(81), "the list's own fields are written");
+        assert_eq!(
+            cached.episode_thumbnails().get(&1).map(String::as_str),
+            Some("https://img.example/ep/900005/1.jpg"),
+        );
+
+        // A fuller answer's own listings replace them.
+        let newer = serde_json::json!([{
+            "title": "Episode 1 - The Lantern",
+            "thumbnail": "https://img.example/ep/900005/1b.jpg",
+        }]);
+        meta.remember(&media(serde_json::json!({ "streamingEpisodes": newer })));
+        let [cached] = meta.cached(&[AnilistId::new(900_005)]).try_into().unwrap();
+        assert_eq!(
+            cached.episode_thumbnails().get(&1).map(String::as_str),
+            Some("https://img.example/ep/900005/1b.jpg"),
+        );
     }
 
     #[test]

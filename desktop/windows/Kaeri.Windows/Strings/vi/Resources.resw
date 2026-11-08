@@ -534,7 +534,10 @@
     <value>Chương {chapter} được gửi tới các dịch vụ theo dõi là chương {whole}.</value>
   </data>
   <data name="ReaderResumed" xml:space="preserve">
-    <value>Đọc tiếp từ trang {page}</value>
+    <value>Mở lại ở trang {page}</value>
+  </data>
+  <data name="ReaderResumedImage" xml:space="preserve">
+    <value>Mở lại ở ảnh {image}</value>
   </data>
   <data name="ReaderBackToPage" xml:space="preserve">
     <value>Quay lại trang {page}</value>
@@ -663,7 +666,7 @@
     <value>Chương mới của truyện bạn theo dõi</value>
   </data>
   <data name="ReadingSpotlightContinue" xml:space="preserve">
-    <value>Tiếp tục đọc</value>
+    <value>Đọc tiếp</value>
   </data>
   <data name="ReadingSpotlightUpNext" xml:space="preserve">
     <value>Tiếp theo cho bạn</value>
@@ -695,20 +698,38 @@
   <data name="ReadingPartNew" xml:space="preserve">
     <value>Phần {part} là phần mới</value>
   </data>
+  <data name="ReadingLabelPercent" xml:space="preserve">
+    <value>{label} · {percent}%</value>
+  </data>
+  <data name="ReadingLabelNew" xml:space="preserve">
+    <value>{label} là phần mới</value>
+  </data>
   <data name="ReadingPartTitled" xml:space="preserve">
     <value>Phần {part} · {title}</value>
+  </data>
+  <data name="ReadingLabelTitled" xml:space="preserve">
+    <value>{label} · {title}</value>
   </data>
   <data name="ReadingPartOutToday" xml:space="preserve">
     <value>Phần {part} ra hôm nay</value>
   </data>
+  <data name="ReadingLabelOutToday" xml:space="preserve">
+    <value>{label} ra hôm nay</value>
+  </data>
   <data name="ReadingPartOutTodayTitled" xml:space="preserve">
     <value>Phần {part}, {title}, ra hôm nay</value>
+  </data>
+  <data name="ReadingLabelOutTodayTitled" xml:space="preserve">
+    <value>{label}, {title}, ra hôm nay</value>
   </data>
   <data name="ReadingChapterOf" xml:space="preserve">
     <value>Chương {chapter} / {of}</value>
   </data>
   <data name="ReadingVolumePart" xml:space="preserve">
     <value>Tập {volume}, phần {part}</value>
+  </data>
+  <data name="ReadingVolumeLabel" xml:space="preserve">
+    <value>Tập {volume}, {label}</value>
   </data>
   <data name="ReadingOriginJapan" xml:space="preserve">
     <value>Nhật Bản</value>
@@ -784,6 +805,12 @@
   </data>
   <data name="ReadingRowPercent" xml:space="preserve">
     <value>{percent}%</value>
+  </data>
+  <data name="ReadingRowOpened" xml:space="preserve">
+    <value>Đã mở</value>
+  </data>
+  <data name="ReadingRowBookmarked" xml:space="preserve">
+    <value>Đã đánh dấu</value>
   </data>
   <data name="ReadingRowPages_other" xml:space="preserve">
     <value>{n} trang</value>
@@ -1124,6 +1151,9 @@
   <data name="CloudLoopbackDone" xml:space="preserve">
     <value>Bạn có thể đóng thẻ này và quay lại Kaeri.</value>
   </data>
+  <data name="SyncDeviceRemoved" xml:space="preserve">
+    <value>Thiết bị này đã bị xóa khỏi đồng bộ trên một thiết bị khác. Hãy tham gia lại để đồng bộ.</value>
+  </data>
   <data name="NoticeSignedIn" xml:space="preserve">
     <value>Đã đăng nhập vào {tracker}.</value>
   </data>
@@ -1251,7 +1281,7 @@
     <value>Không kết nối được tới máy chủ.</value>
   </data>
   <data name="LegalHostsNoContent" xml:space="preserve">
-    <value>Kaeri không lưu trữ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</value>
+    <value>Kaeri không host bất kỳ bộ phim hay cuốn sách nào. Bạn tự thêm các nguồn của mình.</value>
   </data>
   <data name="NoticeSaved" xml:space="preserve">
     <value>Đã lưu {label}.</value>
@@ -1369,6 +1399,39 @@
   </data>
   <data name="FilterPickedMore" xml:space="preserve">
     <value>{first} +{more}</value>
+  </data>
+  <data name="SearchGenreLeftOut" xml:space="preserve">
+    <value>Không phải {genre}</value>
+  </data>
+  <data name="SearchFiltersButtonSet" xml:space="preserve">
+    <value>Bộ lọc, {count} đã đặt</value>
+  </data>
+  <data name="ShortcutsSearchFilters" xml:space="preserve">
+    <value>Bộ lọc tìm kiếm</value>
+  </data>
+  <data name="FilterHintClick" xml:space="preserve">
+    <value>Nhấp một lần để bao gồm, hai lần để loại trừ.</value>
+  </data>
+  <data name="SearchPickInclude" xml:space="preserve">
+    <value>Bao gồm</value>
+  </data>
+  <data name="SearchPickLeaveOut" xml:space="preserve">
+    <value>Loại trừ</value>
+  </data>
+  <data name="SearchRangeFrom" xml:space="preserve">
+    <value>Từ</value>
+  </data>
+  <data name="SearchRangeTo" xml:space="preserve">
+    <value>Đến</value>
+  </data>
+  <data name="SearchMinutesUnit" xml:space="preserve">
+    <value>phút</value>
+  </data>
+  <data name="SearchScoreAny" xml:space="preserve">
+    <value>Bất kỳ</value>
+  </data>
+  <data name="SearchSuggestFilter" xml:space="preserve">
+    <value>Lọc theo {name}</value>
   </data>
   <data name="TitleSeasonWhen" xml:space="preserve">
     <value>{season} · {when}</value>
@@ -1549,6 +1612,12 @@
   </data>
   <data name="SettingsMotion" xml:space="preserve">
     <value>Chuyển động</value>
+  </data>
+  <data name="SettingsSmoothScrolling" xml:space="preserve">
+    <value>Cuộn mượt</value>
+  </data>
+  <data name="SettingsSmoothScrollingDetail" xml:space="preserve">
+    <value>Mỗi lần xoay con lăn chuột, trang lướt mượt vào vị trí. Bàn di chuột và màn hình cảm ứng vẫn cuộn như trước.</value>
   </data>
   <data name="SettingsStartFullscreen" xml:space="preserve">
     <value>Mở toàn màn hình</value>
@@ -2674,6 +2743,27 @@
   </data>
   <data name="PadButtonRightStick" xml:space="preserve">
     <value>Cần analog phải</value>
+  </data>
+  <data name="PadHelpTurnPage" xml:space="preserve">
+    <value>Lật trang</value>
+  </data>
+  <data name="PadHelpPreviousChapter" xml:space="preserve">
+    <value>Chương trước</value>
+  </data>
+  <data name="PadHelpNextChapter" xml:space="preserve">
+    <value>Chương sau</value>
+  </data>
+  <data name="PadHelpReaderBar" xml:space="preserve">
+    <value>Hiện hoặc ẩn thanh</value>
+  </data>
+  <data name="PadHelpReaderSettings" xml:space="preserve">
+    <value>Cài đặt trình đọc</value>
+  </data>
+  <data name="PadHelpCloseReader" xml:space="preserve">
+    <value>Đóng trình đọc</value>
+  </data>
+  <data name="PadHelpReader" xml:space="preserve">
+    <value>Trình đọc</value>
   </data>
   <data name="CloseDontAsk" xml:space="preserve">
     <value>Không hỏi lại</value>
@@ -5474,6 +5564,15 @@
   <data name="ReaderDividerFactsSource" xml:space="preserve">
     <value>{facts} · từ {source}</value>
   </data>
+  <data name="ReaderEndSwipe" xml:space="preserve">
+    <value>Vuốt để đọc tiếp</value>
+  </data>
+  <data name="ReaderDividerImages_other" xml:space="preserve">
+    <value>{count} ảnh</value>
+  </data>
+  <data name="ReaderChapterLineTitled" xml:space="preserve">
+    <value>Chương {chapter} · {title}</value>
+  </data>
   <data name="OnboardingReadDemo" xml:space="preserve">
     <value>Đọc bản demo</value>
   </data>
@@ -5549,6 +5648,51 @@
   <data name="DemoReadChapter" xml:space="preserve">
     <value>Đọc chương {number}</value>
   </data>
+  <data name="ProgressServerSaved" xml:space="preserve">
+    <value>Đã lưu vào {server}</value>
+  </data>
+  <data name="ProgressServerSending" xml:space="preserve">
+    <value>Đang gửi tới {server}…</value>
+  </data>
+  <data name="ProgressServerOffline" xml:space="preserve">
+    <value>Sẽ gửi tới {server} khi bạn có mạng lại</value>
+  </data>
+  <data name="ProgressServerRetrying" xml:space="preserve">
+    <value>{server} không phản hồi. Kaeri sẽ thử lại.</value>
+  </data>
+  <data name="ProgressServerFailed" xml:space="preserve">
+    <value>Chưa lưu vào {server}: {reason}.</value>
+  </data>
+  <data name="ProgressWhyKey" xml:space="preserve">
+    <value>máy chủ từ chối khóa</value>
+  </data>
+  <data name="ProgressWhyPassword" xml:space="preserve">
+    <value>máy chủ từ chối mật khẩu</value>
+  </data>
+  <data name="ProgressWhyGone" xml:space="preserve">
+    <value>bộ truyện này không còn trên máy chủ</value>
+  </data>
+  <data name="ProgressWhyGaveUp" xml:space="preserve">
+    <value>không có phản hồi trong một ngày</value>
+  </data>
+  <data name="ProgressRowSaved" xml:space="preserve">
+    <value>Đã lưu tiến độ {ago}</value>
+  </data>
+  <data name="ProgressRowSending_other" xml:space="preserve">
+    <value>Đang gửi {count} chương…</value>
+  </data>
+  <data name="ProgressRowOffline_other" xml:space="preserve">
+    <value>{count} chương sẽ được gửi khi bạn có mạng lại</value>
+  </data>
+  <data name="ProgressRowRetrying_other" xml:space="preserve">
+    <value>{count} chương đang chờ. Kaeri sẽ thử lại.</value>
+  </data>
+  <data name="ProgressRowFailed_other" xml:space="preserve">
+    <value>{count} chương chưa được lưu: {reason}</value>
+  </data>
+  <data name="ProgressRowOff" xml:space="preserve">
+    <value>Tiến độ được giữ trên {kind} này</value>
+  </data>
   <data name="NavWatch" xml:space="preserve">
     <value>Xem</value>
   </data>
@@ -5557,6 +5701,9 @@
   </data>
   <data name="NavUpdates" xml:space="preserve">
     <value>Cập nhật</value>
+  </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>Đọc tiếp</value>
   </data>
   <data name="HomeReadReleasing" xml:space="preserve">
     <value>Đang ra</value>
@@ -5616,16 +5763,25 @@
     <value>Đọc chương {n}</value>
   </data>
   <data name="ActionContinueChapter" xml:space="preserve">
-    <value>Tiếp tục chương {n} · trang {page}</value>
+    <value>Đọc tiếp chương {n} · trang {page}</value>
   </data>
   <data name="ActionContinuePart" xml:space="preserve">
-    <value>Tiếp tục phần {n} · {percent}%</value>
+    <value>Đọc tiếp phần {n} · {percent}%</value>
   </data>
   <data name="ActionContinuePartPlain" xml:space="preserve">
-    <value>Tiếp tục phần {n}</value>
+    <value>Đọc tiếp phần {n}</value>
   </data>
   <data name="ActionReadPart" xml:space="preserve">
     <value>Đọc phần {n}</value>
+  </data>
+  <data name="ActionContinueNamed" xml:space="preserve">
+    <value>Đọc tiếp {label} · {percent}%</value>
+  </data>
+  <data name="ActionContinueNamedPlain" xml:space="preserve">
+    <value>Đọc tiếp {label}</value>
+  </data>
+  <data name="ActionReadNamed" xml:space="preserve">
+    <value>Đọc {label}</value>
   </data>
   <data name="ActionReadAgain" xml:space="preserve">
     <value>Đọc lại</value>
@@ -6390,7 +6546,7 @@
     <value>Khi bạn đánh dấu</value>
   </data>
   <data name="SettingsCountsReadMarkedNote" xml:space="preserve">
-    <value>Xem tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn</value>
+    <value>Đọc tiếp và các dịch vụ theo dõi của bạn theo các dấu của bạn</value>
   </data>
   <data name="SettingsFollowGroup" xml:space="preserve">
     <value>Cài đặt bộ truyện đi theo bạn</value>
@@ -6475,6 +6631,210 @@
   </data>
   <data name="ReadDownloadsDeleteRead" xml:space="preserve">
     <value>Xóa chương đã đọc</value>
+  </data>
+  <data name="SendTitle" xml:space="preserve">
+    <value>Gửi tới máy đọc sách</value>
+  </data>
+  <data name="SendFor" xml:space="preserve">
+    <value>Gửi tới</value>
+  </data>
+  <data name="SendWhat" xml:space="preserve">
+    <value>Nội dung</value>
+  </data>
+  <data name="SendChapters" xml:space="preserve">
+    <value>Chương</value>
+  </data>
+  <data name="SendChaptersOne" xml:space="preserve">
+    <value>{chapter}</value>
+  </data>
+  <data name="SendChaptersRange" xml:space="preserve">
+    <value>{first} đến {last}</value>
+  </data>
+  <data name="SendSize" xml:space="preserve">
+    <value>Dung lượng</value>
+  </data>
+  <data name="SendSizeAbout" xml:space="preserve">
+    <value>Khoảng {size}</value>
+  </data>
+  <data name="SendNoPlace" xml:space="preserve">
+    <value>Kaeri không biết bạn đọc tới đâu trên máy đọc sách này. Khi bạn quay lại, trang truyện sẽ hỏi bạn đã dừng ở đâu.</value>
+  </data>
+  <data name="SendPrepare" xml:space="preserve">
+    <value>Chuẩn bị và chia sẻ</value>
+  </data>
+  <data name="SendPreparing_other" xml:space="preserve">
+    <value>Đang chuẩn bị chương {done}/{total}</value>
+  </data>
+  <data name="SendSizedFor" xml:space="preserve">
+    <value>Trang được định cỡ cho {device}</value>
+  </data>
+  <data name="SendInParts" xml:space="preserve">
+    <value>Vượt quá {size}, nên các tệp được chia thành nhiều phần.</value>
+  </data>
+  <data name="SendFailedChapter" xml:space="preserve">
+    <value>Không chuẩn bị được chương {chapter}. {cause}</value>
+  </data>
+  <data name="SendFailed" xml:space="preserve">
+    <value>Không chuẩn bị được các tệp. {cause}</value>
+  </data>
+  <data name="SendSizeWorking" xml:space="preserve">
+    <value>Đang tính</value>
+  </data>
+  <data name="SendChaptersOpen" xml:space="preserve">
+    <value>Mở</value>
+  </data>
+  <data name="SendChaptersClosed" xml:space="preserve">
+    <value>Đóng</value>
+  </data>
+  <data name="SendProgressSpoken" xml:space="preserve">
+    <value>{percent} phần trăm</value>
+  </data>
+  <data name="SendChapterAction" xml:space="preserve">
+    <value>Gửi tới máy đọc sách</value>
+  </data>
+  <data name="SendPartsOver" xml:space="preserve">
+    <value>chia phần khi quá {size}</value>
+  </data>
+  <data name="SendWaitingCancel" xml:space="preserve">
+    <value>Hủy gửi</value>
+  </data>
+  <data name="SendReady_other" xml:space="preserve">
+    <value>{n} tệp đã sẵn sàng.</value>
+  </data>
+  <data name="SendShareAgain" xml:space="preserve">
+    <value>Chia sẻ lại</value>
+  </data>
+  <data name="SendBanner" xml:space="preserve">
+    <value>Đang gửi tới {device}</value>
+  </data>
+  <data name="SendFormatFixedEpub" xml:space="preserve">
+    <value>EPUB bố cục cố định</value>
+  </data>
+  <data name="SendFormatKepub" xml:space="preserve">
+    <value>KEPUB</value>
+  </data>
+  <data name="SendFormatEpub" xml:space="preserve">
+    <value>EPUB</value>
+  </data>
+  <data name="SendFormatCbz" xml:space="preserve">
+    <value>CBZ</value>
+  </data>
+  <data name="SendTargetLine" xml:space="preserve">
+    <value>{format} · {width} × {height}</value>
+  </data>
+  <data name="StopTitle" xml:space="preserve">
+    <value>Bạn đã dừng ở đâu?</value>
+  </data>
+  <data name="StopNote" xml:space="preserve">
+    <value>Bạn đã gửi chương tới {device}. Bạn đã dừng ở đâu?</value>
+  </data>
+  <data name="StopNoteAction" xml:space="preserve">
+    <value>Đặt vị trí đọc</value>
+  </data>
+  <data name="StopSentOne" xml:space="preserve">
+    <value>Chương {chapter} đã được gửi tới {device} vào {date}.</value>
+  </data>
+  <data name="StopSentRange" xml:space="preserve">
+    <value>Các chương {first} đến {last} đã được gửi tới {device} vào {date}.</value>
+  </data>
+  <data name="StopFinished" xml:space="preserve">
+    <value>Đã đọc xong chương {chapter}</value>
+  </data>
+  <data name="StopSet" xml:space="preserve">
+    <value>Đặt vị trí đọc</value>
+  </data>
+  <data name="StopKeep" xml:space="preserve">
+    <value>Giữ chương {chapter} · trang {page}</value>
+  </data>
+  <data name="StopKeepPlain" xml:space="preserve">
+    <value>Giữ vị trí hiện tại</value>
+  </data>
+  <data name="EreadersGroup" xml:space="preserve">
+    <value>Máy đọc sách</value>
+  </data>
+  <data name="EreadersSendRow" xml:space="preserve">
+    <value>Gửi tới máy đọc sách</value>
+  </data>
+  <data name="EreadersFeedRow" xml:space="preserve">
+    <value>Feed OPDS</value>
+  </data>
+  <data name="OpdsShareNote" xml:space="preserve">
+    <value>Danh mục OPDS mà máy đọc sách trong nhà có thể duyệt</value>
+  </data>
+  <data name="OpdsFooter" xml:space="preserve">
+    <value>Feed chỉ chạy khi Kaeri đang mở trên {device} này. Tiến độ trên các máy đọc sách đó được giữ ở đó.</value>
+  </data>
+  <data name="OpdsAddress" xml:space="preserve">
+    <value>Địa chỉ</value>
+  </data>
+  <data name="OpdsAddressOff" xml:space="preserve">
+    <value>Bật feed để có địa chỉ.</value>
+  </data>
+  <data name="OpdsPassword" xml:space="preserve">
+    <value>Mật khẩu</value>
+  </data>
+  <data name="OpdsPasswordNote" xml:space="preserve">
+    <value>Máy đọc sách chỉ hỏi một lần</value>
+  </data>
+  <data name="OpdsNewPassword" xml:space="preserve">
+    <value>Mật khẩu mới</value>
+  </data>
+  <data name="OpdsPort" xml:space="preserve">
+    <value>Cổng</value>
+  </data>
+  <data name="OpdsPortNote" xml:space="preserve">
+    <value>Để trống để dùng bất kỳ cổng trống nào, hoặc chọn một cổng từ 1024 đến 65535</value>
+  </data>
+  <data name="OpdsPortMoved" xml:space="preserve">
+    <value>Cổng {wanted} đang bận, nên feed dùng cổng {port}.</value>
+  </data>
+  <data name="OpdsShares" xml:space="preserve">
+    <value>Những gì được chia sẻ</value>
+  </data>
+  <data name="OpdsShareDownloads" xml:space="preserve">
+    <value>Tải xuống</value>
+  </data>
+  <data name="OpdsShareDownloadsCount_other" xml:space="preserve">
+    <value>{n} chương</value>
+  </data>
+  <data name="OpdsShareManga" xml:space="preserve">
+    <value>Thư mục manga</value>
+  </data>
+  <data name="OpdsShareNovels" xml:space="preserve">
+    <value>Thư mục light novel</value>
+  </data>
+  <data name="OpdsShareSeriesCount_other" xml:space="preserve">
+    <value>{n} bộ</value>
+  </data>
+  <data name="OpdsFetchedBy" xml:space="preserve">
+    <value>Máy đã tải</value>
+  </data>
+  <data name="OpdsFetchedNone" xml:space="preserve">
+    <value>Chưa có máy đọc sách nào tải gì.</value>
+  </data>
+  <data name="OpdsStarting" xml:space="preserve">
+    <value>Đang khởi động…</value>
+  </data>
+  <data name="OpdsPausedNone" xml:space="preserve">
+    <value>Tạm dừng. Máy Mac này không ở trong mạng cục bộ nào.</value>
+  </data>
+  <data name="OpdsPausedVpn" xml:space="preserve">
+    <value>Tạm dừng. Máy Mac này chỉ kết nối qua VPN.</value>
+  </data>
+  <data name="OpdsNewPasswordTitle" xml:space="preserve">
+    <value>Tạo mật khẩu mới?</value>
+  </data>
+  <data name="OpdsNewPasswordWarning" xml:space="preserve">
+    <value>Các máy đọc sách đang dùng feed sẽ ngừng hoạt động cho đến khi bạn nhập mật khẩu mới vào từng máy.</value>
+  </data>
+  <data name="OpdsFetchedTime" xml:space="preserve">
+    <value>Yêu cầu gần nhất {time}</value>
+  </data>
+  <data name="OpdsFetchedFiles_other" xml:space="preserve">
+    <value>{n} tệp</value>
+  </data>
+  <data name="OpdsReaderUnnamed" xml:space="preserve">
+    <value>Máy đọc sách tại {address}</value>
   </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Mùa trước</value>
@@ -10020,7 +10380,7 @@
     <value>Lấy danh sách của bạn và điền những tựa đang xem vào mục Xem tiếp.</value>
   </data>
   <data name="AccountsBringsListsRead" xml:space="preserve">
-    <value>Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang đọc.</value>
+    <value>Đưa các danh sách của bạn vào và điền vào Đọc tiếp những gì bạn đang đọc.</value>
   </data>
   <data name="AccountsBringsListsBoth" xml:space="preserve">
     <value>Đưa các danh sách của bạn vào và điền vào Xem tiếp những gì bạn đang xem và đọc.</value>

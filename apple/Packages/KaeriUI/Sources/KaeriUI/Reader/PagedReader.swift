@@ -188,6 +188,10 @@ struct ReaderEndPage: View {
     @Environment(\.readerClose) private var closeReader
     @Environment(Navigator.self) private var navigator
     @Environment(AppStore.self) private var store
+    @Environment(\.dynamicTypeSize) private var type
+
+    /// One more swipe opens the next chapter: in the paged reader, not a strip's foot or a novel.
+    private var swipes: Bool { model.novel == nil && model.view?.mode != .strip }
 
     var body: some View {
         if model.view?.demoCredit != nil {
@@ -247,39 +251,63 @@ struct ReaderEndPage: View {
     private var standard: some View {
         let next = model.end?.next ?? model.view?.next
         let phone = size.width < 600
+        // At the largest sizes nothing is pinned: the buttons follow the column in the scroll.
+        let pinned = phone && !type.isAccessibilitySize
         return ZStack(alignment: .topLeading) {
             ScrollView {
-                column(next, phone: phone)
-                    .frame(width: phone ? size.width - 56 : 440, alignment: .leading)
-                    .padding(.top, phone ? 100 : (Device.isMac ? 120 : 150))
-                    .padding(.bottom, phone ? 190 : 40)
-                    .frame(maxWidth: .infinity, alignment: phone ? .leading : .center)
-                    .padding(.leading, phone ? 28 : 0)
-            }
-            .scrollBounceBehavior(.basedOnSize)
-            if phone {
-                VStack(spacing: 6) {
-                    Spacer(minLength: 0)
-                    if let next {
-                        Button(L.readerContinue) { model.openChapter(next.id) }
-                            .buttonStyle(ReaderAmberStyle(theme: theme))
-                        Button(L.readerBackToSeries) { closeReader() }
-                            .font(.ui(15, weight: .semibold))
-                            .foregroundStyle(theme.silk)
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                            .contentShape(.rect)
-                            .buttonStyle(.plain)
-                    } else {
-                        Button(L.readerBackToSeries) { closeReader() }
-                            .buttonStyle(ReaderAmberStyle(theme: theme))
+                VStack(alignment: .leading, spacing: 0) {
+                    column(next, phone: phone)
+                    if phone && !pinned {
+                        buttons(next)
+                            .padding(.top, 28)
                     }
                 }
+                .frame(width: phone ? size.width - 56 : 440, alignment: .leading)
+                .padding(.top, phone ? 100 : (Device.isMac ? 120 : 150))
+                .padding(.bottom, pinned ? 230 : 40)
+                .frame(maxWidth: .infinity, alignment: phone ? .leading : .center)
+                .padding(.leading, phone ? 28 : 0)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(type.isAccessibilitySize ? .visible : .hidden)
+            if pinned {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    buttons(next)
+                }
                 .padding(.horizontal, 28)
-                .padding(.bottom, 92)
+                .padding(.bottom, 23)
             }
         }
         .frame(width: size.width, height: size.height)
         .background(theme.page)
+    }
+
+    /// The phone's buttons: the swipe line, Continue in amber and Back to the series under it.
+    @ViewBuilder
+    private func buttons(_ next: ChapterRow?) -> some View {
+        VStack(spacing: 0) {
+            if let next {
+                if swipes {
+                    Text(L.readerEndSwipe).font(.ui(13)).foregroundStyle(theme.haze)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.bottom, 10)
+                }
+                Button(L.readerContinue) { model.openChapter(next.id) }
+                    .buttonStyle(ReaderAmberStyle(theme: theme))
+                Button(L.readerBackToSeries) { closeReader() }
+                    .font(.ui(15, weight: .semibold))
+                    .foregroundStyle(theme.silk)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(.rect)
+                    .buttonStyle(.plain)
+                    .padding(.top, 5)
+            } else {
+                Button(L.readerBackToSeries) { closeReader() }
+                    .buttonStyle(ReaderAmberStyle(theme: theme))
+            }
+        }
     }
 
     @ViewBuilder
@@ -328,7 +356,7 @@ struct ReaderEndPage: View {
                 .padding(.top, phone ? 18 : 22)
             }
             if !phone {
-                HStack(spacing: 10) {
+                let row = Group {
                     if let next {
                         Button { model.openChapter(next.id) } label: {
                             Text(L.readerContinue).padding(.horizontal, 18)
@@ -338,8 +366,15 @@ struct ReaderEndPage: View {
                     Button(L.readerBackToSeries) { closeReader() }
                         .buttonStyle(ReaderPillStyle(theme: theme, height: Device.isMac ? 28 : 44))
                 }
-                .fixedSize()
-                .padding(.top, 22)
+                if type.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 10) { row }.padding(.top, 22)
+                } else {
+                    HStack(spacing: 10) { row }.fixedSize().padding(.top, 22)
+                }
+                if next != nil, swipes, !Device.isMac {
+                    Text(L.readerEndSwipe).font(.ui(13)).foregroundStyle(theme.haze)
+                        .padding(.top, 14)
+                }
             }
         }
     }
@@ -348,6 +383,10 @@ struct ReaderEndPage: View {
         let height = (width * 1.42).rounded()
         return ZStack {
             theme.high
+            // With no picture of its first page yet, the plate carries the chapter's number.
+            Text(verbatim: next.number ?? next.label)
+                .font(.ui(15)).monospacedDigit().foregroundStyle(theme.haze)
+                .lineLimit(2).multilineTextAlignment(.center).padding(8)
             if let file = model.previews[next.id] {
                 PageImage(file: file, longest: height * 3, fill: true)
             }
