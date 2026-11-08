@@ -19,7 +19,8 @@ namespace Kaeri.Windows;
 sealed class TrailerPage : IWarmPage
 {
     readonly List<string> queued = [];
-    bool loaded, closed;
+    bool loaded, closed, asleep;
+    int naps;
     string? folder;
 
     public WebView2 View { get; }
@@ -172,6 +173,57 @@ sealed class TrailerPage : IWarmPage
             was.Children.Remove(View);
         }
         parent.Children.Insert(Math.Clamp(index, 0, parent.Children.Count), View);
+    }
+
+    /// <summary>
+    /// Waiting in the dock, paused: a moment after the pause has reached the player, the view is
+    /// hidden, asks for less memory and is suspended, so a kept page costs little until a hover
+    /// takes it.
+    /// </summary>
+    public async void Sleep()
+    {
+        if (closed || asleep)
+            return;
+        asleep = true;
+        var nap = ++naps;
+        await Task.Delay(TimeSpan.FromSeconds(1));
+        if (closed || !asleep || nap != naps || View.CoreWebView2 is not { } core)
+            return;
+        try
+        {
+            core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Low;
+            View.Visibility = Visibility.Collapsed;
+            await core.TrySuspendAsync();
+            // Taken again while it was suspending.
+            if (!asleep && !closed && core.IsSuspended)
+                core.Resume();
+        }
+        catch (Exception)
+        {
+            // The view closed under it.
+        }
+    }
+
+    /// <summary>Taken out of the dock: resumed, seen and back to its usual memory, before any script reaches it.</summary>
+    public void Wake()
+    {
+        if (closed)
+            return;
+        asleep = false;
+        naps++;
+        View.Visibility = Visibility.Visible;
+        if (View.CoreWebView2 is not { } core)
+            return;
+        try
+        {
+            if (core.IsSuspended)
+                core.Resume();
+            core.MemoryUsageTargetLevel = CoreWebView2MemoryUsageTargetLevel.Normal;
+        }
+        catch (Exception)
+        {
+            // The view closed under it.
+        }
     }
 
     /// <summary>Let go of the view, its player and its page's folder.</summary>

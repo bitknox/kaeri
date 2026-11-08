@@ -14,8 +14,12 @@ public sealed partial class MainWindow
     /// <summary>The reader came up over the window, or left it.</summary>
     internal void ReaderShowing(bool showing)
     {
+        // Home is out of sight under the reader: no trailer plays and none is kept.
         if (showing)
+        {
             TrailerHub.StopAll();
+            TrailerPool.Empty();
+        }
         SetTitleBar(showing ? ReaderLayer.DragArea : AppTitleBar);
         AppTitleBar.Visibility = showing ? Visibility.Collapsed : Visibility.Visible;
         Nav.Visibility = showing ? Visibility.Collapsed : Visibility.Visible;

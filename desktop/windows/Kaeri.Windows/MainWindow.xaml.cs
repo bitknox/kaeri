@@ -258,7 +258,18 @@ public sealed partial class MainWindow : Window
         };
         Closed += (_, _) => Shutdown();
         // Hidden or minimised, the tracker pull rests and one pull runs on return; downloads and torrents go on.
-        VisibilityChanged += (_, e) => ctx.Send(new Command.SyncVisible(e.Visible));
+        // Minimised, the kept trailer pages close and an open novel's web view rests.
+        VisibilityChanged += (_, e) =>
+        {
+            ctx.Send(new Command.SyncVisible(e.Visible));
+            ReaderLayer.WindowHidden(!e.Visible);
+            if (!e.Visible)
+            {
+                TrailerHub.StopAll();
+                TrailerPool.Empty();
+            }
+        };
+        WatchMemory();
         Root.Loaded += (_, _) => FirstPage();
         Root.SizeChanged += (_, e) => FitTitleBar(e.NewSize.Width);
     }
@@ -1212,6 +1223,33 @@ public sealed partial class MainWindow : Window
         timer.Start();
     }
 
+    /// <summary>
+    /// Memory runs short: the kept trailer pages close, as they are only there to start the next
+    /// hover sooner. Windows may not say so for an app outside a package, which then keeps them.
+    /// </summary>
+    void WatchMemory()
+    {
+        void Short() => DispatcherQueue.TryEnqueue(TrailerPool.Empty);
+        try
+        {
+            global::Windows.System.MemoryManager.AppMemoryUsageIncreased += (_, _) =>
+            {
+                if (global::Windows.System.MemoryManager.AppMemoryUsageLevel
+                    is global::Windows.System.AppMemoryUsageLevel.High or global::Windows.System.AppMemoryUsageLevel.OverLimit)
+                    Short();
+            };
+            global::Windows.System.MemoryManager.AppMemoryUsageLimitChanging += (_, e) =>
+            {
+                if (e.NewLimit < global::Windows.System.MemoryManager.AppMemoryUsage)
+                    Short();
+            };
+        }
+        catch (Exception)
+        {
+            // Not offered to this app.
+        }
+    }
+
     void RememberWhere()
     {
         var page = ContentFrame.CurrentSourcePageType;
@@ -1243,6 +1281,9 @@ public sealed partial class MainWindow : Window
         RememberWhere();
         if (framePage != e.Content)
             ctx.Left(framePage);
+        // Home left for another place, not a title opened from it: the kept trailer pages close.
+        if (framePage is HomePage && e.Content is not HomePage and not TitlePage)
+            TrailerPool.Empty();
         framePage = e.Content;
         HoverPreview.Close();
         AppTitleBar.IsBackButtonEnabled = ContentFrame.CanGoBack;
@@ -1654,6 +1695,8 @@ public sealed partial class MainWindow : Window
         Activated += (_, e) =>
         {
             inFront = e.WindowActivationState != WindowActivationState.Deactivated;
+            // A reader notice's time runs only while the window is in front.
+            ctx.Known.Reader.WindowActive(inFront);
             // Back in front: the keys go to the dialog that is up, not the page under it.
             if (inFront)
                 DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, Dialogs.Refocus);
