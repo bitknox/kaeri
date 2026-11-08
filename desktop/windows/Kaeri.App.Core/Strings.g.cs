@@ -6805,6 +6805,9 @@ public static partial class T
     /// <summary>Search with Your sources only on, when no source found anything. The line to try other words follows.</summary>
     public static string ReadSearchSourcesOnlyNothing => Get("ReadSearchSourcesOnlyNothing");
 
+    /// <summary>Line under a reading page's title when the device has no connection.</summary>
+    public static string ReadStateOfflineLine => Get("ReadStateOfflineLine");
+
     /// <summary>Over reading's results while more pages are to come, so AniList's count is not known yet.</summary>
     public static string ReadSearchTotalUnknown => Get("ReadSearchTotalUnknown");
 
@@ -13887,6 +13890,7 @@ public static partial class T
         ["ReadSearchAnilistFailedLine"] = "Your sources were still asked.",
         ["ReadSearchSourcesNothing"] = "Nothing in your sources either.",
         ["ReadSearchSourcesOnlyNothing"] = "Nothing found in your sources",
+        ["ReadStateOfflineLine"] = "Offline. Downloaded chapters still open.",
         ["ReadSearchTotalUnknown"] = "Series from AniList",
         ["ReadSearchMoreAnilist"] = "More from AniList",
         ["ReadSearchShown"] = "{shown} of {total} shown",

@@ -64,7 +64,7 @@ public sealed partial class ReadHomePage : Page
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         var head = new StackPanel { Margin = new Thickness(0, 0, 36, 0) };
         head.Children.Add(title);
-        head.Children.Add(new OfflineLine());
+        head.Children.Add(new OfflineLine(reading: true));
         head.Children.Add(offline);
         root.Children.Add(head);
         demoHost.Child = DemoLine();

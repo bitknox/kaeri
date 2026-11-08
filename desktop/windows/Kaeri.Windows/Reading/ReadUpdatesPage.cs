@@ -45,7 +45,7 @@ public sealed partial class ReadUpdatesPage : Page
         var title = new TextBlock { Text = T.NavUpdates, Style = Ui.Res<Style>("PageTitleStyle") };
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level1);
         words.Children.Add(title);
-        words.Children.Add(new OfflineLine());
+        words.Children.Add(new OfflineLine(reading: true));
         AutomationProperties.SetLiveSetting(checkedLine, Microsoft.UI.Xaml.Automation.Peers.AutomationLiveSetting.Polite);
         words.Children.Add(checkedLine);
         head.Children.Add(words);

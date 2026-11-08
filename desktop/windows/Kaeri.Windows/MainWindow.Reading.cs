@@ -145,7 +145,7 @@ public sealed partial class MainWindow
             SearchReading = true;
         SearchBox.Text = words;
         SearchBox.ItemsSource = null;
-        Crossfade.Swap(ContentFrame, () => ContentFrame.Navigate(typeof(ReadSearchPage), null, new SuppressNavigationTransitionInfo()));
+        Crossfade.Swap(ContentFrame, () => ContentFrame.Navigate(typeof(ReadSearchPage), words, new SuppressNavigationTransitionInfo()));
     }
 
     /// <summary>The box's prompt follows Search's scope: "Search reading" while Search shows reading.</summary>

@@ -50,6 +50,10 @@ public static class ReadDiscovery
         return Two(lead, second) ?? "";
     }
 
+    /// <summary>A shelf tile's line from its facts: the first two, "Manga · Releasing", never more.</summary>
+    public static string ShelfFacts(WorkTile tile) =>
+        Two(Format(tile), tile.Facts is { Length: > 1 } facts ? facts[1].Text() : null) ?? "";
+
     /// <summary>The format's words, "Light novel": the first of the engine's facts.</summary>
     public static string? Format(WorkTile tile) => tile.Facts is { Length: > 0 } facts ? facts[0].Text() : null;
 

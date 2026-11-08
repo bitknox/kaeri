@@ -9466,6 +9466,10 @@
     <value>[Ñöţĥîñĝ ƒöüñð îñ ýöüŕ šöüŕçéš~~~~~~~~~]</value>
     <comment>Search with Your sources only on, when no source found anything. The line to try other words follows.</comment>
   </data>
+  <data name="ReadStateOfflineLine" xml:space="preserve">
+    <value>[Öƒƒļîñé. Ðöŵñļöàðéð çĥàþţéŕš šţîļļ öþéñ.~~~~~~~~~~~~]</value>
+    <comment>Line under a reading page's title when the device has no connection.</comment>
+  </data>
   <data name="ReadSearchTotalUnknown" xml:space="preserve">
     <value>[Šéŕîéš ƒŕöɱ ÅñîĻîšţ~~~~~~]</value>
     <comment>Over reading's results while more pages are to come, so AniList's count is not known yet.</comment>

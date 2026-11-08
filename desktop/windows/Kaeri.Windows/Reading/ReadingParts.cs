@@ -364,7 +364,7 @@ static class ReadingParts
 
     /// <summary>
     /// The line under a cover: Not found in your sources once a series' check found no source,
-    /// else what comes next, else its facts joined.
+    /// else what comes next, else its first two facts.
     /// </summary>
     public static string Line(WorkTile tile)
     {
@@ -372,9 +372,7 @@ static class ReadingParts
             return T.HomeNotFound;
         if (tile.Next is { } next)
             return next.Text();
-        if (tile.FormatLabel is { } label && (tile.Facts?.Length ?? 0) == 0)
-            return label;
-        return tile.Facts.Joined();
+        return ReadDiscovery.ShelfFacts(tile);
     }
 
     public static string List(LibrarySegmentRead list) => list switch

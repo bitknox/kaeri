@@ -123,7 +123,7 @@ public sealed partial class ReadSearchPage : Page
         var head = new StackPanel { Margin = new Thickness(0, 0, 36, 0) };
         AutomationProperties.SetHeadingLevel(title, AutomationHeadingLevel.Level1);
         head.Children.Add(title);
-        head.Children.Add(new OfflineLine());
+        head.Children.Add(new OfflineLine(reading: true));
         root.Children.Add(head);
 
         // The scope first, then the filters, which scroll sideways in a narrow window, then Your
@@ -634,6 +634,10 @@ public sealed partial class ReadSearchPage : Page
     /// words keep the rows that show until their answers come. A row that leaves fades out, then
     /// its gap closes. The heading fades in with the first row.
     /// </summary>
+    /// <summary>Counts the sources' answers, so a section fading out stays when a later answer has rows.</summary>
+    int sourcesTurn;
+    bool headShown, sectionLeaving;
+
     void Sources(ReadSearchState search, ReadSourceSearch? found, ReadSourceGroup[] groups, bool first)
     {
         if (found is null && search.Loading && sourceViews.Count > 0)
@@ -644,6 +648,9 @@ public sealed partial class ReadSearchPage : Page
         }
         if (found is null || groups.Length == 0)
         {
+            sourcesTurn++;
+            sectionLeaving = false;
+            Motion.FadeTo(sources, 1, TimeSpan.Zero);
             sources.Visibility = Visibility.Collapsed;
             sourceRows.Children.Clear();
             sourceViews.Clear();
@@ -651,7 +658,9 @@ public sealed partial class ReadSearchPage : Page
         }
         if (sources.Visibility == Visibility.Collapsed)
         {
-            sourcesHead.Opacity = 0;
+            // A fade's held value outlasts a plain set, so the heading is hidden through Motion too.
+            Motion.FadeTo(sourcesHead, 0, TimeSpan.Zero);
+            headShown = false;
             sourcesHead.Margin = new Thickness(0, first ? 4 : 34, 0, 0);
             sources.Visibility = Visibility.Visible;
         }
@@ -715,16 +724,48 @@ public sealed partial class ReadSearchPage : Page
                 }
                 nothingLine.Opacity = 1;
             });
+        if (slotted.Count == 0 && nothing is null)
+        {
+            // Every hit joined AniList's results: the section has nothing left to show, so it
+            // fades out as one, heading and all, rather than leaving its heading alone.
+            if (headShown && !sectionLeaving)
+            {
+                var turn = ++sourcesTurn;
+                sectionLeaving = true;
+                Motion.FadeOutThen(sources, () =>
+                {
+                    if (!sectionLeaving || turn != sourcesTurn)
+                        return;
+                    sectionLeaving = false;
+                    sources.Visibility = Visibility.Collapsed;
+                    sourceRows.Children.Clear();
+                    sourceViews.Clear();
+                    nothingLine.Visibility = Visibility.Collapsed;
+                    Motion.FadeTo(sources, 1, TimeSpan.Zero);
+                });
+            }
+            return;
+        }
+        sourcesTurn++;
+        if (sectionLeaving)
+        {
+            // Rows again before the section had gone: it comes back.
+            sectionLeaving = false;
+            Motion.FadeTo(sources, 1, Motion.FadeInTime);
+        }
         HeadIn();
     }
 
     /// <summary>From your sources fades in with its first row, or with the line for the sources that found nothing.</summary>
     void HeadIn()
     {
-        if (sourcesHead.Opacity >= 1 || sources.Visibility != Visibility.Visible)
+        if (headShown || sources.Visibility != Visibility.Visible)
             return;
         if (sourceViews.Values.Any(v => v.Seen) || nothingLine.Visibility == Visibility.Visible)
+        {
+            headShown = true;
             Motion.FadeTo(sourcesHead, 1, Motion.FadeInTime);
+        }
     }
 
     /// <summary>

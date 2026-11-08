@@ -171,6 +171,14 @@ public class ReadDiscoveryTests
     }
 
     [Fact]
+    public void AShelfTileSaysItsFirstTwoFacts()
+    {
+        var tile = Tile("a:900103") with { FormatLabel = "manga", Facts = [Manga, Releasing, Chapters] };
+        Assert.Equal("Manga · Releasing", ReadDiscovery.ShelfFacts(tile));
+        Assert.Equal("", ReadDiscovery.ShelfFacts(tile with { Facts = [] }));
+    }
+
+    [Fact]
     public void AViewAllLineHoldsWhileTheSearchAsksWhatTheRowAsked()
     {
         var row = new ReadSearchQuery(Text: "", Medium: null, Formats: ["manga", "one-shot"], Origins: [], Status: null, Genres: [], ExcludeGenres: [], Sort: null, Started: "12-months", SourcesOnly: false);
