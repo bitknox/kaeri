@@ -233,7 +233,7 @@ tv-cast-inhibit-reason = Sending an episode to a TV
 # @max 24
 tv-network-group = On this network
 
-# Heading in the sidebar over the places that hold your own sources.
+# The sidebar place that lists your own sources, under the Sources heading.
 # @only linux
 # @max 24
 linux-sidebar-your-sources = Your { -source-pl }

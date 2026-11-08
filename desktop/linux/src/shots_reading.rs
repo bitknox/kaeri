@@ -14,12 +14,15 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every reading shot, in the order a run takes them.
-pub const NAMES: [&str; 36] = [
+pub const NAMES: [&str; 39] = [
     "read",
     "read-updates",
     "read-library",
     "read-library-filters",
     "read-search",
+    "read-search-query",
+    "read-settings",
+    "read-medium-off",
     "read-search-filters",
     "read-downloads",
     "read-sources",
@@ -40,9 +43,10 @@ pub const NAMES: [&str; 36] = [
     "read-turn-a",
     "read-turn-b",
     "read-strip",
-    "read-strip-end",
+    // The slides come before the end, which leaves the place at the chapter's last image.
     "read-strip-slide-a",
     "read-strip-slide-b",
+    "read-strip-end",
     "read-strip-mode",
     "read-strip-light",
     "read-chapters",
@@ -81,6 +85,39 @@ fn series(shell: &Rc<Shell>, work: &str) {
     );
 }
 
+/// Type `query` into the search field on screen, once the page has come in.
+fn type_query(shell: &Rc<Shell>, query: &'static str) {
+    fn entry(widget: &gtk::Widget) -> Option<gtk::SearchEntry> {
+        if widget.is_mapped()
+            && let Some(entry) = widget.downcast_ref::<gtk::SearchEntry>()
+        {
+            return Some(entry.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = entry(&next) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
+    let window = shell.ctx.window.clone();
+    gtk::glib::timeout_add_local_once(std::time::Duration::from_millis(1200), move || {
+        if let Some(entry) = entry(window.upcast_ref()) {
+            entry.set_text(query);
+        }
+    });
+}
+
+fn settings_reading(shell: &Rc<Shell>) {
+    let _ = WidgetExt::activate_action(
+        &shell.ctx.window,
+        "win.settings-pane",
+        Some(&"reading".to_variant()),
+    );
+}
+
 /// Put the window in the state `shot` shows, and say how long to let it settle, when it is one.
 pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
     Some(match shot {
@@ -104,6 +141,26 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         "read-search" => {
             shell.go(Dest::ReadSearch);
             3.0
+        }
+        "read-search-query" => {
+            shell.go(Dest::ReadSearch);
+            type_query(shell, "Lantern");
+            4.5
+        }
+        "read-settings" => {
+            settings_reading(shell);
+            3.0
+        }
+        "read-medium-off" => {
+            settings_reading(shell);
+            let ctx = Rc::clone(&shell.ctx);
+            gtk::glib::timeout_add_local_once(
+                std::time::Duration::from_millis(1500),
+                move || {
+                    crate::reading::medium::shot_turn_off(&ctx);
+                },
+            );
+            3.5
         }
         "read-search-filters" => {
             shell.go(Dest::ReadSearch);

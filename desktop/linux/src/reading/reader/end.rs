@@ -139,8 +139,10 @@ impl EndPage {
         column.append(&none_box);
         column.append(&buttons);
 
+        // From the top, as the board draws every end state, so the words stay put whether a
+        // next chapter follows or not.
         let holder = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        holder.set_valign(gtk::Align::Center);
+        holder.set_valign(gtk::Align::Start);
         holder.set_margin_top(96);
         holder.set_margin_bottom(96);
         holder.set_margin_start(24);

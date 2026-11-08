@@ -212,7 +212,7 @@ impl Parts {
 pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     let dialog = adw::Dialog::new();
     dialog.set_title(&t::send_title());
-    dialog.set_content_width(460);
+    // The dialog grows with the targets as they come in; the column's width holds it at 460.
     dialog.set_follows_content_size(true);
 
     let targets = widgets::boxed_list();
@@ -266,6 +266,7 @@ pub fn open(ctx: &Rc<Ctx>, work: &WorkId) {
     foot.append(&buttons);
 
     let column = gtk::Box::new(gtk::Orientation::Vertical, 10);
+    column.set_width_request(460 - 2 * 18);
     column.set_margin_top(6);
     column.set_margin_bottom(18);
     column.set_margin_start(18);

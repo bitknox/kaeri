@@ -226,6 +226,9 @@ pub fn turn(veil: &gtk::Overlay, of: &impl IsA<gtk::Widget>, change: impl FnOnce
     while let Some(widget) = child {
         child = widget.next_sibling();
         if widget.has_css_class("turn-ghost") {
+            // Unparenting unmaps it, which ends its fade there and then: the class goes first
+            // so the fade's end doesn't remove it a second time from inside this removal.
+            widget.remove_css_class("turn-ghost");
             veil.remove_overlay(&widget);
         }
     }
@@ -245,7 +248,8 @@ pub fn turn(veil: &gtk::Overlay, of: &impl IsA<gtk::Widget>, change: impl FnOnce
     let (veil, gone) = (veil.clone(), ghost.clone());
     let fade = quick(&ghost, 1.0, 0.0, opacity(&ghost));
     fade.connect_done(move |_| {
-        if gone.parent().is_some() {
+        if gone.has_css_class("turn-ghost") {
+            gone.remove_css_class("turn-ghost");
             veil.remove_overlay(&gone);
         }
     });

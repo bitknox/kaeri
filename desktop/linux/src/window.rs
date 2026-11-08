@@ -673,7 +673,7 @@ impl Shell {
                 if let Some(label) =
                     row.child().and_then(|c| c.last_child()).and_downcast::<gtk::Label>()
                 {
-                    label.set_label(&dest.title());
+                    label.set_label(&sidebar_title(dest));
                 }
             }
             child = widget.next_sibling();
@@ -1716,7 +1716,7 @@ fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
             continue;
         }
         if dest == Dest::Providers {
-            let header = gtk::Label::new(Some(&kaeri_i18n::t::linux_sidebar_your_sources()));
+            let header = gtk::Label::new(Some(&kaeri_i18n::t::sources_title()));
             header.add_css_class("heading");
             header.add_css_class("haze");
             header.set_xalign(0.0);
@@ -2023,10 +2023,19 @@ fn link_standing(
     }
 }
 
+/// A place's name in the sidebar. Under the Sources heading the sources place reads "Your
+/// sources", as the app board's sidebar has it.
+fn sidebar_title(dest: Dest) -> String {
+    match dest {
+        Dest::Providers => kaeri_i18n::t::linux_sidebar_your_sources(),
+        _ => dest.title(),
+    }
+}
+
 fn dest_row(dest: Dest) -> gtk::ListBoxRow {
     let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
     line.append(&gtk::Image::from_icon_name(dest.icon()));
-    let label = gtk::Label::new(Some(&dest.title()));
+    let label = gtk::Label::new(Some(&sidebar_title(dest)));
     label.set_xalign(0.0);
     line.append(&label);
     let row = gtk::ListBoxRow::builder().child(&line).build();

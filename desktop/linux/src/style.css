@@ -407,6 +407,19 @@ scale.reader-scrub slider {
 .reader-end-facts { font-size: 1em; color: var(--haze); }
 .reader-end-none { font-size: 1.57em; font-weight: 600; }
 .reader-end-body { font-size: 1.07em; color: var(--haze); }
+/* The end page sits on the dark ground in every look, so a light look's chrome tokens stop at
+   its words and buttons; its preview keeps the look's page colour. */
+.reader-light .reader-end {
+  --raised: #222638;
+  --raised-selected: #343A57;
+  --rule: #434653;
+  --silk: #E4E0D6;
+  --haze: #A3A9C4;
+  --window-fg-color: #E4E0D6;
+  --view-fg-color: #E4E0D6;
+  color: #E4E0D6;
+}
+.reader-light .reader-end .reader-end-preview { background: #E3DFD4; --haze: #4F546E; }
 .reader-end-preview {
   background: var(--raised); border-radius: 4px;
   box-shadow: 0 10px 30px alpha(black, 0.35), inset 0 0 0 1px alpha(currentColor, 0.18);

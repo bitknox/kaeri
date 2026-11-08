@@ -247,3 +247,9 @@ fn turn_off(
     });
     dialog.present(Some(&ctx.window));
 }
+
+/// The shots' turn-off sheet: watching going, as the board's figure draws it.
+#[cfg(feature = "fixtures")]
+pub fn shot_turn_off(ctx: &Rc<Ctx>) {
+    turn_off(ctx, KaeriIsFor::Watch, KaeriIsFor::Read, || {});
+}

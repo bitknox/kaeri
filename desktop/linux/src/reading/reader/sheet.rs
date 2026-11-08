@@ -93,18 +93,19 @@ impl Reader {
         // The settings are the first page; Reading mode pushes its list of four over them.
         let nav = adw::NavigationView::new();
         nav.set_animate_transitions(!crate::motion::reduced());
-        let column = self.sheet_rows(&nav);
         let scroll = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
             .propagate_natural_height(true)
             .max_content_height(560)
-            .child(&column)
             .build();
+        // The first page added is the one the sheet opens on, so the rows' page goes in before
+        // the rows add the mode list behind it.
         nav.add(&adw::NavigationPage::with_tag(
             &scroll,
             &t::linux_reader_settings_open(),
             "main",
         ));
+        scroll.set_child(Some(&self.sheet_rows(&nav)));
         self.sheet.set_child(Some(&nav));
     }
 

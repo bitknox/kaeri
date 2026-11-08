@@ -3262,7 +3262,7 @@ pub fn tv_network_group() -> String {
     text("tv-network-group", &[])
 }
 
-/// Heading in the sidebar over the places that hold your own sources.
+/// The sidebar place that lists your own sources, under the Sources heading.
 pub fn linux_sidebar_your_sources() -> String {
     text("linux-sidebar-your-sources", &[])
 }

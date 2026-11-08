@@ -367,10 +367,11 @@ impl Reader {
         let sheet = gtk::Popover::new();
         sheet.add_css_class("reader-sheet");
         sheet.set_has_arrow(false);
-        sheet.set_position(gtk::PositionType::Top);
+        // A menu button sets its popover's side from its direction, so Up is what opens it above.
         let settings = gtk::MenuButton::builder()
             .icon_name("kaeri-text-look-symbolic")
             .popover(&sheet)
+            .direction(gtk::ArrowType::Up)
             .build();
         settings.set_tooltip_text(Some(&t::linux_reader_settings_open()));
         settings.update_property(&[gtk::accessible::Property::Label(
@@ -384,10 +385,10 @@ impl Reader {
         ends.append(&full);
         let chapters = Chapters::new();
         chapters.popover.set_has_arrow(false);
-        chapters.popover.set_position(gtk::PositionType::Top);
         let chapters_button = gtk::MenuButton::builder()
             .icon_name("kaeri-chapters-symbolic")
             .popover(&chapters.popover)
+            .direction(gtk::ArrowType::Up)
             .build();
         chapters_button.set_tooltip_text(Some(&t::reader_chapters()));
         chapters_button

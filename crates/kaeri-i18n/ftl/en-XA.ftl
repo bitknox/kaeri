@@ -2107,7 +2107,7 @@ tv-cast-inhibit-reason = [Šéñðîñĝ àñ éþîšöðé ţö à ŢṼ~~~~~~
 # The heading over the TVs running Kaeri in Play on TV, once TVs with Chromecast built in are listed below them.
 tv-network-group = [Öñ ţĥîš ñéţŵöŕķ~~~~~]
 
-# Heading in the sidebar over the places that hold your own sources.
+# The sidebar place that lists your own sources, under the Sources heading.
 linux-sidebar-your-sources = [Ýöüŕ šöüŕçéš~~~~]
 
 # Count of devices on a member's row in the members dialog, and after "Owner ·".

@@ -188,7 +188,15 @@ pub fn work_card(hub: &Hub, tile: &WorkTile, width: i32) -> gtk::Box {
     title.set_valign(gtk::Align::Start);
     title.set_width_chars(1);
     title.set_max_width_chars(1);
-    column.append(&title);
+    // A wrapping label still asks for its whole line on a shelf's row, so a clamp holds it to
+    // the cover's width.
+    let clamp = adw::Clamp::builder()
+        .maximum_size(width)
+        .tightening_threshold(width)
+        .child(&title)
+        .build();
+    clamp.set_halign(gtk::Align::Start);
+    column.append(&clamp);
     let mut said = vec![tile.title.clone()];
     if tile.new_chapter {
         column.append(&new_words());
