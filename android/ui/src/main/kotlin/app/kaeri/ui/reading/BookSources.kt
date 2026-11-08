@@ -169,15 +169,19 @@ internal fun folderLine(folder: BookFolderRow): String {
 }
 
 /**
- * "Kavita · books.home.example · 212 series · progress goes back to the server"; "Kavita · 212
+ * "Kavita · 212 series in 2 libraries" once a server has settled, as on Apple; "Kavita · 212
  * series in 2 libraries · added just now" for one added this session; "Kavita · no series yet ·
- * looks again in 30 minutes" for one that showed none.
+ * looks again in 30 minutes" for one that showed none; "Kavita · books.home.example · 212 series
+ * · off" for one switched off or with no libraries to name.
  */
 @Composable
 internal fun serverLine(server: BookServerRow, justAdded: Boolean, progressShown: Boolean = false): String {
     val context = LocalContext.current
     if (server.empty) return Strings.sourceRowServerEmpty(context, serverKindWords(server.kind))
     if (justAdded) return Strings.sourceRowServer(context, serverKindWords(server.kind), server.series.toInt(), server.libraries.toInt())
+    if (server.libraries.toInt() > 0 && !server.off) {
+        return Strings.sourceRowServerSeries(context, serverKindWords(server.kind), server.series.toInt(), server.libraries.toInt())
+    }
     return listOfNotNull(
         serverKindWords(server.kind),
         server.address.takeIf { it != server.name && !progressShown },
