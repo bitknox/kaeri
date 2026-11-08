@@ -1374,13 +1374,17 @@ fn trackers_of(cx: &Cx<'_>, work: &WorkId) -> Option<(AnilistId, Vec<String>)> {
 /// read of `chapter` is kept first. Says which trackers it went to.
 fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> Vec<String> {
     let Some((id, trackers)) = trackers_of(cx, work) else { return Vec::new() };
-    let Some(number) = chapter.key().and_then(|k| k.range()).map(|r| r.last().whole()) else {
-        return Vec::new();
-    };
+    let number = chapter.key().and_then(|k| k.range()).map(|r| r.last().whole());
     // The highest whole chapter read, and the volume a watermark named: half chapters go as
     // the chapter below them, and a tracker never holds less than it was told.
     let (read, volume) = crate::read_tracking::progress_of(cx.services, work);
-    let op = TrackOp::SetReadProgress { anilist_id: id, chapter: number.max(read), volume };
+    // A chapter with no number, as a whole volume read as one book, tells what the progress
+    // kept names: the volumes finished and the chapters counted. With neither there is nothing.
+    if number.is_none() && read == 0 && volume.is_none() {
+        return Vec::new();
+    }
+    let chapter = number.unwrap_or(0).max(read);
+    let op = TrackOp::SetReadProgress { anilist_id: id, chapter, volume };
     trackers
         .into_iter()
         .filter(|tracker| cx.services.store.enqueue(tracker, &op, at).is_ok())

@@ -56,3 +56,45 @@ async fn finishing_a_volume_tells_the_tracker_the_volume() {
         "volume 1 is finished: {ops:?}"
     );
 }
+
+/// Volumes 1 and 2 as whole books, with no chapter numbers.
+fn volume_books(books: &Path) -> Vec<ShelfFile> {
+    (1..=2)
+        .map(|n| {
+            let path = books.join(format!("Volume {n}.cbz"));
+            cbz(&path, 3);
+            ShelfFile {
+                path: path.display().to_string(),
+                chapter: None,
+                label: format!("Volume {n}"),
+                volume: Some(n.to_string()),
+                number_milli: None,
+                format: "cbz".into(),
+                pages: Some(3),
+                comicinfo: None,
+                source: None,
+            }
+        })
+        .collect()
+}
+
+/// Reading a whole-volume book to its end tells the tracker the volume, as the progress kept
+/// here already knows it.
+#[tokio::test(start_paused = true)]
+async fn reading_a_volume_book_tells_the_tracker_the_volume() {
+    let mut h =
+        harness_signed(Store::open_in_memory().unwrap(), "manga", volume_books, None, true);
+    let work = WorkId::new(WORK);
+    h.services.store.set_book_match("folders", "s1", WORK, 100, true, false, 1).unwrap();
+    h.services.book_sources.chapters(&work, None, 1).await.unwrap();
+    h.open(OpenAt::Resume).await;
+    read_through(&mut h).await;
+    let ops = h.services.store.read_outbox("anilist").unwrap();
+    assert!(
+        matches!(
+            ops.last(),
+            Some(TrackOp::SetReadProgress { chapter: 0, volume: Some(1), .. })
+        ),
+        "the tracker hears of volume 1: {ops:?}"
+    );
+}
