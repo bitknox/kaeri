@@ -25,6 +25,25 @@ class HeroArtTest {
     )
 
     @Test
+    fun the_still_the_engine_sent_stands_in_before_the_table() {
+        val sent = entry().copy(seenStill = "s2")
+        assertEquals(HeroArt.Still("s2"), HeroArt.of(sent, null))
+        // The table, once here, says by the same rule, and what it says comes first.
+        val rows = listOf(row(1, "s1"), row(2, "s2"), row(3, "s3", completed = true))
+        assertEquals(HeroArt.Still("s3"), HeroArt.of(sent, rows))
+        assertEquals(HeroArt.Still("s2"), HeroArt.of(sent, listOf(row(1, null))))
+        assertEquals(HeroArt.Banner("b"), HeroArt.of(sent.copy(bannerUrl = "b"), null))
+    }
+
+    @Test
+    fun the_plate_holds_only_until_the_wait_is_over() {
+        assertEquals(HeroArt.Waiting, HeroArt.of(entry(), null, waited = false))
+        assertEquals(HeroArt.Compact, HeroArt.of(entry(), null, waited = true))
+        // A still landing after the wait takes the frame.
+        assertEquals(HeroArt.Still("s1"), HeroArt.of(entry(), listOf(row(1, "s1")), waited = true))
+    }
+
+    @Test
     fun the_banner_wins() {
         assertEquals(HeroArt.Banner("b"), HeroArt.of(entry(banner = "b"), null))
     }

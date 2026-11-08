@@ -50,6 +50,13 @@ pub struct Entry {
     pub cover_color: Option<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub banner_url: Option<String>,
+    /// For a title with no banner, the episode still that stands in for one, as far as the
+    /// metadata the engine holds has stills: the latest episode watched that has one, else
+    /// episode 1's, never one further on. Asks nothing of its own, so a front end can draw the
+    /// wide art from the first frame, before the title's episode table is here. `None` with a
+    /// banner, and where no still is known.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub seen_still: Option<String>,
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub genres: Vec<String>,
     /// Services carrying this title, from AniList's external links.
@@ -765,6 +772,7 @@ impl Entry {
             cover_url: None,
             cover_color: None,
             banner_url: None,
+            seen_still: None,
             genres: Vec::new(),
             available_on: Vec::new(),
             available_at: None,
