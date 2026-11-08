@@ -89,6 +89,10 @@ pub fn sort(list: &mut [Kept]) {
 
 /// Keep a source's answer, and give the chapters it lists that the last answer did not. The
 /// first answer for a series gives none: everything in it was out before.
+///
+/// An empty answer is no answer: a server part way through a scan or a scrape that broke says
+/// nothing of what came out. It is not kept, so the next full answer is not all new; and a
+/// list kept empty before counts as none.
 pub fn keep(
     store: &Store,
     source: &str,
@@ -96,7 +100,10 @@ pub fn keep(
     chapters: &[SourceChapter],
     now: i64,
 ) -> Vec<Kept> {
-    let before = kept(store, source, series).map(|(list, _)| list);
+    if chapters.is_empty() {
+        return Vec::new();
+    }
+    let before = kept(store, source, series).map(|(list, _)| list).filter(|l| !l.is_empty());
     let restarts = crate::read_sources::restarts_per_volume(chapters);
     let mut fresh: Vec<Kept> = Vec::new();
     let mut fresh_ids = HashSet::new();
