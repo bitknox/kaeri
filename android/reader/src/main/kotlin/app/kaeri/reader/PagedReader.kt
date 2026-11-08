@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -67,6 +68,12 @@ class PagedReaderState(initial: Int = 0) {
 
     /** The leaf being turned away from, held under the new one while it fades in. */
     internal var under by mutableStateOf<Int?>(null)
+
+    /** The chapter whose leaves [leaf] counts in. */
+    internal var chapter by mutableStateOf<Any?>(null)
+
+    /** The turn whose crossfade has started; until then the new leaf waits under nothing. */
+    internal var fading by mutableIntStateOf(0)
 
     /** How the leaf on screen was reached, and a count that moves with each turn. */
     var how by mutableStateOf(TurnHow.TURN)
@@ -136,13 +143,20 @@ fun PagedReader(
     val shown by rememberUpdatedState(onShown)
 
     // The engine's own moves: the start place, Back to page, a place another device reached.
+    // A new chapter's leaves count afresh: the old leaf number names another page there, so it is
+    // never shown or faded from. Until the chapter's jump lands, the leaf it lands on shows.
+    val chapter = state.view?.chapter?.id
+    val fresh = chapter != pager.chapter
     LaunchedEffect(state.jump, leaves.size) {
         val jump = state.jump ?: return@LaunchedEffect
         if (leaves.isEmpty()) return@LaunchedEffect
         // Reported as a turn, so the engine does not offer Back to page for its own move.
         pager.go(jump.leaf, TurnHow.TURN)
+        if (fresh) pager.under = null
+        pager.chapter = chapter
         onJumped(jump.id)
     }
+    if (fresh && state.jump == null && leaves.isNotEmpty()) SideEffect { pager.chapter = chapter }
     // A leaf counts as shown once it is on screen, never while a jump is still to come.
     LaunchedEffect(pager.turns, state.layout) {
         if (leaves.isEmpty() || state.jump != null) return@LaunchedEffect
@@ -163,6 +177,7 @@ fun PagedReader(
         }
         val turn: suspend () -> Unit = {
             fade.snapTo(0f)
+            pager.fading = pager.turns
             fade.animateTo(1f, Motion.quick())
             withTimeoutOrNull(PageWaits.PLATE_MS) { snapshotFlow { drawn == pager.leaf }.first { it } }
         }
@@ -341,7 +356,15 @@ fun PagedReader(
                 val under = pager.under
                 if (under != null && motion) Show(under)
                 if (drag != 0f && motion) neighbour(drag)?.let { Show(it, shift = if (drag > 0) drag - width else drag + width) }
-                Show(pager.leaf, alpha = if (under != null && motion) fade.value else 1f, shift = if (motion) drag else 0f, current = true)
+                // The frame between a turn and its fade's start draws the old leaf alone, not the new one
+                // whole for a frame before it fades in.
+                val alpha = when {
+                    under == null || !motion -> 1f
+                    pager.fading != pager.turns -> 0f
+                    else -> fade.value
+                }
+                val landing = state.jump?.leaf?.takeIf { fresh }?.coerceIn(0, leaves.lastIndex)
+                Show(landing ?: pager.leaf, alpha = if (landing != null) 1f else alpha, shift = if (motion) drag else 0f, current = true)
             }
         }
     }

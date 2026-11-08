@@ -401,7 +401,13 @@ fun PhoneReader(
             val strip = view?.mode == ReaderMode.STRIP || view?.mode == ReaderMode.VERTICAL
             var showingAbove by remember(view?.chapter?.id) { mutableStateOf(false) }
             var openingHeld by remember { mutableStateOf(true) }
-            LaunchedEffect(state.leaves.isEmpty()) { if (state.leaves.isEmpty()) openingHeld = true }
+            var plateGone by remember { mutableStateOf(false) }
+            LaunchedEffect(state.leaves.isEmpty()) {
+                if (state.leaves.isEmpty()) {
+                    openingHeld = true
+                    plateGone = false
+                }
+            }
             when {
                 failure != null && state.leaves.isEmpty() && state.novel == null -> {
                     val row = state.openingChapter ?: view?.chapter
@@ -455,8 +461,11 @@ fun PhoneReader(
                     )
                 }
                 else -> {
-                    // The opening plate stays under the first page until it is drawn, so the page fades in over it.
-                    if (state.leaves.isEmpty() || openingHeld) Opening(state, done = state.leaves.isNotEmpty(), fades = fades)
+                    // The opening plate stays under the first page until it is drawn, so the page fades in over
+                    // it, and only then fades itself: the ground never shows between the two.
+                    if (state.leaves.isEmpty() || openingHeld || !plateGone) {
+                        Opening(state, done = state.leaves.isNotEmpty(), drawn = !openingHeld, fades = fades, onGone = { plateGone = true })
+                    }
                     if (state.leaves.isNotEmpty()) PagedReader(
                     state = state,
                     pager = pager,
@@ -564,8 +573,10 @@ fun PhoneReader(
                     }
                 }
             }
+            // Not on the end page, where the corner holds the end page's own buttons.
+            val atEndPage = state.leaves.getOrNull(pager.leaf)?.endPage == true || place.ended
             AnimatedVisibility(
-                visible = notice != null && clear && notice.notice.action == NoticeAction.BACK_TO,
+                visible = notice != null && clear && notice.notice.action == NoticeAction.BACK_TO && !atEndPage,
                 enter = if (fades) fadeIn(Motion.fadeIn()) else EnterTransition.None,
                 exit = if (fades) fadeOut(Motion.fadeOut()) else ExitTransition.None,
                 modifier = Modifier.align(Alignment.BottomStart),
@@ -1138,7 +1149,7 @@ internal fun StripDivider(state: ReaderState, next: ChapterRow) {
  * drawn over it, the plate fades out.
  */
 @Composable
-private fun Opening(state: ReaderState, done: Boolean, fades: Boolean) {
+private fun Opening(state: ReaderState, done: Boolean, drawn: Boolean, fades: Boolean, onGone: () -> Unit) {
     val context = LocalContext.current
     var waited by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
@@ -1150,7 +1161,13 @@ private fun Opening(state: ReaderState, done: Boolean, fades: Boolean) {
         }
     }
     val shown = remember { Animatable(1f) }
-    LaunchedEffect(done) { if (done) { if (fades) shown.animateTo(0f, Motion.fadeOut()) else shown.snapTo(0f) } }
+    val gone by rememberUpdatedState(onGone)
+    LaunchedEffect(drawn) {
+        if (drawn) {
+            if (fades) shown.animateTo(0f, Motion.fadeOut()) else shown.snapTo(0f)
+            gone()
+        }
+    }
     if (waited < PageWaits.PLATE_MS) return
     val number = (state.openingChapter ?: state.view?.chapter)?.let(::chapterNumber)
     val opening = number?.let { Strings.readerOpeningChapter(context, it) }

@@ -142,7 +142,15 @@ private fun PageGrid(state: ReaderState, images: PageImages, currentLeaf: Int, r
                         page.toString(),
                         color = if (file != null) Color.White else Chrome.faint,
                         fontSize = 13.sp,
-                        modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp),
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)
+                            // On a drawn page the number sits on a dark chip, so it reads on light paper.
+                            .then(
+                                if (file != null) {
+                                    Modifier.background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(4.dp)).padding(horizontal = 5.dp, vertical = 1.dp)
+                                } else {
+                                    Modifier
+                                },
+                            ),
                     )
                 }
             }
