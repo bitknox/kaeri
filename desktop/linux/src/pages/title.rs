@@ -1579,7 +1579,7 @@ impl Page {
             let adjustment = page.scroll.vadjustment();
             let near = (to - adjustment.value()).abs() < adjustment.page_size();
             if nearby && near && !motion::reduced() {
-                let fade = adw::TimedAnimation::new(
+                let fade = motion::timed(
                     &page.scroll,
                     adjustment.value(),
                     to,
