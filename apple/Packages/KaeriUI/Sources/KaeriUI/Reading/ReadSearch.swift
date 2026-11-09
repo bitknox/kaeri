@@ -144,6 +144,15 @@ struct ReadSearchScreen: View {
             position.scrollTo(y: CGFloat(points))
         }
         #if os(iOS)
+        // Shots: `sheet=read-filters` opens the Filters sheet, and lets the shot go once it is up. (The
+        // shows' `filters` would open the shows' panel over it.)
+        .task {
+            guard navigator.launchSheet == "read-filters" else { return } // i18n-skip: a shot's sheet name
+            try? await Task.sleep(for: .milliseconds(500))
+            filtersShown = true
+            try? await Task.sleep(for: .milliseconds(1_000))
+            navigator.launchSheet = nil
+        }
         .toolbar {
             if compact {
                 ToolbarItem(placement: .topBarTrailing) {

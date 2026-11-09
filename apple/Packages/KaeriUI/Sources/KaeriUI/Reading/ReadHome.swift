@@ -55,6 +55,16 @@ struct ReadHomeScreen: View {
             try? await Task.sleep(for: .milliseconds(800))
             position.scrollTo(y: CGFloat(points))
         }
+        // Shots: `sheet=viewall` opens the first row's View all once the rows are in.
+        .task {
+            guard navigator.section == .read, navigator.launchSheet == "viewall" else { return } // i18n-skip: a shot's sheet name
+            for _ in 0..<50 where store.reading.home?.rows.first?.viewAll == nil {
+                try? await Task.sleep(for: .milliseconds(100))
+            }
+            navigator.launchSheet = nil
+            guard let row = store.reading.home?.rows.first, let query = row.viewAll else { return }
+            navigator.openReadViewAll(query, title: row.title.text, line: row.viewAllTitle?.text, wide: layout.wide, store: store)
+        }
         #if os(iOS)
         .navigationDestination(item: Binding(get: { navigator.readViewAll }, set: { navigator.readViewAll = $0 })) { page in
             ReadViewAllPage(page: page)
