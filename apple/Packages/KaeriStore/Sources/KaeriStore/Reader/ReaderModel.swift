@@ -102,6 +102,9 @@ public final class ReaderModel {
     public private(set) var chaptersLoaded = false
     /// When the open began, for the opening line's wait.
     public private(set) var openedAt: ContinuousClock.Instant?
+    /// What the open waits on, as the engine last said: the chapter list or the chapter's
+    /// pages, from which source. `nil` before it says, and for a chapter on this device.
+    public private(set) var openingWait: ReaderWait?
     /// Whether the chapter counted as read.
     public private(set) var read = false
     /// The trackers the read went to, by name: "Read · AniList updated".
@@ -305,6 +308,7 @@ public final class ReaderModel {
         request = next
         phase = .opening
         openedAt = .now
+        openingWait = nil
         sendOpen()
         send?(.reader(.loadSettings(medium: .manga, work: WorkId(next.work))))
     }
@@ -408,6 +412,7 @@ public final class ReaderModel {
         send?(.reader(.openChapter(session: session, chapter: id)))
         phase = .opening
         openedAt = .now
+        openingWait = nil
         sheet = nil
     }
 
@@ -647,9 +652,10 @@ public final class ReaderModel {
         case .nextPreview(let session, let chapter, let file):
             guard session == self.session else { return }
             previews[chapter] = file
-        case .opening:
-            // The Android reader's opening screen; this reader has none.
-            break
+        case .opening(_, let wait):
+            // The opening line says what the open waits on.
+            guard phase == .opening || phase == .closed else { return }
+            openingWait = wait
         case .notice(let notice):
             // A notice belongs to the chapter on screen; the opening and failing screens have none.
             guard phase == .open else { return }
@@ -832,6 +838,7 @@ extension ReadingFailure {
         let msg: ReadingMsg = switch self {
         case .offline: .readingFailedOffline
         case .sourceDown(let source): .readingFailedSourceDown(source: source)
+        case .sourceOff(let source): .readingFailedSourceOff(source: source)
         case .notFound: .readingFailedNotFound
         case .blocked(let source, let reason): .readingFailedBlocked(source: source, reason: reason)
         case .parse(let source): .readingFailedParse(source: source)

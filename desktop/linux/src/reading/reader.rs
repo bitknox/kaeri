@@ -54,6 +54,9 @@ const GROUP_WIDTH: i32 = 640;
 const SILENT: Duration = Duration::from_millis(600);
 /// A page still loading says so on its plate from this long.
 const SAY_LOADING: Duration = Duration::from_secs(4);
+/// How long a chapter's open goes on before its plate offers another way, as the player's start
+/// does.
+const LONG_WAIT: Duration = Duration::from_secs(15);
 
 /// What the page plate holds the place of.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -154,6 +157,10 @@ pub struct Reader {
     wait_plate: gtk::Box,
     wait_number: gtk::Label,
     wait_line: gtk::Label,
+    /// Under a chapter's plate once its wait has gone on: another source and Go back.
+    wait_more: gtk::Box,
+    /// Counts a chapter's wait each second, from when its plate shows.
+    wait_ticker: RefCell<Option<glib::SourceId>>,
     waiting: Cell<Option<Waiting>>,
     /// The last open asked for, to open again after a failure.
     asked_open: RefCell<Option<(WorkId, Option<ChapterId>)>>,
@@ -308,6 +315,24 @@ impl Reader {
         wait_words.set_margin_end(24);
         wait_words.append(&wait_number);
         wait_words.append(&wait_line);
+        let wait_choose = gtk::Button::with_label(&t::player_choose_source());
+        wait_choose.add_css_class("pill");
+        let wait_back = gtk::Button::with_label(&t::linux_reader_go_back());
+        wait_back.add_css_class("flat");
+        let wait_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+        wait_buttons.set_halign(gtk::Align::Center);
+        wait_buttons.append(&wait_choose);
+        wait_buttons.append(&wait_back);
+        let wait_long = gtk::Label::new(Some(&t::reader_wait_long()));
+        wait_long.add_css_class("reader-plate-line");
+        wait_long.set_wrap(true);
+        wait_long.set_justify(gtk::Justification::Center);
+        let wait_more = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        wait_more.set_margin_top(18);
+        wait_more.append(&wait_long);
+        wait_more.append(&wait_buttons);
+        wait_more.set_visible(false);
+        wait_words.append(&wait_more);
         let wait_plate = gtk::Box::new(gtk::Orientation::Vertical, 0);
         wait_plate.add_css_class("reader-plate");
         wait_plate.set_halign(gtk::Align::Center);
@@ -514,6 +539,8 @@ impl Reader {
                 wait_plate,
                 wait_number,
                 wait_line,
+                wait_more,
+                wait_ticker: RefCell::default(),
                 waiting: Cell::new(None),
                 asked_open: RefCell::default(),
                 notice,
@@ -582,6 +609,22 @@ impl Reader {
             move |_| {
                 if let Some(this) = this.upgrade() {
                     this.choose_source();
+                }
+            }
+        });
+        wait_choose.connect_clicked({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.choose_source();
+                }
+            }
+        });
+        wait_back.connect_clicked({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.close();
                 }
             }
         });
@@ -961,11 +1004,14 @@ impl Reader {
         }
     }
 
-    fn show_plate(&self, what: Waiting) {
+    fn show_plate(self: &Rc<Self>, what: Waiting) {
         let number = match what {
             Waiting::Chapter => self.opening_line.borrow().clone(),
             Waiting::Page(page) => t::linux_reader_page_plate(i64::from(page + 1)),
         };
+        if what == Waiting::Chapter {
+            self.count_wait();
+        }
         self.wait_number.set_label(&number);
         self.wait_line.set_visible(false);
         self.wait_plate.update_property(&[gtk::accessible::Property::Label(&number)]);
@@ -980,9 +1026,34 @@ impl Reader {
         plate.set_size_request(((height * 0.7).round() as i32).min(width), -1);
     }
 
+    /// From the plate's 600 ms: the stage with its seconds from 3 s, as the player's start counts,
+    /// and from [`LONG_WAIT`] another source and Go back under it.
+    fn count_wait(self: &Rc<Self>) {
+        let this = Rc::downgrade(self);
+        let mut waited = SILENT;
+        let id = glib::timeout_add_local(Duration::from_secs(1), move || {
+            let Some(this) = this.upgrade() else { return glib::ControlFlow::Break };
+            waited += Duration::from_secs(1);
+            let line = this.opening_line.borrow().clone();
+            if waited >= Duration::from_secs(3) && !line.is_empty() {
+                let seconds = i64::try_from(waited.as_secs()).unwrap_or(i64::MAX);
+                this.wait_number.set_label(&t::reader_wait_seconds(&line, seconds));
+            }
+            if waited >= LONG_WAIT && !this.wait_more.is_visible() {
+                this.wait_more.set_visible(true);
+                motion::fade_in(&this.wait_more);
+            }
+            glib::ControlFlow::Continue
+        });
+        if let Some(old) = self.wait_ticker.replace(Some(id)) {
+            old.remove();
+        }
+    }
+
     fn stop_wait(&self) {
         self.waiting.set(None);
-        for timer in [&self.loading_timer, &self.loading_line_timer] {
+        self.wait_more.set_visible(false);
+        for timer in [&self.loading_timer, &self.loading_line_timer, &self.wait_ticker] {
             if let Some(id) = timer.borrow_mut().take() {
                 id.remove();
             }
@@ -1105,12 +1176,17 @@ impl Reader {
             }
             ReaderEvent::Opening { chapter, wait } => {
                 let line = match (wait, chapter) {
-                    (Some(ReaderWait::FindingSource), _) => t::linux_reader_finding_source(),
-                    (None, Some(chapter)) => match &chapter.number {
+                    (Some(ReaderWait::ChapterList { source }), _) => {
+                        t::reader_wait_chapter_list(source)
+                    }
+                    (Some(ReaderWait::ChapterPages { chapter, source }), _) => {
+                        t::reader_wait_chapter_pages(chapter, source)
+                    }
+                    (_, Some(chapter)) => match &chapter.number {
                         Some(number) => t::linux_reader_opening_number(number),
                         None => t::linux_reader_opening(),
                     },
-                    (None, None) => t::linux_reader_opening(),
+                    (_, None) => t::linux_reader_opening(),
                 };
                 self.state.borrow_mut().opening_number = chapter
                     .as_ref()

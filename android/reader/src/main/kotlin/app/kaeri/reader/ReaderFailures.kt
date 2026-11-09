@@ -13,6 +13,7 @@ import app.kaeri.store.text
 fun ReadingFailure.msg(): ReadingMsg = when (this) {
     is ReadingFailure.Offline -> ReadingMsg.ReadingFailedOffline
     is ReadingFailure.SourceDown -> ReadingMsg.ReadingFailedSourceDown(source)
+    is ReadingFailure.SourceOff -> ReadingMsg.ReadingFailedSourceOff(source)
     is ReadingFailure.NotFound -> ReadingMsg.ReadingFailedNotFound
     is ReadingFailure.Blocked -> ReadingMsg.ReadingFailedBlocked(source, reason)
     is ReadingFailure.Parse -> ReadingMsg.ReadingFailedParse(source)
@@ -39,6 +40,7 @@ fun ReadingFailure.text(context: Context): String =
 val ReadingFailure.source: String?
     get() = when (this) {
         is ReadingFailure.SourceDown -> source
+        is ReadingFailure.SourceOff -> source
         is ReadingFailure.Blocked -> source
         is ReadingFailure.Parse -> source
         else -> null

@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
+import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.ReaderWait
 import app.kaeri.reader.PageFileView
 import kotlin.math.roundToInt
@@ -69,6 +70,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -497,7 +499,16 @@ fun PhoneReader(
                     // it, and only then fades itself: the ground never shows between the two.
                     // Under a held end page the plate goes at once when the page is drawn: it is covered then.
                     if (state.leaves.isEmpty() || openingHeld || !plateGone) {
-                        Opening(state, done = state.leaves.isNotEmpty(), drawn = !openingHeld, fades = fades && leaving == null, onGone = { plateGone = true })
+                        Opening(
+                            state,
+                            done = state.leaves.isNotEmpty(),
+                            drawn = !openingHeld,
+                            fades = fades && leaving == null,
+                            onGone = { plateGone = true },
+                            session = session,
+                            instant = instant,
+                            onClose = actions.onClose,
+                        )
                     }
                     if (state.leaves.isNotEmpty()) PagedReader(
                     state = state,
@@ -1190,13 +1201,32 @@ internal fun StripDivider(state: ReaderState, next: ChapterRow) {
     }
 }
 
+/** What the open waits on, in words: the stage the engine named, else the chapter. */
+fun openingStage(context: android.content.Context, wait: ReaderWait?, chapter: String?): String? = when (wait) {
+    is ReaderWait.ChapterList -> Strings.readerWaitChapterList(context, wait.source)
+    is ReaderWait.ChapterPages -> Strings.readerWaitChapterPages(context, wait.chapter, wait.source)
+    else -> chapter?.let { Strings.readerOpeningChapter(context, it) }
+}
+
+/** How long a stage goes on before the opening offers another way, as the player's start does. */
+internal const val OPENING_LONG_MS = 15_000
+
 /**
- * While a chapter opens: nothing for 600 ms, then the page plate in the page's place with the
- * chapter on it, and from 3 s what it waits on and for how long. Once the first page is [done] and
- * drawn over it, the plate fades out.
+ * While a chapter opens: nothing for 600 ms, then the page plate in the page's place with what
+ * the open waits on, from 3 s with how long, and from [OPENING_LONG_MS] another source and Go
+ * back. Once the first page is [done] and drawn over it, the plate fades out.
  */
 @Composable
-private fun Opening(state: ReaderState, done: Boolean, drawn: Boolean, fades: Boolean, onGone: () -> Unit) {
+private fun Opening(
+    state: ReaderState,
+    done: Boolean,
+    drawn: Boolean,
+    fades: Boolean,
+    onGone: () -> Unit,
+    session: ReaderSession,
+    instant: Boolean,
+    onClose: () -> Unit,
+) {
     val context = LocalContext.current
     var waited by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) {
@@ -1217,14 +1247,14 @@ private fun Opening(state: ReaderState, done: Boolean, drawn: Boolean, fades: Bo
     }
     if (waited < PageWaits.PLATE_MS) return
     val number = (state.openingChapter ?: state.view?.chapter)?.let(::chapterNumber)
-    val opening = number?.let { Strings.readerOpeningChapter(context, it) }
+    val stage = openingStage(context, state.openingWait, number)
     val line = when {
-        waited < 3000 -> opening
-        else -> {
-            val what = if (state.openingWait == ReaderWait.FINDING_SOURCE) Strings.readerOpeningFinding(context) else opening
-            what?.let { Strings.readerOpeningWaited(context, it, waited / 1000) }
-        }
+        waited < 3000 -> stage
+        else -> stage?.let { Strings.readerWaitSeconds(context, it, waited / 1000) }
     }
+    val long = waited >= OPENING_LONG_MS && !done
+    LaunchedEffect(long) { if (long) session.loadSources() }
+    var choosing by remember { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize().graphicsLayer { alpha = shown.value }, contentAlignment = Alignment.Center) {
         // The page's place: a page's shape, as wide as it fits.
         val width = minOf(maxWidth, maxHeight * 0.703f)
@@ -1242,6 +1272,28 @@ private fun Opening(state: ReaderState, done: Boolean, drawn: Boolean, fades: Bo
                 )
             }
         }
+        if (long) {
+            // A stage that goes on offers the way on, as a failed open does.
+            Column(
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp).padding(bottom = 30.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(Strings.readerWaitLong(context), color = Chrome.faint, fontSize = 15.sp, modifier = Modifier.padding(bottom = 12.dp))
+                val sources = state.sources.orEmpty()
+                if (sources.isNotEmpty()) {
+                    OutlinedButton(onClick = { choosing = true }, shape = RoundedCornerShape(25.dp), modifier = Modifier.fillMaxWidth().height(50.dp)) {
+                        Text(Strings.readerFailedChoose(context), color = Chrome.text, fontSize = 16.sp)
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
+                TextButton(onClick = onClose, modifier = Modifier.heightIn(min = 38.dp)) {
+                    Text(Strings.readerNoticeGoBack(context), color = Chrome.text, fontSize = 15.sp)
+                }
+            }
+        }
+    }
+    if (choosing) {
+        SourcesSheet(state.sources.orEmpty(), instant, onDismiss = { choosing = false }) { session.chooseSource(it) }
     }
 }
 
@@ -1304,26 +1356,33 @@ private fun ChapterFailed(
             }
         }
         if (choosing) {
-            ReaderSheet(instant = instant, onDismiss = { choosing = false }) {
-                Column(Modifier.navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 16.dp)) {
-                    Text(Strings.readerSourcesTitle(context), color = Chrome.faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 6.dp))
-                    sources.forEach { version ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 56.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .clickable {
-                                    choosing = false
-                                    session.chooseSource(version)
-                                }
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(version.edition.sourceName, color = Chrome.text, fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-                            GlyphIcon(Glyph.Chevron, Chrome.faint, size = 20.dp)
+            SourcesSheet(sources, instant, onDismiss = { choosing = false }) { session.chooseSource(it) }
+        }
+    }
+}
+
+/** The other sources that have the chapter, to open it from one of them instead. */
+@Composable
+private fun SourcesSheet(sources: List<ChapterVersion>, instant: Boolean, onDismiss: () -> Unit, onPick: (ChapterVersion) -> Unit) {
+    val context = LocalContext.current
+    ReaderSheet(instant = instant, onDismiss = onDismiss) {
+        Column(Modifier.navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 16.dp)) {
+            Text(Strings.readerSourcesTitle(context), color = Chrome.faint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 6.dp))
+            sources.forEach { version ->
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable {
+                            onDismiss()
+                            onPick(version)
                         }
-                    }
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(version.edition.sourceName, color = Chrome.text, fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                    GlyphIcon(Glyph.Chevron, Chrome.faint, size = 20.dp)
                 }
             }
         }
