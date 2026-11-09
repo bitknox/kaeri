@@ -1119,6 +1119,9 @@ read-hit-files-format =
 # The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
 read-source-folders = Cartelle
 
+# A section of the feed that e-readers fetch from: the chapters downloaded on this device.
+read-feed-downloads = Download
+
 # On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
 reading-since-january = da gennaio
 
@@ -1154,6 +1157,33 @@ reading-since-november = da novembre
 
 # On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
 reading-since-december = da dicembre
+
+# The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList".
+read-view-all-trending-manga = Manga di tendenza
+
+# The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList".
+read-view-all-trending-webtoons = Webtoon di tendenza
+
+# The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList".
+read-view-all-trending-novels = Light novel di tendenza
+
+# The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList".
+read-view-all-new-manga = Manga iniziati negli ultimi 12 mesi
+
+# The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList".
+read-view-all-new-webtoons = Webtoon iniziati negli ultimi 12 mesi
+
+# The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList".
+read-view-all-new-novels = Light novel iniziate negli ultimi 12 mesi
+
+# The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList".
+read-view-all-finished-manga = Manga conclusi, più popolari
+
+# The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList".
+read-view-all-finished-webtoons = Webtoon conclusi, più popolari
+
+# The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList".
+read-view-all-finished-novels = Light novel concluse, più popolari
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Ti sei unito a { $store } come { $member }.
@@ -1860,6 +1890,62 @@ linux-join-medium-line-both = Visione e lettura, come su { $device }
 
 # Switch on a book plugin's page: its series show in Kaeri while it is on.
 linux-book-plugin-use = Usa questo plugin
+
+# Screen reader name of a discovery row's View all button: the row's heading follows, so a list of links makes sense on its own.
+read-linux-view-all-row = Vedi tutti, { $row }
+
+# Screen reader name of a discovery row's heading while its covers are on their way.
+read-linux-row-loading = { $row }, caricamento
+
+# Said once by screen readers when Your sources only turns on.
+read-linux-anilist-hidden = I risultati di AniList sono nascosti.
+
+# Said once by screen readers when every part of a search has answered. Sources that failed follow, each in its own sentence.
+read-linux-search-done = { $anilist } da AniList, { $sources } dalle tue fonti.
+
+# Said once by screen readers when every source has answered, with Your sources only on.
+read-linux-search-done-sources = { $sources } dalle tue fonti.
+
+# Screen reader name of a source's row heading while the source is being asked. The source's name and kind come first: "Northwind, Plugin".
+read-linux-source-searching = { $source }, ricerca in corso
+
+# Screen reader name of the reason under a source that gave no answer in time, where the screen shows "No answer in 15 s."
+read-linux-source-timeout =
+    { $seconds ->
+        [one] Nessuna risposta in { $seconds } secondo.
+        [many] Nessuna risposta in { $seconds } di secondi.
+       *[other] Nessuna risposta in { $seconds } secondi.
+    }
+
+# Screen reader name of Try again under a source that didn't answer, with the source's name, so each of several reads on its own.
+read-linux-try-again-source = Riprova, { $source }
+
+# Two facts on the line under a cover: "Manga · Releasing", "Japan · since March". Change the separator if the language sets such pairs another way.
+read-linux-caption-pair = { $first } · { $second }
+
+# A screen reader's list of a cover's facts, one more added to the ones before: "Manga, Japan", then "Manga, Japan, Releasing".
+read-linux-spoken-facts = { $facts }, { $fact }
+
+# What a screen reader says for a cover: one more sentence after the ones before. "Lantern Street Notes" and "Manga, Japan, Releasing" make "Lantern Street Notes. Manga, Japan, Releasing".
+read-linux-spoken-then = { $said }. { $more }
+
+# The end of what a screen reader says for a cover: the full stop after the last sentence.
+read-linux-spoken-end = { $said }.
+
+# A list of names before its last one, which "{ $first } and { $last }" adds: "Folders, Northwind" in "Folders, Northwind and Demo".
+read-linux-names-more = { $names }, { $name }
+
+# The filters and order a browse shows, one more added to the ones before: "Manga, Japan", then "Manga, Japan, Trending".
+read-linux-browse-more = { $filters }, { $filter }
+
+# The line over Search's results with AniList's count after it: "Webtoons, trending · 1,920 series from AniList".
+read-linux-line-total = { $line } · { $total }
+
+# Said once by screen readers when a search has settled: the next sentence after the ones before, such as a source that didn't answer.
+read-linux-said-then = { $said } { $more }
+
+# A source's name with its kind, as a screen reader names the source's row: "Northwind, Plugin".
+read-linux-source-with-kind = { $source }, { $kind }
 
 # Tooltip of the reader toolbar's settings button.
 linux-reader-settings-open = Impostazioni lettore
@@ -4582,6 +4668,113 @@ settings-note-upload-limit = Limita tutto il caricamento torrent, così la condi
 
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Usa --token-to-file per spostare un token esistente.
+
+# AniList's name, in the line that says it is still being asked.
+tui-read-anilist = AniList
+
+# The line under the search field when no filter is set. Lower case, as the terminal's metadata lines are.
+tui-read-filters-none = nessun filtro
+
+# The line under the search field, with the filters set. The filters are already joined, such as "Manga · Japan".
+tui-read-filters = filtri { $set }
+
+# On the line under the search field: the switch that hides AniList's results. "on" or "off" follows it in bold.
+tui-read-sources-only = solo le tue fonti
+
+# The state of that switch, after it.
+tui-read-on = attivo
+
+# The state of that switch, after it.
+tui-read-off = disattivo
+
+# After a source that didn't answer, beside the key that asks it again. Lower case.
+tui-read-try-again = riprova
+
+# Toast when "Your sources only" is pressed with nothing typed in reading's search: the sources are asked for words, never browsed.
+tui-read-sources-only-words = Scrivi un titolo per cercare nelle tue fonti.
+
+# Search with "Your sources only" on, when none of the sources found anything. A line saying to try other words follows.
+tui-read-sources-nothing = Niente trovato nelle tue fonti
+
+# A source in reading's search that could not be asked because the computer is offline. The source is its name. Folders still answer offline; servers and plugins need a connection.
+tui-read-source-offline = { $source } richiede una connessione.
+
+# Names in a sentence, the last joined with "and": "Home library and Northwind", "A, B and C". The names before the last are already joined with commas. Used in "Nothing found in …".
+tui-read-names-and = { $names } e { $last }
+
+# Toast after Enter on a series in reading's Home or Search. The terminal has no reader.
+tui-read-opens-in-apps = Si apre nelle app di Kaeri.
+
+# On reading's Home when no book source is set up. The terminal cannot add one; the apps can.
+tui-read-sources-in-apps = Cartelle, server e negozi di plugin si aggiungono nelle app di Kaeri.
+
+# Toast when "Your sources only" turns on.
+tui-read-sources-only-on = Solo le tue fonti. I risultati di AniList sono nascosti.
+
+# Toast when "Your sources only" turns off.
+tui-read-sources-only-off = I risultati di AniList sono di nuovo visibili.
+
+# Header chip while Kaeri is for reading alone: how many of the person's book sources are on. The mark is a dot, filled when one or more is on. Lower case, as the header's other chips are.
+tui-read-header-sources = fonti { $mark } { $n }
+
+# Left of the status line on reading's Home and Search: how many of the person's sources are on.
+tui-read-status =
+    { $n ->
+        [one] Lettura · { $n } fonte
+        [many] Lettura · { $n } di fonti
+       *[other] Lettura · { $n } fonti
+    }
+
+# Left of the status line on reading's Home and Search, when the terminal is narrow.
+tui-read-status-short = Lettura
+
+# Hint in the status line on reading's Search: Tab moves between AniList's results and the sources'. Shown in lower case.
+tui-read-hint-next-section = Sezione successiva
+
+# The same hint when the terminal is narrow.
+tui-read-hint-section = Sezione
+
+# Hint in the status line on reading's Search: the key that turns "Your sources only" on and off. Shown in lower case.
+tui-read-hint-sources-only = Solo le tue fonti
+
+# The same hint when the terminal is narrow.
+tui-read-hint-sources-only-short = Solo fonti
+
+# Hint in the status line on the shows' Home and Search while Kaeri is for shows and reading: the key that goes to Read from Home, and turns Search to reading's. Shown in lower case.
+tui-read-hint-to-reading = Lettura
+
+# Hint in the status line on Read and reading's Search while Kaeri is for shows and reading: the key that goes back to the shows' Home, or turns Search back to the shows'. Shown in lower case.
+tui-read-hint-to-shows = Visione
+
+# Hint in the status line on a reading title the Planning list can take. Shown in lower case.
+tui-read-hint-planning = In programma
+
+# Left of the status line on the shows' Home and Search while Kaeri is for shows and reading, before what the line says there anyway, such as "Demo · Subbed · 1080p".
+tui-read-status-shows = Serie · { $state }
+
+# Action label in the key reference and the command palette, while Kaeri is for both: from the shows' Home to Read and back, and Search turned between the shows' and reading's.
+tui-read-action-switch = Visione o lettura
+
+# Ends the toast that says a command does nothing here: it follows the command's name and "works", and names where it does.
+tui-read-where-switch = in Home, Leggi e Cerca quando Kaeri è per visione e lettura
+
+# In the key reference's reading keys: puts the title under the cursor on the Planning list. Works on Home's discovery rows and AniList's results.
+tui-read-keys-planning = Aggiungi a In programma
+
+# Heading of the reading keys in the key reference.
+tui-read-keys-heading = Lettura
+
+# A row of the key reference: move to the next part of the screen, AniList's results or the sources' on Search, and the next row on Home.
+tui-read-keys-next-section = Sezione successiva
+
+# A row of the key reference: turn "Your sources only" on or off.
+tui-read-keys-sources-only = Solo le tue fonti, attiva o disattiva
+
+# A row of the key reference: ask a source or AniList again on Search, or load Home again.
+tui-read-keys-try-again = Chiedi di nuovo, o ricarica
+
+# A row of the key reference: the filters of reading's search.
+tui-read-keys-filters = Filtri di ricerca
 
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = Serve un terminale più grande
@@ -9758,6 +9951,9 @@ read-filter-included = Incluso
 # A genre's state: no series with it.
 read-filter-left-out = Escluso
 
+# The last entry of the Genres menu, which holds the genres the menu has no room for.
+read-filter-more-genres = Altri generi
+
 # A filter of reading's Search: when a series started.
 read-search-started = Inizio
 
@@ -9782,6 +9978,9 @@ read-search-source-nothing = Niente trovato in { $sources }.
 # On an AniList result that one of the person's sources has. The source is its name.
 read-search-in-source = In { $source }
 
+# On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders.
+read-search-in-folders = Nelle tue cartelle
+
 # On an AniList result that more than one of the person's sources has. Always 2 or more.
 read-search-in-sources =
     { $n ->
@@ -9801,6 +10000,12 @@ read-search-anilist-failed-line = Le tue fonti sono state consultate comunque.
 
 # Search, when nothing was found anywhere: under the line saying AniList found nothing.
 read-search-sources-nothing = Niente nemmeno nelle tue fonti.
+
+# Search with Your sources only on, when no source found anything. The line to try other words follows.
+read-search-sources-only-nothing = Niente trovato nelle tue fonti
+
+# Line under a reading page's title when the device has no connection.
+read-state-offline-line = Offline. I capitoli scaricati si aprono comunque.
 
 # Over reading's results while more pages are to come, so AniList's count is not known yet.
 read-search-total-unknown = Serie da AniList
@@ -9823,6 +10028,96 @@ read-search-source-kind-plugin = Plugin
 
 # The button of a source group with more than five hits.
 read-search-source-more = Mostra altri { $n }
+
+# The line over browsing once every result is listed: the browse line, then the total. As in "Manga, trending · 1,204 series from AniList".
+read-search-line-total = { $line } · { $total }
+
+# Joins the parts of the browse line, one more at a time. As in "Manga, Japan, Popular".
+read-search-browse-parts = { $list }, { $next }
+
+# A tile's caption under its cover: two facts. As in "Manga · Japan" or "Manga · Releasing".
+read-caption-two = { $first } · { $second }
+
+# A filter's button once set, as shown: its name, then the value. As in "Format: Manga".
+read-filter-shown = { $name }: { $value }
+
+# A cover tile: its title, then its caption. As in "Paper Lantern, Manga, Japan".
+read-name-tile = { $title }, { $line }
+
+# A cover tile a source already has: title, caption, then the source. As in "Paper Lantern, Manga, In Folders".
+read-name-tile-placed = { $title }, { $line }, { $placed }
+
+# A tile with only its title and the source that has it. As in "Paper Lantern, In Folders".
+read-name-tile-only-placed = { $title }, { $placed }
+
+# An Up next or This week tile: title, when, and the chapter. As in "Paper Lantern, Tuesday, Chapter 42".
+read-name-week-tile = { $title }, { $time }, { $chapter }
+
+# An Up next or This week tile without a chapter. As in "Paper Lantern, Tuesday".
+read-name-week-tile-time = { $title }, { $time }
+
+# The cover art of Home's spotlight, which opens the series. As in "Paper Lantern, Details".
+read-name-spotlight-art = { $title }, Dettagli
+
+# A row heading with its side words. As in "New manga, Last 12 months".
+read-name-heading = { $heading }, { $side }
+
+# A row or its heading while its covers load. As in "Trending manga, loading".
+read-name-loading = { $name }, caricamento
+
+# A row heading with side words while its covers load. As in "New manga, Last 12 months, loading".
+read-name-heading-loading = { $heading }, { $side }, caricamento
+
+# A row's View all link. As in "View all, Trending manga".
+read-name-view-all = Vedi tutti, { $row }
+
+# A filter button once set. As in "Format, Manga".
+read-name-filter = { $name }, { $value }
+
+# A failure block: what failed, then why. As in "Folders didn't answer, No answer in 15 seconds".
+read-name-failure = { $line }, { $reason }
+
+# A source row's heading: the source's name, then what kind of source it is. As in "Home shelf, Folder".
+read-name-source = { $source }, { $kind }
+
+# A source row's button for its other hits. As in "Show 12 more from Folders".
+read-name-source-more =
+    { $n ->
+        [one] Mostra altri { $n } da { $source }
+        [many] Mostra altri { $n } da { $source }
+       *[other] Mostra altri { $n } da { $source }
+    }
+
+# Under the Your sources only switch in the iPhone and iPad Filters sheet.
+read-search-sources-only-line = I risultati di AniList sono nascosti. I filtri qui sotto si applicano solo ai risultati di AniList.
+
+# What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.
+read-search-done = { $anilist } da AniList, { $sources } dalle tue fonti.
+
+# A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".
+read-home-row-loading = { $row }, caricamento
+
+# Screen readers: the custom action on a discovery cover that puts the series on Planning.
+read-tile-add-planning = Aggiungi a In programma
+
+# Said once by screen readers when Your sources only turns on.
+read-search-anilist-hidden = I risultati di AniList sono nascosti.
+
+# Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.
+read-search-said-anilist =
+    { $n ->
+        [one] { $n } da AniList
+        [many] { $n } da AniList
+       *[other] { $n } da AniList
+    }
+
+# Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.
+read-search-said-sources =
+    { $n ->
+        [one] { $n } dalle tue fonti
+        [many] { $n } dalle tue fonti
+       *[other] { $n } dalle tue fonti
+    }
 
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step } di { $total }

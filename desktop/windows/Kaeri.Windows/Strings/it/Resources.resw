@@ -1178,6 +1178,9 @@
   <data name="ReadSourceFolders" xml:space="preserve">
     <value>Cartelle</value>
   </data>
+  <data name="ReadFeedDownloads" xml:space="preserve">
+    <value>Download</value>
+  </data>
   <data name="ReadingSinceJanuary" xml:space="preserve">
     <value>da gennaio</value>
   </data>
@@ -1213,6 +1216,33 @@
   </data>
   <data name="ReadingSinceDecember" xml:space="preserve">
     <value>da dicembre</value>
+  </data>
+  <data name="ReadViewAllTrendingManga" xml:space="preserve">
+    <value>Manga di tendenza</value>
+  </data>
+  <data name="ReadViewAllTrendingWebtoons" xml:space="preserve">
+    <value>Webtoon di tendenza</value>
+  </data>
+  <data name="ReadViewAllTrendingNovels" xml:space="preserve">
+    <value>Light novel di tendenza</value>
+  </data>
+  <data name="ReadViewAllNewManga" xml:space="preserve">
+    <value>Manga iniziati negli ultimi 12 mesi</value>
+  </data>
+  <data name="ReadViewAllNewWebtoons" xml:space="preserve">
+    <value>Webtoon iniziati negli ultimi 12 mesi</value>
+  </data>
+  <data name="ReadViewAllNewNovels" xml:space="preserve">
+    <value>Light novel iniziate negli ultimi 12 mesi</value>
+  </data>
+  <data name="ReadViewAllFinishedManga" xml:space="preserve">
+    <value>Manga conclusi, più popolari</value>
+  </data>
+  <data name="ReadViewAllFinishedWebtoons" xml:space="preserve">
+    <value>Webtoon conclusi, più popolari</value>
+  </data>
+  <data name="ReadViewAllFinishedNovels" xml:space="preserve">
+    <value>Light novel concluse, più popolari</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Ti sei unito a {store} come {member}.</value>
@@ -2194,6 +2224,27 @@
   </data>
   <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
     <value>I capitoli scaricati si aprono senza connessione.</value>
+  </data>
+  <data name="WindowsReadSearchFinished" xml:space="preserve">
+    <value>{anilist} da AniList, {sources} dalle tue fonti.</value>
+  </data>
+  <data name="WindowsReadSearchFinishedSources" xml:space="preserve">
+    <value>{sources} dalle tue fonti.</value>
+  </data>
+  <data name="WindowsReadSearchAnilistHidden" xml:space="preserve">
+    <value>I risultati di AniList sono nascosti.</value>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_one" xml:space="preserve">
+    <value>Nessuna risposta in {seconds} secondo.</value>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_many" xml:space="preserve">
+    <value>Nessuna risposta in {seconds} di secondi.</value>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_other" xml:space="preserve">
+    <value>Nessuna risposta in {seconds} secondi.</value>
+  </data>
+  <data name="WindowsReadSearchFiltersDimmed" xml:space="preserve">
+    <value>I filtri si applicano solo ai risultati di AniList.</value>
   </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>Rilettura di {title} dall'inizio</value>
@@ -7316,6 +7367,9 @@
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Escluso</value>
   </data>
+  <data name="ReadFilterMoreGenres" xml:space="preserve">
+    <value>Altri generi</value>
+  </data>
   <data name="ReadSearchStarted" xml:space="preserve">
     <value>Inizio</value>
   </data>
@@ -7340,6 +7394,9 @@
   <data name="ReadSearchInSource" xml:space="preserve">
     <value>In {source}</value>
   </data>
+  <data name="ReadSearchInFolders" xml:space="preserve">
+    <value>Nelle tue cartelle</value>
+  </data>
   <data name="ReadSearchInSources_one" xml:space="preserve">
     <value>In {n} delle tue fonti</value>
   </data>
@@ -7360,6 +7417,12 @@
   </data>
   <data name="ReadSearchSourcesNothing" xml:space="preserve">
     <value>Niente nemmeno nelle tue fonti.</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyNothing" xml:space="preserve">
+    <value>Niente trovato nelle tue fonti</value>
+  </data>
+  <data name="ReadStateOfflineLine" xml:space="preserve">
+    <value>Offline. I capitoli scaricati si aprono comunque.</value>
   </data>
   <data name="ReadSearchTotalUnknown" xml:space="preserve">
     <value>Serie da AniList</value>
@@ -7384,6 +7447,99 @@
   </data>
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Mostra altri {n}</value>
+  </data>
+  <data name="ReadSearchLineTotal" xml:space="preserve">
+    <value>{line} · {total}</value>
+  </data>
+  <data name="ReadSearchBrowseParts" xml:space="preserve">
+    <value>{list}, {next}</value>
+  </data>
+  <data name="ReadCaptionTwo" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="ReadFilterShown" xml:space="preserve">
+    <value>{name}: {value}</value>
+  </data>
+  <data name="ReadNameTile" xml:space="preserve">
+    <value>{title}, {line}</value>
+  </data>
+  <data name="ReadNameTilePlaced" xml:space="preserve">
+    <value>{title}, {line}, {placed}</value>
+  </data>
+  <data name="ReadNameTileOnlyPlaced" xml:space="preserve">
+    <value>{title}, {placed}</value>
+  </data>
+  <data name="ReadNameWeekTile" xml:space="preserve">
+    <value>{title}, {time}, {chapter}</value>
+  </data>
+  <data name="ReadNameWeekTileTime" xml:space="preserve">
+    <value>{title}, {time}</value>
+  </data>
+  <data name="ReadNameSpotlightArt" xml:space="preserve">
+    <value>{title}, Dettagli</value>
+  </data>
+  <data name="ReadNameHeading" xml:space="preserve">
+    <value>{heading}, {side}</value>
+  </data>
+  <data name="ReadNameLoading" xml:space="preserve">
+    <value>{name}, caricamento</value>
+  </data>
+  <data name="ReadNameHeadingLoading" xml:space="preserve">
+    <value>{heading}, {side}, caricamento</value>
+  </data>
+  <data name="ReadNameViewAll" xml:space="preserve">
+    <value>Vedi tutti, {row}</value>
+  </data>
+  <data name="ReadNameFilter" xml:space="preserve">
+    <value>{name}, {value}</value>
+  </data>
+  <data name="ReadNameFailure" xml:space="preserve">
+    <value>{line}, {reason}</value>
+  </data>
+  <data name="ReadNameSource" xml:space="preserve">
+    <value>{source}, {kind}</value>
+  </data>
+  <data name="ReadNameSourceMore_one" xml:space="preserve">
+    <value>Mostra altri {n} da {source}</value>
+  </data>
+  <data name="ReadNameSourceMore_many" xml:space="preserve">
+    <value>Mostra altri {n} da {source}</value>
+  </data>
+  <data name="ReadNameSourceMore_other" xml:space="preserve">
+    <value>Mostra altri {n} da {source}</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyLine" xml:space="preserve">
+    <value>I risultati di AniList sono nascosti. I filtri qui sotto si applicano solo ai risultati di AniList.</value>
+  </data>
+  <data name="ReadSearchDone" xml:space="preserve">
+    <value>{anilist} da AniList, {sources} dalle tue fonti.</value>
+  </data>
+  <data name="ReadHomeRowLoading" xml:space="preserve">
+    <value>{row}, caricamento</value>
+  </data>
+  <data name="ReadTileAddPlanning" xml:space="preserve">
+    <value>Aggiungi a In programma</value>
+  </data>
+  <data name="ReadSearchAnilistHidden" xml:space="preserve">
+    <value>I risultati di AniList sono nascosti.</value>
+  </data>
+  <data name="ReadSearchSaidAnilist_one" xml:space="preserve">
+    <value>{n} da AniList</value>
+  </data>
+  <data name="ReadSearchSaidAnilist_many" xml:space="preserve">
+    <value>{n} da AniList</value>
+  </data>
+  <data name="ReadSearchSaidAnilist_other" xml:space="preserve">
+    <value>{n} da AniList</value>
+  </data>
+  <data name="ReadSearchSaidSources_one" xml:space="preserve">
+    <value>{n} dalle tue fonti</value>
+  </data>
+  <data name="ReadSearchSaidSources_many" xml:space="preserve">
+    <value>{n} dalle tue fonti</value>
+  </data>
+  <data name="ReadSearchSaidSources_other" xml:space="preserve">
+    <value>{n} dalle tue fonti</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} di {total}</value>
