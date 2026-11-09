@@ -1,8 +1,8 @@
-Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+Kaeri                                                sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────
  ▸ │  / Search reading
- ▤ │
- ▦ │
+▌/ │
+ ▥ │
 ────────────────────────────────────────────────────────────────────────────────
 ▌ Filters
 ────────────────────────────────────────────────────────────────────────────────
@@ -28,11 +28,11 @@ r00 c00-04 fg=rule mod=BOLD
 r00 c05-79 fg=rule
 r01 c00-79 fg=rule
 r02 c00-79 fg=rule
-r03 c00-79 fg=rule
+r03 c00-00 fg=rule
+r03 c01-01 fg=rule mod=BOLD
+r03 c02-79 fg=rule
 r04 c00-79 fg=rule
-r05 c00-00 fg=rule bg=ground
-r05 c01-01 fg=rule bg=ground mod=BOLD
-r05 c02-79 fg=rule bg=ground
+r05 c00-79 fg=rule bg=ground
 r06 c00-00 fg=obi bg=ground
 r06 c01-01 fg=rule bg=ground
 r06 c02-08 fg=text bg=ground mod=BOLD

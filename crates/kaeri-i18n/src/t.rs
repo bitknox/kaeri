@@ -7210,11 +7210,6 @@ pub fn settings_note_token_storage() -> String {
     text("settings-note-token-storage", &[])
 }
 
-/// Heading over AniList's results in reading's search, with how many it found. Shown once the count is known, which is when every result is listed.
-pub fn tui_read_anilist_count(n: i64) -> String {
-    text("tui-read-anilist-count", &[("n", Arg::Int(n))])
-}
-
 /// AniList's name, in the line that says it is still being asked.
 pub fn tui_read_anilist() -> String {
     text("tui-read-anilist", &[])
@@ -7245,19 +7240,39 @@ pub fn tui_read_off() -> String {
     text("tui-read-off", &[])
 }
 
-/// Beside an AniList result that one of the person's sources has. The source is its name. Lower case, as the terminal's metadata lines are.
-pub fn tui_read_in_source(source: &str) -> String {
-    text("tui-read-in-source", &[("source", Arg::Text(source))])
-}
-
-/// Beside an AniList result that more than one of the person's sources has. Always 2 or more.
-pub fn tui_read_in_sources(n: i64) -> String {
-    text("tui-read-in-sources", &[("n", Arg::Int(n))])
-}
-
 /// After a source that didn't answer, beside the key that asks it again. Lower case.
 pub fn tui_read_try_again() -> String {
     text("tui-read-try-again", &[])
+}
+
+/// Toast when "Your sources only" is pressed with nothing typed in reading's search: the sources are asked for words, never browsed.
+pub fn tui_read_sources_only_words() -> String {
+    text("tui-read-sources-only-words", &[])
+}
+
+/// Search with "Your sources only" on, when none of the sources found anything. A line saying to try other words follows.
+pub fn tui_read_sources_nothing() -> String {
+    text("tui-read-sources-nothing", &[])
+}
+
+/// A source in reading's search that could not be asked because the computer is offline. The source is its name. Folders still answer offline; servers and plugins need a connection.
+pub fn tui_read_source_offline(source: &str) -> String {
+    text("tui-read-source-offline", &[("source", Arg::Text(source))])
+}
+
+/// Names in a sentence, the last joined with "and": "Home library and Northwind", "A, B and C". The names before the last are already joined with commas. Used in "Nothing found in …".
+pub fn tui_read_names_and(names: &str, last: &str) -> String {
+    text("tui-read-names-and", &[("names", Arg::Text(names)), ("last", Arg::Text(last))])
+}
+
+/// Toast after Enter on a series in reading's Home or Search. The terminal has no reader.
+pub fn tui_read_opens_in_apps() -> String {
+    text("tui-read-opens-in-apps", &[])
+}
+
+/// On reading's Home when no book source is set up. The terminal cannot add one; the apps can.
+pub fn tui_read_sources_in_apps() -> String {
+    text("tui-read-sources-in-apps", &[])
 }
 
 /// Toast when "Your sources only" turns on.
@@ -7270,7 +7285,12 @@ pub fn tui_read_sources_only_off() -> String {
     text("tui-read-sources-only-off", &[])
 }
 
-/// Left of the status line on reading's Home and Search: how many sources are asked.
+/// Header chip while Kaeri is for reading alone: how many of the person's book sources are on. The mark is a dot, filled when one or more is on. Lower case, as the header's other chips are.
+pub fn tui_read_header_sources(mark: &str, n: i64) -> String {
+    text("tui-read-header-sources", &[("mark", Arg::Text(mark)), ("n", Arg::Int(n))])
+}
+
+/// Left of the status line on reading's Home and Search: how many of the person's sources are on.
 pub fn tui_read_status(n: i64) -> String {
     text("tui-read-status", &[("n", Arg::Int(n))])
 }
@@ -7300,12 +7320,12 @@ pub fn tui_read_hint_sources_only_short() -> String {
     text("tui-read-hint-sources-only-short", &[])
 }
 
-/// Hint in the status line on the shows' Home and Search while Kaeri is for shows and reading: the key that turns Home and Search to reading's. Shown in lower case.
+/// Hint in the status line on the shows' Home and Search while Kaeri is for shows and reading: the key that goes to Read from Home, and turns Search to reading's. Shown in lower case.
 pub fn tui_read_hint_to_reading() -> String {
     text("tui-read-hint-to-reading", &[])
 }
 
-/// Hint in the status line on reading's Home and Search while Kaeri is for shows and reading: the key that turns Home and Search back to the shows'. Shown in lower case.
+/// Hint in the status line on Read and reading's Search while Kaeri is for shows and reading: the key that goes back to the shows' Home, or turns Search back to the shows'. Shown in lower case.
 pub fn tui_read_hint_to_shows() -> String {
     text("tui-read-hint-to-shows", &[])
 }
@@ -7320,7 +7340,7 @@ pub fn tui_read_status_shows(state: &str) -> String {
     text("tui-read-status-shows", &[("state", Arg::Text(state))])
 }
 
-/// Action label in the key reference and the command palette: turns Home and Search between the shows' and reading's, while Kaeri is for both.
+/// Action label in the key reference and the command palette, while Kaeri is for both: from the shows' Home to Read and back, and Search turned between the shows' and reading's.
 pub fn tui_read_action_switch() -> String {
     text("tui-read-action-switch", &[])
 }
@@ -7340,7 +7360,7 @@ pub fn tui_read_keys_heading() -> String {
     text("tui-read-keys-heading", &[])
 }
 
-/// A row of the key reference: move between AniList's results and the sources'.
+/// A row of the key reference: move to the next part of the screen, AniList's results or the sources' on Search, and the next row on Home.
 pub fn tui_read_keys_next_section() -> String {
     text("tui-read-keys-next-section", &[])
 }
@@ -7350,7 +7370,7 @@ pub fn tui_read_keys_sources_only() -> String {
     text("tui-read-keys-sources-only", &[])
 }
 
-/// A row of the key reference: ask a source that didn't answer again.
+/// A row of the key reference: ask a source or AniList again on Search, or load Home again.
 pub fn tui_read_keys_try_again() -> String {
     text("tui-read-keys-try-again", &[])
 }
@@ -8373,11 +8393,6 @@ pub fn tui_together_not_a_link() -> String {
 /// Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 pub fn tui_together_recent_alone(episode: &str, when: &str) -> String {
     text("tui-together-recent-alone", &[("episode", Arg::Text(episode)), ("when", Arg::Text(when))])
-}
-
-/// Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
-pub fn tui_medium_read_title() -> String {
-    text("tui-medium-read-title", &[])
 }
 
 /// Line under the title of that page.

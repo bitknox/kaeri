@@ -1,24 +1,24 @@
-Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+Kaeri                                                sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────
 ────────────────────────────────────────────────────────────────────────────────
-▌ Keys                                                             Page 1 of 3
+▌ Keys                                                             Page 1 of 2
 ────────────────────────────────────────────────────────────────────────────────
-  Reading                               Search                         /
-    Next section of Search       tab    Recent messages                !
-    Your sources only, on or off   s    Copy the bug report            C
-    Ask a source again             r    Delete the crash report        E
-    Search filters                 f  Movement
-  Global                                Move up                    k / ↑
-    Show keys                      ?    Move down                  j / ↓
-    Run a command         : / ctrl+k    Move left                  h / ←
-    Quit                  Q / ctrl+c    Move right                 l / →
-    Back                     q / esc    Jump to top                    g
-    Toggle rail width            tab    Jump to bottom                 G
-    Refresh this view              r    Jump to today                  T
-    Force a full resync            R    Jump to previous day           {
-    Subbed or dubbed               t    Jump to next day               }
-    Kaeri is for                   I    Page up                   ctrl+u
-    Go to section                1–0    Page down                 ctrl+d
+  Reading                               Recent messages                !
+    Next section                 tab    Copy the bug report            C
+    Your sources only, on or off   s    Delete the crash report        E
+    Ask again, or load again       r  Movement
+    Search filters                 f    Move up                    k / ↑
+    Add to Planning                a    Move down                  j / ↓
+  Global                                Move left                  h / ←
+    Show keys                      ?    Move right                 l / →
+    Run a command         : / ctrl+k    Jump to top                    g
+    Quit                  Q / ctrl+c    Jump to bottom                 G
+    Back                     q / esc    Page up                   ctrl+u
+    Refresh this view              r    Page down                 ctrl+d
+    Force a full resync            R  Lists
+    Kaeri is for                   I    Open                           ↵
+    Go to section                1–0    Play next unwatched        space
+    Search                         /    Set list status                a
 
 ────────────────────────────────────────────────────────────────────────────────
 Reading                                                      ↑↓ page   esc close
@@ -42,17 +42,17 @@ r04 c00-79 fg=rule bg=ground
 r05 c00-01 fg=rule bg=ground
 r05 c02-08 fg=text bg=ground
 r05 c09-37 fg=rule bg=ground
-r05 c38-45 fg=text-dim bg=ground
-r05 c46-70 fg=rule bg=ground
+r05 c38-54 fg=text-dim bg=ground
+r05 c55-70 fg=rule bg=ground
 r05 c71-71 fg=text bg=ground
 r05 c72-79 fg=rule bg=ground
 r06 c00-01 fg=rule bg=ground
-r06 c02-25 fg=text-dim bg=ground
-r06 c26-32 fg=rule bg=ground
+r06 c02-15 fg=text-dim bg=ground
+r06 c16-32 fg=rule bg=ground
 r06 c33-35 fg=text bg=ground
 r06 c36-37 fg=rule bg=ground
-r06 c38-54 fg=text-dim bg=ground
-r06 c55-70 fg=rule bg=ground
+r06 c38-58 fg=text-dim bg=ground
+r06 c59-70 fg=rule bg=ground
 r06 c71-71 fg=text bg=ground
 r06 c72-79 fg=rule bg=ground
 r07 c00-01 fg=rule bg=ground
@@ -60,122 +60,120 @@ r07 c02-31 fg=text-dim bg=ground
 r07 c32-34 fg=rule bg=ground
 r07 c35-35 fg=text bg=ground
 r07 c36-37 fg=rule bg=ground
-r07 c38-58 fg=text-dim bg=ground
-r07 c59-70 fg=rule bg=ground
+r07 c38-62 fg=text-dim bg=ground
+r07 c63-70 fg=rule bg=ground
 r07 c71-71 fg=text bg=ground
 r07 c72-79 fg=rule bg=ground
 r08 c00-01 fg=rule bg=ground
-r08 c02-21 fg=text-dim bg=ground
-r08 c22-34 fg=rule bg=ground
+r08 c02-27 fg=text-dim bg=ground
+r08 c28-34 fg=rule bg=ground
 r08 c35-35 fg=text bg=ground
 r08 c36-37 fg=rule bg=ground
-r08 c38-62 fg=text-dim bg=ground
-r08 c63-70 fg=rule bg=ground
-r08 c71-71 fg=text bg=ground
-r08 c72-79 fg=rule bg=ground
+r08 c38-45 fg=text bg=ground
+r08 c46-79 fg=rule bg=ground
 r09 c00-01 fg=rule bg=ground
 r09 c02-17 fg=text-dim bg=ground
 r09 c18-34 fg=rule bg=ground
 r09 c35-35 fg=text bg=ground
 r09 c36-37 fg=rule bg=ground
-r09 c38-45 fg=text bg=ground
-r09 c46-79 fg=rule bg=ground
+r09 c38-46 fg=text-dim bg=ground
+r09 c47-66 fg=rule bg=ground
+r09 c67-71 fg=text bg=ground
+r09 c72-79 fg=rule bg=ground
 r10 c00-01 fg=rule bg=ground
-r10 c02-07 fg=text bg=ground
-r10 c08-37 fg=rule bg=ground
-r10 c38-46 fg=text-dim bg=ground
-r10 c47-66 fg=rule bg=ground
+r10 c02-18 fg=text-dim bg=ground
+r10 c19-34 fg=rule bg=ground
+r10 c35-35 fg=text bg=ground
+r10 c36-37 fg=rule bg=ground
+r10 c38-48 fg=text-dim bg=ground
+r10 c49-66 fg=rule bg=ground
 r10 c67-71 fg=text bg=ground
 r10 c72-79 fg=rule bg=ground
 r11 c00-01 fg=rule bg=ground
-r11 c02-12 fg=text-dim bg=ground
-r11 c13-34 fg=rule bg=ground
-r11 c35-35 fg=text bg=ground
-r11 c36-37 fg=rule bg=ground
+r11 c02-07 fg=text bg=ground
+r11 c08-37 fg=rule bg=ground
 r11 c38-48 fg=text-dim bg=ground
 r11 c49-66 fg=rule bg=ground
 r11 c67-71 fg=text bg=ground
 r11 c72-79 fg=rule bg=ground
 r12 c00-01 fg=rule bg=ground
-r12 c02-16 fg=text-dim bg=ground
-r12 c17-25 fg=rule bg=ground
-r12 c26-35 fg=text bg=ground
+r12 c02-12 fg=text-dim bg=ground
+r12 c13-34 fg=rule bg=ground
+r12 c35-35 fg=text bg=ground
 r12 c36-37 fg=rule bg=ground
-r12 c38-48 fg=text-dim bg=ground
-r12 c49-66 fg=rule bg=ground
+r12 c38-49 fg=text-dim bg=ground
+r12 c50-66 fg=rule bg=ground
 r12 c67-71 fg=text bg=ground
 r12 c72-79 fg=rule bg=ground
 r13 c00-01 fg=rule bg=ground
-r13 c02-07 fg=text-dim bg=ground
-r13 c08-25 fg=rule bg=ground
+r13 c02-16 fg=text-dim bg=ground
+r13 c17-25 fg=rule bg=ground
 r13 c26-35 fg=text bg=ground
 r13 c36-37 fg=rule bg=ground
-r13 c38-49 fg=text-dim bg=ground
-r13 c50-66 fg=rule bg=ground
-r13 c67-71 fg=text bg=ground
+r13 c38-50 fg=text-dim bg=ground
+r13 c51-70 fg=rule bg=ground
+r13 c71-71 fg=text bg=ground
 r13 c72-79 fg=rule bg=ground
 r14 c00-01 fg=rule bg=ground
 r14 c02-07 fg=text-dim bg=ground
-r14 c08-28 fg=rule bg=ground
-r14 c29-35 fg=text bg=ground
+r14 c08-25 fg=rule bg=ground
+r14 c26-35 fg=text bg=ground
 r14 c36-37 fg=rule bg=ground
-r14 c38-50 fg=text-dim bg=ground
-r14 c51-70 fg=rule bg=ground
+r14 c38-53 fg=text-dim bg=ground
+r14 c54-70 fg=rule bg=ground
 r14 c71-71 fg=text bg=ground
 r14 c72-79 fg=rule bg=ground
 r15 c00-01 fg=rule bg=ground
-r15 c02-20 fg=text-dim bg=ground
-r15 c21-32 fg=rule bg=ground
-r15 c33-35 fg=text bg=ground
+r15 c02-07 fg=text-dim bg=ground
+r15 c08-28 fg=rule bg=ground
+r15 c29-35 fg=text bg=ground
 r15 c36-37 fg=rule bg=ground
-r15 c38-53 fg=text-dim bg=ground
-r15 c54-70 fg=rule bg=ground
-r15 c71-71 fg=text bg=ground
+r15 c38-46 fg=text-dim bg=ground
+r15 c47-65 fg=rule bg=ground
+r15 c66-71 fg=text bg=ground
 r15 c72-79 fg=rule bg=ground
 r16 c00-01 fg=rule bg=ground
 r16 c02-20 fg=text-dim bg=ground
 r16 c21-34 fg=rule bg=ground
 r16 c35-35 fg=text bg=ground
 r16 c36-37 fg=rule bg=ground
-r16 c38-52 fg=text-dim bg=ground
-r16 c53-70 fg=rule bg=ground
-r16 c71-71 fg=text bg=ground
+r16 c38-48 fg=text-dim bg=ground
+r16 c49-65 fg=rule bg=ground
+r16 c66-71 fg=text bg=ground
 r16 c72-79 fg=rule bg=ground
 r17 c00-01 fg=rule bg=ground
 r17 c02-22 fg=text-dim bg=ground
 r17 c23-34 fg=rule bg=ground
 r17 c35-35 fg=text bg=ground
 r17 c36-37 fg=rule bg=ground
-r17 c38-59 fg=text-dim bg=ground
-r17 c60-70 fg=rule bg=ground
-r17 c71-71 fg=text bg=ground
-r17 c72-79 fg=rule bg=ground
+r17 c38-42 fg=text bg=ground
+r17 c43-79 fg=rule bg=ground
 r18 c00-01 fg=rule bg=ground
-r18 c02-19 fg=text-dim bg=ground
-r18 c20-34 fg=rule bg=ground
+r18 c02-15 fg=text-dim bg=ground
+r18 c16-34 fg=rule bg=ground
 r18 c35-35 fg=text bg=ground
 r18 c36-37 fg=rule bg=ground
-r18 c38-55 fg=text-dim bg=ground
-r18 c56-70 fg=rule bg=ground
+r18 c38-43 fg=text-dim bg=ground
+r18 c44-70 fg=rule bg=ground
 r18 c71-71 fg=text bg=ground
 r18 c72-79 fg=rule bg=ground
 r19 c00-01 fg=rule bg=ground
-r19 c02-15 fg=text-dim bg=ground
-r19 c16-34 fg=rule bg=ground
-r19 c35-35 fg=text bg=ground
+r19 c02-16 fg=text-dim bg=ground
+r19 c17-32 fg=rule bg=ground
+r19 c33-35 fg=text bg=ground
 r19 c36-37 fg=rule bg=ground
-r19 c38-46 fg=text-dim bg=ground
-r19 c47-65 fg=rule bg=ground
-r19 c66-71 fg=text bg=ground
+r19 c38-58 fg=text-dim bg=ground
+r19 c59-66 fg=rule bg=ground
+r19 c67-71 fg=text bg=ground
 r19 c72-79 fg=rule bg=ground
 r20 c00-01 fg=rule bg=ground
-r20 c02-16 fg=text-dim bg=ground
-r20 c17-32 fg=rule bg=ground
-r20 c33-35 fg=text bg=ground
+r20 c02-09 fg=text-dim bg=ground
+r20 c10-34 fg=rule bg=ground
+r20 c35-35 fg=text bg=ground
 r20 c36-37 fg=rule bg=ground
-r20 c38-48 fg=text-dim bg=ground
-r20 c49-65 fg=rule bg=ground
-r20 c66-71 fg=text bg=ground
+r20 c38-54 fg=text-dim bg=ground
+r20 c55-70 fg=rule bg=ground
+r20 c71-71 fg=text bg=ground
 r20 c72-79 fg=rule bg=ground
 r21 c00-79 fg=rule bg=ground
 r22 c00-79 fg=rule

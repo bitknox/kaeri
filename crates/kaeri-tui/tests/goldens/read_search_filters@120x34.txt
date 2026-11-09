@@ -1,11 +1,11 @@
-Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+Kaeri                                                                                        sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ▸  Home                   │  / Search reading
-  ▤  Calendar               │  filters Manga  ·  your sources only off
-  ▦  Seasonal               │
-▌ /  Search                 │
+▌ /  Search                 │  filters Manga
   ▥  Library                │
   ↓  Downloads              │
+  ◇  Sources                │
+  ◎  Accounts               │
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ▌ Filters
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -38,13 +38,11 @@ r00 c00-04 fg=rule mod=BOLD
 r00 c05-119 fg=rule
 r01 c00-119 fg=rule
 r02 c00-119 fg=rule
-r03 c00-66 fg=rule
-r03 c67-69 fg=rule mod=BOLD
-r03 c70-119 fg=rule
+r03 c00-04 fg=rule
+r03 c05-10 fg=rule mod=BOLD
+r03 c11-119 fg=rule
 r04 c00-119 fg=rule
-r05 c00-04 fg=rule
-r05 c05-10 fg=rule mod=BOLD
-r05 c11-119 fg=rule
+r05 c00-119 fg=rule
 r06 c00-119 fg=rule
 r07 c00-119 fg=rule
 r08 c00-119 fg=rule bg=ground

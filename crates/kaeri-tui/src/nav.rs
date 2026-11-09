@@ -31,6 +31,9 @@ pub enum Section {
     Settings,
     /// Watch parties: the one this device is in, a line to join another, and the last rooms.
     Together,
+    /// Reading's Home, in the rail beside the shows' while Kaeri is for both. It has no jump key:
+    /// the ten keys stay on the ten sections every answer shares.
+    Read,
 }
 
 impl Section {
@@ -65,6 +68,7 @@ impl Section {
             Self::Accounts => t::nav_section_accounts(),
             Self::Settings => t::nav_section_settings(),
             Self::Together => t::tui_together_section(),
+            Self::Read => t::nav_read(),
         })
     }
 
@@ -88,6 +92,7 @@ impl Section {
             Self::Accounts => '◎',
             Self::Settings => '≡', // sliders; the gear draws two cells wide in many fonts
             Self::Together => '⇄', // two ways: everyone's playhead, kept in step
+            Self::Read => '¶',     // a paragraph mark: text to read
         }
     }
 
@@ -581,7 +586,7 @@ mod tests {
     #[test]
     fn every_section_glyph_takes_one_cell_in_any_font() {
         use unicode_width::UnicodeWidthChar;
-        for section in Section::ALL {
+        for section in Section::ALL.into_iter().chain([Section::Read]) {
             let g = section.glyph();
             assert_eq!(g.width(), Some(1), "{section:?}'s {g:?} is one cell");
             let code = g as u32;
@@ -766,7 +771,8 @@ mod tests {
     fn section_marks_are_distinct_and_single_cell() {
         // A duplicate mark would make the collapsed rail ambiguous, and a wide or emoji
         // glyph would shunt the label a column right on that row alone.
-        let mut marks: Vec<char> = Section::ALL.iter().map(|s| s.glyph()).collect();
+        let mut marks: Vec<char> =
+            Section::ALL.iter().chain([&Section::Read]).map(|s| s.glyph()).collect();
         let count = marks.len();
         for mark in &marks {
             assert!(

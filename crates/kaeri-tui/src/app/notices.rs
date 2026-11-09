@@ -258,6 +258,8 @@ impl App {
         }
         self.toasts.retain(|t| t.ttl > 0);
         self.tick_pending_reload();
+        // A placeholder held past its answer gives way on a tick: the cursor stays on its line.
+        self.settle_reading_cursor();
         // The loading pulse rides this tick rather than getting one of its own. The idle ticker
         // already runs at 100 ms and already forces a repaint, so the animation is free — and
         // 10 fps is more than a three-cell wave needs. A dedicated 60 fps ticker would burn a

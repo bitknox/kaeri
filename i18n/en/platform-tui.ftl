@@ -56,11 +56,6 @@ tui-together-not-a-link = That is not a party link or code.
 # @only tui
 tui-together-recent-alone = Episode { $episode } · { $when }
 
-# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
-# @max 40
-# @only tui
-tui-medium-read-title = Reading is in the apps
-
 # Line under the title of that page.
 # @only tui
 tui-medium-read-line = The terminal has no reader. Manga, webtoons and light novels open in the { -app-name } apps, and sync keeps your progress in step.

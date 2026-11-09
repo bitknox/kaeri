@@ -117,7 +117,10 @@ pub fn render(frame: &mut TFrame<'_>, app: &App) -> FrameReport {
 
     if geometry.has_rail() {
         let counts = app.rail_counts();
+        let sections = app.rail_sections();
         Rail::new(&app.palette, geometry.rail_mode, app.nav.section(), app.nav.focus())
+            .sections(&sections)
+            .watch_home(app.both())
             .counts(&counts)
             .render(geometry.rail, buf);
         Divider::new(&app.palette).render(geometry.divider, buf);
@@ -158,7 +161,7 @@ fn render_stage(buf: &mut Buffer, app: &App, area: Rect) -> Option<usize> {
         StageView::StoreMembers(id) => render_store_members(buf, app, inner, id),
         StageView::Devices => render_devices(buf, app, inner),
         StageView::Section(section) => match section {
-            Section::Home | Section::Search if app.reading_shown() => {
+            Section::Home | Section::Search | Section::Read if app.reading_section() => {
                 reading::render_reading(buf, app, inner)
             }
             Section::Home | Section::Seasonal | Section::Search | Section::Calendar => {
@@ -170,6 +173,8 @@ fn render_stage(buf: &mut Buffer, app: &App, area: Rect) -> Option<usize> {
             Section::Library => render_library(buf, app, inner),
             Section::Settings => render_settings(buf, app, inner),
             Section::Together => render_together(buf, app, inner),
+            // Only in the rail while Kaeri is for both, where it is reading's.
+            Section::Read => {}
         },
     }
     None

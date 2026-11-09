@@ -34,24 +34,24 @@ pub(super) fn render_reading(buf: &mut Buffer, app: &App, area: Rect) {
         return;
     }
     match app.nav.section() {
-        Section::Home => render_home(buf, app, area),
-        _ => render_search(buf, app, area),
+        Section::Search => render_search(buf, app, area),
+        _ => render_home(buf, app, area),
     }
 }
 
 /// Home: the person's shelves and the discovery rows, then the lines that say reading itself is in
 /// the apps.
 fn render_home(buf: &mut Buffer, app: &App, area: Rect) {
-    if app.reading.home.is_none() {
-        if app.read_waited() {
-            render_loading(buf, app, area);
-        }
-        return;
+    // Nothing until it has waited, then the loading line, held 0.3 s once drawn.
+    match app.read_home_loading() {
+        Some(true) => return render_loading(buf, app, area),
+        Some(false) => return,
+        None => {}
     }
     let area = Rect { width: area.width.min(HOME_WIDTH), ..area };
     let width = area.width.saturating_sub(3) as usize;
-    let selected = app.cursors.home.selected;
-    let waited = app.read_waited();
+    let cursor = app.cursors.section(app.nav.section());
+    let selected = cursor.selected;
     let mut rows: Vec<ObiRow> = Vec::new();
     let mut drawn: Vec<(usize, Option<usize>)> = Vec::new();
     let mut head: Option<usize> = None;
@@ -67,22 +67,36 @@ fn render_home(buf: &mut Buffer, app: &App, area: Rect) {
                 };
                 rows.push(ObiRow::heading(text).ruled());
             }
-            ReadLine::Quiet(text) | ReadLine::Alert(text) => {
+            ReadLine::Quiet(text) | ReadLine::Said(text) => {
                 for text in wrap(&text, width, 3) {
                     rows.push(ObiRow::new(text).muted(true));
                 }
             }
+            // Home's failure, with the key that loads it again.
+            ReadLine::Failed { reason, .. } => {
+                let retry =
+                    format!("{} {}", app.key_for(Action::Refresh), t::tui_read_try_again()); // i18n-skip
+                rows.push(
+                    ObiRow::new(reason).mark(glyph::STATE_DEGRADED).trailing(retry).muted(true),
+                );
+            }
             // Held at the size the titles will take, so nothing below moves when they come.
-            ReadLine::Placeholder => {
+            ReadLine::Placeholder { shown } => {
                 for share in [60, 44] {
                     let text =
-                        if waited { plate_row(width * share / 100) } else { String::new() };
+                        if shown { plate_row(width * share / 100) } else { String::new() };
                     rows.push(ObiRow::new(text).muted(true));
                 }
             }
             ReadLine::Work { title, facts, fresh, .. } => {
                 drawn.push((rows.len(), head.take()));
                 let mut row = ObiRow::new(title).selected(n == selected).fresh(fresh);
+                // A new chapter says so with a mark as well as the colour, which NO_COLOR drops.
+                let facts = if fresh && !facts.is_empty() {
+                    format!("{} {facts}", glyph::STATE_READY) // i18n-skip
+                } else {
+                    facts
+                };
                 if !facts.is_empty() {
                     row = row.trailing(truncate(&facts, width / 2));
                 }
@@ -110,8 +124,7 @@ fn render_home(buf: &mut Buffer, app: &App, area: Rect) {
         ObiRow::new(t::tui_medium_read_change(&app.key_for(Action::ChooseMedium))).muted(true),
     );
 
-    let start =
-        window(&drawn, selected, app.cursors.home.offset, rows.len(), area.height as usize);
+    let start = window(&drawn, selected, cursor.offset, rows.len(), area.height as usize);
     let shown: Vec<ObiRow> = rows.into_iter().skip(start).collect();
     ObiList::new(&shown, &app.palette)
         .focused(app.nav.focus() == Focus::Stage)
@@ -202,11 +215,14 @@ fn render_search(buf: &mut Buffer, app: &App, area: Rect) {
             x += text.cells() as u16;
         };
         put(filters, style(Role::TextDim));
-        put("  ·  ".to_string(), style(Role::Rule)); // i18n-skip
-        put(format!("{} ", t::tui_read_sources_only()), style(Role::TextDim)); // i18n-skip
-        let state =
-            if app.reading.sources_only() { t::tui_read_on() } else { t::tui_read_off() };
-        put(state, bold(Role::Text));
+        // Your sources only once words are typed: browsing with none is AniList's alone.
+        if !text.trim().is_empty() {
+            put("  ·  ".to_string(), style(Role::Rule)); // i18n-skip
+            put(format!("{} ", t::tui_read_sources_only()), style(Role::TextDim)); // i18n-skip
+            let state =
+                if app.reading.sources_only() { t::tui_read_on() } else { t::tui_read_off() };
+            put(state, bold(Role::Text));
+        }
         y += 1;
     }
     y += 1;
@@ -220,8 +236,19 @@ fn render_search(buf: &mut Buffer, app: &App, area: Rect) {
     let title_w: usize = if wide { 36 } else { 32 };
     let facts_x = title_x + title_w as u16;
     let facts_w: usize = if wide { 32 } else { room.saturating_sub(title_w + 2) };
-    let waited = app.read_waited();
     let frame = app.pulse_frame();
+    // With motion off the spinner would hold one braille cell, which reads as a stray mark: the
+    // words alone say it, ending in their ellipsis.
+    let spins = app.settings.motion;
+    let asking = |name: &str, room: usize| {
+        let row = Row::default();
+        let row = if spins {
+            row.run(title_x, glyph::spinner(frame).to_string(), style(Role::State))
+        } else {
+            row
+        };
+        row.run(title_x + 2, truncate(&t::read_search_asking(name), room), style(Role::TextDim))
+    };
     let selected = app.cursors.search.selected;
 
     let mut rows: Vec<Row> = Vec::new();
@@ -242,26 +269,22 @@ fn render_search(buf: &mut Buffer, app: &App, area: Rect) {
                 head = Some(rows.len());
                 rows.push(Row::default().run(x0, text, style(Role::TextDim)));
             }
-            ReadLine::AnilistAsking => {
-                let row = if waited {
-                    Row::default()
-                        .run(title_x, glyph::spinner(frame).to_string(), style(Role::State))
-                        .run(
-                            title_x + 2,
-                            t::read_search_asking(&t::tui_read_anilist()),
-                            style(Role::TextDim),
-                        )
+            ReadLine::AnilistAsking { shown } => {
+                let row = if shown {
+                    asking(&t::tui_read_anilist(), room.saturating_sub(4))
                 } else {
                     Row::default()
                 };
                 rows.push(row);
             }
-            ReadLine::Alert(text) => {
-                rows.push(Row::default().run(x0, truncate(&text, room), style(Role::Alert)));
-            }
             ReadLine::Quiet(text) => {
                 for text in wrap(&text, room, 3) {
                     rows.push(Row::default().run(x0, text, style(Role::TextDim)));
+                }
+            }
+            ReadLine::Said(text) => {
+                for text in wrap(&text, room, 3) {
+                    rows.push(Row::default().run(x0, text, style(Role::Text)));
                 }
             }
             ReadLine::Work { title, facts, joined, .. } => {
@@ -310,42 +333,62 @@ fn render_search(buf: &mut Buffer, app: &App, area: Rect) {
                 if head.is_none() {
                     head = Some(rows.len());
                 }
-                let mut row = Row::default().run(x0, truncate(&name, room), bold(Role::Text));
+                // The name gives way first, so the kind beside it always shows.
+                let kind_w = kind.as_ref().map_or(0, |kind| kind.cells() + 2);
+                let name = truncate(&name, room.saturating_sub(kind_w));
+                let mut row = Row::default().run(x0, name.clone(), bold(Role::Text));
                 if let Some(kind) = kind {
                     row = row.run(x0 + name.cells() as u16 + 2, kind, style(Role::TextDim));
                 }
                 rows.push(row);
             }
-            ReadLine::Asking { name } => {
-                let row = if waited {
-                    Row::default()
-                        .run(title_x, glyph::spinner(frame).to_string(), style(Role::State))
-                        .run(
-                            title_x + 2,
-                            truncate(&t::read_search_asking(&name), room.saturating_sub(4)),
-                            style(Role::TextDim),
-                        )
-                } else {
-                    Row::default()
-                };
+            ReadLine::Asking { name, shown } => {
+                let row =
+                    if shown { asking(&name, room.saturating_sub(4)) } else { Row::default() };
                 rows.push(row);
             }
-            ReadLine::SourceFailed { reason, .. } => {
+            // The whole reason, wrapped under the glyph, and the key after its last line, or on
+            // a line of its own when the last line has no room for it. The first line is the one
+            // the cursor lands on.
+            ReadLine::Failed { reason, .. } => {
                 let key = app.key_for(Action::Refresh);
-                let retry = format!("{key} {}", t::tui_read_try_again()); // i18n-skip
-                let reason_w = room.saturating_sub(4 + retry.cells() + 3);
-                let reason = truncate(&reason, reason_w);
-                let retry_x = title_x + 2 + reason.cells() as u16 + 3;
-                let row = Row::default()
-                    .run(title_x, glyph::STATE_DEGRADED.to_string(), style(Role::Alert))
-                    .run(title_x + 2, reason, style(Role::Text))
-                    .run(retry_x, key.clone(), bold(Role::Text))
-                    .run(
-                        retry_x + key.cells() as u16 + 1,
-                        t::tui_read_try_again(),
+                let again = t::tui_read_try_again();
+                let retry_w = key.cells() + 1 + again.cells();
+                let text_x = title_x + 2;
+                let text_w = room.saturating_sub(4);
+                let lines = wrap(&reason, text_w, 4);
+                let last = lines.len().saturating_sub(1);
+                let fits = lines.last().is_none_or(|line| line.cells() + 3 + retry_w <= text_w);
+                let with_key = |row: Row, x: u16| {
+                    row.run(x, key.clone(), bold(Role::Text)).run(
+                        x + key.cells() as u16 + 1,
+                        again.clone(),
                         style(Role::TextDim),
-                    );
-                item(&mut rows, &mut drawn, &mut head, row);
+                    )
+                };
+                for (i, text) in lines.into_iter().enumerate() {
+                    let mut row = Row::default();
+                    if i == 0 {
+                        row = row.run(
+                            title_x,
+                            glyph::STATE_DEGRADED.to_string(),
+                            style(Role::Alert),
+                        );
+                    }
+                    let end = text_x + text.cells() as u16 + 3;
+                    row = row.run(text_x, text, style(Role::Text));
+                    if i == last && fits {
+                        row = with_key(row, end);
+                    }
+                    if i == 0 {
+                        item(&mut rows, &mut drawn, &mut head, row);
+                    } else {
+                        rows.push(row);
+                    }
+                }
+                if !fits {
+                    rows.push(with_key(Row::default(), text_x));
+                }
             }
             ReadLine::ShowMore { n, .. } => {
                 let row = Row::default().run(

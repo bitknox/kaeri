@@ -188,7 +188,15 @@ impl App {
             // Already on Search, `/` means "let me type" rather than "start again": it returns
             // to the field with the query and results as they were, without asking again.
             Action::FocusSearch if self.on_search_root() => self.focus_search_field(),
-            Action::FocusSearch => return self.go_to_section(Section::Search),
+            Action::FocusSearch => {
+                // While Kaeri is for both, Search turns to whichever Home it is opened from.
+                match self.nav.section() {
+                    Section::Read => self.reading.side = true,
+                    Section::Home => self.reading.side = false,
+                    _ => {}
+                }
+                return self.go_to_section(Section::Search);
+            }
             // Every vertical key, for whatever has the keyboard: the rail when it has focus,
             // otherwise the rows of the screen on top. See `move_cursor`.
             Action::Up
@@ -355,7 +363,10 @@ impl App {
 
     /// A section's number, counted from one: that section, at the top of its own view.
     fn jump_section(&mut self, n: u8) -> Option<Command> {
-        if let Some(section) = Section::from_index(usize::from(n).saturating_sub(1)) {
+        // A section the rail leaves out for what Kaeri is for has no screen to jump to.
+        if let Some(section) = Section::from_index(usize::from(n).saturating_sub(1))
+            && self.in_rail(section)
+        {
             return self.go_to_section(section);
         }
         None

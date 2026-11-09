@@ -1,20 +1,20 @@
-Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+Kaeri                                                sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────
  ▸ │  / lantern
- ▤ │
- ▦ │  AniList · 4 series
-▌/ │  ▌ Lantern Street Notes            Light novel · Japan
- ▥ │      in Home library
- ↓ │    Lantern Street Notes            Manga · Japan
- ◇ │    The Lantern Keeper's Apprentice Manga · Japan
- ◎ │    Lanterns Upriver                Webtoon · Korea
- ≡ │
- ⇄ │  From your sources
+▌/ │
+ ▥ │  4 series from AniList
+ ↓ │  ▌ Lantern Street Notes            Light novel · Japan
+ ◇ │      In Home library
+ ◎ │    Lantern Street Notes            Manga · Japan
+ ≡ │    The Lantern Keeper's Apprentice Manga · Japan
+   │    Lanterns Upriver                Webtoon · Korea
+   │
+   │  From your sources
    │  Home library  Server
-   │    Lantern Street Notes, Side Sto… 2 volumes
-   │    Paper Lantern Recipes
-   │  Folders  Folder
-   │    Lantern Festival Sketchbook     1 file · CBZ
+   │    Lantern Street Notes, Side Sto… Light novel · 2 volumes
+   │    Paper Lantern Recipes           Manga
+   │  Folders
+   │    Lantern Festival Sketchbook     Manga · 1 file · CBZ
    │  Northwind  Plugin
    │    ▲ Northwind didn't answer. No answer in 15 s.   r try again
    │
@@ -25,7 +25,7 @@ Reading                           ↵ open   tab section   s sources only   ? ke
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
-r00 c55-63 fg=state
+r00 c53-63 fg=state
 r00 c64-65 fg=text-dim
 r00 c66-66 fg=rule
 r00 c67-68 fg=text-dim
@@ -35,13 +35,13 @@ r02 c01-01 fg=text-dim
 r02 c03-03 fg=rule
 r02 c06-06 fg=obi
 r02 c08-14 fg=text mod=BOLD
-r03 c01-01 fg=text-dim
+r03 c00-00 fg=text-dim
+r03 c01-01 fg=text mod=BOLD
 r03 c03-03 fg=rule
 r04 c01-01 fg=text-dim
 r04 c03-03 fg=rule
-r04 c06-23 fg=text-dim
-r05 c00-00 fg=text-dim
-r05 c01-01 fg=text mod=BOLD
+r04 c06-26 fg=text-dim
+r05 c01-01 fg=text-dim
 r05 c03-03 fg=rule
 r05 c06-06 fg=obi
 r05 c08-27 fg=text mod=BOLD
@@ -57,13 +57,10 @@ r08 c01-01 fg=text-dim
 r08 c03-03 fg=rule
 r08 c08-38 fg=text
 r08 c40-52 fg=text-dim
-r09 c01-01 fg=text-dim
 r09 c03-03 fg=rule
 r09 c08-23 fg=text
 r09 c40-54 fg=text-dim
-r10 c01-01 fg=text-dim
 r10 c03-03 fg=rule
-r11 c01-01 fg=text-dim
 r11 c03-03 fg=rule
 r11 c06-22 fg=text mod=BOLD
 r12 c03-03 fg=rule
@@ -71,15 +68,15 @@ r12 c06-17 fg=text mod=BOLD
 r12 c20-25 fg=text-dim
 r13 c03-03 fg=rule
 r13 c08-38 fg=text
-r13 c40-48 fg=text-dim
+r13 c40-62 fg=text-dim
 r14 c03-03 fg=rule
 r14 c08-28 fg=text
+r14 c40-44 fg=text-dim
 r15 c03-03 fg=rule
 r15 c06-12 fg=text mod=BOLD
-r15 c15-20 fg=text-dim
 r16 c03-03 fg=rule
 r16 c08-34 fg=text
-r16 c40-51 fg=text-dim
+r16 c40-59 fg=text-dim
 r17 c03-03 fg=rule
 r17 c06-14 fg=text mod=BOLD
 r17 c17-22 fg=text-dim

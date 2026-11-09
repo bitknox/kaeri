@@ -481,13 +481,15 @@ impl App {
     /// Clamps rather than wraps: a wrapping rail means holding ↓ cycles forever with no sense of
     /// where you are, and eight sections is short enough that hitting the end is informative.
     pub(super) fn step_section(&mut self, delta: isize) -> Option<Command> {
-        let current = self.nav.section().index() as isize;
-        let last = (Section::ALL.len() - 1) as isize;
+        let sections = self.rail_sections();
+        let current =
+            sections.iter().position(|s| *s == self.nav.section()).unwrap_or(0) as isize;
+        let last = (sections.len() - 1) as isize;
         let next = (current + delta).clamp(0, last) as usize;
         if next == current as usize {
             return None;
         }
-        let section = Section::from_index(next)?;
+        let section = *sections.get(next)?;
         // Move now, fetch shortly. Holding the arrow key sweeps the rail at keyboard-repeat speed,
         // and firing a request per step is how a 30-per-minute budget disappears in two seconds.
         self.nav.go_to(section);

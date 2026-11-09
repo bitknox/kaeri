@@ -26,7 +26,19 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
     // used to take its name from the first source in the order and its state from whether
     // torrents were switched on, so a session that plugins were serving read as broken in the
     // alert colour. Off is a choice and is said quietly; only a source that is failing alerts.
-    for kaeri_model::sources::SourceChip { id: source, state } in app.source_states() {
+    // While Kaeri is for reading alone, the shows' sources say nothing about it: one chip says
+    // how many of the person's book sources are on.
+    if app.reading_only() {
+        let on = app.read_sources_on();
+        let (mark, role) = if on > 0 {
+            (glyph::STATE_READY, Role::State)
+        } else {
+            (glyph::STATE_OFF, Role::TextDim)
+        };
+        chips.push((t::tui_read_header_sources(&mark.to_string(), on as i64), role));
+    }
+    let shows = if app.reading_only() { Vec::new() } else { app.source_states() };
+    for kaeri_model::sources::SourceChip { id: source, state } in shows {
         use kaeri_model::sources::SourceState as S;
         let (mark, role) = match state {
             S::Ready => (glyph::STATE_READY, Role::State),
@@ -71,7 +83,7 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
     let title = if !named {
         "Kaeri".to_owned() // i18n-skip: the product name
     } else {
-        t::chrome_header_section(app.nav.section().label())
+        t::chrome_header_section(app.section_label(app.nav.section()))
     };
     Header::new(&app.palette, &title).chips(&chips).render(geometry.header, buf);
 }

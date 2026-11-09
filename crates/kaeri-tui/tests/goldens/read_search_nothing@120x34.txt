@@ -1,15 +1,15 @@
-Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+Kaeri                                                                                        sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ▸  Home                   │  / quillmarsh▏
-  ▤  Calendar               │  filters none  ·  your sources only off
-  ▦  Seasonal               │
-▌ /  Search                 │  Nothing found for quillmarsh
-  ▥  Library                │  Try other words, or a title in another language.
-  ↓  Downloads              │
-  ◇  Sources                │  Nothing in your sources either.
+▌ /  Search                 │  filters none  ·  your sources only off
+  ▥  Library                │
+  ↓  Downloads              │  Nothing found for quillmarsh
+  ◇  Sources                │  Try other words, or a title in another language.
   ◎  Accounts               │
-  ≡  Settings               │
-  ⇄  Together               │
+  ≡  Settings               │  Nothing in your sources either.
+                            │
+                            │
+                            │
                             │
                             │
                             │
@@ -31,11 +31,11 @@ Kaeri                                                                           
                             │
                             │
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-Reading · 4 sources                                                                 ↵ search   ctrl+f filters   esc back
+Reading · 3 sources                                                                 ↵ search   ctrl+f filters   esc back
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
-r00 c95-103 fg=state
+r00 c93-103 fg=state
 r00 c104-105 fg=text-dim
 r00 c106-106 fg=rule
 r00 c107-108 fg=text-dim
@@ -47,40 +47,34 @@ r02 c28-28 fg=rule
 r02 c31-31 fg=obi
 r02 c33-42 fg=text mod=BOLD
 r02 c43-43 fg=obi
-r03 c02-02 fg=text-dim
-r03 c05-12 fg=text-dim
+r03 c00-00 fg=text-dim
+r03 c02-02 fg=text
+r03 c05-10 fg=text mod=BOLD
 r03 c28-28 fg=rule
 r03 c31-42 fg=text-dim
 r03 c43-47 fg=rule
 r03 c48-65 fg=text-dim
 r03 c66-68 fg=text mod=BOLD
 r04 c02-02 fg=text-dim
-r04 c05-12 fg=text-dim
+r04 c05-11 fg=text-dim
 r04 c28-28 fg=rule
-r05 c00-00 fg=text-dim
-r05 c02-02 fg=text
-r05 c05-10 fg=text mod=BOLD
+r05 c02-02 fg=text-dim
+r05 c05-13 fg=text-dim
 r05 c28-28 fg=rule
-r05 c31-58 fg=text-dim
+r05 c31-58 fg=text
 r06 c02-02 fg=text-dim
 r06 c05-11 fg=text-dim
 r06 c28-28 fg=rule
 r06 c31-78 fg=text-dim
 r07 c02-02 fg=text-dim
-r07 c05-13 fg=text-dim
+r07 c05-12 fg=text-dim
 r07 c28-28 fg=rule
 r08 c02-02 fg=text-dim
-r08 c05-11 fg=text-dim
+r08 c05-12 fg=text-dim
 r08 c28-28 fg=rule
 r08 c31-61 fg=text-dim
-r09 c02-02 fg=text-dim
-r09 c05-12 fg=text-dim
 r09 c28-28 fg=rule
-r10 c02-02 fg=text-dim
-r10 c05-12 fg=text-dim
 r10 c28-28 fg=rule
-r11 c02-02 fg=text-dim
-r11 c05-12 fg=text-dim
 r11 c28-28 fg=rule
 r12 c28-28 fg=rule
 r13 c28-28 fg=rule

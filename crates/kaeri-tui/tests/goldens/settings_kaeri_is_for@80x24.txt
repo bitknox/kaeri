@@ -3,14 +3,14 @@ Kaeri                                                  plugins ●  ·  anilist 
  ▸ │    Kaeri is for                Watching and reading  I to change
  ▤ │
  ▦ │
- / │  Appearance  ───────────────────────────────────────────────────────────
- ▥ │  ▌ Theme                       Adaptive
- ↓ │    Motion                      On
- ◇ │    Titles                      AniList's choice
- ◎ │    Play trailers               Always
-▌≡ │
- ⇄ │  Playback  ─────────────────────────────────────────────────────────────
-   │    Audio                       Subbed
+ ¶ │  Appearance  ───────────────────────────────────────────────────────────
+ / │  ▌ Theme                       Adaptive
+ ▥ │    Motion                      On
+ ↓ │    Titles                      AniList's choice
+ ◇ │    Play trailers               Always
+ ◎ │
+▌≡ │  Playback  ─────────────────────────────────────────────────────────────
+ ⇄ │    Audio                       Subbed
    │    Quality                     1080p
    │    Subtitles                   eng
    │    Counts as watched at        85%
@@ -61,13 +61,14 @@ r09 c01-01 fg=text-dim
 r09 c03-03 fg=rule
 r09 c08-20 fg=text-dim
 r09 c36-41 fg=text
-r10 c00-00 fg=text-dim
-r10 c01-01 fg=text mod=BOLD
+r10 c01-01 fg=text-dim
 r10 c03-03 fg=rule
-r11 c01-01 fg=text-dim
+r11 c00-00 fg=text-dim
+r11 c01-01 fg=text mod=BOLD
 r11 c03-03 fg=rule
 r11 c06-13 fg=text
 r11 c16-76 fg=rule
+r12 c01-01 fg=text-dim
 r12 c03-03 fg=rule
 r12 c08-12 fg=text-dim
 r12 c36-41 fg=text

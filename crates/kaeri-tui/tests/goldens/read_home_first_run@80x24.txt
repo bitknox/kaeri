@@ -1,31 +1,31 @@
-Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+Kaeri                                                sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────
 ▌▸ │    Trending manga  ─────────────────────────────────────────────────────
- ▤ │  ▌ Iron Kite Brigade                                   Manga · Releasing
- ▦ │    Saltwind Diary                                      Manga · Releasing
- / │    Moss and Iron                                       Manga · Releasing
- ▥ │    Foxfire Ledger                                      Manga · Releasing
- ↓ │    Second Floor Swordsmith                             Manga · Releasing
- ◇ │    View all
- ◎ │
- ≡ │    Trending webtoons  ──────────────────────────────────────────────────
- ⇄ │    Rooftop Herbalist                                 Webtoon · Releasing
-   │    Wren and the Iron Bridge                          Webtoon · Releasing
-   │    Seventh Platform Bookshop                         Webtoon · Releasing
-   │    Sandglass Atelier                                 Webtoon · Releasing
+ / │  ▌ Iron Kite Brigade                                   Japan · Releasing
+ ▥ │    Saltwind Diary                                      Japan · Releasing
+ ↓ │    Moss and Iron                                       Japan · Releasing
+ ◇ │    Foxfire Ledger                                      Japan · Releasing
+ ◎ │    Second Floor Swordsmith                             Japan · Releasing
+ ≡ │    View all
+   │
+   │    Trending webtoons  ──────────────────────────────────────────────────
+   │    Rooftop Herbalist                                   Korea · Releasing
+   │    Wren and the Iron Bridge                            Korea · Releasing
+   │    Seventh Platform Bookshop                           Korea · Releasing
+   │    Sandglass Atelier                                   Korea · Releasing
    │    View all
    │
    │    Trending light novels  ──────────────────────────────────────────────
-   │    Tidebell Cartographer                         Light novel · Releasing
-   │    Snowfield Grimoire                            Light novel · Releasing
-   │    Letters on the Wind                           Light novel · Releasing
+   │    Tidebell Cartographer                               Japan · Releasing
+   │    Snowfield Grimoire                                  Japan · Releasing
+   │    Letters on the Wind                                 Japan · Releasing
    │    View all
 ────────────────────────────────────────────────────────────────────────────────
 Reading                                            ↵ open   tab section   ? keys
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
-r00 c55-63 fg=state
+r00 c53-63 fg=state
 r00 c64-65 fg=text-dim
 r00 c66-66 fg=rule
 r00 c67-68 fg=text-dim
@@ -60,25 +60,22 @@ r07 c60-76 fg=text-dim
 r08 c01-01 fg=text-dim
 r08 c03-03 fg=rule
 r08 c08-15 fg=text-dim
-r09 c01-01 fg=text-dim
 r09 c03-03 fg=rule
-r10 c01-01 fg=text-dim
 r10 c03-03 fg=rule
 r10 c08-24 fg=text-dim
 r10 c27-76 fg=rule
-r11 c01-01 fg=text-dim
 r11 c03-03 fg=rule
 r11 c08-24 fg=text-dim
-r11 c58-76 fg=text-dim
+r11 c60-76 fg=text-dim
 r12 c03-03 fg=rule
 r12 c08-31 fg=text-dim
-r12 c58-76 fg=text-dim
+r12 c60-76 fg=text-dim
 r13 c03-03 fg=rule
 r13 c08-32 fg=text-dim
-r13 c58-76 fg=text-dim
+r13 c60-76 fg=text-dim
 r14 c03-03 fg=rule
 r14 c08-24 fg=text-dim
-r14 c58-76 fg=text-dim
+r14 c60-76 fg=text-dim
 r15 c03-03 fg=rule
 r15 c08-15 fg=text-dim
 r16 c03-03 fg=rule
@@ -87,13 +84,13 @@ r17 c08-28 fg=text-dim
 r17 c31-76 fg=rule
 r18 c03-03 fg=rule
 r18 c08-28 fg=text-dim
-r18 c54-76 fg=text-dim
+r18 c60-76 fg=text-dim
 r19 c03-03 fg=rule
 r19 c08-25 fg=text-dim
-r19 c54-76 fg=text-dim
+r19 c60-76 fg=text-dim
 r20 c03-03 fg=rule
 r20 c08-26 fg=text-dim
-r20 c54-76 fg=text-dim
+r20 c60-76 fg=text-dim
 r21 c03-03 fg=rule
 r21 c08-15 fg=text-dim
 r22 c00-79 fg=rule

@@ -1,15 +1,15 @@
-Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+Kaeri                                                sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────
  ▸ │  / lantern
- ▤ │
- ▦ │  From your sources
-▌/ │  Home library  Server
- ▥ │  ▌ Lantern Street Notes, Side Sto… 2 volumes
- ↓ │    Paper Lantern Recipes
- ◇ │  Folders  Folder
- ◎ │    Lantern Festival Sketchbook     1 file · CBZ
- ≡ │  Northwind  Plugin
- ⇄ │    ▲ Northwind didn't answer. You're offline. Downloaded c…   r try again
+▌/ │
+ ▥ │  From your sources
+ ↓ │  Home library  Server
+ ◇ │  ▌ Lantern Street Notes, Side Sto… Light novel · 2 volumes
+ ◎ │    Paper Lantern Recipes           Manga
+ ≡ │  Folders
+   │    Lantern Festival Sketchbook     Manga · 1 file · CBZ
+   │  Northwind  Plugin
+   │    ▲ Northwind needs a connection.   r try again
    │
    │  Nothing found in Demo.
    │
@@ -25,7 +25,7 @@ Reading                                         ↵ open   s sources only   ? ke
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
-r00 c55-63 fg=state
+r00 c53-63 fg=state
 r00 c64-65 fg=text-dim
 r00 c66-66 fg=rule
 r00 c67-68 fg=text-dim
@@ -35,13 +35,13 @@ r02 c01-01 fg=text-dim
 r02 c03-03 fg=rule
 r02 c06-06 fg=obi
 r02 c08-14 fg=text mod=BOLD
-r03 c01-01 fg=text-dim
+r03 c00-00 fg=text-dim
+r03 c01-01 fg=text mod=BOLD
 r03 c03-03 fg=rule
 r04 c01-01 fg=text-dim
 r04 c03-03 fg=rule
 r04 c06-22 fg=text mod=BOLD
-r05 c00-00 fg=text-dim
-r05 c01-01 fg=text mod=BOLD
+r05 c01-01 fg=text-dim
 r05 c03-03 fg=rule
 r05 c06-17 fg=text mod=BOLD
 r05 c20-25 fg=text-dim
@@ -49,28 +49,25 @@ r06 c01-01 fg=text-dim
 r06 c03-03 fg=rule
 r06 c06-06 fg=obi
 r06 c08-38 fg=text mod=BOLD
-r06 c40-48 fg=text-dim
+r06 c40-62 fg=text-dim
 r07 c01-01 fg=text-dim
 r07 c03-03 fg=rule
 r07 c08-28 fg=text
+r07 c40-44 fg=text-dim
 r08 c01-01 fg=text-dim
 r08 c03-03 fg=rule
 r08 c06-12 fg=text mod=BOLD
-r08 c15-20 fg=text-dim
-r09 c01-01 fg=text-dim
 r09 c03-03 fg=rule
 r09 c08-34 fg=text
-r09 c40-51 fg=text-dim
-r10 c01-01 fg=text-dim
+r09 c40-59 fg=text-dim
 r10 c03-03 fg=rule
 r10 c06-14 fg=text mod=BOLD
 r10 c17-22 fg=text-dim
-r11 c01-01 fg=text-dim
 r11 c03-03 fg=rule
 r11 c08-08 fg=alert
-r11 c10-63 fg=text
-r11 c67-67 fg=text mod=BOLD
-r11 c69-77 fg=text-dim
+r11 c10-38 fg=text
+r11 c42-42 fg=text mod=BOLD
+r11 c44-52 fg=text-dim
 r12 c03-03 fg=rule
 r13 c03-03 fg=rule
 r13 c06-27 fg=text-dim

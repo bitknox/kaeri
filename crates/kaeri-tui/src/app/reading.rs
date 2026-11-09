@@ -7,7 +7,7 @@
 
 use std::{
     collections::{HashMap, HashSet},
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 use kaeri_core::books::WorkId;
@@ -16,9 +16,10 @@ use kaeri_model::{
     book_sources::{BookSourceCommand, BookSourcesView},
     command::Command,
     reading::{
-        LibrarySegmentRead, ReadAnilistState, ReadHomeEnd, ReadSearchQuery, ReadSourceKind,
-        ReadSourceSearch, ReadSourceState, ReadingAbout, ReadingCommand, ReadingEvent,
-        ReadingFailure, ReadingHomeView, WorkTile,
+        LibrarySegmentRead, ReadAnilistState, ReadHomeEnd, ReadHomeRow, ReadRowKind,
+        ReadSearchQuery, ReadSourceGroup, ReadSourceKind, ReadSourceSearch, ReadSourceState,
+        ReadingAbout, ReadingCommand, ReadingEvent, ReadingFailure, ReadingHomeView, WorkTile,
+        kind_words,
     },
 };
 
@@ -35,7 +36,50 @@ pub const GROUP_HITS: usize = 5;
 pub const SHELF_TILES: usize = 5;
 
 /// How long a part still on its way is drawn as nothing before its placeholder shows.
-pub const PLACEHOLDER_AFTER: std::time::Duration = std::time::Duration::from_millis(600);
+pub const PLACEHOLDER_AFTER: Duration = Duration::from_millis(600);
+
+/// How long a placeholder stays once drawn, so a part that lands just after it never flickers.
+pub const PLACEHOLDER_HOLD: Duration = Duration::from_millis(300);
+
+/// How long Home's rows can be on their way before a line says suggestions are still loading.
+pub const LOADING_LINE_AFTER: Duration = Duration::from_secs(4);
+
+/// One part of the screen asked for: when, and when its answer came. Each part keeps its own, so
+/// asking one source again leaves every other part's placeholder where it was.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Wait {
+    asked: Option<Instant>,
+    landed: Option<Instant>,
+}
+
+impl Wait {
+    fn asked(at: Instant) -> Self {
+        Self { asked: Some(at), landed: None }
+    }
+
+    /// The answer came. The first answer counts; later ones only change what is drawn.
+    fn land(&mut self, at: Instant) {
+        self.landed.get_or_insert(at);
+    }
+
+    /// Whether the placeholder shows now, for a part still on its way: from 600 ms after it was
+    /// asked. A part with no time of asking shows it at once.
+    pub fn waited(&self, now: Instant) -> bool {
+        self.asked.is_none_or(|at| now.saturating_duration_since(at) >= PLACEHOLDER_AFTER)
+    }
+
+    /// Whether a part that has landed is still drawn as on its way: its placeholder showed, and
+    /// has not yet been up for 0.3 s.
+    pub fn held(&self, now: Instant) -> bool {
+        match (self.asked, self.landed) {
+            (Some(asked), Some(landed)) => {
+                let shown = asked + PLACEHOLDER_AFTER;
+                landed >= shown && now < shown + PLACEHOLDER_HOLD
+            }
+            _ => false,
+        }
+    }
+}
 
 /// What a source is, beside its name in Search. A built-in source shows its name alone.
 pub fn kind_word(kind: ReadSourceKind) -> String {
@@ -60,15 +104,27 @@ pub enum AnilistState {
 pub struct Reading {
     /// Home as the engine last sent it.
     pub home: Option<ReadingHomeView>,
-    /// When Home was asked for, so its loading line waits before it shows.
-    pub home_asked: Option<Instant>,
+    /// Home asked for, so its loading line waits before it shows and then holds.
+    pub home_wait: Wait,
+    /// Each of Home's rows that came still on its way, by row id.
+    pub row_waits: HashMap<String, Wait>,
     /// The filters the next search carries, its words aside. Sticky across queries, as the
     /// shows' filters are.
     pub filter: ReadSearchQuery,
     /// The search the results on screen answer, once one has been asked.
     pub searched: Option<ReadSearchQuery>,
-    /// When it was asked, so placeholders and spinners wait before they show.
+    /// When it was asked: the time every part of it starts from.
     pub asked: Option<Instant>,
+    /// AniList's part, and each source's by its id, so placeholders and spinners wait before
+    /// they show and hold once they do.
+    pub anilist_wait: Wait,
+    pub source_waits: HashMap<String, Wait>,
+    /// The name of the Home row View all came from, with the search it asked, while that search
+    /// is the one on screen.
+    pub view_all: Option<(ReadSearchQuery, String)>,
+    /// The lines the cursor walked when last looked at, so the cursor stays on its line when
+    /// lines land above it.
+    keys: Vec<String>,
     pub anilist: Vec<WorkTile>,
     pub anilist_state: AnilistState,
     /// The last page of AniList's results on screen, counted from 0.
@@ -82,7 +138,7 @@ pub struct Reading {
     pub expanded: HashSet<String>,
     /// How many sources are on, from the Sources view.
     on: usize,
-    /// While Kaeri is for both: Home and Search are turned to reading's.
+    /// While Kaeri is for both: Search is turned to reading's.
     pub side: bool,
 }
 
@@ -106,10 +162,18 @@ pub enum ReadLine {
     },
     /// A line said quietly: offline, nothing found, the closing lines.
     Quiet(String),
-    /// A part that failed to load, said in the alert role.
-    Alert(String),
-    /// Two placeholder lines held for a shelf still on its way.
-    Placeholder,
+    /// A line said in the text colour: what a search found nothing for.
+    Said(String),
+    /// Something that failed, with the key that asks again. A source's or AniList's is a line
+    /// the cursor can land on; Home's is asked again with the key alone.
+    Failed {
+        reason: String,
+        retry: Retry,
+    },
+    /// Two placeholder lines held for a shelf still on its way, drawn once it has waited.
+    Placeholder {
+        shown: bool,
+    },
     /// A series: a Home tile, an AniList result or a source's hit.
     Work {
         work: WorkId,
@@ -124,15 +188,18 @@ pub enum ReadLine {
         plannable: bool,
         part: Part,
     },
-    /// View all under a Home shelf: Search with the shelf's filters.
+    /// View all under a Home shelf: Search with the shelf's filters, under the shelf's name.
     ViewAll {
         query: Box<ReadSearchQuery>,
+        title: Option<String>,
         part: Part,
     },
     /// AniList's heading, with its count once it is known.
     AnilistHeading(String),
-    /// AniList is being asked.
-    AnilistAsking,
+    /// AniList is being asked; the spinner shows once it has waited.
+    AnilistAsking {
+        shown: bool,
+    },
     /// More from AniList, with how many results show.
     MoreAnilist {
         shown: String,
@@ -144,14 +211,10 @@ pub enum ReadLine {
         name: String,
         kind: Option<String>,
     },
-    /// A source still asked.
+    /// A source still asked; the spinner shows once it has waited.
     Asking {
         name: String,
-    },
-    /// A source that failed or gave no answer in time, with the key that asks it again.
-    SourceFailed {
-        source_id: String,
-        reason: String,
+        shown: bool,
     },
     ShowMore {
         source_id: String,
@@ -159,26 +222,55 @@ pub enum ReadLine {
     },
 }
 
+/// What the key on a failure line asks again.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Retry {
+    Home,
+    Anilist,
+    Source(String),
+}
+
 impl ReadLine {
     /// Whether the cursor can land on it.
     pub fn selectable(&self) -> bool {
-        matches!(
-            self,
+        match self {
             Self::Work { .. }
-                | Self::ViewAll { .. }
-                | Self::MoreAnilist { .. }
-                | Self::SourceFailed { .. }
-                | Self::ShowMore { .. }
-        )
+            | Self::ViewAll { .. }
+            | Self::MoreAnilist { .. }
+            | Self::ShowMore { .. } => true,
+            Self::Failed { retry, .. } => *retry != Retry::Home,
+            _ => false,
+        }
     }
 
     /// The part of the screen a selectable line is in.
     pub fn part(&self) -> Part {
         match self {
             Self::Work { part, .. } | Self::ViewAll { part, .. } => *part,
-            Self::MoreAnilist { .. } => Part::Anilist,
+            Self::MoreAnilist { .. } | Self::Failed { retry: Retry::Anilist, .. } => {
+                Part::Anilist
+            }
             _ => Part::Sources,
         }
+    }
+
+    /// What the line is, whatever lands around it: the cursor follows this. `shelf` is the
+    /// heading of the Home row it is under.
+    fn key(&self, shelf: &str) -> Option<String> {
+        let part = match self.part() {
+            Part::Shelf(_) => shelf,
+            Part::Anilist => "anilist",
+            Part::Sources => "sources",
+        };
+        Some(match self {
+            Self::Work { work, .. } => format!("{part}\u{1f}{}", work.as_str()), // i18n-skip
+            Self::ViewAll { .. } => format!("{part}\u{1f}all"),                  // i18n-skip
+            Self::MoreAnilist { .. } => "anilist\u{1f}more".into(),              // i18n-skip
+            Self::Failed { retry: Retry::Anilist, .. } => "anilist\u{1f}failed".into(), // i18n-skip
+            Self::Failed { retry: Retry::Source(id), .. } => format!("failed\u{1f}{id}"), // i18n-skip
+            Self::ShowMore { source_id, .. } => format!("more\u{1f}{source_id}"), // i18n-skip
+            _ => return None,
+        })
     }
 }
 
@@ -190,11 +282,6 @@ impl Reading {
         let plugins = view.plugins.iter().filter(|plugin| !plugin.off).count();
         let folders = usize::from(view.folders.iter().any(|folder| !folder.removed));
         self.on = servers + plugins + folders;
-    }
-
-    /// How many sources a search asks: the groups of the one on screen, else the sources on.
-    pub fn source_count(&self) -> usize {
-        self.sources.as_ref().map_or(self.on, |sources| sources.groups.len())
     }
 
     /// Whether the search on screen hides AniList's results.
@@ -217,30 +304,42 @@ pub fn read_query_blank(query: &ReadSearchQuery) -> bool {
 }
 
 impl App {
+    /// Whether `section` is reading's: Home while Kaeri is for reading alone, Read while it is for
+    /// both, and Search in either once it is turned to reading.
+    pub fn reads(&self, section: Section) -> bool {
+        match section {
+            Section::Home => self.reading_only(),
+            Section::Read => self.both(),
+            Section::Search => self.reading_only() || (self.both() && self.reading.side),
+            _ => false,
+        }
+    }
+
     /// Whether reading's Home or Search is the view on top.
     pub fn reading_here(&self) -> bool {
-        self.reading_shown()
-            && matches!(
-                self.nav.current(),
-                StageView::Section(Section::Home) | StageView::Section(Section::Search)
-            )
+        matches!(self.nav.current(), StageView::Section(section) if self.reads(*section))
     }
 
     /// Whether the shows' Home or Search is on top while Kaeri is for both, so the status line
-    /// says whose they are.
+    /// says whose they are and which key turns to reading's.
     pub fn shows_side_here(&self) -> bool {
         self.both()
-            && !self.reading.side
             && !self.nav.has_overlay()
             && matches!(
                 self.nav.current(),
-                StageView::Section(Section::Home) | StageView::Section(Section::Search)
+                StageView::Section(section @ (Section::Home | Section::Search))
+                    if !self.reads(*section)
             )
     }
 
     /// Whether the section on screen is one reading draws, under whatever is pushed over it.
-    pub(super) fn reading_section(&self) -> bool {
-        self.reading_shown() && matches!(self.nav.section(), Section::Home | Section::Search)
+    pub fn reading_section(&self) -> bool {
+        self.reads(self.nav.section())
+    }
+
+    /// Whether reading's section on screen is its Home: Home, or Read beside the shows'.
+    fn read_home_here(&self) -> bool {
+        self.nav.section() != Section::Search
     }
 
     /// The search the field and the reading filters make.
@@ -254,26 +353,41 @@ impl App {
     /// Work to fill reading's Home or Search.
     pub(super) fn reload_reading(&mut self) -> Option<Command> {
         self.commands.push(Command::BookSources(BookSourceCommand::Load));
-        match self.nav.section() {
-            Section::Home => {
-                self.reading.home_asked = Some(self.clock.now_instant());
-                Some(Command::Reading(ReadingCommand::LoadHome { refresh: false }))
-            }
-            _ if read_query_blank(&self.read_query()) => {
-                self.reading.searched = None;
-                self.reading.sources = None;
-                None
-            }
-            _ => Some(self.run_read_search()),
+        if self.read_home_here() {
+            self.ask_home();
+            return Some(Command::Reading(ReadingCommand::LoadHome { refresh: false }));
         }
+        if read_query_blank(&self.read_query()) {
+            self.reading.searched = None;
+            self.reading.sources = None;
+            return None;
+        }
+        Some(self.run_read_search())
+    }
+
+    /// Home asked for. While one is on screen it stays, so nothing waits on its loading line.
+    fn ask_home(&mut self) {
+        let now = self.clock.now_instant();
+        let reading = &mut self.reading;
+        reading.home_wait = Wait::asked(now);
+        if reading.home.is_some() {
+            reading.home_wait.land(now);
+        }
+        reading.row_waits.clear();
     }
 
     /// Ask the search the field and the filters make, from the top of its results.
     pub(super) fn run_read_search(&mut self) -> Command {
         let query = self.read_query();
+        let now = self.clock.now_instant();
         let reading = &mut self.reading;
         reading.searched = Some(query.clone());
-        reading.asked = Some(self.clock.now_instant());
+        reading.asked = Some(now);
+        reading.anilist_wait = Wait::asked(now);
+        reading.source_waits.clear();
+        if reading.view_all.as_ref().is_some_and(|(asked, _)| *asked != query) {
+            reading.view_all = None;
+        }
         reading.anilist.clear();
         reading.anilist_state = AnilistState::Asking;
         reading.page = 0;
@@ -282,6 +396,7 @@ impl App {
         reading.loading_more = false;
         reading.sources = None;
         reading.expanded.clear();
+        reading.keys.clear();
         self.cursors.search = Default::default();
         Command::Reading(ReadingCommand::Search { query })
     }
@@ -314,10 +429,23 @@ impl App {
 
     /// The engine's word on reading.
     pub(super) fn apply_reading(&mut self, event: ReadingEvent) {
+        let now = self.clock.now_instant();
         match event {
             ReadingEvent::Home(view) => {
-                self.reading.home = Some(*view);
-                self.fit_reading_cursor();
+                let reading = &mut self.reading;
+                reading.home_wait.land(now);
+                let asked = reading.home_wait.asked;
+                for row in &view.rows {
+                    if row.tiles.is_empty() && row.pending {
+                        reading
+                            .row_waits
+                            .entry(row.id.clone())
+                            .or_insert(Wait { asked, landed: None });
+                    } else if let Some(wait) = reading.row_waits.get_mut(&row.id) {
+                        wait.land(now);
+                    }
+                }
+                reading.home = Some(*view);
             }
             ReadingEvent::Search { query, page, tiles, has_more, total, .. } => {
                 if self.reading.searched.as_ref() != Some(&query) {
@@ -334,21 +462,38 @@ impl App {
                         .extend(tiles.into_iter().filter(|t| !known.contains(&t.work)));
                 }
                 reading.anilist_state = AnilistState::Answered;
+                reading.anilist_wait.land(now);
                 reading.page = reading.page.max(page);
                 reading.more = has_more;
                 reading.total = total;
                 reading.loading_more = false;
-                self.fit_reading_cursor();
             }
             ReadingEvent::SourceSearch(sources) => {
                 if self.reading.searched.as_ref() != Some(&sources.query) {
                     return;
                 }
+                let reading = &mut self.reading;
                 if sources.anilist == ReadAnilistState::Failed {
-                    self.reading.anilist_state = AnilistState::Failed;
+                    reading.anilist_state = AnilistState::Failed;
+                    reading.anilist_wait.land(now);
                 }
-                self.reading.sources = Some(*sources);
-                self.fit_reading_cursor();
+                // A group seen asking waits from when it was asked; one that answered in the
+                // same word as it first showed was never drawn waiting, so holds nothing.
+                for group in &sources.groups {
+                    let asking = group.state == ReadSourceState::Asking;
+                    match reading.source_waits.get_mut(&group.source_id) {
+                        Some(wait) if !asking => wait.land(now),
+                        Some(_) => {}
+                        None => {
+                            let asked = reading.asked;
+                            let landed = if asking { None } else { asked };
+                            reading
+                                .source_waits
+                                .insert(group.source_id.clone(), Wait { asked, landed });
+                        }
+                    }
+                }
+                reading.sources = Some(*sources);
             }
             ReadingEvent::Failed { about: ReadingAbout::Search, failure } => {
                 let reading = &mut self.reading;
@@ -359,16 +504,18 @@ impl App {
                     && reading.anilist_state == AnilistState::Asking
                 {
                     reading.anilist_state = AnilistState::Failed;
+                    reading.anilist_wait.land(now);
                 }
             }
             // Opening a series is the one other thing asked from here.
             ReadingEvent::Failed { about: ReadingAbout::Series, failure }
-                if self.reading_shown() =>
+                if self.reading_only() || self.both() =>
             {
                 self.push_toast(alert(say(&failure.msg())));
             }
             _ => {}
         }
+        self.settle_reading_cursor();
     }
 
     /// The Sources view, for how many sources there are.
@@ -376,23 +523,61 @@ impl App {
         self.reading.take_sources(view);
     }
 
-    /// Keep the cursor on a line that exists, after the lines changed under it.
-    fn fit_reading_cursor(&mut self) {
+    /// Keep the cursor on the line it was on when lines land above or below it, at the same
+    /// height in the window, once the person is among the lines. A line that has gone, or a
+    /// cursor still behind Search's field, stays where it was, within the lines there are.
+    /// Called when an answer lands and on the idle tick, as a held placeholder gives way.
+    pub(super) fn settle_reading_cursor(&mut self) {
         if !self.reading_section() {
             return;
         }
-        let len = self.read_items().len();
-        let cursor = self.cursors.section_mut(self.nav.section());
-        cursor.selected = cursor.selected.min(len.saturating_sub(1));
-        cursor.offset = cursor.offset.min(cursor.selected);
+        let keys = self.read_keys();
+        if keys == self.reading.keys {
+            return;
+        }
+        let old = std::mem::replace(&mut self.reading.keys, keys);
+        let section = self.nav.section();
+        let selected = self.cursors.section(section).selected;
+        let among = match section {
+            Section::Search => self.search_in_results,
+            _ => self.nav.focus() == Focus::Stage,
+        };
+        let found = old
+            .get(selected)
+            .filter(|_| among)
+            .and_then(|key| self.reading.keys.iter().position(|k| k == key));
+        let len = self.reading.keys.len();
+        let cursor = self.cursors.section_mut(section);
+        match found {
+            Some(at) => {
+                let above = cursor.selected.saturating_sub(cursor.offset);
+                cursor.selected = at;
+                cursor.offset = at.saturating_sub(above);
+            }
+            None => {
+                cursor.selected = cursor.selected.min(len.saturating_sub(1));
+                cursor.offset = cursor.offset.min(cursor.selected);
+            }
+        }
+    }
+
+    /// What each line the cursor walks is, in order.
+    fn read_keys(&self) -> Vec<String> {
+        let mut shelf = String::new();
+        self.read_lines()
+            .iter()
+            .filter_map(|line| {
+                if let ReadLine::Shelf { title, .. } = line {
+                    shelf.clone_from(title);
+                }
+                if line.selectable() { line.key(&shelf) } else { None }
+            })
+            .collect()
     }
 
     /// Reading's lines for the section on screen.
     pub fn read_lines(&self) -> Vec<ReadLine> {
-        match self.nav.section() {
-            Section::Home => self.read_home_lines(),
-            _ => self.read_search_lines(),
-        }
+        if self.read_home_here() { self.read_home_lines() } else { self.read_search_lines() }
     }
 
     /// The lines the cursor walks, in order.
@@ -409,17 +594,19 @@ impl App {
     fn read_home_lines(&self) -> Vec<ReadLine> {
         let mut lines = Vec::new();
         let Some(view) = &self.reading.home else { return lines };
+        let now = self.clock.now_instant();
         if view.offline {
             let time = view
                 .offline_since
                 .and_then(|at| self.clock.local(at))
                 .map(|at| at.format("%H:%M").to_string());
-            if let Some(time) = time {
-                lines.push(ReadLine::Quiet(t::home_offline(&time)));
-                lines.push(ReadLine::Gap);
-            }
+            lines.push(ReadLine::Quiet(match time {
+                Some(time) => t::home_offline(&time),
+                None => t::home_offline_empty_title(),
+            }));
+            lines.push(ReadLine::Gap);
         } else if view.failed {
-            lines.push(ReadLine::Alert(t::home_failed()));
+            lines.push(ReadLine::Failed { reason: t::home_failed(), retry: Retry::Home });
             lines.push(ReadLine::Gap);
         }
         let mut shelf = 0;
@@ -437,12 +624,16 @@ impl App {
             }
             lines.push(ReadLine::Shelf { title, side: None });
             lines.extend(
-                tiles.iter().take(SHELF_TILES).map(|tile| home_tile(tile, shelf, false)),
+                tiles.iter().take(SHELF_TILES).map(|tile| home_tile(tile, shelf, None, false)),
             );
             shelf += 1;
         }
+        let mut loading_said = false;
         for row in &view.rows {
-            if row.tiles.is_empty() && !row.pending {
+            let wait = self.reading.row_waits.get(&row.id);
+            let on_way = row.tiles.is_empty() && row.pending;
+            let held = wait.is_some_and(|wait| wait.held(now));
+            if row.tiles.is_empty() && !on_way {
                 continue;
             }
             if !lines.is_empty() && lines.last() != Some(&ReadLine::Gap) {
@@ -452,8 +643,14 @@ impl App {
                 title: say(&row.title),
                 side: row.side.as_ref().map(say),
             });
-            if row.tiles.is_empty() {
-                lines.push(ReadLine::Placeholder);
+            if on_way || held {
+                let shown = held || wait.unwrap_or(&self.reading.home_wait).waited(now);
+                lines.push(ReadLine::Placeholder { shown });
+                // Past 4 s, the first row still on its way says what it waits for.
+                if shown && !loading_said && self.home_waited(now, LOADING_LINE_AFTER) {
+                    lines.push(ReadLine::Quiet(t::home_loading()));
+                    loading_said = true;
+                }
                 shelf += 1;
                 continue;
             }
@@ -461,11 +658,12 @@ impl App {
                 row.tiles
                     .iter()
                     .take(SHELF_TILES)
-                    .map(|tile| home_tile(tile, shelf, !tile.demo)),
+                    .map(|tile| home_tile(tile, shelf, Some(row), !tile.demo)),
             );
             if let Some(query) = &row.view_all {
                 lines.push(ReadLine::ViewAll {
                     query: Box::new(query.clone()),
+                    title: row.view_all_title.as_ref().map(say),
                     part: Part::Shelf(shelf),
                 });
             }
@@ -477,9 +675,14 @@ impl App {
         }
         if view.end == Some(ReadHomeEnd::NoSources) || view.no_sources {
             lines.push(ReadLine::Gap);
-            lines.push(ReadLine::Quiet(t::home_read_no_sources()));
+            lines.push(ReadLine::Quiet(t::tui_read_sources_in_apps()));
         }
         lines
+    }
+
+    /// Whether Home was asked for at least `long` ago.
+    fn home_waited(&self, now: Instant, long: Duration) -> bool {
+        self.reading.home_wait.asked.is_some_and(|at| now.saturating_duration_since(at) >= long)
     }
 
     /// Search's lines: AniList's results, then From your sources.
@@ -487,56 +690,78 @@ impl App {
         let mut lines = Vec::new();
         let reading = &self.reading;
         let Some(query) = &reading.searched else { return lines };
+        let now = self.clock.now_instant();
         let sources = reading.sources.as_ref();
         let joins: HashMap<&WorkId, &kaeri_model::reading::ReadSourceJoin> = sources
             .map(|s| s.joins.iter().map(|join| (&join.work, join)).collect())
             .unwrap_or_default();
+        let search_wait = Wait { asked: reading.asked, landed: None };
+        let wait_of = |group: &ReadSourceGroup| {
+            reading.source_waits.get(&group.source_id).copied().unwrap_or(search_wait)
+        };
+        // A part that answered while its placeholder was up keeps it 0.3 s more.
+        let on_way = |group: &ReadSourceGroup| {
+            group.state == ReadSourceState::Asking || wait_of(group).held(now)
+        };
+        let anilist_on_way =
+            reading.anilist_state == AnilistState::Asking || reading.anilist_wait.held(now);
 
         let groups_found = sources.is_some_and(|s| {
             s.groups.iter().any(|g| {
-                !g.tiles.is_empty()
+                on_way(g)
+                    || !g.tiles.is_empty()
                     || matches!(
                         g.state,
-                        ReadSourceState::Asking
-                            | ReadSourceState::Failed { .. }
-                            | ReadSourceState::TimedOut { .. }
+                        ReadSourceState::Failed { .. } | ReadSourceState::TimedOut { .. }
                     )
             })
         });
-        let settled_empty = reading.anilist_state == AnilistState::Answered
-            && reading.anilist.is_empty()
-            && sources.is_some_and(|s| s.done)
-            && !groups_found;
-        if settled_empty && !query.sources_only && !query.text.is_empty() {
-            lines.push(ReadLine::Quiet(t::read_search_nothing(&query.text)));
-            lines.push(ReadLine::Quiet(t::read_search_nothing_line()));
-            lines.push(ReadLine::Gap);
-            lines.push(ReadLine::Quiet(t::read_search_sources_nothing()));
+        let anilist_empty = query.sources_only
+            || (!anilist_on_way
+                && reading.anilist_state == AnilistState::Answered
+                && reading.anilist.is_empty());
+        let settled_empty = anilist_empty && sources.is_some_and(|s| s.done) && !groups_found;
+        if settled_empty && !query.text.is_empty() {
+            if query.sources_only {
+                lines.push(ReadLine::Said(t::tui_read_sources_nothing()));
+                lines.push(ReadLine::Quiet(t::read_search_nothing_line()));
+            } else {
+                lines.push(ReadLine::Said(t::read_search_nothing(&query.text)));
+                lines.push(ReadLine::Quiet(t::read_search_nothing_line()));
+                lines.push(ReadLine::Gap);
+                lines.push(ReadLine::Quiet(t::read_search_sources_nothing()));
+            }
             return lines;
         }
 
         if !query.sources_only {
             match reading.anilist_state {
-                AnilistState::Asking => {
-                    lines.push(ReadLine::AnilistHeading(t::read_search_total_unknown()));
-                    lines.push(ReadLine::AnilistAsking);
+                _ if anilist_on_way => {
+                    let held = reading.anilist_wait.held(now);
+                    lines.push(ReadLine::AnilistHeading(self.anilist_heading(None)));
+                    lines.push(ReadLine::AnilistAsking {
+                        shown: held || reading.anilist_wait.waited(now),
+                    });
                 }
                 AnilistState::Failed => {
-                    lines.push(ReadLine::Alert(t::read_search_anilist_failed()));
+                    lines.push(ReadLine::Failed {
+                        reason: t::read_search_anilist_failed(),
+                        retry: Retry::Anilist,
+                    });
                     lines.push(ReadLine::Quiet(t::read_search_anilist_failed_line()));
                 }
-                AnilistState::Answered if reading.anilist.is_empty() => {
-                    lines.push(ReadLine::AnilistHeading(anilist_heading(reading.total)));
+                // Nothing to count: the one line says it.
+                _ if reading.anilist.is_empty() => {
                     lines.push(ReadLine::Quiet(t::read_search_anilist_nothing()));
                 }
-                AnilistState::Answered => {
-                    lines.push(ReadLine::AnilistHeading(anilist_heading(reading.total)));
+                _ => {
+                    lines.push(ReadLine::AnilistHeading(self.anilist_heading(reading.total)));
                     for tile in &reading.anilist {
                         let joined = joins.get(&tile.work).and_then(|join| {
                             match join.source_names.len() {
                                 0 => None,
-                                1 => Some(t::tui_read_in_source(&join.source_names[0])),
-                                n => Some(t::tui_read_in_sources(n as i64)),
+                                1 => Some(t::read_search_in_source(&join.source_names[0])),
+                                n => Some(t::read_search_in_sources(n as i64)),
                             }
                         });
                         lines.push(ReadLine::Work {
@@ -567,10 +792,13 @@ impl App {
         let shown: Vec<_> = sources
             .groups
             .iter()
-            .filter(|g| match g.state {
-                ReadSourceState::Nothing => false,
-                ReadSourceState::Hits => !g.tiles.is_empty(),
-                _ => true,
+            .filter(|g| {
+                on_way(g)
+                    || match g.state {
+                        ReadSourceState::Nothing => false,
+                        ReadSourceState::Hits => !g.tiles.is_empty(),
+                        _ => true,
+                    }
             })
             .collect();
         if !shown.is_empty() {
@@ -584,19 +812,24 @@ impl App {
                 name: group.source_name.clone(),
                 kind: group.kind.map(kind_word),
             });
+            if on_way(group) {
+                let wait = wait_of(group);
+                lines.push(ReadLine::Asking {
+                    name: group.source_name.clone(),
+                    shown: wait.held(now) || wait.waited(now),
+                });
+                continue;
+            }
             match &group.state {
-                ReadSourceState::Asking => {
-                    lines.push(ReadLine::Asking { name: group.source_name.clone() })
-                }
-                ReadSourceState::Failed { failure } => lines.push(ReadLine::SourceFailed {
-                    source_id: group.source_id.clone(),
+                ReadSourceState::Failed { failure } => lines.push(ReadLine::Failed {
                     reason: failed_reason(&group.source_name, Some(failure), None),
+                    retry: Retry::Source(group.source_id.clone()),
                 }),
-                ReadSourceState::TimedOut { seconds } => lines.push(ReadLine::SourceFailed {
-                    source_id: group.source_id.clone(),
+                ReadSourceState::TimedOut { seconds } => lines.push(ReadLine::Failed {
                     reason: failed_reason(&group.source_name, None, Some(*seconds)),
+                    retry: Retry::Source(group.source_id.clone()),
                 }),
-                ReadSourceState::Hits | ReadSourceState::Nothing => {
+                _ => {
                     let open = reading.expanded.contains(&group.source_id);
                     let take = if open { group.tiles.len() } else { GROUP_HITS };
                     for tile in group.tiles.iter().take(take) {
@@ -623,28 +856,48 @@ impl App {
             .groups
             .iter()
             .filter(|g| {
-                g.state == ReadSourceState::Nothing
-                    || (g.state == ReadSourceState::Hits && g.tiles.is_empty() && g.joined == 0)
+                !on_way(g)
+                    && (g.state == ReadSourceState::Nothing
+                        || (g.state == ReadSourceState::Hits
+                            && g.tiles.is_empty()
+                            && g.joined == 0))
             })
             .map(|g| g.source_name.as_str())
             .collect();
         if !nothing.is_empty() {
             lines.push(ReadLine::Gap);
-            lines.push(ReadLine::Quiet(t::read_search_source_nothing(&nothing.join(", "))));
+            lines.push(ReadLine::Quiet(t::read_search_source_nothing(&names_joined(&nothing))));
         }
         lines
     }
 
-    /// Whether the line under the cursor is in a part still on its way for long enough that its
-    /// placeholder shows.
-    pub fn read_waited(&self) -> bool {
-        let asked = match self.nav.section() {
-            Section::Home => self.reading.home_asked,
-            _ => self.reading.asked,
+    /// AniList's heading: how many series it found, without a number until the engine knows it,
+    /// after the name of the Home row View all came from.
+    fn anilist_heading(&self, total: Option<u32>) -> String {
+        let count = match total {
+            Some(total) => t::read_search_total(i64::from(total)),
+            None => t::read_search_total_unknown(),
         };
-        asked.is_none_or(|at| {
-            self.clock.now_instant().saturating_duration_since(at) >= PLACEHOLDER_AFTER
-        })
+        let reading = &self.reading;
+        match reading
+            .view_all
+            .as_ref()
+            .filter(|(asked, _)| reading.searched.as_ref() == Some(asked))
+        {
+            Some((_, title)) => format!("{title} · {count}"), // i18n-skip
+            None => count,
+        }
+    }
+
+    /// Whether reading's Home has waited long enough for its loading line, and holds it 0.3 s
+    /// once drawn.
+    pub fn read_home_loading(&self) -> Option<bool> {
+        let now = self.clock.now_instant();
+        let wait = &self.reading.home_wait;
+        if self.reading.home.is_none() {
+            return Some(wait.waited(now));
+        }
+        wait.held(now).then_some(true)
     }
 
     /// A key on reading's Home or Search, ahead of the shows' meaning of it. `None` lets it
@@ -653,12 +906,18 @@ impl App {
         if !self.reading_here() {
             return None;
         }
+        self.settle_reading_cursor();
         let on_stage = self.nav.focus() == Focus::Stage;
         let search = self.nav.section() == Section::Search;
         match action {
             Action::Open if on_stage => Some(self.open_read_line()),
             Action::ShowSources if search => Some(self.toggle_sources_only()),
-            Action::ToggleRail if on_stage && self.next_read_part() => Some(None),
+            // Tab moves between the parts here, and with one part does nothing: the rail is a
+            // key away, and folding it would be something the status line never offered.
+            Action::ToggleRail if on_stage => {
+                self.next_read_part();
+                Some(None)
+            }
             Action::Refresh => Some(self.refresh_reading()),
             Action::Filter if search => {
                 self.open_search_filters();
@@ -687,13 +946,15 @@ impl App {
             // The terminal has no reader: the series opens in the apps. Asking for it still
             // tells the engine whether a source has it, which Home says next time.
             ReadLine::Work { work, .. } => {
-                self.push_toast(info(t::tui_medium_read_line()));
+                self.push_toast(info(t::tui_read_opens_in_apps()));
                 Some(Command::Reading(ReadingCommand::LoadSeries { work }))
             }
-            ReadLine::ViewAll { query, .. } => {
+            ReadLine::ViewAll { query, title, .. } => {
                 let query = *query;
                 self.set_text(Field::Search, query.text.clone());
-                self.reading.filter = ReadSearchQuery { text: String::new(), ..query };
+                self.reading.filter = ReadSearchQuery { text: String::new(), ..query.clone() };
+                self.reading.view_all = title.map(|title| (query, title));
+                self.reading.side = true;
                 self.nav.go_to(Section::Search);
                 self.nav.focus_stage();
                 self.search_in_results = true;
@@ -705,7 +966,7 @@ impl App {
                 self.reading.expanded.insert(source_id);
                 None
             }
-            ReadLine::SourceFailed { source_id, .. } => self.retry_source(source_id),
+            ReadLine::Failed { retry, .. } => self.retry(retry),
             _ => None,
         }
     }
@@ -727,19 +988,30 @@ impl App {
         }
     }
 
-    /// `W`, while Kaeri is for both: Home and Search turn between the shows' and reading's.
+    /// `W`, while Kaeri is for both: from the shows' Home to Read and back, and Search turned
+    /// between the shows' and reading's.
     pub(super) fn switch_medium(&mut self) -> Option<Command> {
-        let section = self.nav.section();
-        if !self.both()
-            || !matches!(section, Section::Home | Section::Search)
-            || !matches!(self.nav.current(), StageView::Section(_))
-        {
-            self.works_elsewhere(Action::SwitchMedium);
-            return None;
+        let section = match self.nav.current() {
+            StageView::Section(section) if self.both() => *section,
+            _ => {
+                self.works_elsewhere(Action::SwitchMedium);
+                return None;
+            }
+        };
+        match section {
+            Section::Home => self.go_to_section(Section::Read),
+            Section::Read => self.go_to_section(Section::Home),
+            Section::Search => {
+                self.reading.side = !self.reading.side;
+                self.reading.keys.clear();
+                *self.cursors.section_mut(section) = Default::default();
+                self.reload()
+            }
+            _ => {
+                self.works_elsewhere(Action::SwitchMedium);
+                None
+            }
         }
-        self.reading.side = !self.reading.side;
-        *self.cursors.section_mut(section) = Default::default();
-        self.reload()
     }
 
     /// The next page of AniList's results.
@@ -753,30 +1025,45 @@ impl App {
         Some(Command::Reading(ReadingCommand::SearchMore { query, page: reading.page + 1 }))
     }
 
-    /// Ask one source again; only its group goes back to asking.
-    fn retry_source(&mut self, source_id: String) -> Option<Command> {
-        let query = self.reading.searched.clone()?;
-        self.reading.asked = Some(self.clock.now_instant());
-        Some(Command::Reading(ReadingCommand::RetrySourceSearch { query, source_id }))
+    /// Ask again what a failure line names: Home, the whole search for AniList, or one source,
+    /// whose group alone goes back to asking.
+    fn retry(&mut self, retry: Retry) -> Option<Command> {
+        match retry {
+            Retry::Home => {
+                self.ask_home();
+                self.commands.push(Command::BookSources(BookSourceCommand::Load));
+                Some(Command::Reading(ReadingCommand::LoadHome { refresh: true }))
+            }
+            Retry::Anilist => {
+                let in_results = self.search_in_results;
+                let task = self.run_read_search();
+                self.search_in_results = in_results;
+                Some(task)
+            }
+            Retry::Source(source_id) => {
+                let query = self.reading.searched.clone()?;
+                let now = self.clock.now_instant();
+                self.reading.source_waits.insert(source_id.clone(), Wait::asked(now));
+                Some(Command::Reading(ReadingCommand::RetrySourceSearch { query, source_id }))
+            }
+        }
     }
 
-    /// `r`: the failed source under the cursor, else the first that failed, else everything
-    /// again.
+    /// `r`: Home loaded again; on Search, the failure under the cursor, else the first on the
+    /// screen, else everything again.
     fn refresh_reading(&mut self) -> Option<Command> {
-        if self.nav.section() == Section::Home {
-            self.reading.home_asked = Some(self.clock.now_instant());
-            self.commands.push(Command::BookSources(BookSourceCommand::Load));
-            return Some(Command::Reading(ReadingCommand::LoadHome { refresh: true }));
+        if self.read_home_here() {
+            return self.retry(Retry::Home);
         }
-        if let Some(ReadLine::SourceFailed { source_id, .. }) = self.read_selected() {
-            return self.retry_source(source_id);
+        if let Some(ReadLine::Failed { retry, .. }) = self.read_selected() {
+            return self.retry(retry);
         }
         let failed = self.read_lines().into_iter().find_map(|line| match line {
-            ReadLine::SourceFailed { source_id, .. } => Some(source_id),
+            ReadLine::Failed { retry, .. } => Some(retry),
             _ => None,
         });
-        if let Some(source_id) = failed {
-            return self.retry_source(source_id);
+        if let Some(retry) = failed {
+            return self.retry(retry);
         }
         if read_query_blank(&self.read_query()) {
             return None;
@@ -784,8 +1071,13 @@ impl App {
         Some(self.run_read_search())
     }
 
-    /// `s` on Search: Your sources only, on or off, and the search asked again with it.
+    /// `s` on Search: Your sources only, on or off, and the search asked again with it. With no
+    /// words there is nothing for the sources to find, so the line says to type a title.
     pub(super) fn toggle_sources_only(&mut self) -> Option<Command> {
+        if self.text(Field::Search).trim().is_empty() {
+            self.push_toast(info(t::tui_read_sources_only_words()));
+            return None;
+        }
         let on = !self.reading.filter.sources_only;
         self.reading.filter.sources_only = on;
         self.push_toast(info(if on {
@@ -793,11 +1085,6 @@ impl App {
         } else {
             t::tui_read_sources_only_off()
         }));
-        if read_query_blank(&self.read_query()) || self.text(Field::Search).trim().is_empty() {
-            self.reading.searched = None;
-            self.reading.sources = None;
-            return None;
-        }
         let in_results = self.search_in_results;
         let task = self.run_read_search();
         self.search_in_results = in_results;
@@ -834,23 +1121,33 @@ impl App {
     /// How the status line names reading: the sources a search asks.
     pub fn read_status(&self, wide: bool) -> String {
         if wide {
-            t::tui_read_status(self.reading.source_count() as i64)
+            t::tui_read_status(self.reading.on as i64)
         } else {
             t::tui_read_status_short()
         }
     }
+
+    /// How many sources are on, for the header while Kaeri is for reading.
+    pub fn read_sources_on(&self) -> usize {
+        self.reading.on
+    }
 }
 
-/// A Home tile as a line: Not found in your sources when a source was asked and had nothing,
-/// else what the engine says is next, else its facts.
-/// A Home title as a line. `plannable` for a discovery row's, which `a` puts on Planning.
-fn home_tile(tile: &WorkTile, shelf: usize, plannable: bool) -> ReadLine {
+/// A Home title as a line: Not found in your sources when a source was asked and had nothing,
+/// else what the engine says is next, else its caption. `plannable` for a discovery row's, which
+/// `a` puts on Planning.
+fn home_tile(
+    tile: &WorkTile,
+    shelf: usize,
+    row: Option<&ReadHomeRow>,
+    plannable: bool,
+) -> ReadLine {
     let facts = if tile.not_in_sources {
         t::home_not_found()
     } else if let Some(next) = &tile.next {
         say(next)
     } else {
-        fact_line(tile)
+        home_caption(tile, row)
     };
     ReadLine::Work {
         work: tile.work.clone(),
@@ -863,12 +1160,20 @@ fn home_tile(tile: &WorkTile, shelf: usize, plannable: bool) -> ReadLine {
     }
 }
 
-/// AniList's heading: its count once the engine knows it exactly, else no number at all.
-fn anilist_heading(total: Option<u32>) -> String {
-    match total {
-        Some(total) => t::tui_read_anilist_count(i64::from(total)),
-        None => t::read_search_total_unknown(),
-    }
+/// A discovery title's caption. A row of one format leaves the format out: origin and status, or
+/// on a New row origin and the month it started ("Japan · since March"). A mixed row leads with
+/// the format, as Search does.
+fn home_caption(tile: &WorkTile, row: Option<&ReadHomeRow>) -> String {
+    let Some(row) = row.filter(|row| row.format.is_some()) else {
+        return fact_line(tile);
+    };
+    let status = tile.facts.get(1);
+    let second = match row.kind {
+        ReadRowKind::New => tile.started.as_ref().or(status),
+        _ => status,
+    };
+    let caption = facts_joined(tile.origin.iter().chain(second).map(say));
+    if caption.is_empty() { fact_line(tile) } else { caption }
 }
 
 /// A tile's facts as one line.
@@ -882,20 +1187,45 @@ fn anilist_facts(tile: &WorkTile) -> String {
     facts_joined(tile.facts.first().into_iter().chain(&tile.origin).map(say))
 }
 
-/// A source's hit: what the engine says of it, then how much of it the source holds ("2
-/// volumes", "1 file · CBZ"), when the source says.
+/// A source's hit: its format in the words AniList's lines use, then how much of it the source
+/// holds ("Light novel · 2 volumes", "Manga · 1 file · CBZ") when the source says.
 fn hit_facts(tile: &WorkTile) -> String {
-    facts_joined(tile.facts.iter().chain(&tile.amount).map(say))
+    let format = tile
+        .facts
+        .first()
+        .cloned()
+        .unwrap_or_else(|| kind_words(tile.format_label.as_deref(), tile.medium, None));
+    facts_joined(std::iter::once(&format).chain(&tile.amount).map(say))
 }
 
 fn facts_joined(facts: impl Iterator<Item = String>) -> String {
     facts.collect::<Vec<_>>().join(" · ") // i18n-skip
 }
 
+/// Names as a sentence lists them: "A", "A and B", "A, B and C".
+fn names_joined(names: &[&str]) -> String {
+    match names {
+        [] => String::new(),
+        [one] => (*one).to_owned(),
+        [rest @ .., last] => t::tui_read_names_and(&rest.join(", "), last), // i18n-skip
+    }
+}
+
 /// Why a source has no results: that it did not answer, and the reason or how long it was given.
+/// Offline, a source says it needs a connection: the engine's offline words are the reader's.
 fn failed_reason(name: &str, failure: Option<&ReadingFailure>, seconds: Option<u32>) -> String {
     let reason = match (failure, seconds) {
         (_, Some(seconds)) => t::read_search_source_timeout(i64::from(seconds)),
+        (Some(ReadingFailure::Offline), None) => return t::tui_read_source_offline(name),
+        // These already name the source and say what went wrong with it.
+        (
+            Some(
+                failure @ (ReadingFailure::SourceDown { .. }
+                | ReadingFailure::Blocked { .. }
+                | ReadingFailure::Parse { .. }),
+            ),
+            None,
+        ) => return say(&failure.msg()),
         (Some(failure), None) => say(&failure.msg()),
         (None, None) => return t::read_search_source_failed(name),
     };
@@ -1070,9 +1400,10 @@ mod tests {
         }
     }
 
-    /// Reading alone, on Search, "lantern" asked and nothing back yet.
+    /// Reading alone, on Search, "lantern" asked and nothing back yet, on a clock the test moves.
     fn asked() -> App {
         let mut a = app();
+        a.clock = crate::clock::Clock::fixed(1_793_000_000, crate::clock::Zone::utc());
         a.apply(Event::Medium(MediumView {
             answer: KaeriIsFor::Read,
             edition: AppEdition::Full,
@@ -1183,9 +1514,9 @@ mod tests {
             joins: Vec::new(),
             done: true,
         }))));
-        assert_eq!(work_facts(&a, "Paper Lantern Recipes"), "2 volumes");
-        assert_eq!(work_facts(&a, "Lantern Festival Sketchbook"), "1 file · CBZ");
-        assert_eq!(work_facts(&a, "Lantern Lane Almanac"), "");
+        assert_eq!(work_facts(&a, "Paper Lantern Recipes"), "Manga · 2 volumes");
+        assert_eq!(work_facts(&a, "Lantern Festival Sketchbook"), "Manga · 1 file · CBZ");
+        assert_eq!(work_facts(&a, "Lantern Lane Almanac"), "Manga", "the format alone");
     }
 
     #[test]
@@ -1243,7 +1574,7 @@ mod tests {
     #[test]
     fn a_known_count_is_in_the_heading() {
         let a = searched();
-        assert_eq!(a.read_lines()[0], ReadLine::AnilistHeading("AniList · 2 series".into()));
+        assert_eq!(a.read_lines()[0], ReadLine::AnilistHeading("2 series from AniList".into()));
         assert!(
             !a.read_lines().iter().any(|line| matches!(line, ReadLine::MoreAnilist { .. }))
         );
@@ -1278,9 +1609,9 @@ mod tests {
                 .collect::<Vec<_>>()
         };
         assert!(works(&a).is_empty(), "nothing drawn before AniList's results");
-        assert!(a.read_lines().contains(&ReadLine::AnilistAsking));
+        assert!(a.read_lines().contains(&ReadLine::AnilistAsking { shown: false }));
         anilist(&mut a, vec![tile("a:1", "Lantern Street Notes")], false, Some(1));
-        assert_eq!(works(&a), vec![(WorkId::new("a:1"), Some("in Shelf".into()))]);
+        assert_eq!(works(&a), vec![(WorkId::new("a:1"), Some("In Shelf".into()))]);
     }
 
     #[test]
@@ -1293,7 +1624,7 @@ mod tests {
             matches!(&items[2], ReadLine::Work { part: Part::Sources, title, .. } if title == "Paper Lantern Recipes")
         );
         assert!(
-            matches!(&items[3], ReadLine::SourceFailed { source_id, .. } if source_id == "northwind")
+            matches!(&items[3], ReadLine::Failed { retry: Retry::Source(id), .. } if id == "northwind")
         );
     }
 
@@ -1328,18 +1659,63 @@ mod tests {
     }
 
     #[test]
-    fn both_turns_home_between_the_shows_and_reading() {
+    fn both_puts_read_beside_home_and_w_moves_between_them() {
         let mut a = app();
         medium(&mut a, KaeriIsFor::Both);
+        assert_eq!(
+            a.rail_sections()[..5],
+            [
+                Section::Home,
+                Section::Calendar,
+                Section::Seasonal,
+                Section::Read,
+                Section::Search
+            ]
+        );
         a.go_to_section(Section::Home);
         a.take_commands();
         assert!(!a.reading_here() && a.shows_side_here());
         let task = a.handle(Action::SwitchMedium, 10);
         assert_eq!(task, Some(Command::Reading(ReadingCommand::LoadHome { refresh: false })));
+        assert_eq!(a.nav.section(), Section::Read);
         assert!(a.reading_here() && !a.shows_side_here());
         let task = a.handle(Action::SwitchMedium, 10);
         assert_eq!(task, Some(Command::LoadHome { refresh: false }));
+        assert_eq!(a.nav.section(), Section::Home);
         assert!(!a.reading_here());
+    }
+
+    #[test]
+    fn both_turns_search_between_the_shows_and_reading() {
+        let mut a = app();
+        medium(&mut a, KaeriIsFor::Both);
+        a.go_to_section(Section::Read);
+        a.handle(Action::FocusSearch, 10);
+        assert!(a.reading_here(), "Search opened from Read is reading's");
+        // Out of the field, where W is a letter.
+        a.nav.focus_rail();
+        a.handle(Action::SwitchMedium, 10);
+        assert!(!a.reading_here() && a.shows_side_here());
+        a.go_to_section(Section::Home);
+        a.handle(Action::FocusSearch, 10);
+        assert!(!a.reading_here(), "Search opened from Home is the shows'");
+    }
+
+    #[test]
+    fn reading_alone_leaves_the_shows_only_sections_out_of_the_rail() {
+        let mut a = app();
+        a.go_to_section(Section::Calendar);
+        medium(&mut a, KaeriIsFor::Read);
+        assert_eq!(a.nav.section(), Section::Home, "Calendar gave way to Home");
+        let rail = a.rail_sections();
+        for gone in [Section::Calendar, Section::Seasonal, Section::Together, Section::Read] {
+            assert!(!rail.contains(&gone), "{gone:?}");
+        }
+        assert_eq!(a.handle(Action::JumpSection(2), 10), None);
+        assert_eq!(a.nav.section(), Section::Home, "Calendar's key goes nowhere");
+        a.nav.focus_rail();
+        a.handle(Action::Down, 10);
+        assert_eq!(a.nav.section(), Section::Search, "the rail walks past what it left out");
     }
 
     #[test]
@@ -1404,6 +1780,280 @@ mod tests {
                 status: LibrarySegmentRead::Planning,
             }))
         );
+    }
+
+    /// The sources' part as the engine sends it, for the search on screen.
+    fn sources(a: &mut App, anilist: ReadAnilistState, groups: Vec<ReadSourceGroup>) {
+        let query = a.read_query();
+        a.apply(Event::Reading(ReadingEvent::SourceSearch(Box::new(ReadSourceSearch {
+            query,
+            anilist,
+            groups,
+            joins: Vec::new(),
+            done: true,
+        }))));
+    }
+
+    fn wait(a: &mut App, ms: u64) {
+        a.clock.advance(Duration::from_millis(ms));
+    }
+
+    #[test]
+    fn a_part_that_lands_before_its_placeholder_shows_at_once() {
+        let mut a = asked();
+        wait(&mut a, 500);
+        assert!(a.read_lines().contains(&ReadLine::AnilistAsking { shown: false }));
+        anilist(&mut a, vec![tile("a:1", "Lantern Street Notes")], false, Some(1));
+        assert!(!a.read_lines().iter().any(|l| matches!(l, ReadLine::AnilistAsking { .. })));
+    }
+
+    #[test]
+    fn a_placeholder_once_drawn_holds_for_a_third_of_a_second() {
+        let mut a = asked();
+        wait(&mut a, 650);
+        assert!(a.read_lines().contains(&ReadLine::AnilistAsking { shown: true }));
+        wait(&mut a, 50);
+        anilist(&mut a, vec![tile("a:1", "Lantern Street Notes")], false, Some(1));
+        assert!(
+            a.read_lines().contains(&ReadLine::AnilistAsking { shown: true }),
+            "still held at 700 ms"
+        );
+        wait(&mut a, 200);
+        assert!(!a.read_lines().iter().any(|l| matches!(l, ReadLine::AnilistAsking { .. })));
+        assert_eq!(work_facts(&a, "Lantern Street Notes"), "");
+    }
+
+    #[test]
+    fn asking_one_source_again_leaves_the_other_parts_waiting_as_they_were() {
+        let mut a = asked();
+        sources(
+            &mut a,
+            ReadAnilistState::Asking,
+            vec![
+                group("northwind", ReadSourceState::TimedOut { seconds: 15 }, Vec::new()),
+                group("shelf", ReadSourceState::Asking, Vec::new()),
+            ],
+        );
+        wait(&mut a, 700);
+        let spinners = |a: &App| {
+            a.read_lines()
+                .into_iter()
+                .filter(|l| {
+                    matches!(
+                        l,
+                        ReadLine::AnilistAsking { shown: true }
+                            | ReadLine::Asking { shown: true, .. }
+                    )
+                })
+                .count()
+        };
+        assert_eq!(spinners(&a), 2);
+        a.nav.focus_stage();
+        a.search_in_results = true;
+        let task = a.handle(Action::Refresh, 10);
+        assert!(matches!(
+            task,
+            Some(Command::Reading(ReadingCommand::RetrySourceSearch { .. }))
+        ));
+        sources(
+            &mut a,
+            ReadAnilistState::Asking,
+            vec![
+                group("northwind", ReadSourceState::Asking, Vec::new()),
+                group("shelf", ReadSourceState::Asking, Vec::new()),
+            ],
+        );
+        assert_eq!(spinners(&a), 2, "AniList and the shelf keep theirs; Northwind waits anew");
+    }
+
+    #[test]
+    fn the_cursor_stays_on_its_line_when_results_land_above_it() {
+        let mut a = asked();
+        sources(
+            &mut a,
+            ReadAnilistState::Asking,
+            vec![group(
+                "shelf",
+                ReadSourceState::Hits,
+                vec![tile("s:1", "Paper Lantern Recipes")],
+            )],
+        );
+        a.handle(Action::Down, 10);
+        assert!(
+            matches!(a.read_selected(), Some(ReadLine::Work { title, .. }) if title == "Paper Lantern Recipes")
+        );
+        anilist(
+            &mut a,
+            vec![tile("a:1", "Lantern Street Notes"), tile("a:2", "Lanterns Upriver")],
+            false,
+            Some(2),
+        );
+        assert!(
+            matches!(a.read_selected(), Some(ReadLine::Work { title, .. }) if title == "Paper Lantern Recipes"),
+            "{:?}",
+            a.read_selected()
+        );
+    }
+
+    #[test]
+    fn anilists_failure_is_a_line_r_and_enter_ask_again() {
+        let mut a = asked();
+        sources(
+            &mut a,
+            ReadAnilistState::Failed,
+            vec![group("northwind", ReadSourceState::TimedOut { seconds: 15 }, Vec::new())],
+        );
+        let items = a.read_items();
+        assert!(matches!(items[0], ReadLine::Failed { retry: Retry::Anilist, .. }));
+        a.nav.focus_stage();
+        a.search_in_results = true;
+        // AniList's is under the cursor, and first on the screen.
+        let task = a.handle(Action::Refresh, 10);
+        assert!(matches!(task, Some(Command::Reading(ReadingCommand::Search { .. }))));
+        assert!(a.search_in_results);
+        sources(
+            &mut a,
+            ReadAnilistState::Failed,
+            vec![group("northwind", ReadSourceState::TimedOut { seconds: 15 }, Vec::new())],
+        );
+        // On Northwind's line, `r` asks Northwind.
+        a.handle(Action::Down, 10);
+        let task = a.handle(Action::Refresh, 10);
+        assert!(matches!(
+            task,
+            Some(Command::Reading(ReadingCommand::RetrySourceSearch { ref source_id, .. }))
+                if source_id == "northwind"
+        ));
+        a.handle(Action::Top, 10);
+        let task = a.handle(Action::Open, 10);
+        assert!(matches!(task, Some(Command::Reading(ReadingCommand::Search { .. }))));
+    }
+
+    #[test]
+    fn an_offline_source_says_it_needs_a_connection() {
+        let mut a = asked();
+        sources(
+            &mut a,
+            ReadAnilistState::Answered,
+            vec![group(
+                "northwind",
+                ReadSourceState::Failed { failure: ReadingFailure::Offline },
+                Vec::new(),
+            )],
+        );
+        let reason = a.read_lines().into_iter().find_map(|l| match l {
+            ReadLine::Failed { reason, retry: Retry::Source(_) } => Some(reason),
+            _ => None,
+        });
+        assert_eq!(reason.as_deref(), Some("northwind needs a connection."));
+    }
+
+    #[test]
+    fn your_sources_only_with_nothing_found_says_so_and_what_to_try() {
+        let mut a = asked();
+        a.reading.filter.sources_only = true;
+        a.handle(Action::Open, 10);
+        sources(
+            &mut a,
+            ReadAnilistState::Skipped,
+            vec![
+                group("shelf", ReadSourceState::Nothing, Vec::new()),
+                group("northwind", ReadSourceState::Nothing, Vec::new()),
+            ],
+        );
+        let lines = a.read_lines();
+        assert_eq!(lines[0], ReadLine::Said("Nothing found in your sources".into()));
+        assert_eq!(lines.len(), 2, "{lines:?}");
+    }
+
+    #[test]
+    fn nothing_found_names_the_sources_as_a_sentence_does() {
+        assert_eq!(names_joined(&["Shelf"]), "Shelf");
+        assert_eq!(names_joined(&["Shelf", "Northwind"]), "Shelf and Northwind");
+        assert_eq!(names_joined(&["A", "B", "C"]), "A, B and C");
+    }
+
+    #[test]
+    fn s_with_no_words_says_to_type_a_title_and_changes_nothing() {
+        let mut a = app();
+        medium(&mut a, KaeriIsFor::Read);
+        a.go_to_section(Section::Search);
+        a.take_commands();
+        a.nav.focus_rail();
+        a.toasts.clear();
+        assert_eq!(a.handle(Action::ShowSources, 10), None);
+        assert!(!a.reading.sources_only());
+        assert_eq!(a.toasts.len(), 1);
+    }
+
+    #[test]
+    fn tab_with_one_part_keeps_the_rail_as_it_was() {
+        let mut a = asked();
+        sources(
+            &mut a,
+            ReadAnilistState::Answered,
+            vec![group(
+                "shelf",
+                ReadSourceState::Hits,
+                vec![tile("s:1", "Paper Lantern Recipes")],
+            )],
+        );
+        anilist(&mut a, Vec::new(), false, Some(0));
+        a.handle(Action::Down, 10);
+        let width = a.nav.rail_width();
+        assert_eq!(a.handle(Action::ToggleRail, 10), None);
+        assert_eq!(a.nav.rail_width(), width);
+    }
+
+    #[test]
+    fn view_all_names_its_row_over_anilists_results() {
+        let mut a = app();
+        medium(&mut a, KaeriIsFor::Read);
+        a.go_to_section(Section::Home);
+        let mut view = home_view();
+        view.rows[0].view_all = Some(ReadSearchQuery::default());
+        view.rows[0].view_all_title = Some(Msg::Reading(ReadingMsg::ReadViewAllTrendingManga));
+        a.apply(Event::Reading(ReadingEvent::Home(Box::new(view))));
+        a.nav.focus_stage();
+        a.handle(Action::Bottom, 10);
+        a.handle(Action::Open, 10);
+        assert_eq!(a.nav.section(), Section::Search);
+        let lines = a.read_lines();
+        let ReadLine::AnilistHeading(heading) = &lines[0] else { panic!("{lines:?}") };
+        assert!(heading.ends_with(" · Series from AniList"), "{heading}");
+        anilist(&mut a, vec![tile("a:1", "Lantern Street Notes")], false, Some(1));
+        let lines = a.read_lines();
+        let ReadLine::AnilistHeading(heading) = &lines[0] else { panic!("{lines:?}") };
+        assert!(heading.ends_with(" · 1 series from AniList"), "{heading}");
+    }
+
+    #[test]
+    fn a_format_rows_caption_is_origin_then_status_or_when_it_started() {
+        let japan = Some(Msg::Reading(ReadingMsg::ReadingOriginJapan));
+        let titled = WorkTile {
+            facts: vec![
+                kind_words(Some("manga"), Medium::Manga, Some("JP")),
+                Msg::Reading(ReadingMsg::ReadingStatusReleasing),
+            ],
+            origin: japan,
+            ..tile("a:1", "Lantern Street Notes")
+        };
+        let row = |kind| ReadHomeRow {
+            id: "row".into(),
+            kind,
+            format: Some(kaeri_model::reading::ReadRowFormat::Manga),
+            title: Msg::Reading(ReadingMsg::ReadHomeTrendingManga),
+            side: None,
+            tiles: Vec::new(),
+            view_all: None,
+            view_all_title: None,
+            pending: false,
+        };
+        assert_eq!(
+            home_caption(&titled, Some(&row(ReadRowKind::Trending))),
+            "Japan · Releasing"
+        );
+        assert_eq!(home_caption(&titled, None), "Manga · Releasing", "a mixed row's");
     }
 
     #[test]

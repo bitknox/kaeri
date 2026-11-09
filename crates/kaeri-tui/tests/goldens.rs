@@ -466,6 +466,7 @@ scenarios! {
     home_long,
     home_first_run,
     read_home_first_run,
+    read_home_demo_only,
     read_home_history,
     read_search_mid,
     read_search_failed,
@@ -3762,6 +3763,24 @@ fn read_home_first_run(s: &mut Screen) {
     s.wait(Duration::from_secs(1));
 }
 
+/// Reading's Home on a true first run: only the demo, no source of the person's own, so the end
+/// says where sources are added.
+fn read_home_demo_only(s: &mut Screen) {
+    settled_on(s, 1);
+    s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Read, None));
+    use kaeri_model::{
+        book_sources::{BookSourceEvent, BookSourcesView},
+        reading::ReadingEvent,
+    };
+    s.apply(Event::BookSources(BookSourceEvent::View(BookSourcesView::default())));
+    let Event::Reading(ReadingEvent::Home(mut view)) = read::home_first_run() else {
+        unreachable!("Home")
+    };
+    view.no_sources = true;
+    view.rows.truncate(2);
+    s.apply(Event::Reading(ReadingEvent::Home(view)));
+}
+
 /// Reading's Home with history: the person's shelves, then the rows, one title not found.
 fn read_home_history(s: &mut Screen) {
     reading_on(s, 1);
@@ -3840,7 +3859,8 @@ fn both_home_shows(s: &mut Screen) {
     s.apply(read::sources());
 }
 
-/// Kaeri is for both, `W` pressed on Home: reading's Home, the cursor on a discovery row's title.
+/// Kaeri is for both, `W` pressed on Home: Read, beside Watch in the rail, the cursor on a
+/// discovery row's title.
 fn both_home_reading(s: &mut Screen) {
     settled_on(s, 1);
     s.apply(medium_view(kaeri_model::medium::KaeriIsFor::Both, None));

@@ -506,10 +506,12 @@ pub(crate) fn reading_hints(
     if app.both() {
         wanted.push((Action::SwitchMedium, said(t::tui_read_hint_to_shows())));
     }
-    if search {
-        if wide {
-            wanted.push((Action::Filter, said(t::keys_hint_filters())));
-        }
+    // Your sources only is offered once words are typed: with none, only AniList browses.
+    let words = !app.text(crate::app::Field::Search).trim().is_empty();
+    if search && wide {
+        wanted.push((Action::Filter, said(t::keys_hint_filters())));
+    }
+    if search && words {
         wanted.push((
             Action::ShowSources,
             if wide {

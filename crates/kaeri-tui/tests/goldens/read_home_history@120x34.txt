@@ -1,18 +1,18 @@
-Kaeri                                                                                          plugins ●  ·  anilist ⇅ 2
+Kaeri                                                                                        sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ▌ ▸  Home                   │    Continue  ──────────────────────────────────────────────────────────────────────────
-  ▤  Calendar               │    Harbor Light Recipes                                                      Chapter 14
-  ▦  Seasonal               │    Glasswing Courier                                                          Chapter 3
-  /  Search                 │
-  ▥  Library                │    Up next for you  ───────────────────────────────────────────────────────────────────
-  ↓  Downloads              │    Orchard of Small Hours                                             Manga · Releasing
-  ◇  Sources                │
-  ◎  Accounts               │    Trending manga  ────────────────────────────────────────────────────────────────────
-  ≡  Settings               │    Iron Kite Brigade                                                  Manga · Releasing
-  ⇄  Together               │  ▌ Saltwind Diary                                             Not found in your sources
-                            │    Moss and Iron                                                      Manga · Releasing
-                            │    Foxfire Ledger                                                     Manga · Releasing
-                            │    Second Floor Swordsmith                                            Manga · Releasing
+  /  Search                 │    Harbor Light Recipes                                                    ● Chapter 14
+  ▥  Library                │    Glasswing Courier                                                          Chapter 3
+  ↓  Downloads              │
+  ◇  Sources                │    Up next for you  ───────────────────────────────────────────────────────────────────
+  ◎  Accounts               │    Orchard of Small Hours                                             Manga · Releasing
+  ≡  Settings               │
+                            │    Trending manga  ────────────────────────────────────────────────────────────────────
+                            │    Iron Kite Brigade                                                  Japan · Releasing
+                            │  ▌ Saltwind Diary                                             Not found in your sources
+                            │    Moss and Iron                                                      Japan · Releasing
+                            │    Foxfire Ledger                                                     Japan · Releasing
+                            │    Second Floor Swordsmith                                            Japan · Releasing
                             │    View all
                             │
                             │    Because you finished Harbor Light Recipes  ─────────────────────────────────────────
@@ -20,8 +20,8 @@ Kaeri                                                                           
                             │    Quiet Ferry Days                                                   Manga · Releasing
                             │
                             │    New manga · Last 12 months  ────────────────────────────────────────────────────────
-                            │    Copper Moth Station                                                Manga · Releasing
-                            │    Thistle Road                                                       Manga · Releasing
+                            │    Copper Moth Station                                                Japan · Releasing
+                            │    Thistle Road                                                       Japan · Releasing
                             │    View all
                             │
                             │    More Romance  ──────────────────────────────────────────────────────────────────────
@@ -31,11 +31,11 @@ Kaeri                                                                           
                             │
                             │    Finished manga · Most popular  ─────────────────────────────────────────────────────
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-Reading · 3 sources                                                                   ↵ open   tab next section   ? keys
+Reading · 3 sources                                                      ↵ open   tab next section   a planning   ? keys
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
-r00 c95-103 fg=state
+r00 c93-103 fg=state
 r00 c104-105 fg=text-dim
 r00 c106-106 fg=rule
 r00 c107-108 fg=text-dim
@@ -48,17 +48,17 @@ r02 c28-28 fg=rule
 r02 c33-40 fg=text-dim
 r02 c43-116 fg=rule
 r03 c02-02 fg=text-dim
-r03 c05-12 fg=text-dim
+r03 c05-10 fg=text-dim
 r03 c28-28 fg=rule
 r03 c33-52 fg=text-dim
-r03 c107-116 fg=state
+r03 c105-116 fg=state
 r04 c02-02 fg=text-dim
-r04 c05-12 fg=text-dim
+r04 c05-11 fg=text-dim
 r04 c28-28 fg=rule
 r04 c33-49 fg=text-dim
 r04 c108-116 fg=text-dim
 r05 c02-02 fg=text-dim
-r05 c05-10 fg=text-dim
+r05 c05-13 fg=text-dim
 r05 c28-28 fg=rule
 r06 c02-02 fg=text-dim
 r06 c05-11 fg=text-dim
@@ -66,25 +66,19 @@ r06 c28-28 fg=rule
 r06 c33-47 fg=text-dim
 r06 c50-116 fg=rule
 r07 c02-02 fg=text-dim
-r07 c05-13 fg=text-dim
+r07 c05-12 fg=text-dim
 r07 c28-28 fg=rule
 r07 c33-54 fg=text-dim
 r07 c100-116 fg=text-dim
 r08 c02-02 fg=text-dim
-r08 c05-11 fg=text-dim
+r08 c05-12 fg=text-dim
 r08 c28-28 fg=rule
-r09 c02-02 fg=text-dim
-r09 c05-12 fg=text-dim
 r09 c28-28 fg=rule
 r09 c33-46 fg=text-dim
 r09 c49-116 fg=rule
-r10 c02-02 fg=text-dim
-r10 c05-12 fg=text-dim
 r10 c28-28 fg=rule
 r10 c33-49 fg=text-dim
 r10 c100-116 fg=text-dim
-r11 c02-02 fg=text-dim
-r11 c05-12 fg=text-dim
 r11 c28-28 fg=rule
 r11 c31-31 fg=obi
 r11 c33-46 fg=text mod=BOLD
@@ -140,9 +134,11 @@ r31 c33-61 fg=text-dim
 r31 c64-116 fg=rule
 r32 c00-119 fg=rule
 r33 c00-18 fg=text-dim
-r33 c86-86 fg=text
-r33 c87-94 fg=text-dim
-r33 c95-97 fg=text
-r33 c98-113 fg=text-dim
+r33 c73-73 fg=text
+r33 c74-81 fg=text-dim
+r33 c82-84 fg=text
+r33 c85-100 fg=text-dim
+r33 c101-101 fg=text
+r33 c102-113 fg=text-dim
 r33 c114-114 fg=text
 r33 c115-119 fg=text-dim
