@@ -258,7 +258,7 @@ fn missing(id: &str) -> StoreError {
 }
 
 /// Refuse the tables of the other side on `conn`.
-fn guard(conn: &Connection, denied: &'static [&'static str]) -> rusqlite::Result<()> {
+fn guard(conn: &mut Connection, denied: &'static [&'static str]) -> rusqlite::Result<()> {
     conn.authorizer(Some(move |ctx: rusqlite::hooks::AuthContext<'_>| {
         let table = match ctx.action {
             AuthAction::Read { table_name, .. }
@@ -277,16 +277,16 @@ fn guard(conn: &Connection, denied: &'static [&'static str]) -> rusqlite::Result
     Ok(())
 }
 
-fn unguard(conn: &Connection) -> rusqlite::Result<()> {
+fn unguard(conn: &mut Connection) -> rusqlite::Result<()> {
     conn.authorizer(None::<fn(rusqlite::hooks::AuthContext<'_>) -> Authorization>)?;
     conn.flush_prepared_statement_cache();
     Ok(())
 }
 
 fn open_personal(path: &Path) -> Result<Connection> {
-    let conn = Connection::open(path)?;
+    let mut conn = Connection::open(path)?;
     schema::migrate(&conn)?;
-    guard(&conn, DEVICE_TABLES)?;
+    guard(&mut conn, DEVICE_TABLES)?;
     Ok(conn)
 }
 
@@ -311,8 +311,8 @@ impl Store {
         }
         let personal = open_personal(&list.database(data_dir, id))?;
         {
-            let device = self.conn.lock().map_err(|_| StoreError::Poisoned)?;
-            guard(&device, PERSONAL_TABLES)?;
+            let mut device = self.conn.lock().map_err(|_| StoreError::Poisoned)?;
+            guard(&mut device, PERSONAL_TABLES)?;
         }
         *self.personal.write().unwrap_or_else(std::sync::PoisonError::into_inner) =
             Arc::new(Mutex::new(personal));
@@ -328,8 +328,8 @@ impl Store {
     /// Back to the one-connection store of a single-user install.
     fn drop_profiles(&self) -> Result<()> {
         {
-            let device = self.conn.lock().map_err(|_| StoreError::Poisoned)?;
-            unguard(&device)?;
+            let mut device = self.conn.lock().map_err(|_| StoreError::Poisoned)?;
+            unguard(&mut device)?;
         }
         *self.personal.write().unwrap_or_else(std::sync::PoisonError::into_inner) =
             self.conn.clone();
@@ -408,8 +408,8 @@ fn promote(main: &Path, from: &Path) -> Result<()> {
 
 #[cfg(test)]
 pub(crate) fn guard_for_test(
-    device: &Connection,
-    personal: &Connection,
+    device: &mut Connection,
+    personal: &mut Connection,
 ) -> rusqlite::Result<()> {
     guard(device, PERSONAL_TABLES)?;
     guard(personal, DEVICE_TABLES)

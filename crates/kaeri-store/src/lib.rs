@@ -246,10 +246,10 @@ impl Store {
                     | rusqlite::OpenFlags::SQLITE_OPEN_SHARED_CACHE,
             )
         };
-        let device = open()?;
+        let mut device = open()?;
         schema::migrate(&device)?;
-        let personal = open()?;
-        profile::guard_for_test(&device, &personal)?;
+        let mut personal = open()?;
+        profile::guard_for_test(&mut device, &mut personal)?;
         let store = Self::from_conn(device);
         *store.personal.write().unwrap() = Arc::new(Mutex::new(personal));
         Ok(store)
