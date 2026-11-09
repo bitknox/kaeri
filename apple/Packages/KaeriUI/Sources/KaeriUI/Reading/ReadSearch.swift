@@ -89,13 +89,8 @@ struct ReadSearchScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: compact ? 12 : 16) {
                 if compact {
+                    // The filters are the row pinned under the field, as the shows' Search has them.
                     if store.medium.both { SearchScopePicker() }
-                    ScrollView(.horizontal) {
-                        HStack(spacing: 8) { ReadFilterMenus(compact: true) { filtersShown = true } }
-                            .padding(.horizontal, 16)
-                    }
-                    .scrollIndicators(.never)
-                    .padding(.horizontal, -16)
                 } else {
                     HStack(spacing: 12) {
                         if store.medium.both { SearchScopePicker() }
@@ -153,17 +148,96 @@ struct ReadSearchScreen: View {
             try? await Task.sleep(for: .milliseconds(1_000))
             navigator.launchSheet = nil
         }
-        .toolbar {
-            if compact {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ReadFilterButton { filtersShown = true }
-                }
-            }
+        // On the iPhone the filters stay under the field, sharing the bar's soft scroll edge, as
+        // the shows' Search holds them.
+        .safeAreaBar(edge: .top, spacing: 8) {
+            if compact { ReadPinnedFilterRow { filtersShown = true } }
         }
+        .scrollEdgeEffectStyle(compact ? .soft : nil, for: .top)
         .sheet(isPresented: $filtersShown) { ReadFiltersSheet() }
         #endif
     }
 }
+
+#if os(iOS)
+/// The iPhone's filters, held as the shows' Search holds them: one row pinned under the field
+/// that scrolls sideways under a fade at an edge with more, Clear all in front once something is
+/// set, and the filter pill fixed at its end, which opens the sheet with Your sources only first.
+private struct ReadPinnedFilterRow: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let openSheet: () -> Void
+    /// Where the capsules are scrolled to, put back to the start by new words.
+    @State private var position = ScrollPosition(edge: .leading)
+    @State private var more = ScrollEdges()
+
+    /// What decides the row's width and order: Clear all and what the capsules say.
+    private struct Layout: Hashable {
+        let clearAll: Bool
+        let words: String
+    }
+
+    var body: some View {
+        let query = store.reading.search.query
+        // The sheet holds one thing the row's capsules don't say: Your sources only.
+        let state = PinnedFilterState(
+            showsClearAll: ReadFilterWords.any(query) || query.sourcesOnly, filterCount: query.sourcesOnly ? 1 : 0)
+        HStack(spacing: 0) {
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    if state.showsClearAll { clearAll(query) }
+                    ReadFilterMenus(compact: true, pinned: true, openSheet: openSheet)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 1)
+                .modifier(RowReflow(
+                    layout: Layout(clearAll: state.showsClearAll,
+                                   words: ReadFilterWords.summary(query, filters: store.reading.filters)),
+                    reduceMotion: reduceMotion))
+            }
+            .scrollIndicators(.never)
+            .scrollPosition($position)
+            .onScrollGeometryChange(for: ScrollEdges.self) { geometry in
+                ScrollEdges(geometry)
+            } action: { _, edges in
+                more = edges
+            }
+            .mask { ScrollEdgeFade(edges: more) }
+            Button(action: openSheet) {
+                FilterCapsule(
+                    title: "", active: state.filterCount > 0, compact: true,
+                    symbol: "line.3.horizontal.decrease", badge: state.filterCount, chevron: false, pinned: true)
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 16)
+            .padding(.leading, 4)
+            .accessibilityLabel(state.filtersLabel)
+            .animation(.standard, value: state.filterCount)
+        }
+        .frame(maxWidth: .infinity)
+        // The row grows with the text to extra-extra-extra large and stops there, as the shows' does.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .onChange(of: query.text) {
+            withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .leading) }
+        }
+    }
+
+    /// Clear all keeps the words, the sort and what is searched, as the shows' does.
+    private func clearAll(_ query: ReadSearchQuery) -> some View {
+        Button {
+            var cleared = ReadingModel.emptyQuery
+            cleared.text = query.text
+            cleared.medium = query.medium
+            cleared.sort = query.sort
+            store.reading.runSearch(cleared)
+        } label: {
+            FilterCapsule(title: L.searchClearAll, compact: true, symbol: "xmark", chevron: false, pinned: true)
+        }
+        .buttonStyle(.plain)
+        .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+    }
+}
+#endif
 
 /// Your sources only, the filter bar's last chip: a switch to a screen reader, and on, a check.
 /// Announced once as it turns on.
@@ -765,6 +839,8 @@ enum ReadFilterWords {
 private struct ReadFilterMenus: View {
     @Environment(AppStore.self) private var store
     let compact: Bool
+    /// On the iPhone's pinned row: the shows' capsules, a set one in the neutral fill.
+    var pinned = false
     let openSheet: () -> Void
 
     var body: some View {
@@ -853,28 +929,34 @@ private struct ReadFilterMenus: View {
         Menu {
             items()
         } label: {
-            ReadFilterLabel(name: name, value: value)
-                // Your sources only leaves AniList out, and these filter AniList's results.
-                .opacity(store.reading.search.query.sourcesOnly ? 0.45 : 1)
+            label(name, value: value)
         }
-        .menuStyle(.button)
-        .buttonStyle(.plain)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .pointerHover()
+        .filterMenu()
         .accessibilityLabel(name)
         .accessibilityValue(value ?? L.readFilterAny)
     }
 
     private func button(_ name: String, value: String?, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            ReadFilterLabel(name: name, value: value)
-                .opacity(store.reading.search.query.sourcesOnly ? 0.45 : 1)
+            label(name, value: value)
         }
             .buttonStyle(.plain)
             .fixedSize()
             .accessibilityLabel(name)
             .accessibilityValue(value ?? L.readFilterAny)
+    }
+
+    @ViewBuilder
+    private func label(_ name: String, value: String?) -> some View {
+        Group {
+            if pinned {
+                FilterCapsule(title: value ?? name, active: value != nil, compact: true, pinned: true)
+            } else {
+                ReadFilterLabel(name: name, value: value)
+            }
+        }
+        // Your sources only leaves AniList out, and these filter AniList's results.
+        .opacity(store.reading.search.query.sourcesOnly ? 0.45 : 1)
     }
 }
 

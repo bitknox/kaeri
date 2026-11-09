@@ -264,7 +264,7 @@ struct ReadViewAllPage: View {
     }
 }
 
-/// The filter button beside the field on the iPhone, with a dot while a filter is on.
+/// The filter button in View all's bar on the iPhone, with a dot while a filter is on.
 struct ReadFilterButton: View {
     @Environment(AppStore.self) private var store
     let action: () -> Void

@@ -688,7 +688,7 @@ struct SearchFilterRow: View {
                     .padding(.vertical, 1)
                     // Width and reflow on standard. With Reduce Motion the old row crossfades into
                     // the new, and nothing slides or scales.
-                    .modifier(RowReflow(layout: .init(query), reduceMotion: reduceMotion))
+                    .modifier(RowReflow(layout: PinnedFilterState.Layout(query), reduceMotion: reduceMotion))
             }
             .scrollIndicators(.never)
             .scrollPosition($position)
@@ -967,7 +967,7 @@ struct SearchFilterRow: View {
 
 extension View {
     /// A capsule menu in the filter row: no system chrome around the capsule it draws.
-    fileprivate func filterMenu() -> some View {
+    func filterMenu() -> some View {
         menuStyle(.button)
             .buttonStyle(.plain)
             .menuIndicator(.hidden)
@@ -978,8 +978,8 @@ extension View {
 
 /// The pinned row's change of layout: the capsules take their new widths and places on standard;
 /// with Reduce Motion the whole row is replaced, the old one fading into the new.
-private struct RowReflow: ViewModifier {
-    let layout: PinnedFilterState.Layout
+struct RowReflow<Layout: Hashable>: ViewModifier {
+    let layout: Layout
     let reduceMotion: Bool
 
     @ViewBuilder
