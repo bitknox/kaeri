@@ -1,15 +1,15 @@
-Kaeri                                                  plugins ●  ·  anilist ⇅ 2
+Kaeri                                                sources ● 3  ·  anilist ⇅ 2
 ────────────────────────────────────────────────────────────────────────────────
-▌▸ │
- ▤ │   Reading is in the apps
- ▦ │
- / │   The terminal has no reader. Manga, webtoons and light novels open in
- ▥ │   the Kaeri apps, and sync keeps your progress in step.
- ↓ │
- ◇ │   Press I to change what Kaeri is for.
- ◎ │
+ ▸ │  / quillmarsh▏
+▌/ │
+ ▥ │  Nothing found for quillmarsh
+ ↓ │  Try other words, or a title in another language.
+ ◇ │
+ ◎ │  Nothing in your sources either.
  ≡ │
- ⇄ │
+   │
+   │
+   │
    │
    │
    │
@@ -21,40 +21,39 @@ Kaeri                                                  plugins ●  ·  anilist 
    │
    │
 ────────────────────────────────────────────────────────────────────────────────
-plugins · Subbed · 1080p                                                  ? keys
+Reading                                     ↵ search   ctrl+f filters   esc back
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
-r00 c55-63 fg=state
+r00 c53-63 fg=state
 r00 c64-65 fg=text-dim
 r00 c66-66 fg=rule
 r00 c67-68 fg=text-dim
 r00 c69-79 fg=state
 r01 c00-79 fg=rule
-r02 c00-00 fg=text-dim
-r02 c01-01 fg=text mod=BOLD
+r02 c01-01 fg=text-dim
 r02 c03-03 fg=rule
-r03 c01-01 fg=text-dim
+r02 c06-06 fg=obi
+r02 c08-17 fg=text mod=BOLD
+r02 c18-18 fg=obi
+r03 c00-00 fg=text-dim
+r03 c01-01 fg=text mod=BOLD
 r03 c03-03 fg=rule
-r03 c07-28 fg=text mod=BOLD
 r04 c01-01 fg=text-dim
 r04 c03-03 fg=rule
+r04 c06-33 fg=text
 r05 c01-01 fg=text-dim
 r05 c03-03 fg=rule
-r05 c07-74 fg=text-dim
+r05 c06-53 fg=text-dim
 r06 c01-01 fg=text-dim
 r06 c03-03 fg=rule
-r06 c07-59 fg=text-dim
 r07 c01-01 fg=text-dim
 r07 c03-03 fg=rule
+r07 c06-36 fg=text-dim
 r08 c01-01 fg=text-dim
 r08 c03-03 fg=rule
-r08 c07-42 fg=text
-r09 c01-01 fg=text-dim
 r09 c03-03 fg=rule
-r10 c01-01 fg=text-dim
 r10 c03-03 fg=rule
-r11 c01-01 fg=text-dim
 r11 c03-03 fg=rule
 r12 c03-03 fg=rule
 r13 c03-03 fg=rule
@@ -67,6 +66,10 @@ r19 c03-03 fg=rule
 r20 c03-03 fg=rule
 r21 c03-03 fg=rule
 r22 c00-79 fg=rule
-r23 c00-23 fg=text-dim
-r23 c74-74 fg=text
+r23 c00-06 fg=text-dim
+r23 c44-44 fg=text
+r23 c45-54 fg=text-dim
+r23 c55-60 fg=text
+r23 c61-71 fg=text-dim
+r23 c72-74 fg=text
 r23 c75-79 fg=text-dim

@@ -4554,6 +4554,112 @@ settings-note-upload-limit = [Çàþš àļļ ţöŕŕéñţ üþļöàð, šö 
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = [Ûšé --ţöķéñ-ţö-ƒîļé ţö ɱöṽé àñ éẋîšţîñĝ ţöķéñ.~~~~~~~~~~~~~~]
 
+# AniList's name, in the line that says it is still being asked.
+tui-read-anilist = [ÅñîĻîšţ~~~]
+
+# The line under the search field when no filter is set. Lower case, as the terminal's metadata lines are.
+tui-read-filters-none = [ƒîļţéŕš ñöñé~~~~]
+
+# The line under the search field, with the filters set. The filters are already joined, such as "Manga · Japan".
+tui-read-filters = [ƒîļţéŕš { $set }~~~~]
+
+# On the line under the search field: the switch that hides AniList's results. "on" or "off" follows it in bold.
+tui-read-sources-only = [ýöüŕ šöüŕçéš öñļý~~~~~~]
+
+# The state of that switch, after it.
+tui-read-on = [öñ~]
+
+# The state of that switch, after it.
+tui-read-off = [öƒƒ~]
+
+# After a source that didn't answer, beside the key that asks it again. Lower case.
+tui-read-try-again = [ţŕý àĝàîñ~~~]
+
+# Toast when "Your sources only" is pressed with nothing typed in reading's search: the sources are asked for words, never browsed.
+tui-read-sources-only-words = [Ţýþé à ţîţļé ţö šéàŕçĥ ýöüŕ šöüŕçéš.~~~~~~~~~~~]
+
+# Search with "Your sources only" on, when none of the sources found anything. A line saying to try other words follows.
+tui-read-sources-nothing = [Ñöţĥîñĝ ƒöüñð îñ ýöüŕ šöüŕçéš~~~~~~~~~]
+
+# A source in reading's search that could not be asked because the computer is offline. The source is its name. Folders still answer offline; servers and plugins need a connection.
+tui-read-source-offline = [{ $source } ñééðš à çöññéçţîöñ.~~~~~~~]
+
+# Names in a sentence, the last joined with "and": "Home library and Northwind", "A, B and C". The names before the last are already joined with commas. Used in "Nothing found in …".
+tui-read-names-and = [{ $names } àñð { $last }~~~~]
+
+# Toast after Enter on a series in reading's Home or Search. The terminal has no reader.
+tui-read-opens-in-apps = [Öþéñš îñ ţĥé Ķàéŕî àþþš.~~~~~~~~]
+
+# On reading's Home when no book source is set up. The terminal cannot add one; the apps can.
+tui-read-sources-in-apps = [Ƒöļðéŕš, šéŕṽéŕš àñð þļüĝîñ šţöŕéš àŕé àððéð îñ ţĥé Ķàéŕî àþþš.~~~~~~~~~~~~~~~~~~~]
+
+# Toast when "Your sources only" turns on.
+tui-read-sources-only-on = [Ýöüŕ šöüŕçéš öñļý. ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ.~~~~~~~~~~~~~~~]
+
+# Toast when "Your sources only" turns off.
+tui-read-sources-only-off = [ÅñîĻîšţ'š ŕéšüļţš šĥöŵ àĝàîñ.~~~~~~~~~]
+
+# Header chip while Kaeri is for reading alone: how many of the person's book sources are on. The mark is a dot, filled when one or more is on. Lower case, as the header's other chips are.
+tui-read-header-sources = [šöüŕçéš { $mark } { $n }~~~~~]
+
+# Left of the status line on reading's Home and Search: how many of the person's sources are on.
+tui-read-status =
+    { $n ->
+        [one] [Ŕéàðîñĝ · 1 šöüŕçé~~~~~~]
+       *[other] [Ŕéàðîñĝ · { $n } šöüŕçéš~~~~~~~]
+    }
+
+# Left of the status line on reading's Home and Search, when the terminal is narrow.
+tui-read-status-short = [Ŕéàðîñĝ~~~]
+
+# Hint in the status line on reading's Search: Tab moves between AniList's results and the sources'. Shown in lower case.
+tui-read-hint-next-section = [Ñéẋţ šéçţîöñ~~~~]
+
+# The same hint when the terminal is narrow.
+tui-read-hint-section = [Šéçţîöñ~~~]
+
+# Hint in the status line on reading's Search: the key that turns "Your sources only" on and off. Shown in lower case.
+tui-read-hint-sources-only = [Ýöüŕ šöüŕçéš öñļý~~~~~~]
+
+# The same hint when the terminal is narrow.
+tui-read-hint-sources-only-short = [Šöüŕçéš öñļý~~~~]
+
+# Hint in the status line on the shows' Home and Search while Kaeri is for shows and reading: the key that goes to Read from Home, and turns Search to reading's. Shown in lower case.
+tui-read-hint-to-reading = [Ŕéàðîñĝ~~~]
+
+# Hint in the status line on Read and reading's Search while Kaeri is for shows and reading: the key that goes back to the shows' Home, or turns Search back to the shows'. Shown in lower case.
+tui-read-hint-to-shows = [Šĥöŵš~~]
+
+# Hint in the status line on a reading title the Planning list can take. Shown in lower case.
+tui-read-hint-planning = [Þļàññîñĝ~~~]
+
+# Left of the status line on the shows' Home and Search while Kaeri is for shows and reading, before what the line says there anyway, such as "Demo · Subbed · 1080p".
+tui-read-status-shows = [Šĥöŵš · { $state }~~~~]
+
+# Action label in the key reference and the command palette, while Kaeri is for both: from the shows' Home to Read and back, and Search turned between the shows' and reading's.
+tui-read-action-switch = [Šĥöŵš öŕ ŕéàðîñĝ~~~~~]
+
+# Ends the toast that says a command does nothing here: it follows the command's name and "works", and names where it does.
+tui-read-where-switch = [öñ Ĥöɱé, Ŕéàð àñð Šéàŕçĥ ŵĥîļé Ķàéŕî îš ƒöŕ šĥöŵš àñð ŕéàðîñĝ~~~~~~~~~~~~~~~~~~~]
+
+# In the key reference's reading keys: puts the title under the cursor on the Planning list. Works on Home's discovery rows and AniList's results.
+tui-read-keys-planning = [Åðð ţö Þļàññîñĝ~~~~~]
+
+# Heading of the reading keys in the key reference.
+tui-read-keys-heading = [Ŕéàðîñĝ~~~]
+
+# A row of the key reference: move to the next part of the screen, AniList's results or the sources' on Search, and the next row on Home.
+tui-read-keys-next-section = [Ñéẋţ šéçţîöñ~~~~]
+
+# A row of the key reference: turn "Your sources only" on or off.
+tui-read-keys-sources-only = [Ýöüŕ šöüŕçéš öñļý, öñ öŕ öƒƒ~~~~~~~~~]
+
+# A row of the key reference: ask a source or AniList again on Search, or load Home again.
+tui-read-keys-try-again = [Åšķ àĝàîñ, öŕ ļöàð àĝàîñ~~~~~~~~]
+
+# A row of the key reference: the filters of reading's search.
+tui-read-keys-filters = [Šéàŕçĥ ƒîļţéŕš~~~~~]
+
 # Heading of the { -plugin-store } screens when the terminal is too small to draw them.
 stores-needs-larger-terminal = [Ñééðš à ļàŕĝéŕ ţéŕɱîñàļ~~~~~~~]
 
@@ -5198,9 +5304,6 @@ tui-together-not-a-link = [Ţĥàţ îš ñöţ à þàŕţý ļîñķ öŕ çö
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = [Éþîšöðé { $episode } · { $when }~~~~~~]
-
-# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
-tui-medium-read-title = [Ŕéàðîñĝ îš îñ ţĥé àþþš~~~~~~~]
 
 # Line under the title of that page.
 tui-medium-read-line = [Ţĥé ţéŕɱîñàļ ĥàš ñö ŕéàðéŕ. Ṁàñĝà, ŵéƀţööñš àñð ļîĝĥţ ñöṽéļš öþéñ îñ ţĥé Ķàéŕî àþþš, àñð šýñç ķééþš ýöüŕ þŕöĝŕéšš îñ šţéþ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]

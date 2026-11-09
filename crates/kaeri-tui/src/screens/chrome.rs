@@ -26,7 +26,19 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
     // used to take its name from the first source in the order and its state from whether
     // torrents were switched on, so a session that plugins were serving read as broken in the
     // alert colour. Off is a choice and is said quietly; only a source that is failing alerts.
-    for kaeri_model::sources::SourceChip { id: source, state } in app.source_states() {
+    // While Kaeri is for reading alone, the shows' sources say nothing about it: one chip says
+    // how many of the person's book sources are on.
+    if app.reading_only() {
+        let on = app.read_sources_on();
+        let (mark, role) = if on > 0 {
+            (glyph::STATE_READY, Role::State)
+        } else {
+            (glyph::STATE_OFF, Role::TextDim)
+        };
+        chips.push((t::tui_read_header_sources(&mark.to_string(), on as i64), role));
+    }
+    let shows = if app.reading_only() { Vec::new() } else { app.source_states() };
+    for kaeri_model::sources::SourceChip { id: source, state } in shows {
         use kaeri_model::sources::SourceState as S;
         let (mark, role) = match state {
             S::Ready => (glyph::STATE_READY, Role::State),
@@ -71,7 +83,7 @@ pub(super) fn render_header(buf: &mut Buffer, app: &App, geometry: &Frame) {
     let title = if !named {
         "Kaeri".to_owned() // i18n-skip: the product name
     } else {
-        t::chrome_header_section(app.nav.section().label())
+        t::chrome_header_section(app.section_label(app.nav.section()))
     };
     Header::new(&app.palette, &title).chips(&chips).render(geometry.header, buf);
 }
@@ -197,16 +209,40 @@ pub(super) fn render_status(buf: &mut Buffer, app: &App, geometry: &Frame, help_
             .render(geometry.status, buf);
         return;
     }
+    let wide = buf.area().width >= crate::layout::NARROW_WIDTH;
+    if app.status.is_empty() && app.reading_here() {
+        let state = app.read_status(wide);
+        let hints = crate::keymap::reading_hints(app, wide)
+            .unwrap_or_else(|| status_hints_paged(app, help_pages));
+        StatusLine::new(&app.palette, &state).hints(&hints).render(geometry.status, buf);
+        return;
+    }
+    // While Kaeri is for both, the shows' Home and Search say whose they are, and the key that
+    // turns them to reading's.
+    let shows_side = app.status.is_empty() && app.shows_side_here();
     let state = if app.status.is_empty() {
         let audio = match app.settings.translation {
             kaeri_core::media::Translation::Sub => t::audio_subbed(),
             kaeri_core::media::Translation::Dub => t::audio_dubbed(),
         };
-        t::chrome_status_state(&app.source_label(), &audio, i64::from(app.settings.quality))
+        let state = t::chrome_status_state(
+            &app.source_label(),
+            &audio,
+            i64::from(app.settings.quality),
+        );
+        if shows_side { t::tui_read_status_shows(&state) } else { state }
     } else {
         app.status.clone()
     };
-    let hints = status_hints_paged(app, help_pages);
+    let mut hints = status_hints_paged(app, help_pages);
+    if shows_side
+        && !app.is_typing()
+        && let Some(key) = app.keymap.keys_for(crate::keymap::Action::SwitchMedium).first()
+    {
+        // Before `? keys`, which stays last.
+        let at = hints.len().saturating_sub(1);
+        hints.insert(at, (key.render(), crate::keymap::hint_to_reading()));
+    }
     StatusLine::new(&app.palette, &state).hints(&hints).render(geometry.status, buf);
 }
 

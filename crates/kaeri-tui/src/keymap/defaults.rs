@@ -33,6 +33,9 @@ impl Keymap {
             bind(Binding::plain(Char('R')), A::ForceResync);
             bind(Binding::plain(Char('t')), A::ToggleTranslation);
             bind(Binding::plain(Char('I')), A::ChooseMedium);
+            // `W`: watch or read, on Home and Search while Kaeri is for both. Lowercase `w` is
+            // the watch order on a title.
+            bind(Binding::plain(Char('W')), A::SwitchMedium);
             bind(Binding::plain(Char('/')), A::FocusSearch);
             bind(Binding::ctrl(Char('f')), A::FilterSearch);
             // Surprise me, on Search's browse and on Planning, and Another on the page it opened.

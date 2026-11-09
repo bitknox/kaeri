@@ -32,7 +32,18 @@ use super::{
 };
 
 fn search_filter_rows(app: &App) -> Vec<(String, String)> {
-    use crate::app::{search_filter_labels, search_filter_value};
+    use crate::app::{
+        read_filter_labels, read_filter_value, search_filter_labels, search_filter_value,
+    };
+    if app.reads(crate::nav::Section::Search)
+        && app.nav.section() == crate::nav::Section::Search
+    {
+        return read_filter_labels()
+            .into_iter()
+            .enumerate()
+            .map(|(row, name)| (read_filter_value(&app.reading.filter, row), name))
+            .collect();
+    }
     search_filter_labels()
         .into_iter()
         .enumerate()
@@ -497,10 +508,52 @@ pub(super) fn field_text(app: &App, field: Field) -> String {
 }
 
 fn help_rows(app: &App) -> Vec<(String, String)> {
+    use crate::keymap::{Action, Scope};
     let mut rows = Vec::new();
+    // Reading's own keys first, while Home or Search is reading's.
+    if app.reading_section() {
+        rows.push((String::new(), t::tui_read_keys_heading()));
+        for (action, label) in [
+            (Action::ToggleRail, t::tui_read_keys_next_section()),
+            (Action::ShowSources, t::tui_read_keys_sources_only()),
+            (Action::Refresh, t::tui_read_keys_try_again()),
+            (Action::Filter, t::tui_read_keys_filters()),
+            (Action::SetListStatus, t::tui_read_keys_planning()),
+        ] {
+            if let Some(key) = app.keymap.keys_for(action).first() {
+                rows.push((key.render(), format!("  {}", label)));
+            }
+        }
+    }
+    // While Kaeri is for reading alone, the keys that only act on a show stay out, and so do
+    // the rail's width (Tab no longer changes it here), the Calendar's days, subbed or dubbed and
+    // the medium switch.
+    let reading = app.reading_only();
+    let hidden: Vec<&str> = [
+        Action::ToggleRail,
+        Action::Today,
+        Action::PreviousDay,
+        Action::NextDay,
+        Action::SwitchMedium,
+        Action::ToggleTranslation,
+    ]
+    .iter()
+    .map(|action| action.label())
+    .collect();
     for (scope, entries) in app.keymap.help() {
+        if reading
+            && matches!(
+                scope,
+                Scope::Title | Scope::Episodes | Scope::Downloads | Scope::Playback
+            )
+        {
+            continue;
+        }
         rows.push((String::new(), scope.heading().to_string()));
         for (key, label) in entries {
+            if reading && hidden.contains(&label) {
+                continue;
+            }
             rows.push((key, format!("  {}", label)));
         }
     }

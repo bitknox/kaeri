@@ -44,6 +44,10 @@ impl App {
     /// the status of a show from the list before.
     pub fn selected_entry(&self) -> Option<&Entry> {
         self.content_view()?;
+        // Reading's lines are series, not the shows' entries.
+        if self.reading_section() {
+            return None;
+        }
         if !matches!(self.nav.current(), StageView::Section(_)) {
             return None;
         }
@@ -52,6 +56,9 @@ impl App {
 
     /// How many rows the list on screen has to move over.
     pub(super) fn rows_len(&self) -> usize {
+        if self.reading_section() {
+            return self.read_items().len();
+        }
         self.content.len()
     }
 
@@ -83,6 +90,7 @@ impl App {
     /// as the calendar fetches its past.
     pub(super) fn more_search_if_near_end(&mut self) {
         if self.nav.section() != Section::Search
+            || self.reading_section()
             || self.search_loading_more
             || !self.search_more
             || self.cursors.search.selected + SEARCH_MORE_MARGIN < self.content.len()
@@ -371,12 +379,23 @@ impl App {
     /// is a browse, most popular first.
     pub(super) fn confirm_search_filters(&mut self) -> Option<Command> {
         self.nav.close_overlay();
+        if self.reading_section() {
+            if crate::app::read_query_blank(&self.read_query()) {
+                self.reading.searched = None;
+                self.reading.sources = None;
+                return None;
+            }
+            return Some(self.run_read_search());
+        }
         Some(self.run_search())
     }
 
     /// Enter in Search's field: the search, or the highlighted result once the results are for
     /// the query as typed. With nothing typed, a browse with the filters set.
     pub(super) fn submit_search(&mut self) -> Option<Command> {
+        if self.reading_section() {
+            return self.submit_read_search();
+        }
         // Enter submitted the search *every* time, so a result could be highlighted and
         // never opened — the key just re-ran the same query. It submits only while there is
         // something new to ask; once the results on screen are for this query, Enter does
@@ -438,6 +457,9 @@ impl App {
     /// Whether Enter in Search's field opens the highlighted result rather than searching:
     /// the results on screen are already for the query as typed.
     pub fn search_opens_on_enter(&self) -> bool {
+        if self.reading_section() {
+            return self.read_opens_on_enter();
+        }
         self.search_query() == self.searched_query && !self.content.is_empty()
     }
 
@@ -459,13 +481,15 @@ impl App {
     /// Clamps rather than wraps: a wrapping rail means holding ↓ cycles forever with no sense of
     /// where you are, and eight sections is short enough that hitting the end is informative.
     pub(super) fn step_section(&mut self, delta: isize) -> Option<Command> {
-        let current = self.nav.section().index() as isize;
-        let last = (Section::ALL.len() - 1) as isize;
+        let sections = self.rail_sections();
+        let current =
+            sections.iter().position(|s| *s == self.nav.section()).unwrap_or(0) as isize;
+        let last = (sections.len() - 1) as isize;
         let next = (current + delta).clamp(0, last) as usize;
         if next == current as usize {
             return None;
         }
-        let section = Section::from_index(next)?;
+        let section = *sections.get(next)?;
         // Move now, fetch shortly. Holding the arrow key sweeps the rail at keyboard-repeat speed,
         // and firing a request per step is how a 30-per-minute budget disappears in two seconds.
         self.nav.go_to(section);
@@ -662,6 +686,10 @@ impl App {
         self.calendar_more_ahead = false;
         self.calendar_loading_ahead = false;
 
+        if self.reading_section() {
+            self.content = ContentList::Empty;
+            return self.reload_reading();
+        }
         let task = match self.nav.section() {
             Section::Home => Command::LoadHome { refresh: false },
             Section::Seasonal => Command::LoadSeasonal,
@@ -783,6 +811,10 @@ impl App {
 
     /// Whether the section on screen fills `content` with a list it is about to ask for.
     fn fetches_list(&self) -> bool {
+        // Reading's Home and Search keep their own lines.
+        if self.reading_section() {
+            return false;
+        }
         match self.nav.section() {
             Section::Home | Section::Seasonal | Section::Calendar | Section::Library => true,
             Section::Search => !self.search_query().is_blank(),

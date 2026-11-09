@@ -280,11 +280,33 @@ pub struct Rail<'a> {
     focus: Focus,
     /// Per-section badge counts, e.g. how many titles are in progress.
     counts: &'a [(Section, u32)],
+    /// The sections in the rail, in order: every one, unless what Kaeri is for leaves some out.
+    sections: &'a [Section],
+    /// Home is the shows' beside reading's Read, so the rail calls it Watch.
+    watch_home: bool,
 }
 
 impl<'a> Rail<'a> {
     pub fn new(palette: &'a Palette, width: RailWidth, current: Section, focus: Focus) -> Self {
-        Self { palette, width, current, focus, counts: &[] }
+        Self {
+            palette,
+            width,
+            current,
+            focus,
+            counts: &[],
+            sections: &Section::ALL,
+            watch_home: false,
+        }
+    }
+
+    pub fn sections(mut self, sections: &'a [Section]) -> Self {
+        self.sections = sections;
+        self
+    }
+
+    pub fn watch_home(mut self, watch: bool) -> Self {
+        self.watch_home = watch;
+        self
     }
 
     pub fn counts(mut self, counts: &'a [(Section, u32)]) -> Self {
@@ -300,7 +322,7 @@ impl Widget for Rail<'_> {
             RailWidth::Collapsed => {
                 // Just the obi and a section initial. The rail becomes a spine rather than
                 // a menu, giving the stage its columns back.
-                for (i, section) in Section::ALL.iter().enumerate() {
+                for (i, section) in self.sections.iter().enumerate() {
                     let y = area.top() + i as u16;
                     if y >= area.bottom() {
                         break;
@@ -336,7 +358,8 @@ impl Widget for Rail<'_> {
                 }
             }
             RailWidth::Expanded => {
-                let rows: Vec<ObiRow> = Section::ALL
+                let rows: Vec<ObiRow> = self
+                    .sections
                     .iter()
                     .map(|section| {
                         let count = self
@@ -345,7 +368,12 @@ impl Widget for Rail<'_> {
                             .find(|(s, _)| s == section)
                             .map(|(_, c)| *c)
                             .filter(|c| *c > 0);
-                        let mut row = ObiRow::heading(section.label())
+                        let label = if self.watch_home && *section == Section::Home {
+                            crate::keymap::said(kaeri_i18n::t::nav_watch())
+                        } else {
+                            section.label()
+                        };
+                        let mut row = ObiRow::heading(label)
                             .mark(section.glyph())
                             .selected(*section == self.current);
                         if let Some(c) = count {

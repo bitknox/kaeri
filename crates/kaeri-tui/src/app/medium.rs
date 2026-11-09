@@ -8,7 +8,7 @@ use kaeri_model::{
 };
 
 use super::{App, info};
-use crate::nav::Overlay;
+use crate::nav::{Overlay, Section};
 
 /// The three answers, in the order they are offered.
 pub const CHOICES: [KaeriIsFor; 3] = [KaeriIsFor::Watch, KaeriIsFor::Read, KaeriIsFor::Both];
@@ -40,6 +40,11 @@ pub fn answer_words(answer: KaeriIsFor) -> String {
     }
 }
 
+/// Whether a section is only about shows, so the rail leaves it out while Kaeri is for reading.
+fn shows_only(section: Section) -> bool {
+    matches!(section, Section::Calendar | Section::Seasonal | Section::Together)
+}
+
 /// A medium about to be turned off, and whether its downloads go with it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MediumOff {
@@ -52,7 +57,23 @@ pub struct MediumOff {
 impl App {
     /// The engine's word on what Kaeri is for here. A question it carries is asked once.
     pub(super) fn apply_medium(&mut self, view: MediumView) {
+        let was = self.reading_section();
         self.medium = Some(view);
+        if !self.both() {
+            self.reading.side = false;
+        }
+        // A section the rail no longer has gives way to Home.
+        if !self.in_rail(self.nav.section()) {
+            if let Some(task) = self.go_to_section(Section::Home) {
+                self.commands.push(task);
+            }
+        // Home and Search are reading's now, or the shows' again: what they show is asked anew.
+        } else if was != self.reading_section()
+            && matches!(self.nav.section(), Section::Home | Section::Search)
+            && let Some(task) = self.reload()
+        {
+            self.commands.push(task);
+        }
         self.open_medium_ask();
     }
 
@@ -90,11 +111,47 @@ impl App {
             && matches!(self.medium_ask, Some(MediumAsk::FirstRun))
     }
 
-    /// Whether this computer is set to reading alone, so Home is the page saying where to read.
+    /// Whether this computer is set to reading alone, so Home and Search are reading's.
     pub fn reading_only(&self) -> bool {
         self.medium
             .as_ref()
             .is_some_and(|view| view.reading_available && view.answer == KaeriIsFor::Read)
+    }
+
+    /// Whether this computer is set to both shows and reading, so Home and Search turn between
+    /// the two.
+    pub fn both(&self) -> bool {
+        self.medium
+            .as_ref()
+            .is_some_and(|view| view.reading_available && view.answer == KaeriIsFor::Both)
+    }
+
+    /// The rail's sections for what Kaeri is for: Read after the shows' Home, Calendar and
+    /// Seasonal while it is for both, and none of the sections only about shows (Calendar,
+    /// Seasonal, Together) while it is for reading alone, as the apps' rails have them.
+    pub fn rail_sections(&self) -> Vec<Section> {
+        let mut sections = Section::ALL.to_vec();
+        if self.both() {
+            let at = sections.iter().position(|s| *s == Section::Search).unwrap_or(0);
+            sections.insert(at, Section::Read);
+        } else if self.reading_only() {
+            sections.retain(|section| !shows_only(*section));
+        }
+        sections
+    }
+
+    /// Whether `section` is in the rail for what Kaeri is for.
+    pub fn in_rail(&self, section: Section) -> bool {
+        self.rail_sections().contains(&section)
+    }
+
+    /// A section's name as the rail and the header say it: Home is Watch beside Read.
+    pub fn section_label(&self, section: Section) -> &'static str {
+        if self.both() && section == Section::Home {
+            crate::keymap::said(t::nav_watch())
+        } else {
+            section.label()
+        }
     }
 
     /// Whether the answer is this computer's to change.
@@ -249,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn reading_alone_puts_the_page_on_home_and_the_key_changes_it() {
+    fn reading_alone_gives_home_to_reading_and_the_key_changes_it() {
         let mut a = app();
         assert!(!a.reading_only());
         a.apply(Event::Medium(view(KaeriIsFor::Read, None)));

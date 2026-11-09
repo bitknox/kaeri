@@ -147,6 +147,11 @@ impl App {
             return task;
         }
 
+        // Reading's Home and Search: Enter, Your sources only, Tab, `r` and `f` are theirs.
+        if let Some(task) = self.reading_key(action) {
+            return task;
+        }
+
         // Title commands have nothing to act on without a title, on screen or highlighted, and
         // each says so the same way rather than some doing nothing at all.
         if action.acts_on_a_title()
@@ -183,7 +188,15 @@ impl App {
             // Already on Search, `/` means "let me type" rather than "start again": it returns
             // to the field with the query and results as they were, without asking again.
             Action::FocusSearch if self.on_search_root() => self.focus_search_field(),
-            Action::FocusSearch => return self.go_to_section(Section::Search),
+            Action::FocusSearch => {
+                // While Kaeri is for both, Search turns to whichever Home it is opened from.
+                match self.nav.section() {
+                    Section::Read => self.reading.side = true,
+                    Section::Home => self.reading.side = false,
+                    _ => {}
+                }
+                return self.go_to_section(Section::Search);
+            }
             // Every vertical key, for whatever has the keyboard: the rail when it has focus,
             // otherwise the rows of the screen on top. See `move_cursor`.
             Action::Up
@@ -321,6 +334,7 @@ impl App {
             Action::Refresh => return self.refresh_section(),
             Action::ToggleTranslation => return self.toggle_translation(),
             Action::ChooseMedium => self.choose_medium(),
+            Action::SwitchMedium => return self.switch_medium(),
             _ => self.works_elsewhere(action),
         }
         None
@@ -349,7 +363,10 @@ impl App {
 
     /// A section's number, counted from one: that section, at the top of its own view.
     fn jump_section(&mut self, n: u8) -> Option<Command> {
-        if let Some(section) = Section::from_index(usize::from(n).saturating_sub(1)) {
+        // A section the rail leaves out for what Kaeri is for has no screen to jump to.
+        if let Some(section) = Section::from_index(usize::from(n).saturating_sub(1))
+            && self.in_rail(section)
+        {
             return self.go_to_section(section);
         }
         None
@@ -453,7 +470,7 @@ impl App {
             // instead ran it past the end of the list, unbounded and unscrolled, with `j` and
             // `k` typed rather than moving it.
             Action::Down | Action::PageDown
-                if self.on_search_root() && !in_prompt && !self.content.is_empty() =>
+                if self.on_search_root() && !in_prompt && self.search_has_results() =>
             {
                 self.search_in_results = true;
             }
