@@ -206059,6 +206059,18 @@
         }
       }
     },
+    "read-search-in-folders" : {
+      "comment" : "On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In your folders"
+          }
+        }
+      }
+    },
     "read-search-in-source" : {
       "comment" : "On an AniList result that one of the person's sources has. The source is its name. Argument 1: source (Text).",
       "extractionState" : "manual",

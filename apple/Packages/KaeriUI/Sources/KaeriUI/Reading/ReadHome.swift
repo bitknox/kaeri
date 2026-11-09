@@ -203,7 +203,9 @@ private struct ReadHomeContent: View {
             ReadShelfHeader(title: title, link: link, action: action)
             HomeShelf(spacing: layout.cardGap) {
                 ForEach(tiles, id: \.work) { tile in
-                    ReadTileCard(tile: tile, track: track)
+                    // Up next keeps two title lines as the discovery rows under it do, so the
+                    // page has one rhythm; Continue's cards have the track and keep one.
+                    ReadTileCard(tile: tile, track: track, twoLines: !track)
                         .contextMenu {
                             if track { ReadContinueMenu(tile: tile) } else { ReadTileMenu(tile: tile, kind: .details) }
                         }

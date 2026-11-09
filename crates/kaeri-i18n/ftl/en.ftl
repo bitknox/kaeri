@@ -9862,6 +9862,9 @@ read-search-source-nothing = Nothing found in { $sources }.
 # On an AniList result that one of the person's sources has. The source is its name.
 read-search-in-source = In { $source }
 
+# On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders.
+read-search-in-folders = In your folders
+
 # On an AniList result that more than one of the person's sources has. Always 2 or more.
 read-search-in-sources =
     { $n ->

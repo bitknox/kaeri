@@ -89,13 +89,8 @@ struct ReadSearchScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: compact ? 12 : 16) {
                 if compact {
+                    // The filters are the row pinned under the field, as the shows' Search has them.
                     if store.medium.both { SearchScopePicker() }
-                    ScrollView(.horizontal) {
-                        HStack(spacing: 8) { ReadFilterMenus(compact: true) { filtersShown = true } }
-                            .padding(.horizontal, 16)
-                    }
-                    .scrollIndicators(.never)
-                    .padding(.horizontal, -16)
                 } else {
                     HStack(spacing: 12) {
                         if store.medium.both { SearchScopePicker() }
@@ -153,17 +148,96 @@ struct ReadSearchScreen: View {
             try? await Task.sleep(for: .milliseconds(1_000))
             navigator.launchSheet = nil
         }
-        .toolbar {
-            if compact {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ReadFilterButton { filtersShown = true }
-                }
-            }
+        // On the iPhone the filters stay under the field, sharing the bar's soft scroll edge, as
+        // the shows' Search holds them.
+        .safeAreaBar(edge: .top, spacing: 8) {
+            if compact { ReadPinnedFilterRow { filtersShown = true } }
         }
+        .scrollEdgeEffectStyle(compact ? .soft : nil, for: .top)
         .sheet(isPresented: $filtersShown) { ReadFiltersSheet() }
         #endif
     }
 }
+
+#if os(iOS)
+/// The iPhone's filters, held as the shows' Search holds them: one row pinned under the field
+/// that scrolls sideways under a fade at an edge with more, Clear all in front once something is
+/// set, and the filter pill fixed at its end, which opens the sheet with Your sources only first.
+private struct ReadPinnedFilterRow: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let openSheet: () -> Void
+    /// Where the capsules are scrolled to, put back to the start by new words.
+    @State private var position = ScrollPosition(edge: .leading)
+    @State private var more = ScrollEdges()
+
+    /// What decides the row's width and order: Clear all and what the capsules say.
+    private struct Layout: Hashable {
+        let clearAll: Bool
+        let words: String
+    }
+
+    var body: some View {
+        let query = store.reading.search.query
+        // The sheet holds one thing the row's capsules don't say: Your sources only.
+        let state = PinnedFilterState(
+            showsClearAll: ReadFilterWords.any(query) || query.sourcesOnly, filterCount: query.sourcesOnly ? 1 : 0)
+        HStack(spacing: 0) {
+            ScrollView(.horizontal) {
+                HStack(spacing: 8) {
+                    if state.showsClearAll { clearAll(query) }
+                    ReadFilterMenus(compact: true, pinned: true, openSheet: openSheet)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 1)
+                .modifier(RowReflow(
+                    layout: Layout(clearAll: state.showsClearAll,
+                                   words: ReadFilterWords.summary(query, filters: store.reading.filters)),
+                    reduceMotion: reduceMotion))
+            }
+            .scrollIndicators(.never)
+            .scrollPosition($position)
+            .onScrollGeometryChange(for: ScrollEdges.self) { geometry in
+                ScrollEdges(geometry)
+            } action: { _, edges in
+                more = edges
+            }
+            .mask { ScrollEdgeFade(edges: more) }
+            Button(action: openSheet) {
+                FilterCapsule(
+                    title: "", active: state.filterCount > 0, compact: true,
+                    symbol: "line.3.horizontal.decrease", badge: state.filterCount, chevron: false, pinned: true)
+            }
+            .buttonStyle(.plain)
+            .padding(.trailing, 16)
+            .padding(.leading, 4)
+            .accessibilityLabel(state.filtersLabel)
+            .animation(.standard, value: state.filterCount)
+        }
+        .frame(maxWidth: .infinity)
+        // The row grows with the text to extra-extra-extra large and stops there, as the shows' does.
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .onChange(of: query.text) {
+            withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .leading) }
+        }
+    }
+
+    /// Clear all keeps the words, the sort and what is searched, as the shows' does.
+    private func clearAll(_ query: ReadSearchQuery) -> some View {
+        Button {
+            var cleared = ReadingModel.emptyQuery
+            cleared.text = query.text
+            cleared.medium = query.medium
+            cleared.sort = query.sort
+            store.reading.runSearch(cleared)
+        } label: {
+            FilterCapsule(title: L.searchClearAll, compact: true, symbol: "xmark", chevron: false, pinned: true)
+        }
+        .buttonStyle(.plain)
+        .transition(reduceMotion ? .opacity : .scale.combined(with: .opacity))
+    }
+}
+#endif
 
 /// Your sources only, the filter bar's last chip: a switch to a screen reader, and on, a check.
 /// Announced once as it turns on.
@@ -242,11 +316,12 @@ private struct ReadSearchBody: View {
             }
         } else {
             VStack(alignment: .leading, spacing: 12) {
-                let viewAll = navigator.readViewAllLine.flatMap { $0.query == search.query ? $0.line : nil }
-                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total, line: viewAll))
+                let opened = navigator.readViewAllLine.flatMap { $0.query == search.query ? $0 : nil }
+                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total, line: opened?.line))
                     .font(.plat(mac: 12, touch: 13))
                     .foregroundStyle(.haze)
-                ReadGrid(tiles: search.tiles, twoLines: true, caption: .formatOrigin)
+                // A row's View all keeps the row's caption, so its first covers read as on Home.
+                ReadGrid(tiles: search.tiles, twoLines: true, caption: .list(search.query, viewAll: opened != nil))
                 ReadSearchMore()
             }
         }
@@ -336,6 +411,9 @@ private struct ReadWordsResults: View {
         let anilistFailed = sources?.anilist == .failed || search.failure != nil && search.tiles.isEmpty
         let anilistNothing = only || search.tiles.isEmpty && !anilistAsking && !anilistFailed
         let sourcesNothing = sources.map { $0.done && $0.groups.allSatisfy { $0.state == .nothing } } ?? true
+        // From your sources shows while it has a row or the line of sources that found nothing;
+        // once the last row joins AniList's covers, its heading leaves with it.
+        let sourcesShown = groups.contains { $0.hasRow || $0.state == .nothing }
         VStack(alignment: .leading, spacing: 0) {
             if anilistNothing, sourcesNothing, !anilistAsking {
                 // Nothing anywhere: one title, the line, and the sources' line where there are some.
@@ -344,11 +422,12 @@ private struct ReadWordsResults: View {
             } else {
                 if !only {
                     anilist(search, asking: anilistAsking, failed: anilistFailed, sources: !groups.isEmpty)
-                        .padding(.bottom, groups.isEmpty ? 0 : 32)
+                        .padding(.bottom, sourcesShown ? 32 : 0)
                         .transition(.opacity.animation(.fadeIn))
                 }
-                if !groups.isEmpty {
+                if sourcesShown {
                     ReadSourcesPart(groups: groups)
+                        .transition(.asymmetric(insertion: .opacity, removal: .opacity.animation(.fadeOut)))
                 }
                 if !only, !groups.isEmpty, search.firstPage > 0 {
                     moreFromAnilist(search)
@@ -364,6 +443,7 @@ private struct ReadWordsResults: View {
         }
         .animation(reduceMotion ? .fadeIn : .standard, value: only)
         .animation(.standard, value: groups.map(\.sourceId))
+        .animation(.standard, value: sourcesShown)
         .onChange(of: search.query) { moreShown = false }
         .onChange(of: sources?.done == true) { _, done in
             if done { announce(search) }
@@ -409,10 +489,13 @@ private struct ReadWordsResults: View {
         }
     }
 
-    /// "In Home library", or "In 2 of your sources".
+    /// "In Home library", "In your folders", or "In 2 of your sources".
     private func joinedLine(_ work: String, in search: ReadSearchState) -> String? {
         guard let join = search.joined(work), let first = join.sourceNames.first else { return nil }
-        return join.sourceNames.count == 1 ? L.readSearchInSource(source: first) : L.readSearchInSources(n: join.sourceNames.count)
+        guard join.sourceNames.count == 1 else { return L.readSearchInSources(n: join.sourceNames.count) }
+        // The folders search as one source, named Folders.
+        if join.sourceIds.first == "folders" { return L.readSearchInFolders } // i18n-skip: the engine's id
+        return L.readSearchInSource(source: first)
     }
 
     @ViewBuilder
@@ -475,6 +558,14 @@ private struct ReadWordsResults: View {
     }
 }
 
+extension ReadSourceGroup {
+    /// Whether the source has a row under From your sources: one whose every hit joined an
+    /// AniList result says so there and has none, and one that found nothing is in the line.
+    var hasRow: Bool {
+        state != .nothing && !(state == .hits && tiles.isEmpty)
+    }
+}
+
 extension ReadSourceState {
     var didNotAnswer: Bool {
         switch self {
@@ -494,8 +585,7 @@ private struct ReadSourcesPart: View {
     let groups: [ReadSourceGroup]
 
     var body: some View {
-        // A source whose every hit joined an AniList result says so there, and has no row.
-        let rows = groups.filter { $0.state != .nothing && !($0.state == .hits && $0.tiles.isEmpty) }
+        let rows = groups.filter(\.hasRow)
         let nothing = groups.filter { $0.state == .nothing }.map(\.sourceName)
         VStack(alignment: .leading, spacing: 0) {
             Text(L.readSearchFromSources)
@@ -749,6 +839,8 @@ enum ReadFilterWords {
 private struct ReadFilterMenus: View {
     @Environment(AppStore.self) private var store
     let compact: Bool
+    /// On the iPhone's pinned row: the shows' capsules, a set one in the neutral fill.
+    var pinned = false
     let openSheet: () -> Void
 
     var body: some View {
@@ -837,28 +929,34 @@ private struct ReadFilterMenus: View {
         Menu {
             items()
         } label: {
-            ReadFilterLabel(name: name, value: value)
-                // Your sources only leaves AniList out, and these filter AniList's results.
-                .opacity(store.reading.search.query.sourcesOnly ? 0.45 : 1)
+            label(name, value: value)
         }
-        .menuStyle(.button)
-        .buttonStyle(.plain)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .pointerHover()
+        .filterMenu()
         .accessibilityLabel(name)
         .accessibilityValue(value ?? L.readFilterAny)
     }
 
     private func button(_ name: String, value: String?, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            ReadFilterLabel(name: name, value: value)
-                .opacity(store.reading.search.query.sourcesOnly ? 0.45 : 1)
+            label(name, value: value)
         }
             .buttonStyle(.plain)
             .fixedSize()
             .accessibilityLabel(name)
             .accessibilityValue(value ?? L.readFilterAny)
+    }
+
+    @ViewBuilder
+    private func label(_ name: String, value: String?) -> some View {
+        Group {
+            if pinned {
+                FilterCapsule(title: value ?? name, active: value != nil, compact: true, pinned: true)
+            } else {
+                ReadFilterLabel(name: name, value: value)
+            }
+        }
+        // Your sources only leaves AniList out, and these filter AniList's results.
+        .opacity(store.reading.search.query.sourcesOnly ? 0.45 : 1)
     }
 }
 
@@ -972,8 +1070,14 @@ struct ReadFiltersSheet: View {
                             }
                         ))
                         .foregroundStyle(.silk)
+                        .sheetRow()
                     } footer: {
-                        Text(L.readSearchSourcesOnlyLine).foregroundStyle(.haze)
+                        // Said only while it is true: with the switch off, AniList's results show.
+                        if query.sourcesOnly {
+                            Text(L.readSearchSourcesOnlyLine)
+                                .foregroundStyle(.haze)
+                                .transition(.opacity)
+                        }
                     }
                 }
                 Group {
@@ -1048,6 +1152,7 @@ struct ReadFiltersSheet: View {
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .sheetRow()
             }
         }
     }
@@ -1077,6 +1182,16 @@ struct ReadFiltersSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(checked ? .isSelected : [])
+        .sheetRow()
+    }
+}
+
+private extension View {
+    /// A grouped row in the app's own fill on the raised sheet, a step darker as the sheets'
+    /// grouped boxes are, with the faint rule between rows instead of the system's grey.
+    func sheetRow() -> some View {
+        listRowBackground(Palette.ground.opacity(0.4))
+            .listRowSeparatorTint(Palette.faintRule)
     }
 }
 #endif

@@ -9378,6 +9378,9 @@ public enum L {
         Self.format("read-search-in-source", fallback: "In %1$@", source)
     }
 
+    /// On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders.
+    public static var readSearchInFolders: String { string("read-search-in-folders", fallback: "In your folders") }
+
     /// On an AniList result that more than one of the person's sources has. Always 2 or more.
     public static func readSearchInSources(n: Int) -> String {
         Self.format("read-search-in-sources", fallback: "In %1$lld of your sources", n)

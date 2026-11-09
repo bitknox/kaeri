@@ -199,7 +199,8 @@ private struct ReadListMenu: View {
     }
 }
 
-/// Covers in as many columns of at least the cover's width as fit, sharing the width.
+/// Covers in as many columns of at least the cover's width as fit, sharing the width (on the Mac,
+/// at the cover's width with the spare width at the end).
 struct ReadGrid: View {
     let tiles: [WorkTile]
     /// Two lines kept for every title, as Search's covers have.
@@ -252,8 +253,14 @@ struct ReadGrid: View {
     static func columns(_ width: CGFloat) -> (Int, CGFloat) {
         guard width > 0 else { return (1, minimum) }
         let count = max(1, Int((width + gap) / (minimum + gap)))
+        #if os(macOS)
+        // The Mac's covers stay at Home's 128 points so the grid's columns line up with the rows
+        // under it; the spare width sits at the end.
+        return (count, minimum)
+        #else
         let cell = ((width - gap * CGFloat(count - 1)) / CGFloat(count)).rounded(.down)
         return (count, cell)
+        #endif
     }
 }
 

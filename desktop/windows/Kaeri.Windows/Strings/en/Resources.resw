@@ -9454,6 +9454,10 @@
     <value>In {source}</value>
     <comment>On an AniList result that one of the person's sources has. The source is its name.</comment>
   </data>
+  <data name="ReadSearchInFolders" xml:space="preserve">
+    <value>In your folders</value>
+    <comment>On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders.</comment>
+  </data>
   <data name="ReadSearchInSources_one" xml:space="preserve">
     <value>In {n} of your sources</value>
     <comment>On an AniList result that more than one of the person's sources has. Always 2 or more.</comment>

@@ -10050,6 +10050,10 @@ object Strings {
     fun readSearchInSource(context: Context, source: String): String =
         context.getString(R.string.read_search_in_source, source)
 
+    /** On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders. */
+    fun readSearchInFolders(context: Context): String =
+        context.getString(R.string.read_search_in_folders)
+
     /** On an AniList result that more than one of the person's sources has. Always 2 or more. */
     fun readSearchInSources(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.read_search_in_sources, n, n)

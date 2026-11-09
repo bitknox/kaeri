@@ -105,6 +105,9 @@ struct ReadCoverRowPlaceholder: View {
         }
         .scrollDisabled(true)
         .scrollIndicators(.never)
+        // To the screen's edges on a phone, as the shelf it stands in for runs.
+        .contentMargins(.horizontal, layout.wide ? 0 : layout.margin, for: .scrollContent)
+        .padding(.horizontal, layout.wide ? 0 : -layout.margin)
         .foregroundStyle(.haze)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
@@ -120,6 +123,13 @@ struct ReadHomeRowView: View {
     @Environment(\.homeLayout) private var layout
     let row: ReadHomeRow
 
+    /// A row of one format says the origin then the status, a mixed row the format then the
+    /// status, and a row that fixes the status (Finished) the count in its place.
+    private var caption: ReadCaption {
+        let fixed = row.kind == .finished || row.viewAll?.status != nil
+        return row.format == nil ? .mixedRow(statusFixed: fixed) : .formatRow(statusFixed: fixed)
+    }
+
     var body: some View {
         let title = row.title.text
         let waiting = row.pending && row.tiles.isEmpty
@@ -134,7 +144,7 @@ struct ReadHomeRowView: View {
             ReadWaitSlot(waiting: waiting) {
                 HomeShelf(spacing: layout.cardGap) {
                     ForEach(row.tiles, id: \.work) { tile in
-                        ReadTileCard(tile: tile, twoLines: true, planAction: true, caption: row.format == nil ? .formatOrigin : .formatRow)
+                        ReadTileCard(tile: tile, twoLines: true, planAction: true, caption: caption)
                             .contextMenu { ReadTileMenu(tile: tile, kind: .plan) }
                             .transition(.opacity)
                     }
@@ -228,7 +238,9 @@ struct ReadViewAllPage: View {
                         line: search.query == page.query ? page.line : nil))
                         .font(.ui(13))
                         .foregroundStyle(.haze)
-                    ReadGrid(tiles: search.tiles, twoLines: true, caption: .formatOrigin)
+                    // The row's own caption, so the first covers read as they did on Home.
+                    ReadGrid(tiles: search.tiles, twoLines: true,
+                             caption: .list(search.query, viewAll: search.query == page.query))
                     if search.hasMore {
                         HStack { if search.loading { ProgressView().controlSize(.small) } }
                             .frame(maxWidth: .infinity, minHeight: 32)
@@ -255,7 +267,7 @@ struct ReadViewAllPage: View {
     }
 }
 
-/// The filter button beside the field on the iPhone, with a dot while a filter is on.
+/// The filter button in View all's bar on the iPhone, with a dot while a filter is on.
 struct ReadFilterButton: View {
     @Environment(AppStore.self) private var store
     let action: () -> Void

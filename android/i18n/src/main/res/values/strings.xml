@@ -5335,6 +5335,8 @@
     <string name="read_search_source_nothing">Nothing found in %1$s.</string>
     <!-- On an AniList result that one of the person's sources has. The source is its name. -->
     <string name="read_search_in_source">In %1$s</string>
+    <!-- On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders. -->
+    <string name="read_search_in_folders">In your folders</string>
     <!-- On an AniList result that more than one of the person's sources has. Always 2 or more. -->
     <plurals name="read_search_in_sources">
         <item quantity="one">In %1$,d of your sources</item>
