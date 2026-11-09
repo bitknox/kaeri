@@ -89,7 +89,11 @@ data class EngineLaunch(
         data class Fixtures(val scene: FixtureScene) : Engine
     }
 
-    /** What the engine is told of the app. */
+    /**
+     * What the engine is told of the app. The app reads as well as watches, on a TV only
+     * watches (the engine fixes that from the platform); a Fixtures scene says for itself
+     * whether reading is in it.
+     */
     val record: FfiStart
         get() = FfiStart(
             theme = theme,
@@ -102,6 +106,7 @@ data class EngineLaunch(
             secrets = secrets,
             profile = profile,
             audioTap = audioTap,
+            reading = engine == Engine.App,
             pageDecoder = pageDecoder,
         )
 
