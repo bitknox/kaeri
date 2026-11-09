@@ -212,8 +212,7 @@ Reading added:
   phones' scenes have, a manga, a novel and a strip, as CBZ and EPUB files made on the spot.
   `SIZES=reading shots.sh` takes the reading shots; the app is dark only, so the light ones are
   the reader's own light looks.
-- Reading is on in the Fixtures build and when the config's hidden `reading.dev` key is set, as in
-  the terminal; release builds leave it off until it ships.
+- Reading is on in every build, as in the terminal and the other apps.
 
 ## Running it
 
