@@ -5996,7 +5996,7 @@ public static partial class T
     public static string ReaderWaitChapterList(string source) => Fill(Get("ReaderWaitChapterList"), ("source", source));
 
     /// <summary>The reader's opening line while the source sends the chapter's pages or text.</summary>
-    public static string ReaderWaitChapterPages(long chapter, string source) => Fill(Get("ReaderWaitChapterPages"), ("chapter", chapter.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("source", source));
+    public static string ReaderWaitChapterPages(string chapter, string source) => Fill(Get("ReaderWaitChapterPages"), ("chapter", chapter), ("source", source));
 
     /// <summary>The opening line after a few seconds, with how long it has waited so far.</summary>
     public static string ReaderWaitSeconds(string line, long seconds) => Fill(Get("ReaderWaitSeconds"), ("line", line), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));

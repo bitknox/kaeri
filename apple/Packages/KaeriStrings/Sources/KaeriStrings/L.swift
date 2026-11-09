@@ -8403,8 +8403,8 @@ public enum L {
     }
 
     /// The reader's opening line while the source sends the chapter's pages or text.
-    public static func readerWaitChapterPages(chapter: Int, source: String) -> String {
-        Self.format("reader-wait-chapter-pages", fallback: "Getting chapter %1$@ from %2$@", String(chapter), source)
+    public static func readerWaitChapterPages(chapter: String, source: String) -> String {
+        Self.format("reader-wait-chapter-pages", fallback: "Getting chapter %1$@ from %2$@", chapter, source)
     }
 
     /// The opening line after a few seconds, with how long it has waited so far.

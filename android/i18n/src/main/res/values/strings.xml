@@ -4740,7 +4740,7 @@
     <!-- The reader's opening line while the series' source sends its chapter list. -->
     <string name="reader_wait_chapter_list">Getting the chapter list from %1$s</string>
     <!-- The reader's opening line while the source sends the chapter's pages or text. -->
-    <string name="reader_wait_chapter_pages">Getting chapter %1$d from %2$s</string>
+    <string name="reader_wait_chapter_pages">Getting chapter %1$s from %2$s</string>
     <!-- The opening line after a few seconds, with how long it has waited so far. -->
     <string name="reader_wait_seconds">%1$s · %2$,d s</string>
     <!-- Under the opening line once the wait has gone on for a long time, above Read from another source and Go back. -->

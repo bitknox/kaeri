@@ -8979,7 +8979,7 @@ object Strings {
         context.getString(R.string.reader_wait_chapter_list, source)
 
     /** The reader's opening line while the source sends the chapter's pages or text. */
-    fun readerWaitChapterPages(context: Context, chapter: Int, source: String): String =
+    fun readerWaitChapterPages(context: Context, chapter: String, source: String): String =
         context.getString(R.string.reader_wait_chapter_pages, chapter, source)
 
     /** The opening line after a few seconds, with how long it has waited so far. */

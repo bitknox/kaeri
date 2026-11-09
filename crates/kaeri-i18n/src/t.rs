@@ -14358,8 +14358,8 @@ pub fn reader_wait_chapter_list(source: &str) -> String {
 }
 
 /// The reader's opening line while the source sends the chapter's pages or text.
-pub fn reader_wait_chapter_pages(chapter: i64, source: &str) -> String {
-    text("reader-wait-chapter-pages", &[("chapter", Arg::Plain(chapter)), ("source", Arg::Text(source))])
+pub fn reader_wait_chapter_pages(chapter: &str, source: &str) -> String {
+    text("reader-wait-chapter-pages", &[("chapter", Arg::Text(chapter)), ("source", Arg::Text(source))])
 }
 
 /// The opening line after a few seconds, with how long it has waited so far.

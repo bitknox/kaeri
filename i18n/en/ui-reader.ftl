@@ -226,7 +226,7 @@ reader-chapter-line-titled = Chapter { $chapter } · { $title }
 reader-wait-chapter-list = Getting the chapter list from { $source }
 
 # The reader's opening line while the source sends the chapter's pages or text.
-# @arg chapter: plain
+# @arg chapter: text
 # @arg source: text
 reader-wait-chapter-pages = Getting chapter { $chapter } from { $source }
 

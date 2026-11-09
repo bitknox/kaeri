@@ -225540,7 +225540,7 @@
       }
     },
     "reader-wait-chapter-pages" : {
-      "comment" : "The reader's opening line while the source sends the chapter's pages or text. Argument 1: chapter (Plain). Argument 2: source (Text).",
+      "comment" : "The reader's opening line while the source sends the chapter's pages or text. Argument 1: chapter (Text). Argument 2: source (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
