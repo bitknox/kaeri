@@ -207,6 +207,7 @@ read-hit-files-format = { $count ->
    *[other] { $count } dosya · { $format }
  }
 read-source-folders = Klasörler
+read-feed-downloads = İndirilenler
 reading-since-january = Ocak'tan beri
 reading-since-february = Şubat'tan beri
 reading-since-march = Mart'tan beri
@@ -219,3 +220,12 @@ reading-since-september = Eylül'den beri
 reading-since-october = Ekim'den beri
 reading-since-november = Kasım'dan beri
 reading-since-december = Aralık'tan beri
+read-view-all-trending-manga = Gündemdeki mangalar
+read-view-all-trending-webtoons = Gündemdeki webtoonlar
+read-view-all-trending-novels = Gündemdeki hafif romanlar
+read-view-all-new-manga = Son 12 ayda başlayan mangalar
+read-view-all-new-webtoons = Son 12 ayda başlayan webtoonlar
+read-view-all-new-novels = Son 12 ayda başlayan hafif romanlar
+read-view-all-finished-manga = Tamamlanan mangalar, en popüler
+read-view-all-finished-webtoons = Tamamlanan webtoonlar, en popüler
+read-view-all-finished-novels = Tamamlanan hafif romanlar, en popüler

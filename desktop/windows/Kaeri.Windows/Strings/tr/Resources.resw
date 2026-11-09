@@ -1106,6 +1106,9 @@
   <data name="ReadSourceFolders" xml:space="preserve">
     <value>Klasörler</value>
   </data>
+  <data name="ReadFeedDownloads" xml:space="preserve">
+    <value>İndirilenler</value>
+  </data>
   <data name="ReadingSinceJanuary" xml:space="preserve">
     <value>Ocak'tan beri</value>
   </data>
@@ -1141,6 +1144,33 @@
   </data>
   <data name="ReadingSinceDecember" xml:space="preserve">
     <value>Aralık'tan beri</value>
+  </data>
+  <data name="ReadViewAllTrendingManga" xml:space="preserve">
+    <value>Gündemdeki mangalar</value>
+  </data>
+  <data name="ReadViewAllTrendingWebtoons" xml:space="preserve">
+    <value>Gündemdeki webtoonlar</value>
+  </data>
+  <data name="ReadViewAllTrendingNovels" xml:space="preserve">
+    <value>Gündemdeki hafif romanlar</value>
+  </data>
+  <data name="ReadViewAllNewManga" xml:space="preserve">
+    <value>Son 12 ayda başlayan mangalar</value>
+  </data>
+  <data name="ReadViewAllNewWebtoons" xml:space="preserve">
+    <value>Son 12 ayda başlayan webtoonlar</value>
+  </data>
+  <data name="ReadViewAllNewNovels" xml:space="preserve">
+    <value>Son 12 ayda başlayan hafif romanlar</value>
+  </data>
+  <data name="ReadViewAllFinishedManga" xml:space="preserve">
+    <value>Tamamlanan mangalar, en popüler</value>
+  </data>
+  <data name="ReadViewAllFinishedWebtoons" xml:space="preserve">
+    <value>Tamamlanan webtoonlar, en popüler</value>
+  </data>
+  <data name="ReadViewAllFinishedNovels" xml:space="preserve">
+    <value>Tamamlanan hafif romanlar, en popüler</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>{store}: {member} olarak katıldınız.</value>
@@ -2086,6 +2116,24 @@
   </data>
   <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
     <value>İndirilen bölümler bağlantı olmadan açılır.</value>
+  </data>
+  <data name="WindowsReadSearchFinished" xml:space="preserve">
+    <value>AniList: {anilist}, eklediğiniz kaynaklar: {sources}.</value>
+  </data>
+  <data name="WindowsReadSearchFinishedSources" xml:space="preserve">
+    <value>Eklediğiniz kaynaklar: {sources}.</value>
+  </data>
+  <data name="WindowsReadSearchAnilistHidden" xml:space="preserve">
+    <value>AniList sonuçları gizli.</value>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_one" xml:space="preserve">
+    <value>{seconds} saniye içinde yanıt yok.</value>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_other" xml:space="preserve">
+    <value>{seconds} saniye içinde yanıt yok.</value>
+  </data>
+  <data name="WindowsReadSearchFiltersDimmed" xml:space="preserve">
+    <value>Filtreler yalnızca AniList sonuçlarına uygulanır.</value>
   </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>{title} baştan yeniden okunuyor</value>
@@ -7046,6 +7094,9 @@
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Hariç</value>
   </data>
+  <data name="ReadFilterMoreGenres" xml:space="preserve">
+    <value>Diğer türler</value>
+  </data>
   <data name="ReadSearchStarted" xml:space="preserve">
     <value>Başlangıç</value>
   </data>
@@ -7070,6 +7121,9 @@
   <data name="ReadSearchInSource" xml:space="preserve">
     <value>{source} içinde</value>
   </data>
+  <data name="ReadSearchInFolders" xml:space="preserve">
+    <value>Klasörlerinizde</value>
+  </data>
   <data name="ReadSearchInSources_one" xml:space="preserve">
     <value>Kaynaklarınızın {n} tanesinde</value>
   </data>
@@ -7087,6 +7141,12 @@
   </data>
   <data name="ReadSearchSourcesNothing" xml:space="preserve">
     <value>Kaynaklarınızda da bir şey yok.</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyNothing" xml:space="preserve">
+    <value>Eklediğiniz kaynaklar içinde bir şey bulunamadı</value>
+  </data>
+  <data name="ReadStateOfflineLine" xml:space="preserve">
+    <value>Çevrimdışı. İndirilen bölümler yine de açılır.</value>
   </data>
   <data name="ReadSearchTotalUnknown" xml:space="preserve">
     <value>AniList'ten seriler</value>
@@ -7111,6 +7171,90 @@
   </data>
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>{n} tane daha göster</value>
+  </data>
+  <data name="ReadSearchLineTotal" xml:space="preserve">
+    <value>{line} · {total}</value>
+  </data>
+  <data name="ReadSearchBrowseParts" xml:space="preserve">
+    <value>{list}, {next}</value>
+  </data>
+  <data name="ReadCaptionTwo" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="ReadFilterShown" xml:space="preserve">
+    <value>{name}: {value}</value>
+  </data>
+  <data name="ReadNameTile" xml:space="preserve">
+    <value>{title}, {line}</value>
+  </data>
+  <data name="ReadNameTilePlaced" xml:space="preserve">
+    <value>{title}, {line}, {placed}</value>
+  </data>
+  <data name="ReadNameTileOnlyPlaced" xml:space="preserve">
+    <value>{title}, {placed}</value>
+  </data>
+  <data name="ReadNameWeekTile" xml:space="preserve">
+    <value>{title}, {time}, {chapter}</value>
+  </data>
+  <data name="ReadNameWeekTileTime" xml:space="preserve">
+    <value>{title}, {time}</value>
+  </data>
+  <data name="ReadNameSpotlightArt" xml:space="preserve">
+    <value>{title}, Ayrıntılar</value>
+  </data>
+  <data name="ReadNameHeading" xml:space="preserve">
+    <value>{heading}, {side}</value>
+  </data>
+  <data name="ReadNameLoading" xml:space="preserve">
+    <value>{name}, yükleniyor</value>
+  </data>
+  <data name="ReadNameHeadingLoading" xml:space="preserve">
+    <value>{heading}, {side}, yükleniyor</value>
+  </data>
+  <data name="ReadNameViewAll" xml:space="preserve">
+    <value>Tümünü gör, {row}</value>
+  </data>
+  <data name="ReadNameFilter" xml:space="preserve">
+    <value>{name}, {value}</value>
+  </data>
+  <data name="ReadNameFailure" xml:space="preserve">
+    <value>{line}, {reason}</value>
+  </data>
+  <data name="ReadNameSource" xml:space="preserve">
+    <value>{source}, {kind}</value>
+  </data>
+  <data name="ReadNameSourceMore_one" xml:space="preserve">
+    <value>{source} içinden {n} tane daha göster</value>
+  </data>
+  <data name="ReadNameSourceMore_other" xml:space="preserve">
+    <value>{source} içinden {n} tane daha göster</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyLine" xml:space="preserve">
+    <value>AniList sonuçları gizli. Aşağıdaki filtreler yalnızca AniList sonuçlarına uygulanır.</value>
+  </data>
+  <data name="ReadSearchDone" xml:space="preserve">
+    <value>AniList: {anilist}, eklediğiniz kaynaklar: {sources}.</value>
+  </data>
+  <data name="ReadHomeRowLoading" xml:space="preserve">
+    <value>{row}, yükleniyor</value>
+  </data>
+  <data name="ReadTileAddPlanning" xml:space="preserve">
+    <value>Planlamaya ekle</value>
+  </data>
+  <data name="ReadSearchAnilistHidden" xml:space="preserve">
+    <value>AniList sonuçları gizli.</value>
+  </data>
+  <data name="ReadSearchSaidAnilist_one" xml:space="preserve">
+    <value>AniList: {n}</value>
+  </data>
+  <data name="ReadSearchSaidAnilist_other" xml:space="preserve">
+    <value>AniList: {n}</value>
+  </data>
+  <data name="ReadSearchSaidSources_one" xml:space="preserve">
+    <value>eklediğiniz kaynaklar: {n}</value>
+  </data>
+  <data name="ReadSearchSaidSources_other" xml:space="preserve">
+    <value>eklediğiniz kaynaklar: {n}</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} / {total}</value>

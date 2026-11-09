@@ -262,6 +262,7 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Dahil
 read-filter-left-out = Hariç
+read-filter-more-genres = Diğer türler
 read-search-started = Başlangıç
 read-search-sources-only = Yalnızca { -source-pl }ınız
 read-search-from-sources = { -source-cap-pl }ınızdan
@@ -270,6 +271,7 @@ read-search-source-failed = { $source } yanıt vermedi.
 read-search-source-timeout = { $seconds } sn içinde yanıt yok.
 read-search-source-nothing = Şunlarda bir şey bulunamadı: { $sources }.
 read-search-in-source = { $source } içinde
+read-search-in-folders = Klasörlerinizde
 read-search-in-sources = { $n ->
     [one] { -source-cap-pl }ınızın { $n } tanesinde
    *[other] { -source-cap-pl }ınızın { $n } tanesinde
@@ -278,6 +280,8 @@ read-search-anilist-nothing = AniList bu sözcüklerle bir şey bulamadı.
 read-search-anilist-failed = AniList yanıt vermedi.
 read-search-anilist-failed-line = { -source-cap-pl }ınıza yine de soruldu.
 read-search-sources-nothing = { -source-cap-pl }ınızda da bir şey yok.
+read-search-sources-only-nothing = Eklediğiniz { -source-pl } içinde bir şey bulunamadı
+read-state-offline-line = Çevrimdışı. İndirilen bölümler yine de açılır.
 read-search-total-unknown = AniList'ten seriler
 read-search-more-anilist = AniList'ten daha fazlası
 read-search-shown = { $shown } / { $total } gösteriliyor
@@ -286,6 +290,40 @@ read-search-source-kind-server = Sunucu
 read-search-source-kind-folder = Klasör
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = { $n } tane daha göster
+read-search-line-total = { $line } · { $total }
+read-search-browse-parts = { $list }, { $next }
+read-caption-two = { $first } · { $second }
+read-filter-shown = { $name }: { $value }
+read-name-tile = { $title }, { $line }
+read-name-tile-placed = { $title }, { $line }, { $placed }
+read-name-tile-only-placed = { $title }, { $placed }
+read-name-week-tile = { $title }, { $time }, { $chapter }
+read-name-week-tile-time = { $title }, { $time }
+read-name-spotlight-art = { $title }, Ayrıntılar
+read-name-heading = { $heading }, { $side }
+read-name-loading = { $name }, yükleniyor
+read-name-heading-loading = { $heading }, { $side }, yükleniyor
+read-name-view-all = Tümünü gör, { $row }
+read-name-filter = { $name }, { $value }
+read-name-failure = { $line }, { $reason }
+read-name-source = { $source }, { $kind }
+read-name-source-more = { $n ->
+    [one] { $source } içinden { $n } tane daha göster
+   *[other] { $source } içinden { $n } tane daha göster
+ }
+read-search-sources-only-line = AniList sonuçları gizli. Aşağıdaki filtreler yalnızca AniList sonuçlarına uygulanır.
+read-search-done = AniList: { $anilist }, eklediğiniz { -source-pl }: { $sources }.
+read-home-row-loading = { $row }, yükleniyor
+read-tile-add-planning = Planlamaya ekle
+read-search-anilist-hidden = AniList sonuçları gizli.
+read-search-said-anilist = { $n ->
+    [one] AniList: { $n }
+   *[other] AniList: { $n }
+ }
+read-search-said-sources = { $n ->
+    [one] eklediğiniz { -source-pl }: { $n }
+   *[other] eklediğiniz { -source-pl }: { $n }
+ }
 onboarding-step = { $step } / { $total }
 onboarding-welcome-line = Kendi { -source-pl }ınızdan izlediklerinizi ve okuduklarınızı takip edin.
 onboarding-welcome-note = Listeleriniz ve ilerlemeniz { -device-pl }ınızda kalır. { -tracker-cap-pl } ve { -source-pl } eklemek size kalmış.

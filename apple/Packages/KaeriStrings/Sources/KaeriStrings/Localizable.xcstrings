@@ -197506,6 +197506,12 @@
             "state" : "translated",
             "value" : "%1$@ · %2$@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
         }
       }
     },
@@ -199186,6 +199192,12 @@
             "state" : "translated",
             "value" : "Nedladdningar"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "İndirilenler"
+          }
         }
       }
     },
@@ -200150,6 +200162,12 @@
             "state" : "translated",
             "value" : "Fler genrer"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diğer türler"
+          }
         }
       }
     },
@@ -200542,6 +200560,12 @@
           }
         },
         "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@: %2$@"
@@ -203738,6 +203762,12 @@
             "state" : "translated",
             "value" : "%1$@, läses in"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, yükleniyor"
+          }
         }
       }
     },
@@ -205458,6 +205488,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -205514,6 +205550,12 @@
           }
         },
         "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205578,6 +205620,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -205637,6 +205685,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, läses in"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, yükleniyor"
           }
         }
       }
@@ -205698,6 +205752,12 @@
             "state" : "translated",
             "value" : "%1$@, läses in"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, yükleniyor"
+          }
         }
       }
     },
@@ -205754,6 +205814,12 @@
           }
         },
         "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206064,6 +206130,34 @@
               }
             }
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ içinden %1$lld tane daha göster"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ içinden %1$lld tane daha göster"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -206124,6 +206218,12 @@
             "state" : "translated",
             "value" : "%1$@, Detaljer"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Ayrıntılar"
+          }
         }
       }
     },
@@ -206180,6 +206280,12 @@
           }
         },
         "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206244,6 +206350,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -206300,6 +206412,12 @@
           }
         },
         "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
@@ -206364,6 +206482,12 @@
             "state" : "translated",
             "value" : "Visa alla, %1$@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tümünü gör, %1$@"
+          }
         }
       }
     },
@@ -206424,6 +206548,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
         }
       }
     },
@@ -206480,6 +206610,12 @@
           }
         },
         "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206711,6 +206847,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AniLists resultat är dolda."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniList sonuçları gizli."
           }
         }
       }
@@ -207024,6 +207166,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -207167,6 +207315,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld från AniList, %2$lld från dina källor."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniList: %1$lld, eklediğiniz kaynaklar: %2$lld."
           }
         }
       }
@@ -207395,6 +207549,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "I dina mappar"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Klasörlerinizde"
           }
         }
       }
@@ -207936,6 +208096,12 @@
           }
         },
         "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "tr" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
@@ -208750,6 +208916,34 @@
               }
             }
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList: %1$lld"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList: %1$lld"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -209050,6 +209244,34 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%1$lld från dina källor"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "eklediğiniz kaynaklar: %1$lld"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "eklediğiniz kaynaklar: %1$lld"
                     }
                   }
                 }
@@ -210040,6 +210262,12 @@
             "state" : "translated",
             "value" : "AniLists resultat är dolda. Filtren nedan gäller bara AniLists resultat."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniList sonuçları gizli. Aşağıdaki filtreler yalnızca AniList sonuçlarına uygulanır."
+          }
         }
       }
     },
@@ -210099,6 +210327,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hittade inget i dina källor"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eklediğiniz kaynaklar içinde bir şey bulunamadı"
           }
         }
       }
@@ -211484,6 +211718,12 @@
             "state" : "translated",
             "value" : "Offline. Nedladdade kapitel går fortfarande att öppna."
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Çevrimdışı. İndirilen bölümler yine de açılır."
+          }
         }
       }
     },
@@ -211543,6 +211783,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lägg till i planeringslistan"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Planlamaya ekle"
           }
         }
       }
@@ -211604,6 +211850,12 @@
             "state" : "translated",
             "value" : "Avslutade manga, mest populära"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamamlanan mangalar, en popüler"
+          }
         }
       }
     },
@@ -211663,6 +211915,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Avslutade light novels, mest populära"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamamlanan hafif romanlar, en popüler"
           }
         }
       }
@@ -211724,6 +211982,12 @@
             "state" : "translated",
             "value" : "Avslutade webtoons, mest populära"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamamlanan webtoonlar, en popüler"
+          }
         }
       }
     },
@@ -211783,6 +212047,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manga som startat de senaste 12 månaderna"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son 12 ayda başlayan mangalar"
           }
         }
       }
@@ -211844,6 +212114,12 @@
             "state" : "translated",
             "value" : "Light novels som startat de senaste 12 månaderna"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son 12 ayda başlayan hafif romanlar"
+          }
         }
       }
     },
@@ -211903,6 +212179,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons som startat de senaste 12 månaderna"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son 12 ayda başlayan webtoonlar"
           }
         }
       }
@@ -211964,6 +212246,12 @@
             "state" : "translated",
             "value" : "Manga, trendande"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gündemdeki mangalar"
+          }
         }
       }
     },
@@ -212024,6 +212312,12 @@
             "state" : "translated",
             "value" : "Light novels, trendande"
           }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gündemdeki hafif romanlar"
+          }
         }
       }
     },
@@ -212083,6 +212377,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons, trendande"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gündemdeki webtoonlar"
           }
         }
       }
