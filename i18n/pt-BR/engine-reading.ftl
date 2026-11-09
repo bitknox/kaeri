@@ -223,6 +223,7 @@ read-hit-files-format = { $count ->
    *[other] { $count } arquivos · { $format }
  }
 read-source-folders = Pastas
+read-feed-downloads = Downloads
 reading-since-january = desde janeiro
 reading-since-february = desde fevereiro
 reading-since-march = desde março
@@ -235,3 +236,12 @@ reading-since-september = desde setembro
 reading-since-october = desde outubro
 reading-since-november = desde novembro
 reading-since-december = desde dezembro
+read-view-all-trending-manga = Mangás em alta
+read-view-all-trending-webtoons = Webtoons em alta
+read-view-all-trending-novels = Light novels em alta
+read-view-all-new-manga = Mangás iniciados nos últimos 12 meses
+read-view-all-new-webtoons = Webtoons iniciados nos últimos 12 meses
+read-view-all-new-novels = Light novels iniciadas nos últimos 12 meses
+read-view-all-finished-manga = Mangás concluídos, mais populares
+read-view-all-finished-webtoons = Webtoons concluídos, mais populares
+read-view-all-finished-novels = Light novels concluídas, mais populares

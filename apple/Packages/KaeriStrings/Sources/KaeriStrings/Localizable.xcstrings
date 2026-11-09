@@ -197489,6 +197489,12 @@
             "value" : "%1$@ · %2$@"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -199157,6 +199163,12 @@
             "value" : "Pobrane"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Downloads"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200109,6 +200121,12 @@
             "value" : "Więcej gatunków"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mais gêneros"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200488,6 +200506,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@: %2$@"
@@ -203673,6 +203697,12 @@
             "value" : "%1$@, wczytywanie"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, carregando"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205381,6 +205411,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205424,6 +205460,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205477,6 +205519,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205523,6 +205571,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, wczytywanie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, carregando"
           }
         },
         "sv" : {
@@ -205573,6 +205627,12 @@
             "value" : "%1$@, wczytywanie"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, carregando"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205616,6 +205676,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205831,6 +205897,40 @@
             }
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Mostrar mais %1$lld de %2$@"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Mostrar mais %1$lld de %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Mostrar mais %1$lld de %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205901,6 +206001,12 @@
             "value" : "%1$@, Szczegóły"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Detalhes"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205944,6 +206050,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205997,6 +206109,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206040,6 +206158,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
+        "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
@@ -206093,6 +206217,12 @@
             "value" : "Zobacz wszystko, %1$@"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver tudo, %1$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206141,6 +206271,12 @@
             "value" : "%1$@, %2$@, %3$@"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206184,6 +206320,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206403,6 +206545,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wyniki z AniList są ukryte."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os resultados do AniList estão ocultos."
           }
         },
         "sv" : {
@@ -206705,6 +206853,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206835,6 +206989,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AniList: %1$lld, twoje źródła: %2$lld."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld do AniList, %2$lld das suas fontes."
           }
         },
         "sv" : {
@@ -207051,6 +207211,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "W twoich folderach"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nas suas pastas"
           }
         },
         "sv" : {
@@ -207580,6 +207746,12 @@
           }
         },
         "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
@@ -208299,6 +208471,40 @@
             }
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld do AniList"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld do AniList"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld do AniList"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -208524,6 +208730,40 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "Twoje źródła: %1$lld"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld das suas fontes"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld das suas fontes"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld das suas fontes"
                     }
                   }
                 }
@@ -209525,6 +209765,12 @@
             "value" : "Wyniki z AniList są ukryte. Poniższe filtry dotyczą tylko wyników z AniList."
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os resultados do AniList estão ocultos. Os filtros abaixo valem só para os resultados do AniList."
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -209571,6 +209817,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Twoje źródła nic nie znalazły"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nada encontrado nas suas fontes"
           }
         },
         "sv" : {
@@ -210945,6 +211197,12 @@
             "value" : "Offline. Pobrane rozdziały nadal się otwierają."
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline. Os capítulos baixados ainda abrem."
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210991,6 +211249,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dodaj do planowanych"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar a Planejado"
           }
         },
         "sv" : {
@@ -211041,6 +211305,12 @@
             "value" : "Zakończona manga, od najpopularniejszych"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mangás concluídos, mais populares"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211087,6 +211357,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Zakończone light novel, od najpopularniejszych"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novels concluídas, mais populares"
           }
         },
         "sv" : {
@@ -211137,6 +211413,12 @@
             "value" : "Zakończone webtoony, od najpopularniejszych"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons concluídos, mais populares"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211183,6 +211465,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manga rozpoczęta w ostatnich 12 miesiącach"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mangás iniciados nos últimos 12 meses"
           }
         },
         "sv" : {
@@ -211233,6 +211521,12 @@
             "value" : "Light novel rozpoczęte w ostatnich 12 miesiącach"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novels iniciadas nos últimos 12 meses"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211279,6 +211573,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoony rozpoczęte w ostatnich 12 miesiącach"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons iniciados nos últimos 12 meses"
           }
         },
         "sv" : {
@@ -211329,6 +211629,12 @@
             "value" : "Manga, na topie"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mangás em alta"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211377,6 +211683,12 @@
             "value" : "Light novel, na topie"
           }
         },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novels em alta"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211423,6 +211735,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoony, na topie"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons em alta"
           }
         },
         "sv" : {
