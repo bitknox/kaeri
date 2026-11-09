@@ -259,8 +259,8 @@ impl ReadLine {
     fn key(&self, shelf: &str) -> Option<String> {
         let part = match self.part() {
             Part::Shelf(_) => shelf,
-            Part::Anilist => "anilist",
-            Part::Sources => "sources",
+            Part::Anilist => "anilist", // i18n-skip
+            Part::Sources => "sources", // i18n-skip
         };
         Some(match self {
             Self::Work { work, .. } => format!("{part}\u{1f}{}", work.as_str()), // i18n-skip
