@@ -335,8 +335,7 @@ fn range_heading(
             list.invalidate_filter();
             scroll.vadjustment().set_value(0.0);
             // The new range arrives over the old one's last frame: never empty between them.
-            let fade =
-                adw::TimedAnimation::new(&scroll, 0.4, 1.0, 200, motion::opacity(&scroll));
+            let fade = motion::timed(&scroll, 0.4, 1.0, 200, motion::opacity(&scroll));
             fade.set_easing(adw::Easing::EaseOutCubic);
             fade.play();
         }
