@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -45,6 +47,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -245,10 +248,20 @@ private fun PaperDemoLine() {
 /** A heading on paper with an underlined link at its end. */
 @Composable
 private fun PaperHeading(title: String, link: String?, onLink: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(top = 10.dp).height(HeadingHeight), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = EinkType.RowTitle, modifier = Modifier.weight(1f).semantics { heading() })
-        if (link != null) EinkTextButton(link, onLink, underline = true)
+        if (link != null) EinkTextButton(link, onLink, Modifier.overhang(), underline = true)
     }
+}
+
+/** The heading line's height, as on the board; its link keeps its full touch height above and below. */
+private val HeadingHeight = 32.dp
+
+/** Measures at the full touch height but takes [HeadingHeight] in the line, centred on it. */
+private fun Modifier.overhang(): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity))
+    val height = HeadingHeight.roundToPx()
+    layout(placeable.width, height) { placeable.place(0, (height - placeable.height) / 2) }
 }
 
 /** Continue: four covers on an e-reader, three on a phone, each with its title and short line. */
@@ -396,7 +409,7 @@ internal fun EinkDownloadsPage() {
     val view by store.reading.downloads.collectAsStateWithLifecycle()
     val settings by store.settings.view.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { store.reading.loadDownloads() }
-    val free = freeBytes()
+    val free = freeBytes()?.takeIf { it > 0 }
     var page by rememberSaveable { mutableIntStateOf(0) }
     PaperPage(back = null, title = Strings.downloadsTitle(context)) {
         val v = view

@@ -1,9 +1,11 @@
 package app.kaeri.ui
 
-import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -101,17 +103,16 @@ class ReadDiscoveryShots : ReadingShotHarness() {
     @Test @Config(qualifiers = PHONE)
     fun phone_search_mid() = search("phone-discovery-search-mid", "rd-search-mid")
 
-    /** A source with eight hits: five covers, then Show 3 more in the next slot. */
-    @Test @Config(qualifiers = PHONE)
-    fun phone_search_source_more() {
+    /** A source with eight hits: five covers, then Show 3 more in the next slot. A tablet's row shows all six. */
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_search_source_more() {
         val staged = AtomicBoolean(false)
         shoot(
-            "phone-discovery-search-source-more", FixtureScene.READING_HOME, Destination.Search, medium = KaeriIsFor.READ,
+            "tablet-discovery-search-source-more", FixtureScene.READING_HOME, Destination.Search, medium = KaeriIsFor.READ,
             act = { scope.launch { staged.set(ReadDiscoveryStage.stage(requireNotNull(store), "rd-search-done")) } },
             acted = { staged.get() && it.reading.search.value.sources != null },
             after = {
-                compose.onAllNodes(hasScrollAction())[0].performScrollToNode(hasText("Lanterns at Low Tide", substring = true)) // i18n-skip
-                compose.onNode(hasScrollAction() and hasAnyDescendant(hasText("Lanterns at Low Tide", substring = true))) // i18n-skip
+                compose.onNode(hasScrollToIndexAction() and SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange))
                     .performScrollToNode(hasText("Show 3 more")) // i18n-skip
             },
             ready = { true },
