@@ -215,10 +215,7 @@ private fun Main(
 private fun SizeSlider(context: Context, session: ReaderSession, row: ReaderSettingRow) {
     val value = row.value as? ReaderValue.Amount ?: return
     Row(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            "A", color = Chrome.faint, fontSize = 14.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.semantics { contentDescription = Strings.readerSizeSmall(context) },
-        )
+        SizeStep(14.sp, Strings.readerSizeSmall(context), value.value > sizeRange.start + 0.05) { stepSize(session, row, value, -1) }
         Slider(
             value = value.value.toFloat().coerceIn(sizeRange),
             onValueChange = { session.setSetting(row.key, row.scope, ReaderValue.Amount(((it * 10).toInt() / 10.0))) },
@@ -236,12 +233,29 @@ private fun SizeSlider(context: Context, session: ReaderSession, row: ReaderSett
                 stateDescription = "%.1f".format(value.value)
             },
         )
-        Text(
-            "A", color = Chrome.faint, fontSize = 24.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.semantics { contentDescription = Strings.readerSizeLarge(context) },
-        )
+        SizeStep(24.sp, Strings.readerSizeLarge(context), value.value < sizeRange.endInclusive - 0.05) { stepSize(session, row, value, 1) }
     }
     UseDefaultNote(context, null, row.overridden) { session.useDefault(row.key) }
+}
+
+/** The small or large A beside the size slider: a button that steps the size by a tenth. */
+@Composable
+private fun SizeStep(size: androidx.compose.ui.unit.TextUnit, description: String, enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .size(48.dp)
+            .clip(CircleShape)
+            .clickable(enabled = enabled, role = Role.Button, onClickLabel = description, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("A", color = if (enabled) Chrome.text else Chrome.faint, fontSize = size, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+private fun stepSize(session: ReaderSession, row: ReaderSettingRow, value: ReaderValue.Amount, by: Int) {
+    val next = (Math.round(value.value * 10) + by) / 10.0
+    session.setSetting(row.key, row.scope, ReaderValue.Amount(next.coerceIn(sizeRange.start.toDouble(), sizeRange.endInclusive.toDouble())))
 }
 
 /** The five looks as round "Aa" swatches in their own paper and ink, the chosen one ringed in silk. */
@@ -548,7 +562,13 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
             row.key == Key.FOOT_VALUE && value is ReaderValue.Choice -> SwitchLine(title, null, value.name == "pages_left") {
                 session.setSetting(row.key, row.scope, ReaderValue.Choice(if (it) "pages_left" else "none"))
             }
-            value is ReaderValue.Toggle -> SwitchLine(title, extra(context, row.key), value.on) { toggle(row.key, it) }
+            value is ReaderValue.Toggle -> {
+                SwitchLine(title, extra(context, row.key), value.on) { toggle(row.key, it) }
+                // Which key goes forward, under the switch that lets them turn pages.
+                if (value.on && (row.key == Key.VOLUME_KEYS_TURN || row.key == Key.PAPER_VOLUME)) {
+                    SwitchLine(Strings.readerRowVolumeSwap(context), null, ReaderLook.volumeSwapped(context)) { ReaderLook.swapVolume(context, it) }
+                }
+            }
             row.key == Key.LINE_SPACING || row.key == Key.MARGINS -> if (value is ReaderValue.Amount) {
                 val presets = if (row.key == Key.LINE_SPACING) spacingPresets else marginPresets
                 val labels = if (row.key == Key.LINE_SPACING) {
@@ -607,7 +627,7 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
             value is ReaderValue.Amount && row.key == Key.TEXT_SIZE -> {
                 Text(title, color = Chrome.text, fontSize = 16.sp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("A", color = Chrome.faint, fontSize = 13.sp, modifier = Modifier.semantics { contentDescription = Strings.readerSizeSmall(context) })
+                    SizeStep(13.sp, Strings.readerSizeSmall(context), value.value > sizeRange.start + 0.05) { stepSize(session, row, value, -1) }
                     Slider(
                         value = value.value.toFloat().coerceIn(sizeRange),
                         onValueChange = { session.setSetting(row.key, row.scope, ReaderValue.Amount(((it * 10).toInt() / 10.0))) },
@@ -622,7 +642,7 @@ private fun SettingLine(context: Context, session: ReaderSession, row: ReaderSet
                         ),
                         modifier = Modifier.weight(1f).padding(horizontal = 8.dp).semantics { stateDescription = "%.1f".format(value.value) },
                     )
-                    Text("A", color = Chrome.text, fontSize = 22.sp, modifier = Modifier.semantics { contentDescription = Strings.readerSizeLarge(context) })
+                    SizeStep(22.sp, Strings.readerSizeLarge(context), value.value < sizeRange.endInclusive - 0.05) { stepSize(session, row, value, 1) }
                 }
             }
         }
@@ -691,7 +711,7 @@ private fun extra(context: Context, key: Key): String? = when (key) {
 }
 
 /** The row's written name, or null for a key that has none (the unit test fails on it). */
-internal fun rowTitle(context: Context, key: Key): String? = when (key) {
+fun rowTitle(context: Context, key: Key): String? = when (key) {
     Key.MODE -> Strings.readerRowReadingMode(context)
     Key.DIRECTION -> Strings.readerRowDirection(context)
     Key.COLOUR -> Strings.readerRowColour(context)
@@ -723,7 +743,7 @@ internal fun rowTitle(context: Context, key: Key): String? = when (key) {
 }
 
 /** The choice's written name, or null for a choice that has none (the unit test fails on it). */
-internal fun choiceLabel(context: Context, key: Key, value: ReaderValue): String? {
+fun choiceLabel(context: Context, key: Key, value: ReaderValue): String? {
     val name = (value as? ReaderValue.Choice)?.name ?: return null
     return when (key to name) {
         Key.MODE to "paged" -> Strings.readerPagesPaged(context)

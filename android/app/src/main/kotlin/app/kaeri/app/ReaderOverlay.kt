@@ -3,6 +3,7 @@
 
 package app.kaeri.app
 
+import android.content.pm.ActivityInfo
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.SharedTransitionScope
@@ -40,6 +41,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
@@ -78,6 +80,18 @@ fun ReaderHost(store: AppStore, eink: EinkModel, app: @Composable () -> Unit) {
     val view = LocalView.current
     // The cover the open reader grew out of: hidden in the app while the reader holds it.
     var zoomed by remember { mutableStateOf<String?>(null) }
+    // The open reader's work, kept with the activity's state: after Android let the process go,
+    // coming back opens the reader again at the work's resume place.
+    var kept by rememberSaveable { mutableStateOf<List<String>?>(null) }
+    LaunchedEffect(Unit) {
+        val back = kept
+        if (back != null && ReaderLauncher.request.value == null) {
+            ReaderLauncher.open(ReaderRequest(work = back[0], eink = back[1] == "eink", cover = back.getOrNull(2)))
+        }
+        ReaderLauncher.request.collect { request ->
+            kept = request?.let { listOfNotNull(it.work, if (it.eink) "eink" else "phone", it.cover) }
+        }
+    }
     SharedTransitionLayout {
         CompositionLocalProvider(
             LocalReaderTransitions provides this,
@@ -242,11 +256,26 @@ private fun OpenReader(
     val shows = state.leaves.isNotEmpty() || state.novel != null || state.failure != null || state.closed
     LaunchedEffect(shows) { if (shows) ready.value = true }
     val opened = remember { booleanArrayOf(false) }
+    // On a phone the reader turns with the phone as the player does, unless rotation is locked;
+    // the app under it stays portrait, and is portrait again as the reader closes.
+    val activity = androidx.activity.compose.LocalActivity.current
+    DisposableEffect(activity) {
+        val phone = context.resources.configuration.smallestScreenWidthDp < 600
+        if (phone) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+        onDispose { if (phone) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT }
+    }
+    LaunchedEffect(leaving) {
+        if (leaving && context.resources.configuration.smallestScreenWidthDp < 600) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        }
+    }
     DisposableEffect(session) {
         val unbind = session.bind(store)
         onDispose {
             session.close()
             unbind()
+            // The series page under the reader shows where reading got to.
+            store.reading.readerClosed(request.work)
         }
     }
     Box(
@@ -283,7 +312,7 @@ private fun OpenReader(
                     state = state,
                     images = images,
                     painter = painter,
-                    actions = EinkReaderActions(onBack = close, onContents = close, onSettings = {}, onSeries = close, onDownloads = close, onAddSource = addSource),
+                    actions = EinkReaderActions(onBack = close, onSeries = close, onDownloads = close, onAddSource = addSource),
                 )
             }
         } else {

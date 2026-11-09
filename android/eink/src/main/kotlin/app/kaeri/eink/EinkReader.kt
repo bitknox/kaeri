@@ -24,9 +24,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -59,6 +61,8 @@ import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.NoNext
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReaderMode
+import app.kaeri.engine.model.ReaderSettingKey
+import app.kaeri.engine.model.ReaderValue
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.TurnHow
 import app.kaeri.engine.model.ChapterDownloadState
@@ -98,11 +102,9 @@ import app.kaeri.reader.serverLineWords
 import app.kaeri.store.ServerLine
 import kotlinx.coroutines.delay
 
-/** What the e-ink reader leaves to the app around it. */
+/** What the e-ink reader leaves to the app around it; its settings and Contents are its own. */
 class EinkReaderActions(
     val onBack: () -> Unit,
-    val onContents: () -> Unit,
-    val onSettings: () -> Unit,
     val onSeries: () -> Unit,
     val onDownloads: () -> Unit,
     /** Add a source, from the end of the demo. */
@@ -130,11 +132,38 @@ fun EinkReader(
     val host = LocalView.current
     var chrome by remember { mutableStateOf(false) }
     var zones by remember { mutableStateOf(showZones) }
+    var layer by remember { mutableStateOf(EinkLayer.None) }
     val paint by rememberUpdatedState { what: EinkPaint -> painter.paint(host, what) }
 
     fun toggleChrome() {
         chrome = !chrome
         paint(if (chrome) EinkPaint.ChromeOpen else EinkPaint.ChromeClose)
+    }
+
+    fun show(next: EinkLayer) {
+        layer = next
+        when (next) {
+            EinkLayer.None -> {
+                chrome = false
+                paint(EinkPaint.ChromeClose)
+            }
+            EinkLayer.Contents -> Unit // Contents paints each of its pages.
+            else -> paint(EinkPaint.SheetChange)
+        }
+    }
+
+    // A setting changed under the sheet: the page above it is painted again once it has changed.
+    LaunchedEffect(state.settings, state.leaves) {
+        if (layer == EinkLayer.Settings || layer == EinkLayer.More) paint(EinkPaint.SheetChange)
+    }
+
+    // Back closes the sheet or Contents first, then the reader, never the app's screens under it.
+    BackHandler {
+        when (layer) {
+            EinkLayer.More -> show(EinkLayer.Settings)
+            EinkLayer.Settings, EinkLayer.Contents -> show(EinkLayer.None)
+            EinkLayer.None -> actions.onBack()
+        }
     }
 
     // A demo work opens with the chrome, its credit in the top bar, for 3 s.
@@ -153,7 +182,11 @@ fun EinkReader(
             ReaderAction.CLEAN -> paint(EinkPaint.Clean)
             ReaderAction.FIRST -> pager.go(0, TurnHow.JUMP)
             ReaderAction.LAST -> pager.go(state.leaves.indexOfLast { !it.endPage }.coerceAtLeast(0), TurnHow.JUMP)
-            ReaderAction.ESCAPE -> if (chrome) toggleChrome() else actions.onBack()
+            ReaderAction.ESCAPE -> when {
+                layer != EinkLayer.None -> show(EinkLayer.None)
+                chrome -> toggleChrome()
+                else -> actions.onBack()
+            }
             ReaderAction.GO_TO -> if (!chrome) toggleChrome()
         }
     }
@@ -162,7 +195,7 @@ fun EinkReader(
         modifier
             .fillMaxSize()
             .background(EinkColours.Paper)
-            .readerKeys(ReaderKeyRules(direction, swapVolume = swapVolume, holdCleans = painter.controller.available), ::act)
+            .readerKeys(ReaderKeyRules(direction, volumeTurns = state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.VOLUME_KEYS_TURN }?.let { (it.value as? ReaderValue.Toggle)?.on } ?: true, volumeDownForward = swapVolume, holdCleans = painter.controller.available), ::act)
             // The first touch anywhere clears the guide, and still turns or opens what it touched.
             .pointerInput(zones) {
                 if (!zones) return@pointerInput
@@ -198,17 +231,18 @@ fun EinkReader(
                 endPage = { EinkEndPage(state, actions, onContinue = { next -> session.openChapter(next.id) }, onFirstPage = { pager.go(0, TurnHow.JUMP) }) },
                 waiting = { page, long -> if (long) EinkPageWaiting(page) },
                 failed = { page, failure, retry -> EinkPageFailed(page, failure, retry, skip = { pager.forward(TurnHow.TURN) }) },
+                fit = (state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.FIT }?.value as? ReaderValue.Choice)?.name,
             )
         }
         val leaf = state.leaves.getOrNull(pager.leaf)
         if (leaf != null && !leaf.endPage && !chrome) EinkFolio(leaf, state)
         if (zones && state.leaves.isNotEmpty()) EinkZonesGuide(direction)
-        if (chrome && view != null) {
+        if (chrome && view != null && layer != EinkLayer.Contents) {
             EinkTopBar(
                 title = view.title,
                 chapter = view.chapter,
                 onBack = actions.onBack,
-                onContents = actions.onContents,
+                onContents = { show(EinkLayer.Contents) },
                 modifier = Modifier.align(Alignment.TopCenter),
                 subtitle = view.demoCredit?.let { demo -> demo.licence?.let { Strings.readerDemoCredit(LocalContext.current, demo.series, demo.author, it) } ?: demo.credit },
             )
@@ -224,10 +258,7 @@ fun EinkReader(
                 onBackTo = { session.backTo() },
                 onNext = { view.next?.let { session.openChapter(it.id) } },
                 onPrevious = { view.previous?.let { session.openChapter(it.id) } },
-                onSettings = {
-                    paint(EinkPaint.SheetChange)
-                    actions.onSettings()
-                },
+                onSettings = { show(EinkLayer.Settings) },
                 onClean = { paint(EinkPaint.Clean) },
                 modifier = Modifier.align(Alignment.BottomCenter),
             )
@@ -239,10 +270,28 @@ fun EinkReader(
                     NoticeAction.START_OVER -> session.startOver()
                     NoticeAction.BACK_TO -> session.backTo()
                     NoticeAction.GO_BACK -> session.goBack()
-                    NoticeAction.CHANGE_MODE -> actions.onSettings()
+                    NoticeAction.CHANGE_MODE -> {
+                        chrome = true
+                        show(EinkLayer.Settings)
+                    }
                 }
                 session.dismissNotice(notice.id)
             }, modifier = Modifier.align(Alignment.BottomCenter))
+        }
+        when (layer) {
+            EinkLayer.Settings -> EinkSettingsSheet(session, state, onMore = { show(EinkLayer.More) }, onDone = { show(EinkLayer.None) })
+            EinkLayer.More -> EinkMoreSheet(session, state, onBack = { show(EinkLayer.Settings) }, onDone = { show(EinkLayer.None) })
+            EinkLayer.Contents -> EinkContents(
+                session = session,
+                state = state,
+                onBack = { show(EinkLayer.None) },
+                onOpen = { chapter ->
+                    if (chapter != view?.chapter?.id) session.openChapter(chapter)
+                    show(EinkLayer.None)
+                },
+                onPage = { paint(EinkPaint.ListPage(false)) },
+            )
+            EinkLayer.None -> Unit
         }
     }
 }
@@ -338,7 +387,7 @@ fun EinkTopBar(
 ) {
     val context = LocalContext.current
     Row(
-        modifier.fillMaxWidth().height(EinkSizes.TopBar).background(EinkColours.Paper).bottomRule().padding(horizontal = 8.dp),
+        modifier.fillMaxWidth().background(EinkColours.Paper).bottomRule().statusBarsPadding().height(EinkSizes.TopBar).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -377,7 +426,7 @@ fun EinkBottomBar(
 ) {
     val context = LocalContext.current
     Column(
-        modifier.fillMaxWidth().heightIn(min = EinkSizes.BottomBar).background(EinkColours.Paper).topRule().padding(horizontal = 20.dp, vertical = 14.dp),
+        modifier.fillMaxWidth().background(EinkColours.Paper).topRule().navigationBarsPadding().heightIn(min = EinkSizes.BottomBar).padding(horizontal = 20.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(verticalAlignment = Alignment.Bottom) {

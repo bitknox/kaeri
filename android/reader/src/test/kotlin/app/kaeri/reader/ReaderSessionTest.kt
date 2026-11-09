@@ -10,7 +10,15 @@ import app.kaeri.engine.model.NoNext
 import app.kaeri.engine.model.OpenAt
 import app.kaeri.engine.model.PageEncoding
 import app.kaeri.engine.model.PageFile
+import app.kaeri.engine.core.Medium
+import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReadPlace
+import app.kaeri.engine.model.ReaderMode
+import app.kaeri.engine.model.ReaderSettingKey
+import app.kaeri.engine.model.ReaderSettingRow
+import app.kaeri.engine.model.ReaderSettingsView
+import app.kaeri.engine.model.ReaderValue
+import app.kaeri.engine.model.SettingScope
 import app.kaeri.engine.model.ReaderAction as NoticeAction
 import app.kaeri.engine.model.ReaderCommand
 import app.kaeri.engine.model.ReaderEvent
@@ -70,6 +78,37 @@ class ReaderSessionTest {
         }
         session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, two))
         assertEquals(1, session.state.value.jump?.leaf)
+    }
+
+    @Test
+    fun a_mode_changed_in_the_reader_turns_the_view_with_it() {
+        opened()
+        fun row(key: ReaderSettingKey, word: String) =
+            ReaderSettingRow(key, ReaderValue.Choice(word), SettingScope.SERIES, false, true, emptyList())
+        // The first settings leave the engine's layout as it is, guesses and all.
+        val opened = session.state.value.view
+        session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.MANGA, WORK, listOf(row(ReaderSettingKey.MODE, "strip"), row(ReaderSettingKey.DIRECTION, "rtl")))))
+        assertEquals(opened, session.state.value.view)
+        session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.MANGA, WORK, listOf(row(ReaderSettingKey.MODE, "paged"), row(ReaderSettingKey.DIRECTION, "ltr")))))
+        assertEquals(ReadDirection.LEFT_TO_RIGHT, session.state.value.view?.direction)
+        assertEquals(ReaderMode.PAGED, session.state.value.view?.mode)
+        session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.MANGA, WORK, listOf(row(ReaderSettingKey.MODE, "strip"), row(ReaderSettingKey.DIRECTION, "ltr")))))
+        assertEquals(ReaderMode.STRIP, session.state.value.view?.mode)
+        // Another medium's defaults leave the open chapter alone.
+        session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.NOVEL, null, listOf(row(ReaderSettingKey.MODE, "paged")))))
+        assertEquals(ReaderMode.STRIP, session.state.value.view?.mode)
+    }
+
+    @Test
+    fun spreads_count_pages_not_leaves() {
+        opened(start = 0u, pages = 9)
+        // The cover alone, then pairs: five leaves hold nine pages.
+        val parts = ReaderFixtures.leaves(9).filter { !it.endPage }.flatMap { it.parts }
+        val spreads = (listOf(listOf(parts[0])) + parts.drop(1).chunked(2)).mapIndexed { i, pair ->
+            app.kaeri.engine.model.Leaf(i.toUInt(), pair, false)
+        } + app.kaeri.engine.model.Leaf(5u, emptyList(), true)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, spreads))
+        assertEquals(9, session.state.value.pages)
     }
 
     @Test

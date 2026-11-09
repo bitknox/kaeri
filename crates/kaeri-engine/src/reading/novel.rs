@@ -782,7 +782,10 @@ fn look(
 /// paginator's columns keep to it.
 const MEASURE: [u32; 2] = [65, 75];
 
-const SERIF: &str = "\"Literata\", \"Iowan Old Style\", Charter, Georgia, serif";
+/// Kaeri Serif CJK is the system's own Mincho face (reader.css), named before the generic serif,
+/// which falls back to a sans face for kana and kanji on Android.
+const SERIF: &str =
+    "\"Literata\", \"Iowan Old Style\", Charter, Georgia, \"Kaeri Serif CJK\", serif";
 const SANS: &str = "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Noto Sans\", Helvetica, Arial, sans-serif";
 
 /// The paginator's settings as JSON, from the reader's settings and the screen.

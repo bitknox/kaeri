@@ -51,7 +51,7 @@ One SwiftUI app with three shapes: a split view on Mac, the same split view on i
 - The tab bar minimises on scroll and the large title collapses, both the system's (T6).
 - The main action sits low. When a title page's Resume button scrolls away, a Resume capsule fades into the bottom toolbar. Sheets open at the medium detent with their action at the bottom.
 - Long press opens `contextMenu(menuItems:preview:)` with the banner as the preview. Pull to refresh (`refreshable`) works on Home, Calendar, Seasonal, Library (where it also syncs) and Downloads, and its spinner lasts until the engine's job ends, at most 15 s.
-- The app runs in portrait. The player rotates to landscape when it opens (T2).
+- The app runs in portrait. The player rotates to landscape when it opens (T2). The reader follows the phone's sensor in portrait and landscape while it is open, and keeps the current orientation while the system's rotation lock is on. The rest of the app stays portrait, and closing the reader returns it to portrait.
 
 Swipe actions on iPhone and iPad:
 
@@ -609,6 +609,7 @@ The Compose app keeps every rule above and changes only the means: Material 3 wi
 | Torrents | The same rules as iPhone: foreground only, Torrents on mobile data off by default |
 | Text size, TalkBack, keyboard | Font scale in `sp` with the same caps; `semantics` with `contentDescription`, `stateDescription`, `customActions` and `heading()`; `onPreviewKeyEvent` with the same keys, and `onProvideKeyboardShortcuts` for Meta + / |
 | Glass chrome | No glass. Bars and capsules are solid Raised, with tonal elevation off |
+| Orientation on phones | Under 600 dp at its smallest the app holds `SCREEN_ORIENTATION_PORTRAIT`. The player asks for `SENSOR_LANDSCAPE`. The reader asks for `FULL_USER`, which follows the sensor and honours the rotation lock, and asks for portrait again as it closes. Its pages lay out again for the new size: spreads, the strip and novels each fit landscape |
 
 ## Decisions for you
 

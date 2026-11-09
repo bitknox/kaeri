@@ -2913,6 +2913,74 @@ object Strings {
     fun einkKeepReadyOff(context: Context): String =
         context.getString(R.string.eink_keep_ready_off)
 
+    /** Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. */
+    fun readerRowVolumeSwap(context: Context): String =
+        context.getString(R.string.reader_row_volume_swap)
+
+    /** Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself. */
+    fun einkSheetScreen(context: Context): String =
+        context.getString(R.string.eink_sheet_screen)
+
+    /** Row in the e-ink reader's settings: a full refresh on every page with a picture. */
+    fun einkRowRefreshImage(context: Context): String =
+        context.getString(R.string.eink_row_refresh_image)
+
+    /** Row in the e-ink reader's settings: how often text pages get a full refresh. */
+    fun einkRowRefreshText(context: Context): String =
+        context.getString(R.string.eink_row_refresh_text)
+
+    /** Row in the e-ink reader's settings: how often lists get a full refresh as they page. */
+    fun einkRowRefreshList(context: Context): String =
+        context.getString(R.string.eink_row_refresh_list)
+
+    /** Value of a full refresh row in the e-ink reader's settings: once every so many pages. */
+    fun einkRefreshEvery(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_refresh_every, count, count)
+
+    /** Row in the e-ink reader's settings on a colour screen with speed modes: which mode pages use. */
+    fun einkRowScreenSpeed(context: Context): String =
+        context.getString(R.string.eink_row_screen_speed)
+
+    /** Choice of Screen speed: the screen's usual mode. */
+    fun einkSpeedStandard(context: Context): String =
+        context.getString(R.string.eink_speed_standard)
+
+    /** Choice of Screen speed: quicker updates with more ghosting. */
+    fun einkSpeedFast(context: Context): String =
+        context.getString(R.string.eink_speed_fast)
+
+    /** Choice of Screen speed: the slowest and cleanest updates. */
+    fun einkSpeedBest(context: Context): String =
+        context.getString(R.string.eink_speed_best)
+
+    /** Row in the e-ink reader's settings on a colour screen: softens the rainbow pattern in colour pictures. */
+    fun einkRowRainbow(context: Context): String =
+        context.getString(R.string.eink_row_rainbow)
+
+    /** Row in the e-ink reader's settings on a colour screen: how strong colours are drawn. */
+    fun einkRowSaturation(context: Context): String =
+        context.getString(R.string.eink_row_saturation)
+
+    /** Row in the e-ink reader's settings on a colour screen: the pictures' contrast. */
+    fun einkRowContrast(context: Context): String =
+        context.getString(R.string.eink_row_contrast)
+
+    /** Value of an amount row in the e-ink reader's settings, such as Text size or Contrast. */
+    fun einkPercent(context: Context, percent: Int): String =
+        context.getString(R.string.eink_percent, percent)
+
+    /** Button that makes a setting in the e-ink reader's settings smaller. */
+    fun einkStepDown(context: Context): String =
+        context.getString(R.string.eink_step_down)
+
+    /** Button that makes a setting in the e-ink reader's settings bigger. */
+    fun einkStepUp(context: Context): String =
+        context.getString(R.string.eink_step_up)
+
+    /** Marks the chapter open in the reader on the e-ink contents page. */
+    fun einkContentsReading(context: Context): String =
+        context.getString(R.string.eink_contents_reading)
+
     /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
     fun readHomeOfflineLine(context: Context): String =
         context.getString(R.string.read_home_offline_line)
@@ -3920,6 +3988,10 @@ object Strings {
     /** Settings, Downloads: the count of downloaded episodes. */
     fun settingsDownloadsCount(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.settings_downloads_count, count, count)
+
+    /** Settings, Downloads: the count of downloaded chapters of manga, webtoons and books. */
+    fun settingsDownloadsChapters(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.settings_downloads_chapters, count, count)
 
     /** Settings, Accounts: the group about the main tracker. */
     fun settingsAnilistFooter(context: Context): String =

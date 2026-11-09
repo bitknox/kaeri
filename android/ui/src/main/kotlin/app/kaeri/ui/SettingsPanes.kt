@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import app.kaeri.store.reads
 import app.kaeri.ui.reading.chapterNoticesRow
+import app.kaeri.store.text
 import app.kaeri.ui.reading.downloadsFinishedRow
 import app.kaeri.store.watches
 import androidx.compose.runtime.setValue
@@ -538,7 +539,8 @@ internal fun DownloadsPane(actions: AppActions) {
         // The folder is shared: the storage row counts episodes and chapters together.
         val used = (if (answer.watches) store.downloads.bytes(downloads) else 0L) +
             (if (answer.reads) chapters?.meter?.used?.toLong() ?: 0L else 0L)
-        val count = (if (answer.watches) downloads.size else 0) + (if (answer.reads) chapters?.rows?.size ?: 0 else 0)
+        val episodes = if (answer.watches) downloads.size else 0
+        val chapterCount = if (answer.reads) chapters?.rows?.size ?: 0 else 0
         SettingsGroup(
             rows = listOf(
                 { place -> StorageRow(place, used, free) },
@@ -547,7 +549,16 @@ internal fun DownloadsPane(actions: AppActions) {
                     InfoRow(
                         place,
                         stringResource(R.string.downloads_title),
-                        if (count == 0) stringResource(R.string.settings_none_yet) else pluralStringResource(R.plurals.settings_downloads_count, count, count),
+                        // Episodes and chapters are counted apart, each in its own word.
+                        listOfNotNull(
+                            if (episodes > 0) pluralStringResource(R.plurals.settings_downloads_count, episodes, episodes) else null,
+                            // The engine's own counts name the unit: chapters and a novel's parts, then the size.
+                            if (chapterCount > 0) {
+                                val context = LocalContext.current
+                                chapters?.total?.dropLast(1)?.takeIf { it.isNotEmpty() }?.joinToString(" · ") { it.text(context) }
+                                    ?: pluralStringResource(R.plurals.settings_downloads_chapters, chapterCount, chapterCount)
+                            } else null,
+                        ).joinToString(" · ").ifEmpty { stringResource(R.string.settings_none_yet) },
                         onClick = { navigator.open(DOWNLOADS_ROUTE) },
                     )
                 },

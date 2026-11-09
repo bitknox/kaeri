@@ -1,7 +1,8 @@
 // Taps and keys to reader actions, apart from any view so both readers and their tests share them.
 // The boards' rules: thirds on a phone, mirrored for right to left; on e-ink the forward zone is
 // 40% wide at the reading side, controls 30% in the middle and back 30%. Page buttons arrive as
-// the volume keys, the upper one forward. Home and End go to the first and last page, Escape
+// the volume keys: the upper one forward on e-ink, volume down forward on a phone (a switch swaps
+// them). Home and End go to the first and last page, Escape
 // hides the chrome then closes, and G shows the scrubber.
 
 package app.kaeri.reader
@@ -49,8 +50,8 @@ data class ReaderKeyRules(
     val direction: ReadDirection,
     /** Volume keys turn pages; with a book open they are taken from the volume. */
     val volumeTurns: Boolean = true,
-    /** The upper key goes back instead of forward. */
-    val swapVolume: Boolean = false,
+    /** Volume down goes forward and volume up back: a phone's default, where the thumb rests. */
+    val volumeDownForward: Boolean = false,
     /** Holding the forward key cleans the screen (e-ink). */
     val holdCleans: Boolean = false,
 )
@@ -64,8 +65,8 @@ fun ReaderKeyRules.action(keyCode: Int, shift: Boolean = false, repeat: Int = 0,
     val forwardArrow = if (direction.rightToLeft) KeyEvent.KEYCODE_DPAD_LEFT else KeyEvent.KEYCODE_DPAD_RIGHT
     val backArrow = if (direction.rightToLeft) KeyEvent.KEYCODE_DPAD_RIGHT else KeyEvent.KEYCODE_DPAD_LEFT
     val action = when (keyCode) {
-        KeyEvent.KEYCODE_VOLUME_UP -> if (!volumeTurns) return null else if (swapVolume) ReaderAction.BACK else ReaderAction.FORWARD
-        KeyEvent.KEYCODE_VOLUME_DOWN -> if (!volumeTurns) return null else if (swapVolume) ReaderAction.FORWARD else ReaderAction.BACK
+        KeyEvent.KEYCODE_VOLUME_UP -> if (!volumeTurns) return null else if (volumeDownForward) ReaderAction.BACK else ReaderAction.FORWARD
+        KeyEvent.KEYCODE_VOLUME_DOWN -> if (!volumeTurns) return null else if (volumeDownForward) ReaderAction.FORWARD else ReaderAction.BACK
         KeyEvent.KEYCODE_PAGE_DOWN, KeyEvent.KEYCODE_DPAD_DOWN, forwardArrow -> ReaderAction.FORWARD
         KeyEvent.KEYCODE_PAGE_UP, KeyEvent.KEYCODE_DPAD_UP, backArrow -> ReaderAction.BACK
         KeyEvent.KEYCODE_SPACE -> if (shift) ReaderAction.BACK else ReaderAction.FORWARD

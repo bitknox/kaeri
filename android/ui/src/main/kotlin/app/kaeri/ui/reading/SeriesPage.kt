@@ -140,7 +140,8 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     var statusOpen by remember { mutableStateOf(false) }
     var downloadOpen by remember { mutableStateOf(false) }
     var moreOpen by remember { mutableStateOf(false) }
-    var newestFirst by rememberSaveable { mutableStateOf(true) }
+    // The order last chosen, on any series: the engine sends chapters in reading order.
+    var newestFirst by remember { mutableStateOf(ChapterOrder.newestFirst(context)) }
     // Volumes the person opened or closed; the others are open while not all read.
     val folds = remember { mutableStateMapOf<String, Boolean>() }
     val wide = wideWindow()
@@ -292,7 +293,10 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                         series = series,
                         chapters = chapters,
                         newestFirst = newestFirst,
-                        onOrder = { newestFirst = it },
+                        onOrder = {
+                            newestFirst = it
+                            ChapterOrder.keep(context, it)
+                        },
                         folds = folds,
                         chosen = chosen,
                         onChosen = { chosen = it },
@@ -763,5 +767,18 @@ private fun SeriesRecommended(series: SeriesView) {
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             items(series.recommended, key = { it.work }) { tile -> ReadTile(tile, 112.dp, from = "series-recommended") }
         }
+    }
+}
+
+/** The chapter list's order, kept on this device for every series. */
+private object ChapterOrder {
+    private const val PREFS = "kaeri_series_ui"
+    private const val NEWEST = "newest_first"
+
+    fun newestFirst(context: android.content.Context): Boolean =
+        context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).getBoolean(NEWEST, true)
+
+    fun keep(context: android.content.Context, newest: Boolean) {
+        context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).edit().putBoolean(NEWEST, newest).apply()
     }
 }

@@ -481,6 +481,9 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     private fun reloadChapters(work: WorkId) = reading(ReadingCommand.LoadChapters(work, _chapters.value[work]?.edition?.sourceId))
 
+    /** The reader closed on [work]: its page and lists show where reading got to. */
+    fun readerClosed(work: WorkId) = refreshSeries(work)
+
     private fun refreshSeries(work: WorkId) {
         if (_series.value[work] != null) {
             reading(ReadingCommand.LoadSeries(work))

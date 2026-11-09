@@ -340,7 +340,7 @@ fun PhoneReader(
             ReaderAction.GO_TO -> chrome = true
         }
     }
-    val keyRules = ReaderKeyRules(direction, volumeTurns = volume)
+    val keyRules = ReaderKeyRules(direction, volumeTurns = volume, volumeDownForward = !ReaderLook.volumeSwapped(context))
     // The novel's web view hears keys first and hands the reader's own over.
     SideEffect {
         place.keys = { event ->
@@ -521,6 +521,7 @@ fun PhoneReader(
                         openingHeld = false
                         landed = here
                     },
+                    fit = state.choice(ReaderSettingKey.FIT),
                     )
                     if (leaving != null) {
                         Box(
