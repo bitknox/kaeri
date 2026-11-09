@@ -2483,6 +2483,360 @@
     <value>[Åççöüñţ, {state}~~~~]</value>
     <comment>Name of the account entry in the navigation pane, followed by its state.</comment>
   </data>
+  <data name="WindowsReaderSettingsOpen" xml:space="preserve">
+    <value>[Ŕéàðéŕ šéţţîñĝš~~~~~]</value>
+    <comment>Name and tooltip of the Aa button in the reader's group, which opens the reader's settings.</comment>
+  </data>
+  <data name="WindowsReaderOpening" xml:space="preserve">
+    <value>[Öþéñîñĝ {chapter}~~~~]</value>
+    <comment>The opening screen's line, under the cover, after the first moment. The chapter label comes from the source.</comment>
+  </data>
+  <data name="WindowsReaderOpeningSlow" xml:space="preserve">
+    <value>[Ƒîñðîñĝ à šöüŕçé · {seconds} š~~~~~~~~]</value>
+    <comment>The opening screen's line after a few seconds of waiting for a source to answer.</comment>
+  </data>
+  <data name="WindowsReaderChapterFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ öþéñ {chapter}~~~~~~]</value>
+    <comment>Heading of the error when a chapter would not open.</comment>
+  </data>
+  <data name="WindowsReaderChooseSource" xml:space="preserve">
+    <value>[Çĥööšé šöüŕçé~~~~]</value>
+    <comment>Button of the error when a chapter would not open: back to the series page, where the source is chosen.</comment>
+  </data>
+  <data name="WindowsReaderPageFailedHint" xml:space="preserve">
+    <value>[Ţüŕñ ţĥé þàĝé ţö ĝö öñ ŵîţĥöüţ îţ.~~~~~~~~~~~]</value>
+    <comment>Hint under a page's error: the next page still opens.</comment>
+  </data>
+  <data name="WindowsReaderEndOfChapter" xml:space="preserve">
+    <value>[Éñð öƒ {chapter}~~~]</value>
+    <comment>Top line of the page between chapters: what just ended. The chapter label comes from the source.</comment>
+  </data>
+  <data name="WindowsReaderEndNotRead" xml:space="preserve">
+    <value>[Ñöţ ɱàŕķéð ŕéàð ýéţ~~~~~~]</value>
+    <comment>Line under it when the chapter has not counted as read yet.</comment>
+  </data>
+  <data name="WindowsReaderEndTracker" xml:space="preserve">
+    <value>[Ŕéàð · {trackers} üþðàţéð~~~~~~]</value>
+    <comment>Line under the top line once the chapter counted as read and the trackers were updated. The trackers are names joined by the app: "AniList and Kitsu".</comment>
+  </data>
+  <data name="WindowsReaderEndTrackersTwo" xml:space="preserve">
+    <value>[{first} àñð {second}~~~~]</value>
+    <comment>Two tracker names joined, for the line above.</comment>
+  </data>
+  <data name="WindowsReaderContinue" xml:space="preserve">
+    <value>[Çöñţîñüé~~~]</value>
+    <comment>The one amber button of the page between chapters: opens the next chapter.</comment>
+  </data>
+  <data name="WindowsReaderBackToSeries" xml:space="preserve">
+    <value>[Ɓàçķ ţö ţĥé šéŕîéš~~~~~~]</value>
+    <comment>Button on the page between chapters that closes the reader and goes back to the series page.</comment>
+  </data>
+  <data name="WindowsReaderEndNotOut" xml:space="preserve">
+    <value>[{chapter} îšñ'ţ öüţ ýéţ~~~~~~]</value>
+    <comment>End page heading when the next chapter is not out yet.</comment>
+  </data>
+  <data name="WindowsReaderEndNotOutBody" xml:space="preserve">
+    <value>[Ķàéŕî çĥéçķš ƒöŕ ñéŵ çĥàþţéŕš îñ ţĥé ƀàçķĝŕöüñð àñð àððš ţĥéɱ ţö Ûþðàţéš.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>End page text when the next chapter is not out yet.</comment>
+  </data>
+  <data name="WindowsReaderEndCaughtUpBody" xml:space="preserve">
+    <value>[Ñéŵ çĥàþţéŕš šĥöŵ îñ Ûþðàţéš ŵĥéñ ýöüŕ šöüŕçéš ĥàṽé ţĥéɱ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>End page text when the reader has caught up with the series.</comment>
+  </data>
+  <data name="WindowsReaderEndFinished" xml:space="preserve">
+    <value>[Éñð öƒ ţĥé šéŕîéš~~~~~~]</value>
+    <comment>End page heading at the end of a finished series.</comment>
+  </data>
+  <data name="WindowsReaderEndFinishedBody" xml:space="preserve">
+    <value>[Ţĥéŕé àŕé ñö ɱöŕé çĥàþţéŕš.~~~~~~~~~]</value>
+    <comment>End page text at the end of a finished series.</comment>
+  </data>
+  <data name="WindowsReaderEndNoSource" xml:space="preserve">
+    <value>[Ñö {chapter} îñ ýöüŕ šöüŕçéš ýéţ~~~~~~~~]</value>
+    <comment>End page heading when no source has the next chapter.</comment>
+  </data>
+  <data name="WindowsReaderEndOffline" xml:space="preserve">
+    <value>[{chapter} îšñ'ţ ðöŵñļöàðéð~~~~~~]</value>
+    <comment>End page heading when the next chapter is not downloaded and the PC is offline.</comment>
+  </data>
+  <data name="WindowsReaderEndOfflineBody" xml:space="preserve">
+    <value>[Ýöü'ŕé öƒƒļîñé. Îţ öþéñš ĥéŕé öñçé ýöü'ŕé çöññéçţéð.~~~~~~~~~~~~~~~~]</value>
+    <comment>End page text when the next chapter is not downloaded and the PC is offline.</comment>
+  </data>
+  <data name="WindowsReaderGroupLine" xml:space="preserve">
+    <value>[{chapter} · þàĝé {page} öƒ {total}~~~~~~~]</value>
+    <comment>The group's line under the series title. The chapter label comes from the source.</comment>
+  </data>
+  <data name="WindowsReaderGroupLineSpread" xml:space="preserve">
+    <value>[{chapter} · þàĝéš {first} àñð {second}~~~~~~~]</value>
+    <comment>The group's line when a spread shows two pages.</comment>
+  </data>
+  <data name="WindowsReaderGroupLineStrip" xml:space="preserve">
+    <value>[{chapter} · îɱàĝé {image} öƒ {total}~~~~~~~]</value>
+    <comment>The group's line for a strip of images.</comment>
+  </data>
+  <data name="WindowsReaderGroupLineScroll" xml:space="preserve">
+    <value>[{chapter} · {percent}%~~~]</value>
+    <comment>The group's line for a novel in one long scroll.</comment>
+  </data>
+  <data name="WindowsReaderPageLabel" xml:space="preserve">
+    <value>[Þàĝé {page} öƒ {total}~~~~~]</value>
+    <comment>What a screen reader says when the page turns.</comment>
+  </data>
+  <data name="WindowsReaderPagesLabel" xml:space="preserve">
+    <value>[Þàĝéš {first} àñð {second} öƒ {total}~~~~~~~~]</value>
+    <comment>What a screen reader says when a spread turns.</comment>
+  </data>
+  <data name="WindowsReaderScrubber" xml:space="preserve">
+    <value>[Þàĝé~~]</value>
+    <comment>Name of the scrubber, spoken.</comment>
+  </data>
+  <data name="WindowsReaderStartOver" xml:space="preserve">
+    <value>[Šţàŕţ öṽéŕ~~~]</value>
+    <comment>Button on the Resumed notice.</comment>
+  </data>
+  <data name="WindowsReaderGoBack" xml:space="preserve">
+    <value>[Ĝö ƀàçķ~~~]</value>
+    <comment>Button on the Moved notice.</comment>
+  </data>
+  <data name="WindowsReaderChange" xml:space="preserve">
+    <value>[Çĥàñĝé~~]</value>
+    <comment>Button on the reading mode notice, which opens the reader's settings.</comment>
+  </data>
+  <data name="WindowsReaderThisSeries" xml:space="preserve">
+    <value>[Ţĥîš šéŕîéš~~~~]</value>
+    <comment>Heading of the settings that belong to one series.</comment>
+  </data>
+  <data name="WindowsReaderAllMangaPc" xml:space="preserve">
+    <value>[Åļļ ɱàñĝà öñ ţĥîš ÞÇ~~~~~~]</value>
+    <comment>Heading of the manga settings that stay on this PC.</comment>
+  </data>
+  <data name="WindowsReaderAllStripsPc" xml:space="preserve">
+    <value>[Åļļ ŵéƀţööñš öñ ţĥîš ÞÇ~~~~~~~]</value>
+    <comment>Heading of the webtoon settings that stay on this PC.</comment>
+  </data>
+  <data name="WindowsReaderAllNovels" xml:space="preserve">
+    <value>[Åļļ ļîĝĥţ ñöṽéļš~~~~~]</value>
+    <comment>Heading of the novel settings.</comment>
+  </data>
+  <data name="WindowsReaderReadingMode" xml:space="preserve">
+    <value>[Ŕéàðîñĝ ɱöðé~~~~]</value>
+    <comment>Row: how the series reads.</comment>
+  </data>
+  <data name="WindowsReaderModeAuto" xml:space="preserve">
+    <value>[Åüţö · {mode}~~~]</value>
+    <comment>The reading mode's value when it was guessed. The mode is "right to left", "left to right" or "strip".</comment>
+  </data>
+  <data name="WindowsReaderModeAutoOption" xml:space="preserve">
+    <value>[Åüţö~~]</value>
+    <comment>Option of the reading mode picker that lets Kaeri guess again.</comment>
+  </data>
+  <data name="WindowsReaderModeRtlLower" xml:space="preserve">
+    <value>[ŕîĝĥţ ţö ļéƒţ~~~~]</value>
+    <comment>A guessed reading mode, inside "Auto · right to left".</comment>
+  </data>
+  <data name="WindowsReaderModeLtrLower" xml:space="preserve">
+    <value>[ļéƒţ ţö ŕîĝĥţ~~~~]</value>
+    <comment>A guessed reading mode, inside "Auto · left to right".</comment>
+  </data>
+  <data name="WindowsReaderModeStripLower" xml:space="preserve">
+    <value>[šţŕîþ~~]</value>
+    <comment>A guessed reading mode, inside "Auto · strip".</comment>
+  </data>
+  <data name="WindowsReaderModeDetectedNote" xml:space="preserve">
+    <value>[Ðéţéçţéð ƒŕöɱ ţĥé šéŕîéš ðéţàîļš.~~~~~~~~~~]</value>
+    <comment>Under the reading mode for a guessed mode.</comment>
+  </data>
+  <data name="WindowsReaderModeChoiceNote" xml:space="preserve">
+    <value>[Ýöüŕ çĥöîçé îš šàṽéð ƒöŕ ţĥîš šéŕîéš àñð ƒöļļöŵš îţ ţö ýöüŕ öţĥéŕ ðéṽîçéš.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under the reading mode for the series' own choice.</comment>
+  </data>
+  <data name="WindowsReaderUseDefault" xml:space="preserve">
+    <value>[Ûšé ðéƒàüļţ~~~~]</value>
+    <comment>Button that drops the series' own reading mode.</comment>
+  </data>
+  <data name="WindowsReaderModePaged" xml:space="preserve">
+    <value>[Þàĝéð~~]</value>
+    <comment>A novel's reading mode: pages.</comment>
+  </data>
+  <data name="WindowsReaderModeScrolled" xml:space="preserve">
+    <value>[Šçŕöļļ~~]</value>
+    <comment>A novel's reading mode: one long scroll.</comment>
+  </data>
+  <data name="WindowsReaderPageLayout" xml:space="preserve">
+    <value>[Þàĝé ļàýöüţ~~~~]</value>
+    <comment>Row of the manga settings: one page or two.</comment>
+  </data>
+  <data name="WindowsReaderFit" xml:space="preserve">
+    <value>[Ƒîţ~]</value>
+    <comment>Row of the manga settings: how a page is fitted.</comment>
+  </data>
+  <data name="WindowsReaderFitHeight" xml:space="preserve">
+    <value>[Ĥéîĝĥţ~~]</value>
+    <comment>A choice for how a page is fitted: to the window's height.</comment>
+  </data>
+  <data name="WindowsReaderCropBorders" xml:space="preserve">
+    <value>[Çŕöþ ƀöŕðéŕš~~~~]</value>
+    <comment>Row of the manga settings.</comment>
+  </data>
+  <data name="WindowsReaderGap" xml:space="preserve">
+    <value>[Šþàçé ƀéţŵééñ îɱàĝéš~~~~~~]</value>
+    <comment>Row of the webtoon settings: the space between a strip's images.</comment>
+  </data>
+  <data name="WindowsReaderBackground" xml:space="preserve">
+    <value>[Ɓàçķĝŕöüñð~~~]</value>
+    <comment>Row of the manga settings: what shows round the page.</comment>
+  </data>
+  <data name="WindowsReaderMoreSettings" xml:space="preserve">
+    <value>[Ṁöŕé ŕéàðéŕ šéţţîñĝš~~~~~~]</value>
+    <comment>Row that opens Settings on its Reading pane.</comment>
+  </data>
+  <data name="WindowsReaderPaperMode" xml:space="preserve">
+    <value>[Þàþéŕ ɱöðé~~~]</value>
+    <comment>Row: the e-reader-like look.</comment>
+  </data>
+  <data name="WindowsReaderPaperModeNote" xml:space="preserve">
+    <value>[Þàþéŕ çöļöüŕš, àñð þàĝéš ţüŕñ àţ öñçé ŵîţĥ ñöţĥîñĝ îñ ţĥé ŕéàðéŕ ɱöṽîñĝ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Under the Paper mode switch.</comment>
+  </data>
+  <data name="WindowsReaderFont" xml:space="preserve">
+    <value>[Ƒöñţ~~]</value>
+    <comment>Rows of the novel settings.</comment>
+  </data>
+  <data name="WindowsReaderTextSize" xml:space="preserve">
+    <value>[Ţéẋţ šîžé~~~]</value>
+  </data>
+  <data name="WindowsReaderLineSpacing" xml:space="preserve">
+    <value>[Ļîñé šþàçîñĝ~~~~]</value>
+  </data>
+  <data name="WindowsReaderLineTight" xml:space="preserve">
+    <value>[Ţîĝĥţ~~]</value>
+    <comment>A choice of line spacing.</comment>
+  </data>
+  <data name="WindowsReaderLineNormal" xml:space="preserve">
+    <value>[Ñöŕɱàļ~~]</value>
+    <comment>A choice of line spacing, and of margins.</comment>
+  </data>
+  <data name="WindowsReaderLineLoose" xml:space="preserve">
+    <value>[Ļööšé~~]</value>
+    <comment>A choice of line spacing.</comment>
+  </data>
+  <data name="WindowsReaderMargins" xml:space="preserve">
+    <value>[Ṁàŕĝîñš~~~]</value>
+  </data>
+  <data name="WindowsReaderJustify" xml:space="preserve">
+    <value>[Ĵüšţîƒý ţéẋţ~~~~]</value>
+  </data>
+  <data name="WindowsReaderLook" xml:space="preserve">
+    <value>[Ļööķ~~]</value>
+    <comment>Row of the novel settings: the page's colours.</comment>
+  </data>
+  <data name="WindowsReaderPercent" xml:space="preserve">
+    <value>[{percent}%~~]</value>
+    <comment>The text size's value.</comment>
+  </data>
+  <data name="WindowsReaderSmaller" xml:space="preserve">
+    <value>[Šɱàļļéŕ ţéẋţ~~~~]</value>
+    <comment>Button names of the text size row.</comment>
+  </data>
+  <data name="WindowsReaderLarger" xml:space="preserve">
+    <value>[Ļàŕĝéŕ ţéẋţ~~~~]</value>
+  </data>
+  <data name="WindowsReaderPagesTab" xml:space="preserve">
+    <value>[Þàĝéš~~]</value>
+    <comment>Tabs of the Chapters flyout.</comment>
+  </data>
+  <data name="WindowsReaderChaptersTab" xml:space="preserve">
+    <value>[Çĥàþţéŕš~~~]</value>
+  </data>
+  <data name="WindowsReaderVolume" xml:space="preserve">
+    <value>[Ṽöļüɱé {volume}~~~]</value>
+    <comment>A volume's heading in the chapter list.</comment>
+  </data>
+  <data name="WindowsReaderChapterPages_one" xml:space="preserve">
+    <value>[1 þàĝé~~]</value>
+    <comment>A chapter's length in the chapter list.</comment>
+  </data>
+  <data name="WindowsReaderChapterPages_other" xml:space="preserve">
+    <value>[{pages} þàĝéš~~~]</value>
+    <comment>A chapter's length in the chapter list.</comment>
+  </data>
+  <data name="WindowsReaderGridPage" xml:space="preserve">
+    <value>[Þàĝé {page}~~~]</value>
+    <comment>Name of a page in the page grid, spoken.</comment>
+  </data>
+  <data name="WindowsReaderImageLabel" xml:space="preserve">
+    <value>[Îɱàĝé {image} öƒ {count}~~~~~]</value>
+    <comment>Name of an image in a strip, spoken when the strip settles on it and read by Narrator.</comment>
+  </data>
+  <data name="WindowsReaderNoteClose" xml:space="preserve">
+    <value>[Çļöšé ñöţé~~~]</value>
+    <comment>Name and tooltip of the button that closes a novel's footnote.</comment>
+  </data>
+  <data name="WindowsReaderBack" xml:space="preserve">
+    <value>[Ɓàçķ~~]</value>
+    <comment>Name of the Back button at the top of the reading mode picker inside the reader settings.</comment>
+  </data>
+  <data name="WindowsReaderModeVertical" xml:space="preserve">
+    <value>[Ṽéŕţîçàļ þàĝéš~~~~~]</value>
+    <comment>Option of the reading mode picker: pages one under another.</comment>
+  </data>
+  <data name="WindowsReaderModeVerticalLower" xml:space="preserve">
+    <value>[ṽéŕţîçàļ þàĝéš~~~~~]</value>
+    <comment>A guessed reading mode, inside "Auto · vertical pages".</comment>
+  </data>
+  <data name="WindowsReaderModeAutoLine" xml:space="preserve">
+    <value>[{way}, ƒŕöɱ ţĥé šéŕîéš ðéţàîļš~~~~~~~~~]</value>
+    <comment>Hint under Auto in the reading mode picker. The way is "Right to left", "Left to right", "Strip" or "Vertical pages".</comment>
+  </data>
+  <data name="WindowsReaderModeVerticalLine" xml:space="preserve">
+    <value>[Þàĝéš öñé üñðéŕ àñöţĥéŕ~~~~~~~]</value>
+    <comment>Hint under Vertical pages in the reading mode picker.</comment>
+  </data>
+  <data name="WindowsReaderModeStripLine" xml:space="preserve">
+    <value>[Ƒöŕ ŵéƀţööñš àñð ļöñĝ îɱàĝéš~~~~~~~~~]</value>
+    <comment>Hint under Strip in the reading mode picker.</comment>
+  </data>
+  <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
+    <value>[Ðöŵñļöàðéð çĥàþţéŕš öþéñ ŵîţĥöüţ à çöññéçţîöñ.~~~~~~~~~~~~~~]</value>
+    <comment>Line under the title of the Downloads page for reading when no chapter is kept on this PC.</comment>
+  </data>
+  <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
+    <value>[Ŕéàðîñĝ {title} àĝàîñ ƒŕöɱ ţĥé šţàŕţ~~~~~~~~~~]</value>
+    <comment>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</comment>
+  </data>
+  <data name="SendSaveFilesWindows" xml:space="preserve">
+    <value>[Šàṽé ƒîļéš~~~]</value>
+    <comment>Button in Send to e-reader, once the files are ready: saves them where the person picks instead of sharing them.</comment>
+  </data>
+  <data name="SendSavedWindows_one" xml:space="preserve">
+    <value>[Šàṽéð ţĥé ƒîļé~~~~~]</value>
+    <comment>Notice after the files for an e-reader were saved.</comment>
+  </data>
+  <data name="SendSavedWindows_other" xml:space="preserve">
+    <value>[Šàṽéð {n} ƒîļéš~~~~~]</value>
+    <comment>Notice after the files for an e-reader were saved.</comment>
+  </data>
+  <data name="SendSaveFailedWindows" xml:space="preserve">
+    <value>[Çöüļðñ'ţ šàṽé ţĥé ƒîļéš ţĥéŕé. Ţŕý àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~]</value>
+    <comment>Notice when the files for an e-reader could not be saved where the person picked.</comment>
+  </data>
+  <data name="OpdsPausedNoneWindows" xml:space="preserve">
+    <value>[Þàüšéð. Ţĥîš ÞÇ îšñ'ţ öñ à ļöçàļ ñéţŵöŕķ.~~~~~~~~~~~~~]</value>
+    <comment>Shown in place of the feed's address while the feed is on but this computer has no local network.</comment>
+  </data>
+  <data name="OpdsPausedVpnWindows" xml:space="preserve">
+    <value>[Þàüšéð. Ţĥîš ÞÇ îš öñļý çöññéçţéð ţĥŕöüĝĥ à ṼÞÑ.~~~~~~~~~~~~~~~]</value>
+    <comment>Shown in place of the feed's address while the feed is on but the only connection goes through a VPN.</comment>
+  </data>
+  <data name="FeedFirewallTitleWindows" xml:space="preserve">
+    <value>[Ŵîñðöŵš ŵîļļ àšķ àƀöüţ ţĥé ñéţŵöŕķ~~~~~~~~~~~]</value>
+    <comment>Title of the dialog shown once, the first time the OPDS feed is switched on, before Windows asks whether Kaeri may use the network.</comment>
+  </data>
+  <data name="FeedFirewallBodyWindows" xml:space="preserve">
+    <value>[Ţö ļéţ é-ŕéàðéŕš àţ ĥöɱé ŕéàçĥ ţĥé ƒééð, àļļöŵ Ķàéŕî öñ þŕîṽàţé ñéţŵöŕķš öñļý. Ļéàṽé þüƀļîç ñéţŵöŕķš üñţîçķéð.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Body of that dialog. "Private networks" and "public networks" are the names Windows' own question uses.</comment>
+  </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>[Ļöàðîñĝ šéţţîñĝš~~~~~]</value>
     <comment>Busy line while Settings waits for the engine's values.</comment>
@@ -8103,6 +8457,10 @@
   <data name="NavUpdates" xml:space="preserve">
     <value>[Ûþðàţéš~~~]</value>
     <comment>Sidebar and tab label: new chapters from followed series.</comment>
+  </data>
+  <data name="HomeReadContinue" xml:space="preserve">
+    <value>[Çöñţîñüé~~~]</value>
+    <comment>Shelf heading on Read: the series being read, each at its place.</comment>
   </data>
   <data name="HomeReadReleasing" xml:space="preserve">
     <value>[Ŕéļéàšîñĝ ñöŵ~~~~]</value>

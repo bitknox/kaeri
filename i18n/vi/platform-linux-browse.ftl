@@ -36,3 +36,5 @@ library-linux-list-count = { $list } { $count }
 title-linux-play-on-tv-help = Phát tập này trên TV bằng { -app-name }
 title-linux-episode-watched = Tập { $episode } đã xem
 calendar-linux-day-empty = Không có tập nào chiếu
+linux-read-library-list = Danh sách
+linux-read-downloads-empty = Chương đã tải mở được khi không có kết nối.

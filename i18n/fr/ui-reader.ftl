@@ -53,10 +53,10 @@ reader-end-from = De { $source }
 reader-chapter-line = Chapitre { $chapter }
 
 reader-divider-facts-source = { $facts } · de { $source }
+reader-chapter-line-titled = Chapitre { $chapter } · { $title }
 reader-end-swipe = Balayez pour lire la suite
 reader-divider-images = { $count ->
     [one] Une image
     [many] { $count } images
    *[other] { $count } images
  }
-reader-chapter-line-titled = Chapitre { $chapter } · { $title }

@@ -3,6 +3,7 @@ reader-page-failed = Kunde inte ladda sida { $page }
 reader-try-again = Försök igen
 reader-close = Stäng
 reader-end-read = Läst
+reader-end-tracker = Läst · uppdaterat på { $trackers }
 reader-end-next = { -up-next-cap }
 reader-mode-rtl = Höger till vänster
 reader-mode-ltr = Vänster till höger
@@ -39,7 +40,6 @@ reader-end-caught-up = Du är ikapp
 reader-gap-none = Ingen
 reader-gap-small = Liten
 reader-look-system = System
-reader-end-tracker = Läst · uppdaterat på { $trackers }
 reader-end-of-chapter-number = Slut på kapitel { $chapter }
 reader-end-facts = Kapitel { $chapter } · { $facts }
 reader-end-pages = { $count ->
@@ -47,11 +47,9 @@ reader-end-pages = { $count ->
    *[other] { $count } sidor
  }
 reader-end-from = Från { $source }
-
 reader-chapter-line = Kapitel { $chapter }
-
 reader-divider-facts-source = { $facts } · från { $source }
-reader-end-swipe = Svep för att läsa vidare
+reader-end-swipe = Svep för att { -continue-reading }
 reader-divider-images = { $count ->
     [one] En bild
    *[other] { $count } bilder

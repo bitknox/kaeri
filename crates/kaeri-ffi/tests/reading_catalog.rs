@@ -264,16 +264,19 @@ fn a_series_page_says_where_you_are_what_else_it_is_and_its_versions() {
     engine.send(Command::Reading(ReadingCommand::LoadSeries {
         work: kaeri_core::books::WorkId::new("a:900301"),
     }));
-    // The page, the chapters and More like this come in any order: read until all have.
+    // The page, the chapters and More like this come in any order. The edition's count follows
+    // the folder's fresh list, so read until a whole page has come after the chapters.
     let mut read = Vec::new();
     let whole = |read: &[Event]| {
-        let chapters = read
+        let Some(chapters) = read
             .iter()
-            .any(|event| matches!(event, Event::Reading(ReadingEvent::Chapters { .. })));
-        let page = read.iter().any(|event| {
+            .position(|event| matches!(event, Event::Reading(ReadingEvent::Chapters { .. })))
+        else {
+            return false;
+        };
+        read[chapters..].iter().any(|event| {
             matches!(event, Event::Reading(ReadingEvent::Series(view)) if !view.partial && !view.recommended.is_empty())
-        });
-        chapters && page
+        })
     };
     while !whole(&read) {
         read.extend(read_until(&engine, |event| {

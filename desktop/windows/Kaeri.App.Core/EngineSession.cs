@@ -47,6 +47,8 @@ public sealed class EngineSession : IDisposable
     /// and Trakt sign in with a code typed on their site. These ids are public, as every app's
     /// are. A fixture run passes <paramref name="signIn"/> false: its trackers are the fake's,
     /// and a sign-in must not open the real AniList.
+    /// Reading is on in testing builds (the Fixtures app) and stays dark in release builds until
+    /// it launches.
     /// </summary>
     public static FfiStart AppStart(bool signIn = true) => new(
         Theme: Palette.PlayerTheme,
@@ -57,7 +59,14 @@ public sealed class EngineSession : IDisposable
         TraktClientId: TraktClient,
         Language: T.Language,
         // Kaeri's own libmpv hands its audio over for finding skip times; another one put in its place may not.
-        AudioTap: KaeriFfiMethods.PlayerAudioTap());
+        AudioTap: KaeriFfiMethods.PlayerAudioTap(),
+        Reading: ReadingInBuild);
+
+#if KAERI_TESTING
+    public const bool ReadingInBuild = true;
+#else
+    public const bool ReadingInBuild = false;
+#endif
 
     /// <summary>Kaeri's AniList client: implicit grant, redirecting to <c>kaeri://auth/anilist</c>.</summary>
     public const string AnilistClient = "54537";

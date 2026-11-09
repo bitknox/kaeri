@@ -5,7 +5,7 @@
 use adw::prelude::*;
 
 /// A spring of zero bounce with `stiffness`: 1000 for quick, 440 for standard, the stiffness of
-/// zero-bounce springs of 0.2 s and 0.3 s.
+/// zero-bounce springs of 0.2 s and 0.3 s. Made with the builder, as `timed` explains.
 fn spring(
     widget: &impl IsA<gtk::Widget>,
     from: f64,
@@ -13,10 +13,34 @@ fn spring(
     stiffness: f64,
     target: impl IsA<adw::AnimationTarget>,
 ) -> adw::SpringAnimation {
-    let params = adw::SpringParams::new(1.0, 1.0, stiffness);
-    let animation = adw::SpringAnimation::new(widget, from, to, params, target);
-    animation.set_clamp(true);
-    animation
+    adw::SpringAnimation::builder()
+        .widget(widget)
+        .value_from(from)
+        .value_to(to)
+        .spring_params(&adw::SpringParams::new(1.0, 1.0, stiffness))
+        .target(&target)
+        .clamp(true)
+        .build()
+}
+
+/// A timed animation of `widget` from `from` to `to` over `ms`. Every timed animation is made
+/// here: the builder hands back the only reference, so the animation, its target and whatever
+/// its `done` handler holds all go once the last owner lets go, where libadwaita-rs's
+/// `TimedAnimation::new` keeps one reference too many and they live as long as the app.
+pub fn timed(
+    widget: &impl IsA<gtk::Widget>,
+    from: f64,
+    to: f64,
+    ms: u32,
+    target: impl IsA<adw::AnimationTarget>,
+) -> adw::TimedAnimation {
+    adw::TimedAnimation::builder()
+        .widget(widget)
+        .value_from(from)
+        .value_to(to)
+        .duration(ms)
+        .target(&target)
+        .build()
 }
 
 /// Selection tint, toggles, a row dimming after it is marked watched.
@@ -47,7 +71,7 @@ pub fn opacity(widget: &impl IsA<gtk::Widget>) -> adw::PropertyAnimationTarget {
 /// Fade `widget` in from clear: ease-out, 200 ms. Art arriving, a line appearing.
 pub fn fade_in(widget: &impl IsA<gtk::Widget>) -> adw::TimedAnimation {
     widget.set_opacity(0.0);
-    let animation = adw::TimedAnimation::new(widget, 0.0, 1.0, 200, opacity(widget));
+    let animation = timed(widget, 0.0, 1.0, 200, opacity(widget));
     animation.set_easing(adw::Easing::EaseOutCubic);
     animation.play();
     animation
@@ -56,7 +80,7 @@ pub fn fade_in(widget: &impl IsA<gtk::Widget>) -> adw::TimedAnimation {
 /// Fade `widget` out: ease-in, 300 ms, then hide it.
 pub fn fade_out(widget: &impl IsA<gtk::Widget>) -> adw::TimedAnimation {
     let from = widget.opacity();
-    let animation = adw::TimedAnimation::new(widget, from, 0.0, 300, opacity(widget));
+    let animation = timed(widget, from, 0.0, 300, opacity(widget));
     animation.set_easing(adw::Easing::EaseInCubic);
     let hidden = widget.as_ref().clone();
     animation.connect_done(move |_| {
@@ -74,7 +98,7 @@ pub fn fade_away(
     done: impl Fn() + 'static,
 ) -> adw::TimedAnimation {
     let from = widget.opacity();
-    let animation = adw::TimedAnimation::new(widget, from, 0.0, 300, opacity(widget));
+    let animation = timed(widget, from, 0.0, 300, opacity(widget));
     animation.set_easing(adw::Easing::EaseInCubic);
     animation.connect_done(move |_| done());
     animation.play();
@@ -156,7 +180,7 @@ impl Fader {
         } else {
             (0.0, 300, adw::Easing::EaseInCubic)
         };
-        let animation = adw::TimedAnimation::new(widget, from, to, ms, opacity(widget));
+        let animation = timed(widget, from, to, ms, opacity(widget));
         animation.set_easing(easing);
         animation.set_follow_enable_animations_setting(!self.always);
         let done = widget.clone();
@@ -217,7 +241,7 @@ pub fn ghost(
     }
     veil.add_overlay(&ghost);
     let (veil, gone) = (veil.clone(), ghost.clone());
-    let fade = adw::TimedAnimation::new(&ghost, 1.0, 0.0, 300, opacity(&ghost));
+    let fade = timed(&ghost, 1.0, 0.0, 300, opacity(&ghost));
     fade.set_easing(adw::Easing::EaseOutCubic);
     fade.set_follow_enable_animations_setting(!always);
     fade.connect_done(move |_| veil.remove_overlay(&gone));

@@ -20,9 +20,11 @@
       <StackPanel Spacing="2">
         <TextBlock Text="{x:Bind app:T.SourcesTitle}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
         <local:OfflineLine />
-        <TextBlock Text="{x:Bind app:T.SourcesOrderDetail}" Style="{StaticResource HazeBodyStyle}" />
+        <TextBlock x:Name="OrderDetail" Text="{x:Bind app:T.SourcesOrderDetail}" Style="{StaticResource HazeBodyStyle}" />
+        <!-- Shows or Reading, only while this device does both: the page's own switch. -->
+        <local:ScopeSwitch x:Name="Scope" Margin="0,8,0,0" />
       </StackPanel>
-      <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+      <StackPanel x:Name="ShowActions" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
         <Button x:Name="OpenLinkButton" Content="{x:Bind app:T.OpenedOpen}" Click="OnOpenLink" MinHeight="32" />
         <Button x:Name="CheckButton" Content="{x:Bind app:T.SourcesCheck}" Click="OnCheck" MinHeight="32" />
         <DropDownButton x:Name="AddButton" Content="{x:Bind app:T.SourcesAdd}" MinHeight="32" AutomationProperties.Name="{x:Bind app:T.SourcesAdd}">
@@ -42,6 +44,8 @@
         </DropDownButton>
       </StackPanel>
     </Grid>
+    <!-- Book sources: folders, servers and plugins, in place of the shows' columns while reading shows. -->
+    <local:BookSourcesSection x:Name="BookSources" Grid.Row="1" Visibility="Collapsed" />
     <!-- No sources: the empty state in place of both columns. -->
     <Border x:Name="NoSources" Grid.Row="1" Visibility="Collapsed" />
     <!-- The list beside the selected source; below about 760 the detail goes under the list. -->

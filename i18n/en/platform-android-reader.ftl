@@ -171,7 +171,7 @@ eink-on-device = on this { -device }
 # @only android
 # @arg chapter: text
 # @max 32
-eink-continue-to = { -continue-cap } to chapter { $chapter }
+eink-continue-to = { -continue-reading-cap } to chapter { $chapter }
 
 # Button on the page between chapters that leaves the reader for the series page.
 # @only android
@@ -181,7 +181,7 @@ eink-back-to-series = Back to series
 # Line at the foot of the page between chapters.
 # @only android
 # @max 40
-eink-turn-to-continue = Turn the page to { -continue }
+eink-turn-to-continue = Turn the page to { -continue-reading }
 
 # Heading on the page between chapters when no source has the next chapter yet.
 # @only android
@@ -360,7 +360,7 @@ reader-grid-title = Pages
 # Main button on the page between chapters.
 # @only android
 # @max 16
-reader-end-continue = { -continue-cap }
+reader-end-continue = { -continue-reading-cap }
 
 # Quiet button on the page between chapters that leaves the reader for the series page.
 # @only android

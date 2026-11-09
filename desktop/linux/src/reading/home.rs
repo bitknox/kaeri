@@ -233,7 +233,7 @@ impl Home {
         let inner = gtk::Box::new(gtk::Orientation::Vertical, 0);
         let title = match at {
             0 => String::new(),
-            1 => t::home_continue(),
+            1 => t::home_read_continue(),
             2 => t::home_this_week(),
             _ => t::home_up_next(),
         };

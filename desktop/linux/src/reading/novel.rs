@@ -159,10 +159,16 @@ struct Handler {
     engine: std::sync::Weak<kaeri_engine::engine::Engine>,
 }
 
+/// Frees the scheme's `Handler` as its web context goes.
+unsafe extern "C" fn drop_handler(data: *mut c_void) {
+    // SAFETY: `data` is the Box<Handler> made at registration, freed once, here.
+    drop(unsafe { Box::from_raw(data.cast::<Handler>()) });
+}
+
 /// Answers one request from the engine's served book.
 unsafe extern "C" fn serve(request: Object, data: *mut c_void) {
     let Some(api) = api() else { return };
-    // SAFETY: `data` is the Box<Handler> leaked at registration, alive for the context.
+    // SAFETY: `data` is the Box<Handler> made at registration, alive for the context.
     let handler = unsafe { &*(data as *const Handler) };
     let uri =
         unsafe { CStr::from_ptr((api.request_uri)(request)) }.to_string_lossy().into_owned();
@@ -254,7 +260,7 @@ impl NovelView {
         let setup = format!("window.kaeriSetup = {{top: {HEAD_ROOM}}};\n{}", assets.script); // i18n-skip
         let script = CString::new(setup).map_err(|e| e.to_string())?;
         // SAFETY: every returned GObject is taken full and released with its wrapper; strings
-        // outlive their calls; the leaked handler lives as long as the process.
+        // outlive their calls; the handler is the context's, freed with it.
         let view = unsafe {
             let session: glib::Object = from_glib_full((api.session_ephemeral)());
             let context: glib::Object = from_glib_full((api.context_new)());
@@ -265,7 +271,7 @@ impl NovelView {
                 scheme.as_ptr(),
                 serve,
                 handler.cast(),
-                None,
+                Some(drop_handler),
             );
             let content: glib::Object = from_glib_full((api.content_manager_new)());
             if (api.register_handler)(content.as_ptr(), c"kaeri".as_ptr(), std::ptr::null())

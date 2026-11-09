@@ -9038,6 +9038,10 @@ object Strings {
     fun navUpdates(context: Context): String =
         context.getString(R.string.nav_updates)
 
+    /** Shelf heading on Read: the series being read, each at its place. */
+    fun homeReadContinue(context: Context): String =
+        context.getString(R.string.home_read_continue)
+
     /** Shelf heading on Read: series releasing now. */
     fun homeReadReleasing(context: Context): String =
         context.getString(R.string.home_read_releasing)

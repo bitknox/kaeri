@@ -19,7 +19,7 @@ accounts-welcome-detail = Sign in to { $tracker } to sync your list and where yo
 accounts-brings-lists = Brings in your lists and fills { -continue-cap } with what you are watching.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Brings in your lists and fills { -continue-cap } with what you are reading.
+accounts-brings-lists-read = Brings in your lists and fills { -continue-reading-cap } with what you are reading.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Brings in your lists and fills { -continue-cap } with what you are watching and reading.

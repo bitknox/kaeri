@@ -984,10 +984,24 @@ private const val DECODED_AHEAD = 6
 /** The pixels the page's cover is decoded to. */
 private const val COVER_PIXELS = 300
 
+/**
+ * Whether the plate for title [id]'s wide art has shown for [HeroArt.WAIT_MS], from the first time
+ * the page asked: past it the page shows what there is without a still.
+ */
+@Composable
+private fun artWaited(id: UInt): Boolean {
+    var waited by remember(id) { mutableStateOf(false) }
+    LaunchedEffect(id) {
+        kotlinx.coroutines.delay(HeroArt.WAIT_MS)
+        waited = true
+    }
+    return waited
+}
+
 /** The banner, the poster, the title and its other forms and metadata: the page's head. */
 @Composable
 private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListState, inset: Dp, shared: Boolean) {
-    val art = HeroArt.of(entry, episodes)
+    val art = HeroArt.of(entry, episodes, artWaited(entry.id))
     Box {
         if (art != HeroArt.Compact) {
             ArtworkImage(
@@ -2183,7 +2197,7 @@ private fun TabletTitle(
             ) {
                 fullWidth("head") {
                   SeasonFade(entry) { entry ->
-                    val art = HeroArt.of(entry, allEpisodes[entry.id])
+                    val art = HeroArt.of(entry, allEpisodes[entry.id], artWaited(entry.id))
                     Box {
                         if (art != HeroArt.Compact) {
                             ArtworkImage(

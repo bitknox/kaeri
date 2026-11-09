@@ -1223,7 +1223,7 @@ impl Sheet {
                             label.set_markup(&inline_markup(&segs, &shown.borrow()));
                         })
                     };
-                    let animation = adw::TimedAnimation::new(
+                    let animation = crate::motion::timed(
                         label,
                         from,
                         if open { 1.0 } else { 0.0 },

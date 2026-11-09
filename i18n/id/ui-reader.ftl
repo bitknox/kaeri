@@ -49,8 +49,8 @@ reader-end-from = Dari { $source }
 reader-chapter-line = Bab { $chapter }
 
 reader-divider-facts-source = { $facts } · dari { $source }
+reader-chapter-line-titled = Bab { $chapter } · { $title }
 reader-end-swipe = Geser untuk terus membaca
 reader-divider-images = { $count ->
    *[other] { $count } gambar
  }
-reader-chapter-line-titled = Bab { $chapter } · { $title }

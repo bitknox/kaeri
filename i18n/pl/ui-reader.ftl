@@ -55,6 +55,7 @@ reader-end-from = Z: { $source }
 reader-chapter-line = Rozdział { $chapter }
 
 reader-divider-facts-source = { $facts } · z: { $source }
+reader-chapter-line-titled = Rozdział { $chapter } · { $title }
 reader-end-swipe = Przesuń, aby czytać
 reader-divider-images = { $count ->
     [one] Jeden obraz
@@ -62,4 +63,3 @@ reader-divider-images = { $count ->
     [many] { $count } obrazów
    *[other] { $count } obrazu
  }
-reader-chapter-line-titled = Rozdział { $chapter } · { $title }

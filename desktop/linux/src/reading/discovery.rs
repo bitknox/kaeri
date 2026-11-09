@@ -477,10 +477,23 @@ pub fn strip(posters: &[gtk::Button], name: &str) -> gtk::Widget {
     let hadj = scroll.hadjustment();
     let over = Rc::new(Cell::new(false));
     let fade = Rc::new((motion::Fader::default(), motion::Fader::default()));
+    // The adjustment's own handlers run this, and the scroll holds the adjustment, so it holds
+    // the arrows and the adjustment only weakly: a strong hold would keep the whole row, its
+    // posters and their covers alive after the page drops it.
     let refresh = {
-        let (hadj, prev, next, over, fade) =
-            (hadj.clone(), prev.clone(), next.clone(), Rc::clone(&over), Rc::clone(&fade));
+        let (hadj, prev, next, over, fade) = (
+            hadj.downgrade(),
+            prev.downgrade(),
+            next.downgrade(),
+            Rc::clone(&over),
+            Rc::clone(&fade),
+        );
         Rc::new(move || {
+            let (Some(hadj), Some(prev), Some(next)) =
+                (hadj.upgrade(), prev.upgrade(), next.upgrade())
+            else {
+                return;
+            };
             let back = hadj.value() > 1.0;
             let forward = hadj.value() + hadj.page_size() < hadj.upper() - 1.0;
             fade.0.set(&prev, over.get() && back);
@@ -512,12 +525,20 @@ pub fn strip(posters: &[gtk::Button], name: &str) -> gtk::Widget {
     });
     layers.add_controller(hover);
     prev.connect_clicked({
-        let (hadj, scroll) = (hadj.clone(), scroll.clone());
-        move |_| page_by(&hadj, &scroll, -1)
+        let (hadj, scroll) = (hadj.downgrade(), scroll.downgrade());
+        move |_| {
+            if let (Some(hadj), Some(scroll)) = (hadj.upgrade(), scroll.upgrade()) {
+                page_by(&hadj, &scroll, -1);
+            }
+        }
     });
     next.connect_clicked({
-        let (hadj, scroll) = (hadj.clone(), scroll.clone());
-        move |_| page_by(&hadj, &scroll, 1)
+        let (hadj, scroll) = (hadj.downgrade(), scroll.downgrade());
+        move |_| {
+            if let (Some(hadj), Some(scroll)) = (hadj.upgrade(), scroll.upgrade()) {
+                page_by(&hadj, &scroll, 1);
+            }
+        }
     });
 
     // Tab leaves the row: the focus goes to the row's last poster (its first, going back) with
@@ -525,9 +546,12 @@ pub fn strip(posters: &[gtk::Button], name: &str) -> gtk::Widget {
     let keys = gtk::EventControllerKey::new();
     keys.set_propagation_phase(gtk::PropagationPhase::Capture);
     keys.connect_key_pressed({
-        let (cards, viewport) = (cards.clone(), viewport.clone());
+        let (cards, viewport) = (cards.downgrade(), viewport.downgrade());
         move |_, key, _, state| {
             use gtk::gdk::Key;
+            let (Some(cards), Some(viewport)) = (cards.upgrade(), viewport.upgrade()) else {
+                return glib::Propagation::Proceed;
+            };
             if !matches!(key, Key::Tab | Key::ISO_Left_Tab | Key::KP_Tab) {
                 return glib::Propagation::Proceed;
             }
@@ -822,8 +846,7 @@ impl Part {
         }
         let from = self.inner.opacity();
         let ms = if to > from { 200 } else { 300 };
-        let animation =
-            adw::TimedAnimation::new(&self.inner, from, to, ms, motion::opacity(&self.inner));
+        let animation = motion::timed(&self.inner, from, to, ms, motion::opacity(&self.inner));
         animation.set_easing(if to > from {
             adw::Easing::EaseOutCubic
         } else {
@@ -903,7 +926,7 @@ fn timed(
     easing: adw::Easing,
 ) -> adw::TimedAnimation {
     widget.as_ref().set_opacity(from);
-    let animation = adw::TimedAnimation::new(widget, from, to, ms, motion::opacity(widget));
+    let animation = motion::timed(widget, from, to, ms, motion::opacity(widget));
     animation.set_easing(easing);
     animation.set_follow_enable_animations_setting(false);
     animation

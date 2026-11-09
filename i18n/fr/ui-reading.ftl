@@ -1,6 +1,7 @@
 nav-watch = Regarder
 nav-read = Lire
 nav-updates = Mises à jour
+home-read-continue = { -continue-reading-cap }
 home-read-releasing = En cours de parution
 home-read-checked-on-open = Vérifié à l'ouverture de { -app-name }
 home-read-end = C'est tout pour le moment. Mises à jour et Recherche ont les listes complètes.
@@ -24,10 +25,13 @@ chapter-updates-open-series = Ouvrir { $title }
 chapter-updates-open-chapter-hint = Ouvre le chapitre
 chapter-updates-open-series-menu = Ouvrir la série
 action-read-chapter = Lire le chapitre { $n }
-action-continue-chapter = { -continue-cap } le chapitre { $n } · page { $page }
-action-continue-part = { -continue-cap } la partie { $n } · { $percent } %
-action-continue-part-plain = { -continue-cap } la partie { $n }
+action-continue-chapter = { -continue-reading-cap } le chapitre { $n } · page { $page }
+action-continue-part = { -continue-reading-cap } la partie { $n } · { $percent } %
+action-continue-part-plain = { -continue-reading-cap } la partie { $n }
 action-read-part = Lire la partie { $n }
+action-continue-named = { -continue-reading-cap } { $label } · { $percent } %
+action-continue-named-plain = { -continue-reading-cap } { $label }
+action-read-named = Lire { $label }
 action-read-again = Relire
 series-reading-from = Lecture depuis
 series-change = Modifier
@@ -346,7 +350,7 @@ settings-counts-read-value = Après la dernière page
 settings-counts-read-moving-on = En la quittant
 settings-counts-read-moving-on-note = En tournant la dernière page, ou en ouvrant le chapitre suivant
 settings-counts-read-marked = Quand vous le marquez
-settings-counts-read-marked-note = { -continue-cap } et vos { -tracker-pl } suivent vos marques
+settings-counts-read-marked-note = « { -continue-reading-cap } » et vos { -tracker-pl } suivent vos marques
 settings-follow-group = Réglages de série qui vous suivent
 settings-follow-mode = Mode, sens et couleur
 settings-follow-mode-note = Une série que vous modifiez se lit pareil sur vos autres { -device-pl }
@@ -387,3 +391,91 @@ read-downloads-kept = { $n ->
  }
 read-downloads-read = { $n } lus
 read-downloads-delete-read = Supprimer les lus
+send-title = Envoyer à une liseuse
+send-for = Pour
+send-what = Contenu
+send-chapters = Chapitres
+send-chapters-one = { $chapter }
+send-chapters-range = { $first } à { $last }
+send-size = Taille
+send-size-about = Environ { $size }
+send-no-place = { -app-name } ne voit pas votre position sur cette liseuse. À votre retour, la page de la série vous demande où vous vous êtes arrêté.
+send-prepare = Préparer et partager
+send-preparing = { $total ->
+    [one] Préparation du chapitre
+    [many] Préparation : { $done } sur { $total } chapitres
+   *[other] Préparation : { $done } sur { $total } chapitres
+ }
+send-sized-for = Pages adaptées à { $device }
+send-in-parts = Plus de { $size } : les fichiers partent en plusieurs parties.
+send-failed-chapter = Impossible de préparer le chapitre { $chapter }. { $cause }
+send-failed = Impossible de préparer les fichiers. { $cause }
+send-size-working = Calcul en cours
+send-chapters-open = Ouvert
+send-chapters-closed = Fermé
+send-progress-spoken = { $percent } pour cent
+send-chapter-action = Envoyer à une liseuse
+send-parts-over = en plusieurs parties au-delà de { $size }
+send-waiting-cancel = Annuler l'envoi
+send-ready = { $n ->
+    [one] Un fichier est prêt.
+    [many] { $n } fichiers sont prêts.
+   *[other] { $n } fichiers sont prêts.
+ }
+send-share-again = Partager à nouveau
+send-banner = Envoi vers { $device }
+send-format-fixed-epub = EPUB à mise en page fixe
+send-format-kepub = KEPUB
+send-format-epub = EPUB
+send-format-cbz = CBZ
+send-target-line = { $format } · { $width } × { $height }
+stop-title = Où vous êtes-vous arrêté ?
+stop-note = Vous avez envoyé des chapitres vers { $device }. Où vous êtes-vous arrêté ?
+stop-note-action = Indiquer votre position
+stop-sent-one = Chapitre { $chapter } envoyé vers { $device } le { $date }.
+stop-sent-range = Chapitres { $first } à { $last } envoyés vers { $device } le { $date }.
+stop-finished = Chapitre { $chapter } terminé
+stop-set = Indiquer votre position
+stop-keep = Garder le chapitre { $chapter } · page { $page }
+stop-keep-plain = Garder la position actuelle
+ereaders-group = Liseuses
+ereaders-send-row = Envoyer à une liseuse
+ereaders-feed-row = Flux OPDS
+opds-share-note = Un catalogue OPDS que les liseuses de la maison peuvent parcourir
+opds-footer = Le flux ne fonctionne que lorsque { -app-name } est ouvert sur votre { $device }. La progression sur ces liseuses reste sur elles.
+opds-address = Adresse
+opds-address-off = Activez le flux pour obtenir son adresse.
+opds-password = Mot de passe
+opds-password-note = Les liseuses le demandent une seule fois
+opds-new-password = Nouveau mot de passe
+opds-port = Port
+opds-port-note = Laissez vide pour n'importe quel port libre, ou choisissez-en un entre 1024 et 65535
+opds-port-moved = Le port { $wanted } était occupé, le flux utilise donc { $port }.
+opds-shares = Contenu partagé
+opds-share-downloads = Téléchargements
+opds-share-downloads-count = { $n ->
+    [one] Un chapitre
+    [many] { $n } chapitres
+   *[other] { $n } chapitres
+ }
+opds-share-manga = Dossier de mangas
+opds-share-novels = Dossier de light novels
+opds-share-series-count = { $n ->
+    [one] Une série
+    [many] { $n } séries
+   *[other] { $n } séries
+ }
+opds-fetched-by = Récupéré par
+opds-fetched-none = Aucune liseuse n'a encore rien récupéré.
+opds-starting = Démarrage…
+opds-paused-none = En pause. Ce Mac n'est sur aucun réseau local.
+opds-paused-vpn = En pause. Ce Mac n'est connecté que par un VPN.
+opds-new-password-title = Créer un nouveau mot de passe ?
+opds-new-password-warning = Les liseuses qui utilisent déjà le flux cessent de fonctionner jusqu'à ce que vous saisissiez le nouveau mot de passe sur chacune.
+opds-fetched-time = Dernière demande { $time }
+opds-fetched-files = { $n ->
+    [one] Un fichier
+    [many] { $n } fichiers
+   *[other] { $n } fichiers
+ }
+opds-reader-unnamed = Liseuse à { $address }

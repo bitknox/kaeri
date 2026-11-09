@@ -200,6 +200,9 @@ pub struct Reader {
     hide_timer: RefCell<Option<glib::SourceId>>,
     strip_timer: RefCell<Option<glib::SourceId>>,
     novel: RefCell<Option<Rc<NovelView>>>,
+    /// From `open` until `close`. A closed reader takes no more of the engine's events, and lets
+    /// go of its pages and its novel view once it is off screen.
+    showing: Cell<bool>,
 }
 
 impl Reader {
@@ -547,6 +550,7 @@ impl Reader {
                 hide_timer: RefCell::default(),
                 strip_timer: RefCell::default(),
                 novel: RefCell::default(),
+                showing: Cell::new(false),
             }
         });
         close.connect_clicked({
@@ -744,6 +748,7 @@ impl Reader {
     /// Open a chapter of a work, from where it was left when `chapter` is none.
     pub fn open(self: &Rc<Self>, work: WorkId, chapter: Option<ChapterId>) {
         self.reset();
+        self.showing.set(true);
         self.state.borrow_mut().work = Some(work.clone());
         self.asked_open.replace(Some((work.clone(), chapter.clone())));
         self.wait(Waiting::Chapter);
@@ -758,6 +763,8 @@ impl Reader {
         self.reveal_chrome();
     }
 
+    /// Drop everything the last open held: its pages and textures, the strip, the trail, the
+    /// end page's preview and the novel's web view, which takes its WebKit processes with it.
     fn reset(&self) {
         let old = self.state.replace(State::default());
         // The demo's credit capsule leaves with the work, or the next open adds a second one.
@@ -772,6 +779,7 @@ impl Reader {
         if let Some(novel) = self.novel.take() {
             self.stack.remove(&novel.widget);
         }
+        self.end.forget();
         self.title.set_label("");
         self.group_title.set_label("");
         self.line.set_label("");
@@ -904,6 +912,12 @@ impl Reader {
                 "win.reader-closed",
                 Some(&work.0.to_variant()),
             );
+        }
+        self.showing.set(false);
+        // The page stays drawn while the window crossfades away from it, and goes as the
+        // reader is unmapped at the end of that (see `controls`).
+        if !self.widget.is_mapped() {
+            self.reset();
         }
     }
 
@@ -1122,7 +1136,7 @@ impl Reader {
     }
 
     fn mine(&self, session: u64) -> bool {
-        session != 0 && session == self.state.borrow().session
+        session != 0 && self.showing.get() && session == self.state.borrow().session
     }
 
     /// The chapter on screen, not one a strip ran on from or one still to open.
@@ -1135,6 +1149,12 @@ impl Reader {
     }
 
     fn opened(self: &Rc<Self>, view: &ReaderView) {
+        // Left before the chapter opened: the reader had no session to close then, so the
+        // session that opened late is closed now, and nothing is built in a hidden reader.
+        if !self.showing.get() {
+            self.send(ReaderCommand::Close { session: view.session });
+            return;
+        }
         // The series' chapters for Chapters, with their states as they are now.
         if let Some(ctx) = self.ctx.upgrade() {
             super::send(
@@ -2597,6 +2617,18 @@ impl Reader {
             }
         });
         self.widget.add_controller(keys);
+
+        // A closed reader lets go of what it held once the window has crossfaded away from it.
+        self.widget.connect_unmap({
+            let this = Rc::downgrade(self);
+            move |_| {
+                if let Some(this) = this.upgrade()
+                    && !this.showing.get()
+                {
+                    this.reset();
+                }
+            }
+        });
 
         // Tap zones: the outer thirds turn, the middle brings the chrome or takes it away.
         let click = gtk::GestureClick::new();

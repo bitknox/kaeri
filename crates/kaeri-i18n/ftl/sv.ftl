@@ -591,6 +591,9 @@ reading-split-chapter = Kapitel { $chapter } skickas till trackers som { $whole 
 # A notice over the page when a chapter opens where it was left. It offers Start over.
 reader-resumed = Fortsatte på sida { $page }
 
+# The same notice in a webtoon strip, which counts images rather than pages.
+reader-resumed-image = Fortsatte på bild { $image }
+
 # A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.
 reader-back-to-page = Tillbaka till sida { $page }
 
@@ -758,20 +761,38 @@ reading-part-percent = Del { $part } · { $percent }%
 # Under a cover: a light novel's part came out that the person has not read.
 reading-part-new = Del { $part } är ny
 
+# Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it.
+reading-label-percent = { $label } · { $percent }%
+
+# Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-new = { $label } har kommit ut
+
 # Under a This week cell: a light novel's part that came out that day, with its own title.
 reading-part-titled = Del { $part } · { $title }
+
+# Under a This week cell: a light novel's part that came out that day, with its own title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-titled = { $label } · { $title }
 
 # Under the big picture on reading's Home: a light novel's part that came out today.
 reading-part-out-today = Del { $part } kommer ut idag
 
+# Under the big picture on reading's Home: a light novel's part that came out today, named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today = { $label } kommer ut idag
+
 # Under the big picture on reading's Home: a light novel's part that came out today, with its title.
 reading-part-out-today-titled = Del { $part }, { $title }, kommer ut idag
+
+# Under the big picture on reading's Home: a light novel's part that came out today, with its title, the part named in the source's own words ("Part 4", "Chapter 4").
+reading-label-out-today-titled = { $label }, { $title }, kommer ut idag
 
 # Under a Library cover: the chapter the person is at, and the newest chapter there is.
 reading-chapter-of = Kapitel { $chapter } av { $of }
 
 # Under a Library cover: the volume and part of a light novel the person is at.
 reading-volume-part = Volym { $volume }, del { $part }
+
+# Under a Library cover: the volume of a light novel the person is at, and the part in the source's own words ("Part 5", "Chapter 5").
+reading-volume-label = Volym { $volume }, { $label }
 
 # A search filter: books from Japan.
 reading-origin-japan = Japan
@@ -851,6 +872,12 @@ reading-row-page = Sida { $page }
 
 # A novel's chapter row: how far into it the person is.
 reading-row-percent = { $percent }%
+
+# A novel's chapter row: the person opened it, and how far in is too little to say as a percent.
+reading-row-opened = Öppnad
+
+# A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared.
+reading-row-bookmarked = Bokmärkt
 
 # A chapter row: how long its pages are, for a file on the device.
 reading-row-pages =
@@ -1282,6 +1309,9 @@ stores-ready-demo-stays = { $store } är klar. Demon ligger kvar sist bland Dina
 # The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
 cloud-loopback-done = Du kan stänga den här fliken och gå tillbaka till Kaeri.
 
+# The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
+sync-device-removed = Den här enheten togs bort från synk på en annan enhet. Gå med igen för att synka den.
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Inloggad på { $tracker }.
 
@@ -1417,7 +1447,7 @@ cause-proxy-address-unusable = Proxykontrollen kan inte använda den här adress
 cause-server-unreachable = Det gick inte att nå servern.
 
 # The legal line, shown in About beside Legal and contact. It exists once, so no translation can paraphrase it.
-legal-hosts-no-content = Kaeri lagrar inga serier eller böcker. Du lägger till dina egna källor.
+legal-hosts-no-content = Kaeri är inte värd för några serier eller böcker. Du lägger till dina egna källor.
 
 # Toast after a setting is stored. The label is the setting's name.
 notice-saved = Sparade { $label }.
@@ -1597,6 +1627,12 @@ title-linux-episode-watched = Avsnitt { $episode } sett
 # Line in a day's column when nothing airs that day.
 calendar-linux-day-empty = Inget sänds
 
+# Accessible name of the reading Library's list menu, the button that says the list on screen.
+linux-read-library-list = Lista
+
+# Under No downloads on Downloads, Reading side.
+linux-read-downloads-empty = Nedladdade kapitel öppnas utan anslutning.
+
 # Accessible label of the line that says how the watch party form is getting on.
 party-status = Status för watch party
 
@@ -1680,6 +1716,273 @@ discussion-like-named =
         [one] Gilla, 1 gillning
        *[other] Gilla, { $count } gillningar
     }
+
+# Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
+linux-store-invite-chip = Inbjudan ••••{ $last }
+
+# How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts".
+linux-store-plugin-hosts =
+    { $count ->
+        [one] { $count } värd
+       *[other] { $count } värdar
+    }
+
+# Beside a spinner in the plugin store form while the invite is spent, after 600 ms.
+linux-store-joining = Går med…
+
+# The Install all button while the plugins install.
+linux-store-installing = Installerar…
+
+# Third line of a book server's row in Your sources when its sign-in no longer works.
+linux-book-server-signed-out = Utloggad · logga in igen från Redigera
+
+# Switch on a book server's page: its series show in Kaeri while it is on.
+linux-book-server-use = Använd den här servern
+
+# Title of the dialog that asks before a book server is removed.
+linux-book-server-remove-title = Ta bort { $host }?
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Watch.
+linux-join-medium-line-watch = Titta, som på { $device }
+
+# First run's join page, paired: the line under "Kaeri is for" when the other device's answer is Both.
+linux-join-medium-line-both = Titta och läsa, som på { $device }
+
+# Switch on a book plugin's page: its series show in Kaeri while it is on.
+linux-book-plugin-use = Använd det här tillägget
+
+# Tooltip of the reader toolbar's settings button.
+linux-reader-settings-open = Läsarinställningar
+
+# Line shown while a chapter opens, after the first moment.
+linux-reader-opening = Öppnar kapitlet
+
+# End page heading when the next chapter is not out yet.
+linux-reader-end-not-out = Kapitlet efter har inte kommit ut än
+
+# End page heading at the end of a finished series.
+linux-reader-end-finished = Slutet på serien
+
+# End page heading when the next chapter is not downloaded and the device is offline.
+linux-reader-end-offline = Kapitlet efter har inte laddats ner
+
+# End page heading when no source has the next chapter.
+linux-reader-end-no-source = Kapitlet efter finns inte hos dina källor än
+
+# Button on the end page that goes back to the series page.
+linux-reader-back-to-series = Tillbaka till serien
+
+# Heading of the error when a chapter would not open.
+linux-reader-chapter-failed = Kunde inte öppna kapitlet
+
+# Names of the reader settings in its popover.
+linux-reader-reading-mode = Läsläge
+
+linux-reader-fit = Anpassa
+
+linux-reader-crop-borders = Beskär kanter
+
+linux-reader-page-layout = Sidlayout
+
+linux-reader-background = Bakgrund
+
+linux-reader-look = Utseende
+
+linux-reader-font = Typsnitt
+
+linux-reader-text-size = Textstorlek
+
+linux-reader-margins = Marginaler
+
+linux-reader-line-spacing = Radavstånd
+
+linux-reader-justify = Marginaljustera text
+
+linux-reader-direction = Riktning
+
+linux-reader-spreads = Breda sidor
+
+linux-reader-strip-width = Remsans bredd
+
+linux-reader-strip-gap = Bildavstånd
+
+# The fit that fills the window's height.
+linux-reader-fit-height = Höjd
+
+# Reading mode names.
+linux-reader-mode-paged = Sidvis
+
+linux-reader-mode-scrolled = Rullning
+
+# Title of the sheet that prepares chapters as files for an e-reader.
+linux-send-title = Skicka till e-läsare
+
+# Button that starts preparing the files.
+linux-send-prepare = Förbered filer
+
+# Line while the files are prepared.
+linux-send-progress = Förbereder { $done } av { $total }
+
+# Button that copies the prepared files to a folder the person picks.
+linux-send-save = Spara i en mapp
+
+# Menu item of a series that opens that sheet.
+linux-send-menu = Skicka till e-läsare
+
+# Heading when the web view that shows a novel cannot start.
+linux-reader-novel-unavailable = Romaner kan inte öppnas här
+
+# Line under it: what a novel needs on this computer.
+linux-reader-novel-needs-webkit = Romaner kräver WebKitGTK 6 med fungerande sandlåda.
+
+# The reader's scrubber as a screen reader says it: the page showing and how many there are.
+linux-reader-page-of = Sida { $page } av { $pages }
+
+# Tab of the reader's Chapters popover with the chapter's pages as small pictures; the other tab is the list of chapters.
+linux-reader-pages = Sidor
+
+# Line on the end page for a chapter that has not counted as read yet.
+linux-reader-end-not-read = Inte markerat som läst än
+
+# The one amber button of the end page: opens the next chapter.
+linux-reader-continue = Läs vidare
+
+# End page text when the next chapter is not out yet.
+linux-reader-end-not-out-body = Kaeri söker efter nya kapitel i bakgrunden och lägger till dem i Uppdateringar.
+
+# End page text when the reader has caught up with the series.
+linux-reader-end-caught-up-body = Nya kapitel visas i Uppdateringar när dina källor har dem.
+
+# End page text at the end of a finished series.
+linux-reader-end-finished-body = Det finns inga fler kapitel.
+
+# End page text when the next chapter is not downloaded and the computer is offline.
+linux-reader-end-offline-body = Du är offline. Kapitlet öppnas här när du är uppkopplad.
+
+# Hint under a page's error: turning the page goes on past it.
+linux-reader-page-failed-hint = Bläddra för att gå vidare utan den.
+
+# Line while a chapter opens, once its number is known.
+linux-reader-opening-number = Öppnar kapitel { $chapter }
+
+# Line while a chapter opens and a source is asked for the series' chapters.
+linux-reader-finding-source = Letar efter en källa
+
+# Button on the Resumed notice.
+linux-reader-start-over = Börja om
+
+# Button on the Moved notice.
+linux-reader-go-back = Gå tillbaka
+
+# Button on the mode detected notice: opens the reader settings.
+linux-reader-change = Ändra
+
+# Heading in the reader settings over what this series keeps for itself.
+linux-reader-this-series = Den här serien
+
+# Heading in the reader settings over what applies to every manga.
+linux-reader-all-manga = All manga
+
+# Heading in the reader settings over what applies to every manga on this computer.
+linux-reader-all-manga-here = All manga på den här datorn
+
+# Heading in the reader settings over what applies to every webtoon.
+linux-reader-all-strips = Alla webtoons
+
+# Heading in the reader settings over what applies to every webtoon on this computer.
+linux-reader-all-strips-here = Alla webtoons på den här datorn
+
+# Heading in the reader settings over what applies to every light novel.
+linux-reader-all-novels = Alla light novels
+
+# The reading mode choice that follows the series' details.
+linux-reader-mode-auto = Auto
+
+# Under the reading mode when it was guessed.
+linux-reader-mode-detected = Upptäckt från seriens detaljer.
+
+# Button under the reading mode when the series has a choice of its own: drops it.
+linux-reader-use-default = Använd standard
+
+# Row that opens the rest of the reader settings.
+linux-reader-more-settings = Fler läsarinställningar
+
+# Line spacing choices.
+linux-reader-line-tight = Tätt
+
+linux-reader-line-normal = Normalt
+
+linux-reader-line-loose = Luftigt
+
+# The margins choice between Narrow and Wide.
+linux-reader-margins-normal = Normala
+
+# Accessible names of the two ends of the text size slider.
+linux-reader-text-smaller = Mindre text
+
+linux-reader-text-larger = Större text
+
+# Title of the small popover that jumps to a page, and its shortcut's name.
+linux-reader-go-to-page = Gå till sida
+
+# Placeholder of the Go to page field.
+linux-reader-go-to-page-field = 1 till { $total }
+
+# Heading of the reader's keys in the keyboard shortcuts window.
+linux-shortcuts-reader = Läsare
+
+# Shortcut: turn the page.
+linux-shortcuts-turn = Bläddra
+
+# Shortcut: the first or last page.
+linux-shortcuts-first-last = Första eller sista sidan
+
+# Shortcut: a novel's text larger, smaller or back to its size.
+linux-shortcuts-text-size = Större, mindre eller standardtext
+
+# Shortcut: back to the page before a jump, or out of the reader.
+linux-shortcuts-reader-back = Tillbaka till sidan före ett hopp
+
+# Shortcut: close the reader.
+linux-shortcuts-close-reader = Stäng läsaren
+
+# Two names joined, or a list's last name joined to the rest, in the end page's tracker line: "AniList and MangaUpdates".
+linux-reader-names-and = { $first } och { $last }
+
+# On the plate that holds a page's place while it loads. The page is its number, such as 23.
+linux-reader-page-plate = Sida { $page }
+
+# Heading when a chapter could not open. The chapter is its number, such as 13.
+linux-reader-open-failed = Kunde inte öppna kapitel { $chapter }
+
+# Heading when a chapter with no number could not open.
+linux-reader-open-failed-plain = Kunde inte öppna det här kapitlet
+
+# Choice in Send to e-reader's Chapters row: the next unread chapters, as many as the number.
+linux-send-next =
+    { $n ->
+        [one] Nästkommande olästa kapitel
+       *[other] De { $n } nästkommande olästa
+    }
+
+# Choice in Send to e-reader's Chapters row: every chapter not read yet.
+linux-send-all-unread = Alla olästa
+
+# Under Send to e-reader's Chapters row when every chapter is read.
+linux-send-none-unread = Alla kapitel är lästa
+
+# Toast after the prepared files were saved to a folder.
+linux-send-saved =
+    { $n ->
+        [one] Filen är sparad
+       *[other] { $n } filer är sparade
+    }
+
+# Toast when the prepared files could not be written to the folder picked.
+linux-send-save-failed = Kunde inte spara filerna i den mappen
+
+# Tooltip and spoken name of the button on Updates that looks for new chapters now.
+linux-updates-check = Sök efter nya kapitel
 
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Förhandsvisning
@@ -1933,6 +2236,9 @@ tv-cast-inhibit-reason = Skickar ett avsnitt till en TV
 
 # The heading over the TVs running Kaeri in Play on TV, once TVs with Chromecast built in are listed below them.
 tv-network-group = På det här nätverket
+
+# The sidebar place that lists your own sources, under the Sources heading.
+linux-sidebar-your-sources = Dina källor
 
 # Count of devices on a member's row in the members dialog, and after "Owner ·".
 stores-device-count =
@@ -4791,6 +5097,18 @@ tui-together-not-a-link = Det där är varken en länk eller en kod för watch p
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Avsnitt { $episode } · { $when }
 
+# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
+tui-medium-read-title = Läsning finns i apparna
+
+# Line under the title of that page.
+tui-medium-read-line = Terminalen har ingen läsare. Manga, webtoons och light novels öppnas i Kaeri-apparna, och synk håller ditt förlopp i takt.
+
+# Line under that page: the key that opens the choice of what { -app-name } is for. The key is the one bound to it, as the key map draws it.
+tui-medium-read-change = Tryck { $key } för att ändra vad Kaeri är till för.
+
+# Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
+tui-medium-settings-hint = { $key } för att ändra
+
 # Title of the about page.
 about-title = Om
 
@@ -5485,6 +5803,27 @@ pad-button-left-stick = Vänster spak
 
 # Name of the controller's right stick, in the controller help.
 pad-button-right-stick = Höger spak
+
+# Controller help: the D-pad in the reader turns the page, the way the book reads.
+pad-help-turn-page = Bläddra
+
+# Controller help: the left shoulder button in the reader.
+pad-help-previous-chapter = Föregående kapitel
+
+# Controller help: the right shoulder button in the reader.
+pad-help-next-chapter = Nästa kapitel
+
+# Controller help: the A button in the reader shows or hides the bar with the title and settings.
+pad-help-reader-bar = Visa eller dölj fältet
+
+# Controller help: the menu button in the reader.
+pad-help-reader-settings = Läsarinställningar
+
+# Controller help: the B button in the reader.
+pad-help-close-reader = Stäng läsaren
+
+# Heading in the controller help for the buttons in the reader.
+pad-help-reader = Läsare
 
 # Checkbox of the close question.
 close-dont-ask = Fråga inte igen
@@ -8453,6 +8792,67 @@ demo-story-row = Novell · { $author } · { $licence }
 # Primary action on the demo's series page.
 demo-read-chapter = Läs kapitel { $number }
 
+# Page between chapters, under the tracker line: the server has the progress.
+progress-server-saved = Sparat på { $server }
+
+# Same place, only after 600 ms without an answer.
+progress-server-sending = Skickar till { $server }…
+
+# Same place, offline: the send waits in the queue.
+progress-server-offline = Skickas till { $server } när du är online igen
+
+# Same place, the send failed for a reason that can pass.
+progress-server-retrying = { $server } svarade inte. Kaeri försöker igen.
+
+# Same place, the server said no. Try again follows it.
+progress-server-failed = Inte sparat på { $server }: { $reason }.
+
+# Reason: a Kavita key.
+progress-why-key = servern godtog inte nyckeln
+
+# Reason: a Komga or OPDS password.
+progress-why-password = servern godtog inte lösenordet
+
+# Reason.
+progress-why-gone = serien finns inte längre på servern
+
+# Reason, after a day of retries.
+progress-why-gave-up = inget svar på ett dygn
+
+# Your sources, the server's row, second line.
+progress-row-saved = Förlopp sparat { $ago }
+
+# The server's row, after 600 ms without an answer.
+progress-row-sending =
+    { $count ->
+        [one] Skickar 1 kapitel…
+       *[other] Skickar { $count } kapitel…
+    }
+
+# The server's row, offline.
+progress-row-offline =
+    { $count ->
+        [one] 1 kapitel skickas när du är online igen
+       *[other] { $count } kapitel skickas när du är online igen
+    }
+
+# The server's row, the last try failed for a reason that can pass.
+progress-row-retrying =
+    { $count ->
+        [one] 1 kapitel väntar. Kaeri försöker igen.
+       *[other] { $count } kapitel väntar. Kaeri försöker igen.
+    }
+
+# The server's row, the server said no. Try again sits beside it.
+progress-row-failed =
+    { $count ->
+        [one] 1 kapitel inte sparat: { $reason }
+       *[other] { $count } kapitel inte sparade: { $reason }
+    }
+
+# The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”.
+progress-row-off = Förloppet stannar på den här { $kind }
+
 # Sidebar and tab label: the shows' Home when both media are on.
 nav-watch = Titta
 
@@ -8461,6 +8861,9 @@ nav-read = Läs
 
 # Sidebar and tab label: new chapters from followed series.
 nav-updates = Uppdateringar
+
+# Shelf heading on Read: the series being read, each at its place.
+home-read-continue = Läs vidare
 
 # Shelf heading on Read: series releasing now.
 home-read-releasing = Pågår nu
@@ -8534,6 +8937,15 @@ action-continue-part-plain = Läs vidare på del { $n }
 
 # The main action for a light novel part not opened yet.
 action-read-part = Läs del { $n }
+
+# The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is.
+action-continue-named = Läs vidare på { $label } · { $percent }%
+
+# The main action for a light novel part, part read, named in the source's own words, when how far is not known.
+action-continue-named-plain = Läs vidare på { $label }
+
+# The main action for a light novel part not opened yet, named in the source's own words.
+action-read-named = Läs { $label }
 
 # The main action when every chapter is read.
 action-read-again = Läs igen
@@ -9459,6 +9871,230 @@ read-downloads-read = { $n } lästa
 
 # Button on a series in Downloads: delete its read chapters, keeping bookmarked ones.
 read-downloads-delete-read = Ta bort lästa
+
+# Title of the Send to e-reader sheet, the chapter menu's item and the Settings row.
+send-title = Skicka till e-läsare
+
+# Heading over the e-readers to choose from in the Send to e-reader sheet.
+send-for = Till
+
+# Heading over what is being sent in the Send to e-reader sheet.
+send-what = Vad
+
+# Row in the Send to e-reader sheet: the chapters being sent.
+send-chapters = Kapitel
+
+# The chapters being sent when there is one: its number or label.
+send-chapters-one = { $chapter }
+
+# The chapters being sent when there are several, from the first to the last.
+send-chapters-range = { $first } till { $last }
+
+# Row in the Send to e-reader sheet: how big the files will be.
+send-size = Storlek
+
+# The size of what is being sent, already sized (such as "64 MB"). It is a guess until the files are made.
+send-size-about = Cirka { $size }
+
+# Under the e-readers in the Send to e-reader sheet: what Kaeri cannot know after the files are sent.
+send-no-place = Kaeri kan inte se var du är på den här e-läsaren. När du kommer tillbaka frågar seriesidan var du slutade.
+
+# The one main button of the Send to e-reader sheet. It makes the files and then opens the share sheet.
+send-prepare = Förbered och dela
+
+# While the files are made: which chapter of how many. The ring beside it shows how far along.
+send-preparing =
+    { $total ->
+        [one] Förbereder kapitlet
+       *[other] Förbereder { $done } av { $total } kapitel
+    }
+
+# Under the progress of a send to a device: what the pages are made for.
+send-sized-for = Sidorna är anpassade för { $device }
+
+# Under the size in the Send sheet when the files are over what the e-reader takes in one file.
+send-in-parts = Över { $size }, så filerna delas upp.
+
+# A send that failed on one chapter. The cause is the sentence that says why.
+send-failed-chapter = Kunde inte förbereda kapitel { $chapter }. { $cause }
+
+# A send that failed before or after its chapters. The cause is the sentence that says why.
+send-failed = Kunde inte förbereda filerna. { $cause }
+
+# Text of the Send sheet's Size row while the size is still being worked out.
+send-size-working = Räknar ut
+
+# Spoken value of the Chapters row in the Send sheet while its list is open.
+send-chapters-open = Öppen
+
+# Spoken value of the Chapters row in the Send sheet while its list is closed.
+send-chapters-closed = Stängd
+
+# Spoken value of the ring in a send under way. Already a number from 0 to 100.
+send-progress-spoken = { $percent } procent
+
+# Spoken action on a chapter row of a series: sends that chapter to an e-reader.
+send-chapter-action = Skicka till e-läsare
+
+# Under an e-reader in the sheet when it takes files in parts: the size where a file is split.
+send-parts-over = i delar över { $size }
+
+# While a send waits for the network and the person can stop it. The engine's own line comes first.
+send-waiting-cancel = Avbryt sändningen
+
+# When the files are ready, over the button that opens the share sheet. The count is how many files.
+send-ready =
+    { $n ->
+        [one] En fil är klar.
+       *[other] { $n } filer är klara.
+    }
+
+# Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing.
+send-share-again = Dela igen
+
+# A send in a list or banner that is under way, with a ring beside it. The device is the e-reader.
+send-banner = Skickar till { $device }
+
+# The format of the files an e-reader is sent: a manga as a fixed-layout EPUB.
+send-format-fixed-epub = EPUB med fast layout
+
+# The format of the files an e-reader is sent: the Kobo form of EPUB.
+send-format-kepub = KEPUB
+
+# The format of the files an e-reader is sent: a plain EPUB.
+send-format-epub = EPUB
+
+# The format of the files an e-reader is sent: a comic book archive.
+send-format-cbz = CBZ
+
+# Line under an e-reader in the picker: the format the files will have, and the screen they are made for in pixels.
+send-target-line = { $format } · { $width } × { $height }
+
+# Title of the sheet that asks where you stopped reading on the e-reader.
+stop-title = Var slutade du?
+
+# Note on a series page after chapters were sent: opens the question.
+stop-note = Du skickade kapitel till { $device }. Var slutade du?
+
+# Button in that note.
+stop-note-action = Ange din plats
+
+# First line of the sheet when one chapter was sent. The date is already written out (such as "2 November").
+stop-sent-one = Kapitel { $chapter } skickades till { $device } den { $date }.
+
+# First line of the sheet when several chapters were sent, from the first to the last.
+stop-sent-range = Kapitel { $first } till { $last } skickades till { $device } den { $date }.
+
+# Switch in the sheet: the last chapter sent was read to its end.
+stop-finished = Läste klart kapitel { $chapter }
+
+# The main button of the sheet: keeps the chapter chosen as the place.
+stop-set = Ange din plats
+
+# The other button of the sheet: leaves the place as it is, with the place named.
+stop-keep = Behåll kapitel { $chapter } · sida { $page }
+
+# The other button of the sheet when the place is not a page.
+stop-keep-plain = Behåll nuvarande plats
+
+# Heading of the E-readers group in the Reading settings.
+ereaders-group = E-läsare
+
+# Row in the E-readers group: the e-reader Send to e-reader offers first. The value is the e-reader's name.
+ereaders-send-row = Skicka till e-läsare
+
+# Row in the E-readers group that opens the feed settings. The value is On or Off.
+ereaders-feed-row = OPDS-flöde
+
+# Line under the Share on this network switch.
+opds-share-note = En OPDS-katalog som e-läsare hemma kan bläddra i
+
+# Footnote under the feed settings.
+opds-footer = Flödet körs bara medan Kaeri är öppet på den här { $device }. Förlopp på de e-läsarna stannar där.
+
+# Row in the feed settings: the web address e-readers are given, with a button that copies it.
+opds-address = Adress
+
+# Shown in place of the address while the feed is off or has no password.
+opds-address-off = Slå på flödet för att få dess adress.
+
+# Row in the feed settings: the password e-readers ask for.
+opds-password = Lösenord
+
+# Line under the password row.
+opds-password-note = E-läsare frågar efter det en gång
+
+# Button in the feed settings that makes a new password. The e-readers ask for the new one.
+opds-new-password = Nytt lösenord
+
+# Row in the feed settings: the port the feed listens on.
+opds-port = Port
+
+# Line under the port row when it is empty.
+opds-port-note = Lämna tomt för valfri ledig port, eller välj en från 1024 till 65535
+
+# Line under the port row when the port asked for was taken and another is used.
+opds-port-moved = Port { $wanted } var upptagen, så flödet använder { $port }.
+
+# Heading of the group that picks what the feed shares.
+opds-shares = Vad det delar
+
+# Row in What it shares: the chapters downloaded on this device.
+opds-share-downloads = Nedladdningar
+
+# Line under that row.
+opds-share-downloads-count =
+    { $n ->
+        [one] Ett kapitel
+       *[other] { $n } kapitel
+    }
+
+# Row in What it shares: the series in the manga and comic folders.
+opds-share-manga = Mangamapp
+
+# Row in What it shares: the series in the novel folders.
+opds-share-novels = Romanmapp
+
+# Line under a folder row.
+opds-share-series-count =
+    { $n ->
+        [one] En serie
+       *[other] { $n } serier
+    }
+
+# Heading of the list of e-readers that fetched files from the feed.
+opds-fetched-by = Hämtat av
+
+# Line when no e-reader has fetched anything since the feed started.
+opds-fetched-none = Ingen e-läsare har hämtat något än.
+
+# Shown in place of the address while the feed is switched on and starting to listen.
+opds-starting = Startar…
+
+# Shown in place of the address while the feed is on but the Mac is on no local network.
+opds-paused-none = Pausat. Den här Macen är inte på något lokalt nätverk.
+
+# Shown in place of the address while the feed is on but the only connection goes through a VPN.
+opds-paused-vpn = Pausat. Den här Macen är bara ansluten via VPN.
+
+# Title of the question before a new feed password is made.
+opds-new-password-title = Skapa ett nytt lösenord?
+
+# Text of that question.
+opds-new-password-warning = E-läsare som redan använder flödet slutar fungera tills du skriver in det nya lösenordet i var och en.
+
+# Spoken value of the Fetched by list's rows when an e-reader's last request is given. The time is already written out.
+opds-fetched-time = Senaste förfrågan { $time }
+
+# Line under an e-reader in that list: how many files it took.
+opds-fetched-files =
+    { $n ->
+        [one] En fil
+       *[other] { $n } filer
+    }
+
+# Name for an e-reader that did not give one.
+opds-reader-unnamed = E-läsare på { $address }
 
 # Button that shows the season before.
 seasonal-previous = Föregående säsong
@@ -13132,7 +13768,7 @@ accounts-welcome-detail = Logga in på { $tracker } för att synka din lista och
 accounts-brings-lists = Hämtar dina listor och fyller Fortsätt titta med det du tittar på.
 
 # Line under AniList when Kaeri is for reading: what signing in brings.
-accounts-brings-lists-read = Hämtar in dina listor och fyller startsidan med det du läser.
+accounts-brings-lists-read = Hämtar in dina listor och fyller raden Läs vidare med det du läser.
 
 # Line under AniList when Kaeri is for watching and reading.
 accounts-brings-lists-both = Hämtar in dina listor och fyller startsidan med det du tittar på och läser.

@@ -49,3 +49,4 @@ shell-device-label = Komputer Linux
 tv-cast-through-computer = Diputar lewat komputer ini
 tv-cast-inhibit-reason = Mengirim episode ke TV
 tv-network-group = Di jaringan ini
+linux-sidebar-your-sources = { -source-cap-pl } Anda

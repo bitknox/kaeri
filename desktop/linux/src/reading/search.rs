@@ -1095,7 +1095,7 @@ impl Search {
             }
             return;
         }
-        let animation = adw::TimedAnimation::new(
+        let animation = motion::timed(
             &self.anilist,
             if show { 0.0 } else { self.anilist.opacity() },
             if show { 1.0 } else { 0.0 },
@@ -1477,7 +1477,7 @@ impl Search {
             self.sources.set_visible(true);
             if leaving && self.page.is_mapped() {
                 // Back from part way out: it fades in from where it got to.
-                let back = adw::TimedAnimation::new(
+                let back = motion::timed(
                     &self.sources,
                     from,
                     1.0,
