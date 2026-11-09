@@ -242,11 +242,12 @@ private struct ReadSearchBody: View {
             }
         } else {
             VStack(alignment: .leading, spacing: 12) {
-                let viewAll = navigator.readViewAllLine.flatMap { $0.query == search.query ? $0.line : nil }
-                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total, line: viewAll))
+                let opened = navigator.readViewAllLine.flatMap { $0.query == search.query ? $0 : nil }
+                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total, line: opened?.line))
                     .font(.plat(mac: 12, touch: 13))
                     .foregroundStyle(.haze)
-                ReadGrid(tiles: search.tiles, twoLines: true, caption: .formatOrigin)
+                // A row's View all keeps the row's caption, so its first covers read as on Home.
+                ReadGrid(tiles: search.tiles, twoLines: true, caption: .list(search.query, viewAll: opened != nil))
                 ReadSearchMore()
             }
         }
@@ -336,6 +337,9 @@ private struct ReadWordsResults: View {
         let anilistFailed = sources?.anilist == .failed || search.failure != nil && search.tiles.isEmpty
         let anilistNothing = only || search.tiles.isEmpty && !anilistAsking && !anilistFailed
         let sourcesNothing = sources.map { $0.done && $0.groups.allSatisfy { $0.state == .nothing } } ?? true
+        // From your sources shows while it has a row or the line of sources that found nothing;
+        // once the last row joins AniList's covers, its heading leaves with it.
+        let sourcesShown = groups.contains { $0.hasRow || $0.state == .nothing }
         VStack(alignment: .leading, spacing: 0) {
             if anilistNothing, sourcesNothing, !anilistAsking {
                 // Nothing anywhere: one title, the line, and the sources' line where there are some.
@@ -344,11 +348,12 @@ private struct ReadWordsResults: View {
             } else {
                 if !only {
                     anilist(search, asking: anilistAsking, failed: anilistFailed, sources: !groups.isEmpty)
-                        .padding(.bottom, groups.isEmpty ? 0 : 32)
+                        .padding(.bottom, sourcesShown ? 32 : 0)
                         .transition(.opacity.animation(.fadeIn))
                 }
-                if !groups.isEmpty {
+                if sourcesShown {
                     ReadSourcesPart(groups: groups)
+                        .transition(.asymmetric(insertion: .opacity, removal: .opacity.animation(.fadeOut)))
                 }
                 if !only, !groups.isEmpty, search.firstPage > 0 {
                     moreFromAnilist(search)
@@ -364,6 +369,7 @@ private struct ReadWordsResults: View {
         }
         .animation(reduceMotion ? .fadeIn : .standard, value: only)
         .animation(.standard, value: groups.map(\.sourceId))
+        .animation(.standard, value: sourcesShown)
         .onChange(of: search.query) { moreShown = false }
         .onChange(of: sources?.done == true) { _, done in
             if done { announce(search) }
@@ -409,10 +415,13 @@ private struct ReadWordsResults: View {
         }
     }
 
-    /// "In Home library", or "In 2 of your sources".
+    /// "In Home library", "In your folders", or "In 2 of your sources".
     private func joinedLine(_ work: String, in search: ReadSearchState) -> String? {
         guard let join = search.joined(work), let first = join.sourceNames.first else { return nil }
-        return join.sourceNames.count == 1 ? L.readSearchInSource(source: first) : L.readSearchInSources(n: join.sourceNames.count)
+        guard join.sourceNames.count == 1 else { return L.readSearchInSources(n: join.sourceNames.count) }
+        // The folders search as one source, named Folders.
+        if join.sourceIds.first == "folders" { return L.readSearchInFolders } // i18n-skip: the engine's id
+        return L.readSearchInSource(source: first)
     }
 
     @ViewBuilder
@@ -475,6 +484,14 @@ private struct ReadWordsResults: View {
     }
 }
 
+extension ReadSourceGroup {
+    /// Whether the source has a row under From your sources: one whose every hit joined an
+    /// AniList result says so there and has none, and one that found nothing is in the line.
+    var hasRow: Bool {
+        state != .nothing && !(state == .hits && tiles.isEmpty)
+    }
+}
+
 extension ReadSourceState {
     var didNotAnswer: Bool {
         switch self {
@@ -494,8 +511,7 @@ private struct ReadSourcesPart: View {
     let groups: [ReadSourceGroup]
 
     var body: some View {
-        // A source whose every hit joined an AniList result says so there, and has no row.
-        let rows = groups.filter { $0.state != .nothing && !($0.state == .hits && $0.tiles.isEmpty) }
+        let rows = groups.filter(\.hasRow)
         let nothing = groups.filter { $0.state == .nothing }.map(\.sourceName)
         VStack(alignment: .leading, spacing: 0) {
             Text(L.readSearchFromSources)
@@ -972,8 +988,14 @@ struct ReadFiltersSheet: View {
                             }
                         ))
                         .foregroundStyle(.silk)
+                        .sheetRow()
                     } footer: {
-                        Text(L.readSearchSourcesOnlyLine).foregroundStyle(.haze)
+                        // Said only while it is true: with the switch off, AniList's results show.
+                        if query.sourcesOnly {
+                            Text(L.readSearchSourcesOnlyLine)
+                                .foregroundStyle(.haze)
+                                .transition(.opacity)
+                        }
                     }
                 }
                 Group {
@@ -1048,6 +1070,7 @@ struct ReadFiltersSheet: View {
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .sheetRow()
             }
         }
     }
@@ -1077,6 +1100,16 @@ struct ReadFiltersSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(checked ? .isSelected : [])
+        .sheetRow()
+    }
+}
+
+private extension View {
+    /// A grouped row in the app's own fill on the raised sheet, a step darker as the sheets'
+    /// grouped boxes are, with the faint rule between rows instead of the system's grey.
+    func sheetRow() -> some View {
+        listRowBackground(Palette.ground.opacity(0.4))
+            .listRowSeparatorTint(Palette.faintRule)
     }
 }
 #endif

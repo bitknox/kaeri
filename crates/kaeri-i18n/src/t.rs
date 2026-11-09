@@ -15427,6 +15427,11 @@ pub fn read_search_in_source(source: &str) -> String {
     text("read-search-in-source", &[("source", Arg::Text(source))])
 }
 
+/// On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders.
+pub fn read_search_in_folders() -> String {
+    text("read-search-in-folders", &[])
+}
+
 /// On an AniList result that more than one of the person's sources has. Always 2 or more.
 pub fn read_search_in_sources(n: i64) -> String {
     text("read-search-in-sources", &[("n", Arg::Int(n))])

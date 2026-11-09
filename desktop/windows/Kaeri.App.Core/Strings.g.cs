@@ -6772,6 +6772,9 @@ public static partial class T
     /// <summary>On an AniList result that one of the person's sources has. The source is its name.</summary>
     public static string ReadSearchInSource(string source) => Fill(Get("ReadSearchInSource"), ("source", source));
 
+    /// <summary>On an AniList result that the person's folders have. All their folders search as one source, so the line says they are the person's own, not a place called Folders.</summary>
+    public static string ReadSearchInFolders => Get("ReadSearchInFolders");
+
     /// <summary>On an AniList result that more than one of the person's sources has. Always 2 or more.</summary>
     public static string ReadSearchInSources(long n) => Fill(GetPlural("ReadSearchInSources", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -13865,6 +13868,7 @@ public static partial class T
         ["ReadSearchSourceTimeout"] = "No answer in {seconds} s.",
         ["ReadSearchSourceNothing"] = "Nothing found in {sources}.",
         ["ReadSearchInSource"] = "In {source}",
+        ["ReadSearchInFolders"] = "In your folders",
         ["ReadSearchInSources_one"] = "In {n} of your sources",
         ["ReadSearchInSources_other"] = "In {n} of your sources",
         ["ReadSearchAnilistNothing"] = "AniList found nothing for these words.",

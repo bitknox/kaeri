@@ -92,15 +92,31 @@ struct WaterDot: View {
 // MARK: - Words
 
 /// What the line under a cover says, by where the cover is.
-enum ReadCaption {
+enum ReadCaption: Equatable {
     /// What comes next, else the facts: the person's own shelves and the library.
     case plain
-    /// A Home row of one format: the origin, then the status.
-    case formatRow
-    /// A Home row of several formats, and AniList's results in Search: the format, then the origin.
+    /// A list of one format, a Home row or its View all: the origin, then the status, or on New
+    /// the month the series started ("Japan · since March"). Where the list fixes the status,
+    /// as Finished does, the count takes its place ("Japan · 112 chapters").
+    case formatRow(statusFixed: Bool)
+    /// A list of several formats, a Home row or its View all: the format, then the status
+    /// ("Manga · Finished"), or the count where the list fixes the status.
+    case mixedRow(statusFixed: Bool)
+    /// AniList's results in Search: the format, then the origin, even for a series the person
+    /// reads (a joined cover's note says where it is).
     case formatOrigin
     /// A source's hit in Search: how much the source has, or nothing where it doesn't say.
     case amount
+
+    /// The caption for AniList's list for a query: a row's own when the query names one format
+    /// or several, or when it is a row's View all; else the format and the origin.
+    static func list(_ query: ReadSearchQuery, viewAll: Bool) -> ReadCaption {
+        let fixed = query.status != nil
+        let formats = Set(query.formats.map { $0 == "one-shot" ? "manga" : $0 }) // i18n-skip: format keys
+        if formats.count == 1 { return .formatRow(statusFixed: fixed) }
+        if formats.count > 1 || viewAll { return .mixedRow(statusFixed: fixed) }
+        return .formatOrigin
+    }
 }
 
 enum ReadWords {
@@ -116,18 +132,19 @@ enum ReadWords {
 
     private static func parts(_ tile: WorkTile, _ caption: ReadCaption) -> [String]? {
         if tile.notInSources { return [L.homeNotFound] }
-        if let next = tile.next { return [next.text] }
+        if caption != .formatOrigin, let next = tile.next { return [next.text] }
         let facts = tile.facts.map(\.text)
         switch caption {
         case .amount:
             return tile.amount.map { [$0.text] }
-        case .formatRow:
-            // The facts lead with the format word, which the row's heading already says. A New
-            // row says the month the series started instead: "Japan · since March".
+        case .formatRow(let fixed):
+            // The facts lead with the format word, which the row's heading already says.
             if let origin = tile.origin?.text {
                 if let started = tile.started?.text { return [origin, started] }
-                return [origin] + facts.dropFirst().prefix(1)
+                return [origin] + second(tile, statusFixed: fixed)
             }
+        case .mixedRow(let fixed):
+            if let format = facts.first { return [format] + second(tile, statusFixed: fixed) }
         case .formatOrigin:
             if let origin = tile.origin?.text { return facts.prefix(1) + [origin] }
         case .plain:
@@ -136,6 +153,21 @@ enum ReadWords {
         if let label = tile.formatLabel, facts.isEmpty { return [label] }
         // Two facts at most, so the line fits under a cover.
         return facts.isEmpty ? nil : Array(facts.prefix(2))
+    }
+
+    /// The fact after the format: the status, or where the list fixes the status, the count
+    /// ("112 chapters"), so the line doesn't repeat the heading. Nothing where there is no count.
+    private static func second(_ tile: WorkTile, statusFixed: Bool) -> [String] {
+        guard statusFixed else { return tile.facts.dropFirst().prefix(1).map(\.text) }
+        return tile.facts.dropFirst().first(where: isCount).map { [$0.text] } ?? []
+    }
+
+    private static func isCount(_ fact: Msg) -> Bool {
+        guard case .reading(let words) = fact else { return false }
+        switch words {
+        case .readingChapters, .readingVolumes: return true
+        default: return false
+        }
     }
 
     static func list(_ segment: LibrarySegmentRead) -> String {
@@ -274,9 +306,6 @@ struct ReadTileCard: View {
     var planAction = false
     /// What the line under the cover says.
     var caption = ReadCaption.plain
-    /// Narrower than this, as a phone's grid cells are, the line may wrap once. The Mac's
-    /// 128-point covers keep it to one line with an ellipsis, as the board draws them.
-    static let narrow: CGFloat = 130
 
     var body: some View {
         let width = width ?? layout.poster.width
@@ -305,10 +334,10 @@ struct ReadTileCard: View {
                 if let line = ReadWords.line(tile, caption) {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         if tile.newChapter { WaterDot() }
-                        // A phone's grid cell is narrow: its line takes a second line, not an
-                        // ellipsis, and so does Not found in your sources anywhere.
+                        // One line with an ellipsis on every device, as the board draws it; Not
+                        // found in your sources takes a second line rather than lose words.
                         Text(line)
-                            .lineLimit((!Device.isMac && width < Self.narrow) || tile.notInSources ? 2 : 1)
+                            .lineLimit(tile.notInSources ? 2 : 1)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .font(.ui(layout.posterLine.size))
@@ -350,6 +379,7 @@ struct ReadTileCard: View {
 /// beside the heading some rows have ("Last 12 months").
 struct ReadShelfHeader: View {
     @Environment(\.homeLayout) private var layout
+    @Environment(\.dynamicTypeSize) private var typeSize
     let title: String
     var side: String?
     var link: String?
@@ -364,12 +394,16 @@ struct ReadShelfHeader: View {
                     .font(.ui(layout.heading.size, weight: layout.heading.weight))
                     .fixedLineHeight(layout.heading.line, relativeTo: .title3)
                     .foregroundStyle(.silk)
-                    .lineLimit(1)
+                    // A long heading ("Because you finished …") wraps rather than lose the title
+                    // that explains the row; View all stays on its first line.
+                    .lineLimit(typeSize.isAccessibilitySize ? 3 : 2)
+                    .fixedSize(horizontal: false, vertical: true)
                 if let side {
                     Text(side)
                         .font(.ui(13))
                         .foregroundStyle(.haze)
                         .lineLimit(1)
+                        .fixedSize()
                 }
             }
             .accessibilityElement(children: .combine)
@@ -390,6 +424,7 @@ struct ReadShelfHeader: View {
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .fixedSize()
                 .pointerHover()
                 // "View all, Trending manga".
                 .accessibilityLabel(link)
