@@ -132,9 +132,13 @@ pub(super) fn streamed_dir(cache: &Path, session: u64) -> PathBuf {
 
 /// Fetch every page of a source's chapter of pictures into `dir`, named in reading order with
 /// the type their bytes are, so the page worker opens the folder as a book.
+///
+/// The edge pages of the chapter, and of each of its parts, are fingerprinted on the way, for
+/// finding the series' credit pages.
 async fn fetch_pages(
     sources: &crate::read_sources::BookSources,
     opened: &mut crate::read_sources::Opened,
+    at: (&WorkId, &ChapterId),
     dir: &Path,
     now: i64,
 ) -> Prepared {
@@ -149,11 +153,13 @@ async fn fetch_pages(
     if let Err(e) = tokio::fs::create_dir_all(dir).await {
         return Prepared::Failed(io(e));
     }
+    let mut prints = crate::reading::credits::Recorder::new(&opened.spans());
     for index in 0..total {
         let bytes = match sources.page(opened, index, now).await {
             Ok(bytes) => bytes,
             Err(failure) => return Prepared::Failed(failure),
         };
+        prints.page(index as u32, &bytes).await;
         let Some(ext) = page_extension(&bytes) else {
             return Prepared::Failed(ReadingFailure::Unsupported { extension: "page".into() });
         };
@@ -163,6 +169,8 @@ async fn fetch_pages(
             return Prepared::Failed(io(e));
         }
     }
+    let (work, chapter) = at;
+    prints.keep(sources.store(), work.as_str(), chapter.as_str(), opened.group.as_deref(), now);
     Prepared::Pages(dir.to_owned())
 }
 
@@ -405,7 +413,7 @@ impl Session {
                 Err(failure) => Prepared::Failed(failure),
                 // A source's pictures are fetched into a folder the page worker reads as a book.
                 Ok(mut opened) if matches!(opened.content, ChapterContent::Images(_)) => {
-                    fetch_pages(&sources, &mut opened, &streamed, now).await
+                    fetch_pages(&sources, &mut opened, (&work, &id), &streamed, now).await
                 }
                 Ok(opened) => match opened.content {
                     ChapterContent::Text(xhtml) => {

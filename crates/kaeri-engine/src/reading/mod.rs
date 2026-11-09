@@ -6,6 +6,7 @@
 //! reading on, the reader opens what is on this device ([`session`]); the loads that have no part
 //! behind them yet answer with their empty shapes, and the rest are logged and dropped.
 
+pub(crate) mod credits;
 pub(crate) mod eink;
 pub mod novel;
 pub(crate) mod pages;
@@ -241,6 +242,14 @@ pub(crate) fn reading(
             }
             return chapters(services, work, Some(pref.source_id), tx);
         }
+        ReadingCommand::ChooseGroup { work, group } => {
+            choose_group(services, &work, group);
+            let ask = crate::read_catalog::Ask::of(engine, services);
+            let kit = crate::read_catalog::Kit::of(services);
+            chapters(services, work.clone(), None, tx);
+            crate::read_catalog::series::header(&kit, ask, &work, tx);
+            return;
+        }
         ReadingCommand::MarkRead { work, chapters: ids, read } => {
             mark_read(services, work, ids, read, tx);
             return;
@@ -463,6 +472,28 @@ fn chapters(services: &Services, work: WorkId, edition: Option<String>, tx: &Out
         };
         let _ = tx.send(Event::Reading(event));
     });
+}
+
+/// Keep the person's group for the edition in use. The group is the edition's version, so the
+/// pick is the edition choice with its version set: a choice of another source is replaced by
+/// the source in use.
+fn choose_group(services: &Services, work: &WorkId, group: Option<String>) {
+    let Some((source, _)) = services.book_sources.edition_of(work, None) else { return };
+    let kept = services.store.edition_pref(work.as_str()).ok().flatten();
+    let pref = match kept {
+        Some(mut pref) if pref.source_id == source => {
+            pref.version_label = group;
+            pref
+        }
+        _ => kaeri_store::reading::EditionPref {
+            source_id: source,
+            version_label: group,
+            language: None,
+        },
+    };
+    if let Err(e) = services.store.set_edition_pref(work.as_str(), Some(&pref)) {
+        tracing::warn!(error = %e, "the group choice was not kept");
+    }
 }
 
 /// The person's own mark is kept first; the server is told after, and a refusal there is only

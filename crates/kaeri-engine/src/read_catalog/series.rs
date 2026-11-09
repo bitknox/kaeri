@@ -107,7 +107,12 @@ pub fn versions(kit: &Kit, work: WorkId, chapter: ChapterId, tx: &Outbox) {
     for (source, series) in refs {
         let Some(edition) = editions.iter().find(|e| e.source_id == source) else { continue };
         let Some((list, _)) = chapters::kept(&kit.store, &source, &series) else { continue };
-        for found in list.iter().filter(|c| c.id == chapter.as_str()) {
+        // One version per group: a chapter in parts is one version, from its first part.
+        let mut groups = HashSet::new();
+        for found in list
+            .iter()
+            .filter(|c| c.id == chapter.as_str() && groups.insert(c.version_label.clone()))
+        {
             let mut row = edition.clone();
             row.version_label = found.version_label.clone().or(row.version_label);
             row.language = found.language.clone().or(row.language);
@@ -131,12 +136,28 @@ pub(crate) fn kept_volumes(
     };
     let read = chapters::Read::of(&kit.store, work.as_str());
     let mut groups: Vec<VolumeGroup> = Vec::new();
-    let mut listed = HashSet::new();
     let mut group_of: HashMap<Option<String>, usize> = HashMap::new();
-    // One row per chapter, as the source's answer gives: the first version listed.
-    for chapter in list.iter().filter(|c| listed.insert(c.id.as_str())) {
+    // One row per chapter, as the source's answer gives: its parts as one, from the preferred
+    // group, or another where that one lacks it.
+    let entries: Vec<_> = list.iter().map(chapters::Kept::to_source).collect();
+    let chosen = chapters::chosen_group(&kit.store, work.as_str(), &source);
+    let language = kit.sources.language();
+    let arranged = super::arrange::arrange(&entries, chosen.as_deref(), language.as_deref());
+    for arranged_row in &arranged.rows {
+        let chapter = &list[arranged_row.parts[0]];
         let mut row = super::updates::row_of(chapter, &read);
         row.new_chapter = false;
+        arranged.fill(arranged_row, language.as_deref(), &mut row);
+        if super::arrange::Arranged::in_parts(arranged_row) {
+            row.label = super::arrange::merged_label(&entries[arranged_row.parts[0]], &row.id);
+            row.pages = arranged_row.parts.iter().map(|&i| list[i].pages).sum();
+            row.number =
+                row.id.key().and_then(|k| k.range()).map(|r| r.to_string()).or(row.number);
+            let title = super::arrange::merged_title(&entries[arranged_row.parts[0]]);
+            row.title =
+                chapters::own_title(title.as_deref(), &row.label, row.number.as_deref())
+                    .map(str::to_owned);
+        }
         let at = *group_of.entry(chapter.volume.clone()).or_insert_with(|| {
             groups.push(VolumeGroup {
                 volume: chapter.volume.clone(),
@@ -168,12 +189,16 @@ pub(crate) fn finish(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup], now:
 /// How many versions each chapter has across the person's editions.
 fn count_versions(kit: &Kit, work: &WorkId, volumes: &mut [VolumeGroup]) {
     let refs = kit.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+    // A version is a chapter as one group in one source has it, its parts and all.
+    let mut seen: HashSet<(String, String, Option<String>)> = HashSet::new();
     let mut counts: HashMap<String, usize> = HashMap::new();
     for (source, series) in &refs {
         for chapter in
             chapters::kept(&kit.store, source, series).map(|k| k.0).unwrap_or_default()
         {
-            *counts.entry(chapter.id).or_default() += 1;
+            if seen.insert((source.clone(), chapter.id.clone(), chapter.version_label)) {
+                *counts.entry(chapter.id).or_default() += 1;
+            }
         }
     }
     for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {

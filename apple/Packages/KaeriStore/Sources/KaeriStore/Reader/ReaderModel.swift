@@ -664,6 +664,9 @@ public final class ReaderModel {
         case .goTo(let session, let place):
             guard session == self.session else { return }
             goTo(place)
+        case .creditPages:
+            // The skipped credit pages' line comes with its board.
+            break
         case .closed(let session):
             guard session == self.session || self.session == 0 else { return }
             self.session = 0

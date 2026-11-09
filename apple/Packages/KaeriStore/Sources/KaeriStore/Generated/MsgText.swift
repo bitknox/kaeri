@@ -431,6 +431,15 @@ extension ReadingMsg {
         case .readingRowBookmarked: L.readingRowBookmarked
         case .readingRowPages(let n): L.readingRowPages(n: Int(n))
         case .readingRowVersions(let n): L.readingRowVersions(n: Int(n))
+        case .readingRowParts(let n): L.readingRowParts(n: Int(n))
+        case .readingRowFromGroup(let group): L.readingRowFromGroup(group: group)
+        case .readingRowFromGroupIn(let group, let language): L.readingRowFromGroupIn(group: group, language: language)
+        case .readingRowPartsOf(let have, let n): L.readingRowPartsOf(have: Int(have), n: Int(n))
+        case .readingRowPartMissing(let count, let part): L.readingRowPartMissing(count: Int(count), part: Int(part))
+        case .readingRowPartFromGroup(let part, let group): L.readingRowPartFromGroup(part: Int(part), group: group)
+        case .readingRowPartFromGroupIn(let part, let group, let language): L.readingRowPartFromGroupIn(part: Int(part), group: group, language: language)
+        case .readingRowFromSource(let source): L.readingRowFromSource(source: source)
+        case .readerCreditPagesSkipped(let count): L.readerCreditPagesSkipped(count: Int(count))
         case .readingAgoNow: L.readingAgoNow
         case .readingAgoMinutes(let minutes): L.readingAgoMinutes(minutes: Int(minutes))
         case .readingAgoToday: L.readingAgoToday

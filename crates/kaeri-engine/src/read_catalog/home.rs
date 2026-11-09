@@ -1095,6 +1095,7 @@ mod tests {
             published: Some(at),
             pages: None,
             seen_at: None,
+            part: None,
         };
         let weekly = kaeri_store::book_catalog::BookRhythm {
             weekday: Some(4),

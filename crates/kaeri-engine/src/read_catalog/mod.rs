@@ -5,6 +5,7 @@
 //! everything else waits for [`kaeri_meta::AniList::launched`] and goes in the paced background
 //! queue. Every AniList request a screen needs goes as one, with its parts under aliases.
 
+pub(crate) mod arrange;
 pub(crate) mod chapters;
 pub(crate) mod discovery;
 pub(crate) mod editions;

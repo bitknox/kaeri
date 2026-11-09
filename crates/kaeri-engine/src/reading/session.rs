@@ -645,6 +645,7 @@ fn session_of(command: &ReaderCommand) -> Option<u64> {
         | C::BackTo { session }
         | C::StartOver { session }
         | C::GoBack { session }
+        | C::NotACreditPage { session, .. }
         | C::Close { session } => Some(*session),
         C::Open { .. }
         | C::SetSetting { .. }
@@ -878,7 +879,20 @@ impl Session {
             start_page: page,
             shared: self.laid.clone(),
             out: cx.tx.clone(),
+            credits: self.credit_check(cx),
         });
+    }
+
+    /// The credit pages are looked for in a manga's chapters, unless the person turned that off.
+    fn credit_check(&self, cx: &Cx<'_>) -> Option<super::credits::CreditCheck> {
+        (self.medium == Medium::Manga && self.layers.on(Key::SkipCreditPages)).then(|| {
+            super::credits::CreditCheck {
+                store: cx.services.store.clone(),
+                work: self.work.as_str().to_owned(),
+                chapter: self.chapter().id.as_str().to_owned(),
+                now: cx.now(),
+            }
+        })
     }
 
     fn laid_out(&mut self, cx: &mut Cx<'_>, pages: &Pages) {
@@ -945,6 +959,15 @@ impl Session {
             chapter: self.chapter().id.clone(),
             leaves,
         });
+        if !laid.credits.is_empty() {
+            let count = laid.credits.len() as i64;
+            cx.send(ReaderEvent::CreditPages {
+                session: self.id,
+                chapter: self.chapter().id.clone(),
+                pages: laid.credits,
+                msg: Msg::Reading(ReadingMsg::ReaderCreditPagesSkipped { count }),
+            });
+        }
         if let Some(msg) = said {
             cx.send(notice(msg, Some(ReaderAction::ChangeMode), RESUMED_MS, eink));
         }
@@ -1040,6 +1063,19 @@ impl Session {
                 let mut start = place(&self.work, &self.chapter().id, Some(0));
                 start.novel = self.novel_start();
                 self.go_to(cx, pages, start);
+            }
+            C::NotACreditPage { fingerprint, .. } => {
+                let store = &cx.services.store;
+                if let Err(e) =
+                    store.keep_credit_page(self.work.as_str(), fingerprint, cx.now())
+                {
+                    tracing::warn!(error = %e, "a page kept from the credit pages was not kept");
+                    return;
+                }
+                if self.novel.is_none() {
+                    let page = self.page().unwrap_or(0);
+                    self.lay_out(cx, pages, page);
+                }
             }
             C::GoBack { .. } => {
                 if let Some(back) = self.moved_back.take() {
@@ -1460,6 +1496,7 @@ mod tests {
     use super::*;
     use crate::{host::QuietHost, outbox::Envelope};
 
+    mod groups;
     mod hints;
     mod leaving;
     mod novels;

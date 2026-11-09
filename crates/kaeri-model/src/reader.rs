@@ -285,6 +285,9 @@ pub enum ReaderSettingKey {
     PaperLook,
     PaperDim,
     PaperVolume,
+    /// Skip the credit pages a series repeats at the start or end of its chapters. On by
+    /// default.
+    SkipCreditPages,
 }
 
 /// Where a setting's value is kept.
@@ -348,6 +351,7 @@ impl ReaderSettingKey {
         Self::PaperLook,
         Self::PaperDim,
         Self::PaperVolume,
+        Self::SkipCreditPages,
     ];
 
     /// The setting's name in the store, the config and the `read_series` register.
@@ -387,6 +391,7 @@ impl ReaderSettingKey {
             Self::PaperLook => "paper_look",
             Self::PaperDim => "paper_dim",
             Self::PaperVolume => "paper_volume",
+            Self::SkipCreditPages => "skip_credit_pages",
         }
     }
 
@@ -408,7 +413,8 @@ impl ReaderSettingKey {
             | Self::PageLayout
             | Self::Spreads
             | Self::StripWidth
-            | Self::StripGap => matches!(medium, Medium::Manga),
+            | Self::StripGap
+            | Self::SkipCreditPages => matches!(medium, Medium::Manga),
             Self::Font | Self::TextSize | Self::Margins | Self::LineSpacing | Self::Justify => {
                 matches!(medium, Medium::Novel)
             }
@@ -914,6 +920,13 @@ pub enum ReaderCommand {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         session: u64,
     },
+    /// The person said a skipped page is not a credit page: the work never skips a page with
+    /// this fingerprint again, and the open chapter is laid out again with it in its place.
+    NotACreditPage {
+        session: u64,
+        /// From [`CreditPage::fingerprint`].
+        fingerprint: u64,
+    },
 }
 
 impl ReaderCommand {
@@ -1030,6 +1043,31 @@ pub enum ReaderEvent {
     Closed {
         session: u64,
     },
+    /// Pages of the open chapter left out as credit pages: the leaves hold the rest, and page
+    /// totals and progress count without them. The quiet line says `msg` ("1 credit page
+    /// skipped") and shows the pages when tapped, each with Not a credit page. Sent after
+    /// [`ReaderEvent::Leaves`] whenever a layout skipped any.
+    CreditPages {
+        session: u64,
+        chapter: ChapterId,
+        pages: Vec<CreditPage>,
+        msg: Msg,
+    },
+}
+
+/// A page skipped as a credit page.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct CreditPage {
+    /// Where it was in the chapter, from 0, counting every page the source has.
+    pub page: u32,
+    /// At the chapter's (or a part's) end rather than its start.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub at_end: bool,
+    /// The page as the book had it, to show when the line is tapped.
+    pub file: PageFile,
+    /// What `NotACreditPage` sends back.
+    pub fingerprint: u64,
 }
 
 #[cfg(test)]

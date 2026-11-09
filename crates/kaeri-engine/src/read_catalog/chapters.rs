@@ -34,6 +34,10 @@ pub struct Kept {
     /// When a later answer first listed it. `None` for what the first answer listed.
     #[serde(default)]
     pub seen_at: Option<i64>,
+    /// Its part of the chapter, from 1, for an entry that is one part of a chapter (see
+    /// [`super::arrange`]); `id` is then the whole chapter's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub part: Option<u32>,
 }
 
 impl Kept {
@@ -44,6 +48,18 @@ impl Kept {
 
     pub fn range(&self) -> Option<ChapterRange> {
         ChapterId::new(self.id.clone()).key().and_then(|k| k.range())
+    }
+
+    /// The entry as the source listed it, for [`super::arrange::arrange`].
+    pub fn to_source(&self) -> SourceChapter {
+        let mut c = SourceChapter::new(self.source_ref.clone(), self.label.clone());
+        c.volume = self.volume.clone();
+        c.title = self.title.clone();
+        c.version_label = self.version_label.clone();
+        c.language = self.language.clone();
+        c.published = self.published;
+        c.page_count = self.pages;
+        c
     }
 
     /// Its title, unless the title only names the chapter again (see [`own_title`]).
@@ -107,13 +123,15 @@ pub fn keep(
     // By id, so a long list is looked through once rather than once a chapter.
     let before: Option<HashMap<&str, &Kept>> =
         before.as_ref().map(|list| list.iter().map(|k| (k.id.as_str(), k)).collect());
-    let restarts = crate::read_sources::restarts_per_volume(chapters);
+    // Parts are kept under their whole chapter, so what is new is a chapter, not a part.
+    let arranged = super::arrange::arrange(chapters, None, None);
     let mut fresh: Vec<Kept> = Vec::new();
     let mut fresh_ids = HashSet::new();
     let list: Vec<Kept> = chapters
         .iter()
-        .map(|c| {
-            let id = c.key(restarts).id().as_str().to_owned();
+        .enumerate()
+        .map(|(i, c)| {
+            let id = arranged.ids[i].as_str().to_owned();
             let earlier = before.as_ref().map(|b| b.get(id.as_str()).copied());
             let seen_at = match earlier {
                 None => None,
@@ -132,6 +150,7 @@ pub fn keep(
                 published: c.published,
                 pages: c.page_count,
                 seen_at,
+                part: arranged.parts[i],
             };
             // Two versions of a new chapter are one chapter come out.
             if matches!(earlier, Some(None)) && fresh_ids.insert(kept.id.clone()) {
@@ -242,37 +261,62 @@ pub fn of_work(
     Some((source, series, list))
 }
 
-/// An edition's line from its kept list: how many chapters, the newest, and the language and
-/// version most of them are in.
+/// An edition's line from its kept list: how many chapters, the newest, the language most of
+/// them are in, and the groups, with the one its chapters are listed from.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Summary {
     pub chapters: u32,
     pub latest: Option<String>,
     pub language: Option<String>,
+    /// The group the list is read from: the person's pick, else the one with the most
+    /// chapters.
     pub version_label: Option<String>,
+    pub groups: Vec<super::arrange::Group>,
+    /// The person picked `version_label`.
+    pub chosen: bool,
 }
 
-pub fn summary(store: &Store, source: &str, series: &str) -> Summary {
+/// The summary of a source's kept list, with the person's group for the series, when picked.
+pub fn summary(
+    store: &Store,
+    source: &str,
+    series: &str,
+    chosen: Option<&str>,
+    app_language: Option<&str>,
+) -> Summary {
     let Some((list, _)) = kept(store, source, series) else { return Summary::default() };
     let ids: HashSet<&str> = list.iter().map(|c| c.id.as_str()).collect();
-    let most = |pick: fn(&Kept) -> Option<&String>| {
-        let mut counts: std::collections::HashMap<&String, usize> = Default::default();
-        for c in &list {
-            if let Some(v) = pick(c) {
-                *counts.entry(v).or_default() += 1;
-            }
+    let mut counts: HashMap<&String, usize> = HashMap::new();
+    for c in &list {
+        if let Some(v) = c.language.as_ref() {
+            *counts.entry(v).or_default() += 1;
         }
-        counts
-            .into_iter()
-            .max_by(|a, b| a.1.cmp(&b.1).then_with(|| b.0.cmp(a.0)))
-            .map(|(v, _)| v.clone())
-    };
+    }
+    let language = counts
+        .into_iter()
+        .max_by(|a, b| a.1.cmp(&b.1).then_with(|| b.0.cmp(a.0)))
+        .map(|(v, _)| v.clone());
+    let entries: Vec<SourceChapter> = list.iter().map(Kept::to_source).collect();
+    let arranged = super::arrange::arrange(&entries, chosen, app_language);
     Summary {
         chapters: u32::try_from(ids.len()).unwrap_or(u32::MAX),
         latest: list.last().map(|c| c.number.clone().unwrap_or_else(|| c.label.clone())),
-        language: most(|c| c.language.as_ref()),
-        version_label: most(|c| c.version_label.as_ref()),
+        language,
+        version_label: arranged.preferred,
+        groups: arranged.groups,
+        chosen: arranged.chosen,
     }
+}
+
+/// The group the person picked for a work's chapters in `source`: the version the edition was
+/// chosen in, by `ChooseGroup` or a chapter's Prefer this version.
+pub fn chosen_group(store: &Store, work: &str, source: &str) -> Option<String> {
+    store
+        .edition_pref(work)
+        .ok()
+        .flatten()
+        .filter(|p| p.source_id == source)
+        .and_then(|p| p.version_label)
 }
 
 /// How a series comes out, learnt from the dates of its newest chapters: a weekday when most of
@@ -368,6 +412,7 @@ mod tests {
             published: None,
             pages: None,
             seen_at: None,
+            part: None,
         };
         assert_eq!(titled("Chapter 15", "Chapter 15").own_title(), None);
         assert_eq!(titled("15", "Chapter 15").own_title(), None);
@@ -398,6 +443,7 @@ mod tests {
                 published: Some(FRIDAY - (4 - n) * 7 * DAY),
                 pages: None,
                 seen_at: None,
+                part: None,
             })
             .collect();
         let found = rhythm(&weekly, &zone, FRIDAY).unwrap();

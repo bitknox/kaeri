@@ -23,8 +23,8 @@ use kaeri_core::books::ChapterId;
 use kaeri_model::{
     event::Event,
     reader::{
-        Leaf, LeafPart, PageEncoding, PageFile, PageHalf, PageKind, PixelFormat, PixelRect,
-        ReadDirection, ReaderEvent, ReaderMode, StripPos, UnitRect,
+        CreditPage, Leaf, LeafPart, PageEncoding, PageFile, PageHalf, PageKind, PixelFormat,
+        PixelRect, ReadDirection, ReaderEvent, ReaderMode, StripPos, UnitRect,
     },
     reading::ReadingFailure,
 };
@@ -83,6 +83,8 @@ pub struct Laid {
     /// Still extracting: more leaves may come.
     pub growing: bool,
     pub failure: Option<ReadingFailure>,
+    /// Credit pages left out of `pages`, by their place in the chapter as fetched.
+    pub credits: Vec<CreditPage>,
 }
 
 pub type Shared = Arc<Mutex<Laid>>;
@@ -100,6 +102,8 @@ pub struct OpenJob {
     pub shared: Shared,
     /// A way to answer, held while the worker has pages to make.
     pub out: Outbox,
+    /// Find and leave out the series' credit pages, when the person has that on.
+    pub credits: Option<super::credits::CreditCheck>,
 }
 
 #[derive(Debug)]
@@ -449,17 +453,7 @@ impl Worker {
             },
         };
         touch(&dir);
-        let original = keep_original(&dir, 0, &bytes)?;
-        let format = original.format?;
-        Some(PageFile {
-            path: original.path.display().to_string(),
-            encoding: PageEncoding::Original { mime: format.mime().to_owned() },
-            width: original.width,
-            height: original.height,
-            crop: None,
-            colour: false,
-            bytes: bytes.len() as u64,
-        })
+        page_file(&keep_original(&dir, 0, &bytes)?)
     }
 
     fn fail(&self, job: &OpenJob, failure: ReadingFailure) {
@@ -487,6 +481,7 @@ impl Worker {
         };
         let mut originals = Vec::new();
         let mut kinds = Vec::new();
+        let mut credits = Vec::new();
         let mut info_rtl = None;
         match book {
             Book::Comic(mut comic) => {
@@ -525,6 +520,33 @@ impl Worker {
                             .unwrap_or("")
                             .to_ascii_uppercase();
                         return self.fail(&job, ReadingFailure::Unreadable { path, format });
+                    }
+                }
+                // Credit pages leave the chapter's pages, so its count and progress go without
+                // them; their files stay in the cache, a tap away.
+                if let Some(check) = &job.credits {
+                    let files: Vec<Option<&Path>> = originals
+                        .iter()
+                        .map(|o| o.as_ref().map(|o| o.path.as_path()))
+                        .collect();
+                    for found in check.find(&files).into_iter().rev() {
+                        let at = found.page as usize;
+                        if kinds.get(at) == Some(&layout::PageKind::Skip) {
+                            continue;
+                        }
+                        let original = originals.remove(at);
+                        kinds.remove(at);
+                        if let Some(file) = original.as_ref().and_then(page_file) {
+                            credits.insert(
+                                0,
+                                CreditPage {
+                                    page: found.page,
+                                    at_end: found.at_end,
+                                    file,
+                                    fingerprint: found.print,
+                                },
+                            );
+                        }
                     }
                 }
             }
@@ -689,6 +711,7 @@ impl Worker {
                 cuts,
                 growing: false,
                 failure: None,
+                credits,
             };
         }
         self.open = Some(chapter);
@@ -1223,6 +1246,21 @@ fn book_key(path: &Path) -> String {
         meta.modified().ok().hash(&mut h);
     }
     format!("{:016x}", h.finish())
+}
+
+/// A kept original as the app shows it, untouched.
+fn page_file(original: &Original) -> Option<PageFile> {
+    let format = original.format?;
+    let bytes = std::fs::metadata(&original.path).ok()?.len();
+    Some(PageFile {
+        path: original.path.display().to_string(),
+        encoding: PageEncoding::Original { mime: format.mime().to_owned() },
+        width: original.width,
+        height: original.height,
+        crop: None,
+        colour: false,
+        bytes,
+    })
 }
 
 fn keep_original(dir: &Path, page: usize, bytes: &[u8]) -> Option<Original> {

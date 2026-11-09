@@ -1473,6 +1473,24 @@ pub enum ReadingMsg {
     ReadingRowPages { n: i64 },
     /// A chapter row: how many versions the person's sources have of it. The row's menu lists them.
     ReadingRowVersions { n: i64 },
+    /// A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".
+    ReadingRowParts { n: i64 },
+    /// A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.
+    ReadingRowFromGroup { group: String },
+    /// A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".
+    ReadingRowFromGroupIn { group: String, language: String },
+    /// A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
+    ReadingRowPartsOf { have: i64, n: i64 },
+    /// A chapter row, after the parts count: the part no group has released. With several, how many.
+    ReadingRowPartMissing { count: i64, part: i64 },
+    /// A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".
+    ReadingRowPartFromGroup { part: i64, group: String },
+    /// The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
+    ReadingRowPartFromGroupIn { part: i64, group: String, language: String },
+    /// A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.
+    ReadingRowFromSource { source: String },
+    /// A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
+    ReaderCreditPagesSkipped { count: i64 },
     /// A chapter row: when it was read or came out, under a minute ago.
     ReadingAgoNow,
     /// A chapter row: when it was read or came out, in minutes.
@@ -1738,6 +1756,15 @@ impl ReadingMsg {
             Self::ReadingRowBookmarked => "reading-row-bookmarked",
             Self::ReadingRowPages { .. } => "reading-row-pages",
             Self::ReadingRowVersions { .. } => "reading-row-versions",
+            Self::ReadingRowParts { .. } => "reading-row-parts",
+            Self::ReadingRowFromGroup { .. } => "reading-row-from-group",
+            Self::ReadingRowFromGroupIn { .. } => "reading-row-from-group-in",
+            Self::ReadingRowPartsOf { .. } => "reading-row-parts-of",
+            Self::ReadingRowPartMissing { .. } => "reading-row-part-missing",
+            Self::ReadingRowPartFromGroup { .. } => "reading-row-part-from-group",
+            Self::ReadingRowPartFromGroupIn { .. } => "reading-row-part-from-group-in",
+            Self::ReadingRowFromSource { .. } => "reading-row-from-source",
+            Self::ReaderCreditPagesSkipped { .. } => "reader-credit-pages-skipped",
             Self::ReadingAgoNow => "reading-ago-now",
             Self::ReadingAgoMinutes { .. } => "reading-ago-minutes",
             Self::ReadingAgoToday => "reading-ago-today",
@@ -1927,6 +1954,15 @@ impl ReadingMsg {
             Self::ReadingRowBookmarked => Vec::new(),
             Self::ReadingRowPages { n } => vec![("n", Value::Int(*n))],
             Self::ReadingRowVersions { n } => vec![("n", Value::Int(*n))],
+            Self::ReadingRowParts { n } => vec![("n", Value::Int(*n))],
+            Self::ReadingRowFromGroup { group } => vec![("group", Value::Text(group.clone()))],
+            Self::ReadingRowFromGroupIn { group, language } => vec![("group", Value::Text(group.clone())), ("language", Value::Text(language.clone()))],
+            Self::ReadingRowPartsOf { have, n } => vec![("have", Value::Int(*have)), ("n", Value::Int(*n))],
+            Self::ReadingRowPartMissing { count, part } => vec![("count", Value::Int(*count)), ("part", Value::Plain(*part))],
+            Self::ReadingRowPartFromGroup { part, group } => vec![("part", Value::Plain(*part)), ("group", Value::Text(group.clone()))],
+            Self::ReadingRowPartFromGroupIn { part, group, language } => vec![("part", Value::Plain(*part)), ("group", Value::Text(group.clone())), ("language", Value::Text(language.clone()))],
+            Self::ReadingRowFromSource { source } => vec![("source", Value::Text(source.clone()))],
+            Self::ReaderCreditPagesSkipped { count } => vec![("count", Value::Int(*count))],
             Self::ReadingAgoNow => Vec::new(),
             Self::ReadingAgoMinutes { minutes } => vec![("minutes", Value::Int(*minutes))],
             Self::ReadingAgoToday => Vec::new(),
