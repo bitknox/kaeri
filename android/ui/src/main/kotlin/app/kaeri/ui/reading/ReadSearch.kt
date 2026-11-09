@@ -9,6 +9,7 @@ package app.kaeri.ui.reading
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -46,6 +48,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,7 +95,9 @@ import app.kaeri.ui.sharedWork
 import app.kaeri.ui.wideWindow
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 
 /** The Started filter's choice that sets nothing. */
 internal const val STARTED_ANY = "any" // i18n-skip
@@ -129,6 +134,18 @@ internal fun ReadSearchScreen(startText: String? = null) {
     LaunchedEffect(search.query.text) {
         if (search.query.text != text.text.toString().trim()) text.setTextAndPlaceCursorAtEnd(search.query.text)
     }
+    // A new query starts the grid at its top and holds it there while the answer lands, rather
+    // than following an item it kept down the new list; a drag lets go. Loading more of the same
+    // query doesn't change the query, so it keeps its place.
+    val grid = rememberLazyGridState()
+    var holdTop by remember { mutableStateOf(false) }
+    LaunchedEffect(grid) {
+        store.reading.search.map { it.query }.distinctUntilChanged().drop(1).collect { holdTop = true }
+    }
+    LaunchedEffect(grid) {
+        grid.interactionSource.interactions.collect { if (it is DragInteraction.Start) holdTop = false }
+    }
+    if (holdTop) SideEffect { grid.requestScrollToItem(0) }
     val query = search.query
     val browsing = query.text.isBlank()
     val failure = search.failure ?: failures[ReadingAbout.SEARCH]?.takeIf { !search.loading }
@@ -161,7 +178,7 @@ internal fun ReadSearchScreen(startText: String? = null) {
             }
             ReadFilterRow(query, filters, browsing)
         }
-        PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp)) {
+        PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), grid) {
             when {
                 // With words: AniList's grid, then the sources' rows (ReadSourceResults.kt).
                 !browsing -> wordsResults(search, both, demo.onlyBooks)
