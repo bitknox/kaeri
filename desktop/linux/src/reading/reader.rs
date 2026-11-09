@@ -41,6 +41,7 @@ use super::{
 use crate::{motion, say, window::Ctx};
 
 mod end;
+mod keys;
 mod sheet;
 mod trail;
 
@@ -2617,6 +2618,17 @@ impl Reader {
             }
         });
         self.widget.add_controller(keys);
+        // Focus that lands on a page behind the reader comes back to it, and keys follow it.
+        if let Some(ctx) = self.ctx.upgrade() {
+            let this = Rc::downgrade(self);
+            keys::hold(
+                &ctx.window,
+                &self.widget,
+                Rc::new(move |key, modifiers| {
+                    this.upgrade().is_some_and(|this| this.take_key(key, modifiers))
+                }),
+            );
+        }
 
         // A closed reader lets go of what it held once the window has crossfaded away from it.
         self.widget.connect_unmap({
