@@ -9976,6 +9976,26 @@ read-search-done = { $anilist } from AniList, { $sources } from your sources.
 # A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".
 read-home-row-loading = { $row }, loading
 
+# Screen readers: the custom action on a discovery cover that puts the series on Planning.
+read-tile-add-planning = Add to Planning
+
+# Said once by screen readers when Your sources only turns on.
+read-search-anilist-hidden = AniList's results are hidden.
+
+# Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.
+read-search-said-anilist =
+    { $n ->
+        [one] 1 from AniList
+       *[other] { $n } from AniList
+    }
+
+# Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.
+read-search-said-sources =
+    { $n ->
+        [one] 1 from your sources
+       *[other] { $n } from your sources
+    }
+
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step } of { $total }
 

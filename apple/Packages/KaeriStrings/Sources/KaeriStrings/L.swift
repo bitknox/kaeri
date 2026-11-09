@@ -9532,6 +9532,22 @@ public enum L {
         Self.format("read-home-row-loading", fallback: "%1$@, loading", row)
     }
 
+    /// Screen readers: the custom action on a discovery cover that puts the series on Planning.
+    public static var readTileAddPlanning: String { string("read-tile-add-planning", fallback: "Add to Planning") }
+
+    /// Said once by screen readers when Your sources only turns on.
+    public static var readSearchAnilistHidden: String { string("read-search-anilist-hidden", fallback: "AniList's results are hidden.") }
+
+    /// Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.
+    public static func readSearchSaidAnilist(n: Int) -> String {
+        Self.format("read-search-said-anilist", fallback: "%1$lld from AniList", n)
+    }
+
+    /// Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.
+    public static func readSearchSaidSources(n: Int) -> String {
+        Self.format("read-search-said-sources", fallback: "%1$lld from your sources", n)
+    }
+
     /// Over a first-run page's title: which page of how many.
     public static func onboardingStep(step: Int, total: Int) -> String {
         Self.format("onboarding-step", fallback: "%1$lld of %2$lld", step, total)

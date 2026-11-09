@@ -95,6 +95,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -697,7 +698,8 @@ internal fun SearchChip(
     Box(
         Modifier
             .heightIn(min = 48.dp)
-            .clickable(enabled = enabled, onClick = onClick)
+            // A screen reader says what it is: a filter that opens its menu, or one that turns on and off.
+            .clickable(enabled = enabled, role = when { menu -> Role.DropdownList; leading != null -> Role.Button; else -> Role.Checkbox }, onClick = onClick)
             .semantics {
                 this.selected = selected
                 describe?.let { contentDescription = it }

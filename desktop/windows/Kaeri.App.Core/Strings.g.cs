@@ -6905,6 +6905,18 @@ public static partial class T
     /// <summary>A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".</summary>
     public static string ReadHomeRowLoading(string row) => Fill(Get("ReadHomeRowLoading"), ("row", row));
 
+    /// <summary>Screen readers: the custom action on a discovery cover that puts the series on Planning.</summary>
+    public static string ReadTileAddPlanning => Get("ReadTileAddPlanning");
+
+    /// <summary>Said once by screen readers when Your sources only turns on.</summary>
+    public static string ReadSearchAnilistHidden => Get("ReadSearchAnilistHidden");
+
+    /// <summary>Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.</summary>
+    public static string ReadSearchSaidAnilist(long n) => Fill(GetPlural("ReadSearchSaidAnilist", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.</summary>
+    public static string ReadSearchSaidSources(long n) => Fill(GetPlural("ReadSearchSaidSources", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Over a first-run page's title: which page of how many.</summary>
     public static string OnboardingStep(long step, long total) => Fill(Get("OnboardingStep"), ("step", step.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -14000,6 +14012,12 @@ public static partial class T
         ["ReadSearchSourcesOnlyLine"] = "AniList's results are hidden. The filters below apply to AniList's results only.",
         ["ReadSearchDone"] = "{anilist} from AniList, {sources} from your sources.",
         ["ReadHomeRowLoading"] = "{row}, loading",
+        ["ReadTileAddPlanning"] = "Add to Planning",
+        ["ReadSearchAnilistHidden"] = "AniList's results are hidden.",
+        ["ReadSearchSaidAnilist_one"] = "1 from AniList",
+        ["ReadSearchSaidAnilist_other"] = "{n} from AniList",
+        ["ReadSearchSaidSources_one"] = "1 from your sources",
+        ["ReadSearchSaidSources_other"] = "{n} from your sources",
         ["OnboardingStep"] = "{step} of {total}",
         ["OnboardingWelcomeLine"] = "Keep track of what you watch and read, from your own sources.",
         ["OnboardingWelcomeNote"] = "Your lists and progress stay on your devices. Trackers and sources are yours to add.",

@@ -1531,8 +1531,53 @@
     <string name="reader_sources_title">Read this chapter from</string>
     <!-- Heading on the Paper mode page above the parts it changes. -->
     <string name="reader_paper_parts">What it changes</string>
+    <!-- The e-reader's last tab: sources, trackers, sync, settings and About, each a row. -->
+    <string name="eink_tab_more">More</string>
+    <!-- The link at the end of a heading on e-ink Home that opens the whole list, such as all of Continue. -->
+    <string name="eink_home_all">All</string>
+    <!-- Heading on the e-reader's Home over the newest chapters that came out; All opens Updates. -->
+    <string name="eink_home_new_chapters">New chapters</string>
+    <!-- A row on the e-reader's More page that opens the tracker accounts. -->
+    <string name="eink_more_trackers">Trackers</string>
+    <!-- A row on the e-reader's More page that opens syncing with other devices. -->
+    <string name="eink_more_sync">Sync</string>
+    <!-- The line under Settings on the e-reader's More page: what the settings cover. -->
+    <string name="eink_more_settings_line">Storage, notifications and language</string>
+    <!-- Under the title of the e-reader's Downloads: what downloads take and what is free, such as "1.3 GB on this device · 21 GB free". -->
+    <string name="eink_downloads_space">%1$s on this device · %2$s free</string>
+    <!-- Under the title of the e-reader's Downloads when the free space isn't known. -->
+    <string name="eink_downloads_space_used">%1$s on this device</string>
+    <!-- Heading on the e-reader's Downloads over the chapters downloading or waiting. -->
+    <string name="eink_downloads_downloading">Downloading</string>
+    <!-- Heading on the e-reader's Downloads over the series with chapters kept here. -->
+    <string name="eink_downloads_here">On this device</string>
+    <!-- The line under Keep next chapters ready on the e-reader's Downloads while it is on. -->
+    <string name="eink_keep_ready_on">On · the next chapters of series you\'re reading</string>
+    <!-- The line under Keep next chapters ready on the e-reader's Downloads while it is off. -->
+    <string name="eink_keep_ready_off">Off</string>
     <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
     <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
+    <!-- Screen readers: a source group in Search while its source is still being asked. The source is its name. -->
+    <string name="read_search_source_busy">%1$s, searching</string>
+    <!-- The same, with the kind of source it is (Server, Folder or the plugin word). -->
+    <string name="read_search_source_busy_kind">%1$s, %2$s, searching</string>
+    <!-- Screen readers: a source group's heading in Search, its name and the kind of source it is. -->
+    <string name="read_search_source_named">%1$s, %2$s</string>
+    <!-- Screen readers: the reason under a source group whose source gave no answer in time. -->
+    <plurals name="read_search_source_timeout_spoken">
+        <item quantity="one">No answer in %1$,d second.</item>
+        <item quantity="other">No answer in %1$,d seconds.</item>
+    </plurals>
+    <!-- Screen readers: the Try again button of one source group in Search. The source is its name. -->
+    <string name="read_search_try_again_source">Try again, %1$s</string>
+    <!-- The line under "Nothing found in your sources" when Your sources only is on. -->
+    <string name="read_search_sources_only_nothing_line">Try other words.</string>
+    <!-- Screen readers: a reading cover with no line under its title. -->
+    <string name="read_tile_spoken_title">%1$s.</string>
+    <!-- Screen readers: a reading cover, its title and the line under it. -->
+    <string name="read_tile_spoken">%1$s. %2$s.</string>
+    <!-- Screen readers: a reading cover, its title, the line under it and where the person has it. -->
+    <string name="read_tile_spoken_in">%1$s. %2$s. %3$s.</string>
     <!-- Name of the notification channel for new chapters, shown in the system's settings. -->
     <string name="channel_chapters_name">New chapters</string>
     <!-- What the new chapters channel is for, shown in the system's settings. -->
@@ -5362,6 +5407,20 @@
     <string name="read_search_done">%1$,d from AniList, %2$,d from your sources.</string>
     <!-- A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga". -->
     <string name="read_home_row_loading">%1$s, loading</string>
+    <!-- Screen readers: the custom action on a discovery cover that puts the series on Planning. -->
+    <string name="read_tile_add_planning">Add to Planning</string>
+    <!-- Said once by screen readers when Your sources only turns on. -->
+    <string name="read_search_anilist_hidden">AniList\'s results are hidden.</string>
+    <!-- Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow. -->
+    <plurals name="read_search_said_anilist">
+        <item quantity="one">1 from AniList</item>
+        <item quantity="other">%1$,d from AniList</item>
+    </plurals>
+    <!-- Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list. -->
+    <plurals name="read_search_said_sources">
+        <item quantity="one">1 from your sources</item>
+        <item quantity="other">%1$,d from your sources</item>
+    </plurals>
     <!-- Over a first-run page's title: which page of how many. -->
     <string name="onboarding_step">%1$,d of %2$,d</string>
     <!-- Line under "Welcome to Kaeri" on the first page, naming both media. -->

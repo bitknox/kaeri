@@ -9604,6 +9604,30 @@
     <value>[{row}, ļöàðîñĝ~~~~]</value>
     <comment>A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".</comment>
   </data>
+  <data name="ReadTileAddPlanning" xml:space="preserve">
+    <value>[Åðð ţö Þļàññîñĝ~~~~~]</value>
+    <comment>Screen readers: the custom action on a discovery cover that puts the series on Planning.</comment>
+  </data>
+  <data name="ReadSearchAnilistHidden" xml:space="preserve">
+    <value>[ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ.~~~~~~~~~]</value>
+    <comment>Said once by screen readers when Your sources only turns on.</comment>
+  </data>
+  <data name="ReadSearchSaidAnilist_one" xml:space="preserve">
+    <value>[1 ƒŕöɱ ÅñîĻîšţ~~~~~]</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.</comment>
+  </data>
+  <data name="ReadSearchSaidAnilist_other" xml:space="preserve">
+    <value>[{n} ƒŕöɱ ÅñîĻîšţ~~~~~]</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.</comment>
+  </data>
+  <data name="ReadSearchSaidSources_one" xml:space="preserve">
+    <value>[1 ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~]</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.</comment>
+  </data>
+  <data name="ReadSearchSaidSources_other" xml:space="preserve">
+    <value>[{n} ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~~]</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.</comment>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>[{step} öƒ {total}~~~]</value>
     <comment>Over a first-run page's title: which page of how many.</comment>

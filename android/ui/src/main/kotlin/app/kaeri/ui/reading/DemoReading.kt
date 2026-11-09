@@ -232,15 +232,36 @@ internal fun DemoHomeSpotlight(actions: AppActions, modifier: Modifier = Modifie
     }
 }
 
-/** Under the demo's spotlight: that only the demo is on, and Add a source. */
+/**
+ * While the demo is the only thing to read: one line under its spotlight with Add a source beside
+ * it, stacked under the words when large text would squeeze them.
+ */
 @Composable
-internal fun DemoHomeEnd(modifier: Modifier = Modifier) {
+internal fun DemoOnlyLine(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val navigator = LocalNavigator.current
-    Column(modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp)) {
-        Text(Strings.homeDemoOnlyBooks(context), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        FilledTonalButton(onClick = { navigator.open(PROVIDERS_ROUTE) }, modifier = Modifier.padding(top = 12.dp).heightIn(min = 40.dp)) {
+    val stacked = androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f
+    val words = @Composable { m: Modifier ->
+        Text(Strings.homeDemoOnlyBooks(context), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = m)
+    }
+    val button = @Composable { m: Modifier ->
+        FilledTonalButton(onClick = { navigator.open(PROVIDERS_ROUTE) }, modifier = m.heightIn(min = 40.dp)) {
             Text(Strings.sourcesAddTitle(context))
+        }
+    }
+    if (stacked) {
+        Column(modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)) {
+            words(Modifier)
+            button(Modifier.padding(top = 12.dp))
+        }
+    } else {
+        Row(
+            modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            words(Modifier.weight(1f))
+            button(Modifier)
         }
     }
 }

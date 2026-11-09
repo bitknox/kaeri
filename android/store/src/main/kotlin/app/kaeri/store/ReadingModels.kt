@@ -37,6 +37,9 @@ import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.NewChapter
 import app.kaeri.engine.model.ReadFilters
 import app.kaeri.engine.model.ReadSearchQuery
+import app.kaeri.engine.model.ReadAnilistState
+import app.kaeri.engine.model.ReadSourceSearch
+import app.kaeri.engine.model.ReadSourceState
 import app.kaeri.engine.model.ReaderCommand
 import app.kaeri.engine.model.ReaderEvent
 import app.kaeri.engine.model.ReaderSettingKey
@@ -138,7 +141,88 @@ data class ReadSearchState(
     val total: UInt? = null,
     val loading: Boolean = false,
     val failure: ReadingFailure? = null,
-)
+    /**
+     * The sources' part of a search with words: AniList's state and one group per source, the
+     * newest the engine sent for [query]. `null` while browsing, and before the first send.
+     */
+    val sources: ReadSourceSearch? = null,
+    /** How many of [tiles] came on the first page: with words, the rest show under the sources. */
+    val firstPage: Int = 0,
+    /**
+     * [tiles], the count and [failure] are the answer to the words before [query], kept on screen
+     * as they were until [query]'s own answer replaces them, so new words never empty the page.
+     */
+    val stale: Boolean = false,
+    /** The groups in [sources] kept from the words before, by source id, each until it answers [query]. */
+    val staleSources: Set<String> = emptySet(),
+) {
+    /** Whether the search has words, so the sources are asked beside AniList. */
+    val words: Boolean get() = query.text.isNotBlank()
+}
+
+/** [this] with a page of AniList's answer in: the first page replaces, a later one adds. */
+private fun ReadSearchState.answered(event: ReadingEvent.Search): ReadSearchState {
+    val first = event.page == 0u
+    return copy(
+        tiles = if (first) event.tiles else tiles + event.tiles,
+        firstPage = if (first) event.tiles.size else firstPage,
+        page = event.page,
+        hasMore = event.hasMore,
+        otherScope = event.otherScope,
+        total = event.total ?: if (first) null else total,
+        loading = false,
+        failure = null,
+        stale = false,
+    )
+}
+
+/**
+ * [this] asked [query] anew: what is on screen stays, marked stale, until the answer to [query]
+ * replaces it part by part, AniList's grid when its first page lands and each source's row when
+ * that source answers. Browsing has no sources; a group still asking stays asking.
+ */
+internal fun ReadSearchState.asking(query: ReadSearchQuery): ReadSearchState {
+    val kept = sources?.takeIf { query.text.isNotBlank() }?.let {
+        it.copy(query = query, anilist = if (query.sourcesOnly) ReadAnilistState.SKIPPED else ReadAnilistState.ASKING, done = false)
+    }
+    return copy(
+        query = query,
+        loading = true,
+        page = 0u,
+        hasMore = false,
+        sources = kept,
+        stale = tiles.isNotEmpty() || failure != null,
+        staleSources = kept?.groups?.filter { it.state !is ReadSourceState.Asking }?.map { it.sourceId }?.toSet().orEmpty(),
+    )
+}
+
+/**
+ * [this] with the sources' newest answer to its query in. A group asking that still has a row
+ * kept from the words before keeps that row until it answers; one that answers takes its place
+ * and is no longer stale. A group's own Try again is never kept: it answered this query already.
+ */
+private fun ReadSearchState.sourcesIn(part: ReadSourceSearch): ReadSearchState {
+    val before = sources?.groups?.associateBy { it.sourceId }.orEmpty()
+    val asking = part.groups.filter { it.state is ReadSourceState.Asking }.map { it.sourceId }.toSet()
+    val groups = part.groups.map { group ->
+        val kept = before[group.sourceId]
+        if (group.sourceId in asking && group.sourceId in staleSources && kept != null) kept else group
+    }
+    return copy(
+        sources = part.copy(groups = groups),
+        staleSources = staleSources intersect asking,
+        // With Your sources only, AniList is not asked: the groups are the whole answer.
+        loading = if (part.query.sourcesOnly) false else loading,
+    )
+}
+
+/**
+ * [this] once AniList failed: a first page that failed takes the place of what the words before
+ * found; a later page keeps the pages already shown.
+ */
+private fun ReadSearchState.failedWith(failure: ReadingFailure): ReadSearchState =
+    if (stale) copy(loading = false, failure = failure, tiles = emptyList(), total = null, firstPage = 0, otherScope = null, stale = false)
+    else copy(loading = false, failure = failure)
 
 /** A finished download batch, said as a notification while Downloads finished is on. */
 data class DownloadsDone(val work: WorkId?, val title: Msg, val body: Msg)
@@ -161,6 +245,14 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     private val _search = MutableStateFlow(ReadSearchState())
     val search: StateFlow<ReadSearchState> = _search.asStateFlow()
+
+    private val _viewAll = MutableStateFlow(ReadSearchState())
+
+    /**
+     * A Home row's View all, pushed over Home with the row's filters: a search of its own, so
+     * Search keeps the words it had.
+     */
+    val viewAll: StateFlow<ReadSearchState> = _viewAll.asStateFlow()
 
     private val _series = MutableStateFlow<Map<WorkId, SeriesView>>(emptyMap())
     val series: StateFlow<Map<WorkId, SeriesView>> = _series.asStateFlow()
@@ -224,15 +316,47 @@ class ReadingModel(private val send: (Command) -> Unit) {
     fun downloadNew() = reading(ReadingCommand.DownloadNew)
     fun loadList(segment: LibrarySegmentRead) = reading(ReadingCommand.LoadLibrary(segment))
 
+    /** Search [query]: what is on screen stays until the answer replaces it ([asking]). */
     fun runSearch(query: ReadSearchQuery) {
-        _search.value = ReadSearchState(query = query, loading = true)
+        _search.value = _search.value.asking(query)
         reading(ReadingCommand.Search(query))
+    }
+
+    /** [query] marked as asked with nothing sent, for a Fixtures stage that answers it itself. */
+    internal fun askedForStage(query: ReadSearchQuery) {
+        _search.value = _search.value.asking(query)
     }
 
     fun searchMore() {
         val now = _search.value
         if (!now.hasMore || now.loading) return
         _search.value = now.copy(loading = true)
+        reading(ReadingCommand.SearchMore(now.query, now.page + 1u))
+    }
+
+    /** Ask one source again for the search on screen: its group's Try again. */
+    fun retrySource(sourceId: String) = reading(ReadingCommand.RetrySourceSearch(_search.value.query, sourceId))
+
+    /**
+     * A row's View all: its exact query, which the engine answers with the row's titles first.
+     * Opened from a row it starts afresh; a chip changed on the page keeps the titles on screen
+     * until the answer replaces them ([keep]).
+     */
+    fun runViewAll(query: ReadSearchQuery, keep: Boolean = false, first: List<WorkTile> = emptyList()) {
+        _viewAll.value = when {
+            keep -> _viewAll.value.asking(query)
+            // The row's covers stand in until the first page lands, so the page never opens empty.
+            first.isNotEmpty() -> ReadSearchState(query = query, tiles = first, loading = true, stale = true)
+            else -> ReadSearchState(query = query, loading = true)
+        }
+        reading(ReadingCommand.Search(query))
+    }
+
+    /** View all's next page, asked as its end comes into view. */
+    fun viewAllMore() {
+        val now = _viewAll.value
+        if (!now.hasMore || now.loading) return
+        _viewAll.value = now.copy(loading = true)
         reading(ReadingCommand.SearchMore(now.query, now.page + 1u))
     }
 
@@ -388,18 +512,13 @@ class ReadingModel(private val send: (Command) -> Unit) {
             is ReadingEvent.Updates -> _updates.value = event.v1
             is ReadingEvent.Library -> _lists.update { it + (event.segment to event.tiles) }
             is ReadingEvent.Search -> {
-                val now = _search.value
-                if (event.query != now.query) return
-                val first = event.page == 0u
-                _search.value = now.copy(
-                    tiles = if (first) event.tiles else now.tiles + event.tiles,
-                    page = event.page,
-                    hasMore = event.hasMore,
-                    otherScope = event.otherScope,
-                    total = event.total ?: if (first) null else now.total,
-                    loading = false,
-                    failure = null,
-                )
+                // View all and Search may ask the same query; each takes the answer to its own.
+                _search.update { if (event.query == it.query) it.answered(event) else it }
+                _viewAll.update { if (event.query == it.query) it.answered(event) else it }
+            }
+            is ReadingEvent.SourceSearch -> {
+                val part = event.v1
+                _search.update { now -> if (part.query != now.query) now else now.sourcesIn(part) }
             }
             is ReadingEvent.Series -> _series.update { it + (event.v1.work to event.v1) }
             is ReadingEvent.Chapters -> _chapters.update { it + (event.work to ReadChapters(event.edition, event.volumes, event.failure)) }
@@ -416,7 +535,10 @@ class ReadingModel(private val send: (Command) -> Unit) {
             is ReadingEvent.Failed -> {
                 _failures.update { it + (event.about to event.failure) }
                 if (event.about == ReadingAbout.HOME) _homeLoading.value = false
-                if (event.about == ReadingAbout.SEARCH) _search.update { it.copy(loading = false, failure = event.failure) }
+                if (event.about == ReadingAbout.SEARCH) {
+                    _search.update { it.failedWith(event.failure) }
+                    _viewAll.update { if (it.loading) it.failedWith(event.failure) else it }
+                }
             }
             else -> {}
         }

@@ -2857,9 +2857,93 @@ object Strings {
     fun readerPaperParts(context: Context): String =
         context.getString(R.string.reader_paper_parts)
 
+    /** The e-reader's last tab: sources, trackers, sync, settings and About, each a row. */
+    fun einkTabMore(context: Context): String =
+        context.getString(R.string.eink_tab_more)
+
+    /** The link at the end of a heading on e-ink Home that opens the whole list, such as all of Continue. */
+    fun einkHomeAll(context: Context): String =
+        context.getString(R.string.eink_home_all)
+
+    /** Heading on the e-reader's Home over the newest chapters that came out; All opens Updates. */
+    fun einkHomeNewChapters(context: Context): String =
+        context.getString(R.string.eink_home_new_chapters)
+
+    /** A row on the e-reader's More page that opens the tracker accounts. */
+    fun einkMoreTrackers(context: Context): String =
+        context.getString(R.string.eink_more_trackers)
+
+    /** A row on the e-reader's More page that opens syncing with other devices. */
+    fun einkMoreSync(context: Context): String =
+        context.getString(R.string.eink_more_sync)
+
+    /** The line under Settings on the e-reader's More page: what the settings cover. */
+    fun einkMoreSettingsLine(context: Context): String =
+        context.getString(R.string.eink_more_settings_line)
+
+    /** Under the title of the e-reader's Downloads: what downloads take and what is free, such as "1.3 GB on this device · 21 GB free". */
+    fun einkDownloadsSpace(context: Context, used: String, free: String): String =
+        context.getString(R.string.eink_downloads_space, used, free)
+
+    /** Under the title of the e-reader's Downloads when the free space isn't known. */
+    fun einkDownloadsSpaceUsed(context: Context, used: String): String =
+        context.getString(R.string.eink_downloads_space_used, used)
+
+    /** Heading on the e-reader's Downloads over the chapters downloading or waiting. */
+    fun einkDownloadsDownloading(context: Context): String =
+        context.getString(R.string.eink_downloads_downloading)
+
+    /** Heading on the e-reader's Downloads over the series with chapters kept here. */
+    fun einkDownloadsHere(context: Context): String =
+        context.getString(R.string.eink_downloads_here)
+
+    /** The line under Keep next chapters ready on the e-reader's Downloads while it is on. */
+    fun einkKeepReadyOn(context: Context): String =
+        context.getString(R.string.eink_keep_ready_on)
+
+    /** The line under Keep next chapters ready on the e-reader's Downloads while it is off. */
+    fun einkKeepReadyOff(context: Context): String =
+        context.getString(R.string.eink_keep_ready_off)
+
     /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
     fun readHomeOfflineLine(context: Context): String =
         context.getString(R.string.read_home_offline_line)
+
+    /** Screen readers: a source group in Search while its source is still being asked. The source is its name. */
+    fun readSearchSourceBusy(context: Context, source: String): String =
+        context.getString(R.string.read_search_source_busy, source)
+
+    /** The same, with the kind of source it is (Server, Folder or the plugin word). */
+    fun readSearchSourceBusyKind(context: Context, source: String, kind: String): String =
+        context.getString(R.string.read_search_source_busy_kind, source, kind)
+
+    /** Screen readers: a source group's heading in Search, its name and the kind of source it is. */
+    fun readSearchSourceNamed(context: Context, source: String, kind: String): String =
+        context.getString(R.string.read_search_source_named, source, kind)
+
+    /** Screen readers: the reason under a source group whose source gave no answer in time. */
+    fun readSearchSourceTimeoutSpoken(context: Context, seconds: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_source_timeout_spoken, seconds, seconds)
+
+    /** Screen readers: the Try again button of one source group in Search. The source is its name. */
+    fun readSearchTryAgainSource(context: Context, source: String): String =
+        context.getString(R.string.read_search_try_again_source, source)
+
+    /** The line under "Nothing found in your sources" when Your sources only is on. */
+    fun readSearchSourcesOnlyNothingLine(context: Context): String =
+        context.getString(R.string.read_search_sources_only_nothing_line)
+
+    /** Screen readers: a reading cover with no line under its title. */
+    fun readTileSpokenTitle(context: Context, title: String): String =
+        context.getString(R.string.read_tile_spoken_title, title)
+
+    /** Screen readers: a reading cover, its title and the line under it. */
+    fun readTileSpoken(context: Context, title: String, line: String): String =
+        context.getString(R.string.read_tile_spoken, title, line)
+
+    /** Screen readers: a reading cover, its title, the line under it and where the person has it. */
+    fun readTileSpokenIn(context: Context, title: String, line: String, where: String): String =
+        context.getString(R.string.read_tile_spoken_in, title, line, where)
 
     /** Name of the notification channel for new chapters, shown in the system's settings. */
     fun channelChaptersName(context: Context): String =
@@ -10099,6 +10183,22 @@ object Strings {
     /** A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga". */
     fun readHomeRowLoading(context: Context, row: String): String =
         context.getString(R.string.read_home_row_loading, row)
+
+    /** Screen readers: the custom action on a discovery cover that puts the series on Planning. */
+    fun readTileAddPlanning(context: Context): String =
+        context.getString(R.string.read_tile_add_planning)
+
+    /** Said once by screen readers when Your sources only turns on. */
+    fun readSearchAnilistHidden(context: Context): String =
+        context.getString(R.string.read_search_anilist_hidden)
+
+    /** Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow. */
+    fun readSearchSaidAnilist(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_said_anilist, n, n)
+
+    /** Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list. */
+    fun readSearchSaidSources(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.read_search_said_sources, n, n)
 
     /** Over a first-run page's title: which page of how many. */
     fun onboardingStep(context: Context, step: Int, total: Int): String =

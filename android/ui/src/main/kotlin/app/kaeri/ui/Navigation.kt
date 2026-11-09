@@ -43,6 +43,9 @@ internal fun seriesRoute(destination: Destination, work: WorkId) = "${destinatio
 /** The route pattern of the series page in [destination]'s back stack. */
 internal fun seriesPattern(destination: Destination) = "${destination.route}/series/{work}"
 
+/** The route pattern of a reading page pushed onto [destination]'s back stack: View all, e-ink Browse. */
+internal fun readPagePattern(destination: Destination) = "${destination.route}/read/{page}"
+
 /** The graph that holds [destination]'s back stack. */
 internal fun graphRoute(destination: Destination) = "${destination.route}-tab"
 
@@ -144,6 +147,11 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         private set
 
     /** Push the page at [route] over whatever is on screen. */
+    /** Push a reading page ([page] names it) onto the current destination's back stack. */
+    internal fun openReadPage(page: String) {
+        nav.navigate("${current().route}/read/${android.net.Uri.encode(page)}")
+    }
+
     fun open(route: String) {
         nav.currentBackStackEntry?.destinationOf()?.let { openedFrom = it }
         nav.navigate(route) { launchSingleTop = true }

@@ -1,5 +1,5 @@
 // Reading's Home: the spotlight, Continue as covers with a silk track, This week by day, Up next
-// for you, Releasing now, Because you finished, one genre shelf and the closing line. The engine
+// for you, the discovery rows (ReadDiscovery.kt) and the closing line. The engine
 // sends the whole view and decides the spotlight's case and words; this draws it. A section with
 // nothing leaves with its heading.
 
@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -138,11 +139,13 @@ import kotlinx.coroutines.launch
 /** How long a part waits before the activity line says it in words, as the Watch Home's does. */
 private const val ACTIVITY_AFTER = 4_000L
 
-/** How long placeholders stand once shown, so they never flicker away. */
-private const val PLACEHOLDERS_HELD = 300L
-
 @Composable
 internal fun ReadHomeScreen(actions: AppActions) {
+    // On e-ink, the board's one-screen Home on paper.
+    if (LocalEinkLayout.current != null) {
+        EinkHomeScreen(actions)
+        return
+    }
     val store = LocalAppStore.current
     val context = LocalContext.current
     val snackbars = LocalSnackbars.current
@@ -272,13 +275,20 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
     val discovery = heldPlaceholders(ReadHomePart.DISCOVERY in home.pending || ReadHomePart.BECAUSE in home.pending)
     // While the demo is the only thing to read, its own spotlight and end, as the demo's board draws them.
     val demo by store.demo.collectAsStateWithLifecycle()
+    val viewAll = rememberViewAll()
+    val eink = LocalEinkLayout.current
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = top, bottom = 24.dp)) {
         // The spotlight changes in place, a crossfade when its series or case moves.
         item(key = "spotlight", contentType = "spotlight") {
             val tile = home.spotlight?.takeUnless { it.work in goneSet }
             val spot = home.spot
             if (demo.onlyBooks) {
-                Box(itemMotion()) { DemoHomeSpotlight(actions, Modifier.padding(top = 8.dp)) }
+                Box(itemMotion()) {
+                    Column {
+                        DemoHomeSpotlight(actions, Modifier.padding(top = 8.dp))
+                        DemoOnlyLine()
+                    }
+                }
             } else Box(itemMotion()) {
                 AnimatedContent(
                     targetState = if (tile != null && spot != null) tile to spot else null,
@@ -312,43 +322,31 @@ private fun ReadHomeColumn(home: ReadingHomeView, actions: AppActions, gone: Mut
                 }
             }
         }
-        // Discovery stays away while only the demo is on: nothing there could be read yet.
-        val discover = !demo.onlyBooks
-        if (discover && home.releasing.isNotEmpty()) {
-            item(key = "releasing", contentType = "shelf") {
-                Box(itemMotion()) {
-                    TileShelf(Strings.homeReadReleasing(context), home.releasing, "read-releasing", Strings.homeSearch(context)) {
-                        ReadPlaces.search(store.reading, ReadingModel.EMPTY_QUERY)
-                        navigator.go(Destination.Search)
-                    }
-                }
+        // Discovery: the engine's rows in its order, each landing in place over its placeholders.
+        // While only the demo is on they show too, as the first run's catalogue to browse.
+        val rows = home.rows.filter { it.tiles.isNotEmpty() || it.pending }
+        if (eink != null && rows.isNotEmpty()) {
+            // E-ink keeps Home short: one Browse row opens the list of rows, or the list itself
+            // when there is nothing of the person's own above it.
+            val own = home.continueReading.isNotEmpty() || home.week.isNotEmpty() || home.upNext.isNotEmpty()
+            item(key = "browse", contentType = "browse") { Box(rowMotion()) { BrowseEntry(rows, inline = !own) } }
+        } else {
+            items(rows, key = { "row-${it.id}" }, contentType = { "row" }) { row ->
+                Box(rowMotion()) { DiscoveryRow(row, viewAll) }
             }
         }
-        val because = home.becauseTitle
-        if (discover && because != null && home.because.isNotEmpty()) {
-            item(key = "because", contentType = "shelf") {
-                Box(itemMotion()) { TileShelf(Strings.homeBecause(context, because), home.because, "read-because") }
-            }
-        }
-        val genre = home.genre
-        if (discover && genre != null && home.genreShelf.isNotEmpty()) {
-            item(key = "genre", contentType = "shelf") {
-                Box(itemMotion()) {
-                    TileShelf(Strings.homeMoreGenre(context, genre), home.genreShelf, "read-genre", Strings.homeSearch(context)) {
-                        ReadPlaces.search(store.reading, ReadingModel.EMPTY_QUERY.copy(genres = listOf(genre)))
-                        navigator.go(Destination.Search)
-                    }
-                }
-            }
-        }
-        // What is still on its way, held in place below what has arrived.
-        if (discover && discovery) {
+        // Before the engine has planned any rows, two shelves' placeholders hold their place.
+        if (rows.isEmpty() && discovery) {
             item(key = "discovery-pending", contentType = "pending") {
                 Box(itemMotion()) { Column { ShelfPlaceholder(); ShelfPlaceholder() } }
             }
         }
+        if (rows.isEmpty() && home.offline && !discovery) {
+            item(key = "offline-rows", contentType = "end") { Box(itemMotion()) { OfflineRowsLine() } }
+        }
         if (demo.onlyBooks) {
-            item(key = "end", contentType = "end") { Box(itemMotion()) { DemoHomeEnd() } }
+            // The demo's line sits under its spotlight, so the end is the everyday one.
+            item(key = "end", contentType = "end") { Box(itemMotion()) { ReadEndLine(ReadHomeEnd.EVERYTHING) } }
         } else home.end?.let { end ->
             item(key = "end", contentType = "end") { Box(itemMotion()) { ReadEndLine(end) } }
         }
@@ -628,7 +626,7 @@ private fun ContinueShelf(tiles: List<WorkTile>, actions: AppActions, hide: (Wor
     val context = LocalContext.current
     val navigator = LocalNavigator.current
     Column(Modifier.padding(top = shelfTop())) {
-        ReadShelfHeading(Strings.navContinue(context))
+        ReadShelfHeading(Strings.homeReadContinue(context))
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(cardGap())) {
             items(tiles.take(12), key = { "c-${it.work}" }, contentType = { "cover" }) { tile ->
                 var menu by remember { mutableStateOf(false) }
@@ -674,7 +672,12 @@ private fun TileShelf(title: String, tiles: List<WorkTile>, from: String, link: 
         ReadShelfHeading(title, link, onLink)
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(cardGap())) {
             items(tiles, key = { "$from-${it.work}" }, contentType = { "cover" }) { tile ->
-                Box(itemMotion()) { ReadTile(tile, posterWidth(), from = from, lines = 2) }
+                // A long press offers Details alone: these are the person's own, already on a list.
+                var menu by remember { mutableStateOf(false) }
+                Box(itemMotion()) {
+                    ReadTile(tile, posterWidth(), from = from, lines = 2, onLongClick = { menu = true })
+                    ReadTileMenu(tile, menu, current = null, lists = false) { menu = false }
+                }
             }
         }
     }
@@ -764,12 +767,21 @@ private fun ReadWeekCell(entry: ReadWeekEntry) {
     // The chapter that came out this day; for one only expected, the chapter the engine expects,
     // and nothing when it has no confident guess.
     val chapter = if (entry.usually) entry.chapter?.text(context) else (entry.chapter ?: tile.next)?.text(context)
+    // A long press offers Details alone, as Up next's covers do.
+    var menu by remember { mutableStateOf(false) }
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    Box { ReadTileMenu(tile, menu, current = null, lists = false) { menu = false } }
     Row(
         Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp)
             .sharedWork(Shared.Page, tile.work, "read-week")
-            .clickable(onClickLabel = stringResource(R.string.title_open), role = Role.Button) { navigator.openSeries(tile.work, "read-week") }
+            .combinedClickable(
+                onClickLabel = stringResource(R.string.title_open),
+                role = Role.Button,
+                onLongClickLabel = stringResource(R.string.action_more),
+                onLongClick = { haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress); menu = true },
+            ) { navigator.openSeries(tile.work, "read-week") }
             .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {

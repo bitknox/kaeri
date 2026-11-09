@@ -127,6 +127,20 @@ internal object Icons {
     /** Something failed: the warning triangle, in vermilion where it is used. */
     val Problem = stroked("Problem", "M10.3 4.4 A2 2 0 0 1 13.7 4.4 L21 17.5 A2 2 0 0 1 19.3 20.5 H4.7 A2 2 0 0 1 3 17.5 Z", "M12 9.5 V13.5 M12 16.8 V16.81")
 
+    /** The problem glyph filled, its mark cut out, as the discovery board draws a failure: tinted by its icon. */
+    val ProblemFilled = ImageVector.Builder(
+        name = "ProblemFilled", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f,
+    ).apply {
+        addPath(
+            pathData = addPathNodes(
+                "M10.3 4.4 A2 2 0 0 1 13.7 4.4 L21 17.5 A2 2 0 0 1 19.3 20.5 H4.7 A2 2 0 0 1 3 17.5 Z " +
+                    "M11 9 H13 V14 H11 Z M12 15.6 A1.2 1.2 0 1 1 11.99 15.6 Z",
+            ),
+            fill = SolidColor(Color.Black),
+            pathFillType = androidx.compose.ui.graphics.PathFillType.EvenOdd,
+        )
+    }.build()
+
     /** The play glyph on the amber action, filled in the action's text colour. */
     val Play = ImageVector.Builder(
         name = "Play", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f,

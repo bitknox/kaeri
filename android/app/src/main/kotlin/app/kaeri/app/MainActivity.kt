@@ -21,6 +21,9 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.pm.ShortcutManagerCompat
@@ -58,6 +61,8 @@ import app.kaeri.ui.AppLink
 import app.kaeri.ui.AppRoot
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
+import app.kaeri.ui.reading.LocalEinkLayout
+import app.kaeri.eink.EinkLook
 import app.kaeri.reader.phone.ReaderLauncher
 import app.kaeri.reader.phone.ReaderRequest
 import app.kaeri.reader.phone.SettingsPane
@@ -239,8 +244,23 @@ class MainActivity : ComponentActivity() {
                 { tv.offer(TvPlayRequest(id, model.showTitle, episode, model.position, fromPlayer = true)) }
             }
         }
+        // The window's recomposer, so an e-ink panel can stop every animation in it.
+        val motion = PanelMotion(contentResolver).also { it.install(this) }
         traced("setContent") { setContent {
             KaeriTheme {
+                // On an e-ink panel the app draws the e-ink shell: paper, ink and nothing moving.
+                val einkState by app.eink.state.collectAsState()
+                val einkLayout = if (einkState.eink) EinkLook(colour = einkState.amber) else null
+                androidx.compose.runtime.SideEffect { motion.still = einkState.eink }
+                // Dark icons on paper; light ones on the dark ground.
+                val decor = androidx.compose.ui.platform.LocalView.current
+                androidx.compose.runtime.LaunchedEffect(einkState.eink) {
+                    androidx.core.view.WindowCompat.getInsetsController(window, decor).run {
+                        isAppearanceLightStatusBars = einkState.eink
+                        isAppearanceLightNavigationBars = einkState.eink
+                    }
+                }
+                CompositionLocalProvider(LocalEinkLayout provides einkLayout) {
                 ReaderHost(app.store, app.eink) { AppRoot(
                     app.store,
                     if (search != null) Destination.Search else start,
@@ -254,6 +274,7 @@ class MainActivity : ComponentActivity() {
                     onSection = { section -> app.appUpdates?.section = section },
                     firstLaunch = firstLaunch,
                 ) }
+                }
             }
         } }
         if (Flavour.FIXTURES || debuggable) announceReady()

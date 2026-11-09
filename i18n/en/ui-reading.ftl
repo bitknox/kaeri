@@ -1026,6 +1026,28 @@ read-search-done = { $anilist } from AniList, { $sources } from your { -source-p
 # @arg row: text
 read-home-row-loading = { $row }, loading
 
+# Screen readers: the custom action on a discovery cover that puts the series on Planning.
+read-tile-add-planning = Add to Planning
+
+# Said once by screen readers when Your sources only turns on.
+read-search-anilist-hidden = AniList's results are hidden.
+
+# Said once by screen readers when every part of a search has answered: how many series AniList
+# found. The sources' count and any source that didn't answer follow.
+# @arg n: int
+read-search-said-anilist = { $n ->
+    [one] 1 from AniList
+   *[other] { $n } from AniList
+ }
+
+# Said once by screen readers when every part of a search has answered: how many series the
+# person's sources found that AniList did not list.
+# @arg n: int
+read-search-said-sources = { $n ->
+    [one] 1 from your { -source-pl }
+   *[other] { $n } from your { -source-pl }
+ }
+
 ## First run with reading on
 
 # Over a first-run page's title: which page of how many.

@@ -9604,6 +9604,30 @@
     <value>{row}, loading</value>
     <comment>A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".</comment>
   </data>
+  <data name="ReadTileAddPlanning" xml:space="preserve">
+    <value>Add to Planning</value>
+    <comment>Screen readers: the custom action on a discovery cover that puts the series on Planning.</comment>
+  </data>
+  <data name="ReadSearchAnilistHidden" xml:space="preserve">
+    <value>AniList's results are hidden.</value>
+    <comment>Said once by screen readers when Your sources only turns on.</comment>
+  </data>
+  <data name="ReadSearchSaidAnilist_one" xml:space="preserve">
+    <value>1 from AniList</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.</comment>
+  </data>
+  <data name="ReadSearchSaidAnilist_other" xml:space="preserve">
+    <value>{n} from AniList</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow.</comment>
+  </data>
+  <data name="ReadSearchSaidSources_one" xml:space="preserve">
+    <value>1 from your sources</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.</comment>
+  </data>
+  <data name="ReadSearchSaidSources_other" xml:space="preserve">
+    <value>{n} from your sources</value>
+    <comment>Said once by screen readers when every part of a search has answered: how many series the person's sources found that AniList did not list.</comment>
+  </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} of {total}</value>
     <comment>Over a first-run page's title: which page of how many.</comment>

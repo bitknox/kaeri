@@ -844,3 +844,66 @@ reader-sources-title = Read this chapter from
 # @only android
 # @max 30
 reader-paper-parts = What it changes
+
+# The e-reader's last tab: sources, trackers, sync, settings and About, each a row.
+# @only android
+# @max 12
+eink-tab-more = More
+
+# The link at the end of a heading on e-ink Home that opens the whole list, such as all of Continue.
+# @only android
+# @max 12
+eink-home-all = All
+
+# Heading on the e-reader's Home over the newest chapters that came out; All opens Updates.
+# @only android
+# @max 30
+eink-home-new-chapters = New chapters
+
+# A row on the e-reader's More page that opens the tracker accounts.
+# @only android
+# @max 30
+eink-more-trackers = { -tracker-cap-pl }
+
+# A row on the e-reader's More page that opens syncing with other devices.
+# @only android
+# @max 30
+eink-more-sync = Sync
+
+# The line under Settings on the e-reader's More page: what the settings cover.
+# @only android
+# @max 60
+eink-more-settings-line = Storage, notifications and language
+
+# Under the title of the e-reader's Downloads: what downloads take and what is free, such as "1.3 GB on this device · 21 GB free".
+# @only android
+# @arg used: text
+# @arg free: text
+# @max 60
+eink-downloads-space = { $used } on this { -device } · { $free } free
+
+# Under the title of the e-reader's Downloads when the free space isn't known.
+# @only android
+# @arg used: text
+# @max 60
+eink-downloads-space-used = { $used } on this { -device }
+
+# Heading on the e-reader's Downloads over the chapters downloading or waiting.
+# @only android
+# @max 30
+eink-downloads-downloading = Downloading
+
+# Heading on the e-reader's Downloads over the series with chapters kept here.
+# @only android
+# @max 30
+eink-downloads-here = On this { -device }
+
+# The line under Keep next chapters ready on the e-reader's Downloads while it is on.
+# @only android
+# @max 80
+eink-keep-ready-on = On · the next chapters of series you're reading
+
+# The line under Keep next chapters ready on the e-reader's Downloads while it is off.
+# @only android
+# @max 60
+eink-keep-ready-off = Off
