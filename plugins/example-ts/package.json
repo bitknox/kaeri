@@ -8,6 +8,6 @@
     "build": "jco componentize src/plugin.js --wit ../../wit/kaeri-provider.wit --world-name plugin --out kaeri-example-plugin-ts.wasm --disable all"
   },
   "devDependencies": {
-    "@bytecodealliance/jco": "^1.39.0"
+    "@bytecodealliance/jco": "^1.40.0"
   }
 }
