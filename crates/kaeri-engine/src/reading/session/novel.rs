@@ -48,8 +48,59 @@ pub(super) type Slot = Arc<Mutex<Option<(u64, Prepared)>>>;
 pub(super) enum Prepared {
     /// Pictures: read through the page worker from this file.
     Pages(PathBuf),
+    /// A source's pictures fetched into this folder, with its parts when it has them.
+    Streamed(PathBuf, Option<Parts>),
     Novel(Box<NovelBook>),
     Failed(ReadingFailure),
+}
+
+/// A chapter of pictures in parts, as fetched: each part's first page from 0 through every
+/// page, and what the reader is told of it.
+#[derive(Debug, Clone)]
+pub(super) struct Parts {
+    pub starts: Vec<(u32, kaeri_model::reader::ChapterPart)>,
+    pub total: u32,
+    pub missing: Vec<u32>,
+}
+
+impl Parts {
+    fn of(opened: &crate::read_sources::Opened) -> Option<Self> {
+        if opened.parts.len() < 2 && opened.missing.is_empty() {
+            return None;
+        }
+        let starts = opened
+            .spans()
+            .into_iter()
+            .zip(&opened.parts)
+            .map(|((start, _), part)| {
+                let group = part.chapter.version_label.clone();
+                let other_group = group.is_some() && group != opened.group;
+                let mark = kaeri_model::reader::ChapterPart {
+                    number: part.number,
+                    first_page: start + 1,
+                    group,
+                    other_group,
+                };
+                (start, mark)
+            })
+            .collect();
+        Some(Self { starts, total: opened.total, missing: opened.missing.clone() })
+    }
+
+    /// The parts with their first pages as the reader counts them, the credit pages at
+    /// `skipped` (from 0, through every page) left out.
+    pub fn shown(&self, skipped: &[u32]) -> Vec<kaeri_model::reader::ChapterPart> {
+        self.starts
+            .iter()
+            .map(|(start, mark)| {
+                let before = skipped.iter().filter(|p| **p < *start).count() as u32;
+                kaeri_model::reader::ChapterPart {
+                    first_page: start - before + 1,
+                    ..mark.clone()
+                }
+            })
+            .collect()
+    }
 }
 
 /// The novel open in the web view.
@@ -171,7 +222,7 @@ async fn fetch_pages(
     }
     let (work, chapter) = at;
     prints.keep(sources.store(), work.as_str(), chapter.as_str(), opened.group.as_deref(), now);
-    Prepared::Pages(dir.to_owned())
+    Prepared::Streamed(dir.to_owned(), Parts::of(opened))
 }
 
 /// The extension a page's bytes are of, by their first bytes, for the page worker.
@@ -454,7 +505,16 @@ impl Session {
         let Some((_, prepared)) = taken else { return };
         match prepared {
             Prepared::Failed(failure) => failed(cx, failure),
-            Prepared::Pages(path) => {
+            Prepared::Pages(path) | Prepared::Streamed(path, None) => {
+                self.parts = None;
+                let chapter = &mut self.chapters[self.at];
+                chapter.path = path;
+                chapter.format = "pages".into();
+                let page = self.start.page.unwrap_or(0);
+                self.lay_out(cx, pages, page);
+            }
+            Prepared::Streamed(path, Some(parts)) => {
+                self.parts = Some((self.chapters[self.at].id.clone(), parts));
                 let chapter = &mut self.chapters[self.at];
                 chapter.path = path;
                 chapter.format = "pages".into();

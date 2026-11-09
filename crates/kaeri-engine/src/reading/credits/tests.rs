@@ -162,3 +162,24 @@ async fn the_recorder_keeps_each_parts_edges_with_the_group() {
     assert!(kept.iter().all(|p| p.group_label.as_deref() == Some("Group Example")));
     assert!(kept.iter().any(|p| p.page == 4 && p.at_end));
 }
+
+#[test]
+fn only_chapters_from_the_same_group_count() {
+    let credit = PagePrint { page: 11, at_end: true, print: 0x5555_aaaa_5555_aaaa };
+    let theirs = |chapter: &str, group: Option<&str>| KeptPrint {
+        chapter: chapter.into(),
+        page: 11,
+        at_end: true,
+        print: credit.print,
+        group_label: group.map(str::to_owned),
+    };
+    let mine = [credit];
+    // Two chapters of another group share the page: that group's credits, not this one's.
+    let other = [theirs("1", Some("Group B")), theirs("2", Some("Group B"))];
+    assert!(credit_pages(&other, &[], ("3", Some("Group A")), &mine).is_empty());
+    let same = [theirs("1", Some("Group A")), theirs("2", Some("Group A"))];
+    assert_eq!(credit_pages(&same, &[], ("3", Some("Group A")), &mine), mine);
+    // A chapter whose group is not known counts with any.
+    let unknown = [theirs("1", None), theirs("2", Some("Group B"))];
+    assert_eq!(credit_pages(&unknown, &[], ("3", None), &mine), mine);
+}

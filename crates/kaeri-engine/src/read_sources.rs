@@ -1231,6 +1231,9 @@ pub struct Opened {
     pub parts: Vec<OpenedPart>,
     /// The group it is read in, as the source names it.
     pub group: Option<String>,
+    /// For a chapter in parts: the parts in all, and those no group lists.
+    pub total: u32,
+    pub missing: Vec<u32>,
 }
 
 /// One part of a chapter opened in parts.
@@ -1238,6 +1241,19 @@ pub struct Opened {
 pub struct OpenedPart {
     pub chapter: SourceChapter,
     pub pages: Vec<PageRef>,
+    /// Its number, from 1.
+    pub number: u32,
+}
+
+/// A chapter's entries in a source's list, in reading order, as [`BookSources::open`] reads
+/// them.
+#[derive(Debug)]
+struct Found {
+    entries: Vec<SourceChapter>,
+    /// For a chapter in parts: each entry's part number, the parts in all and those missing.
+    numbers: Vec<u32>,
+    total: u32,
+    missing: Vec<u32>,
 }
 
 impl Opened {
@@ -1614,11 +1630,9 @@ impl BookSources {
             group.all_read =
                 group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
         }
-        let editions = self.editions(work);
-        let row = editions.into_iter().find(|e| e.source_id == source).map(|mut e| {
-            e.chapters = u32::try_from(arranged.rows.len()).unwrap_or(u32::MAX);
-            e
-        });
+        // The list just kept, counted as every screen counts it: one per chapter, its parts and
+        // its groups' releases as one.
+        let row = self.editions(work).into_iter().find(|e| e.source_id == source);
         Ok((row, groups))
     }
 
@@ -1631,10 +1645,14 @@ impl BookSources {
         edition: Option<&str>,
         now: i64,
     ) -> Result<Opened, ReadingFailure> {
-        let (source, series, mut found) =
-            self.find_chapter(work, chapter, edition, now).await?;
+        let (source, series, found) = self.find_chapter(work, chapter, edition, now).await?;
+        let Found { entries: mut found, numbers, total, missing } = found;
+        // The group the chapter is read in: its first part's, as a part from another group is
+        // named on its own.
         let group = found[0].version_label.clone();
         let first = found.remove(0);
+        let mut numbers = numbers.into_iter();
+        let first_number = numbers.next().unwrap_or(1);
         let content = self
             .registry
             .content(&source, &series, &first.id, now)
@@ -1647,6 +1665,8 @@ impl BookSources {
             content,
             parts: Vec::new(),
             group,
+            total,
+            missing,
         };
         if found.is_empty() {
             return Ok(opened);
@@ -1655,7 +1675,7 @@ impl BookSources {
         // part is a whole file opens as that file.
         let mut parts = Vec::new();
         let mut text = String::new();
-        for part in found {
+        for (part, number) in found.into_iter().zip(numbers.chain(std::iter::repeat(0))) {
             let more = self
                 .registry
                 .content(&opened.source_id, &opened.series_ref, &part.id, now)
@@ -1663,7 +1683,7 @@ impl BookSources {
                 .map_err(|e| failure(&opened.source_id, &e))?;
             match more {
                 ChapterContent::Images(pages) => {
-                    parts.push(OpenedPart { chapter: part, pages })
+                    parts.push(OpenedPart { chapter: part, pages, number })
                 }
                 ChapterContent::Text(xhtml) => text.push_str(&xhtml),
                 ChapterContent::Book(_) => {}
@@ -1671,8 +1691,11 @@ impl BookSources {
         }
         match &mut opened.content {
             ChapterContent::Images(pages) => {
-                let first =
-                    OpenedPart { chapter: opened.chapter.clone(), pages: pages.clone() };
+                let first = OpenedPart {
+                    chapter: opened.chapter.clone(),
+                    pages: pages.clone(),
+                    number: first_number,
+                };
                 parts.insert(0, first);
                 *pages = parts.iter().flat_map(|p| p.pages.iter().cloned()).collect();
                 opened.parts = parts;
@@ -1693,7 +1716,7 @@ impl BookSources {
         chapter: &ChapterId,
         edition: Option<&str>,
         now: i64,
-    ) -> Result<(String, String, Vec<SourceChapter>), ReadingFailure> {
+    ) -> Result<(String, String, Found), ReadingFailure> {
         let (source, series) =
             self.edition_of(work, edition).ok_or(ReadingFailure::NotFound)?;
         let found = self.find_in(work, &source, &series, chapter, now).await;
@@ -1730,7 +1753,7 @@ impl BookSources {
         series: &str,
         chapter: &ChapterId,
         now: i64,
-    ) -> Result<Vec<SourceChapter>, ReadingFailure> {
+    ) -> Result<Found, ReadingFailure> {
         let chapters = self
             .registry
             .chapters(source, series, &BookHints::default(), now)
@@ -1744,7 +1767,12 @@ impl BookSources {
             self.language().as_deref(),
         );
         let row = arranged.row(chapter).ok_or(ReadingFailure::NotFound)?;
-        Ok(row.parts.iter().map(|&i| chapters[i].clone()).collect())
+        Ok(Found {
+            entries: row.parts.iter().map(|&i| chapters[i].clone()).collect(),
+            numbers: row.numbers.clone(),
+            total: row.total,
+            missing: row.missing.clone(),
+        })
     }
 
     /// The first page of a chapter of pictures, and nothing more of it: the reader's preview of
@@ -1757,8 +1785,8 @@ impl BookSources {
         chapter: &ChapterId,
         now: i64,
     ) -> Result<Option<Vec<u8>>, ReadingFailure> {
-        let (source, series, mut found) = self.find_chapter(work, chapter, None, now).await?;
-        let found = found.remove(0);
+        let (source, series, found) = self.find_chapter(work, chapter, None, now).await?;
+        let found = found.entries.into_iter().next().ok_or(ReadingFailure::NotFound)?;
         let pages = self
             .registry
             .chapter_pages(&source, &series, &found.id, now)
@@ -1772,6 +1800,8 @@ impl BookSources {
             chapter: found,
             content: ChapterContent::Images(pages),
             parts: Vec::new(),
+            total: 0,
+            missing: Vec::new(),
         };
         self.page(&mut opened, 0, now).await.map(Some)
     }

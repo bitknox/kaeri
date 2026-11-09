@@ -285,7 +285,6 @@ pub fn summary(
     app_language: Option<&str>,
 ) -> Summary {
     let Some((list, _)) = kept(store, source, series) else { return Summary::default() };
-    let ids: HashSet<&str> = list.iter().map(|c| c.id.as_str()).collect();
     let mut counts: HashMap<&String, usize> = HashMap::new();
     for c in &list {
         if let Some(v) = c.language.as_ref() {
@@ -299,7 +298,8 @@ pub fn summary(
     let entries: Vec<SourceChapter> = list.iter().map(Kept::to_source).collect();
     let arranged = super::arrange::arrange(&entries, chosen, app_language);
     Summary {
-        chapters: u32::try_from(ids.len()).unwrap_or(u32::MAX),
+        // One per chapter: its parts and its groups' releases count once.
+        chapters: u32::try_from(arranged.rows.len()).unwrap_or(u32::MAX),
         latest: list.last().map(|c| c.number.clone().unwrap_or_else(|| c.label.clone())),
         language,
         version_label: arranged.preferred,

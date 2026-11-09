@@ -218,6 +218,8 @@ pub struct Session {
     restore: Option<NovelPos>,
     /// What a chapter opened off the actor gave.
     prepared: novel::Slot,
+    /// The open chapter's parts, when it is a source's chapter of pictures in parts.
+    parts: Option<(ChapterId, novel::Parts)>,
     /// "Resumed at page N" waits for a novel's first page.
     novel_resumed: bool,
     /// A work of the reading demo, whose credit the reader shows.
@@ -585,6 +587,7 @@ impl Reader {
             novel: None,
             restore,
             prepared: Arc::default(),
+            parts: None,
             novel_resumed: false,
         };
         let pages = self.pages(cx);
@@ -964,8 +967,20 @@ impl Session {
             cx.send(ReaderEvent::CreditPages {
                 session: self.id,
                 chapter: self.chapter().id.clone(),
-                pages: laid.credits,
+                pages: laid.credits.clone(),
                 msg: Msg::Reading(ReadingMsg::ReaderCreditPagesSkipped { count }),
+            });
+        }
+        if let Some((chapter, parts)) = &self.parts
+            && chapter == &self.chapter().id
+        {
+            let skipped: Vec<u32> = laid.credits.iter().map(|c| c.page).collect();
+            cx.send(ReaderEvent::ChapterParts {
+                session: self.id,
+                chapter: chapter.clone(),
+                parts: parts.shown(&skipped),
+                total: parts.total,
+                missing: parts.missing.clone(),
             });
         }
         if let Some(msg) = said {

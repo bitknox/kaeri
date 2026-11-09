@@ -5,8 +5,8 @@
 //! reader as it streams a chapter, by downloads as they write one, and by the page worker for a
 //! file opened with none kept. A chapter in parts has the edges of each part. A page whose
 //! fingerprint is the same page (see [`kaeri_pages::print::same_page`]) at an edge of
-//! [`CHAPTERS`] or more chapters of the series is a credit page, unless the person said it is
-//! not. Nothing more is asked of the source, and nothing is deleted: the reader leaves the page
+//! [`CHAPTERS`] or more chapters of the series from the same group is a credit page, unless the
+//! person said it is not. A chapter whose group is not known counts with any group. Nothing more is asked of the source, and nothing is deleted: the reader leaves the page
 //! out of the chapter's pages and says so, and the page is a tap away.
 
 use std::collections::HashSet;
@@ -60,19 +60,24 @@ impl std::fmt::Debug for CreditCheck {
     }
 }
 
-/// The pages of `chapter` that are credit pages, from its own edge fingerprints, those of the
-/// work's other chapters, and the fingerprints the person kept.
+/// The pages of `chapter`, read in `group`, that are credit pages, from its own edge
+/// fingerprints, those of the work's other chapters in the same group, and the fingerprints the
+/// person kept.
 pub(crate) fn credit_pages(
     all: &[KeptPrint],
     kept: &[u64],
-    chapter: &str,
+    (chapter, group): (&str, Option<&str>),
     mine: &[PagePrint],
 ) -> Vec<PagePrint> {
+    let same_group = |other: &KeptPrint| match (other.group_label.as_deref(), group) {
+        (Some(theirs), Some(ours)) => theirs == ours,
+        _ => true,
+    };
     mine.iter()
         .filter(|p| !kept.iter().any(|k| same_page(*k, p.print)))
         .filter(|p| {
             let mut chapters: HashSet<&str> = HashSet::from([chapter]);
-            for other in all.iter().filter(|o| same_page(o.print, p.print)) {
+            for other in all.iter().filter(|o| same_group(o) && same_page(o.print, p.print)) {
                 chapters.insert(other.chapter.as_str());
             }
             chapters.len() >= CHAPTERS
@@ -91,6 +96,11 @@ impl CreditCheck {
             return Vec::new();
         }
         let mut all = self.store.page_prints(&self.work).unwrap_or_default();
+        // The group the chapter was read in, as its fingerprints were kept.
+        let group = all
+            .iter()
+            .find(|p| p.chapter == self.chapter && p.group_label.is_some())
+            .and_then(|p| p.group_label.clone());
         let mut mine: Vec<PagePrint> = all
             .iter()
             .filter(|p| p.chapter == self.chapter && p.page < count)
@@ -121,7 +131,7 @@ impl CreditCheck {
             mine.extend(fresh);
         }
         let kept = self.store.kept_credit_pages(&self.work).unwrap_or_default();
-        let mut credits = credit_pages(&all, &kept, &self.chapter, &mine);
+        let mut credits = credit_pages(&all, &kept, (&self.chapter, group.as_deref()), &mine);
         credits.sort_by_key(|p| p.page);
         credits.dedup_by_key(|p| p.page);
         if credits.len() >= files.len() {

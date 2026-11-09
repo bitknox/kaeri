@@ -441,9 +441,17 @@ impl ReaderSettingKey {
     }
 
     /// Whether the medium's value follows the person to their other devices: the choices (mode,
-    /// direction, colour, look, font). Layout stays on each device.
+    /// direction, colour, look, font, skipping credit pages). Layout stays on each device.
     pub const fn syncs(self) -> bool {
-        matches!(self, Self::Mode | Self::Direction | Self::Colour | Self::Look | Self::Font)
+        matches!(
+            self,
+            Self::Mode
+                | Self::Direction
+                | Self::Colour
+                | Self::Look
+                | Self::Font
+                | Self::SkipCreditPages
+        )
     }
 }
 
@@ -1053,6 +1061,35 @@ pub enum ReaderEvent {
         pages: Vec<CreditPage>,
         msg: Msg,
     },
+    /// The open chapter is read in parts: one count of pages with a tick on the track where
+    /// each later part starts, and the scrub preview naming the part. `parts` names each part
+    /// there is, in order; `total` is the parts in all and `missing` those no group lists,
+    /// which the reader marks where they would be. Sent after [`ReaderEvent::Leaves`] (and
+    /// [`ReaderEvent::CreditPages`]) for a chapter of pictures in parts.
+    ChapterParts {
+        session: u64,
+        chapter: ChapterId,
+        parts: Vec<ChapterPart>,
+        total: u32,
+        missing: Vec<u32>,
+    },
+}
+
+/// One part of the open chapter.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ChapterPart {
+    /// Its number, from 1.
+    pub number: u32,
+    /// Its first page, from 1, as the reader counts pages: skipped credit pages left out.
+    pub first_page: u32,
+    /// The group it is read from, as the source names it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub group: Option<String>,
+    /// From another group than the chapter's first part, which lacks it: the reader names the
+    /// group.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub other_group: bool,
 }
 
 /// A page skipped as a credit page.
@@ -1088,7 +1125,7 @@ mod tests {
     #[test]
     fn choices_sync_and_layout_stays_on_the_device() {
         use ReaderSettingKey as K;
-        for key in [K::Mode, K::Direction, K::Colour, K::Look, K::Font] {
+        for key in [K::Mode, K::Direction, K::Colour, K::Look, K::Font, K::SkipCreditPages] {
             assert!(key.syncs(), "{key:?}");
             assert_eq!(key.home_scope(), SettingScope::Medium);
         }

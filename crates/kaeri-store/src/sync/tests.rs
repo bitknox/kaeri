@@ -866,9 +866,11 @@ fn reading_choices_travel_as_registers_and_local_works_stay_home() {
     a.store.set_bookmark(work, "v1/3", true, 10).unwrap();
     a.store.set_track_map(work, "mal", None, "hand", 10).unwrap();
     a.store.set_read_hidden(work, true).unwrap();
+    a.store.keep_credit_page(work, 0xf00d_0000_0000_0001, 10).unwrap();
     let before = a.store.sync_op_count().unwrap();
     read_on(&a, local, "1", 2, false);
     a.store.set_bookmark(local, "1", true, 11).unwrap();
+    a.store.keep_credit_page(local, 7, 11).unwrap();
     assert_eq!(a.store.sync_op_count().unwrap(), before);
 
     send(&a, &b);
@@ -883,6 +885,8 @@ fn reading_choices_travel_as_registers_and_local_works_stay_home() {
     let map = b.store.track_map(work).unwrap();
     assert_eq!((map[0].tracker_id.as_deref(), map[0].origin.as_str()), (None, "hand"));
     assert!(b.store.read_chapters(local).unwrap().is_empty());
+    assert_eq!(b.store.kept_credit_pages(work).unwrap(), [0xf00d_0000_0000_0001]);
+    assert!(b.store.kept_credit_pages(local).unwrap().is_empty());
 }
 
 #[test]
@@ -894,15 +898,17 @@ fn reading_done_before_sync_becomes_the_first_ops() {
     store.record_read(&e, Vec::new()).unwrap();
     store.adopt_read(work, "3", None, 101).unwrap();
     store.set_series_setting(work, "mode", Some("strip"), true, 102).unwrap();
+    store.keep_credit_page(work, u64::MAX, 102).unwrap();
     store.record_read(&crate::reading::ReadEvent::new("l:ff", "1", 103), Vec::new()).unwrap();
     store.sync_enable("a").unwrap();
-    assert_eq!(store.sync_op_count().unwrap(), 3);
+    assert_eq!(store.sync_op_count().unwrap(), 4);
     let other = dev("b", 1_000);
     let ops = store.ops_after(&other.store.version_vector().unwrap(), usize::MAX).unwrap();
     other.store.apply_ops(ops).unwrap();
     assert!(other.store.chapter_is_read(work, "2").unwrap());
     assert!(other.store.chapter_is_read(work, "4").unwrap());
     assert_eq!(other.store.series_settings(work).unwrap()[0].value, "strip");
+    assert_eq!(other.store.kept_credit_pages(work).unwrap(), [u64::MAX]);
 }
 
 #[test]

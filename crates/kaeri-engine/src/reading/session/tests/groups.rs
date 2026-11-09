@@ -153,7 +153,9 @@ fn harness_with(source: Arc<Groups>, signed_in: bool) -> Harness {
 
 async fn rows(h: &Harness) -> Vec<ChapterRow> {
     let work = WorkId::new(WORK);
-    let (_, volumes) = h.services.book_sources.chapters(&work, None, 1).await.unwrap();
+    let (_, mut volumes) = h.services.book_sources.chapters(&work, None, 1).await.unwrap();
+    let kit = crate::read_catalog::Kit::of(&h.services);
+    crate::read_catalog::series::finish(&kit, &work, &mut volumes, 1);
     volumes.into_iter().flat_map(|v| v.chapters).collect()
 }
 
@@ -167,8 +169,20 @@ async fn a_chapter_in_parts_reads_through_as_one_and_counts_once() {
     assert_eq!((first.id.as_str(), first.parts, first.label.as_str()), ("1", 2, "Chapter 1"));
     assert_eq!(rows.iter().filter(|r| r.id.as_str() == "1").count(), 1);
 
-    let (_, leaves, _) = h.open(OpenAt::Start).await;
+    let (_, leaves, after) = h.open(OpenAt::Start).await;
     assert_eq!(leaves.len(), 7, "both parts' six pages and the end page");
+    let marks = after
+        .iter()
+        .find_map(|e| match e {
+            ReaderEvent::ChapterParts { parts, total, missing, .. } => {
+                Some((parts.clone(), *total, missing.clone()))
+            }
+            _ => None,
+        })
+        .expect("the parts are told");
+    let starts: Vec<(u32, u32, bool)> =
+        marks.0.iter().map(|p| (p.number, p.first_page, p.other_group)).collect();
+    assert_eq!((starts, marks.1, marks.2), (vec![(1, 1, false), (2, 4, false)], 2, vec![]));
     h.shown(3, TurnHow::Turn).await;
     h.shown(5, TurnHow::Turn).await;
     let read = h
@@ -211,6 +225,9 @@ async fn the_group_picked_lists_its_chapters_and_the_read_marks_stay() {
         editions[0].groups.iter().map(|g| (g.label.as_str(), g.chapters, g.in_use)).collect();
     assert_eq!(groups, vec![("Group A", 4, true), ("Group B", 3, false)]);
     assert!(!editions[0].group_chosen);
+    // One count of chapters wherever the edition is shown: five, not its eight releases.
+    let (edition, _) = h.services.book_sources.chapters(&work, None, 1).await.unwrap();
+    assert_eq!((edition.unwrap().chapters, editions[0].chapters), (5, 5));
 
     let mut event = ReadEvent::new(WORK, "2", 5);
     event.completed = true;
@@ -236,6 +253,32 @@ async fn the_group_picked_lists_its_chapters_and_the_read_marks_stay() {
     // Back to the group with the most chapters.
     crate::reading::choose_group(&h.services, &work, None);
     assert_eq!(rows(&h).await[0].version_label.as_deref(), Some("Group A"));
+}
+
+/// Opening a chapter reads the chosen group's release of it, and a chapter that group lacks
+/// from the next group, so what is read matches the list.
+#[tokio::test(start_paused = true)]
+async fn opening_reads_the_chosen_groups_release() {
+    let h = harness_with(Groups::new(false), false);
+    let work = WorkId::new(WORK);
+    let sources = &h.services.book_sources;
+    let opened = |chapter: &'static str| async move {
+        let opened = sources.open(&work_id(), &ChapterId::new(chapter), None, 1).await.unwrap();
+        (opened.chapter.id.clone(), opened.group.clone())
+    };
+    assert_eq!(opened("2").await, ("a2".to_owned(), Some("Group A".to_owned())));
+    assert_eq!(opened("4").await.0, "b4", "only Group B has chapter 4");
+    crate::reading::choose_group(&h.services, &work, Some("Group B".into()));
+    assert_eq!(opened("2").await, ("b2".to_owned(), Some("Group B".to_owned())));
+    assert_eq!(opened("1").await.0, "b1", "Group B lists chapter 1 whole");
+    assert_eq!(opened("3").await.0, "a3", "Group B lacks chapter 3");
+    // Downloads open the chapter in the edition they were queued for.
+    let download = sources.open(&work, &ChapterId::new("2"), Some("groups"), 1).await.unwrap();
+    assert_eq!(download.chapter.id, "b2", "a download is the same release as reading online");
+}
+
+fn work_id() -> WorkId {
+    WorkId::new(WORK)
 }
 
 /// The page every chapter ends on is learnt as the group's credit page by the third chapter,

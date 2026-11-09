@@ -4,9 +4,9 @@
 //! `book_page_print` stays on the device, as the chapter lists do; `book_credit_keep` is the
 //! person's own and follows the profile.
 
-use rusqlite::params;
+use rusqlite::{Transaction, params};
 
-use crate::{Result, Store};
+use crate::{Result, Store, sync::op::kinds};
 
 /// One fingerprinted page at a chapter's edge.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -36,6 +36,41 @@ fn to_sql(print: u64) -> i64 {
 
 fn from_sql(value: i64) -> u64 {
     u64::from_ne_bytes(value.to_ne_bytes())
+}
+
+/// The sync register key of a kept page: `<work>/<fingerprint in hex>`.
+pub(crate) fn keep_key(work: &str, print: u64) -> String {
+    format!("{work}/{print:016x}")
+}
+
+/// A kept page received from another device. A key this version cannot read is passed over.
+pub(crate) fn apply_keep(
+    tx: &Transaction<'_>,
+    key: &str,
+    at: i64,
+) -> rusqlite::Result<Option<String>> {
+    let Some((work, hex)) = key.rsplit_once('/') else { return Ok(None) };
+    let Ok(print) = u64::from_str_radix(hex, 16) else { return Ok(None) };
+    write_keep(tx, work, print, at)?;
+    Ok(Some(work.to_owned()))
+}
+
+/// The kept pages of works that sync, for a snapshot: (key, at).
+pub(crate) fn synced_keeps(tx: &Transaction<'_>) -> rusqlite::Result<Vec<(String, i64)>> {
+    let mut stmt =
+        tx.prepare("SELECT work, print, at FROM book_credit_keep WHERE work LIKE 'a:%'")?;
+    let rows = stmt.query_map([], |r| {
+        Ok((keep_key(&r.get::<_, String>(0)?, from_sql(r.get(1)?)), r.get(2)?))
+    })?;
+    rows.collect()
+}
+
+fn write_keep(tx: &Transaction<'_>, work: &str, print: u64, at: i64) -> rusqlite::Result<()> {
+    tx.execute(
+        "INSERT OR REPLACE INTO book_credit_keep (work, print, at) VALUES (?1, ?2, ?3)",
+        params![work, to_sql(print), at],
+    )?;
+    Ok(())
 }
 
 impl Store {
@@ -105,12 +140,13 @@ impl Store {
     }
 
     /// The person said the page with this fingerprint is not a credit page.
+    /// It syncs, as the person's other reading choices do.
     pub fn keep_credit_page(&self, work: &str, print: u64, at: i64) -> Result<()> {
-        self.with_personal(|c| {
-            c.execute(
-                "INSERT OR REPLACE INTO book_credit_keep (work, print, at) VALUES (?1, ?2, ?3)",
-                params![work, to_sql(print), at],
-            )?;
+        self.with_personal_tx(|tx| {
+            write_keep(tx, work, print, at)?;
+            if crate::reading::syncs(work) {
+                self.emit_reg(tx, kinds::READ_CREDIT_KEEP, &keep_key(work, print), Some("1"))?;
+            }
             Ok(())
         })
     }
