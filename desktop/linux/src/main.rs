@@ -18,6 +18,8 @@ mod fixtures;
 #[cfg(feature = "fixtures")]
 mod fixtures_reading;
 mod flags;
+#[cfg(test)]
+mod gtk_test;
 mod hub;
 mod matching;
 mod motion;

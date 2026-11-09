@@ -707,8 +707,9 @@ pub fn faded_scroll(capsules: &gtk::Box) -> gtk::Overlay {
         arrow.set_tooltip_text(Some(tip));
         // The row's buttons take the keyboard on their own: the arrow is for the pointer.
         arrow.set_focusable(false);
-        let adjustment = adjustment.clone();
+        let adjustment = adjustment.downgrade();
         arrow.connect_clicked(move |_| {
+            let Some(adjustment) = adjustment.upgrade() else { return };
             let to = adjustment.value() + by * adjustment.page_size() * 0.7;
             adjustment.set_value(to.clamp(0.0, adjustment.upper() - adjustment.page_size()));
         });
@@ -729,13 +730,23 @@ pub fn faded_scroll(capsules: &gtk::Box) -> gtk::Overlay {
     }
     overlay.add_overlay(&start_arrow);
     overlay.add_overlay(&end_arrow);
+    // The adjustment's own handlers run this, and each arrow's click holds the adjustment, so
+    // both hold the other side weakly: a strong hold both ways would keep the arrows, their fades
+    // and the adjustment alive after the row is dropped.
+    let edges: [glib::WeakRef<gtk::Widget>; 4] = [
+        start_fade.upcast_ref::<gtk::Widget>().downgrade(),
+        start_arrow.upcast_ref::<gtk::Widget>().downgrade(),
+        end_fade.upcast_ref::<gtk::Widget>().downgrade(),
+        end_arrow.upcast_ref::<gtk::Widget>().downgrade(),
+    ];
     let follow = move |a: &gtk::Adjustment| {
         let (value, room) = (a.value(), a.upper() - a.page_size());
         let (before, after) = (value > 1.0, room - value > 1.0);
-        start_fade.set_visible(before);
-        start_arrow.set_visible(before);
-        end_fade.set_visible(after);
-        end_arrow.set_visible(after);
+        for (edge, shown) in edges.iter().zip([before, before, after, after]) {
+            if let Some(edge) = edge.upgrade() {
+                edge.set_visible(shown);
+            }
+        }
     };
     follow(&adjustment);
     adjustment.connect_value_changed(follow.clone());
@@ -755,6 +766,56 @@ mod tests {
                 Some(season)
             );
         }
+    }
+
+    /// The row's arrows and its adjustment hold each other: a dropped row must free them all.
+    #[test]
+    fn a_dropped_filter_row_frees_its_arrows_and_adjustment() {
+        crate::gtk_test::run(|| {
+            let capsules = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+            for name in ["Format", "Status", "Genres", "Year", "Season"] {
+                capsules.append(&menu_button(name));
+            }
+            let row = faded_scroll(&capsules);
+            let window = gtk::Window::builder().default_width(200).default_height(80).build();
+            window.set_child(Some(&row));
+            window.present();
+            crate::gtk_test::pump(200);
+            let mut held: Vec<(&str, glib::WeakRef<glib::Object>)> =
+                vec![("row", row.upcast_ref::<glib::Object>().downgrade())];
+            let mut child = row.first_child();
+            while let Some(widget) = child {
+                if let Some(scroll) = widget.downcast_ref::<gtk::ScrolledWindow>() {
+                    held.push((
+                        "adjustment",
+                        scroll.hadjustment().upcast::<glib::Object>().downgrade(),
+                    ));
+                } else if widget.is::<gtk::Button>() {
+                    held.push(("arrow", widget.upcast_ref::<glib::Object>().downgrade()));
+                }
+                child = widget.next_sibling();
+            }
+            assert_eq!(held.len(), 4, "the row, its adjustment and two arrows");
+            window.set_child(gtk::Widget::NONE);
+            drop((row, capsules));
+            window.destroy();
+            drop(window);
+            // GTK lets go of a widget it was laying out on a later turn of the loop.
+            let kept = || -> Vec<&str> {
+                held.iter()
+                    .filter(|(_, weak)| weak.upgrade().is_some())
+                    .map(|(name, _)| *name)
+                    .collect()
+            };
+            for _ in 0..40 {
+                if kept().is_empty() {
+                    break;
+                }
+                crate::gtk_test::pump(25);
+            }
+            let kept = kept();
+            assert!(kept.is_empty(), "kept after the row was dropped: {kept:?}");
+        });
     }
 
     #[test]

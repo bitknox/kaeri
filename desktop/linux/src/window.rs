@@ -1031,10 +1031,15 @@ impl Shell {
                 );
             }),
         );
+        // While the reader covers the window, keys stay in it and the places behind it don't
+        // move: a place opened there would be unseen and take the focus from the reader.
         add(
             "go",
             Some(glib::VariantTy::STRING),
             Box::new(move |s, a| {
+                if s.is_reader() {
+                    return;
+                }
                 if let Some(dest) =
                     a.and_then(String::from_variant).and_then(|n| Dest::named(&n))
                 {
@@ -1047,6 +1052,9 @@ impl Shell {
             "go-section",
             Some(glib::VariantTy::INT32),
             Box::new(move |s, a| {
+                if s.is_reader() {
+                    return;
+                }
                 let n = a.and_then(|a| a.get::<i32>()).unwrap_or(0);
                 let sections = Dest::numbered(pages::answer());
                 if let Some(dest) = usize::try_from(n - 1).ok().and_then(|i| sections.get(i)) {
@@ -1198,7 +1206,15 @@ impl Shell {
                 }
             }),
         );
-        add("search", None, Box::new(|s, _| s.go(Dest::Search)));
+        add(
+            "search",
+            None,
+            Box::new(|s, _| {
+                if !s.is_reader() {
+                    s.go(Dest::Search);
+                }
+            }),
+        );
         add("back", None, Box::new(|s, _| s.back()));
         // Ctrl+W closes the reader before the window.
         add(

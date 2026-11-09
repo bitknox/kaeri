@@ -1777,12 +1777,18 @@ fn upscaling_label(mode: kaeri_core::config::Upscaling) -> &'static str {
     }
 }
 
-/// The value as the file takes it: the switch form of new chapters writes the picker's choice.
+/// The value as the file takes it: the switch form of new chapters writes the picker's choice,
+/// and mpv options typed one to a line write a list.
 pub fn as_written(key: SettingKey, value: SettingValue) -> SettingValue {
     match (key, value) {
         (SettingKey::KeepChaptersReady, SettingValue::Bool(on)) => SettingValue::Str(
             if on { NewChapters::Reading } else { NewChapters::Off }.name().into(),
         ),
+        // Typed one to a line, and kept in the file as a list: a string there would leave the
+        // file unreadable.
+        (SettingKey::MpvOptions, SettingValue::Str(lines)) => {
+            SettingValue::Strings(mpv_options(lines.lines()).unwrap_or_default())
+        }
         (_, value) => value,
     }
 }
@@ -2230,6 +2236,15 @@ mod tests {
         let typed = SettingValue::Str("--hwdec=no\n\n--sub-scale=1.2".into());
         assert!(put(&mut config, SettingKey::MpvOptions, &typed));
         assert_eq!(config.playback.mpv_args, ["--hwdec=no", "--sub-scale=1.2"]);
+        // The file keeps typed options as a list, an empty field as an empty one.
+        assert_eq!(
+            as_written(SettingKey::MpvOptions, typed),
+            SettingValue::Strings(vec!["--hwdec=no".into(), "--sub-scale=1.2".into()])
+        );
+        assert_eq!(
+            as_written(SettingKey::MpvOptions, SettingValue::Str(String::new())),
+            SettingValue::Strings(Vec::new())
+        );
         // Not options, so nothing changes.
         for wrong in ["sub-font-size=40", "--", "--=1", "--sub font=1"] {
             let refused = SettingValue::Strings(vec![wrong.into()]);
