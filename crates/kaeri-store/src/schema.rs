@@ -1058,6 +1058,36 @@ const MIGRATIONS: &[(&str, &str)] = &[
     ) WITHOUT ROWID;
     "#,
     ),
+    (
+        "0032_book_credit_pages",
+        r#"
+    -- Fingerprints of the pages at either edge of a chapter (the first two and last two of
+    -- each part), taken from pages the reader or a download fetched anyway: a 64-bit dHash per
+    -- page. A fingerprint at the edge of three chapters of one work is a credit page. `page`
+    -- counts from 0 through the chapter as read, parts and all; `edge` is 0 at a part's start
+    -- and 1 at its end; `group_label` is the version label the chapter was read in, when the
+    -- source gave one. Stays on the device, as the chapter lists do.
+    CREATE TABLE book_page_print (
+        work        TEXT    NOT NULL,
+        chapter     TEXT    NOT NULL,
+        page        INTEGER NOT NULL,
+        edge        INTEGER NOT NULL,
+        print       INTEGER NOT NULL,
+        group_label TEXT,
+        at          INTEGER NOT NULL,
+        PRIMARY KEY (work, chapter, page)
+    ) WITHOUT ROWID;
+
+    -- Pages the person said are not credit pages, by fingerprint: never skipped again in the
+    -- work.
+    CREATE TABLE book_credit_keep (
+        work  TEXT    NOT NULL,
+        print INTEGER NOT NULL,
+        at    INTEGER NOT NULL,
+        PRIMARY KEY (work, print)
+    ) WITHOUT ROWID;
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.
