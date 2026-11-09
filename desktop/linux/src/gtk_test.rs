@@ -41,7 +41,7 @@ fn queue() -> Option<&'static Queue> {
 /// display it says so and passes: CI runs these under xvfb-run, and a desktop has a display.
 pub fn run(body: impl FnOnce() + Send + 'static) {
     let Some(queue) = queue() else {
-        eprintln!("no display: this test needs one");
+        eprintln!("no display: this test needs one"); // i18n-skip
         return;
     };
     let (done, result) = mpsc::channel();
@@ -57,7 +57,7 @@ pub fn run(body: impl FnOnce() + Send + 'static) {
             .downcast_ref::<String>()
             .map(String::as_str)
             .or_else(|| panic.downcast_ref::<&str>().copied())
-            .unwrap_or("the test panicked on the GTK thread");
+            .unwrap_or("the test panicked on the GTK thread"); // i18n-skip
         panic!("{message}");
     }
 }
