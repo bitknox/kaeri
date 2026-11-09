@@ -51,7 +51,7 @@ kaeri-pages = { path = "crates/kaeri-pages" }
 kaeri-books = { path = "crates/kaeri-books" }
 
 # --- async ---
-tokio = { version = "1.53", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "process", "net", "io-util", "signal"] }
+tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "sync", "time", "fs", "process", "net", "io-util", "signal"] }
 async-trait = "0.1"
 futures = "0.3"
 
