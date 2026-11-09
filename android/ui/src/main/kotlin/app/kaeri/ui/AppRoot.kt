@@ -14,6 +14,7 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideInHorizontally
@@ -80,6 +81,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
+import androidx.navigation.compose.DefaultNavTransitions
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -267,6 +269,17 @@ private fun readPageUncovered(from: Int): EnterTransition =
 /** The page a pop takes away: [to] px along, fading out over the page underneath. */
 private fun readPageAway(to: Int): ExitTransition =
     slideOutHorizontally(tween(300, easing = EMPHASIZED)) { to } + fadeOut(tween(210))
+
+/*
+ * The same axis while a back swipe seeks it, linear so the pages follow the finger: the page
+ * underneath stays whole and the leaving page fades over it across the whole swipe, so a swipe
+ * held part way shows both and letting go finishes the crossfade.
+ */
+private fun readPageBackUncovered(from: Int): EnterTransition =
+    slideInHorizontally(tween(300, easing = LinearEasing)) { from }
+
+private fun readPageBackAway(to: Int): ExitTransition =
+    slideOutHorizontally(tween(300, easing = LinearEasing)) { to } + fadeOut(tween(300, easing = LinearEasing))
 
 /**
  * The frame. A switch between destinations fades the page through on the quick spring (T6); a
@@ -492,6 +505,16 @@ fun AppRoot(
                                     initialState.isReadPage && !eink -> readPageAway(axis)
                                     else -> ExitTransition.KeepUntilTransitionsFinished
                                 }
+                            },
+                            // Navigation's own back swipe scales the page to 0.7 and drops it at the end;
+                            // a reading page keeps its axis instead. Other pages keep Navigation's.
+                            predictivePopEnterTransition = { edge ->
+                                if (initialState.isReadPage && !eink) readPageBackUncovered(-axis)
+                                else DefaultNavTransitions.predictivePopEnterTransition(this, edge)
+                            },
+                            predictivePopExitTransition = { edge ->
+                                if (initialState.isReadPage && !eink) readPageBackAway(axis)
+                                else DefaultNavTransitions.predictivePopExitTransition(this, edge)
                             },
                         ) {
                             if (player != null) {
