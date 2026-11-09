@@ -400,6 +400,48 @@ pub fn new_device_id() -> String {
 mod tests {
     use super::*;
 
+    /// X25519 against RFC 7748's test vectors, a device's public key, and a keyring wrapped by an
+    /// earlier build: a new curve library must reproduce every one of them byte for byte.
+    #[test]
+    fn device_keys_and_wrapped_keyrings_stay_byte_identical() {
+        let hex32 = |h: &str| -> [u8; 32] { hex::decode(h).unwrap().try_into().unwrap() };
+        let alice = DeviceKey {
+            secret: hex32("77076d0a7318a57d3c16c17251b26645df4c2f87ebc0992ab177fba51db92c2a"),
+        };
+        let bob = DeviceKey {
+            secret: hex32("5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b6fd1c2f8b27ff88e0eb"),
+        };
+        assert_eq!(
+            alice.public_hex(),
+            "8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381af4eba4a98eaa9b4e6a"
+        );
+        assert_eq!(
+            bob.public_hex(),
+            "de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b78674dadfc7e146f882b4f"
+        );
+        let shared = hex32("4a5d9d5ba4ce2de1728e3bf480350f25e07e21c947d19e3376f09b3c1e161742");
+        assert_eq!(alice.shared(&bob.public()), shared);
+        assert_eq!(bob.shared(&alice.public()), shared);
+
+        let device = DeviceKey::from_identity(b"one");
+        assert_eq!(
+            device.public_hex(),
+            "c42c9a0c8bdd68f921507a18021e093a71221894c12b74063c93eb0db7c4c62b"
+        );
+        let wrapped = hex::decode(concat!(
+            "8c3c84493e02b6f1a6b9caec34e963e9a7b03245b0ecf48d1170f09444114e2d",
+            "379897f3bf280f16f74bfafc36cb0844f703b1071ab2ac30b3914f12950e1cb9",
+            "c908d889ebe2e618c04be672d37770a90fe3535791ee1d036db14f7bc0645435",
+            "517d4b0b310d975238bc2bbaf3840f1078a7174dffb77ee89177f00684fc5382",
+            "c062e0c14009b23c56cac3b9a7",
+        ))
+        .unwrap();
+        assert_eq!(
+            device.unwrap("aaaa0000aaaa0000", &wrapped).unwrap(),
+            Keyring::single([7; 32])
+        );
+    }
+
     #[test]
     fn a_recovery_key_reads_back_however_it_is_typed() {
         let key = RecoveryKey::generate();
