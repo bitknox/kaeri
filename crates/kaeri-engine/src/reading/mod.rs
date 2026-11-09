@@ -7,6 +7,7 @@
 //! behind them yet answer with their empty shapes, and the rest are logged and dropped.
 
 pub(crate) mod eink;
+pub(crate) mod feed;
 pub mod novel;
 pub(crate) mod pages;
 pub(crate) mod session;
