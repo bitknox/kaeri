@@ -62,6 +62,7 @@ import app.kaeri.ui.AppRoot
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
 import app.kaeri.ui.reading.LocalEinkLayout
+import app.kaeri.eink.EinkAnswerPrefs
 import app.kaeri.eink.EinkLook
 import app.kaeri.reader.phone.ReaderLauncher
 import app.kaeri.reader.phone.ReaderRequest
@@ -172,13 +173,14 @@ class MainActivity : ComponentActivity() {
     private val linkFlow = links.receiveAsFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Out of the launch theme, whose window draws Android 11's splash screen.
-        setTheme(R.style.Theme_Kaeri)
-        // Light icons on the dark ground, over bars the app draws itself.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-        )
+        // Out of the launch theme, whose window draws Android 11's splash screen. On a panel the
+        // last run found to be e-ink, the window is paper from the start, so a cold start never
+        // paints the dark ground before the paper shell; the engine's answer then confirms it.
+        val paper = EinkAnswerPrefs(this).load()?.eink == true
+        setTheme(if (paper) R.style.Theme_Kaeri_Paper else R.style.Theme_Kaeri)
+        // Light icons on the dark ground and dark ones on paper, over bars the app draws itself.
+        val bars = if (paper) SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT) else SystemBarStyle.dark(Color.TRANSPARENT)
+        enableEdgeToEdge(statusBarStyle = bars, navigationBarStyle = bars)
         super.onCreate(savedInstanceState)
         app.player.hostStarted()
         // Back a moment after Play, before the player's screen is there to take it.
@@ -259,6 +261,7 @@ class MainActivity : ComponentActivity() {
                         isAppearanceLightStatusBars = einkState.eink
                         isAppearanceLightNavigationBars = einkState.eink
                     }
+                    paperSplash(einkState.eink, paper)
                 }
                 CompositionLocalProvider(LocalEinkLayout provides einkLayout) {
                 ReaderHost(app.store, app.eink) { AppRoot(
@@ -285,6 +288,23 @@ class MainActivity : ComponentActivity() {
         if (!signIn.handle(intent) && !(fresh && follow(intent)) && !invite(intent) && !party(intent) && !opened(intent)) remote(intent)
         keepDownloadsRunning()
         startUpdateActivities()
+    }
+
+    /** Whether the system's splash screen was last set to paper, from [paperSplash]. */
+    private var splashPaper: Boolean? = null
+
+    /**
+     * The system's own splash screen in paper once the panel is known to be e-ink, and back to the
+     * ground when it no longer is (Android 13 and up, where the system keeps the choice for the
+     * next launch). Asked only when the answer differs from the one this launch started with.
+     */
+    private fun paperSplash(eink: Boolean, atLaunch: Boolean) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val was = splashPaper ?: atLaunch
+        splashPaper = eink
+        if (eink == was) return
+        runCatching { splashScreen.setSplashScreenTheme(if (eink) R.style.Theme_Kaeri_Paper else android.content.res.Resources.ID_NULL) }
+            .onFailure { Log.w(KaeriApp.TAG, "the splash screen kept its theme", it) }
     }
 
     /**

@@ -3,6 +3,7 @@
 package app.kaeri.app
 
 import app.kaeri.i18n.Strings
+import app.kaeri.eink.EinkAnswerPrefs
 import app.kaeri.eink.EinkModel
 import android.app.Application
 import android.content.ActivityNotFoundException
@@ -135,8 +136,11 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
 
     val notifier: Notifier by lazy { Notifier(this) }
 
-    /** The e-ink profile the engine makes from this device's facts, and the questions it leaves. */
-    val eink: EinkModel by lazy { EinkModel(store::send).also { it.bind(store) } }
+    /**
+     * The e-ink profile the engine makes from this device's facts, and the questions it leaves,
+     * starting from the last run's answer.
+     */
+    val eink: EinkModel by lazy { EinkModel(EinkAnswerPrefs(this), store::send).also { it.bind(store) } }
 
     override val episodeNotifier: EpisodeNotifier by lazy { EpisodeNotifier(this) }
 

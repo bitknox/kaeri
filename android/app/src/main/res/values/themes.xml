@@ -9,6 +9,13 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
+    <!-- The window on a panel the last run found to be e-ink, chosen before the first frame: paper
+         from the start, so a cold start never paints the dark ground before the paper shell. -->
+    <style name="Theme.Kaeri.Paper">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:colorBackground">@android:color/white</item>
+    </style>
+
     <!-- The activity's theme as it launches. Android 11 has no splash screen of the system's, so
          its starting window draws the same one, Nagare on the ground; the activity takes
          Theme.Kaeri as it starts. -->
