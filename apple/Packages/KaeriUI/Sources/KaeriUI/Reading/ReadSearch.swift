@@ -144,6 +144,13 @@ struct ReadSearchScreen: View {
             position.scrollTo(y: CGFloat(points))
         }
         #if os(iOS)
+        // Shots: `sheet=filters` opens the Filters sheet.
+        .task {
+            guard navigator.launchSheet == "filters" else { return } // i18n-skip: a shot's sheet name
+            try? await Task.sleep(for: .milliseconds(500))
+            navigator.launchSheet = nil
+            filtersShown = true
+        }
         .toolbar {
             if compact {
                 ToolbarItem(placement: .topBarTrailing) {
