@@ -13,12 +13,12 @@ Kaeri                                                      plugins ·  ·  kitsu
     Force a full resync            R    Jump to today                  T
     Subbed or dubbed               t    Jump to previous day           {
     Kaeri is for                   I    Jump to next day               }
-    Go to section                1–0    Page up                   ctrl+u
-    Search                         /    Page down                 ctrl+d
-    Recent messages                !  Lists
-    Copy the bug report            C    Open                           ↵
-    Delete the crash report        E    Play next unwatched        space
-                                        Set list status                a
+    Shows or reading               W    Page up                   ctrl+u
+    Go to section                1–0    Page down                 ctrl+d
+    Search                         /  Lists
+    Recent messages                !    Open                           ↵
+    Copy the bug report            C    Play next unwatched        space
+    Delete the crash report        E    Set list status                a
 
 ────────────────────────────────────────────────────────────────────────────────
 plugins · Subbed · 1080p                                     ↑↓ page   esc close

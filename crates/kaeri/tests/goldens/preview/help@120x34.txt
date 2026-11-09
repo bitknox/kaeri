@@ -3,16 +3,17 @@ Kaeri                                                                           
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ▌ Keys
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  Global                                Page down                 ctrl+d  Downloads
-    Show keys                      ?  Lists                                 Clear finished downloads       c
-    Run a command         : / ctrl+k    Open                           ↵    Delete download and its file   X
-    Quit                  Q / ctrl+c    Play next unwatched        space  Sources
-    Back                     q / esc    Set list status                a    Move source up                 K
-    Toggle rail width            tab    Rate this title                *    Move source down               J
-    Refresh this view              r    Expand synopsis                i    Play the demo                  B
-    Force a full resync            R    Remove, or not interested      x    Remove or add the demo         Y
-    Subbed or dubbed               t    Search filters            ctrl+f  Now playing
-    Kaeri is for                   I    Surprise me                    z    Play or pause              space
+  Global                                Page up                   ctrl+u    Filter                         f
+    Show keys                      ?    Page down                 ctrl+d  Downloads
+    Run a command         : / ctrl+k  Lists                                 Clear finished downloads       c
+    Quit                  Q / ctrl+c    Open                           ↵    Delete download and its file   X
+    Back                     q / esc    Play next unwatched        space  Sources
+    Toggle rail width            tab    Set list status                a    Move source up                 K
+    Refresh this view              r    Rate this title                *    Move source down               J
+    Force a full resync            R    Expand synopsis                i    Play the demo                  B
+    Subbed or dubbed               t    Remove, or not interested      x    Remove or add the demo         Y
+    Kaeri is for                   I    Search filters            ctrl+f  Now playing
+    Shows or reading               W    Surprise me                    z    Play or pause              space
     Go to section                1–0  Title                                 Back 5 seconds                 ←
     Search                         /    Episodes                       e    Forward 5 seconds              →
     Recent messages                !    Sources                        s    Back 30 seconds                H
@@ -28,7 +29,6 @@ Kaeri                                                                           
     Jump to today                  T    Download a range of episodes   D    Leave player running           q
     Jump to previous day           {    Toggle watched                 u    Stop playback                  x
     Jump to next day               }    Mark all previous watched      M
-    Page up                   ctrl+u    Filter                         f
 
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 plugins · Subbed · 1080p                                                                                       esc close
