@@ -154,7 +154,7 @@ shell-library-segment = { $name } { $count }
 shell-not-a-store = This link doesn't lead to a { -plugin-store }. Ask the person who sent it for a new invite.
 
 # Context menu item that carries on with an episode that was left part-way.
-# @arg episode: int
+# @arg episode: plain
 # @allow proceed
 shell-resume-episode = Resume episode { $episode }
 

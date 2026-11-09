@@ -95,4 +95,8 @@
     <value>{who} watched {what}</value>
     <comment>Order changes per language.</comment>
   </data>
+  <data name="EpisodeSeen" xml:space="preserve">
+    <value>Episode {episode}, seen {count} times</value>
+    <comment>A number that names something beside a count.</comment>
+  </data>
 </root>

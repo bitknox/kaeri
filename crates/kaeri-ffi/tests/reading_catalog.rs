@@ -182,7 +182,11 @@ fn home_comes_whole_from_one_request_and_the_queue_behind_it() {
     // More of the genre read most, with its View all.
     let genre = &rows[6];
     assert_eq!(genre.kind, ReadRowKind::MoreGenre);
-    assert_eq!(genre.title.english(), "More Slice of Life");
+    assert_eq!(genre.title.english(), "More slice of life");
+    assert_eq!(
+        genre.view_all_title.as_ref().map(|t| t.english()),
+        Some("More slice of life".into())
+    );
     assert_eq!(home.genre.as_deref(), Some("Slice of Life"));
     assert_eq!(
         genre.view_all.as_ref().map(|q| q.genres.clone()),

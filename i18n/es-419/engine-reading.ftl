@@ -181,3 +181,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } partes de { $title } están listas para leer sin conexión.
  }
 reading-downloads-done-series = Hay capítulos de { $count } series listos para leer sin conexión.
+read-source-folders = Carpetas
+reading-since-january = desde enero
+reading-since-february = desde febrero
+reading-since-march = desde marzo
+reading-since-april = desde abril
+reading-since-may = desde mayo
+reading-since-june = desde junio
+reading-since-july = desde julio
+reading-since-august = desde agosto
+reading-since-september = desde septiembre
+reading-since-october = desde octubre
+reading-since-november = desde noviembre
+reading-since-december = desde diciembre

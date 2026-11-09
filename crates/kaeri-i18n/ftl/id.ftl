@@ -156,8 +156,62 @@ home-trending = Sedang tren
 # Heading over recommendations from one show the person finished and rated well. The title is that show.
 home-because = Karena Anda sudah menyelesaikan { $title }
 
-# Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+# Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
 home-more-genre = Lebih banyak { $genre }
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-action = Lebih banyak aksi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-adventure = Lebih banyak petualangan
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-comedy = Lebih banyak komedi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-drama = Lebih banyak drama
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-ecchi = Lebih banyak ecchi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-fantasy = Lebih banyak fantasi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-horror = Lebih banyak horor
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mahou-shoujo = Lebih banyak mahou shoujo
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mecha = Lebih banyak mecha
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-music = Lebih banyak musik
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mystery = Lebih banyak misteri
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-psychological = Lebih banyak psikologis
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-romance = Lebih banyak romansa
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sci-fi = Lebih banyak fiksi ilmiah
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-slice-of-life = Lebih banyak slice of life
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sports = Lebih banyak olahraga
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-supernatural = Lebih banyak supernatural
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-thriller = Lebih banyak thriller
 
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, bebas dibagikan
@@ -917,6 +971,45 @@ reading-downloads-done-parts =
 
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = Bab dari { $count } seri siap dibaca offline.
+
+# The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+read-source-folders = Folder
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+reading-since-january = sejak Januari
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+reading-since-february = sejak Februari
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+reading-since-march = sejak Maret
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+reading-since-april = sejak April
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+reading-since-may = sejak Mei
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+reading-since-june = sejak Juni
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+reading-since-july = sejak Juli
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+reading-since-august = sejak Agustus
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+reading-since-september = sejak September
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+reading-since-october = sejak Oktober
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+reading-since-november = sejak November
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+reading-since-december = sejak Desember
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = Bergabung dengan { $store } sebagai { $member }.

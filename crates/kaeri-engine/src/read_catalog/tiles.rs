@@ -75,7 +75,28 @@ pub fn plain(meta: &Meta, book: &Book) -> WorkTile {
         not_in_sources: false,
         origin: origin(book.origin()),
         amount: None,
+        started: None,
     }
+}
+
+/// The month a series started, as a New row's caption says it: "since March".
+pub fn started(book: &Book) -> Option<Msg> {
+    let month = book.start_date.as_ref()?.month?;
+    Some(Msg::Reading(match month {
+        1 => ReadingMsg::ReadingSinceJanuary,
+        2 => ReadingMsg::ReadingSinceFebruary,
+        3 => ReadingMsg::ReadingSinceMarch,
+        4 => ReadingMsg::ReadingSinceApril,
+        5 => ReadingMsg::ReadingSinceMay,
+        6 => ReadingMsg::ReadingSinceJune,
+        7 => ReadingMsg::ReadingSinceJuly,
+        8 => ReadingMsg::ReadingSinceAugust,
+        9 => ReadingMsg::ReadingSinceSeptember,
+        10 => ReadingMsg::ReadingSinceOctober,
+        11 => ReadingMsg::ReadingSinceNovember,
+        12 => ReadingMsg::ReadingSinceDecember,
+        _ => return None,
+    }))
 }
 
 /// The country a series comes from, in the words of the Origin filter.

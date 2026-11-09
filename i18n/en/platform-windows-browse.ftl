@@ -34,7 +34,7 @@ calendar-time-about = about { $time }
 
 # Calendar: an episode that airs dubbed, with no time.
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 calendar-episode-dubbed = E{ $episode } { -dubbed }
 
 # Calendar: the one quiet line of an episode already watched: the show, then the episode.
@@ -52,28 +52,28 @@ calendar-watched-spoken = { $title }, { $episode }, watched
 # Calendar: the line under a show in the week, for an episode that has aired. The span is
 # already worded, such as "1 d 2 h ago".
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 # @arg ago: text
 calendar-cell-out = E{ $episode } out { $ago }
 
 # Calendar: the line under a show in the week, for a dubbed episode that has aired. The spaces
 # around the dot don't break, so a line that wraps never leaves "Dubbed" on its own.
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 # @arg ago: text
 calendar-cell-out-dubbed = E{ $episode } out { $ago } · { -dubbed-cap }
 
 # Calendar: the line under a show in the week, for an episode that airs soon. The span is
 # already worded, such as "1 h 30 min".
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 # @arg span: text
 calendar-cell-in = E{ $episode } in { $span }
 
 # Calendar: the line under a show in the week, for a dubbed episode that airs soon. The spaces
 # around the dot don't break, so a line that wraps never leaves "Dubbed" on its own.
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 # @arg span: text
 calendar-cell-in-dubbed = E{ $episode } in { $span } · { -dubbed-cap }
 
@@ -191,7 +191,7 @@ title-relation-format = { $relation } · { $format }
 
 # Title page details: the latest episode and how long ago it came out. The span is already worded, such as "2d ago".
 # @only windows
-# @arg episode: int
+# @arg episode: plain
 # @arg ago: text
 title-episode-out-ago = E{ $episode } out { $ago }
 

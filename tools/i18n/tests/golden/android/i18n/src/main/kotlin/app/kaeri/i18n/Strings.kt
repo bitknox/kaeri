@@ -65,6 +65,10 @@ object Strings {
     fun twoArgs(context: Context, who: String, what: String): String =
         context.getString(R.string.two_args, who, what)
 
+    /** A number that names something beside a count. */
+    fun episodeSeen(context: Context, episode: Int, count: Int): String =
+        context.getString(R.string.episode_seen, episode, count)
+
     /** The languages this build has text for, source first. Draft ones carry the draft label. */
     val languages: List<Language> = listOf(
         Language("en", "English", "gb", false),

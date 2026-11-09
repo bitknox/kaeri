@@ -156,8 +156,62 @@ home-trending = Şu an öne çıkanlar
 # Heading over recommendations from one show the person finished and rated well. The title is that show.
 home-because = Bitirdiğiniz { $title } yüzünden
 
-# Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha".
+# Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it.
 home-more-genre = Daha fazla { $genre }
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-action = Daha fazla aksiyon
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-adventure = Daha fazla macera
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-comedy = Daha fazla komedi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-drama = Daha fazla dram
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-ecchi = Daha fazla ecchi
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-fantasy = Daha fazla fantastik
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-horror = Daha fazla korku
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mahou-shoujo = Daha fazla mahou shoujo
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mecha = Daha fazla mecha
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-music = Daha fazla müzik
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-mystery = Daha fazla gizem
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-psychological = Daha fazla psikolojik
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-romance = Daha fazla romantik
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sci-fi = Daha fazla bilim kurgu
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-slice-of-life = Daha fazla günlük yaşam
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-sports = Daha fazla spor
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-supernatural = Daha fazla doğaüstü
+
+# Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language.
+home-more-genre-thriller = Daha fazla gerilim
 
 # Line over the spotlight's title when it is the built-in demo.
 home-spotlight-demo = Demo, paylaşmak serbest
@@ -938,6 +992,45 @@ reading-downloads-done-parts =
 
 # The notification's text: chapters of several series are downloaded.
 reading-downloads-done-series = { $count } seriden bölümler çevrimdışı okumaya hazır.
+
+# The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it.
+read-source-folders = Klasörler
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January".
+reading-since-january = Ocak'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February".
+reading-since-february = Şubat'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March".
+reading-since-march = Mart'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April".
+reading-since-april = Nisan'dan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May".
+reading-since-may = Mayıs'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June".
+reading-since-june = Haziran'dan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July".
+reading-since-july = Temmuz'dan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August".
+reading-since-august = Ağustos'tan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September".
+reading-since-september = Eylül'den beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October".
+reading-since-october = Ekim'den beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November".
+reading-since-november = Kasım'dan beri
+
+# On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December".
+reading-since-december = Aralık'tan beri
 
 # Toast after joining a plugin store with an invite that names this device's owner.
 store-joined = { $store }: { $member } olarak katıldınız.

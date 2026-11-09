@@ -7,7 +7,7 @@ title-based-on = Based on
 ## Starting and failing
 
 # Line on the starting screen, from the moment the player is asked to play until the first frame.
-# @arg episode: int
+# @arg episode: plain
 player-starting = Starting episode { $episode }
 
 # Line on the starting screen after a few seconds: the app is looking for a stream.
@@ -18,7 +18,7 @@ player-finding-source = Finding a { -source } · { $seconds } s
 player-finding-source-plain = Finding a { -source }
 
 # Title of the card shown when an episode could not play.
-# @arg episode: int
+# @arg episode: plain
 player-failed-title = Couldn't play episode { $episode }
 
 # Line under the failure title when every { -source } was tried.
@@ -388,7 +388,7 @@ player-found-ask-opening = { -app-name } found this opening. Were the edges righ
 player-found-ask-ending = { -app-name } found this ending. Were the edges right?
 
 # Line under that prompt, in a quieter colour. $episode is the episode's number.
-# @arg episode: int
+# @arg episode: plain
 player-found-ask-share = Yes shares these times with AniSkip for episode { $episode }.
 
 # Buttons of that prompt. Yes saves the found times as the person's own and shares them; Adjust
@@ -399,7 +399,7 @@ player-found-yes = Yes
 player-found-adjust = Adjust
 
 # What the prompt says after Yes. $episode is the episode's number.
-# @arg episode: int
+# @arg episode: plain
 player-found-saved = Saved. AniSkip gets these times for episode { $episode }.
 
 # What the prompt says after Don't ask again, with the line below it.
@@ -609,11 +609,11 @@ player-audio-file-failed = Couldn't load that file as audio. Choose an audio fil
 player-track-unnamed = Unnamed track
 
 # Name of an audio track the file does not describe.
-# @arg id: int
+# @arg id: plain
 player-audio-track-n = Audio { $id }
 
 # Name of a subtitle track the file does not describe.
-# @arg id: int
+# @arg id: plain
 player-subtitle-track-n = Subtitles { $id }
 
 # Line in the track list before the file has told which tracks it has.
@@ -646,7 +646,7 @@ player-scrub-quarter = Quarter-speed scrubbing
 player-starting-text = Starting episode { $episode }
 
 # Name of an audio or subtitle track that has no language or title.
-# @arg id: int
+# @arg id: plain
 player-track-n = Track { $id }
 
 # Line while an episode starts after a few seconds: what the wait is on, and for how long.

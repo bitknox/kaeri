@@ -47,3 +47,6 @@ braces = [Ûšé { "{" }ñàɱé{ "}" } ĥéŕé~~~~~]
 # Order changes per language.
 two-args = [{ $who } ŵàţçĥéð { $what }~~~~~]
 
+# A number that names something beside a count.
+episode-seen = [Éþîšöðé { $episode }, šééñ { $count } ţîɱéš~~~~~~~~~]
+

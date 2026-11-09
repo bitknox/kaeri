@@ -31,23 +31,23 @@
     <!-- The casting card's line while a cast starts, for its first 4 seconds. The name is the TV's own, such as Living room. -->
     <string name="cast_phase_starting">Starting on %1$s</string>
     <!-- The casting card's line while a cast starts, past its first 4 seconds, counting the seconds since the tap. -->
-    <string name="cast_phase_starting_for">Starting on %1$s · %2$d s</string>
+    <string name="cast_phase_starting_for">Starting on %1$s · %2$,d s</string>
     <!-- The casting card's line while the TV opens its player or loads the stream, past the first 4 seconds of the start. -->
-    <string name="cast_phase_waiting">Waiting for %1$s · %2$d s</string>
+    <string name="cast_phase_waiting">Waiting for %1$s · %2$,d s</string>
     <!-- The casting card's line while this device reads the stream and makes it ready for the TV, past the first 4 seconds of the start. -->
-    <string name="cast_phase_preparing">Preparing the stream · %1$d s</string>
+    <string name="cast_phase_preparing">Preparing the stream · %1$,d s</string>
     <!-- A comment's age, beside its author, when it was written under a minute ago. -->
     <string name="discussion_age_now">now</string>
     <!-- A comment's age, beside its author, in minutes. Abbreviated, as a timeline shows it. -->
-    <string name="discussion_age_minutes">%1$d min</string>
+    <string name="discussion_age_minutes">%1$,d min</string>
     <!-- A comment's age, beside its author, in hours. Abbreviated, as a timeline shows it. -->
-    <string name="discussion_age_hours">%1$d h</string>
+    <string name="discussion_age_hours">%1$,d h</string>
     <!-- A comment's age, beside its author, in days. Abbreviated, as a timeline shows it. -->
-    <string name="discussion_age_days">%1$d d</string>
+    <string name="discussion_age_days">%1$,d d</string>
     <!-- A comment's age, beside its author, in weeks. Abbreviated, as a timeline shows it. -->
-    <string name="discussion_age_weeks">%1$d w</string>
+    <string name="discussion_age_weeks">%1$,d w</string>
     <!-- A comment's age, beside its author, in years. Abbreviated, as a timeline shows it. -->
-    <string name="discussion_age_years">%1$d y</string>
+    <string name="discussion_age_years">%1$,d y</string>
     <!-- Toast when a like on a comment did not reach AniList. The like is taken back. -->
     <string name="notice_comment_like_failed">Couldn\'t like the comment. Try again.</string>
     <!-- Toast when a comment could not be deleted on AniList. The comment stays. -->
@@ -67,7 +67,7 @@
     <!-- Line over the spotlight's title when nothing of the person's own is waiting, so it is this season's most popular show they have not started. -->
     <string name="home_spotlight_popular">Popular this season</string>
     <!-- Line under the spotlight's title, and under a { -continue-cap } card, for an episode part way through: the episode and the minutes left in it. -->
-    <string name="home_time_left">Episode %1$d · %2$d min left</string>
+    <string name="home_time_left">Episode %1$d · %2$,d min left</string>
     <!-- Line under the spotlight's title, and under a { -continue-cap } card, for a show still airing whose next episode is its newest one out. -->
     <string name="home_episode_out">Episode %1$d is out</string>
     <!-- Line under the spotlight's title, and under a { -continue-cap } card, for the next episode of a show part way through when it is not the newest one out, such as any episode of a show that finished airing. -->
@@ -106,8 +106,44 @@
     <string name="home_trending">Trending now</string>
     <!-- Heading over recommendations from one show the person finished and rated well. The title is that show. -->
     <string name="home_because">Because you finished %1$s</string>
-    <!-- Heading over popular titles of the genre the person finished most of. The genre is lower case, such as "mecha". -->
+    <!-- Heading over popular titles of the genre the person finished most of, for a genre that has no heading of its own below. The genre is AniList's name as it writes it. -->
     <string name="home_more_genre">More %1$s</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_action">More action</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_adventure">More adventure</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_comedy">More comedy</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_drama">More drama</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_ecchi">More ecchi</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_fantasy">More fantasy</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_horror">More horror</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_mahou_shoujo">More mahou shoujo</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_mecha">More mecha</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_music">More music</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_mystery">More mystery</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_psychological">More psychological</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_romance">More romance</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_sci_fi">More sci-fi</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_slice_of_life">More slice of life</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_sports">More sports</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_supernatural">More supernatural</string>
+    <!-- Heading over popular titles of a genre the person finished most of. Write the genre as it reads inside a sentence in this language. -->
+    <string name="home_more_genre_thriller">More thriller</string>
     <!-- Line over the spotlight's title when it is the built-in demo. -->
     <string name="home_spotlight_demo">Demo, free to share</string>
     <!-- Notice when the viewer comes back from a licensed service after long enough to have watched an episode. It holds Mark as watched for 8 seconds. The service is the one they opened, such as Hikari Library. -->
@@ -131,7 +167,7 @@
     <!-- Part of an air time: the broadcast is within the next week. -->
     <plurals name="cause_airs_in_days">
         <item quantity="one">in one day at %2$s</item>
-        <item quantity="other">in %1$d days at %2$s</item>
+        <item quantity="other">in %1$,d days at %2$s</item>
     </plurals>
     <!-- Part of an air time: the broadcast is more than a week away. The date is year-month-day. -->
     <string name="cause_airs_on_date">on %1$s at %2$s</string>
@@ -154,14 +190,14 @@
     <!-- Part of a finished download's toast: subtitle files were merged into the video. -->
     <plurals name="cause_subtitles_merged">
         <item quantity="one">One subtitle track was merged in.</item>
-        <item quantity="other">%1$d subtitle tracks were merged in.</item>
+        <item quantity="other">%1$,d subtitle tracks were merged in.</item>
     </plurals>
     <!-- Part of a finished download's toast: merging failed, so the subtitles stay as files beside it. -->
     <string name="cause_subtitles_left_apart">The subtitles stay as separate files. %1$s</string>
     <!-- Part of a download toast: how many episodes of the range were in the queue already. -->
     <plurals name="cause_already_in_downloads">
         <item quantity="one">One episode is already in downloads.</item>
-        <item quantity="other">%1$d episodes are already in downloads.</item>
+        <item quantity="other">%1$,d episodes are already in downloads.</item>
     </plurals>
     <!-- Job note while a play looks the title up. -->
     <string name="status_looking_up_title">Looking up the title…</string>
@@ -186,13 +222,13 @@
     <!-- Toast when the player cannot be started. The reason comes from the system. -->
     <string name="notice_player_failed_to_start">Couldn\'t start mpv. Check that it runs on its own. (%1$s)</string>
     <!-- Toast when a stream never showed a frame and the next one is tried. -->
-    <string name="notice_stream_no_video">No video from that stream. Trying %1$d of %2$d.</string>
+    <string name="notice_stream_no_video">No video from that stream. Trying %1$,d of %2$,d.</string>
     <!-- Toast when mpv gave up on a file. The reason is mpv's own line. -->
     <string name="notice_player_could_not_play">mpv couldn\'t play this. %1$s</string>
     <!-- Toast when mpv closed without playing and without saying why. -->
     <string name="notice_player_exited_silently">mpv exited without playing anything and gave no reason. Try another source.</string>
     <!-- Toast when no picture has appeared a while after the player opened. -->
-    <string name="notice_player_not_playing">mpv hasn\'t started playing after %1$d s. The source may have no data. Check that mpv plays a file on its own.</string>
+    <string name="notice_player_not_playing">mpv hasn\'t started playing after %1$,d s. The source may have no data. Check that mpv plays a file on its own.</string>
     <!-- Toast when a play is asked for in a build with no player. -->
     <string name="notice_no_player">This version of Kaeri can\'t play video.</string>
     <!-- Toast at launch when the mpv program is missing. The binary is the name the settings give it. Terminal only: the engine never sends it to the apps. -->
@@ -276,12 +312,12 @@
     <!-- Toast after finished downloads were cleared from the list. -->
     <plurals name="notice_downloads_cleared">
         <item quantity="one">Cleared one finished download.</item>
-        <item quantity="other">Cleared %1$d finished downloads.</item>
+        <item quantity="other">Cleared %1$,d finished downloads.</item>
     </plurals>
     <!-- Toast after the skip times the viewer marked were cleared, from Settings. -->
     <plurals name="notice_skip_marks_cleared">
         <item quantity="one">Cleared the one skip time you marked.</item>
-        <item quantity="other">Cleared %1$d skip times you marked.</item>
+        <item quantity="other">Cleared %1$,d skip times you marked.</item>
     </plurals>
     <!-- Toast after clearing skip times from Settings when none were marked. -->
     <string name="notice_skip_marks_none">You haven\'t marked any skip times.</string>
@@ -304,17 +340,17 @@
     <!-- Toast after a range was asked for, some episodes were queued and some were there already. `existing` is the sentence of `cause-already-in-downloads`. -->
     <plurals name="notice_episodes_queued_existing">
         <item quantity="one">Queued one episode. %2$s</item>
-        <item quantity="other">Queued %1$d episodes. %2$s</item>
+        <item quantity="other">Queued %1$,d episodes. %2$s</item>
     </plurals>
     <!-- Toast as above, with the reason the range stopped. -->
     <plurals name="notice_episodes_queued_stopped">
         <item quantity="one">Queued one episode, then it stopped. %2$s</item>
-        <item quantity="other">Queued %1$d episodes, then it stopped. %2$s</item>
+        <item quantity="other">Queued %1$,d episodes, then it stopped. %2$s</item>
     </plurals>
     <!-- Toast as above, with some episodes in the queue already and the reason the range stopped. `existing` is the sentence of `cause-already-in-downloads`; `reason` is a sentence saying why the range stopped. -->
     <plurals name="notice_episodes_queued_existing_stopped">
         <item quantity="one">Queued one episode, then it stopped. %2$s %3$s</item>
-        <item quantity="other">Queued %1$d episodes, then it stopped. %2$s %3$s</item>
+        <item quantity="other">Queued %1$,d episodes, then it stopped. %2$s %3$s</item>
     </plurals>
     <!-- Toast when keep next found no room for another episode. -->
     <string name="notice_keep_next_full">Not enough free space to keep the next episodes downloaded. Free up some space to download more.</string>
@@ -353,7 +389,7 @@
     <!-- Under a cover or on a series page: how often new chapters come out, in weeks. -->
     <plurals name="reading_about_every_weeks">
         <item quantity="one">About every week</item>
-        <item quantity="other">About every %1$d weeks</item>
+        <item quantity="other">About every %1$,d weeks</item>
     </plurals>
     <!-- On a book's series page, when the same story is also a show. Shown only to someone who both watches and reads. -->
     <string name="reading_also_a_show">Also a show</string>
@@ -363,8 +399,6 @@
     <string name="reading_split_chapter">Chapter %1$s goes to trackers as %2$s.</string>
     <!-- A notice over the page when a chapter opens where it was left. It offers Start over. -->
     <string name="reader_resumed">Resumed at page %1$d</string>
-    <!-- The same notice in a webtoon strip, which counts images rather than pages. -->
-    <string name="reader_resumed_image">Resumed at image %1$d</string>
     <!-- A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page. -->
     <string name="reader_back_to_page">Back to page %1$d</string>
     <!-- A notice when another device read further, so the reader moved on to where it stopped. It offers Go back. The chapter is its whole label, such as The Long Night or Episode 63, and the device is its name, such as Living room tablet. A chapter with only a number uses the next message. -->
@@ -444,12 +478,12 @@
     <!-- Under a cover or on a series page: how many chapters the series has. -->
     <plurals name="reading_chapters">
         <item quantity="one">1 chapter</item>
-        <item quantity="other">%1$d chapters</item>
+        <item quantity="other">%1$,d chapters</item>
     </plurals>
     <!-- Under a cover or on a series page: how many volumes the series has. -->
     <plurals name="reading_volumes">
         <item quantity="one">1 volume</item>
-        <item quantity="other">%1$d volumes</item>
+        <item quantity="other">%1$,d volumes</item>
     </plurals>
     <!-- Under a cover: the series is on the person's Planning list. -->
     <string name="reading_on_planning">On your Planning list</string>
@@ -468,17 +502,17 @@
     <!-- Under a cover or the big picture: the page the person stopped on in a chapter. -->
     <string name="reading_chapter_page">Chapter %1$s · page %2$d</string>
     <!-- Under a cover or the big picture: how far into a novel's chapter the person is. -->
-    <string name="reading_chapter_percent">Chapter %1$s · %2$d%%</string>
+    <string name="reading_chapter_percent">Chapter %1$s · %2$,d%%</string>
     <!-- Under a cover: a chapter came out that the person has not read. The chapter is its number. -->
     <string name="reading_chapter_new">Chapter %1$s is new</string>
     <!-- Under a cover: a light novel's part, next to read or in progress. Light novels read in parts. -->
     <string name="reading_next_part">Part %1$s</string>
     <!-- Under a cover or the big picture: how far into a light novel's part the person is. -->
-    <string name="reading_part_percent">Part %1$s · %2$d%%</string>
+    <string name="reading_part_percent">Part %1$s · %2$,d%%</string>
     <!-- Under a cover: a light novel's part came out that the person has not read. -->
     <string name="reading_part_new">Part %1$s is new</string>
     <!-- Under a cover or the big picture: how far into a light novel's part the person is, the part named in the source's own words ("Part 3", "Chapter 3"), as its row on the series page names it. -->
-    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_percent">%1$s · %2$,d%%</string>
     <!-- Under a cover: a light novel's part came out that the person has not read, named in the source's own words ("Part 4", "Chapter 4"). -->
     <string name="reading_label_new">%1$s is new</string>
     <!-- Under a This week cell: a light novel's part that came out that day, with its own title. -->
@@ -522,7 +556,7 @@
     <!-- Send to e-reader: a send that waits because chapters must be fetched and downloads are kept to Wi-Fi. A send makes its files from every chapter at once, so all of it waits. n is how many chapters it still has to fetch. -->
     <plurals name="export_waits_for_wifi">
         <item quantity="one">One chapter isn\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
-        <item quantity="other">%1$d chapters aren\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
+        <item quantity="other">%1$,d chapters aren\'t downloaded yet, so this send waits for Wi-Fi and goes on by itself.</item>
     </plurals>
     <!-- Under a This week cell: the chapter that came out that day, with its own title. -->
     <string name="reading_chapter_titled">Chapter %1$s · %2$s</string>
@@ -543,7 +577,7 @@
     <!-- A chapter row's state: it waits to download until the device is on Wi-Fi. -->
     <string name="reading_row_waits_wifi">Queued · waits for Wi-Fi</string>
     <!-- A chapter row's state while it downloads. -->
-    <string name="reading_row_downloading">Downloading · %1$d of %2$d pages</string>
+    <string name="reading_row_downloading">Downloading · %1$,d of %2$,d pages</string>
     <!-- A chapter row's state: the download failed. The reason follows as the next part. -->
     <string name="reading_row_failed">Couldn\'t download</string>
     <!-- A chapter row's state: the page the person stopped on, of how many. -->
@@ -551,7 +585,7 @@
     <!-- A chapter row's state: the page the person stopped on, when the length isn't known. -->
     <string name="reading_row_page">Page %1$d</string>
     <!-- A novel's chapter row: how far into it the person is. -->
-    <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_percent">%1$,d%%</string>
     <!-- A novel's chapter row: the person opened it, and how far in is too little to say as a percent. -->
     <string name="reading_row_opened">Opened</string>
     <!-- A chapter row's state: the person bookmarked it. Bookmarked chapters are kept when read downloads are cleared. -->
@@ -559,17 +593,17 @@
     <!-- A chapter row: how long its pages are, for a file on the device. -->
     <plurals name="reading_row_pages">
         <item quantity="one">1 page</item>
-        <item quantity="other">%1$d pages</item>
+        <item quantity="other">%1$,d pages</item>
     </plurals>
     <!-- A chapter row: how many versions the person's sources have of it. The row's menu lists them. -->
     <plurals name="reading_row_versions">
         <item quantity="one">1 version</item>
-        <item quantity="other">%1$d versions</item>
+        <item quantity="other">%1$,d versions</item>
     </plurals>
     <!-- A chapter row: when it was read or came out, under a minute ago. -->
     <string name="reading_ago_now">just now</string>
     <!-- A chapter row: when it was read or came out, in minutes. -->
-    <string name="reading_ago_minutes">%1$d min ago</string>
+    <string name="reading_ago_minutes">%1$,d min ago</string>
     <!-- A chapter row: when it was read or came out, earlier today. -->
     <string name="reading_ago_today">today</string>
     <!-- A chapter row: when it was read or came out, the day before today. -->
@@ -577,22 +611,22 @@
     <!-- A chapter row: when it was read or came out, in days, under a week. -->
     <plurals name="reading_ago_days">
         <item quantity="one">1 day ago</item>
-        <item quantity="other">%1$d days ago</item>
+        <item quantity="other">%1$,d days ago</item>
     </plurals>
     <!-- A chapter row: when it was read or came out, in weeks, under two months. -->
     <plurals name="reading_ago_weeks">
         <item quantity="one">1 week ago</item>
-        <item quantity="other">%1$d weeks ago</item>
+        <item quantity="other">%1$,d weeks ago</item>
     </plurals>
     <!-- A chapter row: when it was read or came out, in months, under a year. -->
     <plurals name="reading_ago_months">
         <item quantity="one">1 month ago</item>
-        <item quantity="other">%1$d months ago</item>
+        <item quantity="other">%1$,d months ago</item>
     </plurals>
     <!-- A chapter row: when it was read or came out, in years. -->
     <plurals name="reading_ago_years">
         <item quantity="one">1 year ago</item>
-        <item quantity="other">%1$d years ago</item>
+        <item quantity="other">%1$,d years ago</item>
     </plurals>
     <!-- The tracker took the series off its list. -->
     <string name="reading_removed_from">Removed from %1$s</string>
@@ -613,20 +647,20 @@
     <!-- How many parts of a light novel are downloaded. -->
     <plurals name="reading_dl_parts">
         <item quantity="one">1 part</item>
-        <item quantity="other">%1$d parts</item>
+        <item quantity="other">%1$,d parts</item>
     </plurals>
     <!-- What the downloads take up on this device. -->
     <string name="reading_dl_size">%1$s</string>
     <!-- How many of the downloaded chapters are read, which Delete read clears. -->
-    <string name="reading_dl_read">%1$d read</string>
+    <string name="reading_dl_read">%1$,d read</string>
     <!-- The chapter downloading now. -->
     <string name="reading_dl_chapter">Chapter %1$s</string>
     <!-- How far the chapter downloading now has come. -->
-    <string name="reading_dl_pages">%1$d of %2$d pages</string>
+    <string name="reading_dl_pages">%1$,d of %2$,d pages</string>
     <!-- Chapters waiting their turn after the one downloading. -->
-    <string name="reading_dl_more_queued">%1$d more queued</string>
+    <string name="reading_dl_more_queued">%1$,d more queued</string>
     <!-- Chapters waiting their turn, none downloaded yet. -->
-    <string name="reading_dl_queued">%1$d queued</string>
+    <string name="reading_dl_queued">%1$,d queued</string>
     <!-- Chapters that wait for Wi-Fi to download. -->
     <string name="reading_dl_waits_wifi">waits for Wi-Fi</string>
     <!-- A chapter that failed. The reason follows as the next part. -->
@@ -644,15 +678,15 @@
     <!-- The notification's text: one series' chapters are downloaded. -->
     <plurals name="reading_downloads_done_chapters">
         <item quantity="one">A chapter of %1$s is ready to read offline.</item>
-        <item quantity="other">%2$d chapters of %1$s are ready to read offline.</item>
+        <item quantity="other">%2$,d chapters of %1$s are ready to read offline.</item>
     </plurals>
     <!-- The notification's text: one light novel's parts are downloaded. -->
     <plurals name="reading_downloads_done_parts">
         <item quantity="one">A part of %1$s is ready to read offline.</item>
-        <item quantity="other">%2$d parts of %1$s are ready to read offline.</item>
+        <item quantity="other">%2$,d parts of %1$s are ready to read offline.</item>
     </plurals>
     <!-- The notification's text: chapters of several series are downloaded. -->
-    <string name="reading_downloads_done_series">Chapters of %1$d series are ready to read offline.</string>
+    <string name="reading_downloads_done_series">Chapters of %1$,d series are ready to read offline.</string>
     <!-- Row heading on reading's Home: manga that are trending on AniList now. -->
     <string name="read_home_trending_manga">Trending manga</string>
     <!-- Row heading on reading's Home: webtoons that are trending on AniList now. -->
@@ -688,18 +722,64 @@
     <!-- Under a source's hit in Search: a light novel's parts it holds. -->
     <plurals name="read_hit_parts">
         <item quantity="one">1 part</item>
-        <item quantity="other">%1$d parts</item>
+        <item quantity="other">%1$,d parts</item>
     </plurals>
     <!-- Under a source's hit in Search: the book files it holds. -->
     <plurals name="read_hit_files">
         <item quantity="one">1 file</item>
-        <item quantity="other">%1$d files</item>
+        <item quantity="other">%1$,d files</item>
     </plurals>
     <!-- Under a source's hit in Search: the book files it holds, all in one format ("CBZ"). -->
     <plurals name="read_hit_files_format">
         <item quantity="one">1 file · %2$s</item>
-        <item quantity="other">%1$d files · %2$s</item>
+        <item quantity="other">%1$,d files · %2$s</item>
     </plurals>
+    <!-- The name of the folders on this device, which read as one source: a Search group's heading, the source a series reads from, "In Folders" on a search result. It stands alone, with no word for its kind beside it. -->
+    <string name="read_source_folders">Folders</string>
+    <!-- A section of the feed that e-readers fetch from: the chapters downloaded on this device. -->
+    <string name="read_feed_downloads">Downloads</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since January". -->
+    <string name="reading_since_january">since January</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since February". -->
+    <string name="reading_since_february">since February</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since March". -->
+    <string name="reading_since_march">since March</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since April". -->
+    <string name="reading_since_april">since April</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since May". -->
+    <string name="reading_since_may">since May</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since June". -->
+    <string name="reading_since_june">since June</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since July". -->
+    <string name="reading_since_july">since July</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since August". -->
+    <string name="reading_since_august">since August</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since September". -->
+    <string name="reading_since_september">since September</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since October". -->
+    <string name="reading_since_october">since October</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since November". -->
+    <string name="reading_since_november">since November</string>
+    <!-- On a cover in a New row, after the country: the month the series started, within the last 12 months, as in "Japan · since December". -->
+    <string name="reading_since_december">since December</string>
+    <!-- The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Manga, trending · 1,920 series from AniList". -->
+    <string name="read_view_all_trending_manga">Manga, trending</string>
+    <!-- The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Webtoons, trending · 1,920 series from AniList". -->
+    <string name="read_view_all_trending_webtoons">Webtoons, trending</string>
+    <!-- The line over Search's results opened by View all on a Trending row: the format and the order. The count follows it: "Light novels, trending · 1,920 series from AniList". -->
+    <string name="read_view_all_trending_novels">Light novels, trending</string>
+    <!-- The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Manga started in the last 12 months · 1,920 series from AniList". -->
+    <string name="read_view_all_new_manga">Manga started in the last 12 months</string>
+    <!-- The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Webtoons started in the last 12 months · 1,920 series from AniList". -->
+    <string name="read_view_all_new_webtoons">Webtoons started in the last 12 months</string>
+    <!-- The line over Search's results opened by View all on a New row: the format and the filter. The count follows it: "Light novels started in the last 12 months · 1,920 series from AniList". -->
+    <string name="read_view_all_new_novels">Light novels started in the last 12 months</string>
+    <!-- The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished manga, most popular · 1,920 series from AniList". -->
+    <string name="read_view_all_finished_manga">Finished manga, most popular</string>
+    <!-- The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished webtoons, most popular · 1,920 series from AniList". -->
+    <string name="read_view_all_finished_webtoons">Finished webtoons, most popular</string>
+    <!-- The line over Search's results opened by View all on a Finished row: the format and the order. The count follows it: "Finished light novels, most popular · 1,920 series from AniList". -->
+    <string name="read_view_all_finished_novels">Finished light novels, most popular</string>
     <!-- Toast after joining a plugin store with an invite that names this device's owner. -->
     <string name="store_joined">Joined %1$s as %2$s.</string>
     <!-- Toast after joining a plugin store with its open link, which keeps no name. -->
@@ -715,7 +795,7 @@
     <!-- Toast after cancelling an invite that people joined with. -->
     <plurals name="store_invite_cancelled_kept">
         <item quantity="one">Invite cancelled. The person who joined stays a member.</item>
-        <item quantity="other">Invite cancelled. The %1$d people who joined stay members.</item>
+        <item quantity="other">Invite cancelled. The %1$,d people who joined stay members.</item>
     </plurals>
     <!-- Toast after a store owner lets anyone with the store's link join. -->
     <string name="store_open_join_on">Anyone with the plugin store\'s link can join now. Copy it from the members screen.</string>
@@ -724,7 +804,7 @@
     <!-- Toast after a store owner turns off joining with the link, when some devices joined that way. -->
     <plurals name="store_open_join_off_devices">
         <item quantity="one">Only people you invite can join now. The device that joined with the link keeps working until you remove it.</item>
-        <item quantity="other">Only people you invite can join now. The %1$d devices that joined with the link keep working until you remove them.</item>
+        <item quantity="other">Only people you invite can join now. The %1$,d devices that joined with the link keep working until you remove them.</item>
     </plurals>
     <!-- Toast after one device that joined with the store's link is removed. -->
     <string name="store_device_removed">That device no longer works with this plugin store.</string>
@@ -751,7 +831,7 @@
     <!-- Note on the sources screen when plugins were skipped because they were built for an older plugin interface. -->
     <plurals name="plugins_outdated">
         <item quantity="one">One plugin was built for an older version of Kaeri and needs updating: %2$s.</item>
-        <item quantity="other">%1$d plugins were built for an older version of Kaeri and need updating: %2$s.</item>
+        <item quantity="other">%1$,d plugins were built for an older version of Kaeri and need updating: %2$s.</item>
     </plurals>
     <!-- Toast at launch when joined plugin stores offer newer versions of installed plugins. -->
     <plurals name="plugin_updates_ready">
@@ -921,7 +1001,7 @@
     <!-- Toast after signing out of a tracker. The changes were not discarded: they are sent after the next sign-in. -->
     <plurals name="notice_signed_out_queue">
         <item quantity="one">Signed out of %1$s. One queued change is kept for the next sign-in.</item>
-        <item quantity="other">Signed out of %1$s. %2$d queued changes are kept for the next sign-in.</item>
+        <item quantity="other">Signed out of %1$s. %2$,d queued changes are kept for the next sign-in.</item>
     </plurals>
     <!-- Toast when signing out of a tracker failed. The reason comes from the system. -->
     <string name="notice_sign_out_failed">Couldn\'t sign out of %1$s. Try again. %2$s</string>
@@ -950,7 +1030,7 @@
     <!-- Toast, and desktop notification, for several episodes that aired while the app was closed. -->
     <plurals name="notice_episodes_aired">
         <item quantity="one">One new episode of a show you watch aired. The calendar has it.</item>
-        <item quantity="other">%1$d new episodes of shows you watch aired. The calendar has them.</item>
+        <item quantity="other">%1$,d new episodes of shows you watch aired. The calendar has them.</item>
     </plurals>
     <!-- Toast when a new release of Kaeri is out, on the terminal app. The command is not translated. Terminal only: the engine never sends it to the apps. -->
     <string name="notice_update_available">%1$s is out. Run kaeri --update to install it.</string>
@@ -993,7 +1073,7 @@
     <!-- Toast after episodes are added to the download queue. -->
     <plurals name="notice_episodes_queued">
         <item quantity="one">Queued one episode.</item>
-        <item quantity="other">Queued %1$d episodes.</item>
+        <item quantity="other">Queued %1$,d episodes.</item>
     </plurals>
     <!-- Notice after the subtitle style is reset. It offers Undo. -->
     <string name="settings_subs_reset_done">Subtitle style reset</string>
@@ -1048,7 +1128,7 @@
     <!-- Player, More menu: under Discussion, how many comments there are and that opening it pauses the video. -->
     <plurals name="player_more_discussion_note">
         <item quantity="one">One comment · pauses</item>
-        <item quantity="other">%1$d comments · pauses</item>
+        <item quantity="other">%1$,d comments · pauses</item>
     </plurals>
     <!-- Player, More menu: under Discussion when the comment count is not known yet; opening it pauses the video. -->
     <string name="player_more_discussion_pauses">Pauses the video</string>
@@ -1057,7 +1137,7 @@
     <!-- Spoken name of a filter pill in the search row that has no value. -->
     <string name="search_pill_any">%1$s, any</string>
     <!-- Spoken name of the pinned filters button when the sheet holds filters that are set. -->
-    <string name="search_pill_all_set">All filters, %1$d set</string>
+    <string name="search_pill_all_set">All filters, %1$,d set</string>
     <!-- Spoken name of the pill in the search row that takes every filter off. -->
     <string name="search_pill_clear">Clear all filters</string>
     <!-- Play on TV sheet: the heading over the TVs with Chromecast built in. -->
@@ -1071,7 +1151,7 @@
     <!-- Play on TV sheet: in place of the rows when the local network permission was turned down. Open settings follows it. -->
     <string name="cast_sheet_local_network">Allow Kaeri to find devices on your local network</string>
     <!-- Casting card: over the next episode while the count runs to playing it by itself. -->
-    <string name="cast_card_up_next_in">Up next · plays in %1$d s</string>
+    <string name="cast_card_up_next_in">Up next · plays in %1$,d s</string>
     <!-- Casting card: over the next episode when auto-next is off and the card waits for Play now. -->
     <string name="cast_card_up_next">Up next</string>
     <!-- Casting card: cancels the count, so the next episode does not play by itself. -->
@@ -1112,8 +1192,8 @@
     <string name="store_invite_chip">Invite ••••%1$s</string>
     <!-- How many hosts a plugin may contact, filling { $hosts } in "Version 1.4 · may contact 2 hosts". -->
     <plurals name="store_plugin_hosts">
-        <item quantity="one">%1$d host</item>
-        <item quantity="other">%1$d hosts</item>
+        <item quantity="one">%1$,d host</item>
+        <item quantity="other">%1$,d hosts</item>
     </plurals>
     <!-- Join page, paired view: the line under "Kaeri is for" when the other device's answer is Watch. -->
     <string name="join_medium_line_watch">Watching, as on %1$s</string>
@@ -1156,7 +1236,7 @@
     <!-- Under the page number in the e-ink reader's bottom bar. -->
     <plurals name="eink_pages_left">
         <item quantity="one">One page left in chapter</item>
-        <item quantity="other">%1$d pages left in chapter</item>
+        <item quantity="other">%1$,d pages left in chapter</item>
     </plurals>
     <!-- Button in the e-ink reader's bottom bar. -->
     <string name="eink_next_chapter">Next chapter</string>
@@ -1175,7 +1255,7 @@
     <!-- The next chapter's length on the page between chapters. -->
     <plurals name="eink_end_pages">
         <item quantity="one">One page</item>
-        <item quantity="other">%1$d pages</item>
+        <item quantity="other">%1$,d pages</item>
     </plurals>
     <!-- How the next chapter reads, on the page between chapters. -->
     <string name="eink_reads_rtl">right to left</string>
@@ -1251,16 +1331,20 @@
     <string name="reader_notice_change">Change</string>
     <!-- Button in the reader's controls that opens its settings, drawn as Aa. -->
     <string name="reader_settings">Reader settings</string>
+    <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
+    <string name="reader_chapter_line_titled">Chapter %1$s · %2$s</string>
     <!-- Under the novel's title in the reader's controls, while it scrolls. The chapter is its number, such as 4. -->
     <string name="reader_novel_line_scroll">Chapter %1$s · scroll</string>
     <!-- At the end of a scrolling novel's scrubber: the time left in the chapter at the person's pace. -->
-    <string name="reader_minutes_left">%1$d min</string>
+    <string name="reader_minutes_left">%1$,d min</string>
     <!-- Name of the tap zone on the reading side, shown once on the first chapter. -->
     <string name="reader_zone_next">Next page</string>
     <!-- Heading of the page grid. -->
     <string name="reader_grid_title">Pages</string>
     <!-- Main button on the page between chapters. -->
     <string name="reader_end_continue">Continue</string>
+    <!-- Line above the main button on the page between chapters. -->
+    <string name="reader_end_swipe">Swipe to keep reading</string>
     <!-- Quiet button on the page between chapters that leaves the reader for the series page. -->
     <string name="reader_end_series">Back to the series</string>
     <!-- Button on the last page of a finished series that starts it from the first chapter. -->
@@ -1439,8 +1523,13 @@
     <string name="reader_paper_look">Paper look by day</string>
     <!-- Paper mode part: a slider for how far the page's white is dimmed. -->
     <string name="reader_paper_dim">Dim the page</string>
+    <!-- The next episode's length on the divider inside a strip. -->
+    <plurals name="reader_divider_images">
+        <item quantity="one">One image</item>
+        <item quantity="other">%1$,d images</item>
+    </plurals>
     <!-- The opening screen's line after 3 s: what it waits on, then how long it has waited, such as "Finding a source · 4 s". -->
-    <string name="reader_opening_waited">%1$s · %2$d s</string>
+    <string name="reader_opening_waited">%1$s · %2$,d s</string>
     <!-- Heading of the list of other sources a failed chapter can be read from. -->
     <string name="reader_sources_title">Read this chapter from</string>
     <!-- Heading on the Paper mode page above the parts it changes. -->
@@ -1460,7 +1549,7 @@
     <!-- Notification, new chapters: the line under the series' title when one series has several. -->
     <plurals name="notif_chapters_new">
         <item quantity="one">One new chapter</item>
-        <item quantity="other">%1$d new chapters</item>
+        <item quantity="other">%1$,d new chapters</item>
     </plurals>
     <!-- Notification, new chapter: what the lock screen shows when previews are hidden. -->
     <string name="notif_chapter_hidden">New chapter</string>
@@ -1469,12 +1558,12 @@
     <!-- The download notification while only chapters download. -->
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Downloading one chapter</item>
-        <item quantity="other">Downloading %1$d chapters</item>
+        <item quantity="other">Downloading %1$,d chapters</item>
     </plurals>
     <!-- On a series page whose source failed, under the cause: the chapters downloaded before still open. -->
     <plurals name="read_series_downloaded_open">
         <item quantity="one">One downloaded chapter still opens.</item>
-        <item quantity="other">%1$d downloaded chapters still open.</item>
+        <item quantity="other">%1$,d downloaded chapters still open.</item>
     </plurals>
     <!-- Downloads' empty line for a person who only reads, under "No downloads". -->
     <string name="read_downloads_empty_detail">Downloaded chapters open without a connection.</string>
@@ -1487,24 +1576,24 @@
     <!-- Part of the line under Sources in the Settings list: how many book folders there are. -->
     <plurals name="settings_summary_book_folders">
         <item quantity="one">1 folder</item>
-        <item quantity="other">%1$d folders</item>
+        <item quantity="other">%1$,d folders</item>
     </plurals>
     <!-- Part of the line under Sources in the Settings list: how many book servers there are. -->
     <plurals name="settings_summary_book_servers">
         <item quantity="one">1 server</item>
-        <item quantity="other">%1$d servers</item>
+        <item quantity="other">%1$,d servers</item>
     </plurals>
     <!-- Part of the line under Sources in the Settings list: how many plugins there are for books. -->
     <plurals name="settings_summary_book_plugins">
         <item quantity="one">1 plugin</item>
-        <item quantity="other">%1$d plugins</item>
+        <item quantity="other">%1$,d plugins</item>
     </plurals>
     <!-- Row in Settings' Sources with both media on, and the title of its page: the sources for books. -->
     <string name="settings_book_sources">Book sources</string>
     <!-- Line over the Check matches list: how many series of the folders were matched, and how many need a look. -->
     <plurals name="book_matches_line">
-        <item quantity="one">Kaeri matched %1$d by their details. This one needs a look.</item>
-        <item quantity="other">Kaeri matched %1$d by their details. These %2$d need a look.</item>
+        <item quantity="one">Kaeri matched %1$,d by their details. This one needs a look.</item>
+        <item quantity="other">Kaeri matched %1$,d by their details. These %2$,d need a look.</item>
     </plurals>
     <!-- The folder picker could not be opened, or the folder could not be kept. -->
     <string name="book_folder_failed">That folder couldn\'t be added. Try another one.</string>
@@ -1543,9 +1632,9 @@
     <!-- TV, card actions: adds the title to Planning. -->
     <string name="tv_add_to_planning">Add to Planning</string>
     <!-- TV, Library poster: how far along, out of the total. -->
-    <string name="tv_progress_of">%1$d / %2$d</string>
+    <string name="tv_progress_of">%1$,d / %2$,d</string>
     <!-- TV, Library poster: how far along when the total is not known. -->
-    <string name="tv_progress_unknown">%1$d / ?</string>
+    <string name="tv_progress_unknown">%1$,d / ?</string>
     <!-- Beside the calendar chips when signed out -->
     <string name="tv_calendar_signed_out_note">Sign in to see only your shows</string>
     <!-- Air time with the time it moved from -->
@@ -1573,11 +1662,11 @@
     <!-- Under the genre list on the TV when it is offline and the genres have not loaded -->
     <string name="tv_search_genres_offline">Genres load once the TV is online</string>
     <!-- Under the seasons row on the TV title page: which season this is among the franchise's. -->
-    <string name="tv_seasons_position">%1$d of %2$d</string>
+    <string name="tv_seasons_position">%1$,d of %2$,d</string>
     <!-- Under the seasons row on the TV title page when this title is none of its seasons. -->
     <plurals name="tv_seasons_count">
-        <item quantity="one">%1$d season</item>
-        <item quantity="other">%1$d seasons</item>
+        <item quantity="one">%1$,d season</item>
+        <item quantity="other">%1$,d seasons</item>
     </plurals>
     <!-- Action on an episode's sheet: marks it and every episode before it watched. -->
     <string name="tv_episode_mark_up_to_here">Mark watched up to here</string>
@@ -1633,13 +1722,13 @@
     <string name="tv_update_auto_check_detail">Once a day, from Kaeri\'s releases</string>
     <!-- Line under a paired phone on the TV: it was last used this many days ago. -->
     <plurals name="tv_phone_used_days">
-        <item quantity="one">Used %1$d day ago</item>
-        <item quantity="other">Used %1$d days ago</item>
+        <item quantity="one">Used %1$,d day ago</item>
+        <item quantity="other">Used %1$,d days ago</item>
     </plurals>
     <!-- Line under a paired phone that never connected again: it paired this many days ago. -->
     <plurals name="tv_phone_paired_days">
-        <item quantity="one">Paired %1$d day ago</item>
-        <item quantity="other">Paired %1$d days ago</item>
+        <item quantity="one">Paired %1$,d day ago</item>
+        <item quantity="other">Paired %1$,d days ago</item>
     </plurals>
     <!-- Line on the TV's update page naming the version it runs now -->
     <string name="tv_update_installed">This TV has v%1$s</string>
@@ -1698,7 +1787,7 @@
     <!-- Key line under a plugin store's name before joining on the TV -->
     <string name="tv_preview_key">Key %1$s</string>
     <!-- Line under the first plugins of a plugin store about the rest -->
-    <string name="tv_preview_more">and %1$d more</string>
+    <string name="tv_preview_more">and %1$,d more</string>
     <!-- Button on the TV's plugin store preview when this device joined already -->
     <string name="tv_already_joined">Already joined</string>
     <!-- Label of the Join button while it works -->
@@ -1732,12 +1821,12 @@
     <!-- TV, discussion panel: the comment count under the title, and that nothing can be posted here. -->
     <plurals name="tv_discussion_count_read_only">
         <item quantity="one">One comment · Read only</item>
-        <item quantity="other">%1$d comments · Read only</item>
+        <item quantity="other">%1$,d comments · Read only</item>
     </plurals>
     <!-- TV, discussion panel: a comment's like count after its age. -->
     <plurals name="tv_discussion_likes">
         <item quantity="one">One like</item>
-        <item quantity="other">%1$d likes</item>
+        <item quantity="other">%1$,d likes</item>
     </plurals>
     <!-- TV, discussion panel: what Select does on a comment with a hidden spoiler. -->
     <string name="tv_discussion_select_spoiler">Select to show the spoiler</string>
@@ -1752,7 +1841,7 @@
     <!-- Download notification title when several episodes are paused. -->
     <plurals name="downloads_live_paused">
         <item quantity="one">One episode paused</item>
-        <item quantity="other">%1$d episodes paused</item>
+        <item quantity="other">%1$,d episodes paused</item>
     </plurals>
     <!-- Download notification, several episodes: the one that runs, by show and number. -->
     <string name="downloads_live_lead">%1$s E%2$d</string>
@@ -1793,7 +1882,7 @@
     <!-- Title facts: where else the title is, by the first place and how many more. -->
     <plurals name="title_also_on_more">
         <item quantity="one">%1$s and one more</item>
-        <item quantity="other">%1$s and %2$d more</item>
+        <item quantity="other">%1$s and %2$,d more</item>
     </plurals>
     <!-- Mark on a title meant for adults. -->
     <string name="title_adult_mark">18+</string>
@@ -1812,7 +1901,7 @@
     <!-- Group heading on the downloads board: how many episodes a show has, and the space they take. -->
     <plurals name="downloads_group_summary">
         <item quantity="one">One episode · %2$s</item>
-        <item quantity="other">%1$d episodes · %2$s</item>
+        <item quantity="other">%1$,d episodes · %2$s</item>
     </plurals>
     <!-- Episode menu item that starts a download. -->
     <string name="episode_menu_download">Download</string>
@@ -1845,17 +1934,17 @@
     <!-- Search chip for several genres picked. -->
     <plurals name="search_genres_picked">
         <item quantity="one">One genre</item>
-        <item quantity="other">%1$d genres</item>
+        <item quantity="other">%1$,d genres</item>
     </plurals>
     <!-- Search chip for several formats picked. -->
     <plurals name="search_formats_picked">
         <item quantity="one">One format</item>
-        <item quantity="other">%1$d formats</item>
+        <item quantity="other">%1$,d formats</item>
     </plurals>
     <!-- Search chip for several statuses picked. -->
     <plurals name="search_statuses_picked">
         <item quantity="one">One status</item>
-        <item quantity="other">%1$d statuses</item>
+        <item quantity="other">%1$,d statuses</item>
     </plurals>
     <!-- Search filter: the score slider's value when no minimum is set. -->
     <string name="filter_score_any">Any</string>
@@ -1908,7 +1997,7 @@
     <!-- Plugin store line: how many updates wait in it. -->
     <plurals name="stores_updates_waiting">
         <item quantity="one">One update</item>
-        <item quantity="other">%1$d updates</item>
+        <item quantity="other">%1$,d updates</item>
     </plurals>
     <!-- Plugin store page: when the store was last checked, after "Joined as" and a dot. -->
     <string name="stores_checked_ago">checked %1$s</string>
@@ -1943,7 +2032,7 @@
     <!-- Settings list, Sources row: how many sources there are. -->
     <plurals name="settings_summary_sources">
         <item quantity="one">One source</item>
-        <item quantity="other">%1$d sources</item>
+        <item quantity="other">%1$,d sources</item>
     </plurals>
     <!-- Settings list, Sources row: no sources yet. -->
     <string name="settings_summary_no_sources">No sources yet</string>
@@ -1992,13 +2081,13 @@
     <!-- Title language note: what the Romaji choice does. -->
     <string name="settings_titles_note_romaji">Japanese titles written in Latin letters, as AniList lists them.</string>
     <!-- Settings, Sources: how many plugin stores, and how many updates wait in them. -->
-    <string name="settings_stores_with_updates">%1$d · %2$s</string>
+    <string name="settings_stores_with_updates">%1$,d · %2$s</string>
     <!-- Settings, Sources: the note under the seeding group. -->
     <string name="settings_seeding_best_effort">This device seeds only while Kaeri is open.</string>
     <!-- Settings, Downloads: the count of downloaded episodes. -->
     <plurals name="settings_downloads_count">
         <item quantity="one">One episode</item>
-        <item quantity="other">%1$d episodes</item>
+        <item quantity="other">%1$,d episodes</item>
     </plurals>
     <!-- Settings, Accounts: the group about the main tracker. -->
     <string name="settings_anilist_footer">Progress and list changes sync to AniList. Library shows your AniList lists.</string>
@@ -2007,7 +2096,7 @@
     <!-- Settings, Accounts: the row that opens the list of differences between here and the tracker. -->
     <plurals name="accounts_review_differences">
         <item quantity="one">Review one difference</item>
-        <item quantity="other">Review %1$d differences</item>
+        <item quantity="other">Review %1$,d differences</item>
     </plurals>
     <!-- Settings, About: the licence row. -->
     <string name="settings_licence_title">Licence</string>
@@ -2084,7 +2173,7 @@
     <!-- TV sheet, remote: the volume up button. -->
     <string name="tv_sheet_volume_up">Volume up</string>
     <!-- TV sheet, remote: the volume as a number out of 100. -->
-    <string name="tv_sheet_volume_value">%1$d of 100</string>
+    <string name="tv_sheet_volume_value">%1$,d of 100</string>
     <!-- TV sheet, remote: the row when the TV plays nothing. -->
     <string name="tv_sheet_nothing_playing">Nothing playing</string>
     <!-- TV sheet, remote: the seek bar's name for a screen reader. -->
@@ -2130,7 +2219,7 @@
     <!-- Notification, new episodes: the summary's title when several shows have a new episode. -->
     <plurals name="notif_new_episodes">
         <item quantity="one">One new episode</item>
-        <item quantity="other">%1$d new episodes</item>
+        <item quantity="other">%1$,d new episodes</item>
     </plurals>
     <!-- Notification, new episode: what the lock screen shows when previews are hidden. -->
     <string name="notif_hidden_text">New episode</string>
@@ -2151,7 +2240,7 @@
     <!-- Phone as remote, media card: the episode and the TV it plays on. -->
     <string name="tv_session_line">%1$s · %2$s</string>
     <!-- Widgets, Continue: the line under a show with time left in the episode. -->
-    <string name="widget_line_left">%1$s · %2$d min left</string>
+    <string name="widget_line_left">%1$s · %2$,d min left</string>
     <!-- Widgets, Continue: the line under a show with the episode out of the season. -->
     <string name="widget_line_of">E%1$d of %2$d</string>
     <!-- Widgets, Continue: the title when nothing is in progress. -->
@@ -2187,7 +2276,7 @@
     <!-- Under a release in the source picker: how many people share it right now. -->
     <plurals name="release_seeders">
         <item quantity="one">One seeder</item>
-        <item quantity="other">%1$d seeders</item>
+        <item quantity="other">%1$,d seeders</item>
     </plurals>
     <!-- Heading in the trailer sheet when the video did not start within a few seconds or the player refused it. -->
     <string name="trailer_failed">Couldn\'t open the trailer</string>
@@ -2386,7 +2475,7 @@
     <!-- Note under the Settings row that lets a cast play torrents, on an iPad. -->
     <string name="cast_torrents_note_ipad">A TV with Chromecast built in can then play torrents. This iPad sends the episode for as long as it plays.</string>
     <!-- Line on the casting card while the next episode counts down. The seconds are whole. -->
-    <string name="cast_up_next_plays_in">Up next · plays in %1$d s</string>
+    <string name="cast_up_next_plays_in">Up next · plays in %1$,d s</string>
     <!-- The card's line when a cast never started. The name is the TV's. -->
     <string name="cast_couldnt_start">Couldn\'t start on %1$s</string>
     <!-- The card's line when a cast that played has stopped. -->
@@ -2406,17 +2495,17 @@
     <!-- Button that puts a question off until later. -->
     <string name="action_not_now">Not now</string>
     <!-- A span of time in whole days. The unit letter belongs to the language. -->
-    <string name="duration_days">%1$d d</string>
+    <string name="duration_days">%1$,d d</string>
     <!-- A span of time in hours and minutes. -->
-    <string name="duration_hours_minutes">%1$d h %2$d min</string>
+    <string name="duration_hours_minutes">%1$,d h %2$,d min</string>
     <!-- A span of time in whole hours. -->
-    <string name="duration_hours">%1$d h</string>
+    <string name="duration_hours">%1$,d h</string>
     <!-- A span of time in minutes. -->
-    <string name="duration_minutes">%1$d min</string>
+    <string name="duration_minutes">%1$,d min</string>
     <!-- A short wait in minutes and seconds. The seconds come with a leading zero. -->
-    <string name="duration_minutes_seconds">%1$d min %2$s s</string>
+    <string name="duration_minutes_seconds">%1$,d min %2$s s</string>
     <!-- A short wait in seconds. -->
-    <string name="duration_seconds">%1$d s</string>
+    <string name="duration_seconds">%1$,d s</string>
     <!-- A file size in bytes. The number is already formatted. -->
     <string name="size_byte">%1$s B</string>
     <!-- A file size in kilobytes (1,000 bytes). The number is already formatted. -->
@@ -2536,9 +2625,9 @@
     <!-- How long until something happens. -->
     <string name="time_in">in %1$s</string>
     <!-- Under a title or in a row: minutes left in an episode. -->
-    <string name="time_minutes_left">%1$d min left</string>
+    <string name="time_minutes_left">%1$,d min left</string>
     <!-- A length in minutes, for an episode. -->
-    <string name="time_minutes">%1$d min</string>
+    <string name="time_minutes">%1$,d min</string>
     <!-- A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line. -->
     <string name="time_now_inline">now</string>
     <!-- How long ago, under a minute. Lower case, as it stands inside a line. -->
@@ -2606,12 +2695,12 @@
     <!-- Controller help: seeks back in the player. -->
     <plurals name="pad_help_seek_back">
         <item quantity="one">Back one second</item>
-        <item quantity="other">Back %1$d seconds</item>
+        <item quantity="other">Back %1$,d seconds</item>
     </plurals>
     <!-- Controller help: seeks forward in the player. -->
     <plurals name="pad_help_seek_forward">
         <item quantity="one">Forward one second</item>
-        <item quantity="other">Forward %1$d seconds</item>
+        <item quantity="other">Forward %1$,d seconds</item>
     </plurals>
     <!-- Controller help: skips the opening or ending while its offer shows. -->
     <string name="pad_help_skip">Skip</string>
@@ -2720,7 +2809,7 @@
     <!-- Accessible label of the button that turns the TV down. -->
     <string name="tv_volume_down">Volume down</string>
     <!-- The TV's volume as a value of 100. -->
-    <string name="tv_volume_of">%1$d of 100</string>
+    <string name="tv_volume_of">%1$,d of 100</string>
     <!-- Accessible label of the button that turns the TV up. -->
     <string name="tv_volume_up">Volume up</string>
     <!-- Button that downloads the new version of the app. -->
@@ -2744,12 +2833,12 @@
     <!-- Quiet line under an episode that opens its discussion. -->
     <plurals name="discussion_row">
         <item quantity="one">Discussion · one comment</item>
-        <item quantity="other">Discussion · %1$d comments</item>
+        <item quantity="other">Discussion · %1$,d comments</item>
     </plurals>
     <!-- Count of comments in the header of the discussion. -->
     <plurals name="discussion_count">
         <item quantity="one">One comment</item>
-        <item quantity="other">%1$d comments</item>
+        <item quantity="other">%1$,d comments</item>
     </plurals>
     <!-- Button that likes a comment, with its count after it. Also its accessible name. -->
     <string name="discussion_like">Like</string>
@@ -2758,7 +2847,7 @@
     <!-- Line under a reply that has more replies folded in it. The line opens them. -->
     <plurals name="discussion_more_replies">
         <item quantity="one">One more reply</item>
-        <item quantity="other">%1$d more replies</item>
+        <item quantity="other">%1$,d more replies</item>
     </plurals>
     <!-- Muted bar in place of a spoiler in a comment, until it is opened. -->
     <string name="discussion_spoiler">Spoiler</string>
@@ -2929,7 +3018,7 @@
     <!-- Notification text while several episodes download. -->
     <plurals name="downloads_notice_running">
         <item quantity="one">Downloading one episode</item>
-        <item quantity="other">Downloading %1$d episodes</item>
+        <item quantity="other">Downloading %1$,d episodes</item>
     </plurals>
     <!-- Notification text: first line of one running download. -->
     <string name="downloads_notice_episode_left">Episode %1$d · %2$s left</string>
@@ -3008,7 +3097,7 @@
     <!-- Count beside the { -continue-cap } heading when there are more than twelve shows. -->
     <plurals name="home_continue_count">
         <item quantity="one">1 show</item>
-        <item quantity="other">%1$d shows</item>
+        <item quantity="other">%1$,d shows</item>
     </plurals>
     <!-- Link beside a heading that opens the full list. -->
     <string name="home_view_all">View all</string>
@@ -3019,7 +3108,7 @@
     <!-- A day of This week with nothing on it. -->
     <string name="home_nothing_airing">Nothing airing</string>
     <!-- A day of This week with more titles than fit. -->
-    <string name="home_day_more">%1$d more</string>
+    <string name="home_day_more">%1$,d more</string>
     <!-- Link beside This season and Starting in that opens Seasonal. -->
     <string name="home_seasonal">Seasonal</string>
     <!-- Link beside a genre shelf that opens Search with that genre. -->
@@ -3069,20 +3158,20 @@
     <!-- Continue row subtitle. The show's title is cut first when the row is short. -->
     <plurals name="queue_episodes_left">
         <item quantity="one">One episode left in %2$s</item>
-        <item quantity="other">%1$d episodes left in %2$s</item>
+        <item quantity="other">%1$,d episodes left in %2$s</item>
     </plurals>
     <!-- A number of episodes, alone: a badge or a count under a title. -->
     <plurals name="episodes_count">
-        <item quantity="one">%1$d episode</item>
-        <item quantity="other">%1$d episodes</item>
+        <item quantity="one">%1$,d episode</item>
+        <item quantity="other">%1$,d episodes</item>
     </plurals>
     <!-- How far through a show a person is. The plural follows the total. -->
     <plurals name="progress_episodes">
-        <item quantity="one">%1$d of %2$d episode</item>
-        <item quantity="other">%1$d of %2$d episodes</item>
+        <item quantity="one">%1$,d of %2$,d episode</item>
+        <item quantity="other">%1$,d of %2$,d episodes</item>
     </plurals>
     <!-- A span of time to the next episode, in days and hours. The unit letters belong to the language. -->
-    <string name="duration_days_hours">%1$d d %2$d h</string>
+    <string name="duration_days_hours">%1$,d d %2$,d h</string>
     <!-- Group header on the library and continue screens. -->
     <string name="group_in_progress">In progress</string>
     <!-- Group header for what aired in the last few days. -->
@@ -3172,9 +3261,9 @@
     <!-- Shorter marker used in a widget row. -->
     <string name="library_in_your_list">In your list</string>
     <!-- Short progress under a show: the last episode watched out of the total. -->
-    <string name="progress_episodes_short">E%1$d of %2$d</string>
+    <string name="progress_episodes_short">E%1$,d of %2$,d</string>
     <!-- Short progress under a show when the total is not known. -->
-    <string name="progress_episode_short">E%1$d</string>
+    <string name="progress_episode_short">E%1$,d</string>
     <!-- Row caption: the next unwatched episode, dubbed, which came out a while ago. -->
     <string name="continue_row_start_aired_dubbed">Play E%1$d dubbed · out %2$s</string>
     <!-- Line on a suggestion that has not started airing. The date is written out already, such as "9 January". -->
@@ -3206,26 +3295,26 @@
     <!-- Line of a folder's row while it is scanned. -->
     <plurals name="library_row_scanning">
         <item quantity="one">Scanning · 1 file found</item>
-        <item quantity="other">Scanning · %1$d files found</item>
+        <item quantity="other">Scanning · %1$,d files found</item>
     </plurals>
     <!-- Line of a folder's row while its series are matched to AniList. -->
-    <string name="library_row_matching">Matching · %1$d of %2$d series</string>
+    <string name="library_row_matching">Matching · %1$,d of %2$,d series</string>
     <!-- Added to the matching line while the limiter holds requests back. -->
-    <string name="library_row_waiting">Waiting for AniList · %1$d s</string>
+    <string name="library_row_waiting">Waiting for AniList · %1$,d s</string>
     <!-- Line of a folder row when it is done, such as "214 episodes of 18 series". Both parts are worded already by library-episodes and library-series. -->
     <string name="library_row_summary">%1$s of %2$s</string>
     <!-- The episodes part of a folder's summary line. -->
     <plurals name="library_episodes">
         <item quantity="one">1 episode</item>
-        <item quantity="other">%1$d episodes</item>
+        <item quantity="other">%1$,d episodes</item>
     </plurals>
     <!-- The series part of a folder's summary line. -->
     <plurals name="library_series">
         <item quantity="one">1 series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
     <!-- Ends the summary line when some series need a look. -->
-    <string name="library_row_needs_look">%1$d need a look</string>
+    <string name="library_row_needs_look">%1$,d need a look</string>
     <!-- Line of a folder on a drive that is not connected. -->
     <string name="library_row_drive_offline">Drive not connected</string>
     <!-- Line of a folder that was removed or renamed. -->
@@ -3251,28 +3340,28 @@
     <!-- Heading of the list of files that could not be matched. -->
     <string name="library_not_matched">Not matched</string>
     <!-- Row that opens the list of matched series. -->
-    <string name="library_matched">%1$d series matched</string>
+    <string name="library_matched">%1$,d series matched</string>
     <!-- Line under a row in Needs a look. -->
-    <string name="library_best_guess">Best guess: %1$s · %2$d%% match</string>
+    <string name="library_best_guess">Best guess: %1$s · %2$,d%% match</string>
     <!-- Prompt of the folder chooser. -->
     <string name="library_picker_prompt">Add folder</string>
     <!-- Heading of the folder chooser. -->
     <string name="library_picker_message">Choose a folder with your episodes.</string>
     <!-- What a title in the match list says about how well it fits the files. -->
-    <string name="library_fix_confidence">%1$d%% match</string>
+    <string name="library_fix_confidence">%1$,d%% match</string>
     <!-- Button that shows a folder in the file manager. -->
     <string name="library_open_folder">Open folder</string>
     <!-- Row line: how many series are matched. -->
-    <string name="library_matched_count">%1$d series matched</string>
+    <string name="library_matched_count">%1$,d series matched</string>
     <!-- The series count of that line. -->
     <plurals name="library_row_series">
         <item quantity="one">1 series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
     <!-- Line of a folder's row once scanned. -->
     <plurals name="library_row_files">
         <item quantity="one">1 file</item>
-        <item quantity="other">%1$d files</item>
+        <item quantity="other">%1$,d files</item>
     </plurals>
     <!-- Button that shows a folder in Finder. -->
     <string name="library_show_finder">Show in Finder</string>
@@ -3281,7 +3370,7 @@
     <!-- Line of a file group: how many files it holds. -->
     <plurals name="library_files">
         <item quantity="one">1 file</item>
-        <item quantity="other">%1$d files</item>
+        <item quantity="other">%1$,d files</item>
     </plurals>
     <!-- Why a file group is not matched. -->
     <string name="library_reason_no_episode">No episode number in the name</string>
@@ -3306,7 +3395,7 @@
     <!-- Button on a title whose drive is not connected. -->
     <string name="library_connect_drive">Connect the drive to play</string>
     <!-- Line under a title in the match sheet when its episode count does not fit the folder. -->
-    <string name="library_fix_count_mismatch">Has %1$d episodes, this folder has %2$d</string>
+    <string name="library_fix_count_mismatch">Has %1$,d episodes, this folder has %2$,d</string>
     <!-- Text button under the results of the match dialog. -->
     <string name="library_leave_unmatched">Leave unmatched</string>
     <!-- Title of the dialog that sets one file's episode. -->
@@ -3340,7 +3429,7 @@
     <!-- Notice after a folder is removed. It holds Undo. -->
     <string name="library_removed">%1$s removed</string>
     <!-- How well a title fits a group of files, in the match sheet. -->
-    <string name="library_match_percent">%1$d%% match</string>
+    <string name="library_match_percent">%1$,d%% match</string>
     <!-- Title of the page. -->
     <string name="licensed_title">Licensed services</string>
     <!-- Line under the title. -->
@@ -3352,7 +3441,7 @@
     <!-- Heading over the services the viewer pays for. -->
     <string name="licensed_yours">Your services</string>
     <!-- Row that shows the rest of the services. -->
-    <string name="licensed_show_all">Show all %1$d</string>
+    <string name="licensed_show_all">Show all %1$,d</string>
     <!-- Choice in the Region picker that follows the device's own country. -->
     <string name="licensed_region_system">Follow this device</string>
     <!-- Value of the region choice before one is picked: the device's own. -->
@@ -3464,11 +3553,11 @@
     <!-- Note beside a link to an official service whose page is in another language, such as "Site in Japanese". -->
     <string name="media_link_language">Site in %1$s</string>
     <!-- Length of a film or a single episode, in its metadata line: hours and the minutes past them, such as "1 h 52 min". -->
-    <string name="film_length_hours_minutes">%1$d h %2$d min</string>
+    <string name="film_length_hours_minutes">%1$,d h %2$,d min</string>
     <!-- Length of a film or a single episode that is a whole number of hours, such as "2 h". -->
-    <string name="film_length_hours">%1$d h</string>
+    <string name="film_length_hours">%1$,d h</string>
     <!-- Length of a film or a single episode under an hour, such as "46 min". -->
-    <string name="film_length_minutes">%1$d min</string>
+    <string name="film_length_minutes">%1$,d min</string>
     <!-- Country name: the origin filter and, after "Made in", the title facts. -->
     <string name="country_japan">Japan</string>
     <!-- Country name: the origin filter and, after "Made in", the title facts. -->
@@ -3756,15 +3845,15 @@
     <!-- Line when two members are still to be ready. -->
     <string name="party_wait_two">Play starts once %1$s and %2$s are ready</string>
     <!-- Line when more than two members are still to be ready. -->
-    <string name="party_wait_many">Play starts once %1$d more are ready</string>
+    <string name="party_wait_many">Play starts once %1$,d more are ready</string>
     <!-- Connection line while the party reconnects. -->
-    <string name="party_connection_lost">Connection lost. Trying again, %1$d of %2$d</string>
+    <string name="party_connection_lost">Connection lost. Trying again, %1$,d of %2$,d</string>
     <!-- Connection line: encrypted. -->
     <string name="party_connected_encrypted">Connected, encrypted</string>
     <!-- Connection line: not encrypted. -->
     <string name="party_connected_plain">Connected, not encrypted</string>
     <!-- Connection line with the round trip time. -->
-    <string name="party_connected_latency">%1$s · %2$d ms</string>
+    <string name="party_connected_latency">%1$s · %2$,d ms</string>
     <!-- Line under the invite link button before any episode plays. -->
     <string name="party_invite_after_play">The invite link comes once an episode plays.</string>
     <!-- Line under the invite link button. -->
@@ -3802,12 +3891,12 @@
     <!-- Line over the list of sources that list the episode. -->
     <plurals name="party_sources_found">
         <item quantity="one">One source has it</item>
-        <item quantity="other">%1$d sources have it</item>
+        <item quantity="other">%1$,d sources have it</item>
     </plurals>
     <!-- Accessibility label of the list of sources for the episode. -->
     <string name="party_sources_label">Sources for this episode</string>
     <!-- Line of a source: its quality and size already formatted, and the number of seeders. -->
-    <string name="party_source_seeders">%1$d seeders</string>
+    <string name="party_source_seeders">%1$,d seeders</string>
     <!-- Line when no source lists the episode. -->
     <string name="party_no_source_lists">No source lists episode %1$s. Sources come from plugins, which a plugin store adds.</string>
     <!-- Button that plays the chosen source with the room. -->
@@ -3835,7 +3924,7 @@
     <!-- Heading of the block on the place that shows the watch party you are in. -->
     <string name="together_in_party">In a party</string>
     <!-- Line of the In a party block. The episode is a number or label. -->
-    <string name="together_in_party_line">Episode %1$s · %2$d in the room · %3$d ready</string>
+    <string name="together_in_party_line">Episode %1$s · %2$,d in the room · %3$,d ready</string>
     <!-- Button that opens the lobby of the watch party you are in. -->
     <string name="together_open_lobby">Open lobby</string>
     <!-- Button that opens the player of the watch party you are in. -->
@@ -3864,7 +3953,7 @@
     <!-- Line under a server that parties were held on. -->
     <plurals name="together_server_used">
         <item quantity="one">Used for 1 party</item>
-        <item quantity="other">Used for %1$d parties</item>
+        <item quantity="other">Used for %1$,d parties</item>
     </plurals>
     <!-- Button that adds a server to the list. -->
     <string name="together_add_server">Add a server</string>
@@ -3889,7 +3978,7 @@
     <!-- Line that says you stay in the room while you have no source for the episode. -->
     <string name="party_still_in_room">You\'re still in the room.</string>
     <!-- Line in the lobby that counts the room. -->
-    <string name="party_lobby_count">In the room · %1$d of %2$d ready</string>
+    <string name="party_lobby_count">In the room · %1$,d of %2$,d ready</string>
     <!-- Line in the lobby of an invite: who invited. -->
     <string name="party_invited_by">%1$s invited you</string>
     <!-- Line shown while the app looks into a room, after a short wait. -->
@@ -3919,7 +4008,7 @@
     <!-- Button that starts the room without waiting for those who are not ready. -->
     <string name="party_start_anyway">Start anyway</string>
     <!-- Line during the three second count before play. -->
-    <string name="party_starting">Starting in %1$d</string>
+    <string name="party_starting">Starting in %1$,d</string>
     <!-- Button in the lobby that changes the room's episode. -->
     <string name="party_change_episode">Change episode</string>
     <!-- Button that changes the server after it could not be reached. -->
@@ -3959,7 +4048,7 @@
     <!-- Title line of the bar above the tabs while you are in a party. -->
     <string name="party_bar_title">%1$s · Episode %2$s</string>
     <!-- Second line of the bar above the tabs. -->
-    <string name="party_bar_line">%1$d in the room · %2$d ready</string>
+    <string name="party_bar_line">%1$,d in the room · %2$,d ready</string>
     <!-- Second line of the bar when nothing plays for you. -->
     <string name="party_bar_idle">In the room · nothing playing for you</string>
     <!-- Second line of the bar while the room has nothing picked: a play anywhere in the app picks the episode for the room. -->
@@ -3971,9 +4060,9 @@
     <!-- Notice in the player when someone moves the position. The time is already formatted. -->
     <string name="party_seeked_by">%1$s moved to %2$s</string>
     <!-- Line on the Up Next card in a party. -->
-    <string name="party_next_line">Everyone moves on in %1$d s</string>
+    <string name="party_next_line">Everyone moves on in %1$,d s</string>
     <!-- Line on the starting screen while the room waits for a member. -->
-    <string name="party_next_waiting">Waiting for %1$s · %2$d s</string>
+    <string name="party_next_waiting">Waiting for %1$s · %2$,d s</string>
     <!-- Notice when a member who was behind joins. The time is already formatted. -->
     <string name="party_next_joined_at">%1$s joined at %2$s</string>
     <!-- Line that replaces the autoplay switch in a party. -->
@@ -4015,7 +4104,7 @@
     <!-- Heading of the lobby's member list. -->
     <string name="party_in_the_room">In the room</string>
     <!-- Beside that heading while looking into a room before joining it: how many are there. -->
-    <string name="party_here_count">%1$d here</string>
+    <string name="party_here_count">%1$,d here</string>
     <!-- Beside the Recent rooms heading. -->
     <string name="together_recent_note">The last ten, kept on this device</string>
     <!-- The start sheet's button after a title is picked. -->
@@ -4027,14 +4116,14 @@
     <!-- Heading of the conversation in the lobby, on a phone's remote screen and the Android action that opens chat. -->
     <string name="party_chat_title">Chat</string>
     <!-- End of the chat field while sending waits, after three messages in five seconds. -->
-    <string name="party_chat_wait">Wait %1$d s</string>
+    <string name="party_chat_wait">Wait %1$,d s</string>
     <!-- Spoken once when sending waits, for screen readers. -->
     <plurals name="party_chat_wait_spoken">
         <item quantity="one">Wait one second</item>
-        <item quantity="other">Wait %1$d seconds</item>
+        <item quantity="other">Wait %1$,d seconds</item>
     </plurals>
     <!-- Line after the three newest chat lines on the video, which opens the conversation. -->
-    <string name="party_chat_more">%1$d more in chat</string>
+    <string name="party_chat_more">%1$,d more in chat</string>
     <!-- Notice when the room's server has chat turned off, and the line that replaces the field. -->
     <string name="party_chat_off">This room\'s server has chat turned off</string>
     <!-- Line under the chat field in the lobby, shown once. -->
@@ -4088,7 +4177,7 @@
     <!-- Three members named together. -->
     <string name="party_names_three">%1$s, %2$s and %3$s</string>
     <!-- More than three members named together: two names and how many others. -->
-    <string name="party_names_others">%1$s, %2$s and %3$d others</string>
+    <string name="party_names_others">%1$s, %2$s and %3$,d others</string>
     <!-- Name of this device's own member in the conversation and on its reactions. -->
     <string name="party_chat_you">You</string>
     <!-- Line on a phone's remote screen under the chat field: which device the line is said as. -->
@@ -4099,8 +4188,8 @@
     <string name="party_chat_announce">%1$s says %2$s</string>
     <!-- Spoken by a screen reader once, when 20 characters are left in the chat field. -->
     <plurals name="party_chat_left">
-        <item quantity="one">%1$d character left</item>
-        <item quantity="other">%1$d characters left</item>
+        <item quantity="one">%1$,d character left</item>
+        <item quantity="other">%1$,d characters left</item>
     </plurals>
     <!-- Label on the card for the episode that plays after this one. -->
     <string name="player_up_next">Up next</string>
@@ -4109,7 +4198,7 @@
     <!-- Line on the starting screen, from the moment the player is asked to play until the first frame. -->
     <string name="player_starting">Starting episode %1$d</string>
     <!-- Line on the starting screen after a few seconds: the app is looking for a stream. -->
-    <string name="player_finding_source">Finding a source · %1$d s</string>
+    <string name="player_finding_source">Finding a source · %1$,d s</string>
     <!-- Same line before the wait is counted. -->
     <string name="player_finding_source_plain">Finding a source</string>
     <!-- Title of the card shown when an episode could not play. -->
@@ -4127,7 +4216,7 @@
     <!-- Short word while the video buffers. -->
     <string name="player_buffering">Buffering</string>
     <!-- Detail line while a source is asked and more than one is in the viewer's order. -->
-    <string name="player_start_place">%1$d of %2$d sources</string>
+    <string name="player_start_place">%1$,d of %2$,d sources</string>
     <!-- Detail line while the source asked is the one the show is pinned to. -->
     <string name="player_start_pinned">Your pick for this show</string>
     <!-- Detail line when a source has no match for the show. -->
@@ -4149,11 +4238,11 @@
     <!-- Detail line when a stream showed no video and another opens. -->
     <string name="player_start_no_video">The first one showed no video</string>
     <!-- Detail line with the place of the stream being opened. -->
-    <string name="player_start_stream_place">%1$d of %2$d streams</string>
+    <string name="player_start_stream_place">%1$,d of %2$,d streams</string>
     <!-- Detail line while a torrent has peers. -->
     <plurals name="player_start_peers">
         <item quantity="one">One peer</item>
-        <item quantity="other">%1$d peers</item>
+        <item quantity="other">%1$,d peers</item>
     </plurals>
     <!-- Detail line with the speed data arrives at, already sized with one decimal, such as "3.4 MB". -->
     <string name="player_start_speed">%1$s/s</string>
@@ -4182,7 +4271,7 @@
     <!-- Details row once the title has been looked up. -->
     <string name="player_start_looked_up">Looked up the title</string>
     <!-- Seconds on the starting screen's detail line and Details rows. -->
-    <string name="player_start_seconds">%1$d s</string>
+    <string name="player_start_seconds">%1$,d s</string>
     <!-- Spoken once, when a start has taken more than a few seconds. -->
     <string name="player_start_still_starting">Still starting. You can choose a source now.</string>
     <!-- Spoken when a start begins. The episode is its label. -->
@@ -4210,7 +4299,7 @@
     <!-- Label of the switch in the Details list that plays the episode with its subtitles. -->
     <string name="player_start_subtitled">Subtitled</string>
     <!-- Title of the stall card. The seconds count up. -->
-    <string name="player_stall_title">Source is buffering · %1$d s</string>
+    <string name="player_stall_title">Source is buffering · %1$,d s</string>
     <!-- Line under the stall title. -->
     <string name="player_stall_detail">Another stream may play without waiting.</string>
     <!-- Button on the stall card that moves to another { -source }. -->
@@ -4218,7 +4307,7 @@
     <!-- Button on the stall card that keeps waiting. -->
     <string name="player_keep_waiting">Keep waiting</string>
     <!-- Line on the Up next card: the episode starts when the count ends. -->
-    <string name="player_plays_in">Plays in %1$d s</string>
+    <string name="player_plays_in">Plays in %1$,d s</string>
     <!-- Button that skips the opening. -->
     <string name="player_skip_opening">Skip opening</string>
     <!-- Button that skips the ending. -->
@@ -4355,7 +4444,7 @@
     <!-- Line under the still-watching title. -->
     <plurals name="player_still_watching_detail">
         <item quantity="one">Paused after one episode in a row.</item>
-        <item quantity="other">Paused after %1$d episodes in a row.</item>
+        <item quantity="other">Paused after %1$,d episodes in a row.</item>
     </plurals>
     <!-- Button on the still-watching card that goes on. -->
     <string name="player_still_watching_continue">Continue watching</string>
@@ -4472,7 +4561,7 @@
     <!-- Name of an audio or subtitle track that has no language or title. -->
     <string name="player_track_n">Track %1$d</string>
     <!-- Line while an episode starts after a few seconds: what the wait is on, and for how long. -->
-    <string name="player_wait_note">%1$s · %2$d s</string>
+    <string name="player_wait_note">%1$s · %2$,d s</string>
     <!-- Message on the video when the player could not make a change the viewer asked for, such as a speed or a track. -->
     <string name="player_command_failed">That didn\'t work. Try again.</string>
     <!-- Heading of the style section in the player's subtitles panel. -->
@@ -4556,7 +4645,7 @@
     <!-- Line in the margin of a novel's page. -->
     <plurals name="reader_pages_left">
         <item quantity="one">One page left in this chapter</item>
-        <item quantity="other">%1$d pages left in this chapter</item>
+        <item quantity="other">%1$,d pages left in this chapter</item>
     </plurals>
     <!-- Chapters sheet and the chapter list: the list is on its way. -->
     <string name="reader_chapters_loading">Loading chapters</string>
@@ -4581,23 +4670,14 @@
     <!-- The next chapter's length on the page between chapters. -->
     <plurals name="reader_end_pages">
         <item quantity="one">One page</item>
-        <item quantity="other">%1$d pages</item>
+        <item quantity="other">%1$,d pages</item>
     </plurals>
     <!-- Under the next chapter's title on the page between chapters, when nothing more is known of it than the source it came from. -->
     <string name="reader_end_from">From %1$s</string>
-    <!-- Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. -->
+    <!-- Under the series title in the reader's controls. The chapter is its number, such as 12. -->
     <string name="reader_chapter_line">Chapter %1$s</string>
     <!-- The next chapter's facts and where it came from: on the divider inside a strip, and under the next chapter's title on the page between chapters. -->
     <string name="reader_divider_facts_source">%1$s · from %2$s</string>
-    <!-- Line on the page between chapters, near its buttons: one more swipe opens the next chapter. -->
-    <string name="reader_end_swipe">Swipe to keep reading</string>
-    <!-- The next episode's length on the divider inside a strip. -->
-    <plurals name="reader_divider_images">
-        <item quantity="one">One image</item>
-        <item quantity="other">%1$d images</item>
-    </plurals>
-    <!-- Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. -->
-    <string name="reader_chapter_line_titled">Chapter %1$s · %2$s</string>
     <!-- Button in the first run that opens the reading demo. -->
     <string name="onboarding_read_demo">Read the demo</string>
     <!-- Under the first run's demo heading when the device is for reading. -->
@@ -4611,7 +4691,7 @@
     <!-- The demo comic's facts line on its series page. -->
     <plurals name="demo_series_facts">
         <item quantity="one">Demo · Comic · one page</item>
-        <item quantity="other">Demo · Comic · %1$d pages</item>
+        <item quantity="other">Demo · Comic · %1$,d pages</item>
     </plurals>
     <!-- The comic's credit on its series page and in About the demo. The licence is "CC BY 4.0". -->
     <string name="demo_credit_book">%1$s by %2$s. Licensed %3$s. Read from Wikimedia Commons.</string>
@@ -4648,7 +4728,7 @@
     <!-- A chapter row's line on the demo's series page. -->
     <plurals name="demo_pages">
         <item quantity="one">One page</item>
-        <item quantity="other">%1$d pages</item>
+        <item quantity="other">%1$,d pages</item>
     </plurals>
     <!-- The story's row on the demo's series page. The licence is "Public domain" as the engine says it. -->
     <string name="demo_story_row">Story · %1$s · %2$s</string>
@@ -4677,22 +4757,22 @@
     <!-- The server's row, after 600 ms without an answer. -->
     <plurals name="progress_row_sending">
         <item quantity="one">Sending 1 chapter…</item>
-        <item quantity="other">Sending %1$d chapters…</item>
+        <item quantity="other">Sending %1$,d chapters…</item>
     </plurals>
     <!-- The server's row, offline. -->
     <plurals name="progress_row_offline">
         <item quantity="one">1 chapter will send when you’re back online</item>
-        <item quantity="other">%1$d chapters will send when you’re back online</item>
+        <item quantity="other">%1$,d chapters will send when you’re back online</item>
     </plurals>
     <!-- The server's row, the last try failed for a reason that can pass. -->
     <plurals name="progress_row_retrying">
         <item quantity="one">1 chapter waiting. Kaeri will try again.</item>
-        <item quantity="other">%1$d chapters waiting. Kaeri will try again.</item>
+        <item quantity="other">%1$,d chapters waiting. Kaeri will try again.</item>
     </plurals>
     <!-- The server's row, the server said no. Try again sits beside it. -->
     <plurals name="progress_row_failed">
         <item quantity="one">1 chapter not saved: %2$s</item>
-        <item quantity="other">%1$d chapters not saved: %2$s</item>
+        <item quantity="other">%1$,d chapters not saved: %2$s</item>
     </plurals>
     <!-- The server's row, when Send progress to the server is off. The kind is the device's own word, as in sync-turn-off: “Mac”, “iPhone”, “phone”. -->
     <string name="progress_row_off">Progress stays on this %1$s</string>
@@ -4717,7 +4797,7 @@
     <!-- E-ink: the line under Browse on Read's Home. -->
     <string name="read_home_browse_line">Trending, new and finished, by format</string>
     <!-- E-ink: a discovery row in the Browse list, naming its first two series and how many follow. -->
-    <string name="read_home_browse_row">%1$s, %2$s and %3$d more</string>
+    <string name="read_home_browse_row">%1$s, %2$s and %3$,d more</string>
     <!-- E-ink: the note on the Browse page. The rows are AniList's catalogue; sources are asked only when a series is opened. -->
     <string name="read_home_browse_note">From AniList. Your sources are asked when you open a series.</string>
     <!-- E-ink: on the Browse page when AniList didn't answer. The time is when the lists were kept. -->
@@ -4745,7 +4825,7 @@
     <!-- After a chapter on an Updates row, when several groups put it out. -->
     <plurals name="chapter_updates_versions">
         <item quantity="one">1 version</item>
-        <item quantity="other">%1$d versions</item>
+        <item quantity="other">%1$,d versions</item>
     </plurals>
     <!-- Accessibility label on an Updates row's cover, which opens the series. -->
     <string name="chapter_updates_open_series">Open %1$s</string>
@@ -4758,13 +4838,13 @@
     <!-- The main action when a chapter is part read. -->
     <string name="action_continue_chapter">Continue chapter %1$s · page %2$d</string>
     <!-- The main action for a light novel part, part read. -->
-    <string name="action_continue_part">Continue part %1$s · %2$d%%</string>
+    <string name="action_continue_part">Continue part %1$s · %2$,d%%</string>
     <!-- The main action for a light novel part, part read, when how far is not known. -->
     <string name="action_continue_part_plain">Continue part %1$s</string>
     <!-- The main action for a light novel part not opened yet. -->
     <string name="action_read_part">Read part %1$s</string>
     <!-- The main action for a light novel part, part read, named in the source's own words ("Part 3", "Chapter 3") as its row is. -->
-    <string name="action_continue_named">Continue %1$s · %2$d%%</string>
+    <string name="action_continue_named">Continue %1$s · %2$,d%%</string>
     <!-- The main action for a light novel part, part read, named in the source's own words, when how far is not known. -->
     <string name="action_continue_named_plain">Continue %1$s</string>
     <!-- The main action for a light novel part not opened yet, named in the source's own words. -->
@@ -4778,7 +4858,7 @@
     <!-- After the source's name: how many other sources have the series. -->
     <plurals name="series_sources_more">
         <item quantity="one">1 more</item>
-        <item quantity="other">%1$d more</item>
+        <item quantity="other">%1$,d more</item>
     </plurals>
     <!-- Value of the trackers row while a tracker asks which series this is. -->
     <string name="series_tracker_ask">Which series is this? Choose</string>
@@ -4786,13 +4866,13 @@
     <string name="series_preferred_group">Your preferred group here</string>
     <!-- A tracker's progress in chapters, with the total. -->
     <plurals name="series_tracker_chapters_of">
-        <item quantity="one">%1$d of %2$d chapter</item>
-        <item quantity="other">%1$d of %2$d chapters</item>
+        <item quantity="one">%1$,d of %2$,d chapter</item>
+        <item quantity="other">%1$,d of %2$,d chapters</item>
     </plurals>
     <!-- A tracker's progress in chapters, total unknown. -->
     <plurals name="series_tracker_chapters">
         <item quantity="one">1 chapter</item>
-        <item quantity="other">%1$d chapters</item>
+        <item quantity="other">%1$,d chapters</item>
     </plurals>
     <!-- A tracker's progress in chapters, then the volume. -->
     <string name="series_tracker_with_volume">%1$s · volume %2$d</string>
@@ -4815,7 +4895,7 @@
     <!-- Title while choosing chapters on a phone: how many are chosen. -->
     <plurals name="series_chosen">
         <item quantity="one">1 chapter</item>
-        <item quantity="other">%1$d chapters</item>
+        <item quantity="other">%1$,d chapters</item>
     </plurals>
     <!-- Button while choosing chapters on a phone: choose every unread chapter. -->
     <string name="series_choose_all_unread">All unread</string>
@@ -4884,7 +4964,7 @@
     <!-- Menu of a chapter that several groups put out. -->
     <plurals name="series_versions">
         <item quantity="one">1 version</item>
-        <item quantity="other">%1$d versions</item>
+        <item quantity="other">%1$,d versions</item>
     </plurals>
     <!-- In that menu while the versions load. -->
     <string name="series_versions_loading">Looking for versions…</string>
@@ -4899,7 +4979,7 @@
     <!-- A chapter waiting for Wi-Fi to download. -->
     <string name="chapter_state_wifi">Queued · waits for Wi-Fi</string>
     <!-- A chapter downloading. -->
-    <string name="chapter_state_downloading">Downloading · %1$d of %2$d pages</string>
+    <string name="chapter_state_downloading">Downloading · %1$,d of %2$,d pages</string>
     <!-- A chapter that failed to download, with the reason. -->
     <string name="chapter_state_failed">Couldn\'t download. %1$s</string>
     <!-- A part-read chapter. -->
@@ -4917,13 +4997,13 @@
     <!-- Chapter menu item. -->
     <string name="chapter_download_delete">Delete download</string>
     <!-- Download menu item. -->
-    <string name="download_next">Next %1$d unread</string>
+    <string name="download_next">Next %1$,d unread</string>
     <!-- Download menu item. -->
     <string name="download_unread">Every unread chapter</string>
     <!-- Download menu item: a volume's chapters not yet downloaded. -->
     <plurals name="download_volume_count">
         <item quantity="one">%1$s · 1 chapter</item>
-        <item quantity="other">%1$s · %2$d chapters</item>
+        <item quantity="other">%1$s · %2$,d chapters</item>
     </plurals>
     <!-- Download menu item: turns on choosing chapters in the list. -->
     <string name="download_choose">Choose chapters…</string>
@@ -4932,7 +5012,7 @@
     <!-- The amber button in the Choose chapters bar. -->
     <plurals name="download_chapters">
         <item quantity="one">Download 1 chapter</item>
-        <item quantity="other">Download %1$d chapters</item>
+        <item quantity="other">Download %1$,d chapters</item>
     </plurals>
     <!-- Line above that button. -->
     <string name="download_over_wifi">Over Wi-Fi</string>
@@ -4967,9 +5047,9 @@
     <!-- A tracker looking for the series. -->
     <string name="series_tracker_looking">Looking for this series…</string>
     <!-- A tracker that is behind, and catches up on the next sync. -->
-    <string name="series_tracker_behind">Has chapter %1$d. Gets %2$d on the next sync.</string>
+    <string name="series_tracker_behind">Has chapter %1$,d. Gets %2$,d on the next sync.</string>
     <!-- A tracker ahead of Kaeri. -->
-    <string name="series_tracker_ahead">Has chapter %1$d, further than Kaeri.</string>
+    <string name="series_tracker_ahead">Has chapter %1$,d, further than Kaeri.</string>
     <!-- A tracker's score out of ten. -->
     <string name="series_tracker_score">%1$s / 10</string>
     <!-- Menu item on a tracker that differs. -->
@@ -5035,7 +5115,7 @@
     <!-- What the server held once signed in, when it said how many series it lists. -->
     <plurals name="sources_found_server_series">
         <item quantity="one">Found a %1$s server with 1 series</item>
-        <item quantity="other">Found a %1$s server with %2$d series</item>
+        <item quantity="other">Found a %1$s server with %2$,d series</item>
     </plurals>
     <!-- While the address is tried. -->
     <string name="book_server_looking">Looking at this address…</string>
@@ -5052,10 +5132,10 @@
     <!-- How many series a folder or server holds. -->
     <plurals name="book_sources_series">
         <item quantity="one">1 series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
     <!-- A folder being looked through. -->
-    <string name="book_sources_scanning">Looking through · %1$d found</string>
+    <string name="book_sources_scanning">Looking through · %1$,d found</string>
     <!-- A folder that can't be found, such as a drive that isn't plugged in. -->
     <string name="book_sources_missing">Not found. Is the drive connected?</string>
     <!-- A source that is turned off. -->
@@ -5069,7 +5149,7 @@
     <!-- A plugin's version. -->
     <string name="book_sources_version">version %1$s</string>
     <!-- Button on a folder: series whose match needs a look. -->
-    <string name="book_sources_check_matches">Check matches · %1$d</string>
+    <string name="book_sources_check_matches">Check matches · %1$,d</string>
     <!-- Title of the Check matches sheet. -->
     <string name="book_sources_check_matches_title">Check matches</string>
     <!-- A folder menu item: look through the folders again. -->
@@ -5099,7 +5179,7 @@
     <!-- Accessibility value of the list menu: the list and how many series are on it. -->
     <plurals name="read_library_list_value">
         <item quantity="one">%1$s, 1 series</item>
-        <item quantity="other">%1$s, %2$d series</item>
+        <item quantity="other">%1$s, %2$,d series</item>
     </plurals>
     <!-- A reading list with nothing on it. A Search button follows. -->
     <string name="read_library_empty">Nothing on %1$s yet</string>
@@ -5116,7 +5196,7 @@
     <!-- The last row of reading's results with both media on: matches in the other scope. -->
     <plurals name="search_other_scope">
         <item quantity="one">1 match in %2$s</item>
-        <item quantity="other">%1$d matches in %2$s</item>
+        <item quantity="other">%1$,d matches in %2$s</item>
     </plurals>
     <!-- The button on that row, which switches the scope. -->
     <string name="search_show_them">Show them</string>
@@ -5125,7 +5205,7 @@
     <!-- Over reading's results once every result is listed: how many series AniList found. -->
     <plurals name="read_search_total">
         <item quantity="one">1 series from AniList</item>
-        <item quantity="other">%1$d series from AniList</item>
+        <item quantity="other">%1$,d series from AniList</item>
     </plurals>
     <!-- Search couldn't ask AniList. -->
     <string name="read_search_failed">Couldn\'t search</string>
@@ -5164,13 +5244,13 @@
     <!-- A filter's name before its value, once set: "Origin: Korea". -->
     <string name="read_filter_set">%1$s:</string>
     <!-- A filter with several values: the first, then how many more. -->
-    <string name="read_filter_many">%1$s and %2$d more</string>
+    <string name="read_filter_many">%1$s and %2$,d more</string>
     <!-- A genre left out. -->
     <string name="read_filter_not_genre">Not %1$s</string>
     <!-- How many genres are set. -->
     <plurals name="read_filter_genres_count">
         <item quantity="one">1 genre</item>
-        <item quantity="other">%1$d genres</item>
+        <item quantity="other">%1$,d genres</item>
     </plurals>
     <!-- A genre's state: only series with it. -->
     <string name="read_filter_included">Included</string>
@@ -5187,15 +5267,15 @@
     <!-- A source group whose source failed to answer. The reason and Try again follow. -->
     <string name="read_search_source_failed">%1$s didn\'t answer.</string>
     <!-- The reason under it when the source gave no answer in time. -->
-    <string name="read_search_source_timeout">No answer in %1$d s.</string>
+    <string name="read_search_source_timeout">No answer in %1$,d s.</string>
     <!-- One line at the end of the sources' groups for every source that found nothing. The sources are their names, joined as a list. -->
     <string name="read_search_source_nothing">Nothing found in %1$s.</string>
     <!-- On an AniList result that one of the person's sources has. The source is its name. -->
     <string name="read_search_in_source">In %1$s</string>
     <!-- On an AniList result that more than one of the person's sources has. Always 2 or more. -->
     <plurals name="read_search_in_sources">
-        <item quantity="one">In %1$d of your sources</item>
-        <item quantity="other">In %1$d of your sources</item>
+        <item quantity="one">In %1$,d of your sources</item>
+        <item quantity="other">In %1$,d of your sources</item>
     </plurals>
     <!-- Search, when AniList found nothing but the person's sources did. -->
     <string name="read_search_anilist_nothing">AniList found nothing for these words.</string>
@@ -5210,17 +5290,17 @@
     <!-- The link under From your sources that shows the rest of AniList's results. -->
     <string name="read_search_more_anilist">More from AniList</string>
     <!-- Beside More from AniList: how many of AniList's results show. -->
-    <string name="read_search_shown">%1$d of %2$d shown</string>
+    <string name="read_search_shown">%1$,d of %2$,d shown</string>
     <!-- Beside More from AniList while AniList's count is not known yet: how many results show. -->
-    <string name="read_search_shown_some">%1$d shown</string>
+    <string name="read_search_shown_some">%1$,d shown</string>
     <!-- Beside a source's name in Search: the kind of source it is. -->
     <string name="read_search_source_kind_server">Server</string>
     <string name="read_search_source_kind_folder">Folder</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <!-- The button of a source group with more than five hits. -->
-    <string name="read_search_source_more">Show %1$d more</string>
+    <string name="read_search_source_more">Show %1$,d more</string>
     <!-- Over a first-run page's title: which page of how many. -->
-    <string name="onboarding_step">%1$d of %2$d</string>
+    <string name="onboarding_step">%1$,d of %2$,d</string>
     <!-- Line under "Welcome to Kaeri" on the first page, naming both media. -->
     <string name="onboarding_welcome_line">Keep track of what you watch and read, from your own sources.</string>
     <!-- Note under the welcome line. -->
@@ -5280,7 +5360,7 @@
     <!-- Line under Add a server in the shows' part. -->
     <string name="onboarding_both_shows_server_line">Your Jellyfin server</string>
     <!-- Accessibility value of a choice row: its place among the three. -->
-    <string name="medium_choice_position">%1$d of %2$d</string>
+    <string name="medium_choice_position">%1$,d of %2$,d</string>
     <!-- Under the choices in the sheet. -->
     <string name="medium_change_later">You can change it in Settings.</string>
     <!-- Line of the sheet over Home after the update that brought reading. -->
@@ -5412,27 +5492,27 @@
     <string name="accounts_username">User name</string>
     <!-- Beside the Reading heading in Downloads: how many chapters are kept and their size. -->
     <plurals name="read_downloads_total">
-        <item quantity="one">%1$d chapter · %2$s</item>
-        <item quantity="other">%1$d chapters · %2$s</item>
+        <item quantity="one">%1$,d chapter · %2$s</item>
+        <item quantity="other">%1$,d chapters · %2$s</item>
     </plurals>
     <!-- A series' line in Downloads while a chapter downloads. -->
-    <string name="read_downloads_active">%1$s · %2$d of %3$d pages</string>
+    <string name="read_downloads_active">%1$s · %2$,d of %3$,d pages</string>
     <!-- After the chapter downloading: how many more wait. -->
-    <string name="read_downloads_more_queued">%1$d more queued</string>
+    <string name="read_downloads_more_queued">%1$,d more queued</string>
     <!-- A series' line in Downloads when its chapters wait to start. -->
     <plurals name="read_downloads_queued">
-        <item quantity="one">%1$d chapter queued</item>
-        <item quantity="other">%1$d chapters queued</item>
+        <item quantity="one">%1$,d chapter queued</item>
+        <item quantity="other">%1$,d chapters queued</item>
     </plurals>
     <!-- A series' line in Downloads when a chapter failed, with the reason. -->
     <string name="read_downloads_failed">%1$s couldn\'t download. %2$s</string>
     <!-- A series' line in Downloads: how many chapters are kept. -->
     <plurals name="read_downloads_kept">
-        <item quantity="one">%1$d chapter</item>
-        <item quantity="other">%1$d chapters</item>
+        <item quantity="one">%1$,d chapter</item>
+        <item quantity="other">%1$,d chapters</item>
     </plurals>
     <!-- After the kept count: how many of them are read. -->
-    <string name="read_downloads_read">%1$d read</string>
+    <string name="read_downloads_read">%1$,d read</string>
     <!-- Button on a series in Downloads: delete its read chapters, keeping bookmarked ones. -->
     <string name="read_downloads_delete_read">Delete read</string>
     <!-- Title of the Send to e-reader sheet, the chapter menu's item and the Settings row. -->
@@ -5458,7 +5538,7 @@
     <!-- While the files are made: which chapter of how many. The ring beside it shows how far along. -->
     <plurals name="send_preparing">
         <item quantity="one">Preparing the chapter</item>
-        <item quantity="other">Preparing %1$d of %2$d chapters</item>
+        <item quantity="other">Preparing %1$,d of %2$,d chapters</item>
     </plurals>
     <!-- Under the progress of a send to a device: what the pages are made for. -->
     <string name="send_sized_for">Pages are sized for %1$s</string>
@@ -5475,7 +5555,7 @@
     <!-- Spoken value of the Chapters row in the Send sheet while its list is closed. -->
     <string name="send_chapters_closed">Closed</string>
     <!-- Spoken value of the ring in a send under way. Already a number from 0 to 100. -->
-    <string name="send_progress_spoken">%1$d percent</string>
+    <string name="send_progress_spoken">%1$,d percent</string>
     <!-- Spoken action on a chapter row of a series: sends that chapter to an e-reader. -->
     <string name="send_chapter_action">Send to e-reader</string>
     <!-- Under an e-reader in the sheet when it takes files in parts: the size where a file is split. -->
@@ -5485,7 +5565,7 @@
     <!-- When the files are ready, over the button that opens the share sheet. The count is how many files. -->
     <plurals name="send_ready">
         <item quantity="one">One file is ready.</item>
-        <item quantity="other">%1$d files are ready.</item>
+        <item quantity="other">%1$,d files are ready.</item>
     </plurals>
     <!-- Button in the Send to e-reader sheet that opens the share sheet again, after it was closed without sharing. -->
     <string name="send_share_again">Share again</string>
@@ -5552,7 +5632,7 @@
     <!-- Line under that row. -->
     <plurals name="opds_share_downloads_count">
         <item quantity="one">One chapter</item>
-        <item quantity="other">%1$d chapters</item>
+        <item quantity="other">%1$,d chapters</item>
     </plurals>
     <!-- Row in What it shares: the series in the manga and comic folders. -->
     <string name="opds_share_manga">Manga folder</string>
@@ -5561,7 +5641,7 @@
     <!-- Line under a folder row. -->
     <plurals name="opds_share_series_count">
         <item quantity="one">One series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
     <!-- Heading of the list of e-readers that fetched files from the feed. -->
     <string name="opds_fetched_by">Fetched by</string>
@@ -5582,7 +5662,7 @@
     <!-- Line under an e-reader in that list: how many files it took. -->
     <plurals name="opds_fetched_files">
         <item quantity="one">One file</item>
-        <item quantity="other">%1$d files</item>
+        <item quantity="other">%1$,d files</item>
     </plurals>
     <!-- Name for an e-reader that did not give one. -->
     <string name="opds_reader_unnamed">E-reader at %1$s</string>
@@ -5661,7 +5741,7 @@
     <!-- Accessible label and tooltip of the button that closes the filters panel. -->
     <string name="filters_close">Close filters</string>
     <!-- Button that opens the filters, with how many are on. -->
-    <string name="filters_button_count">All filters · %1$d</string>
+    <string name="filters_button_count">All filters · %1$,d</string>
     <!-- Button that opens the filters when none is on. -->
     <string name="filters_button">All filters</string>
     <!-- Filter name. -->
@@ -5773,21 +5853,21 @@
     <!-- The count line under a title in a list or on a card: how many episodes a finished show has. -->
     <plurals name="count_episodes">
         <item quantity="one">One episode</item>
-        <item quantity="other">%1$d episodes</item>
+        <item quantity="other">%1$,d episodes</item>
     </plurals>
     <!-- The same, short, for a cell too narrow for the long form. -->
-    <string name="count_episodes_short">%1$d ep</string>
+    <string name="count_episodes_short">%1$,d ep</string>
     <!-- The count line of a show that is airing and has a known total: episodes out so far, then the total. -->
-    <string name="count_out_of">%1$d of %2$d out</string>
+    <string name="count_out_of">%1$,d of %2$,d out</string>
     <!-- The same, short. -->
-    <string name="count_out_of_short">%1$d of %2$d</string>
+    <string name="count_out_of_short">%1$,d of %2$,d</string>
     <!-- The count line of a show that is airing and has no known total: episodes out so far. -->
     <plurals name="count_out">
         <item quantity="one">One episode out</item>
-        <item quantity="other">%1$d episodes out</item>
+        <item quantity="other">%1$,d episodes out</item>
     </plurals>
     <!-- The same, short. -->
-    <string name="count_out_short">%1$d out</string>
+    <string name="count_out_short">%1$,d out</string>
     <!-- The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below. -->
     <string name="count_starts">Starts %1$s</string>
     <!-- The count line of a show that has not started and has no date. -->
@@ -5801,14 +5881,14 @@
     <!-- What a screen reader says for a count line: the long form of a finished show. -->
     <plurals name="count_spoken_episodes">
         <item quantity="one">One episode</item>
-        <item quantity="other">%1$d episodes</item>
+        <item quantity="other">%1$,d episodes</item>
     </plurals>
     <!-- What a screen reader says for a show that is airing, with a known total. -->
-    <string name="count_spoken_out_of">%1$d of %2$d episodes out</string>
+    <string name="count_spoken_out_of">%1$,d of %2$,d episodes out</string>
     <!-- What a screen reader says for a show that is airing with no known total. -->
     <plurals name="count_spoken_out">
         <item quantity="one">One episode out</item>
-        <item quantity="other">%1$d episodes out</item>
+        <item quantity="other">%1$,d episodes out</item>
     </plurals>
     <!-- What a screen reader says for a show not out yet, with a date. The date is the day and the full month name. -->
     <string name="count_spoken_starts">Starts %1$s</string>
@@ -5947,7 +6027,7 @@
     <!-- Line under it. -->
     <string name="servers_libraries_body">Shows are matched to AniList so they join Home, your lists and Search.</string>
     <!-- A library's line: what it holds, and how many series. -->
-    <string name="servers_library_line">%1$s · %2$d series</string>
+    <string name="servers_library_line">%1$s · %2$,d series</string>
     <!-- Switch on the libraries step and the server's page. -->
     <string name="servers_report">Report what you watch to Jellyfin</string>
     <!-- Line under that switch. -->
@@ -5955,24 +6035,24 @@
     <!-- Button that finishes the dialog. -->
     <string name="servers_add">Add server</string>
     <!-- Line of a server's row while it is matched to AniList. -->
-    <string name="servers_row_matching">Matching · %1$d of %2$d series</string>
+    <string name="servers_row_matching">Matching · %1$,d of %2$,d series</string>
     <!-- A server's line once it is read. -->
     <plurals name="servers_row_summary">
-        <item quantity="one">1 library · %2$d series</item>
-        <item quantity="other">%1$d libraries · %2$d series</item>
+        <item quantity="one">1 library · %2$,d series</item>
+        <item quantity="other">%1$,d libraries · %2$,d series</item>
     </plurals>
     <!-- First part of a server's row line: how many libraries it has. -->
     <plurals name="servers_row_libraries">
         <item quantity="one">1 library</item>
-        <item quantity="other">%1$d libraries</item>
+        <item quantity="other">%1$,d libraries</item>
     </plurals>
     <!-- Second part of a server's row line: how many series it holds. -->
     <plurals name="servers_row_series">
         <item quantity="one">1 series</item>
-        <item quantity="other">%1$d series</item>
+        <item quantity="other">%1$,d series</item>
     </plurals>
     <!-- Line of a server's row after the summary: series that need a look. -->
-    <string name="servers_row_needs_look">%1$d need a look</string>
+    <string name="servers_row_needs_look">%1$,d need a look</string>
     <!-- Line at the top of a server's page. -->
     <string name="servers_page_line">%1$s · Jellyfin %2$s · signed in as %3$s</string>
     <!-- Button on a server's page. -->
@@ -6028,7 +6108,7 @@
     <!-- Button on a server's page that matches its series to AniList again. -->
     <string name="servers_refresh">Match again</string>
     <!-- Line on a server's page: how many of its series are not matched for sure. -->
-    <string name="servers_needs_look">%1$d not matched to AniList</string>
+    <string name="servers_needs_look">%1$,d not matched to AniList</string>
     <!-- What a Jellyfin library of films is called in a library's line. -->
     <string name="servers_kind_films">Films</string>
     <!-- Error under the address field when the server's certificate is not trusted. -->
@@ -6164,7 +6244,7 @@
     <!-- Line: how many shows override a setting. -->
     <plurals name="settings_overridden">
         <item quantity="one">Overridden for one show</item>
-        <item quantity="other">Overridden for %1$d shows</item>
+        <item quantity="other">Overridden for %1$,d shows</item>
     </plurals>
     <!-- Row: new downloads. -->
     <string name="settings_new_downloads">New downloads</string>
@@ -6329,7 +6409,7 @@
     <!-- Line under a signed-in account while changes wait to be sent. -->
     <plurals name="accounts_changes_waiting">
         <item quantity="one">One change waiting to sync</item>
-        <item quantity="other">%1$d changes waiting to sync</item>
+        <item quantity="other">%1$,d changes waiting to sync</item>
     </plurals>
     <!-- Choice for the download quality: larger files with more detail. -->
     <string name="settings_quality_higher">Higher</string>
@@ -6406,7 +6486,7 @@
     <!-- Label of the subtitle size slider. -->
     <string name="settings_subs_size">Size</string>
     <!-- Value of the size slider. The percent is a whole number from 50 to 200. -->
-    <string name="settings_subs_size_value">%1$d%%</string>
+    <string name="settings_subs_size_value">%1$,d%%</string>
     <!-- Label of the subtitle font row. -->
     <string name="settings_subs_font">Font</string>
     <!-- Subtitle font choice: the player's own sans-serif. -->
@@ -6454,7 +6534,7 @@
     <!-- Label of the row that raises subtitles. -->
     <string name="settings_subs_raise">Raise subtitles</string>
     <!-- Value of the raise slider. The percent is a whole number from 0 to 20. -->
-    <string name="settings_subs_raise_value">%1$d%% of the picture</string>
+    <string name="settings_subs_raise_value">%1$,d%% of the picture</string>
     <!-- Label of the picker that says what happens to styled subtitles. -->
     <string name="settings_subs_styled">Styled subtitles</string>
     <!-- Styled subtitles choice: leave the authors' styling alone. -->
@@ -6489,13 +6569,13 @@
     <string name="book_server_key">Key ••••%1$s</string>
     <!-- Result title once the server signed in. -->
     <plurals name="book_server_found_title">
-        <item quantity="one">Found %1$d series</item>
-        <item quantity="other">Found %1$d series in %2$d libraries</item>
+        <item quantity="one">Found %1$,d series</item>
+        <item quantity="other">Found %1$,d series in %2$,d libraries</item>
     </plurals>
     <!-- Line under the result title. The kind is Komga, Kavita or OPDS. -->
     <string name="book_server_found_line">%1$s at %2$s. Pick the libraries to add.</string>
     <!-- A library row's line in the result. -->
-    <string name="book_server_library_line">%1$d series</string>
+    <string name="book_server_library_line">%1$,d series</string>
     <!-- Switch in the result, on to start with. -->
     <string name="book_server_sync_progress">Send progress to the server</string>
     <!-- Line under the switch. -->
@@ -6526,20 +6606,20 @@
     <string name="book_server_not_books_line">Kaeri reads from Komga, Kavita and OPDS catalogues.</string>
     <!-- Folder result title. -->
     <plurals name="book_folder_found">
-        <item quantity="one">Found %1$d series in one file</item>
-        <item quantity="other">Found %1$d series in %2$d files</item>
+        <item quantity="one">Found %1$,d series in one file</item>
+        <item quantity="other">Found %1$,d series in %2$,d files</item>
     </plurals>
     <!-- Line under it: the folder's path, then how many series were matched by their own details. -->
-    <string name="book_folder_found_line">%1$s. Kaeri matched %2$d of them by their details.</string>
+    <string name="book_folder_found_line">%1$s. Kaeri matched %2$,d of them by their details.</string>
     <!-- Row in the folder result: files that are books in formats Kaeri can't open. -->
     <plurals name="book_folder_unsupported">
         <item quantity="one">One file Kaeri can\'t open</item>
-        <item quantity="other">%1$d files Kaeri can\'t open</item>
+        <item quantity="other">%1$,d files Kaeri can\'t open</item>
     </plurals>
     <!-- Line under it: the formats, already counted and joined, such as "14 MOBI, 6 AZW3". -->
     <string name="book_folder_unsupported_line">%1$s. They stay in the folder as they are.</string>
     <!-- One item of that list: EPUB files locked with DRM or a password. -->
-    <string name="book_folder_drm">%1$d EPUB locked with DRM</string>
+    <string name="book_folder_drm">%1$,d EPUB locked with DRM</string>
     <!-- Note under the folder result. -->
     <string name="book_folder_opens">Kaeri opens CBZ, CBR, EPUB and PDF files, and folders of images.</string>
     <!-- Row action that lists the files skipped. -->
@@ -6553,7 +6633,7 @@
     <!-- Line under it. -->
     <plurals name="book_folder_empty_line">
         <item quantity="one">It holds one file, which isn\'t CBZ, CBR, EPUB, PDF or an image.</item>
-        <item quantity="other">It holds %1$d files, none of them CBZ, CBR, EPUB, PDF or images.</item>
+        <item quantity="other">It holds %1$,d files, none of them CBZ, CBR, EPUB, PDF or images.</item>
     </plurals>
     <!-- Primary action after an empty folder. -->
     <string name="book_folder_choose_other">Choose another folder</string>
@@ -6566,7 +6646,7 @@
     <!-- Line under it. The owner is who runs the store. -->
     <plurals name="store_joined_line">
         <item quantity="one">%1$s offers one plugin. Joining installs nothing; install it here or later.</item>
-        <item quantity="other">%1$s offers %2$d plugins. Joining installs nothing; pick the ones you want here or later.</item>
+        <item quantity="other">%1$s offers %2$,d plugins. Joining installs nothing; pick the ones you want here or later.</item>
     </plurals>
     <!-- Group header in the joined store's list. -->
     <string name="store_group_reading">For reading</string>
@@ -6581,7 +6661,7 @@
     <!-- Result after installing. -->
     <plurals name="store_installed">
         <item quantity="one">One plugin installed. It\'s in Your sources.</item>
-        <item quantity="other">%1$d plugins installed. They\'re in Your sources.</item>
+        <item quantity="other">%1$,d plugins installed. They\'re in Your sources.</item>
     </plurals>
     <!-- Info title when every plugin in a store is for watching, and watching is off here. -->
     <string name="store_other_medium">Every plugin in %1$s is for watching</string>
@@ -6600,40 +6680,40 @@
     <!-- Under the reading group: plugins for watching while watching is off here. -->
     <plurals name="store_other_medium_more">
         <item quantity="one">One more is for watching, which is off on this device.</item>
-        <item quantity="other">%1$d more are for watching, which is off on this device.</item>
+        <item quantity="other">%1$,d more are for watching, which is off on this device.</item>
     </plurals>
     <!-- On a TV, under the list: plugins for reading, which a TV doesn't do. -->
     <plurals name="store_tv_reading_only">
         <item quantity="one">One more is for reading, which this TV doesn\'t do.</item>
-        <item quantity="other">%1$d more are for reading, which this TV doesn\'t do.</item>
+        <item quantity="other">%1$,d more are for reading, which this TV doesn\'t do.</item>
     </plurals>
     <!-- On a TV, info title when every plugin in a store is for reading. -->
     <string name="store_tv_all_reading">Every plugin in %1$s is for reading, which this TV doesn\'t do.</string>
     <!-- Plugin row in an invite's result. -->
     <string name="store_plugin_row">Version %1$s · may contact %2$s</string>
     <!-- Notice after a server or folder is added, for 4 seconds. -->
-    <string name="source_added">Added %1$s · %2$d series</string>
+    <string name="source_added">Added %1$s · %2$,d series</string>
     <!-- Notice after Install all, for 4 seconds. -->
     <plurals name="source_added_plugins">
         <item quantity="one">Installed one plugin from %2$s</item>
-        <item quantity="other">Installed %1$d plugins from %2$s</item>
+        <item quantity="other">Installed %1$,d plugins from %2$s</item>
     </plurals>
     <!-- A server's row in Your sources, just added. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library. -->
     <plurals name="source_row_server">
-        <item quantity="one">%1$s · %2$d series in %3$d library · added just now</item>
-        <item quantity="other">%1$s · %2$d series in %3$d libraries · added just now</item>
+        <item quantity="one">%1$s · %2$,d series in %3$,d library · added just now</item>
+        <item quantity="other">%1$s · %2$,d series in %3$,d libraries · added just now</item>
     </plurals>
     <!-- A server's row in Your sources once it has settled. The kind is Komga, Kavita or OPDS; an OPDS catalogue is one library. -->
     <plurals name="source_row_server_series">
-        <item quantity="one">%1$s · %2$d series in %3$d library</item>
-        <item quantity="other">%1$s · %2$d series in %3$d libraries</item>
+        <item quantity="one">%1$s · %2$,d series in %3$,d library</item>
+        <item quantity="other">%1$s · %2$,d series in %3$,d libraries</item>
     </plurals>
     <!-- A server's row in Your sources while it shows no series. -->
     <string name="source_row_server_empty">%1$s · no series yet · looks again in 30 minutes</string>
     <!-- A folder's row in Your sources. -->
     <plurals name="source_row_folder">
-        <item quantity="one">%1$s · %2$d series · one file skipped</item>
-        <item quantity="other">%1$s · %2$d series · %3$d files skipped</item>
+        <item quantity="one">%1$s · %2$,d series · one file skipped</item>
+        <item quantity="other">%1$s · %2$,d series · %3$,d files skipped</item>
     </plurals>
     <!-- A plugin's row in Your sources. The medium is "Reading" or "Watching". -->
     <string name="source_row_plugin">From %1$s · %2$s · version %3$s</string>
@@ -6651,8 +6731,8 @@
     <string name="source_picker_automatic_detail">Each episode from the first source that has it</string>
     <!-- Under a source: how many of the title's released episodes it lists. -->
     <plurals name="source_picker_coverage">
-        <item quantity="one">%1$d of %2$d episode</item>
-        <item quantity="other">%1$d of %2$d episodes</item>
+        <item quantity="one">%1$,d of %2$,d episode</item>
+        <item quantity="other">%1$,d of %2$,d episodes</item>
     </plurals>
     <!-- Under a source that is switched off in Settings. -->
     <string name="source_note_off">Switched off</string>
@@ -6747,7 +6827,7 @@
     <!-- Line: the plugin contacts several hosts. The count is the hosts after the first. -->
     <plurals name="sources_contacts_line">
         <item quantity="one">Contacts %1$s and one more</item>
-        <item quantity="other">Contacts %1$s and %2$d more</item>
+        <item quantity="other">Contacts %1$s and %2$,d more</item>
     </plurals>
     <!-- Line: the plugin contacts no host. -->
     <string name="sources_contacts_none">Lists no hosts to contact</string>
@@ -6758,7 +6838,7 @@
     <!-- Line: an update adds several hosts. The count is the hosts after the first. -->
     <plurals name="sources_update_contacts">
         <item quantity="one">This update also contacts %1$s and one more.</item>
-        <item quantity="other">This update also contacts %1$s and %2$d more.</item>
+        <item quantity="other">This update also contacts %1$s and %2$,d more.</item>
     </plurals>
     <!-- Title of the update question. -->
     <string name="sources_update_title">Update %1$s?</string>
@@ -6779,7 +6859,7 @@
     <!-- Over the { -source } list while the { -source-pl } are set up again after a change. -->
     <string name="sources_rebuilding">Setting up sources again</string>
     <!-- Value of a plugin's response time, in milliseconds. -->
-    <string name="sources_response_ms">%1$d ms</string>
+    <string name="sources_response_ms">%1$,d ms</string>
     <!-- Menu, palette and source picker entry that opens the sheet. -->
     <string name="match_fix">Fix this match</string>
     <!-- The title page's main action while the source couldn't choose, and the sheet's title. -->
@@ -6787,7 +6867,7 @@
     <!-- The line on the title page while the match is open, under its main action. The count leaves out titles that were ruled out. -->
     <plurals name="match_uncertain">
         <item quantity="one">%2$s lists a title that could be this one. Choose it to play its episodes.</item>
-        <item quantity="other">%2$s lists %1$d titles that could be this one. Choose one to play its episodes.</item>
+        <item quantity="other">%2$s lists %1$,d titles that could be this one. Choose one to play its episodes.</item>
     </plurals>
     <!-- The line on a title page when the source listed no title that fits, so the person searches. -->
     <string name="match_uncertain_none">%1$s has no title that fits this one. Choose one anyway, or search.</string>
@@ -7106,7 +7186,7 @@
     <!-- Line of a member: the number of devices. -->
     <plurals name="stores_member_devices">
         <item quantity="one">Their one device</item>
-        <item quantity="other">Their %1$d devices</item>
+        <item quantity="other">Their %1$,d devices</item>
     </plurals>
     <!-- Label of the field for the name of the person invited. -->
     <string name="stores_invite_for">Who is it for? (optional)</string>
@@ -7154,9 +7234,9 @@
     <!-- Line under it. -->
     <string name="stores_invite_group_detail">Each person adds their own name when they join.</string>
     <!-- Line under an invite that works a set number of times. -->
-    <string name="stores_invite_works_times">Works %1$d times, until %2$s.</string>
+    <string name="stores_invite_works_times">Works %1$,d times, until %2$s.</string>
     <!-- The same with no end date. -->
-    <string name="stores_invite_works_times_forever">Works %1$d times, until you cancel it.</string>
+    <string name="stores_invite_works_times_forever">Works %1$,d times, until you cancel it.</string>
     <!-- Line under an invite that works any number of times. -->
     <string name="stores_invite_works_any">Anyone who has this link can join, until %1$s.</string>
     <!-- The same with no end date. -->
@@ -7176,10 +7256,10 @@
     <!-- Uses of an invite that works any number of times. -->
     <plurals name="stores_invite_used">
         <item quantity="one">Used once</item>
-        <item quantity="other">Used %1$d times</item>
+        <item quantity="other">Used %1$,d times</item>
     </plurals>
     <!-- Uses of an invite that works a set number of times. -->
-    <string name="stores_invite_used_of">Used %1$d of %2$d</string>
+    <string name="stores_invite_used_of">Used %1$,d of %2$,d</string>
     <!-- Heading over invites that ended. -->
     <string name="stores_invites_ended">Ended in the last 30 days</string>
     <!-- Why an invite ended: it was used as many times as it allowed. -->
@@ -7195,7 +7275,7 @@
     <!-- Detail of the confirmation that cancels an invite that was used. -->
     <plurals name="stores_cancel_invite_detail">
         <item quantity="one">Nobody else can join with it. The person who joined stays a member.</item>
-        <item quantity="other">Nobody else can join with it. The %1$d people who joined stay members.</item>
+        <item quantity="other">Nobody else can join with it. The %1$,d people who joined stay members.</item>
     </plurals>
     <!-- Join sheet: name field when the invite works more than once. -->
     <string name="stores_join_your_name">Your name (optional)</string>
@@ -7218,12 +7298,12 @@
     <!-- Line over the list of devices that joined with the link. -->
     <plurals name="stores_devices_joined">
         <item quantity="one">One device joined with the link</item>
-        <item quantity="other">%1$d devices joined with the link</item>
+        <item quantity="other">%1$,d devices joined with the link</item>
     </plurals>
     <!-- Line of a device that joined. -->
     <string name="stores_device_joined_at">Joined %1$s</string>
     <!-- Line under the list when it is cut off. -->
-    <string name="stores_newest_listed">The newest %1$d are listed.</string>
+    <string name="stores_newest_listed">The newest %1$,d are listed.</string>
     <!-- Line when the store's server cannot offer the choice. -->
     <string name="stores_server_older">This plugin store\'s server is older, and lets in only people you invite. Updating it adds the choice.</string>
     <!-- Title of the confirmation that removes devices that joined with the link. -->
@@ -7243,7 +7323,7 @@
     <!-- Heading over the { -plugin-pl } a { -plugin-store } offers, in the join dialog. -->
     <plurals name="stores_offers_plugins">
         <item quantity="one">One plugin</item>
-        <item quantity="other">%1$d plugins</item>
+        <item quantity="other">%1$,d plugins</item>
     </plurals>
     <!-- Button of a notice that opens the plugin stores page. -->
     <string name="notice_open_stores">Open plugin stores</string>
@@ -7352,7 +7432,7 @@
     <!-- Row and sheet title. -->
     <string name="devices_add">Add a device</string>
     <!-- Device row line past 30 days. -->
-    <string name="devices_not_seen">Not seen for %1$d days</string>
+    <string name="devices_not_seen">Not seen for %1$,d days</string>
     <!-- A device paired only for Play on TV. -->
     <string name="devices_remote_only">Remote only</string>
     <!-- Button on a remote-only TV row. -->
@@ -7505,8 +7585,8 @@
     <string name="rkey_enter_title">Enter your recovery key</string>
     <!-- Restore. -->
     <plurals name="rkey_enter_line">
-        <item quantity="one">%1$s holds history from %2$d device. The key you saved when sync was turned on opens it.</item>
-        <item quantity="other">%1$s holds history from %2$d devices. The key you saved when sync was turned on opens it.</item>
+        <item quantity="one">%1$s holds history from %2$,d device. The key you saved when sync was turned on opens it.</item>
+        <item quantity="other">%1$s holds history from %2$,d devices. The key you saved when sync was turned on opens it.</item>
     </plurals>
     <!-- Field note. -->
     <string name="rkey_enter_note">24 letters and digits, in groups of four. Spaces and case don’t matter.</string>
@@ -7633,7 +7713,7 @@
     <!-- Devices row value while sync is off and TVs are paired for Play on TV. The row says "Sync off", then this. -->
     <plurals name="devices_tvs_for_play">
         <item quantity="one">One TV for Play on TV</item>
-        <item quantity="other">%1$d TVs for Play on TV</item>
+        <item quantity="other">%1$,d TVs for Play on TV</item>
     </plurals>
     <!-- Line under a TV paired for Play on TV today. -->
     <string name="devices_paired_today">Paired today</string>
@@ -7787,11 +7867,11 @@
     <!-- Screen reader hint of that action. -->
     <string name="episode_synopsis_show_hint">Shows this episode\'s still and synopsis</string>
     <!-- Facts line of an episode with a length and an air date. The date is already formatted. -->
-    <string name="episode_facts">%1$d min · Aired %2$s</string>
+    <string name="episode_facts">%1$,d min · Aired %2$s</string>
     <!-- Facts line of an episode with a length only. -->
-    <string name="episode_facts_length">%1$d min</string>
+    <string name="episode_facts_length">%1$,d min</string>
     <!-- Facts line of an episode that is part-watched. -->
-    <string name="episode_facts_left">%1$d min left</string>
+    <string name="episode_facts_left">%1$,d min left</string>
     <!-- One line in the list where spoiler protection starts, on desktops. The episode is the last one not hidden. -->
     <string name="episode_protection_line">Spoiler protection hides what comes after episode %1$d.</string>
     <!-- The same line on phones. -->
@@ -7803,7 +7883,7 @@
     <!-- One line that stands for the watched episodes at the top of a range. Opening it shows them. -->
     <plurals name="episode_fold">
         <item quantity="one">One watched episode</item>
-        <item quantity="other">%1$d watched episodes</item>
+        <item quantity="other">%1$,d watched episodes</item>
     </plurals>
     <!-- An episode's number in a facts line on phones and in narrow desktop windows. -->
     <string name="episode_short">E%1$d</string>
@@ -7866,7 +7946,7 @@
     <!-- Note under that list: where the names come from. -->
     <string name="more_following_note">From AniList</string>
     <!-- What a followed person gave the show, out of ten. The score is a whole number. -->
-    <string name="more_followed_score">%1$d/10</string>
+    <string name="more_followed_score">%1$,d/10</string>
     <!-- Heading of the list of titles people who liked this one also liked. -->
     <string name="more_like_this">More like this</string>
     <!-- Line of a followed person's list entry: their status and how far they are. Both are already worded. -->
@@ -7880,7 +7960,7 @@
     <!-- Button that shows the spoiler tags. -->
     <plurals name="more_show_spoiler_tags">
         <item quantity="one">Show one spoiler tag</item>
-        <item quantity="other">Show %1$d spoiler tags</item>
+        <item quantity="other">Show %1$,d spoiler tags</item>
     </plurals>
     <!-- An episode's line with the audio it was watched in marked, as Continue and the title page word it. -->
     <string name="episode_line_dubbed">%1$s · Dubbed</string>
@@ -7903,7 +7983,7 @@
     <!-- Value of the fact on a show with no announced start. -->
     <string name="title_fact_tba">To be announced</string>
     <!-- A followed person's status and score, such as "Completed · 9/10". The status is already worded. -->
-    <string name="more_following_line">%1$s · %2$d/10</string>
+    <string name="more_following_line">%1$s · %2$,d/10</string>
     <!-- Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number. -->
     <string name="episode_go_to">Go to episode…</string>
     <!-- Title of the Go to episode field. -->
@@ -8075,7 +8155,7 @@
     <!-- Status: signed in, with changes waiting to be sent. -->
     <plurals name="accounts_state_signed_in_waiting">
         <item quantity="one">Signed in to %1$s as %2$s · one change waiting</item>
-        <item quantity="other">Signed in to %1$s as %2$s · %3$d changes waiting</item>
+        <item quantity="other">Signed in to %1$s as %2$s · %3$,d changes waiting</item>
     </plurals>
     <!-- Status: the sign-in ran out. -->
     <string name="accounts_state_expired">%1$s needs you to sign in again</string>
@@ -8318,7 +8398,7 @@
     <!-- Line under the empty state of Play on TV when no TV was found: casting looks for these too. -->
     <string name="tv_cast_none_found">TVs with Chromecast built in show here too.</string>
     <!-- Status line of the casting card while a cast takes a while to start: the line, then the seconds since the TV was picked. -->
-    <string name="tv_cast_counting">%1$s · %2$d s</string>
+    <string name="tv_cast_counting">%1$s · %2$,d s</string>
     <!-- Status line of the casting card when the cast didn't start. The reason shows under the episode. -->
     <string name="tv_cast_couldnt_start">Couldn\'t start on %1$s</string>
     <!-- Status line of the casting card after the TV stopped answering. -->
@@ -8334,7 +8414,7 @@
     <!-- Under the TV volume row on the casting card, for a TV whose volume is set with its own remote. -->
     <string name="tv_cast_volume_on_tv">Set on the TV</string>
     <!-- Line over the next episode on the casting card while its count runs. At 0 the TV plays it. -->
-    <string name="tv_cast_up_next_in">Up next · plays in %1$d s</string>
+    <string name="tv_cast_up_next_in">Up next · plays in %1$,d s</string>
     <!-- Line under the paired TVs. -->
     <string name="tv_forget_note">Forget a TV here and it forgets this device too.</string>
     <!-- Heading of the update row in settings and about. -->

@@ -168,3 +168,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $title }: { $count } kısım çevrimdışı okumaya hazır.
  }
 reading-downloads-done-series = { $count } seriden bölümler çevrimdışı okumaya hazır.
+read-source-folders = Klasörler
+reading-since-january = Ocak'tan beri
+reading-since-february = Şubat'tan beri
+reading-since-march = Mart'tan beri
+reading-since-april = Nisan'dan beri
+reading-since-may = Mayıs'tan beri
+reading-since-june = Haziran'dan beri
+reading-since-july = Temmuz'dan beri
+reading-since-august = Ağustos'tan beri
+reading-since-september = Eylül'den beri
+reading-since-october = Ekim'den beri
+reading-since-november = Kasım'dan beri
+reading-since-december = Aralık'tan beri
