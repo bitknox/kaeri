@@ -197483,6 +197483,12 @@
             "value" : "%1$@ · %2$@"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -199169,6 +199175,12 @@
             "value" : "Download"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダウンロード"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200139,6 +200151,12 @@
             "value" : "Altri generi"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "その他のジャンル"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200536,6 +200554,12 @@
           }
         },
         "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@: %2$@"
@@ -203739,6 +203763,12 @@
             "value" : "%1$@, caricamento"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、読み込み中"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205465,6 +205495,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205529,6 +205565,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@"
           }
         },
         "pl" : {
@@ -205597,6 +205639,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205661,6 +205709,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, caricamento"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@、読み込み中"
           }
         },
         "pl" : {
@@ -205729,6 +205783,12 @@
             "value" : "%1$@, caricamento"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、読み込み中"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205793,6 +205853,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@"
           }
         },
         "pl" : {
@@ -205982,6 +206048,28 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "Mostra altri %1$lld da %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@からさらに%1$lld件を表示"
                     }
                   }
                 }
@@ -206195,6 +206283,12 @@
             "value" : "%1$@, Dettagli"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、詳細"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206259,6 +206353,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@"
           }
         },
         "pl" : {
@@ -206327,6 +206427,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206391,6 +206497,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@、%3$@"
           }
         },
         "pl" : {
@@ -206459,6 +206571,12 @@
             "value" : "Vedi tutti, %1$@"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@をすべて見る"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206525,6 +206643,12 @@
             "value" : "%1$@, %2$@, %3$@"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@、%3$@"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206589,6 +206713,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@"
           }
         },
         "pl" : {
@@ -206823,6 +206953,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "I risultati di AniList sono nascosti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniListの結果は非表示です。"
           }
         },
         "pl" : {
@@ -207143,6 +207279,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@、%2$@"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -207291,6 +207433,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld da AniList, %2$lld dalle tue fonti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniListから%1$lld件、ソースから%2$lld件。"
           }
         },
         "pl" : {
@@ -207525,6 +207673,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nelle tue cartelle"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手元のフォルダにあり"
           }
         },
         "pl" : {
@@ -208072,6 +208226,12 @@
           }
         },
         "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "ja" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
@@ -208775,6 +208935,28 @@
             }
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniListから%1$lld件"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -209102,6 +209284,28 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%1$lld dalle tue fonti"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "ソースから%1$lld件"
                     }
                   }
                 }
@@ -210239,6 +210443,12 @@
             "value" : "I risultati di AniList sono nascosti. I filtri qui sotto si applicano solo ai risultati di AniList."
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniListの結果は非表示です。下の絞り込みはAniListの結果にのみ適用されます。"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210303,6 +210513,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Niente trovato nelle tue fonti"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ソースでは見つかりませんでした"
           }
         },
         "pl" : {
@@ -211695,6 +211911,12 @@
             "value" : "Offline. I capitoli scaricati si aprono comunque."
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "オフラインです。ダウンロード済みの章は開けます。"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211759,6 +211981,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Aggiungi a In programma"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "予定に追加"
           }
         },
         "pl" : {
@@ -211827,6 +212055,12 @@
             "value" : "Manga conclusi, più popolari"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完結したマンガ、人気順"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211891,6 +212125,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Light novel concluse, più popolari"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完結したライトノベル、人気順"
           }
         },
         "pl" : {
@@ -211959,6 +212199,12 @@
             "value" : "Webtoon conclusi, più popolari"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完結したウェブトゥーン、人気順"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -212023,6 +212269,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manga iniziati negli ultimi 12 mesi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "過去12か月に始まったマンガ"
           }
         },
         "pl" : {
@@ -212091,6 +212343,12 @@
             "value" : "Light novel iniziate negli ultimi 12 mesi"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "過去12か月に始まったライトノベル"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -212155,6 +212413,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoon iniziati negli ultimi 12 mesi"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "過去12か月に始まったウェブトゥーン"
           }
         },
         "pl" : {
@@ -212223,6 +212487,12 @@
             "value" : "Manga di tendenza"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "マンガ、話題順"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -212289,6 +212559,12 @@
             "value" : "Light novel di tendenza"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ライトノベル、話題順"
+          }
+        },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -212353,6 +212629,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoon di tendenza"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ウェブトゥーン、話題順"
           }
         },
         "pl" : {

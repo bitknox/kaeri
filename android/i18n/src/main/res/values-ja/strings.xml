@@ -383,6 +383,7 @@
         <item quantity="other">ファイル%1$,d件 · %2$s</item>
     </plurals>
     <string name="read_source_folders">フォルダ</string>
+    <string name="read_feed_downloads">ダウンロード</string>
     <string name="reading_since_january">1月から</string>
     <string name="reading_since_february">2月から</string>
     <string name="reading_since_march">3月から</string>
@@ -395,6 +396,15 @@
     <string name="reading_since_october">10月から</string>
     <string name="reading_since_november">11月から</string>
     <string name="reading_since_december">12月から</string>
+    <string name="read_view_all_trending_manga">マンガ、話題順</string>
+    <string name="read_view_all_trending_webtoons">ウェブトゥーン、話題順</string>
+    <string name="read_view_all_trending_novels">ライトノベル、話題順</string>
+    <string name="read_view_all_new_manga">過去12か月に始まったマンガ</string>
+    <string name="read_view_all_new_webtoons">過去12か月に始まったウェブトゥーン</string>
+    <string name="read_view_all_new_novels">過去12か月に始まったライトノベル</string>
+    <string name="read_view_all_finished_manga">完結したマンガ、人気順</string>
+    <string name="read_view_all_finished_webtoons">完結したウェブトゥーン、人気順</string>
+    <string name="read_view_all_finished_novels">完結したライトノベル、人気順</string>
     <string name="store_joined">%1$sに%2$sとして参加しました。</string>
     <string name="store_joined_unnamed">%1$sに名前なしで参加しました。</string>
     <string name="store_left">%1$sから退出しました。インストール済みのプラグインはそのまま残ります。</string>
@@ -774,7 +784,32 @@
     <string name="reader_opening_waited">%1$s · %2$,d秒</string>
     <string name="reader_sources_title">この章を読めるソース</string>
     <string name="reader_paper_parts">変更される項目</string>
+    <string name="eink_tab_more">その他</string>
+    <string name="eink_home_all">すべて</string>
+    <string name="eink_place_chapter_page">第%1$s話 · %2$dページ</string>
+    <string name="eink_place_chapter_percent">第%1$s話 · %2$,d%%</string>
+    <string name="eink_home_new_chapters">新しい章</string>
+    <string name="eink_more_trackers">連携サービス</string>
+    <string name="eink_more_sync">同期</string>
+    <string name="eink_more_settings_line">ストレージ、通知、言語</string>
+    <string name="eink_downloads_space">このデバイスで%1$s使用 · 空き %2$s</string>
+    <string name="eink_downloads_space_used">このデバイスで%1$s使用</string>
+    <string name="eink_downloads_downloading">ダウンロード中</string>
+    <string name="eink_downloads_here">このデバイス内</string>
+    <string name="eink_keep_ready_on">オン · 読んでいる作品の次の章</string>
+    <string name="eink_keep_ready_off">オフ</string>
     <string name="read_home_offline_line">読書のホームは、初めて開くときに接続が必要です。ダウンロード済みの章は開けます。</string>
+    <string name="read_search_source_busy">%1$s、検索中</string>
+    <string name="read_search_source_busy_kind">%1$s、%2$s、検索中</string>
+    <string name="read_search_source_named">%1$s、%2$s</string>
+    <plurals name="read_search_source_timeout_spoken">
+        <item quantity="other">%1$,d秒以内に応答がありませんでした。</item>
+    </plurals>
+    <string name="read_search_try_again_source">%1$sを再試行</string>
+    <string name="read_search_sources_only_nothing_line">別の言葉をお試しください。</string>
+    <string name="read_tile_spoken_title">%1$s。</string>
+    <string name="read_tile_spoken">%1$s。%2$s。</string>
+    <string name="read_tile_spoken_in">%1$s。%2$s。%3$s。</string>
     <string name="channel_chapters_name">新しい章</string>
     <string name="channel_chapters_description">「読書中」リストの作品に新しい章が出たとき。</string>
     <string name="channel_downloads_finished_name">ダウンロード完了</string>
@@ -2690,6 +2725,7 @@
     </plurals>
     <string name="read_filter_included">含める</string>
     <string name="read_filter_left_out">除外</string>
+    <string name="read_filter_more_genres">その他のジャンル</string>
     <string name="read_search_started">開始時期</string>
     <string name="read_search_sources_only">ソースのみ</string>
     <string name="read_search_from_sources">ソースから</string>
@@ -2698,6 +2734,7 @@
     <string name="read_search_source_timeout">%1$,d秒以内に応答がありませんでした。</string>
     <string name="read_search_source_nothing">%1$sでは見つかりませんでした。</string>
     <string name="read_search_in_source">%1$sにあり</string>
+    <string name="read_search_in_folders">手元のフォルダにあり</string>
     <plurals name="read_search_in_sources">
         <item quantity="other">ソースのうち%1$,d件にあり</item>
     </plurals>
@@ -2705,6 +2742,8 @@
     <string name="read_search_anilist_failed">AniListからの応答がありませんでした。</string>
     <string name="read_search_anilist_failed_line">ソースには問い合わせ済みです。</string>
     <string name="read_search_sources_nothing">ソースにも見つかりませんでした。</string>
+    <string name="read_search_sources_only_nothing">ソースでは見つかりませんでした</string>
+    <string name="read_state_offline_line">オフラインです。ダウンロード済みの章は開けます。</string>
     <string name="read_search_total_unknown">AniListの作品</string>
     <string name="read_search_more_anilist">AniListの結果をさらに表示</string>
     <string name="read_search_shown">%2$,d件中%1$,d件を表示</string>
@@ -2713,6 +2752,37 @@
     <string name="read_search_source_kind_folder">フォルダ</string>
     <string name="read_search_source_kind_plugin">プラグイン</string>
     <string name="read_search_source_more">さらに%1$,d件を表示</string>
+    <string name="read_search_line_total">%1$s · %2$s</string>
+    <string name="read_search_browse_parts">%1$s、%2$s</string>
+    <string name="read_caption_two">%1$s · %2$s</string>
+    <string name="read_filter_shown">%1$s: %2$s</string>
+    <string name="read_name_tile">%1$s、%2$s</string>
+    <string name="read_name_tile_placed">%1$s、%2$s、%3$s</string>
+    <string name="read_name_tile_only_placed">%1$s、%2$s</string>
+    <string name="read_name_week_tile">%1$s、%2$s、%3$s</string>
+    <string name="read_name_week_tile_time">%1$s、%2$s</string>
+    <string name="read_name_spotlight_art">%1$s、詳細</string>
+    <string name="read_name_heading">%1$s、%2$s</string>
+    <string name="read_name_loading">%1$s、読み込み中</string>
+    <string name="read_name_heading_loading">%1$s、%2$s、読み込み中</string>
+    <string name="read_name_view_all">%1$sをすべて見る</string>
+    <string name="read_name_filter">%1$s、%2$s</string>
+    <string name="read_name_failure">%1$s、%2$s</string>
+    <string name="read_name_source">%1$s、%2$s</string>
+    <plurals name="read_name_source_more">
+        <item quantity="other">%2$sからさらに%1$,d件を表示</item>
+    </plurals>
+    <string name="read_search_sources_only_line">AniListの結果は非表示です。下の絞り込みはAniListの結果にのみ適用されます。</string>
+    <string name="read_search_done">AniListから%1$,d件、ソースから%2$,d件。</string>
+    <string name="read_home_row_loading">%1$s、読み込み中</string>
+    <string name="read_tile_add_planning">予定に追加</string>
+    <string name="read_search_anilist_hidden">AniListの結果は非表示です。</string>
+    <plurals name="read_search_said_anilist">
+        <item quantity="other">AniListから%1$,d件</item>
+    </plurals>
+    <plurals name="read_search_said_sources">
+        <item quantity="other">ソースから%1$,d件</item>
+    </plurals>
     <string name="onboarding_step">%1$,d/%2$,d</string>
     <string name="onboarding_welcome_line">自分のソースで、視聴も読書も記録できます。</string>
     <string name="onboarding_welcome_note">リストと進捗はあなたのデバイスに残ります。連携サービスとソースは、ご自分で追加します。</string>

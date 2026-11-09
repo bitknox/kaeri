@@ -248,6 +248,7 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = 含める
 read-filter-left-out = 除外
+read-filter-more-genres = その他のジャンル
 read-search-started = 開始時期
 read-search-sources-only = { -source-pl }のみ
 read-search-from-sources = { -source-pl }から
@@ -256,6 +257,7 @@ read-search-source-failed = { $source }から応答がありませんでした�
 read-search-source-timeout = { $seconds }秒以内に応答がありませんでした。
 read-search-source-nothing = { $sources }では見つかりませんでした。
 read-search-in-source = { $source }にあり
+read-search-in-folders = 手元のフォルダにあり
 read-search-in-sources = { $n ->
    *[other] { -source-pl }のうち{ $n }件にあり
  }
@@ -263,6 +265,8 @@ read-search-anilist-nothing = AniListではこの言葉に一致する作品が�
 read-search-anilist-failed = AniListからの応答がありませんでした。
 read-search-anilist-failed-line = { -source-pl }には問い合わせ済みです。
 read-search-sources-nothing = { -source-pl }にも見つかりませんでした。
+read-search-sources-only-nothing = { -source-pl }では見つかりませんでした
+read-state-offline-line = オフラインです。ダウンロード済みの章は開けます。
 read-search-total-unknown = AniListの作品
 read-search-more-anilist = AniListの結果をさらに表示
 read-search-shown = { $total }件中{ $shown }件を表示
@@ -271,6 +275,37 @@ read-search-source-kind-server = サーバー
 read-search-source-kind-folder = フォルダ
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = さらに{ $n }件を表示
+read-search-line-total = { $line } · { $total }
+read-search-browse-parts = { $list }、{ $next }
+read-caption-two = { $first } · { $second }
+read-filter-shown = { $name }: { $value }
+read-name-tile = { $title }、{ $line }
+read-name-tile-placed = { $title }、{ $line }、{ $placed }
+read-name-tile-only-placed = { $title }、{ $placed }
+read-name-week-tile = { $title }、{ $time }、{ $chapter }
+read-name-week-tile-time = { $title }、{ $time }
+read-name-spotlight-art = { $title }、詳細
+read-name-heading = { $heading }、{ $side }
+read-name-loading = { $name }、読み込み中
+read-name-heading-loading = { $heading }、{ $side }、読み込み中
+read-name-view-all = { $row }をすべて見る
+read-name-filter = { $name }、{ $value }
+read-name-failure = { $line }、{ $reason }
+read-name-source = { $source }、{ $kind }
+read-name-source-more = { $n ->
+   *[other] { $source }からさらに{ $n }件を表示
+ }
+read-search-sources-only-line = AniListの結果は非表示です。下の絞り込みはAniListの結果にのみ適用されます。
+read-search-done = AniListから{ $anilist }件、{ -source-pl }から{ $sources }件。
+read-home-row-loading = { $row }、読み込み中
+read-tile-add-planning = 予定に追加
+read-search-anilist-hidden = AniListの結果は非表示です。
+read-search-said-anilist = { $n ->
+   *[other] AniListから{ $n }件
+ }
+read-search-said-sources = { $n ->
+   *[other] { -source-pl }から{ $n }件
+ }
 onboarding-step = { $step }/{ $total }
 onboarding-welcome-line = 自分の{ -source-pl }で、視聴も読書も記録できます。
 onboarding-welcome-note = リストと進捗はあなたの{ -device-pl }に残ります。{ -tracker-cap-pl }と{ -source-pl }は、ご自分で追加します。

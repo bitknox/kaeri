@@ -1,0 +1,36 @@
+tui-read-anilist = AniList
+tui-read-filters-none = 絞り込みなし
+tui-read-filters = 絞り込み { $set }
+tui-read-sources-only = { -source-pl }のみ
+tui-read-on = オン
+tui-read-off = オフ
+tui-read-try-again = 再試行
+tui-read-sources-only-words = タイトルを入力して{ -source-pl }を検索してください。
+tui-read-sources-nothing = { -source-pl }では見つかりませんでした
+tui-read-source-offline = { $source }には接続が必要です。
+tui-read-names-and = { $names }と{ $last }
+tui-read-opens-in-apps = { -app-name }のアプリで開きます。
+tui-read-sources-in-apps = フォルダ、サーバー、{ -plugin-store-pl }は{ -app-name }のアプリで追加します。
+tui-read-sources-only-on = { -source-pl }のみを表示します。AniListの結果は非表示です。
+tui-read-sources-only-off = AniListの結果を再び表示します。
+tui-read-header-sources = { -source-pl } { $mark } { $n }
+tui-read-status = { $n ->
+   *[other] 読書 · { -source-pl } { $n }件
+ }
+tui-read-status-short = 読書
+tui-read-hint-next-section = 次のセクション
+tui-read-hint-section = セクション
+tui-read-hint-sources-only = { -source-pl }のみ
+tui-read-hint-sources-only-short = { -source-cap-pl }のみ
+tui-read-hint-to-reading = 読書
+tui-read-hint-to-shows = 視聴
+tui-read-hint-planning = 予定
+tui-read-status-shows = 視聴 · { $state }
+tui-read-action-switch = 視聴と読書を切り替え
+tui-read-where-switch = { -app-name }を視聴と読書の両方に使っているときのホーム、読書、検索
+tui-read-keys-planning = 予定に追加
+tui-read-keys-heading = 読書
+tui-read-keys-next-section = 次のセクション
+tui-read-keys-sources-only = 「{ -source-pl }のみ」のオン/オフ
+tui-read-keys-try-again = 再度問い合わせ、または再読み込み
+tui-read-keys-filters = 検索の絞り込み

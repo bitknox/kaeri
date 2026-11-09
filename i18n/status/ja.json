@@ -6143,6 +6143,34 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "eink-downloads-downloading": {
+    "source": "7c557a9cb9a1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Downloading"
+  },
+  "eink-downloads-here": {
+    "source": "0b3112447456",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Inside this [device]"
+  },
+  "eink-downloads-space": {
+    "source": "e08b5412a620",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $used } used on this [device] · free { $free }"
+  },
+  "eink-downloads-space-used": {
+    "source": "4bda5d9ab80b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $used } used on this [device]"
+  },
   "eink-end-next": {
     "source": "0fbf6dc6a196",
     "state": "draft",
@@ -6185,11 +6213,60 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "eink-home-all": {
+    "source": "f993bb199fef",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "All"
+  },
+  "eink-home-new-chapters": {
+    "source": "526dc4f8cd11",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "New chapters"
+  },
+  "eink-keep-ready-off": {
+    "source": "302cbb19bf9a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Off"
+  },
+  "eink-keep-ready-on": {
+    "source": "05a62f9cb986",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "On · next chapters of works you are reading"
+  },
   "eink-loading-chapter": {
     "source": "555c24be5d39",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "eink-more-settings-line": {
+    "source": "c8c2053196cb",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Storage, notifications, language"
+  },
+  "eink-more-sync": {
+    "source": "05073d2537b4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Sync"
+  },
+  "eink-more-trackers": {
+    "source": "b4c06d298f83",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "[Trackers]"
   },
   "eink-new": {
     "source": "3741f519c32a",
@@ -6257,6 +6334,23 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "eink-place-chapter-page": {
+    "source": "1c04e1170d19",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Uses the full 第N話 and ページ rather than an abbreviation, since both fit 24 characters; check it reads well under a narrow cover."
+    ],
+    "back": "Episode { $chapter } · page { $page }"
+  },
+  "eink-place-chapter-percent": {
+    "source": "9eff101ba2cc",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Episode { $chapter } · { $percent }%"
+  },
   "eink-previous-chapter": {
     "source": "7ac92381ab6c",
     "state": "draft",
@@ -6286,6 +6380,13 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "eink-tab-more": {
+    "source": "37a9e8aec571",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Other"
   },
   "eink-turn-to-continue": {
     "source": "c3d82ba03295",
@@ -19681,6 +19782,13 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-caption-two": {
+    "source": "142080cd7a31",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $first } · { $second }"
+  },
   "read-downloads-active": {
     "source": "f3da69fdcf85",
     "state": "draft",
@@ -19741,6 +19849,13 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-feed-downloads": {
+    "source": "175d37c8eb04",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Downloads"
+  },
   "read-filter-any": {
     "source": "f999d4199ff4",
     "state": "draft",
@@ -19783,6 +19898,13 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-filter-more-genres": {
+    "source": "a9b11006c741",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Other genres"
+  },
   "read-filter-not-genre": {
     "source": "7b64f01aec2e",
     "state": "draft",
@@ -19806,6 +19928,13 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "read-filter-shown": {
+    "source": "152964312d4c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $name }: { $value }"
   },
   "read-filter-status": {
     "source": "ad3e3c8146fc",
@@ -20000,6 +20129,13 @@
     "at": "2026-11-08",
     "back": "Trending works and new works will appear once you're online."
   },
+  "read-home-row-loading": {
+    "source": "d40242635a0c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $row }, loading"
+  },
   "read-home-trending-manga": {
     "source": "7eee43d8f9ae",
     "state": "draft",
@@ -20057,6 +20193,140 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-linux-anilist-hidden": {
+    "source": "19bed86df940",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "AniList results are hidden."
+  },
+  "read-linux-browse-more": {
+    "source": "b341332d8e27",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Comma join changed to 、 for the visible browse line; check 、 versus ・ here."
+    ],
+    "back": "{ $filters }, { $filter }"
+  },
+  "read-linux-caption-pair": {
+    "source": "142080cd7a31",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $first } · { $second }"
+  },
+  "read-linux-line-total": {
+    "source": "24b2edc96138",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $line } · { $total }"
+  },
+  "read-linux-names-more": {
+    "source": "0fb96100c53c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Comma join changed to 、 for a list of names."
+    ],
+    "back": "{ $names }, { $name }"
+  },
+  "read-linux-row-loading": {
+    "source": "d40242635a0c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $row }, loading"
+  },
+  "read-linux-said-then": {
+    "source": "6302539e08ff",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Space between sentences dropped, since Japanese sentences end in 。 with no space."
+    ],
+    "back": "{ $said }{ $more }"
+  },
+  "read-linux-search-done": {
+    "source": "55d780f0ac5a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $anilist } items from AniList, { $sources } items from [sources]."
+  },
+  "read-linux-search-done-sources": {
+    "source": "c33f984ca6de",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $sources } items from [sources]."
+  },
+  "read-linux-source-searching": {
+    "source": "4ef0626c72a1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $source }, searching"
+  },
+  "read-linux-source-timeout": {
+    "source": "5590581daff9",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "There was no response within { $seconds } seconds."
+  },
+  "read-linux-source-with-kind": {
+    "source": "20a40c8c7518",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $source }, { $kind }"
+  },
+  "read-linux-spoken-end": {
+    "source": "d11d30b4a3c4",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $said }."
+  },
+  "read-linux-spoken-facts": {
+    "source": "f4948e944e12",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Comma join changed to the Japanese 、 for a spoken list."
+    ],
+    "back": "{ $facts }, { $fact }"
+  },
+  "read-linux-spoken-then": {
+    "source": "f82add2b81db",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Full stop changed to 。 between spoken sentences."
+    ],
+    "back": "{ $said }. { $more }"
+  },
+  "read-linux-try-again-source": {
+    "source": "7b6946368e89",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Retry { $source }"
+  },
+  "read-linux-view-all-row": {
+    "source": "1e08428c7307",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "See all of { $row }"
+  },
   "read-list-completed": {
     "source": "5033dab8c17f",
     "state": "draft",
@@ -20099,6 +20369,104 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-name-failure": {
+    "source": "784875b13ed7",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $line }, { $reason }"
+  },
+  "read-name-filter": {
+    "source": "eafa17d3fc5f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $name }, { $value }"
+  },
+  "read-name-heading": {
+    "source": "6f12e1b19eec",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $heading }, { $side }"
+  },
+  "read-name-heading-loading": {
+    "source": "c8c4e603fb23",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $heading }, { $side }, loading"
+  },
+  "read-name-loading": {
+    "source": "227900d56eb8",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $name }, loading"
+  },
+  "read-name-source": {
+    "source": "20a40c8c7518",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $source }, { $kind }"
+  },
+  "read-name-source-more": {
+    "source": "e912219c14cf",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Show { $n } more items from { $source }"
+  },
+  "read-name-spotlight-art": {
+    "source": "b0f7c6de5d2a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $title }, details"
+  },
+  "read-name-tile": {
+    "source": "a24f6b23ef80",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $title }, { $line }"
+  },
+  "read-name-tile-only-placed": {
+    "source": "76c119ff9f5c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $title }, { $placed }"
+  },
+  "read-name-tile-placed": {
+    "source": "af6b3ebff90d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $title }, { $line }, { $placed }"
+  },
+  "read-name-view-all": {
+    "source": "1e08428c7307",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "See all of { $row }"
+  },
+  "read-name-week-tile": {
+    "source": "d5e8d28a2c55",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $title }, { $time }, { $chapter }"
+  },
+  "read-name-week-tile-time": {
+    "source": "3ab81b471ba8",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $title }, { $time }"
+  },
   "read-search-anilist-failed": {
     "source": "51697437569f",
     "state": "draft",
@@ -20112,6 +20480,13 @@
     "by": "opus",
     "at": "2026-11-08",
     "back": "Sources have already been asked."
+  },
+  "read-search-anilist-hidden": {
+    "source": "19bed86df940",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "AniList results are hidden."
   },
   "read-search-anilist-nothing": {
     "source": "53296c63604b",
@@ -20133,11 +20508,28 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-search-browse-parts": {
+    "source": "f579a92eaebd",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Comma join changed to 、 for the visible browse line; check 、 versus ・ here."
+    ],
+    "back": "{ $list }, { $next }"
+  },
   "read-search-clear-filters": {
     "source": "e253299d8c90",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-07"
+  },
+  "read-search-done": {
+    "source": "55d780f0ac5a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $anilist } items from AniList, { $sources } items from [sources]."
   },
   "read-search-failed": {
     "source": "1d7fe5c4eb80",
@@ -20155,6 +20547,16 @@
     ],
     "back": "From sources"
   },
+  "read-search-in-folders": {
+    "source": "0dccc1dd9315",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: 手元のフォルダ chosen to say the folders are the person's own without あなたの; check it reads naturally."
+    ],
+    "back": "Exists in the folders at hand"
+  },
   "read-search-in-source": {
     "source": "9d6c2ec16e83",
     "state": "draft",
@@ -20171,6 +20573,13 @@
     "by": "opus",
     "at": "2026-11-08",
     "back": "other: Available in { $n } of the sources"
+  },
+  "read-search-line-total": {
+    "source": "24b2edc96138",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $line } · { $total }"
   },
   "read-search-more-anilist": {
     "source": "8c0d4e2b5764",
@@ -20209,6 +20618,20 @@
     "by": "agent",
     "at": "2026-11-07"
   },
+  "read-search-said-anilist": {
+    "source": "77defe235979",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $n } items from AniList"
+  },
+  "read-search-said-sources": {
+    "source": "9faa49a7fcc3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $n } items from [sources]"
+  },
   "read-search-shown": {
     "source": "bc2e24859970",
     "state": "draft",
@@ -20222,6 +20645,20 @@
     "by": "opus",
     "at": "2026-11-08",
     "back": "Showing { $shown }"
+  },
+  "read-search-source-busy": {
+    "source": "4ef0626c72a1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $source }, searching"
+  },
+  "read-search-source-busy-kind": {
+    "source": "e91bb2badcca",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $source }, { $kind }, searching"
   },
   "read-search-source-failed": {
     "source": "f8bd3cfcebc6",
@@ -20258,6 +20695,13 @@
     "at": "2026-11-08",
     "back": "Show { $n } more"
   },
+  "read-search-source-named": {
+    "source": "20a40c8c7518",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $source }, { $kind }"
+  },
   "read-search-source-nothing": {
     "source": "4c0214217083",
     "state": "draft",
@@ -20270,6 +20714,13 @@
     "state": "draft",
     "by": "opus",
     "at": "2026-11-08",
+    "back": "There was no response within { $seconds } seconds."
+  },
+  "read-search-source-timeout-spoken": {
+    "source": "630ee59bb619",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
     "back": "There was no response within { $seconds } seconds."
   },
   "read-search-sources-nothing": {
@@ -20288,6 +20739,27 @@
       "drafter: Your dropped: { -source-pl }のみ."
     ],
     "back": "Sources only"
+  },
+  "read-search-sources-only-line": {
+    "source": "c0eaeab3784f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "AniList results are hidden. The narrowing below applies only to AniList results."
+  },
+  "read-search-sources-only-nothing": {
+    "source": "14a1de27c829",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Not found in [sources]"
+  },
+  "read-search-sources-only-nothing-line": {
+    "source": "924709551685",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Please try different words."
   },
   "read-search-started": {
     "source": "3fd6bd99e3f6",
@@ -20333,6 +20805,13 @@
     "at": "2026-11-08",
     "back": "AniList works"
   },
+  "read-search-try-again-source": {
+    "source": "7b6946368e89",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Retry { $source }"
+  },
   "read-series-downloaded-open": {
     "source": "8a151ce93ce9",
     "state": "draft",
@@ -20374,6 +20853,107 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-11-08"
+  },
+  "read-state-offline-line": {
+    "source": "c98ca421ce61",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "You are offline. Downloaded chapters can be opened."
+  },
+  "read-tile-add-planning": {
+    "source": "7164d161006c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Uses reading's list name 予定 rather than the shows' 視聴予定."
+    ],
+    "back": "Add to Planned"
+  },
+  "read-tile-spoken": {
+    "source": "7b37a31a6353",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $title }. { $line }."
+  },
+  "read-tile-spoken-in": {
+    "source": "e1e3a41b8bad",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $title }. { $line }. { $where }."
+  },
+  "read-tile-spoken-title": {
+    "source": "6d70cd0ead62",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $title }."
+  },
+  "read-view-all-finished-manga": {
+    "source": "b454efb8e61e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Completed manga, by popularity"
+  },
+  "read-view-all-finished-novels": {
+    "source": "6dba99ac57a6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Completed light novels, by popularity"
+  },
+  "read-view-all-finished-webtoons": {
+    "source": "c667b14dbacd",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Completed webtoons, by popularity"
+  },
+  "read-view-all-new-manga": {
+    "source": "7fd2fd13a6a6",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Manga that started in the past 12 months"
+  },
+  "read-view-all-new-novels": {
+    "source": "92d580159644",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Light novels that started in the past 12 months"
+  },
+  "read-view-all-new-webtoons": {
+    "source": "dc9ec4f84e0a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Webtoons that started in the past 12 months"
+  },
+  "read-view-all-trending-manga": {
+    "source": "dd7b77c2265b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Manga, by trending order"
+  },
+  "read-view-all-trending-novels": {
+    "source": "f0786b194e43",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Light novels, by trending order"
+  },
+  "read-view-all-trending-webtoons": {
+    "source": "775b377d87bf",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Webtoons, by trending order"
   },
   "reader-action-controls": {
     "source": "83cd32b685cc",
@@ -36466,6 +37046,256 @@
     "by": "opus",
     "at": "2026-11-08"
   },
+  "tui-read-action-switch": {
+    "source": "e92650e3eb2d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Switch between watching and reading"
+  },
+  "tui-read-anilist": {
+    "source": "0983c11daa64",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "AniList"
+  },
+  "tui-read-filters": {
+    "source": "758385535b90",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Narrowing { $set }"
+  },
+  "tui-read-filters-none": {
+    "source": "d14061906410",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "No narrowing"
+  },
+  "tui-read-header-sources": {
+    "source": "576ebdb7fcee",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "[sources] { $mark } { $n }"
+  },
+  "tui-read-hint-next-section": {
+    "source": "8744f82be5bc",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Next section"
+  },
+  "tui-read-hint-planning": {
+    "source": "caff67c331d3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Uses reading's Planning list name 予定 (read-list-planning), not the shows' 視聴予定."
+    ],
+    "back": "Planned"
+  },
+  "tui-read-hint-section": {
+    "source": "cc1db59d292c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Section"
+  },
+  "tui-read-hint-sources-only": {
+    "source": "c20c9edf24b3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "[sources] only"
+  },
+  "tui-read-hint-sources-only-short": {
+    "source": "d11821ee0e0e",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "[Sources] only"
+  },
+  "tui-read-hint-to-reading": {
+    "source": "b8b919fcd36c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Reading (the activity)"
+  },
+  "tui-read-hint-to-shows": {
+    "source": "b65b4daf699f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Watching"
+  },
+  "tui-read-keys-filters": {
+    "source": "6346054a3e70",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Search narrowing"
+  },
+  "tui-read-keys-heading": {
+    "source": "b8b919fcd36c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Reading (the activity)"
+  },
+  "tui-read-keys-next-section": {
+    "source": "8744f82be5bc",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Next section"
+  },
+  "tui-read-keys-planning": {
+    "source": "7164d161006c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Add to Planned"
+  },
+  "tui-read-keys-sources-only": {
+    "source": "afaea7785357",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "back-translation: Revised after back-translation (「ソースのみをオンまたはオフ」 reads as turning only the sources on or off, not toggling the Your sources only switch; quote the switch name, e.g. 「ソースのみ」のオン/オフ). Was: \"{ -source-pl }のみをオンまたはオフ\". The new back-translation is not blind."
+    ],
+    "back": "\"[Sources] only\" on/off"
+  },
+  "tui-read-keys-try-again": {
+    "source": "12a139f22b51",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Ask again rendered as 再度問い合わせ, matching 問い合わせ used for asking sources elsewhere."
+    ],
+    "back": "Query again, or reload"
+  },
+  "tui-read-names-and": {
+    "source": "aae93ac0d4a7",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $names } and { $last }"
+  },
+  "tui-read-off": {
+    "source": "1a249b1921e2",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Off"
+  },
+  "tui-read-on": {
+    "source": "08b05807b556",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "On"
+  },
+  "tui-read-opens-in-apps": {
+    "source": "3ba6177494b1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Opens in the [Kaeri] apps."
+  },
+  "tui-read-source-offline": {
+    "source": "d6c85e9c342f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $source } requires a connection."
+  },
+  "tui-read-sources-in-apps": {
+    "source": "acd6f84da0b3",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Folders, servers and [plugin stores] are added in the [Kaeri] apps."
+  },
+  "tui-read-sources-nothing": {
+    "source": "14a1de27c829",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Not found in [sources]"
+  },
+  "tui-read-sources-only": {
+    "source": "e2c66de9fda7",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "[sources] only"
+  },
+  "tui-read-sources-only-off": {
+    "source": "44c6f13e6fa7",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Showing AniList results again."
+  },
+  "tui-read-sources-only-on": {
+    "source": "1ee589a8236f",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Showing only [sources]. AniList results are hidden."
+  },
+  "tui-read-sources-only-words": {
+    "source": "5e118f714782",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Please enter a title and search [sources]."
+  },
+  "tui-read-status": {
+    "source": "5891160349fc",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Reading (the activity) · [sources] { $n } items"
+  },
+  "tui-read-status-short": {
+    "source": "b8b919fcd36c",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Reading (the activity)"
+  },
+  "tui-read-status-shows": {
+    "source": "4f3366bf743d",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Watching · { $state }"
+  },
+  "tui-read-try-again": {
+    "source": "8030578146a1",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Retry"
+  },
+  "tui-read-where-switch": {
+    "source": "c3ebe743c49b",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "flags": [
+      "drafter: Reshaped as a noun phrase to fit before で使えます in toast-works-elsewhere."
+    ],
+    "back": "Home, Reading and Search when you use [Kaeri] for both watching and reading"
+  },
   "tui-together-chat-hidden-line": {
     "source": "6be0cc730c25",
     "state": "draft",
@@ -39913,6 +40743,41 @@
     "by": "opus",
     "at": "2026-11-08",
     "back": "Downloaded chapters can be opened without a connection."
+  },
+  "windows-read-search-anilist-hidden": {
+    "source": "19bed86df940",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "AniList results are hidden."
+  },
+  "windows-read-search-filters-dimmed": {
+    "source": "a75f05f4b854",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "Narrowing applies only to AniList results."
+  },
+  "windows-read-search-finished": {
+    "source": "55d780f0ac5a",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $anilist } items from AniList, { $sources } items from [sources]."
+  },
+  "windows-read-search-finished-sources": {
+    "source": "c33f984ca6de",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "{ $sources } items from [sources]."
+  },
+  "windows-read-search-source-timeout-said": {
+    "source": "630ee59bb619",
+    "state": "draft",
+    "by": "opus",
+    "at": "2026-11-09",
+    "back": "There was no response within { $seconds } seconds."
   },
   "windows-reader-all-manga-pc": {
     "source": "b55d1dff2113",

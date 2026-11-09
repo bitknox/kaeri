@@ -1034,6 +1034,9 @@
   <data name="ReadSourceFolders" xml:space="preserve">
     <value>フォルダ</value>
   </data>
+  <data name="ReadFeedDownloads" xml:space="preserve">
+    <value>ダウンロード</value>
+  </data>
   <data name="ReadingSinceJanuary" xml:space="preserve">
     <value>1月から</value>
   </data>
@@ -1069,6 +1072,33 @@
   </data>
   <data name="ReadingSinceDecember" xml:space="preserve">
     <value>12月から</value>
+  </data>
+  <data name="ReadViewAllTrendingManga" xml:space="preserve">
+    <value>マンガ、話題順</value>
+  </data>
+  <data name="ReadViewAllTrendingWebtoons" xml:space="preserve">
+    <value>ウェブトゥーン、話題順</value>
+  </data>
+  <data name="ReadViewAllTrendingNovels" xml:space="preserve">
+    <value>ライトノベル、話題順</value>
+  </data>
+  <data name="ReadViewAllNewManga" xml:space="preserve">
+    <value>過去12か月に始まったマンガ</value>
+  </data>
+  <data name="ReadViewAllNewWebtoons" xml:space="preserve">
+    <value>過去12か月に始まったウェブトゥーン</value>
+  </data>
+  <data name="ReadViewAllNewNovels" xml:space="preserve">
+    <value>過去12か月に始まったライトノベル</value>
+  </data>
+  <data name="ReadViewAllFinishedManga" xml:space="preserve">
+    <value>完結したマンガ、人気順</value>
+  </data>
+  <data name="ReadViewAllFinishedWebtoons" xml:space="preserve">
+    <value>完結したウェブトゥーン、人気順</value>
+  </data>
+  <data name="ReadViewAllFinishedNovels" xml:space="preserve">
+    <value>完結したライトノベル、人気順</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>{store}に{member}として参加しました。</value>
@@ -1978,6 +2008,21 @@
   </data>
   <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
     <value>ダウンロードした章は、接続なしで開けます。</value>
+  </data>
+  <data name="WindowsReadSearchFinished" xml:space="preserve">
+    <value>AniListから{anilist}件、ソースから{sources}件。</value>
+  </data>
+  <data name="WindowsReadSearchFinishedSources" xml:space="preserve">
+    <value>ソースから{sources}件。</value>
+  </data>
+  <data name="WindowsReadSearchAnilistHidden" xml:space="preserve">
+    <value>AniListの結果は非表示です。</value>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_other" xml:space="preserve">
+    <value>{seconds}秒以内に応答がありませんでした。</value>
+  </data>
+  <data name="WindowsReadSearchFiltersDimmed" xml:space="preserve">
+    <value>絞り込みはAniListの結果にのみ適用されます。</value>
   </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>{title}を最初から読み直しています</value>
@@ -6776,6 +6821,9 @@
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>除外</value>
   </data>
+  <data name="ReadFilterMoreGenres" xml:space="preserve">
+    <value>その他のジャンル</value>
+  </data>
   <data name="ReadSearchStarted" xml:space="preserve">
     <value>開始時期</value>
   </data>
@@ -6800,6 +6848,9 @@
   <data name="ReadSearchInSource" xml:space="preserve">
     <value>{source}にあり</value>
   </data>
+  <data name="ReadSearchInFolders" xml:space="preserve">
+    <value>手元のフォルダにあり</value>
+  </data>
   <data name="ReadSearchInSources_other" xml:space="preserve">
     <value>ソースのうち{n}件にあり</value>
   </data>
@@ -6814,6 +6865,12 @@
   </data>
   <data name="ReadSearchSourcesNothing" xml:space="preserve">
     <value>ソースにも見つかりませんでした。</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyNothing" xml:space="preserve">
+    <value>ソースでは見つかりませんでした</value>
+  </data>
+  <data name="ReadStateOfflineLine" xml:space="preserve">
+    <value>オフラインです。ダウンロード済みの章は開けます。</value>
   </data>
   <data name="ReadSearchTotalUnknown" xml:space="preserve">
     <value>AniListの作品</value>
@@ -6838,6 +6895,81 @@
   </data>
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>さらに{n}件を表示</value>
+  </data>
+  <data name="ReadSearchLineTotal" xml:space="preserve">
+    <value>{line} · {total}</value>
+  </data>
+  <data name="ReadSearchBrowseParts" xml:space="preserve">
+    <value>{list}、{next}</value>
+  </data>
+  <data name="ReadCaptionTwo" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="ReadFilterShown" xml:space="preserve">
+    <value>{name}: {value}</value>
+  </data>
+  <data name="ReadNameTile" xml:space="preserve">
+    <value>{title}、{line}</value>
+  </data>
+  <data name="ReadNameTilePlaced" xml:space="preserve">
+    <value>{title}、{line}、{placed}</value>
+  </data>
+  <data name="ReadNameTileOnlyPlaced" xml:space="preserve">
+    <value>{title}、{placed}</value>
+  </data>
+  <data name="ReadNameWeekTile" xml:space="preserve">
+    <value>{title}、{time}、{chapter}</value>
+  </data>
+  <data name="ReadNameWeekTileTime" xml:space="preserve">
+    <value>{title}、{time}</value>
+  </data>
+  <data name="ReadNameSpotlightArt" xml:space="preserve">
+    <value>{title}、詳細</value>
+  </data>
+  <data name="ReadNameHeading" xml:space="preserve">
+    <value>{heading}、{side}</value>
+  </data>
+  <data name="ReadNameLoading" xml:space="preserve">
+    <value>{name}、読み込み中</value>
+  </data>
+  <data name="ReadNameHeadingLoading" xml:space="preserve">
+    <value>{heading}、{side}、読み込み中</value>
+  </data>
+  <data name="ReadNameViewAll" xml:space="preserve">
+    <value>{row}をすべて見る</value>
+  </data>
+  <data name="ReadNameFilter" xml:space="preserve">
+    <value>{name}、{value}</value>
+  </data>
+  <data name="ReadNameFailure" xml:space="preserve">
+    <value>{line}、{reason}</value>
+  </data>
+  <data name="ReadNameSource" xml:space="preserve">
+    <value>{source}、{kind}</value>
+  </data>
+  <data name="ReadNameSourceMore_other" xml:space="preserve">
+    <value>{source}からさらに{n}件を表示</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyLine" xml:space="preserve">
+    <value>AniListの結果は非表示です。下の絞り込みはAniListの結果にのみ適用されます。</value>
+  </data>
+  <data name="ReadSearchDone" xml:space="preserve">
+    <value>AniListから{anilist}件、ソースから{sources}件。</value>
+  </data>
+  <data name="ReadHomeRowLoading" xml:space="preserve">
+    <value>{row}、読み込み中</value>
+  </data>
+  <data name="ReadTileAddPlanning" xml:space="preserve">
+    <value>予定に追加</value>
+  </data>
+  <data name="ReadSearchAnilistHidden" xml:space="preserve">
+    <value>AniListの結果は非表示です。</value>
+  </data>
+  <data name="ReadSearchSaidAnilist_other" xml:space="preserve">
+    <value>AniListから{n}件</value>
+  </data>
+  <data name="ReadSearchSaidSources_other" xml:space="preserve">
+    <value>ソースから{n}件</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step}/{total}</value>

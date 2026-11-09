@@ -191,6 +191,7 @@ read-hit-files-format = { $count ->
    *[other] ファイル{ $count }件 · { $format }
  }
 read-source-folders = フォルダ
+read-feed-downloads = ダウンロード
 reading-since-january = 1月から
 reading-since-february = 2月から
 reading-since-march = 3月から
@@ -203,3 +204,12 @@ reading-since-september = 9月から
 reading-since-october = 10月から
 reading-since-november = 11月から
 reading-since-december = 12月から
+read-view-all-trending-manga = マンガ、話題順
+read-view-all-trending-webtoons = ウェブトゥーン、話題順
+read-view-all-trending-novels = ライトノベル、話題順
+read-view-all-new-manga = 過去12か月に始まったマンガ
+read-view-all-new-webtoons = 過去12か月に始まったウェブトゥーン
+read-view-all-new-novels = 過去12か月に始まったライトノベル
+read-view-all-finished-manga = 完結したマンガ、人気順
+read-view-all-finished-webtoons = 完結したウェブトゥーン、人気順
+read-view-all-finished-novels = 完結したライトノベル、人気順
