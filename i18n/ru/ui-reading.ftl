@@ -290,6 +290,7 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Включён
 read-filter-left-out = Исключён
+read-filter-more-genres = Другие жанры
 read-search-started = Начало выпуска
 read-search-sources-only = Только ваши { -source-pl }
 read-search-from-sources = Ваши { -source-pl }
@@ -298,6 +299,7 @@ read-search-source-failed = { $source }: нет ответа.
 read-search-source-timeout = Нет ответа за { $seconds } с.
 read-search-source-nothing = Ничего не найдено в: { $sources }.
 read-search-in-source = Есть в { $source }
+read-search-in-folders = В ваших папках
 read-search-in-sources = { $n ->
     [one] Ваши { -source-pl } с этой серией: { $n }
     [few] Ваши { -source-pl } с этой серией: { $n }
@@ -308,6 +310,8 @@ read-search-anilist-nothing = AniList ничего не нашёл по этим
 read-search-anilist-failed = AniList не ответил.
 read-search-anilist-failed-line = Ваши { -source-pl } всё равно были опрошены.
 read-search-sources-nothing = Ваши { -source-pl } тоже ничего не нашли.
+read-search-sources-only-nothing = Ваши { -source-pl } ничего не нашли
+read-state-offline-line = Нет связи. Скачанные главы по-прежнему открываются.
 read-search-total-unknown = Серии из AniList
 read-search-more-anilist = Ещё из AniList
 read-search-shown = Показано { $shown } из { $total }
@@ -316,6 +320,46 @@ read-search-source-kind-server = Сервер
 read-search-source-kind-folder = Папка
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Показать ещё { $n }
+read-search-line-total = { $line } · { $total }
+read-search-browse-parts = { $list }, { $next }
+read-caption-two = { $first } · { $second }
+read-filter-shown = { $name }: { $value }
+read-name-tile = { $title }, { $line }
+read-name-tile-placed = { $title }, { $line }, { $placed }
+read-name-tile-only-placed = { $title }, { $placed }
+read-name-week-tile = { $title }, { $time }, { $chapter }
+read-name-week-tile-time = { $title }, { $time }
+read-name-spotlight-art = { $title }, Подробнее
+read-name-heading = { $heading }, { $side }
+read-name-loading = { $name }, загрузка
+read-name-heading-loading = { $heading }, { $side }, загрузка
+read-name-view-all = Показать все, { $row }
+read-name-filter = { $name }, { $value }
+read-name-failure = { $line }, { $reason }
+read-name-source = { $source }, { $kind }
+read-name-source-more = { $n ->
+    [one] { $source }: показать ещё { $n }
+    [few] { $source }: показать ещё { $n }
+    [many] { $source }: показать ещё { $n }
+   *[other] { $source }: показать ещё { $n }
+ }
+read-search-sources-only-line = Результаты AniList скрыты. Фильтры ниже действуют только на результаты AniList.
+read-search-done = AniList нашёл { $anilist }, ваши { -source-pl } нашли { $sources }.
+read-home-row-loading = { $row }, загрузка
+read-tile-add-planning = Добавить в «Запланировано»
+read-search-anilist-hidden = Результаты AniList скрыты.
+read-search-said-anilist = { $n ->
+    [one] AniList нашёл { $n }
+    [few] AniList нашёл { $n }
+    [many] AniList нашёл { $n }
+   *[other] AniList нашёл { $n }
+ }
+read-search-said-sources = { $n ->
+    [one] ваши { -source-pl } нашли { $n }
+    [few] ваши { -source-pl } нашли { $n }
+    [many] ваши { -source-pl } нашли { $n }
+   *[other] ваши { -source-pl } нашли { $n }
+ }
 onboarding-step = { $step } из { $total }
 onboarding-welcome-line = Следите за тем, что смотрите и читаете. { -source-cap-pl } вы добавляете сами.
 onboarding-welcome-note = Ваши списки и прогресс остаются при вас. { -tracker-cap-pl } и { -source-pl } вы добавляете сами.

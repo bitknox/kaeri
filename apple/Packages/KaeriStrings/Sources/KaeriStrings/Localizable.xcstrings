@@ -197495,6 +197495,12 @@
             "value" : "%1$@ · %2$@"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -199169,6 +199175,12 @@
             "value" : "Downloads"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загрузки"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200127,6 +200139,12 @@
             "value" : "Mais gêneros"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Другие жанры"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200512,6 +200530,12 @@
           }
         },
         "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@: %2$@"
@@ -203703,6 +203727,12 @@
             "value" : "%1$@, carregando"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, загрузка"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205417,6 +205447,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205466,6 +205502,12 @@
           }
         },
         "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205525,6 +205567,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205577,6 +205625,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, carregando"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, загрузка"
           }
         },
         "sv" : {
@@ -205633,6 +205687,12 @@
             "value" : "%1$@, carregando"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, загрузка"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205682,6 +205742,12 @@
           }
         },
         "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205931,6 +205997,46 @@
             }
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@: показать ещё %1$lld"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@: показать ещё %1$lld"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@: показать ещё %1$lld"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@: показать ещё %1$lld"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206007,6 +206113,12 @@
             "value" : "%1$@, Detalhes"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Подробнее"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206056,6 +206168,12 @@
           }
         },
         "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206115,6 +206233,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206164,6 +206288,12 @@
           }
         },
         "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
+        "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
@@ -206223,6 +206353,12 @@
             "value" : "Ver tudo, %1$@"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать все, %1$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206277,6 +206413,12 @@
             "value" : "%1$@, %2$@, %3$@"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206326,6 +206468,12 @@
           }
         },
         "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206551,6 +206699,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Os resultados do AniList estão ocultos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Результаты AniList скрыты."
           }
         },
         "sv" : {
@@ -206859,6 +207013,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206995,6 +207155,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld do AniList, %2$lld das suas fontes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniList нашёл %1$lld, ваши источники нашли %2$lld."
           }
         },
         "sv" : {
@@ -207217,6 +207383,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nas suas pastas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В ваших папках"
           }
         },
         "sv" : {
@@ -207752,6 +207924,12 @@
           }
         },
         "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
@@ -208505,6 +208683,46 @@
             }
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList нашёл %1$lld"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList нашёл %1$lld"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList нашёл %1$lld"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList нашёл %1$lld"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -208764,6 +208982,46 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%1$lld das suas fontes"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "ваши источники нашли %1$lld"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "ваши источники нашли %1$lld"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "ваши источники нашли %1$lld"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "ваши источники нашли %1$lld"
                     }
                   }
                 }
@@ -209771,6 +210029,12 @@
             "value" : "Os resultados do AniList estão ocultos. Os filtros abaixo valem só para os resultados do AniList."
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Результаты AniList скрыты. Фильтры ниже действуют только на результаты AniList."
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -209823,6 +210087,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nada encontrado nas suas fontes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваши источники ничего не нашли"
           }
         },
         "sv" : {
@@ -211203,6 +211473,12 @@
             "value" : "Offline. Os capítulos baixados ainda abrem."
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет связи. Скачанные главы по-прежнему открываются."
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211255,6 +211531,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adicionar a Planejado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить в «Запланировано»"
           }
         },
         "sv" : {
@@ -211311,6 +211593,12 @@
             "value" : "Mangás concluídos, mais populares"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершённая манга, самые популярные"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211363,6 +211651,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Light novels concluídas, mais populares"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершённые ранобэ, самые популярные"
           }
         },
         "sv" : {
@@ -211419,6 +211713,12 @@
             "value" : "Webtoons concluídos, mais populares"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершённые вебтуны, самые популярные"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211471,6 +211771,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mangás iniciados nos últimos 12 meses"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Манга, начавшая выходить за последние 12 месяцев"
           }
         },
         "sv" : {
@@ -211527,6 +211833,12 @@
             "value" : "Light novels iniciadas nos últimos 12 meses"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ранобэ, начавшие выходить за последние 12 месяцев"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211579,6 +211891,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons iniciados nos últimos 12 meses"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вебтуны, начавшие выходить за последние 12 месяцев"
           }
         },
         "sv" : {
@@ -211635,6 +211953,12 @@
             "value" : "Mangás em alta"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Манга в тренде"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211689,6 +212013,12 @@
             "value" : "Light novels em alta"
           }
         },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ранобэ в тренде"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211741,6 +212071,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons em alta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вебтуны в тренде"
           }
         },
         "sv" : {

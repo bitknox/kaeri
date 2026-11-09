@@ -239,6 +239,7 @@ read-hit-files-format = { $count ->
    *[other] { $count } файла · { $format }
  }
 read-source-folders = Папки
+read-feed-downloads = Загрузки
 reading-since-january = с января
 reading-since-february = с февраля
 reading-since-march = с марта
@@ -251,3 +252,12 @@ reading-since-september = с сентября
 reading-since-october = с октября
 reading-since-november = с ноября
 reading-since-december = с декабря
+read-view-all-trending-manga = Манга в тренде
+read-view-all-trending-webtoons = Вебтуны в тренде
+read-view-all-trending-novels = Ранобэ в тренде
+read-view-all-new-manga = Манга, начавшая выходить за последние 12 месяцев
+read-view-all-new-webtoons = Вебтуны, начавшие выходить за последние 12 месяцев
+read-view-all-new-novels = Ранобэ, начавшие выходить за последние 12 месяцев
+read-view-all-finished-manga = Завершённая манга, самые популярные
+read-view-all-finished-webtoons = Завершённые вебтуны, самые популярные
+read-view-all-finished-novels = Завершённые ранобэ, самые популярные
