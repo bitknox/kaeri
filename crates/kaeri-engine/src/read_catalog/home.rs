@@ -574,6 +574,7 @@ impl Home {
             not_in_sources: false,
             origin: tiles::origin(origin),
             amount: None,
+            started: None,
         };
         tiles::mark(&mut tile, &self.store, &self.sources);
         Some(tile)
