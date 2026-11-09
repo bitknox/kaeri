@@ -4,6 +4,7 @@
 use roxmltree::Node;
 
 use super::{escape_attr, escape_text};
+use crate::xml::PlainAttr;
 
 pub(crate) const XHTML_NS: &str = "http://www.w3.org/1999/xhtml";
 
@@ -217,7 +218,7 @@ fn is_active(name: &str, value: &str) -> bool {
 
 fn is_refresh(n: Node<'_, '_>) -> bool {
     n.tag_name().name() == "meta"
-        && n.attribute("http-equiv").is_some_and(|v| v.trim().eq_ignore_ascii_case("refresh"))
+        && n.plain_attr("http-equiv").is_some_and(|v| v.trim().eq_ignore_ascii_case("refresh"))
 }
 
 /// Splits text after each sentence end: `.`, `!`, `?` or an ellipsis followed by closing
@@ -335,7 +336,7 @@ mod tests {
         assert!(out.contains("<title>T. x</title>"));
         // Every id once.
         let doc = reparse(&out);
-        let ids: Vec<&str> = doc.descendants().filter_map(|n| n.attribute("id")).collect();
+        let ids: Vec<&str> = doc.descendants().filter_map(|n| n.plain_attr("id")).collect();
         let mut unique = ids.clone();
         unique.sort();
         unique.dedup();

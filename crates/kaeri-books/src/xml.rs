@@ -46,10 +46,28 @@ pub(crate) fn parse<'a>(
     // and ignores the declaration, so nothing to strip.
     check_depth(text, limits.max_xml_depth)
         .map_err(|reason| BookError::malformed(format, reason))?;
-    let options =
-        roxmltree::ParsingOptions { allow_dtd: true, nodes_limit: limits.max_xml_nodes };
+    let options = roxmltree::ParsingOptions {
+        allow_dtd: true,
+        nodes_limit: limits.max_xml_nodes,
+        entity_resolver: None,
+    };
     roxmltree::Document::parse_with_options(text, options)
         .map_err(|e| BookError::malformed(format, e))
+}
+
+/// An element's attribute that has no namespace. roxmltree's `attribute("href")` matches any
+/// attribute with that local name, `xlink:href` and `xml:lang` included, and returns the first
+/// in document order. The reader and the sanitizer need the plain one, the one a renderer reads.
+pub(crate) trait PlainAttr<'a> {
+    fn plain_attr(&self, name: &str) -> Option<&'a str>;
+}
+
+impl<'a> PlainAttr<'a> for roxmltree::Node<'a, '_> {
+    fn plain_attr(&self, name: &str) -> Option<&'a str> {
+        self.attributes()
+            .find(|a| a.namespace().is_none() && a.name() == name)
+            .map(|a| a.value())
+    }
 }
 
 /// The text inside an element, trimmed, or `None` when there is none.

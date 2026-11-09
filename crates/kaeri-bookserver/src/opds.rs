@@ -43,6 +43,12 @@ fn local<'a>(node: roxmltree::Node<'a, '_>) -> &'a str {
     node.tag_name().name()
 }
 
+/// An attribute with no namespace. roxmltree's `attribute("title")` would also match a prefixed
+/// `title` from another vocabulary, whichever comes first.
+fn plain<'a>(node: roxmltree::Node<'a, '_>, name: &str) -> Option<&'a str> {
+    node.attributes().find(|a| a.namespace().is_none() && a.name() == name).map(|a| a.value())
+}
+
 fn text_of(node: roxmltree::Node<'_, '_>) -> String {
     node.text().unwrap_or_default().trim().to_owned()
 }
@@ -100,7 +106,7 @@ pub fn parse(text: &str, base: &str) -> Result<Feed> {
         }
     };
     let link = |node: roxmltree::Node<'_, '_>| -> Link {
-        let attr = |name: &str| node.attribute(name).unwrap_or_default();
+        let attr = |name: &str| plain(node, name).unwrap_or_default();
         let ns = |name: &str| {
             node.attributes().find(|a| a.name() == name).map(|a| a.value().to_owned())
         };
@@ -108,7 +114,7 @@ pub fn parse(text: &str, base: &str) -> Result<Feed> {
             rel: attr("rel").to_owned(),
             href: absolute(attr("href")),
             media_type: attr("type").to_owned(),
-            title: node.attribute("title").map(str::to_owned),
+            title: plain(node, "title").map(str::to_owned),
             pse_count: ns("count").and_then(|v| v.parse().ok()),
             pse_last_read: ns("lastRead").and_then(|v| v.parse().ok()),
         }
@@ -155,9 +161,8 @@ pub fn parse(text: &str, base: &str) -> Result<Feed> {
                             }
                         }
                         "category" => {
-                            let label = part
-                                .attribute("label")
-                                .or_else(|| part.attribute("term"))
+                            let label = plain(part, "label")
+                                .or_else(|| plain(part, "term"))
                                 .unwrap_or_default();
                             if !label.is_empty() {
                                 entry.categories.push(label.to_owned());

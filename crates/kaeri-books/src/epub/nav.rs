@@ -1,7 +1,7 @@
 //! Tables of contents: the EPUB 3 navigation document's `toc` and `page-list`, and the EPUB 2
 //! NCX as the fallback.
 
-use crate::xml::{self, collapse};
+use crate::xml::{self, PlainAttr, collapse};
 use crate::{Format, Limits, Result, path};
 
 /// One entry in a table of contents or page list.
@@ -100,10 +100,10 @@ fn list_items(
         let Some(head) = head else { continue };
         budget.left -= 1;
         let label = xml::trimmed_text(head)
-            .or_else(|| head.attribute("title").map(collapse))
+            .or_else(|| head.plain_attr("title").map(collapse))
             .unwrap_or_default();
         let href = (head.tag_name().name() == "a")
-            .then(|| head.attribute("href"))
+            .then(|| head.plain_attr("href"))
             .flatten()
             .and_then(|h| path::resolve(doc_path, h, budget.max_path_depth))
             .map(|h| h.to_url_path());
@@ -163,7 +163,7 @@ fn nav_points(
         let href = p
             .children()
             .find(|c| c.is_element() && c.tag_name().name() == "content")
-            .and_then(|c| c.attribute("src"))
+            .and_then(|c| c.plain_attr("src"))
             .and_then(|h| path::resolve(doc_path, h, budget.max_path_depth))
             .map(|h| h.to_url_path());
         let children = nav_points(p, tag, doc_path, budget, depth + 1);

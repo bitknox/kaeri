@@ -3,7 +3,7 @@
 //! cheaper than rendering each page in a web view.
 
 use super::{Epub, Layout, PageSpread, nav::html_entities};
-use crate::xml;
+use crate::xml::{self, PlainAttr};
 use crate::{Format, mime, path};
 
 /// One page of an image-only EPUB.
@@ -90,7 +90,7 @@ fn only_image(bytes: &[u8], doc_path: &str, limits: &crate::Limits) -> Option<St
             continue;
         }
         let src = match n.tag_name().name() {
-            "img" => n.attribute("src"),
+            "img" => n.plain_attr("src"),
             "image" => n.attributes().find(|a| a.name() == "href").map(|a| a.value()),
             _ => continue,
         };

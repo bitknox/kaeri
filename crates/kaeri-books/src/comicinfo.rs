@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::xml;
+use crate::xml::{self, PlainAttr};
 use crate::{Format, Limits, Result};
 
 /// The parts of ComicInfo.xml Kaeri uses. Every field is optional; values are trimmed and empty
@@ -205,8 +205,8 @@ pub fn parse(bytes: &[u8], format: Format, limits: &Limits) -> Result<ComicInfo>
 }
 
 fn parse_page(node: roxmltree::Node<'_, '_>) -> Option<ComicPage> {
-    let image = node.attribute("Image")?.trim().parse().ok()?;
-    let kind = node.attribute("Type").and_then(|t| {
+    let image = node.plain_attr("Image")?.trim().parse().ok()?;
+    let kind = node.plain_attr("Type").and_then(|t| {
         Some(match t.trim() {
             "FrontCover" => ComicPageType::FrontCover,
             "InnerCover" => ComicPageType::InnerCover,
@@ -222,11 +222,11 @@ fn parse_page(node: roxmltree::Node<'_, '_>) -> Option<ComicPage> {
             _ => return None,
         })
     });
-    let num = |name| node.attribute(name).and_then(|v| v.trim().parse().ok());
+    let num = |name| node.plain_attr(name).and_then(|v| v.trim().parse().ok());
     Some(ComicPage {
         image,
         kind,
-        double_page: node.attribute("DoublePage").and_then(yes_no).unwrap_or(false),
+        double_page: node.plain_attr("DoublePage").and_then(yes_no).unwrap_or(false),
         width: num("ImageWidth"),
         height: num("ImageHeight"),
     })

@@ -10,6 +10,7 @@ use std::path::Path;
 
 use zip::CompressionMethod;
 
+use crate::xml::PlainAttr;
 use crate::{Book, Limits};
 
 /// What is wrong with a part of the book.
@@ -111,7 +112,7 @@ pub fn check_epub(path: &Path, limits: &Limits) -> Result<(), Problem> {
             .map_err(|_| Problem::new(CONTAINER, ProblemKind::Malformed))?;
         doc.descendants()
             .find(|n| n.has_tag_name("rootfile"))
-            .and_then(|n| n.attribute("full-path"))
+            .and_then(|n| n.plain_attr("full-path"))
             .map(str::to_owned)
             .ok_or_else(|| Problem::new(CONTAINER, ProblemKind::Malformed))?
     };
@@ -152,11 +153,11 @@ fn check_package(
     let mut ids = HashSet::new();
     let mut nav = false;
     for item in doc.descendants().filter(|n| n.has_tag_name("item")) {
-        let (Some(id), Some(href)) = (item.attribute("id"), item.attribute("href")) else {
+        let (Some(id), Some(href)) = (item.plain_attr("id"), item.plain_attr("href")) else {
             return Err(bad());
         };
         ids.insert(id.to_owned());
-        nav |= item.attribute("properties").is_some_and(|p| p.split(' ').any(|p| p == "nav"));
+        nav |= item.plain_attr("properties").is_some_and(|p| p.split(' ').any(|p| p == "nav"));
         let href = percent_decode(href);
         let full = if base.is_empty() { href } else { format!("{base}/{href}") };
         if !names.contains(&full) {
@@ -168,7 +169,7 @@ fn check_package(
     }
     let mut spine = 0;
     for itemref in doc.descendants().filter(|n| n.has_tag_name("itemref")) {
-        let known = itemref.attribute("idref").is_some_and(|id| ids.contains(id));
+        let known = itemref.plain_attr("idref").is_some_and(|id| ids.contains(id));
         if !known {
             return Err(bad());
         }
@@ -181,8 +182,11 @@ fn check_package(
 }
 
 fn parse<'a>(text: &'a str, limits: &Limits) -> Result<roxmltree::Document<'a>, ()> {
-    let options =
-        roxmltree::ParsingOptions { allow_dtd: true, nodes_limit: limits.max_xml_nodes };
+    let options = roxmltree::ParsingOptions {
+        allow_dtd: true,
+        nodes_limit: limits.max_xml_nodes,
+        entity_resolver: None,
+    };
     roxmltree::Document::parse_with_options(text, options).map_err(drop)
 }
 

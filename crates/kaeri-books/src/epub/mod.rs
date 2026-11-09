@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use sha1::{Digest, Sha1};
 
 use crate::archive::{Archive, ArchiveKind};
-use crate::xml;
+use crate::xml::{self, PlainAttr};
 use crate::{BookError, Format, Limits, Result, mime, path};
 
 pub use images::ImagePage;
@@ -294,9 +294,9 @@ fn rootfile(archive: &mut Archive, limits: &Limits) -> Result<String> {
         .collect();
     let chosen = rootfiles
         .iter()
-        .find(|n| n.attribute("media-type") == Some("application/oebps-package+xml"))
+        .find(|n| n.plain_attr("media-type") == Some("application/oebps-package+xml"))
         .or_else(|| rootfiles.first())
-        .and_then(|n| n.attribute("full-path"))
+        .and_then(|n| n.plain_attr("full-path"))
         .ok_or_else(|| {
             BookError::malformed(Format::Epub, "the container names no package document")
         })?;
@@ -318,7 +318,7 @@ fn encryption(archive: &mut Archive, limits: &Limits) -> Result<HashMap<String, 
         let algorithm = data
             .descendants()
             .find(|n| n.is_element() && n.tag_name().name() == "EncryptionMethod")
-            .and_then(|n| n.attribute("Algorithm"))
+            .and_then(|n| n.plain_attr("Algorithm"))
             .unwrap_or_default();
         let how = match algorithm.trim() {
             IDPF_OBFUSCATION => Obfuscation::Idpf,
@@ -328,7 +328,7 @@ fn encryption(archive: &mut Archive, limits: &Limits) -> Result<HashMap<String, 
         let Some(uri) = data
             .descendants()
             .find(|n| n.is_element() && n.tag_name().name() == "CipherReference")
-            .and_then(|n| n.attribute("URI"))
+            .and_then(|n| n.plain_attr("URI"))
         else {
             continue;
         };

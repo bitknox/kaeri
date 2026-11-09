@@ -261,6 +261,7 @@ pub fn opensearch_description(short_name: &str, description: &str, template: &st
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::xml::PlainAttr;
 
     fn sample() -> Feed {
         let mut feed = Feed::new(
@@ -314,9 +315,9 @@ mod tests {
         assert_eq!(child(root, ATOM_NS, "title").text(), Some("Shelf <&>"));
         assert_eq!(child(root, OPENSEARCH_NS, "totalResults").text(), Some("41"));
         assert_eq!(child(root, OPENSEARCH_NS, "startIndex").text(), Some("21"));
-        let this = root.children().find(|c| c.attribute("rel") == Some("self")).unwrap();
-        assert_eq!(this.attribute("href"), Some("/opds/shelf?page=2&n=20"));
-        assert_eq!(this.attribute("type"), Some(ACQUISITION_TYPE));
+        let this = root.children().find(|c| c.plain_attr("rel") == Some("self")).unwrap();
+        assert_eq!(this.plain_attr("href"), Some("/opds/shelf?page=2&n=20"));
+        assert_eq!(this.plain_attr("type"), Some(ACQUISITION_TYPE));
 
         let entries: Vec<_> =
             root.children().filter(|c| c.has_tag_name((ATOM_NS, "entry"))).collect();
@@ -329,11 +330,11 @@ mod tests {
         assert!(!doc.descendants().any(|n| n.has_tag_name("script")));
         assert_eq!(child(e, ATOM_NS, "summary").text(), Some("Two \"towns\" & a river"));
         assert_eq!(child(e, DC_NS, "language").text(), Some("en"));
-        assert_eq!(child(e, ATOM_NS, "category").attribute("term"), Some("Slice \"of\" life"));
+        assert_eq!(child(e, ATOM_NS, "category").plain_attr("term"), Some("Slice \"of\" life"));
         let stream =
-            e.children().find(|c| c.attribute("rel") == Some(REL_PAGE_STREAM)).unwrap();
+            e.children().find(|c| c.plain_attr("rel") == Some(REL_PAGE_STREAM)).unwrap();
         assert_eq!(
-            stream.attribute("href"),
+            stream.plain_attr("href"),
             Some("/opds/book/1/page/{pageNumber}?width={maxWidth}")
         );
         assert_eq!(stream.attribute((PSE_NS, "count")), Some("32"));
@@ -354,8 +355,8 @@ mod tests {
         let xml = feed.to_xml();
         let doc = roxmltree::Document::parse(&xml).unwrap();
         let link =
-            doc.descendants().find(|n| n.attribute("rel") == Some(REL_SUBSECTION)).unwrap();
-        assert_eq!(link.attribute("type"), Some(ACQUISITION_TYPE));
+            doc.descendants().find(|n| n.plain_attr("rel") == Some(REL_SUBSECTION)).unwrap();
+        assert_eq!(link.plain_attr("type"), Some(ACQUISITION_TYPE));
         assert!(doc.descendants().all(|n| !n.has_tag_name((OPENSEARCH_NS, "totalResults"))));
     }
 
@@ -373,7 +374,7 @@ mod tests {
             Some("Books \"here\" & <there>")
         );
         let url = child(root, OPENSEARCH_NS, "Url");
-        assert_eq!(url.attribute("template"), Some("/opds/search?q={searchTerms}&x=1"));
-        assert_eq!(url.attribute("type"), Some(ACQUISITION_TYPE));
+        assert_eq!(url.plain_attr("template"), Some("/opds/search?q={searchTerms}&x=1"));
+        assert_eq!(url.plain_attr("type"), Some(ACQUISITION_TYPE));
     }
 }

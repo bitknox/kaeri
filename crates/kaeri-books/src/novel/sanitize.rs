@@ -15,6 +15,7 @@ use roxmltree::Node;
 use super::{Flow, css, hyphen};
 use crate::write::xhtml::{VOID, XHTML_NS, attr_qname, declarations, qname};
 use crate::write::{escape_attr, escape_text};
+use crate::xml::PlainAttr;
 use crate::{Format, Limits, path, xml};
 
 const SVG_NS: &str = "http://www.w3.org/2000/svg";
@@ -318,7 +319,7 @@ fn is_html(n: Node<'_, '_>) -> bool {
 }
 
 fn lang_of<'a>(n: Node<'a, '_>) -> Option<&'a str> {
-    n.attribute((XML_NS, "lang")).or_else(|| n.attribute("lang")).filter(|l| !l.is_empty())
+    n.attribute((XML_NS, "lang")).or_else(|| n.plain_attr("lang")).filter(|l| !l.is_empty())
 }
 
 struct Walk<'c> {
@@ -354,7 +355,7 @@ impl Walk<'_> {
             && !(html && NO_HYPHENS.contains(&local))
             && !svg
             && ns != Some(MATHML_NS)
-            && n.attribute("translate") != Some("no");
+            && n.plain_attr("translate") != Some("no");
         if html && UNWRAP_HTML.contains(&local) {
             self.children(n, &lang, hyphens);
             return;
@@ -436,13 +437,13 @@ impl Walk<'_> {
 
     /// A `<link>` stays only as a stylesheet inside the book.
     fn link(&mut self, n: Node<'_, '_>) {
-        let rel = n.attribute("rel").unwrap_or_default().to_ascii_lowercase();
+        let rel = n.plain_attr("rel").unwrap_or_default().to_ascii_lowercase();
         if !rel.split_whitespace().any(|r| r == "stylesheet")
             || rel.split_whitespace().any(|r| r == "alternate")
         {
             return;
         }
-        let Some(href) = n.attribute("href") else { return };
+        let Some(href) = n.plain_attr("href") else { return };
         let Some(target) =
             path::resolve(self.clean.path, href, self.clean.limits.max_path_depth)
         else {
@@ -453,7 +454,7 @@ impl Walk<'_> {
             "<link rel=\"stylesheet\" type=\"text/css\" href=\"{}\"",
             escape_attr(href.trim())
         ));
-        if let Some(media) = n.attribute("media") {
+        if let Some(media) = n.plain_attr("media") {
             self.out.push_str(&format!(" media=\"{}\"", escape_attr(media)));
         }
         self.out.push_str("/>");
@@ -731,8 +732,8 @@ mod tests {
         }
         // Still XHTML, and the remote image is still an element so paths do not move.
         let doc = reparse(&out);
-        assert!(doc.descendants().any(|n| n.attribute("id") == Some("remote")));
-        assert_eq!(doc.root_element().attribute("lang"), Some("en"));
+        assert!(doc.descendants().any(|n| n.plain_attr("id") == Some("remote")));
+        assert_eq!(doc.root_element().plain_attr("lang"), Some("en"));
     }
 
     #[test]
@@ -748,14 +749,14 @@ mod tests {
         let mut metas = head.children().filter(|n| n.is_element());
         let viewport = metas.next().unwrap();
         assert_eq!(
-            viewport.attribute("content"),
+            viewport.plain_attr("content"),
             Some(
                 "width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no"
             )
         );
         let meta = metas.next().unwrap();
-        assert_eq!(meta.attribute("name"), Some("kaeri-setup"));
-        assert_eq!(meta.attribute("content"), Some("{\"size\":18,\"q\":\"<&>\"}"));
+        assert_eq!(meta.plain_attr("name"), Some("kaeri-setup"));
+        assert_eq!(meta.plain_attr("content"), Some("{\"size\":18,\"q\":\"<&>\"}"));
         let body = doc.descendants().find(|n| n.has_tag_name((XHTML_NS, "body"))).unwrap();
         assert_eq!(body.first_element_child().unwrap().text(), Some("One"));
         // A head that was there gets it first too.
@@ -834,7 +835,7 @@ mod tests {
             &clean,
         );
         let doc = reparse(&d.text);
-        assert_eq!(doc.root_element().attribute("lang"), Some("en"));
+        assert_eq!(doc.root_element().plain_attr("lang"), Some("en"));
         assert!(d.text.contains("<title>Chapter 3</title>"));
         assert!(d.text.contains("<p>The tower\u{a0}stood.</p>"), "{}", d.text);
         assert!(!d.text.contains("x.example") && !d.text.contains("script"));
@@ -858,7 +859,7 @@ mod tests {
         let doc = reparse(&d.text);
         assert_eq!(doc.root_element().attribute((XML_NS, "lang")), Some("ja"));
         assert_eq!(
-            doc.root_element().attribute("lang"),
+            doc.root_element().plain_attr("lang"),
             None,
             "its own language is kept as written"
         );
