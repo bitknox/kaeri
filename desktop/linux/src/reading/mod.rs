@@ -354,19 +354,31 @@ pub fn shelf(cards: &[gtk::Widget], gap: i32) -> gtk::Widget {
             button.set_visible(false);
             button.update_property(&[gtk::accessible::Property::Label(&tip)]);
             button.connect_clicked({
-                let scroll = scroll.clone();
-                move |_| page_by(&scroll, by, f64::from(COVER_WIDTH + gap))
+                let scroll = scroll.downgrade();
+                move |_| {
+                    if let Some(scroll) = scroll.upgrade() {
+                        page_by(&scroll, by, f64::from(COVER_WIDTH + gap));
+                    }
+                }
             });
             layers.add_overlay(&button);
             button
         })
         .collect();
     let over = Rc::new(Cell::new(false));
+    // The adjustment's own handlers run this, and the scroll holds the adjustment, so it holds
+    // the arrows and the scroll only weakly: a strong hold would keep the whole shelf, its cards
+    // and their covers alive after the page drops it.
     let refresh = {
-        let hadj = scroll.hadjustment();
-        let (back, forward) = (buttons[0].clone(), buttons[1].clone());
+        let hadj = scroll.hadjustment().downgrade();
+        let (back, forward) = (buttons[0].downgrade(), buttons[1].downgrade());
         let over = Rc::clone(&over);
         Rc::new(move || {
+            let (Some(hadj), Some(back), Some(forward)) =
+                (hadj.upgrade(), back.upgrade(), forward.upgrade())
+            else {
+                return;
+            };
             back.set_visible(over.get() && hadj.value() > 1.0);
             forward.set_visible(
                 over.get() && hadj.value() + hadj.page_size() < hadj.upper() - 1.0,
