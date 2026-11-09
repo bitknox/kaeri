@@ -846,6 +846,23 @@ eink-tab-more = More
 # @max 12
 eink-home-all = All
 
+# Under a small cover in Continue on a 6 inch e-reader's Home: the chapter and page the person
+# stopped on, shortened to fit one line under a narrow cover. "Ch" is short for chapter and "p"
+# for page; use your language's usual short forms.
+# @only android
+# @arg chapter: text
+# @arg page: plain
+# @max 24
+eink-place-chapter-page = Ch { $chapter } · p { $page }
+
+# Under a small cover in Continue on a 6 inch e-reader's Home: how far into a novel's chapter the
+# person is, shortened to fit one line under a narrow cover. "Ch" is short for chapter.
+# @only android
+# @arg chapter: text
+# @arg percent: int
+# @max 24
+eink-place-chapter-percent = Ch { $chapter } · { $percent }%
+
 # Heading on the e-reader's Home over the newest chapters that came out; All opens Updates.
 # @only android
 # @max 30

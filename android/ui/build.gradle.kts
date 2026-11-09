@@ -24,6 +24,8 @@ dependencies {
 
     testImplementation(project(":testkit"))
     testImplementation(libs.junit)
+    // Virtual time for the e-ink pacing of Downloads.
+    testImplementation(libs.coroutines.test)
     testImplementation(libs.robolectric)
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)

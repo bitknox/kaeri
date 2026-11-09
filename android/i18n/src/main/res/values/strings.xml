@@ -1531,6 +1531,10 @@
     <string name="eink_tab_more">More</string>
     <!-- The link at the end of a heading on e-ink Home that opens the whole list, such as all of Continue. -->
     <string name="eink_home_all">All</string>
+    <!-- Under a small cover in Continue on a 6 inch e-reader's Home: the chapter and page the person stopped on, shortened to fit one line under a narrow cover. "Ch" is short for chapter and "p" for page; use your language's usual short forms. -->
+    <string name="eink_place_chapter_page">Ch %1$s · p %2$d</string>
+    <!-- Under a small cover in Continue on a 6 inch e-reader's Home: how far into a novel's chapter the person is, shortened to fit one line under a narrow cover. "Ch" is short for chapter. -->
+    <string name="eink_place_chapter_percent">Ch %1$s · %2$,d%%</string>
     <!-- Heading on the e-reader's Home over the newest chapters that came out; All opens Updates. -->
     <string name="eink_home_new_chapters">New chapters</string>
     <!-- A row on the e-reader's More page that opens the tracker accounts. -->

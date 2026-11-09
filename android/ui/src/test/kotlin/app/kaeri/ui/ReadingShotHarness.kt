@@ -187,6 +187,9 @@ abstract class ReadingShotHarness {
         /** The 6 inch e-reader of the discovery board: 572 × 772 dp. */
         const val EREADER = "w572dp-h772dp-port-xhdpi"
 
+        /** The 7 inch e-reader of the e-ink board: 674 × 896 dp. */
+        const val EREADER_7 = "w674dp-h896dp-port-xhdpi"
+
         /** The e-ink phone of the discovery board: 439 × 879 dp. */
         const val EINK_PHONE = "w439dp-h879dp-port-xxhdpi"
     }
