@@ -105,6 +105,9 @@ struct ReadCoverRowPlaceholder: View {
         }
         .scrollDisabled(true)
         .scrollIndicators(.never)
+        // To the screen's edges on a phone, as the shelf it stands in for runs.
+        .contentMargins(.horizontal, layout.wide ? 0 : layout.margin, for: .scrollContent)
+        .padding(.horizontal, layout.wide ? 0 : -layout.margin)
         .foregroundStyle(.haze)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
     }
