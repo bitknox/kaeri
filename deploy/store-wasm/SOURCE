@@ -22,7 +22,7 @@ generic-array v0.14.7 more_lengths
 getrandom v0.2.17 js,js-sys,wasm-bindgen
 hybrid-array v0.4.15 
 icu_collections v2.2.0 
-icu_locale_core v2.2.0 zerovec
+icu_locale_core v2.4.0 zerovec
 icu_normalizer v2.2.0 compiled_data
 icu_normalizer_data v2.2.0 
 icu_properties v2.2.0 compiled_data
@@ -57,11 +57,12 @@ smallvec v1.15.2 const_generics
 stable_deref_trait v1.2.1 
 subtle v2.6.1 
 syn v2.0.119 clone-impls,default,derive,extra-traits,fold,full,parsing,printing,proc-macro,visit,visit-mut
-syn v3.0.3 clone-impls,default,derive,full,parsing,printing,proc-macro,visit-mut
+syn v3.0.10 clone-impls,default,derive,extra-traits,fold,full,parsing,printing,proc-macro,visit,visit-mut
 synstructure v0.13.2 default,proc-macro
+synstructure v0.14.0 default,proc-macro
 thiserror v2.0.21 default,std
 thiserror-impl v2.0.21 (proc-macro) 
-tinystr v0.8.3 zerovec
+tinystr v0.8.5 zerovec
 tracing v0.1.44 attributes,default,std,tracing-attributes
 tracing-attributes v0.1.31 (proc-macro) 
 tracing-core v0.1.36 once_cell,std
@@ -75,15 +76,15 @@ wasm-bindgen-futures v0.4.76 default,std
 wasm-bindgen-macro v0.2.126 (proc-macro) 
 wasm-bindgen-macro-support v0.2.126 
 wasm-bindgen-shared v0.2.126 
-writeable v0.6.3 
-yoke v0.8.3 derive,zerofrom
-yoke-derive v0.8.2 (proc-macro) 
+writeable v0.6.4 
+yoke v0.8.4 derive,zerofrom
+yoke-derive v0.8.4 (proc-macro) 
 zerofrom v0.1.8 derive
 zerofrom-derive v0.1.7 (proc-macro) 
 zeroize v1.9.0 alloc
 zerotrie v0.2.4 yoke,zerofrom
-zerovec v0.11.6 derive,yoke
-zerovec-derive v0.11.3 (proc-macro) 
+zerovec v0.11.9 derive,yoke
+zerovec-derive v0.11.7 (proc-macro) 
 zmij v1.0.23 
 .cargo/config.toml 193ffe573f22bc2b3052fea0d81d56d2d819d5ce
 crates/kaeri-store-core/Cargo.toml 8c50d895e534dc0412ad0710c2d7e79f2290a889
