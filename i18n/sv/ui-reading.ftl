@@ -262,6 +262,7 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Med
 read-filter-left-out = Utesluten
+read-filter-more-genres = Fler genrer
 read-search-started = Start
 read-search-sources-only = Bara dina { -source-pl }
 read-search-from-sources = Från dina { -source-pl }
@@ -270,6 +271,7 @@ read-search-source-failed = { $source } svarade inte.
 read-search-source-timeout = Inget svar på { $seconds } s.
 read-search-source-nothing = Hittade inget i { $sources }.
 read-search-in-source = Hos { $source }
+read-search-in-folders = I dina mappar
 read-search-in-sources = { $n ->
     [one] Hos { $n } av dina { -source-pl }
    *[other] Hos { $n } av dina { -source-pl }
@@ -278,6 +280,8 @@ read-search-anilist-nothing = AniList hittade inget för de här orden.
 read-search-anilist-failed = AniList svarade inte.
 read-search-anilist-failed-line = Dina { -source-pl } frågades ändå.
 read-search-sources-nothing = Inget i dina { -source-pl } heller.
+read-search-sources-only-nothing = Hittade inget i dina { -source-pl }
+read-state-offline-line = Offline. Nedladdade kapitel går fortfarande att öppna.
 read-search-total-unknown = Serier från AniList
 read-search-more-anilist = Mer från AniList
 read-search-shown = { $shown } av { $total } visas
@@ -286,6 +290,40 @@ read-search-source-kind-server = Server
 read-search-source-kind-folder = Mapp
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Visa { $n } till
+read-search-line-total = { $line } · { $total }
+read-search-browse-parts = { $list }, { $next }
+read-caption-two = { $first } · { $second }
+read-filter-shown = { $name }: { $value }
+read-name-tile = { $title }, { $line }
+read-name-tile-placed = { $title }, { $line }, { $placed }
+read-name-tile-only-placed = { $title }, { $placed }
+read-name-week-tile = { $title }, { $time }, { $chapter }
+read-name-week-tile-time = { $title }, { $time }
+read-name-spotlight-art = { $title }, Detaljer
+read-name-heading = { $heading }, { $side }
+read-name-loading = { $name }, läses in
+read-name-heading-loading = { $heading }, { $side }, läses in
+read-name-view-all = Visa alla, { $row }
+read-name-filter = { $name }, { $value }
+read-name-failure = { $line }, { $reason }
+read-name-source = { $source }, { $kind }
+read-name-source-more = { $n ->
+    [one] Visa { $n } till från { $source }
+   *[other] Visa { $n } till från { $source }
+ }
+read-search-sources-only-line = AniLists resultat är dolda. Filtren nedan gäller bara AniLists resultat.
+read-search-done = { $anilist } från AniList, { $sources } från dina { -source-pl }.
+read-home-row-loading = { $row }, läses in
+read-tile-add-planning = Lägg till i planeringslistan
+read-search-anilist-hidden = AniLists resultat är dolda.
+read-search-said-anilist = { $n ->
+    [one] { $n } från AniList
+   *[other] { $n } från AniList
+ }
+read-search-said-sources = { $n ->
+    [one] { $n } från dina { -source-pl }
+   *[other] { $n } från dina { -source-pl }
+ }
 onboarding-step = { $step } av { $total }
 onboarding-welcome-line = Håll koll på vad du tittar på och läser, från dina egna { -source-pl }.
 onboarding-welcome-note = Dina listor och ditt förlopp stannar på dina { -device-pl }. { -tracker-cap-pl } och { -source-pl } lägger du till själv.

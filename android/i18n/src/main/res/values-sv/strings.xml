@@ -407,6 +407,7 @@
         <item quantity="other">%1$,d filer · %2$s</item>
     </plurals>
     <string name="read_source_folders">Mappar</string>
+    <string name="read_feed_downloads">Nedladdningar</string>
     <string name="reading_since_january">sedan januari</string>
     <string name="reading_since_february">sedan februari</string>
     <string name="reading_since_march">sedan mars</string>
@@ -419,6 +420,15 @@
     <string name="reading_since_october">sedan oktober</string>
     <string name="reading_since_november">sedan november</string>
     <string name="reading_since_december">sedan december</string>
+    <string name="read_view_all_trending_manga">Manga, trendande</string>
+    <string name="read_view_all_trending_webtoons">Webtoons, trendande</string>
+    <string name="read_view_all_trending_novels">Light novels, trendande</string>
+    <string name="read_view_all_new_manga">Manga som startat de senaste 12 månaderna</string>
+    <string name="read_view_all_new_webtoons">Webtoons som startat de senaste 12 månaderna</string>
+    <string name="read_view_all_new_novels">Light novels som startat de senaste 12 månaderna</string>
+    <string name="read_view_all_finished_manga">Avslutade manga, mest populära</string>
+    <string name="read_view_all_finished_webtoons">Avslutade webtoons, mest populära</string>
+    <string name="read_view_all_finished_novels">Avslutade light novels, mest populära</string>
     <string name="store_joined">Gick med i %1$s som %2$s.</string>
     <string name="store_joined_unnamed">Gick med i %1$s utan namn.</string>
     <string name="store_left">Lämnade %1$s. Dess tillägg finns kvar installerade.</string>
@@ -809,7 +819,33 @@
     <string name="reader_opening_waited">%1$s · %2$,d s</string>
     <string name="reader_sources_title">Läs det här kapitlet från</string>
     <string name="reader_paper_parts">Vad det ändrar</string>
+    <string name="eink_tab_more">Mer</string>
+    <string name="eink_home_all">Alla</string>
+    <string name="eink_place_chapter_page">Kap. %1$s · s. %2$d</string>
+    <string name="eink_place_chapter_percent">Kap. %1$s · %2$,d%%</string>
+    <string name="eink_home_new_chapters">Nya kapitel</string>
+    <string name="eink_more_trackers">Trackers</string>
+    <string name="eink_more_sync">Synkronisering</string>
+    <string name="eink_more_settings_line">Lagring, aviseringar och språk</string>
+    <string name="eink_downloads_space">%1$s sparat här · %2$s ledigt</string>
+    <string name="eink_downloads_space_used">%1$s sparat här</string>
+    <string name="eink_downloads_downloading">Laddar ner</string>
+    <string name="eink_downloads_here">Sparat här</string>
+    <string name="eink_keep_ready_on">På · kommande kapitel i serier du läser</string>
+    <string name="eink_keep_ready_off">Av</string>
     <string name="read_home_offline_line">Hem för läsning behöver en anslutning första gången den öppnas. Nedladdade kapitel går fortfarande att öppna.</string>
+    <string name="read_search_source_busy">%1$s, söker</string>
+    <string name="read_search_source_busy_kind">%1$s, %2$s, söker</string>
+    <string name="read_search_source_named">%1$s, %2$s</string>
+    <plurals name="read_search_source_timeout_spoken">
+        <item quantity="one">Inget svar på %1$,d sekund.</item>
+        <item quantity="other">Inget svar på %1$,d sekunder.</item>
+    </plurals>
+    <string name="read_search_try_again_source">Försök igen, %1$s</string>
+    <string name="read_search_sources_only_nothing_line">Prova andra ord.</string>
+    <string name="read_tile_spoken_title">%1$s.</string>
+    <string name="read_tile_spoken">%1$s. %2$s.</string>
+    <string name="read_tile_spoken_in">%1$s. %2$s. %3$s.</string>
     <string name="channel_chapters_name">Nya kapitel</string>
     <string name="channel_chapters_description">När en serie på din Läser-lista får ett nytt kapitel.</string>
     <string name="channel_downloads_finished_name">Nedladdningar klara</string>
@@ -2797,6 +2833,7 @@
     </plurals>
     <string name="read_filter_included">Med</string>
     <string name="read_filter_left_out">Utesluten</string>
+    <string name="read_filter_more_genres">Fler genrer</string>
     <string name="read_search_started">Start</string>
     <string name="read_search_sources_only">Bara dina källor</string>
     <string name="read_search_from_sources">Från dina källor</string>
@@ -2805,6 +2842,7 @@
     <string name="read_search_source_timeout">Inget svar på %1$,d s.</string>
     <string name="read_search_source_nothing">Hittade inget i %1$s.</string>
     <string name="read_search_in_source">Hos %1$s</string>
+    <string name="read_search_in_folders">I dina mappar</string>
     <plurals name="read_search_in_sources">
         <item quantity="one">Hos %1$,d av dina källor</item>
         <item quantity="other">Hos %1$,d av dina källor</item>
@@ -2813,6 +2851,8 @@
     <string name="read_search_anilist_failed">AniList svarade inte.</string>
     <string name="read_search_anilist_failed_line">Dina källor frågades ändå.</string>
     <string name="read_search_sources_nothing">Inget i dina källor heller.</string>
+    <string name="read_search_sources_only_nothing">Hittade inget i dina källor</string>
+    <string name="read_state_offline_line">Offline. Nedladdade kapitel går fortfarande att öppna.</string>
     <string name="read_search_total_unknown">Serier från AniList</string>
     <string name="read_search_more_anilist">Mer från AniList</string>
     <string name="read_search_shown">%1$,d av %2$,d visas</string>
@@ -2821,6 +2861,40 @@
     <string name="read_search_source_kind_folder">Mapp</string>
     <string name="read_search_source_kind_plugin">Tillägg</string>
     <string name="read_search_source_more">Visa %1$,d till</string>
+    <string name="read_search_line_total">%1$s · %2$s</string>
+    <string name="read_search_browse_parts">%1$s, %2$s</string>
+    <string name="read_caption_two">%1$s · %2$s</string>
+    <string name="read_filter_shown">%1$s: %2$s</string>
+    <string name="read_name_tile">%1$s, %2$s</string>
+    <string name="read_name_tile_placed">%1$s, %2$s, %3$s</string>
+    <string name="read_name_tile_only_placed">%1$s, %2$s</string>
+    <string name="read_name_week_tile">%1$s, %2$s, %3$s</string>
+    <string name="read_name_week_tile_time">%1$s, %2$s</string>
+    <string name="read_name_spotlight_art">%1$s, Detaljer</string>
+    <string name="read_name_heading">%1$s, %2$s</string>
+    <string name="read_name_loading">%1$s, läses in</string>
+    <string name="read_name_heading_loading">%1$s, %2$s, läses in</string>
+    <string name="read_name_view_all">Visa alla, %1$s</string>
+    <string name="read_name_filter">%1$s, %2$s</string>
+    <string name="read_name_failure">%1$s, %2$s</string>
+    <string name="read_name_source">%1$s, %2$s</string>
+    <plurals name="read_name_source_more">
+        <item quantity="one">Visa %1$,d till från %2$s</item>
+        <item quantity="other">Visa %1$,d till från %2$s</item>
+    </plurals>
+    <string name="read_search_sources_only_line">AniLists resultat är dolda. Filtren nedan gäller bara AniLists resultat.</string>
+    <string name="read_search_done">%1$,d från AniList, %2$,d från dina källor.</string>
+    <string name="read_home_row_loading">%1$s, läses in</string>
+    <string name="read_tile_add_planning">Lägg till i planeringslistan</string>
+    <string name="read_search_anilist_hidden">AniLists resultat är dolda.</string>
+    <plurals name="read_search_said_anilist">
+        <item quantity="one">%1$,d från AniList</item>
+        <item quantity="other">%1$,d från AniList</item>
+    </plurals>
+    <plurals name="read_search_said_sources">
+        <item quantity="one">%1$,d från dina källor</item>
+        <item quantity="other">%1$,d från dina källor</item>
+    </plurals>
     <string name="onboarding_step">%1$,d av %2$,d</string>
     <string name="onboarding_welcome_line">Håll koll på vad du tittar på och läser, från dina egna källor.</string>
     <string name="onboarding_welcome_note">Dina listor och ditt förlopp stannar på dina enheter. Trackers och källor lägger du till själv.</string>

@@ -207,6 +207,7 @@ read-hit-files-format = { $count ->
    *[other] { $count } filer · { $format }
  }
 read-source-folders = Mappar
+read-feed-downloads = Nedladdningar
 reading-since-january = sedan januari
 reading-since-february = sedan februari
 reading-since-march = sedan mars
@@ -219,3 +220,12 @@ reading-since-september = sedan september
 reading-since-october = sedan oktober
 reading-since-november = sedan november
 reading-since-december = sedan december
+read-view-all-trending-manga = Manga, trendande
+read-view-all-trending-webtoons = Webtoons, trendande
+read-view-all-trending-novels = Light novels, trendande
+read-view-all-new-manga = Manga som startat de senaste 12 månaderna
+read-view-all-new-webtoons = Webtoons som startat de senaste 12 månaderna
+read-view-all-new-novels = Light novels som startat de senaste 12 månaderna
+read-view-all-finished-manga = Avslutade manga, mest populära
+read-view-all-finished-webtoons = Avslutade webtoons, mest populära
+read-view-all-finished-novels = Avslutade light novels, mest populära

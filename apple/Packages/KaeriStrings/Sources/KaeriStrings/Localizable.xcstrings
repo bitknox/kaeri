@@ -197464,6 +197464,12 @@
             "state" : "translated",
             "value" : "%1$@ · %2$@"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
         }
       }
     },
@@ -199102,6 +199108,12 @@
             "state" : "translated",
             "value" : "Downloads"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nedladdningar"
+          }
         }
       }
     },
@@ -200024,6 +200036,12 @@
             "state" : "translated",
             "value" : "More genres"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fler genrer"
+          }
         }
       }
     },
@@ -200374,6 +200392,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@: %2$@"
@@ -203528,6 +203552,12 @@
             "state" : "translated",
             "value" : "%1$@, loading"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, läses in"
+          }
         }
       }
     },
@@ -205206,6 +205236,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -205220,6 +205256,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205242,6 +205284,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -205259,6 +205307,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, loading"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, läses in"
           }
         }
       }
@@ -205278,6 +205332,12 @@
             "state" : "translated",
             "value" : "%1$@, loading"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, läses in"
+          }
         }
       }
     },
@@ -205292,6 +205352,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205358,6 +205424,34 @@
               }
             }
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Visa %1$lld till från %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Visa %1$lld till från %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -205376,6 +205470,12 @@
             "state" : "translated",
             "value" : "%1$@, Details"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Detaljer"
+          }
         }
       }
     },
@@ -205390,6 +205490,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205412,6 +205518,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -205426,6 +205538,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
@@ -205448,6 +205566,12 @@
             "state" : "translated",
             "value" : "View all, %1$@"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visa alla, %1$@"
+          }
         }
       }
     },
@@ -205466,6 +205590,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
         }
       }
     },
@@ -205480,6 +205610,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205669,6 +205805,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AniList's results are hidden."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniLists resultat är dolda."
           }
         }
       }
@@ -205940,6 +206082,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -206041,6 +206189,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld from AniList, %2$lld from your sources."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld från AniList, %2$lld från dina källor."
           }
         }
       }
@@ -206227,6 +206381,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In your folders"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I dina mappar"
           }
         }
       }
@@ -206726,6 +206886,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "sv" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
@@ -207296,6 +207462,34 @@
               }
             }
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld från AniList"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld från AniList"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -207352,6 +207546,34 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%1$lld from your sources"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld från dina källor"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld från dina källor"
                     }
                   }
                 }
@@ -208300,6 +208522,12 @@
             "state" : "translated",
             "value" : "AniList's results are hidden. The filters below apply to AniList's results only."
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniLists resultat är dolda. Filtren nedan gäller bara AniLists resultat."
+          }
         }
       }
     },
@@ -208317,6 +208545,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nothing found in your sources"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hittade inget i dina källor"
           }
         }
       }
@@ -209660,6 +209894,12 @@
             "state" : "translated",
             "value" : "Offline. Downloaded chapters still open."
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline. Nedladdade kapitel går fortfarande att öppna."
+          }
         }
       }
     },
@@ -209677,6 +209917,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add to Planning"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lägg till i planeringslistan"
           }
         }
       }
@@ -209696,6 +209942,12 @@
             "state" : "translated",
             "value" : "Finished manga, most popular"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avslutade manga, mest populära"
+          }
         }
       }
     },
@@ -209713,6 +209965,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Finished light novels, most popular"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avslutade light novels, mest populära"
           }
         }
       }
@@ -209732,6 +209990,12 @@
             "state" : "translated",
             "value" : "Finished webtoons, most popular"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avslutade webtoons, mest populära"
+          }
         }
       }
     },
@@ -209749,6 +210013,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manga started in the last 12 months"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga som startat de senaste 12 månaderna"
           }
         }
       }
@@ -209768,6 +210038,12 @@
             "state" : "translated",
             "value" : "Light novels started in the last 12 months"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novels som startat de senaste 12 månaderna"
+          }
         }
       }
     },
@@ -209785,6 +210061,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons started in the last 12 months"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons som startat de senaste 12 månaderna"
           }
         }
       }
@@ -209804,6 +210086,12 @@
             "state" : "translated",
             "value" : "Manga, trending"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga, trendande"
+          }
         }
       }
     },
@@ -209822,6 +210110,12 @@
             "state" : "translated",
             "value" : "Light novels, trending"
           }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novels, trendande"
+          }
         }
       }
     },
@@ -209839,6 +210133,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons, trending"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons, trendande"
           }
         }
       }
