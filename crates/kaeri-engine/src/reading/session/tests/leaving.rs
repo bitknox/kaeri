@@ -48,9 +48,20 @@ impl kaeri_core::traits::BookSource for Slow {
 const SLOW_WORK: &str = "a:900888";
 
 /// The person opens a series only a slow source holds, sees "Finding source", and leaves with
-/// the session the opening named. When the source answers, nothing opens and nothing is held.
+/// the session the open becomes. When the source answers, nothing opens and nothing is held.
 #[tokio::test(start_paused = true)]
 async fn leaving_while_finding_the_source_opens_nothing() {
+    leave_while_finding(true).await;
+}
+
+/// The same with Close and no session, as an app sends while it has none: whatever open waits
+/// is dropped.
+#[tokio::test(start_paused = true)]
+async fn leaving_with_no_session_while_finding_the_source_opens_nothing() {
+    leave_while_finding(false).await;
+}
+
+async fn leave_while_finding(named: bool) {
     let mut h = harness_of(Store::open_in_memory().unwrap(), "manga", |_| Vec::new());
     let source = Arc::new(Slow {
         manifest: BookSourceManifest {
@@ -76,14 +87,15 @@ async fn leaving_while_finding_the_source_opens_nothing() {
         at: OpenAt::Start,
         surface: surface(),
     });
-    let (wait, session) = h
+    let wait = h
         .until(|e| match e {
-            ReaderEvent::Opening { wait, session, .. } => Some((*wait, *session)),
+            ReaderEvent::Opening { wait, .. } => Some(*wait),
             _ => None,
         })
         .await;
     assert_eq!(wait, Some(ReaderWait::FindingSource));
-    assert_ne!(session, 0, "the opening names the session it becomes");
+    let pending = h.reader.listing.as_ref().map(|l| l.id).expect("the open waits");
+    let session = if named { pending } else { 0 };
     h.send(ReaderCommand::Close { session });
     let closed = h
         .until(|e| match e {

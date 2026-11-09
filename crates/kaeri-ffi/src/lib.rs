@@ -415,7 +415,6 @@ mod tests {
         crosses_intact(Event::Reader(ReaderEvent::Opening {
             chapter: None,
             wait: Some(kaeri_model::reader::ReaderWait::FindingSource),
-            session: 3,
         }));
         crosses_intact(Event::Reader(ReaderEvent::GoTo {
             session: 7,

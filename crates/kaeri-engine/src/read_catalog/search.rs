@@ -131,6 +131,7 @@ fn medium_of(query: &ReadSearchQuery) -> Option<Medium> {
 /// One page of a search. Pages count from 0. With words, the first page also asks the person's
 /// sources; "Your sources only" asks them alone and never AniList.
 pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbox) {
+    let searched = searched(kit, &query);
     let words = !query.text.trim().is_empty();
     let with_sources = words && page == 0;
     let generation = with_sources.then(|| sources_search(kit, ask, &query, tx));
@@ -152,7 +153,13 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
         // The other scope's count rides the first page, with words to count.
         let shows = (ask.both() && page == 0 && !term.is_empty())
             .then_some((term.as_str(), filter.adult));
-        match kit.meta.books_and_shows(&[browse], shows).await {
+        let answer = kit.meta.books_and_shows(&[browse], shows).await;
+        // Newer words or filters were searched while AniList answered: the page shows theirs,
+        // and this answer, or failure, is for words no longer there.
+        if !still_searched(&kit, searched) {
+            return;
+        }
+        match answer {
             Ok((pages, other_scope)) => {
                 let (items, has_more) = pages
                     .into_iter()
@@ -210,6 +217,29 @@ pub fn search(kit: &Kit, ask: Ask, query: ReadSearchQuery, page: u32, tx: &Outbo
             }
         }
     });
+}
+
+/// The words and filters last searched, with a generation that changes when they do. More pages
+/// of the same search keep it.
+#[derive(Debug, Default)]
+pub(crate) struct Searched {
+    generation: u64,
+    query: ReadSearchQuery,
+}
+
+/// The generation of `query`'s search, starting a new one when it differs from the last.
+fn searched(kit: &Kit, query: &ReadSearchQuery) -> u64 {
+    let mut searched = kit.sources.catalog.searched.lock().unwrap_or_else(|e| e.into_inner());
+    if searched.generation == 0 || searched.query != *query {
+        searched.generation += 1;
+        searched.query = query.clone();
+    }
+    searched.generation
+}
+
+fn still_searched(kit: &Kit, generation: u64) -> bool {
+    kit.sources.catalog.searched.lock().unwrap_or_else(|e| e.into_inner()).generation
+        == generation
 }
 
 /// How many series AniList found, once the last page is in. Before that AniList's own total is
@@ -415,32 +445,34 @@ fn sources_search(kit: &Kit, ask: Ask, query: &ReadSearchQuery, tx: &Outbox) -> 
         generation
     };
     update(kit, generation, tx, |_| {});
-    let ids: Vec<String> = asked.into_iter().map(|(id, ..)| id).collect();
-    ask_sources(kit, ask, generation, query.text.trim().to_owned(), medium, ids, tx);
+    let named: Vec<(String, String)> =
+        asked.into_iter().map(|(id, name, _)| (id, name)).collect();
+    ask_sources(kit, ask, generation, query.text.trim().to_owned(), medium, named, tx);
     generation
 }
 
-/// Ask each of `ids` for `text`, each answer landing in the run as it comes.
+/// Ask each of `named` (id and the name its group shows) for `text`, each answer landing in
+/// the run as it comes.
 fn ask_sources(
     kit: &Kit,
     ask: Ask,
     generation: u64,
     text: String,
     medium: Option<Medium>,
-    ids: Vec<String>,
+    named: Vec<(String, String)>,
     tx: &Outbox,
 ) {
-    if ids.is_empty() {
+    if named.is_empty() {
         return;
     }
     let (kit, tx) = (kit.clone(), tx.clone());
     tokio::spawn(async move {
         let text = &text;
-        let mut asking: FuturesUnordered<_> = ids
+        let mut asking: FuturesUnordered<_> = named
             .iter()
-            .map(|id| {
+            .map(|(id, name)| {
                 let kit = &kit;
-                async move { (id.clone(), ask_source(kit, id, text, ask.now).await) }
+                async move { (id.clone(), ask_source(kit, id, name, text, ask.now).await) }
             })
             .collect();
         while let Some((id, answer)) = asking.next().await {
@@ -489,10 +521,12 @@ fn ask_sources(
     });
 }
 
-/// One source's answer to a search, or the state its group shows instead.
+/// One source's answer to a search, or the state its group shows instead. A failure names the
+/// source as its group does.
 async fn ask_source(
     kit: &Kit,
     id: &str,
+    name: &str,
     text: &str,
     now: i64,
 ) -> Result<Vec<SeriesHit>, ReadSourceState> {
@@ -506,13 +540,13 @@ async fn ask_source(
         Ok(Ok(hits)) => Ok(hits),
         // A source without the title is not a failure.
         Ok(Err(ProviderError::NotFound)) => Ok(Vec::new()),
-        Ok(Err(error)) => Err(ReadSourceState::Failed { failure: failure(id, &error) }),
+        Ok(Err(error)) => Err(ReadSourceState::Failed { failure: failure(name, &error) }),
     }
 }
 
 /// A group's Try again: ask its source once more for the search still shown.
 pub fn retry_source(kit: &Kit, ask: Ask, query: ReadSearchQuery, source: String, tx: &Outbox) {
-    let generation = {
+    let (generation, name) = {
         let mut run = kit.sources.catalog.search.lock().unwrap_or_else(|e| e.into_inner());
         // A group still asking has an ask under way, which answers for it: a second would
         // ask the source twice and let the slower answer overwrite the other.
@@ -520,16 +554,16 @@ pub fn retry_source(kit: &Kit, ask: Ask, query: ReadSearchQuery, source: String,
         if run.query != query || !run.groups.iter().any(ready) {
             return;
         }
-        if let Some(group) = run.groups.iter_mut().find(|g| g.id == source) {
-            group.state = ReadSourceState::Asking;
-            group.hits.clear();
-        }
-        run.generation
+        let Some(group) = run.groups.iter_mut().find(|g| g.id == source) else { return };
+        group.state = ReadSourceState::Asking;
+        group.hits.clear();
+        let name = group.name.clone();
+        (run.generation, name)
     };
     kit.sources.registry.retry_down();
     update(kit, generation, tx, |_| {});
     let text = query.text.trim().to_owned();
-    ask_sources(kit, ask, generation, text, medium_of(&query), vec![source], tx);
+    ask_sources(kit, ask, generation, text, medium_of(&query), vec![(source, name)], tx);
 }
 
 /// Change the run, unless a newer search replaced it, and send the sources' part as it stands.

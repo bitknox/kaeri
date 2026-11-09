@@ -34,10 +34,12 @@ struct Shelf {
     asked: Mutex<Vec<String>>,
     /// Pages at these addresses answer 404.
     broken: Mutex<Vec<String>>,
-    /// The page at this address waits: the first notify says it was asked, the second lets it
-    /// answer.
-    held: Mutex<Option<(String, Arc<tokio::sync::Notify>, Arc<tokio::sync::Notify>)>>,
+    /// The page at this address waits: see [`Held`].
+    held: Mutex<Option<Held>>,
 }
+
+/// A page held back: its address, a notify that says it was asked and one that lets it answer.
+type Held = (String, Arc<tokio::sync::Notify>, Arc<tokio::sync::Notify>);
 
 #[async_trait]
 impl BookSource for Shelf {

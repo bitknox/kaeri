@@ -42,6 +42,9 @@ pub struct Memory {
     pub(crate) misses: Arc<Mutex<editions::Misses>>,
     /// The search with words whose sources are being asked.
     pub(crate) search: Arc<Mutex<search::Run>>,
+    /// The words and filters last searched, and their generation: AniList's answers for older
+    /// ones are dropped.
+    pub(crate) searched: Arc<Mutex<search::Searched>>,
     /// The series opened that no source had, with when that was found: a Home tile says so for
     /// the rest of its row's 30 minutes.
     pub(crate) not_found: Arc<Mutex<std::collections::HashMap<String, i64>>>,
