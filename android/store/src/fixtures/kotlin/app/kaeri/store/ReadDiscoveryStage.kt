@@ -35,8 +35,8 @@ object ReadDiscoveryStage {
      */
     val MOTION: List<String> = listOf("rd-typing", "rd-rows-landing")
 
-    /** How long `rd-rows-landing` holds the rows on their way. */
-    private const val ROWS_HELD = 1_500L
+    /** How long `rd-rows-landing` holds the rows on their way: long enough to scroll a phone down to them. */
+    private const val ROWS_HELD = 5_000L
 
     /** The kinds beside the made-up sources' names; the demo is built in and has none. */
     private val KINDS = mapOf("home-library" to ReadSourceKind.SERVER, "folders" to ReadSourceKind.FOLDER, "northwind" to ReadSourceKind.PLUGIN) // i18n-skip
