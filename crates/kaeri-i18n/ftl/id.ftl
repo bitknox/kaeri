@@ -5101,9 +5101,6 @@ tui-together-not-a-link = Itu bukan tautan atau kode nonton bareng.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Episode { $episode } · { $when }
 
-# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
-tui-medium-read-title = Membaca ada di aplikasi
-
 # Line under the title of that page.
 tui-medium-read-line = Terminal tidak punya pembaca. Manga, webtoon, dan light novel dibuka di aplikasi Kaeri, dan sinkronisasi menjaga kemajuan Anda tetap sama.
 

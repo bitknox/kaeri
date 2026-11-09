@@ -10,7 +10,6 @@ tui-together-join-prompt = tautan atau kode
 tui-together-chat-hidden-line = Pesan dan reaksi tidak muncul di pemutar di semua sesi.
 tui-together-not-a-link = Itu bukan tautan atau kode { -watch-party }.
 tui-together-recent-alone = Episode { $episode } · { $when }
-tui-medium-read-title = Membaca ada di aplikasi
 tui-medium-read-line = Terminal tidak punya pembaca. Manga, webtoon, dan light novel dibuka di aplikasi { -app-name }, dan sinkronisasi menjaga kemajuan Anda tetap sama.
 tui-medium-read-change = Tekan { $key } untuk mengubah fungsi { -app-name }.
 tui-medium-settings-hint = { $key } untuk mengubah

@@ -5169,9 +5169,6 @@ tui-together-not-a-link = Det där är varken en länk eller en kod för watch p
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Avsnitt { $episode } · { $when }
 
-# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
-tui-medium-read-title = Läsning finns i apparna
-
 # Line under the title of that page.
 tui-medium-read-line = Terminalen har ingen läsare. Manga, webtoons och light novels öppnas i Kaeri-apparna, och synk håller ditt förlopp i takt.
 

@@ -10,7 +10,6 @@ tui-together-join-prompt = link lub kod
 tui-together-chat-hidden-line = Wiadomości i reakcje nie pojawiają się w odtwarzaczu w żadnym oglądaniu.
 tui-together-not-a-link = To nie jest link ani kod pokoju.
 tui-together-recent-alone = Odcinek { $episode } · { $when }
-tui-medium-read-title = Czytanie jest w aplikacjach
 tui-medium-read-line = Terminal nie ma czytnika. Manga, webtoony i light novel otwierają się w aplikacjach { -app-name }, a synchronizacja utrzymuje twój postęp na bieżąco.
 tui-medium-read-change = Naciśnij { $key }, aby zmienić, do czego służy { -app-name }.
 tui-medium-settings-hint = { $key }: zmień

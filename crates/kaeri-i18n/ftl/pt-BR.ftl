@@ -5237,9 +5237,6 @@ tui-together-not-a-link = Isso não é um link ou código de sessão.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Episódio { $episode } · { $when }
 
-# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
-tui-medium-read-title = A leitura fica nos apps
-
 # Line under the title of that page.
 tui-medium-read-line = O terminal não tem leitor. Mangás, webtoons e light novels abrem nos apps do Kaeri, e a sincronização mantém seu progresso em dia.
 

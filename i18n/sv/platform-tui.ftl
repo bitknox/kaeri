@@ -10,7 +10,6 @@ tui-together-join-prompt = länk eller kod
 tui-together-chat-hidden-line = Rader och reaktioner hålls borta från spelaren i alla partyn.
 tui-together-not-a-link = Det där är varken en länk eller en kod för { -watch-party }.
 tui-together-recent-alone = Avsnitt { $episode } · { $when }
-tui-medium-read-title = Läsning finns i apparna
 tui-medium-read-line = Terminalen har ingen läsare. Manga, webtoons och light novels öppnas i { -app-name }-apparna, och synk håller ditt förlopp i takt.
 tui-medium-read-change = Tryck { $key } för att ändra vad { -app-name } är till för.
 tui-medium-settings-hint = { $key } för att ändra

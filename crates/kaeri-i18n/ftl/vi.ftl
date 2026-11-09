@@ -5101,9 +5101,6 @@ tui-together-not-a-link = Đây không phải liên kết hay mã xem chung.
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Tập { $episode } · { $when }
 
-# Title of the page that stands in for Home when this computer is set to reading only. The terminal has no reader.
-tui-medium-read-title = Đọc truyện trong các ứng dụng
-
 # Line under the title of that page.
 tui-medium-read-line = Terminal không có trình đọc. Manga, webtoon và light novel mở trong các ứng dụng Kaeri, và đồng bộ giữ tiến độ của bạn khớp nhau.
 
