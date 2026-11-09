@@ -199,6 +199,18 @@ internal fun ReadSearchScreen(startText: String? = null) {
     }
 }
 
+/**
+ * Search on reading's side, for the fixtures' shots: [words] typed, and with [filters] the row's
+ * filters set (Fantasy, Manga, Japan, Releasing), which the fixtures' books answer.
+ */
+fun showReadingSearch(store: app.kaeri.store.AppStore, words: String?, filters: Boolean) {
+    var query = ReadingModel.EMPTY_QUERY.copy(text = words.orEmpty())
+    if (filters) {
+        query = query.copy(genres = listOf("Fantasy"), formats = listOf("manga", "one-shot"), origins = listOf("JP"), status = "releasing") // i18n-skip
+    }
+    if (query == ReadingModel.EMPTY_QUERY) ReadPlaces.searchReading = true else ReadPlaces.search(store.reading, query)
+}
+
 /** "2 matches in Shows", and Show them, which switches the scope. */
 @Composable
 internal fun OtherScopeRow(search: ReadSearchState) {
