@@ -144,12 +144,14 @@ struct ReadSearchScreen: View {
             position.scrollTo(y: CGFloat(points))
         }
         #if os(iOS)
-        // Shots: `sheet=filters` opens the Filters sheet.
+        // Shots: `sheet=read-filters` opens the Filters sheet, and lets the shot go once it is up. (The
+        // shows' `filters` would open the shows' panel over it.)
         .task {
-            guard navigator.launchSheet == "filters" else { return } // i18n-skip: a shot's sheet name
+            guard navigator.launchSheet == "read-filters" else { return } // i18n-skip: a shot's sheet name
             try? await Task.sleep(for: .milliseconds(500))
-            navigator.launchSheet = nil
             filtersShown = true
+            try? await Task.sleep(for: .milliseconds(1_000))
+            navigator.launchSheet = nil
         }
         .toolbar {
             if compact {
