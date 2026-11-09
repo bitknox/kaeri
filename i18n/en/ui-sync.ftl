@@ -401,7 +401,7 @@ pair-which-profile-line = This { $kind } syncs with that profile only. The other
 pair-also-sync-foot = { $device } already knows this phone from Play on TV, so syncing with it needs no new code.
 
 # Continue, for a day.
-# @arg n: int
+# @arg n: plain
 # @arg time: text
 # @arg device: text
 continue-from-device = Episode { $n } · stopped at { $time } on { $device }
@@ -422,7 +422,7 @@ sync-syncing-with = Syncing with { $device }
 sync-notes = Sync notes
 
 # Sync note.
-# @arg n: int
+# @arg n: plain
 # @arg title: text
 # @arg other: text
 # @arg device: text

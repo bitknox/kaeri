@@ -22,7 +22,7 @@ pub fn is_engine(group: &str) -> bool {
 fn rust_type(ty: ArgType) -> &'static str {
     match ty {
         ArgType::Text => "String",
-        ArgType::Int | ArgType::Timestamp => "i64",
+        ArgType::Int | ArgType::Plain | ArgType::Timestamp => "i64",
         ArgType::Decimal => "f64",
         ArgType::Percent => "u8",
         ArgType::Seconds => "Span",
@@ -35,6 +35,7 @@ fn value(ty: ArgType, field: &str) -> String {
     match ty {
         ArgType::Text => format!("Value::Text({field}.clone())"),
         ArgType::Int | ArgType::Timestamp => format!("Value::Int(*{field})"),
+        ArgType::Plain => format!("Value::Plain(*{field})"),
         ArgType::Decimal => format!("Value::Float(*{field})"),
         ArgType::Percent => format!("Value::Int(i64::from(*{field}))"),
         ArgType::Seconds => format!("Value::Span(*{field})"),

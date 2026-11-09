@@ -16,15 +16,15 @@
     <string name="notice_cast_no_device">Этот телевизор больше не в сети.</string>
     <string name="notice_cast_unavailable">Эта версия Kaeri не умеет передавать видео на телевизоры.</string>
     <string name="cast_phase_starting">Запуск на %1$s</string>
-    <string name="cast_phase_starting_for">Запуск на %1$s · %2$d с</string>
-    <string name="cast_phase_waiting">Ожидание %1$s · %2$d с</string>
-    <string name="cast_phase_preparing">Подготовка потока · %1$d с</string>
+    <string name="cast_phase_starting_for">Запуск на %1$s · %2$,d с</string>
+    <string name="cast_phase_waiting">Ожидание %1$s · %2$,d с</string>
+    <string name="cast_phase_preparing">Подготовка потока · %1$,d с</string>
     <string name="discussion_age_now">сейчас</string>
-    <string name="discussion_age_minutes">%1$d мин</string>
-    <string name="discussion_age_hours">%1$d ч</string>
-    <string name="discussion_age_days">%1$d д</string>
-    <string name="discussion_age_weeks">%1$d нед</string>
-    <string name="discussion_age_years">%1$d г</string>
+    <string name="discussion_age_minutes">%1$,d мин</string>
+    <string name="discussion_age_hours">%1$,d ч</string>
+    <string name="discussion_age_days">%1$,d д</string>
+    <string name="discussion_age_weeks">%1$,d нед</string>
+    <string name="discussion_age_years">%1$,d г</string>
     <string name="notice_comment_like_failed">Не удалось поставить лайк. Попробуйте ещё раз.</string>
     <string name="notice_comment_delete_failed">Не удалось удалить комментарий. Он остался на месте. Попробуйте ещё раз.</string>
     <string name="notice_discussion_sign_in">Войдите в AniList, чтобы ставить лайки и отвечать.</string>
@@ -34,7 +34,7 @@
     <string name="home_spotlight_because">Потому что вы досмотрели %1$s</string>
     <string name="home_spotlight_recommended">Рекомендуем вам</string>
     <string name="home_spotlight_popular">Популярное в этом сезоне</string>
-    <string name="home_time_left">Эпизод %1$d · осталось %2$d мин</string>
+    <string name="home_time_left">Эпизод %1$d · осталось %2$,d мин</string>
     <string name="home_episode_out">Вышел эпизод %1$d</string>
     <string name="home_episode_next">Следующая: серия %1$d</string>
     <string name="home_episode_out_today">Эпизод %1$d · вышел сегодня</string>
@@ -55,6 +55,24 @@
     <string name="home_trending">Сейчас в тренде</string>
     <string name="home_because">Потому что вы досмотрели %1$s</string>
     <string name="home_more_genre">Ещё: %1$s</string>
+    <string name="home_more_genre_action">Ещё: экшен</string>
+    <string name="home_more_genre_adventure">Ещё: приключения</string>
+    <string name="home_more_genre_comedy">Ещё: комедия</string>
+    <string name="home_more_genre_drama">Ещё: драма</string>
+    <string name="home_more_genre_ecchi">Ещё: этти</string>
+    <string name="home_more_genre_fantasy">Ещё: фэнтези</string>
+    <string name="home_more_genre_horror">Ещё: ужасы</string>
+    <string name="home_more_genre_mahou_shoujo">Ещё: махо-сёдзё</string>
+    <string name="home_more_genre_mecha">Ещё: меха</string>
+    <string name="home_more_genre_music">Ещё: музыка</string>
+    <string name="home_more_genre_mystery">Ещё: детектив</string>
+    <string name="home_more_genre_psychological">Ещё: психологическое</string>
+    <string name="home_more_genre_romance">Ещё: романтика</string>
+    <string name="home_more_genre_sci_fi">Ещё: фантастика</string>
+    <string name="home_more_genre_slice_of_life">Ещё: повседневность</string>
+    <string name="home_more_genre_sports">Ещё: спорт</string>
+    <string name="home_more_genre_supernatural">Ещё: сверхъестественное</string>
+    <string name="home_more_genre_thriller">Ещё: триллер</string>
     <string name="home_spotlight_demo">Демо, можно делиться</string>
     <string name="licensed_return">Посмотрели эпизод %1$d на %2$s?</string>
     <string name="licensed_marked">Эпизод %1$d отмечен как просмотренный.</string>
@@ -66,10 +84,10 @@
     <string name="cause_airs_today">сегодня в %1$s</string>
     <string name="cause_airs_tomorrow">завтра в %1$s</string>
     <plurals name="cause_airs_in_days">
-        <item quantity="one">через %1$d день в %2$s</item>
-        <item quantity="few">через %1$d дня в %2$s</item>
-        <item quantity="many">через %1$d дней в %2$s</item>
-        <item quantity="other">через %1$d дня в %2$s</item>
+        <item quantity="one">через %1$,d день в %2$s</item>
+        <item quantity="few">через %1$,d дня в %2$s</item>
+        <item quantity="many">через %1$,d дней в %2$s</item>
+        <item quantity="other">через %1$,d дня в %2$s</item>
     </plurals>
     <string name="cause_airs_on_date">на %1$s в %2$s</string>
     <string name="cause_no_playable_stream">Источник ответил, но воспроизводить нечего. Попробуйте другой.</string>
@@ -81,17 +99,17 @@
     <string name="cause_source_cannot_download">Этот источник показывает эпизоды, но скачать их нельзя.</string>
     <string name="cause_no_source_could_list_show">Ни один источник не смог перечислить эпизоды этого аниме, поэтому скачать нельзя.</string>
     <plurals name="cause_subtitles_merged">
-        <item quantity="one">%1$d дорожка субтитров добавлена в видео.</item>
-        <item quantity="few">%1$d дорожки субтитров добавлены в видео.</item>
-        <item quantity="many">%1$d дорожек субтитров добавлено в видео.</item>
-        <item quantity="other">%1$d дорожки субтитров добавлены в видео.</item>
+        <item quantity="one">%1$,d дорожка субтитров добавлена в видео.</item>
+        <item quantity="few">%1$,d дорожки субтитров добавлены в видео.</item>
+        <item quantity="many">%1$,d дорожек субтитров добавлено в видео.</item>
+        <item quantity="other">%1$,d дорожки субтитров добавлены в видео.</item>
     </plurals>
     <string name="cause_subtitles_left_apart">Субтитры остались отдельными файлами рядом с видео. %1$s</string>
     <plurals name="cause_already_in_downloads">
-        <item quantity="one">%1$d эпизод уже в загрузках.</item>
-        <item quantity="few">%1$d эпизода уже в загрузках.</item>
-        <item quantity="many">%1$d эпизодов уже в загрузках.</item>
-        <item quantity="other">%1$d эпизода уже в загрузках.</item>
+        <item quantity="one">%1$,d эпизод уже в загрузках.</item>
+        <item quantity="few">%1$,d эпизода уже в загрузках.</item>
+        <item quantity="many">%1$,d эпизодов уже в загрузках.</item>
+        <item quantity="other">%1$,d эпизода уже в загрузках.</item>
     </plurals>
     <string name="status_looking_up_title">Ищем название…</string>
     <string name="status_loading_sources">Загружаем источники…</string>
@@ -104,10 +122,10 @@
     <string name="start_buffering">Буферизация</string>
     <string name="status_searching_sources">Запрашиваем источники об эпизоде %1$s…</string>
     <string name="notice_player_failed_to_start">Не удалось запустить mpv. Проверьте, что mpv запускается сам по себе. (%1$s)</string>
-    <string name="notice_stream_no_video">Из этого потока не пришёл ни один кадр. Пробуем поток %1$d из %2$d.</string>
+    <string name="notice_stream_no_video">Из этого потока не пришёл ни один кадр. Пробуем поток %1$,d из %2$,d.</string>
     <string name="notice_player_could_not_play">mpv не смог воспроизвести это. %1$s</string>
     <string name="notice_player_exited_silently">mpv закрылся без воспроизведения и без объяснения причины. Попробуйте другой источник.</string>
-    <string name="notice_player_not_playing">mpv не начал воспроизведение через %1$d с. У источника может не быть данных. Проверьте, что mpv сам воспроизводит файлы.</string>
+    <string name="notice_player_not_playing">mpv не начал воспроизведение через %1$,d с. У источника может не быть данных. Проверьте, что mpv сам воспроизводит файлы.</string>
     <string name="notice_no_player">Эта версия Kaeri не умеет воспроизводить видео.</string>
     <string name="notice_mpv_missing">%1$s не найден. Установите mpv, чтобы воспроизводить эпизоды.</string>
     <string name="notice_mpv_old">mpv %1$s может воспроизводить, но плеер Kaeri для кнопки пропуска, карточки «Далее», меню и превью требует mpv версии 0.36 или новее.</string>
@@ -149,16 +167,16 @@
     <string name="notice_download_removed_file_kept">Загрузка удалена, но её файл удалить не удалось. %1$s</string>
     <string name="notice_download_removed">Загрузка удалена.</string>
     <plurals name="notice_downloads_cleared">
-        <item quantity="one">Из списка удалена %1$d завершённая загрузка.</item>
-        <item quantity="few">Из списка удалены %1$d завершённые загрузки.</item>
-        <item quantity="many">Из списка удалено %1$d завершённых загрузок.</item>
-        <item quantity="other">Из списка удалены %1$d завершённые загрузки.</item>
+        <item quantity="one">Из списка удалена %1$,d завершённая загрузка.</item>
+        <item quantity="few">Из списка удалены %1$,d завершённые загрузки.</item>
+        <item quantity="many">Из списка удалено %1$,d завершённых загрузок.</item>
+        <item quantity="other">Из списка удалены %1$,d завершённые загрузки.</item>
     </plurals>
     <plurals name="notice_skip_marks_cleared">
-        <item quantity="one">Удалена %1$d отметка пропуска.</item>
-        <item quantity="few">Удалены %1$d отметки пропуска.</item>
-        <item quantity="many">Удалено %1$d отметок пропуска.</item>
-        <item quantity="other">Удалено %1$d отметки пропуска.</item>
+        <item quantity="one">Удалена %1$,d отметка пропуска.</item>
+        <item quantity="few">Удалены %1$,d отметки пропуска.</item>
+        <item quantity="many">Удалено %1$,d отметок пропуска.</item>
+        <item quantity="other">Удалено %1$,d отметки пропуска.</item>
     </plurals>
     <string name="notice_skip_marks_none">Вы не отмечали моменты для пропуска.</string>
     <string name="notice_skip_marks_not_cleared">Не удалось удалить ваши отметки пропуска. %1$s</string>
@@ -170,22 +188,22 @@
     <string name="notice_downloads_none_new">Ничего нового не добавлено в очередь. %1$s</string>
     <string name="notice_downloads_none_new_stopped">Ничего нового не добавлено в очередь. %1$s %2$s</string>
     <plurals name="notice_episodes_queued_existing">
-        <item quantity="one">В очередь добавлен %1$d эпизод. %2$s</item>
-        <item quantity="few">В очередь добавлено %1$d эпизода. %2$s</item>
-        <item quantity="many">В очередь добавлено %1$d эпизодов. %2$s</item>
-        <item quantity="other">В очередь добавлено %1$d эпизода. %2$s</item>
+        <item quantity="one">В очередь добавлен %1$,d эпизод. %2$s</item>
+        <item quantity="few">В очередь добавлено %1$,d эпизода. %2$s</item>
+        <item quantity="many">В очередь добавлено %1$,d эпизодов. %2$s</item>
+        <item quantity="other">В очередь добавлено %1$,d эпизода. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_stopped">
-        <item quantity="one">В очередь добавлен %1$d эпизод, затем добавление остановилось. %2$s</item>
-        <item quantity="few">В очередь добавлено %1$d эпизода, затем добавление остановилось. %2$s</item>
-        <item quantity="many">В очередь добавлено %1$d эпизодов, затем добавление остановилось. %2$s</item>
-        <item quantity="other">В очередь добавлено %1$d эпизода, затем добавление остановилось. %2$s</item>
+        <item quantity="one">В очередь добавлен %1$,d эпизод, затем добавление остановилось. %2$s</item>
+        <item quantity="few">В очередь добавлено %1$,d эпизода, затем добавление остановилось. %2$s</item>
+        <item quantity="many">В очередь добавлено %1$,d эпизодов, затем добавление остановилось. %2$s</item>
+        <item quantity="other">В очередь добавлено %1$,d эпизода, затем добавление остановилось. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_existing_stopped">
-        <item quantity="one">В очередь добавлен %1$d эпизод, затем добавление остановилось. %2$s %3$s</item>
-        <item quantity="few">В очередь добавлено %1$d эпизода, затем добавление остановилось. %2$s %3$s</item>
-        <item quantity="many">В очередь добавлено %1$d эпизодов, затем добавление остановилось. %2$s %3$s</item>
-        <item quantity="other">В очередь добавлено %1$d эпизода, затем добавление остановилось. %2$s %3$s</item>
+        <item quantity="one">В очередь добавлен %1$,d эпизод, затем добавление остановилось. %2$s %3$s</item>
+        <item quantity="few">В очередь добавлено %1$,d эпизода, затем добавление остановилось. %2$s %3$s</item>
+        <item quantity="many">В очередь добавлено %1$,d эпизодов, затем добавление остановилось. %2$s %3$s</item>
+        <item quantity="other">В очередь добавлено %1$,d эпизода, затем добавление остановилось. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Недостаточно свободного места, чтобы сохранить следующие эпизоды в загрузках. Освободите место, чтобы загрузить больше.</string>
     <string name="party_needs_server">Совместный просмотр: сначала выберите сервер в настройке syncplay.server. Предлагаем %1$s, управляется %2$s.</string>
@@ -205,16 +223,16 @@
     <string name="reading_usually_saturdays">Обычно по субботам</string>
     <string name="reading_usually_sundays">Обычно по воскресеньям</string>
     <plurals name="reading_about_every_weeks">
-        <item quantity="one">Примерно раз в %1$d неделю</item>
-        <item quantity="few">Примерно раз в %1$d недели</item>
-        <item quantity="many">Примерно раз в %1$d недель</item>
-        <item quantity="other">Примерно раз в %1$d недели</item>
+        <item quantity="one">Примерно раз в %1$,d неделю</item>
+        <item quantity="few">Примерно раз в %1$,d недели</item>
+        <item quantity="many">Примерно раз в %1$,d недель</item>
+        <item quantity="other">Примерно раз в %1$,d недели</item>
     </plurals>
     <string name="reading_also_a_show">Есть и сериал</string>
     <string name="reading_also_a_book">Есть и книга</string>
     <string name="reading_split_chapter">Глава %1$s уходит в трекеры как %2$s.</string>
     <string name="reader_resumed">Продолжено со страницы %1$d</string>
-    <string name="reader_resumed_image">Открыто на картинке %1$d</string>
+    <string name="reader_resumed_image">Открыто на картинке %1$,d</string>
     <string name="reader_back_to_page">Назад на страницу %1$d</string>
     <string name="reader_moved">Переход к %1$s, страница %2$d: там остановилось %3$s</string>
     <string name="reader_moved_number">Переход к главе %1$s, страница %2$d: там остановилось %3$s</string>
@@ -254,16 +272,16 @@
     <string name="reading_status_cancelled">Отменено</string>
     <string name="reading_status_not_yet">Ещё не вышло</string>
     <plurals name="reading_chapters">
-        <item quantity="one">%1$d глава</item>
-        <item quantity="few">%1$d главы</item>
-        <item quantity="many">%1$d глав</item>
-        <item quantity="other">%1$d главы</item>
+        <item quantity="one">%1$,d глава</item>
+        <item quantity="few">%1$,d главы</item>
+        <item quantity="many">%1$,d глав</item>
+        <item quantity="other">%1$,d главы</item>
     </plurals>
     <plurals name="reading_volumes">
-        <item quantity="one">%1$d том</item>
-        <item quantity="few">%1$d тома</item>
-        <item quantity="many">%1$d томов</item>
-        <item quantity="other">%1$d тома</item>
+        <item quantity="one">%1$,d том</item>
+        <item quantity="few">%1$,d тома</item>
+        <item quantity="many">%1$,d томов</item>
+        <item quantity="other">%1$,d тома</item>
     </plurals>
     <string name="reading_on_planning">В вашем списке «Запланировано»</string>
     <string name="reading_spotlight_new_chapter">Новая глава в серии, за которой вы следите</string>
@@ -273,12 +291,12 @@
     <string name="reading_out_today">Глава %1$s вышла сегодня</string>
     <string name="reading_out_today_titled">Глава %1$s, %2$s, вышла сегодня</string>
     <string name="reading_chapter_page">Глава %1$s · стр. %2$d</string>
-    <string name="reading_chapter_percent">Глава %1$s · %2$d%%</string>
+    <string name="reading_chapter_percent">Глава %1$s · %2$,d%%</string>
     <string name="reading_chapter_new">Вышла глава %1$s</string>
     <string name="reading_next_part">Часть %1$s</string>
-    <string name="reading_part_percent">Часть %1$s · %2$d%%</string>
+    <string name="reading_part_percent">Часть %1$s · %2$,d%%</string>
     <string name="reading_part_new">Вышла часть %1$s</string>
-    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_percent">%1$s · %2$,d%%</string>
     <string name="reading_label_new">Новое: %1$s</string>
     <string name="reading_part_titled">Часть %1$s · %2$s</string>
     <string name="reading_label_titled">%1$s · %2$s</string>
@@ -301,9 +319,9 @@
     <string name="export_chapter">Глава %1$s</string>
     <plurals name="export_waits_for_wifi">
         <item quantity="one">Одна глава ещё не скачана, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
-        <item quantity="few">%1$d главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
-        <item quantity="many">%1$d глав ещё не скачано, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
-        <item quantity="other">%1$d главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
+        <item quantity="few">%1$,d главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
+        <item quantity="many">%1$,d глав ещё не скачано, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
+        <item quantity="other">%1$,d главы ещё не скачаны, поэтому отправка дождётся Wi-Fi и продолжится сама.</item>
     </plurals>
     <string name="reading_chapter_titled">Глава %1$s · %2$s</string>
     <string name="reading_row_read">Прочитано</string>
@@ -314,52 +332,52 @@
     <string name="reading_row_on_device">Хранится здесь</string>
     <string name="reading_row_queued">В очереди</string>
     <string name="reading_row_waits_wifi">В очереди · ждёт Wi-Fi</string>
-    <string name="reading_row_downloading">Скачивание · %1$d из %2$d стр.</string>
+    <string name="reading_row_downloading">Скачивание · %1$,d из %2$,d стр.</string>
     <string name="reading_row_failed">Не удалось скачать</string>
     <string name="reading_row_page_of">Стр. %1$d из %2$d</string>
     <string name="reading_row_page">Стр. %1$d</string>
-    <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_percent">%1$,d%%</string>
     <string name="reading_row_opened">Открыта</string>
     <string name="reading_row_bookmarked">В закладках</string>
     <plurals name="reading_row_pages">
-        <item quantity="one">%1$d страница</item>
-        <item quantity="few">%1$d страницы</item>
-        <item quantity="many">%1$d страниц</item>
-        <item quantity="other">%1$d страницы</item>
+        <item quantity="one">%1$,d страница</item>
+        <item quantity="few">%1$,d страницы</item>
+        <item quantity="many">%1$,d страниц</item>
+        <item quantity="other">%1$,d страницы</item>
     </plurals>
     <plurals name="reading_row_versions">
-        <item quantity="one">%1$d версия</item>
-        <item quantity="few">%1$d версии</item>
-        <item quantity="many">%1$d версий</item>
-        <item quantity="other">%1$d версии</item>
+        <item quantity="one">%1$,d версия</item>
+        <item quantity="few">%1$,d версии</item>
+        <item quantity="many">%1$,d версий</item>
+        <item quantity="other">%1$,d версии</item>
     </plurals>
     <string name="reading_ago_now">только что</string>
-    <string name="reading_ago_minutes">%1$d мин назад</string>
+    <string name="reading_ago_minutes">%1$,d мин назад</string>
     <string name="reading_ago_today">сегодня</string>
     <string name="reading_ago_yesterday">вчера</string>
     <plurals name="reading_ago_days">
-        <item quantity="one">%1$d день назад</item>
-        <item quantity="few">%1$d дня назад</item>
-        <item quantity="many">%1$d дней назад</item>
-        <item quantity="other">%1$d дня назад</item>
+        <item quantity="one">%1$,d день назад</item>
+        <item quantity="few">%1$,d дня назад</item>
+        <item quantity="many">%1$,d дней назад</item>
+        <item quantity="other">%1$,d дня назад</item>
     </plurals>
     <plurals name="reading_ago_weeks">
-        <item quantity="one">%1$d неделю назад</item>
-        <item quantity="few">%1$d недели назад</item>
-        <item quantity="many">%1$d недель назад</item>
-        <item quantity="other">%1$d недели назад</item>
+        <item quantity="one">%1$,d неделю назад</item>
+        <item quantity="few">%1$,d недели назад</item>
+        <item quantity="many">%1$,d недель назад</item>
+        <item quantity="other">%1$,d недели назад</item>
     </plurals>
     <plurals name="reading_ago_months">
-        <item quantity="one">%1$d месяц назад</item>
-        <item quantity="few">%1$d месяца назад</item>
-        <item quantity="many">%1$d месяцев назад</item>
-        <item quantity="other">%1$d месяца назад</item>
+        <item quantity="one">%1$,d месяц назад</item>
+        <item quantity="few">%1$,d месяца назад</item>
+        <item quantity="many">%1$,d месяцев назад</item>
+        <item quantity="other">%1$,d месяца назад</item>
     </plurals>
     <plurals name="reading_ago_years">
-        <item quantity="one">%1$d год назад</item>
-        <item quantity="few">%1$d года назад</item>
-        <item quantity="many">%1$d лет назад</item>
-        <item quantity="other">%1$d года назад</item>
+        <item quantity="one">%1$,d год назад</item>
+        <item quantity="few">%1$,d года назад</item>
+        <item quantity="many">%1$,d лет назад</item>
+        <item quantity="other">%1$,d года назад</item>
     </plurals>
     <string name="reading_removed_from">Удалено из %1$s</string>
     <string name="reading_removed_not_there">Не было в вашем списке %1$s</string>
@@ -370,17 +388,17 @@
     <string name="reading_miss_down_since">Не отвечает с %1$s</string>
     <string name="reading_miss_down">Не отвечает</string>
     <plurals name="reading_dl_parts">
-        <item quantity="one">%1$d часть</item>
-        <item quantity="few">%1$d части</item>
-        <item quantity="many">%1$d частей</item>
-        <item quantity="other">%1$d части</item>
+        <item quantity="one">%1$,d часть</item>
+        <item quantity="few">%1$,d части</item>
+        <item quantity="many">%1$,d частей</item>
+        <item quantity="other">%1$,d части</item>
     </plurals>
     <string name="reading_dl_size">%1$s</string>
-    <string name="reading_dl_read">Прочитано: %1$d</string>
+    <string name="reading_dl_read">Прочитано: %1$,d</string>
     <string name="reading_dl_chapter">Глава %1$s</string>
-    <string name="reading_dl_pages">%1$d из %2$d стр.</string>
-    <string name="reading_dl_more_queued">Ещё в очереди: %1$d</string>
-    <string name="reading_dl_queued">В очереди: %1$d</string>
+    <string name="reading_dl_pages">%1$,d из %2$,d стр.</string>
+    <string name="reading_dl_more_queued">Ещё в очереди: %1$,d</string>
+    <string name="reading_dl_queued">В очереди: %1$,d</string>
     <string name="reading_dl_waits_wifi">ждёт Wi-Fi</string>
     <string name="reading_dl_failed">Не удалось скачать главу %1$s</string>
     <string name="reading_estimate_size">Около %1$s</string>
@@ -390,17 +408,30 @@
     <string name="reading_downloads_done_title">Загрузки завершены</string>
     <plurals name="reading_downloads_done_chapters">
         <item quantity="one">Глава «%1$s» готова для чтения офлайн.</item>
-        <item quantity="few">%2$d главы «%1$s» готовы для чтения офлайн.</item>
-        <item quantity="many">%2$d глав «%1$s» готовы для чтения офлайн.</item>
-        <item quantity="other">%2$d главы «%1$s» готовы для чтения офлайн.</item>
+        <item quantity="few">%2$,d главы «%1$s» готовы для чтения офлайн.</item>
+        <item quantity="many">%2$,d глав «%1$s» готовы для чтения офлайн.</item>
+        <item quantity="other">%2$,d главы «%1$s» готовы для чтения офлайн.</item>
     </plurals>
     <plurals name="reading_downloads_done_parts">
         <item quantity="one">Часть «%1$s» готова для чтения офлайн.</item>
-        <item quantity="few">%2$d части «%1$s» готовы для чтения офлайн.</item>
-        <item quantity="many">%2$d частей «%1$s» готовы для чтения офлайн.</item>
-        <item quantity="other">%2$d части «%1$s» готовы для чтения офлайн.</item>
+        <item quantity="few">%2$,d части «%1$s» готовы для чтения офлайн.</item>
+        <item quantity="many">%2$,d частей «%1$s» готовы для чтения офлайн.</item>
+        <item quantity="other">%2$,d части «%1$s» готовы для чтения офлайн.</item>
     </plurals>
-    <string name="reading_downloads_done_series">Главы %1$d серий готовы для чтения офлайн.</string>
+    <string name="reading_downloads_done_series">Главы %1$,d серий готовы для чтения офлайн.</string>
+    <string name="read_source_folders">Папки</string>
+    <string name="reading_since_january">с января</string>
+    <string name="reading_since_february">с февраля</string>
+    <string name="reading_since_march">с марта</string>
+    <string name="reading_since_april">с апреля</string>
+    <string name="reading_since_may">с мая</string>
+    <string name="reading_since_june">с июня</string>
+    <string name="reading_since_july">с июля</string>
+    <string name="reading_since_august">с августа</string>
+    <string name="reading_since_september">с сентября</string>
+    <string name="reading_since_october">с октября</string>
+    <string name="reading_since_november">с ноября</string>
+    <string name="reading_since_december">с декабря</string>
     <string name="store_joined">Подключено к %1$s как %2$s.</string>
     <string name="store_joined_unnamed">Подключено к %1$s без имени.</string>
     <string name="store_left">Вы вышли из %1$s. Его плагины остаются установленными.</string>
@@ -409,17 +440,17 @@
     <string name="store_invite_cancelled">Приглашение отменено. Ссылка больше не работает.</string>
     <plurals name="store_invite_cancelled_kept">
         <item quantity="one">Приглашение отменено. Присоединившийся человек остаётся участником.</item>
-        <item quantity="few">Приглашение отменено. Присоединившиеся (%1$d) остаются участниками.</item>
-        <item quantity="many">Приглашение отменено. Присоединившиеся (%1$d) остаются участниками.</item>
-        <item quantity="other">Приглашение отменено. Присоединившиеся (%1$d) остаются участниками.</item>
+        <item quantity="few">Приглашение отменено. Присоединившиеся (%1$,d) остаются участниками.</item>
+        <item quantity="many">Приглашение отменено. Присоединившиеся (%1$,d) остаются участниками.</item>
+        <item quantity="other">Приглашение отменено. Присоединившиеся (%1$,d) остаются участниками.</item>
     </plurals>
     <string name="store_open_join_on">магазин плагинов: подключиться по ссылке теперь может любой. Скопируйте её на экране участников.</string>
     <string name="store_open_join_off">Теперь подключиться могут только приглашённые.</string>
     <plurals name="store_open_join_off_devices">
         <item quantity="one">Теперь подключиться могут только приглашённые. устройство по ссылке продолжает работать, пока вы его не удалите.</item>
-        <item quantity="few">Теперь подключиться могут только приглашённые. устройства (%1$d), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</item>
-        <item quantity="many">Теперь подключиться могут только приглашённые. устройства (%1$d), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</item>
-        <item quantity="other">Теперь подключиться могут только приглашённые. устройства (%1$d), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</item>
+        <item quantity="few">Теперь подключиться могут только приглашённые. устройства (%1$,d), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</item>
+        <item quantity="many">Теперь подключиться могут только приглашённые. устройства (%1$,d), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</item>
+        <item quantity="other">Теперь подключиться могут только приглашённые. устройства (%1$,d), подключившиеся по ссылке, продолжают работать, пока вы их не удалите.</item>
     </plurals>
     <string name="store_device_removed">магазин плагинов больше не принимает это устройство.</string>
     <string name="store_devices_removed">Удалены все устройства, подключившиеся по ссылке.</string>
@@ -433,10 +464,10 @@
     <string name="plugin_installed_not_loaded">Установлено: %1$s, но загрузить не удалось. %2$s</string>
     <string name="plugin_installed_outdated">Установлен %1$s, но он собран для старой версии Kaeri и требует обновления. Попросите автора о новой сборке.</string>
     <plurals name="plugins_outdated">
-        <item quantity="one">Плагины, собранные для старой версии Kaeri, нужно обновить (%1$d): %2$s.</item>
-        <item quantity="few">Плагины, собранные для старой версии Kaeri, нужно обновить (%1$d): %2$s.</item>
-        <item quantity="many">Плагины, собранные для старой версии Kaeri, нужно обновить (%1$d): %2$s.</item>
-        <item quantity="other">Плагины, собранные для старой версии Kaeri, нужно обновить (%1$d): %2$s.</item>
+        <item quantity="one">Плагины, собранные для старой версии Kaeri, нужно обновить (%1$,d): %2$s.</item>
+        <item quantity="few">Плагины, собранные для старой версии Kaeri, нужно обновить (%1$,d): %2$s.</item>
+        <item quantity="many">Плагины, собранные для старой версии Kaeri, нужно обновить (%1$,d): %2$s.</item>
+        <item quantity="other">Плагины, собранные для старой версии Kaeri, нужно обновить (%1$,d): %2$s.</item>
     </plurals>
     <plurals name="plugin_updates_ready">
         <item quantity="one">Плагин: готово обновление. %2$s.</item>
@@ -526,9 +557,9 @@
     <string name="notice_signed_out">Вы вышли из %1$s.</string>
     <plurals name="notice_signed_out_queue">
         <item quantity="one">Вы вышли из %1$s. Одно изменение в очереди сохранено для следующего входа.</item>
-        <item quantity="few">Вы вышли из %1$s. %2$d изменения в очереди сохранены для следующего входа.</item>
-        <item quantity="many">Вы вышли из %1$s. %2$d изменений в очереди сохранены для следующего входа.</item>
-        <item quantity="other">Вы вышли из %1$s. %2$d изменения в очереди сохранены для следующего входа.</item>
+        <item quantity="few">Вы вышли из %1$s. %2$,d изменения в очереди сохранены для следующего входа.</item>
+        <item quantity="many">Вы вышли из %1$s. %2$,d изменений в очереди сохранены для следующего входа.</item>
+        <item quantity="other">Вы вышли из %1$s. %2$,d изменения в очереди сохранены для следующего входа.</item>
     </plurals>
     <string name="notice_sign_out_failed">Не удалось выйти из %1$s. Попробуйте ещё раз. %2$s</string>
     <string name="notice_not_saved_because">Не удалось сохранить настройку. %1$s</string>
@@ -544,9 +575,9 @@
     <string name="notice_episode_aired">%1$s, серия %2$d, вышла, пока вас не было.</string>
     <plurals name="notice_episodes_aired">
         <item quantity="one">Вышла новая серия тайтла, который вы смотрите. Она есть в календаре.</item>
-        <item quantity="few">Вышли %1$d новые серии тайтлов, которые вы смотрите. Они есть в календаре.</item>
-        <item quantity="many">Вышли %1$d новых серий тайтлов, которые вы смотрите. Они есть в календаре.</item>
-        <item quantity="other">Вышли %1$d новые серии тайтлов, которые вы смотрите. Они есть в календаре.</item>
+        <item quantity="few">Вышли %1$,d новые серии тайтлов, которые вы смотрите. Они есть в календаре.</item>
+        <item quantity="many">Вышли %1$,d новых серий тайтлов, которые вы смотрите. Они есть в календаре.</item>
+        <item quantity="other">Вышли %1$,d новые серии тайтлов, которые вы смотрите. Они есть в календаре.</item>
     </plurals>
     <string name="notice_update_available">Вышла версия %1$s. Чтобы установить её, выполните kaeri --update.</string>
     <string name="cause_proxy_needs_address">Для прокси нужны хост и порт.</string>
@@ -569,9 +600,9 @@
     <string name="start_failed_player">Не удалось запустить плеер. %1$s</string>
     <plurals name="notice_episodes_queued">
         <item quantity="one">В очередь добавлен один эпизод.</item>
-        <item quantity="few">В очередь добавлены %1$d эпизода.</item>
-        <item quantity="many">В очередь добавлены %1$d эпизодов.</item>
-        <item quantity="other">В очередь добавлены %1$d эпизодов.</item>
+        <item quantity="few">В очередь добавлены %1$,d эпизода.</item>
+        <item quantity="many">В очередь добавлены %1$,d эпизодов.</item>
+        <item quantity="other">В очередь добавлены %1$,d эпизодов.</item>
     </plurals>
     <string name="settings_subs_reset_done">Стиль субтитров сброшен</string>
     <string name="crash_notice">Kaeri закрылось после сбоя.</string>
@@ -600,21 +631,21 @@
     <string name="discussion_video_host">Видео · %1$s</string>
     <plurals name="player_more_discussion_note">
         <item quantity="one">Один комментарий · ставит на паузу</item>
-        <item quantity="few">%1$d комментария · ставит на паузу</item>
-        <item quantity="many">%1$d комментариев · ставит на паузу</item>
-        <item quantity="other">%1$d комментария · ставит на паузу</item>
+        <item quantity="few">%1$,d комментария · ставит на паузу</item>
+        <item quantity="many">%1$,d комментариев · ставит на паузу</item>
+        <item quantity="other">%1$,d комментария · ставит на паузу</item>
     </plurals>
     <string name="player_more_discussion_pauses">Ставит видео на паузу</string>
     <string name="search_pill_set">%1$s, %2$s</string>
     <string name="search_pill_any">%1$s, любое</string>
-    <string name="search_pill_all_set">Все фильтры, задано: %1$d</string>
+    <string name="search_pill_all_set">Все фильтры, задано: %1$,d</string>
     <string name="search_pill_clear">Сбросить все фильтры</string>
     <string name="cast_sheet_group">Chromecast</string>
     <string name="cast_sheet_through_phone">Воспроизводится через этот телефон</string>
     <string name="cast_sheet_through_tablet">Воспроизводится через этот планшет</string>
     <string name="cast_sheet_chromecast_too">ТВ со встроенным Chromecast тоже показываются здесь.</string>
     <string name="cast_sheet_local_network">Разрешите Kaeri находить устройства в вашей локальной сети</string>
-    <string name="cast_card_up_next_in">Далее · воспроизведение через %1$d с</string>
+    <string name="cast_card_up_next_in">Далее · воспроизведение через %1$,d с</string>
     <string name="cast_card_up_next">Далее</string>
     <string name="cast_card_up_next_cancel">Отмена</string>
     <string name="cast_card_up_next_play">Смотреть сейчас</string>
@@ -635,10 +666,10 @@
     <string name="book_server_keystore_android">хранилище ключей Android</string>
     <string name="store_invite_chip">Приглашение ••••%1$s</string>
     <plurals name="store_plugin_hosts">
-        <item quantity="one">%1$d хосту</item>
-        <item quantity="few">%1$d хостам</item>
-        <item quantity="many">%1$d хостам</item>
-        <item quantity="other">%1$d хоста</item>
+        <item quantity="one">%1$,d хосту</item>
+        <item quantity="few">%1$,d хостам</item>
+        <item quantity="many">%1$,d хостам</item>
+        <item quantity="other">%1$,d хоста</item>
     </plurals>
     <string name="join_medium_line_watch">Просмотр, как на %1$s</string>
     <string name="join_medium_line_both">Просмотр и чтение, как на %1$s</string>
@@ -660,10 +691,10 @@
     <string name="eink_contents">Оглавление</string>
     <string name="eink_back">Назад</string>
     <plurals name="eink_pages_left">
-        <item quantity="one">В главе осталась %1$d страница</item>
-        <item quantity="few">В главе остались %1$d страницы</item>
-        <item quantity="many">В главе осталось %1$d страниц</item>
-        <item quantity="other">В главе остались %1$d страницы</item>
+        <item quantity="one">В главе осталась %1$,d страница</item>
+        <item quantity="few">В главе остались %1$,d страницы</item>
+        <item quantity="many">В главе осталось %1$,d страниц</item>
+        <item quantity="other">В главе остались %1$,d страницы</item>
     </plurals>
     <string name="eink_next_chapter">Следующая глава</string>
     <string name="eink_previous_chapter">Предыдущая глава</string>
@@ -673,10 +704,10 @@
     <string name="eink_counted_read">Засчитано как прочитанная</string>
     <string name="eink_end_next">Следующая</string>
     <plurals name="eink_end_pages">
-        <item quantity="one">%1$d страница</item>
-        <item quantity="few">%1$d страницы</item>
-        <item quantity="many">%1$d страниц</item>
-        <item quantity="other">%1$d страницы</item>
+        <item quantity="one">%1$,d страница</item>
+        <item quantity="few">%1$,d страницы</item>
+        <item quantity="many">%1$,d страниц</item>
+        <item quantity="other">%1$,d страницы</item>
     </plurals>
     <string name="eink_reads_rtl">справа налево</string>
     <string name="eink_reads_ltr">слева направо</string>
@@ -716,7 +747,7 @@
     <string name="reader_notice_change">Изменить</string>
     <string name="reader_settings">Настройки чтения</string>
     <string name="reader_novel_line_scroll">Глава %1$s · прокрутка</string>
-    <string name="reader_minutes_left">%1$d мин</string>
+    <string name="reader_minutes_left">%1$,d мин</string>
     <string name="reader_zone_next">Следующая страница</string>
     <string name="reader_grid_title">Страницы</string>
     <string name="reader_end_continue">Читать дальше</string>
@@ -809,7 +840,7 @@
     <string name="reader_row_strip_gap">Промежуток между картинками</string>
     <string name="reader_paper_look">Бумажный вид днём</string>
     <string name="reader_paper_dim">Приглушить страницу</string>
-    <string name="reader_opening_waited">%1$s · %2$d с</string>
+    <string name="reader_opening_waited">%1$s · %2$,d с</string>
     <string name="reader_sources_title">Читать эту главу из</string>
     <string name="reader_paper_parts">Что меняется</string>
     <string name="read_home_offline_line">При первом открытии главной в разделе чтения нужно подключение. Скачанные главы по-прежнему открываются.</string>
@@ -819,53 +850,53 @@
     <string name="channel_downloads_finished_description">Когда все главы, выбранные для скачивания, готовы.</string>
     <string name="notif_chapter_new">Вышло: %1$s.</string>
     <plurals name="notif_chapters_new">
-        <item quantity="one">%1$d новая глава</item>
-        <item quantity="few">%1$d новые главы</item>
-        <item quantity="many">%1$d новых глав</item>
-        <item quantity="other">%1$d новой главы</item>
+        <item quantity="one">%1$,d новая глава</item>
+        <item quantity="few">%1$,d новые главы</item>
+        <item quantity="many">%1$,d новых глав</item>
+        <item quantity="other">%1$,d новой главы</item>
     </plurals>
     <string name="notif_chapter_hidden">Новая глава</string>
     <string name="notif_chapter_read">Читать</string>
     <plurals name="downloads_notice_chapters">
-        <item quantity="one">Скачивается %1$d глава</item>
-        <item quantity="few">Скачиваются %1$d главы</item>
-        <item quantity="many">Скачивается %1$d глав</item>
-        <item quantity="other">Скачивается %1$d главы</item>
+        <item quantity="one">Скачивается %1$,d глава</item>
+        <item quantity="few">Скачиваются %1$,d главы</item>
+        <item quantity="many">Скачивается %1$,d глав</item>
+        <item quantity="other">Скачивается %1$,d главы</item>
     </plurals>
     <plurals name="read_series_downloaded_open">
-        <item quantity="one">%1$d скачанная глава по-прежнему открывается.</item>
-        <item quantity="few">%1$d скачанные главы по-прежнему открываются.</item>
-        <item quantity="many">%1$d скачанных глав по-прежнему открываются.</item>
-        <item quantity="other">%1$d скачанной главы по-прежнему открываются.</item>
+        <item quantity="one">%1$,d скачанная глава по-прежнему открывается.</item>
+        <item quantity="few">%1$,d скачанные главы по-прежнему открываются.</item>
+        <item quantity="many">%1$,d скачанных глав по-прежнему открываются.</item>
+        <item quantity="other">%1$,d скачанной главы по-прежнему открываются.</item>
     </plurals>
     <string name="read_downloads_empty_detail">Скачанные главы открываются без подключения к сети.</string>
     <string name="read_downloads_empty_both">Скачанные эпизоды и главы открываются без подключения к сети.</string>
     <string name="settings_summary_chapters_on">Новые главы включены</string>
     <string name="settings_summary_chapters_off">Новые главы выключены</string>
     <plurals name="settings_summary_book_folders">
-        <item quantity="one">%1$d папка</item>
-        <item quantity="few">%1$d папки</item>
-        <item quantity="many">%1$d папок</item>
-        <item quantity="other">%1$d папки</item>
+        <item quantity="one">%1$,d папка</item>
+        <item quantity="few">%1$,d папки</item>
+        <item quantity="many">%1$,d папок</item>
+        <item quantity="other">%1$,d папки</item>
     </plurals>
     <plurals name="settings_summary_book_servers">
-        <item quantity="one">%1$d сервер</item>
-        <item quantity="few">%1$d сервера</item>
-        <item quantity="many">%1$d серверов</item>
-        <item quantity="other">%1$d сервера</item>
+        <item quantity="one">%1$,d сервер</item>
+        <item quantity="few">%1$,d сервера</item>
+        <item quantity="many">%1$,d серверов</item>
+        <item quantity="other">%1$,d сервера</item>
     </plurals>
     <plurals name="settings_summary_book_plugins">
-        <item quantity="one">%1$d плагин</item>
-        <item quantity="few">Плагины: %1$d</item>
-        <item quantity="many">Плагины: %1$d</item>
-        <item quantity="other">Плагины: %1$d</item>
+        <item quantity="one">%1$,d плагин</item>
+        <item quantity="few">Плагины: %1$,d</item>
+        <item quantity="many">Плагины: %1$,d</item>
+        <item quantity="other">Плагины: %1$,d</item>
     </plurals>
     <string name="settings_book_sources">Источники книг</string>
     <plurals name="book_matches_line">
-        <item quantity="one">Kaeri сопоставил по данным: %1$d. %2$d серию нужно проверить.</item>
-        <item quantity="few">Kaeri сопоставил по данным: %1$d. %2$d серии нужно проверить.</item>
-        <item quantity="many">Kaeri сопоставил по данным: %1$d. %2$d серий нужно проверить.</item>
-        <item quantity="other">Kaeri сопоставил по данным: %1$d. %2$d серии нужно проверить.</item>
+        <item quantity="one">Kaeri сопоставил по данным: %1$,d. %2$,d серию нужно проверить.</item>
+        <item quantity="few">Kaeri сопоставил по данным: %1$,d. %2$,d серии нужно проверить.</item>
+        <item quantity="many">Kaeri сопоставил по данным: %1$,d. %2$,d серий нужно проверить.</item>
+        <item quantity="other">Kaeri сопоставил по данным: %1$,d. %2$,d серии нужно проверить.</item>
     </plurals>
     <string name="book_folder_failed">Не удалось добавить эту папку. Попробуйте другую.</string>
     <string name="book_server_note_device">Kaeri отправляет ваш прогресс чтения обратно на этот сервер. Пароль хранит только это устройство.</string>
@@ -885,8 +916,8 @@
     <string name="tv_connect_tracker">Подключить трекер</string>
     <string name="tv_change_status">Изменить статус</string>
     <string name="tv_add_to_planning">Добавить в «Запланировано»</string>
-    <string name="tv_progress_of">%1$d / %2$d</string>
-    <string name="tv_progress_unknown">%1$d / ?</string>
+    <string name="tv_progress_of">%1$,d / %2$,d</string>
+    <string name="tv_progress_unknown">%1$,d / ?</string>
     <string name="tv_calendar_signed_out_note">Войдите, чтобы видеть только свои тайтлы</string>
     <string name="tv_calendar_time_was">%1$s (было %2$s)</string>
     <string name="tv_player_undo_pill">%1$s · Отменить</string>
@@ -900,12 +931,12 @@
     <string name="tv_search_space">Пробел</string>
     <string name="tv_search_season_in">Сезон %1$d года</string>
     <string name="tv_search_genres_offline">Жанры загрузятся, когда телевизор подключится к сети</string>
-    <string name="tv_seasons_position">%1$d из %2$d</string>
+    <string name="tv_seasons_position">%1$,d из %2$,d</string>
     <plurals name="tv_seasons_count">
-        <item quantity="one">%1$d сезон</item>
-        <item quantity="few">%1$d сезона</item>
-        <item quantity="many">%1$d сезонов</item>
-        <item quantity="other">%1$d сезона</item>
+        <item quantity="one">%1$,d сезон</item>
+        <item quantity="few">%1$,d сезона</item>
+        <item quantity="many">%1$,d сезонов</item>
+        <item quantity="other">%1$,d сезона</item>
     </plurals>
     <string name="tv_episode_mark_up_to_here">Отметить просмотренными до этого эпизода</string>
     <string name="tv_card_label_watched">%1$s, просмотрено</string>
@@ -934,16 +965,16 @@
     <string name="tv_update_auto_check">Проверять обновления автоматически</string>
     <string name="tv_update_auto_check_detail">Раз в день, релизы Kaeri</string>
     <plurals name="tv_phone_used_days">
-        <item quantity="one">Использовался %1$d день назад</item>
-        <item quantity="few">Использовался %1$d дня назад</item>
-        <item quantity="many">Использовался %1$d дней назад</item>
-        <item quantity="other">Использовался %1$d дня назад</item>
+        <item quantity="one">Использовался %1$,d день назад</item>
+        <item quantity="few">Использовался %1$,d дня назад</item>
+        <item quantity="many">Использовался %1$,d дней назад</item>
+        <item quantity="other">Использовался %1$,d дня назад</item>
     </plurals>
     <plurals name="tv_phone_paired_days">
-        <item quantity="one">Подключён %1$d день назад</item>
-        <item quantity="few">Подключён %1$d дня назад</item>
-        <item quantity="many">Подключён %1$d дней назад</item>
-        <item quantity="other">Подключён %1$d дня назад</item>
+        <item quantity="one">Подключён %1$,d день назад</item>
+        <item quantity="few">Подключён %1$,d дня назад</item>
+        <item quantity="many">Подключён %1$,d дней назад</item>
+        <item quantity="other">Подключён %1$,d дня назад</item>
     </plurals>
     <string name="tv_update_installed">Установлена версия %1$s</string>
     <string name="tv_page_not_found_text">Этой страницы больше нет. Отсканируйте код на телевизоре ещё раз.</string>
@@ -973,7 +1004,7 @@
     <string name="tv_field_password_optional">Пароль, если требуется</string>
     <string name="tv_qr_label_link">QR-код страницы со ссылкой</string>
     <string name="tv_preview_key">Ключ %1$s</string>
-    <string name="tv_preview_more">и ещё %1$d</string>
+    <string name="tv_preview_more">и ещё %1$,d</string>
     <string name="tv_already_joined">Уже подключено</string>
     <string name="tv_joining">Подключение</string>
     <string name="tv_signin_done_as">Вход в %1$s выполнен: %2$s</string>
@@ -990,16 +1021,16 @@
     <string name="tv_card_progress_spoken">просмотрено %1$s</string>
     <string name="tv_discussion_footer">Чтобы ответить, откройте обсуждение на телефоне.</string>
     <plurals name="tv_discussion_count_read_only">
-        <item quantity="one">%1$d комментарий · только чтение</item>
-        <item quantity="few">%1$d комментария · только чтение</item>
-        <item quantity="many">%1$d комментариев · только чтение</item>
-        <item quantity="other">%1$d комментария · только чтение</item>
+        <item quantity="one">%1$,d комментарий · только чтение</item>
+        <item quantity="few">%1$,d комментария · только чтение</item>
+        <item quantity="many">%1$,d комментариев · только чтение</item>
+        <item quantity="other">%1$,d комментария · только чтение</item>
     </plurals>
     <plurals name="tv_discussion_likes">
-        <item quantity="one">%1$d лайк</item>
-        <item quantity="few">%1$d лайка</item>
-        <item quantity="many">%1$d лайков</item>
-        <item quantity="other">%1$d лайка</item>
+        <item quantity="one">%1$,d лайк</item>
+        <item quantity="few">%1$,d лайка</item>
+        <item quantity="many">%1$,d лайков</item>
+        <item quantity="other">%1$,d лайка</item>
     </plurals>
     <string name="tv_discussion_select_spoiler">Нажмите OK, чтобы показать спойлер</string>
     <string name="updates_unknown_sources_path">Настройки › Приложения › Безопасность и ограничения › Неизвестные источники</string>
@@ -1007,10 +1038,10 @@
     <string name="episode_short_dubbed">Эп. %1$d · С дубляжом</string>
     <string name="episode_long_dubbed">Эпизод %1$d · С дубляжом</string>
     <plurals name="downloads_live_paused">
-        <item quantity="one">%1$d эпизод на паузе</item>
-        <item quantity="few">%1$d эпизода на паузе</item>
-        <item quantity="many">%1$d эпизодов на паузе</item>
-        <item quantity="other">%1$d эпизода на паузе</item>
+        <item quantity="one">%1$,d эпизод на паузе</item>
+        <item quantity="few">%1$,d эпизода на паузе</item>
+        <item quantity="many">%1$,d эпизодов на паузе</item>
+        <item quantity="other">%1$,d эпизода на паузе</item>
     </plurals>
     <string name="downloads_live_lead">%1$s, эп. %2$d</string>
     <string name="downloads_live_left">Осталось %1$s</string>
@@ -1038,10 +1069,10 @@
     <string name="title_facts_airs">Выйдет с %1$s</string>
     <string name="media_dates_range">с %1$s по %2$s</string>
     <plurals name="title_also_on_more">
-        <item quantity="one">%1$s и ещё %2$d</item>
-        <item quantity="few">%1$s и ещё %2$d</item>
-        <item quantity="many">%1$s и ещё %2$d</item>
-        <item quantity="other">%1$s и ещё %2$d</item>
+        <item quantity="one">%1$s и ещё %2$,d</item>
+        <item quantity="few">%1$s и ещё %2$,d</item>
+        <item quantity="many">%1$s и ещё %2$,d</item>
+        <item quantity="other">%1$s и ещё %2$,d</item>
     </plurals>
     <string name="title_adult_mark">18+</string>
     <string name="downloads_storage_used_free">%1$s занято · %2$s свободно</string>
@@ -1051,10 +1082,10 @@
     <string name="downloads_uploaded">Отдано %1$s</string>
     <string name="downloads_ratio_of">%1$s из %2$s</string>
     <plurals name="downloads_group_summary">
-        <item quantity="one">%1$d эпизод · %2$s</item>
-        <item quantity="few">%1$d эпизода · %2$s</item>
-        <item quantity="many">%1$d эпизодов · %2$s</item>
-        <item quantity="other">%1$d эпизода · %2$s</item>
+        <item quantity="one">%1$,d эпизод · %2$s</item>
+        <item quantity="few">%1$,d эпизода · %2$s</item>
+        <item quantity="many">%1$,d эпизодов · %2$s</item>
+        <item quantity="other">%1$,d эпизода · %2$s</item>
     </plurals>
     <string name="episode_menu_download">Скачать</string>
     <string name="episode_menu_download_paused">Загрузка на паузе</string>
@@ -1071,22 +1102,22 @@
     <string name="updates_open_release">Открыть страницу</string>
     <string name="country_korea">Южная Корея</string>
     <plurals name="search_genres_picked">
-        <item quantity="one">%1$d жанр</item>
-        <item quantity="few">%1$d жанра</item>
-        <item quantity="many">%1$d жанров</item>
-        <item quantity="other">%1$d жанра</item>
+        <item quantity="one">%1$,d жанр</item>
+        <item quantity="few">%1$,d жанра</item>
+        <item quantity="many">%1$,d жанров</item>
+        <item quantity="other">%1$,d жанра</item>
     </plurals>
     <plurals name="search_formats_picked">
-        <item quantity="one">%1$d формат</item>
-        <item quantity="few">%1$d формата</item>
-        <item quantity="many">%1$d форматов</item>
-        <item quantity="other">%1$d формата</item>
+        <item quantity="one">%1$,d формат</item>
+        <item quantity="few">%1$,d формата</item>
+        <item quantity="many">%1$,d форматов</item>
+        <item quantity="other">%1$,d формата</item>
     </plurals>
     <plurals name="search_statuses_picked">
-        <item quantity="one">%1$d статус</item>
-        <item quantity="few">%1$d статуса</item>
-        <item quantity="many">%1$d статусов</item>
-        <item quantity="other">%1$d статуса</item>
+        <item quantity="one">%1$,d статус</item>
+        <item quantity="few">%1$,d статуса</item>
+        <item quantity="many">%1$,d статусов</item>
+        <item quantity="other">%1$,d статуса</item>
     </plurals>
     <string name="filter_score_any">Любой</string>
     <string name="filter_years_from">%1$s и позже</string>
@@ -1113,10 +1144,10 @@
     <string name="reason_source_no_address">Адрес источника не найден.</string>
     <string name="reason_source_unreachable">Не удалось подключиться к источнику.</string>
     <plurals name="stores_updates_waiting">
-        <item quantity="one">%1$d обновление</item>
-        <item quantity="few">%1$d обновления</item>
-        <item quantity="many">%1$d обновлений</item>
-        <item quantity="other">%1$d обновления</item>
+        <item quantity="one">%1$,d обновление</item>
+        <item quantity="few">%1$,d обновления</item>
+        <item quantity="many">%1$,d обновлений</item>
+        <item quantity="other">%1$,d обновления</item>
     </plurals>
     <string name="stores_checked_ago">проверен %1$s</string>
     <string name="stores_preview_key_link">Ключ совпадает со ссылкой</string>
@@ -1134,10 +1165,10 @@
     <string name="settings_summary_notify_on">Новые эпизоды включены</string>
     <string name="settings_summary_notify_off">Новые эпизоды выключены</string>
     <plurals name="settings_summary_sources">
-        <item quantity="one">%1$d источник</item>
-        <item quantity="few">%1$d источника</item>
-        <item quantity="many">%1$d источников</item>
-        <item quantity="other">%1$d источника</item>
+        <item quantity="one">%1$,d источник</item>
+        <item quantity="few">%1$,d источника</item>
+        <item quantity="many">%1$,d источников</item>
+        <item quantity="other">%1$,d источника</item>
     </plurals>
     <string name="settings_summary_no_sources">Источников пока нет</string>
     <string name="settings_summary_torrents_on">торренты включены</string>
@@ -1162,21 +1193,21 @@
     <string name="settings_titles_note_english_missing">У %1$s нет английского названия в AniList, поэтому оно остаётся в ромадзи.</string>
     <string name="settings_titles_note_english">Английские названия, как их указывает AniList, а там, где их нет, ромадзи.</string>
     <string name="settings_titles_note_romaji">Японские названия латиницей, как их указывает AniList.</string>
-    <string name="settings_stores_with_updates">%1$d · %2$s</string>
+    <string name="settings_stores_with_updates">%1$,d · %2$s</string>
     <string name="settings_seeding_best_effort">Это устройство раздаёт, только пока открыт Kaeri.</string>
     <plurals name="settings_downloads_count">
-        <item quantity="one">%1$d эпизод</item>
-        <item quantity="few">%1$d эпизода</item>
-        <item quantity="many">%1$d эпизодов</item>
-        <item quantity="other">%1$d эпизода</item>
+        <item quantity="one">%1$,d эпизод</item>
+        <item quantity="few">%1$,d эпизода</item>
+        <item quantity="many">%1$,d эпизодов</item>
+        <item quantity="other">%1$,d эпизода</item>
     </plurals>
     <string name="settings_anilist_footer">Прогресс и изменения списков синхронизируются с AniList. Библиотека показывает списки AniList.</string>
     <string name="accounts_sign_in_again_button">Войти снова</string>
     <plurals name="accounts_review_differences">
-        <item quantity="one">Проверить %1$d различие</item>
-        <item quantity="few">Проверить %1$d различия</item>
-        <item quantity="many">Проверить %1$d различий</item>
-        <item quantity="other">Проверить %1$d различия</item>
+        <item quantity="one">Проверить %1$,d различие</item>
+        <item quantity="few">Проверить %1$,d различия</item>
+        <item quantity="many">Проверить %1$,d различий</item>
+        <item quantity="other">Проверить %1$,d различия</item>
     </plurals>
     <string name="settings_licence_title">Лицензия</string>
     <string name="settings_licence_value">MIT, открытый код, без коммерческого использования</string>
@@ -1215,7 +1246,7 @@
     <string name="tv_sheet_volume">Громкость на телевизоре</string>
     <string name="tv_sheet_volume_down">Уменьшить громкость</string>
     <string name="tv_sheet_volume_up">Увеличить громкость</string>
-    <string name="tv_sheet_volume_value">%1$d из 100</string>
+    <string name="tv_sheet_volume_value">%1$,d из 100</string>
     <string name="tv_sheet_nothing_playing">Ничего не воспроизводится</string>
     <string name="tv_sheet_position">Позиция на телевизоре</string>
     <string name="tv_sheet_position_state">%1$s из %2$s</string>
@@ -1238,10 +1269,10 @@
     <string name="player_sheet_episodes_loading">Список эпизодов скоро появится.</string>
     <string name="player_dual_audio">С субтитрами и с дубляжом</string>
     <plurals name="notif_new_episodes">
-        <item quantity="one">%1$d новый эпизод</item>
-        <item quantity="few">%1$d новых эпизода</item>
-        <item quantity="many">%1$d новых эпизодов</item>
-        <item quantity="other">%1$d новых эпизода</item>
+        <item quantity="one">%1$,d новый эпизод</item>
+        <item quantity="few">%1$,d новых эпизода</item>
+        <item quantity="many">%1$,d новых эпизодов</item>
+        <item quantity="other">%1$,d новых эпизода</item>
     </plurals>
     <string name="notif_hidden_text">Новый эпизод</string>
     <string name="notif_episode_out">Эпизод %1$d вышел.</string>
@@ -1252,7 +1283,7 @@
     <string name="device_name_tablet">Android-планшет</string>
     <string name="tv_session_starting">Запускается на %1$s</string>
     <string name="tv_session_line">%1$s · %2$s</string>
-    <string name="widget_line_left">%1$s · осталось %2$d мин</string>
+    <string name="widget_line_left">%1$s · осталось %2$,d мин</string>
     <string name="widget_line_of">Эп. %1$d из %2$d</string>
     <string name="widget_continue_title">Продолжить просмотр</string>
     <string name="widget_caught_up_title">Всё посмотрено</string>
@@ -1270,10 +1301,10 @@
     <string name="poster_new">Новое</string>
     <string name="channel_downloads_name">Загрузки</string>
     <plurals name="release_seeders">
-        <item quantity="one">%1$d сид</item>
-        <item quantity="few">%1$d сида</item>
-        <item quantity="many">%1$d сидов</item>
-        <item quantity="other">%1$d сидов</item>
+        <item quantity="one">%1$,d сид</item>
+        <item quantity="few">%1$,d сида</item>
+        <item quantity="many">%1$,d сидов</item>
+        <item quantity="other">%1$,d сидов</item>
     </plurals>
     <string name="trailer_failed">Не удалось открыть трейлер</string>
     <string name="engine_down_title">Kaeri остановлен</string>
@@ -1373,7 +1404,7 @@
     <string name="cast_torrents_note_mac">Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот Mac передаёт эпизод, пока он идёт.</string>
     <string name="cast_torrents_note_iphone">Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPhone передаёт эпизод, пока он идёт.</string>
     <string name="cast_torrents_note_ipad">Тогда ТВ со встроенным Chromecast сможет воспроизводить торренты. Этот iPad передаёт эпизод, пока он идёт.</string>
-    <string name="cast_up_next_plays_in">Далее · воспроизведение через %1$d с</string>
+    <string name="cast_up_next_plays_in">Далее · воспроизведение через %1$,d с</string>
     <string name="cast_couldnt_start">Не удалось запустить на %1$s</string>
     <string name="cast_stopped">Трансляция остановлена</string>
     <string name="cast_play_here">Смотреть здесь</string>
@@ -1383,12 +1414,12 @@
     <string name="action_cancel">Отмена</string>
     <string name="action_go">Перейти</string>
     <string name="action_not_now">Не сейчас</string>
-    <string name="duration_days">%1$d д</string>
-    <string name="duration_hours_minutes">%1$d ч %2$d мин</string>
-    <string name="duration_hours">%1$d ч</string>
-    <string name="duration_minutes">%1$d мин</string>
-    <string name="duration_minutes_seconds">%1$d мин %2$s с</string>
-    <string name="duration_seconds">%1$d с</string>
+    <string name="duration_days">%1$,d д</string>
+    <string name="duration_hours_minutes">%1$,d ч %2$,d мин</string>
+    <string name="duration_hours">%1$,d ч</string>
+    <string name="duration_minutes">%1$,d мин</string>
+    <string name="duration_minutes_seconds">%1$,d мин %2$s с</string>
+    <string name="duration_seconds">%1$,d с</string>
     <string name="size_byte">%1$s Б</string>
     <string name="size_kilobyte">%1$s кБ</string>
     <string name="size_megabyte">%1$s МБ</string>
@@ -1448,8 +1479,8 @@
     <string name="day_yesterday">Вчера</string>
     <string name="time_ago">%1$s назад</string>
     <string name="time_in">через %1$s</string>
-    <string name="time_minutes_left">осталось %1$d мин</string>
-    <string name="time_minutes">%1$d мин</string>
+    <string name="time_minutes_left">осталось %1$,d мин</string>
+    <string name="time_minutes">%1$,d мин</string>
     <string name="time_now_inline">сейчас</string>
     <string name="time_just_now_inline">только что</string>
     <string name="when_today">сегодня в %1$s</string>
@@ -1483,16 +1514,16 @@
     <string name="pad_help_page_up">Страница вверх</string>
     <string name="pad_help_page_down">Страница вниз</string>
     <plurals name="pad_help_seek_back">
-        <item quantity="one">Назад на %1$d секунду</item>
-        <item quantity="few">Назад на %1$d секунды</item>
-        <item quantity="many">Назад на %1$d секунд</item>
-        <item quantity="other">Назад на %1$d секунды</item>
+        <item quantity="one">Назад на %1$,d секунду</item>
+        <item quantity="few">Назад на %1$,d секунды</item>
+        <item quantity="many">Назад на %1$,d секунд</item>
+        <item quantity="other">Назад на %1$,d секунды</item>
     </plurals>
     <plurals name="pad_help_seek_forward">
-        <item quantity="one">Вперёд на %1$d секунду</item>
-        <item quantity="few">Вперёд на %1$d секунды</item>
-        <item quantity="many">Вперёд на %1$d секунд</item>
-        <item quantity="other">Вперёд на %1$d секунды</item>
+        <item quantity="one">Вперёд на %1$,d секунду</item>
+        <item quantity="few">Вперёд на %1$,d секунды</item>
+        <item quantity="many">Вперёд на %1$,d секунд</item>
+        <item quantity="other">Вперёд на %1$,d секунды</item>
     </plurals>
     <string name="pad_help_skip">Пропустить</string>
     <string name="pad_help_play_now">Смотреть сейчас</string>
@@ -1547,7 +1578,7 @@
     <string name="tv_problem_version">На телевизоре другая версия Kaeri. Обновите и телевизор, и приложение до одной версии.</string>
     <string name="tv_problem_wrong_code">Код не совпал. Проверьте код на телевизоре и попробуйте снова.</string>
     <string name="tv_volume_down">Уменьшить громкость</string>
-    <string name="tv_volume_of">%1$d из 100</string>
+    <string name="tv_volume_of">%1$,d из 100</string>
     <string name="tv_volume_up">Увеличить громкость</string>
     <string name="updates_download">Скачать обновление</string>
     <string name="updates_restart">Перезапустить и обновить</string>
@@ -1560,23 +1591,23 @@
     <string name="discussion_title_episode">Обсуждение эпизода %1$d</string>
     <plurals name="discussion_row">
         <item quantity="one">Обсуждение · один комментарий</item>
-        <item quantity="few">Обсуждение · %1$d комментария</item>
-        <item quantity="many">Обсуждение · %1$d комментариев</item>
-        <item quantity="other">Обсуждение · %1$d комментария</item>
+        <item quantity="few">Обсуждение · %1$,d комментария</item>
+        <item quantity="many">Обсуждение · %1$,d комментариев</item>
+        <item quantity="other">Обсуждение · %1$,d комментария</item>
     </plurals>
     <plurals name="discussion_count">
         <item quantity="one">Один комментарий</item>
-        <item quantity="few">%1$d комментария</item>
-        <item quantity="many">%1$d комментариев</item>
-        <item quantity="other">%1$d комментария</item>
+        <item quantity="few">%1$,d комментария</item>
+        <item quantity="many">%1$,d комментариев</item>
+        <item quantity="other">%1$,d комментария</item>
     </plurals>
     <string name="discussion_like">Нравится</string>
     <string name="discussion_reply">Ответить</string>
     <plurals name="discussion_more_replies">
         <item quantity="one">Ещё один ответ</item>
-        <item quantity="few">Ещё %1$d ответа</item>
-        <item quantity="many">Ещё %1$d ответов</item>
-        <item quantity="other">Ещё %1$d ответа</item>
+        <item quantity="few">Ещё %1$,d ответа</item>
+        <item quantity="many">Ещё %1$,d ответов</item>
+        <item quantity="other">Ещё %1$,d ответа</item>
     </plurals>
     <string name="discussion_spoiler">Спойлер</string>
     <string name="discussion_image">Изображение</string>
@@ -1663,9 +1694,9 @@
     <string name="downloads_notice_done_detail">%1$s · можно смотреть без подключения</string>
     <plurals name="downloads_notice_running">
         <item quantity="one">Загружается один эпизод</item>
-        <item quantity="few">Загружаются %1$d эпизода</item>
-        <item quantity="many">Загружаются %1$d эпизодов</item>
-        <item quantity="other">Загружаются %1$d эпизодов</item>
+        <item quantity="few">Загружаются %1$,d эпизода</item>
+        <item quantity="many">Загружаются %1$,d эпизодов</item>
+        <item quantity="other">Загружаются %1$,d эпизодов</item>
     </plurals>
     <string name="downloads_notice_episode_left">Эпизод %1$d · осталось %2$s</string>
     <string name="downloads_notice_starting">Запускается</string>
@@ -1705,16 +1736,16 @@
     <string name="home_marked_watched">Эпизод %1$d отмечен как просмотренный</string>
     <string name="home_remove_continue">Убрать из «Продолжить просмотр»</string>
     <plurals name="home_continue_count">
-        <item quantity="one">%1$d тайтл</item>
-        <item quantity="few">%1$d тайтла</item>
-        <item quantity="many">%1$d тайтлов</item>
-        <item quantity="other">%1$d тайтла</item>
+        <item quantity="one">%1$,d тайтл</item>
+        <item quantity="few">%1$,d тайтла</item>
+        <item quantity="many">%1$,d тайтлов</item>
+        <item quantity="other">%1$,d тайтла</item>
     </plurals>
     <string name="home_view_all">Показать все</string>
     <string name="home_full_calendar">Весь календарь</string>
     <string name="home_today">Сегодня</string>
     <string name="home_nothing_airing">Ничего не выходит</string>
-    <string name="home_day_more">Ещё %1$d</string>
+    <string name="home_day_more">Ещё %1$,d</string>
     <string name="home_seasonal">Сезон</string>
     <string name="home_search">Поиск</string>
     <string name="home_end">Пока это всё. Полные списки есть в разделах «Сезон» и «Календарь».</string>
@@ -1739,24 +1770,24 @@
     <string name="home_next">Вперёд</string>
     <string name="home_synced">AniList синхронизирован</string>
     <plurals name="queue_episodes_left">
-        <item quantity="one">Осталась %1$d серия в «%2$s»</item>
-        <item quantity="few">Осталось %1$d серии в «%2$s»</item>
-        <item quantity="many">Осталось %1$d серий в «%2$s»</item>
-        <item quantity="other">Осталось %1$d серий в «%2$s»</item>
+        <item quantity="one">Осталась %1$,d серия в «%2$s»</item>
+        <item quantity="few">Осталось %1$,d серии в «%2$s»</item>
+        <item quantity="many">Осталось %1$,d серий в «%2$s»</item>
+        <item quantity="other">Осталось %1$,d серий в «%2$s»</item>
     </plurals>
     <plurals name="episodes_count">
-        <item quantity="one">%1$d серия</item>
-        <item quantity="few">%1$d серии</item>
-        <item quantity="many">%1$d серий</item>
-        <item quantity="other">%1$d серий</item>
+        <item quantity="one">%1$,d серия</item>
+        <item quantity="few">%1$,d серии</item>
+        <item quantity="many">%1$,d серий</item>
+        <item quantity="other">%1$,d серий</item>
     </plurals>
     <plurals name="progress_episodes">
-        <item quantity="one">%1$d из %2$d серия</item>
-        <item quantity="few">%1$d из %2$d серии</item>
-        <item quantity="many">%1$d из %2$d серий</item>
-        <item quantity="other">%1$d из %2$d серий</item>
+        <item quantity="one">%1$,d из %2$,d серия</item>
+        <item quantity="few">%1$,d из %2$,d серии</item>
+        <item quantity="many">%1$,d из %2$,d серий</item>
+        <item quantity="other">%1$,d из %2$,d серий</item>
     </plurals>
-    <string name="duration_days_hours">%1$d д %2$d ч</string>
+    <string name="duration_days_hours">%1$,d д %2$,d ч</string>
     <string name="group_in_progress">В процессе</string>
     <string name="group_new_this_week">Новое на этой неделе</string>
     <string name="continue_empty_title">Вы ещё ничего не смотрели</string>
@@ -1818,27 +1849,27 @@
     <string name="up_next_broadcast">Серия %1$d · %2$s</string>
     <string name="up_next_out">вышла %1$s</string>
     <plurals name="library_row_scanning">
-        <item quantity="one">Сканирование · найдено файлов: %1$d</item>
-        <item quantity="few">Сканирование · найдено файлов: %1$d</item>
-        <item quantity="many">Сканирование · найдено файлов: %1$d</item>
-        <item quantity="other">Сканирование · найдено файлов: %1$d</item>
+        <item quantity="one">Сканирование · найдено файлов: %1$,d</item>
+        <item quantity="few">Сканирование · найдено файлов: %1$,d</item>
+        <item quantity="many">Сканирование · найдено файлов: %1$,d</item>
+        <item quantity="other">Сканирование · найдено файлов: %1$,d</item>
     </plurals>
-    <string name="library_row_matching">Сопоставление · %1$d из %2$d сериалов</string>
-    <string name="library_row_waiting">Ожидание AniList · %1$d с</string>
+    <string name="library_row_matching">Сопоставление · %1$,d из %2$,d сериалов</string>
+    <string name="library_row_waiting">Ожидание AniList · %1$,d с</string>
     <string name="library_row_summary">%1$s из %2$s</string>
     <plurals name="library_episodes">
-        <item quantity="one">%1$d эпизод</item>
-        <item quantity="few">%1$d эпизода</item>
-        <item quantity="many">%1$d эпизодов</item>
-        <item quantity="other">%1$d эпизода</item>
+        <item quantity="one">%1$,d эпизод</item>
+        <item quantity="few">%1$,d эпизода</item>
+        <item quantity="many">%1$,d эпизодов</item>
+        <item quantity="other">%1$,d эпизода</item>
     </plurals>
     <plurals name="library_series">
-        <item quantity="one">%1$d сериала</item>
-        <item quantity="few">%1$d сериалов</item>
-        <item quantity="many">%1$d сериалов</item>
-        <item quantity="other">%1$d сериала</item>
+        <item quantity="one">%1$,d сериала</item>
+        <item quantity="few">%1$,d сериалов</item>
+        <item quantity="many">%1$,d сериалов</item>
+        <item quantity="other">%1$,d сериала</item>
     </plurals>
-    <string name="library_row_needs_look">Требуют внимания: %1$d</string>
+    <string name="library_row_needs_look">Требуют внимания: %1$,d</string>
     <string name="library_row_drive_offline">Диск не подключён</string>
     <string name="library_row_missing">Папка не найдена</string>
     <string name="library_row_no_access">Kaeri больше не может открыть эту папку</string>
@@ -1851,32 +1882,32 @@
     <string name="library_remove_folder">Удалить папку</string>
     <string name="library_needs_look">Нужно проверить</string>
     <string name="library_not_matched">Не сопоставлено</string>
-    <string name="library_matched">Сопоставлено сериалов: %1$d</string>
-    <string name="library_best_guess">Вероятно: %1$s · совпадение %2$d%%</string>
+    <string name="library_matched">Сопоставлено сериалов: %1$,d</string>
+    <string name="library_best_guess">Вероятно: %1$s · совпадение %2$,d%%</string>
     <string name="library_picker_prompt">Добавить папку</string>
     <string name="library_picker_message">Выберите папку с вашими эпизодами.</string>
-    <string name="library_fix_confidence">совпадение %1$d%%</string>
+    <string name="library_fix_confidence">совпадение %1$,d%%</string>
     <string name="library_open_folder">Открыть папку</string>
-    <string name="library_matched_count">Сопоставлено сериалов: %1$d</string>
+    <string name="library_matched_count">Сопоставлено сериалов: %1$,d</string>
     <plurals name="library_row_series">
-        <item quantity="one">%1$d сериал</item>
-        <item quantity="few">%1$d сериала</item>
-        <item quantity="many">%1$d сериалов</item>
-        <item quantity="other">%1$d сериала</item>
+        <item quantity="one">%1$,d сериал</item>
+        <item quantity="few">%1$,d сериала</item>
+        <item quantity="many">%1$,d сериалов</item>
+        <item quantity="other">%1$,d сериала</item>
     </plurals>
     <plurals name="library_row_files">
-        <item quantity="one">%1$d файл</item>
-        <item quantity="few">%1$d файла</item>
-        <item quantity="many">%1$d файлов</item>
-        <item quantity="other">%1$d файла</item>
+        <item quantity="one">%1$,d файл</item>
+        <item quantity="few">%1$,d файла</item>
+        <item quantity="many">%1$,d файлов</item>
+        <item quantity="other">%1$,d файла</item>
     </plurals>
     <string name="library_show_finder">Показать в Finder</string>
     <string name="library_remove_line">Ваши файлы останутся на месте.</string>
     <plurals name="library_files">
-        <item quantity="one">%1$d файл</item>
-        <item quantity="few">%1$d файла</item>
-        <item quantity="many">%1$d файлов</item>
-        <item quantity="other">%1$d файла</item>
+        <item quantity="one">%1$,d файл</item>
+        <item quantity="few">%1$,d файла</item>
+        <item quantity="many">%1$,d файлов</item>
+        <item quantity="other">%1$,d файла</item>
     </plurals>
     <string name="library_reason_no_episode">В названии нет номера эпизода</string>
     <string name="library_reason_no_title">Тайтл на AniList не найден</string>
@@ -1889,7 +1920,7 @@
     <string name="library_fix_search">Искать на AniList</string>
     <string name="library_fix_hint">Найдите тайтл, с которым нужно сопоставить эти файлы.</string>
     <string name="library_connect_drive">Подключите диск, чтобы смотреть</string>
-    <string name="library_fix_count_mismatch">В нём эпизодов: %1$d, а в этой папке файлов: %2$d</string>
+    <string name="library_fix_count_mismatch">В нём эпизодов: %1$,d, а в этой папке файлов: %2$,d</string>
     <string name="library_leave_unmatched">Не сопоставлять</string>
     <string name="library_episode_title">Какой эпизод в этом файле?</string>
     <string name="library_season">Сезон</string>
@@ -1906,13 +1937,13 @@
     <string name="library_fix_none">Тайтлы не найдены</string>
     <string name="library_fix_offline">Не удалось связаться с AniList. Попробуйте, когда будете в сети.</string>
     <string name="library_removed">Удалено: %1$s</string>
-    <string name="library_match_percent">совпадение %1$d%%</string>
+    <string name="library_match_percent">совпадение %1$,d%%</string>
     <string name="licensed_title">Лицензионные сервисы</string>
     <string name="licensed_body">Kaeri может открывать тайтлы в стриминговых сервисах, за которые вы платите. Сам он их никогда не воспроизводит. Ссылки берутся из AniList.</string>
     <string name="licensed_region">Регион</string>
     <string name="licensed_region_line">Ссылки, которые AniList отметил для других стран, скрыты. У большинства ссылок страна не указана, поэтому выберите ещё и свои сервисы.</string>
     <string name="licensed_yours">Ваши сервисы</string>
-    <string name="licensed_show_all">Показать все (%1$d)</string>
+    <string name="licensed_show_all">Показать все (%1$,d)</string>
     <string name="licensed_region_system">Как на этом устройстве</string>
     <string name="licensed_region_device">Регион: это устройство</string>
     <string name="licensed_show_others">Показывать другие сервисы на страницах тайтлов</string>
@@ -1968,9 +1999,9 @@
     <string name="media_streaming_on">Где смотреть</string>
     <string name="media_streaming_region_note">Доступность зависит от региона.</string>
     <string name="media_link_language">Язык сайта: %1$s</string>
-    <string name="film_length_hours_minutes">%1$d ч %2$d мин</string>
-    <string name="film_length_hours">%1$d ч</string>
-    <string name="film_length_minutes">%1$d мин</string>
+    <string name="film_length_hours_minutes">%1$,d ч %2$,d мин</string>
+    <string name="film_length_hours">%1$,d ч</string>
+    <string name="film_length_minutes">%1$,d мин</string>
     <string name="country_japan">Япония</string>
     <string name="country_china">Китай</string>
     <string name="country_south_korea">Южная Корея</string>
@@ -2114,11 +2145,11 @@
     <string name="party_wait_you">Воспроизведение начнётся, когда вы будете готовы</string>
     <string name="party_wait_one">Воспроизведение начнётся после готовности %1$s</string>
     <string name="party_wait_two">Воспроизведение начнётся после готовности %1$s и %2$s</string>
-    <string name="party_wait_many">Воспроизведение начнётся после готовности остальных (%1$d)</string>
-    <string name="party_connection_lost">Связь потеряна. Пробуем снова, %1$d из %2$d.</string>
+    <string name="party_wait_many">Воспроизведение начнётся после готовности остальных (%1$,d)</string>
+    <string name="party_connection_lost">Связь потеряна. Пробуем снова, %1$,d из %2$,d.</string>
     <string name="party_connected_encrypted">Подключено, шифрование включено</string>
     <string name="party_connected_plain">Подключено, без шифрования</string>
-    <string name="party_connected_latency">%1$s · %2$d мс</string>
+    <string name="party_connected_latency">%1$s · %2$,d мс</string>
     <string name="party_invite_after_play">Ссылка-приглашение появится, когда начнётся серия.</string>
     <string name="party_invite_detail">В ней указаны комната и серия. Каждый друг смотрит её через свои источники.</string>
     <string name="party_in_room_idle">Вы в комнате %1$s на %2$s, ничего не воспроизводится.</string>
@@ -2137,13 +2168,13 @@
     <string name="party_nosource_unaired">Ваши источники не будут содержать серию %1$d, пока она не выйдет.</string>
     <string name="party_nosource_unaired_plain">Ваши источники не будут её содержать до выхода. Она будет воспроизводиться в комнате, как только её добавит один из них.</string>
     <plurals name="party_sources_found">
-        <item quantity="one">%1$d источник её содержит</item>
-        <item quantity="few">%1$d источника её содержат</item>
-        <item quantity="many">%1$d источников её содержат</item>
-        <item quantity="other">%1$d источников её содержат</item>
+        <item quantity="one">%1$,d источник её содержит</item>
+        <item quantity="few">%1$,d источника её содержат</item>
+        <item quantity="many">%1$,d источников её содержат</item>
+        <item quantity="other">%1$,d источников её содержат</item>
     </plurals>
     <string name="party_sources_label">Источники для этой серии</string>
-    <string name="party_source_seeders">Сиды: %1$d</string>
+    <string name="party_source_seeders">Сиды: %1$,d</string>
     <string name="party_no_source_lists">Ни один источник не содержит серию %1$s. Источники появляются через плагины, которые ставит магазин плагинов.</string>
     <string name="party_play_with">Включить для всей комнаты</string>
     <string name="together_title">Смотреть вместе</string>
@@ -2157,7 +2188,7 @@
     <string name="together_paste">Вставить</string>
     <string name="together_join_action">Войти</string>
     <string name="together_in_party">В совместном просмотре</string>
-    <string name="together_in_party_line">Эпизод %1$s · в комнате: %2$d · готовы: %3$d</string>
+    <string name="together_in_party_line">Эпизод %1$s · в комнате: %2$,d · готовы: %3$,d</string>
     <string name="together_open_lobby">Открыть лобби</string>
     <string name="together_open_player">Открыть плеер</string>
     <string name="together_recent">Недавние комнаты</string>
@@ -2175,10 +2206,10 @@
     <string name="together_servers">Серверы</string>
     <string name="together_server_suggested">Предлагаемый · ведёт %1$s</string>
     <plurals name="together_server_used">
-        <item quantity="one">Использовался для %1$d просмотра</item>
-        <item quantity="few">Использовался для %1$d просмотров</item>
-        <item quantity="many">Использовался для %1$d просмотров</item>
-        <item quantity="other">Использовался для %1$d просмотра</item>
+        <item quantity="one">Использовался для %1$,d просмотра</item>
+        <item quantity="few">Использовался для %1$,d просмотров</item>
+        <item quantity="many">Использовался для %1$,d просмотров</item>
+        <item quantity="other">Использовался для %1$,d просмотра</item>
     </plurals>
     <string name="together_add_server">Добавить сервер</string>
     <string name="together_paste_shortcut_hint">Вставить ссылку или код можно в любом месте этой страницы.</string>
@@ -2191,7 +2222,7 @@
     <string name="party_lobby_sources_missing">Пока нет в ваших источниках</string>
     <string name="party_lobby_out_on">Выходит: %1$s</string>
     <string name="party_still_in_room">Вы остаётесь в комнате.</string>
-    <string name="party_lobby_count">В комнате · готовы %1$d из %2$d</string>
+    <string name="party_lobby_count">В комнате · готовы %1$,d из %2$,d</string>
     <string name="party_invited_by">%1$s приглашает вас</string>
     <string name="party_looking_in">Заглядываем</string>
     <string name="party_looking_in_note">Пока вы открываете комнату, вас на мгновение видно в ней.</string>
@@ -2206,7 +2237,7 @@
     <string name="party_invite_copied">Ссылка-приглашение скопирована</string>
     <string name="party_starts_line">Начнётся с 0:00, когда все будут готовы</string>
     <string name="party_start_anyway">Всё равно начать</string>
-    <string name="party_starting">Старт через %1$d</string>
+    <string name="party_starting">Старт через %1$,d</string>
     <string name="party_change_episode">Сменить эпизод</string>
     <string name="party_change_server">Сменить сервер</string>
     <string name="party_room_watching">Комната смотрит</string>
@@ -2226,14 +2257,14 @@
     <string name="party_code_wait">Подождать здесь</string>
     <string name="party_code_other_server">Коды работают на %1$s. Для другого сервера попросите ссылку-приглашение.</string>
     <string name="party_bar_title">%1$s · Эпизод %2$s</string>
-    <string name="party_bar_line">В комнате: %1$d · готовы: %2$d</string>
+    <string name="party_bar_line">В комнате: %1$,d · готовы: %2$,d</string>
     <string name="party_bar_idle">В комнате · для вас ничего не играет</string>
     <string name="party_bar_pick">Нажмите «Воспроизвести» на любой серии, чтобы смотреть её вместе со всеми</string>
     <string name="party_paused_by">Пауза: %1$s</string>
     <string name="party_played_by">Воспроизведение: %1$s</string>
     <string name="party_seeked_by">Перемотка на %2$s · %1$s</string>
-    <string name="party_next_line">Все переходят дальше через %1$d с</string>
-    <string name="party_next_waiting">Ждём %1$s · %2$d с</string>
+    <string name="party_next_line">Все переходят дальше через %1$,d с</string>
+    <string name="party_next_waiting">Ждём %1$s · %2$,d с</string>
     <string name="party_next_joined_at">%1$s подключается с %2$s</string>
     <string name="party_next_off">В конце комната перейдёт дальше вместе.</string>
     <string name="party_last_out">Это был последний вышедший эпизод.</string>
@@ -2254,20 +2285,20 @@
     <string name="party_ready_on_device">Готов на %1$s</string>
     <string name="party_leave_on_device">Выйти из совместного просмотра на %1$s</string>
     <string name="party_in_the_room">В комнате</string>
-    <string name="party_here_count">Здесь: %1$d</string>
+    <string name="party_here_count">Здесь: %1$,d</string>
     <string name="together_recent_note">Последние десять, хранятся на этом устройстве</string>
     <string name="party_pick_continue">Продолжить</string>
     <string name="party_chat_field">Написать</string>
     <string name="party_chat_send">Отправить</string>
     <string name="party_chat_title">Чат</string>
-    <string name="party_chat_wait">Ждите %1$d с</string>
+    <string name="party_chat_wait">Ждите %1$,d с</string>
     <plurals name="party_chat_wait_spoken">
         <item quantity="one">Подождите одну секунду</item>
-        <item quantity="few">Подождите %1$d секунды</item>
-        <item quantity="many">Подождите %1$d секунд</item>
-        <item quantity="other">Подождите %1$d секунды</item>
+        <item quantity="few">Подождите %1$,d секунды</item>
+        <item quantity="many">Подождите %1$,d секунд</item>
+        <item quantity="other">Подождите %1$,d секунды</item>
     </plurals>
-    <string name="party_chat_more">Ещё в чате: %1$d</string>
+    <string name="party_chat_more">Ещё в чате: %1$,d</string>
     <string name="party_chat_off">На сервере этой комнаты чат отключён</string>
     <string name="party_chat_privacy">Сообщения проходят через сервер комнаты. Kaeri их не хранит.</string>
     <string name="party_chat_hidden">Чат скрыт</string>
@@ -2294,21 +2325,21 @@
     <string name="party_reacted_at">%1$s на %2$s</string>
     <string name="party_names_two">%1$s и %2$s</string>
     <string name="party_names_three">%1$s, %2$s и %3$s</string>
-    <string name="party_names_others">%1$s, %2$s и ещё %3$d</string>
+    <string name="party_names_others">%1$s, %2$s и ещё %3$,d</string>
     <string name="party_chat_you">Вы</string>
     <string name="party_sends_as">Отправляется от имени %1$s</string>
     <string name="party_tick_label">%1$s · %2$s</string>
     <string name="party_chat_announce">%1$s пишет: %2$s</string>
     <plurals name="party_chat_left">
-        <item quantity="one">Остался %1$d символ</item>
-        <item quantity="few">Осталось %1$d символа</item>
-        <item quantity="many">Осталось %1$d символов</item>
-        <item quantity="other">Осталось %1$d символа</item>
+        <item quantity="one">Остался %1$,d символ</item>
+        <item quantity="few">Осталось %1$,d символа</item>
+        <item quantity="many">Осталось %1$,d символов</item>
+        <item quantity="other">Осталось %1$,d символа</item>
     </plurals>
     <string name="player_up_next">Далее</string>
     <string name="title_based_on">Основано на</string>
     <string name="player_starting">Запуск эпизода %1$d</string>
-    <string name="player_finding_source">Ищем источник · %1$d с</string>
+    <string name="player_finding_source">Ищем источник · %1$,d с</string>
     <string name="player_finding_source_plain">Ищем источник</string>
     <string name="player_failed_title">Не удалось воспроизвести эпизод %1$d</string>
     <string name="player_failed_detail">Ни один источник не дал рабочий поток. Попробуйте другой.</string>
@@ -2317,7 +2348,7 @@
     <string name="player_choose_another_source">Выбрать другой источник</string>
     <string name="player_add_plugin_store">Добавить магазин плагинов</string>
     <string name="player_buffering">Буферизация</string>
-    <string name="player_start_place">источник %1$d из %2$d</string>
+    <string name="player_start_place">источник %1$,d из %2$,d</string>
     <string name="player_start_pinned">Ваш выбор для этого шоу</string>
     <string name="player_start_miss_no_match">У %1$s нет этого шоу</string>
     <string name="player_start_miss_no_episode">У %1$s нет серии %2$s</string>
@@ -2328,12 +2359,12 @@
     <string name="player_start_resting">Пропущены после недавних сбоев</string>
     <string name="player_start_from">Из %1$s</string>
     <string name="player_start_no_video">Первый не показал видео</string>
-    <string name="player_start_stream_place">Поток %1$d из %2$d</string>
+    <string name="player_start_stream_place">Поток %1$,d из %2$,d</string>
     <plurals name="player_start_peers">
-        <item quantity="one">%1$d пир</item>
-        <item quantity="few">%1$d пира</item>
-        <item quantity="many">%1$d пиров</item>
-        <item quantity="other">%1$d пира</item>
+        <item quantity="one">%1$,d пир</item>
+        <item quantity="few">%1$,d пира</item>
+        <item quantity="many">%1$,d пиров</item>
+        <item quantity="other">%1$,d пира</item>
     </plurals>
     <string name="player_start_speed">%1$s/с</string>
     <string name="player_start_buffering_percent">Буферизация · %1$s</string>
@@ -2348,7 +2379,7 @@
     <string name="player_start_fix_match">Исправить совпадение</string>
     <string name="player_start_translation">Звук и субтитры</string>
     <string name="player_start_looked_up">Название найдено</string>
-    <string name="player_start_seconds">%1$d с</string>
+    <string name="player_start_seconds">%1$,d с</string>
     <string name="player_start_still_starting">Всё ещё запускается. Можно выбрать источник.</string>
     <string name="player_start_announce">Запуск серии %1$s, %2$s</string>
     <string name="player_start_failed_announce">%1$s. %2$s</string>
@@ -2362,11 +2393,11 @@
     <string name="player_start_row_skipped">Пропущено</string>
     <string name="player_start_asked">Опрошены: %1$s.</string>
     <string name="player_start_subtitled">С субтитрами</string>
-    <string name="player_stall_title">Источник буферизуется · %1$d с</string>
+    <string name="player_stall_title">Источник буферизуется · %1$,d с</string>
     <string name="player_stall_detail">Другой поток может начаться без ожидания.</string>
     <string name="player_switch_source">Сменить источник</string>
     <string name="player_keep_waiting">Продолжить ожидание</string>
-    <string name="player_plays_in">Начнётся через %1$d с</string>
+    <string name="player_plays_in">Начнётся через %1$,d с</string>
     <string name="player_skip_opening">Пропустить опенинг</string>
     <string name="player_skip_ending">Пропустить эндинг</string>
     <string name="player_skipped_opening">Опенинг пропущен</string>
@@ -2447,9 +2478,9 @@
     <string name="player_still_watching">Вы ещё смотрите?</string>
     <plurals name="player_still_watching_detail">
         <item quantity="one">Пауза после одного эпизода подряд.</item>
-        <item quantity="few">Пауза после %1$d эпизода подряд.</item>
-        <item quantity="many">Пауза после %1$d эпизодов подряд.</item>
-        <item quantity="other">Пауза после %1$d эпизода подряд.</item>
+        <item quantity="few">Пауза после %1$,d эпизода подряд.</item>
+        <item quantity="many">Пауза после %1$,d эпизодов подряд.</item>
+        <item quantity="other">Пауза после %1$,d эпизода подряд.</item>
     </plurals>
     <string name="player_still_watching_continue">Продолжить просмотр</string>
     <string name="player_ends_at">Заканчивается в %1$s</string>
@@ -2508,7 +2539,7 @@
     <string name="player_scrub_quarter">Перемотка на четверти скорости</string>
     <string name="player_starting_text">Запуск эпизода %1$s</string>
     <string name="player_track_n">Дорожка %1$d</string>
-    <string name="player_wait_note">%1$s · %2$d с</string>
+    <string name="player_wait_note">%1$s · %2$,d с</string>
     <string name="player_command_failed">Не получилось. Попробуйте ещё раз.</string>
     <string name="player_subs_style">Стиль</string>
     <string name="player_subs_larger">Увеличить субтитры</string>
@@ -2550,10 +2581,10 @@
     <string name="reader_tap_off">Выкл.</string>
     <string name="reader_chapters">Главы</string>
     <plurals name="reader_pages_left">
-        <item quantity="one">В этой главе осталась %1$d страница</item>
-        <item quantity="few">В этой главе остались %1$d страницы</item>
-        <item quantity="many">В этой главе осталось %1$d страниц</item>
-        <item quantity="other">В этой главе остались %1$d страницы</item>
+        <item quantity="one">В этой главе осталась %1$,d страница</item>
+        <item quantity="few">В этой главе остались %1$,d страницы</item>
+        <item quantity="many">В этой главе осталось %1$,d страниц</item>
+        <item quantity="other">В этой главе остались %1$,d страницы</item>
     </plurals>
     <string name="reader_chapters_loading">Загрузка глав</string>
     <string name="reader_background_theme">Тема</string>
@@ -2566,20 +2597,20 @@
     <string name="reader_end_of_chapter_number">Конец главы %1$s</string>
     <string name="reader_end_facts">Глава %1$s · %2$s</string>
     <plurals name="reader_end_pages">
-        <item quantity="one">%1$d страница</item>
-        <item quantity="few">%1$d страницы</item>
-        <item quantity="many">%1$d страниц</item>
-        <item quantity="other">%1$d страницы</item>
+        <item quantity="one">%1$,d страница</item>
+        <item quantity="few">%1$,d страницы</item>
+        <item quantity="many">%1$,d страниц</item>
+        <item quantity="other">%1$,d страницы</item>
     </plurals>
     <string name="reader_end_from">Из %1$s</string>
     <string name="reader_chapter_line">Глава %1$s</string>
     <string name="reader_divider_facts_source">%1$s · из %2$s</string>
     <string name="reader_end_swipe">Смахните, чтобы читать дальше</string>
     <plurals name="reader_divider_images">
-        <item quantity="one">%1$d картинка</item>
-        <item quantity="few">%1$d картинки</item>
-        <item quantity="many">%1$d картинок</item>
-        <item quantity="other">%1$d картинки</item>
+        <item quantity="one">%1$,d картинка</item>
+        <item quantity="few">%1$,d картинки</item>
+        <item quantity="many">%1$,d картинок</item>
+        <item quantity="other">%1$,d картинки</item>
     </plurals>
     <string name="reader_chapter_line_titled">Глава %1$s · %2$s</string>
     <string name="onboarding_read_demo">Открыть демо</string>
@@ -2588,10 +2619,10 @@
     <string name="home_demo_only_books">Включено только демо. Добавьте папку, сервер или магазин плагинов, чтобы читать свои книги.</string>
     <string name="home_spotlight_read">Читать</string>
     <plurals name="demo_series_facts">
-        <item quantity="one">Демо · Комикс · %1$d страница</item>
-        <item quantity="few">Демо · Комикс · %1$d страницы</item>
-        <item quantity="many">Демо · Комикс · %1$d страниц</item>
-        <item quantity="other">Демо · Комикс · %1$d страниц</item>
+        <item quantity="one">Демо · Комикс · %1$,d страница</item>
+        <item quantity="few">Демо · Комикс · %1$,d страницы</item>
+        <item quantity="many">Демо · Комикс · %1$,d страниц</item>
+        <item quantity="other">Демо · Комикс · %1$,d страниц</item>
     </plurals>
     <string name="demo_credit_book">%1$s, автор: %2$s. Лицензия: %3$s. Читается с Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s, автор: %2$s. Общественное достояние. Входит в приложение.</string>
@@ -2610,10 +2641,10 @@
     <string name="demo_also">Ещё в демо</string>
     <string name="demo_credits">Авторство</string>
     <plurals name="demo_pages">
-        <item quantity="one">%1$d страница</item>
-        <item quantity="few">%1$d страницы</item>
-        <item quantity="many">%1$d страниц</item>
-        <item quantity="other">%1$d страниц</item>
+        <item quantity="one">%1$,d страница</item>
+        <item quantity="few">%1$,d страницы</item>
+        <item quantity="many">%1$,d страниц</item>
+        <item quantity="other">%1$,d страниц</item>
     </plurals>
     <string name="demo_story_row">Рассказ · %1$s · %2$s</string>
     <string name="demo_read_chapter">Читать главу %1$s</string>
@@ -2628,28 +2659,28 @@
     <string name="progress_why_gave_up">нет ответа в течение суток</string>
     <string name="progress_row_saved">Прогресс сохранён %1$s</string>
     <plurals name="progress_row_sending">
-        <item quantity="one">Отправка %1$d главы…</item>
-        <item quantity="few">Отправка %1$d глав…</item>
-        <item quantity="many">Отправка %1$d глав…</item>
-        <item quantity="other">Отправка %1$d главы…</item>
+        <item quantity="one">Отправка %1$,d главы…</item>
+        <item quantity="few">Отправка %1$,d глав…</item>
+        <item quantity="many">Отправка %1$,d глав…</item>
+        <item quantity="other">Отправка %1$,d главы…</item>
     </plurals>
     <plurals name="progress_row_offline">
-        <item quantity="one">%1$d глава отправится, когда вы снова будете в сети</item>
-        <item quantity="few">%1$d главы отправятся, когда вы снова будете в сети</item>
-        <item quantity="many">%1$d глав отправятся, когда вы снова будете в сети</item>
-        <item quantity="other">%1$d главы отправятся, когда вы снова будете в сети</item>
+        <item quantity="one">%1$,d глава отправится, когда вы снова будете в сети</item>
+        <item quantity="few">%1$,d главы отправятся, когда вы снова будете в сети</item>
+        <item quantity="many">%1$,d глав отправятся, когда вы снова будете в сети</item>
+        <item quantity="other">%1$,d главы отправятся, когда вы снова будете в сети</item>
     </plurals>
     <plurals name="progress_row_retrying">
-        <item quantity="one">%1$d глава ждёт. Kaeri попробует снова.</item>
-        <item quantity="few">%1$d главы ждут. Kaeri попробует снова.</item>
-        <item quantity="many">%1$d глав ждут. Kaeri попробует снова.</item>
-        <item quantity="other">%1$d главы ждут. Kaeri попробует снова.</item>
+        <item quantity="one">%1$,d глава ждёт. Kaeri попробует снова.</item>
+        <item quantity="few">%1$,d главы ждут. Kaeri попробует снова.</item>
+        <item quantity="many">%1$,d глав ждут. Kaeri попробует снова.</item>
+        <item quantity="other">%1$,d главы ждут. Kaeri попробует снова.</item>
     </plurals>
     <plurals name="progress_row_failed">
-        <item quantity="one">%1$d глава не сохранена: %2$s</item>
-        <item quantity="few">%1$d главы не сохранены: %2$s</item>
-        <item quantity="many">%1$d глав не сохранено: %2$s</item>
-        <item quantity="other">%1$d главы не сохранено: %2$s</item>
+        <item quantity="one">%1$,d глава не сохранена: %2$s</item>
+        <item quantity="few">%1$,d главы не сохранены: %2$s</item>
+        <item quantity="many">%1$,d глав не сохранено: %2$s</item>
+        <item quantity="other">%1$,d главы не сохранено: %2$s</item>
     </plurals>
     <string name="progress_row_off">Прогресс остаётся на этом устройстве (%1$s)</string>
     <string name="nav_watch">Смотреть</string>
@@ -2671,44 +2702,44 @@
     <string name="chapter_updates_today">Сегодня</string>
     <string name="chapter_updates_yesterday">Вчера</string>
     <plurals name="chapter_updates_versions">
-        <item quantity="one">%1$d версия</item>
-        <item quantity="few">%1$d версии</item>
-        <item quantity="many">%1$d версий</item>
-        <item quantity="other">%1$d версии</item>
+        <item quantity="one">%1$,d версия</item>
+        <item quantity="few">%1$,d версии</item>
+        <item quantity="many">%1$,d версий</item>
+        <item quantity="other">%1$,d версии</item>
     </plurals>
     <string name="chapter_updates_open_series">Открыть: %1$s</string>
     <string name="chapter_updates_open_chapter_hint">Открывает главу</string>
     <string name="chapter_updates_open_series_menu">Открыть серию</string>
     <string name="action_read_chapter">Читать главу %1$s</string>
     <string name="action_continue_chapter">Читать дальше: глава %1$s · стр. %2$d</string>
-    <string name="action_continue_part">Читать дальше: часть %1$s · %2$d%%</string>
+    <string name="action_continue_part">Читать дальше: часть %1$s · %2$,d%%</string>
     <string name="action_continue_part_plain">Читать дальше: часть %1$s</string>
     <string name="action_read_part">Читать часть %1$s</string>
-    <string name="action_continue_named">Читать дальше: %1$s · %2$d%%</string>
+    <string name="action_continue_named">Читать дальше: %1$s · %2$,d%%</string>
     <string name="action_continue_named_plain">Читать дальше: %1$s</string>
     <string name="action_read_named">Читать: %1$s</string>
     <string name="action_read_again">Прочитать заново</string>
     <string name="series_reading_from">Читается из</string>
     <string name="series_change">Изменить</string>
     <plurals name="series_sources_more">
-        <item quantity="one">ещё %1$d</item>
-        <item quantity="few">ещё %1$d</item>
-        <item quantity="many">ещё %1$d</item>
-        <item quantity="other">ещё %1$d</item>
+        <item quantity="one">ещё %1$,d</item>
+        <item quantity="few">ещё %1$,d</item>
+        <item quantity="many">ещё %1$,d</item>
+        <item quantity="other">ещё %1$,d</item>
     </plurals>
     <string name="series_tracker_ask">Какая это серия? Выбрать</string>
     <string name="series_preferred_group">Предпочитаемая группа</string>
     <plurals name="series_tracker_chapters_of">
-        <item quantity="one">%1$d из %2$d главы</item>
-        <item quantity="few">%1$d из %2$d глав</item>
-        <item quantity="many">%1$d из %2$d глав</item>
-        <item quantity="other">%1$d из %2$d глав</item>
+        <item quantity="one">%1$,d из %2$,d главы</item>
+        <item quantity="few">%1$,d из %2$,d глав</item>
+        <item quantity="many">%1$,d из %2$,d глав</item>
+        <item quantity="other">%1$,d из %2$,d глав</item>
     </plurals>
     <plurals name="series_tracker_chapters">
-        <item quantity="one">%1$d глава</item>
-        <item quantity="few">%1$d главы</item>
-        <item quantity="many">%1$d глав</item>
-        <item quantity="other">%1$d главы</item>
+        <item quantity="one">%1$,d глава</item>
+        <item quantity="few">%1$,d главы</item>
+        <item quantity="many">%1$,d глав</item>
+        <item quantity="other">%1$,d главы</item>
     </plurals>
     <string name="series_tracker_with_volume">%1$s · том %2$d</string>
     <string name="series_tracker_volumes">Том %1$d из %2$d</string>
@@ -2720,10 +2751,10 @@
     <string name="series_remove_from_lists_line">Серия исчезнет из списка в каждом подключённом трекере. Ваше место и прочитанные главы останутся в Kaeri.</string>
     <string name="series_removed_title">Ваши списки</string>
     <plurals name="series_chosen">
-        <item quantity="one">Выбрано глав: %1$d</item>
-        <item quantity="few">Выбрано глав: %1$d</item>
-        <item quantity="many">Выбрано глав: %1$d</item>
-        <item quantity="other">Выбрано глав: %1$d</item>
+        <item quantity="one">Выбрано глав: %1$,d</item>
+        <item quantity="few">Выбрано глав: %1$,d</item>
+        <item quantity="many">Выбрано глав: %1$,d</item>
+        <item quantity="other">Выбрано глав: %1$,d</item>
     </plurals>
     <string name="series_choose_all_unread">Все непрочитанные</string>
     <string name="read_from_not_found">Не найдено в</string>
@@ -2758,10 +2789,10 @@
     <string name="series_bookmark">В закладки</string>
     <string name="series_remove_bookmark">Убрать закладку</string>
     <plurals name="series_versions">
-        <item quantity="one">%1$d версия</item>
-        <item quantity="few">%1$d версии</item>
-        <item quantity="many">%1$d версий</item>
-        <item quantity="other">%1$d версии</item>
+        <item quantity="one">%1$,d версия</item>
+        <item quantity="few">%1$,d версии</item>
+        <item quantity="many">%1$,d версий</item>
+        <item quantity="other">%1$,d версии</item>
     </plurals>
     <string name="series_versions_loading">Ищем версии…</string>
     <string name="series_version_in_use">Используется: %1$s</string>
@@ -2769,7 +2800,7 @@
     <string name="chapter_state_downloaded">Скачана</string>
     <string name="chapter_state_queued">В очереди</string>
     <string name="chapter_state_wifi">В очереди · ждёт Wi-Fi</string>
-    <string name="chapter_state_downloading">Скачивание · %1$d из %2$d стр.</string>
+    <string name="chapter_state_downloading">Скачивание · %1$,d из %2$,d стр.</string>
     <string name="chapter_state_failed">Не удалось скачать. %1$s</string>
     <string name="chapter_state_page_of">Стр. %1$d из %2$d</string>
     <string name="chapter_state_page">Стр. %1$d</string>
@@ -2778,21 +2809,21 @@
     <string name="chapter_download_stop">Остановить загрузку</string>
     <string name="chapter_retry">Повторить</string>
     <string name="chapter_download_delete">Удалить загрузку</string>
-    <string name="download_next">Следующие непрочитанные: %1$d</string>
+    <string name="download_next">Следующие непрочитанные: %1$,d</string>
     <string name="download_unread">Все непрочитанные главы</string>
     <plurals name="download_volume_count">
-        <item quantity="one">%1$s · %2$d глава</item>
-        <item quantity="few">%1$s · %2$d главы</item>
-        <item quantity="many">%1$s · %2$d глав</item>
-        <item quantity="other">%1$s · %2$d главы</item>
+        <item quantity="one">%1$s · %2$,d глава</item>
+        <item quantity="few">%1$s · %2$,d главы</item>
+        <item quantity="many">%1$s · %2$,d глав</item>
+        <item quantity="other">%1$s · %2$,d главы</item>
     </plurals>
     <string name="download_choose">Выбрать главы…</string>
     <string name="download_delete_series">Удалить загрузки этой серии</string>
     <plurals name="download_chapters">
-        <item quantity="one">Скачать %1$d главу</item>
-        <item quantity="few">Скачать %1$d главы</item>
-        <item quantity="many">Скачать %1$d глав</item>
-        <item quantity="other">Скачать %1$d главы</item>
+        <item quantity="one">Скачать %1$,d главу</item>
+        <item quantity="few">Скачать %1$,d главы</item>
+        <item quantity="many">Скачать %1$,d глав</item>
+        <item quantity="other">Скачать %1$,d главы</item>
     </plurals>
     <string name="download_over_wifi">По Wi-Fi</string>
     <string name="read_again_title">Перечитать «%1$s» с начала?</string>
@@ -2844,10 +2875,10 @@
     <string name="book_add_server_button">Добавить сервер</string>
     <string name="sources_found_server">Найден сервер %1$s</string>
     <plurals name="sources_found_server_series">
-        <item quantity="one">Найден сервер %1$s, в нём %2$d серия</item>
-        <item quantity="few">Найден сервер %1$s, в нём %2$d серии</item>
-        <item quantity="many">Найден сервер %1$s, в нём %2$d серий</item>
-        <item quantity="other">Найден сервер %1$s, в нём %2$d серии</item>
+        <item quantity="one">Найден сервер %1$s, в нём %2$,d серия</item>
+        <item quantity="few">Найден сервер %1$s, в нём %2$,d серии</item>
+        <item quantity="many">Найден сервер %1$s, в нём %2$,d серий</item>
+        <item quantity="other">Найден сервер %1$s, в нём %2$,d серии</item>
     </plurals>
     <string name="book_server_looking">Проверяем этот адрес…</string>
     <string name="book_server_note">Kaeri отправляет ваш прогресс чтения обратно на этот сервер. Пароль хранится в связке ключей.</string>
@@ -2856,19 +2887,19 @@
     <string name="book_sources_plugins">Плагины</string>
     <string name="book_sources_plugins_footer">Плагины приходят из любого магазина, к которому вы присоединились.</string>
     <plurals name="book_sources_series">
-        <item quantity="one">%1$d серия</item>
-        <item quantity="few">%1$d серии</item>
-        <item quantity="many">%1$d серий</item>
-        <item quantity="other">%1$d серии</item>
+        <item quantity="one">%1$,d серия</item>
+        <item quantity="few">%1$,d серии</item>
+        <item quantity="many">%1$,d серий</item>
+        <item quantity="other">%1$,d серии</item>
     </plurals>
-    <string name="book_sources_scanning">Просмотр · найдено: %1$d</string>
+    <string name="book_sources_scanning">Просмотр · найдено: %1$,d</string>
     <string name="book_sources_missing">Не найдено. Диск подключён?</string>
     <string name="book_sources_off">Выкл.</string>
     <string name="book_sources_progress_back">прогресс возвращается на сервер</string>
     <string name="book_sources_opds">Каталог OPDS</string>
     <string name="book_sources_from_store">Из %1$s</string>
     <string name="book_sources_version">версия %1$s</string>
-    <string name="book_sources_check_matches">Проверить совпадения · %1$d</string>
+    <string name="book_sources_check_matches">Проверить совпадения · %1$,d</string>
     <string name="book_sources_check_matches_title">Проверка совпадений</string>
     <string name="book_sources_scan">Просмотреть снова</string>
     <string name="book_sources_report_progress">Отправлять прогресс на сервер</string>
@@ -2883,10 +2914,10 @@
     <string name="library_scope_reading">Чтение</string>
     <string name="read_sort_last_read">Недавно читали</string>
     <plurals name="read_library_list_value">
-        <item quantity="one">%1$s, %2$d серия</item>
-        <item quantity="few">%1$s, %2$d серии</item>
-        <item quantity="many">%1$s, %2$d серий</item>
-        <item quantity="other">%1$s, %2$d серии</item>
+        <item quantity="one">%1$s, %2$,d серия</item>
+        <item quantity="few">%1$s, %2$,d серии</item>
+        <item quantity="many">%1$s, %2$,d серий</item>
+        <item quantity="other">%1$s, %2$,d серии</item>
     </plurals>
     <string name="read_library_empty">В «%1$s» пока ничего</string>
     <string name="read_library_empty_line">Серии, добавленные из поиска или со страницы серии, появятся здесь.</string>
@@ -2895,18 +2926,18 @@
     <string name="read_library_files_add">Добавить папку или сервер</string>
     <string name="read_search_placeholder">Поиск по чтению</string>
     <plurals name="search_other_scope">
-        <item quantity="one">%1$d совпадение: %2$s</item>
-        <item quantity="few">%1$d совпадения: %2$s</item>
-        <item quantity="many">%1$d совпадений: %2$s</item>
-        <item quantity="other">%1$d совпадения: %2$s</item>
+        <item quantity="one">%1$,d совпадение: %2$s</item>
+        <item quantity="few">%1$,d совпадения: %2$s</item>
+        <item quantity="many">%1$,d совпадений: %2$s</item>
+        <item quantity="other">%1$,d совпадения: %2$s</item>
     </plurals>
     <string name="search_show_them">Показать</string>
     <string name="read_search_browse_line">%1$s · из AniList</string>
     <plurals name="read_search_total">
-        <item quantity="one">%1$d серия из AniList</item>
-        <item quantity="few">%1$d серии из AniList</item>
-        <item quantity="many">%1$d серий из AniList</item>
-        <item quantity="other">%1$d серии из AniList</item>
+        <item quantity="one">%1$,d серия из AniList</item>
+        <item quantity="few">%1$,d серии из AniList</item>
+        <item quantity="many">%1$,d серий из AniList</item>
+        <item quantity="other">%1$,d серии из AniList</item>
     </plurals>
     <string name="read_search_failed">Не удалось выполнить поиск</string>
     <string name="read_search_nothing">По запросу %1$s ничего не найдено</string>
@@ -2926,17 +2957,17 @@
     <string name="read_filter_reset">Сбросить</string>
     <string name="read_filter_any">Любой</string>
     <string name="read_filter_set">%1$s:</string>
-    <string name="read_filter_many">%1$s и ещё %2$d</string>
+    <string name="read_filter_many">%1$s и ещё %2$,d</string>
     <string name="read_filter_not_genre">Без: %1$s</string>
     <plurals name="read_filter_genres_count">
-        <item quantity="one">%1$d жанр</item>
-        <item quantity="few">%1$d жанра</item>
-        <item quantity="many">%1$d жанров</item>
-        <item quantity="other">%1$d жанра</item>
+        <item quantity="one">%1$,d жанр</item>
+        <item quantity="few">%1$,d жанра</item>
+        <item quantity="many">%1$,d жанров</item>
+        <item quantity="other">%1$,d жанра</item>
     </plurals>
     <string name="read_filter_included">Включён</string>
     <string name="read_filter_left_out">Исключён</string>
-    <string name="onboarding_step">%1$d из %2$d</string>
+    <string name="onboarding_step">%1$,d из %2$,d</string>
     <string name="onboarding_welcome_line">Следите за тем, что смотрите и читаете. Источники вы добавляете сами.</string>
     <string name="onboarding_welcome_note">Ваши списки и прогресс остаются при вас. Трекеры и источники вы добавляете сами.</string>
     <string name="onboarding_medium_title">Смотреть, читать или и то и другое?</string>
@@ -2966,7 +2997,7 @@
     <string name="onboarding_both_books">Книги</string>
     <string name="onboarding_both_shows_folder_line">Видеофайлы на %1$s</string>
     <string name="onboarding_both_shows_server_line">Ваш сервер Jellyfin</string>
-    <string name="medium_choice_position">%1$d из %2$d</string>
+    <string name="medium_choice_position">%1$,d из %2$,d</string>
     <string name="medium_change_later">Это можно изменить в настройках.</string>
     <string name="medium_update_line">Kaeri теперь умеет читать мангу, вебтуны и ранобэ из ваших источники. Выберите, для чего нужен Kaeri на %1$s.</string>
     <plurals name="medium_join_title_watch">
@@ -3043,27 +3074,27 @@
     <string name="accounts_mangaupdates_credit">Kaeri обращается к MangaUpdates через его публичный API.</string>
     <string name="accounts_username">Имя пользователя</string>
     <plurals name="read_downloads_total">
-        <item quantity="one">%1$d глава · %2$s</item>
-        <item quantity="few">%1$d главы · %2$s</item>
-        <item quantity="many">%1$d глав · %2$s</item>
-        <item quantity="other">%1$d главы · %2$s</item>
+        <item quantity="one">%1$,d глава · %2$s</item>
+        <item quantity="few">%1$,d главы · %2$s</item>
+        <item quantity="many">%1$,d глав · %2$s</item>
+        <item quantity="other">%1$,d главы · %2$s</item>
     </plurals>
-    <string name="read_downloads_active">%1$s · %2$d из %3$d стр.</string>
-    <string name="read_downloads_more_queued">ещё в очереди: %1$d</string>
+    <string name="read_downloads_active">%1$s · %2$,d из %3$,d стр.</string>
+    <string name="read_downloads_more_queued">ещё в очереди: %1$,d</string>
     <plurals name="read_downloads_queued">
-        <item quantity="one">В очереди %1$d глава</item>
-        <item quantity="few">В очереди %1$d главы</item>
-        <item quantity="many">В очереди %1$d глав</item>
-        <item quantity="other">В очереди %1$d главы</item>
+        <item quantity="one">В очереди %1$,d глава</item>
+        <item quantity="few">В очереди %1$,d главы</item>
+        <item quantity="many">В очереди %1$,d глав</item>
+        <item quantity="other">В очереди %1$,d главы</item>
     </plurals>
     <string name="read_downloads_failed">%1$s: не удалось скачать. %2$s</string>
     <plurals name="read_downloads_kept">
-        <item quantity="one">%1$d глава</item>
-        <item quantity="few">%1$d главы</item>
-        <item quantity="many">%1$d глав</item>
-        <item quantity="other">%1$d главы</item>
+        <item quantity="one">%1$,d глава</item>
+        <item quantity="few">%1$,d главы</item>
+        <item quantity="many">%1$,d глав</item>
+        <item quantity="other">%1$,d главы</item>
     </plurals>
-    <string name="read_downloads_read">прочитано: %1$d</string>
+    <string name="read_downloads_read">прочитано: %1$,d</string>
     <string name="read_downloads_delete_read">Удалить прочитанные</string>
     <string name="send_title">Отправить на ридер</string>
     <string name="send_for">Куда</string>
@@ -3076,10 +3107,10 @@
     <string name="send_no_place">Kaeri не видит, докуда вы дочитали на этом ридере. Когда вы вернётесь, страница серии спросит об этом.</string>
     <string name="send_prepare">Подготовить и поделиться</string>
     <plurals name="send_preparing">
-        <item quantity="one">Подготовка %1$d из %2$d главы</item>
-        <item quantity="few">Подготовка %1$d из %2$d глав</item>
-        <item quantity="many">Подготовка %1$d из %2$d глав</item>
-        <item quantity="other">Подготовка %1$d из %2$d главы</item>
+        <item quantity="one">Подготовка %1$,d из %2$,d главы</item>
+        <item quantity="few">Подготовка %1$,d из %2$,d глав</item>
+        <item quantity="many">Подготовка %1$,d из %2$,d глав</item>
+        <item quantity="other">Подготовка %1$,d из %2$,d главы</item>
     </plurals>
     <string name="send_sized_for">Страницы подогнаны под %1$s</string>
     <string name="send_in_parts">Больше %1$s, поэтому файлы будут разделены на части.</string>
@@ -3088,15 +3119,15 @@
     <string name="send_size_working">Вычисляется</string>
     <string name="send_chapters_open">Развёрнуто</string>
     <string name="send_chapters_closed">Свёрнуто</string>
-    <string name="send_progress_spoken">%1$d %%</string>
+    <string name="send_progress_spoken">%1$,d %%</string>
     <string name="send_chapter_action">Отправить на ридер</string>
     <string name="send_parts_over">частями, если больше %1$s</string>
     <string name="send_waiting_cancel">Отменить отправку</string>
     <plurals name="send_ready">
-        <item quantity="one">%1$d файл готов.</item>
-        <item quantity="few">%1$d файла готовы.</item>
-        <item quantity="many">%1$d файлов готово.</item>
-        <item quantity="other">%1$d файла готово.</item>
+        <item quantity="one">%1$,d файл готов.</item>
+        <item quantity="few">%1$,d файла готовы.</item>
+        <item quantity="many">%1$,d файлов готово.</item>
+        <item quantity="other">%1$,d файла готово.</item>
     </plurals>
     <string name="send_share_again">Поделиться снова</string>
     <string name="send_banner">Отправка на %1$s</string>
@@ -3130,18 +3161,18 @@
     <string name="opds_shares">Что доступно</string>
     <string name="opds_share_downloads">Загрузки</string>
     <plurals name="opds_share_downloads_count">
-        <item quantity="one">%1$d глава</item>
-        <item quantity="few">%1$d главы</item>
-        <item quantity="many">%1$d глав</item>
-        <item quantity="other">%1$d главы</item>
+        <item quantity="one">%1$,d глава</item>
+        <item quantity="few">%1$,d главы</item>
+        <item quantity="many">%1$,d глав</item>
+        <item quantity="other">%1$,d главы</item>
     </plurals>
     <string name="opds_share_manga">Папка манги</string>
     <string name="opds_share_novels">Папка ранобэ</string>
     <plurals name="opds_share_series_count">
-        <item quantity="one">%1$d серия</item>
-        <item quantity="few">%1$d серии</item>
-        <item quantity="many">%1$d серий</item>
-        <item quantity="other">%1$d серии</item>
+        <item quantity="one">%1$,d серия</item>
+        <item quantity="few">%1$,d серии</item>
+        <item quantity="many">%1$,d серий</item>
+        <item quantity="other">%1$,d серии</item>
     </plurals>
     <string name="opds_fetched_by">Скачивали</string>
     <string name="opds_fetched_none">Ни один ридер ещё ничего не скачал.</string>
@@ -3152,10 +3183,10 @@
     <string name="opds_new_password_warning">Ридеры, которые уже используют канал, перестанут работать, пока вы не введёте новый пароль на каждом из них.</string>
     <string name="opds_fetched_time">Последний запрос %1$s</string>
     <plurals name="opds_fetched_files">
-        <item quantity="one">%1$d файл</item>
-        <item quantity="few">%1$d файла</item>
-        <item quantity="many">%1$d файлов</item>
-        <item quantity="other">%1$d файла</item>
+        <item quantity="one">%1$,d файл</item>
+        <item quantity="few">%1$,d файла</item>
+        <item quantity="many">%1$,d файлов</item>
+        <item quantity="other">%1$,d файла</item>
     </plurals>
     <string name="opds_reader_unnamed">Ридер по адресу %1$s</string>
     <string name="seasonal_previous">Предыдущий сезон</string>
@@ -3195,7 +3226,7 @@
     <string name="search_loading_more">Загружаем тайтлы</string>
     <string name="filters_title">Фильтры</string>
     <string name="filters_close">Закрыть фильтры</string>
-    <string name="filters_button_count">Все фильтры · %1$d</string>
+    <string name="filters_button_count">Все фильтры · %1$,d</string>
     <string name="filters_button">Все фильтры</string>
     <string name="filter_genre">Жанр</string>
     <string name="filter_genres">Жанры</string>
@@ -3252,20 +3283,20 @@
     <string name="search_line_service">В %1$s</string>
     <plurals name="count_episodes">
         <item quantity="one">Один эпизод</item>
-        <item quantity="few">%1$d эпизода</item>
-        <item quantity="many">%1$d эпизодов</item>
-        <item quantity="other">%1$d эпизода</item>
+        <item quantity="few">%1$,d эпизода</item>
+        <item quantity="many">%1$,d эпизодов</item>
+        <item quantity="other">%1$,d эпизода</item>
     </plurals>
-    <string name="count_episodes_short">%1$d эп.</string>
-    <string name="count_out_of">Вышло %1$d из %2$d</string>
-    <string name="count_out_of_short">%1$d из %2$d</string>
+    <string name="count_episodes_short">%1$,d эп.</string>
+    <string name="count_out_of">Вышло %1$,d из %2$,d</string>
+    <string name="count_out_of_short">%1$,d из %2$,d</string>
     <plurals name="count_out">
         <item quantity="one">Вышел один эпизод</item>
-        <item quantity="few">Вышло %1$d эпизода</item>
-        <item quantity="many">Вышло %1$d эпизодов</item>
-        <item quantity="other">Вышло %1$d эпизода</item>
+        <item quantity="few">Вышло %1$,d эпизода</item>
+        <item quantity="many">Вышло %1$,d эпизодов</item>
+        <item quantity="other">Вышло %1$,d эпизода</item>
     </plurals>
-    <string name="count_out_short">Вышло %1$d</string>
+    <string name="count_out_short">Вышло %1$,d</string>
     <string name="count_starts">Старт: %1$s</string>
     <string name="count_not_out">Ещё не вышло</string>
     <string name="count_next_of">Эп. %1$d из %2$d</string>
@@ -3273,16 +3304,16 @@
     <string name="count_dub_through">Дубляж %1$d</string>
     <plurals name="count_spoken_episodes">
         <item quantity="one">Один эпизод</item>
-        <item quantity="few">%1$d эпизода</item>
-        <item quantity="many">%1$d эпизодов</item>
-        <item quantity="other">%1$d эпизода</item>
+        <item quantity="few">%1$,d эпизода</item>
+        <item quantity="many">%1$,d эпизодов</item>
+        <item quantity="other">%1$,d эпизода</item>
     </plurals>
-    <string name="count_spoken_out_of">Вышло эпизодов: %1$d из %2$d</string>
+    <string name="count_spoken_out_of">Вышло эпизодов: %1$,d из %2$,d</string>
     <plurals name="count_spoken_out">
         <item quantity="one">Вышел один эпизод</item>
-        <item quantity="few">Вышло %1$d эпизода</item>
-        <item quantity="many">Вышло %1$d эпизодов</item>
-        <item quantity="other">Вышло %1$d эпизода</item>
+        <item quantity="few">Вышло %1$,d эпизода</item>
+        <item quantity="many">Вышло %1$,d эпизодов</item>
+        <item quantity="other">Вышло %1$,d эпизода</item>
     </plurals>
     <string name="count_spoken_starts">Старт: %1$s</string>
     <string name="count_spoken_next_of">Эпизод %1$d из %2$d</string>
@@ -3352,30 +3383,30 @@
     <string name="servers_qc_new_code">Получить новый код</string>
     <string name="servers_libraries_title">Выберите библиотеки</string>
     <string name="servers_libraries_body">Сериалы сопоставляются с AniList, чтобы попасть на главную, в ваши списки и в поиск.</string>
-    <string name="servers_library_line">%1$s · сериалов: %2$d</string>
+    <string name="servers_library_line">%1$s · сериалов: %2$,d</string>
     <string name="servers_report">Сообщать Jellyfin, что вы смотрите</string>
     <string name="servers_report_line">Точки возобновления и отметки просмотра следуют за тем, что вы воспроизводите здесь.</string>
     <string name="servers_add">Добавить сервер</string>
-    <string name="servers_row_matching">Сопоставление · %1$d из %2$d сериалов</string>
+    <string name="servers_row_matching">Сопоставление · %1$,d из %2$,d сериалов</string>
     <plurals name="servers_row_summary">
-        <item quantity="one">%1$d библиотека · сериалов: %2$d</item>
-        <item quantity="few">%1$d библиотеки · сериалов: %2$d</item>
-        <item quantity="many">%1$d библиотек · сериалов: %2$d</item>
-        <item quantity="other">%1$d библиотеки · сериалов: %2$d</item>
+        <item quantity="one">%1$,d библиотека · сериалов: %2$,d</item>
+        <item quantity="few">%1$,d библиотеки · сериалов: %2$,d</item>
+        <item quantity="many">%1$,d библиотек · сериалов: %2$,d</item>
+        <item quantity="other">%1$,d библиотеки · сериалов: %2$,d</item>
     </plurals>
     <plurals name="servers_row_libraries">
-        <item quantity="one">%1$d библиотека</item>
-        <item quantity="few">%1$d библиотеки</item>
-        <item quantity="many">%1$d библиотек</item>
-        <item quantity="other">%1$d библиотеки</item>
+        <item quantity="one">%1$,d библиотека</item>
+        <item quantity="few">%1$,d библиотеки</item>
+        <item quantity="many">%1$,d библиотек</item>
+        <item quantity="other">%1$,d библиотеки</item>
     </plurals>
     <plurals name="servers_row_series">
-        <item quantity="one">%1$d сериал</item>
-        <item quantity="few">%1$d сериала</item>
-        <item quantity="many">%1$d сериалов</item>
-        <item quantity="other">%1$d сериала</item>
+        <item quantity="one">%1$,d сериал</item>
+        <item quantity="few">%1$,d сериала</item>
+        <item quantity="many">%1$,d сериалов</item>
+        <item quantity="other">%1$,d сериала</item>
     </plurals>
-    <string name="servers_row_needs_look">Требуют внимания: %1$d</string>
+    <string name="servers_row_needs_look">Требуют внимания: %1$,d</string>
     <string name="servers_page_line">%1$s · Jellyfin %2$s · вход выполнен как %3$s</string>
     <string name="servers_sign_out">Выйти</string>
     <string name="servers_remove">Удалить сервер</string>
@@ -3403,7 +3434,7 @@
     <string name="servers_quick_connect">Quick Connect</string>
     <string name="servers_libraries_heading">Библиотеки</string>
     <string name="servers_refresh">Сопоставить заново</string>
-    <string name="servers_needs_look">Не сопоставлено с AniList: %1$d</string>
+    <string name="servers_needs_look">Не сопоставлено с AniList: %1$,d</string>
     <string name="servers_kind_films">Фильмы</string>
     <string name="servers_error_certificate">%1$s использует сертификат, которому это устройство не доверяет. Используйте адрес https:// с сертификатом, которому оно доверяет.</string>
     <string name="servers_row_signed_out_here">Вход не выполнен</string>
@@ -3471,10 +3502,10 @@
     <string name="settings_system_captions">Использовать стиль субтитров системы</string>
     <string name="settings_system_captions_detail">Обычные субтитры берут настройки из «Универсального доступа». Субтитры с собственным оформлением сохраняют свой вид.</string>
     <plurals name="settings_overridden">
-        <item quantity="one">Переопределено для %1$d сериала</item>
-        <item quantity="few">Переопределено для %1$d сериалов</item>
-        <item quantity="many">Переопределено для %1$d сериалов</item>
-        <item quantity="other">Переопределено для %1$d сериалов</item>
+        <item quantity="one">Переопределено для %1$,d сериала</item>
+        <item quantity="few">Переопределено для %1$,d сериалов</item>
+        <item quantity="many">Переопределено для %1$,d сериалов</item>
+        <item quantity="other">Переопределено для %1$,d сериалов</item>
     </plurals>
     <string name="settings_new_downloads">Новые загрузки</string>
     <string name="settings_keep_next">Хранить следующие серии</string>
@@ -3557,10 +3588,10 @@
     <string name="widget_start_label">Смотреть серию %1$d из «%2$s»</string>
     <string name="widget_resume_dubbed_label">Продолжить серию %1$d, с дубляжом, из «%2$s»</string>
     <plurals name="accounts_changes_waiting">
-        <item quantity="one">%1$d изменение ждёт синхронизации</item>
-        <item quantity="few">%1$d изменения ждут синхронизации</item>
-        <item quantity="many">%1$d изменений ждут синхронизации</item>
-        <item quantity="other">%1$d изменений ждут синхронизации</item>
+        <item quantity="one">%1$,d изменение ждёт синхронизации</item>
+        <item quantity="few">%1$,d изменения ждут синхронизации</item>
+        <item quantity="many">%1$,d изменений ждут синхронизации</item>
+        <item quantity="other">%1$,d изменений ждут синхронизации</item>
     </plurals>
     <string name="settings_quality_higher">Высокое</string>
     <string name="settings_quality_standard">Стандартное</string>
@@ -3599,7 +3630,7 @@
     <string name="settings_subs_system_change">Изменить в настройках универсального доступа</string>
     <string name="settings_subs_system_value">Из системы</string>
     <string name="settings_subs_size">Размер</string>
-    <string name="settings_subs_size_value">%1$d%%</string>
+    <string name="settings_subs_size_value">%1$,d%%</string>
     <string name="settings_subs_font">Шрифт</string>
     <string name="settings_subs_font_default">По умолчанию</string>
     <string name="settings_subs_font_serif">С засечками</string>
@@ -3623,7 +3654,7 @@
     <string name="settings_subs_background_all">За всеми строками</string>
     <string name="settings_subs_opacity">Непрозрачность</string>
     <string name="settings_subs_raise">Поднять субтитры</string>
-    <string name="settings_subs_raise_value">%1$d%% высоты кадра</string>
+    <string name="settings_subs_raise_value">%1$,d%% высоты кадра</string>
     <string name="settings_subs_styled">Субтитры со стилем</string>
     <string name="settings_subs_styled_keep">Сохранять оформление</string>
     <string name="settings_subs_styled_keep_detail">Субтитры со стилем сохраняют шрифты, цвета и положение надписей, заданные авторами. Размер и подъём по-прежнему действуют.</string>
@@ -3641,13 +3672,13 @@
     <string name="book_server_key_kept">Kaeri хранит ключ в %1$s и показывает только его последние четыре символа.</string>
     <string name="book_server_key">Ключ ••••%1$s</string>
     <plurals name="book_server_found_title">
-        <item quantity="one">Найдено серий: %1$d, библиотек: %2$d</item>
-        <item quantity="few">Найдено серий: %1$d, библиотек: %2$d</item>
-        <item quantity="many">Найдено серий: %1$d, библиотек: %2$d</item>
-        <item quantity="other">Найдено серий: %1$d, библиотек: %2$d</item>
+        <item quantity="one">Найдено серий: %1$,d, библиотек: %2$,d</item>
+        <item quantity="few">Найдено серий: %1$,d, библиотек: %2$,d</item>
+        <item quantity="many">Найдено серий: %1$,d, библиотек: %2$,d</item>
+        <item quantity="other">Найдено серий: %1$,d, библиотек: %2$,d</item>
     </plurals>
     <string name="book_server_found_line">%1$s на %2$s. Выберите библиотеки, которые нужно добавить.</string>
-    <string name="book_server_library_line">Серий: %1$d</string>
+    <string name="book_server_library_line">Серий: %1$,d</string>
     <string name="book_server_sync_progress">Передавать прогресс на сервер</string>
     <string name="book_server_sync_progress_line">Прочитанные здесь страницы попадают на %1$s, а его прогресс приходит сюда.</string>
     <string name="book_server_username">Имя пользователя</string>
@@ -3663,40 +3694,40 @@
     <string name="book_server_empty_recheck">Вы можете добавить его сейчас. Kaeri проверяет снова каждые 30 минут.</string>
     <string name="book_server_not_books_line">Kaeri читает каталоги Komga, Kavita и OPDS.</string>
     <plurals name="book_folder_found">
-        <item quantity="one">Найдено серий: %1$d, файлов: %2$d</item>
-        <item quantity="few">Найдено серий: %1$d, файлов: %2$d</item>
-        <item quantity="many">Найдено серий: %1$d, файлов: %2$d</item>
-        <item quantity="other">Найдено серий: %1$d, файлов: %2$d</item>
+        <item quantity="one">Найдено серий: %1$,d, файлов: %2$,d</item>
+        <item quantity="few">Найдено серий: %1$,d, файлов: %2$,d</item>
+        <item quantity="many">Найдено серий: %1$,d, файлов: %2$,d</item>
+        <item quantity="other">Найдено серий: %1$,d, файлов: %2$,d</item>
     </plurals>
-    <string name="book_folder_found_line">%1$s. По их данным Kaeri сопоставил: %2$d.</string>
+    <string name="book_folder_found_line">%1$s. По их данным Kaeri сопоставил: %2$,d.</string>
     <plurals name="book_folder_unsupported">
-        <item quantity="one">%1$d файл, который Kaeri не может открыть</item>
-        <item quantity="few">%1$d файла, которые Kaeri не может открыть</item>
-        <item quantity="many">%1$d файлов, которые Kaeri не может открыть</item>
-        <item quantity="other">%1$d файла, которые Kaeri не может открыть</item>
+        <item quantity="one">%1$,d файл, который Kaeri не может открыть</item>
+        <item quantity="few">%1$,d файла, которые Kaeri не может открыть</item>
+        <item quantity="many">%1$,d файлов, которые Kaeri не может открыть</item>
+        <item quantity="other">%1$,d файла, которые Kaeri не может открыть</item>
     </plurals>
     <string name="book_folder_unsupported_line">%1$s. Они остаются в папке как есть.</string>
-    <string name="book_folder_drm">Файлов EPUB с защитой DRM: %1$d</string>
+    <string name="book_folder_drm">Файлов EPUB с защитой DRM: %1$,d</string>
     <string name="book_folder_opens">Kaeri открывает файлы CBZ, CBR, EPUB и PDF, а также папки с изображениями.</string>
     <string name="book_folder_show_files">Показать файлы</string>
     <string name="book_folder_add">Добавить папку</string>
     <string name="book_folder_change">Изменить</string>
     <string name="book_folder_empty">В папке %1$s нет ничего, что Kaeri может открыть</string>
     <plurals name="book_folder_empty_line">
-        <item quantity="one">В ней %1$d файл, и это не CBZ, CBR, EPUB, PDF и не изображение.</item>
-        <item quantity="few">В ней %1$d файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
-        <item quantity="many">В ней %1$d файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
-        <item quantity="other">В ней %1$d файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
+        <item quantity="one">В ней %1$,d файл, и это не CBZ, CBR, EPUB, PDF и не изображение.</item>
+        <item quantity="few">В ней %1$,d файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
+        <item quantity="many">В ней %1$,d файлов, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
+        <item quantity="other">В ней %1$,d файла, и ни один из них не CBZ, CBR, EPUB, PDF и не изображение.</item>
     </plurals>
     <string name="book_folder_choose_other">Выбрать другую папку</string>
     <string name="store_join_title">Подключение: магазин плагинов</string>
     <string name="store_invite_field">Приглашение</string>
     <string name="store_joined_title">Подключено: %1$s</string>
     <plurals name="store_joined_line">
-        <item quantity="one">%1$s предлагает %2$d плагин. Подключение ничего не устанавливает: установите его здесь или позже.</item>
-        <item quantity="few">У %1$s плагины: %2$d. Подключение ничего не устанавливает: выберите нужные здесь или позже.</item>
-        <item quantity="many">У %1$s плагины: %2$d. Подключение ничего не устанавливает: выберите нужные здесь или позже.</item>
-        <item quantity="other">У %1$s плагины: %2$d. Подключение ничего не устанавливает: выберите нужные здесь или позже.</item>
+        <item quantity="one">%1$s предлагает %2$,d плагин. Подключение ничего не устанавливает: установите его здесь или позже.</item>
+        <item quantity="few">У %1$s плагины: %2$,d. Подключение ничего не устанавливает: выберите нужные здесь или позже.</item>
+        <item quantity="many">У %1$s плагины: %2$,d. Подключение ничего не устанавливает: выберите нужные здесь или позже.</item>
+        <item quantity="other">У %1$s плагины: %2$,d. Подключение ничего не устанавливает: выберите нужные здесь или позже.</item>
     </plurals>
     <string name="store_group_reading">Для чтения</string>
     <string name="store_group_watching">Для просмотра</string>
@@ -3704,10 +3735,10 @@
     <string name="store_installed_row">Установлено</string>
     <string name="store_install_all_reading">Установить всё для чтения</string>
     <plurals name="store_installed">
-        <item quantity="one">Установлен %1$d плагин. Он в разделе «Ваши источники».</item>
-        <item quantity="few">Установлено, плагины: %1$d. Они в разделе «Ваши источники».</item>
-        <item quantity="many">Установлено, плагины: %1$d. Они в разделе «Ваши источники».</item>
-        <item quantity="other">Установлено, плагины: %1$d. Они в разделе «Ваши источники».</item>
+        <item quantity="one">Установлен %1$,d плагин. Он в разделе «Ваши источники».</item>
+        <item quantity="few">Установлено, плагины: %1$,d. Они в разделе «Ваши источники».</item>
+        <item quantity="many">Установлено, плагины: %1$,d. Они в разделе «Ваши источники».</item>
+        <item quantity="other">Установлено, плагины: %1$,d. Они в разделе «Ваши источники».</item>
     </plurals>
     <string name="store_other_medium">Каждый плагин в %1$s предназначен для просмотра</string>
     <string name="store_other_medium_line">Это устройство: просмотр выключен, поэтому ни один из них не показан в списке «Ваши источники».</string>
@@ -3717,44 +3748,44 @@
     <string name="store_err_unreachable">Не удалось подключиться к %1$s</string>
     <string name="store_err_unreachable_line">Приглашение выглядит верным, но магазин не отвечает. Повторите попытку позже или спросите у %1$s, работает ли он.</string>
     <plurals name="store_other_medium_more">
-        <item quantity="one">Ещё %1$d для просмотра. Это устройство: просмотр выключен.</item>
-        <item quantity="few">Ещё %1$d для просмотра. Это устройство: просмотр выключен.</item>
-        <item quantity="many">Ещё %1$d для просмотра. Это устройство: просмотр выключен.</item>
-        <item quantity="other">Ещё %1$d для просмотра. Это устройство: просмотр выключен.</item>
+        <item quantity="one">Ещё %1$,d для просмотра. Это устройство: просмотр выключен.</item>
+        <item quantity="few">Ещё %1$,d для просмотра. Это устройство: просмотр выключен.</item>
+        <item quantity="many">Ещё %1$,d для просмотра. Это устройство: просмотр выключен.</item>
+        <item quantity="other">Ещё %1$,d для просмотра. Это устройство: просмотр выключен.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
-        <item quantity="one">Ещё %1$d предназначен для чтения, а на этом телевизоре чтения нет.</item>
-        <item quantity="few">Ещё %1$d предназначены для чтения, а на этом телевизоре чтения нет.</item>
-        <item quantity="many">Ещё %1$d предназначены для чтения, а на этом телевизоре чтения нет.</item>
-        <item quantity="other">Ещё %1$d предназначены для чтения, а на этом телевизоре чтения нет.</item>
+        <item quantity="one">Ещё %1$,d предназначен для чтения, а на этом телевизоре чтения нет.</item>
+        <item quantity="few">Ещё %1$,d предназначены для чтения, а на этом телевизоре чтения нет.</item>
+        <item quantity="many">Ещё %1$,d предназначены для чтения, а на этом телевизоре чтения нет.</item>
+        <item quantity="other">Ещё %1$,d предназначены для чтения, а на этом телевизоре чтения нет.</item>
     </plurals>
     <string name="store_tv_all_reading">Все плагины в %1$s предназначены для чтения, а на этом телевизоре чтения нет.</string>
     <string name="store_plugin_row">Версия %1$s · может обращаться к %2$s</string>
-    <string name="source_added">Добавлено: %1$s · серий: %2$d</string>
+    <string name="source_added">Добавлено: %1$s · серий: %2$,d</string>
     <plurals name="source_added_plugins">
-        <item quantity="one">Установлен %1$d плагин из %2$s</item>
-        <item quantity="few">Установлено из %2$s, плагины: %1$d</item>
-        <item quantity="many">Установлено из %2$s, плагины: %1$d</item>
-        <item quantity="other">Установлено из %2$s, плагины: %1$d</item>
+        <item quantity="one">Установлен %1$,d плагин из %2$s</item>
+        <item quantity="few">Установлено из %2$s, плагины: %1$,d</item>
+        <item quantity="many">Установлено из %2$s, плагины: %1$,d</item>
+        <item quantity="other">Установлено из %2$s, плагины: %1$,d</item>
     </plurals>
     <plurals name="source_row_server">
-        <item quantity="one">%1$s · серий: %2$d · библиотек: %3$d · добавлено только что</item>
-        <item quantity="few">%1$s · серий: %2$d · библиотек: %3$d · добавлено только что</item>
-        <item quantity="many">%1$s · серий: %2$d · библиотек: %3$d · добавлено только что</item>
-        <item quantity="other">%1$s · серий: %2$d · библиотек: %3$d · добавлено только что</item>
+        <item quantity="one">%1$s · серий: %2$,d · библиотек: %3$,d · добавлено только что</item>
+        <item quantity="few">%1$s · серий: %2$,d · библиотек: %3$,d · добавлено только что</item>
+        <item quantity="many">%1$s · серий: %2$,d · библиотек: %3$,d · добавлено только что</item>
+        <item quantity="other">%1$s · серий: %2$,d · библиотек: %3$,d · добавлено только что</item>
     </plurals>
     <plurals name="source_row_server_series">
-        <item quantity="one">%1$s · серий: %2$d · библиотек: %3$d</item>
-        <item quantity="few">%1$s · серий: %2$d · библиотек: %3$d</item>
-        <item quantity="many">%1$s · серий: %2$d · библиотек: %3$d</item>
-        <item quantity="other">%1$s · серий: %2$d · библиотек: %3$d</item>
+        <item quantity="one">%1$s · серий: %2$,d · библиотек: %3$,d</item>
+        <item quantity="few">%1$s · серий: %2$,d · библиотек: %3$,d</item>
+        <item quantity="many">%1$s · серий: %2$,d · библиотек: %3$,d</item>
+        <item quantity="other">%1$s · серий: %2$,d · библиотек: %3$,d</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · серий пока нет · проверка снова через 30 минут</string>
     <plurals name="source_row_folder">
-        <item quantity="one">%1$s · серий: %2$d · пропущено файлов: %3$d</item>
-        <item quantity="few">%1$s · серий: %2$d · пропущено файлов: %3$d</item>
-        <item quantity="many">%1$s · серий: %2$d · пропущено файлов: %3$d</item>
-        <item quantity="other">%1$s · серий: %2$d · пропущено файлов: %3$d</item>
+        <item quantity="one">%1$s · серий: %2$,d · пропущено файлов: %3$,d</item>
+        <item quantity="few">%1$s · серий: %2$,d · пропущено файлов: %3$,d</item>
+        <item quantity="many">%1$s · серий: %2$,d · пропущено файлов: %3$,d</item>
+        <item quantity="other">%1$s · серий: %2$,d · пропущено файлов: %3$,d</item>
     </plurals>
     <string name="source_row_plugin">Из %1$s · %2$s · версия %3$s</string>
     <string name="sources_title">Источники</string>
@@ -3764,10 +3795,10 @@
     <string name="source_picker_automatic">Автоматически</string>
     <string name="source_picker_automatic_detail">Каждый эпизод из первого источника, где он есть</string>
     <plurals name="source_picker_coverage">
-        <item quantity="one">%1$d из %2$d эпизода</item>
-        <item quantity="few">%1$d из %2$d эпизода</item>
-        <item quantity="many">%1$d из %2$d эпизодов</item>
-        <item quantity="other">%1$d из %2$d эпизода</item>
+        <item quantity="one">%1$,d из %2$,d эпизода</item>
+        <item quantity="few">%1$,d из %2$,d эпизода</item>
+        <item quantity="many">%1$,d из %2$,d эпизодов</item>
+        <item quantity="other">%1$,d из %2$,d эпизода</item>
     </plurals>
     <string name="source_note_off">Выключен</string>
     <string name="source_note_resting">Не отвечает, скоро попробуем снова</string>
@@ -3815,19 +3846,19 @@
     <string name="sources_listed_by_store">Указан: Магазин плагинов</string>
     <string name="sources_contacts_one">Обращается к %1$s</string>
     <plurals name="sources_contacts_line">
-        <item quantity="one">Обращается к: %1$s и ещё %2$d</item>
-        <item quantity="few">Обращается к: %1$s и ещё %2$d</item>
-        <item quantity="many">Обращается к: %1$s и ещё %2$d</item>
-        <item quantity="other">Обращается к: %1$s и ещё %2$d</item>
+        <item quantity="one">Обращается к: %1$s и ещё %2$,d</item>
+        <item quantity="few">Обращается к: %1$s и ещё %2$,d</item>
+        <item quantity="many">Обращается к: %1$s и ещё %2$,d</item>
+        <item quantity="other">Обращается к: %1$s и ещё %2$,d</item>
     </plurals>
     <string name="sources_contacts_none">Серверов для связи не указано</string>
     <string name="sources_no_hosts">Нет серверов</string>
     <string name="sources_update_contacts_one">Это обновление также обращается к %1$s.</string>
     <plurals name="sources_update_contacts">
-        <item quantity="one">Это обновление также обращается к: %1$s и ещё %2$d.</item>
-        <item quantity="few">Это обновление также обращается к: %1$s и ещё %2$d.</item>
-        <item quantity="many">Это обновление также обращается к: %1$s и ещё %2$d.</item>
-        <item quantity="other">Это обновление также обращается к: %1$s и ещё %2$d.</item>
+        <item quantity="one">Это обновление также обращается к: %1$s и ещё %2$,d.</item>
+        <item quantity="few">Это обновление также обращается к: %1$s и ещё %2$,d.</item>
+        <item quantity="many">Это обновление также обращается к: %1$s и ещё %2$,d.</item>
+        <item quantity="other">Это обновление также обращается к: %1$s и ещё %2$,d.</item>
     </plurals>
     <string name="sources_update_title">Обновить %1$s?</string>
     <string name="sources_replace_title">Заменить %1$s?</string>
@@ -3838,14 +3869,14 @@
     <string name="sources_source_order_row">Порядок проверки</string>
     <string name="sources_torrents_note">Торренты встроены в Kaeri и не являются плагин. Прокси и раздача настраиваются в настройках, в разделе «Источники».</string>
     <string name="sources_rebuilding">Источники настраиваются заново</string>
-    <string name="sources_response_ms">%1$d мс</string>
+    <string name="sources_response_ms">%1$,d мс</string>
     <string name="match_fix">Исправить сопоставление</string>
     <string name="match_choose">Выбрать совпадение</string>
     <plurals name="match_uncertain">
-        <item quantity="one">В %2$s есть %1$d тайтл, который может быть этим. Выберите его, чтобы смотреть его эпизоды.</item>
-        <item quantity="few">В %2$s есть %1$d тайтла, которые могут быть этим. Выберите один, чтобы смотреть его эпизоды.</item>
-        <item quantity="many">В %2$s есть %1$d тайтлов, которые могут быть этим. Выберите один, чтобы смотреть его эпизоды.</item>
-        <item quantity="other">В %2$s есть %1$d тайтла, которые могут быть этим. Выберите один, чтобы смотреть его эпизоды.</item>
+        <item quantity="one">В %2$s есть %1$,d тайтл, который может быть этим. Выберите его, чтобы смотреть его эпизоды.</item>
+        <item quantity="few">В %2$s есть %1$,d тайтла, которые могут быть этим. Выберите один, чтобы смотреть его эпизоды.</item>
+        <item quantity="many">В %2$s есть %1$,d тайтлов, которые могут быть этим. Выберите один, чтобы смотреть его эпизоды.</item>
+        <item quantity="other">В %2$s есть %1$,d тайтла, которые могут быть этим. Выберите один, чтобы смотреть его эпизоды.</item>
     </plurals>
     <string name="match_uncertain_none">В %1$s нет подходящего тайтла. Всё равно выберите один или поищите.</string>
     <string name="match_source_picker_row">Не тот? Исправить сопоставление</string>
@@ -4005,10 +4036,10 @@
     <string name="stores_members">Участники</string>
     <string name="stores_owner_devices">Владелец · %1$s</string>
     <plurals name="stores_member_devices">
-        <item quantity="one">Устройство: %1$d</item>
-        <item quantity="few">Устройства: %1$d</item>
-        <item quantity="many">Устройства: %1$d</item>
-        <item quantity="other">Устройства: %1$d</item>
+        <item quantity="one">Устройство: %1$,d</item>
+        <item quantity="few">Устройства: %1$,d</item>
+        <item quantity="many">Устройства: %1$,d</item>
+        <item quantity="other">Устройства: %1$,d</item>
     </plurals>
     <string name="stores_invite_for">Для кого? (необязательно)</string>
     <string name="stores_their_name">Их имя</string>
@@ -4035,8 +4066,8 @@
     <string name="stores_invite_lasts_forever">Без срока</string>
     <string name="stores_invite_group_name">Название этого приглашения (необязательно)</string>
     <string name="stores_invite_group_detail">Каждый добавит своё имя, когда присоединится.</string>
-    <string name="stores_invite_works_times">Использований: %1$d, до %2$s.</string>
-    <string name="stores_invite_works_times_forever">Использований: %1$d, пока вы её не отмените.</string>
+    <string name="stores_invite_works_times">Использований: %1$,d, до %2$s.</string>
+    <string name="stores_invite_works_times_forever">Использований: %1$,d, пока вы её не отмените.</string>
     <string name="stores_invite_works_any">Присоединиться может любой, у кого есть эта ссылка, до %1$s.</string>
     <string name="stores_invite_works_any_forever">Присоединиться может любой, у кого есть эта ссылка, пока вы её не отмените.</string>
     <string name="stores_invite_once_until">Действует один раз, для того, кому вы её отправите, до %1$s.</string>
@@ -4046,12 +4077,12 @@
     <string name="stores_invite_links">Ссылки-приглашения</string>
     <string name="stores_invite_not_used">Ещё не использовалась</string>
     <plurals name="stores_invite_used">
-        <item quantity="one">Использовано %1$d раз</item>
-        <item quantity="few">Использовано %1$d раза</item>
-        <item quantity="many">Использовано %1$d раз</item>
-        <item quantity="other">Использовано %1$d раза</item>
+        <item quantity="one">Использовано %1$,d раз</item>
+        <item quantity="few">Использовано %1$,d раза</item>
+        <item quantity="many">Использовано %1$,d раз</item>
+        <item quantity="other">Использовано %1$,d раза</item>
     </plurals>
-    <string name="stores_invite_used_of">Использовано %1$d из %2$d</string>
+    <string name="stores_invite_used_of">Использовано %1$,d из %2$,d</string>
     <string name="stores_invites_ended">Закончились за последние 30 дней</string>
     <string name="stores_invite_used_up">Использована %1$s</string>
     <string name="stores_invite_ran_out">Закончилась %1$s</string>
@@ -4060,9 +4091,9 @@
     <string name="stores_invite_joined">%1$s · присоединился %2$s</string>
     <plurals name="stores_cancel_invite_detail">
         <item quantity="one">Больше никто не сможет присоединиться. Присоединившийся остаётся участником.</item>
-        <item quantity="few">Больше никто не сможет присоединиться. Присоединившиеся (%1$d) остаются участниками.</item>
-        <item quantity="many">Больше никто не сможет присоединиться. Присоединившиеся (%1$d) остаются участниками.</item>
-        <item quantity="other">Больше никто не сможет присоединиться. Присоединившиеся (%1$d) остаются участниками.</item>
+        <item quantity="few">Больше никто не сможет присоединиться. Присоединившиеся (%1$,d) остаются участниками.</item>
+        <item quantity="many">Больше никто не сможет присоединиться. Присоединившиеся (%1$,d) остаются участниками.</item>
+        <item quantity="other">Больше никто не сможет присоединиться. Присоединившиеся (%1$,d) остаются участниками.</item>
     </plurals>
     <string name="stores_join_your_name">Ваше имя (необязательно)</string>
     <string name="stores_join_your_name_detail">Владельцы магазина видят это имя в списке участников.</string>
@@ -4074,13 +4105,13 @@
     <string name="stores_anyone_with_store_link">Любой, у кого есть ссылка магазина</string>
     <string name="stores_only_invited">Только приглашённые вами</string>
     <plurals name="stores_devices_joined">
-        <item quantity="one">%1$d устройство подключилось по ссылке.</item>
-        <item quantity="few">%1$d устройства подключились по ссылке.</item>
-        <item quantity="many">Устройства, подключившиеся по ссылке: %1$d.</item>
-        <item quantity="other">Устройства, подключившиеся по ссылке: %1$d.</item>
+        <item quantity="one">%1$,d устройство подключилось по ссылке.</item>
+        <item quantity="few">%1$,d устройства подключились по ссылке.</item>
+        <item quantity="many">Устройства, подключившиеся по ссылке: %1$,d.</item>
+        <item quantity="other">Устройства, подключившиеся по ссылке: %1$,d.</item>
     </plurals>
     <string name="stores_device_joined_at">Подключено %1$s</string>
-    <string name="stores_newest_listed">Показаны последние %1$d.</string>
+    <string name="stores_newest_listed">Показаны последние %1$,d.</string>
     <string name="stores_server_older">Сервер этого магазина старше и пускает только приглашённых. Обновление добавит этот выбор.</string>
     <string name="stores_remove_devices_title">Удалить устройства, подключившиеся по ссылке?</string>
     <string name="stores_remove_devices_detail">Они сразу перестают работать с %1$s. Плагины, уже установленные на них, остаются.</string>
@@ -4090,10 +4121,10 @@
     <string name="stores_remove_all">Удалить все</string>
     <string name="stores_copy_link">Копировать ссылку</string>
     <plurals name="stores_offers_plugins">
-        <item quantity="one">%1$d плагин</item>
-        <item quantity="few">%1$d плагина</item>
-        <item quantity="many">Плагины: %1$d</item>
-        <item quantity="other">Плагины: %1$d</item>
+        <item quantity="one">%1$,d плагин</item>
+        <item quantity="few">%1$,d плагина</item>
+        <item quantity="many">Плагины: %1$,d</item>
+        <item quantity="other">Плагины: %1$,d</item>
     </plurals>
     <string name="notice_open_stores">Открыть магазины плагинов</string>
     <string name="stores_what_is">Магазин плагинов представляет собой небольшой сервер, который хранит подписанные плагины и выдаёт каждому устройству свой токен. Его плагины добавляют источники. Kaeri не ведёт магазинов плагинов и не составляет их списков, поэтому подключиться к одному из них можно по ссылке-приглашению от владельца.</string>
@@ -4148,7 +4179,7 @@
     <string name="devices_only_this">Только это устройство</string>
     <string name="devices_only_this_line">Свяжите ещё одно устройство, чтобы делиться местом, где вы остановились, историей и настройками.</string>
     <string name="devices_add">Добавить устройство</string>
-    <string name="devices_not_seen">Не появлялось %1$d дн.</string>
+    <string name="devices_not_seen">Не появлялось %1$,d дн.</string>
     <string name="devices_remote_only">Только пульт</string>
     <string name="devices_also_sync">Тоже синхронизировать с: %1$s</string>
     <string name="devices_paired_tvs_foot">Связан для «Смотреть на ТВ». Телевизор, связанный как пульт, никогда не получает вашу историю.</string>
@@ -4225,10 +4256,10 @@
     <string name="rkey_new_foot">Старый ключ перестанет работать, а ваши устройства перейдут на новый при следующей синхронизации.</string>
     <string name="rkey_enter_title">Введите ключ восстановления</string>
     <plurals name="rkey_enter_line">
-        <item quantity="one">%1$s хранит историю с устройств: %2$d. Её откроет ключ, который вы сохранили при включении синхронизации.</item>
-        <item quantity="few">%1$s хранит историю с устройств: %2$d. Её откроет ключ, который вы сохранили при включении синхронизации.</item>
-        <item quantity="many">%1$s хранит историю с устройств: %2$d. Её откроет ключ, который вы сохранили при включении синхронизации.</item>
-        <item quantity="other">%1$s хранит историю с устройств: %2$d. Её откроет ключ, который вы сохранили при включении синхронизации.</item>
+        <item quantity="one">%1$s хранит историю с устройств: %2$,d. Её откроет ключ, который вы сохранили при включении синхронизации.</item>
+        <item quantity="few">%1$s хранит историю с устройств: %2$,d. Её откроет ключ, который вы сохранили при включении синхронизации.</item>
+        <item quantity="many">%1$s хранит историю с устройств: %2$,d. Её откроет ключ, который вы сохранили при включении синхронизации.</item>
+        <item quantity="other">%1$s хранит историю с устройств: %2$,d. Её откроет ключ, который вы сохранили при включении синхронизации.</item>
     </plurals>
     <string name="rkey_enter_note">24 буквы и цифры группами по четыре. Пробелы и регистр не важны.</string>
     <string name="rkey_wrong">Этот ключ не открывает эту папку. Проверьте каждую группу из четырёх знаков и попробуйте снова.</string>
@@ -4293,9 +4324,9 @@
     <string name="cloud_app_password_note">Создайте его в Nextcloud, в разделе «Настройки», «Безопасность». Он хранится на этом устройстве (%1$s).</string>
     <plurals name="devices_tvs_for_play">
         <item quantity="one">Один телевизор для «Смотреть на ТВ»</item>
-        <item quantity="few">%1$d телевизора для «Смотреть на ТВ»</item>
-        <item quantity="many">%1$d телевизоров для «Смотреть на ТВ»</item>
-        <item quantity="other">%1$d телевизора для «Смотреть на ТВ»</item>
+        <item quantity="few">%1$,d телевизора для «Смотреть на ТВ»</item>
+        <item quantity="many">%1$,d телевизоров для «Смотреть на ТВ»</item>
+        <item quantity="other">%1$,d телевизора для «Смотреть на ТВ»</item>
     </plurals>
     <string name="devices_paired_today">Связан сегодня</string>
     <string name="tv_devices_add_line">Показывает код, который нужно ввести на телефоне</string>
@@ -4374,18 +4405,18 @@
     <string name="episode_synopsis_hidden">Описание скрыто защитой от спойлеров</string>
     <string name="episode_synopsis_show">Показать описание</string>
     <string name="episode_synopsis_show_hint">Показывает кадр и описание этой серии</string>
-    <string name="episode_facts">%1$d мин · Вышла %2$s</string>
-    <string name="episode_facts_length">%1$d min</string>
-    <string name="episode_facts_left">Осталось %1$d мин</string>
+    <string name="episode_facts">%1$,d мин · Вышла %2$s</string>
+    <string name="episode_facts_length">%1$,d min</string>
+    <string name="episode_facts_left">Осталось %1$,d мин</string>
     <string name="episode_protection_line">Защита от спойлеров скрывает всё после серии %1$d.</string>
     <string name="episode_protection_line_short">Скрыто после серии %1$d</string>
     <string name="episode_range">Серии с %1$d по %2$d</string>
     <string name="episode_range_label">Диапазон серий</string>
     <plurals name="episode_fold">
         <item quantity="one">Одна просмотренная серия</item>
-        <item quantity="few">%1$d просмотренные серии</item>
-        <item quantity="many">%1$d просмотренных серий</item>
-        <item quantity="other">%1$d просмотренной серии</item>
+        <item quantity="few">%1$,d просмотренные серии</item>
+        <item quantity="many">%1$,d просмотренных серий</item>
+        <item quantity="other">%1$,d просмотренной серии</item>
     </plurals>
     <string name="episode_short">С%1$d</string>
     <string name="episode_aired">Вышла %1$s</string>
@@ -4417,17 +4448,17 @@
     <string name="more_rankings">Рейтинги</string>
     <string name="more_following">Люди, которых вы отслеживаете</string>
     <string name="more_following_note">Из AniList</string>
-    <string name="more_followed_score">%1$d/10</string>
+    <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Похожие тайтлы</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">У AniList пока нет актёров, создателей и рекомендаций для этого тайтла.</string>
     <string name="more_spoiler">Спойлер</string>
     <string name="more_hide_spoiler_tags">Скрыть теги со спойлерами</string>
     <plurals name="more_show_spoiler_tags">
-        <item quantity="one">Показать %1$d тег со спойлерами</item>
-        <item quantity="few">Показать %1$d тега со спойлерами</item>
-        <item quantity="many">Показать %1$d тегов со спойлерами</item>
-        <item quantity="other">Показать %1$d тегов со спойлерами</item>
+        <item quantity="one">Показать %1$,d тег со спойлерами</item>
+        <item quantity="few">Показать %1$,d тега со спойлерами</item>
+        <item quantity="many">Показать %1$,d тегов со спойлерами</item>
+        <item quantity="other">Показать %1$,d тегов со спойлерами</item>
     </plurals>
     <string name="episode_line_dubbed">%1$s · С дубляжом</string>
     <string name="title_button_play_dubbed">Смотреть серию %1$d · С дубляжом</string>
@@ -4439,7 +4470,7 @@
     <string name="title_fact_after">После серии %1$d</string>
     <string name="title_fact_now">Сейчас</string>
     <string name="title_fact_tba">Дата не объявлена</string>
-    <string name="more_following_line">%1$s · %2$d/10</string>
+    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Перейти к эпизоду…</string>
     <string name="episode_go_to_title">Перейти к эпизоду</string>
     <string name="episode_go_to_go">Перейти</string>
@@ -4525,10 +4556,10 @@
     <string name="accounts_state_signed_out">Вход не выполнен</string>
     <string name="accounts_state_signed_in">Вход в %1$s выполнен как %2$s</string>
     <plurals name="accounts_state_signed_in_waiting">
-        <item quantity="one">Вход в %1$s выполнен как %2$s · %3$d изменение ждёт отправки</item>
-        <item quantity="few">Вход в %1$s выполнен как %2$s · %3$d изменения ждут отправки</item>
-        <item quantity="many">Вход в %1$s выполнен как %2$s · %3$d изменений ждут отправки</item>
-        <item quantity="other">Вход в %1$s выполнен как %2$s · %3$d изменения ждут отправки</item>
+        <item quantity="one">Вход в %1$s выполнен как %2$s · %3$,d изменение ждёт отправки</item>
+        <item quantity="few">Вход в %1$s выполнен как %2$s · %3$,d изменения ждут отправки</item>
+        <item quantity="many">Вход в %1$s выполнен как %2$s · %3$,d изменений ждут отправки</item>
+        <item quantity="other">Вход в %1$s выполнен как %2$s · %3$,d изменения ждут отправки</item>
     </plurals>
     <string name="accounts_state_expired">Нужно снова войти в %1$s.</string>
     <string name="accounts_state_expired_short">Войдите снова, чтобы продолжить синхронизацию</string>
@@ -4650,7 +4681,7 @@
     <string name="tv_volume">Громкость ТВ</string>
     <string name="tv_cast_group">Chromecast</string>
     <string name="tv_cast_none_found">ТВ со встроенным Chromecast тоже показываются здесь.</string>
-    <string name="tv_cast_counting">%1$s · %2$d с</string>
+    <string name="tv_cast_counting">%1$s · %2$,d с</string>
     <string name="tv_cast_couldnt_start">Не удалось запустить на %1$s</string>
     <string name="tv_cast_stopped">Трансляция остановлена</string>
     <string name="tv_cast_play_here">Смотреть здесь</string>
@@ -4658,7 +4689,7 @@
     <string name="tv_cast_mute">Выключить звук</string>
     <string name="tv_cast_unmute">Включить звук</string>
     <string name="tv_cast_volume_on_tv">Задаётся на ТВ</string>
-    <string name="tv_cast_up_next_in">Далее · воспроизведение через %1$d с</string>
+    <string name="tv_cast_up_next_in">Далее · воспроизведение через %1$,d с</string>
     <string name="tv_forget_note">Если убрать здесь телевизор, он тоже забудет это устройство.</string>
     <string name="updates_title">Обновления</string>
     <string name="updates_checking">Проверка новой версии…</string>

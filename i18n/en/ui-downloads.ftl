@@ -62,7 +62,7 @@ downloads-folder-failed = Couldn't open the folder. Check that it still exists.
 ## Row
 
 # Name of a row.
-# @arg episode: int
+# @arg episode: plain
 downloads-episode-name = Episode { $episode }
 
 # Row caption: waiting for a free place.
@@ -136,7 +136,7 @@ downloads-pause-one = Pause download
 downloads-resume-one = Resume download
 
 # Accessibility label: play one downloaded episode.
-# @arg episode: int
+# @arg episode: plain
 downloads-play-episode = Play episode { $episode }
 
 ## Confirm delete
@@ -228,7 +228,7 @@ downloads-quality = Download quality
 ## Notifications of a download
 
 # Title of the notification when an episode finished.
-# @arg episode: int
+# @arg episode: plain
 downloads-notice-done = Episode { $episode } downloaded
 
 # Body of that notification.
@@ -243,7 +243,7 @@ downloads-notice-running = { $count ->
  }
 
 # Notification text: first line of one running download.
-# @arg episode: int
+# @arg episode: plain
 # @arg left: text
 downloads-notice-episode-left = Episode { $episode } · { $left } left
 
@@ -251,7 +251,7 @@ downloads-notice-episode-left = Episode { $episode } · { $left } left
 downloads-notice-starting = Starting
 
 # Button on a title page to download one episode.
-# @arg episode: int
+# @arg episode: plain
 episode-download-one = Download episode { $episode }
 
 # Line under that button while it waits.
@@ -272,5 +272,5 @@ episode-download-paused = Download paused at { $percent }
 episode-download-done = Downloaded
 
 # Line under that button after a failure.
-# @arg episode: int
+# @arg episode: plain
 episode-download-failed = Couldn't download episode { $episode }. Try again.

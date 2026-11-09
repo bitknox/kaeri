@@ -16,15 +16,15 @@
     <string name="notice_cast_no_device">Den TV:n finns inte längre på nätverket.</string>
     <string name="notice_cast_unavailable">Den här versionen av Kaeri kan inte skicka till TV:ar.</string>
     <string name="cast_phase_starting">Startar på %1$s</string>
-    <string name="cast_phase_starting_for">Startar på %1$s · %2$d s</string>
-    <string name="cast_phase_waiting">Väntar på %1$s · %2$d s</string>
-    <string name="cast_phase_preparing">Förbereder strömmen · %1$d s</string>
+    <string name="cast_phase_starting_for">Startar på %1$s · %2$,d s</string>
+    <string name="cast_phase_waiting">Väntar på %1$s · %2$,d s</string>
+    <string name="cast_phase_preparing">Förbereder strömmen · %1$,d s</string>
     <string name="discussion_age_now">nu</string>
-    <string name="discussion_age_minutes">%1$d min</string>
-    <string name="discussion_age_hours">%1$d t</string>
-    <string name="discussion_age_days">%1$d d</string>
-    <string name="discussion_age_weeks">%1$d v</string>
-    <string name="discussion_age_years">%1$d år</string>
+    <string name="discussion_age_minutes">%1$,d min</string>
+    <string name="discussion_age_hours">%1$,d t</string>
+    <string name="discussion_age_days">%1$,d d</string>
+    <string name="discussion_age_weeks">%1$,d v</string>
+    <string name="discussion_age_years">%1$,d år</string>
     <string name="notice_comment_like_failed">Det gick inte att gilla kommentaren. Försök igen.</string>
     <string name="notice_comment_delete_failed">Det gick inte att ta bort kommentaren. Försök igen.</string>
     <string name="notice_discussion_sign_in">Logga in med AniList för att gilla och svara.</string>
@@ -34,7 +34,7 @@
     <string name="home_spotlight_because">För att du såg klart %1$s</string>
     <string name="home_spotlight_recommended">Rekommenderas för dig</string>
     <string name="home_spotlight_popular">Populärt den här säsongen</string>
-    <string name="home_time_left">Avsnitt %1$d · %2$d min kvar</string>
+    <string name="home_time_left">Avsnitt %1$d · %2$,d min kvar</string>
     <string name="home_episode_out">Avsnitt %1$d är ute</string>
     <string name="home_episode_next">Avsnitt %1$d kommer härnäst</string>
     <string name="home_episode_out_today">Avsnitt %1$d · ute idag</string>
@@ -55,6 +55,24 @@
     <string name="home_trending">Trendar nu</string>
     <string name="home_because">För att du såg klart %1$s</string>
     <string name="home_more_genre">Mer %1$s</string>
+    <string name="home_more_genre_action">Mer action</string>
+    <string name="home_more_genre_adventure">Mer äventyr</string>
+    <string name="home_more_genre_comedy">Mer komedi</string>
+    <string name="home_more_genre_drama">Mer drama</string>
+    <string name="home_more_genre_ecchi">Mer ecchi</string>
+    <string name="home_more_genre_fantasy">Mer fantasy</string>
+    <string name="home_more_genre_horror">Mer skräck</string>
+    <string name="home_more_genre_mahou_shoujo">Mer mahou shoujo</string>
+    <string name="home_more_genre_mecha">Mer mecha</string>
+    <string name="home_more_genre_music">Mer musik</string>
+    <string name="home_more_genre_mystery">Mer mysterium</string>
+    <string name="home_more_genre_psychological">Mer psykologisk</string>
+    <string name="home_more_genre_romance">Mer romantik</string>
+    <string name="home_more_genre_sci_fi">Mer sci-fi</string>
+    <string name="home_more_genre_slice_of_life">Mer vardagsliv</string>
+    <string name="home_more_genre_sports">Mer sport</string>
+    <string name="home_more_genre_supernatural">Mer övernaturligt</string>
+    <string name="home_more_genre_thriller">Mer thriller</string>
     <string name="home_spotlight_demo">Demo, fri att dela</string>
     <string name="licensed_return">Såg du avsnitt %1$d på %2$s?</string>
     <string name="licensed_marked">Avsnitt %1$d markerat som sett.</string>
@@ -67,7 +85,7 @@
     <string name="cause_airs_tomorrow">imorgon kl. %1$s</string>
     <plurals name="cause_airs_in_days">
         <item quantity="one">om en dag kl. %2$s</item>
-        <item quantity="other">om %1$d dagar kl. %2$s</item>
+        <item quantity="other">om %1$,d dagar kl. %2$s</item>
     </plurals>
     <string name="cause_airs_on_date">den %1$s kl. %2$s</string>
     <string name="cause_no_playable_stream">källa svarade, men det fanns inget att spela. Prova en annan.</string>
@@ -80,12 +98,12 @@
     <string name="cause_no_source_could_list_show">Ingen källa kunde lista den här serien, så den kan inte laddas ner.</string>
     <plurals name="cause_subtitles_merged">
         <item quantity="one">Ett undertextspår lades in i videon.</item>
-        <item quantity="other">%1$d undertextspår lades in i videon.</item>
+        <item quantity="other">%1$,d undertextspår lades in i videon.</item>
     </plurals>
     <string name="cause_subtitles_left_apart">Undertexterna ligger kvar som separata filer. %1$s</string>
     <plurals name="cause_already_in_downloads">
         <item quantity="one">Ett avsnitt finns redan i nedladdningarna.</item>
-        <item quantity="other">%1$d avsnitt finns redan i nedladdningarna.</item>
+        <item quantity="other">%1$,d avsnitt finns redan i nedladdningarna.</item>
     </plurals>
     <string name="status_looking_up_title">Slår upp titeln…</string>
     <string name="status_loading_sources">Läser in källor…</string>
@@ -98,10 +116,10 @@
     <string name="start_buffering">Buffrar</string>
     <string name="status_searching_sources">Söker i källor efter avsnitt %1$s…</string>
     <string name="notice_player_failed_to_start">Det gick inte att starta mpv. Kontrollera att den startar på egen hand. (%1$s)</string>
-    <string name="notice_stream_no_video">Ingen bild från strömmen. Provar %1$d av %2$d.</string>
+    <string name="notice_stream_no_video">Ingen bild från strömmen. Provar %1$,d av %2$,d.</string>
     <string name="notice_player_could_not_play">mpv kunde inte spela upp det här. %1$s</string>
     <string name="notice_player_exited_silently">mpv stängdes utan att spela något och utan att säga varför. Prova en annan källa.</string>
-    <string name="notice_player_not_playing">mpv har inte börjat spela efter %1$d s. Den här källan kan sakna data. Kontrollera att mpv spelar upp en fil på egen hand.</string>
+    <string name="notice_player_not_playing">mpv har inte börjat spela efter %1$,d s. Den här källan kan sakna data. Kontrollera att mpv spelar upp en fil på egen hand.</string>
     <string name="notice_no_player">Den här versionen av Kaeri kan inte spela video.</string>
     <string name="notice_mpv_missing">%1$s hittades inte. Installera mpv för att spela avsnitt.</string>
     <string name="notice_mpv_old">mpv %1$s kan spela, men Kaeris spelare kräver mpv 0.36 eller nyare för hoppknappen, kortet Nästa, menyerna och miniatyrerna.</string>
@@ -144,11 +162,11 @@
     <string name="notice_download_removed">Nedladdningen togs bort.</string>
     <plurals name="notice_downloads_cleared">
         <item quantity="one">Rensade en avslutad nedladdning.</item>
-        <item quantity="other">Rensade %1$d avslutade nedladdningar.</item>
+        <item quantity="other">Rensade %1$,d avslutade nedladdningar.</item>
     </plurals>
     <plurals name="notice_skip_marks_cleared">
         <item quantity="one">Rensade den enda hopptid du markerat.</item>
-        <item quantity="other">Rensade %1$d hopptider du markerat.</item>
+        <item quantity="other">Rensade %1$,d hopptider du markerat.</item>
     </plurals>
     <string name="notice_skip_marks_none">Du har inte markerat några hopptider.</string>
     <string name="notice_skip_marks_not_cleared">Kunde inte rensa dina hopptider. %1$s</string>
@@ -161,15 +179,15 @@
     <string name="notice_downloads_none_new_stopped">Inget nytt lades i kön. %1$s %2$s</string>
     <plurals name="notice_episodes_queued_existing">
         <item quantity="one">Ett avsnitt lades i kön. %2$s</item>
-        <item quantity="other">%1$d avsnitt lades i kön. %2$s</item>
+        <item quantity="other">%1$,d avsnitt lades i kön. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_stopped">
         <item quantity="one">Ett avsnitt lades i kön, sedan stoppade det. %2$s</item>
-        <item quantity="other">%1$d avsnitt lades i kön, sedan stoppade det. %2$s</item>
+        <item quantity="other">%1$,d avsnitt lades i kön, sedan stoppade det. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_existing_stopped">
         <item quantity="one">Ett avsnitt lades i kön, sedan stoppade det. %2$s %3$s</item>
-        <item quantity="other">%1$d avsnitt lades i kön, sedan stoppade det. %2$s %3$s</item>
+        <item quantity="other">%1$,d avsnitt lades i kön, sedan stoppade det. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Inte tillräckligt med ledigt utrymme för att hålla kommande avsnitt nedladdade. Frigör lite utrymme för att ladda ner fler.</string>
     <string name="party_needs_server">Välj först en server för watch party, som syncplay.server. %1$s drivs av %2$s.</string>
@@ -190,13 +208,13 @@
     <string name="reading_usually_sundays">Oftast på söndagar</string>
     <plurals name="reading_about_every_weeks">
         <item quantity="one">Ungefär varje vecka</item>
-        <item quantity="other">Ungefär %1$d veckor emellan</item>
+        <item quantity="other">Ungefär %1$,d veckor emellan</item>
     </plurals>
     <string name="reading_also_a_show">Finns även som serie</string>
     <string name="reading_also_a_book">Finns även som bok</string>
     <string name="reading_split_chapter">Kapitel %1$s skickas till trackers som %2$s.</string>
     <string name="reader_resumed">Fortsatte på sida %1$d</string>
-    <string name="reader_resumed_image">Fortsatte på bild %1$d</string>
+    <string name="reader_resumed_image">Fortsatte på bild %1$,d</string>
     <string name="reader_back_to_page">Tillbaka till sida %1$d</string>
     <string name="reader_moved">Flyttade till %1$s, sida %2$d, där %3$s slutade</string>
     <string name="reader_moved_number">Flyttade till kapitel %1$s, sida %2$d, där %3$s slutade</string>
@@ -237,11 +255,11 @@
     <string name="reading_status_not_yet">Inte utgiven än</string>
     <plurals name="reading_chapters">
         <item quantity="one">1 kapitel</item>
-        <item quantity="other">%1$d kapitel</item>
+        <item quantity="other">%1$,d kapitel</item>
     </plurals>
     <plurals name="reading_volumes">
         <item quantity="one">1 volym</item>
-        <item quantity="other">%1$d volymer</item>
+        <item quantity="other">%1$,d volymer</item>
     </plurals>
     <string name="reading_on_planning">På din planeringslista</string>
     <string name="reading_spotlight_new_chapter">Nytt kapitel i en serie du följer</string>
@@ -251,12 +269,12 @@
     <string name="reading_out_today">Kapitel %1$s kommer ut idag</string>
     <string name="reading_out_today_titled">Kapitel %1$s, %2$s, kommer ut idag</string>
     <string name="reading_chapter_page">Kapitel %1$s · sida %2$d</string>
-    <string name="reading_chapter_percent">Kapitel %1$s · %2$d%%</string>
+    <string name="reading_chapter_percent">Kapitel %1$s · %2$,d%%</string>
     <string name="reading_chapter_new">Kapitel %1$s är nytt</string>
     <string name="reading_next_part">Del %1$s</string>
-    <string name="reading_part_percent">Del %1$s · %2$d%%</string>
+    <string name="reading_part_percent">Del %1$s · %2$,d%%</string>
     <string name="reading_part_new">Del %1$s är ny</string>
-    <string name="reading_label_percent">%1$s · %2$d%%</string>
+    <string name="reading_label_percent">%1$s · %2$,d%%</string>
     <string name="reading_label_new">%1$s har kommit ut</string>
     <string name="reading_part_titled">Del %1$s · %2$s</string>
     <string name="reading_label_titled">%1$s · %2$s</string>
@@ -279,7 +297,7 @@
     <string name="export_chapter">Kapitel %1$s</string>
     <plurals name="export_waits_for_wifi">
         <item quantity="one">Ett kapitel är inte nedladdat än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.</item>
-        <item quantity="other">%1$d kapitel är inte nedladdade än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.</item>
+        <item quantity="other">%1$,d kapitel är inte nedladdade än, så den här sändningen väntar på Wi-Fi och fortsätter av sig själv.</item>
     </plurals>
     <string name="reading_chapter_titled">Kapitel %1$s · %2$s</string>
     <string name="reading_row_read">Läst</string>
@@ -290,40 +308,40 @@
     <string name="reading_row_on_device">På den här enheten</string>
     <string name="reading_row_queued">I kö</string>
     <string name="reading_row_waits_wifi">I kö · väntar på Wi-Fi</string>
-    <string name="reading_row_downloading">Laddar ner · %1$d av %2$d sidor</string>
+    <string name="reading_row_downloading">Laddar ner · %1$,d av %2$,d sidor</string>
     <string name="reading_row_failed">Kunde inte laddas ner</string>
     <string name="reading_row_page_of">Sida %1$d av %2$d</string>
     <string name="reading_row_page">Sida %1$d</string>
-    <string name="reading_row_percent">%1$d%%</string>
+    <string name="reading_row_percent">%1$,d%%</string>
     <string name="reading_row_opened">Öppnad</string>
     <string name="reading_row_bookmarked">Bokmärkt</string>
     <plurals name="reading_row_pages">
         <item quantity="one">1 sida</item>
-        <item quantity="other">%1$d sidor</item>
+        <item quantity="other">%1$,d sidor</item>
     </plurals>
     <plurals name="reading_row_versions">
         <item quantity="one">1 version</item>
-        <item quantity="other">%1$d versioner</item>
+        <item quantity="other">%1$,d versioner</item>
     </plurals>
     <string name="reading_ago_now">nyss</string>
-    <string name="reading_ago_minutes">%1$d min sedan</string>
+    <string name="reading_ago_minutes">%1$,d min sedan</string>
     <string name="reading_ago_today">idag</string>
     <string name="reading_ago_yesterday">igår</string>
     <plurals name="reading_ago_days">
         <item quantity="one">1 dag sedan</item>
-        <item quantity="other">%1$d dagar sedan</item>
+        <item quantity="other">%1$,d dagar sedan</item>
     </plurals>
     <plurals name="reading_ago_weeks">
         <item quantity="one">1 vecka sedan</item>
-        <item quantity="other">%1$d veckor sedan</item>
+        <item quantity="other">%1$,d veckor sedan</item>
     </plurals>
     <plurals name="reading_ago_months">
         <item quantity="one">1 månad sedan</item>
-        <item quantity="other">%1$d månader sedan</item>
+        <item quantity="other">%1$,d månader sedan</item>
     </plurals>
     <plurals name="reading_ago_years">
         <item quantity="one">1 år sedan</item>
-        <item quantity="other">%1$d år sedan</item>
+        <item quantity="other">%1$,d år sedan</item>
     </plurals>
     <string name="reading_removed_from">Borttagen från %1$s</string>
     <string name="reading_removed_not_there">Fanns inte i din %1$s-lista</string>
@@ -335,14 +353,14 @@
     <string name="reading_miss_down">Svarar inte</string>
     <plurals name="reading_dl_parts">
         <item quantity="one">1 del</item>
-        <item quantity="other">%1$d delar</item>
+        <item quantity="other">%1$,d delar</item>
     </plurals>
     <string name="reading_dl_size">%1$s</string>
-    <string name="reading_dl_read">%1$d lästa</string>
+    <string name="reading_dl_read">%1$,d lästa</string>
     <string name="reading_dl_chapter">Kapitel %1$s</string>
-    <string name="reading_dl_pages">%1$d av %2$d sidor</string>
-    <string name="reading_dl_more_queued">%1$d till i kö</string>
-    <string name="reading_dl_queued">%1$d i kö</string>
+    <string name="reading_dl_pages">%1$,d av %2$,d sidor</string>
+    <string name="reading_dl_more_queued">%1$,d till i kö</string>
+    <string name="reading_dl_queued">%1$,d i kö</string>
     <string name="reading_dl_waits_wifi">väntar på Wi-Fi</string>
     <string name="reading_dl_failed">Kapitel %1$s kunde inte laddas ner</string>
     <string name="reading_estimate_size">Cirka %1$s</string>
@@ -352,13 +370,26 @@
     <string name="reading_downloads_done_title">Nedladdningar klara</string>
     <plurals name="reading_downloads_done_chapters">
         <item quantity="one">Ett kapitel av %1$s är redo att läsas offline.</item>
-        <item quantity="other">%2$d kapitel av %1$s är redo att läsas offline.</item>
+        <item quantity="other">%2$,d kapitel av %1$s är redo att läsas offline.</item>
     </plurals>
     <plurals name="reading_downloads_done_parts">
         <item quantity="one">En del av %1$s är redo att läsas offline.</item>
-        <item quantity="other">%2$d delar av %1$s är redo att läsas offline.</item>
+        <item quantity="other">%2$,d delar av %1$s är redo att läsas offline.</item>
     </plurals>
-    <string name="reading_downloads_done_series">Kapitel från %1$d serier är redo att läsas offline.</string>
+    <string name="reading_downloads_done_series">Kapitel från %1$,d serier är redo att läsas offline.</string>
+    <string name="read_source_folders">Mappar</string>
+    <string name="reading_since_january">sedan januari</string>
+    <string name="reading_since_february">sedan februari</string>
+    <string name="reading_since_march">sedan mars</string>
+    <string name="reading_since_april">sedan april</string>
+    <string name="reading_since_may">sedan maj</string>
+    <string name="reading_since_june">sedan juni</string>
+    <string name="reading_since_july">sedan juli</string>
+    <string name="reading_since_august">sedan augusti</string>
+    <string name="reading_since_september">sedan september</string>
+    <string name="reading_since_october">sedan oktober</string>
+    <string name="reading_since_november">sedan november</string>
+    <string name="reading_since_december">sedan december</string>
     <string name="store_joined">Gick med i %1$s som %2$s.</string>
     <string name="store_joined_unnamed">Gick med i %1$s utan namn.</string>
     <string name="store_left">Lämnade %1$s. Dess tillägg finns kvar installerade.</string>
@@ -367,13 +398,13 @@
     <string name="store_invite_cancelled">Inbjudan avbröts. Länken fungerar inte längre.</string>
     <plurals name="store_invite_cancelled_kept">
         <item quantity="one">Inbjudan avbröts. Personen som gick med är kvar som medlem.</item>
-        <item quantity="other">Inbjudan avbröts. De %1$d personerna som gick med är kvar som medlemmar.</item>
+        <item quantity="other">Inbjudan avbröts. De %1$,d personerna som gick med är kvar som medlemmar.</item>
     </plurals>
     <string name="store_open_join_on">Vem som helst med länken till tilläggsbutik kan gå med nu. Kopiera den från medlemssidan.</string>
     <string name="store_open_join_off">Bara personer du bjuder in kan gå med nu.</string>
     <plurals name="store_open_join_off_devices">
         <item quantity="one">Bara personer du bjuder in kan gå med nu. Den enhet som gick med via länken fortsätter fungera tills du tar bort den.</item>
-        <item quantity="other">Bara personer du bjuder in kan gå med nu. De %1$d enheter som gick med via länken fortsätter fungera tills du tar bort dem.</item>
+        <item quantity="other">Bara personer du bjuder in kan gå med nu. De %1$,d enheter som gick med via länken fortsätter fungera tills du tar bort dem.</item>
     </plurals>
     <string name="store_device_removed">Den enhet fungerar inte längre med den här tilläggsbutiken.</string>
     <string name="store_devices_removed">Tog bort alla enheter som gick med via länken.</string>
@@ -388,7 +419,7 @@
     <string name="plugin_installed_outdated">Installerade %1$s, men det byggdes för en äldre version av Kaeri och behöver uppdateras. Be utvecklaren om en ny version.</string>
     <plurals name="plugins_outdated">
         <item quantity="one">Ett tillägg byggdes för en äldre version av Kaeri och behöver uppdateras: %2$s.</item>
-        <item quantity="other">%1$d tillägg byggdes för en äldre version av Kaeri och behöver uppdateras: %2$s.</item>
+        <item quantity="other">%1$,d tillägg byggdes för en äldre version av Kaeri och behöver uppdateras: %2$s.</item>
     </plurals>
     <plurals name="plugin_updates_ready">
         <item quantity="one">Uppdatering klar för tillägg: %2$s.</item>
@@ -476,7 +507,7 @@
     <string name="notice_signed_out">Utloggad från %1$s.</string>
     <plurals name="notice_signed_out_queue">
         <item quantity="one">Utloggad från %1$s. En köad ändring sparas till nästa inloggning.</item>
-        <item quantity="other">Utloggad från %1$s. %2$d köade ändringar sparas till nästa inloggning.</item>
+        <item quantity="other">Utloggad från %1$s. %2$,d köade ändringar sparas till nästa inloggning.</item>
     </plurals>
     <string name="notice_sign_out_failed">Det gick inte att logga ut från %1$s. Försök igen. %2$s</string>
     <string name="notice_not_saved_because">Det gick inte att spara inställningen. %1$s</string>
@@ -492,7 +523,7 @@
     <string name="notice_episode_aired">%1$s, avsnitt %2$d, sändes medan du var borta.</string>
     <plurals name="notice_episodes_aired">
         <item quantity="one">Ett nytt avsnitt av en serie du följer sändes. Kalendern visar det.</item>
-        <item quantity="other">%1$d nya avsnitt av serier du följer sändes. Kalendern visar dem.</item>
+        <item quantity="other">%1$,d nya avsnitt av serier du följer sändes. Kalendern visar dem.</item>
     </plurals>
     <string name="notice_update_available">%1$s är ute. Kör kaeri --update för att installera den.</string>
     <string name="cause_proxy_needs_address">En proxy behöver en värd och en port.</string>
@@ -515,7 +546,7 @@
     <string name="start_failed_player">Spelaren kunde inte starta. %1$s</string>
     <plurals name="notice_episodes_queued">
         <item quantity="one">Lade till ett avsnitt i kön.</item>
-        <item quantity="other">Lade till %1$d avsnitt i kön.</item>
+        <item quantity="other">Lade till %1$,d avsnitt i kön.</item>
     </plurals>
     <string name="settings_subs_reset_done">Undertextstilen återställdes</string>
     <string name="crash_notice">Kaeri stängdes efter ett fel.</string>
@@ -544,19 +575,19 @@
     <string name="discussion_video_host">Video · %1$s</string>
     <plurals name="player_more_discussion_note">
         <item quantity="one">En kommentar · pausar</item>
-        <item quantity="other">%1$d kommentarer · pausar</item>
+        <item quantity="other">%1$,d kommentarer · pausar</item>
     </plurals>
     <string name="player_more_discussion_pauses">Pausar videon</string>
     <string name="search_pill_set">%1$s, %2$s</string>
     <string name="search_pill_any">%1$s, valfri</string>
-    <string name="search_pill_all_set">Alla filter, %1$d valda</string>
+    <string name="search_pill_all_set">Alla filter, %1$,d valda</string>
     <string name="search_pill_clear">Rensa alla filter</string>
     <string name="cast_sheet_group">Chromecast</string>
     <string name="cast_sheet_through_phone">Spelas via den här telefonen</string>
     <string name="cast_sheet_through_tablet">Spelas via den här surfplattan</string>
     <string name="cast_sheet_chromecast_too">TV-apparater med inbyggd Chromecast visas också här.</string>
     <string name="cast_sheet_local_network">Låt Kaeri hitta enheter i ditt lokala nätverk</string>
-    <string name="cast_card_up_next_in">Nästa · spelas om %1$d s</string>
+    <string name="cast_card_up_next_in">Nästa · spelas om %1$,d s</string>
     <string name="cast_card_up_next">Nästa</string>
     <string name="cast_card_up_next_cancel">Avbryt</string>
     <string name="cast_card_up_next_play">Spela nu</string>
@@ -577,8 +608,8 @@
     <string name="book_server_keystore_android">Androids nyckellager</string>
     <string name="store_invite_chip">Inbjudan ••••%1$s</string>
     <plurals name="store_plugin_hosts">
-        <item quantity="one">%1$d värd</item>
-        <item quantity="other">%1$d värdar</item>
+        <item quantity="one">%1$,d värd</item>
+        <item quantity="other">%1$,d värdar</item>
     </plurals>
     <string name="join_medium_line_watch">Titta, som på %1$s</string>
     <string name="join_medium_line_both">Titta och läsa, som på %1$s</string>
@@ -601,7 +632,7 @@
     <string name="eink_back">Tillbaka</string>
     <plurals name="eink_pages_left">
         <item quantity="one">En sida kvar i kapitlet</item>
-        <item quantity="other">%1$d sidor kvar i kapitlet</item>
+        <item quantity="other">%1$,d sidor kvar i kapitlet</item>
     </plurals>
     <string name="eink_next_chapter">Nästa kapitel</string>
     <string name="eink_previous_chapter">Föregående kapitel</string>
@@ -612,7 +643,7 @@
     <string name="eink_end_next">Nästa</string>
     <plurals name="eink_end_pages">
         <item quantity="one">En sida</item>
-        <item quantity="other">%1$d sidor</item>
+        <item quantity="other">%1$,d sidor</item>
     </plurals>
     <string name="eink_reads_rtl">höger till vänster</string>
     <string name="eink_reads_ltr">vänster till höger</string>
@@ -652,7 +683,7 @@
     <string name="reader_notice_change">Ändra</string>
     <string name="reader_settings">Läsarinställningar</string>
     <string name="reader_novel_line_scroll">Kapitel %1$s · rullning</string>
-    <string name="reader_minutes_left">%1$d min</string>
+    <string name="reader_minutes_left">%1$,d min</string>
     <string name="reader_zone_next">Nästa sida</string>
     <string name="reader_grid_title">Sidor</string>
     <string name="reader_end_continue">Läs vidare</string>
@@ -745,7 +776,7 @@
     <string name="reader_row_strip_gap">Avstånd mellan bilder</string>
     <string name="reader_paper_look">Pappersutseende dagtid</string>
     <string name="reader_paper_dim">Dämpa sidan</string>
-    <string name="reader_opening_waited">%1$s · %2$d s</string>
+    <string name="reader_opening_waited">%1$s · %2$,d s</string>
     <string name="reader_sources_title">Läs det här kapitlet från</string>
     <string name="reader_paper_parts">Vad det ändrar</string>
     <string name="read_home_offline_line">Hem för läsning behöver en anslutning första gången den öppnas. Nedladdade kapitel går fortfarande att öppna.</string>
@@ -756,17 +787,17 @@
     <string name="notif_chapter_new">%1$s är ute.</string>
     <plurals name="notif_chapters_new">
         <item quantity="one">Ett nytt kapitel</item>
-        <item quantity="other">%1$d nya kapitel</item>
+        <item quantity="other">%1$,d nya kapitel</item>
     </plurals>
     <string name="notif_chapter_hidden">Nytt kapitel</string>
     <string name="notif_chapter_read">Läs</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Laddar ner ett kapitel</item>
-        <item quantity="other">Laddar ner %1$d kapitel</item>
+        <item quantity="other">Laddar ner %1$,d kapitel</item>
     </plurals>
     <plurals name="read_series_downloaded_open">
         <item quantity="one">Ett nedladdat kapitel går fortfarande att öppna.</item>
-        <item quantity="other">%1$d nedladdade kapitel går fortfarande att öppna.</item>
+        <item quantity="other">%1$,d nedladdade kapitel går fortfarande att öppna.</item>
     </plurals>
     <string name="read_downloads_empty_detail">Nedladdade kapitel öppnas utan anslutning.</string>
     <string name="read_downloads_empty_both">Nedladdade avsnitt och kapitel öppnas utan anslutning.</string>
@@ -774,20 +805,20 @@
     <string name="settings_summary_chapters_off">Nya kapitel av</string>
     <plurals name="settings_summary_book_folders">
         <item quantity="one">1 mapp</item>
-        <item quantity="other">%1$d mappar</item>
+        <item quantity="other">%1$,d mappar</item>
     </plurals>
     <plurals name="settings_summary_book_servers">
         <item quantity="one">1 server</item>
-        <item quantity="other">%1$d servrar</item>
+        <item quantity="other">%1$,d servrar</item>
     </plurals>
     <plurals name="settings_summary_book_plugins">
         <item quantity="one">1 tillägg</item>
-        <item quantity="other">%1$d tillägg</item>
+        <item quantity="other">%1$,d tillägg</item>
     </plurals>
     <string name="settings_book_sources">Källor för böcker</string>
     <plurals name="book_matches_line">
-        <item quantity="one">Kaeri matchade %1$d utifrån deras detaljer. Den här behöver granskas.</item>
-        <item quantity="other">Kaeri matchade %1$d utifrån deras detaljer. De här %2$d behöver granskas.</item>
+        <item quantity="one">Kaeri matchade %1$,d utifrån deras detaljer. Den här behöver granskas.</item>
+        <item quantity="other">Kaeri matchade %1$,d utifrån deras detaljer. De här %2$,d behöver granskas.</item>
     </plurals>
     <string name="book_folder_failed">Mappen kunde inte läggas till. Prova en annan.</string>
     <string name="book_server_note_device">Kaeri skickar tillbaka ditt läsförlopp till servern. Lösenordet stannar på den här enheten.</string>
@@ -807,8 +838,8 @@
     <string name="tv_connect_tracker">Anslut en tracker</string>
     <string name="tv_change_status">Ändra status</string>
     <string name="tv_add_to_planning">Lägg till i Planering</string>
-    <string name="tv_progress_of">%1$d / %2$d</string>
-    <string name="tv_progress_unknown">%1$d / ?</string>
+    <string name="tv_progress_of">%1$,d / %2$,d</string>
+    <string name="tv_progress_unknown">%1$,d / ?</string>
     <string name="tv_calendar_signed_out_note">Logga in för att bara se dina serier</string>
     <string name="tv_calendar_time_was">%1$s (var %2$s)</string>
     <string name="tv_player_undo_pill">%1$s · Ångra</string>
@@ -822,10 +853,10 @@
     <string name="tv_search_space">Mellanslag</string>
     <string name="tv_search_season_in">Säsong %1$d</string>
     <string name="tv_search_genres_offline">Genrerna läses in när TV:n är uppkopplad</string>
-    <string name="tv_seasons_position">%1$d av %2$d</string>
+    <string name="tv_seasons_position">%1$,d av %2$,d</string>
     <plurals name="tv_seasons_count">
-        <item quantity="one">%1$d säsong</item>
-        <item quantity="other">%1$d säsonger</item>
+        <item quantity="one">%1$,d säsong</item>
+        <item quantity="other">%1$,d säsonger</item>
     </plurals>
     <string name="tv_episode_mark_up_to_here">Markera som sedda till och med här</string>
     <string name="tv_card_label_watched">%1$s, sedd</string>
@@ -854,12 +885,12 @@
     <string name="tv_update_auto_check">Sök efter uppdateringar automatiskt</string>
     <string name="tv_update_auto_check_detail">En gång om dagen, från Kaeris utgåvor</string>
     <plurals name="tv_phone_used_days">
-        <item quantity="one">Använd för %1$d dag sedan</item>
-        <item quantity="other">Använd för %1$d dagar sedan</item>
+        <item quantity="one">Använd för %1$,d dag sedan</item>
+        <item quantity="other">Använd för %1$,d dagar sedan</item>
     </plurals>
     <plurals name="tv_phone_paired_days">
-        <item quantity="one">Parkopplad för %1$d dag sedan</item>
-        <item quantity="other">Parkopplad för %1$d dagar sedan</item>
+        <item quantity="one">Parkopplad för %1$,d dag sedan</item>
+        <item quantity="other">Parkopplad för %1$,d dagar sedan</item>
     </plurals>
     <string name="tv_update_installed">Den här TV:n kör v%1$s</string>
     <string name="tv_page_not_found_text">Sidan finns inte längre. Skanna koden på TV:n igen.</string>
@@ -889,7 +920,7 @@
     <string name="tv_field_password_optional">Lösenord, om det efterfrågas</string>
     <string name="tv_qr_label_link">QR-kod för sidan som tar emot länken</string>
     <string name="tv_preview_key">Nyckel %1$s</string>
-    <string name="tv_preview_more">och %1$d till</string>
+    <string name="tv_preview_more">och %1$,d till</string>
     <string name="tv_already_joined">Redan ansluten</string>
     <string name="tv_joining">Ansluter</string>
     <string name="tv_signin_done_as">Loggade in på %1$s som %2$s.</string>
@@ -907,11 +938,11 @@
     <string name="tv_discussion_footer">För att svara, öppna diskussionen på telefonen.</string>
     <plurals name="tv_discussion_count_read_only">
         <item quantity="one">En kommentar · Endast läsning</item>
-        <item quantity="other">%1$d kommentarer · Endast läsning</item>
+        <item quantity="other">%1$,d kommentarer · Endast läsning</item>
     </plurals>
     <plurals name="tv_discussion_likes">
         <item quantity="one">En gillning</item>
-        <item quantity="other">%1$d gillningar</item>
+        <item quantity="other">%1$,d gillningar</item>
     </plurals>
     <string name="tv_discussion_select_spoiler">Välj för att visa spoilern</string>
     <string name="updates_unknown_sources_path">Inställningar › Appar › Säkerhet och begränsningar › Okända källor</string>
@@ -920,7 +951,7 @@
     <string name="episode_long_dubbed">Avsnitt %1$d · Dubbat</string>
     <plurals name="downloads_live_paused">
         <item quantity="one">Ett avsnitt pausat</item>
-        <item quantity="other">%1$d avsnitt pausade</item>
+        <item quantity="other">%1$,d avsnitt pausade</item>
     </plurals>
     <string name="downloads_live_lead">%1$s E%2$d</string>
     <string name="downloads_live_left">%1$s kvar</string>
@@ -945,7 +976,7 @@
     <string name="media_dates_range">%1$s till %2$s</string>
     <plurals name="title_also_on_more">
         <item quantity="one">%1$s och en till</item>
-        <item quantity="other">%1$s och %2$d till</item>
+        <item quantity="other">%1$s och %2$,d till</item>
     </plurals>
     <string name="title_adult_mark">18+</string>
     <string name="downloads_storage_used_free">%1$s använt · %2$s ledigt</string>
@@ -956,7 +987,7 @@
     <string name="downloads_ratio_of">%1$s av %2$s</string>
     <plurals name="downloads_group_summary">
         <item quantity="one">Ett avsnitt · %2$s</item>
-        <item quantity="other">%1$d avsnitt · %2$s</item>
+        <item quantity="other">%1$,d avsnitt · %2$s</item>
     </plurals>
     <string name="episode_menu_download">Ladda ner</string>
     <string name="episode_menu_download_paused">Nedladdning pausad</string>
@@ -974,15 +1005,15 @@
     <string name="country_korea">Sydkorea</string>
     <plurals name="search_genres_picked">
         <item quantity="one">En genre</item>
-        <item quantity="other">%1$d genrer</item>
+        <item quantity="other">%1$,d genrer</item>
     </plurals>
     <plurals name="search_formats_picked">
         <item quantity="one">Ett format</item>
-        <item quantity="other">%1$d format</item>
+        <item quantity="other">%1$,d format</item>
     </plurals>
     <plurals name="search_statuses_picked">
         <item quantity="one">En status</item>
-        <item quantity="other">%1$d statusar</item>
+        <item quantity="other">%1$,d statusar</item>
     </plurals>
     <string name="filter_score_any">Valfri</string>
     <string name="filter_years_from">%1$s och framåt</string>
@@ -1010,7 +1041,7 @@
     <string name="reason_source_unreachable">Det gick inte att nå källan.</string>
     <plurals name="stores_updates_waiting">
         <item quantity="one">En uppdatering</item>
-        <item quantity="other">%1$d uppdateringar</item>
+        <item quantity="other">%1$,d uppdateringar</item>
     </plurals>
     <string name="stores_checked_ago">kontrollerades %1$s</string>
     <string name="stores_preview_key_link">Nyckeln stämmer med länken</string>
@@ -1029,7 +1060,7 @@
     <string name="settings_summary_notify_off">Nya avsnitt av</string>
     <plurals name="settings_summary_sources">
         <item quantity="one">En källa</item>
-        <item quantity="other">%1$d källor</item>
+        <item quantity="other">%1$,d källor</item>
     </plurals>
     <string name="settings_summary_no_sources">Inga källor än</string>
     <string name="settings_summary_torrents_on">torrenter på</string>
@@ -1054,17 +1085,17 @@
     <string name="settings_titles_note_english_missing">%1$s har ingen engelsk titel på AniList, så den behåller sin romaji-titel.</string>
     <string name="settings_titles_note_english">Engelska titlar som AniList anger, och romaji där det inte finns någon.</string>
     <string name="settings_titles_note_romaji">Japanska titlar skrivna med latinska bokstäver, som AniList anger dem.</string>
-    <string name="settings_stores_with_updates">%1$d · %2$s</string>
+    <string name="settings_stores_with_updates">%1$,d · %2$s</string>
     <string name="settings_seeding_best_effort">Den här enheten seedar bara medan Kaeri är öppen.</string>
     <plurals name="settings_downloads_count">
         <item quantity="one">Ett avsnitt</item>
-        <item quantity="other">%1$d avsnitt</item>
+        <item quantity="other">%1$,d avsnitt</item>
     </plurals>
     <string name="settings_anilist_footer">Framsteg och liständringar synkas till AniList. Bibliotek visar dina AniList-listor.</string>
     <string name="accounts_sign_in_again_button">Logga in igen</string>
     <plurals name="accounts_review_differences">
         <item quantity="one">Granska en skillnad</item>
-        <item quantity="other">Granska %1$d skillnader</item>
+        <item quantity="other">Granska %1$,d skillnader</item>
     </plurals>
     <string name="settings_licence_title">Licens</string>
     <string name="settings_licence_value">MIT, öppen källkod och icke-kommersiell</string>
@@ -1103,7 +1134,7 @@
     <string name="tv_sheet_volume">TV:ns volym</string>
     <string name="tv_sheet_volume_down">Sänk volymen</string>
     <string name="tv_sheet_volume_up">Höj volymen</string>
-    <string name="tv_sheet_volume_value">%1$d av 100</string>
+    <string name="tv_sheet_volume_value">%1$,d av 100</string>
     <string name="tv_sheet_nothing_playing">Spelar inget</string>
     <string name="tv_sheet_position">Position på TV:n</string>
     <string name="tv_sheet_position_state">%1$s av %2$s</string>
@@ -1127,7 +1158,7 @@
     <string name="player_dual_audio">Textat och dubbat</string>
     <plurals name="notif_new_episodes">
         <item quantity="one">Ett nytt avsnitt</item>
-        <item quantity="other">%1$d nya avsnitt</item>
+        <item quantity="other">%1$,d nya avsnitt</item>
     </plurals>
     <string name="notif_hidden_text">Nytt avsnitt</string>
     <string name="notif_episode_out">Avsnitt %1$d är ute.</string>
@@ -1138,7 +1169,7 @@
     <string name="device_name_tablet">Android-surfplatta</string>
     <string name="tv_session_starting">Startar på %1$s</string>
     <string name="tv_session_line">%1$s · %2$s</string>
-    <string name="widget_line_left">%1$s · %2$d min kvar</string>
+    <string name="widget_line_left">%1$s · %2$,d min kvar</string>
     <string name="widget_line_of">E%1$d av %2$d</string>
     <string name="widget_continue_title">Fortsätt titta</string>
     <string name="widget_caught_up_title">Ikapp</string>
@@ -1157,7 +1188,7 @@
     <string name="channel_downloads_name">Nedladdningar</string>
     <plurals name="release_seeders">
         <item quantity="one">En seeder</item>
-        <item quantity="other">%1$d seeders</item>
+        <item quantity="other">%1$,d seeders</item>
     </plurals>
     <string name="trailer_failed">Det gick inte att öppna trailern</string>
     <string name="engine_down_title">Kaeri har stannat</string>
@@ -1257,7 +1288,7 @@
     <string name="cast_torrents_note_mac">Då kan en TV med inbyggd Chromecast spela torrents. Den här Macen skickar avsnittet så länge det spelas.</string>
     <string name="cast_torrents_note_iphone">Då kan en TV med inbyggd Chromecast spela torrents. Den här iPhonen skickar avsnittet så länge det spelas.</string>
     <string name="cast_torrents_note_ipad">Då kan en TV med inbyggd Chromecast spela torrents. Den här iPaden skickar avsnittet så länge det spelas.</string>
-    <string name="cast_up_next_plays_in">Nästa · spelas om %1$d s</string>
+    <string name="cast_up_next_plays_in">Nästa · spelas om %1$,d s</string>
     <string name="cast_couldnt_start">Kunde inte starta på %1$s</string>
     <string name="cast_stopped">Castingen stoppades</string>
     <string name="cast_play_here">Spela här</string>
@@ -1267,12 +1298,12 @@
     <string name="action_cancel">Avbryt</string>
     <string name="action_go">Gå</string>
     <string name="action_not_now">Inte nu</string>
-    <string name="duration_days">%1$d d</string>
-    <string name="duration_hours_minutes">%1$d h %2$d min</string>
-    <string name="duration_hours">%1$d h</string>
-    <string name="duration_minutes">%1$d min</string>
-    <string name="duration_minutes_seconds">%1$d min %2$s s</string>
-    <string name="duration_seconds">%1$d s</string>
+    <string name="duration_days">%1$,d d</string>
+    <string name="duration_hours_minutes">%1$,d h %2$,d min</string>
+    <string name="duration_hours">%1$,d h</string>
+    <string name="duration_minutes">%1$,d min</string>
+    <string name="duration_minutes_seconds">%1$,d min %2$s s</string>
+    <string name="duration_seconds">%1$,d s</string>
     <string name="size_byte">%1$s B</string>
     <string name="size_kilobyte">%1$s kB</string>
     <string name="size_megabyte">%1$s MB</string>
@@ -1332,8 +1363,8 @@
     <string name="day_yesterday">Igår</string>
     <string name="time_ago">för %1$s sedan</string>
     <string name="time_in">om %1$s</string>
-    <string name="time_minutes_left">%1$d min kvar</string>
-    <string name="time_minutes">%1$d min</string>
+    <string name="time_minutes_left">%1$,d min kvar</string>
+    <string name="time_minutes">%1$,d min</string>
     <string name="time_now_inline">nu</string>
     <string name="time_just_now_inline">precis nyss</string>
     <string name="when_today">idag %1$s</string>
@@ -1368,11 +1399,11 @@
     <string name="pad_help_page_down">Bläddra en sida ner</string>
     <plurals name="pad_help_seek_back">
         <item quantity="one">Bakåt 1 sekund</item>
-        <item quantity="other">Bakåt %1$d sekunder</item>
+        <item quantity="other">Bakåt %1$,d sekunder</item>
     </plurals>
     <plurals name="pad_help_seek_forward">
         <item quantity="one">Framåt 1 sekund</item>
-        <item quantity="other">Framåt %1$d sekunder</item>
+        <item quantity="other">Framåt %1$,d sekunder</item>
     </plurals>
     <string name="pad_help_skip">Hoppa över</string>
     <string name="pad_help_play_now">Spela upp nu</string>
@@ -1427,7 +1458,7 @@
     <string name="tv_problem_version">TV:n kör en annan version av Kaeri. Uppdatera båda till samma version.</string>
     <string name="tv_problem_wrong_code">Koden stämde inte. Kontrollera koden på TV:n och försök igen.</string>
     <string name="tv_volume_down">Sänk volymen</string>
-    <string name="tv_volume_of">%1$d av 100</string>
+    <string name="tv_volume_of">%1$,d av 100</string>
     <string name="tv_volume_up">Höj volymen</string>
     <string name="updates_download">Ladda ner uppdatering</string>
     <string name="updates_restart">Starta om och uppdatera</string>
@@ -1440,17 +1471,17 @@
     <string name="discussion_title_episode">Diskussion om avsnitt %1$d</string>
     <plurals name="discussion_row">
         <item quantity="one">Diskussion · en kommentar</item>
-        <item quantity="other">Diskussion · %1$d kommentarer</item>
+        <item quantity="other">Diskussion · %1$,d kommentarer</item>
     </plurals>
     <plurals name="discussion_count">
         <item quantity="one">En kommentar</item>
-        <item quantity="other">%1$d kommentarer</item>
+        <item quantity="other">%1$,d kommentarer</item>
     </plurals>
     <string name="discussion_like">Gilla</string>
     <string name="discussion_reply">Svara</string>
     <plurals name="discussion_more_replies">
         <item quantity="one">Ett svar till</item>
-        <item quantity="other">%1$d svar till</item>
+        <item quantity="other">%1$,d svar till</item>
     </plurals>
     <string name="discussion_spoiler">Spoiler</string>
     <string name="discussion_image">Bild</string>
@@ -1537,7 +1568,7 @@
     <string name="downloads_notice_done_detail">%1$s · klart att se offline</string>
     <plurals name="downloads_notice_running">
         <item quantity="one">Laddar ner ett avsnitt</item>
-        <item quantity="other">Laddar ner %1$d avsnitt</item>
+        <item quantity="other">Laddar ner %1$,d avsnitt</item>
     </plurals>
     <string name="downloads_notice_episode_left">Avsnitt %1$d · %2$s kvar</string>
     <string name="downloads_notice_starting">Startar</string>
@@ -1578,13 +1609,13 @@
     <string name="home_remove_continue">Ta bort från Fortsätt titta</string>
     <plurals name="home_continue_count">
         <item quantity="one">1 serie</item>
-        <item quantity="other">%1$d serier</item>
+        <item quantity="other">%1$,d serier</item>
     </plurals>
     <string name="home_view_all">Visa alla</string>
     <string name="home_full_calendar">Hela kalendern</string>
     <string name="home_today">Idag</string>
     <string name="home_nothing_airing">Inget sänds</string>
-    <string name="home_day_more">%1$d till</string>
+    <string name="home_day_more">%1$,d till</string>
     <string name="home_seasonal">Säsong</string>
     <string name="home_search">Sök</string>
     <string name="home_end">Det var allt för nu. Säsong och Kalender har de fullständiga listorna.</string>
@@ -1610,17 +1641,17 @@
     <string name="home_synced">AniList synkat</string>
     <plurals name="queue_episodes_left">
         <item quantity="one">Ett avsnitt kvar i %2$s</item>
-        <item quantity="other">%1$d avsnitt kvar i %2$s</item>
+        <item quantity="other">%1$,d avsnitt kvar i %2$s</item>
     </plurals>
     <plurals name="episodes_count">
-        <item quantity="one">%1$d avsnitt</item>
-        <item quantity="other">%1$d avsnitt</item>
+        <item quantity="one">%1$,d avsnitt</item>
+        <item quantity="other">%1$,d avsnitt</item>
     </plurals>
     <plurals name="progress_episodes">
-        <item quantity="one">%1$d av %2$d avsnitt</item>
-        <item quantity="other">%1$d av %2$d avsnitt</item>
+        <item quantity="one">%1$,d av %2$,d avsnitt</item>
+        <item quantity="other">%1$,d av %2$,d avsnitt</item>
     </plurals>
-    <string name="duration_days_hours">%1$d d %2$d h</string>
+    <string name="duration_days_hours">%1$,d d %2$,d h</string>
     <string name="group_in_progress">Pågår</string>
     <string name="group_new_this_week">Nytt den här veckan</string>
     <string name="continue_empty_title">Inget sett än</string>
@@ -1683,20 +1714,20 @@
     <string name="up_next_out">släpptes %1$s</string>
     <plurals name="library_row_scanning">
         <item quantity="one">Söker igenom · 1 fil hittad</item>
-        <item quantity="other">Söker igenom · %1$d filer hittade</item>
+        <item quantity="other">Söker igenom · %1$,d filer hittade</item>
     </plurals>
-    <string name="library_row_matching">Matchar · %1$d av %2$d serier</string>
-    <string name="library_row_waiting">Väntar på AniList · %1$d s</string>
+    <string name="library_row_matching">Matchar · %1$,d av %2$,d serier</string>
+    <string name="library_row_waiting">Väntar på AniList · %1$,d s</string>
     <string name="library_row_summary">%1$s från %2$s</string>
     <plurals name="library_episodes">
         <item quantity="one">1 avsnitt</item>
-        <item quantity="other">%1$d avsnitt</item>
+        <item quantity="other">%1$,d avsnitt</item>
     </plurals>
     <plurals name="library_series">
         <item quantity="one">1 serie</item>
-        <item quantity="other">%1$d serier</item>
+        <item quantity="other">%1$,d serier</item>
     </plurals>
-    <string name="library_row_needs_look">%1$d behöver en titt</string>
+    <string name="library_row_needs_look">%1$,d behöver en titt</string>
     <string name="library_row_drive_offline">Enheten är inte ansluten</string>
     <string name="library_row_missing">Mappen hittades inte</string>
     <string name="library_row_no_access">Kaeri kan inte längre öppna den här mappen</string>
@@ -1709,26 +1740,26 @@
     <string name="library_remove_folder">Ta bort mappen</string>
     <string name="library_needs_look">Behöver en titt</string>
     <string name="library_not_matched">Inte matchade</string>
-    <string name="library_matched">%1$d serier matchade</string>
-    <string name="library_best_guess">Bästa gissning: %1$s · %2$d %% match</string>
+    <string name="library_matched">%1$,d serier matchade</string>
+    <string name="library_best_guess">Bästa gissning: %1$s · %2$,d %% match</string>
     <string name="library_picker_prompt">Lägg till mapp</string>
     <string name="library_picker_message">Välj en mapp med dina avsnitt.</string>
-    <string name="library_fix_confidence">%1$d %% match</string>
+    <string name="library_fix_confidence">%1$,d %% match</string>
     <string name="library_open_folder">Öppna mappen</string>
-    <string name="library_matched_count">%1$d serier matchade</string>
+    <string name="library_matched_count">%1$,d serier matchade</string>
     <plurals name="library_row_series">
         <item quantity="one">1 serie</item>
-        <item quantity="other">%1$d serier</item>
+        <item quantity="other">%1$,d serier</item>
     </plurals>
     <plurals name="library_row_files">
         <item quantity="one">1 fil</item>
-        <item quantity="other">%1$d filer</item>
+        <item quantity="other">%1$,d filer</item>
     </plurals>
     <string name="library_show_finder">Visa i Finder</string>
     <string name="library_remove_line">Dina filer ligger kvar där de är.</string>
     <plurals name="library_files">
         <item quantity="one">1 fil</item>
-        <item quantity="other">%1$d filer</item>
+        <item quantity="other">%1$,d filer</item>
     </plurals>
     <string name="library_reason_no_episode">Inget avsnittsnummer i namnet</string>
     <string name="library_reason_no_title">Ingen AniList-titel hittades</string>
@@ -1741,7 +1772,7 @@
     <string name="library_fix_search">Sök på AniList</string>
     <string name="library_fix_hint">Sök efter titeln som filerna ska matchas mot.</string>
     <string name="library_connect_drive">Anslut enheten för att spela</string>
-    <string name="library_fix_count_mismatch">Har %1$d avsnitt, mappen har %2$d</string>
+    <string name="library_fix_count_mismatch">Har %1$,d avsnitt, mappen har %2$,d</string>
     <string name="library_leave_unmatched">Lämna omatchad</string>
     <string name="library_episode_title">Vilket avsnitt är den här filen?</string>
     <string name="library_season">Säsong</string>
@@ -1758,13 +1789,13 @@
     <string name="library_fix_none">Inga titlar hittades</string>
     <string name="library_fix_offline">Kunde inte nå AniList. Försök igen när du är online.</string>
     <string name="library_removed">%1$s togs bort</string>
-    <string name="library_match_percent">%1$d %% match</string>
+    <string name="library_match_percent">%1$,d %% match</string>
     <string name="licensed_title">Licensierade tjänster</string>
     <string name="licensed_body">Kaeri kan öppna titlar i streamingtjänster du betalar för. Den spelar dem aldrig själv. Länkarna kommer från AniList.</string>
     <string name="licensed_region">Region</string>
     <string name="licensed_region_line">Länkar som AniList markerat för andra länder döljs. De flesta länkar anger inget land, så välj även dina tjänster.</string>
     <string name="licensed_yours">Dina tjänster</string>
-    <string name="licensed_show_all">Visa alla %1$d</string>
+    <string name="licensed_show_all">Visa alla %1$,d</string>
     <string name="licensed_region_system">Följ den här enheten</string>
     <string name="licensed_region_device">Den här enhetens region</string>
     <string name="licensed_show_others">Visa andra tjänster på titelsidor</string>
@@ -1820,9 +1851,9 @@
     <string name="media_streaming_on">Streamas på</string>
     <string name="media_streaming_region_note">Tillgängligheten beror på var du bor.</string>
     <string name="media_link_language">Webbplats på %1$s</string>
-    <string name="film_length_hours_minutes">%1$d h %2$d min</string>
-    <string name="film_length_hours">%1$d h</string>
-    <string name="film_length_minutes">%1$d min</string>
+    <string name="film_length_hours_minutes">%1$,d h %2$,d min</string>
+    <string name="film_length_hours">%1$,d h</string>
+    <string name="film_length_minutes">%1$,d min</string>
     <string name="country_japan">Japan</string>
     <string name="country_china">Kina</string>
     <string name="country_south_korea">Sydkorea</string>
@@ -1966,11 +1997,11 @@
     <string name="party_wait_you">Uppspelningen startar när du är redo</string>
     <string name="party_wait_one">Uppspelningen startar när %1$s är redo</string>
     <string name="party_wait_two">Uppspelningen startar när %1$s och %2$s är redo</string>
-    <string name="party_wait_many">Uppspelningen startar när %1$d till är redo</string>
-    <string name="party_connection_lost">Anslutningen bröts. Försöker igen, %1$d av %2$d</string>
+    <string name="party_wait_many">Uppspelningen startar när %1$,d till är redo</string>
+    <string name="party_connection_lost">Anslutningen bröts. Försöker igen, %1$,d av %2$,d</string>
     <string name="party_connected_encrypted">Ansluten, krypterad</string>
     <string name="party_connected_plain">Ansluten, inte krypterad</string>
-    <string name="party_connected_latency">%1$s · %2$d ms</string>
+    <string name="party_connected_latency">%1$s · %2$,d ms</string>
     <string name="party_invite_after_play">Inbjudningslänken kommer när ett avsnitt spelas.</string>
     <string name="party_invite_detail">Den namnger rummet och avsnittet. Varje vän spelar det från sina egna källor.</string>
     <string name="party_in_room_idle">Du är i %1$s på %2$s, men inget spelas.</string>
@@ -1990,10 +2021,10 @@
     <string name="party_nosource_unaired_plain">Dina källor har det inte förrän då. Det spelas med rummet när någon av dem har det.</string>
     <plurals name="party_sources_found">
         <item quantity="one">En källa har det</item>
-        <item quantity="other">%1$d källor har det</item>
+        <item quantity="other">%1$,d källor har det</item>
     </plurals>
     <string name="party_sources_label">Källor för det här avsnittet</string>
-    <string name="party_source_seeders">%1$d seeders</string>
+    <string name="party_source_seeders">%1$,d seeders</string>
     <string name="party_no_source_lists">Ingen källa listar avsnitt %1$s. Källor kommer från tillägg, som en tilläggsbutik lägger till.</string>
     <string name="party_play_with">Spela med watch party</string>
     <string name="together_title">Titta tillsammans</string>
@@ -2007,7 +2038,7 @@
     <string name="together_paste">Klistra in</string>
     <string name="together_join_action">Gå med</string>
     <string name="together_in_party">I ett watch party</string>
-    <string name="together_in_party_line">Avsnitt %1$s · %2$d i rummet · %3$d redo</string>
+    <string name="together_in_party_line">Avsnitt %1$s · %2$,d i rummet · %3$,d redo</string>
     <string name="together_open_lobby">Öppna lobbyn</string>
     <string name="together_open_player">Öppna spelaren</string>
     <string name="together_recent">Senaste rum</string>
@@ -2024,7 +2055,7 @@
     <string name="together_server_suggested">Föreslagen · drivs av %1$s</string>
     <plurals name="together_server_used">
         <item quantity="one">Använd för 1 watch party</item>
-        <item quantity="other">Använd för %1$d watch partyn</item>
+        <item quantity="other">Använd för %1$,d watch partyn</item>
     </plurals>
     <string name="together_add_server">Lägg till en server</string>
     <string name="together_paste_shortcut_hint">Klistra in en länk eller kod var som helst på sidan.</string>
@@ -2037,7 +2068,7 @@
     <string name="party_lobby_sources_missing">Finns inte i dina källor än</string>
     <string name="party_lobby_out_on">Ute %1$s</string>
     <string name="party_still_in_room">Du är kvar i rummet.</string>
-    <string name="party_lobby_count">I rummet · %1$d av %2$d redo</string>
+    <string name="party_lobby_count">I rummet · %1$,d av %2$,d redo</string>
     <string name="party_invited_by">%1$s bjöd in dig</string>
     <string name="party_looking_in">Tittar in</string>
     <string name="party_looking_in_note">När du öppnar ett rum syns du där en kort stund.</string>
@@ -2052,7 +2083,7 @@
     <string name="party_invite_copied">Inbjudningslänken kopierades</string>
     <string name="party_starts_line">Startar på 0:00 när alla är redo</string>
     <string name="party_start_anyway">Starta ändå</string>
-    <string name="party_starting">Startar om %1$d</string>
+    <string name="party_starting">Startar om %1$,d</string>
     <string name="party_change_episode">Byt avsnitt</string>
     <string name="party_change_server">Byt server</string>
     <string name="party_room_watching">Rummet tittar på</string>
@@ -2072,14 +2103,14 @@
     <string name="party_code_wait">Vänta här</string>
     <string name="party_code_other_server">Koder fungerar på %1$s. För en annan server, be om inbjudningslänken.</string>
     <string name="party_bar_title">%1$s · Avsnitt %2$s</string>
-    <string name="party_bar_line">%1$d i rummet · %2$d redo</string>
+    <string name="party_bar_line">%1$,d i rummet · %2$,d redo</string>
     <string name="party_bar_idle">I rummet · inget spelas för dig</string>
     <string name="party_bar_pick">Tryck på Spela upp på valfritt avsnitt för att titta på det med rummet</string>
     <string name="party_paused_by">Pausad av %1$s</string>
     <string name="party_played_by">Startad av %1$s</string>
     <string name="party_seeked_by">%1$s hoppade till %2$s</string>
-    <string name="party_next_line">Alla går vidare om %1$d s</string>
-    <string name="party_next_waiting">Väntar på %1$s · %2$d s</string>
+    <string name="party_next_line">Alla går vidare om %1$,d s</string>
+    <string name="party_next_waiting">Väntar på %1$s · %2$,d s</string>
     <string name="party_next_joined_at">%1$s gick med vid %2$s</string>
     <string name="party_next_off">Rummet går vidare tillsammans i slutet.</string>
     <string name="party_last_out">Det var det senaste avsnittet som är ute.</string>
@@ -2100,18 +2131,18 @@
     <string name="party_ready_on_device">Redo på %1$s</string>
     <string name="party_leave_on_device">Lämna watch party på %1$s</string>
     <string name="party_in_the_room">I rummet</string>
-    <string name="party_here_count">%1$d här</string>
+    <string name="party_here_count">%1$,d här</string>
     <string name="together_recent_note">De tio senaste, sparade på den här enheten</string>
     <string name="party_pick_continue">Fortsätt</string>
     <string name="party_chat_field">Säg något</string>
     <string name="party_chat_send">Skicka</string>
     <string name="party_chat_title">Chatt</string>
-    <string name="party_chat_wait">Vänta %1$d s</string>
+    <string name="party_chat_wait">Vänta %1$,d s</string>
     <plurals name="party_chat_wait_spoken">
         <item quantity="one">Vänta en sekund</item>
-        <item quantity="other">Vänta %1$d sekunder</item>
+        <item quantity="other">Vänta %1$,d sekunder</item>
     </plurals>
-    <string name="party_chat_more">%1$d till i chatten</string>
+    <string name="party_chat_more">%1$,d till i chatten</string>
     <string name="party_chat_off">Rummets server har stängt av chatten</string>
     <string name="party_chat_privacy">Meddelanden går via rummets server. Kaeri sparar inga.</string>
     <string name="party_chat_hidden">Chatten är dold</string>
@@ -2138,19 +2169,19 @@
     <string name="party_reacted_at">%1$s vid %2$s</string>
     <string name="party_names_two">%1$s och %2$s</string>
     <string name="party_names_three">%1$s, %2$s och %3$s</string>
-    <string name="party_names_others">%1$s, %2$s och %3$d till</string>
+    <string name="party_names_others">%1$s, %2$s och %3$,d till</string>
     <string name="party_chat_you">Du</string>
     <string name="party_sends_as">Skickar som %1$s</string>
     <string name="party_tick_label">%1$s · %2$s</string>
     <string name="party_chat_announce">%1$s säger %2$s</string>
     <plurals name="party_chat_left">
-        <item quantity="one">%1$d tecken kvar</item>
-        <item quantity="other">%1$d tecken kvar</item>
+        <item quantity="one">%1$,d tecken kvar</item>
+        <item quantity="other">%1$,d tecken kvar</item>
     </plurals>
     <string name="player_up_next">Nästa</string>
     <string name="title_based_on">Baserad på</string>
     <string name="player_starting">Startar avsnitt %1$d</string>
-    <string name="player_finding_source">Letar efter en källa · %1$d s</string>
+    <string name="player_finding_source">Letar efter en källa · %1$,d s</string>
     <string name="player_finding_source_plain">Letar efter en källa</string>
     <string name="player_failed_title">Det gick inte att spela avsnitt %1$d</string>
     <string name="player_failed_detail">Ingen källa hade en ström som gick att spela. Prova en annan.</string>
@@ -2159,7 +2190,7 @@
     <string name="player_choose_another_source">Välj en annan källa</string>
     <string name="player_add_plugin_store">Lägg till en tilläggsbutik</string>
     <string name="player_buffering">Buffrar</string>
-    <string name="player_start_place">%1$d av %2$d källor</string>
+    <string name="player_start_place">%1$,d av %2$,d källor</string>
     <string name="player_start_pinned">Ditt val för den här serien</string>
     <string name="player_start_miss_no_match">%1$s har inte den här serien</string>
     <string name="player_start_miss_no_episode">%1$s har inte avsnitt %2$s</string>
@@ -2170,10 +2201,10 @@
     <string name="player_start_resting">Hoppades över efter senaste fel</string>
     <string name="player_start_from">Från %1$s</string>
     <string name="player_start_no_video">Den första visade ingen video</string>
-    <string name="player_start_stream_place">Ström %1$d av %2$d</string>
+    <string name="player_start_stream_place">Ström %1$,d av %2$,d</string>
     <plurals name="player_start_peers">
         <item quantity="one">En peer</item>
-        <item quantity="other">%1$d peers</item>
+        <item quantity="other">%1$,d peers</item>
     </plurals>
     <string name="player_start_speed">%1$s/s</string>
     <string name="player_start_buffering_percent">Buffrar · %1$s</string>
@@ -2188,7 +2219,7 @@
     <string name="player_start_fix_match">Rätta matchning</string>
     <string name="player_start_translation">Ljud och undertexter</string>
     <string name="player_start_looked_up">Titeln hittades</string>
-    <string name="player_start_seconds">%1$d s</string>
+    <string name="player_start_seconds">%1$,d s</string>
     <string name="player_start_still_starting">Startar fortfarande. Du kan välja bland källor.</string>
     <string name="player_start_announce">Startar avsnitt %1$s, %2$s</string>
     <string name="player_start_failed_announce">%1$s. %2$s</string>
@@ -2202,11 +2233,11 @@
     <string name="player_start_row_skipped">Överhoppad</string>
     <string name="player_start_asked">%1$s tillfrågades.</string>
     <string name="player_start_subtitled">Textad</string>
-    <string name="player_stall_title">Källa buffrar · %1$d s</string>
+    <string name="player_stall_title">Källa buffrar · %1$,d s</string>
     <string name="player_stall_detail">En annan ström kan spelas utan att du väntar.</string>
     <string name="player_switch_source">Byt källa</string>
     <string name="player_keep_waiting">Vänta vidare</string>
-    <string name="player_plays_in">Spelas i %1$d s</string>
+    <string name="player_plays_in">Spelas i %1$,d s</string>
     <string name="player_skip_opening">Hoppa över intro</string>
     <string name="player_skip_ending">Hoppa över outro</string>
     <string name="player_skipped_opening">Hoppade över intro</string>
@@ -2287,7 +2318,7 @@
     <string name="player_still_watching">Tittar du fortfarande?</string>
     <plurals name="player_still_watching_detail">
         <item quantity="one">Pausad efter ett avsnitt i rad.</item>
-        <item quantity="other">Pausad efter %1$d avsnitt i rad.</item>
+        <item quantity="other">Pausad efter %1$,d avsnitt i rad.</item>
     </plurals>
     <string name="player_still_watching_continue">Fortsätt titta</string>
     <string name="player_ends_at">Slutar %1$s</string>
@@ -2346,7 +2377,7 @@
     <string name="player_scrub_quarter">Skrubbning i en fjärdedel av hastigheten</string>
     <string name="player_starting_text">Startar avsnitt %1$s</string>
     <string name="player_track_n">Spår %1$d</string>
-    <string name="player_wait_note">%1$s · %2$d s</string>
+    <string name="player_wait_note">%1$s · %2$,d s</string>
     <string name="player_command_failed">Det gick inte. Försök igen.</string>
     <string name="player_subs_style">Stil</string>
     <string name="player_subs_larger">Större undertexter</string>
@@ -2389,7 +2420,7 @@
     <string name="reader_chapters">Kapitel</string>
     <plurals name="reader_pages_left">
         <item quantity="one">En sida kvar i det här kapitlet</item>
-        <item quantity="other">%1$d sidor kvar i det här kapitlet</item>
+        <item quantity="other">%1$,d sidor kvar i det här kapitlet</item>
     </plurals>
     <string name="reader_chapters_loading">Laddar kapitel</string>
     <string name="reader_background_theme">Tema</string>
@@ -2403,7 +2434,7 @@
     <string name="reader_end_facts">Kapitel %1$s · %2$s</string>
     <plurals name="reader_end_pages">
         <item quantity="one">En sida</item>
-        <item quantity="other">%1$d sidor</item>
+        <item quantity="other">%1$,d sidor</item>
     </plurals>
     <string name="reader_end_from">Från %1$s</string>
     <string name="reader_chapter_line">Kapitel %1$s</string>
@@ -2411,7 +2442,7 @@
     <string name="reader_end_swipe">Svep för att läsa vidare</string>
     <plurals name="reader_divider_images">
         <item quantity="one">En bild</item>
-        <item quantity="other">%1$d bilder</item>
+        <item quantity="other">%1$,d bilder</item>
     </plurals>
     <string name="reader_chapter_line_titled">Kapitel %1$s · %2$s</string>
     <string name="onboarding_read_demo">Läs demon</string>
@@ -2421,7 +2452,7 @@
     <string name="home_spotlight_read">Läs</string>
     <plurals name="demo_series_facts">
         <item quantity="one">Demo · Tecknad serie · en sida</item>
-        <item quantity="other">Demo · Tecknad serie · %1$d sidor</item>
+        <item quantity="other">Demo · Tecknad serie · %1$,d sidor</item>
     </plurals>
     <string name="demo_credit_book">%1$s av %2$s. Licensierad under %3$s. Läses från Wikimedia Commons.</string>
     <string name="demo_credit_story">%1$s av %2$s. Allmän egendom. Den följer med appen.</string>
@@ -2441,7 +2472,7 @@
     <string name="demo_credits">Upphovsuppgifter</string>
     <plurals name="demo_pages">
         <item quantity="one">En sida</item>
-        <item quantity="other">%1$d sidor</item>
+        <item quantity="other">%1$,d sidor</item>
     </plurals>
     <string name="demo_story_row">Novell · %1$s · %2$s</string>
     <string name="demo_read_chapter">Läs kapitel %1$s</string>
@@ -2457,19 +2488,19 @@
     <string name="progress_row_saved">Förlopp sparat %1$s</string>
     <plurals name="progress_row_sending">
         <item quantity="one">Skickar 1 kapitel…</item>
-        <item quantity="other">Skickar %1$d kapitel…</item>
+        <item quantity="other">Skickar %1$,d kapitel…</item>
     </plurals>
     <plurals name="progress_row_offline">
         <item quantity="one">1 kapitel skickas när du är online igen</item>
-        <item quantity="other">%1$d kapitel skickas när du är online igen</item>
+        <item quantity="other">%1$,d kapitel skickas när du är online igen</item>
     </plurals>
     <plurals name="progress_row_retrying">
         <item quantity="one">1 kapitel väntar. Kaeri försöker igen.</item>
-        <item quantity="other">%1$d kapitel väntar. Kaeri försöker igen.</item>
+        <item quantity="other">%1$,d kapitel väntar. Kaeri försöker igen.</item>
     </plurals>
     <plurals name="progress_row_failed">
         <item quantity="one">1 kapitel inte sparat: %2$s</item>
-        <item quantity="other">%1$d kapitel inte sparade: %2$s</item>
+        <item quantity="other">%1$,d kapitel inte sparade: %2$s</item>
     </plurals>
     <string name="progress_row_off">Förloppet stannar på den här %1$s</string>
     <string name="nav_watch">Titta</string>
@@ -2492,17 +2523,17 @@
     <string name="chapter_updates_yesterday">Igår</string>
     <plurals name="chapter_updates_versions">
         <item quantity="one">1 version</item>
-        <item quantity="other">%1$d versioner</item>
+        <item quantity="other">%1$,d versioner</item>
     </plurals>
     <string name="chapter_updates_open_series">Öppna %1$s</string>
     <string name="chapter_updates_open_chapter_hint">Öppnar kapitlet</string>
     <string name="chapter_updates_open_series_menu">Öppna serie</string>
     <string name="action_read_chapter">Läs kapitel %1$s</string>
     <string name="action_continue_chapter">Läs vidare på kapitel %1$s · sida %2$d</string>
-    <string name="action_continue_part">Läs vidare på del %1$s · %2$d%%</string>
+    <string name="action_continue_part">Läs vidare på del %1$s · %2$,d%%</string>
     <string name="action_continue_part_plain">Läs vidare på del %1$s</string>
     <string name="action_read_part">Läs del %1$s</string>
-    <string name="action_continue_named">Läs vidare på %1$s · %2$d%%</string>
+    <string name="action_continue_named">Läs vidare på %1$s · %2$,d%%</string>
     <string name="action_continue_named_plain">Läs vidare på %1$s</string>
     <string name="action_read_named">Läs %1$s</string>
     <string name="action_read_again">Läs igen</string>
@@ -2510,17 +2541,17 @@
     <string name="series_change">Ändra</string>
     <plurals name="series_sources_more">
         <item quantity="one">1 till</item>
-        <item quantity="other">%1$d till</item>
+        <item quantity="other">%1$,d till</item>
     </plurals>
     <string name="series_tracker_ask">Vilken serie är det här? Välj</string>
     <string name="series_preferred_group">Din föredragna grupp här</string>
     <plurals name="series_tracker_chapters_of">
-        <item quantity="one">%1$d av %2$d kapitel</item>
-        <item quantity="other">%1$d av %2$d kapitel</item>
+        <item quantity="one">%1$,d av %2$,d kapitel</item>
+        <item quantity="other">%1$,d av %2$,d kapitel</item>
     </plurals>
     <plurals name="series_tracker_chapters">
         <item quantity="one">1 kapitel</item>
-        <item quantity="other">%1$d kapitel</item>
+        <item quantity="other">%1$,d kapitel</item>
     </plurals>
     <string name="series_tracker_with_volume">%1$s · volym %2$d</string>
     <string name="series_tracker_volumes">Volym %1$d av %2$d</string>
@@ -2533,7 +2564,7 @@
     <string name="series_removed_title">Dina listor</string>
     <plurals name="series_chosen">
         <item quantity="one">1 kapitel valt</item>
-        <item quantity="other">%1$d kapitel valda</item>
+        <item quantity="other">%1$,d kapitel valda</item>
     </plurals>
     <string name="series_choose_all_unread">Alla olästa</string>
     <string name="read_from_not_found">Hittades inte hos</string>
@@ -2569,7 +2600,7 @@
     <string name="series_remove_bookmark">Ta bort bokmärke</string>
     <plurals name="series_versions">
         <item quantity="one">1 version</item>
-        <item quantity="other">%1$d versioner</item>
+        <item quantity="other">%1$,d versioner</item>
     </plurals>
     <string name="series_versions_loading">Letar efter versioner…</string>
     <string name="series_version_in_use">%1$s används</string>
@@ -2577,7 +2608,7 @@
     <string name="chapter_state_downloaded">Nedladdad</string>
     <string name="chapter_state_queued">I kö</string>
     <string name="chapter_state_wifi">I kö · väntar på Wi-Fi</string>
-    <string name="chapter_state_downloading">Laddar ner · %1$d av %2$d sidor</string>
+    <string name="chapter_state_downloading">Laddar ner · %1$,d av %2$,d sidor</string>
     <string name="chapter_state_failed">Kunde inte laddas ner. %1$s</string>
     <string name="chapter_state_page_of">Sida %1$d av %2$d</string>
     <string name="chapter_state_page">Sida %1$d</string>
@@ -2586,17 +2617,17 @@
     <string name="chapter_download_stop">Stoppa nedladdning</string>
     <string name="chapter_retry">Försök igen</string>
     <string name="chapter_download_delete">Ta bort nedladdning</string>
-    <string name="download_next">Nästa %1$d olästa</string>
+    <string name="download_next">Nästa %1$,d olästa</string>
     <string name="download_unread">Alla olästa kapitel</string>
     <plurals name="download_volume_count">
         <item quantity="one">%1$s · 1 kapitel</item>
-        <item quantity="other">%1$s · %2$d kapitel</item>
+        <item quantity="other">%1$s · %2$,d kapitel</item>
     </plurals>
     <string name="download_choose">Välj kapitel…</string>
     <string name="download_delete_series">Ta bort nedladdningar av den här serien</string>
     <plurals name="download_chapters">
         <item quantity="one">Ladda ner 1 kapitel</item>
-        <item quantity="other">Ladda ner %1$d kapitel</item>
+        <item quantity="other">Ladda ner %1$,d kapitel</item>
     </plurals>
     <string name="download_over_wifi">Via Wi-Fi</string>
     <string name="read_again_title">Läsa %1$s igen från början?</string>
@@ -2649,7 +2680,7 @@
     <string name="sources_found_server">Hittade en %1$s-server</string>
     <plurals name="sources_found_server_series">
         <item quantity="one">Hittade en %1$s-server med 1 serie</item>
-        <item quantity="other">Hittade en %1$s-server med %2$d serier</item>
+        <item quantity="other">Hittade en %1$s-server med %2$,d serier</item>
     </plurals>
     <string name="book_server_looking">Tittar på den här adressen…</string>
     <string name="book_server_note">Kaeri skickar tillbaka ditt läsförlopp till servern. Lösenordet stannar i Nyckelringen.</string>
@@ -2659,16 +2690,16 @@
     <string name="book_sources_plugins_footer">Tillägg kommer från tilläggsbutiker du går med i.</string>
     <plurals name="book_sources_series">
         <item quantity="one">1 serie</item>
-        <item quantity="other">%1$d serier</item>
+        <item quantity="other">%1$,d serier</item>
     </plurals>
-    <string name="book_sources_scanning">Söker igenom · %1$d hittade</string>
+    <string name="book_sources_scanning">Söker igenom · %1$,d hittade</string>
     <string name="book_sources_missing">Hittades inte. Är disken ansluten?</string>
     <string name="book_sources_off">Av</string>
     <string name="book_sources_progress_back">förloppet skickas tillbaka till servern</string>
     <string name="book_sources_opds">OPDS-katalog</string>
     <string name="book_sources_from_store">Från %1$s</string>
     <string name="book_sources_version">version %1$s</string>
-    <string name="book_sources_check_matches">Granska träffar · %1$d</string>
+    <string name="book_sources_check_matches">Granska träffar · %1$,d</string>
     <string name="book_sources_check_matches_title">Granska träffar</string>
     <string name="book_sources_scan">Sök igenom igen</string>
     <string name="book_sources_report_progress">Skicka förlopp till servern</string>
@@ -2684,7 +2715,7 @@
     <string name="read_sort_last_read">Senast läst</string>
     <plurals name="read_library_list_value">
         <item quantity="one">%1$s, 1 serie</item>
-        <item quantity="other">%1$s, %2$d serier</item>
+        <item quantity="other">%1$s, %2$,d serier</item>
     </plurals>
     <string name="read_library_empty">Inget i %1$s än</string>
     <string name="read_library_empty_line">Serier du lägger till från Sök eller en seriesida visas här.</string>
@@ -2694,13 +2725,13 @@
     <string name="read_search_placeholder">Sök i läsning</string>
     <plurals name="search_other_scope">
         <item quantity="one">1 träff i %2$s</item>
-        <item quantity="other">%1$d träffar i %2$s</item>
+        <item quantity="other">%1$,d träffar i %2$s</item>
     </plurals>
     <string name="search_show_them">Visa dem</string>
     <string name="read_search_browse_line">%1$s · från AniList</string>
     <plurals name="read_search_total">
         <item quantity="one">1 serie från AniList</item>
-        <item quantity="other">%1$d serier från AniList</item>
+        <item quantity="other">%1$,d serier från AniList</item>
     </plurals>
     <string name="read_search_failed">Kunde inte söka</string>
     <string name="read_search_nothing">Hittade inget för %1$s</string>
@@ -2720,15 +2751,15 @@
     <string name="read_filter_reset">Återställ</string>
     <string name="read_filter_any">Valfri</string>
     <string name="read_filter_set">%1$s:</string>
-    <string name="read_filter_many">%1$s och %2$d till</string>
+    <string name="read_filter_many">%1$s och %2$,d till</string>
     <string name="read_filter_not_genre">Inte %1$s</string>
     <plurals name="read_filter_genres_count">
         <item quantity="one">1 genre</item>
-        <item quantity="other">%1$d genrer</item>
+        <item quantity="other">%1$,d genrer</item>
     </plurals>
     <string name="read_filter_included">Med</string>
     <string name="read_filter_left_out">Utesluten</string>
-    <string name="onboarding_step">%1$d av %2$d</string>
+    <string name="onboarding_step">%1$,d av %2$,d</string>
     <string name="onboarding_welcome_line">Håll koll på vad du tittar på och läser, från dina egna källor.</string>
     <string name="onboarding_welcome_note">Dina listor och ditt förlopp stannar på dina enheter. Trackers och källor lägger du till själv.</string>
     <string name="onboarding_medium_title">Titta, läsa eller båda?</string>
@@ -2758,7 +2789,7 @@
     <string name="onboarding_both_books">Böcker</string>
     <string name="onboarding_both_shows_folder_line">Videofiler på den här %1$s</string>
     <string name="onboarding_both_shows_server_line">Din Jellyfin-server</string>
-    <string name="medium_choice_position">%1$d av %2$d</string>
+    <string name="medium_choice_position">%1$,d av %2$,d</string>
     <string name="medium_change_later">Du kan ändra det i Inställningar.</string>
     <string name="medium_update_line">Kaeri kan nu läsa manga, webtoons och light novels från dina källor. Välj vad Kaeri är till för på den här %1$s.</string>
     <plurals name="medium_join_title_watch">
@@ -2829,21 +2860,21 @@
     <string name="accounts_mangaupdates_credit">Kaeri kommunicerar med MangaUpdates via dess öppna API.</string>
     <string name="accounts_username">Användarnamn</string>
     <plurals name="read_downloads_total">
-        <item quantity="one">%1$d kapitel · %2$s</item>
-        <item quantity="other">%1$d kapitel · %2$s</item>
+        <item quantity="one">%1$,d kapitel · %2$s</item>
+        <item quantity="other">%1$,d kapitel · %2$s</item>
     </plurals>
-    <string name="read_downloads_active">%1$s · %2$d av %3$d sidor</string>
-    <string name="read_downloads_more_queued">%1$d till i kö</string>
+    <string name="read_downloads_active">%1$s · %2$,d av %3$,d sidor</string>
+    <string name="read_downloads_more_queued">%1$,d till i kö</string>
     <plurals name="read_downloads_queued">
-        <item quantity="one">%1$d kapitel i kö</item>
-        <item quantity="other">%1$d kapitel i kö</item>
+        <item quantity="one">%1$,d kapitel i kö</item>
+        <item quantity="other">%1$,d kapitel i kö</item>
     </plurals>
     <string name="read_downloads_failed">%1$s kunde inte laddas ner. %2$s</string>
     <plurals name="read_downloads_kept">
-        <item quantity="one">%1$d kapitel</item>
-        <item quantity="other">%1$d kapitel</item>
+        <item quantity="one">%1$,d kapitel</item>
+        <item quantity="other">%1$,d kapitel</item>
     </plurals>
-    <string name="read_downloads_read">%1$d lästa</string>
+    <string name="read_downloads_read">%1$,d lästa</string>
     <string name="read_downloads_delete_read">Ta bort lästa</string>
     <string name="send_title">Skicka till e-läsare</string>
     <string name="send_for">Till</string>
@@ -2857,7 +2888,7 @@
     <string name="send_prepare">Förbered och dela</string>
     <plurals name="send_preparing">
         <item quantity="one">Förbereder kapitlet</item>
-        <item quantity="other">Förbereder %1$d av %2$d kapitel</item>
+        <item quantity="other">Förbereder %1$,d av %2$,d kapitel</item>
     </plurals>
     <string name="send_sized_for">Sidorna är anpassade för %1$s</string>
     <string name="send_in_parts">Över %1$s, så filerna delas upp.</string>
@@ -2866,13 +2897,13 @@
     <string name="send_size_working">Räknar ut</string>
     <string name="send_chapters_open">Öppen</string>
     <string name="send_chapters_closed">Stängd</string>
-    <string name="send_progress_spoken">%1$d procent</string>
+    <string name="send_progress_spoken">%1$,d procent</string>
     <string name="send_chapter_action">Skicka till e-läsare</string>
     <string name="send_parts_over">i delar över %1$s</string>
     <string name="send_waiting_cancel">Avbryt sändningen</string>
     <plurals name="send_ready">
         <item quantity="one">En fil är klar.</item>
-        <item quantity="other">%1$d filer är klara.</item>
+        <item quantity="other">%1$,d filer är klara.</item>
     </plurals>
     <string name="send_share_again">Dela igen</string>
     <string name="send_banner">Skickar till %1$s</string>
@@ -2907,13 +2938,13 @@
     <string name="opds_share_downloads">Nedladdningar</string>
     <plurals name="opds_share_downloads_count">
         <item quantity="one">Ett kapitel</item>
-        <item quantity="other">%1$d kapitel</item>
+        <item quantity="other">%1$,d kapitel</item>
     </plurals>
     <string name="opds_share_manga">Mangamapp</string>
     <string name="opds_share_novels">Romanmapp</string>
     <plurals name="opds_share_series_count">
         <item quantity="one">En serie</item>
-        <item quantity="other">%1$d serier</item>
+        <item quantity="other">%1$,d serier</item>
     </plurals>
     <string name="opds_fetched_by">Hämtat av</string>
     <string name="opds_fetched_none">Ingen e-läsare har hämtat något än.</string>
@@ -2925,7 +2956,7 @@
     <string name="opds_fetched_time">Senaste förfrågan %1$s</string>
     <plurals name="opds_fetched_files">
         <item quantity="one">En fil</item>
-        <item quantity="other">%1$d filer</item>
+        <item quantity="other">%1$,d filer</item>
     </plurals>
     <string name="opds_reader_unnamed">E-läsare på %1$s</string>
     <string name="seasonal_previous">Föregående säsong</string>
@@ -2965,7 +2996,7 @@
     <string name="search_loading_more">Laddar fler titlar</string>
     <string name="filters_title">Filter</string>
     <string name="filters_close">Stäng filter</string>
-    <string name="filters_button_count">Alla filter · %1$d</string>
+    <string name="filters_button_count">Alla filter · %1$,d</string>
     <string name="filters_button">Alla filter</string>
     <string name="filter_genre">Genre</string>
     <string name="filter_genres">Genrer</string>
@@ -3022,16 +3053,16 @@
     <string name="search_line_service">På %1$s</string>
     <plurals name="count_episodes">
         <item quantity="one">Ett avsnitt</item>
-        <item quantity="other">%1$d avsnitt</item>
+        <item quantity="other">%1$,d avsnitt</item>
     </plurals>
-    <string name="count_episodes_short">%1$d avs</string>
-    <string name="count_out_of">%1$d av %2$d ute</string>
-    <string name="count_out_of_short">%1$d av %2$d</string>
+    <string name="count_episodes_short">%1$,d avs</string>
+    <string name="count_out_of">%1$,d av %2$,d ute</string>
+    <string name="count_out_of_short">%1$,d av %2$,d</string>
     <plurals name="count_out">
         <item quantity="one">Ett avsnitt ute</item>
-        <item quantity="other">%1$d avsnitt ute</item>
+        <item quantity="other">%1$,d avsnitt ute</item>
     </plurals>
-    <string name="count_out_short">%1$d ute</string>
+    <string name="count_out_short">%1$,d ute</string>
     <string name="count_starts">Startar %1$s</string>
     <string name="count_not_out">Inte ute än</string>
     <string name="count_next_of">Avs %1$d av %2$d</string>
@@ -3039,12 +3070,12 @@
     <string name="count_dub_through">Dub %1$d</string>
     <plurals name="count_spoken_episodes">
         <item quantity="one">Ett avsnitt</item>
-        <item quantity="other">%1$d avsnitt</item>
+        <item quantity="other">%1$,d avsnitt</item>
     </plurals>
-    <string name="count_spoken_out_of">%1$d av %2$d avsnitt ute</string>
+    <string name="count_spoken_out_of">%1$,d av %2$,d avsnitt ute</string>
     <plurals name="count_spoken_out">
         <item quantity="one">Ett avsnitt ute</item>
-        <item quantity="other">%1$d avsnitt ute</item>
+        <item quantity="other">%1$,d avsnitt ute</item>
     </plurals>
     <string name="count_spoken_starts">Startar %1$s</string>
     <string name="count_spoken_next_of">Avsnitt %1$d av %2$d</string>
@@ -3114,24 +3145,24 @@
     <string name="servers_qc_new_code">Hämta en ny kod</string>
     <string name="servers_libraries_title">Välj bibliotek</string>
     <string name="servers_libraries_body">Serier matchas mot AniList så att de syns i Hem, dina listor och Sök.</string>
-    <string name="servers_library_line">%1$s · %2$d serier</string>
+    <string name="servers_library_line">%1$s · %2$,d serier</string>
     <string name="servers_report">Rapportera vad du tittar på till Jellyfin</string>
     <string name="servers_report_line">Återupptagningspunkter och sedd-markeringar följer det du spelar här.</string>
     <string name="servers_add">Lägg till server</string>
-    <string name="servers_row_matching">Matchar · %1$d av %2$d serier</string>
+    <string name="servers_row_matching">Matchar · %1$,d av %2$,d serier</string>
     <plurals name="servers_row_summary">
-        <item quantity="one">1 bibliotek · %2$d serier</item>
-        <item quantity="other">%1$d bibliotek · %2$d serier</item>
+        <item quantity="one">1 bibliotek · %2$,d serier</item>
+        <item quantity="other">%1$,d bibliotek · %2$,d serier</item>
     </plurals>
     <plurals name="servers_row_libraries">
         <item quantity="one">1 bibliotek</item>
-        <item quantity="other">%1$d bibliotek</item>
+        <item quantity="other">%1$,d bibliotek</item>
     </plurals>
     <plurals name="servers_row_series">
         <item quantity="one">1 serie</item>
-        <item quantity="other">%1$d serier</item>
+        <item quantity="other">%1$,d serier</item>
     </plurals>
-    <string name="servers_row_needs_look">%1$d behöver en titt</string>
+    <string name="servers_row_needs_look">%1$,d behöver en titt</string>
     <string name="servers_page_line">%1$s · Jellyfin %2$s · inloggad som %3$s</string>
     <string name="servers_sign_out">Logga ut</string>
     <string name="servers_remove">Ta bort servern</string>
@@ -3159,7 +3190,7 @@
     <string name="servers_quick_connect">Quick Connect</string>
     <string name="servers_libraries_heading">Bibliotek</string>
     <string name="servers_refresh">Matcha igen</string>
-    <string name="servers_needs_look">%1$d inte matchade mot AniList</string>
+    <string name="servers_needs_look">%1$,d inte matchade mot AniList</string>
     <string name="servers_kind_films">Filmer</string>
     <string name="servers_error_certificate">%1$s använder ett certifikat som den här enheten inte litar på. Använd en https://-adress med ett certifikat den litar på.</string>
     <string name="servers_row_signed_out_here">Utloggad</string>
@@ -3228,7 +3259,7 @@
     <string name="settings_system_captions_detail">Vanliga undertexter använder dina textinställningar från Tillgänglighet. Stilade undertexter behåller sin egen look.</string>
     <plurals name="settings_overridden">
         <item quantity="one">Åsidosatt för en serie</item>
-        <item quantity="other">Åsidosatt för %1$d serier</item>
+        <item quantity="other">Åsidosatt för %1$,d serier</item>
     </plurals>
     <string name="settings_new_downloads">Nya hämtningar</string>
     <string name="settings_keep_next">Behåll nästa avsnitt</string>
@@ -3312,7 +3343,7 @@
     <string name="widget_resume_dubbed_label">Fortsätt avsnitt %1$d, dubbat, av %2$s</string>
     <plurals name="accounts_changes_waiting">
         <item quantity="one">En ändring väntar på att synkas</item>
-        <item quantity="other">%1$d ändringar väntar på att synkas</item>
+        <item quantity="other">%1$,d ändringar väntar på att synkas</item>
     </plurals>
     <string name="settings_quality_higher">Högre</string>
     <string name="settings_quality_standard">Standard</string>
@@ -3351,7 +3382,7 @@
     <string name="settings_subs_system_change">Ändra i inställningarna för Tillgänglighet</string>
     <string name="settings_subs_system_value">Från ditt system</string>
     <string name="settings_subs_size">Storlek</string>
-    <string name="settings_subs_size_value">%1$d %%</string>
+    <string name="settings_subs_size_value">%1$,d %%</string>
     <string name="settings_subs_font">Typsnitt</string>
     <string name="settings_subs_font_default">Standard</string>
     <string name="settings_subs_font_serif">Serif</string>
@@ -3375,7 +3406,7 @@
     <string name="settings_subs_background_all">Bakom alla rader</string>
     <string name="settings_subs_opacity">Opacitet</string>
     <string name="settings_subs_raise">Höj undertexterna</string>
-    <string name="settings_subs_raise_value">%1$d %% av bilden</string>
+    <string name="settings_subs_raise_value">%1$,d %% av bilden</string>
     <string name="settings_subs_styled">Stylade undertexter</string>
     <string name="settings_subs_styled_keep">Behåll utseendet</string>
     <string name="settings_subs_styled_keep_detail">Stylade undertexter behåller de typsnitt, färger och den placering av skyltar som upphovsmakarna gav dem. Storlek och Höj gäller fortfarande.</string>
@@ -3393,11 +3424,11 @@
     <string name="book_server_key_kept">Kaeri sparar nyckeln i %1$s och visar bara de fyra sista tecknen.</string>
     <string name="book_server_key">Nyckel ••••%1$s</string>
     <plurals name="book_server_found_title">
-        <item quantity="one">Hittade %1$d serier</item>
-        <item quantity="other">Hittade %1$d serier i %2$d bibliotek</item>
+        <item quantity="one">Hittade %1$,d serier</item>
+        <item quantity="other">Hittade %1$,d serier i %2$,d bibliotek</item>
     </plurals>
     <string name="book_server_found_line">%1$s på %2$s. Välj vilka bibliotek som ska läggas till.</string>
-    <string name="book_server_library_line">%1$d serier</string>
+    <string name="book_server_library_line">%1$,d serier</string>
     <string name="book_server_sync_progress">Skicka framsteg till servern</string>
     <string name="book_server_sync_progress_line">Sidor du läser här skickas till %1$s, och dess framsteg kommer hit.</string>
     <string name="book_server_username">Användarnamn</string>
@@ -3413,16 +3444,16 @@
     <string name="book_server_empty_recheck">Du kan lägga till den nu. Kaeri tittar igen var 30:e minut.</string>
     <string name="book_server_not_books_line">Kaeri läser från Komga-, Kavita- och OPDS-kataloger.</string>
     <plurals name="book_folder_found">
-        <item quantity="one">Hittade %1$d serier i en fil</item>
-        <item quantity="other">Hittade %1$d serier i %2$d filer</item>
+        <item quantity="one">Hittade %1$,d serier i en fil</item>
+        <item quantity="other">Hittade %1$,d serier i %2$,d filer</item>
     </plurals>
-    <string name="book_folder_found_line">%1$s. Kaeri matchade %2$d av dem utifrån deras uppgifter.</string>
+    <string name="book_folder_found_line">%1$s. Kaeri matchade %2$,d av dem utifrån deras uppgifter.</string>
     <plurals name="book_folder_unsupported">
         <item quantity="one">En fil som Kaeri inte kan öppna</item>
-        <item quantity="other">%1$d filer som Kaeri inte kan öppna</item>
+        <item quantity="other">%1$,d filer som Kaeri inte kan öppna</item>
     </plurals>
     <string name="book_folder_unsupported_line">%1$s. De ligger kvar i mappen som de är.</string>
-    <string name="book_folder_drm">%1$d EPUB låsta med DRM</string>
+    <string name="book_folder_drm">%1$,d EPUB låsta med DRM</string>
     <string name="book_folder_opens">Kaeri öppnar CBZ-, CBR-, EPUB- och PDF-filer samt mappar med bilder.</string>
     <string name="book_folder_show_files">Visa filer</string>
     <string name="book_folder_add">Lägg till mapp</string>
@@ -3430,7 +3461,7 @@
     <string name="book_folder_empty">Inget i %1$s som Kaeri kan öppna</string>
     <plurals name="book_folder_empty_line">
         <item quantity="one">Den innehåller en fil, som inte är CBZ, CBR, EPUB, PDF eller en bild.</item>
-        <item quantity="other">Den innehåller %1$d filer, ingen av dem CBZ, CBR, EPUB, PDF eller bilder.</item>
+        <item quantity="other">Den innehåller %1$,d filer, ingen av dem CBZ, CBR, EPUB, PDF eller bilder.</item>
     </plurals>
     <string name="book_folder_choose_other">Välj en annan mapp</string>
     <string name="store_join_title">Gå med i en tilläggsbutik</string>
@@ -3438,7 +3469,7 @@
     <string name="store_joined_title">Gick med i %1$s</string>
     <plurals name="store_joined_line">
         <item quantity="one">%1$s erbjuder ett tillägg. Att gå med installerar ingenting; installera det här eller senare.</item>
-        <item quantity="other">%1$s erbjuder %2$d tillägg. Att gå med installerar ingenting; välj de du vill ha här eller senare.</item>
+        <item quantity="other">%1$s erbjuder %2$,d tillägg. Att gå med installerar ingenting; välj de du vill ha här eller senare.</item>
     </plurals>
     <string name="store_group_reading">För läsning</string>
     <string name="store_group_watching">För tittande</string>
@@ -3447,7 +3478,7 @@
     <string name="store_install_all_reading">Installera alla för läsning</string>
     <plurals name="store_installed">
         <item quantity="one">Ett tillägg installerat. Det finns i Dina källor.</item>
-        <item quantity="other">%1$d tillägg installerade. De finns i Dina källor.</item>
+        <item quantity="other">%1$,d tillägg installerade. De finns i Dina källor.</item>
     </plurals>
     <string name="store_other_medium">Alla tillägg i %1$s är för tittande</string>
     <string name="store_other_medium_line">Tittande är avstängt på denna enhet, så inget av dem syns i Dina källor.</string>
@@ -3458,31 +3489,31 @@
     <string name="store_err_unreachable_line">Inbjudan ser rätt ut, men butiken svarar inte. Försök igen senare, eller fråga %1$s om den är igång.</string>
     <plurals name="store_other_medium_more">
         <item quantity="one">Ett till är för tittande, vilket är avstängt på denna enhet.</item>
-        <item quantity="other">%1$d till är för tittande, vilket är avstängt på denna enhet.</item>
+        <item quantity="other">%1$,d till är för tittande, vilket är avstängt på denna enhet.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
         <item quantity="one">Ett till är för läsning, vilket den här TV:n inte klarar.</item>
-        <item quantity="other">%1$d till är för läsning, vilket den här TV:n inte klarar.</item>
+        <item quantity="other">%1$,d till är för läsning, vilket den här TV:n inte klarar.</item>
     </plurals>
     <string name="store_tv_all_reading">Alla tillägg i %1$s är för läsning, vilket den här TV:n inte klarar.</string>
     <string name="store_plugin_row">Version %1$s · kan kontakta %2$s</string>
-    <string name="source_added">La till %1$s · %2$d serier</string>
+    <string name="source_added">La till %1$s · %2$,d serier</string>
     <plurals name="source_added_plugins">
         <item quantity="one">Installerade ett tillägg från %2$s</item>
-        <item quantity="other">Installerade %1$d tillägg från %2$s</item>
+        <item quantity="other">Installerade %1$,d tillägg från %2$s</item>
     </plurals>
     <plurals name="source_row_server">
-        <item quantity="one">%1$s · %2$d serier i %3$d bibliotek · nyss tillagd</item>
-        <item quantity="other">%1$s · %2$d serier i %3$d bibliotek · nyss tillagd</item>
+        <item quantity="one">%1$s · %2$,d serier i %3$,d bibliotek · nyss tillagd</item>
+        <item quantity="other">%1$s · %2$,d serier i %3$,d bibliotek · nyss tillagd</item>
     </plurals>
     <plurals name="source_row_server_series">
-        <item quantity="one">%1$s · %2$d serier i %3$d bibliotek</item>
-        <item quantity="other">%1$s · %2$d serier i %3$d bibliotek</item>
+        <item quantity="one">%1$s · %2$,d serier i %3$,d bibliotek</item>
+        <item quantity="other">%1$s · %2$,d serier i %3$,d bibliotek</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · inga serier än · tittar igen om 30 minuter</string>
     <plurals name="source_row_folder">
-        <item quantity="one">%1$s · %2$d serier · en fil hoppades över</item>
-        <item quantity="other">%1$s · %2$d serier · %3$d filer hoppades över</item>
+        <item quantity="one">%1$s · %2$,d serier · en fil hoppades över</item>
+        <item quantity="other">%1$s · %2$,d serier · %3$,d filer hoppades över</item>
     </plurals>
     <string name="source_row_plugin">Från %1$s · %2$s · version %3$s</string>
     <string name="sources_title">Källor</string>
@@ -3492,8 +3523,8 @@
     <string name="source_picker_automatic">Automatiskt</string>
     <string name="source_picker_automatic_detail">Varje avsnitt från första källan som har det</string>
     <plurals name="source_picker_coverage">
-        <item quantity="one">%1$d av %2$d avsnitt</item>
-        <item quantity="other">%1$d av %2$d avsnitt</item>
+        <item quantity="one">%1$,d av %2$,d avsnitt</item>
+        <item quantity="other">%1$,d av %2$,d avsnitt</item>
     </plurals>
     <string name="source_note_off">Avstängd</string>
     <string name="source_note_resting">Svarar inte, provar igen snart</string>
@@ -3542,14 +3573,14 @@
     <string name="sources_contacts_one">Kontaktar %1$s</string>
     <plurals name="sources_contacts_line">
         <item quantity="one">Kontaktar %1$s och en till</item>
-        <item quantity="other">Kontaktar %1$s och %2$d till</item>
+        <item quantity="other">Kontaktar %1$s och %2$,d till</item>
     </plurals>
     <string name="sources_contacts_none">Listar inga värdar att kontakta</string>
     <string name="sources_no_hosts">Inga värdar</string>
     <string name="sources_update_contacts_one">Den här uppdateringen kontaktar också %1$s.</string>
     <plurals name="sources_update_contacts">
         <item quantity="one">Den här uppdateringen kontaktar också %1$s och en till.</item>
-        <item quantity="other">Den här uppdateringen kontaktar också %1$s och %2$d till.</item>
+        <item quantity="other">Den här uppdateringen kontaktar också %1$s och %2$,d till.</item>
     </plurals>
     <string name="sources_update_title">Uppdatera %1$s?</string>
     <string name="sources_replace_title">Ersätt %1$s?</string>
@@ -3560,12 +3591,12 @@
     <string name="sources_source_order_row">Källaordning</string>
     <string name="sources_torrents_note">Torrenter ingår i Kaeri och är inget tillägg. Proxyn och seedningen ställs in i Inställningar, under Källor.</string>
     <string name="sources_rebuilding">Källor ställs in på nytt</string>
-    <string name="sources_response_ms">%1$d ms</string>
+    <string name="sources_response_ms">%1$,d ms</string>
     <string name="match_fix">Rätta matchningen</string>
     <string name="match_choose">Välj matchning</string>
     <plurals name="match_uncertain">
         <item quantity="one">%2$s listar en titel som kan vara den här. Välj den för att spela dess avsnitt.</item>
-        <item quantity="other">%2$s listar %1$d titlar som kan vara den här. Välj en för att spela dess avsnitt.</item>
+        <item quantity="other">%2$s listar %1$,d titlar som kan vara den här. Välj en för att spela dess avsnitt.</item>
     </plurals>
     <string name="match_uncertain_none">%1$s har ingen titel som passar den här. Välj en ändå, eller sök.</string>
     <string name="match_source_picker_row">Fel titel? Rätta matchningen</string>
@@ -3726,7 +3757,7 @@
     <string name="stores_owner_devices">Ägare · %1$s</string>
     <plurals name="stores_member_devices">
         <item quantity="one">Deras enda enhet</item>
-        <item quantity="other">Deras %1$d enheter</item>
+        <item quantity="other">Deras %1$,d enheter</item>
     </plurals>
     <string name="stores_invite_for">För vem? (valfritt)</string>
     <string name="stores_their_name">Deras namn</string>
@@ -3753,8 +3784,8 @@
     <string name="stores_invite_lasts_forever">Inget slutdatum</string>
     <string name="stores_invite_group_name">Ett namn för den här inbjudan (valfritt)</string>
     <string name="stores_invite_group_detail">Var och en lägger till sitt eget namn när de går med.</string>
-    <string name="stores_invite_works_times">Gäller %1$d gånger, till och med %2$s.</string>
-    <string name="stores_invite_works_times_forever">Gäller %1$d gånger, tills du avbryter den.</string>
+    <string name="stores_invite_works_times">Gäller %1$,d gånger, till och med %2$s.</string>
+    <string name="stores_invite_works_times_forever">Gäller %1$,d gånger, tills du avbryter den.</string>
     <string name="stores_invite_works_any">Alla som har den här länken kan gå med, till och med %1$s.</string>
     <string name="stores_invite_works_any_forever">Alla som har den här länken kan gå med tills du avbryter den.</string>
     <string name="stores_invite_once_until">Gäller en gång, för personen du skickar den till, till och med %1$s.</string>
@@ -3765,9 +3796,9 @@
     <string name="stores_invite_not_used">Inte använd än</string>
     <plurals name="stores_invite_used">
         <item quantity="one">Använd en gång</item>
-        <item quantity="other">Använd %1$d gånger</item>
+        <item quantity="other">Använd %1$,d gånger</item>
     </plurals>
-    <string name="stores_invite_used_of">Använd %1$d av %2$d</string>
+    <string name="stores_invite_used_of">Använd %1$,d av %2$,d</string>
     <string name="stores_invites_ended">Avslutade de senaste 30 dagarna</string>
     <string name="stores_invite_used_up">Förbrukad %1$s</string>
     <string name="stores_invite_ran_out">Upphörde %1$s</string>
@@ -3776,7 +3807,7 @@
     <string name="stores_invite_joined">%1$s · gick med %2$s</string>
     <plurals name="stores_cancel_invite_detail">
         <item quantity="one">Ingen annan kan gå med via den. Personen som gick med är kvar som medlem.</item>
-        <item quantity="other">Ingen annan kan gå med via den. De %1$d personerna som gick med är kvar som medlemmar.</item>
+        <item quantity="other">Ingen annan kan gå med via den. De %1$,d personerna som gick med är kvar som medlemmar.</item>
     </plurals>
     <string name="stores_join_your_name">Ditt namn (valfritt)</string>
     <string name="stores_join_your_name_detail">butikens ägare ser det här namnet i medlemslistan.</string>
@@ -3789,10 +3820,10 @@
     <string name="stores_only_invited">Bara personer du bjuder in</string>
     <plurals name="stores_devices_joined">
         <item quantity="one">En enhet har gått med via länken</item>
-        <item quantity="other">%1$d enheter har gått med via länken</item>
+        <item quantity="other">%1$,d enheter har gått med via länken</item>
     </plurals>
     <string name="stores_device_joined_at">Gick med %1$s</string>
-    <string name="stores_newest_listed">De %1$d senaste visas.</string>
+    <string name="stores_newest_listed">De %1$,d senaste visas.</string>
     <string name="stores_server_older">Den här tilläggsbutikens server är äldre och släpper bara in personer du bjuder in. Att uppdatera servern lägger till valet.</string>
     <string name="stores_remove_devices_title">Ta bort enheterna som gick med via länken?</string>
     <string name="stores_remove_devices_detail">De slutar fungera med %1$s direkt. Tillägg som redan är installerade på dem finns kvar.</string>
@@ -3803,7 +3834,7 @@
     <string name="stores_copy_link">Kopiera länk</string>
     <plurals name="stores_offers_plugins">
         <item quantity="one">Ett tillägg</item>
-        <item quantity="other">%1$d tillägg</item>
+        <item quantity="other">%1$,d tillägg</item>
     </plurals>
     <string name="notice_open_stores">Öppna tilläggsbutiker</string>
     <string name="stores_what_is">En tilläggsbutik är en liten server som innehåller signerade tillägg och ger varje enhet sin egen token. Dess tillägg lägger till källor. Kaeri driver inga tilläggsbutiker och listar inga, så du går med i en via en inbjudningslänk från ägaren.</string>
@@ -3858,7 +3889,7 @@
     <string name="devices_only_this">Bara den här enheten</string>
     <string name="devices_only_this_line">Parkoppla en till enhet för att dela var du slutade, din historik och dina inställningar.</string>
     <string name="devices_add">Lägg till en enhet</string>
-    <string name="devices_not_seen">Inte sedd på %1$d dagar</string>
+    <string name="devices_not_seen">Inte sedd på %1$,d dagar</string>
     <string name="devices_remote_only">Bara fjärrstyrning</string>
     <string name="devices_also_sync">Synka också med %1$s</string>
     <string name="devices_paired_tvs_foot">Parkopplad för Spela på TV. En TV som parkopplats som fjärrkontroll får aldrig din historik.</string>
@@ -3935,8 +3966,8 @@
     <string name="rkey_new_foot">Den gamla nyckeln slutar fungera, och dina enheter byter till den nya vid sin kommande synk.</string>
     <string name="rkey_enter_title">Ange din återställningsnyckel</string>
     <plurals name="rkey_enter_line">
-        <item quantity="one">%1$s innehåller historik från %2$d enhet. Nyckeln du sparade när synkningen slogs på öppnar den.</item>
-        <item quantity="other">%1$s innehåller historik från %2$d enheter. Nyckeln du sparade när synkningen slogs på öppnar den.</item>
+        <item quantity="one">%1$s innehåller historik från %2$,d enhet. Nyckeln du sparade när synkningen slogs på öppnar den.</item>
+        <item quantity="other">%1$s innehåller historik från %2$,d enheter. Nyckeln du sparade när synkningen slogs på öppnar den.</item>
     </plurals>
     <string name="rkey_enter_note">24 bokstäver och siffror, i grupper om fyra. Mellanslag och versaler spelar ingen roll.</string>
     <string name="rkey_wrong">Den nyckeln öppnar inte den här mappen. Kontrollera varje grupp om fyra och försök igen.</string>
@@ -4001,7 +4032,7 @@
     <string name="cloud_app_password_note">Skapa ett i Nextcloud under Inställningar, Säkerhet. Det sparas på den här %1$s.</string>
     <plurals name="devices_tvs_for_play">
         <item quantity="one">En TV för Spela på TV</item>
-        <item quantity="other">%1$d TV-apparater för Spela på TV</item>
+        <item quantity="other">%1$,d TV-apparater för Spela på TV</item>
     </plurals>
     <string name="devices_paired_today">Parkopplad idag</string>
     <string name="tv_devices_add_line">Visar en kod att ange på din mobil</string>
@@ -4080,16 +4111,16 @@
     <string name="episode_synopsis_hidden">Sammanfattning dold av spoilerskydd</string>
     <string name="episode_synopsis_show">Visa sammanfattning</string>
     <string name="episode_synopsis_show_hint">Visar avsnittets bild och sammanfattning</string>
-    <string name="episode_facts">%1$d min · Sändes %2$s</string>
-    <string name="episode_facts_length">%1$d min</string>
-    <string name="episode_facts_left">%1$d min kvar</string>
+    <string name="episode_facts">%1$,d min · Sändes %2$s</string>
+    <string name="episode_facts_length">%1$,d min</string>
+    <string name="episode_facts_left">%1$,d min kvar</string>
     <string name="episode_protection_line">Spoilerskyddet döljer allt efter avsnitt %1$d.</string>
     <string name="episode_protection_line_short">Dolt efter avsnitt %1$d</string>
     <string name="episode_range">Avsnitt %1$d till %2$d</string>
     <string name="episode_range_label">Avsnittsintervall</string>
     <plurals name="episode_fold">
         <item quantity="one">Ett sett avsnitt</item>
-        <item quantity="other">%1$d sedda avsnitt</item>
+        <item quantity="other">%1$,d sedda avsnitt</item>
     </plurals>
     <string name="episode_short">A%1$d</string>
     <string name="episode_aired">Sändes %1$s</string>
@@ -4121,7 +4152,7 @@
     <string name="more_rankings">Placeringar</string>
     <string name="more_following">Personer du följer</string>
     <string name="more_following_note">Från AniList</string>
-    <string name="more_followed_score">%1$d/10</string>
+    <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Liknande</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList har inga roller, medarbetare eller rekommendationer för den här titeln än.</string>
@@ -4129,7 +4160,7 @@
     <string name="more_hide_spoiler_tags">Dölj spoilertaggar</string>
     <plurals name="more_show_spoiler_tags">
         <item quantity="one">Visa en spoilertagg</item>
-        <item quantity="other">Visa %1$d spoilertaggar</item>
+        <item quantity="other">Visa %1$,d spoilertaggar</item>
     </plurals>
     <string name="episode_line_dubbed">%1$s · Dubbat</string>
     <string name="title_button_play_dubbed">Spela upp avsnitt %1$d · Dubbat</string>
@@ -4141,7 +4172,7 @@
     <string name="title_fact_after">Efter avsnitt %1$d</string>
     <string name="title_fact_now">Nu</string>
     <string name="title_fact_tba">Datum tillkännages</string>
-    <string name="more_following_line">%1$s · %2$d/10</string>
+    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Gå till avsnitt…</string>
     <string name="episode_go_to_title">Gå till avsnitt</string>
     <string name="episode_go_to_go">Gå</string>
@@ -4228,7 +4259,7 @@
     <string name="accounts_state_signed_in">Inloggad på %1$s som %2$s</string>
     <plurals name="accounts_state_signed_in_waiting">
         <item quantity="one">Inloggad på %1$s som %2$s · en ändring väntar</item>
-        <item quantity="other">Inloggad på %1$s som %2$s · %3$d ändringar väntar</item>
+        <item quantity="other">Inloggad på %1$s som %2$s · %3$,d ändringar väntar</item>
     </plurals>
     <string name="accounts_state_expired">%1$s behöver att du loggar in igen</string>
     <string name="accounts_state_expired_short">Logga in igen för att fortsätta synka</string>
@@ -4350,7 +4381,7 @@
     <string name="tv_volume">Volym på TV:n</string>
     <string name="tv_cast_group">Chromecast</string>
     <string name="tv_cast_none_found">TV-apparater med inbyggd Chromecast visas också här.</string>
-    <string name="tv_cast_counting">%1$s · %2$d s</string>
+    <string name="tv_cast_counting">%1$s · %2$,d s</string>
     <string name="tv_cast_couldnt_start">Kunde inte starta på %1$s</string>
     <string name="tv_cast_stopped">Castingen stoppades</string>
     <string name="tv_cast_play_here">Spela här</string>
@@ -4358,7 +4389,7 @@
     <string name="tv_cast_mute">Ljud av</string>
     <string name="tv_cast_unmute">Ljud på</string>
     <string name="tv_cast_volume_on_tv">Ställs in på TV:n</string>
-    <string name="tv_cast_up_next_in">Nästa · spelas om %1$d s</string>
+    <string name="tv_cast_up_next_in">Nästa · spelas om %1$,d s</string>
     <string name="tv_forget_note">Glömmer du en TV här glömmer den den här enheten också.</string>
     <string name="updates_title">Uppdateringar</string>
     <string name="updates_checking">Letar efter en nyare version…</string>

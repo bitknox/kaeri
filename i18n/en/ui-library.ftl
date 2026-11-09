@@ -63,32 +63,32 @@ continue-drop = Move to Dropped
 continue-more-for = More for { $title }
 
 # Row caption: resumes this episode where it stopped. The clock is the stored position.
-# @arg episode: int
+# @arg episode: plain
 # @arg clock: text
 # @allow proceed
 continue-row-resume = Resume E{ $episode } · { $clock }
 
 # Row caption: resumes this episode where it stopped, dubbed.
-# @arg episode: int
+# @arg episode: plain
 # @arg clock: text
 # @allow proceed
 continue-row-resume-dubbed = Resume E{ $episode } { -dubbed } · { $clock }
 
 # Row caption: the next unwatched episode.
-# @arg episode: int
+# @arg episode: plain
 continue-row-start = Play E{ $episode }
 
 # Row caption: the next unwatched episode, dubbed.
-# @arg episode: int
+# @arg episode: plain
 continue-row-start-dubbed = Play E{ $episode } { -dubbed }
 
 # Row caption: the next unwatched episode, which came out a while ago.
-# @arg episode: int
+# @arg episode: plain
 # @arg ago: text
 continue-row-start-aired = Play E{ $episode } · out { $ago }
 
 # Row caption: nothing new to watch. The time is when the next episode airs.
-# @arg episode: int
+# @arg episode: plain
 # @arg when: text
 continue-row-caught-up = Caught up · E{ $episode } { $when }
 
@@ -104,14 +104,14 @@ continue-caught-up = You're caught up.
 ## Title page button
 
 # Main button of the title page when the episode is part-watched. The time is where it stopped, already formatted.
-# @arg episode: int
+# @arg episode: plain
 # @arg time: text
 # @max 40
 # @allow proceed
 title-button-resume = Resume episode { $episode } · { $time }
 
 # Main button of the title page otherwise: plays the next unwatched episode from the start.
-# @arg episode: int
+# @arg episode: plain
 # @max 40
 title-button-play = Play episode { $episode }
 
@@ -191,18 +191,18 @@ library-on-your-list = On your list
 library-in-your-list = In your list
 
 # Short progress under a show: the last episode watched out of the total.
-# @arg done: int
-# @arg total: int
+# @arg done: plain
+# @arg total: plain
 # @max 24
 progress-episodes-short = E{ $done } of { $total }
 
 # Short progress under a show when the total is not known.
-# @arg done: int
+# @arg done: plain
 # @max 12
 progress-episode-short = E{ $done }
 
 # Row caption: the next unwatched episode, dubbed, which came out a while ago.
-# @arg episode: int
+# @arg episode: plain
 # @arg ago: text
 continue-row-start-aired-dubbed = Play E{ $episode } { -dubbed } · out { $ago }
 
@@ -254,7 +254,7 @@ up-next-hidden = { $title } is hidden from { -up-next-cap } for you
 up-next-hidden-until-airs = { $title } is hidden until it airs
 
 # Line under a show that airs today: its episode, then the time or how long ago it came out. The time is worded already.
-# @arg episode: int
+# @arg episode: plain
 # @arg when: text
 # @max 36
 up-next-broadcast = Episode { $episode } · { $when }

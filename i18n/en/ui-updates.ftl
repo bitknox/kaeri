@@ -159,7 +159,7 @@ updates-saved-replace-plain = Version { $version } saved to Downloads. Replace t
 ## Why an update stopped
 
 # The server refused. The code is a number.
-# @arg code: int
+# @arg code: plain
 updates-why-server = The download stopped: the server refused it ({ $code }). Try again later.
 
 # The connection broke.
