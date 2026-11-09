@@ -427,7 +427,8 @@ internal fun WorkTile.rowCaption(context: Context, kind: ReadRowKind, oneFormat:
     val status = status
     val second = when (kind) {
         ReadRowKind.FINISHED -> count ?: status
-        ReadRowKind.NEW -> status
+        // A new series by the month it started, else where it stands.
+        ReadRowKind.NEW -> started ?: status
         else -> status
     }
     val shown = if (oneFormat) listOfNotNull(origin, second) else listOfNotNull(format, status)
@@ -441,7 +442,8 @@ internal fun WorkTile.rowCaption(context: Context, kind: ReadRowKind, oneFormat:
 /** The line under a cover: the engine's words for where the person is, else its facts joined. */
 internal fun WorkTile.line(context: Context): String =
     if (notInSources) Strings.homeNotFound(context)
-    else next?.text(context) ?: facts.joinToString(" · ") { it.text(context) } // i18n-skip
+    else next?.text(context) ?: started?.let { since -> listOfNotNull(origin?.text(context), since.text(context)).joinToString(" · ") } // i18n-skip
+        ?: facts.joinToString(" · ") { it.text(context) } // i18n-skip
 
 /** An AniList result's caption: its format and where it comes from, "Light novel · Japan". */
 internal fun WorkTile.anilistLine(context: Context): String =

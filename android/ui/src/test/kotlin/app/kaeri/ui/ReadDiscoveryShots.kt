@@ -1,8 +1,11 @@
 package app.kaeri.ui
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -100,6 +103,22 @@ class ReadDiscoveryShots : ReadingShotHarness() {
     @Test @Config(qualifiers = PHONE)
     fun phone_search_mid() = search("phone-discovery-search-mid", "rd-search-mid")
 
+    /** A source with eight hits: five covers, then Show 3 more in the next slot. A tablet's row shows all six. */
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_search_source_more() {
+        val staged = AtomicBoolean(false)
+        shoot(
+            "tablet-discovery-search-source-more", FixtureScene.READING_HOME, Destination.Search, medium = KaeriIsFor.READ,
+            act = { scope.launch { staged.set(ReadDiscoveryStage.stage(requireNotNull(store), "rd-search-done")) } },
+            acted = { staged.get() && it.reading.search.value.sources != null },
+            after = {
+                compose.onNode(hasScrollToIndexAction() and SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange))
+                    .performScrollToNode(hasText("Show 3 more")) // i18n-skip
+            },
+            ready = { true },
+        )
+    }
+
     @Test @Config(qualifiers = PHONE)
     fun phone_search_done() = search("phone-discovery-search-done", "rd-search-done")
 
@@ -121,8 +140,35 @@ class ReadDiscoveryShots : ReadingShotHarness() {
     @Config(qualifiers = EREADER)
     fun eink_home_browse_row() = shoot(
         "eink-reader-home-browse", FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(),
-        act = { scrollTo("Browse") }, // i18n-skip
         ready = homeRows,
+    )
+
+    @Test
+    @Config(qualifiers = EINK_PHONE)
+    fun eink_phone_home() = shoot(
+        "eink-phone-home", FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(),
+        ready = homeRows,
+    )
+
+    @Test
+    @Config(qualifiers = EREADER)
+    fun eink_home_first_run() = shoot(
+        "eink-reader-home-first-run", FixtureScene.READING_DEMO, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(),
+        ready = homeRows,
+    )
+
+    @Test
+    @Config(qualifiers = EREADER)
+    fun eink_downloads() = shoot(
+        "eink-reader-downloads", FixtureScene.READING_DOWNLOADS, Destination.Downloads, medium = KaeriIsFor.READ, eink = EinkLook(),
+        ready = { it.reading.downloads.value != null },
+    )
+
+    @Test
+    @Config(qualifiers = EREADER)
+    fun eink_more() = shoot(
+        "eink-reader-more", FixtureScene.READING_HOME, Destination.More, medium = KaeriIsFor.READ, eink = EinkLook(),
+        ready = { it.bookSources.view.value != null },
     )
 
     @Test

@@ -288,10 +288,14 @@ private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?, grid: ReadG
             onLongClick = { menu = true },
             extra = extra,
             list = grid.list,
+            planning = true,
         )
         ReadTileMenu(tile, menu, current = null) { menu = false }
     }
 }
+
+/** A source group shows this many hits, then "Show N more". */
+internal const val SOURCE_HITS_SHOWN = 5
 
 /**
  * One source's row: its name and kind, then its covers, a failure with Try again, or placeholders.
@@ -352,7 +356,7 @@ private fun SourceGroupRow(group: ReadSourceGroup, again: Boolean, waited: Boole
                         Modifier.padding(horizontal = 16.dp),
                     )
                     // Source hits: no menu and no Add to Planning, as the board has them.
-                    else -> TileStrip(tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false) { hit ->
+                    else -> TileStrip(tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false, cap = SOURCE_HITS_SHOWN) { hit ->
                         hit.hitLine(context).let { RowCaption(it, it) }
                     }
                 }

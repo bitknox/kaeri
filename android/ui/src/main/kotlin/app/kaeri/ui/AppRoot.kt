@@ -116,7 +116,13 @@ enum class Destination(val route: String, @StringRes val label: Int, val icon: I
     Read("read", R.string.nav_read, Icons.Read, Icons.ReadSelected),
 
     /** New chapters of the series followed: a bar item with Read alone, Read's heading with Both. */
-    Updates("updates", R.string.nav_updates, Icons.Updates, Icons.UpdatesSelected);
+    Updates("updates", R.string.nav_updates, Icons.Updates, Icons.UpdatesSelected),
+
+    /** The e-reader's Downloads tab: what is downloading and what is here, on paper. */
+    Downloads("shelf-downloads", R.string.downloads_title, Icons.Downloads, Icons.Downloads),
+
+    /** The e-reader's More tab: sources, trackers, sync, settings and About. */
+    More("more", R.string.eink_tab_more, Icons.More, Icons.More);
 
     companion object {
         /** The destination [name] names, by its route, case aside. */
@@ -286,9 +292,49 @@ private fun readPageBackAway(to: Int): ExitTransition =
  * title page pushed inside one keeps the page underneath, and the shared elements do the moving
  * (T1), seeked by predictive back.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppRoot(
+    store: AppStore,
+    start: Destination = Destination.Home,
+    actions: AppActions = AppActions(),
+    /** A title page to open on [start] as the app starts: the fixtures' `title` extra. */
+    startTitle: AnilistId? = null,
+    /** A search to run on Search as the app starts: the fixtures' `query` and `genre` extras. */
+    startSearch: SearchQuery? = null,
+    /** A sheet to open on [start] as the app starts: the fixtures' `sheet` extra, `filters` on Search. */
+    startSheet: String? = null,
+    /** A page to open over [start] as the app starts, by its route: the fixtures' `page` extra. */
+    startPage: String? = null,
+    /** The player, which the frame shows over everything while it is up. */
+    player: PlayerSlot? = null,
+    /** The links the system opens the app on, followed as they come: shortcuts, notifications. */
+    links: Flow<AppLink> = emptyFlow(),
+    /** The destination on screen, each time it changes: where the Updated notification comes back to. */
+    onSection: (Destination) -> Unit = {},
+    /** Whether first launch's pages may show, until this device has been through them. */
+    firstLaunch: Boolean = false,
+) {
+    // On an e-ink panel every screen draws on paper, with no ripple and nothing moving.
+    EinkPaperTheme(app.kaeri.ui.reading.LocalEinkLayout.current) {
+        AppRootFrame(
+            store = store,
+            start = start,
+            actions = actions,
+            startTitle = startTitle,
+            startSearch = startSearch,
+            startSheet = startSheet,
+            startPage = startPage,
+            player = player,
+            links = links,
+            onSection = onSection,
+            firstLaunch = firstLaunch,
+        )
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun AppRootFrame(
     store: AppStore,
     start: Destination = Destination.Home,
     actions: AppActions = AppActions(),
@@ -351,8 +397,10 @@ fun AppRoot(
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
     val snackbars = remember { Snackbars(SnackbarHostState(), scope, context) }
-    val wide = wideWindow()
     val eink = app.kaeri.ui.reading.LocalEinkLayout.current != null
+    // An e-reader keeps the board's bottom tabs at every size, never the rail.
+    val wide = wideWindow() && !eink
+    val einkReader = eink && einkReaderShape()
     val mediumView by store.medium.view.collectAsStateWithLifecycle()
     val answer = mediumView?.answer ?: KaeriIsFor.WATCH
 
@@ -460,7 +508,7 @@ fun AppRoot(
                     if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
                     if (!wide && !onPage && !onPlayer && !sheets.barHidden) {
                         // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
-                        if (eink) EinkTabBar(current ?: start, answer, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
+                        if (eink) EinkTabBar(current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
                     }
                 }
             },
@@ -475,34 +523,39 @@ fun AppRoot(
                         NavHost(
                             nav,
                             startDestination = graphRoute(start),
-                            // A reading page (View all) pushes on M3's shared axis, which predictive back seeks; e-ink stays still.
+                            // A reading page (View all) pushes on M3's shared axis, which predictive back seeks.
+                            // E-ink: no fades between pages; the panel redraws the new one at once.
                             enterTransition = {
                                 when {
+                                    eink -> EnterTransition.None
                                     navigator.replacing -> fadeIn(Motion.standard())
                                     switching() -> fadeIn(Motion.quick())
-                                    targetState.isReadPage && !eink -> readPageOver(axis)
+                                    targetState.isReadPage -> readPageOver(axis)
                                     else -> EnterTransition.None
                                 }
                             },
                             exitTransition = {
                                 when {
+                                    eink -> ExitTransition.None
                                     navigator.replacing -> fadeOut(Motion.standard())
                                     switching() -> fadeOut(Motion.quick())
-                                    targetState.isReadPage && !eink -> readPageCovered(-axis)
+                                    targetState.isReadPage -> readPageCovered(-axis)
                                     else -> ExitTransition.KeepUntilTransitionsFinished
                                 }
                             },
                             popEnterTransition = {
                                 when {
+                                    eink -> EnterTransition.None
                                     switching() -> fadeIn(Motion.quick())
-                                    initialState.isReadPage && !eink -> readPageUncovered(-axis)
+                                    initialState.isReadPage -> readPageUncovered(-axis)
                                     else -> EnterTransition.None
                                 }
                             },
                             popExitTransition = {
                                 when {
+                                    eink -> ExitTransition.None
                                     switching() -> fadeOut(Motion.quick())
-                                    initialState.isReadPage && !eink -> readPageAway(axis)
+                                    initialState.isReadPage -> readPageAway(axis)
                                     else -> ExitTransition.KeepUntilTransitionsFinished
                                 }
                             },
@@ -604,6 +657,9 @@ private fun DestinationScreen(
         Destination.Home -> if (answer == KaeriIsFor.READ) app.kaeri.ui.reading.ReadHomeScreen(actions) else HomeScreen(actions)
         Destination.Read -> app.kaeri.ui.reading.ReadHomeScreen(actions)
         Destination.Updates -> app.kaeri.ui.reading.UpdatesScreen(actions)
+        // The e-reader's own tabs, on paper; elsewhere Downloads is the app's own page.
+        Destination.Downloads -> if (app.kaeri.ui.reading.LocalEinkLayout.current != null) app.kaeri.ui.reading.EinkDownloadsPage() else DownloadsScreen(actions)
+        Destination.More -> app.kaeri.ui.reading.EinkMorePage()
         Destination.Calendar -> CalendarScreen()
         Destination.Seasonal -> SeasonalScreen()
         Destination.Library -> LibraryScreen(actions)

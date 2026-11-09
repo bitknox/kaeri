@@ -244,11 +244,22 @@ class MainActivity : ComponentActivity() {
                 { tv.offer(TvPlayRequest(id, model.showTitle, episode, model.position, fromPlayer = true)) }
             }
         }
+        // The window's recomposer, so an e-ink panel can stop every animation in it.
+        val motion = PanelMotion(contentResolver).also { it.install(this) }
         traced("setContent") { setContent {
             KaeriTheme {
-                // On an e-ink panel, reading's discovery draws its paper pages and Home's Browse row.
+                // On an e-ink panel the app draws the e-ink shell: paper, ink and nothing moving.
                 val einkState by app.eink.state.collectAsState()
                 val einkLayout = if (einkState.eink) EinkLook(colour = einkState.amber) else null
+                androidx.compose.runtime.SideEffect { motion.still = einkState.eink }
+                // Dark icons on paper; light ones on the dark ground.
+                val decor = androidx.compose.ui.platform.LocalView.current
+                androidx.compose.runtime.LaunchedEffect(einkState.eink) {
+                    androidx.core.view.WindowCompat.getInsetsController(window, decor).run {
+                        isAppearanceLightStatusBars = einkState.eink
+                        isAppearanceLightNavigationBars = einkState.eink
+                    }
+                }
                 CompositionLocalProvider(LocalEinkLayout provides einkLayout) {
                 ReaderHost(app.store, app.eink) { AppRoot(
                     app.store,

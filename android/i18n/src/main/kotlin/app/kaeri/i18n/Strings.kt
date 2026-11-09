@@ -2849,6 +2849,54 @@ object Strings {
     fun readerPaperParts(context: Context): String =
         context.getString(R.string.reader_paper_parts)
 
+    /** The e-reader's last tab: sources, trackers, sync, settings and About, each a row. */
+    fun einkTabMore(context: Context): String =
+        context.getString(R.string.eink_tab_more)
+
+    /** The link at the end of a heading on e-ink Home that opens the whole list, such as all of Continue. */
+    fun einkHomeAll(context: Context): String =
+        context.getString(R.string.eink_home_all)
+
+    /** Heading on the e-reader's Home over the newest chapters that came out; All opens Updates. */
+    fun einkHomeNewChapters(context: Context): String =
+        context.getString(R.string.eink_home_new_chapters)
+
+    /** A row on the e-reader's More page that opens the tracker accounts. */
+    fun einkMoreTrackers(context: Context): String =
+        context.getString(R.string.eink_more_trackers)
+
+    /** A row on the e-reader's More page that opens syncing with other devices. */
+    fun einkMoreSync(context: Context): String =
+        context.getString(R.string.eink_more_sync)
+
+    /** The line under Settings on the e-reader's More page: what the settings cover. */
+    fun einkMoreSettingsLine(context: Context): String =
+        context.getString(R.string.eink_more_settings_line)
+
+    /** Under the title of the e-reader's Downloads: what downloads take and what is free, such as "1.3 GB on this device · 21 GB free". */
+    fun einkDownloadsSpace(context: Context, used: String, free: String): String =
+        context.getString(R.string.eink_downloads_space, used, free)
+
+    /** Under the title of the e-reader's Downloads when the free space isn't known. */
+    fun einkDownloadsSpaceUsed(context: Context, used: String): String =
+        context.getString(R.string.eink_downloads_space_used, used)
+
+    /** Heading on the e-reader's Downloads over the chapters downloading or waiting. */
+    fun einkDownloadsDownloading(context: Context): String =
+        context.getString(R.string.eink_downloads_downloading)
+
+    /** Heading on the e-reader's Downloads over the series with chapters kept here. */
+    fun einkDownloadsHere(context: Context): String =
+        context.getString(R.string.eink_downloads_here)
+
+    /** The line under Keep next chapters ready on the e-reader's Downloads while it is on. */
+    fun einkKeepReadyOn(context: Context): String =
+        context.getString(R.string.eink_keep_ready_on)
+
+    /** The line under Keep next chapters ready on the e-reader's Downloads while it is off. */
+    fun einkKeepReadyOff(context: Context): String =
+        context.getString(R.string.eink_keep_ready_off)
+
     /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
     fun readHomeOfflineLine(context: Context): String =
         context.getString(R.string.read_home_offline_line)

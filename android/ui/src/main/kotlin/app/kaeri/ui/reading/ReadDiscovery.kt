@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -56,6 +57,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
@@ -68,6 +70,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,20 +81,26 @@ import app.kaeri.design.rememberStillFade
 import app.kaeri.design.rememberSystemReducedMotion
 import app.kaeri.design.stillFade
 import app.kaeri.design.tabular
+import app.kaeri.engine.model.ReadFilters
 import app.kaeri.engine.model.ReadHomeRow
 import app.kaeri.engine.model.WorkTile
 import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
+import app.kaeri.store.ReadSearchState
 import app.kaeri.store.text
+import app.kaeri.ui.AfterWait
 import app.kaeri.ui.Icons
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.PLACEHOLDERS_AFTER
+import app.kaeri.ui.PosterGrid
 import app.kaeri.ui.PosterPlaceholder
 import app.kaeri.ui.cardGap
+import app.kaeri.ui.itemMotion
 import app.kaeri.ui.posterWidth
 import app.kaeri.ui.shelfTop
 import kotlinx.coroutines.coroutineScope
+import app.kaeri.ui.wideWindow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -306,28 +315,48 @@ internal fun TileStrip(
     from: String,
     rowKey: String,
     planning: Boolean = true,
+    /** Shows this many covers, then "Show N more" in the next slot until it's pressed. */
+    cap: Int? = null,
     /** The line under each title in place of the tile's own, shown and spoken. */
     caption: ((WorkTile) -> RowCaption)? = null,
 ) {
     val state = rememberLazyListState()
+    val context = LocalContext.current
+    val reduced = rememberSystemReducedMotion()
+    var open by rememberSaveable(rowKey) { mutableStateOf(false) }
+    val capped = cap != null && !open && tiles.size > cap
+    val shown = if (capped) tiles.take(cap!!) else tiles
     LazyRow(
         state = state,
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(cardGap()),
     ) {
-        items(tiles, key = { "$rowKey-${it.work}" }, contentType = { "cover" }) { tile ->
+        items(shown, key = { "$rowKey-${it.work}" }, contentType = { "cover" }) { tile ->
             val words = caption?.invoke(tile)
-            if (planning) {
-                var menu by remember { mutableStateOf(false) }
-                Box {
+            // The covers past the cap fade in where the button stood, as the row's other arrivals do.
+            Box(if (reduced || cap == null) Modifier else itemMotion()) {
+                if (planning) {
+                    var menu by remember { mutableStateOf(false) }
                     ReadTile(
                         tile, posterWidth(), from = from, lines = 1, reserveLine = true, planning = true,
                         caption = words?.shown, spoken = words?.spoken, onLongClick = { menu = true },
                     )
                     ReadTileMenu(tile, menu, current = null) { menu = false }
+                } else {
+                    ReadTile(tile, posterWidth(), from = from, lines = 1, reserveLine = true, caption = words?.shown, spoken = words?.spoken)
                 }
-            } else {
-                ReadTile(tile, posterWidth(), from = from, lines = 1, reserveLine = true, caption = words?.shown, spoken = words?.spoken)
+            }
+        }
+        if (capped) {
+            item(key = "$rowKey-more", contentType = "more") {
+                Box(
+                    (if (reduced) Modifier else itemMotion()).width(posterWidth()).aspectRatio(2f / 3f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    TextButton(onClick = { open = true }) {
+                        Text(Strings.readSearchSourceMore(context, tiles.size - cap!!), textAlign = TextAlign.Center)
+                    }
+                }
             }
         }
     }
@@ -467,7 +496,7 @@ private fun ViewAllPage(rowId: String) {
             ReadGrid(
                 PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp + padding.calculateBottomPadding()),
                 Modifier.stillFade(gridFade),
-            ) { grid -> browseCells(shown, grid, viewAll = true, lineFor = null) }
+            ) { grid -> browseCells(shown, grid, viewAll = true, lineFor = { viewAllLine(it, row, shown.search, store.reading.filters) }) }
         }
     }
 }
@@ -560,4 +589,14 @@ private fun BrowseCell(tile: WorkTile, grid: ReadGridShape, from: String) {
         )
         ReadTileMenu(tile, menu, current = null) { menu = false }
     }
+}
+
+/**
+ * The line over View all's results: the row's own words and the count once AniList gives it,
+ * "Webtoons, trending · 1,920 series from AniList". With the filter changed, the filter's words.
+ */
+private fun viewAllLine(context: Context, row: ReadHomeRow?, search: ReadSearchState, filters: ReadFilters): String {
+    val line = row?.viewAllTitle?.takeIf { search.query == row.viewAll }?.text(context) ?: return browseLine(context, search, filters)
+    val total = search.total ?: return Strings.readSearchBrowseLine(context, line)
+    return listOf(line, Strings.readSearchTotal(context, total.toInt())).joinToString(" · ") // i18n-skip
 }
