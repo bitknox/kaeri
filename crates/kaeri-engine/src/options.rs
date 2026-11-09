@@ -78,8 +78,9 @@ pub struct EngineOptions {
     /// so the viewer knows why their history starts over and where the old file is. See
     /// `Store::open_or_set_aside`.
     pub set_aside: Option<std::path::PathBuf>,
-    /// Whether reading is in this build. Off while it ships dark: release builds leave it off,
-    /// the Fixtures builds and the terminal's hidden development key turn it on.
+    /// Whether reading is on. Every app turns it on; off is the engine with reading switched
+    /// off, for a test or a still frame written without it, and every reading command is then
+    /// refused.
     pub reading: bool,
     /// Which build this is: the full app, the e-reader build, or a TV, which only watches.
     pub edition: kaeri_model::medium::AppEdition,

@@ -1,6 +1,6 @@
 # Messages about reading manga and novels: the words on covers and series pages, the reader's
 # notices, and why something could not be read. Each one is shown in place, unless it says
-# otherwise. Reading is off in release builds until it launches.
+# otherwise.
 
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 # @arg chapter: text

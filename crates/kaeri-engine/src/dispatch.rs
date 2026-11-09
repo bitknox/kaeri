@@ -485,7 +485,7 @@ pub(crate) fn dispatch(
             crate::export::command(engine, services, command, job, tx)
         }
 
-        // Reading: refused in place while it ships dark. See `reading`.
+        // Reading: refused in place when the engine was started with it off. See `reading`.
         Command::Reading(kaeri_model::reading::ReadingCommand::LoadTracking { work })
             if engine.reading.available =>
         {

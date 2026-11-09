@@ -563,7 +563,8 @@ impl Default for NotificationsConfig {
 pub struct ReadingConfig {
     /// What this device is for: `watch`, `read` or `both`. Unset until the person answers.
     pub kaeri_is_for: Option<String>,
-    /// For development in the terminal: turns reading on, which release builds leave off.
+    /// A development switch from before reading launched. Reading is on everywhere now, so it
+    /// does nothing; it is kept so a file that sets it still reads without an unknown key.
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub dev: bool,
     /// The one switch of earlier versions for whether a series' own choices follow the person

@@ -1,10 +1,10 @@
 //! Reading's commands, routed here from the dispatcher.
 //!
-//! Reading ships dark: until the front end starts the engine with reading on, every reading,
-//! reader and book source command is answered with [`ReadingFailure::ReadingOff`] in place, and
-//! the medium is Watch whatever is stored. With reading on, the reader opens what is on this
-//! device ([`session`]); the loads that have no part behind them yet answer with their empty
-//! shapes, and the rest are logged and dropped.
+//! Every app starts the engine with reading on. Started with it off, as a test or a still frame
+//! may be, every reading, reader and book source command is answered with
+//! [`ReadingFailure::ReadingOff`] in place, and the medium is Watch whatever is stored. With
+//! reading on, the reader opens what is on this device ([`session`]); the loads that have no part
+//! behind them yet answer with their empty shapes, and the rest are logged and dropped.
 
 pub(crate) mod eink;
 pub mod novel;
@@ -34,7 +34,7 @@ use crate::{outbox::Outbox, services::Services, state::EngineState};
 /// What the engine knows about reading on this device.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ReadingState {
-    /// Reading is in this build: false while it ships dark.
+    /// Reading is on: false only where the engine was started with it off.
     pub available: bool,
     pub edition: AppEdition,
     /// This device's own answer, as kept.
@@ -95,7 +95,7 @@ impl ReadingState {
             edition: self.edition,
             fixed,
             reading_available: self.available,
-            // Never asked while dark, nor where the edition fixes the answer.
+            // Never asked with reading off, nor where the edition fixes the answer.
             ask: if self.available && !fixed { self.ask.clone() } else { None },
             account: self.account,
         }

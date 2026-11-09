@@ -191,8 +191,9 @@ pub struct FfiStart {
     /// none.
     #[uniffi(default = false)]
     pub audio_tap: bool,
-    /// Whether reading is in this build. Release builds pass `false` while it ships dark, and
-    /// every reading command is then refused; Fixtures builds pass `true`.
+    /// Whether reading is on. Every app passes `true`; with `false` every reading command is
+    /// refused and the medium is Watch, as in a test written without reading. A Fixtures scene
+    /// sets it for itself.
     #[uniffi(default = false)]
     pub reading: bool,
     /// The build's edition: the e-reader build is `ReadOnly`. `None` is `Full`, except on

@@ -1,4 +1,5 @@
-//! The reading scenes: the medium question each asks, and reading refused while it ships dark.
+//! The reading scenes: the medium question each asks, and reading refused in an engine started
+//! with it off.
 #![cfg(feature = "testing")]
 
 use std::{sync::Arc, thread, time::Duration};
@@ -357,4 +358,84 @@ fn a_reading_scene_started_again_on_its_home_keeps_the_reader_settings_changed_i
         .and_then(|view| view.rows.into_iter().find(|row| row.key == ReaderSettingKey::Look))
         .map(|row| row.value);
     assert_eq!(look, Some(ReaderValue::Choice { name: "sepia".into() }));
+}
+
+/// The engine as an app starts it outside any scene, on `root`: the start record the app passes,
+/// reading on, on the testing engine's fakes.
+fn start_as_an_app(root: &std::path::Path, start: kaeri_ffi::FfiStart) -> Arc<FfiEngine> {
+    let dir = |name: &str| root.join(name).display().to_string();
+    let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
+    FfiEngine::start_testing(dirs, Arc::new(Quiet), start).expect("the engine starts")
+}
+
+fn as_the_mac() -> kaeri_ffi::FfiStart {
+    kaeri_ffi::FfiStart {
+        platform: Some(kaeri_ffi::FfiPlatform::MacOs),
+        reading: true,
+        ..kaeri_ffi::FfiStart::default()
+    }
+}
+
+#[test]
+fn an_update_from_before_reading_asks_once_over_home() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    // A config as an earlier version left it: settings of its own, and no answer to the question.
+    std::fs::create_dir_all(root.path().join("config")).unwrap();
+    std::fs::write(root.path().join("config/config.toml"), "[theme]\nmode = \"immersive\"\n")
+        .unwrap();
+
+    let engine = start_as_an_app(root.path(), as_the_mac());
+    let view = medium(&engine);
+    assert!(view.reading_available, "reading is on in the app");
+    assert_eq!((view.ask, view.answer), (Some(MediumAsk::Updated), KaeriIsFor::Watch));
+    engine.send(Command::Medium(MediumCommand::Answer {
+        ask: MediumAsk::Updated,
+        answer: KaeriIsFor::Both,
+    }));
+    let view = medium(&engine);
+    assert_eq!((view.ask, view.answer), (None, KaeriIsFor::Both));
+    engine.shutdown();
+
+    // Answered once, never asked again.
+    let engine = start_as_an_app(root.path(), as_the_mac());
+    let view = medium(&engine);
+    assert_eq!((view.ask, view.answer), (None, KaeriIsFor::Both));
+    engine.shutdown();
+}
+
+#[test]
+fn a_new_install_asks_on_the_first_run() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = start_as_an_app(root.path(), as_the_mac());
+    let view = medium(&engine);
+    assert!(view.reading_available, "reading is on in the app");
+    assert_eq!(view.ask, Some(MediumAsk::FirstRun));
+    engine.shutdown();
+}
+
+#[test]
+fn a_tv_only_watches_and_the_e_reader_only_reads_and_neither_asks() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let tv = kaeri_ffi::FfiStart {
+        platform: Some(kaeri_ffi::FfiPlatform::AndroidTv),
+        reading: true,
+        ..kaeri_ffi::FfiStart::default()
+    };
+    let engine = start_as_an_app(root.path(), tv);
+    let view = medium(&engine);
+    assert_eq!((view.answer, view.fixed, view.ask), (KaeriIsFor::Watch, true, None));
+    engine.shutdown();
+
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let reader = kaeri_ffi::FfiStart {
+        platform: Some(kaeri_ffi::FfiPlatform::Android),
+        edition: Some(kaeri_model::medium::AppEdition::ReadOnly),
+        reading: true,
+        ..kaeri_ffi::FfiStart::default()
+    };
+    let engine = start_as_an_app(root.path(), reader);
+    let view = medium(&engine);
+    assert!(view.reading_available);
+    assert_eq!((view.answer, view.fixed, view.ask), (KaeriIsFor::Read, true, None));
+    engine.shutdown();
 }

@@ -4,8 +4,8 @@
 //! place reads it from [`MediumView`]: Home rows, Search's scope, notifications, Accounts, store
 //! lists, settings and widgets. Turning a medium off keeps its data.
 //!
-//! While reading ships dark the engine says reading is not available, never asks, and treats
-//! every answer as Watch.
+//! An engine started with reading off (a test or a still frame) says reading is not available,
+//! never asks, and treats every answer as Watch. Every app starts it with reading on.
 
 /// What Kaeri is for on this device.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -90,7 +90,7 @@ pub struct MediumView {
     pub edition: AppEdition,
     /// The edition fixes the answer: never asked, and Settings has no row for it.
     pub fixed: bool,
-    /// Reading is in this build. False while reading ships dark.
+    /// Reading is on. False only where the engine was started with it off.
     pub reading_available: bool,
     /// A question to show once, `None` when there is none.
     #[cfg_attr(feature = "ffi", uniffi(default))]
