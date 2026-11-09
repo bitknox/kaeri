@@ -346,6 +346,7 @@ extension ReadingMsg {
         case .readerDetectedStrip: L.readerDetectedStrip
         case .readingFailedOffline: L.readingFailedOffline
         case .readingFailedSourceDown(let source): L.readingFailedSourceDown(source: source)
+        case .readingFailedSourceOff(let source): L.readingFailedSourceOff(source: source)
         case .readingFailedNotFound: L.readingFailedNotFound
         case .readingFailedBlocked(let source, let reason): L.readingFailedBlocked(source: source, reason: reason)
         case .readingFailedParse(let source): L.readingFailedParse(source: source)

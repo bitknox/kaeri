@@ -38,6 +38,7 @@ use super::{Ask, Kit, home, search, tiles};
 use crate::{outbox::Outbox, read_sources::BookSources};
 
 mod lists;
+mod series_open;
 
 const DAY: i64 = 86_400;
 // Noon UTC on 14 November 2023, read in UTC.

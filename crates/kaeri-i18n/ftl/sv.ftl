@@ -618,7 +618,6 @@ reading-failed-offline = Du är offline. Nedladdade kapitel går fortfarande att
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = { $source } svarar inte. Försök igen senare.
 
-# Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = Den här källan har inte kvar det. Prova en annan källa.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.

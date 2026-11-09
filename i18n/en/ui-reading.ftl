@@ -463,6 +463,18 @@ series-read-from-chapters = Chapters 1 to { $latest }
 # @arg latest: text
 series-read-from-chapters-later = chapters 1 to { $latest }
 
+# A source's line while it is asked for its chapter list, first on its line.
+series-read-from-checking = Checking chapters
+
+# The same, after its kind on the line.
+series-read-from-checking-later = checking chapters
+
+# A source that answered with no chapters for this series, first on its line.
+series-read-from-empty = No chapters here yet
+
+# The same, after its kind on the line.
+series-read-from-empty-later = no chapters here yet
+
 # After a folder's chapters.
 # @arg device: text
 series-read-from-on-device = on this { $device }

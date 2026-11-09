@@ -344,6 +344,7 @@ public static class MsgText
         ReadingMsg.ReaderDetectedStrip => T.ReaderDetectedStrip,
         ReadingMsg.ReadingFailedOffline => T.ReadingFailedOffline,
         ReadingMsg.ReadingFailedSourceDown x => T.ReadingFailedSourceDown(x.Source),
+        ReadingMsg.ReadingFailedSourceOff x => T.ReadingFailedSourceOff(x.Source),
         ReadingMsg.ReadingFailedNotFound => T.ReadingFailedNotFound,
         ReadingMsg.ReadingFailedBlocked x => T.ReadingFailedBlocked(x.Source, x.Reason),
         ReadingMsg.ReadingFailedParse x => T.ReadingFailedParse(x.Source),

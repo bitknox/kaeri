@@ -112,6 +112,10 @@ reading-failed-offline = You're offline. Downloaded chapters still open.
 reading-failed-source-down = { $source } isn't answering. Try again later.
 
 # Why a chapter could not load: the source no longer has it.
+# Why something could not load: the source the series reads from is switched off in Your sources.
+# @arg source: text
+reading-failed-source-off = { $source } is switched off. Switch it on in Your { -source-pl }, or read from another { -source }.
+
 reading-failed-not-found = This { -source } doesn't have it anymore. Try another { -source }.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.

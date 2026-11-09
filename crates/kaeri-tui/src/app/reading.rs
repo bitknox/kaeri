@@ -1221,6 +1221,7 @@ fn failed_reason(name: &str, failure: Option<&ReadingFailure>, seconds: Option<u
         (
             Some(
                 failure @ (ReadingFailure::SourceDown { .. }
+                | ReadingFailure::SourceOff { .. }
                 | ReadingFailure::Blocked { .. }
                 | ReadingFailure::Parse { .. }),
             ),

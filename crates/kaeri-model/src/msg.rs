@@ -1303,7 +1303,8 @@ pub enum ReadingMsg {
     ReadingFailedOffline,
     /// Why a chapter or a list could not load: the source did not answer. The source is its name.
     ReadingFailedSourceDown { source: String },
-    /// Why a chapter could not load: the source no longer has it.
+    /// Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources.
+    ReadingFailedSourceOff { source: String },
     ReadingFailedNotFound,
     /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
     ReadingFailedBlocked { source: String, reason: String },
@@ -1653,6 +1654,7 @@ impl ReadingMsg {
             Self::ReaderDetectedStrip => "reader-detected-strip",
             Self::ReadingFailedOffline => "reading-failed-offline",
             Self::ReadingFailedSourceDown { .. } => "reading-failed-source-down",
+            Self::ReadingFailedSourceOff { .. } => "reading-failed-source-off",
             Self::ReadingFailedNotFound => "reading-failed-not-found",
             Self::ReadingFailedBlocked { .. } => "reading-failed-blocked",
             Self::ReadingFailedParse { .. } => "reading-failed-parse",
@@ -1842,6 +1844,7 @@ impl ReadingMsg {
             Self::ReaderDetectedStrip => Vec::new(),
             Self::ReadingFailedOffline => Vec::new(),
             Self::ReadingFailedSourceDown { source } => vec![("source", Value::Text(source.clone()))],
+            Self::ReadingFailedSourceOff { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReadingFailedNotFound => Vec::new(),
             Self::ReadingFailedBlocked { source, reason } => vec![("source", Value::Text(source.clone())), ("reason", Value::Text(reason.clone()))],
             Self::ReadingFailedParse { source } => vec![("source", Value::Text(source.clone()))],

@@ -618,7 +618,9 @@ reading-failed-offline = You're offline. Downloaded chapters still open.
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = { $source } isn't answering. Try again later.
 
-# Why a chapter could not load: the source no longer has it.
+# Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources.
+reading-failed-source-off = { $source } is switched off. Switch it on in Your sources, or read from another source.
+
 reading-failed-not-found = This source doesn't have it anymore. Try another source.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.
@@ -8969,6 +8971,18 @@ reader-divider-images =
 # Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
 reader-chapter-line-titled = Chapter { $chapter } · { $title }
 
+# The reader's opening line while the series' source sends its chapter list.
+reader-wait-chapter-list = Getting the chapter list from { $source }
+
+# The reader's opening line while the source sends the chapter's pages or text.
+reader-wait-chapter-pages = Getting chapter { $chapter } from { $source }
+
+# The opening line after a few seconds, with how long it has waited so far.
+reader-wait-seconds = { $line } · { $seconds } s
+
+# Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
+reader-wait-long = This is taking a while.
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = Read the demo
 
@@ -9504,6 +9518,18 @@ series-read-from-chapters = Chapters 1 to { $latest }
 
 # A source's chapters, after its kind on the line.
 series-read-from-chapters-later = chapters 1 to { $latest }
+
+# A source's line while it is asked for its chapter list, first on its line.
+series-read-from-checking = Checking chapters
+
+# The same, after its kind on the line.
+series-read-from-checking-later = checking chapters
+
+# A source that answered with no chapters for this series, first on its line.
+series-read-from-empty = No chapters here yet
+
+# The same, after its kind on the line.
+series-read-from-empty-later = no chapters here yet
 
 # After a folder's chapters.
 series-read-from-on-device = on this { $device }

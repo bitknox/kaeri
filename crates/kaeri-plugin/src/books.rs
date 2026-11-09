@@ -283,7 +283,8 @@ impl LoadedBookPlugin {
         self.makes_pages
     }
 
-    fn capabilities(&self) -> Capabilities {
+    /// The capabilities one call is lent: made fresh per call, so its fetch count starts at nought.
+    pub(crate) fn capabilities(&self) -> Capabilities {
         Capabilities::new(
             self.manifest.id.clone(),
             self.manifest.allowed_hosts.clone(),
@@ -332,7 +333,17 @@ impl LoadedBookPlugin {
         query: &str,
         hints: &TitleHints,
     ) -> Result<Result<Vec<SeriesHit>, SourceError>, PluginError> {
-        let mut store = new_store(&self.engine, self.limits, self.capabilities());
+        self.search_with(self.capabilities(), query, hints).await
+    }
+
+    /// [`Self::search`] under `capabilities`, kept by the caller to read the call's reach.
+    pub(crate) async fn search_with(
+        &self,
+        capabilities: Capabilities,
+        query: &str,
+        hints: &TitleHints,
+    ) -> Result<Result<Vec<SeriesHit>, SourceError>, PluginError> {
+        let mut store = new_store(&self.engine, self.limits, capabilities);
         let instance = self.instantiate(&mut store).await?;
         instance
             .kaeri_books_source()
@@ -346,7 +357,17 @@ impl LoadedBookPlugin {
         id: &str,
         hints: &TitleHints,
     ) -> Result<Result<SeriesDetail, SourceError>, PluginError> {
-        let mut store = new_store(&self.engine, self.limits, self.capabilities());
+        self.series_with(self.capabilities(), id, hints).await
+    }
+
+    /// [`Self::series`] under `capabilities`, kept by the caller to read the call's reach.
+    pub(crate) async fn series_with(
+        &self,
+        capabilities: Capabilities,
+        id: &str,
+        hints: &TitleHints,
+    ) -> Result<Result<SeriesDetail, SourceError>, PluginError> {
+        let mut store = new_store(&self.engine, self.limits, capabilities);
         let instance = self.instantiate(&mut store).await?;
         instance
             .kaeri_books_source()
@@ -360,7 +381,17 @@ impl LoadedBookPlugin {
         id: &str,
         hints: &TitleHints,
     ) -> Result<Result<Vec<Chapter>, SourceError>, PluginError> {
-        let mut store = new_store(&self.engine, self.limits, self.capabilities());
+        self.list_chapters_with(self.capabilities(), id, hints).await
+    }
+
+    /// [`Self::list_chapters`] under `capabilities`, kept by the caller to read the call's reach.
+    pub(crate) async fn list_chapters_with(
+        &self,
+        capabilities: Capabilities,
+        id: &str,
+        hints: &TitleHints,
+    ) -> Result<Result<Vec<Chapter>, SourceError>, PluginError> {
+        let mut store = new_store(&self.engine, self.limits, capabilities);
         let instance = self.instantiate(&mut store).await?;
         instance
             .kaeri_books_source()
@@ -374,7 +405,17 @@ impl LoadedBookPlugin {
         series: &str,
         chapter: &str,
     ) -> Result<Result<Content, SourceError>, PluginError> {
-        let mut store = new_store(&self.engine, self.limits, self.capabilities());
+        self.chapter_content_with(self.capabilities(), series, chapter).await
+    }
+
+    /// [`Self::chapter_content`] under `capabilities`, kept by the caller to read the call's reach.
+    pub(crate) async fn chapter_content_with(
+        &self,
+        capabilities: Capabilities,
+        series: &str,
+        chapter: &str,
+    ) -> Result<Result<Content, SourceError>, PluginError> {
+        let mut store = new_store(&self.engine, self.limits, capabilities);
         let instance = self.instantiate(&mut store).await?;
         instance
             .kaeri_books_source()
@@ -394,10 +435,21 @@ impl LoadedBookPlugin {
         chapter: &str,
         url: &str,
     ) -> Result<Result<Option<Vec<u8>>, SourceError>, PluginError> {
+        self.page_bytes_with(self.capabilities(), series, chapter, url).await
+    }
+
+    /// [`Self::page_bytes`] under `capabilities`, kept by the caller to read the call's reach.
+    pub(crate) async fn page_bytes_with(
+        &self,
+        capabilities: Capabilities,
+        series: &str,
+        chapter: &str,
+        url: &str,
+    ) -> Result<Result<Option<Vec<u8>>, SourceError>, PluginError> {
         if !self.makes_pages {
             return Ok(Ok(None));
         }
-        let mut store = new_store(&self.engine, self.limits, self.capabilities());
+        let mut store = new_store(&self.engine, self.limits, capabilities);
         let instance = with_pages::BookPluginWithPages::instantiate_async(
             &mut store,
             &self.component,

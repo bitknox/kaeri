@@ -775,7 +775,11 @@ public enum L {
         Self.format("reading-failed-source-down", fallback: "%1$@ isn't answering. Try again later.", source)
     }
 
-    /// Why a chapter could not load: the source no longer has it.
+    /// Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources.
+    public static func readingFailedSourceOff(source: String) -> String {
+        Self.format("reading-failed-source-off", fallback: "%1$@ is switched off. Switch it on in Your sources, or read from another source.", source)
+    }
+
     public static var readingFailedNotFound: String { string("reading-failed-not-found", fallback: "This source doesn't have it anymore. Try another source.") }
 
     /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
@@ -8389,6 +8393,24 @@ public enum L {
         Self.format("reader-chapter-line-titled", fallback: "Chapter %1$@ · %2$@", chapter, title)
     }
 
+    /// The reader's opening line while the series' source sends its chapter list.
+    public static func readerWaitChapterList(source: String) -> String {
+        Self.format("reader-wait-chapter-list", fallback: "Getting the chapter list from %1$@", source)
+    }
+
+    /// The reader's opening line while the source sends the chapter's pages or text.
+    public static func readerWaitChapterPages(chapter: Int, source: String) -> String {
+        Self.format("reader-wait-chapter-pages", fallback: "Getting chapter %1$@ from %2$@", String(chapter), source)
+    }
+
+    /// The opening line after a few seconds, with how long it has waited so far.
+    public static func readerWaitSeconds(line: String, seconds: Int) -> String {
+        Self.format("reader-wait-seconds", fallback: "%1$@ · %2$lld s", line, seconds)
+    }
+
+    /// Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
+    public static var readerWaitLong: String { string("reader-wait-long", fallback: "This is taking a while.") }
+
     /// Button in the first run that opens the reading demo.
     public static var onboardingReadDemo: String { string("onboarding-read-demo", fallback: "Read the demo") }
 
@@ -8988,6 +9010,18 @@ public enum L {
     public static func seriesReadFromChaptersLater(latest: String) -> String {
         Self.format("series-read-from-chapters-later", fallback: "chapters 1 to %1$@", latest)
     }
+
+    /// A source's line while it is asked for its chapter list, first on its line.
+    public static var seriesReadFromChecking: String { string("series-read-from-checking", fallback: "Checking chapters") }
+
+    /// The same, after its kind on the line.
+    public static var seriesReadFromCheckingLater: String { string("series-read-from-checking-later", fallback: "checking chapters") }
+
+    /// A source that answered with no chapters for this series, first on its line.
+    public static var seriesReadFromEmpty: String { string("series-read-from-empty", fallback: "No chapters here yet") }
+
+    /// The same, after its kind on the line.
+    public static var seriesReadFromEmptyLater: String { string("series-read-from-empty-later", fallback: "no chapters here yet") }
 
     /// After a folder's chapters.
     public static func seriesReadFromOnDevice(device: String) -> String {

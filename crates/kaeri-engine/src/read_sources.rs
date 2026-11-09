@@ -1158,7 +1158,9 @@ impl BookSources {
                 // What the source listed last time, from the chapter cache.
                 let kept =
                     crate::read_catalog::chapters::summary(&self.store, &source, &series);
+                let listing = self.listing_of(&source, &series);
                 Some(kaeri_model::reading::BookEditionRow {
+                    listing,
                     preferred: preferred.as_ref().is_some_and(|p| p.source_id == source),
                     in_use: in_use.as_deref() == Some(source.as_str()),
                     source_id: source,
@@ -1178,8 +1180,11 @@ impl BookSources {
 
 use kaeri_core::books::{ChapterId, PageRef, WorkId};
 use kaeri_model::reading::{
-    BookEditionRow, ChapterReadState, ChapterRow, ReadingFailure, VolumeGroup, WorkTile,
+    BookEditionRow, ChapterReadState, ChapterRow, EditionListing, ReadingFailure, VolumeGroup,
+    WorkTile,
 };
+
+use crate::read_catalog::chapters::Asked;
 
 /// A chapter opened: what it holds and where it came from.
 #[derive(Debug)]
@@ -1190,6 +1195,8 @@ pub struct Opened {
     pub content: ChapterContent,
 }
 
+/// Why asking a source failed. `source` is the name the person knows it by, as the words
+/// show it: [`BookSources::failure`] looks it up from an id.
 pub(crate) fn failure(source: &str, error: &ProviderError) -> ReadingFailure {
     match error {
         ProviderError::NotFound => ReadingFailure::NotFound,
@@ -1302,6 +1309,68 @@ impl BookSources {
         })
     }
 
+    /// Why asking `source` failed, naming it as the person knows it. A source switched off
+    /// says so, rather than the sign-in its refusal would otherwise read as.
+    pub(crate) fn failure(&self, source: &str, error: &ProviderError) -> ReadingFailure {
+        let name = self.source_name(source);
+        if matches!(error, ProviderError::Unavailable(_)) && self.registry.is_off(source) {
+            return ReadingFailure::SourceOff { source: name };
+        }
+        match failure(&name, error) {
+            // A source that could not be reached while the network says there is none is
+            // offline, whatever words the source chose for it.
+            ReadingFailure::SourceDown { .. } if self.write_back.is_offline() => {
+                ReadingFailure::Offline
+            }
+            said => said,
+        }
+    }
+
+    /// Keep where an edition's chapter-list ask stands; `None` once a list is kept.
+    pub(crate) fn note_listing(
+        &self,
+        source: &str,
+        series: &str,
+        asked: Option<Asked>,
+        now: i64,
+    ) {
+        let mut kept = self.catalog.listings.lock().unwrap_or_else(|e| e.into_inner());
+        let key = (source.to_owned(), series.to_owned());
+        match asked {
+            Some(asked) => kept.insert(key, (now, asked)),
+            None => kept.remove(&key),
+        };
+    }
+
+    /// Where an edition's chapter list stands, for Read from's line.
+    pub(crate) fn listing_of(&self, source: &str, series: &str) -> Option<EditionListing> {
+        let asked = self
+            .catalog
+            .listings
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .get(&(source.to_owned(), series.to_owned()))
+            .map(|(_, asked)| asked.clone());
+        match asked {
+            Some(Asked::Asking) => Some(EditionListing::Asking),
+            Some(Asked::Empty) => Some(EditionListing::Empty),
+            Some(Asked::Failed(failure)) => Some(EditionListing::Failed { failure }),
+            None => crate::read_catalog::chapters::kept(&self.store, source, series)
+                .filter(|(list, _)| !list.is_empty())
+                .map(|_| EditionListing::Listed),
+        }
+    }
+
+    /// When an edition's list was last asked for, if that ask left no list kept.
+    pub(crate) fn listing_asked_at(&self, source: &str, series: &str) -> Option<i64> {
+        self.catalog
+            .listings
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .get(&(source.to_owned(), series.to_owned()))
+            .map(|(at, _)| *at)
+    }
+
     /// Which source and series reference a work is read from: the chosen edition, the person's
     /// preference, or the first source in their order that holds it.
     pub(crate) fn edition_of(
@@ -1404,11 +1473,18 @@ impl BookSources {
             self.edition_of(work, edition).ok_or(ReadingFailure::NotFound)?;
         // The source is asked how the series reads beside its chapters, and never held up for.
         self.ask_hint(&source, &series, now);
-        let chapters = self
-            .registry
-            .chapters(&source, &series, &BookHints::default(), now)
-            .await
-            .map_err(|e| failure(&source, &e))?;
+        self.note_listing(&source, &series, Some(Asked::Asking), now);
+        let asked = self.registry.chapters(&source, &series, &BookHints::default(), now).await;
+        let chapters = match asked {
+            Ok(chapters) => chapters,
+            Err(e) => {
+                let failure = self.failure(&source, &e);
+                self.note_listing(&source, &series, Some(Asked::Failed(failure.clone())), now);
+                return Err(failure);
+            }
+        };
+        let empty = chapters.is_empty().then_some(Asked::Empty);
+        self.note_listing(&source, &series, empty, now);
         crate::read_catalog::chapters::keep(&self.store, &source, &series, &chapters, now);
         let restarts = restarts_per_volume(&chapters);
         let read: HashMap<String, kaeri_store::reading::ReadChapter> = self
@@ -1508,7 +1584,7 @@ impl BookSources {
             .registry
             .content(&source, &series, &found.id, now)
             .await
-            .map_err(|e| failure(&source, &e))?;
+            .map_err(|e| self.failure(&source, &e))?;
         Ok(Opened { source_id: source, series_ref: series, chapter: found, content })
     }
 
@@ -1526,7 +1602,7 @@ impl BookSources {
             .registry
             .chapters(&source, &series, &BookHints::default(), now)
             .await
-            .map_err(|e| failure(&source, &e))?;
+            .map_err(|e| self.failure(&source, &e))?;
         let restarts = restarts_per_volume(&chapters);
         let found = chapters
             .into_iter()
@@ -1550,7 +1626,7 @@ impl BookSources {
             .registry
             .chapter_pages(&source, &series, &found.id, now)
             .await
-            .map_err(|e| failure(&source, &e))?;
+            .map_err(|e| self.failure(&source, &e))?;
         let Some(pages) = pages.filter(|p| !p.is_empty()) else { return Ok(None) };
         let mut opened = Opened {
             source_id: source,
@@ -1583,7 +1659,7 @@ impl BookSources {
                 async move { plain_fetch(&client, &page).await }
             })
             .await
-            .map_err(|e| failure(&opened.source_id, &e))
+            .map_err(|e| self.failure(&opened.source_id, &e))
     }
 }
 

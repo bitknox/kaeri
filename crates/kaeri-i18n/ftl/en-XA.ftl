@@ -618,7 +618,9 @@ reading-failed-offline = [Ýöü'ŕé öƒƒļîñé. Ðöŵñļöàðéð çĥ�
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = [{ $source } îšñ'ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ.~~~~~~~~~~~~]
 
-# Why a chapter could not load: the source no longer has it.
+# Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources.
+reading-failed-source-off = [{ $source } îš šŵîţçĥéð öƒƒ. Šŵîţçĥ îţ öñ îñ Ýöüŕ šöüŕçéš, öŕ ŕéàð ƒŕöɱ àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~~~~~~]
+
 reading-failed-not-found = [Ţĥîš šöüŕçé ðöéšñ'ţ ĥàṽé îţ àñýɱöŕé. Ţŕý àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~]
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.
@@ -8969,6 +8971,18 @@ reader-divider-images =
 # Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.
 reader-chapter-line-titled = [Çĥàþţéŕ { $chapter } · { $title }~~~~~~]
 
+# The reader's opening line while the series' source sends its chapter list.
+reader-wait-chapter-list = [Ĝéţţîñĝ ţĥé çĥàþţéŕ ļîšţ ƒŕöɱ { $source }~~~~~~~~~~]
+
+# The reader's opening line while the source sends the chapter's pages or text.
+reader-wait-chapter-pages = [Ĝéţţîñĝ çĥàþţéŕ { $chapter } ƒŕöɱ { $source }~~~~~~~~~]
+
+# The opening line after a few seconds, with how long it has waited so far.
+reader-wait-seconds = [{ $line } · { $seconds } š~~~~]
+
+# Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
+reader-wait-long = [Ţĥîš îš ţàķîñĝ à ŵĥîļé.~~~~~~~]
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = [Ŕéàð ţĥé ðéɱö~~~~]
 
@@ -9504,6 +9518,18 @@ series-read-from-chapters = [Çĥàþţéŕš 1 ţö { $latest }~~~~~~]
 
 # A source's chapters, after its kind on the line.
 series-read-from-chapters-later = [çĥàþţéŕš 1 ţö { $latest }~~~~~~]
+
+# A source's line while it is asked for its chapter list, first on its line.
+series-read-from-checking = [Çĥéçķîñĝ çĥàþţéŕš~~~~~~]
+
+# The same, after its kind on the line.
+series-read-from-checking-later = [çĥéçķîñĝ çĥàþţéŕš~~~~~~]
+
+# A source that answered with no chapters for this series, first on its line.
+series-read-from-empty = [Ñö çĥàþţéŕš ĥéŕé ýéţ~~~~~~]
+
+# The same, after its kind on the line.
+series-read-from-empty-later = [ñö çĥàþţéŕš ĥéŕé ýéţ~~~~~~]
 
 # After a folder's chapters.
 series-read-from-on-device = [öñ ţĥîš { $device }~~~~]

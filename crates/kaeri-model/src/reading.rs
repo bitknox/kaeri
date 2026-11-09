@@ -210,6 +210,24 @@ pub struct BookEditionRow {
     /// The series reads from this one now: the person's choice, else the one picked for them.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub in_use: bool,
+    /// Where its chapter list stands. `None` when it was never asked for and is not being
+    /// asked: `chapters` is then 0 and says nothing, so the apps show the line as pending.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub listing: Option<EditionListing>,
+}
+
+/// Where an edition's chapter list stands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum EditionListing {
+    /// The list kept last, which `chapters` and `latest` describe.
+    Listed,
+    /// The source is being asked for it now.
+    Asking,
+    /// The source answered with no chapters.
+    Empty,
+    /// The source did not answer.
+    Failed { failure: ReadingFailure },
 }
 
 /// A volume's chapters, or the chapters in no volume.
@@ -1169,6 +1187,10 @@ pub enum ReadingFailure {
     SourceDown {
         source: String,
     },
+    /// The source the series reads from is switched off in Your sources. `source` is its name.
+    SourceOff {
+        source: String,
+    },
     /// The source no longer has it.
     NotFound,
     Blocked {
@@ -1252,6 +1274,9 @@ impl ReadingFailure {
             Self::Offline => ReadingMsg::ReadingFailedOffline,
             Self::SourceDown { source } => {
                 ReadingMsg::ReadingFailedSourceDown { source: source.clone() }
+            }
+            Self::SourceOff { source } => {
+                ReadingMsg::ReadingFailedSourceOff { source: source.clone() }
             }
             Self::NotFound => ReadingMsg::ReadingFailedNotFound,
             Self::Blocked { source, reason } => ReadingMsg::ReadingFailedBlocked {
@@ -1931,6 +1956,7 @@ mod tests {
         let failures = [
             ReadingFailure::Offline,
             ReadingFailure::SourceDown { source: "Shelf".into() },
+            ReadingFailure::SourceOff { source: "Shelf".into() },
             ReadingFailure::NotFound,
             ReadingFailure::Blocked {
                 source: "Shelf".into(),

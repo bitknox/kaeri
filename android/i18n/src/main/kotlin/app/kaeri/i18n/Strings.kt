@@ -785,7 +785,10 @@ object Strings {
     fun readingFailedSourceDown(context: Context, source: String): String =
         context.getString(R.string.reading_failed_source_down, source)
 
-    /** Why a chapter could not load: the source no longer has it. */
+    /** Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources. */
+    fun readingFailedSourceOff(context: Context, source: String): String =
+        context.getString(R.string.reading_failed_source_off, source)
+
     fun readingFailedNotFound(context: Context): String =
         context.getString(R.string.reading_failed_not_found)
 
@@ -8966,6 +8969,22 @@ object Strings {
     fun readerChapterLineTitled(context: Context, chapter: String, title: String): String =
         context.getString(R.string.reader_chapter_line_titled, chapter, title)
 
+    /** The reader's opening line while the series' source sends its chapter list. */
+    fun readerWaitChapterList(context: Context, source: String): String =
+        context.getString(R.string.reader_wait_chapter_list, source)
+
+    /** The reader's opening line while the source sends the chapter's pages or text. */
+    fun readerWaitChapterPages(context: Context, chapter: Int, source: String): String =
+        context.getString(R.string.reader_wait_chapter_pages, chapter, source)
+
+    /** The opening line after a few seconds, with how long it has waited so far. */
+    fun readerWaitSeconds(context: Context, line: String, seconds: Int): String =
+        context.getString(R.string.reader_wait_seconds, line, seconds)
+
+    /** Under the opening line once the wait has gone on for a long time, above Read from another source and Go back. */
+    fun readerWaitLong(context: Context): String =
+        context.getString(R.string.reader_wait_long)
+
     /** Button in the first run that opens the reading demo. */
     fun onboardingReadDemo(context: Context): String =
         context.getString(R.string.onboarding_read_demo)
@@ -9605,6 +9624,22 @@ object Strings {
     /** A source's chapters, after its kind on the line. */
     fun seriesReadFromChaptersLater(context: Context, latest: String): String =
         context.getString(R.string.series_read_from_chapters_later, latest)
+
+    /** A source's line while it is asked for its chapter list, first on its line. */
+    fun seriesReadFromChecking(context: Context): String =
+        context.getString(R.string.series_read_from_checking)
+
+    /** The same, after its kind on the line. */
+    fun seriesReadFromCheckingLater(context: Context): String =
+        context.getString(R.string.series_read_from_checking_later)
+
+    /** A source that answered with no chapters for this series, first on its line. */
+    fun seriesReadFromEmpty(context: Context): String =
+        context.getString(R.string.series_read_from_empty)
+
+    /** The same, after its kind on the line. */
+    fun seriesReadFromEmptyLater(context: Context): String =
+        context.getString(R.string.series_read_from_empty_later)
 
     /** After a folder's chapters. */
     fun seriesReadFromOnDevice(context: Context, device: String): String =

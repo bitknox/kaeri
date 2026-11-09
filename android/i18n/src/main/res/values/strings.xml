@@ -417,7 +417,8 @@
     <string name="reading_failed_offline">You\'re offline. Downloaded chapters still open.</string>
     <!-- Why a chapter or a list could not load: the source did not answer. The source is its name. -->
     <string name="reading_failed_source_down">%1$s isn\'t answering. Try again later.</string>
-    <!-- Why a chapter could not load: the source no longer has it. -->
+    <!-- Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources. -->
+    <string name="reading_failed_source_off">%1$s is switched off. Switch it on in Your sources, or read from another source.</string>
     <string name="reading_failed_not_found">This source doesn\'t have it anymore. Try another source.</string>
     <!-- Why a chapter or a list could not load: the source refused. The reason comes from the source. -->
     <string name="reading_failed_blocked">%1$s refused the request. %2$s</string>
@@ -4733,6 +4734,14 @@
     </plurals>
     <!-- Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12. -->
     <string name="reader_chapter_line_titled">Chapter %1$s · %2$s</string>
+    <!-- The reader's opening line while the series' source sends its chapter list. -->
+    <string name="reader_wait_chapter_list">Getting the chapter list from %1$s</string>
+    <!-- The reader's opening line while the source sends the chapter's pages or text. -->
+    <string name="reader_wait_chapter_pages">Getting chapter %1$d from %2$s</string>
+    <!-- The opening line after a few seconds, with how long it has waited so far. -->
+    <string name="reader_wait_seconds">%1$s · %2$,d s</string>
+    <!-- Under the opening line once the wait has gone on for a long time, above Read from another source and Go back. -->
+    <string name="reader_wait_long">This is taking a while.</string>
     <!-- Button in the first run that opens the reading demo. -->
     <string name="onboarding_read_demo">Read the demo</string>
     <!-- Under the first run's demo heading when the device is for reading. -->
@@ -5095,6 +5104,14 @@
     <string name="series_read_from_chapters">Chapters 1 to %1$s</string>
     <!-- A source's chapters, after its kind on the line. -->
     <string name="series_read_from_chapters_later">chapters 1 to %1$s</string>
+    <!-- A source's line while it is asked for its chapter list, first on its line. -->
+    <string name="series_read_from_checking">Checking chapters</string>
+    <!-- The same, after its kind on the line. -->
+    <string name="series_read_from_checking_later">checking chapters</string>
+    <!-- A source that answered with no chapters for this series, first on its line. -->
+    <string name="series_read_from_empty">No chapters here yet</string>
+    <!-- The same, after its kind on the line. -->
+    <string name="series_read_from_empty_later">no chapters here yet</string>
     <!-- After a folder's chapters. -->
     <string name="series_read_from_on_device">on this %1$s</string>
     <!-- Footnote of the Read from sheet. -->

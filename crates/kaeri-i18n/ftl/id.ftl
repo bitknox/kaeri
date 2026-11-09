@@ -609,7 +609,6 @@ reading-failed-offline = Anda sedang offline. Bab yang diunduh tetap bisa dibuka
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = { $source } tidak menjawab. Coba lagi nanti.
 
-# Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = Sumber ini sudah tidak memilikinya. Coba sumber lain.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.

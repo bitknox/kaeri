@@ -439,10 +439,13 @@ impl Reader {
         if chapters.is_empty()
             && let Some(slot) = novel::list(cx, id, &work)
         {
+            // The source is known: it is asked for the list, and the line names it.
+            let source = cx.services.book_sources.edition_of(&work, None);
+            let source = source.map(|(id, _)| cx.services.book_sources.source_name(&id));
             self.listing = Some(Listing { id, work, chapter, at, surface, slot });
             cx.send(ReaderEvent::Opening {
                 chapter: None,
-                wait: Some(ReaderWait::FindingSource),
+                wait: source.map(|source| ReaderWait::ChapterList { source }),
             });
             return;
         }
@@ -515,10 +518,16 @@ impl Reader {
             return;
         };
         let marks = store.read_marks(work.as_str()).unwrap_or_default();
-        cx.send(ReaderEvent::Opening {
-            chapter: Some(chapters[index].row(&marks)),
-            wait: None,
-        });
+        let row = chapters[index].row(&marks);
+        // A chapter not on this device is asked of its source, which the line names.
+        let wait = (chapters[index].format == novel::SOURCE)
+            .then(|| cx.services.book_sources.edition_of(&work, None))
+            .flatten()
+            .map(|(source, _)| ReaderWait::ChapterPages {
+                chapter: row.number.clone().unwrap_or_else(|| row.label.clone()),
+                source: cx.services.book_sources.source_name(&source),
+            });
+        cx.send(ReaderEvent::Opening { chapter: Some(row), wait });
         let source = cx.source_word(&work);
         let layers = cx.layers_with(medium, Some(work.as_str()), Some(source));
         // A novel opens at its kept text position, or the one asked for.

@@ -975,7 +975,11 @@ pub fn reading_failed_source_down(source: &str) -> String {
     text("reading-failed-source-down", &[("source", Arg::Text(source))])
 }
 
-/// Why a chapter could not load: the source no longer has it.
+/// Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources.
+pub fn reading_failed_source_off(source: &str) -> String {
+    text("reading-failed-source-off", &[("source", Arg::Text(source))])
+}
+
 pub fn reading_failed_not_found() -> String {
     text("reading-failed-not-found", &[])
 }
@@ -14342,6 +14346,26 @@ pub fn reader_chapter_line_titled(chapter: &str, title: &str) -> String {
     text("reader-chapter-line-titled", &[("chapter", Arg::Text(chapter)), ("title", Arg::Text(title))])
 }
 
+/// The reader's opening line while the series' source sends its chapter list.
+pub fn reader_wait_chapter_list(source: &str) -> String {
+    text("reader-wait-chapter-list", &[("source", Arg::Text(source))])
+}
+
+/// The reader's opening line while the source sends the chapter's pages or text.
+pub fn reader_wait_chapter_pages(chapter: i64, source: &str) -> String {
+    text("reader-wait-chapter-pages", &[("chapter", Arg::Plain(chapter)), ("source", Arg::Text(source))])
+}
+
+/// The opening line after a few seconds, with how long it has waited so far.
+pub fn reader_wait_seconds(line: &str, seconds: i64) -> String {
+    text("reader-wait-seconds", &[("line", Arg::Text(line)), ("seconds", Arg::Int(seconds))])
+}
+
+/// Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
+pub fn reader_wait_long() -> String {
+    text("reader-wait-long", &[])
+}
+
 /// Button in the first run that opens the reading demo.
 pub fn onboarding_read_demo() -> String {
     text("onboarding-read-demo", &[])
@@ -15140,6 +15164,26 @@ pub fn series_read_from_chapters(latest: &str) -> String {
 /// A source's chapters, after its kind on the line.
 pub fn series_read_from_chapters_later(latest: &str) -> String {
     text("series-read-from-chapters-later", &[("latest", Arg::Text(latest))])
+}
+
+/// A source's line while it is asked for its chapter list, first on its line.
+pub fn series_read_from_checking() -> String {
+    text("series-read-from-checking", &[])
+}
+
+/// The same, after its kind on the line.
+pub fn series_read_from_checking_later() -> String {
+    text("series-read-from-checking-later", &[])
+}
+
+/// A source that answered with no chapters for this series, first on its line.
+pub fn series_read_from_empty() -> String {
+    text("series-read-from-empty", &[])
+}
+
+/// The same, after its kind on the line.
+pub fn series_read_from_empty_later() -> String {
+    text("series-read-from-empty-later", &[])
 }
 
 /// After a folder's chapters.

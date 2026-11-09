@@ -220,3 +220,20 @@ reader-divider-images = { $count ->
 # @arg title: text
 # @max 60
 reader-chapter-line-titled = Chapter { $chapter } · { $title }
+
+# The reader's opening line while the series' source sends its chapter list.
+# @arg source: text
+reader-wait-chapter-list = Getting the chapter list from { $source }
+
+# The reader's opening line while the source sends the chapter's pages or text.
+# @arg chapter: plain
+# @arg source: text
+reader-wait-chapter-pages = Getting chapter { $chapter } from { $source }
+
+# The opening line after a few seconds, with how long it has waited so far.
+# @arg line: text
+# @arg seconds: int
+reader-wait-seconds = { $line } · { $seconds } s
+
+# Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
+reader-wait-long = This is taking a while.

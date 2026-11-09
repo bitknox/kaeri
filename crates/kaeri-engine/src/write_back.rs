@@ -101,7 +101,7 @@ impl WriteBack {
         self.0.wake.notify_one();
     }
 
-    fn is_offline(&self) -> bool {
+    pub(crate) fn is_offline(&self) -> bool {
         self.0.offline.load(Ordering::Relaxed)
     }
 
