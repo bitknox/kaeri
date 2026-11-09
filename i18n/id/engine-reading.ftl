@@ -191,6 +191,7 @@ read-hit-files-format = { $count ->
    *[other] { $count } berkas · { $format }
  }
 read-source-folders = Folder
+read-feed-downloads = Unduhan
 reading-since-january = sejak Januari
 reading-since-february = sejak Februari
 reading-since-march = sejak Maret
@@ -203,3 +204,12 @@ reading-since-september = sejak September
 reading-since-october = sejak Oktober
 reading-since-november = sejak November
 reading-since-december = sejak Desember
+read-view-all-trending-manga = Manga, sedang tren
+read-view-all-trending-webtoons = Webtoon, sedang tren
+read-view-all-trending-novels = Light novel, sedang tren
+read-view-all-new-manga = Manga yang mulai terbit dalam 12 bulan terakhir
+read-view-all-new-webtoons = Webtoon yang mulai terbit dalam 12 bulan terakhir
+read-view-all-new-novels = Light novel yang mulai terbit dalam 12 bulan terakhir
+read-view-all-finished-manga = Manga tamat, paling populer
+read-view-all-finished-webtoons = Webtoon tamat, paling populer
+read-view-all-finished-novels = Light novel tamat, paling populer

@@ -248,6 +248,7 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Disertakan
 read-filter-left-out = Dikecualikan
+read-filter-more-genres = Genre lainnya
 read-search-started = Mulai terbit
 read-search-sources-only = Hanya { -source-pl } Anda
 read-search-from-sources = Dari { -source-pl } Anda
@@ -256,6 +257,7 @@ read-search-source-failed = { $source } tidak merespons.
 read-search-source-timeout = Tidak ada respons dalam { $seconds } detik.
 read-search-source-nothing = Tidak ada hasil di { $sources }.
 read-search-in-source = Ada di { $source }
+read-search-in-folders = Ada di folder Anda
 read-search-in-sources = { $n ->
    *[other] Ada di { $n } { -source } Anda
  }
@@ -263,6 +265,8 @@ read-search-anilist-nothing = AniList tidak menemukan apa pun dengan kata-kata i
 read-search-anilist-failed = AniList tidak merespons.
 read-search-anilist-failed-line = { -source-cap-pl } Anda tetap dihubungi.
 read-search-sources-nothing = Di { -source-pl } Anda juga tidak ada.
+read-search-sources-only-nothing = Tidak ada hasil di { -source-pl } Anda
+read-state-offline-line = Offline. Bab yang diunduh tetap bisa dibuka.
 read-search-total-unknown = Seri dari AniList
 read-search-more-anilist = Lainnya dari AniList
 read-search-shown = { $shown } dari { $total } ditampilkan
@@ -271,6 +275,37 @@ read-search-source-kind-server = Server
 read-search-source-kind-folder = Folder
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Tampilkan { $n } lagi
+read-search-line-total = { $line } · { $total }
+read-search-browse-parts = { $list }, { $next }
+read-caption-two = { $first } · { $second }
+read-filter-shown = { $name }: { $value }
+read-name-tile = { $title }, { $line }
+read-name-tile-placed = { $title }, { $line }, { $placed }
+read-name-tile-only-placed = { $title }, { $placed }
+read-name-week-tile = { $title }, { $time }, { $chapter }
+read-name-week-tile-time = { $title }, { $time }
+read-name-spotlight-art = { $title }, Detail
+read-name-heading = { $heading }, { $side }
+read-name-loading = { $name }, memuat
+read-name-heading-loading = { $heading }, { $side }, memuat
+read-name-view-all = Lihat semua, { $row }
+read-name-filter = { $name }, { $value }
+read-name-failure = { $line }, { $reason }
+read-name-source = { $source }, { $kind }
+read-name-source-more = { $n ->
+   *[other] Tampilkan { $n } lagi dari { $source }
+ }
+read-search-sources-only-line = Hasil AniList disembunyikan. Filter di bawah hanya berlaku untuk hasil AniList.
+read-search-done = { $anilist } dari AniList, { $sources } dari { -source-pl } Anda.
+read-home-row-loading = { $row }, memuat
+read-tile-add-planning = Tambahkan ke Direncanakan
+read-search-anilist-hidden = Hasil AniList disembunyikan.
+read-search-said-anilist = { $n ->
+   *[other] { $n } dari AniList
+ }
+read-search-said-sources = { $n ->
+   *[other] { $n } dari { -source-pl } Anda
+ }
 onboarding-step = { $step } dari { $total }
 onboarding-welcome-line = Catat yang Anda tonton dan baca, dari { -source-pl } Anda sendiri.
 onboarding-welcome-note = Daftar dan kemajuan Anda tetap ada di { -device-pl } Anda. Anda sendiri yang menambahkan { -tracker-cap-pl } dan { -source-pl }.

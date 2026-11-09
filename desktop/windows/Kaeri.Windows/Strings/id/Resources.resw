@@ -1034,6 +1034,9 @@
   <data name="ReadSourceFolders" xml:space="preserve">
     <value>Folder</value>
   </data>
+  <data name="ReadFeedDownloads" xml:space="preserve">
+    <value>Unduhan</value>
+  </data>
   <data name="ReadingSinceJanuary" xml:space="preserve">
     <value>sejak Januari</value>
   </data>
@@ -1069,6 +1072,33 @@
   </data>
   <data name="ReadingSinceDecember" xml:space="preserve">
     <value>sejak Desember</value>
+  </data>
+  <data name="ReadViewAllTrendingManga" xml:space="preserve">
+    <value>Manga, sedang tren</value>
+  </data>
+  <data name="ReadViewAllTrendingWebtoons" xml:space="preserve">
+    <value>Webtoon, sedang tren</value>
+  </data>
+  <data name="ReadViewAllTrendingNovels" xml:space="preserve">
+    <value>Light novel, sedang tren</value>
+  </data>
+  <data name="ReadViewAllNewManga" xml:space="preserve">
+    <value>Manga yang mulai terbit dalam 12 bulan terakhir</value>
+  </data>
+  <data name="ReadViewAllNewWebtoons" xml:space="preserve">
+    <value>Webtoon yang mulai terbit dalam 12 bulan terakhir</value>
+  </data>
+  <data name="ReadViewAllNewNovels" xml:space="preserve">
+    <value>Light novel yang mulai terbit dalam 12 bulan terakhir</value>
+  </data>
+  <data name="ReadViewAllFinishedManga" xml:space="preserve">
+    <value>Manga tamat, paling populer</value>
+  </data>
+  <data name="ReadViewAllFinishedWebtoons" xml:space="preserve">
+    <value>Webtoon tamat, paling populer</value>
+  </data>
+  <data name="ReadViewAllFinishedNovels" xml:space="preserve">
+    <value>Light novel tamat, paling populer</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Bergabung dengan {store} sebagai {member}.</value>
@@ -1978,6 +2008,21 @@
   </data>
   <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
     <value>Bab yang diunduh bisa dibuka tanpa koneksi.</value>
+  </data>
+  <data name="WindowsReadSearchFinished" xml:space="preserve">
+    <value>{anilist} dari AniList, {sources} dari sumber-sumber Anda.</value>
+  </data>
+  <data name="WindowsReadSearchFinishedSources" xml:space="preserve">
+    <value>{sources} dari sumber-sumber Anda.</value>
+  </data>
+  <data name="WindowsReadSearchAnilistHidden" xml:space="preserve">
+    <value>Hasil AniList disembunyikan.</value>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_other" xml:space="preserve">
+    <value>Tidak ada respons dalam {seconds} detik.</value>
+  </data>
+  <data name="WindowsReadSearchFiltersDimmed" xml:space="preserve">
+    <value>Filter hanya berlaku untuk hasil AniList.</value>
   </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>Membaca ulang {title} dari awal</value>
@@ -6776,6 +6821,9 @@
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Dikecualikan</value>
   </data>
+  <data name="ReadFilterMoreGenres" xml:space="preserve">
+    <value>Genre lainnya</value>
+  </data>
   <data name="ReadSearchStarted" xml:space="preserve">
     <value>Mulai terbit</value>
   </data>
@@ -6800,6 +6848,9 @@
   <data name="ReadSearchInSource" xml:space="preserve">
     <value>Ada di {source}</value>
   </data>
+  <data name="ReadSearchInFolders" xml:space="preserve">
+    <value>Ada di folder Anda</value>
+  </data>
   <data name="ReadSearchInSources_other" xml:space="preserve">
     <value>Ada di {n} sumber Anda</value>
   </data>
@@ -6814,6 +6865,12 @@
   </data>
   <data name="ReadSearchSourcesNothing" xml:space="preserve">
     <value>Di sumber-sumber Anda juga tidak ada.</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyNothing" xml:space="preserve">
+    <value>Tidak ada hasil di sumber-sumber Anda</value>
+  </data>
+  <data name="ReadStateOfflineLine" xml:space="preserve">
+    <value>Offline. Bab yang diunduh tetap bisa dibuka.</value>
   </data>
   <data name="ReadSearchTotalUnknown" xml:space="preserve">
     <value>Seri dari AniList</value>
@@ -6838,6 +6895,81 @@
   </data>
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Tampilkan {n} lagi</value>
+  </data>
+  <data name="ReadSearchLineTotal" xml:space="preserve">
+    <value>{line} · {total}</value>
+  </data>
+  <data name="ReadSearchBrowseParts" xml:space="preserve">
+    <value>{list}, {next}</value>
+  </data>
+  <data name="ReadCaptionTwo" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="ReadFilterShown" xml:space="preserve">
+    <value>{name}: {value}</value>
+  </data>
+  <data name="ReadNameTile" xml:space="preserve">
+    <value>{title}, {line}</value>
+  </data>
+  <data name="ReadNameTilePlaced" xml:space="preserve">
+    <value>{title}, {line}, {placed}</value>
+  </data>
+  <data name="ReadNameTileOnlyPlaced" xml:space="preserve">
+    <value>{title}, {placed}</value>
+  </data>
+  <data name="ReadNameWeekTile" xml:space="preserve">
+    <value>{title}, {time}, {chapter}</value>
+  </data>
+  <data name="ReadNameWeekTileTime" xml:space="preserve">
+    <value>{title}, {time}</value>
+  </data>
+  <data name="ReadNameSpotlightArt" xml:space="preserve">
+    <value>{title}, Detail</value>
+  </data>
+  <data name="ReadNameHeading" xml:space="preserve">
+    <value>{heading}, {side}</value>
+  </data>
+  <data name="ReadNameLoading" xml:space="preserve">
+    <value>{name}, memuat</value>
+  </data>
+  <data name="ReadNameHeadingLoading" xml:space="preserve">
+    <value>{heading}, {side}, memuat</value>
+  </data>
+  <data name="ReadNameViewAll" xml:space="preserve">
+    <value>Lihat semua, {row}</value>
+  </data>
+  <data name="ReadNameFilter" xml:space="preserve">
+    <value>{name}, {value}</value>
+  </data>
+  <data name="ReadNameFailure" xml:space="preserve">
+    <value>{line}, {reason}</value>
+  </data>
+  <data name="ReadNameSource" xml:space="preserve">
+    <value>{source}, {kind}</value>
+  </data>
+  <data name="ReadNameSourceMore_other" xml:space="preserve">
+    <value>Tampilkan {n} lagi dari {source}</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyLine" xml:space="preserve">
+    <value>Hasil AniList disembunyikan. Filter di bawah hanya berlaku untuk hasil AniList.</value>
+  </data>
+  <data name="ReadSearchDone" xml:space="preserve">
+    <value>{anilist} dari AniList, {sources} dari sumber-sumber Anda.</value>
+  </data>
+  <data name="ReadHomeRowLoading" xml:space="preserve">
+    <value>{row}, memuat</value>
+  </data>
+  <data name="ReadTileAddPlanning" xml:space="preserve">
+    <value>Tambahkan ke Direncanakan</value>
+  </data>
+  <data name="ReadSearchAnilistHidden" xml:space="preserve">
+    <value>Hasil AniList disembunyikan.</value>
+  </data>
+  <data name="ReadSearchSaidAnilist_other" xml:space="preserve">
+    <value>{n} dari AniList</value>
+  </data>
+  <data name="ReadSearchSaidSources_other" xml:space="preserve">
+    <value>{n} dari sumber-sumber Anda</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} dari {total}</value>

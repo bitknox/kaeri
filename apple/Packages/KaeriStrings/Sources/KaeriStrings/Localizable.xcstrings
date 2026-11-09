@@ -197477,6 +197477,12 @@
             "value" : "%1$@ · %2$@"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -199169,6 +199175,12 @@
             "value" : "Téléchargements"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unduhan"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200145,6 +200157,12 @@
             "value" : "Plus de genres"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Genre lainnya"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200551,6 +200569,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ : %2$@"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
           }
         },
         "it" : {
@@ -203757,6 +203781,12 @@
             "value" : "%1$@, chargement"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, memuat"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205489,6 +205519,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205556,6 +205592,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205633,6 +205675,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205703,6 +205751,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, chargement"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, memuat"
           }
         },
         "it" : {
@@ -205777,6 +205831,12 @@
             "value" : "%1$@, chargement"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, memuat"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205844,6 +205904,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206014,6 +206080,28 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "Afficher %1$lld de plus dans %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Tampilkan %1$lld lagi dari %2$@"
                     }
                   }
                 }
@@ -206277,6 +206365,12 @@
             "value" : "%1$@, Détails"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Detail"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206344,6 +206438,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206421,6 +206521,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206488,6 +206594,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
+        "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
@@ -206565,6 +206677,12 @@
             "value" : "Tout voir, %1$@"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lihat semua, %1$@"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206637,6 +206755,12 @@
             "value" : "%1$@, %2$@, %3$@"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206704,6 +206828,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206947,6 +207077,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Les résultats d’AniList sont masqués."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasil AniList disembunyikan."
           }
         },
         "it" : {
@@ -207273,6 +207409,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -207427,6 +207569,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld sur AniList, %2$lld dans vos sources."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld dari AniList, %2$lld dari sumber-sumber Anda."
           }
         },
         "it" : {
@@ -207667,6 +207815,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dans vos dossiers"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ada di folder Anda"
           }
         },
         "it" : {
@@ -208220,6 +208374,12 @@
           }
         },
         "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "id" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
@@ -208901,6 +209061,28 @@
             }
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld dari AniList"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -209250,6 +209432,28 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%1$lld dans vos sources"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld dari sumber-sumber Anda"
                     }
                   }
                 }
@@ -210437,6 +210641,12 @@
             "value" : "Les résultats d’AniList sont masqués. Les filtres ci-dessous s’appliquent seulement aux résultats d’AniList."
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasil AniList disembunyikan. Filter di bawah hanya berlaku untuk hasil AniList."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210507,6 +210717,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rien trouvé dans vos sources"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tidak ada hasil di sumber-sumber Anda"
           }
         },
         "it" : {
@@ -211905,6 +212121,12 @@
             "value" : "Hors ligne. Les chapitres téléchargés restent lisibles."
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline. Bab yang diunduh tetap bisa dibuka."
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211975,6 +212197,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajouter à la liste À lire"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tambahkan ke Direncanakan"
           }
         },
         "it" : {
@@ -212049,6 +212277,12 @@
             "value" : "Mangas terminés, les plus populaires"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga tamat, paling populer"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -212119,6 +212353,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Light novels terminés, les plus populaires"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novel tamat, paling populer"
           }
         },
         "it" : {
@@ -212193,6 +212433,12 @@
             "value" : "Webtoons terminés, les plus populaires"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoon tamat, paling populer"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -212263,6 +212509,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mangas commencés ces 12 derniers mois"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga yang mulai terbit dalam 12 bulan terakhir"
           }
         },
         "it" : {
@@ -212337,6 +212589,12 @@
             "value" : "Light novels commencés ces 12 derniers mois"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novel yang mulai terbit dalam 12 bulan terakhir"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -212407,6 +212665,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons commencés ces 12 derniers mois"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoon yang mulai terbit dalam 12 bulan terakhir"
           }
         },
         "it" : {
@@ -212481,6 +212745,12 @@
             "value" : "Mangas tendance"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga, sedang tren"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -212553,6 +212823,12 @@
             "value" : "Light novels tendance"
           }
         },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novel, sedang tren"
+          }
+        },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
@@ -212623,6 +212899,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons tendance"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoon, sedang tren"
           }
         },
         "it" : {

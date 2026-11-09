@@ -1,0 +1,36 @@
+tui-read-anilist = AniList
+tui-read-filters-none = tanpa filter
+tui-read-filters = filter { $set }
+tui-read-sources-only = hanya { -source-pl } Anda
+tui-read-on = aktif
+tui-read-off = nonaktif
+tui-read-try-again = coba lagi
+tui-read-sources-only-words = Ketik judul untuk mencari di { -source-pl } Anda.
+tui-read-sources-nothing = Tidak ada hasil di { -source-pl } Anda
+tui-read-source-offline = { $source } perlu koneksi.
+tui-read-names-and = { $names } dan { $last }
+tui-read-opens-in-apps = Dibuka di aplikasi { -app-name }.
+tui-read-sources-in-apps = Folder, server, dan { -plugin-store-pl } ditambahkan di aplikasi { -app-name }.
+tui-read-sources-only-on = Hanya { -source-pl } Anda. Hasil AniList disembunyikan.
+tui-read-sources-only-off = Hasil AniList ditampilkan lagi.
+tui-read-header-sources = { -source } { $mark } { $n }
+tui-read-status = { $n ->
+   *[other] Bacaan · { $n } { -source }
+ }
+tui-read-status-short = Bacaan
+tui-read-hint-next-section = Bagian selanjutnya
+tui-read-hint-section = Bagian
+tui-read-hint-sources-only = Hanya { -source-pl } Anda
+tui-read-hint-sources-only-short = Hanya { -source }
+tui-read-hint-to-reading = Bacaan
+tui-read-hint-to-shows = Tontonan
+tui-read-hint-planning = Direncanakan
+tui-read-status-shows = Tontonan · { $state }
+tui-read-action-switch = Tontonan atau bacaan
+tui-read-where-switch = di Beranda, Baca, dan Pencarian saat { -app-name } dipakai untuk tontonan dan bacaan
+tui-read-keys-planning = Tambahkan ke Direncanakan
+tui-read-keys-heading = Bacaan
+tui-read-keys-next-section = Bagian selanjutnya
+tui-read-keys-sources-only = Hanya { -source-pl } Anda, aktif atau nonaktif
+tui-read-keys-try-again = Hubungi lagi, atau muat ulang
+tui-read-keys-filters = Filter pencarian
