@@ -290,6 +290,7 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Uwzględnione
 read-filter-left-out = Pominięte
+read-filter-more-genres = Więcej gatunków
 read-search-started = Początek wydawania
 read-search-sources-only = Tylko twoje { -source-pl }
 read-search-from-sources = Twoje { -source-pl }
@@ -298,6 +299,7 @@ read-search-source-failed = { $source }: brak odpowiedzi.
 read-search-source-timeout = Brak odpowiedzi w ciągu { $seconds } s.
 read-search-source-nothing = Nic nie znaleziono w: { $sources }.
 read-search-in-source = Znaleziono w: { $source }
+read-search-in-folders = W twoich folderach
 read-search-in-sources = { $n ->
     [one] Twoje { -source-pl } z tą serią: { $n }
     [few] Twoje { -source-pl } z tą serią: { $n }
@@ -308,6 +310,8 @@ read-search-anilist-nothing = AniList nic nie znalazł dla tych słów.
 read-search-anilist-failed = AniList nie odpowiedział.
 read-search-anilist-failed-line = Twoje { -source-pl } zostały mimo to odpytane.
 read-search-sources-nothing = Twoje { -source-pl } też nic nie znalazły.
+read-search-sources-only-nothing = Twoje { -source-pl } nic nie znalazły
+read-state-offline-line = Offline. Pobrane rozdziały nadal się otwierają.
 read-search-total-unknown = Serie z AniList
 read-search-more-anilist = Więcej z AniList
 read-search-shown = Pokazano { $shown } z { $total }
@@ -316,6 +320,46 @@ read-search-source-kind-server = Serwer
 read-search-source-kind-folder = Folder
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Pokaż jeszcze { $n }
+read-search-line-total = { $line } · { $total }
+read-search-browse-parts = { $list }, { $next }
+read-caption-two = { $first } · { $second }
+read-filter-shown = { $name }: { $value }
+read-name-tile = { $title }, { $line }
+read-name-tile-placed = { $title }, { $line }, { $placed }
+read-name-tile-only-placed = { $title }, { $placed }
+read-name-week-tile = { $title }, { $time }, { $chapter }
+read-name-week-tile-time = { $title }, { $time }
+read-name-spotlight-art = { $title }, Szczegóły
+read-name-heading = { $heading }, { $side }
+read-name-loading = { $name }, wczytywanie
+read-name-heading-loading = { $heading }, { $side }, wczytywanie
+read-name-view-all = Zobacz wszystko, { $row }
+read-name-filter = { $name }, { $value }
+read-name-failure = { $line }, { $reason }
+read-name-source = { $source }, { $kind }
+read-name-source-more = { $n ->
+    [one] Pokaż jeszcze { $n } z: { $source }
+    [few] Pokaż jeszcze { $n } z: { $source }
+    [many] Pokaż jeszcze { $n } z: { $source }
+   *[other] Pokaż jeszcze { $n } z: { $source }
+ }
+read-search-sources-only-line = Wyniki z AniList są ukryte. Poniższe filtry dotyczą tylko wyników z AniList.
+read-search-done = AniList: { $anilist }, twoje { -source-pl }: { $sources }.
+read-home-row-loading = { $row }, wczytywanie
+read-tile-add-planning = Dodaj do planowanych
+read-search-anilist-hidden = Wyniki z AniList są ukryte.
+read-search-said-anilist = { $n ->
+    [one] AniList: { $n }
+    [few] AniList: { $n }
+    [many] AniList: { $n }
+   *[other] AniList: { $n }
+ }
+read-search-said-sources = { $n ->
+    [one] Twoje { -source-pl }: { $n }
+    [few] Twoje { -source-pl }: { $n }
+    [many] Twoje { -source-pl }: { $n }
+   *[other] Twoje { -source-pl }: { $n }
+ }
 onboarding-step = { $step } z { $total }
 onboarding-welcome-line = Śledź to, co oglądasz i czytasz. Dostarczają to twoje { -source-pl }.
 onboarding-welcome-note = Twoje listy i postęp zostają przy tobie. { -tracker-cap-pl } i { -source-pl } dodajesz sam.

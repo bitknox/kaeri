@@ -197465,6 +197465,12 @@
             "value" : "%1$@ · %2$@"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -199109,6 +199115,12 @@
             "value" : "Downloads"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pobrane"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200037,6 +200049,12 @@
             "value" : "More genres"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Więcej gatunków"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200392,6 +200410,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@: %2$@"
@@ -203553,6 +203577,12 @@
             "value" : "%1$@, loading"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, wczytywanie"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205237,6 +205267,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205256,6 +205292,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205285,6 +205327,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205307,6 +205355,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, loading"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, wczytywanie"
           }
         },
         "sv" : {
@@ -205333,6 +205387,12 @@
             "value" : "%1$@, loading"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, wczytywanie"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205352,6 +205412,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205425,6 +205491,46 @@
             }
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Pokaż jeszcze %1$lld z: %2$@"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Pokaż jeszcze %1$lld z: %2$@"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Pokaż jeszcze %1$lld z: %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Pokaż jeszcze %1$lld z: %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205471,6 +205577,12 @@
             "value" : "%1$@, Details"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Szczegóły"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205490,6 +205602,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205519,6 +205637,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205538,6 +205662,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
@@ -205567,6 +205697,12 @@
             "value" : "View all, %1$@"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zobacz wszystko, %1$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205591,6 +205727,12 @@
             "value" : "%1$@, %2$@, %3$@"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205610,6 +205752,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205805,6 +205953,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AniList's results are hidden."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyniki z AniList są ukryte."
           }
         },
         "sv" : {
@@ -206083,6 +206237,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206189,6 +206349,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld from AniList, %2$lld from your sources."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniList: %1$lld, twoje źródła: %2$lld."
           }
         },
         "sv" : {
@@ -206381,6 +206547,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In your folders"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "W twoich folderach"
           }
         },
         "sv" : {
@@ -206886,6 +207058,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "pl" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
@@ -207463,6 +207641,46 @@
             }
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList: %1$lld"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList: %1$lld"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList: %1$lld"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "AniList: %1$lld"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -207546,6 +207764,46 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%1$lld from your sources"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "few" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Twoje źródła: %1$lld"
+                    }
+                  },
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Twoje źródła: %1$lld"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Twoje źródła: %1$lld"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Twoje źródła: %1$lld"
                     }
                   }
                 }
@@ -208523,6 +208781,12 @@
             "value" : "AniList's results are hidden. The filters below apply to AniList's results only."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyniki z AniList są ukryte. Poniższe filtry dotyczą tylko wyników z AniList."
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -208545,6 +208809,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nothing found in your sources"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twoje źródła nic nie znalazły"
           }
         },
         "sv" : {
@@ -209895,6 +210165,12 @@
             "value" : "Offline. Downloaded chapters still open."
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Offline. Pobrane rozdziały nadal się otwierają."
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -209917,6 +210193,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add to Planning"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj do planowanych"
           }
         },
         "sv" : {
@@ -209943,6 +210225,12 @@
             "value" : "Finished manga, most popular"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zakończona manga, od najpopularniejszych"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -209965,6 +210253,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Finished light novels, most popular"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zakończone light novel, od najpopularniejszych"
           }
         },
         "sv" : {
@@ -209991,6 +210285,12 @@
             "value" : "Finished webtoons, most popular"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zakończone webtoony, od najpopularniejszych"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210013,6 +210313,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manga started in the last 12 months"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga rozpoczęta w ostatnich 12 miesiącach"
           }
         },
         "sv" : {
@@ -210039,6 +210345,12 @@
             "value" : "Light novels started in the last 12 months"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novel rozpoczęte w ostatnich 12 miesiącach"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210061,6 +210373,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons started in the last 12 months"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoony rozpoczęte w ostatnich 12 miesiącach"
           }
         },
         "sv" : {
@@ -210087,6 +210405,12 @@
             "value" : "Manga, trending"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga, na topie"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210111,6 +210435,12 @@
             "value" : "Light novels, trending"
           }
         },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novel, na topie"
+          }
+        },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210133,6 +210463,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons, trending"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoony, na topie"
           }
         },
         "sv" : {
