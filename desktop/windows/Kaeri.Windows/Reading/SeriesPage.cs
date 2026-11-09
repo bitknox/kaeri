@@ -523,6 +523,13 @@ public sealed partial class SeriesPage : Page
             chapters.Children.Add(States.Rows(6, 0, 0, 46, 0));
             return;
         }
+        if (read.Failure is ReadingFailure.NoSource)
+        {
+            // Nothing was ever read from a source, so nothing failed: an empty state that leads to Read from.
+            chapters.Children.Add(States.Unavailable(T.SeriesNoSourceTitle, T.SeriesNoSourceLine, T.SeriesNoSourceSearch,
+                () => _ = SeriesDialogs.ReadFrom(ctx, XamlRoot, work)));
+            return;
+        }
         if (read.Failure is { } failure)
         {
             var source = read.Edition?.SourceName ?? series.Edition?.SourceName ?? "";

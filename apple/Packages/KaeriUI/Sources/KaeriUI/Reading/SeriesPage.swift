@@ -872,7 +872,15 @@ private struct SeriesChapters: View {
     @ViewBuilder
     private func list(_ chapters: ReadChapters) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-                if let failure = chapters.failure {
+                if chapters.failure == .noSource {
+                    // Nothing was ever read from a source, so nothing failed: an empty state that
+                    // leads to Read from.
+                    rule
+                    PlainEmpty(title: L.seriesNoSourceTitle, line: L.seriesNoSourceLine) {
+                        Button(L.seriesNoSourceSearch) { navigator.seriesSheet = .source(series.work) }
+                            .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 40, fontSize: Device.isMac ? 13 : 15))
+                    }
+                } else if let failure = chapters.failure {
                     failed(failure, chapters: chapters)
                 }
                 // The engine keeps the source's order, oldest first.

@@ -672,7 +672,20 @@ private fun LazyListScope.seriesChapters(
     } else {
         chapters.volumes
     }
-    if (failure != null) {
+    if (failure is ReadingFailure.NoSource) {
+        // Nothing was ever read from a source, so nothing failed: an empty state that leads to Read from.
+        item(key = "chapters-no-source") {
+            val context = LocalContext.current
+            Box(Modifier.itemMotion()) {
+                PlainEmpty(
+                    Strings.seriesNoSourceTitle(context),
+                    Strings.seriesNoSourceLine(context),
+                    action = Strings.seriesNoSourceSearch(context),
+                    onAction = onReadFrom,
+                )
+            }
+        }
+    } else if (failure != null) {
         item(key = "chapters-failed") { Box(Modifier.itemMotion()) { ChaptersFailed(series, failure, groups.chapterRows().size, onRetry) } }
     } else if (groups.isEmpty()) {
         item(key = "chapters-none") {

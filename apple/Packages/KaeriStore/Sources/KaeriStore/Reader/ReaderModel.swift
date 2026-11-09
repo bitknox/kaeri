@@ -840,6 +840,7 @@ extension ReadingFailure {
         case .sourceDown(let source): .readingFailedSourceDown(source: source)
         case .sourceOff(let source): .readingFailedSourceOff(source: source)
         case .notFound: .readingFailedNotFound
+        case .noSource: .readingFailedNoSource
         case .blocked(let source, let reason): .readingFailedBlocked(source: source, reason: reason)
         case .parse(let source): .readingFailedParse(source: source)
         case .pageFetch(let status): .readingFailedPage(status: Int64(status))
