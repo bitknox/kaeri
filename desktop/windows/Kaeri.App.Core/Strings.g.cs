@@ -6896,6 +6896,15 @@ public static partial class T
     /// <summary>A source row's button for its other hits. As in "Show 12 more from Folders".</summary>
     public static string ReadNameSourceMore(long n, string source) => Fill(GetPlural("ReadNameSourceMore", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("source", source));
 
+    /// <summary>Under the Your sources only switch in the iPhone and iPad Filters sheet.</summary>
+    public static string ReadSearchSourcesOnlyLine => Get("ReadSearchSourcesOnlyLine");
+
+    /// <summary>What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.</summary>
+    public static string ReadSearchDone(long anilist, long sources) => Fill(Get("ReadSearchDone"), ("anilist", anilist.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("sources", sources.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".</summary>
+    public static string ReadHomeRowLoading(string row) => Fill(Get("ReadHomeRowLoading"), ("row", row));
+
     /// <summary>Over a first-run page's title: which page of how many.</summary>
     public static string OnboardingStep(long step, long total) => Fill(Get("OnboardingStep"), ("step", step.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -13988,6 +13997,9 @@ public static partial class T
         ["ReadNameSource"] = "{source}, {kind}",
         ["ReadNameSourceMore_one"] = "Show 1 more from {source}",
         ["ReadNameSourceMore_other"] = "Show {n} more from {source}",
+        ["ReadSearchSourcesOnlyLine"] = "AniList's results are hidden. The filters below apply to AniList's results only.",
+        ["ReadSearchDone"] = "{anilist} from AniList, {sources} from your sources.",
+        ["ReadHomeRowLoading"] = "{row}, loading",
         ["OnboardingStep"] = "{step} of {total}",
         ["OnboardingWelcomeLine"] = "Keep track of what you watch and read, from your own sources.",
         ["OnboardingWelcomeNote"] = "Your lists and progress stay on your devices. Trackers and sources are yours to add.",

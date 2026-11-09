@@ -10088,6 +10088,18 @@ object Strings {
     fun readNameSourceMore(context: Context, n: Int, source: String): String =
         context.resources.getQuantityString(R.plurals.read_name_source_more, n, n, source)
 
+    /** Under the Your sources only switch in the iPhone and iPad Filters sheet. */
+    fun readSearchSourcesOnlyLine(context: Context): String =
+        context.getString(R.string.read_search_sources_only_line)
+
+    /** What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence. */
+    fun readSearchDone(context: Context, anilist: Int, sources: Int): String =
+        context.getString(R.string.read_search_done, anilist, sources)
+
+    /** A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga". */
+    fun readHomeRowLoading(context: Context, row: String): String =
+        context.getString(R.string.read_home_row_loading, row)
+
     /** Over a first-run page's title: which page of how many. */
     fun onboardingStep(context: Context, step: Int, total: Int): String =
         context.getString(R.string.onboarding_step, step, total)

@@ -89,6 +89,20 @@ public struct ReadSearchState: Equatable, Sendable {
     public var total: UInt32?
     public var loading = false
     public var failure: ReadingFailure?
+    /// How many results the first page brought: with words, those show above the sources' part
+    /// and the rest under More from AniList.
+    public var firstPage = 0
+    /// The sources' part of a search with words: AniList's state beside it, each source's group
+    /// in its own slot, and the AniList results a source hit joined. Nil while browsing.
+    public var sources: ReadSourceSearch?
+
+    /// Whether the search has words, and so asks the person's sources beside AniList.
+    public var hasWords: Bool { !query.text.trimmingCharacters(in: .whitespaces).isEmpty }
+
+    /// The sources that have an AniList result, by its work: "In Home library".
+    public func joined(_ work: String) -> ReadSourceJoin? {
+        sources?.joins.first { $0.work == work }
+    }
 }
 
 @Observable @MainActor
@@ -148,7 +162,15 @@ public final class ReadingModel {
         search.total = nil
         search.loading = true
         search.failure = nil
+        // A browse asks AniList alone; a search with words gets the sources' part at once.
+        if !search.hasWords { search.sources = nil }
         send?(.reading(.search(query: query)))
+    }
+
+    /// Try again on one source's group: only that group asks again.
+    public func retrySourceSearch(_ sourceId: String) {
+        guard let sources = search.sources else { return }
+        send?(.reading(.retrySourceSearch(query: sources.query, sourceId: sourceId)))
     }
 
     public func searchMore() {
@@ -320,10 +342,33 @@ public final class ReadingModel {
             if page == 0 { search.total = nil }
             if let total { search.total = total }
             search.tiles = page == 0 ? tiles : search.tiles + tiles
+            if page == 0 { search.firstPage = tiles.count }
             search.page = page
             search.hasMore = hasMore
             search.otherScope = otherScope
             search.loading = false
+            #if FIXTURES
+            restageSources()
+            #endif
+        case .sourceSearch(let part):
+            #if FIXTURES
+            // A shot's staged sources stand; the testing engine's own answer would replace them.
+            guard stagedSources == nil else { return }
+            #endif
+            guard part.query == search.query else { return }
+            search.sources = part
+            switch part.anilist {
+            case .skipped:
+                // Your sources only: AniList is not asked, so no results of its come.
+                search.tiles = []
+                search.hasMore = false
+                search.total = nil
+                search.loading = false
+            case .failed:
+                search.loading = false
+            case .asking, .answered:
+                break
+            }
         case .series(let view):
             series[view.work] = view
         case .chapters(let work, let edition, let volumes, let failure):
@@ -366,7 +411,38 @@ public final class ReadingModel {
         #endif
     }
 
+    /// For shots: Search's sources' part in one of the board's states (`SourceSearchShots`), on
+    /// the words searched, held against the testing engine's own answer. Does nothing outside the
+    /// fixtures.
+    public func stageSourceSearchShot(_ name: String) {
+        #if FIXTURES
+        guard SourceSearchShots.names.contains(name) else { return }
+        stagedSources = name
+        restageSources()
+        #endif
+    }
+
     #if FIXTURES
+    @ObservationIgnored private var stagedSources: String?
+
+    private func restageSources() {
+        guard let name = stagedSources else { return }
+        if name == SourceSearchShots.sourcesOnly { search.query.sourcesOnly = true }
+        // The fixture covers come from wherever the fake serves art; any cover on screen says where.
+        let covers = search.tiles + (home?.continueReading ?? []) + (home?.rows.flatMap(\.tiles) ?? [])
+        let art = covers.lazy.compactMap(\.cover).compactMap { url in
+            url.range(of: "/cover/").map { String(url[..<$0.upperBound]) } // i18n-skip
+        }.first
+        let staged = SourceSearchShots.make(name, query: search.query, results: search.tiles, art: art)
+        search.sources = staged
+        if staged.anilist != .answered || name == SourceSearchShots.nothing || name == SourceSearchShots.sourceHits {
+            search.tiles = []
+            search.hasMore = false
+            search.total = staged.anilist == .answered ? 0 : nil
+        }
+        search.loading = false
+    }
+
     @ObservationIgnored private var stagedSpotlight = false
 
     private static func newChapterSpotlight(_ view: ReadingHomeView) -> ReadingHomeView {

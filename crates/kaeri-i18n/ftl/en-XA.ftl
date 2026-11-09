@@ -9912,6 +9912,15 @@ read-name-source-more =
        *[other] [Šĥöŵ { $n } ɱöŕé ƒŕöɱ { $source }~~~~~~~]
     }
 
+# Under the Your sources only switch in the iPhone and iPad Filters sheet.
+read-search-sources-only-line = [ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ. Ţĥé ƒîļţéŕš ƀéļöŵ àþþļý ţö ÅñîĻîšţ'š ŕéšüļţš öñļý.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.
+read-search-done = [{ $anilist } ƒŕöɱ ÅñîĻîšţ, { $sources } ƒŕöɱ ýöüŕ šöüŕçéš.~~~~~~~~~~~~]
+
+# A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".
+read-home-row-loading = [{ $row }, ļöàðîñĝ~~~~]
+
 # Over a first-run page's title: which page of how many.
 onboarding-step = [{ $step } öƒ { $total }~~~]
 

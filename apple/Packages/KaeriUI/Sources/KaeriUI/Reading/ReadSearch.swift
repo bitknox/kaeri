@@ -66,12 +66,22 @@ struct ReadSearchScreen: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @State private var filtersShown = false
+    @State private var width: CGFloat = 1_000
+    @State private var position = ScrollPosition()
     #if os(iOS)
     @Environment(\.horizontalSizeClass) private var sizeClass
     private var compact: Bool { sizeClass == .compact }
     #else
     private let compact = false
     #endif
+
+    private var layout: HomeLayout {
+        #if os(iOS)
+        HomeLayout(surface: .touch(regular: !compact, column: width - 48))
+        #else
+        HomeLayout(surface: .mac)
+        #endif
+    }
 
     var body: some View {
         let search = store.reading.search
@@ -90,9 +100,15 @@ struct ReadSearchScreen: View {
                     HStack(spacing: 12) {
                         if store.medium.both { SearchScopePicker() }
                         ReadFilterMenus(compact: false) { filtersShown = true }
+                        // Last, after a rule, so nothing moves when it comes with the first word.
+                        if search.hasWords {
+                            Rectangle().fill(Palette.glassRule).frame(width: 1, height: 16).accessibilityHidden(true)
+                            ReadSourcesOnlyToggle()
+                        }
                         Spacer(minLength: 8)
                         if browsing { ReadSortMenu() }
                     }
+                    .animation(.fadeIn, value: search.hasWords)
                 }
                 ReadSearchBody(browsing: browsing)
                     .animation(.standard, value: search.query)
@@ -101,7 +117,10 @@ struct ReadSearchScreen: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .scrollIndicators(.never)
+        .scrollPosition($position)
         .background(.ground)
+        .environment(\.homeLayout, layout)
+        .onOfferedWidth { width = $0 }
         .task {
             if let genre = navigator.readingGenre {
                 navigator.readingGenre = nil
@@ -112,9 +131,83 @@ struct ReadSearchScreen: View {
                 store.reading.runSearch(search.query)
             }
         }
+        // Shots: the sources' part in the board's states, `sources-<state>`.
+        .task {
+            guard let sheet = navigator.launchSheet, sheet.hasPrefix("sources-") else { return } // i18n-skip
+            try? await Task.sleep(for: .milliseconds(500))
+            navigator.launchSheet = nil
+            store.reading.stageSourceSearchShot(String(sheet.dropFirst("sources-".count))) // i18n-skip
+            // A shot's `scroll=<points>`: the sources' rows brought up once they are drawn.
+            guard navigator.section == .search, let points = navigator.launchReadScroll else { return }
+            navigator.launchReadScroll = nil
+            try? await Task.sleep(for: .milliseconds(1_000))
+            position.scrollTo(y: CGFloat(points))
+        }
         #if os(iOS)
+        .toolbar {
+            if compact {
+                ToolbarItem(placement: .topBarTrailing) {
+                    ReadFilterButton { filtersShown = true }
+                }
+            }
+        }
         .sheet(isPresented: $filtersShown) { ReadFiltersSheet() }
         #endif
+    }
+}
+
+/// Your sources only, the filter bar's last chip: a switch to a screen reader, and on, a check.
+/// Announced once as it turns on.
+private struct ReadSourcesOnlyToggle: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
+        let on = store.reading.search.query.sourcesOnly
+        Toggle(L.readSearchSourcesOnly, isOn: Binding(
+            get: { on },
+            set: { value in
+                var query = store.reading.search.query
+                query.sourcesOnly = value
+                store.reading.runSearch(query)
+                if value { AccessibilityNotification.Announcement(L.readSearchSourcesOnlyLine).post() }
+            }
+        ))
+        .toggleStyle(ReadChipToggleStyle())
+        .pointerHover()
+    }
+}
+
+/// A chip that is on or off: an outline either way, the check and silk words while on.
+private struct ReadChipToggleStyle: ToggleStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Button {
+            configuration.isOn.toggle()
+        } label: {
+            HStack(spacing: 6) {
+                if configuration.isOn {
+                    Image(systemName: "checkmark")
+                        .font(.ui(Device.isMac ? 10 : 12, weight: .bold))
+                        .accessibilityHidden(true)
+                        .transition(.opacity)
+                }
+                configuration.label
+                    .fontWeight(configuration.isOn ? .semibold : .medium)
+            }
+            .font(.plat(mac: 13, touch: 15, weight: .medium))
+            .foregroundStyle(configuration.isOn ? .silk : .haze)
+            .padding(.horizontal, 12)
+            .frame(height: Device.isMac ? 28 : 36)
+            // On, it takes the neutral fill as a set filter does; amber stays with the actions.
+            .background(configuration.isOn ? Palette.raisedSelected : .clear, in: .capsule)
+            .overlay { Capsule().strokeBorder(configuration.isOn ? .clear : Palette.glassRule, lineWidth: 1) }
+            .contentShape(.capsule)
+            .animation(.quick, value: configuration.isOn)
+        }
+        .buttonStyle(.plain)
+        .fixedSize()
+        .accessibilityRepresentation {
+            Toggle(isOn: configuration.$isOn) { configuration.label }
+        }
     }
 }
 
@@ -125,64 +218,37 @@ private struct ReadSearchBody: View {
 
     var body: some View {
         let search = store.reading.search
-        if let failure = search.failure, search.tiles.isEmpty {
-            PlainEmpty(title: L.readSearchFailed, line: failure.words) {
-                Button(L.actionTryAgain) { store.reading.runSearch(search.query) }
-                    .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
-                    .fixedSize()
-            }
+        if !browsing {
+            ReadWordsResults()
+        } else if let failure = search.failure, search.tiles.isEmpty {
+            ReadSearchFailed(failure: failure)
         } else if search.tiles.isEmpty, search.loading || search.page == 0 && search.hasMore {
             HomeWait(active: true, activity: "searching reading") { // i18n-skip
-                ReadSearchPlaceholder(browsing: browsing)
+                ReadSearchPlaceholder()
             }
         } else if search.tiles.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                PlainEmpty(title: browsing ? L.readSearchNothingBrowse : L.readSearchNothing(query: search.query.text),
-                           line: ReadFilterWords.any(search.query) ? L.readSearchNothingFiltersLine : L.readSearchNothingLine) {
-                    if ReadFilterWords.any(search.query) {
-                        Button(L.readSearchClearFilters) {
-                            var query = ReadingModel.emptyQuery
-                            query.text = search.query.text
-                            store.reading.runSearch(query)
-                        }
-                        .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
-                        .fixedSize()
-                    }
-                }
+                ReadNothingFound(title: L.readSearchNothingBrowse)
                 OtherScopeRow()
-            }
-        } else if browsing {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total))
-                    .font(.plat(mac: 12, touch: 13))
-                    .foregroundStyle(.haze)
-                ReadGrid(tiles: search.tiles)
-                more
             }
         } else {
-            VStack(alignment: .leading, spacing: 0) {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(search.tiles, id: \.work) { tile in
-                        Rectangle().fill(Palette.faintRule).frame(height: 1).accessibilityHidden(true)
-                        ReadResultRow(tile: tile)
-                    }
-                    Rectangle().fill(Palette.faintRule).frame(height: 1).accessibilityHidden(true)
-                }
-                more
-                if store.demo.state.onlyBooks {
-                    Text(L.searchDemoOnlyBooks)
-                        .font(.plat(mac: 12, touch: 13))
-                        .foregroundStyle(.haze)
-                        .padding(.top, 12)
-                }
-                OtherScopeRow()
+            VStack(alignment: .leading, spacing: 12) {
+                let viewAll = navigator.readViewAllLine.flatMap { $0.query == search.query ? $0.line : nil }
+                Text(ReadFilterWords.browseLine(search.query, filters: store.reading.filters, total: search.total, line: viewAll))
+                    .font(.plat(mac: 12, touch: 13))
+                    .foregroundStyle(.haze)
+                ReadGrid(tiles: search.tiles, twoLines: true, caption: .formatOrigin)
+                ReadSearchMore()
             }
-            .frame(maxWidth: Device.isMac ? 620 : .infinity, alignment: .leading)
         }
     }
+}
 
-    @ViewBuilder
-    private var more: some View {
+/// Loads AniList's next page as the end of its results comes into view.
+private struct ReadSearchMore: View {
+    @Environment(AppStore.self) private var store
+
+    var body: some View {
         let search = store.reading.search
         if search.hasMore {
             HStack {
@@ -191,6 +257,391 @@ private struct ReadSearchBody: View {
             .frame(maxWidth: .infinity, minHeight: 32)
             .onAppear { store.reading.searchMore() }
         }
+    }
+}
+
+/// Couldn't search, with Try again.
+private struct ReadSearchFailed: View {
+    @Environment(AppStore.self) private var store
+    let failure: ReadingFailure
+
+    var body: some View {
+        PlainEmpty(title: L.readSearchFailed, line: failure.words) {
+            Button(L.actionTryAgain) { store.reading.runSearch(store.reading.search.query) }
+                .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
+                .fixedSize()
+        }
+    }
+}
+
+/// Nothing found: the title, the line to try other words or fewer filters, and with filters set
+/// Clear filters. With words and sources, the line that they found nothing either follows.
+private struct ReadNothingFound: View {
+    @Environment(AppStore.self) private var store
+    let title: String
+    var sourcesToo = false
+
+    var body: some View {
+        let query = store.reading.search.query
+        let filtered = ReadFilterWords.any(query)
+        PlainEmpty(title: title, line: filtered ? L.readSearchNothingFiltersLine : L.readSearchNothingLine) {
+            VStack(alignment: .leading, spacing: 16) {
+                if sourcesToo {
+                    Text(L.readSearchSourcesNothing)
+                        .font(.plat(mac: 13, touch: 15))
+                        .foregroundStyle(.haze)
+                        .padding(.top, -6)
+                }
+                if filtered {
+                    Button(L.readSearchClearFilters) {
+                        var cleared = ReadingModel.emptyQuery
+                        cleared.text = query.text
+                        cleared.sourcesOnly = query.sourcesOnly
+                        store.reading.runSearch(cleared)
+                    }
+                    .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
+                    .fixedSize()
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Results for words
+
+/// With words: AniList's covers in the browse grid, then From your sources with one sideways row
+/// per source, then the rest of AniList's results under More from AniList. Your sources only
+/// leaves AniList out and the source rows lead.
+private struct ReadWordsResults: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var moreShown = false
+
+    var body: some View {
+        let search = store.reading.search
+        let sources = search.sources
+        let groups = sources?.groups ?? []
+        let only = search.query.sourcesOnly
+        let anilistAsking = search.loading || sources?.anilist == .asking
+            || search.tiles.isEmpty && search.page == 0 && search.hasMore
+        let anilistFailed = sources?.anilist == .failed || search.failure != nil && search.tiles.isEmpty
+        let anilistNothing = only || search.tiles.isEmpty && !anilistAsking && !anilistFailed
+        let sourcesNothing = sources.map { $0.done && $0.groups.allSatisfy { $0.state == .nothing } } ?? true
+        VStack(alignment: .leading, spacing: 0) {
+            if anilistNothing, sourcesNothing, !anilistAsking {
+                // Nothing anywhere: one title, the line, and the sources' line where there are some.
+                ReadNothingFound(title: L.readSearchNothing(query: search.query.text), sourcesToo: !groups.isEmpty)
+                    .transition(.opacity)
+            } else {
+                if !only {
+                    anilist(search, asking: anilistAsking, failed: anilistFailed, sources: !groups.isEmpty)
+                        .padding(.bottom, groups.isEmpty ? 0 : 32)
+                        .transition(.opacity.animation(.fadeIn))
+                }
+                if !groups.isEmpty {
+                    ReadSourcesPart(groups: groups)
+                }
+                if !only, !groups.isEmpty, search.firstPage > 0 {
+                    moreFromAnilist(search)
+                }
+            }
+            if store.demo.state.onlyBooks {
+                Text(L.searchDemoOnlyBooks)
+                    .font(.plat(mac: 12, touch: 13))
+                    .foregroundStyle(.haze)
+                    .padding(.top, 12)
+            }
+            OtherScopeRow()
+        }
+        .animation(reduceMotion ? .fadeIn : .standard, value: only)
+        .animation(.standard, value: groups.map(\.sourceId))
+        .onChange(of: search.query) { moreShown = false }
+        .onChange(of: sources?.done == true) { _, done in
+            if done { announce(search) }
+        }
+    }
+
+    @ViewBuilder
+    private func anilist(_ search: ReadSearchState, asking: Bool, failed: Bool, sources: Bool) -> some View {
+        if failed, search.tiles.isEmpty {
+            if sources {
+                PlainEmpty(title: L.readSearchAnilistFailed, line: L.readSearchAnilistFailedLine) {
+                    Button(L.actionTryAgain) { store.reading.runSearch(search.query) }
+                        .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 17))
+                        .fixedSize()
+                }
+                .padding(.vertical, -24)
+            } else if let failure = search.failure {
+                ReadSearchFailed(failure: failure)
+            }
+        } else if asking, search.tiles.isEmpty {
+            HomeWait(active: true, activity: "searching reading") { // i18n-skip
+                ReadSearchPlaceholder()
+            }
+        } else if search.tiles.isEmpty {
+            if sources {
+                PlainEmpty(title: L.readSearchAnilistNothing, line: L.readSearchNothingLine)
+                    .padding(.vertical, -24)
+            } else {
+                ReadNothingFound(title: L.readSearchNothing(query: search.query.text))
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 12) {
+                // AniList's count only once it is exact; until then the line has no number.
+                Text(search.total.map { L.readSearchTotal(n: Int($0)) } ?? L.readSearchTotalUnknown)
+                    .font(.plat(mac: 12, touch: 13))
+                    .foregroundStyle(.haze)
+                // With sources, the first page stands above them and the rest waits under More
+                // from AniList; without, the results run on as browsing's do.
+                let shown = sources ? Array(search.tiles.prefix(max(search.firstPage, 1))) : search.tiles
+                ReadGrid(tiles: shown, twoLines: true, note: { tile in joinedLine(tile.work, in: search) }, caption: .formatOrigin)
+                if !sources { ReadSearchMore() }
+            }
+        }
+    }
+
+    /// "In Home library", or "In 2 of your sources".
+    private func joinedLine(_ work: String, in search: ReadSearchState) -> String? {
+        guard let join = search.joined(work), let first = join.sourceNames.first else { return nil }
+        return join.sourceNames.count == 1 ? L.readSearchInSource(source: first) : L.readSearchInSources(n: join.sourceNames.count)
+    }
+
+    @ViewBuilder
+    private func moreFromAnilist(_ search: ReadSearchState) -> some View {
+        let first = max(search.firstPage, 1)
+        let rest = Array(search.tiles.dropFirst(first))
+        if search.hasMore || !rest.isEmpty {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    if moreShown {
+                        Text(L.readSearchMoreAnilist)
+                            .font(.plat(mac: 13, touch: 16, weight: .semibold))
+                            .foregroundStyle(.silk)
+                            .accessibilityAddTraits(.isHeader)
+                    } else {
+                        Button {
+                            withAnimation(.standard) { moreShown = true }
+                            if rest.isEmpty { store.reading.searchMore() }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(L.readSearchMoreAnilist)
+                                Image(systemName: "chevron.down")
+                                    .font(.ui(Device.isMac ? 10 : 12, weight: .semibold))
+                                    .accessibilityHidden(true)
+                            }
+                            .font(.plat(mac: 13, touch: 16, weight: .semibold))
+                            .foregroundStyle(.silk)
+                            .frame(minHeight: Device.isMac ? 24 : 44)
+                            .contentShape(.rect)
+                        }
+                        .buttonStyle(.plain)
+                        .pointerHover()
+                    }
+                    let shown = moreShown ? search.tiles.count : first
+                    Text(search.total.map { L.readSearchShown(shown: shown, total: Int($0)) } ?? L.readSearchShownSome(shown: shown))
+                        .font(.plat(mac: 12, touch: 13))
+                        .foregroundStyle(.haze)
+                        .contentTransition(.numericText())
+                }
+                if moreShown {
+                    ReadGrid(tiles: rest, twoLines: true, note: { tile in joinedLine(tile.work, in: search) }, caption: .formatOrigin)
+                        .transition(.opacity)
+                    ReadSearchMore()
+                }
+            }
+            .padding(.top, 32)
+        }
+    }
+
+    /// One announcement once AniList and every source have settled: how many from each, then
+    /// each source that didn't answer.
+    private func announce(_ search: ReadSearchState) {
+        guard let sources = search.sources else { return }
+        let fromSources = sources.groups.reduce(0) { $0 + $1.tiles.count + Int($1.joined) }
+        var words = [L.readSearchDone(anilist: search.query.sourcesOnly ? 0 : Int(search.total ?? UInt32(search.tiles.count)), sources: fromSources)]
+        for group in sources.groups where group.state.didNotAnswer {
+            words.append(L.readSearchSourceFailed(source: group.sourceName))
+        }
+        AccessibilityNotification.Announcement(words.joined(separator: " ")).post() // i18n-skip
+    }
+}
+
+extension ReadSourceState {
+    var didNotAnswer: Bool {
+        switch self {
+        case .failed, .timedOut: true
+        case .asking, .hits, .nothing: false
+        }
+    }
+}
+
+// MARK: - From your sources
+
+/// From your sources: a row per source with what it found, waiting or what went wrong, and one
+/// line at the end for every source that found nothing.
+private struct ReadSourcesPart: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.homeLayout) private var layout
+    let groups: [ReadSourceGroup]
+
+    var body: some View {
+        // A source whose every hit joined an AniList result says so there, and has no row.
+        let rows = groups.filter { $0.state != .nothing && !($0.state == .hits && $0.tiles.isEmpty) }
+        let nothing = groups.filter { $0.state == .nothing }.map(\.sourceName)
+        VStack(alignment: .leading, spacing: 0) {
+            Text(L.readSearchFromSources)
+                .font(.ui(layout.heading.size, weight: layout.heading.weight))
+                .fixedLineHeight(layout.heading.line, relativeTo: .title3)
+                .foregroundStyle(.silk)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityHeading(.h2)
+            VStack(alignment: .leading, spacing: 24) {
+                ForEach(rows, id: \.sourceId) { group in
+                    ReadSourceRow(group: group)
+                        .transition(.opacity)
+                }
+            }
+            .padding(.top, rows.isEmpty ? 0 : 12)
+            if !nothing.isEmpty {
+                VStack(alignment: .leading, spacing: 16) {
+                    Rectangle().fill(Palette.faintRule).frame(height: 1).accessibilityHidden(true)
+                    Text(L.readSearchSourceNothing(sources: nothing.formatted(.list(type: .and).locale(AirTime.locale))))
+                        .font(.plat(mac: 13, touch: 16))
+                        .foregroundStyle(.haze)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.top, rows.isEmpty ? 16 : 28)
+                .transition(.opacity)
+            }
+        }
+        .animation(.standard, value: rows.map(\.sourceId))
+        .animation(.fadeIn, value: nothing)
+    }
+}
+
+/// One source's row: its name and kind, then its covers sideways, placeholders while it is asked,
+/// or that it didn't answer with Try again for it alone.
+private struct ReadSourceRow: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.homeLayout) private var layout
+    let group: ReadSourceGroup
+    /// Whether the hits past the first five are in.
+    @State private var expanded = false
+
+    /// A row shows five hits, and Show N more brings in the rest.
+    private static let first = 5
+
+    var body: some View {
+        let asking = group.state == .asking
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(group.sourceName)
+                    .font(.plat(mac: 13, touch: 16, weight: .semibold))
+                    .foregroundStyle(.silk)
+                if let kind {
+                    Text(kind)
+                        .font(.plat(mac: 13, touch: 16))
+                        .foregroundStyle(.haze)
+                }
+                if asking {
+                    ProgressView()
+                        .controlSize(.mini)
+                        .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 4 }
+                        .accessibilityHidden(true)
+                        .transition(.opacity)
+                }
+            }
+            .lineLimit(1)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text([group.sourceName, kind?.lowercased(with: AirTime.locale)].compactMap { $0 }.joined(separator: ", "))) // i18n-skip
+            .accessibilityAddTraits(.isHeader)
+            .accessibilityHeading(.h3)
+            ReadWaitSlot(waiting: asking) {
+                answer
+            } placeholder: {
+                ReadCoverRowPlaceholder(count: 8)
+            }
+            .overlay {
+                // The placeholders are hidden; a screen reader hears that the source is asked.
+                if asking {
+                    Color.clear
+                        .accessibilityElement()
+                        .accessibilityLabel(L.readSearchAsking(source: group.sourceName))
+                }
+            }
+            .animation(.standard, value: group.state)
+        }
+    }
+
+    /// Server, Folder or Plugin beside the name; the demo shows its name alone.
+    private var kind: String? {
+        switch group.kind {
+        case .server: L.readSearchSourceKindServer
+        case .folder: L.readSearchSourceKindFolder
+        case .plugin: L.readSearchSourceKindPlugin
+        case nil: nil
+        }
+    }
+
+    @ViewBuilder
+    private var answer: some View {
+        switch group.state {
+        case .failed(let failure):
+            failed(reason: failure.words)
+        case .timedOut(let seconds):
+            failed(reason: L.readSearchSourceTimeout(seconds: Int(seconds)))
+        case .hits, .asking, .nothing:
+            let hidden = expanded ? 0 : max(0, group.tiles.count - Self.first)
+            VStack(alignment: .leading, spacing: 8) {
+                HomeShelf(spacing: layout.cardGap) {
+                    ForEach(group.tiles.prefix(group.tiles.count - hidden), id: \.work) { tile in
+                        ReadTileCard(tile: tile, twoLines: true, caption: .amount)
+                            .contextMenu { ReadTileMenu(tile: tile, kind: .details) }
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.standard, value: expanded)
+                if hidden > 0 {
+                    Button(L.readSearchSourceMore(n: hidden)) { expanded = true }
+                        .buttonStyle(.plain)
+                        .font(.plat(mac: 13, touch: 15, weight: .medium))
+                        .foregroundStyle(.silk)
+                        .frame(minHeight: Device.isMac ? 24 : 44)
+                        .contentShape(.rect)
+                        .pointerHover()
+                        .transition(.opacity)
+                }
+            }
+            .onChange(of: group.tiles.map(\.work)) { expanded = false }
+        }
+    }
+
+    /// The vermilion glyph, the source didn't answer, the reason and Try again.
+    private func failed(reason: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.plat(mac: 12, touch: 15))
+                .foregroundStyle(.vermilion)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(L.readSearchSourceFailed(source: group.sourceName))
+                        .font(.plat(mac: 13, touch: 16))
+                        .foregroundStyle(.silk)
+                    Text(reason)
+                        .font(.plat(mac: 12, touch: 14))
+                        .foregroundStyle(.haze)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityElement(children: .combine)
+                Button(L.actionTryAgain) { store.reading.retrySourceSearch(group.sourceId) }
+                    .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 44, fontSize: Device.isMac ? 13 : 15))
+                    .fixedSize()
+                    .pointerHover()
+                    .padding(.top, 10)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -226,72 +677,28 @@ private struct OtherScopeRow: View {
     }
 }
 
-/// A result: the cover, the title and its facts, and your list on the right.
-private struct ReadResultRow: View {
-    @Environment(AppStore.self) private var store
-    @Environment(Navigator.self) private var navigator
-    #if os(iOS)
-    @Environment(\.horizontalSizeClass) private var sizeClass
-    #endif
-    let tile: WorkTile
-
-    /// On a phone the place in the series goes under the facts, where it has the width.
-    private var compact: Bool {
-        #if os(iOS)
-        sizeClass == .compact
-        #else
-        false
-        #endif
-    }
-
-    var body: some View {
-        Button {
-            navigator.openSeries(tile.work)
-        } label: {
-            HStack(spacing: 12) {
-                BookCover(url: tile.cover, width: Device.isMac ? 40 : 44, radius: 4)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(tile.title)
-                        .font(.plat(mac: 13, touch: 17, weight: .semibold))
-                        .foregroundStyle(.silk)
-                        .lineLimit(1)
-                    Text(store.reading.series[tile.work]?.demo != nil ? L.searchDemoReads : tile.facts.map(\.text).joined(separator: " · ")) // i18n-skip
-                        .font(.plat(mac: 12, touch: 15))
-                        .foregroundStyle(.haze)
-                        .lineLimit(1)
-                    if compact, let next = tile.next {
-                        Text(next.text)
-                            .font(.plat(mac: 12, touch: 15))
-                            .foregroundStyle(.haze)
-                            .lineLimit(2)
-                    }
-                }
-                Spacer(minLength: 8)
-                if !compact, let next = tile.next {
-                    Text(next.text)
-                        .font(.plat(mac: 12, touch: 15))
-                        .foregroundStyle(.haze)
-                        .lineLimit(1)
-                }
-            }
-            .padding(.vertical, 6)
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .pointerHover()
-        .contextMenu { ReadTileMenu(tile: tile) }
-        .accessibilityElement(children: .combine)
-        // The demo's own titles are the only ones asked about: the series says whether it is one.
-        .task { if store.demo.reading.works.contains(where: { $0.series == tile.title }) { store.reading.loadSeries(tile.work) } }
-    }
-}
-
 // MARK: - Filters
 
 enum ReadFilterWords {
     static func any(_ query: ReadSearchQuery) -> Bool {
         !query.formats.isEmpty || !query.origins.isEmpty || query.status != nil || !query.genres.isEmpty
-            || !query.excludeGenres.isEmpty
+            || !query.excludeGenres.isEmpty || started(query) != nil
+    }
+
+    /// The Started choice set, if any other than Any time.
+    static func started(_ query: ReadSearchQuery) -> String? {
+        guard let started = query.started, started != "any" else { return nil } // i18n-skip
+        return started
+    }
+
+    /// What the filters set come to, for a screen reader on the filter button.
+    static func summary(_ query: ReadSearchQuery, filters: ReadFilters) -> String {
+        var parts = labels(query.formats, in: filters.formats) + labels(query.origins, in: filters.origins)
+        if let status = query.status { parts += labels([status], in: filters.statuses) }
+        parts += query.genres + query.excludeGenres.map { L.readFilterNotGenre(genre: $0) }
+        if let started = started(query) { parts += labels([started], in: filters.started) }
+        if query.sourcesOnly { parts.append(L.readSearchSourcesOnly) }
+        return parts.joined(separator: ", ") // i18n-skip
     }
 
     static func labels(_ keys: [String], in choices: [ReadFilterChoice]) -> [String] {
@@ -307,12 +714,13 @@ enum ReadFilterWords {
 
     /// The line over browsing: what is shown, and where the list comes from.
     /// "Popular · from AniList", or once every result is listed, "Popular · 214 series from AniList".
-    static func browseLine(_ query: ReadSearchQuery, filters: ReadFilters, total: UInt32? = nil) -> String {
+    /// `line` is a View all's own line ("Manga, trending"), which says it better than the filters.
+    static func browseLine(_ query: ReadSearchQuery, filters: ReadFilters, total: UInt32? = nil, line: String? = nil) -> String {
         var parts = labels(query.formats, in: filters.formats) + labels(query.origins, in: filters.origins)
         if let status = query.status { parts += labels([status], in: filters.statuses) }
         parts += query.genres
-        let what = parts.isEmpty ? sort(query.sort ?? filters.sorts.first ?? "") : parts.joined(separator: ", ") // i18n-skip
-        guard let total else { return L.readSearchBrowseLine(what: what) }
+        let what = line ?? (parts.isEmpty ? sort(query.sort ?? filters.sorts.first ?? "") : parts.joined(separator: ", ")) // i18n-skip
+        guard let total else { return line ?? L.readSearchBrowseLine(what: what) }
         return [what, L.readSearchTotal(n: Int(total))].joined(separator: " · ") // i18n-skip
     }
 
@@ -353,6 +761,7 @@ private struct ReadFilterMenus: View {
         }
         if compact {
             button(L.readFilterGenres, value: genresValue(query)) { openSheet() }
+            started(filters, query)
         } else {
             menu(L.readFilterGenres, value: genresValue(query)) {
                 ForEach(filters.genres, id: \.self) { genre in
@@ -367,6 +776,18 @@ private struct ReadFilterMenus: View {
                         ))
                     }
                 }
+            }
+            started(filters, query)
+        }
+    }
+
+    private func started(_ filters: ReadFilters, _ query: ReadSearchQuery) -> some View {
+        menu(L.readSearchStarted, value: ReadFilterWords.started(query).flatMap { ReadFilterWords.value([$0], in: filters.started) }) {
+            ForEach(filters.started, id: \.key) { choice in
+                Toggle(choice.label.text, isOn: Binding(
+                    get: { (ReadFilterWords.started(query) ?? "any") == choice.key }, // i18n-skip
+                    set: { on in change { $0.started = on && choice.key != "any" ? choice.key : nil } } // i18n-skip
+                ))
             }
         }
     }
@@ -408,6 +829,8 @@ private struct ReadFilterMenus: View {
             items()
         } label: {
             ReadFilterLabel(name: name, value: value)
+                // Your sources only leaves AniList out, and these filter AniList's results.
+                .opacity(store.reading.search.query.sourcesOnly ? 0.45 : 1)
         }
         .menuStyle(.button)
         .buttonStyle(.plain)
@@ -419,7 +842,10 @@ private struct ReadFilterMenus: View {
     }
 
     private func button(_ name: String, value: String?, action: @escaping () -> Void) -> some View {
-        Button(action: action) { ReadFilterLabel(name: name, value: value) }
+        Button(action: action) {
+            ReadFilterLabel(name: name, value: value)
+                .opacity(store.reading.search.query.sourcesOnly ? 0.45 : 1)
+        }
             .buttonStyle(.plain)
             .fixedSize()
             .accessibilityLabel(name)
@@ -427,7 +853,7 @@ private struct ReadFilterMenus: View {
     }
 }
 
-/// A filter's button: "Format" when unset, "Origin: Korea" in an outline when set.
+/// A filter's button: "Format" when unset, "Origin: Korea" on the neutral fill when set.
 private struct ReadFilterLabel: View {
     let name: String
     let value: String?
@@ -448,9 +874,9 @@ private struct ReadFilterLabel: View {
         .font(.plat(mac: 13, touch: 15, weight: .medium))
         .padding(.horizontal, 12)
         .frame(height: Device.isMac ? 28 : 36)
-        .overlay {
-            if value != nil { Capsule().strokeBorder(Palette.glassRule, lineWidth: 1) }
-        }
+        // A set filter takes the neutral fill, as the shows' set pills do; amber stays with the actions.
+        .background(value == nil ? .clear : Palette.raisedSelected, in: .capsule)
+        .animation(.quick, value: value)
         .contentShape(.capsule)
     }
 }
@@ -515,9 +941,10 @@ private struct ReadSortMenu: View {
 }
 
 #if os(iOS)
-/// The iPhone's filters: format and origin as checked rows, status as one choice, and genres
-/// cycling Any, Included and Left out.
-private struct ReadFiltersSheet: View {
+/// The iPhone's filters: with words, Your sources only first as a switch; then format and origin
+/// as checked rows, status and started as one choice each, and genres cycling Any, Included and
+/// Left out. AniList's filters dim while Your sources only is on.
+struct ReadFiltersSheet: View {
     @Environment(AppStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var query = ReadingModel.emptyQuery
@@ -526,40 +953,40 @@ private struct ReadFiltersSheet: View {
         let filters = store.reading.filters
         NavigationStack {
             List {
-                Section(L.readFilterFormat) { checks(filters.formats, \.formats) }
-                Section(L.readFilterOrigin) { checks(filters.origins, \.origins) }
-                Section(L.readFilterStatus) {
-                    ForEach(filters.statuses, id: \.key) { choice in
-                        row(choice.label.text, checked: query.status == choice.key) {
-                            query.status = query.status == choice.key ? nil : choice.key
-                        }
+                if !query.text.trimmingCharacters(in: .whitespaces).isEmpty {
+                    Section {
+                        Toggle(L.readSearchSourcesOnly, isOn: Binding(
+                            get: { query.sourcesOnly },
+                            set: { on in
+                                withAnimation(.fadeIn) { query.sourcesOnly = on }
+                                if on { AccessibilityNotification.Announcement(L.readSearchSourcesOnlyLine).post() }
+                            }
+                        ))
+                        .foregroundStyle(.silk)
+                    } footer: {
+                        Text(L.readSearchSourcesOnlyLine).foregroundStyle(.haze)
                     }
                 }
-                Section(L.readFilterGenres) {
-                    ForEach(filters.genres, id: \.self) { genre in
-                        let state = ReadFilterGenres.state(query, genre)
-                        Button {
-                            let next: ReadFilterGenres.State = switch state {
-                            case .any: .included
-                            case .included: .leftOut
-                            case .leftOut: .any
+                Group {
+                    Section(L.readFilterFormat) { checks(filters.formats, \.formats) }
+                    Section(L.readFilterOrigin) { checks(filters.origins, \.origins) }
+                    Section(L.readFilterStatus) {
+                        ForEach(filters.statuses, id: \.key) { choice in
+                            row(choice.label.text, checked: query.status == choice.key) {
+                                query.status = query.status == choice.key ? nil : choice.key
                             }
-                            ReadFilterGenres.set(&query, genre, next)
-                        } label: {
-                            HStack {
-                                Text(genre).foregroundStyle(.silk)
-                                Spacer()
-                                switch state {
-                                case .any: EmptyView()
-                                case .included: Text(L.readFilterIncluded).foregroundStyle(.silk)
-                                case .leftOut: Text(L.readFilterLeftOut).foregroundStyle(.haze)
-                                }
-                            }
-                            .contentShape(.rect)
                         }
-                        .buttonStyle(.plain)
                     }
+                    Section(L.readSearchStarted) {
+                        ForEach(filters.started, id: \.key) { choice in
+                            row(choice.label.text, checked: (ReadFilterWords.started(query) ?? "any") == choice.key) { // i18n-skip
+                                query.started = choice.key == "any" ? nil : choice.key // i18n-skip
+                            }
+                        }
+                    }
+                    genres(filters)
                 }
+                .opacity(query.sourcesOnly ? 0.45 : 1)
             }
             .scrollContentBackground(.hidden)
             .background(.raised)
@@ -569,8 +996,10 @@ private struct ReadFiltersSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(L.readFilterReset) {
                         let text = query.text
+                        let only = query.sourcesOnly
                         query = ReadingModel.emptyQuery
                         query.text = text
+                        query.sourcesOnly = only
                     }
                     .disabled(!ReadFilterWords.any(query))
                 }
@@ -584,6 +1013,34 @@ private struct ReadFiltersSheet: View {
         }
         .onAppear { query = store.reading.search.query }
         .presentationBackground(.raised)
+    }
+
+    private func genres(_ filters: ReadFilters) -> some View {
+        Section(L.readFilterGenres) {
+            ForEach(filters.genres, id: \.self) { genre in
+                let state = ReadFilterGenres.state(query, genre)
+                Button {
+                    let next: ReadFilterGenres.State = switch state {
+                    case .any: .included
+                    case .included: .leftOut
+                    case .leftOut: .any
+                    }
+                    ReadFilterGenres.set(&query, genre, next)
+                } label: {
+                    HStack {
+                        Text(genre).foregroundStyle(.silk)
+                        Spacer()
+                        switch state {
+                        case .any: EmptyView()
+                        case .included: Text(L.readFilterIncluded).foregroundStyle(.silk)
+                        case .leftOut: Text(L.readFilterLeftOut).foregroundStyle(.haze)
+                        }
+                    }
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 
     private func checks(_ choices: [ReadFilterChoice], _ path: WritableKeyPath<ReadSearchQuery, [String]>) -> some View {
@@ -615,35 +1072,18 @@ private struct ReadFiltersSheet: View {
 }
 #endif
 
+/// AniList's grid as it will stand: the line over it and a row of covers with their captions.
 private struct ReadSearchPlaceholder: View {
-    let browsing: Bool
+    @State private var width: CGFloat = Device.isMac ? 992 : 360
 
     var body: some View {
-        if browsing {
-            VStack(alignment: .leading, spacing: 12) {
-                RoundedRectangle(cornerRadius: 3).fill(.raised).frame(width: 260, height: 10)
-                let (columns, cell) = ReadGrid.columns(Device.isMac ? 992 : 360)
-                LazyVGrid(columns: Array(repeating: GridItem(.fixed(cell), spacing: ReadGrid.gap), count: columns),
-                          alignment: .leading, spacing: 24) {
-                    ForEach(0..<columns, id: \.self) { _ in
-                        RoundedRectangle(cornerRadius: 6).fill(.raised).frame(width: cell, height: cell * 1.5)
-                    }
-                }
-            }
-            .accessibilityHidden(true)
-        } else {
-            VStack(alignment: .leading, spacing: 12) {
-                ForEach(0..<4, id: \.self) { _ in
-                    HStack(spacing: 12) {
-                        RoundedRectangle(cornerRadius: 4).fill(.raised).frame(width: 40, height: 60)
-                        VStack(alignment: .leading, spacing: 6) {
-                            RoundedRectangle(cornerRadius: 3).fill(.raised).frame(width: 180, height: 10)
-                            RoundedRectangle(cornerRadius: 3).fill(.raised).frame(width: 120, height: 8)
-                        }
-                    }
-                }
-            }
-            .accessibilityHidden(true)
+        let (columns, cell) = ReadGrid.columns(width)
+        VStack(alignment: .leading, spacing: 12) {
+            RoundedRectangle(cornerRadius: 3).fill(.raised).frame(width: 160, height: 10)
+            ReadCoverRowPlaceholder(width: cell, count: columns, spacing: ReadGrid.gap)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+        .accessibilityHidden(true)
     }
 }

@@ -21,6 +21,7 @@
 # reader-moved), the reader open with its chrome or a sheet up,
 # medium=<read|watch|both> on a reading scene, what Kaeri is for chosen at launch as Settings would,
 # work=<id> a series' page by its work id (work=a:900301), reading=1 the Library and Search on their reading side,
+# sheet=sources-<mid|failed|only|nothing|sourcehits|anilistfailed> on reading's Search with words (search+reading=1+query=lantern) stages its sources' part with made-up sources,
 # send=<preparing|waiting|failed> on a series' Send to e-reader sheet (sheet=send, work=<id>; sheet=stopped asks where you stopped), feed=<on|off> the Mac Reading settings' OPDS feed pane told as if it were (settings+pane=reading+sheet=feed), never switched on,
 # party=<form|joining|refused|invite|panel|ready|sync|chat|chatline|chatbusy|chatreact|chatfield|chatkeys|chatwait|chatoff|chatfail|chatpanel|chatmute|chathidden|chatshort|lost|left|nosource|choose|unaired|quit>, a
 # watch party on the testing engine's fake Syncplay server (PartyScene; the player's on the playing

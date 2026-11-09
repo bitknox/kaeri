@@ -203489,6 +203489,18 @@
         }
       }
     },
+    "read-home-row-loading" : {
+      "comment" : "A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as \"Trending manga\". Argument 1: row (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, loading"
+          }
+        }
+      }
+    },
     "read-home-trending-manga" : {
       "comment" : "Row heading on reading's Home: manga that are trending on AniList now.",
       "extractionState" : "manual",
@@ -205855,6 +205867,18 @@
         }
       }
     },
+    "read-search-done" : {
+      "comment" : "What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence. Argument 1: anilist (Int). Argument 2: sources (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld from AniList, %2$lld from your sources."
+          }
+        }
+      }
+    },
     "read-search-failed" : {
       "comment" : "Search couldn't ask AniList.",
       "extractionState" : "manual",
@@ -207943,6 +207967,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chỉ các nguồn của bạn"
+          }
+        }
+      }
+    },
+    "read-search-sources-only-line" : {
+      "comment" : "Under the Your sources only switch in the iPhone and iPad Filters sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AniList's results are hidden. The filters below apply to AniList's results only."
           }
         }
       }

@@ -9519,6 +9519,19 @@ public enum L {
         Self.format("read-name-source-more", fallback: "Show %1$lld more from %2$@", n, source)
     }
 
+    /// Under the Your sources only switch in the iPhone and iPad Filters sheet.
+    public static var readSearchSourcesOnlyLine: String { string("read-search-sources-only-line", fallback: "AniList's results are hidden. The filters below apply to AniList's results only.") }
+
+    /// What a screen reader hears once, when AniList and every source have answered or run out of time. Sources that didn't answer follow it, each as its own sentence.
+    public static func readSearchDone(anilist: Int, sources: Int) -> String {
+        Self.format("read-search-done", fallback: "%1$lld from AniList, %2$lld from your sources.", anilist, sources)
+    }
+
+    /// A screen reader's label for a discovery row's heading on reading's Home while its covers are on their way. The row is its heading, such as "Trending manga".
+    public static func readHomeRowLoading(row: String) -> String {
+        Self.format("read-home-row-loading", fallback: "%1$@, loading", row)
+    }
+
     /// Over a first-run page's title: which page of how many.
     public static func onboardingStep(step: Int, total: Int) -> String {
         Self.format("onboarding-step", fallback: "%1$lld of %2$lld", step, total)
