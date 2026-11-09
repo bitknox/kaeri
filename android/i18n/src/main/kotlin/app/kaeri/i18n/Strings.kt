@@ -9970,6 +9970,10 @@ object Strings {
     fun readFilterOrigin(context: Context): String =
         context.getString(R.string.read_filter_origin)
 
+    /** The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off. */
+    fun readFilterAnyOrigin(context: Context): String =
+        context.getString(R.string.read_filter_any_origin)
+
     /** A filter. */
     fun readFilterStatus(context: Context): String =
         context.getString(R.string.read_filter_status)

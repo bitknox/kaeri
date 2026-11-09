@@ -322,6 +322,11 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reading(ReadingCommand.Search(query))
     }
 
+    /** Search back at its start, with nothing asked: no words, no filters and no order chosen. */
+    fun searchStart() {
+        _search.value = ReadSearchState()
+    }
+
     /** [query] marked as asked with nothing sent, for a Fixtures stage that answers it itself. */
     internal fun askedForStage(query: ReadSearchQuery) {
         _search.value = _search.value.asking(query)

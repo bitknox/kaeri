@@ -5292,6 +5292,8 @@
     <string name="read_filter_format">Format</string>
     <!-- A filter. -->
     <string name="read_filter_origin">Origin</string>
+    <!-- The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off. -->
+    <string name="read_filter_any_origin">Any origin</string>
     <!-- A filter. -->
     <string name="read_filter_status">Status</string>
     <!-- A filter. -->

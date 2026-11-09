@@ -1,13 +1,31 @@
-// Search's reading side: the M3 search bar with the query, then the filters as chips that open
-// menus (format, origin, status, genres, started) and the order; with words, Your sources only
-// leads the chips. Browsing with no words shows covers under a line saying what is shown and where
-// the list comes from; words show AniList's covers and a row per source (ReadSourceResults.kt).
-// With Both, the Shows or Reading control comes first, and the last row counts the matches in
-// Shows. No results names the query and offers Clear filters.
+// Search's reading side, built from the shows' Search so the two scopes look and move alike: the
+// same top (the Shows or Reading control with Both, the field, the row of ReadSearchRow.kt), then
+// with nothing asked the start (Home's discovery rows as rails with See all, then the genres), and
+// once something is asked the shows' grid under its caption line. Words show AniList's covers and
+// a row per source (ReadSourceResults.kt); with Both the last row counts the matches in Shows.
+// Reading has no recent searches and no Surprise me.
 
 package app.kaeri.ui.reading
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.interaction.DragInteraction
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.saveable.rememberSaveable
+import app.kaeri.design.Motion
+import app.kaeri.design.SwapFade
+import app.kaeri.engine.model.ReadHomeRow
+import app.kaeri.ui.PosterGrid
+import app.kaeri.ui.RAIL_COVER
+import app.kaeri.ui.Rail
+import app.kaeri.ui.RailPlaceholder
+import app.kaeri.ui.RailPlaceholderRow
+import app.kaeri.ui.RemovableFilters
+import app.kaeri.ui.SearchFieldPlace
+import app.kaeri.ui.SearchNothing
+import app.kaeri.ui.SearchTop
+import app.kaeri.ui.StartGenres
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -93,21 +111,31 @@ internal fun ReadSearchScreen(startText: String? = null) {
     val search by store.reading.search.collectAsStateWithLifecycle()
     val demo by store.demo.collectAsStateWithLifecycle()
     val failures by store.reading.failures.collectAsStateWithLifecycle()
+    val home by store.reading.home.collectAsStateWithLifecycle()
     val filters = store.reading.filters
     val both = kaeriIsFor() == KaeriIsFor.BOTH
+    val phone = !wideWindow()
     val text = rememberTextFieldState(search.query.text)
     val bar = rememberSearchBarState()
+    var filtersShown by rememberSaveable { mutableStateOf(false) }
+    // The start's row whose See all is on show, by its id: the line over the results keeps its words.
+    var seeAll by rememberSaveable { mutableStateOf<String?>(null) }
+    fun go(query: ReadSearchQuery) = if (query.isStart()) store.reading.searchStart() else store.reading.runSearch(query)
     LaunchedEffect(Unit) {
-        // The first search: the words the app was opened with, else browse.
-        if (search.tiles.isEmpty() && !search.loading) {
-            store.reading.runSearch(startText?.let { search.query.copy(text = it) } ?: search.query)
+        // The words the app was opened with, or what was asked before; with nothing asked, the start.
+        val now = store.reading.search.value
+        if (now.tiles.isEmpty() && !now.loading) {
+            val asked = startText?.let { now.query.copy(text = it) } ?: now.query
+            if (!asked.isStart()) store.reading.runSearch(asked)
         }
+        // The start's rows are Home's discovery rows.
+        if (store.reading.home.value == null) store.reading.loadHome()
     }
     // The words search once the typing rests.
     LaunchedEffect(text) {
         snapshotFlow { text.text.toString() }.drop(1).debounce(TYPING_REST).collect { typed ->
             val now = store.reading.search.value.query
-            if (typed.trim() != now.text) store.reading.runSearch(now.copy(text = typed.trim()))
+            if (typed.trim() != now.text) go(now.copy(text = typed.trim()))
         }
     }
     // Words from elsewhere, a link from Home or Clear filters, take the field.
@@ -118,6 +146,8 @@ internal fun ReadSearchScreen(startText: String? = null) {
     // than following an item it kept down the new list; a drag lets go. Loading more of the same
     // query doesn't change the query, so it keeps its place.
     val gridState = rememberLazyGridState()
+    val startGrid = rememberLazyGridState()
+    val rowScroll = rememberLazyListState()
     var holdTop by remember { mutableStateOf(false) }
     LaunchedEffect(gridState) {
         store.reading.search.map { it.query }.distinctUntilChanged().drop(1).collect { holdTop = true }
@@ -126,6 +156,10 @@ internal fun ReadSearchScreen(startText: String? = null) {
         gridState.interactionSource.interactions.collect { if (it is DragInteraction.Start) holdTop = false }
     }
     if (holdTop) SideEffect { gridState.requestScrollToItem(0) }
+    // New words start the row at its first pill, as the shows' row does.
+    LaunchedEffect(rowScroll) {
+        store.reading.search.map { it.query.text }.distinctUntilChanged().drop(1).collect { rowScroll.scrollToItem(0) }
+    }
     val query = search.query
     val browsing = query.text.isBlank()
     val clearLabel = stringResource(R.string.search_clear)
@@ -136,65 +170,141 @@ internal fun ReadSearchScreen(startText: String? = null) {
         val failure = drawn.failure ?: failures[ReadingAbout.SEARCH]?.takeIf { !drawn.loading }
         if (failure == drawn.failure) held else held.copy(search = drawn.copy(failure = failure))
     }
+    // The start, while nothing is asked; it stays while a first search is under 600 ms away, then
+    // gives way to the results or their placeholders in one crossfade, as the shows' start does.
+    val startShown = query.isStart() || (search.loading && search.tiles.isEmpty() && search.failure == null && !held.waited)
+    val seeAllRow = home?.rows?.firstOrNull { it.id == seeAll }
+    LaunchedEffect(query) { if (seeAllRow != null && query != seeAllRow.viewAll) seeAll = null }
+    val scrolledUnder = phone && (if (startShown) startGrid else gridState).canScrollBackward
     Column {
-        Column(Modifier.windowInsetsPadding(WindowInsets.statusBars).padding(top = 8.dp)) {
-            if (both) {
-                ScopeControl(reading = true, modifier = Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp)) { ReadPlaces.searchReading = it }
-            }
-            Surface(
-                shape = SearchBarDefaults.inputFieldShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                // On a tablet the field stops at 720 and sits in the middle, as a field that long reads as a rule.
-                modifier = Modifier.padding(horizontal = 16.dp).widthIn(max = 720.dp).fillMaxWidth().align(Alignment.CenterHorizontally),
-            ) {
-                SearchBarDefaults.InputField(
-                    textFieldState = text,
-                    searchBarState = bar,
-                    onSearch = { store.reading.runSearch(store.reading.search.value.query.copy(text = it.trim())) },
-                    placeholder = { Text(Strings.readSearchPlaceholder(context)) },
-                    leadingIcon = { Icon(Icons.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (text.text.isNotEmpty()) {
-                            IconButton(onClick = { text.clearText() }, modifier = Modifier.semantics { contentDescription = clearLabel }) {
-                                Icon(Icons.Clear, contentDescription = null)
+        SearchTop(
+            phone, scrolledUnder, both, reading = true,
+            field = {
+                Surface(shape = SearchBarDefaults.inputFieldShape, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = SearchFieldPlace) {
+                    SearchBarDefaults.InputField(
+                        textFieldState = text,
+                        searchBarState = bar,
+                        onSearch = { go(store.reading.search.value.query.copy(text = it.trim())) },
+                        placeholder = { Text(Strings.readSearchPlaceholder(context)) },
+                        leadingIcon = { Icon(Icons.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (text.text.isNotEmpty()) {
+                                IconButton(onClick = { text.clearText() }, modifier = Modifier.semantics { contentDescription = clearLabel }) {
+                                    Icon(Icons.Clear, contentDescription = null)
+                                }
                             }
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            ReadFilterRow(query, filters, browsing)
-        }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            row = { ReadSearchRow(query, filters, phone, rowScroll, onFilters = { filtersShown = true }, go = ::go) },
+        )
         // The one announcement once every part answered, outside the grid so it is always there.
         if (!browsing) SearchSaid(search)
-        ReadGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), Modifier.stillFade(gridFade), gridState) { grid ->
-            // What shows follows the held answer: words' results stay until browsing's land, and back.
-            if (shown.search.query.text.isNotBlank()) {
-                // With words: AniList's grid, then the sources' rows (ReadSourceResults.kt).
-                wordsResults(shown, both, demo.onlyBooks, grid)
-            } else {
-                browseCells(
-                    shown,
-                    grid,
-                    viewAll = false,
-                    lineFor = { browseLine(it, shown.search, filters) },
-                    nothing = {
-                        Column {
-                            val asked = shown.search.query
-                            val filtered = anyFilter(asked)
-                            PlainEmpty(
-                                Strings.readSearchNothingBrowse(context),
-                                if (filtered) Strings.readSearchNothingFiltersLine(context) else Strings.readSearchNothingLine(context),
-                                inset = 0.dp,
-                                small = true,
-                                action = if (filtered) Strings.readSearchClearFilters(context) else null,
-                                onAction = { store.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(text = asked.text, sort = asked.sort)) },
-                            )
-                            if (both) OtherScopeRow(shown.search)
+        Crossfade(startShown, Modifier.weight(1f), animationSpec = Motion.standard(), label = "read search") { start -> // i18n-skip
+            if (start) {
+                ReadSearchStart(
+                    startGrid,
+                    home?.rows,
+                    filters.genres,
+                    onSeeAll = { row ->
+                        row.viewAll?.let { asked ->
+                            seeAll = row.id
+                            store.reading.runSearch(asked)
                         }
                     },
+                    onGenre = { genre -> go(ReadingModel.EMPTY_QUERY.copy(genres = listOf(genre))) },
                 )
+                return@Crossfade
             }
+            ReadGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), Modifier.stillFade(gridFade), gridState, search = true) { grid ->
+                // A wide window says the filters set over the results, each with its cross, as the shows' does.
+                if (!phone) {
+                    val active = activeFilters(context, query, filters)
+                    if (active.isNotEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }, key = "active", contentType = "active") {
+                            RemovableFilters(
+                                active.map { (label, remove) -> label to { go(remove(store.reading.search.value.query)) } },
+                                onClearAll = { go(store.reading.search.value.query.clearedFilters()) },
+                            )
+                        }
+                    }
+                }
+                // What shows follows the held answer: words' results stay until browsing's land, and back.
+                if (shown.search.query.text.isNotBlank()) {
+                    // With words: AniList's grid, then the sources' rows (ReadSourceResults.kt).
+                    wordsResults(shown, both, demo.onlyBooks, grid)
+                } else {
+                    browseCells(
+                        shown,
+                        grid,
+                        viewAll = false,
+                        lineFor = { viewAllLine(it, seeAllRow, shown.search, filters) },
+                        nothing = {
+                            Column {
+                                val asked = shown.search.query
+                                SearchNothing(
+                                    Strings.readSearchNothingBrowse(context),
+                                    onClearFilters = if (anyFilter(asked)) ({ go(asked.clearedFilters()) }) else null,
+                                )
+                                if (both) OtherScopeRow(shown.search)
+                            }
+                        },
+                    )
+                }
+            }
+        }
+    }
+    if (filtersShown) ReadFiltersSheet(onDismiss = { filtersShown = false }, go = ::go)
+}
+
+/**
+ * Search's start with nothing asked: Home's discovery rows as the shows' start has its rails, each
+ * with See all, then the genres. Rows on their way hold placeholders as the shows' rails do.
+ */
+@Composable
+private fun ReadSearchStart(
+    state: LazyGridState,
+    rows: List<ReadHomeRow>?,
+    genres: List<String>,
+    onSeeAll: (ReadHomeRow) -> Unit,
+    onGenre: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    PosterGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), state) {
+        if (rows == null) {
+            item(span = { GridItemSpan(maxLineSpan) }, key = "rail-placeholder") { RailPlaceholder() }
+        } else {
+            for (row in rows.filter { it.tiles.isNotEmpty() || it.pending }) {
+                item(span = { GridItemSpan(maxLineSpan) }, key = "rail-${row.id}") {
+                    val title = row.title.text(context)
+                    val side = row.side?.text(context)
+                    SwapFade(row.tiles.isEmpty(), animationSpec = Motion.standard(), label = "start row") { waiting -> // i18n-skip
+                        if (waiting) {
+                            RailPlaceholderRow(title, side)
+                        } else {
+                            Rail(title, side, onSeeAll = row.viewAll?.let { { onSeeAll(row) } }) {
+                                val oneFormat = row.format != null
+                                items(row.tiles, key = { "${row.id}-${it.work}" }) { tile ->
+                                    val caption = tile.rowCaption(context, row.kind, oneFormat)
+                                    var menu by remember { mutableStateOf(false) }
+                                    Box {
+                                        ReadTile(
+                                            tile, RAIL_COVER, from = "read-search-${row.id}", lines = 1, reserveLine = true, planning = true,
+                                            caption = caption.shown, spoken = caption.spoken, onLongClick = { menu = true }, titleMax = 2,
+                                        )
+                                        ReadTileMenu(tile, menu, current = null) { menu = false }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (genres.isNotEmpty()) {
+            item(span = { GridItemSpan(maxLineSpan) }, key = "genres") { StartGenres(genres, onGenre) }
         }
     }
 }
@@ -374,24 +484,24 @@ internal fun chipWords(context: android.content.Context, name: String, value: St
     if (value == null) name else "${Strings.readFilterSet(context, name)} $value" // i18n-skip
 
 /** The set choices' words: one, or the first and how many more. */
-private fun value(context: android.content.Context, keys: List<String>, choices: List<ReadFilterChoice>): String? {
+internal fun value(context: android.content.Context, keys: List<String>, choices: List<ReadFilterChoice>): String? {
     val words = keys.mapNotNull { key -> choices.firstOrNull { it.key == key }?.label?.text(context) }
     val first = words.firstOrNull() ?: return null
     return if (words.size == 1) first else Strings.readFilterMany(context, first, words.size - 1)
 }
 
 /** The formats set in words. Manga with one-shot is Manga: one-shot counts as part of it. */
-private fun formatsValue(context: android.content.Context, keys: List<String>, choices: List<ReadFilterChoice>): String? {
+internal fun formatsValue(context: android.content.Context, keys: List<String>, choices: List<ReadFilterChoice>): String? {
     val shown = if (FORMAT_MANGA in keys) keys - FORMAT_ONE_SHOT else keys
     return value(context, shown, choices)
 }
 
 /** Format keys the chip treats as one: Manga takes one-shot with it. */
-private const val FORMAT_MANGA = "manga" // i18n-skip
-private const val FORMAT_ONE_SHOT = "one-shot" // i18n-skip
+internal const val FORMAT_MANGA = "manga" // i18n-skip
+internal const val FORMAT_ONE_SHOT = "one-shot" // i18n-skip
 
 /** Turns a format on or off; Manga takes one-shot with it both ways, as one-shots are part of Manga. */
-private fun List<String>.togglingFormat(key: String): List<String> = when {
+internal fun List<String>.togglingFormat(key: String): List<String> = when {
     key == FORMAT_MANGA && key in this -> this - FORMAT_MANGA - FORMAT_ONE_SHOT
     key == FORMAT_MANGA -> this - FORMAT_ONE_SHOT + FORMAT_MANGA + FORMAT_ONE_SHOT
     else -> toggling(key)
@@ -406,20 +516,20 @@ private fun genresValue(context: android.content.Context, query: ReadSearchQuery
     }
 }
 
-private fun List<String>.toggling(key: String): List<String> = if (key in this) this - key else this + key
+internal fun List<String>.toggling(key: String): List<String> = if (key in this) this - key else this + key
 
-private fun ReadSearchQuery.cyclingGenre(genre: String): ReadSearchQuery = when (genre) {
+internal fun ReadSearchQuery.cyclingGenre(genre: String): ReadSearchQuery = when (genre) {
     in genres -> copy(genres = genres - genre, excludeGenres = excludeGenres + genre)
     in excludeGenres -> copy(excludeGenres = excludeGenres - genre)
     else -> copy(genres = genres + genre)
 }
 
-private fun anyFilter(query: ReadSearchQuery): Boolean =
+internal fun anyFilter(query: ReadSearchQuery): Boolean =
     query.formats.isNotEmpty() || query.origins.isNotEmpty() || query.status != null || query.genres.isNotEmpty() ||
         query.excludeGenres.isNotEmpty() || (query.started != null && query.started != STARTED_ANY)
 
 /** An order in words, as the shows' search words it. */
-private fun sortWords(context: android.content.Context, key: String?): String = when (key) {
+internal fun sortWords(context: android.content.Context, key: String?): String = when (key) {
     "TRENDING_DESC" -> Strings.readSortTrending(context) // i18n-skip
     "SCORE_DESC" -> Strings.readSortScore(context) // i18n-skip
     "START_DATE_DESC" -> Strings.readSortNewest(context) // i18n-skip
