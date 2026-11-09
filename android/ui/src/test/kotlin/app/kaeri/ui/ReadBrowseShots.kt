@@ -6,6 +6,7 @@ import app.kaeri.store.AppStore
 import app.kaeri.store.FixtureScene
 import app.kaeri.store.ReadingModel
 import app.kaeri.ui.reading.ReadPlaces
+import app.kaeri.ui.reading.isStart
 import org.junit.Test
 import org.robolectric.annotation.Config
 
@@ -139,7 +140,9 @@ class ReadBrowseShots : ReadingShotHarness() {
         shoot("tablet-search-read-browse", FixtureScene.READING_HOME, Destination.Search, medium = KaeriIsFor.READ) { searched(it) }
     }
 
-    private fun searched(store: AppStore) = store.reading.search.value.let { !it.loading && it.tiles.isNotEmpty() }
+    /** Search opens on its start, Home's rows, until something is asked; then the answer has landed. */
+    private fun searched(store: AppStore) = store.reading.home.value != null &&
+        store.reading.search.value.let { if (it.query.isStart()) !it.loading else !it.loading && it.tiles.isNotEmpty() }
 
     companion object {
         const val TALL = "w412dp-h3000dp-port-420dpi"
