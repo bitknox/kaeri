@@ -54,12 +54,14 @@ internal fun ReadGrid(
     padding: PaddingValues,
     modifier: Modifier = Modifier,
     state: LazyGridState = rememberLazyGridState(),
+    /** Search's grid: the shows' Search columns and gaps, cells at least 140 wide with 13 between. */
+    search: Boolean = false,
     content: LazyGridScope.(ReadGridShape) -> Unit,
 ) {
     val list = listInsteadOfGrid()
     val wide = wideWindow()
-    val cover = posterWidth()
-    val gap = if (wide) cardGap() else 13.dp
+    val cover = if (search) SEARCH_CELL else posterWidth()
+    val gap = if (wide && !search) cardGap() else 13.dp
     BoxWithConstraints(modifier) {
         val inner = maxWidth - padding.calculateStartPadding(LayoutDirection.Ltr) - padding.calculateEndPadding(LayoutDirection.Ltr)
         val columns = when {
@@ -70,13 +72,20 @@ internal fun ReadGrid(
         val shape = ReadGridShape(columns, list, lines = if (wide || list) 1 else 2)
         LazyVerticalGrid(
             state = state,
-            columns = if (list || !wide) GridCells.Fixed(columns) else GridCells.FixedSize(cover),
+            columns = when {
+                list || !wide -> GridCells.Fixed(columns)
+                search -> GridCells.Adaptive(cover)
+                else -> GridCells.FixedSize(cover)
+            },
             contentPadding = padding,
             horizontalArrangement = Arrangement.spacedBy(gap),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) { content(shape) }
     }
 }
+
+/** The narrowest cell of Search's grid on a wide window, as the shows' Search has it. */
+private val SEARCH_CELL = 140.dp
 
 /** What a search grid draws: [search] as held, and whether 600 ms have passed with it still busy. */
 @Immutable
