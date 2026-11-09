@@ -975,13 +975,19 @@ pub fn reading_failed_source_down(source: &str) -> String {
     text("reading-failed-source-down", &[("source", Arg::Text(source))])
 }
 
-/// Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources.
+/// Why something could not load: the source the series reads from is switched off in Your sources.
 pub fn reading_failed_source_off(source: &str) -> String {
     text("reading-failed-source-off", &[("source", Arg::Text(source))])
 }
 
+/// Why a chapter could not load: the source no longer has it.
 pub fn reading_failed_not_found() -> String {
     text("reading-failed-not-found", &[])
+}
+
+/// Why a series has no chapters: none of the person's sources holds it, and none was ever picked.
+pub fn reading_failed_no_source() -> String {
+    text("reading-failed-no-source", &[])
 }
 
 /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
@@ -14954,6 +14960,21 @@ pub fn series_no_chapters_title() -> String {
 /// Line under it.
 pub fn series_no_chapters_line() -> String {
     text("series-no-chapters-line", &[])
+}
+
+/// The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.
+pub fn series_no_source_title() -> String {
+    text("series-no-source-title", &[])
+}
+
+/// Line under it.
+pub fn series_no_source_line() -> String {
+    text("series-no-source-line", &[])
+}
+
+/// Its button: opens Read from, where each source can be searched by another name.
+pub fn series_no_source_search() -> String {
+    text("series-no-source-search", &[])
 }
 
 /// The chapter list when the source failed. Downloaded chapters are listed under it.

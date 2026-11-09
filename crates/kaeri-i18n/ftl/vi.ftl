@@ -609,6 +609,7 @@ reading-failed-offline = Bạn đang ngoại tuyến. Các chương đã tải v
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = { $source } không phản hồi. Hãy thử lại sau.
 
+# Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = Nguồn này không còn có nội dung đó. Hãy thử nguồn khác.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.

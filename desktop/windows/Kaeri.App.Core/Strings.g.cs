@@ -597,10 +597,14 @@ public static partial class T
     /// <summary>Why a chapter or a list could not load: the source did not answer. The source is its name.</summary>
     public static string ReadingFailedSourceDown(string source) => Fill(Get("ReadingFailedSourceDown"), ("source", source));
 
-    /// <summary>Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources.</summary>
+    /// <summary>Why something could not load: the source the series reads from is switched off in Your sources.</summary>
     public static string ReadingFailedSourceOff(string source) => Fill(Get("ReadingFailedSourceOff"), ("source", source));
 
+    /// <summary>Why a chapter could not load: the source no longer has it.</summary>
     public static string ReadingFailedNotFound => Get("ReadingFailedNotFound");
+
+    /// <summary>Why a series has no chapters: none of the person's sources holds it, and none was ever picked.</summary>
+    public static string ReadingFailedNoSource => Get("ReadingFailedNoSource");
 
     /// <summary>Why a chapter or a list could not load: the source refused. The reason comes from the source.</summary>
     public static string ReadingFailedBlocked(string source, string reason) => Fill(Get("ReadingFailedBlocked"), ("source", source), ("reason", reason));
@@ -6354,6 +6358,15 @@ public static partial class T
     /// <summary>Line under it.</summary>
     public static string SeriesNoChaptersLine => Get("SeriesNoChaptersLine");
 
+    /// <summary>The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.</summary>
+    public static string SeriesNoSourceTitle => Get("SeriesNoSourceTitle");
+
+    /// <summary>Line under it.</summary>
+    public static string SeriesNoSourceLine => Get("SeriesNoSourceLine");
+
+    /// <summary>Its button: opens Read from, where each source can be searched by another name.</summary>
+    public static string SeriesNoSourceSearch => Get("SeriesNoSourceSearch");
+
     /// <summary>The chapter list when the source failed. Downloaded chapters are listed under it.</summary>
     public static string SeriesChaptersFailed(string source) => Fill(Get("SeriesChaptersFailed"), ("source", source));
 
@@ -11846,6 +11859,7 @@ public static partial class T
         ["ReadingFailedSourceDown"] = "{source} isn't answering. Try again later.",
         ["ReadingFailedSourceOff"] = "{source} is switched off. Switch it on in Your sources, or read from another source.",
         ["ReadingFailedNotFound"] = "This source doesn't have it anymore. Try another source.",
+        ["ReadingFailedNoSource"] = "None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.",
         ["ReadingFailedBlocked"] = "{source} refused the request. {reason}",
         ["ReadingFailedParse"] = "Kaeri couldn't read what {source} sent. Its plugin may need an update.",
         ["ReadingFailedPage"] = "This page didn't load (error {status}). Try again.",
@@ -13846,6 +13860,9 @@ public static partial class T
         ["SeriesCollapsed"] = "Collapsed",
         ["SeriesNoChaptersTitle"] = "No chapters in this source yet",
         ["SeriesNoChaptersLine"] = "Another source may have them.",
+        ["SeriesNoSourceTitle"] = "None of your sources has this series yet",
+        ["SeriesNoSourceLine"] = "Search for it by another name, or add a source in Your sources.",
+        ["SeriesNoSourceSearch"] = "Search by another name",
         ["SeriesChaptersFailed"] = "Couldn't load chapters from {source}.",
         ["SeriesChapterNumber"] = "Chapter {n}",
         ["SeriesBookmarked"] = "Bookmarked",

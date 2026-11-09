@@ -618,6 +618,7 @@ reading-failed-offline = Du bist offline. Heruntergeladene Kapitel öffnen sich 
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = { $source } antwortet nicht. Versuche es später erneut.
 
+# Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = Diese Quelle hat es nicht mehr. Versuche eine andere Quelle.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.

@@ -1193,6 +1193,9 @@ pub enum ReadingFailure {
     },
     /// The source no longer has it.
     NotFound,
+    /// None of the person's sources holds the series, and none was picked for it: there is no
+    /// source to try again. A page shows it as an empty state that leads to Read from.
+    NoSource,
     Blocked {
         source: String,
         reason: String,
@@ -1279,6 +1282,7 @@ impl ReadingFailure {
                 ReadingMsg::ReadingFailedSourceOff { source: source.clone() }
             }
             Self::NotFound => ReadingMsg::ReadingFailedNotFound,
+            Self::NoSource => ReadingMsg::ReadingFailedNoSource,
             Self::Blocked { source, reason } => ReadingMsg::ReadingFailedBlocked {
                 source: source.clone(),
                 reason: reason.clone(),
@@ -1958,6 +1962,7 @@ mod tests {
             ReadingFailure::SourceDown { source: "Shelf".into() },
             ReadingFailure::SourceOff { source: "Shelf".into() },
             ReadingFailure::NotFound,
+            ReadingFailure::NoSource,
             ReadingFailure::Blocked {
                 source: "Shelf".into(),
                 reason: "Too many requests.".into(),

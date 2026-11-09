@@ -110,7 +110,7 @@ pub(crate) async fn chapters(
         if volumes.is_empty() && kit.sources.edition_of(work, edition.as_deref()).is_some() {
             // Found by name: read from there, below.
         } else {
-            let failure = volumes.is_empty().then_some(ReadingFailure::NotFound);
+            let failure = volumes.is_empty().then_some(ReadingFailure::NoSource);
             send(
                 tx,
                 ReadingEvent::Chapters { work: work.clone(), edition: None, volumes, failure },

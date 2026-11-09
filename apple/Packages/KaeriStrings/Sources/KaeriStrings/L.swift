@@ -775,12 +775,16 @@ public enum L {
         Self.format("reading-failed-source-down", fallback: "%1$@ isn't answering. Try again later.", source)
     }
 
-    /// Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources.
+    /// Why something could not load: the source the series reads from is switched off in Your sources.
     public static func readingFailedSourceOff(source: String) -> String {
         Self.format("reading-failed-source-off", fallback: "%1$@ is switched off. Switch it on in Your sources, or read from another source.", source)
     }
 
+    /// Why a chapter could not load: the source no longer has it.
     public static var readingFailedNotFound: String { string("reading-failed-not-found", fallback: "This source doesn't have it anymore. Try another source.") }
+
+    /// Why a series has no chapters: none of the person's sources holds it, and none was ever picked.
+    public static var readingFailedNoSource: String { string("reading-failed-no-source", fallback: "None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.") }
 
     /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
     public static func readingFailedBlocked(source: String, reason: String) -> String {
@@ -8854,6 +8858,15 @@ public enum L {
 
     /// Line under it.
     public static var seriesNoChaptersLine: String { string("series-no-chapters-line", fallback: "Another source may have them.") }
+
+    /// The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.
+    public static var seriesNoSourceTitle: String { string("series-no-source-title", fallback: "None of your sources has this series yet") }
+
+    /// Line under it.
+    public static var seriesNoSourceLine: String { string("series-no-source-line", fallback: "Search for it by another name, or add a source in Your sources.") }
+
+    /// Its button: opens Read from, where each source can be searched by another name.
+    public static var seriesNoSourceSearch: String { string("series-no-source-search", fallback: "Search by another name") }
 
     /// The chapter list when the source failed. Downloaded chapters are listed under it.
     public static func seriesChaptersFailed(source: String) -> String {

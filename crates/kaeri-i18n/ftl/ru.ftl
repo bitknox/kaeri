@@ -636,6 +636,7 @@ reading-failed-offline = Нет подключения. Скачанные гл�
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = { $source } не отвечает. Повторите попытку позже.
 
+# Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = Этого больше нет в этом источнике. Попробуйте другой.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.

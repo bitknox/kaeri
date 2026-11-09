@@ -618,6 +618,7 @@ reading-failed-offline = Çevrimdışısınız. İndirilen bölümler yine de a�
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = { $source } yanıt vermiyor. Daha sonra tekrar deneyin.
 
+# Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = Bu kaynak artık bunu içermiyor. Başka bir kaynak deneyin.
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.

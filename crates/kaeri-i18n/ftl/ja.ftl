@@ -609,6 +609,7 @@ reading-failed-offline = オフラインです。ダウンロード済みの章�
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = { $source }から応答がありません。しばらくしてからもう一度お試しください。
 
+# Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = このソースにはもうありません。別のソースをお試しください。
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.

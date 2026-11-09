@@ -785,12 +785,17 @@ object Strings {
     fun readingFailedSourceDown(context: Context, source: String): String =
         context.getString(R.string.reading_failed_source_down, source)
 
-    /** Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources. */
+    /** Why something could not load: the source the series reads from is switched off in Your sources. */
     fun readingFailedSourceOff(context: Context, source: String): String =
         context.getString(R.string.reading_failed_source_off, source)
 
+    /** Why a chapter could not load: the source no longer has it. */
     fun readingFailedNotFound(context: Context): String =
         context.getString(R.string.reading_failed_not_found)
+
+    /** Why a series has no chapters: none of the person's sources holds it, and none was ever picked. */
+    fun readingFailedNoSource(context: Context): String =
+        context.getString(R.string.reading_failed_no_source)
 
     /** Why a chapter or a list could not load: the source refused. The reason comes from the source. */
     fun readingFailedBlocked(context: Context, source: String, reason: String): String =
@@ -9456,6 +9461,18 @@ object Strings {
     /** Line under it. */
     fun seriesNoChaptersLine(context: Context): String =
         context.getString(R.string.series_no_chapters_line)
+
+    /** The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from. */
+    fun seriesNoSourceTitle(context: Context): String =
+        context.getString(R.string.series_no_source_title)
+
+    /** Line under it. */
+    fun seriesNoSourceLine(context: Context): String =
+        context.getString(R.string.series_no_source_line)
+
+    /** Its button: opens Read from, where each source can be searched by another name. */
+    fun seriesNoSourceSearch(context: Context): String =
+        context.getString(R.string.series_no_source_search)
 
     /** The chapter list when the source failed. Downloaded chapters are listed under it. */
     fun seriesChaptersFailed(context: Context, source: String): String =

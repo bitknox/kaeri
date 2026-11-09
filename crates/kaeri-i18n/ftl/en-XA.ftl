@@ -618,10 +618,14 @@ reading-failed-offline = [Ýöü'ŕé öƒƒļîñé. Ðöŵñļöàðéð çĥ�
 # Why a chapter or a list could not load: the source did not answer. The source is its name.
 reading-failed-source-down = [{ $source } îšñ'ţ àñšŵéŕîñĝ. Ţŕý àĝàîñ ļàţéŕ.~~~~~~~~~~~~]
 
-# Why a chapter could not load: the source no longer has it. Why something could not load: the source the series reads from is switched off in Your sources.
+# Why something could not load: the source the series reads from is switched off in Your sources.
 reading-failed-source-off = [{ $source } îš šŵîţçĥéð öƒƒ. Šŵîţçĥ îţ öñ îñ Ýöüŕ šöüŕçéš, öŕ ŕéàð ƒŕöɱ àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~~~~~~]
 
+# Why a chapter could not load: the source no longer has it.
 reading-failed-not-found = [Ţĥîš šöüŕçé ðöéšñ'ţ ĥàṽé îţ àñýɱöŕé. Ţŕý àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~]
+
+# Why a series has no chapters: none of the person's sources holds it, and none was ever picked.
+reading-failed-no-source = [Ñöñé öƒ ýöüŕ šöüŕçéš ĥàš ţĥîš šéŕîéš ýéţ. Šéàŕçĥ ƒöŕ îţ ƀý àñöţĥéŕ ñàɱé îñ Ŕéàð ƒŕöɱ, öŕ àðð à šöüŕçé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Why a chapter or a list could not load: the source refused. The reason comes from the source.
 reading-failed-blocked = [{ $source } ŕéƒüšéð ţĥé ŕéƣüéšţ. { $reason }~~~~~~~~~]
@@ -9380,6 +9384,15 @@ series-no-chapters-title = [Ñö çĥàþţéŕš îñ ţĥîš šöüŕçé ý�
 
 # Line under it.
 series-no-chapters-line = [Åñöţĥéŕ šöüŕçé ɱàý ĥàṽé ţĥéɱ.~~~~~~~~~]
+
+# The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.
+series-no-source-title = [Ñöñé öƒ ýöüŕ šöüŕçéš ĥàš ţĥîš šéŕîéš ýéţ~~~~~~~~~~~~]
+
+# Line under it.
+series-no-source-line = [Šéàŕçĥ ƒöŕ îţ ƀý àñöţĥéŕ ñàɱé, öŕ àðð à šöüŕçé îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~]
+
+# Its button: opens Read from, where each source can be searched by another name.
+series-no-source-search = [Šéàŕçĥ ƀý àñöţĥéŕ ñàɱé~~~~~~~]
 
 # The chapter list when the source failed. Downloaded chapters are listed under it.
 series-chapters-failed = [Çöüļðñ'ţ ļöàð çĥàþţéŕš ƒŕöɱ { $source }.~~~~~~~~~~]

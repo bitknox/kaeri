@@ -346,6 +346,7 @@ public static class MsgText
         ReadingMsg.ReadingFailedSourceDown x => T.ReadingFailedSourceDown(x.Source),
         ReadingMsg.ReadingFailedSourceOff x => T.ReadingFailedSourceOff(x.Source),
         ReadingMsg.ReadingFailedNotFound => T.ReadingFailedNotFound,
+        ReadingMsg.ReadingFailedNoSource => T.ReadingFailedNoSource,
         ReadingMsg.ReadingFailedBlocked x => T.ReadingFailedBlocked(x.Source, x.Reason),
         ReadingMsg.ReadingFailedParse x => T.ReadingFailedParse(x.Source),
         ReadingMsg.ReadingFailedPage x => T.ReadingFailedPage(x.Status),

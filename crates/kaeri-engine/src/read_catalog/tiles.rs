@@ -274,9 +274,9 @@ pub fn action(
     work: &WorkId,
     medium: kaeri_core::media::Medium,
 ) -> SeriesAction {
-    if sources.edition_of(work, None).is_none() {
+    let Some((source, series)) = sources.edition_of(work, None) else {
         return SeriesAction::NoSource;
-    }
+    };
     let read = Read::of(store, work.as_str());
     let list = chapters::of_work(sources, store, work).map(|(_, _, l)| l);
     if let Some((chapter, page, of)) = read.in_progress.clone() {
@@ -303,6 +303,13 @@ pub fn action(
         };
     }
     let Some(list) = list else {
+        // The source answered with no chapters: nothing here can be read, so the button offers
+        // another source rather than a chapter that is not there.
+        if sources.listing_of(&source, &series)
+            == Some(kaeri_model::reading::EditionListing::Empty)
+        {
+            return SeriesAction::NoSource;
+        }
         // Not asked yet: the first chapter, until the source answers.
         return read_action(medium, ChapterId::new("1"), "1".into(), None);
     };

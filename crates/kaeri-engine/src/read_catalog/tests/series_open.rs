@@ -147,7 +147,8 @@ async fn a_series_still_being_looked_for_hears_no_failure_before_its_chapters() 
     );
 }
 
-/// A series no source has: the failure comes once every source has answered, not before.
+/// A series no source has: the failure comes once every source has answered, not before, and
+/// says no source has it rather than that a source lost it: there is nothing to try again.
 #[tokio::test]
 async fn a_series_no_source_has_fails_once_the_sources_have_answered() {
     let fake = FakeAniList::start().await;
@@ -170,7 +171,7 @@ async fn a_series_no_source_has_fails_once_the_sources_have_answered() {
 
     assert!(!before.iter().any(|e| e.starts_with("chapters")), "{order:#?}");
     let chapters: Vec<_> = after.iter().filter(|e| e.starts_with("chapters")).collect();
-    assert_eq!(chapters, [&"chapters failed(NotFound)".to_owned()], "{order:#?}");
+    assert_eq!(chapters, [&"chapters failed(NoSource)".to_owned()], "{order:#?}");
 }
 
 /// A source that answers at once: its chapter list of `chapters`, or its search with `broken`.
@@ -459,4 +460,36 @@ async fn a_kept_list_shows_at_once_while_a_stuck_source_is_asked() {
         })
         .collect();
     assert_eq!(rows, [4], "{events:?}");
+}
+
+/// A series whose only source lists no chapters offers no chapter to read: the main button
+/// offers another source, so nothing opens a reader on a chapter that is not there.
+#[tokio::test]
+async fn a_source_with_no_chapters_offers_no_chapter_to_read() {
+    let fake = FakeAniList::start().await;
+    fake.add_books([book(WORK_ID, TITLE, "MANGA", (2020, 500), &[], &[])]);
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(Some(&fake), dir.path());
+    kit.meta.book(kaeri_core::AnilistId(WORK_ID)).await.unwrap();
+    Shelf::put(&kit, "bare-shelf", "Bare Shelf", 0, false);
+    let work = WorkId::new(format!("a:{WORK_ID}"));
+    kit.store
+        .set_book_match("bare-shelf", "ferry", work.as_str(), 90, false, false, NOW)
+        .unwrap();
+    let (tx, mut rx) = outbox();
+
+    crate::reading::chapters_of(kit.clone(), ask(), work, None, &tx);
+    let events = all(&mut rx, Duration::from_millis(300)).await;
+    let chapters = events.iter().find_map(|event| match event {
+        Event::Reading(ReadingEvent::Chapters { volumes, failure, .. }) => {
+            Some((volumes.len(), failure.clone()))
+        }
+        _ => None,
+    });
+    assert_eq!(chapters, Some((0, None)), "an empty list, not a failure: {events:?}");
+    let action = events.iter().rev().find_map(|event| match event {
+        Event::Reading(ReadingEvent::Series(view)) => Some(view.action.clone()),
+        _ => None,
+    });
+    assert_eq!(action, Some(kaeri_model::reading::SeriesAction::NoSource), "{events:?}");
 }
