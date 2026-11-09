@@ -112,6 +112,8 @@ struct HomeTests {
                 "the app's own scheme")
         let phone = EngineLaunch.app(home: launch.home, platform: .ios)
         #expect(phone.record.anilistClientId == "54537" && phone.record.malClientId == EngineLaunch.malClient)
+        // Reading is on in the app on every platform.
+        #expect(launch.record.reading && phone.record.reading)
         launch.anilistClientID = "4242"
         launch.malClientID = nil
         let record = launch.record
