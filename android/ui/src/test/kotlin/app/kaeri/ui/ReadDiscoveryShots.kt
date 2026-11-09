@@ -144,6 +144,13 @@ class ReadDiscoveryShots : ReadingShotHarness() {
     )
 
     @Test
+    @Config(qualifiers = EREADER_7)
+    fun eink_home_browse_row_7_inch() = shoot(
+        "eink-reader-7-home-browse", FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(),
+        ready = homeRows,
+    )
+
+    @Test
     @Config(qualifiers = EINK_PHONE)
     fun eink_phone_home() = shoot(
         "eink-phone-home", FixtureScene.READING_HOME, Destination.Home, medium = KaeriIsFor.READ, eink = EinkLook(),

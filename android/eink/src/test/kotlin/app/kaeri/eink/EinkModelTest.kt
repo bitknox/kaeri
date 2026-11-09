@@ -101,4 +101,62 @@ class EinkModelTest {
         model.apply(Event.Reading(ReadingEvent.Failed(app.kaeri.engine.model.ReadingAbout.EINK, app.kaeri.engine.model.ReadingFailure.ReadingOff)))
         assertNull(model.state.value.profile)
     }
+
+    /** Answers kept in memory, as the preferences keep them between runs. */
+    private class Kept(var answer: EinkAnswer? = null) : EinkAnswerStore {
+        var saves = 0
+        override fun load() = answer
+        override fun save(answer: EinkAnswer) {
+            this.answer = answer
+            saves++
+        }
+    }
+
+    @Test
+    fun the_last_answer_draws_paper_before_the_engine_answers() {
+        val kept = Kept(EinkAnswer(eink = true, amber = false))
+        val next = EinkModel(kept) {}
+        assertNull(next.state.value.profile)
+        assertTrue(next.state.value.eink)
+        assertFalse(next.state.value.amber)
+        // Nothing is asked on the saved answer alone.
+        assertNull(next.state.value.question)
+    }
+
+    @Test
+    fun the_engine_corrects_the_saved_answer_and_it_is_kept() {
+        val kept = Kept(EinkAnswer(eink = true, amber = true))
+        val next = EinkModel(kept) {}
+        assertTrue(next.state.value.amber)
+        next.apply(Event.Reading(ReadingEvent.Eink(profile(EinkMatch.NO, EinkPanel.LCD))))
+        assertFalse(next.state.value.eink)
+        assertFalse(next.state.value.amber)
+        assertEquals(EinkAnswer(eink = false, amber = false), kept.answer)
+        // The same answer again writes nothing.
+        next.apply(Event.Reading(ReadingEvent.Eink(profile(EinkMatch.NO, EinkPanel.LCD))))
+        assertEquals(1, kept.saves)
+    }
+
+    @Test
+    fun a_first_run_starts_on_the_ground_and_keeps_the_engines_answer() {
+        val kept = Kept()
+        val next = EinkModel(kept) {}
+        assertFalse(next.state.value.eink)
+        next.apply(Event.Reading(ReadingEvent.Eink(profile(EinkMatch.SURE, EinkPanel.GREY))))
+        assertTrue(next.state.value.eink)
+        assertEquals(EinkAnswer(eink = true, amber = false), kept.answer)
+        // An unsure match keeps the standard layout until the person answers.
+        next.apply(Event.Reading(ReadingEvent.Eink(profile(EinkMatch.UNSURE, EinkPanel.GREY))))
+        assertEquals(EinkAnswer(eink = false, amber = false), kept.answer)
+    }
+
+    @Test
+    fun the_preferences_keep_the_answer_between_runs() {
+        val context = RuntimeEnvironment.getApplication()
+        assertNull(EinkAnswerPrefs(context).load())
+        EinkAnswerPrefs(context).save(EinkAnswer(eink = true, amber = true))
+        assertEquals(EinkAnswer(eink = true, amber = true), EinkAnswerPrefs(context).load())
+        EinkAnswerPrefs(context).save(EinkAnswer(eink = false, amber = false))
+        assertEquals(EinkAnswer(eink = false, amber = false), EinkAnswerPrefs(context).load())
+    }
 }

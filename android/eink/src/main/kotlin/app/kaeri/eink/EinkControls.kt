@@ -26,7 +26,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +48,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import app.kaeri.i18n.Strings
+import kotlinx.coroutines.delay
 
 /** A click with no ripple: e-ink draws the press itself. */
 @Composable
@@ -209,3 +214,20 @@ fun <T> pagesOf(items: List<T>, perPage: Int): List<List<T>> =
 /** How many rows of [rowHeight] fit in [space], leaving the pager row's height. */
 fun rowsThatFit(space: Dp, rowHeight: Dp = EinkSizes.Row, pager: Dp = EinkSizes.PagerRow): Int =
     ((space - pager) / rowHeight).toInt().coerceAtLeast(1)
+
+/** How long a wait on paper draws nothing, as the board says: most loads end inside it. */
+const val PAPER_QUIET_MS = 600L
+
+/**
+ * A waiting line on paper: nothing for [PAPER_QUIET_MS], then [content], painted once. A load that
+ * ends first costs the panel no update at all.
+ */
+@Composable
+fun PaperWaiting(content: @Composable () -> Unit) {
+    var shown by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(PAPER_QUIET_MS)
+        shown = true
+    }
+    if (shown) content()
+}

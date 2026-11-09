@@ -7,6 +7,7 @@
 
 package app.kaeri.ui.reading
 
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -38,7 +40,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSearchBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,7 +75,9 @@ import app.kaeri.ui.kaeriIsFor
 import app.kaeri.ui.wideWindow
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 
 /** The Started filter's choice that sets nothing. */
 internal const val STARTED_ANY = "any" // i18n-skip
@@ -106,6 +114,18 @@ internal fun ReadSearchScreen(startText: String? = null) {
     LaunchedEffect(search.query.text) {
         if (search.query.text != text.text.toString().trim()) text.setTextAndPlaceCursorAtEnd(search.query.text)
     }
+    // A new query starts the grid at its top and holds it there while the answer lands, rather
+    // than following an item it kept down the new list; a drag lets go. Loading more of the same
+    // query doesn't change the query, so it keeps its place.
+    val gridState = rememberLazyGridState()
+    var holdTop by remember { mutableStateOf(false) }
+    LaunchedEffect(gridState) {
+        store.reading.search.map { it.query }.distinctUntilChanged().drop(1).collect { holdTop = true }
+    }
+    LaunchedEffect(gridState) {
+        gridState.interactionSource.interactions.collect { if (it is DragInteraction.Start) holdTop = false }
+    }
+    if (holdTop) SideEffect { gridState.requestScrollToItem(0) }
     val query = search.query
     val browsing = query.text.isBlank()
     val clearLabel = stringResource(R.string.search_clear)
@@ -147,7 +167,7 @@ internal fun ReadSearchScreen(startText: String? = null) {
         }
         // The one announcement once every part answered, outside the grid so it is always there.
         if (!browsing) SearchSaid(search)
-        ReadGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), Modifier.stillFade(gridFade)) { grid ->
+        ReadGrid(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), Modifier.stillFade(gridFade), gridState) { grid ->
             // What shows follows the held answer: words' results stay until browsing's land, and back.
             if (shown.search.query.text.isNotBlank()) {
                 // With words: AniList's grid, then the sources' rows (ReadSourceResults.kt).

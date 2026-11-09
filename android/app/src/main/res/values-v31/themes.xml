@@ -11,6 +11,16 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
+    <!-- The window on a panel the last run found to be e-ink, chosen before the first frame. From
+         Android 13 it is the splash screen's theme too: plain paper with no icon, as the icon's
+         dark art would be a large dark area on the panel. -->
+    <style name="Theme.Kaeri.Paper">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:colorBackground">@android:color/white</item>
+        <item name="android:windowSplashScreenBackground">@android:color/white</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+    </style>
+
     <!-- The system's splash screen draws the launch here: nothing to add. -->
     <style name="Theme.Kaeri.Launch" />
 </resources>
