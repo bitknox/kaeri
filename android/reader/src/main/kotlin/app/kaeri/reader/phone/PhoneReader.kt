@@ -15,8 +15,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.BoxScope
@@ -561,6 +563,10 @@ fun PhoneReader(
                             strip -> null
                             else -> { -> Scrubber(state, direction.rightToLeft && view.mode == ReaderMode.PAGED, pager.leaf, scrub) { pager.go(it, TurnHow.JUMP) } }
                         },
+                        backTo = state.backTo,
+                        onBackTo = session::backTo,
+                        rtl = direction.rightToLeft,
+                        fades = fades,
                         chaptersOpen = sheet == Sheet.Chapters,
                         settingsOpen = sheet == Sheet.Settings,
                         onClose = actions.onClose,
@@ -588,12 +594,12 @@ fun PhoneReader(
                 }
             }
 
-            // Notices sit at the top centre while the chrome is away, and Back to page in the bottom
-            // leading corner, as the board has them. A novel's text runs up to the top margin, so its
-            // notices take the bottom margin in place of the pages left.
+            // Notices sit at the top centre while the chrome is away, as the board has them. A novel's
+            // text runs up to the top margin, so its notices take the bottom margin in place of the
+            // pages left.
             val notice = state.notice
             val clear = !shown && sheet == Sheet.None
-            val plated = notice != null && clear && notice.notice.action != NoticeAction.BACK_TO
+            val plated = notice != null && clear
 
             // At rest a novel's only line: the pages left in the chapter, in the bottom margin.
             if (novelOpen && !shown && place.failed == null && !place.ended && !plated) PagesLeft(state, place)
@@ -611,28 +617,10 @@ fun PhoneReader(
                         n.notice.action?.let { action ->
                             when (action) {
                                 NoticeAction.START_OVER -> session.startOver()
-                                NoticeAction.BACK_TO -> session.backTo()
                                 NoticeAction.GO_BACK -> session.goBack()
                                 NoticeAction.CHANGE_MODE -> sheet = Sheet.Settings
                             }
                         }
-                        session.dismissNotice(n.id)
-                    }
-                }
-            }
-            // Not on the end page, where the corner holds the end page's own buttons.
-            val atEndPage = state.leaves.getOrNull(pager.leaf)?.endPage == true || place.ended
-            AnimatedVisibility(
-                visible = notice != null && clear && notice.notice.action == NoticeAction.BACK_TO && !atEndPage,
-                enter = if (fades) fadeIn(Motion.fadeIn()) else EnterTransition.None,
-                exit = if (fades) fadeOut(Motion.fadeOut()) else ExitTransition.None,
-                modifier = Modifier.align(Alignment.BottomStart),
-            ) {
-                val held = remember { mutableStateOf<ShownNotice?>(null) }
-                if (notice != null) held.value = notice
-                held.value?.let { n ->
-                    BackToPage(n.notice.msg.text(context), rtl = direction.rightToLeft) {
-                        session.backTo()
                         session.dismissNotice(n.id)
                     }
                 }
@@ -719,14 +707,14 @@ internal fun chapterNumber(row: ChapterRow): String = row.number ?: row.label
 private fun actionWords(context: Context, notice: ShownNotice): String? = when (notice.notice.action) {
     null -> null
     NoticeAction.START_OVER -> Strings.readerNoticeStartOver(context)
-    NoticeAction.BACK_TO -> notice.notice.msg.text(context)
     NoticeAction.GO_BACK -> Strings.readerNoticeGoBack(context)
     NoticeAction.CHANGE_MODE -> Strings.readerNoticeChange(context)
 }
 
 /**
- * The one group at the thumb: the scrubber (page number at its start, the length at its end, in
- * mono 13), then Close, the series and chapter, Chapters and Aa. Solid Raised, radius 28.
+ * The one group at the thumb: Back to page while it is offered, the scrubber (page number at its
+ * start, the length at its end, in mono 13), then Close, the series and chapter, Chapters and Aa.
+ * Solid Raised, radius 28.
  */
 @Composable
 private fun ChromeGroup(
@@ -734,6 +722,10 @@ private fun ChromeGroup(
     title: String,
     line: String,
     scrubber: (@Composable () -> Unit)?,
+    backTo: UInt?,
+    onBackTo: () -> Unit,
+    rtl: Boolean,
+    fades: Boolean,
     chaptersOpen: Boolean,
     settingsOpen: Boolean,
     onClose: () -> Unit,
@@ -754,6 +746,17 @@ private fun ChromeGroup(
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .semantics { isTraversalGroup = true },
     ) {
+        // The group grows upwards as it comes, so the scrubber under the finger stays put.
+        val held = remember { mutableStateOf(backTo) }
+        if (backTo != null) held.value = backTo
+        AnimatedVisibility(
+            visible = backTo != null,
+            enter = if (fades) fadeIn(Motion.fadeIn()) + expandVertically(Motion.standard(), Alignment.Bottom) else EnterTransition.None,
+            exit = if (fades) fadeOut(Motion.fadeOut()) + shrinkVertically(Motion.standard(), Alignment.Bottom) else ExitTransition.None,
+            modifier = Modifier.semantics { isTraversalGroup = true; traversalIndex = 2f },
+        ) {
+            held.value?.let { page -> BackToPage(Strings.readerBackToPage(context, page.toInt()), rtl, onBackTo) }
+        }
         if (scrubber != null) {
             Box(Modifier.semantics { isTraversalGroup = true; traversalIndex = 1f }) { scrubber() }
         }
@@ -1100,24 +1103,28 @@ private fun NoticePlate(words: String, action: String?, modifier: Modifier, atFo
     }
 }
 
-/** Back to page: 40 dp tall, 16 dp from the leading edge, the back glyph and the words in silk. */
+/**
+ * Back to page, at the leading end above the scrubber: 32 dp tall on the selected fill inside a
+ * 48 dp target, the back glyph and the words in silk.
+ */
 @Composable
 private fun BackToPage(words: String, rtl: Boolean, onClick: () -> Unit) {
     Row(
         Modifier
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(start = 16.dp, bottom = 40.dp)
-            .heightIn(min = 40.dp)
+            .padding(start = 4.dp, top = 2.dp)
+            .heightIn(min = 48.dp)
             .clip(RoundedCornerShape(50))
-            .background(Chrome.plate)
-            .clickable(onClick = onClick)
-            .padding(start = 12.dp, end = 16.dp)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(vertical = 8.dp)
+            .heightIn(min = 32.dp)
+            .background(Chrome.selected, RoundedCornerShape(50))
+            .padding(start = 10.dp, end = 14.dp)
             .semantics { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        GlyphIcon(Glyph.Back, Chrome.text, size = 20.dp, mirror = rtl)
-        Text(words, color = Chrome.text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+        GlyphIcon(Glyph.Back, Chrome.text, size = 18.dp, mirror = rtl)
+        Text(words, color = Chrome.text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

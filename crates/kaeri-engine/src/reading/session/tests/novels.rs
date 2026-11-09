@@ -221,6 +221,23 @@ async fn a_hostile_book_reads_with_nothing_active_and_nothing_remote() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn back_to_page_in_a_novel_follows_only_a_jump_of_more_than_two_screens() {
+    let mut h = novel_harness();
+    let (_, novel) = h.open_novel(OpenAt::Resume).await;
+    let first = novel.spine.iter().position(|s| s.linear).unwrap() as u32;
+    // The first layout and a new one after a font change are the app's own moves.
+    h.at(pos(first, &[1], 0), 0, 8, TurnHow::Placed);
+    h.at(pos(first, &[2], 0), 2, 8, TurnHow::Jump);
+    assert_eq!(offers(&h.drain()), [], "two screens on");
+    h.at(pos(first, &[2], 0), 5, 16, TurnHow::Placed);
+    assert_eq!(offers(&h.drain()), [], "laid out again");
+    h.at(pos(first, &[6], 0), 12, 16, TurnHow::Jump);
+    assert_eq!(offers(&h.drain()), [Some(6)]);
+    h.at(pos(first, &[6], 40), 13, 16, TurnHow::Swipe);
+    assert_eq!(offers(&h.drain()), [None]);
+}
+
+#[tokio::test(start_paused = true)]
 async fn novel_places_are_text_positions_that_resume_with_back_to_page() {
     let mut h = novel_harness();
     let (_, novel) = h.open_novel(OpenAt::Resume).await;
@@ -231,8 +248,8 @@ async fn novel_places_are_text_positions_that_resume_with_back_to_page() {
 
     // A jump offers the place it left.
     tokio::time::advance(WRITE_EVERY).await;
-    h.at(pos(first, &[3], 12), 2, 4, TurnHow::Jump);
-    assert_eq!(notices(&h.drain()), [ReadingMsg::ReaderBackToPage { page: 1 }]);
+    h.at(pos(first, &[3], 12), 3, 6, TurnHow::Jump);
+    assert_eq!(offers(&h.drain()), [Some(1)]);
     h.send(ReaderCommand::BackTo { session: h.session() });
     let back = h
         .until(|e| match e {

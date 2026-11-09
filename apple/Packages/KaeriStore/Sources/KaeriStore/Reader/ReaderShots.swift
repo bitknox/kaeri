@@ -70,7 +70,7 @@ extension ReaderModel {
                     requestTurn(forward: true)
                 }
             case "scrub": chromeShown = true; shotScrub = max(leaves.count / 4, 1)
-            case "pill": backTo = ReaderNoticeLine(id: bump(), text: L.readerBackToPage(page: 9), action: .backTo)
+            case "pill": chromeShown = true; backToPage = 9
             case "opening": hold(.opening)
             case "error": hold(.failed(.offline))
             default: break

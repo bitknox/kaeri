@@ -127,14 +127,35 @@ class ReaderSessionTest {
     }
 
     @Test
-    fun an_eink_notice_clears_at_the_next_turn_but_not_at_a_jump() {
+    fun an_eink_notice_clears_at_the_next_turn_but_not_at_a_jump_or_the_apps_own_move() {
         opened()
-        val notice = ReaderNotice(Msg.Reading(ReadingMsg.ReaderBackToPage(5)), NoticeAction.BACK_TO, 0u)
+        val notice = ReaderNotice(Msg.Reading(ReadingMsg.ReaderResumed(5)), NoticeAction.START_OVER, 0u)
         session.apply(ReaderEvent.Notice(notice))
+        session.shown(4, TurnHow.PLACED)
         session.shown(2, TurnHow.JUMP)
         assertEquals(notice, session.state.value.notice?.notice)
         session.shown(3, TurnHow.TURN)
         assertNull(session.state.value.notice)
+    }
+
+    @Test
+    fun back_to_page_is_state_the_engine_offers_and_takes_away() {
+        opened()
+        session.apply(ReaderEvent.BackToPage(SESSION, 2u))
+        assertEquals(2u, session.state.value.backTo)
+        sent.clear()
+        session.backTo()
+        assertEquals(ReaderCommand.BackTo(SESSION), sent.single())
+        assertNull(session.state.value.backTo)
+        session.apply(ReaderEvent.BackToPage(SESSION, 3u))
+        session.apply(ReaderEvent.BackToPage(SESSION, null))
+        assertNull(session.state.value.backTo)
+        // Another session's offer is left, and a new chapter starts without one.
+        session.apply(ReaderEvent.BackToPage(SESSION + 1u, 3u))
+        assertNull(session.state.value.backTo)
+        session.apply(ReaderEvent.BackToPage(SESSION, 3u))
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u)))
+        assertNull(session.state.value.backTo)
     }
 
     @Test

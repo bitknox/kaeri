@@ -45,8 +45,10 @@ struct PagedReader: View {
         .onAppear { model.position = (current, max(model.leaves.count, 1)) }
         .onChange(of: model.current) { _, _ in model.position = (current, max(model.leaves.count, 1)) }
         .onChange(of: model.leaves.count) { _, _ in model.position = (current, max(model.leaves.count, 1)) }
+        // A place the engine chose (Back to page, Start over, another device's) is its own move,
+        // never the person's jump.
         .onChange(of: model.goTo?.tick) { _, _ in
-            if let to = model.goTo?.leaf { model.shown(to, how: .jump) }
+            if let to = model.goTo?.leaf { model.shown(to, how: .placed) }
         }
         .onChange(of: model.jump?.tick) { _, _ in
             if let to = model.jump?.index, model.leaves.indices.contains(to) { model.shown(to, how: .jump) }

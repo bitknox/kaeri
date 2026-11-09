@@ -336,6 +336,12 @@ sealed class NovelView : Grid
         web.CoreWebView2.Navigate(target);
     }
 
+    /// <summary>
+    /// How the document loading now came: a turn past a document's edge, or a contents entry or
+    /// link the person picked. Anything else loaded is placed.
+    /// </summary>
+    TurnHow? readyHow;
+
     static string PosText(NovelPos pos) => $"{pos.Spine}/{string.Join('.', pos.Path)}/{pos.Offset}";
 
     /// <summary>The index in the spine of the document showing.</summary>
@@ -453,6 +459,8 @@ sealed class NovelView : Grid
     public void GoToUrl(string url)
     {
         HideEnd();
+        // The person's jump: the document reports it as one once it is ready.
+        readyHow = TurnHow.Jump;
         var parts = url.Split('#', 2);
         Load(parts[0], parts.Length > 1 ? parts[1] : null);
     }
@@ -462,8 +470,9 @@ sealed class NovelView : Grid
         if (book is null)
             return;
         HideEnd();
+        readyHow = null;
         if (CurrentSpine == (int)pos.Spine)
-            Call($"window.kaeriReader && window.kaeriReader.goToPos('{PosText(pos)}', 'jump')");
+            Call($"window.kaeriReader && window.kaeriReader.goToPos('{PosText(pos)}', 'placed')");
         else if (pos.Spine < book.Spine.Length)
             Load(book.Spine[(int)pos.Spine].Url, "kaeri:pos=" + PosText(pos));
     }
@@ -591,8 +600,12 @@ sealed class NovelView : Grid
             "key" => TurnHow.Key,
             "scroll" => TurnHow.Scroll,
             "turn" => TurnHow.Turn,
-            _ => TurnHow.Jump,
+            "jump" => TurnHow.Jump,
+            // Ready after a load: how it came, or the app's own move.
+            _ => readyHow ?? TurnHow.Placed,
         };
+        if (Str(root, "type") == "ready")
+            readyHow = null;
         Reader.NovelAt(place, Page, Pages, how);
         owner.PositionChanged();
         owner.NovelPaintedNow(this);
@@ -609,6 +622,7 @@ sealed class NovelView : Grid
         {
             if (book.Spine[i].Linear)
             {
+                readyHow = TurnHow.Turn;
                 Load(book.Spine[i].Url, null);
                 return;
             }
@@ -624,6 +638,7 @@ sealed class NovelView : Grid
         {
             if (book.Spine[i].Linear)
             {
+                readyHow = TurnHow.Turn;
                 Load(book.Spine[i].Url, "kaeri:end");
                 return;
             }
@@ -691,6 +706,7 @@ sealed class NovelView : Grid
         if (Bool(root, "internal") && Str(root, "href") is { Length: > 0 } href && href.StartsWith(Scheme + "://", StringComparison.OrdinalIgnoreCase))
         {
             var parts = href.Split('#', 2);
+            readyHow = TurnHow.Jump;
             Load(parts[0], parts.Length > 1 ? parts[1] : null);
         }
     }

@@ -398,6 +398,16 @@ button.read-sources-only:checked:hover { background: var(--raised-selected); }
 }
 .reader-group button { min-width: 34px; min-height: 34px; padding: 0; border-radius: 17px; }
 .reader-scrub-row { min-height: 28px; padding: 0 8px; }
+/* Back to page over the scrubber: a small pill on the neutral selected fill, label in silk. */
+.reader-group button.reader-back-to {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 15px;
+  background: var(--raised-selected);
+  color: var(--silk);
+  font-size: 0.93em;
+  font-weight: 500;
+}
 .reader-group-title { font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; font-size: 1em; }
 .reader-group-line { font-size: 0.86em; color: var(--haze); }
 scale.reader-scrub { padding: 0; }
