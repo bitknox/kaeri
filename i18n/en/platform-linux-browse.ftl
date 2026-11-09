@@ -187,7 +187,7 @@ title-linux-play-on-tv-help = Play this episode on a TV with { -app-name }
 
 # Description read by a screen reader on an episode's watched check box.
 # @only linux
-# @arg episode: int
+# @arg episode: plain
 # @max 40
 title-linux-episode-watched = Episode { $episode } watched
 

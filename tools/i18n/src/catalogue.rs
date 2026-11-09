@@ -41,12 +41,17 @@ impl Platform {
     }
 }
 
-/// What an argument is. Only `Int` can pick a plural form; the others reach a message as text the
-/// app has already formatted with its platform's formatter.
+/// What an argument is. Only `Int` can pick a plural form. `Int` and `Plain` reach a message as
+/// numbers (`Plain` as text on Apple, whose `%lld` always groups); the others as text the app
+/// has already formatted with its platform's formatter.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArgType {
     Text,
+    /// A count: every platform groups its digits the language's way, "1,920" or "1.920".
     Int,
+    /// A whole number that names something and is never grouped: a year, an episode, chapter,
+    /// page or volume number, a port, an id, an error code. "Chapter 1024", not "Chapter 1,024".
+    Plain,
     Decimal,
     Percent,
     Seconds,
@@ -61,6 +66,7 @@ impl ArgType {
         Some(match text {
             "text" => ArgType::Text,
             "int" | "count" => ArgType::Int,
+            "plain" => ArgType::Plain,
             "decimal" => ArgType::Decimal,
             "percent" => ArgType::Percent,
             "seconds" => ArgType::Seconds,
@@ -71,8 +77,15 @@ impl ArgType {
         })
     }
 
+    /// A whole number, which every platform passes as an integer.
     pub fn is_int(self) -> bool {
-        self == ArgType::Int
+        matches!(self, ArgType::Int | ArgType::Plain)
+    }
+
+    /// The type as a translation sees it: how digits are grouped changes no translation, so a
+    /// plain number reads as an int and its drafts stay current.
+    fn hashed(self) -> ArgType {
+        if self == ArgType::Plain { ArgType::Int } else { self }
     }
 }
 
@@ -179,7 +192,7 @@ impl Message {
     pub fn normalised(&self) -> String {
         let mut out = String::new();
         for arg in &self.args {
-            out.push_str(&format!("@{}:{:?};", arg.name, arg.ty));
+            out.push_str(&format!("@{}:{:?};", arg.name, arg.ty.hashed()));
         }
         let render = |parts: &[Part]| -> String {
             parts

@@ -54,7 +54,8 @@ pub(crate) fn filter_of(query: &ReadSearchQuery, adult: bool, now: i64) -> Brows
     if let Some(status) = query.status.as_deref().and_then(anilist_status) {
         filter.statuses.push(status.to_owned());
     }
-    let formats: Vec<&str> = query.formats.iter().map(String::as_str).collect();
+    // Manga takes in one-shots, and a `one-shot` saved before that reads as manga.
+    let formats = query.format_keys();
     match formats.as_slice() {
         [] => match query.medium {
             Some(Medium::Novel) => filter.formats.push("NOVEL".into()),
@@ -67,14 +68,16 @@ pub(crate) fn filter_of(query: &ReadSearchQuery, adult: bool, now: i64) -> Brows
         }
         many => {
             for format in many {
-                let name = match *format {
-                    "manga" | "webtoon" => "MANGA",
-                    "one-shot" => "ONE_SHOT",
-                    "novel" => "NOVEL",
+                let names: &[&str] = match *format {
+                    "manga" => &["MANGA", "ONE_SHOT"],
+                    "webtoon" => &["MANGA"],
+                    "novel" => &["NOVEL"],
                     _ => continue,
                 };
-                if !filter.formats.iter().any(|f| f == name) {
-                    filter.formats.push(name.into());
+                for name in names {
+                    if !filter.formats.iter().any(|f| f == name) {
+                        filter.formats.push((*name).into());
+                    }
                 }
             }
             // Manga without webtoons: the strips stay out, one-shots or not.
@@ -362,13 +365,13 @@ fn sources_for(
         .collect()
 }
 
-/// The word under a group's name; built-in sources show their name alone.
+/// The word beside a group's name. Built-in sources show their name alone, and so do the
+/// folders: all of them are one source named Folders, and "Folders  Folder" would say it twice.
 fn kind_of(kind: BookSourceKind) -> Option<ReadSourceKind> {
     match kind {
         BookSourceKind::Server => Some(ReadSourceKind::Server),
-        BookSourceKind::Folder => Some(ReadSourceKind::Folder),
         BookSourceKind::Plugin => Some(ReadSourceKind::Plugin),
-        BookSourceKind::Native => None,
+        BookSourceKind::Folder | BookSourceKind::Native => None,
     }
 }
 
@@ -684,6 +687,7 @@ fn local_tile(kit: &Kit, work: &str, name: &str, medium: &str) -> WorkTile {
         not_in_sources: false,
         origin: None,
         amount: None,
+        started: None,
     };
     tiles::mark(&mut tile, &kit.store, &kit.sources);
     tile
@@ -773,9 +777,33 @@ mod tests {
     }
 
     #[test]
-    fn a_group_says_what_kind_of_source_it_is_unless_built_in() {
+    fn manga_takes_in_one_shots_and_a_saved_one_shot_reads_as_manga() {
+        let formats = |keys: &[&str]| {
+            let query = kaeri_model::reading::ReadSearchQuery {
+                formats: keys.iter().map(|k| (*k).to_owned()).collect(),
+                ..Default::default()
+            };
+            let filter = super::filter_of(&query, false, 1_700_000_000);
+            (filter.formats, filter.tags, filter.tags_excluded)
+        };
+        let manga = formats(&["manga"]);
+        assert_eq!(manga.0, ["MANGA", "ONE_SHOT"]);
+        assert_eq!(manga.2, [super::LONG_STRIP]);
+        assert_eq!(formats(&["one-shot"]), manga);
+        assert_eq!(formats(&["manga", "one-shot"]), manga);
+        let webtoons = formats(&["webtoon"]);
+        assert_eq!(webtoons.0, ["MANGA"]);
+        assert_eq!(webtoons.1, [super::LONG_STRIP]);
+        assert_eq!(formats(&["manga", "novel"]).0, ["MANGA", "ONE_SHOT", "NOVEL"]);
+        let choices = kaeri_model::reading::read_filters().formats;
+        let keys: Vec<&str> = choices.iter().map(|c| c.key.as_str()).collect();
+        assert_eq!(keys, ["manga", "webtoon", "novel"], "one Manga choice, one-shots in it");
+    }
+
+    #[test]
+    fn a_group_says_what_kind_of_source_it_is_unless_its_name_says_it() {
         assert_eq!(kind_of(BookSourceKind::Server), Some(ReadSourceKind::Server));
-        assert_eq!(kind_of(BookSourceKind::Folder), Some(ReadSourceKind::Folder));
+        assert_eq!(kind_of(BookSourceKind::Folder), None);
         assert_eq!(kind_of(BookSourceKind::Plugin), Some(ReadSourceKind::Plugin));
         assert_eq!(kind_of(BookSourceKind::Native), None);
     }

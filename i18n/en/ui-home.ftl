@@ -6,13 +6,13 @@
 home-title = Home
 
 # Main action for an episode part way through.
-# @arg episode: int
+# @arg episode: plain
 # @max 28
 # @allow proceed
 home-resume-episode = Resume episode { $episode }
 
 # Main action for an episode not started.
-# @arg episode: int
+# @arg episode: plain
 # @max 28
 home-play-episode = Play episode { $episode }
 
@@ -29,12 +29,12 @@ home-details = Details
 home-more = More
 
 # Action in the spotlight's More menu for a show part way through.
-# @arg episode: int
+# @arg episode: plain
 # @max 40
 home-mark-watched = Mark episode { $episode } as watched
 
 # Notice after the action above. It has an Undo button.
-# @arg episode: int
+# @arg episode: plain
 home-marked-watched = Episode { $episode } marked as watched
 
 # Action on a { -continue-cap } card and in the spotlight's More menu.

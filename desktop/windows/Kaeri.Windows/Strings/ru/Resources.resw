@@ -194,6 +194,60 @@
   <data name="HomeMoreGenre" xml:space="preserve">
     <value>Ещё: {genre}</value>
   </data>
+  <data name="HomeMoreGenreAction" xml:space="preserve">
+    <value>Ещё: экшен</value>
+  </data>
+  <data name="HomeMoreGenreAdventure" xml:space="preserve">
+    <value>Ещё: приключения</value>
+  </data>
+  <data name="HomeMoreGenreComedy" xml:space="preserve">
+    <value>Ещё: комедия</value>
+  </data>
+  <data name="HomeMoreGenreDrama" xml:space="preserve">
+    <value>Ещё: драма</value>
+  </data>
+  <data name="HomeMoreGenreEcchi" xml:space="preserve">
+    <value>Ещё: этти</value>
+  </data>
+  <data name="HomeMoreGenreFantasy" xml:space="preserve">
+    <value>Ещё: фэнтези</value>
+  </data>
+  <data name="HomeMoreGenreHorror" xml:space="preserve">
+    <value>Ещё: ужасы</value>
+  </data>
+  <data name="HomeMoreGenreMahouShoujo" xml:space="preserve">
+    <value>Ещё: махо-сёдзё</value>
+  </data>
+  <data name="HomeMoreGenreMecha" xml:space="preserve">
+    <value>Ещё: меха</value>
+  </data>
+  <data name="HomeMoreGenreMusic" xml:space="preserve">
+    <value>Ещё: музыка</value>
+  </data>
+  <data name="HomeMoreGenreMystery" xml:space="preserve">
+    <value>Ещё: детектив</value>
+  </data>
+  <data name="HomeMoreGenrePsychological" xml:space="preserve">
+    <value>Ещё: психологическое</value>
+  </data>
+  <data name="HomeMoreGenreRomance" xml:space="preserve">
+    <value>Ещё: романтика</value>
+  </data>
+  <data name="HomeMoreGenreSciFi" xml:space="preserve">
+    <value>Ещё: фантастика</value>
+  </data>
+  <data name="HomeMoreGenreSliceOfLife" xml:space="preserve">
+    <value>Ещё: повседневность</value>
+  </data>
+  <data name="HomeMoreGenreSports" xml:space="preserve">
+    <value>Ещё: спорт</value>
+  </data>
+  <data name="HomeMoreGenreSupernatural" xml:space="preserve">
+    <value>Ещё: сверхъестественное</value>
+  </data>
+  <data name="HomeMoreGenreThriller" xml:space="preserve">
+    <value>Ещё: триллер</value>
+  </data>
   <data name="HomeSpotlightDemo" xml:space="preserve">
     <value>Демо, можно делиться</value>
   </data>
@@ -1105,6 +1159,45 @@
   </data>
   <data name="ReadingDownloadsDoneSeries" xml:space="preserve">
     <value>Главы {count} серий готовы для чтения офлайн.</value>
+  </data>
+  <data name="ReadSourceFolders" xml:space="preserve">
+    <value>Папки</value>
+  </data>
+  <data name="ReadingSinceJanuary" xml:space="preserve">
+    <value>с января</value>
+  </data>
+  <data name="ReadingSinceFebruary" xml:space="preserve">
+    <value>с февраля</value>
+  </data>
+  <data name="ReadingSinceMarch" xml:space="preserve">
+    <value>с марта</value>
+  </data>
+  <data name="ReadingSinceApril" xml:space="preserve">
+    <value>с апреля</value>
+  </data>
+  <data name="ReadingSinceMay" xml:space="preserve">
+    <value>с мая</value>
+  </data>
+  <data name="ReadingSinceJune" xml:space="preserve">
+    <value>с июня</value>
+  </data>
+  <data name="ReadingSinceJuly" xml:space="preserve">
+    <value>с июля</value>
+  </data>
+  <data name="ReadingSinceAugust" xml:space="preserve">
+    <value>с августа</value>
+  </data>
+  <data name="ReadingSinceSeptember" xml:space="preserve">
+    <value>с сентября</value>
+  </data>
+  <data name="ReadingSinceOctober" xml:space="preserve">
+    <value>с октября</value>
+  </data>
+  <data name="ReadingSinceNovember" xml:space="preserve">
+    <value>с ноября</value>
+  </data>
+  <data name="ReadingSinceDecember" xml:space="preserve">
+    <value>с декабря</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Подключено к {store} как {member}.</value>

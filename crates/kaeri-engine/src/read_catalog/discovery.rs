@@ -153,7 +153,27 @@ impl Planned {
             Self::Finished(Webtoons) => r(ReadingMsg::ReadHomeFinishedWebtoons),
             Self::Finished(Novels) => r(ReadingMsg::ReadHomeFinishedNovels),
             Self::Because => Msg::HomeBecause { title: because?.to_owned() },
-            Self::Genre => Msg::HomeMoreGenre { genre: genre?.to_owned() },
+            Self::Genre => kaeri_model::search::more_genre(genre?),
+        })
+    }
+
+    /// The line over View all's results, before the count: the format and the order in words.
+    /// A genre row's is its heading. `None` where there is no View all.
+    pub fn view_all_title(self, genre: Option<&str>) -> Option<Msg> {
+        use ReadRowFormat::{Manga, Novels, Webtoons};
+        let r = Msg::Reading;
+        Some(match self {
+            Self::Trending(Manga) => r(ReadingMsg::ReadViewAllTrendingManga),
+            Self::Trending(Webtoons) => r(ReadingMsg::ReadViewAllTrendingWebtoons),
+            Self::Trending(Novels) => r(ReadingMsg::ReadViewAllTrendingNovels),
+            Self::New(Manga) => r(ReadingMsg::ReadViewAllNewManga),
+            Self::New(Webtoons) => r(ReadingMsg::ReadViewAllNewWebtoons),
+            Self::New(Novels) => r(ReadingMsg::ReadViewAllNewNovels),
+            Self::Finished(Manga) => r(ReadingMsg::ReadViewAllFinishedManga),
+            Self::Finished(Webtoons) => r(ReadingMsg::ReadViewAllFinishedWebtoons),
+            Self::Finished(Novels) => r(ReadingMsg::ReadViewAllFinishedNovels),
+            Self::Genre => kaeri_model::search::more_genre(genre?),
+            Self::Because => return None,
         })
     }
 
@@ -267,7 +287,7 @@ mod tests {
     #[test]
     fn each_row_carries_the_search_view_all_opens() {
         let trending = Planned::Trending(Manga).query(None).unwrap();
-        assert_eq!(trending.formats, ["manga", "one-shot"]);
+        assert_eq!(trending.formats, ["manga"]);
         assert_eq!(trending.sort.as_deref(), Some("TRENDING_DESC"));
         let new = Planned::New(Webtoons).query(None).unwrap();
         assert_eq!(new.formats, ["webtoon"]);
@@ -307,6 +327,7 @@ mod tests {
             not_in_sources: false,
             origin: None,
             amount: None,
+            started: None,
         };
         let mut rows = vec![
             vec![tile("a:1"), tile("a:2"), tile("a:3")],

@@ -12,13 +12,13 @@ cause-no-sources = No { -source-pl } are set up. Add one on the { -source-cap-pl
 cause-no-connection = No connection. Try again when you're back online.
 
 # A play's explanation: the episode's broadcast is still ahead. The "when" says today, tomorrow or a date.
-# @arg episode: int
+# @arg episode: plain
 # @arg when: cause
 notice-not-aired = Episode { $episode } airs { $when }.
 
 # A play's explanation: the episode is after the next one to air. The "when" says when that one airs.
-# @arg episode: int
-# @arg next: int
+# @arg episode: plain
+# @arg next: plain
 # @arg when: cause
 notice-not-aired-yet = Episode { $episode } hasn't aired yet. Episode { $next } airs { $when }.
 

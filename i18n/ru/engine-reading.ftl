@@ -203,3 +203,16 @@ reading-downloads-done-parts = { $count ->
    *[other] { $count } части «{ $title }» готовы для чтения офлайн.
  }
 reading-downloads-done-series = Главы { $count } серий готовы для чтения офлайн.
+read-source-folders = Папки
+reading-since-january = с января
+reading-since-february = с февраля
+reading-since-march = с марта
+reading-since-april = с апреля
+reading-since-may = с мая
+reading-since-june = с июня
+reading-since-july = с июля
+reading-since-august = с августа
+reading-since-september = с сентября
+reading-since-october = с октября
+reading-since-november = с ноября
+reading-since-december = с декабря

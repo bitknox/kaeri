@@ -9,7 +9,7 @@
     <!-- Toast with a wait. -->
     <plurals name="notice_everything">
         <item quantity="one">One thing in %1$s, %2$s, %4$s%%.</item>
-        <item quantity="other">%3$d things in %1$s, %2$s, %4$s%%.</item>
+        <item quantity="other">%3$,d things in %1$s, %2$s, %4$s%%.</item>
     </plurals>
     <!-- The storage is full. -->
     <string name="cause_disk_full">There is no space left. Free some and try again.</string>
@@ -24,7 +24,7 @@
     <!-- Row subtitle on the continue shelf. -->
     <plurals name="queue_left">
         <item quantity="one">One episode left in %2$s</item>
-        <item quantity="other">%1$d episodes left in %2$s</item>
+        <item quantity="other">%1$,d episodes left in %2$s</item>
     </plurals>
     <!-- The reasons a match was made. -->
     <string name="match_remembered">Remembered (%1$s) at 100%%</string>
@@ -36,4 +36,6 @@
     <string name="braces">Use {name} here</string>
     <!-- Order changes per language. -->
     <string name="two_args">%1$s watched %2$s</string>
+    <!-- A number that names something beside a count. -->
+    <string name="episode_seen">Episode %1$d, seen %2$,d times</string>
 </resources>

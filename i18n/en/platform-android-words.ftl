@@ -4,13 +4,13 @@
 
 # The episode in a short form for a title last watched dubbed.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 # @max 24
 episode-short-dubbed = E{ $episode } · { -dubbed-cap }
 
 # The episode in its long form for a title last watched dubbed.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 # @max 32
 episode-long-dubbed = Episode { $episode } · { -dubbed-cap }
 
@@ -26,7 +26,7 @@ downloads-live-paused = { $count ->
 # Download notification, several episodes: the one that runs, by show and number.
 # @only android
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 downloads-live-lead = { $title } E{ $episode }
 
 # Download notification, several episodes: how much is left. The size is already formatted.
@@ -303,7 +303,7 @@ filter-source-material = Based on
 # Search result detail for a title being watched: its list status, and the episode up next.
 # @only android
 # @arg status: text
-# @arg episode: int
+# @arg episode: plain
 search-detail-episode = { $status } · E{ $episode }
 
 # Source switch: use the source. The name is the source's.
@@ -474,13 +474,13 @@ library-storage-none = Nothing on this { -device }
 
 # Library list detail: the next episode and how many there are.
 # @only android
-# @arg next: int
-# @arg total: int
+# @arg next: plain
+# @arg total: plain
 library-detail-of = E{ $next } of { $total }
 
 # Library list detail: the next episode when the length is not announced.
 # @only android
-# @arg next: int
+# @arg next: plain
 library-detail-next = E{ $next }
 
 # Library sort menu: by when the title was last watched.
@@ -669,14 +669,14 @@ continue-short-left = { $episode } · { $left }
 
 # Continue, airing card: an episode that has aired, with its time and how long ago.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 # @arg time: text
 # @arg ago: text
 continue-airing-out = E{ $episode } · { $time } · out { $ago }
 
 # Continue, airing card: an episode still to air, with its time and how long to wait.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 # @arg time: text
 # @arg countdown: text
 continue-airing-in = E{ $episode } · { $time } · in { $countdown }
@@ -801,7 +801,7 @@ tv-sheet-title-fallback = TV
 
 # Episode row, second line: the episode's number, then a detail such as its length or air time.
 # @only android
-# @arg number: int
+# @arg number: plain
 # @arg detail: text
 episode-line-detail = E{ $number } · { $detail }
 
@@ -885,24 +885,24 @@ notif-hidden-text = New episode
 
 # Notification, new episode: the line under the show's title.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 notif-episode-out = Episode { $episode } is out.
 
 # Notification, new episode: the same for a show watched dubbed.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 notif-episode-out-dubbed = Episode { $episode } is out, { -dubbed }.
 
 # Notification, new episode: the same for a viewer who is behind.
 # @only android
-# @arg episode: int
-# @arg next: int
+# @arg episode: plain
+# @arg next: plain
 notif-episode-out-next = Episode { $episode } is out. Next for you: episode { $next }.
 
 # Notification, new episode: the same, dubbed, for a viewer who is behind.
 # @only android
-# @arg episode: int
-# @arg next: int
+# @arg episode: plain
+# @arg next: plain
 notif-episode-out-dubbed-next = Episode { $episode } is out, { -dubbed }. Next for you: episode { $next }.
 
 # Phone as remote: how this phone introduces itself to a TV.
@@ -932,8 +932,8 @@ widget-line-left = { $episode } · { $minutes } min left
 
 # Widgets, Continue: the line under a show with the episode out of the season.
 # @only android
-# @arg episode: int
-# @arg total: int
+# @arg episode: plain
+# @arg total: plain
 widget-line-of = E{ $episode } of { $total }
 
 # Widgets, Continue: the title when nothing is in progress.
@@ -951,7 +951,7 @@ widget-caught-up = You're caught up.
 # Widgets, Continue: the line when the next episode has a date.
 # @only android
 # @arg title: text
-# @arg episode: int
+# @arg episode: plain
 # @arg airs: text
 widget-caught-up-next = { $title } E{ $episode } airs { $airs }.
 
@@ -962,31 +962,31 @@ widget-day-date = { $day }
 
 # Widgets, Continue: the play button for a screen reader, with the mark ("dubbed") after the number.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 # @arg title: text
 widget-play-dubbed-label = Play episode { $episode }, { -dubbed }, of { $title }
 
 # TV, title page: the amber action when the viewer has started the episode.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 # @allow proceed
 tv-action-resume = Resume episode { $episode }
 
 # TV, title page: the same when the viewer watches dubbed.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 # @allow proceed
 tv-action-resume-dubbed = Resume episode { $episode } · { -dubbed-cap }
 
 # TV, title page: the disabled action for an episode that is not out, with the day it comes out.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 # @arg day: text
 tv-action-out = Play episode { $episode } (out { $day })
 
 # TV, title page: the disabled action for an episode with no air date.
 # @only android
-# @arg episode: int
+# @arg episode: plain
 tv-action-not-out = Play episode { $episode } (not out yet)
 
 # TV, title page: the day word for an episode that comes out later today.

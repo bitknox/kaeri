@@ -27,9 +27,14 @@ cargo run -p i18n-tool -- generate
    ```
 
    The comment is the translator's context. Declare every argument with `# @arg name: type` (text,
-   int, decimal, percent, seconds, bytes, timestamp). A plural selects on an int argument, uses CLDR
-   categories, and ends with the `*[other]` default. Use `@max N` for a width limit and
+   int, plain, decimal, percent, seconds, bytes, timestamp). A plural selects on an int argument, uses
+   CLDR categories, and ends with the `*[other]` default. Use `@max N` for a width limit and
    `@only apple|android|windows|linux|tui` when only some platforms show it.
+
+   An `int` is a count, and every platform groups its digits the language's way: "1,920 series" in
+   English, "1.920" in German. A number that names something is `plain` and keeps its digits
+   together: a year, an episode, chapter, page or volume number, a range of them, the total in
+   "Episode 12 of 1100", a port, an id or an error code.
 3. Use the glossary's words through terms (`{ -source }`, `{ -plugin-cap-pl }`), never typed out.
    `i18n/en/terms.ftl` lists them. Fluent terms have no attributes, so each form is its own term.
 4. Run `generate`, then `lint` and `check`. Commit the catalogue and the generated files together.

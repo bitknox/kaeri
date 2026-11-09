@@ -16,15 +16,15 @@
     <string name="notice_cast_no_device">Seçilen TV artık ağda değil.</string>
     <string name="notice_cast_unavailable">Bu Kaeri sürümü TV\'lere yayınlamayı desteklemiyor.</string>
     <string name="cast_phase_starting">%1$s üzerinde başlatılıyor</string>
-    <string name="cast_phase_starting_for">%1$s üzerinde başlatılıyor · %2$d sn</string>
-    <string name="cast_phase_waiting">%1$s bekleniyor · %2$d sn</string>
-    <string name="cast_phase_preparing">Akış hazırlanıyor · %1$d sn</string>
+    <string name="cast_phase_starting_for">%1$s üzerinde başlatılıyor · %2$,d sn</string>
+    <string name="cast_phase_waiting">%1$s bekleniyor · %2$,d sn</string>
+    <string name="cast_phase_preparing">Akış hazırlanıyor · %1$,d sn</string>
     <string name="discussion_age_now">şimdi</string>
-    <string name="discussion_age_minutes">%1$d dk</string>
-    <string name="discussion_age_hours">%1$d sa</string>
-    <string name="discussion_age_days">%1$d g</string>
-    <string name="discussion_age_weeks">%1$d h</string>
-    <string name="discussion_age_years">%1$d y</string>
+    <string name="discussion_age_minutes">%1$,d dk</string>
+    <string name="discussion_age_hours">%1$,d sa</string>
+    <string name="discussion_age_days">%1$,d g</string>
+    <string name="discussion_age_weeks">%1$,d h</string>
+    <string name="discussion_age_years">%1$,d y</string>
     <string name="notice_comment_like_failed">Yorum beğenilemedi. Yeniden deneyin.</string>
     <string name="notice_comment_delete_failed">Yorum silinemedi. Yeniden deneyin.</string>
     <string name="notice_discussion_sign_in">Beğenmek ve yanıtlamak için AniList\'e giriş yapın.</string>
@@ -34,7 +34,7 @@
     <string name="home_spotlight_because">Bitirdiğiniz %1$s yüzünden</string>
     <string name="home_spotlight_recommended">Sizin için önerilen</string>
     <string name="home_spotlight_popular">Bu sezon en popüler</string>
-    <string name="home_time_left">Bölüm %1$d · %2$d dk kaldı</string>
+    <string name="home_time_left">Bölüm %1$d · %2$,d dk kaldı</string>
     <string name="home_episode_out">Bölüm %1$d yayında</string>
     <string name="home_episode_next">%1$d. bölüm sırada</string>
     <string name="home_episode_out_today">Bölüm %1$d · bugün yayında</string>
@@ -55,6 +55,24 @@
     <string name="home_trending">Şu an öne çıkanlar</string>
     <string name="home_because">Bitirdiğiniz %1$s yüzünden</string>
     <string name="home_more_genre">Daha fazla %1$s</string>
+    <string name="home_more_genre_action">Daha fazla aksiyon</string>
+    <string name="home_more_genre_adventure">Daha fazla macera</string>
+    <string name="home_more_genre_comedy">Daha fazla komedi</string>
+    <string name="home_more_genre_drama">Daha fazla dram</string>
+    <string name="home_more_genre_ecchi">Daha fazla ecchi</string>
+    <string name="home_more_genre_fantasy">Daha fazla fantastik</string>
+    <string name="home_more_genre_horror">Daha fazla korku</string>
+    <string name="home_more_genre_mahou_shoujo">Daha fazla mahou shoujo</string>
+    <string name="home_more_genre_mecha">Daha fazla mecha</string>
+    <string name="home_more_genre_music">Daha fazla müzik</string>
+    <string name="home_more_genre_mystery">Daha fazla gizem</string>
+    <string name="home_more_genre_psychological">Daha fazla psikolojik</string>
+    <string name="home_more_genre_romance">Daha fazla romantik</string>
+    <string name="home_more_genre_sci_fi">Daha fazla bilim kurgu</string>
+    <string name="home_more_genre_slice_of_life">Daha fazla günlük yaşam</string>
+    <string name="home_more_genre_sports">Daha fazla spor</string>
+    <string name="home_more_genre_supernatural">Daha fazla doğaüstü</string>
+    <string name="home_more_genre_thriller">Daha fazla gerilim</string>
     <string name="home_spotlight_demo">Demo, paylaşmak serbest</string>
     <string name="licensed_return">%2$s üzerinde %1$d. bölümü izlediniz mi?</string>
     <string name="licensed_marked">%1$d. bölüm izlendi olarak işaretlendi.</string>
@@ -67,7 +85,7 @@
     <string name="cause_airs_tomorrow">yarın saat %1$s</string>
     <plurals name="cause_airs_in_days">
         <item quantity="one">1 gün içinde saat %2$s</item>
-        <item quantity="other">%1$d gün içinde saat %2$s</item>
+        <item quantity="other">%1$,d gün içinde saat %2$s</item>
     </plurals>
     <string name="cause_airs_on_date">%1$s tarihinde saat %2$s</string>
     <string name="cause_no_playable_stream">kaynak yanıt verdi ama oynatılacak bir şey göndermedi. Başka birini deneyin.</string>
@@ -80,12 +98,12 @@
     <string name="cause_no_source_could_list_show">Hiçbir kaynak bu diziyi listeleyemedi, bu yüzden indirilemiyor.</string>
     <plurals name="cause_subtitles_merged">
         <item quantity="one">Bir altyazı izi videoya eklendi.</item>
-        <item quantity="other">%1$d altyazı izi videoya eklendi.</item>
+        <item quantity="other">%1$,d altyazı izi videoya eklendi.</item>
     </plurals>
     <string name="cause_subtitles_left_apart">Altyazılar ayrı dosyalar olarak kaldı. %1$s</string>
     <plurals name="cause_already_in_downloads">
         <item quantity="one">Bir bölüm zaten indirmelerde.</item>
-        <item quantity="other">%1$d bölüm zaten indirmelerde.</item>
+        <item quantity="other">%1$,d bölüm zaten indirmelerde.</item>
     </plurals>
     <string name="status_looking_up_title">Başlık aranıyor…</string>
     <string name="status_loading_sources">Yükleniyor: kaynaklar…</string>
@@ -98,10 +116,10 @@
     <string name="start_buffering">Arabelleğe alınıyor</string>
     <string name="status_searching_sources">Bölüm %1$s için kaynaklar aranıyor…</string>
     <string name="notice_player_failed_to_start">mpv başlatılamadı. Tek başına çalışıp çalışmadığını kontrol edin. (%1$s)</string>
-    <string name="notice_stream_no_video">Bu akıştan görüntü gelmedi. Bir sonraki akış deneniyor (%1$d/%2$d).</string>
+    <string name="notice_stream_no_video">Bu akıştan görüntü gelmedi. Bir sonraki akış deneniyor (%1$,d/%2$,d).</string>
     <string name="notice_player_could_not_play">mpv bunu oynatamadı. %1$s</string>
     <string name="notice_player_exited_silently">mpv bir şey oynatmadan ve neden belirtmeden kapandı. Başka bir kaynak deneyin.</string>
-    <string name="notice_player_not_playing">mpv %1$d sn geçmesine rağmen oynatmaya başlamadı. Bu kaynak veri içermiyor olabilir. mpv\'nin bir dosyayı tek başına oynatıp oynatmadığını kontrol edin.</string>
+    <string name="notice_player_not_playing">mpv %1$,d sn geçmesine rağmen oynatmaya başlamadı. Bu kaynak veri içermiyor olabilir. mpv\'nin bir dosyayı tek başına oynatıp oynatmadığını kontrol edin.</string>
     <string name="notice_no_player">Bu Kaeri sürümü video oynatamıyor.</string>
     <string name="notice_mpv_missing">%1$s bulunamadı. Bölümleri oynatmak için mpv\'yi kurun.</string>
     <string name="notice_mpv_old">mpv %1$s oynatabiliyor, ama Kaeri oynatıcısının atlama düğmesi, Sıradaki kartı, menüleri ve küçük resimleri için mpv 0.36 ya da daha yenisi gerekli.</string>
@@ -144,11 +162,11 @@
     <string name="notice_download_removed">İndirme kaldırıldı.</string>
     <plurals name="notice_downloads_cleared">
         <item quantity="one">Biten bir indirme temizlendi.</item>
-        <item quantity="other">Biten %1$d indirme temizlendi.</item>
+        <item quantity="other">Biten %1$,d indirme temizlendi.</item>
     </plurals>
     <plurals name="notice_skip_marks_cleared">
         <item quantity="one">İşaretlediğiniz atlama zamanı temizlendi.</item>
-        <item quantity="other">İşaretlediğiniz %1$d atlama zamanı temizlendi.</item>
+        <item quantity="other">İşaretlediğiniz %1$,d atlama zamanı temizlendi.</item>
     </plurals>
     <string name="notice_skip_marks_none">Hiç atlama zamanı işaretlemediniz.</string>
     <string name="notice_skip_marks_not_cleared">Atlama zamanlarınız temizlenemedi. %1$s</string>
@@ -161,15 +179,15 @@
     <string name="notice_downloads_none_new_stopped">Kuyruğa yeni bir şey eklenmedi. %1$s %2$s</string>
     <plurals name="notice_episodes_queued_existing">
         <item quantity="one">Bir bölüm kuyruğa eklendi. %2$s</item>
-        <item quantity="other">%1$d bölüm kuyruğa eklendi. %2$s</item>
+        <item quantity="other">%1$,d bölüm kuyruğa eklendi. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_stopped">
         <item quantity="one">Bir bölüm kuyruğa eklendi, sonra durdu. %2$s</item>
-        <item quantity="other">%1$d bölüm kuyruğa eklendi, sonra durdu. %2$s</item>
+        <item quantity="other">%1$,d bölüm kuyruğa eklendi, sonra durdu. %2$s</item>
     </plurals>
     <plurals name="notice_episodes_queued_existing_stopped">
         <item quantity="one">Bir bölüm kuyruğa eklendi, sonra durdu. %2$s %3$s</item>
-        <item quantity="other">%1$d bölüm kuyruğa eklendi, sonra durdu. %2$s %3$s</item>
+        <item quantity="other">%1$,d bölüm kuyruğa eklendi, sonra durdu. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Sonraki bölümleri tutmak için yeterli boş alan yok. Daha fazla indirmek için biraz alan açın.</string>
     <string name="party_needs_server">Önce birlikte izleme için bir sunucu seçin, syncplay.server olarak. %1$s sunucusu %2$s tarafından işletiliyor.</string>
@@ -190,13 +208,13 @@
     <string name="reading_usually_sundays">Genelde pazar</string>
     <plurals name="reading_about_every_weeks">
         <item quantity="one">Yaklaşık haftada bir</item>
-        <item quantity="other">Yaklaşık %1$d haftada bir</item>
+        <item quantity="other">Yaklaşık %1$,d haftada bir</item>
     </plurals>
     <string name="reading_also_a_show">Aynı zamanda dizi</string>
     <string name="reading_also_a_book">Aynı zamanda kitap</string>
     <string name="reading_split_chapter">Bölüm %1$s, takip hizmetlerine %2$s olarak bildirilir.</string>
     <string name="reader_resumed">%1$d. sayfadan açıldı</string>
-    <string name="reader_resumed_image">%1$d. görselden açıldı</string>
+    <string name="reader_resumed_image">%1$,d. görselden açıldı</string>
     <string name="reader_back_to_page">%1$d. sayfaya dön</string>
     <string name="reader_moved">%1$s, sayfa %2$d konumuna geçildi: %3$s burada kaldı</string>
     <string name="reader_moved_number">Bölüm %1$s, sayfa %2$d konumuna geçildi: %3$s burada kaldı</string>
@@ -237,11 +255,11 @@
     <string name="reading_status_not_yet">Henüz çıkmadı</string>
     <plurals name="reading_chapters">
         <item quantity="one">1 bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
     <plurals name="reading_volumes">
         <item quantity="one">1 cilt</item>
-        <item quantity="other">%1$d cilt</item>
+        <item quantity="other">%1$,d cilt</item>
     </plurals>
     <string name="reading_on_planning">Planlananlar listenizde</string>
     <string name="reading_spotlight_new_chapter">Takip ettiğiniz bir seride yeni bölüm</string>
@@ -251,12 +269,12 @@
     <string name="reading_out_today">Bölüm %1$s bugün çıktı</string>
     <string name="reading_out_today_titled">Bölüm %1$s, %2$s, bugün çıktı</string>
     <string name="reading_chapter_page">Bölüm %1$s · sayfa %2$d</string>
-    <string name="reading_chapter_percent">Bölüm %1$s · %%%2$d</string>
+    <string name="reading_chapter_percent">Bölüm %1$s · %%%2$,d</string>
     <string name="reading_chapter_new">Bölüm %1$s yeni</string>
     <string name="reading_next_part">Kısım %1$s</string>
-    <string name="reading_part_percent">Kısım %1$s · %%%2$d</string>
+    <string name="reading_part_percent">Kısım %1$s · %%%2$,d</string>
     <string name="reading_part_new">Kısım %1$s yeni</string>
-    <string name="reading_label_percent">%1$s · %%%2$d</string>
+    <string name="reading_label_percent">%1$s · %%%2$,d</string>
     <string name="reading_label_new">%1$s yeni</string>
     <string name="reading_part_titled">Kısım %1$s · %2$s</string>
     <string name="reading_label_titled">%1$s · %2$s</string>
@@ -279,7 +297,7 @@
     <string name="export_chapter">Bölüm %1$s</string>
     <plurals name="export_waits_for_wifi">
         <item quantity="one">Bir bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi\'yi bekler ve sonra kendiliğinden sürer.</item>
-        <item quantity="other">%1$d bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi\'yi bekler ve sonra kendiliğinden sürer.</item>
+        <item quantity="other">%1$,d bölüm henüz indirilmedi, bu yüzden gönderim Wi-Fi\'yi bekler ve sonra kendiliğinden sürer.</item>
     </plurals>
     <string name="reading_chapter_titled">Bölüm %1$s · %2$s</string>
     <string name="reading_row_read">Okundu</string>
@@ -290,40 +308,40 @@
     <string name="reading_row_on_device">Bu cihazda</string>
     <string name="reading_row_queued">Sırada</string>
     <string name="reading_row_waits_wifi">Sırada · Wi-Fi bekliyor</string>
-    <string name="reading_row_downloading">İndiriliyor · %1$d / %2$d sayfa</string>
+    <string name="reading_row_downloading">İndiriliyor · %1$,d / %2$,d sayfa</string>
     <string name="reading_row_failed">İndirilemedi</string>
     <string name="reading_row_page_of">Sayfa %1$d / %2$d</string>
     <string name="reading_row_page">Sayfa %1$d</string>
-    <string name="reading_row_percent">%%%1$d</string>
+    <string name="reading_row_percent">%%%1$,d</string>
     <string name="reading_row_opened">Açıldı</string>
     <string name="reading_row_bookmarked">Yer imi eklendi</string>
     <plurals name="reading_row_pages">
         <item quantity="one">1 sayfa</item>
-        <item quantity="other">%1$d sayfa</item>
+        <item quantity="other">%1$,d sayfa</item>
     </plurals>
     <plurals name="reading_row_versions">
         <item quantity="one">1 kopya</item>
-        <item quantity="other">%1$d kopya</item>
+        <item quantity="other">%1$,d kopya</item>
     </plurals>
     <string name="reading_ago_now">az önce</string>
-    <string name="reading_ago_minutes">%1$d dk önce</string>
+    <string name="reading_ago_minutes">%1$,d dk önce</string>
     <string name="reading_ago_today">bugün</string>
     <string name="reading_ago_yesterday">dün</string>
     <plurals name="reading_ago_days">
         <item quantity="one">1 gün önce</item>
-        <item quantity="other">%1$d gün önce</item>
+        <item quantity="other">%1$,d gün önce</item>
     </plurals>
     <plurals name="reading_ago_weeks">
         <item quantity="one">1 hafta önce</item>
-        <item quantity="other">%1$d hafta önce</item>
+        <item quantity="other">%1$,d hafta önce</item>
     </plurals>
     <plurals name="reading_ago_months">
         <item quantity="one">1 ay önce</item>
-        <item quantity="other">%1$d ay önce</item>
+        <item quantity="other">%1$,d ay önce</item>
     </plurals>
     <plurals name="reading_ago_years">
         <item quantity="one">1 yıl önce</item>
-        <item quantity="other">%1$d yıl önce</item>
+        <item quantity="other">%1$,d yıl önce</item>
     </plurals>
     <string name="reading_removed_from">Kaldırıldı: %1$s</string>
     <string name="reading_removed_not_there">Listede yoktu: %1$s</string>
@@ -335,14 +353,14 @@
     <string name="reading_miss_down">Yanıt vermiyor</string>
     <plurals name="reading_dl_parts">
         <item quantity="one">1 kısım</item>
-        <item quantity="other">%1$d kısım</item>
+        <item quantity="other">%1$,d kısım</item>
     </plurals>
     <string name="reading_dl_size">%1$s</string>
-    <string name="reading_dl_read">%1$d okundu</string>
+    <string name="reading_dl_read">%1$,d okundu</string>
     <string name="reading_dl_chapter">Bölüm %1$s</string>
-    <string name="reading_dl_pages">%1$d / %2$d sayfa</string>
-    <string name="reading_dl_more_queued">%1$d tane daha sırada</string>
-    <string name="reading_dl_queued">%1$d sırada</string>
+    <string name="reading_dl_pages">%1$,d / %2$,d sayfa</string>
+    <string name="reading_dl_more_queued">%1$,d tane daha sırada</string>
+    <string name="reading_dl_queued">%1$,d sırada</string>
     <string name="reading_dl_waits_wifi">Wi-Fi bekliyor</string>
     <string name="reading_dl_failed">Bölüm %1$s indirilemedi</string>
     <string name="reading_estimate_size">Yaklaşık %1$s</string>
@@ -352,13 +370,26 @@
     <string name="reading_downloads_done_title">İndirmeler tamamlandı</string>
     <plurals name="reading_downloads_done_chapters">
         <item quantity="one">%1$s: bir bölüm çevrimdışı okumaya hazır.</item>
-        <item quantity="other">%1$s: %2$d bölüm çevrimdışı okumaya hazır.</item>
+        <item quantity="other">%1$s: %2$,d bölüm çevrimdışı okumaya hazır.</item>
     </plurals>
     <plurals name="reading_downloads_done_parts">
         <item quantity="one">%1$s: bir kısım çevrimdışı okumaya hazır.</item>
-        <item quantity="other">%1$s: %2$d kısım çevrimdışı okumaya hazır.</item>
+        <item quantity="other">%1$s: %2$,d kısım çevrimdışı okumaya hazır.</item>
     </plurals>
-    <string name="reading_downloads_done_series">%1$d seriden bölümler çevrimdışı okumaya hazır.</string>
+    <string name="reading_downloads_done_series">%1$,d seriden bölümler çevrimdışı okumaya hazır.</string>
+    <string name="read_source_folders">Klasörler</string>
+    <string name="reading_since_january">Ocak\'tan beri</string>
+    <string name="reading_since_february">Şubat\'tan beri</string>
+    <string name="reading_since_march">Mart\'tan beri</string>
+    <string name="reading_since_april">Nisan\'dan beri</string>
+    <string name="reading_since_may">Mayıs\'tan beri</string>
+    <string name="reading_since_june">Haziran\'dan beri</string>
+    <string name="reading_since_july">Temmuz\'dan beri</string>
+    <string name="reading_since_august">Ağustos\'tan beri</string>
+    <string name="reading_since_september">Eylül\'den beri</string>
+    <string name="reading_since_october">Ekim\'den beri</string>
+    <string name="reading_since_november">Kasım\'dan beri</string>
+    <string name="reading_since_december">Aralık\'tan beri</string>
     <string name="store_joined">%1$s: %2$s olarak katıldınız.</string>
     <string name="store_joined_unnamed">%1$s: isim olmadan katıldınız.</string>
     <string name="store_left">%1$s bırakıldı. Kurulu eklentiler kalır.</string>
@@ -367,13 +398,13 @@
     <string name="store_invite_cancelled">Davet iptal edildi. Bağlantı artık çalışmıyor.</string>
     <plurals name="store_invite_cancelled_kept">
         <item quantity="one">Davet iptal edildi. Katılan kişi üye olarak kalır.</item>
-        <item quantity="other">Davet iptal edildi. Katılan %1$d kişi üye olarak kalır.</item>
+        <item quantity="other">Davet iptal edildi. Katılan %1$,d kişi üye olarak kalır.</item>
     </plurals>
     <string name="store_open_join_on">Bu eklenti mağazasının bağlantısına sahip herkes artık katılabilir. Bağlantıyı üye ekranından kopyalayın.</string>
     <string name="store_open_join_off">Artık yalnızca davet ettikleriniz katılabilir.</string>
     <plurals name="store_open_join_off_devices">
         <item quantity="one">Artık yalnızca davet ettikleriniz katılabilir. Bağlantıyla katılan cihaz siz kaldırana kadar çalışmaya devam eder.</item>
-        <item quantity="other">Artık yalnızca davet ettikleriniz katılabilir. Bağlantıyla katılan %1$d cihazlar siz kaldırana kadar çalışmaya devam eder.</item>
+        <item quantity="other">Artık yalnızca davet ettikleriniz katılabilir. Bağlantıyla katılan %1$,d cihazlar siz kaldırana kadar çalışmaya devam eder.</item>
     </plurals>
     <string name="store_device_removed">Bu cihaz artık bu eklenti mağazasında çalışmıyor.</string>
     <string name="store_devices_removed">Bağlantıyla katılan bütün cihazlar kaldırıldı.</string>
@@ -388,7 +419,7 @@
     <string name="plugin_installed_outdated">%1$s kuruldu, ancak Kaeri uygulamasının eski bir sürümü için derlenmiş ve güncellenmesi gerekiyor. Yapımcısından yeni bir derleme isteyin.</string>
     <plurals name="plugins_outdated">
         <item quantity="one">Bir eklenti, Kaeri uygulamasının eski bir sürümü için derlenmiş ve güncellenmesi gerekiyor: %2$s.</item>
-        <item quantity="other">%1$d eklentiler, Kaeri uygulamasının eski bir sürümü için derlenmiş ve güncellenmesi gerekiyor: %2$s.</item>
+        <item quantity="other">%1$,d eklentiler, Kaeri uygulamasının eski bir sürümü için derlenmiş ve güncellenmesi gerekiyor: %2$s.</item>
     </plurals>
     <plurals name="plugin_updates_ready">
         <item quantity="one">Eklenti güncellemesi hazır: %2$s.</item>
@@ -476,7 +507,7 @@
     <string name="notice_signed_out">Oturum kapatıldı: %1$s.</string>
     <plurals name="notice_signed_out_queue">
         <item quantity="one">Oturum kapatıldı: %1$s. Bekleyen bir değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.</item>
-        <item quantity="other">Oturum kapatıldı: %1$s. Bekleyen %2$d değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.</item>
+        <item quantity="other">Oturum kapatıldı: %1$s. Bekleyen %2$,d değişiklik, bir sonraki oturum açmada gönderilmek üzere saklandı.</item>
     </plurals>
     <string name="notice_sign_out_failed">Oturum kapatılamadı: %1$s. Yeniden deneyin. %2$s</string>
     <string name="notice_not_saved_because">Bu ayar kaydedilemedi. %1$s</string>
@@ -492,7 +523,7 @@
     <string name="notice_episode_aired">%1$s, %2$d. bölüm, siz yokken yayınlandı.</string>
     <plurals name="notice_episodes_aired">
         <item quantity="one">İzlediğiniz dizilerden bir yeni bölüm yayınlandı. Takvimde görebilirsiniz.</item>
-        <item quantity="other">İzlediğiniz dizilerden %1$d yeni bölüm yayınlandı. Takvimde görebilirsiniz.</item>
+        <item quantity="other">İzlediğiniz dizilerden %1$,d yeni bölüm yayınlandı. Takvimde görebilirsiniz.</item>
     </plurals>
     <string name="notice_update_available">%1$s çıktı. Kurmak için kaeri --update komutunu çalıştırın.</string>
     <string name="cause_proxy_needs_address">Vekil sunucu için bir ana makine ve bir bağlantı noktası gerekir.</string>
@@ -515,7 +546,7 @@
     <string name="start_failed_player">Oynatıcı başlatılamadı. %1$s</string>
     <plurals name="notice_episodes_queued">
         <item quantity="one">Bir bölüm indirme kuyruğuna eklendi.</item>
-        <item quantity="other">%1$d bölüm indirme kuyruğuna eklendi.</item>
+        <item quantity="other">%1$,d bölüm indirme kuyruğuna eklendi.</item>
     </plurals>
     <string name="settings_subs_reset_done">Altyazı stili sıfırlandı</string>
     <string name="crash_notice">Kaeri bir sorun nedeniyle kapandı.</string>
@@ -544,19 +575,19 @@
     <string name="discussion_video_host">Video · %1$s</string>
     <plurals name="player_more_discussion_note">
         <item quantity="one">Bir yorum · video duraklar</item>
-        <item quantity="other">%1$d yorum · video duraklar</item>
+        <item quantity="other">%1$,d yorum · video duraklar</item>
     </plurals>
     <string name="player_more_discussion_pauses">Açınca video duraklar</string>
     <string name="search_pill_set">%1$s, %2$s</string>
     <string name="search_pill_any">%1$s, hepsi</string>
-    <string name="search_pill_all_set">Tüm filtreler, %1$d ayarlı</string>
+    <string name="search_pill_all_set">Tüm filtreler, %1$,d ayarlı</string>
     <string name="search_pill_clear">Tüm filtreleri temizle</string>
     <string name="cast_sheet_group">Chromecast</string>
     <string name="cast_sheet_through_phone">Bu telefon üzerinden oynatılır</string>
     <string name="cast_sheet_through_tablet">Bu tablet üzerinden oynatılır</string>
     <string name="cast_sheet_chromecast_too">Chromecast özellikli TV\'ler de burada görünür.</string>
     <string name="cast_sheet_local_network">Kaeri uygulamasının yerel ağdaki cihazları bulabilmesine izin verin.</string>
-    <string name="cast_card_up_next_in">Sıradaki · %1$d sn içinde oynatılacak</string>
+    <string name="cast_card_up_next_in">Sıradaki · %1$,d sn içinde oynatılacak</string>
     <string name="cast_card_up_next">Sıradaki</string>
     <string name="cast_card_up_next_cancel">İptal</string>
     <string name="cast_card_up_next_play">Şimdi oynat</string>
@@ -577,8 +608,8 @@
     <string name="book_server_keystore_android">Android anahtar deposu</string>
     <string name="store_invite_chip">Davet ••••%1$s</string>
     <plurals name="store_plugin_hosts">
-        <item quantity="one">%1$d sunucu</item>
-        <item quantity="other">%1$d sunucu</item>
+        <item quantity="one">%1$,d sunucu</item>
+        <item quantity="other">%1$,d sunucu</item>
     </plurals>
     <string name="join_medium_line_watch">%1$s gibi izleme</string>
     <string name="join_medium_line_both">%1$s gibi izleme ve okuma</string>
@@ -601,7 +632,7 @@
     <string name="eink_back">Geri</string>
     <plurals name="eink_pages_left">
         <item quantity="one">Bölümde bir sayfa kaldı</item>
-        <item quantity="other">Bölümde %1$d sayfa kaldı</item>
+        <item quantity="other">Bölümde %1$,d sayfa kaldı</item>
     </plurals>
     <string name="eink_next_chapter">Sonraki bölüm</string>
     <string name="eink_previous_chapter">Önceki bölüm</string>
@@ -612,7 +643,7 @@
     <string name="eink_end_next">Sonraki</string>
     <plurals name="eink_end_pages">
         <item quantity="one">Bir sayfa</item>
-        <item quantity="other">%1$d sayfa</item>
+        <item quantity="other">%1$,d sayfa</item>
     </plurals>
     <string name="eink_reads_rtl">sağdan sola</string>
     <string name="eink_reads_ltr">soldan sağa</string>
@@ -652,7 +683,7 @@
     <string name="reader_notice_change">Değiştir</string>
     <string name="reader_settings">Okuyucu ayarları</string>
     <string name="reader_novel_line_scroll">Bölüm %1$s · kaydırma</string>
-    <string name="reader_minutes_left">%1$d dk</string>
+    <string name="reader_minutes_left">%1$,d dk</string>
     <string name="reader_zone_next">Sonraki sayfa</string>
     <string name="reader_grid_title">Sayfalar</string>
     <string name="reader_end_continue">Okumayı sürdür</string>
@@ -745,7 +776,7 @@
     <string name="reader_row_strip_gap">Görseller arası boşluk</string>
     <string name="reader_paper_look">Gündüz kâğıt görünümü</string>
     <string name="reader_paper_dim">Sayfayı karart</string>
-    <string name="reader_opening_waited">%1$s · %2$d sn</string>
+    <string name="reader_opening_waited">%1$s · %2$,d sn</string>
     <string name="reader_sources_title">Bu bölümü şuradan oku</string>
     <string name="reader_paper_parts">Neleri değiştirir</string>
     <string name="read_home_offline_line">Okuma ana sayfası ilk açılışta bağlantı ister. İndirilen bölümler yine de açılır.</string>
@@ -756,17 +787,17 @@
     <string name="notif_chapter_new">%1$s çıktı.</string>
     <plurals name="notif_chapters_new">
         <item quantity="one">Yeni bir bölüm</item>
-        <item quantity="other">%1$d yeni bölüm</item>
+        <item quantity="other">%1$,d yeni bölüm</item>
     </plurals>
     <string name="notif_chapter_hidden">Yeni bölüm</string>
     <string name="notif_chapter_read">Oku</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Bir bölüm indiriliyor</item>
-        <item quantity="other">%1$d bölüm indiriliyor</item>
+        <item quantity="other">%1$,d bölüm indiriliyor</item>
     </plurals>
     <plurals name="read_series_downloaded_open">
         <item quantity="one">İndirilmiş bir bölüm yine de açılır.</item>
-        <item quantity="other">İndirilmiş %1$d bölüm yine de açılır.</item>
+        <item quantity="other">İndirilmiş %1$,d bölüm yine de açılır.</item>
     </plurals>
     <string name="read_downloads_empty_detail">İndirilen bölümler bağlantı olmadan açılır.</string>
     <string name="read_downloads_empty_both">İzlemek ve okumak için indirilen bölümler bağlantı olmadan açılır.</string>
@@ -774,20 +805,20 @@
     <string name="settings_summary_chapters_off">Yeni bölümler kapalı</string>
     <plurals name="settings_summary_book_folders">
         <item quantity="one">1 klasör</item>
-        <item quantity="other">%1$d klasör</item>
+        <item quantity="other">%1$,d klasör</item>
     </plurals>
     <plurals name="settings_summary_book_servers">
         <item quantity="one">1 sunucu</item>
-        <item quantity="other">%1$d sunucu</item>
+        <item quantity="other">%1$,d sunucu</item>
     </plurals>
     <plurals name="settings_summary_book_plugins">
         <item quantity="one">1 eklenti</item>
-        <item quantity="other">%1$d eklenti</item>
+        <item quantity="other">%1$,d eklenti</item>
     </plurals>
     <string name="settings_book_sources">Kitap kaynakları</string>
     <plurals name="book_matches_line">
-        <item quantity="one">Kaeri, %1$d seriyi ayrıntılarına göre eşleştirdi. Şu seriye bir bakmak gerekiyor.</item>
-        <item quantity="other">Kaeri, %1$d seriyi ayrıntılarına göre eşleştirdi. Şu %2$d seriye bir bakmak gerekiyor.</item>
+        <item quantity="one">Kaeri, %1$,d seriyi ayrıntılarına göre eşleştirdi. Şu seriye bir bakmak gerekiyor.</item>
+        <item quantity="other">Kaeri, %1$,d seriyi ayrıntılarına göre eşleştirdi. Şu %2$,d seriye bir bakmak gerekiyor.</item>
     </plurals>
     <string name="book_folder_failed">Bu klasör eklenemedi. Başka bir klasör deneyin.</string>
     <string name="book_server_note_device">Kaeri okuma ilerlemenizi bu sunucuya geri gönderir. Parola bu cihazda kalır.</string>
@@ -807,8 +838,8 @@
     <string name="tv_connect_tracker">Bir takip hizmeti bağlayın</string>
     <string name="tv_change_status">Durumu değiştir</string>
     <string name="tv_add_to_planning">Planlananlara ekle</string>
-    <string name="tv_progress_of">%1$d / %2$d</string>
-    <string name="tv_progress_unknown">%1$d / ?</string>
+    <string name="tv_progress_of">%1$,d / %2$,d</string>
+    <string name="tv_progress_unknown">%1$,d / ?</string>
     <string name="tv_calendar_signed_out_note">Yalnızca kendi dizilerinizi görmek için oturum açın</string>
     <string name="tv_calendar_time_was">%1$s (eskiden %2$s)</string>
     <string name="tv_player_undo_pill">%1$s · Geri al</string>
@@ -822,10 +853,10 @@
     <string name="tv_search_space">Boşluk</string>
     <string name="tv_search_season_in">%1$d yılında sezon</string>
     <string name="tv_search_genres_offline">Türler, TV çevrimiçi olunca yüklenir</string>
-    <string name="tv_seasons_position">Seride %1$d / %2$d</string>
+    <string name="tv_seasons_position">Seride %1$,d / %2$,d</string>
     <plurals name="tv_seasons_count">
-        <item quantity="one">%1$d sezon</item>
-        <item quantity="other">%1$d sezon</item>
+        <item quantity="one">%1$,d sezon</item>
+        <item quantity="other">%1$,d sezon</item>
     </plurals>
     <string name="tv_episode_mark_up_to_here">Buraya kadar izlendi olarak işaretle</string>
     <string name="tv_card_label_watched">%1$s, izlendi</string>
@@ -854,12 +885,12 @@
     <string name="tv_update_auto_check">Güncellemeleri otomatik denetle</string>
     <string name="tv_update_auto_check_detail">Günde bir kez, Kaeri sürümlerinden denetlenir.</string>
     <plurals name="tv_phone_used_days">
-        <item quantity="one">%1$d gün önce kullanıldı</item>
-        <item quantity="other">%1$d gün önce kullanıldı</item>
+        <item quantity="one">%1$,d gün önce kullanıldı</item>
+        <item quantity="other">%1$,d gün önce kullanıldı</item>
     </plurals>
     <plurals name="tv_phone_paired_days">
-        <item quantity="one">%1$d gün önce eşleştirildi</item>
-        <item quantity="other">%1$d gün önce eşleştirildi</item>
+        <item quantity="one">%1$,d gün önce eşleştirildi</item>
+        <item quantity="other">%1$,d gün önce eşleştirildi</item>
     </plurals>
     <string name="tv_update_installed">Bu TV v%1$s çalıştırıyor.</string>
     <string name="tv_page_not_found_text">Bu sayfa artık yok. TV\'deki kodu yeniden tarayın.</string>
@@ -889,7 +920,7 @@
     <string name="tv_field_password_optional">Parola (istenirse)</string>
     <string name="tv_qr_label_link">Davet bağlantısını alan sayfanın QR kodu</string>
     <string name="tv_preview_key">Anahtar %1$s</string>
-    <string name="tv_preview_more">ve %1$d tane daha</string>
+    <string name="tv_preview_more">ve %1$,d tane daha</string>
     <string name="tv_already_joined">Zaten katılındı</string>
     <string name="tv_joining">Katılınıyor</string>
     <string name="tv_signin_done_as">Oturum açıldı: %1$s, kullanıcı: %2$s</string>
@@ -907,11 +938,11 @@
     <string name="tv_discussion_footer">Yanıtlamak için bu tartışmayı telefonunuzda açın.</string>
     <plurals name="tv_discussion_count_read_only">
         <item quantity="one">Bir yorum · Yalnızca okunur</item>
-        <item quantity="other">%1$d yorum · Yalnızca okunur</item>
+        <item quantity="other">%1$,d yorum · Yalnızca okunur</item>
     </plurals>
     <plurals name="tv_discussion_likes">
         <item quantity="one">Bir beğeni</item>
-        <item quantity="other">%1$d beğeni</item>
+        <item quantity="other">%1$,d beğeni</item>
     </plurals>
     <string name="tv_discussion_select_spoiler">Spoiler\'ı göstermek için Seç</string>
     <string name="updates_unknown_sources_path">Ayarlar › Uygulamalar › Güvenlik ve kısıtlamalar › Bilinmeyen kaynaklar</string>
@@ -920,7 +951,7 @@
     <string name="episode_long_dubbed">Bölüm %1$d · Dublajlı</string>
     <plurals name="downloads_live_paused">
         <item quantity="one">Bir bölüm duraklatıldı</item>
-        <item quantity="other">%1$d bölüm duraklatıldı</item>
+        <item quantity="other">%1$,d bölüm duraklatıldı</item>
     </plurals>
     <string name="downloads_live_lead">%1$s E%2$d</string>
     <string name="downloads_live_left">%1$s kaldı</string>
@@ -945,7 +976,7 @@
     <string name="media_dates_range">%1$s ile %2$s arası</string>
     <plurals name="title_also_on_more">
         <item quantity="one">%1$s ve bir tane daha</item>
-        <item quantity="other">%1$s ve %2$d tane daha</item>
+        <item quantity="other">%1$s ve %2$,d tane daha</item>
     </plurals>
     <string name="title_adult_mark">18+</string>
     <string name="downloads_storage_used_free">%1$s kullanıldı · %2$s boş</string>
@@ -956,7 +987,7 @@
     <string name="downloads_ratio_of">%1$s / %2$s</string>
     <plurals name="downloads_group_summary">
         <item quantity="one">Bir bölüm · %2$s</item>
-        <item quantity="other">%1$d bölüm · %2$s</item>
+        <item quantity="other">%1$,d bölüm · %2$s</item>
     </plurals>
     <string name="episode_menu_download">İndir</string>
     <string name="episode_menu_download_paused">İndirme duraklatıldı</string>
@@ -974,15 +1005,15 @@
     <string name="country_korea">Güney Kore</string>
     <plurals name="search_genres_picked">
         <item quantity="one">Bir tür</item>
-        <item quantity="other">%1$d tür</item>
+        <item quantity="other">%1$,d tür</item>
     </plurals>
     <plurals name="search_formats_picked">
         <item quantity="one">Bir biçim</item>
-        <item quantity="other">%1$d biçim</item>
+        <item quantity="other">%1$,d biçim</item>
     </plurals>
     <plurals name="search_statuses_picked">
         <item quantity="one">Bir durum</item>
-        <item quantity="other">%1$d durum</item>
+        <item quantity="other">%1$,d durum</item>
     </plurals>
     <string name="filter_score_any">Herhangi</string>
     <string name="filter_years_from">%1$s ve sonrası</string>
@@ -1010,7 +1041,7 @@
     <string name="reason_source_unreachable">Ulaşılamadı.</string>
     <plurals name="stores_updates_waiting">
         <item quantity="one">Bir güncelleme</item>
-        <item quantity="other">%1$d güncelleme</item>
+        <item quantity="other">%1$,d güncelleme</item>
     </plurals>
     <string name="stores_checked_ago">Denetlendi: %1$s</string>
     <string name="stores_preview_key_link">Anahtar bağlantıyla eşleşiyor</string>
@@ -1029,7 +1060,7 @@
     <string name="settings_summary_notify_off">Yeni bölümler kapalı</string>
     <plurals name="settings_summary_sources">
         <item quantity="one">Bir kaynak</item>
-        <item quantity="other">%1$d kaynak</item>
+        <item quantity="other">%1$,d kaynak</item>
     </plurals>
     <string name="settings_summary_no_sources">Henüz kaynak yok</string>
     <string name="settings_summary_torrents_on">Torrent\'ler açık</string>
@@ -1054,17 +1085,17 @@
     <string name="settings_titles_note_english_missing">%1$s, AniList\'te İngilizce adı olmadığı için romaji adını korur.</string>
     <string name="settings_titles_note_english">AniList\'te listelendiği gibi İngilizce adlar. Yoksa romaji.</string>
     <string name="settings_titles_note_romaji">AniList\'te listelendiği gibi, Latin harflerle yazılmış Japonca adlar.</string>
-    <string name="settings_stores_with_updates">%1$d · %2$s</string>
+    <string name="settings_stores_with_updates">%1$,d · %2$s</string>
     <string name="settings_seeding_best_effort">Bu cihaz yalnızca Kaeri açıkken paylaşım yapar.</string>
     <plurals name="settings_downloads_count">
         <item quantity="one">Bir bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
     <string name="settings_anilist_footer">İlerleme ve liste değişiklikleri AniList\'e eşitlenir. Kitaplık AniList listelerinizi gösterir.</string>
     <string name="accounts_sign_in_again_button">Yeniden oturum aç</string>
     <plurals name="accounts_review_differences">
         <item quantity="one">Bir farkı incele</item>
-        <item quantity="other">%1$d farkı incele</item>
+        <item quantity="other">%1$,d farkı incele</item>
     </plurals>
     <string name="settings_licence_title">Lisans</string>
     <string name="settings_licence_value">MIT, açık kaynak ve ticari olmayan</string>
@@ -1103,7 +1134,7 @@
     <string name="tv_sheet_volume">TV sesi</string>
     <string name="tv_sheet_volume_down">Sesi kıs</string>
     <string name="tv_sheet_volume_up">Sesi aç</string>
-    <string name="tv_sheet_volume_value">%1$d / 100</string>
+    <string name="tv_sheet_volume_value">%1$,d / 100</string>
     <string name="tv_sheet_nothing_playing">Hiçbir şey oynatılmıyor</string>
     <string name="tv_sheet_position">TV\'deki konum</string>
     <string name="tv_sheet_position_state">%1$s / %2$s</string>
@@ -1127,7 +1158,7 @@
     <string name="player_dual_audio">Altyazılı ve dublajlı</string>
     <plurals name="notif_new_episodes">
         <item quantity="one">Yeni bir bölüm</item>
-        <item quantity="other">%1$d yeni bölüm</item>
+        <item quantity="other">%1$,d yeni bölüm</item>
     </plurals>
     <string name="notif_hidden_text">Yeni bölüm</string>
     <string name="notif_episode_out">Bölüm %1$d çıktı.</string>
@@ -1138,7 +1169,7 @@
     <string name="device_name_tablet">Android tablet</string>
     <string name="tv_session_starting">%1$s üzerinde başlıyor</string>
     <string name="tv_session_line">%1$s · %2$s</string>
-    <string name="widget_line_left">%1$s · %2$d dk kaldı</string>
+    <string name="widget_line_left">%1$s · %2$,d dk kaldı</string>
     <string name="widget_line_of">E%1$d / %2$d</string>
     <string name="widget_continue_title">İzlemeye devam et</string>
     <string name="widget_caught_up_title">Güncelsiniz</string>
@@ -1157,7 +1188,7 @@
     <string name="channel_downloads_name">İndirmeler</string>
     <plurals name="release_seeders">
         <item quantity="one">Bir seeder</item>
-        <item quantity="other">%1$d seeder</item>
+        <item quantity="other">%1$,d seeder</item>
     </plurals>
     <string name="trailer_failed">Fragman açılamadı</string>
     <string name="engine_down_title">Kaeri durdu</string>
@@ -1257,7 +1288,7 @@
     <string name="cast_torrents_note_mac">Böylece yerleşik Chromecast\'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu Mac gönderir.</string>
     <string name="cast_torrents_note_iphone">Böylece yerleşik Chromecast\'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPhone gönderir.</string>
     <string name="cast_torrents_note_ipad">Böylece yerleşik Chromecast\'li bir TV torrent oynatabilir. Bölüm oynadığı sürece onu bu iPad gönderir.</string>
-    <string name="cast_up_next_plays_in">Sıradaki · %1$d sn içinde oynatılır</string>
+    <string name="cast_up_next_plays_in">Sıradaki · %1$,d sn içinde oynatılır</string>
     <string name="cast_couldnt_start">%1$s üzerinde başlatılamadı</string>
     <string name="cast_stopped">Yayın durduruldu</string>
     <string name="cast_play_here">Burada oynat</string>
@@ -1267,12 +1298,12 @@
     <string name="action_cancel">Vazgeç</string>
     <string name="action_go">Git</string>
     <string name="action_not_now">Şimdi değil</string>
-    <string name="duration_days">%1$d g</string>
-    <string name="duration_hours_minutes">%1$d sa %2$d dk</string>
-    <string name="duration_hours">%1$d sa</string>
-    <string name="duration_minutes">%1$d dk</string>
-    <string name="duration_minutes_seconds">%1$d dk %2$s sn</string>
-    <string name="duration_seconds">%1$d sn</string>
+    <string name="duration_days">%1$,d g</string>
+    <string name="duration_hours_minutes">%1$,d sa %2$,d dk</string>
+    <string name="duration_hours">%1$,d sa</string>
+    <string name="duration_minutes">%1$,d dk</string>
+    <string name="duration_minutes_seconds">%1$,d dk %2$s sn</string>
+    <string name="duration_seconds">%1$,d sn</string>
     <string name="size_byte">%1$s B</string>
     <string name="size_kilobyte">%1$s kB</string>
     <string name="size_megabyte">%1$s MB</string>
@@ -1332,8 +1363,8 @@
     <string name="day_yesterday">Dün</string>
     <string name="time_ago">%1$s önce</string>
     <string name="time_in">%1$s içinde</string>
-    <string name="time_minutes_left">%1$d dk kaldı</string>
-    <string name="time_minutes">%1$d dk</string>
+    <string name="time_minutes_left">%1$,d dk kaldı</string>
+    <string name="time_minutes">%1$,d dk</string>
     <string name="time_now_inline">şimdi</string>
     <string name="time_just_now_inline">az önce</string>
     <string name="when_today">bugün %1$s</string>
@@ -1368,11 +1399,11 @@
     <string name="pad_help_page_down">Bir sayfa aşağı</string>
     <plurals name="pad_help_seek_back">
         <item quantity="one">Bir saniye geri</item>
-        <item quantity="other">%1$d saniye geri</item>
+        <item quantity="other">%1$,d saniye geri</item>
     </plurals>
     <plurals name="pad_help_seek_forward">
         <item quantity="one">Bir saniye ileri</item>
-        <item quantity="other">%1$d saniye ileri</item>
+        <item quantity="other">%1$,d saniye ileri</item>
     </plurals>
     <string name="pad_help_skip">Atla</string>
     <string name="pad_help_play_now">Şimdi oynat</string>
@@ -1427,7 +1458,7 @@
     <string name="tv_problem_version">TV\'de başka bir Kaeri sürümü var. İkisini de aynı sürüme güncelleyin.</string>
     <string name="tv_problem_wrong_code">Kod eşleşmedi. TV\'deki kodu kontrol edip yeniden deneyin.</string>
     <string name="tv_volume_down">Sesi kıs</string>
-    <string name="tv_volume_of">100 üzerinden %1$d</string>
+    <string name="tv_volume_of">100 üzerinden %1$,d</string>
     <string name="tv_volume_up">Sesi artır</string>
     <string name="updates_download">Güncellemeyi indir</string>
     <string name="updates_restart">Güncelle ve yeniden aç</string>
@@ -1440,17 +1471,17 @@
     <string name="discussion_title_episode">Bölüm %1$d tartışması</string>
     <plurals name="discussion_row">
         <item quantity="one">Tartışma · bir yorum</item>
-        <item quantity="other">Tartışma · %1$d yorum</item>
+        <item quantity="other">Tartışma · %1$,d yorum</item>
     </plurals>
     <plurals name="discussion_count">
         <item quantity="one">Bir yorum</item>
-        <item quantity="other">%1$d yorum</item>
+        <item quantity="other">%1$,d yorum</item>
     </plurals>
     <string name="discussion_like">Beğen</string>
     <string name="discussion_reply">Yanıtla</string>
     <plurals name="discussion_more_replies">
         <item quantity="one">Bir yanıt daha</item>
-        <item quantity="other">%1$d yanıt daha</item>
+        <item quantity="other">%1$,d yanıt daha</item>
     </plurals>
     <string name="discussion_spoiler">Spoiler</string>
     <string name="discussion_image">Görsel</string>
@@ -1537,7 +1568,7 @@
     <string name="downloads_notice_done_detail">%1$s · çevrimdışı izlemeye hazır</string>
     <plurals name="downloads_notice_running">
         <item quantity="one">Bir bölüm indiriliyor</item>
-        <item quantity="other">%1$d bölüm indiriliyor</item>
+        <item quantity="other">%1$,d bölüm indiriliyor</item>
     </plurals>
     <string name="downloads_notice_episode_left">Bölüm %1$d · %2$s</string>
     <string name="downloads_notice_starting">Başlıyor</string>
@@ -1578,13 +1609,13 @@
     <string name="home_remove_continue">Listeden kaldır</string>
     <plurals name="home_continue_count">
         <item quantity="one">1 dizi</item>
-        <item quantity="other">%1$d dizi</item>
+        <item quantity="other">%1$,d dizi</item>
     </plurals>
     <string name="home_view_all">Tümünü gör</string>
     <string name="home_full_calendar">Tam takvim</string>
     <string name="home_today">Bugün</string>
     <string name="home_nothing_airing">Yayın yok</string>
-    <string name="home_day_more">%1$d daha</string>
+    <string name="home_day_more">%1$,d daha</string>
     <string name="home_seasonal">Sezonluk</string>
     <string name="home_search">Ara</string>
     <string name="home_end">Şimdilik hepsi bu. Tam listeler için Sezonluk ve Takvim\'e bakın.</string>
@@ -1610,17 +1641,17 @@
     <string name="home_synced">AniList eşitlendi</string>
     <plurals name="queue_episodes_left">
         <item quantity="one">%2$s: bir bölüm kaldı</item>
-        <item quantity="other">%2$s: %1$d bölüm kaldı</item>
+        <item quantity="other">%2$s: %1$,d bölüm kaldı</item>
     </plurals>
     <plurals name="episodes_count">
-        <item quantity="one">%1$d bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="one">%1$,d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
     <plurals name="progress_episodes">
-        <item quantity="one">%1$d / %2$d bölüm</item>
-        <item quantity="other">%1$d / %2$d bölüm</item>
+        <item quantity="one">%1$,d / %2$,d bölüm</item>
+        <item quantity="other">%1$,d / %2$,d bölüm</item>
     </plurals>
-    <string name="duration_days_hours">%1$d g %2$d sa</string>
+    <string name="duration_days_hours">%1$,d g %2$,d sa</string>
     <string name="group_in_progress">Devam eden</string>
     <string name="group_new_this_week">Bu hafta yeni</string>
     <string name="continue_empty_title">Henüz izlenen yok</string>
@@ -1683,20 +1714,20 @@
     <string name="up_next_out">yayınlandı: %1$s</string>
     <plurals name="library_row_scanning">
         <item quantity="one">Taranıyor · 1 dosya bulundu</item>
-        <item quantity="other">Taranıyor · %1$d dosya bulundu</item>
+        <item quantity="other">Taranıyor · %1$,d dosya bulundu</item>
     </plurals>
-    <string name="library_row_matching">Eşleştiriliyor · %1$d / %2$d dizi</string>
-    <string name="library_row_waiting">AniList bekleniyor · %1$d sn</string>
+    <string name="library_row_matching">Eşleştiriliyor · %1$,d / %2$,d dizi</string>
+    <string name="library_row_waiting">AniList bekleniyor · %1$,d sn</string>
     <string name="library_row_summary">%2$s içinde %1$s</string>
     <plurals name="library_episodes">
         <item quantity="one">1 bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
     <plurals name="library_series">
         <item quantity="one">1 dizi</item>
-        <item quantity="other">%1$d dizi</item>
+        <item quantity="other">%1$,d dizi</item>
     </plurals>
-    <string name="library_row_needs_look">%1$d tanesine bakmak gerek</string>
+    <string name="library_row_needs_look">%1$,d tanesine bakmak gerek</string>
     <string name="library_row_drive_offline">Sürücü bağlı değil</string>
     <string name="library_row_missing">Klasör bulunamadı</string>
     <string name="library_row_no_access">Kaeri bu klasörü artık açamıyor</string>
@@ -1709,26 +1740,26 @@
     <string name="library_remove_folder">Klasörü kaldır</string>
     <string name="library_needs_look">Bakılması gerekenler</string>
     <string name="library_not_matched">Eşleşmeyenler</string>
-    <string name="library_matched">%1$d dizi eşleşti</string>
-    <string name="library_best_guess">En iyi tahmin: %1$s · %%%2$d eşleşme</string>
+    <string name="library_matched">%1$,d dizi eşleşti</string>
+    <string name="library_best_guess">En iyi tahmin: %1$s · %%%2$,d eşleşme</string>
     <string name="library_picker_prompt">Klasör ekle</string>
     <string name="library_picker_message">Bölümlerinizin olduğu bir klasör seçin.</string>
-    <string name="library_fix_confidence">%%%1$d eşleşme</string>
+    <string name="library_fix_confidence">%%%1$,d eşleşme</string>
     <string name="library_open_folder">Klasörü aç</string>
-    <string name="library_matched_count">%1$d dizi eşleşti</string>
+    <string name="library_matched_count">%1$,d dizi eşleşti</string>
     <plurals name="library_row_series">
         <item quantity="one">1 dizi</item>
-        <item quantity="other">%1$d dizi</item>
+        <item quantity="other">%1$,d dizi</item>
     </plurals>
     <plurals name="library_row_files">
         <item quantity="one">1 dosya</item>
-        <item quantity="other">%1$d dosya</item>
+        <item quantity="other">%1$,d dosya</item>
     </plurals>
     <string name="library_show_finder">Finder\'da göster</string>
     <string name="library_remove_line">Dosyalarınız olduğu yerde kalır.</string>
     <plurals name="library_files">
         <item quantity="one">1 dosya</item>
-        <item quantity="other">%1$d dosya</item>
+        <item quantity="other">%1$,d dosya</item>
     </plurals>
     <string name="library_reason_no_episode">Adında bölüm numarası yok</string>
     <string name="library_reason_no_title">AniList\'te başlık bulunamadı</string>
@@ -1741,7 +1772,7 @@
     <string name="library_fix_search">AniList\'te ara</string>
     <string name="library_fix_hint">Bu dosyaların eşleşeceği başlığı arayın.</string>
     <string name="library_connect_drive">Oynatmak için sürücüyü bağlayın</string>
-    <string name="library_fix_count_mismatch">%1$d bölümü var, bu klasörde %2$d dosya var</string>
+    <string name="library_fix_count_mismatch">%1$,d bölümü var, bu klasörde %2$,d dosya var</string>
     <string name="library_leave_unmatched">Eşleşmemiş bırak</string>
     <string name="library_episode_title">Bu dosya hangi bölüm?</string>
     <string name="library_season">Sezon</string>
@@ -1758,13 +1789,13 @@
     <string name="library_fix_none">Başlık bulunamadı</string>
     <string name="library_fix_offline">AniList\'e ulaşılamadı. Çevrimiçi olunca yeniden deneyin.</string>
     <string name="library_removed">%1$s kaldırıldı</string>
-    <string name="library_match_percent">%%%1$d eşleşme</string>
+    <string name="library_match_percent">%%%1$,d eşleşme</string>
     <string name="licensed_title">Lisanslı hizmetler</string>
     <string name="licensed_body">Kaeri, ücretini ödediğiniz yayın hizmetlerindeki başlıkları açabilir. Kendisi hiçbirini oynatmaz. Bağlantılar AniList\'ten gelir.</string>
     <string name="licensed_region">Bölge</string>
     <string name="licensed_region_line">AniList\'in başka ülkeler için işaretlediği bağlantılar gizlenir. Çoğu bağlantı bir ülke belirtmez, bu yüzden hizmetlerinizi de seçin.</string>
     <string name="licensed_yours">Hizmetleriniz</string>
-    <string name="licensed_show_all">Tümünü göster (%1$d)</string>
+    <string name="licensed_show_all">Tümünü göster (%1$,d)</string>
     <string name="licensed_region_system">Bu cihaz ile aynı olsun</string>
     <string name="licensed_region_device">Bu cihaz bölgesi</string>
     <string name="licensed_show_others">Başlık sayfalarında diğer hizmetleri göster</string>
@@ -1820,9 +1851,9 @@
     <string name="media_streaming_on">Resmi yayın hizmetleri</string>
     <string name="media_streaming_region_note">Erişim bölgenize göre değişir.</string>
     <string name="media_link_language">%1$s dilinde site</string>
-    <string name="film_length_hours_minutes">%1$d sa %2$d dk</string>
-    <string name="film_length_hours">%1$d sa</string>
-    <string name="film_length_minutes">%1$d dk</string>
+    <string name="film_length_hours_minutes">%1$,d sa %2$,d dk</string>
+    <string name="film_length_hours">%1$,d sa</string>
+    <string name="film_length_minutes">%1$,d dk</string>
     <string name="country_japan">Japonya</string>
     <string name="country_china">Çin</string>
     <string name="country_south_korea">Güney Kore</string>
@@ -1966,11 +1997,11 @@
     <string name="party_wait_you">Siz hazır olduğunuzda oynatma başlar</string>
     <string name="party_wait_one">%1$s hazır olduğunda oynatma başlar</string>
     <string name="party_wait_two">%1$s ve %2$s hazır olduğunda oynatma başlar</string>
-    <string name="party_wait_many">%1$d kişi daha hazır olduğunda oynatma başlar</string>
-    <string name="party_connection_lost">Bağlantı koptu. Yeniden deneniyor: %1$d/%2$d</string>
+    <string name="party_wait_many">%1$,d kişi daha hazır olduğunda oynatma başlar</string>
+    <string name="party_connection_lost">Bağlantı koptu. Yeniden deneniyor: %1$,d/%2$,d</string>
     <string name="party_connected_encrypted">Bağlı, şifreli</string>
     <string name="party_connected_plain">Bağlı, şifresiz</string>
-    <string name="party_connected_latency">%1$s · %2$d ms</string>
+    <string name="party_connected_latency">%1$s · %2$,d ms</string>
     <string name="party_invite_after_play">Davet bağlantısı bir bölüm oynatıldığında gelir.</string>
     <string name="party_invite_detail">Oda adını ve bölümü içerir. Her arkadaş bölümü kendi kaynaklarından oynatır.</string>
     <string name="party_in_room_idle">%1$s odasındasınız (%2$s). Şu an oynatılan bir şey yok.</string>
@@ -1990,10 +2021,10 @@
     <string name="party_nosource_unaired_plain">Kaynaklarınız o zamana kadar bunu içermeyecek. Bunlardan biri içerdiğinde odayla birlikte oynatılır.</string>
     <plurals name="party_sources_found">
         <item quantity="one">Bir kaynak bunu içeriyor</item>
-        <item quantity="other">%1$d kaynaklar bunu içeriyor</item>
+        <item quantity="other">%1$,d kaynaklar bunu içeriyor</item>
     </plurals>
     <string name="party_sources_label">Bu bölüm için Kaynaklar</string>
-    <string name="party_source_seeders">%1$d seeder</string>
+    <string name="party_source_seeders">%1$,d seeder</string>
     <string name="party_no_source_lists">Hiçbir kaynak %1$s bölümü listelemiyor. Kaynaklar, bir eklenti mağazası tarafından eklenen eklentilerden gelir.</string>
     <string name="party_play_with">Birlikte izlemeyle oynat</string>
     <string name="together_title">Birlikte izle</string>
@@ -2007,7 +2038,7 @@
     <string name="together_paste">Yapıştır</string>
     <string name="together_join_action">Katıl</string>
     <string name="together_in_party">Bir odadasınız</string>
-    <string name="together_in_party_line">%1$s. bölüm · odada %2$d kişi · %3$d hazır</string>
+    <string name="together_in_party_line">%1$s. bölüm · odada %2$,d kişi · %3$,d hazır</string>
     <string name="together_open_lobby">Lobiyi aç</string>
     <string name="together_open_player">Oynatıcıyı aç</string>
     <string name="together_recent">Son odalar</string>
@@ -2024,7 +2055,7 @@
     <string name="together_server_suggested">Önerilen · işleten: %1$s</string>
     <plurals name="together_server_used">
         <item quantity="one">1 oda için kullanıldı</item>
-        <item quantity="other">%1$d oda için kullanıldı</item>
+        <item quantity="other">%1$,d oda için kullanıldı</item>
     </plurals>
     <string name="together_add_server">Sunucu ekle</string>
     <string name="together_paste_shortcut_hint">Bu sayfada herhangi bir yere bağlantı ya da kod yapıştırabilirsiniz.</string>
@@ -2037,7 +2068,7 @@
     <string name="party_lobby_sources_missing">Henüz kaynaklarınızda yok</string>
     <string name="party_lobby_out_on">%1$s günü çıkıyor</string>
     <string name="party_still_in_room">Hâlâ odadasınız.</string>
-    <string name="party_lobby_count">Odada · %2$d kişiden %1$d hazır</string>
+    <string name="party_lobby_count">Odada · %2$,d kişiden %1$,d hazır</string>
     <string name="party_invited_by">%1$s sizi davet etti</string>
     <string name="party_looking_in">Bakılıyor</string>
     <string name="party_looking_in_note">Bir odayı açmak, sizi bir an için odada gösterir.</string>
@@ -2052,7 +2083,7 @@
     <string name="party_invite_copied">Davet bağlantısı kopyalandı</string>
     <string name="party_starts_line">Herkes hazır olunca 0:00\'da başlar</string>
     <string name="party_start_anyway">Yine de başlat</string>
-    <string name="party_starting">%1$d saniye sonra başlıyor</string>
+    <string name="party_starting">%1$,d saniye sonra başlıyor</string>
     <string name="party_change_episode">Bölümü değiştir</string>
     <string name="party_change_server">Sunucuyu değiştir</string>
     <string name="party_room_watching">Oda şunu izliyor</string>
@@ -2072,14 +2103,14 @@
     <string name="party_code_wait">Burada bekle</string>
     <string name="party_code_other_server">Kodlar %1$s üzerinde çalışır. Başka bir sunucu için davet bağlantısını isteyin.</string>
     <string name="party_bar_title">%1$s · %2$s. bölüm</string>
-    <string name="party_bar_line">Odada %1$d kişi · %2$d hazır</string>
+    <string name="party_bar_line">Odada %1$,d kişi · %2$,d hazır</string>
     <string name="party_bar_idle">Odada · sizin için oynatılan yok</string>
     <string name="party_bar_pick">Odayla izlemek için herhangi bir bölümde Oynat\'a basın</string>
     <string name="party_paused_by">%1$s duraklattı</string>
     <string name="party_played_by">%1$s oynattı</string>
     <string name="party_seeked_by">%1$s şuraya geçti: %2$s</string>
-    <string name="party_next_line">Herkes %1$d sn içinde devam eder</string>
-    <string name="party_next_waiting">%1$s bekleniyor · %2$d sn</string>
+    <string name="party_next_line">Herkes %1$,d sn içinde devam eder</string>
+    <string name="party_next_waiting">%1$s bekleniyor · %2$,d sn</string>
     <string name="party_next_joined_at">%1$s şu noktada katıldı: %2$s</string>
     <string name="party_next_off">Oda sonunda birlikte devam eder.</string>
     <string name="party_last_out">Çıkan son bölüm buydu.</string>
@@ -2100,18 +2131,18 @@
     <string name="party_ready_on_device">%1$s cihazında hazır</string>
     <string name="party_leave_on_device">%1$s cihazında ayrıl</string>
     <string name="party_in_the_room">Odada</string>
-    <string name="party_here_count">%1$d kişi burada</string>
+    <string name="party_here_count">%1$,d kişi burada</string>
     <string name="together_recent_note">Son on oda, bu cihaz üzerinde tutulur</string>
     <string name="party_pick_continue">Devam</string>
     <string name="party_chat_field">Bir şey söyle</string>
     <string name="party_chat_send">Gönder</string>
     <string name="party_chat_title">Sohbet</string>
-    <string name="party_chat_wait">%1$d sn bekle</string>
+    <string name="party_chat_wait">%1$,d sn bekle</string>
     <plurals name="party_chat_wait_spoken">
         <item quantity="one">Bir saniye bekleyin</item>
-        <item quantity="other">%1$d saniye bekleyin</item>
+        <item quantity="other">%1$,d saniye bekleyin</item>
     </plurals>
-    <string name="party_chat_more">Sohbette %1$d daha</string>
+    <string name="party_chat_more">Sohbette %1$,d daha</string>
     <string name="party_chat_off">Bu odanın sunucusunda sohbet kapalı</string>
     <string name="party_chat_privacy">İletiler odanın sunucusu üzerinden gider. Kaeri hiçbirini tutmaz.</string>
     <string name="party_chat_hidden">Sohbet gizli</string>
@@ -2138,19 +2169,19 @@
     <string name="party_reacted_at">%1$s, %2$s anında</string>
     <string name="party_names_two">%1$s ve %2$s</string>
     <string name="party_names_three">%1$s, %2$s ve %3$s</string>
-    <string name="party_names_others">%1$s, %2$s ve %3$d kişi daha</string>
+    <string name="party_names_others">%1$s, %2$s ve %3$,d kişi daha</string>
     <string name="party_chat_you">Siz</string>
     <string name="party_sends_as">%1$s olarak gönderilir</string>
     <string name="party_tick_label">%1$s · %2$s</string>
     <string name="party_chat_announce">%1$s diyor ki: %2$s</string>
     <plurals name="party_chat_left">
-        <item quantity="one">%1$d karakter kaldı</item>
-        <item quantity="other">%1$d karakter kaldı</item>
+        <item quantity="one">%1$,d karakter kaldı</item>
+        <item quantity="other">%1$,d karakter kaldı</item>
     </plurals>
     <string name="player_up_next">Sıradaki</string>
     <string name="title_based_on">Temel alınan</string>
     <string name="player_starting">%1$d. bölüm başlatılıyor</string>
-    <string name="player_finding_source">Bir kaynak aranıyor · %1$d sn</string>
+    <string name="player_finding_source">Bir kaynak aranıyor · %1$,d sn</string>
     <string name="player_finding_source_plain">Bir kaynak aranıyor</string>
     <string name="player_failed_title">%1$d. bölüm oynatılamadı</string>
     <string name="player_failed_detail">Hiçbir kaynak oynatılabilir bir yayın sunmadı. Başka bir kaynak deneyin.</string>
@@ -2159,7 +2190,7 @@
     <string name="player_choose_another_source">Başka bir kaynak seç</string>
     <string name="player_add_plugin_store">Bir eklenti mağazası ekle</string>
     <string name="player_buffering">Yükleniyor</string>
-    <string name="player_start_place">%2$d kaynak içinden %1$d</string>
+    <string name="player_start_place">%2$,d kaynak içinden %1$,d</string>
     <string name="player_start_pinned">Bu dizi için seçimin</string>
     <string name="player_start_miss_no_match">%1$s bu diziye sahip değil</string>
     <string name="player_start_miss_no_episode">%1$s bölüm %2$s için yok</string>
@@ -2170,10 +2201,10 @@
     <string name="player_start_resting">Son hatalar nedeniyle atlandı</string>
     <string name="player_start_from">Kaynak: %1$s</string>
     <string name="player_start_no_video">İlki görüntü göstermedi</string>
-    <string name="player_start_stream_place">%2$d akıştan %1$d.</string>
+    <string name="player_start_stream_place">%2$,d akıştan %1$,d.</string>
     <plurals name="player_start_peers">
         <item quantity="one">Bir eş</item>
-        <item quantity="other">%1$d eş</item>
+        <item quantity="other">%1$,d eş</item>
     </plurals>
     <string name="player_start_speed">%1$s/sn</string>
     <string name="player_start_buffering_percent">Arabelleğe alınıyor · %1$s</string>
@@ -2188,7 +2219,7 @@
     <string name="player_start_fix_match">Eşleşmeyi düzelt</string>
     <string name="player_start_translation">Ses ve altyazı</string>
     <string name="player_start_looked_up">Başlık arandı</string>
-    <string name="player_start_seconds">%1$d sn</string>
+    <string name="player_start_seconds">%1$,d sn</string>
     <string name="player_start_still_starting">Hâlâ başlıyor. kaynak seçebilirsin.</string>
     <string name="player_start_announce">Bölüm %1$s başlıyor, %2$s</string>
     <string name="player_start_failed_announce">%1$s. %2$s</string>
@@ -2202,11 +2233,11 @@
     <string name="player_start_row_skipped">Atlandı</string>
     <string name="player_start_asked">Sorulanlar: %1$s.</string>
     <string name="player_start_subtitled">Altyazılı</string>
-    <string name="player_stall_title">Kaynak yükleniyor · %1$d sn</string>
+    <string name="player_stall_title">Kaynak yükleniyor · %1$,d sn</string>
     <string name="player_stall_detail">Başka bir yayın, beklemeden oynatılabilir.</string>
     <string name="player_switch_source">Kaynak değiştir</string>
     <string name="player_keep_waiting">Beklemeye devam et</string>
-    <string name="player_plays_in">%1$d sn içinde oynatılır</string>
+    <string name="player_plays_in">%1$,d sn içinde oynatılır</string>
     <string name="player_skip_opening">Açılışı atla</string>
     <string name="player_skip_ending">Kapanışı atla</string>
     <string name="player_skipped_opening">Açılış atlandı</string>
@@ -2287,7 +2318,7 @@
     <string name="player_still_watching">Hâlâ izliyor musunuz?</string>
     <plurals name="player_still_watching_detail">
         <item quantity="one">Arka arkaya bir bölümden sonra duraklatıldı.</item>
-        <item quantity="other">Arka arkaya %1$d bölümden sonra duraklatıldı.</item>
+        <item quantity="other">Arka arkaya %1$,d bölümden sonra duraklatıldı.</item>
     </plurals>
     <string name="player_still_watching_continue">İzlemeye devam et</string>
     <string name="player_ends_at">Bitiş: %1$s</string>
@@ -2346,7 +2377,7 @@
     <string name="player_scrub_quarter">Çeyrek hızda arama</string>
     <string name="player_starting_text">%1$s. bölüm başlatılıyor</string>
     <string name="player_track_n">Parça %1$d</string>
-    <string name="player_wait_note">%1$s · %2$d sn</string>
+    <string name="player_wait_note">%1$s · %2$,d sn</string>
     <string name="player_command_failed">Bu olmadı. Yeniden deneyin.</string>
     <string name="player_subs_style">Stil</string>
     <string name="player_subs_larger">Daha büyük altyazı</string>
@@ -2389,7 +2420,7 @@
     <string name="reader_chapters">Bölümler</string>
     <plurals name="reader_pages_left">
         <item quantity="one">Bu bölümde bir sayfa kaldı</item>
-        <item quantity="other">Bu bölümde %1$d sayfa kaldı</item>
+        <item quantity="other">Bu bölümde %1$,d sayfa kaldı</item>
     </plurals>
     <string name="reader_chapters_loading">Bölümler yükleniyor</string>
     <string name="reader_background_theme">Tema</string>
@@ -2403,7 +2434,7 @@
     <string name="reader_end_facts">Bölüm %1$s · %2$s</string>
     <plurals name="reader_end_pages">
         <item quantity="one">Bir sayfa</item>
-        <item quantity="other">%1$d sayfa</item>
+        <item quantity="other">%1$,d sayfa</item>
     </plurals>
     <string name="reader_end_from">Şuradan: %1$s</string>
     <string name="reader_chapter_line">Bölüm %1$s</string>
@@ -2411,7 +2442,7 @@
     <string name="reader_end_swipe">Sürdürmek için kaydırın</string>
     <plurals name="reader_divider_images">
         <item quantity="one">Bir görsel</item>
-        <item quantity="other">%1$d görsel</item>
+        <item quantity="other">%1$,d görsel</item>
     </plurals>
     <string name="reader_chapter_line_titled">Bölüm %1$s · %2$s</string>
     <string name="onboarding_read_demo">Demoyu oku</string>
@@ -2421,7 +2452,7 @@
     <string name="home_spotlight_read">Oku</string>
     <plurals name="demo_series_facts">
         <item quantity="one">Demo · Çizgi roman · bir sayfa</item>
-        <item quantity="other">Demo · Çizgi roman · %1$d sayfa</item>
+        <item quantity="other">Demo · Çizgi roman · %1$,d sayfa</item>
     </plurals>
     <string name="demo_credit_book">%1$s, %2$s. Lisans: %3$s. Wikimedia Commons üzerinden okunur.</string>
     <string name="demo_credit_story">%1$s, %2$s. Kamu malı. Uygulamayla birlikte gelir.</string>
@@ -2441,7 +2472,7 @@
     <string name="demo_credits">Künye</string>
     <plurals name="demo_pages">
         <item quantity="one">Bir sayfa</item>
-        <item quantity="other">%1$d sayfa</item>
+        <item quantity="other">%1$,d sayfa</item>
     </plurals>
     <string name="demo_story_row">Hikâye · %1$s · %2$s</string>
     <string name="demo_read_chapter">%1$s. bölümü oku</string>
@@ -2457,19 +2488,19 @@
     <string name="progress_row_saved">İlerleme %1$s kaydedildi</string>
     <plurals name="progress_row_sending">
         <item quantity="one">1 bölüm gönderiliyor…</item>
-        <item quantity="other">%1$d bölüm gönderiliyor…</item>
+        <item quantity="other">%1$,d bölüm gönderiliyor…</item>
     </plurals>
     <plurals name="progress_row_offline">
         <item quantity="one">1 bölüm, yeniden çevrimiçi olduğunuzda gönderilecek</item>
-        <item quantity="other">%1$d bölüm, yeniden çevrimiçi olduğunuzda gönderilecek</item>
+        <item quantity="other">%1$,d bölüm, yeniden çevrimiçi olduğunuzda gönderilecek</item>
     </plurals>
     <plurals name="progress_row_retrying">
         <item quantity="one">1 bölüm bekliyor. Kaeri yeniden deneyecek.</item>
-        <item quantity="other">%1$d bölüm bekliyor. Kaeri yeniden deneyecek.</item>
+        <item quantity="other">%1$,d bölüm bekliyor. Kaeri yeniden deneyecek.</item>
     </plurals>
     <plurals name="progress_row_failed">
         <item quantity="one">1 bölüm kaydedilmedi: %2$s</item>
-        <item quantity="other">%1$d bölüm kaydedilmedi: %2$s</item>
+        <item quantity="other">%1$,d bölüm kaydedilmedi: %2$s</item>
     </plurals>
     <string name="progress_row_off">İlerleme bu %1$s üzerinde kalır</string>
     <string name="nav_watch">İzle</string>
@@ -2492,17 +2523,17 @@
     <string name="chapter_updates_yesterday">Dün</string>
     <plurals name="chapter_updates_versions">
         <item quantity="one">1 kopya</item>
-        <item quantity="other">%1$d kopya</item>
+        <item quantity="other">%1$,d kopya</item>
     </plurals>
     <string name="chapter_updates_open_series">%1$s aç</string>
     <string name="chapter_updates_open_chapter_hint">Bölümü açar</string>
     <string name="chapter_updates_open_series_menu">Seriyi aç</string>
     <string name="action_read_chapter">Bölüm %1$s oku</string>
     <string name="action_continue_chapter">Okumayı sürdür: bölüm %1$s · sayfa %2$d</string>
-    <string name="action_continue_part">Okumayı sürdür: kısım %1$s · %%%2$d</string>
+    <string name="action_continue_part">Okumayı sürdür: kısım %1$s · %%%2$,d</string>
     <string name="action_continue_part_plain">Okumayı sürdür: kısım %1$s</string>
     <string name="action_read_part">Kısım %1$s oku</string>
-    <string name="action_continue_named">Okumayı sürdür: %1$s · %%%2$d</string>
+    <string name="action_continue_named">Okumayı sürdür: %1$s · %%%2$,d</string>
     <string name="action_continue_named_plain">Okumayı sürdür: %1$s</string>
     <string name="action_read_named">%1$s oku</string>
     <string name="action_read_again">Yeniden oku</string>
@@ -2510,17 +2541,17 @@
     <string name="series_change">Değiştir</string>
     <plurals name="series_sources_more">
         <item quantity="one">1 tane daha</item>
-        <item quantity="other">%1$d tane daha</item>
+        <item quantity="other">%1$,d tane daha</item>
     </plurals>
     <string name="series_tracker_ask">Hangi seri bu? Seçin</string>
     <string name="series_preferred_group">Burada tercih ettiğiniz grup</string>
     <plurals name="series_tracker_chapters_of">
-        <item quantity="one">%1$d / %2$d bölüm</item>
-        <item quantity="other">%1$d / %2$d bölüm</item>
+        <item quantity="one">%1$,d / %2$,d bölüm</item>
+        <item quantity="other">%1$,d / %2$,d bölüm</item>
     </plurals>
     <plurals name="series_tracker_chapters">
         <item quantity="one">1 bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
     <string name="series_tracker_with_volume">%1$s · cilt %2$d</string>
     <string name="series_tracker_volumes">Cilt %1$d / %2$d</string>
@@ -2533,7 +2564,7 @@
     <string name="series_removed_title">Listeleriniz</string>
     <plurals name="series_chosen">
         <item quantity="one">1 bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
     <string name="series_choose_all_unread">Tüm okunmamışlar</string>
     <string name="read_from_not_found">Şurada bulunamadı</string>
@@ -2569,7 +2600,7 @@
     <string name="series_remove_bookmark">Yer imini kaldır</string>
     <plurals name="series_versions">
         <item quantity="one">1 kopya</item>
-        <item quantity="other">%1$d kopya</item>
+        <item quantity="other">%1$,d kopya</item>
     </plurals>
     <string name="series_versions_loading">Kopyalar aranıyor…</string>
     <string name="series_version_in_use">%1$s kullanılıyor</string>
@@ -2577,7 +2608,7 @@
     <string name="chapter_state_downloaded">İndirildi</string>
     <string name="chapter_state_queued">Sırada</string>
     <string name="chapter_state_wifi">Sırada · Wi-Fi bekliyor</string>
-    <string name="chapter_state_downloading">İndiriliyor · %1$d / %2$d sayfa</string>
+    <string name="chapter_state_downloading">İndiriliyor · %1$,d / %2$,d sayfa</string>
     <string name="chapter_state_failed">İndirilemedi. %1$s</string>
     <string name="chapter_state_page_of">Sayfa %1$d / %2$d</string>
     <string name="chapter_state_page">Sayfa %1$d</string>
@@ -2586,17 +2617,17 @@
     <string name="chapter_download_stop">İndirmeyi durdur</string>
     <string name="chapter_retry">Yeniden dene</string>
     <string name="chapter_download_delete">İndirmeyi sil</string>
-    <string name="download_next">Sonraki %1$d okunmamış</string>
+    <string name="download_next">Sonraki %1$,d okunmamış</string>
     <string name="download_unread">Tüm okunmamış bölümler</string>
     <plurals name="download_volume_count">
         <item quantity="one">%1$s · 1 bölüm</item>
-        <item quantity="other">%1$s · %2$d bölüm</item>
+        <item quantity="other">%1$s · %2$,d bölüm</item>
     </plurals>
     <string name="download_choose">Bölüm seç…</string>
     <string name="download_delete_series">Bu serinin indirmelerini sil</string>
     <plurals name="download_chapters">
         <item quantity="one">1 bölümü indir</item>
-        <item quantity="other">%1$d bölümü indir</item>
+        <item quantity="other">%1$,d bölümü indir</item>
     </plurals>
     <string name="download_over_wifi">Wi-Fi ile</string>
     <string name="read_again_title">%1$s baştan okunsun mu?</string>
@@ -2649,7 +2680,7 @@
     <string name="sources_found_server">%1$s sunucusu bulundu</string>
     <plurals name="sources_found_server_series">
         <item quantity="one">1 serili bir %1$s sunucusu bulundu</item>
-        <item quantity="other">%2$d serili bir %1$s sunucusu bulundu</item>
+        <item quantity="other">%2$,d serili bir %1$s sunucusu bulundu</item>
     </plurals>
     <string name="book_server_looking">Bu adrese bakılıyor…</string>
     <string name="book_server_note">Kaeri okuma ilerlemenizi bu sunucuya geri gönderir. Parola Anahtar Zinciri\'nde kalır.</string>
@@ -2659,16 +2690,16 @@
     <string name="book_sources_plugins_footer">Eklentiler, katıldığınız eklenti mağazaları üzerinden gelir.</string>
     <plurals name="book_sources_series">
         <item quantity="one">1 seri</item>
-        <item quantity="other">%1$d seri</item>
+        <item quantity="other">%1$,d seri</item>
     </plurals>
-    <string name="book_sources_scanning">Taranıyor · %1$d bulundu</string>
+    <string name="book_sources_scanning">Taranıyor · %1$,d bulundu</string>
     <string name="book_sources_missing">Bulunamadı. Sürücü bağlı mı?</string>
     <string name="book_sources_off">Kapalı</string>
     <string name="book_sources_progress_back">ilerleme sunucuya geri gider</string>
     <string name="book_sources_opds">OPDS kataloğu</string>
     <string name="book_sources_from_store">Şuradan: %1$s</string>
     <string name="book_sources_version">v%1$s</string>
-    <string name="book_sources_check_matches">Eşleşmeleri kontrol et · %1$d</string>
+    <string name="book_sources_check_matches">Eşleşmeleri kontrol et · %1$,d</string>
     <string name="book_sources_check_matches_title">Eşleşmeleri kontrol et</string>
     <string name="book_sources_scan">Yeniden tara</string>
     <string name="book_sources_report_progress">İlerlemeyi sunucuya gönder</string>
@@ -2684,7 +2715,7 @@
     <string name="read_sort_last_read">Son okunan</string>
     <plurals name="read_library_list_value">
         <item quantity="one">%1$s, 1 seri</item>
-        <item quantity="other">%1$s, %2$d seri</item>
+        <item quantity="other">%1$s, %2$,d seri</item>
     </plurals>
     <string name="read_library_empty">Henüz boş: %1$s</string>
     <string name="read_library_empty_line">Arama\'dan ya da seri sayfasından eklediğiniz seriler burada görünür.</string>
@@ -2694,13 +2725,13 @@
     <string name="read_search_placeholder">Okumada ara</string>
     <plurals name="search_other_scope">
         <item quantity="one">1 eşleşme: %2$s</item>
-        <item quantity="other">%1$d eşleşme: %2$s</item>
+        <item quantity="other">%1$,d eşleşme: %2$s</item>
     </plurals>
     <string name="search_show_them">Göster</string>
     <string name="read_search_browse_line">%1$s · AniList\'ten</string>
     <plurals name="read_search_total">
         <item quantity="one">AniList\'te 1 seri bulundu</item>
-        <item quantity="other">AniList\'te %1$d seri bulundu</item>
+        <item quantity="other">AniList\'te %1$,d seri bulundu</item>
     </plurals>
     <string name="read_search_failed">Aranamadı</string>
     <string name="read_search_nothing">%1$s için bir şey bulunamadı</string>
@@ -2720,15 +2751,15 @@
     <string name="read_filter_reset">Sıfırla</string>
     <string name="read_filter_any">Fark etmez</string>
     <string name="read_filter_set">%1$s:</string>
-    <string name="read_filter_many">%1$s ve %2$d tane daha</string>
+    <string name="read_filter_many">%1$s ve %2$,d tane daha</string>
     <string name="read_filter_not_genre">%1$s hariç</string>
     <plurals name="read_filter_genres_count">
         <item quantity="one">1 tür</item>
-        <item quantity="other">%1$d tür</item>
+        <item quantity="other">%1$,d tür</item>
     </plurals>
     <string name="read_filter_included">Dahil</string>
     <string name="read_filter_left_out">Hariç</string>
-    <string name="onboarding_step">%1$d / %2$d</string>
+    <string name="onboarding_step">%1$,d / %2$,d</string>
     <string name="onboarding_welcome_line">Kendi kaynaklarınızdan izlediklerinizi ve okuduklarınızı takip edin.</string>
     <string name="onboarding_welcome_note">Listeleriniz ve ilerlemeniz cihazlarınızda kalır. Takip hizmetleri ve kaynaklar eklemek size kalmış.</string>
     <string name="onboarding_medium_title">İzle, oku veya ikisi de?</string>
@@ -2758,7 +2789,7 @@
     <string name="onboarding_both_books">Kitaplar</string>
     <string name="onboarding_both_shows_folder_line">Bu %1$s üzerindeki video dosyaları</string>
     <string name="onboarding_both_shows_server_line">Jellyfin sunucunuz</string>
-    <string name="medium_choice_position">%1$d / %2$d</string>
+    <string name="medium_choice_position">%1$,d / %2$,d</string>
     <string name="medium_change_later">Bunu Ayarlar\'dan değiştirebilirsiniz.</string>
     <string name="medium_update_line">Kaeri artık kaynaklarınızdan manga, webtoon ve hafif roman okuyabilir. Bu %1$s üzerinde Kaeri uygulamasının ne için kullanılacağını seçin.</string>
     <plurals name="medium_join_title_watch">
@@ -2829,21 +2860,21 @@
     <string name="accounts_mangaupdates_credit">Kaeri, MangaUpdates ile herkese açık API\'si üzerinden iletişim kurar.</string>
     <string name="accounts_username">Kullanıcı adı</string>
     <plurals name="read_downloads_total">
-        <item quantity="one">%1$d bölüm · %2$s</item>
-        <item quantity="other">%1$d bölüm · %2$s</item>
+        <item quantity="one">%1$,d bölüm · %2$s</item>
+        <item quantity="other">%1$,d bölüm · %2$s</item>
     </plurals>
-    <string name="read_downloads_active">%1$s · %2$d / %3$d sayfa</string>
-    <string name="read_downloads_more_queued">%1$d tane daha sırada</string>
+    <string name="read_downloads_active">%1$s · %2$,d / %3$,d sayfa</string>
+    <string name="read_downloads_more_queued">%1$,d tane daha sırada</string>
     <plurals name="read_downloads_queued">
-        <item quantity="one">%1$d bölüm sırada</item>
-        <item quantity="other">%1$d bölüm sırada</item>
+        <item quantity="one">%1$,d bölüm sırada</item>
+        <item quantity="other">%1$,d bölüm sırada</item>
     </plurals>
     <string name="read_downloads_failed">%1$s indirilemedi. %2$s</string>
     <plurals name="read_downloads_kept">
-        <item quantity="one">%1$d bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="one">%1$,d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
-    <string name="read_downloads_read">%1$d okundu</string>
+    <string name="read_downloads_read">%1$,d okundu</string>
     <string name="read_downloads_delete_read">Okunanları sil</string>
     <string name="send_title">E-okuyucuya gönder</string>
     <string name="send_for">Hedef</string>
@@ -2857,7 +2888,7 @@
     <string name="send_prepare">Hazırla ve paylaş</string>
     <plurals name="send_preparing">
         <item quantity="one">Bölüm hazırlanıyor</item>
-        <item quantity="other">%1$d / %2$d bölüm hazırlanıyor</item>
+        <item quantity="other">%1$,d / %2$,d bölüm hazırlanıyor</item>
     </plurals>
     <string name="send_sized_for">Sayfalar %1$s için boyutlandırıldı</string>
     <string name="send_in_parts">%1$s boyutunu aşıyor, bu yüzden dosyalar parça parça gider.</string>
@@ -2866,13 +2897,13 @@
     <string name="send_size_working">Hesaplanıyor</string>
     <string name="send_chapters_open">Açık</string>
     <string name="send_chapters_closed">Kapalı</string>
-    <string name="send_progress_spoken">Yüzde %1$d</string>
+    <string name="send_progress_spoken">Yüzde %1$,d</string>
     <string name="send_chapter_action">E-okuyucuya gönder</string>
     <string name="send_parts_over">%1$s üzerindeyse parçalara bölünür</string>
     <string name="send_waiting_cancel">Gönderimi iptal et</string>
     <plurals name="send_ready">
         <item quantity="one">Bir dosya hazır.</item>
-        <item quantity="other">%1$d dosya hazır.</item>
+        <item quantity="other">%1$,d dosya hazır.</item>
     </plurals>
     <string name="send_share_again">Yeniden paylaş</string>
     <string name="send_banner">Gönderiliyor: %1$s</string>
@@ -2907,13 +2938,13 @@
     <string name="opds_share_downloads">İndirilenler</string>
     <plurals name="opds_share_downloads_count">
         <item quantity="one">Bir bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
     <string name="opds_share_manga">Manga klasörü</string>
     <string name="opds_share_novels">Roman klasörü</string>
     <plurals name="opds_share_series_count">
         <item quantity="one">Bir seri</item>
-        <item quantity="other">%1$d seri</item>
+        <item quantity="other">%1$,d seri</item>
     </plurals>
     <string name="opds_fetched_by">Alan e-okuyucular</string>
     <string name="opds_fetched_none">Henüz hiçbir e-okuyucu bir şey almadı.</string>
@@ -2925,7 +2956,7 @@
     <string name="opds_fetched_time">Son istek: %1$s</string>
     <plurals name="opds_fetched_files">
         <item quantity="one">Bir dosya</item>
-        <item quantity="other">%1$d dosya</item>
+        <item quantity="other">%1$,d dosya</item>
     </plurals>
     <string name="opds_reader_unnamed">%1$s adresindeki e-okuyucu</string>
     <string name="seasonal_previous">Önceki sezon</string>
@@ -2965,7 +2996,7 @@
     <string name="search_loading_more">Daha fazla başlık yükleniyor</string>
     <string name="filters_title">Filtreler</string>
     <string name="filters_close">Filtreleri kapat</string>
-    <string name="filters_button_count">Tüm filtreler · %1$d</string>
+    <string name="filters_button_count">Tüm filtreler · %1$,d</string>
     <string name="filters_button">Tüm filtreler</string>
     <string name="filter_genre">Tür</string>
     <string name="filter_genres">Türler</string>
@@ -3022,16 +3053,16 @@
     <string name="search_line_service">%1$s üzerinde</string>
     <plurals name="count_episodes">
         <item quantity="one">Bir bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
-    <string name="count_episodes_short">%1$d böl.</string>
-    <string name="count_out_of">%1$d/%2$d çıktı</string>
-    <string name="count_out_of_short">%1$d/%2$d</string>
+    <string name="count_episodes_short">%1$,d böl.</string>
+    <string name="count_out_of">%1$,d/%2$,d çıktı</string>
+    <string name="count_out_of_short">%1$,d/%2$,d</string>
     <plurals name="count_out">
         <item quantity="one">Bir bölüm çıktı</item>
-        <item quantity="other">%1$d bölüm çıktı</item>
+        <item quantity="other">%1$,d bölüm çıktı</item>
     </plurals>
-    <string name="count_out_short">%1$d çıktı</string>
+    <string name="count_out_short">%1$,d çıktı</string>
     <string name="count_starts">%1$s başlıyor</string>
     <string name="count_not_out">Henüz çıkmadı</string>
     <string name="count_next_of">Böl. %1$d/%2$d</string>
@@ -3039,12 +3070,12 @@
     <string name="count_dub_through">Dublaj %1$d</string>
     <plurals name="count_spoken_episodes">
         <item quantity="one">Bir bölüm</item>
-        <item quantity="other">%1$d bölüm</item>
+        <item quantity="other">%1$,d bölüm</item>
     </plurals>
-    <string name="count_spoken_out_of">%2$d bölümün %1$d tanesi çıktı</string>
+    <string name="count_spoken_out_of">%2$,d bölümün %1$,d tanesi çıktı</string>
     <plurals name="count_spoken_out">
         <item quantity="one">Bir bölüm çıktı</item>
-        <item quantity="other">%1$d bölüm çıktı</item>
+        <item quantity="other">%1$,d bölüm çıktı</item>
     </plurals>
     <string name="count_spoken_starts">%1$s tarihinde başlıyor</string>
     <string name="count_spoken_next_of">%2$d bölümün %1$d. bölümü</string>
@@ -3114,24 +3145,24 @@
     <string name="servers_qc_new_code">Yeni kod al</string>
     <string name="servers_libraries_title">Kitaplıkları seçin</string>
     <string name="servers_libraries_body">Diziler AniList ile eşleştirilir, böylece Ana sayfaya, listelerinize ve Arama\'ya katılırlar.</string>
-    <string name="servers_library_line">%1$s · %2$d dizi</string>
+    <string name="servers_library_line">%1$s · %2$,d dizi</string>
     <string name="servers_report">İzlediklerinizi Jellyfin\'e bildirin</string>
     <string name="servers_report_line">Kaldığınız yerler ve izlendi işaretleri burada oynattıklarınızı izler.</string>
     <string name="servers_add">Sunucu ekle</string>
-    <string name="servers_row_matching">Eşleştiriliyor · %1$d / %2$d dizi</string>
+    <string name="servers_row_matching">Eşleştiriliyor · %1$,d / %2$,d dizi</string>
     <plurals name="servers_row_summary">
-        <item quantity="one">1 kitaplık · %2$d dizi</item>
-        <item quantity="other">%1$d kitaplık · %2$d dizi</item>
+        <item quantity="one">1 kitaplık · %2$,d dizi</item>
+        <item quantity="other">%1$,d kitaplık · %2$,d dizi</item>
     </plurals>
     <plurals name="servers_row_libraries">
         <item quantity="one">1 kitaplık</item>
-        <item quantity="other">%1$d kitaplık</item>
+        <item quantity="other">%1$,d kitaplık</item>
     </plurals>
     <plurals name="servers_row_series">
         <item quantity="one">1 dizi</item>
-        <item quantity="other">%1$d dizi</item>
+        <item quantity="other">%1$,d dizi</item>
     </plurals>
-    <string name="servers_row_needs_look">%1$d tanesine bakmak gerek</string>
+    <string name="servers_row_needs_look">%1$,d tanesine bakmak gerek</string>
     <string name="servers_page_line">%1$s · Jellyfin %2$s · %3$s olarak oturum açıldı</string>
     <string name="servers_sign_out">Oturumu kapat</string>
     <string name="servers_remove">Sunucuyu kaldır</string>
@@ -3159,7 +3190,7 @@
     <string name="servers_quick_connect">Quick Connect</string>
     <string name="servers_libraries_heading">Kitaplıklar</string>
     <string name="servers_refresh">Yeniden eşleştir</string>
-    <string name="servers_needs_look">%1$d tanesi AniList ile eşleşmedi</string>
+    <string name="servers_needs_look">%1$,d tanesi AniList ile eşleşmedi</string>
     <string name="servers_kind_films">Filmler</string>
     <string name="servers_error_certificate">%1$s, bu cihazın güvenmediği bir sertifika kullanıyor. Güvendiği bir sertifikaya sahip, https:// ile başlayan bir adres kullanın.</string>
     <string name="servers_row_signed_out_here">Oturum kapalı</string>
@@ -3228,7 +3259,7 @@
     <string name="settings_system_captions_detail">Düz altyazılar, Erişilebilirlik\'teki altyazı tercihlerinizi kullanır. Stilli altyazılar kendi görünümünü korur.</string>
     <plurals name="settings_overridden">
         <item quantity="one">Bir dizi için geçersiz kılındı</item>
-        <item quantity="other">%1$d dizi için geçersiz kılındı</item>
+        <item quantity="other">%1$,d dizi için geçersiz kılındı</item>
     </plurals>
     <string name="settings_new_downloads">Yeni indirmeler</string>
     <string name="settings_keep_next">Sonraki bölümleri hazır tut</string>
@@ -3312,7 +3343,7 @@
     <string name="widget_resume_dubbed_label">%2$s: dublajlı %1$d. bölüme devam et</string>
     <plurals name="accounts_changes_waiting">
         <item quantity="one">Gönderilmeyi bekleyen bir değişiklik</item>
-        <item quantity="other">Gönderilmeyi bekleyen %1$d değişiklik</item>
+        <item quantity="other">Gönderilmeyi bekleyen %1$,d değişiklik</item>
     </plurals>
     <string name="settings_quality_higher">Yüksek</string>
     <string name="settings_quality_standard">Standart</string>
@@ -3351,7 +3382,7 @@
     <string name="settings_subs_system_change">Erişilebilirlik ayarlarında değiştirin</string>
     <string name="settings_subs_system_value">Sisteminizden</string>
     <string name="settings_subs_size">Boyut</string>
-    <string name="settings_subs_size_value">%%%1$d</string>
+    <string name="settings_subs_size_value">%%%1$,d</string>
     <string name="settings_subs_font">Yazı tipi</string>
     <string name="settings_subs_font_default">Varsayılan</string>
     <string name="settings_subs_font_serif">Tırnaklı</string>
@@ -3375,7 +3406,7 @@
     <string name="settings_subs_background_all">Tüm satırların arkasında</string>
     <string name="settings_subs_opacity">Opaklık</string>
     <string name="settings_subs_raise">Altyazıyı yükselt</string>
-    <string name="settings_subs_raise_value">Görüntünün %%%1$d\'i</string>
+    <string name="settings_subs_raise_value">Görüntünün %%%1$,d\'i</string>
     <string name="settings_subs_styled">Stilli altyazılar</string>
     <string name="settings_subs_styled_keep">Görünümünü koru</string>
     <string name="settings_subs_styled_keep_detail">Stilli altyazılar, yazarlarının verdiği yazı tiplerini, renkleri ve yazı yerleşimini korur. Boyut ve Yükselt yine de geçerlidir.</string>
@@ -3393,11 +3424,11 @@
     <string name="book_server_key_kept">Kaeri anahtarı %1$s içinde saklar ve yalnızca son dört karakterini gösterir.</string>
     <string name="book_server_key">Anahtar ••••%1$s</string>
     <plurals name="book_server_found_title">
-        <item quantity="one">%1$d seri bulundu</item>
-        <item quantity="other">%2$d kitaplıkta %1$d seri bulundu</item>
+        <item quantity="one">%1$,d seri bulundu</item>
+        <item quantity="other">%2$,d kitaplıkta %1$,d seri bulundu</item>
     </plurals>
     <string name="book_server_found_line">%2$s adresinde %1$s bulundu. Eklenecek kitaplıkları seçin.</string>
-    <string name="book_server_library_line">%1$d seri</string>
+    <string name="book_server_library_line">%1$,d seri</string>
     <string name="book_server_sync_progress">İlerlemeyi sunucuya gönder</string>
     <string name="book_server_sync_progress_line">Burada okuduğunuz sayfalar %1$s adresine gider, oradaki ilerleme de buraya gelir.</string>
     <string name="book_server_username">Kullanıcı adı</string>
@@ -3413,16 +3444,16 @@
     <string name="book_server_empty_recheck">Şimdi ekleyebilirsiniz. Kaeri her 30 dakikada bir yeniden bakar.</string>
     <string name="book_server_not_books_line">Kaeri Komga, Kavita ve OPDS kataloglarından okur.</string>
     <plurals name="book_folder_found">
-        <item quantity="one">Bir dosyada %1$d seri bulundu</item>
-        <item quantity="other">%2$d dosyada %1$d seri bulundu</item>
+        <item quantity="one">Bir dosyada %1$,d seri bulundu</item>
+        <item quantity="other">%2$,d dosyada %1$,d seri bulundu</item>
     </plurals>
-    <string name="book_folder_found_line">%1$s. Kaeri bunlardan %2$d tanesini ayrıntılarına göre eşleştirdi.</string>
+    <string name="book_folder_found_line">%1$s. Kaeri bunlardan %2$,d tanesini ayrıntılarına göre eşleştirdi.</string>
     <plurals name="book_folder_unsupported">
         <item quantity="one">Kaeri uygulamasının açamadığı bir dosya</item>
-        <item quantity="other">Kaeri uygulamasının açamadığı %1$d dosya</item>
+        <item quantity="other">Kaeri uygulamasının açamadığı %1$,d dosya</item>
     </plurals>
     <string name="book_folder_unsupported_line">%1$s. Klasörde olduğu gibi kalırlar.</string>
-    <string name="book_folder_drm">DRM ile kilitli %1$d EPUB</string>
+    <string name="book_folder_drm">DRM ile kilitli %1$,d EPUB</string>
     <string name="book_folder_opens">Kaeri CBZ, CBR, EPUB ve PDF dosyalarını ve görsel klasörlerini açar.</string>
     <string name="book_folder_show_files">Dosyaları göster</string>
     <string name="book_folder_add">Klasör ekle</string>
@@ -3430,7 +3461,7 @@
     <string name="book_folder_empty">%1$s içinde Kaeri uygulamasının açabileceği bir şey yok</string>
     <plurals name="book_folder_empty_line">
         <item quantity="one">İçinde bir dosya var, ama CBZ, CBR, EPUB, PDF veya görsel değil.</item>
-        <item quantity="other">İçinde %1$d dosya var, hiçbiri CBZ, CBR, EPUB, PDF veya görsel değil.</item>
+        <item quantity="other">İçinde %1$,d dosya var, hiçbiri CBZ, CBR, EPUB, PDF veya görsel değil.</item>
     </plurals>
     <string name="book_folder_choose_other">Başka bir klasör seçin</string>
     <string name="store_join_title">Bir eklenti mağazasına katılın</string>
@@ -3438,7 +3469,7 @@
     <string name="store_joined_title">Katıldınız: %1$s</string>
     <plurals name="store_joined_line">
         <item quantity="one">%1$s bir eklenti sunuyor. Katılmak hiçbir şey yüklemez; buradan veya daha sonra yükleyin.</item>
-        <item quantity="other">%1$s tarafından sunulan eklentiler: %2$d. Katılmak hiçbir şey yüklemez; istediklerinizi buradan veya daha sonra seçin.</item>
+        <item quantity="other">%1$s tarafından sunulan eklentiler: %2$,d. Katılmak hiçbir şey yüklemez; istediklerinizi buradan veya daha sonra seçin.</item>
     </plurals>
     <string name="store_group_reading">Okumak için</string>
     <string name="store_group_watching">İzlemek için</string>
@@ -3447,7 +3478,7 @@
     <string name="store_install_all_reading">Okuma için hepsini yükle</string>
     <plurals name="store_installed">
         <item quantity="one">Bir eklenti yüklendi. “Kaynaklarınız” bölümünde.</item>
-        <item quantity="other">%1$d eklenti yüklendi. Hepsi “Kaynaklarınız” bölümünde.</item>
+        <item quantity="other">%1$,d eklenti yüklendi. Hepsi “Kaynaklarınız” bölümünde.</item>
     </plurals>
     <string name="store_other_medium">%1$s içindeki her eklenti izlemek için</string>
     <string name="store_other_medium_line">Bu cihazda izleme kapalı, bu yüzden hiçbiri “kaynaklar” bölümünde görünmez.</string>
@@ -3458,31 +3489,31 @@
     <string name="store_err_unreachable_line">Davet doğru görünüyor, ama mağaza yanıt vermiyor. Daha sonra yeniden deneyin ya da çalışıp çalışmadığını %1$s kişisine sorun.</string>
     <plurals name="store_other_medium_more">
         <item quantity="one">Bir tane daha izlemek için, ama izleme bu cihazda kapalı.</item>
-        <item quantity="other">%1$d tane daha izlemek için, ama izleme bu cihazda kapalı.</item>
+        <item quantity="other">%1$,d tane daha izlemek için, ama izleme bu cihazda kapalı.</item>
     </plurals>
     <plurals name="store_tv_reading_only">
         <item quantity="one">Bir tane daha okuma için; bu TV okuma yapmaz.</item>
-        <item quantity="other">%1$d tane daha okuma için; bu TV okuma yapmaz.</item>
+        <item quantity="other">%1$,d tane daha okuma için; bu TV okuma yapmaz.</item>
     </plurals>
     <string name="store_tv_all_reading">%1$s içindeki her eklenti okuma için; bu TV okuma yapmaz.</string>
     <string name="store_plugin_row">Sürüm %1$s · %2$s ile iletişim kurabilir</string>
-    <string name="source_added">%1$s eklendi · %2$d seri</string>
+    <string name="source_added">%1$s eklendi · %2$,d seri</string>
     <plurals name="source_added_plugins">
         <item quantity="one">%2$s içinden bir eklenti yüklendi</item>
-        <item quantity="other">%2$s içinden yüklenen eklentiler: %1$d</item>
+        <item quantity="other">%2$s içinden yüklenen eklentiler: %1$,d</item>
     </plurals>
     <plurals name="source_row_server">
-        <item quantity="one">%1$s · %3$d kitaplıkta %2$d seri · az önce eklendi</item>
-        <item quantity="other">%1$s · %3$d kitaplıkta %2$d seri · az önce eklendi</item>
+        <item quantity="one">%1$s · %3$,d kitaplıkta %2$,d seri · az önce eklendi</item>
+        <item quantity="other">%1$s · %3$,d kitaplıkta %2$,d seri · az önce eklendi</item>
     </plurals>
     <plurals name="source_row_server_series">
-        <item quantity="one">%1$s · %3$d kitaplıkta %2$d seri</item>
-        <item quantity="other">%1$s · %3$d kitaplıkta %2$d seri</item>
+        <item quantity="one">%1$s · %3$,d kitaplıkta %2$,d seri</item>
+        <item quantity="other">%1$s · %3$,d kitaplıkta %2$,d seri</item>
     </plurals>
     <string name="source_row_server_empty">%1$s · henüz seri yok · 30 dakika sonra yeniden bakar</string>
     <plurals name="source_row_folder">
-        <item quantity="one">%1$s · %2$d seri · bir dosya atlandı</item>
-        <item quantity="other">%1$s · %2$d seri · %3$d dosya atlandı</item>
+        <item quantity="one">%1$s · %2$,d seri · bir dosya atlandı</item>
+        <item quantity="other">%1$s · %2$,d seri · %3$,d dosya atlandı</item>
     </plurals>
     <string name="source_row_plugin">%1$s içinden · %2$s · sürüm %3$s</string>
     <string name="sources_title">Kaynaklar</string>
@@ -3492,8 +3523,8 @@
     <string name="source_picker_automatic">Otomatik</string>
     <string name="source_picker_automatic_detail">Her bölüm, ona sahip olan ilk kaynaktan gelir</string>
     <plurals name="source_picker_coverage">
-        <item quantity="one">%1$d / %2$d bölüm</item>
-        <item quantity="other">%1$d / %2$d bölüm</item>
+        <item quantity="one">%1$,d / %2$,d bölüm</item>
+        <item quantity="other">%1$,d / %2$,d bölüm</item>
     </plurals>
     <string name="source_note_off">Kapalı</string>
     <string name="source_note_resting">Yanıt vermiyor, yakında yeniden denenecek</string>
@@ -3542,14 +3573,14 @@
     <string name="sources_contacts_one">Bağlandığı: %1$s</string>
     <plurals name="sources_contacts_line">
         <item quantity="one">Bağlandığı: %1$s ve bir tane daha</item>
-        <item quantity="other">Bağlandığı: %1$s ve %2$d tane daha</item>
+        <item quantity="other">Bağlandığı: %1$s ve %2$,d tane daha</item>
     </plurals>
     <string name="sources_contacts_none">Hiçbir sunucu listelemiyor</string>
     <string name="sources_no_hosts">Sunucu yok</string>
     <string name="sources_update_contacts_one">Bu güncelleme ayrıca %1$s sunucusuna bağlanır.</string>
     <plurals name="sources_update_contacts">
         <item quantity="one">Bu güncelleme ayrıca %1$s sunucusuna ve bir sunucu daha bağlanır.</item>
-        <item quantity="other">Bu güncelleme ayrıca %1$s sunucusuna ve %2$d sunucu daha bağlanır.</item>
+        <item quantity="other">Bu güncelleme ayrıca %1$s sunucusuna ve %2$,d sunucu daha bağlanır.</item>
     </plurals>
     <string name="sources_update_title">%1$s güncellensin mi?</string>
     <string name="sources_replace_title">%1$s değiştirilsin mi?</string>
@@ -3560,12 +3591,12 @@
     <string name="sources_source_order_row">Kaynak sırası</string>
     <string name="sources_torrents_note">Torrent\'ler Kaeri uygulamasının parçasıdır, bir eklenti değil. Proxy ve paylaşım Ayarlar\'da, Kaynaklar altında ayarlanır.</string>
     <string name="sources_rebuilding">Kaynaklar yeniden hazırlanıyor</string>
-    <string name="sources_response_ms">%1$d ms</string>
+    <string name="sources_response_ms">%1$,d ms</string>
     <string name="match_fix">Bu eşleşmeyi düzelt</string>
     <string name="match_choose">Eşleşmeyi seçin</string>
     <plurals name="match_uncertain">
         <item quantity="one">%2$s bu başlık olabilecek bir başlığı listeliyor. Bölümlerini oynatmak için onu seçin.</item>
-        <item quantity="other">%2$s bu başlık olabilecek %1$d başlığı listeliyor. Bölümlerini oynatmak için birini seçin.</item>
+        <item quantity="other">%2$s bu başlık olabilecek %1$,d başlığı listeliyor. Bölümlerini oynatmak için birini seçin.</item>
     </plurals>
     <string name="match_uncertain_none">%1$s bu başlığa uyan bir başlık listelemiyor. Yine de birini seçin ya da arayın.</string>
     <string name="match_source_picker_row">Yanlış mı? Eşleşmeyi düzelt</string>
@@ -3726,7 +3757,7 @@
     <string name="stores_owner_devices">Sahip · %1$s</string>
     <plurals name="stores_member_devices">
         <item quantity="one">Tek cihazı</item>
-        <item quantity="other">%1$d cihaz</item>
+        <item quantity="other">%1$,d cihaz</item>
     </plurals>
     <string name="stores_invite_for">Kim için? (isteğe bağlı)</string>
     <string name="stores_their_name">Kişinin adı</string>
@@ -3753,8 +3784,8 @@
     <string name="stores_invite_lasts_forever">Bitiş tarihi yok</string>
     <string name="stores_invite_group_name">Bu davet için bir ad (isteğe bağlı)</string>
     <string name="stores_invite_group_detail">Her kişi katılırken kendi adını ekler.</string>
-    <string name="stores_invite_works_times">%1$d kez geçerli, %2$s tarihine kadar.</string>
-    <string name="stores_invite_works_times_forever">%1$d kez geçerli, siz iptal edene kadar.</string>
+    <string name="stores_invite_works_times">%1$,d kez geçerli, %2$s tarihine kadar.</string>
+    <string name="stores_invite_works_times_forever">%1$,d kez geçerli, siz iptal edene kadar.</string>
     <string name="stores_invite_works_any">Bu bağlantıya sahip herkes %1$s tarihine kadar katılabilir.</string>
     <string name="stores_invite_works_any_forever">Bu bağlantıya sahip herkes siz iptal edene kadar katılabilir.</string>
     <string name="stores_invite_once_until">Gönderdiğiniz kişi için %1$s tarihine kadar bir kez çalışır.</string>
@@ -3765,9 +3796,9 @@
     <string name="stores_invite_not_used">Henüz kullanılmadı</string>
     <plurals name="stores_invite_used">
         <item quantity="one">Bir kez kullanıldı</item>
-        <item quantity="other">%1$d kez kullanıldı</item>
+        <item quantity="other">%1$,d kez kullanıldı</item>
     </plurals>
-    <string name="stores_invite_used_of">%2$d kullanımdan %1$d kullanıldı</string>
+    <string name="stores_invite_used_of">%2$,d kullanımdan %1$,d kullanıldı</string>
     <string name="stores_invites_ended">Son 30 günde sona erenler</string>
     <string name="stores_invite_used_up">%1$s tarihinde tükendi</string>
     <string name="stores_invite_ran_out">%1$s tarihinde sona erdi</string>
@@ -3776,7 +3807,7 @@
     <string name="stores_invite_joined">%1$s · %2$s tarihinde katıldı</string>
     <plurals name="stores_cancel_invite_detail">
         <item quantity="one">Artık kimse bununla katılamaz. Katılan kişi üye olarak kalır.</item>
-        <item quantity="other">Artık kimse bununla katılamaz. Katılan %1$d kişi üye olarak kalır.</item>
+        <item quantity="other">Artık kimse bununla katılamaz. Katılan %1$,d kişi üye olarak kalır.</item>
     </plurals>
     <string name="stores_join_your_name">Adınız (isteğe bağlı)</string>
     <string name="stores_join_your_name_detail">mağaza sahipleri bu adı üye listesinde görür.</string>
@@ -3789,10 +3820,10 @@
     <string name="stores_only_invited">Yalnızca davet ettiğiniz kişiler</string>
     <plurals name="stores_devices_joined">
         <item quantity="one">Bağlantıyla bir cihaz katıldı.</item>
-        <item quantity="other">Bağlantıyla %1$d cihaz katıldı.</item>
+        <item quantity="other">Bağlantıyla %1$,d cihaz katıldı.</item>
     </plurals>
     <string name="stores_device_joined_at">Katıldı: %1$s</string>
-    <string name="stores_newest_listed">En yeni %1$d gösteriliyor.</string>
+    <string name="stores_newest_listed">En yeni %1$,d gösteriliyor.</string>
     <string name="stores_server_older">Bu eklenti mağazasının sunucusu eski sürümde; yalnızca davet ettiğiniz kişileri kabul ediyor. Güncellenirse bu seçenek eklenir.</string>
     <string name="stores_remove_devices_title">Bağlantıyla katılan cihazlar kaldırılsın mı?</string>
     <string name="stores_remove_devices_detail">Hemen %1$s ile çalışmayı bırakırlar. Onlara yüklü eklentiler kalır.</string>
@@ -3803,7 +3834,7 @@
     <string name="stores_copy_link">Bağlantıyı kopyala</string>
     <plurals name="stores_offers_plugins">
         <item quantity="one">Bir eklenti</item>
-        <item quantity="other">%1$d eklenti</item>
+        <item quantity="other">%1$,d eklenti</item>
     </plurals>
     <string name="notice_open_stores">eklenti mağazalarını aç</string>
     <string name="stores_what_is">Bir eklenti mağazası, imzalı eklentiler tutan ve her cihaza kendi belirtecini veren küçük bir sunucudur. İçindeki eklentiler kaynaklar ekler. Kaeri eklenti mağazaları işletmez ve hiçbirini listelemez; bu yüzden sahibinden aldığınız bir davet bağlantısıyla birine katılırsınız.</string>
@@ -3858,7 +3889,7 @@
     <string name="devices_only_this">Yalnızca bu cihaz</string>
     <string name="devices_only_this_line">Kaldığınız yeri, geçmişinizi ve ayarlarınızı paylaşmak için başka bir cihaz eşleştirin.</string>
     <string name="devices_add">cihaz ekle</string>
-    <string name="devices_not_seen">%1$d gündür görülmedi</string>
+    <string name="devices_not_seen">%1$,d gündür görülmedi</string>
     <string name="devices_remote_only">Yalnızca uzaktan kumanda</string>
     <string name="devices_also_sync">%1$s ile de eşitle</string>
     <string name="devices_paired_tvs_foot">TV\'de Oynat için eşleştirildi. Uzaktan kumanda olarak eşleşen bir TV geçmişinizi hiçbir zaman almaz.</string>
@@ -3935,8 +3966,8 @@
     <string name="rkey_new_foot">Eski anahtar çalışmaz olur ve cihazlar bir sonraki eşitlemede yenisine geçer.</string>
     <string name="rkey_enter_title">Kurtarma anahtarınızı girin</string>
     <plurals name="rkey_enter_line">
-        <item quantity="one">%1$s, %2$d cihaz cihazından gelen geçmişi tutuyor. Eşitleme açılırken kaydettiğiniz anahtar onu açar.</item>
-        <item quantity="other">%1$s, %2$d cihazlar cihazından gelen geçmişi tutuyor. Eşitleme açılırken kaydettiğiniz anahtar onu açar.</item>
+        <item quantity="one">%1$s, %2$,d cihaz cihazından gelen geçmişi tutuyor. Eşitleme açılırken kaydettiğiniz anahtar onu açar.</item>
+        <item quantity="other">%1$s, %2$,d cihazlar cihazından gelen geçmişi tutuyor. Eşitleme açılırken kaydettiğiniz anahtar onu açar.</item>
     </plurals>
     <string name="rkey_enter_note">24 harf ve rakam, dörderli gruplar halinde. Boşluk ve büyük küçük harf fark etmez.</string>
     <string name="rkey_wrong">Bu anahtar bu klasörü açmıyor. Her dörtlü grubu denetleyip yeniden deneyin.</string>
@@ -4001,7 +4032,7 @@
     <string name="cloud_app_password_note">Nextcloud\'da Ayarlar, Güvenlik bölümünden bir tane oluşturun. Bu %1$s üzerinde saklanır.</string>
     <plurals name="devices_tvs_for_play">
         <item quantity="one">TV\'de Oynat için bir TV</item>
-        <item quantity="other">TV\'de Oynat için %1$d TV</item>
+        <item quantity="other">TV\'de Oynat için %1$,d TV</item>
     </plurals>
     <string name="devices_paired_today">Bugün eşleştirildi</string>
     <string name="tv_devices_add_line">Telefonunuza girilecek bir kod gösterir</string>
@@ -4080,16 +4111,16 @@
     <string name="episode_synopsis_hidden">Özet, spoiler korumasıyla gizlendi</string>
     <string name="episode_synopsis_show">Özeti göster</string>
     <string name="episode_synopsis_show_hint">Bu bölümün karesini ve özetini gösterir</string>
-    <string name="episode_facts">%1$d dk · Yayın tarihi %2$s</string>
-    <string name="episode_facts_length">%1$d min</string>
-    <string name="episode_facts_left">%1$d dk kaldı</string>
+    <string name="episode_facts">%1$,d dk · Yayın tarihi %2$s</string>
+    <string name="episode_facts_length">%1$,d min</string>
+    <string name="episode_facts_left">%1$,d dk kaldı</string>
     <string name="episode_protection_line">Spoiler koruması, %1$d. bölümden sonrasını gizler.</string>
     <string name="episode_protection_line_short">%1$d. bölümden sonra gizli</string>
     <string name="episode_range">%1$d. ile %2$d. bölümler arası</string>
     <string name="episode_range_label">Bölüm aralığı</string>
     <plurals name="episode_fold">
         <item quantity="one">İzlenen bir bölüm</item>
-        <item quantity="other">%1$d izlenen bölüm</item>
+        <item quantity="other">%1$,d izlenen bölüm</item>
     </plurals>
     <string name="episode_short">B%1$d</string>
     <string name="episode_aired">Yayın tarihi %1$s</string>
@@ -4121,7 +4152,7 @@
     <string name="more_rankings">Sıralamalar</string>
     <string name="more_following">Takip ettiğiniz kişiler</string>
     <string name="more_following_note">AniList\'ten</string>
-    <string name="more_followed_score">%1$d/10</string>
+    <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Buna benzer</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList bu dizi için henüz kadro, ekip ya da öneri içermiyor.</string>
@@ -4129,7 +4160,7 @@
     <string name="more_hide_spoiler_tags">Spoiler etiketlerini gizle</string>
     <plurals name="more_show_spoiler_tags">
         <item quantity="one">Bir spoiler etiketini göster</item>
-        <item quantity="other">%1$d spoiler etiketini göster</item>
+        <item quantity="other">%1$,d spoiler etiketini göster</item>
     </plurals>
     <string name="episode_line_dubbed">%1$s · Dublajlı</string>
     <string name="title_button_play_dubbed">Bölüm %1$d · Dublajlı oynat</string>
@@ -4141,7 +4172,7 @@
     <string name="title_fact_after">%1$d. bölümden sonra</string>
     <string name="title_fact_now">Şimdi</string>
     <string name="title_fact_tba">Açıklanacak</string>
-    <string name="more_following_line">%1$s · %2$d/10</string>
+    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Bölüme git…</string>
     <string name="episode_go_to_title">Bölüme git</string>
     <string name="episode_go_to_go">Git</string>
@@ -4228,7 +4259,7 @@
     <string name="accounts_state_signed_in">Oturum açık: %1$s, ad: %2$s</string>
     <plurals name="accounts_state_signed_in_waiting">
         <item quantity="one">Oturum açık: %1$s, ad: %2$s · bekleyen bir değişiklik</item>
-        <item quantity="other">Oturum açık: %1$s, ad: %2$s · bekleyen %3$d değişiklik</item>
+        <item quantity="other">Oturum açık: %1$s, ad: %2$s · bekleyen %3$,d değişiklik</item>
     </plurals>
     <string name="accounts_state_expired">%1$s yeniden oturum açmanızı istiyor</string>
     <string name="accounts_state_expired_short">Eşitlemeye devam etmek için yeniden oturum açın</string>
@@ -4350,7 +4381,7 @@
     <string name="tv_volume">TV ses düzeyi</string>
     <string name="tv_cast_group">Chromecast</string>
     <string name="tv_cast_none_found">Yerleşik Chromecast\'li TV\'ler de burada görünür.</string>
-    <string name="tv_cast_counting">%1$s · %2$d sn</string>
+    <string name="tv_cast_counting">%1$s · %2$,d sn</string>
     <string name="tv_cast_couldnt_start">%1$s üzerinde başlatılamadı</string>
     <string name="tv_cast_stopped">Yayın durdu</string>
     <string name="tv_cast_play_here">Burada oynat</string>
@@ -4358,7 +4389,7 @@
     <string name="tv_cast_mute">Sessize al</string>
     <string name="tv_cast_unmute">Sesi aç</string>
     <string name="tv_cast_volume_on_tv">Ses TV\'den ayarlanır</string>
-    <string name="tv_cast_up_next_in">Sıradaki · %1$d sn içinde oynar</string>
+    <string name="tv_cast_up_next_in">Sıradaki · %1$,d sn içinde oynar</string>
     <string name="tv_forget_note">Burada bir TV\'yi unutursanız o da bu cihaz cihazı unutur.</string>
     <string name="updates_title">Güncellemeler</string>
     <string name="updates_checking">Daha yeni bir şey olup olmadığı denetleniyor…</string>

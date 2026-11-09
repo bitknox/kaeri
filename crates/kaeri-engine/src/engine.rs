@@ -418,6 +418,9 @@ impl Engine {
         }
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
         services.syncing.set_language(language.clone());
+        // The terminal sets the process's language and passes none.
+        let tag = language.clone().unwrap_or_else(|| kaeri_i18n::language().to_owned());
+        services.book_sources.set_language(&tag);
         #[cfg(feature = "cast")]
         {
             casts.set_language(language);
