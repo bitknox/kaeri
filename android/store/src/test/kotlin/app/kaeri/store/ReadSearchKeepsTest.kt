@@ -113,4 +113,15 @@ class ReadSearchKeepsTest {
         model.runViewAll(row)
         assertTrue(model.viewAll.value.tiles.isEmpty())
     }
+
+    @Test
+    fun view_all_opens_on_the_row_covers_until_its_first_page_lands() {
+        val row = ReadingModel.EMPTY_QUERY.copy(formats = listOf("manga"))
+        model.runViewAll(row, first = listOf(tile(1), tile(2)))
+        assertEquals(listOf(tile(1), tile(2)), model.viewAll.value.tiles)
+        assertTrue(model.viewAll.value.stale)
+        model.apply(ReadingEvent.Search(row, 0u, listOf(tile(1), tile(2), tile(3)), false, null, 3u))
+        assertEquals(listOf(tile(1), tile(2), tile(3)), model.viewAll.value.tiles)
+        assertFalse(model.viewAll.value.stale)
+    }
 }

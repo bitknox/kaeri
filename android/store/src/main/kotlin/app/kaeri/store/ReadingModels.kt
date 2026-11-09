@@ -342,8 +342,13 @@ class ReadingModel(private val send: (Command) -> Unit) {
      * Opened from a row it starts afresh; a chip changed on the page keeps the titles on screen
      * until the answer replaces them ([keep]).
      */
-    fun runViewAll(query: ReadSearchQuery, keep: Boolean = false) {
-        _viewAll.value = if (keep) _viewAll.value.asking(query) else ReadSearchState(query = query, loading = true)
+    fun runViewAll(query: ReadSearchQuery, keep: Boolean = false, first: List<WorkTile> = emptyList()) {
+        _viewAll.value = when {
+            keep -> _viewAll.value.asking(query)
+            // The row's covers stand in until the first page lands, so the page never opens empty.
+            first.isNotEmpty() -> ReadSearchState(query = query, tiles = first, loading = true, stale = true)
+            else -> ReadSearchState(query = query, loading = true)
+        }
         reading(ReadingCommand.Search(query))
     }
 

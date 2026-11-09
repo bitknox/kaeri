@@ -383,7 +383,7 @@ internal fun rememberViewAll(): (ReadHomeRow) -> Unit {
     return remember(store, navigator) {
         { row ->
             row.viewAll?.let { query ->
-                store.reading.runViewAll(query)
+                store.reading.runViewAll(query, first = row.tiles)
                 val fade = navigator.fade
                 if (removed && fade != null) {
                     scope.launch { fade.swap(fullSpeed = true) { navigator.openReadPage(READ_PAGE_VIEW_ALL + row.id) } }

@@ -245,13 +245,28 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.switching(): Boole
 /** Whether the entry is a reading page pushed inside a destination: View all, e-ink's Browse. */
 private val NavBackStackEntry.isReadPage: Boolean get() = destination.route?.endsWith("/read/{page}") == true // i18n-skip
 
-/** A page coming in on M3's shared axis X: from [from] px along, fading in after the old one's first 90 ms. */
-private fun readPageIn(from: Int): EnterTransition =
-    slideInHorizontally(tween(300, easing = EMPHASIZED)) { from } + fadeIn(tween(210, delayMillis = 90))
+/*
+ * Reading pages on M3's shared axis X, 300 ms emphasized, as a crossfade rather than a fade
+ * through: only the page on top fades, over a page underneath that stays whole until it is
+ * covered, so no frame shows the empty background. A push puts the new page on top; a pop keeps
+ * the leaving page on top.
+ */
 
-/** A page leaving on M3's shared axis X: [to] px along, faded out in its first 90 ms. */
-private fun readPageOut(to: Int): ExitTransition =
-    slideOutHorizontally(tween(300, easing = EMPHASIZED)) { to } + fadeOut(tween(90))
+/** The page pushed on top: from [from] px along, fading in over the page underneath. */
+private fun readPageOver(from: Int): EnterTransition =
+    slideInHorizontally(tween(300, easing = EMPHASIZED)) { from } + fadeIn(tween(210))
+
+/** The page a push covers: [to] px along, whole until the new page is, then gone. */
+private fun readPageCovered(to: Int): ExitTransition =
+    slideOutHorizontally(tween(300, easing = EMPHASIZED)) { to } + fadeOut(tween(90, delayMillis = 210))
+
+/** The page a pop uncovers: from [from] px along, whole from the start under the leaving page. */
+private fun readPageUncovered(from: Int): EnterTransition =
+    slideInHorizontally(tween(300, easing = EMPHASIZED)) { from }
+
+/** The page a pop takes away: [to] px along, fading out over the page underneath. */
+private fun readPageAway(to: Int): ExitTransition =
+    slideOutHorizontally(tween(300, easing = EMPHASIZED)) { to } + fadeOut(tween(210))
 
 /**
  * The frame. A switch between destinations fades the page through on the quick spring (T6); a
@@ -452,7 +467,7 @@ fun AppRoot(
                                 when {
                                     navigator.replacing -> fadeIn(Motion.standard())
                                     switching() -> fadeIn(Motion.quick())
-                                    targetState.isReadPage && !eink -> readPageIn(axis)
+                                    targetState.isReadPage && !eink -> readPageOver(axis)
                                     else -> EnterTransition.None
                                 }
                             },
@@ -460,21 +475,21 @@ fun AppRoot(
                                 when {
                                     navigator.replacing -> fadeOut(Motion.standard())
                                     switching() -> fadeOut(Motion.quick())
-                                    targetState.isReadPage && !eink -> readPageOut(-axis)
+                                    targetState.isReadPage && !eink -> readPageCovered(-axis)
                                     else -> ExitTransition.KeepUntilTransitionsFinished
                                 }
                             },
                             popEnterTransition = {
                                 when {
                                     switching() -> fadeIn(Motion.quick())
-                                    initialState.isReadPage && !eink -> readPageIn(-axis)
+                                    initialState.isReadPage && !eink -> readPageUncovered(-axis)
                                     else -> EnterTransition.None
                                 }
                             },
                             popExitTransition = {
                                 when {
                                     switching() -> fadeOut(Motion.quick())
-                                    initialState.isReadPage && !eink -> readPageOut(axis)
+                                    initialState.isReadPage && !eink -> readPageAway(axis)
                                     else -> ExitTransition.KeepUntilTransitionsFinished
                                 }
                             },
