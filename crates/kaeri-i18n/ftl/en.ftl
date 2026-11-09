@@ -1853,6 +1853,61 @@ linux-join-medium-line-both = Watching and reading, as on { $device }
 # Switch on a book plugin's page: its series show in Kaeri while it is on.
 linux-book-plugin-use = Use this plugin
 
+# Screen reader name of a discovery row's View all button: the row's heading follows, so a list of links makes sense on its own.
+read-linux-view-all-row = View all, { $row }
+
+# Screen reader name of a discovery row's heading while its covers are on their way.
+read-linux-row-loading = { $row }, loading
+
+# Said once by screen readers when Your sources only turns on.
+read-linux-anilist-hidden = AniList's results are hidden.
+
+# Said once by screen readers when every part of a search has answered. Sources that failed follow, each in its own sentence.
+read-linux-search-done = { $anilist } from AniList, { $sources } from your sources.
+
+# Said once by screen readers when every source has answered, with Your sources only on.
+read-linux-search-done-sources = { $sources } from your sources.
+
+# Screen reader name of a source's row heading while the source is being asked. The source's name and kind come first: "Northwind, Plugin".
+read-linux-source-searching = { $source }, searching
+
+# Screen reader name of the reason under a source that gave no answer in time, where the screen shows "No answer in 15 s."
+read-linux-source-timeout =
+    { $seconds ->
+        [one] No answer in 1 second.
+       *[other] No answer in { $seconds } seconds.
+    }
+
+# Screen reader name of Try again under a source that didn't answer, with the source's name, so each of several reads on its own.
+read-linux-try-again-source = Try again, { $source }
+
+# Two facts on the line under a cover: "Manga · Releasing", "Japan · since March". Change the separator if the language sets such pairs another way.
+read-linux-caption-pair = { $first } · { $second }
+
+# A screen reader's list of a cover's facts, one more added to the ones before: "Manga, Japan", then "Manga, Japan, Releasing".
+read-linux-spoken-facts = { $facts }, { $fact }
+
+# What a screen reader says for a cover: one more sentence after the ones before. "Lantern Street Notes" and "Manga, Japan, Releasing" make "Lantern Street Notes. Manga, Japan, Releasing".
+read-linux-spoken-then = { $said }. { $more }
+
+# The end of what a screen reader says for a cover: the full stop after the last sentence.
+read-linux-spoken-end = { $said }.
+
+# A list of names before its last one, which "{ $first } and { $last }" adds: "Folders, Northwind" in "Folders, Northwind and Demo".
+read-linux-names-more = { $names }, { $name }
+
+# The filters and order a browse shows, one more added to the ones before: "Manga, Japan", then "Manga, Japan, Trending".
+read-linux-browse-more = { $filters }, { $filter }
+
+# The line over Search's results with AniList's count after it: "Webtoons, trending · 1,920 series from AniList".
+read-linux-line-total = { $line } · { $total }
+
+# Said once by screen readers when a search has settled: the next sentence after the ones before, such as a source that didn't answer.
+read-linux-said-then = { $said } { $more }
+
+# A source's name with its kind, as a screen reader names the source's row: "Northwind, Plugin".
+read-linux-source-with-kind = { $source }, { $kind }
+
 # Tooltip of the reader toolbar's settings button.
 linux-reader-settings-open = Reader settings
 

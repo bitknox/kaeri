@@ -458,7 +458,16 @@ pub struct Hub {
     /// For a shot: a search by hand that fails, or a pick that never comes back.
     #[cfg(feature = "fixtures")]
     pub match_hold: Cell<MatchHold>,
+    /// For a shot: reading's commands answered here, each event after its delay in ms, in place
+    /// of the fixture engine, which has no discovery rows or sources' search to show.
+    #[cfg(feature = "fixtures")]
+    pub read_answer: RefCell<Option<ReadAnswer>>,
 }
+
+/// What a shot answers a reading command with, when it answers it: events and their delays.
+#[cfg(feature = "fixtures")]
+pub type ReadAnswer =
+    Rc<dyn Fn(&kaeri_model::reading::ReadingCommand) -> Option<Vec<(u64, Event)>>>;
 
 /// What a match picker shot holds still in place of the engine's answer.
 #[cfg(feature = "fixtures")]
@@ -494,6 +503,8 @@ impl Hub {
             unsourced: Cell::default(),
             #[cfg(feature = "fixtures")]
             match_hold: Cell::default(),
+            #[cfg(feature = "fixtures")]
+            read_answer: RefCell::default(),
         })
     }
 
@@ -522,6 +533,25 @@ impl Hub {
                 }
             });
             return None;
+        }
+        // A reading shot's own answers.
+        #[cfg(feature = "fixtures")]
+        if let Command::Reading(reading) = &command {
+            let answer = self.read_answer.borrow().clone();
+            if let Some(events) = answer.and_then(|answer| answer(reading)) {
+                for (ms, event) in events {
+                    let me = self.me.clone();
+                    glib::timeout_add_local_once(
+                        std::time::Duration::from_millis(ms),
+                        move || {
+                            if let Some(hub) = me.upgrade() {
+                                hub.show_instead(vec![event]);
+                            }
+                        },
+                    );
+                }
+                return None;
+            }
         }
         // The lawful sources showcase: folders, servers and services the fixture engine has none of.
         #[cfg(feature = "fixtures")]
@@ -678,6 +708,12 @@ impl Hub {
         self.held.borrow_mut().extend(kinds);
     }
 
+    /// The engine's own events of `kinds` show again, after a shot's.
+    #[cfg(feature = "fixtures")]
+    pub fn release(&self, kinds: &[&str]) {
+        self.held.borrow_mut().retain(|kind| !kinds.contains(kind));
+    }
+
     /// The title as it last stood, when it has been seen.
     pub fn entry(&self, id: AnilistId) -> Option<Entry> {
         self.known.borrow().entries.get(&id.get()).cloned()
@@ -765,6 +801,11 @@ fn showcase_kind(event: &Event) -> Option<&'static str> {
         Event::StorePreview(_) => "store-preview",
         Event::BookSources(kaeri_model::book_sources::BookSourceEvent::View(_)) => {
             "book-sources"
+        }
+        Event::Reading(kaeri_model::reading::ReadingEvent::Home(_)) => "read-home",
+        Event::Reading(kaeri_model::reading::ReadingEvent::Search { .. }) => "read-search",
+        Event::Reading(kaeri_model::reading::ReadingEvent::SourceSearch(_)) => {
+            "read-source-search"
         }
         _ => return None,
     })

@@ -369,6 +369,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         return settle;
     }
     #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_read_discovery::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
     if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
         return settle;
     }
@@ -1373,6 +1377,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
     #[cfg(feature = "fixtures")]
     crate::shots_reading::unstage(shell, shot);
     #[cfg(feature = "fixtures")]
+    crate::shots_read_discovery::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
     crate::shots_prelaunch::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
@@ -2052,6 +2058,8 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 | "read-chapters"
                 | "read-chapters-list"
                 | "read-novel-paper" => open_popover(&window),
+                #[cfg(feature = "fixtures")]
+                "read-disc-poster-menu" | "read-disc-poster-menu-own" => context_menu(&window),
                 party if party.starts_with("party-") => player.shot_party_popover(),
                 _ => None,
             };
@@ -2108,6 +2116,10 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 #[cfg(feature = "fixtures")]
                 "reading" => {
                     crate::shots_reading::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "reading-discovery" => {
+                    crate::shots_read_discovery::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
                 #[cfg(feature = "fixtures")]
                 "prelaunch" => {
@@ -3330,6 +3342,30 @@ fn open_popover(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f3
         bounds.y() + bounds.height()
     };
     Some((popover.upcast(), x, y.max(0.0)))
+}
+
+/// A context menu open on a widget, as its key opens it: under the widget, from its start.
+#[cfg(feature = "fixtures")]
+fn context_menu(window: &adw::ApplicationWindow) -> Option<(gtk::Widget, f32, f32)> {
+    fn find(widget: &gtk::Widget) -> Option<gtk::PopoverMenu> {
+        if let Some(menu) = widget.downcast_ref::<gtk::PopoverMenu>()
+            && menu.is_visible()
+            && menu.parent().is_some_and(|p| p.is_mapped())
+        {
+            return Some(menu.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = find(&next) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
+    let menu = find(window.upcast_ref())?;
+    let bounds = menu.parent()?.compute_bounds(window)?;
+    Some((menu.upcast(), bounds.x(), bounds.y() + bounds.height()))
 }
 
 /// The first text field under `widget`.

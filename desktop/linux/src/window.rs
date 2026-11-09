@@ -45,6 +45,9 @@ pub enum Size {
 /// What a window size change calls.
 type OnSize = Box<dyn Fn(Size)>;
 
+/// How long a pushed page takes to slide over the one under it.
+const PUSH_MS: u32 = 250;
+
 /// What one of the window's actions does.
 type ShellAction = Box<dyn Fn(&Shell, Option<&glib::Variant>)>;
 
@@ -78,7 +81,17 @@ pub struct Ctx {
     main_menu: RefCell<Option<gtk::MenuButton>>,
     /// The pick the title page on screen was opened by (Surprise me or Another), for its Another.
     pub pick: RefCell<Option<Pick>>,
+    /// Reading's Search, opened by a Read row's View all with the row's filters and order.
+    pub read_view_all: RefCell<Option<ReadViewAll>>,
+    /// Reading's Search is on screen from View all: its Back returns to Read.
+    pub read_from_home: Cell<bool>,
+    /// The View all that opened it, for focus to return to on Back.
+    pub read_view_all_from: RefCell<Option<glib::WeakRef<gtk::Widget>>>,
 }
+
+/// Opens reading's Search on a query.
+/// View all on a Read row: its query and the line over its results.
+pub type ReadViewAll = Rc<dyn Fn(kaeri_model::reading::ReadSearchQuery, Option<String>)>;
 
 /// A title opened by Surprise me: where it was picked from, and whether that pool has another.
 #[derive(Debug, Clone)]
@@ -114,6 +127,13 @@ impl Ctx {
     pub fn nav(&self) -> Option<adw::NavigationView> {
         let name = self.stack.visible_child_name()?;
         self.navs.borrow().iter().find(|(d, _)| d.name() == name).map(|(_, n)| n.clone())
+    }
+
+    /// Calls `f` when another destination comes on screen.
+    pub fn on_dest_changed(&self, f: impl Fn(Option<Dest>) + 'static) {
+        self.stack.connect_visible_child_name_notify(move |stack| {
+            f(stack.visible_child_name().and_then(|name| Dest::named(&name)))
+        });
     }
 
     /// The destination on screen.
@@ -380,6 +400,9 @@ impl Shell {
             content_focus: RefCell::default(),
             main_menu: RefCell::default(),
             pick: RefCell::default(),
+            read_view_all: RefCell::default(),
+            read_view_all_from: RefCell::default(),
+            read_from_home: Cell::new(false),
         });
 
         // The offline scene is offline before Home first asks, as a device without a network
@@ -597,6 +620,22 @@ impl Shell {
         }
     }
 
+    /// Show `dest` as a page pushed over the one on screen, or popped back to it: libadwaita's
+    /// push, over from the end and back under it. With Reduce Animation it is there at once.
+    fn slide(&self, dest: Dest, forward: bool) {
+        let stack = &self.ctx.stack;
+        if !crate::motion::reduced() {
+            stack.set_transition_type(if forward {
+                gtk::StackTransitionType::OverLeft
+            } else {
+                gtk::StackTransitionType::UnderRight
+            });
+            stack.set_transition_duration(PUSH_MS);
+        }
+        self.go(dest);
+        stack.set_transition_type(gtk::StackTransitionType::None);
+    }
+
     /// Settings on one of its panes.
     pub fn settings_pane(&self, pane: &str) {
         self.go(Dest::Settings);
@@ -711,8 +750,26 @@ impl Shell {
             self.player.close();
         } else if self.is_reader() {
             self.reader.back();
-        } else if let Some(nav) = self.ctx.nav() {
-            nav.pop();
+        } else if let Some(nav) = self.ctx.nav()
+            && !nav.pop()
+            && self.ctx.read_from_home.get()
+            && self.ctx.current_dest() == Some(Dest::ReadSearch)
+        {
+            self.read_back_home();
+        }
+    }
+
+    /// Back from reading's Search to Read, where View all opened it, at the same scroll.
+    pub fn read_back_home(&self) {
+        self.ctx.read_from_home.set(false);
+        self.slide(Dest::Read, false);
+        // Focus goes back to the View all that was pressed, as a pop would leave it.
+        if let Some(button) = self.ctx.read_view_all_from.take().and_then(|w| w.upgrade()) {
+            glib::idle_add_local_once(move || {
+                if button.is_mapped() {
+                    button.grab_focus();
+                }
+            });
         }
     }
 
@@ -963,6 +1020,17 @@ impl Shell {
                 }
             }),
         );
+        // Read's Couldn't load suggestions notice: Try again.
+        add(
+            "read-home-reload",
+            None,
+            Box::new(move |s, _| {
+                crate::reading::send(
+                    &s.ctx.hub,
+                    kaeri_model::reading::ReadingCommand::LoadHome { refresh: true },
+                );
+            }),
+        );
         add(
             "go",
             Some(glib::VariantTy::STRING),
@@ -1080,6 +1148,34 @@ impl Shell {
             "book-add-server",
             None,
             Box::new(|s, _| crate::reading::sources::add_server(&s.ctx)),
+        );
+        // View all on a Read row: reading's Search pushed over Read, its Back returning there.
+        add(
+            "read-view-all",
+            None,
+            Box::new(|s, _| {
+                s.ctx.prefs.set_scope_reading(Dest::Search.name(), true);
+                s.ctx.read_from_home.set(true);
+                s.slide(Dest::ReadSearch, true);
+            }),
+        );
+        add("read-back-home", None, Box::new(|s, _| s.read_back_home()));
+        // Add to Planning from a poster's menu or its key, said once it is done.
+        add(
+            "read-plan",
+            Some(glib::VariantTy::STRING),
+            Box::new(|s, a| {
+                if let Some(work) = a.and_then(String::from_variant) {
+                    crate::reading::send(
+                        &s.ctx.hub,
+                        kaeri_model::reading::ReadingCommand::SetStatus {
+                            work: kaeri_core::books::WorkId(work),
+                            status: kaeri_model::reading::LibrarySegmentRead::Planning,
+                        },
+                    );
+                    s.ctx.toast(&t::library_added_planning());
+                }
+            }),
         );
         for (name, shape) in crate::reading::series::ACTIONS {
             let ty = glib::VariantType::new(shape).expect("a type");

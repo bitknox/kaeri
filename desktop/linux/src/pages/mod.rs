@@ -283,6 +283,7 @@ pub fn shortcuts(ctx: &Ctx) {
                     t::shortcuts_episode_ranges(),
                     "<Control><Shift>bracketleft <Control><Shift>bracketright", // i18n-skip
                 ),
+                (t::library_add_planning(), crate::reading::discovery::PLAN_KEYS),
                 (t::shortcuts_context_menu(), "<Shift>F10"), // i18n-skip
             ],
         ),

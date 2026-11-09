@@ -221,11 +221,20 @@ pub fn ghost(
 ) {
     let of = of.as_ref();
     let before = gtk::WidgetPaintable::new(Some(of)).current_image();
-    let ghost = gtk::Picture::for_paintable(&before);
+    // The picture keeps the size it was taken at, from the top left: when what replaces it is
+    // shorter, the veil clips the picture instead of squeezing it.
+    let picture = gtk::Picture::for_paintable(&before);
+    picture.set_content_fit(gtk::ContentFit::Fill);
+    picture.set_size_request(of.width(), of.height());
+    picture.set_halign(gtk::Align::Start);
+    picture.set_valign(gtk::Align::Start);
+    let ghost = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::External)
+        .vscrollbar_policy(gtk::PolicyType::External)
+        .child(&picture)
+        .build();
     ghost.set_can_target(false);
-    ghost.set_halign(gtk::Align::Fill);
-    ghost.set_valign(gtk::Align::Start);
-    ghost.set_content_fit(gtk::ContentFit::Fill);
+    ghost.set_can_focus(false);
     change();
     if !of.is_mapped() {
         return;

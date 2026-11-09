@@ -100,8 +100,11 @@ const CHAPTERS: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" he
 /// A large A and a small a: the reader's Aa, its settings for the page and the text.
 const TEXT_LOOK: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#222" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 13.5 5.25 2.5 9 13.5M2.9 9.6h4.7"/><circle cx="12" cy="11" r="2.3"/><path d="M14.3 8.4v5.1"/></svg>"##; // i18n-skip
 
+/// An open book in outline: the foot of a cover plate for a work with no cover.
+const BOOK: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#222" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4.2C6.6 3 4.6 2.6 1.75 2.75v9.5C4.6 12.1 6.6 12.5 8 13.6c1.4-1.1 3.4-1.5 6.25-1.35v-9.5C11.4 2.6 9.4 3 8 4.2zM8 4.2v9.4"/></svg>"##; // i18n-skip
+
 /// The icons the app draws itself, in the cache's own theme folder: the mini player's, the
-/// people button's, the cast screen's, the die, the reader's Aa and its Chapters.
+/// people button's, the cast screen's, the die, the reader's Aa and its Chapters, and the book.
 pub fn action_icons(display: &gtk::gdk::Display, cache: &std::path::Path) {
     let root = cache.join("icons");
     let dir = root.join("hicolor/scalable/actions");
@@ -112,6 +115,7 @@ pub fn action_icons(display: &gtk::gdk::Display, cache: &std::path::Path) {
         ("kaeri-dice-symbolic", DICE),
         ("kaeri-text-look-symbolic", TEXT_LOOK),
         ("kaeri-chapters-symbolic", CHAPTERS),
+        ("kaeri-book-symbolic", BOOK),
     ]
     .iter()
     .all(|(name, svg)| {
