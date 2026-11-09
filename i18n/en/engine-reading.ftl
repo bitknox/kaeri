@@ -566,7 +566,7 @@ reading-row-from-group-in = From { $group }, { $language }
 # reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
 # @arg have: int
 # @arg n: int
-# @max 20
+# @max 28
 reading-row-parts-of = { $have } of { $n } parts
 
 # A chapter row, after the parts count: the part no group has released. With several, how many.
@@ -601,7 +601,7 @@ reading-row-from-source = From { $source }
 # A quiet line in the reader: pages a series repeats at the start or end of its chapters (a
 # group's credits or notices) were left out of this chapter. Tapping it shows them.
 # @arg count: int
-# @max 32
+# @max 36
 reader-credit-pages-skipped = { $count ->
     [one] { $count } credit page skipped
    *[other] { $count } credit pages skipped
