@@ -431,6 +431,7 @@
         <item quantity="other">%1$,d archivos · %2$s</item>
     </plurals>
     <string name="read_source_folders">Carpetas</string>
+    <string name="read_feed_downloads">Descargas</string>
     <string name="reading_since_january">desde enero</string>
     <string name="reading_since_february">desde febrero</string>
     <string name="reading_since_march">desde marzo</string>
@@ -443,6 +444,15 @@
     <string name="reading_since_october">desde octubre</string>
     <string name="reading_since_november">desde noviembre</string>
     <string name="reading_since_december">desde diciembre</string>
+    <string name="read_view_all_trending_manga">Manga en tendencia</string>
+    <string name="read_view_all_trending_webtoons">Webtoons en tendencia</string>
+    <string name="read_view_all_trending_novels">Novelas ligeras en tendencia</string>
+    <string name="read_view_all_new_manga">Manga iniciado en los últimos 12 meses</string>
+    <string name="read_view_all_new_webtoons">Webtoons iniciados en los últimos 12 meses</string>
+    <string name="read_view_all_new_novels">Novelas ligeras iniciadas en los últimos 12 meses</string>
+    <string name="read_view_all_finished_manga">Manga finalizado, por popularidad</string>
+    <string name="read_view_all_finished_webtoons">Webtoons finalizados, por popularidad</string>
+    <string name="read_view_all_finished_novels">Novelas ligeras finalizadas, por popularidad</string>
     <string name="store_joined">Te uniste a %1$s como %2$s.</string>
     <string name="store_joined_unnamed">Te uniste a %1$s sin nombre.</string>
     <string name="store_left">Saliste de %1$s. Sus complementos siguen instalados.</string>
@@ -844,7 +854,34 @@
     <string name="reader_opening_waited">%1$s · %2$,d s</string>
     <string name="reader_sources_title">Leer este capítulo desde</string>
     <string name="reader_paper_parts">Qué cambia</string>
+    <string name="eink_tab_more">Más</string>
+    <string name="eink_home_all">Ver todo</string>
+    <string name="eink_place_chapter_page">Cap. %1$s · pág. %2$d</string>
+    <string name="eink_place_chapter_percent">Cap. %1$s · %2$,d%%</string>
+    <string name="eink_home_new_chapters">Capítulos nuevos</string>
+    <string name="eink_more_trackers">Servicios de seguimiento</string>
+    <string name="eink_more_sync">Sincronización</string>
+    <string name="eink_more_settings_line">Almacenamiento, notificaciones e idioma</string>
+    <string name="eink_downloads_space">%1$s en este dispositivo · %2$s libres</string>
+    <string name="eink_downloads_space_used">%1$s en este dispositivo</string>
+    <string name="eink_downloads_downloading">Descargando</string>
+    <string name="eink_downloads_here">En este dispositivo</string>
+    <string name="eink_keep_ready_on">Activado · los próximos capítulos de las series que estás leyendo</string>
+    <string name="eink_keep_ready_off">Desactivado</string>
     <string name="read_home_offline_line">El Inicio de Leer necesita conexión la primera vez que se abre. Los capítulos descargados se siguen abriendo.</string>
+    <string name="read_search_source_busy">%1$s, buscando</string>
+    <string name="read_search_source_busy_kind">%1$s, %2$s, buscando</string>
+    <string name="read_search_source_named">%1$s, %2$s</string>
+    <plurals name="read_search_source_timeout_spoken">
+        <item quantity="one">Sin respuesta en %1$,d segundo.</item>
+        <item quantity="many">Sin respuesta en %1$,d de segundos.</item>
+        <item quantity="other">Sin respuesta en %1$,d segundos.</item>
+    </plurals>
+    <string name="read_search_try_again_source">Reintentar, %1$s</string>
+    <string name="read_search_sources_only_nothing_line">Prueba con otras palabras.</string>
+    <string name="read_tile_spoken_title">%1$s.</string>
+    <string name="read_tile_spoken">%1$s. %2$s.</string>
+    <string name="read_tile_spoken_in">%1$s. %2$s. %3$s.</string>
     <string name="channel_chapters_name">Capítulos nuevos</string>
     <string name="channel_chapters_description">Cuando una serie de tu lista Leyendo tiene un capítulo nuevo.</string>
     <string name="channel_downloads_finished_name">Descargas terminadas</string>
@@ -2904,6 +2941,7 @@
     </plurals>
     <string name="read_filter_included">Incluido</string>
     <string name="read_filter_left_out">Excluido</string>
+    <string name="read_filter_more_genres">Más géneros</string>
     <string name="read_search_started">Fecha de inicio</string>
     <string name="read_search_sources_only">Solo tus fuentes</string>
     <string name="read_search_from_sources">De tus fuentes</string>
@@ -2912,6 +2950,7 @@
     <string name="read_search_source_timeout">Sin respuesta en %1$,d s.</string>
     <string name="read_search_source_nothing">No se encontró nada en %1$s.</string>
     <string name="read_search_in_source">En %1$s</string>
+    <string name="read_search_in_folders">En tus carpetas</string>
     <plurals name="read_search_in_sources">
         <item quantity="one">En %1$,d de tus fuentes</item>
         <item quantity="many">En %1$,d de tus fuentes</item>
@@ -2921,6 +2960,8 @@
     <string name="read_search_anilist_failed">AniList no respondió.</string>
     <string name="read_search_anilist_failed_line">Aun así se consultó a tus fuentes.</string>
     <string name="read_search_sources_nothing">Tampoco hay nada en tus fuentes.</string>
+    <string name="read_search_sources_only_nothing">No se encontró nada en tus fuentes</string>
+    <string name="read_state_offline_line">Sin conexión. Los capítulos descargados se siguen abriendo.</string>
     <string name="read_search_total_unknown">Series de AniList</string>
     <string name="read_search_more_anilist">Más resultados de AniList</string>
     <string name="read_search_shown">Se muestran %1$,d de %2$,d</string>
@@ -2929,6 +2970,43 @@
     <string name="read_search_source_kind_folder">Carpeta</string>
     <string name="read_search_source_kind_plugin">Complemento</string>
     <string name="read_search_source_more">Mostrar %1$,d más</string>
+    <string name="read_search_line_total">%1$s · %2$s</string>
+    <string name="read_search_browse_parts">%1$s, %2$s</string>
+    <string name="read_caption_two">%1$s · %2$s</string>
+    <string name="read_filter_shown">%1$s: %2$s</string>
+    <string name="read_name_tile">%1$s, %2$s</string>
+    <string name="read_name_tile_placed">%1$s, %2$s, %3$s</string>
+    <string name="read_name_tile_only_placed">%1$s, %2$s</string>
+    <string name="read_name_week_tile">%1$s, %2$s, %3$s</string>
+    <string name="read_name_week_tile_time">%1$s, %2$s</string>
+    <string name="read_name_spotlight_art">%1$s, Detalles</string>
+    <string name="read_name_heading">%1$s, %2$s</string>
+    <string name="read_name_loading">%1$s, cargando</string>
+    <string name="read_name_heading_loading">%1$s, %2$s, cargando</string>
+    <string name="read_name_view_all">Ver todo, %1$s</string>
+    <string name="read_name_filter">%1$s, %2$s</string>
+    <string name="read_name_failure">%1$s, %2$s</string>
+    <string name="read_name_source">%1$s, %2$s</string>
+    <plurals name="read_name_source_more">
+        <item quantity="one">Mostrar %1$,d más de %2$s</item>
+        <item quantity="many">Mostrar %1$,d más de %2$s</item>
+        <item quantity="other">Mostrar %1$,d más de %2$s</item>
+    </plurals>
+    <string name="read_search_sources_only_line">Los resultados de AniList están ocultos. Los filtros de abajo solo se aplican a los resultados de AniList.</string>
+    <string name="read_search_done">%1$,d de AniList, %2$,d en tus fuentes.</string>
+    <string name="read_home_row_loading">%1$s, cargando</string>
+    <string name="read_tile_add_planning">Añadir a Pendiente</string>
+    <string name="read_search_anilist_hidden">Los resultados de AniList están ocultos.</string>
+    <plurals name="read_search_said_anilist">
+        <item quantity="one">%1$,d de AniList</item>
+        <item quantity="many">%1$,d de AniList</item>
+        <item quantity="other">%1$,d de AniList</item>
+    </plurals>
+    <plurals name="read_search_said_sources">
+        <item quantity="one">%1$,d en tus fuentes</item>
+        <item quantity="many">%1$,d en tus fuentes</item>
+        <item quantity="other">%1$,d en tus fuentes</item>
+    </plurals>
     <string name="onboarding_step">%1$,d de %2$,d</string>
     <string name="onboarding_welcome_line">Lleva el registro de lo que ves y lees, desde tus propias fuentes.</string>
     <string name="onboarding_welcome_note">Tus listas y tu progreso se quedan en tus dispositivos. Agregar servicios de seguimiento y fuentes depende de ti.</string>

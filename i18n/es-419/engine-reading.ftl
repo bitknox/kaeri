@@ -223,6 +223,7 @@ read-hit-files-format = { $count ->
    *[other] { $count } archivos · { $format }
  }
 read-source-folders = Carpetas
+read-feed-downloads = Descargas
 reading-since-january = desde enero
 reading-since-february = desde febrero
 reading-since-march = desde marzo
@@ -235,3 +236,12 @@ reading-since-september = desde septiembre
 reading-since-october = desde octubre
 reading-since-november = desde noviembre
 reading-since-december = desde diciembre
+read-view-all-trending-manga = Manga en tendencia
+read-view-all-trending-webtoons = Webtoons en tendencia
+read-view-all-trending-novels = Novelas ligeras en tendencia
+read-view-all-new-manga = Manga iniciado en los últimos 12 meses
+read-view-all-new-webtoons = Webtoons iniciados en los últimos 12 meses
+read-view-all-new-novels = Novelas ligeras iniciadas en los últimos 12 meses
+read-view-all-finished-manga = Manga finalizado, por popularidad
+read-view-all-finished-webtoons = Webtoons finalizados, por popularidad
+read-view-all-finished-novels = Novelas ligeras finalizadas, por popularidad

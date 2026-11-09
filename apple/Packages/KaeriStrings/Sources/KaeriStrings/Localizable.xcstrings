@@ -197465,6 +197465,12 @@
             "value" : "%1$@ · %2$@"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -199127,6 +199133,12 @@
             "value" : "Downloads"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descargas"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200073,6 +200085,12 @@
             "value" : "More genres"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Más géneros"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -200446,6 +200464,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "es-419" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@: %2$@"
@@ -203625,6 +203649,12 @@
             "value" : "%1$@, loading"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, cargando"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205327,6 +205357,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205364,6 +205400,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "es-419" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205411,6 +205453,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205451,6 +205499,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, loading"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, cargando"
           }
         },
         "fr" : {
@@ -205495,6 +205549,12 @@
             "value" : "%1$@, loading"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, cargando"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205532,6 +205592,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "es-419" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205616,6 +205682,40 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "Show %1$lld more from %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Mostrar %1$lld más de %2$@"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Mostrar %1$lld más de %2$@"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Mostrar %1$lld más de %2$@"
                     }
                   }
                 }
@@ -205777,6 +205877,12 @@
             "value" : "%1$@, Details"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Detalles"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205814,6 +205920,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "es-419" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205861,6 +205973,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205898,6 +206016,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
+        "es-419" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
@@ -205945,6 +206069,12 @@
             "value" : "View all, %1$@"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver todo, %1$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -205987,6 +206117,12 @@
             "value" : "%1$@, %2$@, %3$@"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206024,6 +206160,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "es-419" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206237,6 +206379,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AniList's results are hidden."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los resultados de AniList están ocultos."
           }
         },
         "fr" : {
@@ -206533,6 +206681,12 @@
             "value" : "%1$@, %2$@"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -206657,6 +206811,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld from AniList, %2$lld from your sources."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de AniList, %2$lld en tus fuentes."
           }
         },
         "fr" : {
@@ -206867,6 +207027,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "In your folders"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En tus carpetas"
           }
         },
         "fr" : {
@@ -207390,6 +207556,12 @@
           }
         },
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "es-419" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
@@ -207985,6 +208157,40 @@
             }
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld de AniList"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld de AniList"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld de AniList"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -208176,6 +208382,40 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%1$lld from your sources"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "many" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld en tus fuentes"
+                    }
+                  },
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld en tus fuentes"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld en tus fuentes"
                     }
                   }
                 }
@@ -209261,6 +209501,12 @@
             "value" : "AniList's results are hidden. The filters below apply to AniList's results only."
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los resultados de AniList están ocultos. Los filtros de abajo solo se aplican a los resultados de AniList."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -209301,6 +209547,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nothing found in your sources"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se encontró nada en tus fuentes"
           }
         },
         "fr" : {
@@ -210669,6 +210921,12 @@
             "value" : "Offline. Downloaded chapters still open."
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin conexión. Los capítulos descargados se siguen abriendo."
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210709,6 +210967,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Add to Planning"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir a Pendiente"
           }
         },
         "fr" : {
@@ -210753,6 +211017,12 @@
             "value" : "Finished manga, most popular"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga finalizado, por popularidad"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210793,6 +211063,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Finished light novels, most popular"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novelas ligeras finalizadas, por popularidad"
           }
         },
         "fr" : {
@@ -210837,6 +211113,12 @@
             "value" : "Finished webtoons, most popular"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons finalizados, por popularidad"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210877,6 +211159,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manga started in the last 12 months"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga iniciado en los últimos 12 meses"
           }
         },
         "fr" : {
@@ -210921,6 +211209,12 @@
             "value" : "Light novels started in the last 12 months"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novelas ligeras iniciadas en los últimos 12 meses"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -210961,6 +211255,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons started in the last 12 months"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons iniciados en los últimos 12 meses"
           }
         },
         "fr" : {
@@ -211005,6 +211305,12 @@
             "value" : "Manga, trending"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga en tendencia"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211047,6 +211353,12 @@
             "value" : "Light novels, trending"
           }
         },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novelas ligeras en tendencia"
+          }
+        },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
@@ -211087,6 +211399,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Webtoons, trending"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoons en tendencia"
           }
         },
         "fr" : {
