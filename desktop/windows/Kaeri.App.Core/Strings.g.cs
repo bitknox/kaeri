@@ -571,7 +571,7 @@ public static partial class T
     public static string ReaderResumed(long page) => Fill(Get("ReaderResumed"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>The same notice in a webtoon strip, which counts images rather than pages.</summary>
-    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReaderResumedImage(long image) => Fill(Get("ReaderResumedImage"), ("image", image.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>A notice in the corner after jumping away with the scrubber or the page grid. Tapping it goes back to the page.</summary>
     public static string ReaderBackToPage(long page) => Fill(Get("ReaderBackToPage"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -5705,7 +5705,7 @@ public static partial class T
     public static string ReaderEndSwipe => Get("ReaderEndSwipe");
 
     /// <summary>The next episode's length on the divider inside a strip.</summary>
-    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string ReaderDividerImages(long count) => Fill(GetPlural("ReaderDividerImages", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
     public static string ReaderChapterLineTitled(string chapter, string title) => Fill(Get("ReaderChapterLineTitled"), ("chapter", chapter), ("title", title));

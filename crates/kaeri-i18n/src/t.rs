@@ -2875,6 +2875,51 @@ pub fn read_linux_try_again_source(source: &str) -> String {
     text("read-linux-try-again-source", &[("source", Arg::Text(source))])
 }
 
+/// Two facts on the line under a cover: "Manga · Releasing", "Japan · since March". Change the separator if the language sets such pairs another way.
+pub fn read_linux_caption_pair(first: &str, second: &str) -> String {
+    text("read-linux-caption-pair", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// A screen reader's list of a cover's facts, one more added to the ones before: "Manga, Japan", then "Manga, Japan, Releasing".
+pub fn read_linux_spoken_facts(facts: &str, fact: &str) -> String {
+    text("read-linux-spoken-facts", &[("facts", Arg::Text(facts)), ("fact", Arg::Text(fact))])
+}
+
+/// What a screen reader says for a cover: one more sentence after the ones before. "Lantern Street Notes" and "Manga, Japan, Releasing" make "Lantern Street Notes. Manga, Japan, Releasing".
+pub fn read_linux_spoken_then(said: &str, more: &str) -> String {
+    text("read-linux-spoken-then", &[("said", Arg::Text(said)), ("more", Arg::Text(more))])
+}
+
+/// The end of what a screen reader says for a cover: the full stop after the last sentence.
+pub fn read_linux_spoken_end(said: &str) -> String {
+    text("read-linux-spoken-end", &[("said", Arg::Text(said))])
+}
+
+/// A list of names before its last one, which "{ $first } and { $last }" adds: "Folders, Northwind" in "Folders, Northwind and Demo".
+pub fn read_linux_names_more(names: &str, name: &str) -> String {
+    text("read-linux-names-more", &[("names", Arg::Text(names)), ("name", Arg::Text(name))])
+}
+
+/// The filters and order a browse shows, one more added to the ones before: "Manga, Japan", then "Manga, Japan, Trending".
+pub fn read_linux_browse_more(filters: &str, filter: &str) -> String {
+    text("read-linux-browse-more", &[("filters", Arg::Text(filters)), ("filter", Arg::Text(filter))])
+}
+
+/// The line over Search's results with AniList's count after it: "Webtoons, trending · 1,920 series from AniList".
+pub fn read_linux_line_total(line: &str, total: &str) -> String {
+    text("read-linux-line-total", &[("line", Arg::Text(line)), ("total", Arg::Text(total))])
+}
+
+/// Said once by screen readers when a search has settled: the next sentence after the ones before, such as a source that didn't answer.
+pub fn read_linux_said_then(said: &str, more: &str) -> String {
+    text("read-linux-said-then", &[("said", Arg::Text(said)), ("more", Arg::Text(more))])
+}
+
+/// A source's name with its kind, as a screen reader names the source's row: "Northwind, Plugin".
+pub fn read_linux_source_with_kind(source: &str, kind: &str) -> String {
+    text("read-linux-source-with-kind", &[("source", Arg::Text(source)), ("kind", Arg::Text(kind))])
+}
+
 /// Tooltip of the reader toolbar's settings button.
 pub fn linux_reader_settings_open() -> String {
     text("linux-reader-settings-open", &[])

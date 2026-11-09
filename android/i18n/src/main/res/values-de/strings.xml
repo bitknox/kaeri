@@ -663,13 +663,11 @@
     <string name="reader_notice_go_back">Zurück</string>
     <string name="reader_notice_change">Ändern</string>
     <string name="reader_settings">Leseeinstellungen</string>
-    <string name="reader_chapter_line_titled">Kapitel %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Kapitel %1$s · Scrollen</string>
     <string name="reader_minutes_left">%1$,d Min.</string>
     <string name="reader_zone_next">Nächste Seite</string>
     <string name="reader_grid_title">Seiten</string>
     <string name="reader_end_continue">Weiterlesen</string>
-    <string name="reader_end_swipe">Wische zum Weiterlesen</string>
     <string name="reader_end_series">Zurück zur Serie</string>
     <string name="reader_end_again">Von vorn lesen</string>
     <string name="reader_opening_chapter">Kapitel %1$s wird geöffnet</string>
@@ -759,10 +757,6 @@
     <string name="reader_row_strip_gap">Abstand zwischen Bildern</string>
     <string name="reader_paper_look">Papier-Look tagsüber</string>
     <string name="reader_paper_dim">Seite abdunkeln</string>
-    <plurals name="reader_divider_images">
-        <item quantity="one">Ein Bild</item>
-        <item quantity="other">%1$,d Bilder</item>
-    </plurals>
     <string name="reader_opening_waited">%1$s · %2$,d s</string>
     <string name="reader_sources_title">Dieses Kapitel lesen von</string>
     <string name="reader_paper_parts">Was sich ändert</string>
@@ -2376,6 +2370,12 @@
     <string name="reader_end_from">Von %1$s</string>
     <string name="reader_chapter_line">Kapitel %1$s</string>
     <string name="reader_divider_facts_source">%1$s · von %2$s</string>
+    <string name="reader_end_swipe">Wische zum Weiterlesen</string>
+    <plurals name="reader_divider_images">
+        <item quantity="one">Ein Bild</item>
+        <item quantity="other">%1$,d Bilder</item>
+    </plurals>
+    <string name="reader_chapter_line_titled">Kapitel %1$s · %2$s</string>
     <string name="onboarding_read_demo">Demo lesen</string>
     <string name="onboarding_demo_books_detail">Ein kurzer Comic und eine kurze Geschichte, von ihren Urhebern unter Creative Commons geteilt.</string>
     <string name="onboarding_demo_both_detail">Eine kurze Episode und ein kurzer Comic, von ihren Urhebern unter Creative Commons geteilt.</string>

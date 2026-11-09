@@ -51,3 +51,68 @@ read-linux-source-timeout = { $seconds ->
 # @only linux
 # @arg source: text
 read-linux-try-again-source = Try again, { $source }
+
+## Joining words
+
+# Two facts on the line under a cover: "Manga · Releasing", "Japan · since March". Change the
+# separator if the language sets such pairs another way.
+# @only linux
+# @arg first: text
+# @arg second: text
+# @max 60
+read-linux-caption-pair = { $first } · { $second }
+
+# A screen reader's list of a cover's facts, one more added to the ones before: "Manga, Japan",
+# then "Manga, Japan, Releasing".
+# @only linux
+# @arg facts: text
+# @arg fact: text
+read-linux-spoken-facts = { $facts }, { $fact }
+
+# What a screen reader says for a cover: one more sentence after the ones before. "Lantern
+# Street Notes" and "Manga, Japan, Releasing" make "Lantern Street Notes. Manga, Japan,
+# Releasing".
+# @only linux
+# @arg said: text
+# @arg more: text
+read-linux-spoken-then = { $said }. { $more }
+
+# The end of what a screen reader says for a cover: the full stop after the last sentence.
+# @only linux
+# @arg said: text
+read-linux-spoken-end = { $said }.
+
+# A list of names before its last one, which "{ $first } and { $last }" adds: "Folders,
+# Northwind" in "Folders, Northwind and Demo".
+# @only linux
+# @arg names: text
+# @arg name: text
+read-linux-names-more = { $names }, { $name }
+
+# The filters and order a browse shows, one more added to the ones before: "Manga, Japan",
+# then "Manga, Japan, Trending".
+# @only linux
+# @arg filters: text
+# @arg filter: text
+read-linux-browse-more = { $filters }, { $filter }
+
+# The line over Search's results with AniList's count after it: "Webtoons, trending · 1,920
+# series from AniList".
+# @only linux
+# @arg line: text
+# @arg total: text
+read-linux-line-total = { $line } · { $total }
+
+# Said once by screen readers when a search has settled: the next sentence after the ones
+# before, such as a source that didn't answer.
+# @only linux
+# @arg said: text
+# @arg more: text
+read-linux-said-then = { $said } { $more }
+
+# A source's name with its kind, as a screen reader names the source's row: "Northwind,
+# Plugin".
+# @only linux
+# @arg source: text
+# @arg kind: text
+read-linux-source-with-kind = { $source }, { $kind }

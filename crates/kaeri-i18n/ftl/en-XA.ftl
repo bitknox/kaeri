@@ -1878,6 +1878,33 @@ read-linux-source-timeout =
 # Screen reader name of Try again under a source that didn't answer, with the source's name, so each of several reads on its own.
 read-linux-try-again-source = [Ţŕý àĝàîñ, { $source }~~~~~]
 
+# Two facts on the line under a cover: "Manga · Releasing", "Japan · since March". Change the separator if the language sets such pairs another way.
+read-linux-caption-pair = [{ $first } · { $second }~~~]
+
+# A screen reader's list of a cover's facts, one more added to the ones before: "Manga, Japan", then "Manga, Japan, Releasing".
+read-linux-spoken-facts = [{ $facts }, { $fact }~~~]
+
+# What a screen reader says for a cover: one more sentence after the ones before. "Lantern Street Notes" and "Manga, Japan, Releasing" make "Lantern Street Notes. Manga, Japan, Releasing".
+read-linux-spoken-then = [{ $said }. { $more }~~~]
+
+# The end of what a screen reader says for a cover: the full stop after the last sentence.
+read-linux-spoken-end = [{ $said }.~~]
+
+# A list of names before its last one, which "{ $first } and { $last }" adds: "Folders, Northwind" in "Folders, Northwind and Demo".
+read-linux-names-more = [{ $names }, { $name }~~~]
+
+# The filters and order a browse shows, one more added to the ones before: "Manga, Japan", then "Manga, Japan, Trending".
+read-linux-browse-more = [{ $filters }, { $filter }~~~]
+
+# The line over Search's results with AniList's count after it: "Webtoons, trending · 1,920 series from AniList".
+read-linux-line-total = [{ $line } · { $total }~~~]
+
+# Said once by screen readers when a search has settled: the next sentence after the ones before, such as a source that didn't answer.
+read-linux-said-then = [{ $said } { $more }~~~]
+
+# A source's name with its kind, as a screen reader names the source's row: "Northwind, Plugin".
+read-linux-source-with-kind = [{ $source }, { $kind }~~~]
+
 # Tooltip of the reader toolbar's settings button.
 linux-reader-settings-open = [Ŕéàðéŕ šéţţîñĝš~~~~~]
 

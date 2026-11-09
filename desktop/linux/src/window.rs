@@ -90,7 +90,8 @@ pub struct Ctx {
 }
 
 /// Opens reading's Search on a query.
-pub type ReadViewAll = Rc<dyn Fn(kaeri_model::reading::ReadSearchQuery)>;
+/// View all on a Read row: its query and the line over its results.
+pub type ReadViewAll = Rc<dyn Fn(kaeri_model::reading::ReadSearchQuery, Option<String>)>;
 
 /// A title opened by Surprise me: where it was picked from, and whether that pool has another.
 #[derive(Debug, Clone)]

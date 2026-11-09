@@ -48,7 +48,8 @@ struct RowSlot {
     title: gtk::Label,
     side: gtk::Label,
     all: gtk::Button,
-    query: Rc<RefCell<Option<ReadSearchQuery>>>,
+    /// View all's query and the line over its results.
+    query: Rc<RefCell<Option<ViewAll>>>,
 }
 
 /// The spotlight's or one of the person's own sections' slot.
@@ -213,7 +214,7 @@ impl Home {
             self.capsule.set_visible(false);
             return;
         }
-        if self.capsule.is_visible() || self.activity.borrow().is_some() {
+        if self.capsule.get_visible() || self.activity.borrow().is_some() {
             return;
         }
         let home = Rc::downgrade(self);
@@ -336,7 +337,7 @@ impl Home {
             if place.is_closing() {
                 continue;
             }
-            if place.is_visible() {
+            if place.get_visible() {
                 let rows = self.rows.clone();
                 slot.part.leave(move || {
                     if place.parent().is_some() {
@@ -365,12 +366,14 @@ impl Home {
         let inner = gtk::Box::new(gtk::Orientation::Vertical, 0);
         inner.set_margin_top(BETWEEN);
         let (head, title, side, all) = heading("");
-        let query: Rc<RefCell<Option<ReadSearchQuery>>> = Rc::default();
+        let query: Rc<RefCell<Option<ViewAll>>> = Rc::default();
         all.connect_clicked({
             let (ctx, query) = (Rc::downgrade(ctx), Rc::clone(&query));
             move |all| {
-                if let (Some(ctx), Some(query)) = (ctx.upgrade(), query.borrow().clone()) {
-                    view_all(&ctx, query, all);
+                if let (Some(ctx), Some((query, line))) =
+                    (ctx.upgrade(), query.borrow().clone())
+                {
+                    view_all(&ctx, query, line, all);
                 }
             }
         });
@@ -403,7 +406,9 @@ impl Home {
         let side = row.side.as_ref().map(say::msg);
         slot.side.set_label(side.as_deref().unwrap_or_default());
         slot.side.set_visible(side.is_some());
-        slot.query.replace(row.view_all.clone());
+        slot.query.replace(
+            row.view_all.clone().map(|q| (q, row.view_all_title.as_ref().map(say::msg))),
+        );
         slot.all.set_visible(row.view_all.is_some() && row.kind != ReadRowKind::Because);
         slot.all.update_property(&[gtk::accessible::Property::Label(
             &t::read_linux_view_all_row(&title),
@@ -433,11 +438,11 @@ impl Home {
         let mut above = false;
         for slot in self.own_slots.borrow().iter() {
             slot.part.inner.set_margin_top(if above { BETWEEN } else { 0 });
-            above |= slot.part.place.is_visible();
+            above |= slot.part.place.get_visible();
         }
         for slot in self.slots.borrow().iter() {
             slot.part.inner.set_margin_top(if above { BETWEEN } else { 0 });
-            above |= slot.part.place.is_visible();
+            above |= slot.part.place.get_visible();
         }
     }
 
@@ -506,13 +511,16 @@ impl Home {
     }
 }
 
+/// A row's View all: its query and the line over its results.
+type ViewAll = (ReadSearchQuery, Option<String>);
+
 /// View all: Search on the Reading side, with the row's exact filters and order. Back returns
 /// focus to `from`.
-fn view_all(ctx: &Rc<Ctx>, query: ReadSearchQuery, from: &gtk::Button) {
+fn view_all(ctx: &Rc<Ctx>, query: ReadSearchQuery, line: Option<String>, from: &gtk::Button) {
     ctx.read_view_all_from.replace(Some(from.upcast_ref::<gtk::Widget>().downgrade()));
     let open = ctx.read_view_all.borrow().clone();
     if let Some(open) = open {
-        open(query);
+        open(query, line);
     }
     let _ = WidgetExt::activate_action(&ctx.window, "win.read-view-all", None);
 }

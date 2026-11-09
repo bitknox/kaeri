@@ -115,10 +115,18 @@ fn browse_line(query: &ReadSearchQuery, filters: &ReadFilters, total: Option<u32
     parts.push(sort_name(
         query.sort.as_deref().or(filters.sorts.first().map(String::as_str)).unwrap_or(""),
     ));
-    let what = parts.join(", "); // i18n-skip
+    let what = discovery::join(parts, t::read_linux_browse_more);
     match total {
-        Some(n) => format!("{what} \u{b7} {}", t::read_search_total(i64::from(n))), // i18n-skip
+        Some(n) => t::read_linux_line_total(&what, &t::read_search_total(i64::from(n))),
         None => t::read_search_browse_line(&what),
+    }
+}
+
+/// View all's line: the row's own words, then the count once AniList knows it.
+fn titled_line(line: &str, total: Option<u32>) -> String {
+    match total {
+        Some(n) => t::read_linux_line_total(line, &t::read_search_total(i64::from(n))),
+        None => line.to_owned(),
     }
 }
 
@@ -160,10 +168,9 @@ fn settled_words(anilist: Option<Option<usize>>, groups: &[ReadSourceGroup]) -> 
     let mut said = match anilist {
         Some(Some(n)) => t::read_linux_search_done(n as i64, found as i64),
         // AniList was asked and didn't answer: said first, as the failed sources are after.
-        Some(None) => format!(
-            "{} {}", // i18n-skip
-            t::read_search_anilist_failed(),
-            t::read_linux_search_done_sources(found as i64)
+        Some(None) => t::read_linux_said_then(
+            &t::read_search_anilist_failed(),
+            &t::read_linux_search_done_sources(found as i64),
         ),
         None => t::read_linux_search_done_sources(found as i64),
     };
@@ -172,7 +179,10 @@ fn settled_words(anilist: Option<Option<usize>>, groups: &[ReadSourceGroup]) -> 
             group.state,
             ReadSourceState::Failed { .. } | ReadSourceState::TimedOut { .. }
         ) {
-            said = format!("{said} {}", t::read_search_source_failed(&group.source_name)); // i18n-skip
+            said = t::read_linux_said_then(
+                &said,
+                &t::read_search_source_failed(&group.source_name),
+            );
         }
     }
     said
@@ -634,6 +644,8 @@ struct Search {
     sources: gtk::Box,
     sources_head: gtk::Label,
     groups: gtk::Box,
+    /// From your sources fading out, until it hides.
+    sources_fade: RefCell<Option<adw::TimedAnimation>>,
     nothing_line: gtk::Label,
     slots: RefCell<Vec<Rc<GroupSlot>>>,
     /// AniList's later pages, under the sources, and More from AniList.
@@ -658,6 +670,8 @@ struct Search {
     has_more: Cell<bool>,
     asking_more: Cell<bool>,
     total: Cell<Option<u32>>,
+    /// View all's line for the query it opened, kept while that query is on screen.
+    titled: RefCell<Option<(ReadSearchQuery, String)>>,
     anilist_failed: Cell<bool>,
     anilist_in: Cell<bool>,
     source: RefCell<Option<ReadSourceSearch>>,
@@ -822,6 +836,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         grid: RefCell::new(poster_grid()),
         sources,
         sources_head,
+        sources_fade: RefCell::default(),
         groups,
         nothing_line,
         slots: RefCell::default(),
@@ -836,6 +851,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         empty,
         clear: clear.clone(),
         at: RefCell::new((ReadSearchQuery::default(), 0)),
+        titled: RefCell::default(),
         asked: Cell::new(false),
         tiles: RefCell::default(),
         first_page: RefCell::default(),
@@ -938,12 +954,16 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     // View all on a Read row: its filters and order, no words.
     ctx.read_view_all.replace(Some(Rc::new({
         let search = Rc::downgrade(&search);
-        move |query| {
+        move |query, line: Option<String>| {
             if let Some(search) = search.upgrade() {
                 search.filters.adopt(&query);
                 search.entry.set_text("");
                 search.filters.set_words(false);
+                search.titled.replace(None);
                 search.ask(true);
+                let asked = search.at.borrow().0.clone();
+                search.titled.replace(line.map(|line| (asked, line)));
+                search.set_line();
                 // Focus waits on Back until the list lands, then takes its first result.
                 search.focus_first.set(true);
                 let back = search.back.clone();
@@ -1011,7 +1031,11 @@ impl Search {
                 for slot in self.slots.take() {
                     self.groups.remove(&slot.part.place);
                 }
+                if let Some(fade) = self.sources_fade.take() {
+                    fade.pause();
+                }
                 self.sources.set_visible(false);
+                self.sources.set_opacity(1.0);
                 self.nothing_line.set_visible(false);
             }
         }
@@ -1044,7 +1068,7 @@ impl Search {
     /// Animation the two states crossfade.
     fn show_anilist(&self, show: bool) {
         let place = &self.anilist_place;
-        let shown = place.is_visible() && !place.is_closing();
+        let shown = place.get_visible() && !place.is_closing();
         self.place_sources(!show);
         if shown == show {
             return;
@@ -1226,7 +1250,15 @@ impl Search {
     /// The line over the grid: what a browse shows, or how many AniList found once it knows.
     fn set_line(&self) {
         let query = self.at.borrow().0.clone();
-        let words = if query.text.is_empty() {
+        let titled = self
+            .titled
+            .borrow()
+            .as_ref()
+            .filter(|(asked, _)| *asked == query)
+            .map(|(_, line)| line.clone());
+        let words = if let Some(line) = titled {
+            Some(titled_line(&line, self.total.get()))
+        } else if query.text.is_empty() {
             Some(browse_line(&query, &self.filters.choices, self.total.get()))
         } else {
             match self.total.get() {
@@ -1359,7 +1391,7 @@ impl Search {
         self.nothing_line.set_label(&t::read_search_source_nothing(&discovery::names(&names)));
         if names.is_empty() {
             self.nothing_line.set_visible(false);
-        } else if !self.nothing_line.is_visible() {
+        } else if !self.nothing_line.get_visible() {
             self.nothing_line.set_visible(true);
             motion::fade_in(&self.nothing_line);
         }
@@ -1392,7 +1424,7 @@ impl Search {
         };
         // Nothing anywhere takes the page's place, or gives it back, in one crossfade.
         match self.veil.child() {
-            Some(body) if self.nothing.is_visible() != nowhere && self.page.is_mapped() => {
+            Some(body) if self.nothing.get_visible() != nowhere && self.page.is_mapped() => {
                 motion::ghost(&self.veil, &body, true, switch);
             }
             _ => switch(),
@@ -1421,25 +1453,49 @@ impl Search {
         let mut first = true;
         for slot in self.slots.borrow().iter() {
             slot.part.inner.set_margin_top(if first { 12 } else { ABOVE_SOURCE });
-            first &= !slot.part.place.is_visible();
+            first &= !slot.part.place.get_visible();
         }
     }
 
     /// From your sources shows while a row or the line of sources that found nothing does,
     /// fading in when it comes and out when it goes; never over Nothing anywhere.
     fn show_sources(&self) {
-        let rows = self.slots.borrow().iter().any(|s| s.part.place.is_visible());
-        let show = !self.nothing.is_visible() && (rows || self.nothing_line.is_visible());
-        let shown = self.sources.is_visible();
+        let rows = self.slots.borrow().iter().any(|s| s.part.place.get_visible());
+        let show = !self.nothing.get_visible() && (rows || self.nothing_line.get_visible());
+        // Fading out counts as gone, so a row that comes back meanwhile stops the fade.
+        let leaving = self
+            .sources_fade
+            .borrow()
+            .as_ref()
+            .is_some_and(|fade| fade.state() == adw::AnimationState::Playing);
+        let shown = self.sources.get_visible() && !leaving;
         if show && !shown {
-            // The heading fades in; the rows and the line under it fade on their own.
+            let from = self.sources.opacity();
+            if let Some(fade) = self.sources_fade.take() {
+                fade.pause();
+            }
             self.sources.set_visible(true);
-            if self.page.is_mapped() {
-                motion::fade_in(&self.sources_head);
+            if leaving && self.page.is_mapped() {
+                // Back from part way out: it fades in from where it got to.
+                let back = adw::TimedAnimation::new(
+                    &self.sources,
+                    from,
+                    1.0,
+                    200,
+                    motion::opacity(&self.sources),
+                );
+                back.set_easing(adw::Easing::EaseOutCubic);
+                back.play();
+            } else {
+                // The heading fades in; the rows and the line under it fade on their own.
+                self.sources.set_opacity(1.0);
+                if self.page.is_mapped() {
+                    motion::fade_in(&self.sources_head);
+                }
             }
         } else if !show && shown {
             if self.page.is_mapped() {
-                motion::fade_out(&self.sources);
+                self.sources_fade.replace(Some(motion::fade_out(&self.sources)));
             } else {
                 self.sources.set_visible(false);
             }
@@ -1515,7 +1571,7 @@ impl Search {
         slot.kind.set_label(kind.as_deref().unwrap_or_default());
         slot.kind.set_visible(kind.is_some());
         let heading = match &kind {
-            Some(kind) => format!("{}, {kind}", group.source_name), // i18n-skip
+            Some(kind) => t::read_linux_source_with_kind(&group.source_name, kind),
             None => group.source_name.clone(),
         };
         let asking = group.state == ReadSourceState::Asking;
@@ -1698,6 +1754,7 @@ mod tests {
             not_in_sources: false,
             origin: None,
             amount: None,
+            started: None,
         };
         ReadSourceGroup {
             source_id: name.to_lowercase(),

@@ -694,13 +694,11 @@
     <string name="reader_notice_go_back">Voltar</string>
     <string name="reader_notice_change">Mudar</string>
     <string name="reader_settings">Ajustes do leitor</string>
-    <string name="reader_chapter_line_titled">Capítulo %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Capítulo %1$s · rolagem</string>
     <string name="reader_minutes_left">%1$,d min</string>
     <string name="reader_zone_next">Próxima página</string>
     <string name="reader_grid_title">Páginas</string>
     <string name="reader_end_continue">Seguir lendo</string>
-    <string name="reader_end_swipe">Deslize para seguir lendo</string>
     <string name="reader_end_series">Voltar à série</string>
     <string name="reader_end_again">Reler desde o início</string>
     <string name="reader_opening_chapter">Abrindo o capítulo %1$s</string>
@@ -790,11 +788,6 @@
     <string name="reader_row_strip_gap">Espaço entre imagens</string>
     <string name="reader_paper_look">Aparência papel de dia</string>
     <string name="reader_paper_dim">Escurecer a página</string>
-    <plurals name="reader_divider_images">
-        <item quantity="one">Uma imagem</item>
-        <item quantity="many">%1$,d de imagens</item>
-        <item quantity="other">%1$,d imagens</item>
-    </plurals>
     <string name="reader_opening_waited">%1$s · %2$,d s</string>
     <string name="reader_sources_title">Ler este capítulo de</string>
     <string name="reader_paper_parts">O que ele muda</string>
@@ -2452,6 +2445,13 @@
     <string name="reader_end_from">De %1$s</string>
     <string name="reader_chapter_line">Capítulo %1$s</string>
     <string name="reader_divider_facts_source">%1$s · de %2$s</string>
+    <string name="reader_end_swipe">Deslize para seguir lendo</string>
+    <plurals name="reader_divider_images">
+        <item quantity="one">Uma imagem</item>
+        <item quantity="many">%1$,d de imagens</item>
+        <item quantity="other">%1$,d imagens</item>
+    </plurals>
+    <string name="reader_chapter_line_titled">Capítulo %1$s · %2$s</string>
     <string name="onboarding_read_demo">Ler a demo</string>
     <string name="onboarding_demo_books_detail">Um quadrinho curto e um conto curto, compartilhados pelos autores sob Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Um episódio curto e um quadrinho curto, compartilhados pelos autores sob Creative Commons.</string>

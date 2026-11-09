@@ -105,8 +105,8 @@ fn facts_of(tile: &WorkTile) -> Facts {
 }
 
 /// When a New row's series started, once the engine says.
-fn started_of(_tile: &WorkTile) -> Option<String> {
-    None
+fn started_of(tile: &WorkTile) -> Option<String> {
+    tile.started.as_ref().map(say::msg)
 }
 
 /// The parts of the line under a poster's title: Not found in your sources once a row's series
@@ -135,7 +135,7 @@ fn parts(tile: &WorkTile, caption: Caption) -> Vec<String> {
 
 /// The line under a poster's title.
 pub fn line_of(tile: &WorkTile, caption: Caption) -> String {
-    parts(tile, caption).join(" \u{b7} ") // i18n-skip
+    join(parts(tile, caption), t::read_linux_caption_pair)
 }
 
 /// Everything a screen reader hears about a poster under its title, whatever its line shows:
@@ -152,15 +152,20 @@ fn spoken_parts(tile: &WorkTile, caption: Caption) -> Vec<String> {
 /// What a screen reader says for a poster: "Title. Manga, Japan, Releasing." and, after a miss,
 /// "Title. Not found in your sources." A joined result adds where it is: "In Home library."
 pub fn spoken(tile: &WorkTile, caption: Caption, joined: Option<&str>) -> String {
-    let line = spoken_parts(tile, caption).join(", "); // i18n-skip
+    let line = join(spoken_parts(tile, caption), t::read_linux_spoken_facts);
     let mut said = tile.title.clone();
     for part in [Some(line.as_str()), joined].into_iter().flatten().filter(|p| !p.is_empty()) {
-        said = format!("{said}. {part}"); // i18n-skip
+        said = t::read_linux_spoken_then(&said, part);
     }
     if tile.new_chapter {
-        said = format!("{said}. {}", t::chapter_state_new()); // i18n-skip
+        said = t::read_linux_spoken_then(&said, &t::chapter_state_new());
     }
-    format!("{said}.") // i18n-skip
+    t::read_linux_spoken_end(&said)
+}
+
+/// `words` as one, each joined to the ones before by the catalogue's `pair`.
+pub fn join(words: impl IntoIterator<Item = String>, pair: fn(&str, &str) -> String) -> String {
+    words.into_iter().reduce(|before, word| pair(&before, &word)).unwrap_or_default()
 }
 
 /// `names` as one list: "Comics folder, Northwind and Demo".
@@ -168,7 +173,10 @@ pub fn names(names: &[String]) -> String {
     match names {
         [] => String::new(),
         [one] => one.clone(),
-        [rest @ .., last] => t::linux_reader_names_and(&rest.join(", "), last), // i18n-skip
+        [rest @ .., last] => t::linux_reader_names_and(
+            &join(rest.iter().cloned(), t::read_linux_names_more),
+            last,
+        ),
     }
 }
 
@@ -297,7 +305,11 @@ pub fn poster(
     if !plan {
         // The person's own series and a source's hits: Details only, never Add to Planning.
         let menu = gtk::gio::Menu::new();
-        menu.append_item(&widgets::menu_item(&t::home_details(), "win.open-series", &tile.work.0));
+        menu.append_item(&widgets::menu_item(
+            &t::home_details(),
+            "win.open-series",
+            &tile.work.0,
+        ));
         widgets::context_menu(&button, &menu);
         return button;
     }
@@ -338,15 +350,30 @@ pub fn placeholder() -> gtk::Box {
     let card = gtk::Box::new(gtk::Orientation::Vertical, 0);
     card.set_size_request(POSTER, -1);
     card.append(&states::plate(POSTER, POSTER_HEIGHT, "read-poster-plate"));
-    let title = states::plate(POSTER * 8 / 10, 12, "bar");
+    // Each bar sits on an unseen copy of the line it holds, so the caption's height is the real
+    // one at any text size and nothing moves when the words land.
+    let title = widgets::show_title(" ", "home-poster-title");
     title.set_margin_top(8);
-    card.append(&title);
-    let line = states::plate(POSTER / 2, 10, "bar");
-    line.set_margin_top(8);
-    // The caption's two lines take 34 px; the bars, 30.
-    line.set_margin_bottom(4);
-    card.append(&line);
+    card.append(&held_by(title.upcast(), states::plate(POSTER * 8 / 10, 12, "bar")));
+    let line = gtk::Label::new(Some(" "));
+    line.add_css_class("haze");
+    line.add_css_class("home-sub");
+    line.set_size_request(-1, 16);
+    card.append(&held_by(line.upcast(), states::plate(POSTER / 2, 10, "bar")));
     card
+}
+
+/// `bar` centred on the left of `line`, which keeps its size and is never drawn.
+fn held_by(line: gtk::Widget, bar: impl IsA<gtk::Widget>) -> gtk::Overlay {
+    line.set_child_visible(false);
+    let held = gtk::Overlay::new();
+    held.set_child(Some(&line));
+    bar.set_halign(gtk::Align::Start);
+    bar.set_valign(gtk::Align::Center);
+    // The line's top margin stays above the bar, as above the words.
+    bar.set_margin_top(line.margin_top());
+    held.add_overlay(&bar);
+    held
 }
 
 /// `n` placeholders in a row, clipped where the row ends: they ask for no width of their own.
@@ -771,7 +798,7 @@ impl Part {
 
     /// Whether it shows and is not on its way out.
     pub fn is_shown(&self) -> bool {
-        self.place.is_visible() && !self.place.is_closing()
+        self.place.get_visible() && !self.place.is_closing()
     }
 
     /// Whether something on screen comes after it, in its column or the one holding that.
@@ -814,7 +841,7 @@ impl Part {
         if self.is_shown() {
             return;
         }
-        let hidden = !self.place.is_visible();
+        let hidden = !self.place.get_visible();
         let closing = self.place.is_closing();
         if hidden {
             self.inner.set_opacity(0.0);
@@ -838,7 +865,7 @@ impl Part {
     /// goes at once.
     pub fn leave(self: &Rc<Self>, done: impl Fn() + 'static) {
         self.landing.stop();
-        if self.place.is_closing() || !self.place.is_visible() {
+        if self.place.is_closing() || !self.place.get_visible() {
             return;
         }
         let part = Rc::downgrade(self);
@@ -914,6 +941,7 @@ mod tests {
             not_in_sources: false,
             origin: None,
             amount: None,
+            started: None,
         }
     }
 

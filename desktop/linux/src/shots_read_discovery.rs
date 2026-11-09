@@ -116,6 +116,7 @@ fn tile(b: &Book) -> WorkTile {
         not_in_sources: false,
         origin: origin_words(b.origin),
         amount: None,
+        started: None,
     }
 }
 
@@ -174,6 +175,7 @@ fn hit(
         not_in_sources: false,
         origin: None,
         amount,
+        started: None,
     }
 }
 
@@ -285,14 +287,50 @@ fn row(
         }),
         ReadRowKind::Because => None,
     };
+    // As the engine words the line over View all's results.
+    let view_all_title = view_all.as_ref().and_then(|_| {
+        use ReadRowFormat::{Manga, Novels, Webtoons};
+        if kind == ReadRowKind::MoreGenre {
+            return Some(title.clone());
+        }
+        Some(reading(match (kind, format?) {
+            (ReadRowKind::Trending, Manga) => ReadingMsg::ReadViewAllTrendingManga,
+            (ReadRowKind::Trending, Webtoons) => ReadingMsg::ReadViewAllTrendingWebtoons,
+            (ReadRowKind::Trending, Novels) => ReadingMsg::ReadViewAllTrendingNovels,
+            (ReadRowKind::New, Manga) => ReadingMsg::ReadViewAllNewManga,
+            (ReadRowKind::New, Webtoons) => ReadingMsg::ReadViewAllNewWebtoons,
+            (ReadRowKind::New, Novels) => ReadingMsg::ReadViewAllNewNovels,
+            (ReadRowKind::Finished, Manga) => ReadingMsg::ReadViewAllFinishedManga,
+            (ReadRowKind::Finished, Webtoons) => ReadingMsg::ReadViewAllFinishedWebtoons,
+            (ReadRowKind::Finished, Novels) => ReadingMsg::ReadViewAllFinishedNovels,
+            _ => return None,
+        }))
+    });
+    // A New row says when each series started.
+    const SINCE: [ReadingMsg; 4] = [
+        ReadingMsg::ReadingSinceMarch,
+        ReadingMsg::ReadingSinceJune,
+        ReadingMsg::ReadingSinceJanuary,
+        ReadingMsg::ReadingSinceSeptember,
+    ];
+    let tiles = books
+        .iter()
+        .enumerate()
+        .map(|(i, b)| WorkTile {
+            started: (kind == ReadRowKind::New)
+                .then(|| reading(SINCE[i % SINCE.len()].clone())),
+            ..tile(b)
+        })
+        .collect();
     ReadHomeRow {
         id: id.into(),
         kind,
         format,
         title,
         side,
-        tiles: books.iter().map(tile).collect(),
+        tiles,
         view_all,
+        view_all_title,
         pending: false,
     }
 }
@@ -580,10 +618,10 @@ fn group(
     state: ReadSourceState,
     tiles: Vec<WorkTile>,
 ) -> ReadSourceGroup {
-    // As Your sources has them: a server, a folder, a plugin; the demo is built in.
+    // As Your sources has them: a server and a plugin; the folders and the demo show their
+    // name alone.
     let kind = match id {
         HOME_LIBRARY => Some(ReadSourceKind::Server),
-        COMICS_FOLDER => Some(ReadSourceKind::Folder),
         NORTHWIND => Some(ReadSourceKind::Plugin),
         _ => None,
     };
@@ -644,7 +682,7 @@ fn sources_part(query: &ReadSearchQuery, moment: Moment) -> ReadSourceSearch {
         anilist: ReadAnilistState::Answered,
         groups: vec![
             home,
-            group(COMICS_FOLDER, "Comics folder", ReadSourceState::Hits, comics_hits()),
+            group(COMICS_FOLDER, "Folders", ReadSourceState::Hits, comics_hits()),
             group(NORTHWIND, "Northwind", northwind, Vec::new()),
             group(DEMO, "Demo", ReadSourceState::Nothing, Vec::new()),
         ],
@@ -657,7 +695,7 @@ fn sources_part(query: &ReadSearchQuery, moment: Moment) -> ReadSourceSearch {
             ReadSourceJoin {
                 work: WorkId(format!("a:{}", LANTERN[3].art)),
                 source_ids: vec![HOME_LIBRARY.into(), COMICS_FOLDER.into()],
-                source_names: vec!["Home library".into(), "Comics folder".into()],
+                source_names: vec!["Home library".into(), "Folders".into()],
             },
         ],
         done: moment == Moment::Failed,
@@ -676,7 +714,7 @@ fn sources_only_part(query: &ReadSearchQuery) -> ReadSourceSearch {
         anilist: ReadAnilistState::Skipped,
         groups: vec![
             group(HOME_LIBRARY, "Home library", ReadSourceState::Hits, home),
-            group(COMICS_FOLDER, "Comics folder", ReadSourceState::Hits, comics_hits()),
+            group(COMICS_FOLDER, "Folders", ReadSourceState::Hits, comics_hits()),
             group(NORTHWIND, "Northwind", ReadSourceState::Hits, northwind_hits()),
             group(DEMO, "Demo", ReadSourceState::Nothing, Vec::new()),
         ],
@@ -691,7 +729,7 @@ fn nothing_part(query: &ReadSearchQuery) -> ReadSourceSearch {
         anilist: ReadAnilistState::Answered,
         groups: [
             (HOME_LIBRARY, "Home library"),
-            (COMICS_FOLDER, "Comics folder"),
+            (COMICS_FOLDER, "Folders"),
             (NORTHWIND, "Northwind"),
             (DEMO, "Demo"),
         ]
@@ -731,7 +769,7 @@ fn night_part(query: &ReadSearchQuery) -> ReadSourceSearch {
                     ),
                 ],
             ),
-            group(COMICS_FOLDER, "Comics folder", ReadSourceState::Nothing, Vec::new()),
+            group(COMICS_FOLDER, "Folders", ReadSourceState::Nothing, Vec::new()),
             group(NORTHWIND, "Northwind", ReadSourceState::Nothing, Vec::new()),
             group(DEMO, "Demo", ReadSourceState::Nothing, Vec::new()),
         ],
@@ -918,9 +956,9 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
             ReadingCommand::Search { .. } => Some(Vec::new()),
             _ => None,
         }),
-        "read-disc-home-history" | "read-disc-home-history-end" | "read-disc-poster-menu-own" => {
-            home(with_history)
-        }
+        "read-disc-home-history"
+        | "read-disc-home-history-end"
+        | "read-disc-poster-menu-own" => home(with_history),
         "read-disc-home-loading" => home(loading),
         "read-disc-search-mid" | "read-disc-search-mid-end" | "read-disc-search-failed" => {
             let failed = shot == "read-disc-search-failed";

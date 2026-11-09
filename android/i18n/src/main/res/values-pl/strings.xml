@@ -725,13 +725,11 @@
     <string name="reader_notice_go_back">Wróć</string>
     <string name="reader_notice_change">Zmień</string>
     <string name="reader_settings">Ustawienia czytnika</string>
-    <string name="reader_chapter_line_titled">Rozdział %1$s · %2$s</string>
     <string name="reader_novel_line_scroll">Rozdział %1$s · przewijanie</string>
     <string name="reader_minutes_left">%1$,d min</string>
     <string name="reader_zone_next">Następna strona</string>
     <string name="reader_grid_title">Strony</string>
     <string name="reader_end_continue">Czytaj</string>
-    <string name="reader_end_swipe">Przesuń, aby czytać</string>
     <string name="reader_end_series">Wróć do serii</string>
     <string name="reader_end_again">Czytaj od początku</string>
     <string name="reader_opening_chapter">Otwieranie rozdziału %1$s</string>
@@ -821,12 +819,6 @@
     <string name="reader_row_strip_gap">Odstęp między obrazami</string>
     <string name="reader_paper_look">Wygląd papieru w dzień</string>
     <string name="reader_paper_dim">Przyciemnij stronę</string>
-    <plurals name="reader_divider_images">
-        <item quantity="one">Jeden obraz</item>
-        <item quantity="few">%1$,d obrazy</item>
-        <item quantity="many">%1$,d obrazów</item>
-        <item quantity="other">%1$,d obrazu</item>
-    </plurals>
     <string name="reader_opening_waited">%1$s · %2$,d s</string>
     <string name="reader_sources_title">Czytaj ten rozdział z</string>
     <string name="reader_paper_parts">Co zmienia</string>
@@ -2528,6 +2520,14 @@
     <string name="reader_end_from">Z: %1$s</string>
     <string name="reader_chapter_line">Rozdział %1$s</string>
     <string name="reader_divider_facts_source">%1$s · z: %2$s</string>
+    <string name="reader_end_swipe">Przesuń, aby czytać</string>
+    <plurals name="reader_divider_images">
+        <item quantity="one">Jeden obraz</item>
+        <item quantity="few">%1$,d obrazy</item>
+        <item quantity="many">%1$,d obrazów</item>
+        <item quantity="other">%1$,d obrazu</item>
+    </plurals>
+    <string name="reader_chapter_line_titled">Rozdział %1$s · %2$s</string>
     <string name="onboarding_read_demo">Przeczytaj demo</string>
     <string name="onboarding_demo_books_detail">Krótki komiks i krótkie opowiadanie, udostępnione przez twórców na licencji Creative Commons.</string>
     <string name="onboarding_demo_both_detail">Jeden krótki odcinek i jeden krótki komiks, udostępnione przez twórców na licencji Creative Commons.</string>
