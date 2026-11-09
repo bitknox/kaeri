@@ -347,6 +347,7 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReaderDetectedStrip -> Strings.readerDetectedStrip(context)
         is ReadingMsg.ReadingFailedOffline -> Strings.readingFailedOffline(context)
         is ReadingMsg.ReadingFailedSourceDown -> Strings.readingFailedSourceDown(context, this.source)
+        is ReadingMsg.ReadingFailedSourceOff -> Strings.readingFailedSourceOff(context, this.source)
         is ReadingMsg.ReadingFailedNotFound -> Strings.readingFailedNotFound(context)
         is ReadingMsg.ReadingFailedBlocked -> Strings.readingFailedBlocked(context, this.source, this.reason)
         is ReadingMsg.ReadingFailedParse -> Strings.readingFailedParse(context, this.source)

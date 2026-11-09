@@ -168,7 +168,14 @@ struct SeriesPage: View {
                             .padding(.top, wide ? 32 : 24)
                     }
                 } else if let failure = store.reading.failures[.series] {
+                    // The header that was known stays above why the rest did not come.
+                    if let tile = store.reading.knownTile(work) {
+                        KnownSeriesHeader(tile: tile, wide: wide).padding(.bottom, 24)
+                    }
                     ScreenFailed(title: L.titleLoadFailed, reason: failure.words) { store.reading.loadSeries(work) }
+                } else if let tile = store.reading.knownTile(work) {
+                    // What the tile tapped already showed, at once and where the header puts it.
+                    KnownSeriesHeader(tile: tile, wide: wide)
                 } else {
                     HomeWait(active: true, activity: "loading the series") { // i18n-skip
                         SeriesPlaceholder()
@@ -327,7 +334,7 @@ private struct WideSeriesHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(alignment: .top, spacing: 28) {
-                BookCover(url: series.cover, width: Device.isMac ? 200 : 220)
+                BookCover(url: series.cover ?? store.reading.knownTile(series.work)?.cover, width: Device.isMac ? 200 : 220)
                 VStack(alignment: .leading, spacing: 0) {
                     SeriesTitleBlock(series: series, compact: false)
                     SeriesActions(series: series, stretch: false, choosing: $choosing)
@@ -356,7 +363,7 @@ private struct PhoneSeriesHeader: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top, spacing: 16) {
-                BookCover(url: series.cover, width: 116)
+                BookCover(url: series.cover ?? store.reading.knownTile(series.work)?.cover, width: 116)
                 SeriesTitleBlock(series: series, compact: true)
             }
             SeriesActions(series: series, stretch: true, choosing: $choosing)
@@ -380,7 +387,8 @@ private struct SeriesTitleBlock: View {
 
     private var standard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(series.titles.display)
+            // Until the engine's header names it, the tile it was opened from does.
+            Text(series.titles.display.isEmpty ? store.reading.knownTile(series.work)?.title ?? "" : series.titles.display)
                 .font(.showTitle(size: compact ? 22 : (Device.isMac ? 30 : 34), relativeTo: .largeTitle))
                 .foregroundStyle(.silk)
                 .lineLimit(3)
@@ -508,9 +516,23 @@ private struct SeriesActions: View {
     /// steps back and waits.
     private var main: some View { mainButton(icon: !stretch) }
 
+    /// No source is known to hold it yet, but the engine is still asking: the chapters have not
+    /// come. The button holds its place until they do, rather than say there is nothing to read.
+    private var stillAsking: Bool {
+        series.action == .noSource && store.reading.chapters[series.work] == nil
+    }
+
     @ViewBuilder
     private func mainButton(icon: Bool) -> some View {
-        if let words = ReadSeriesWords.action(series.action) {
+        if stillAsking {
+            Button {} label: {
+                Text(L.actionReadPart(n: "1")).lineLimit(1).frame(maxWidth: stretch ? .infinity : nil)
+            }
+            .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: font, offIsRaised: true))
+            .disabled(true)
+            .redacted(reason: .placeholder)
+            .accessibilityHidden(true)
+        } else if let words = ReadSeriesWords.action(series.action) {
             Button {
                 ReadSeriesWords.perform(series.action, work: series.work, store: store, navigator: navigator)
             } label: {
@@ -825,7 +847,31 @@ private struct SeriesChapters: View {
                 .pointerHover()
             }
             .padding(.bottom, 8)
-            if let chapters {
+            // The rows take the placeholders' place in one crossfade, with nothing above moving.
+            // Reduce Motion keeps it: a fade moves nothing.
+            ZStack(alignment: .topLeading) {
+                if let chapters {
+                    list(chapters).transition(.opacity)
+                } else {
+                    HomeWait(active: true, activity: "loading chapters") { // i18n-skip
+                        ForEach(0..<5, id: \.self) { _ in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Chapter 12 The Far Shore").font(.ui(13)) // i18n-skip
+                                Text("Read · 3 weeks ago").font(.ui(12)) // i18n-skip
+                            }
+                            .foregroundStyle(.haze)
+                        }
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .animation(.standard, value: chapters == nil)
+        }
+    }
+
+    @ViewBuilder
+    private func list(_ chapters: ReadChapters) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
                 if let failure = chapters.failure {
                     failed(failure, chapters: chapters)
                 }
@@ -841,17 +887,6 @@ private struct SeriesChapters: View {
                 ForEach(groups, id: \.volume) { group in
                     volume(group)
                 }
-            } else {
-                HomeWait(active: true, activity: "loading chapters") { // i18n-skip
-                    ForEach(0..<5, id: \.self) { _ in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Chapter 12 The Far Shore").font(.ui(13)) // i18n-skip
-                            Text("Read · 3 weeks ago").font(.ui(12)) // i18n-skip
-                        }
-                        .foregroundStyle(.haze)
-                    }
-                }
-            }
         }
     }
 
@@ -1207,6 +1242,26 @@ private struct RemoveFromLists: ViewModifier {
 extension View {
     fileprivate func removeFromLists(series: SeriesView, asking: Binding<Bool>) -> some View {
         modifier(RemoveFromLists(series: series, asking: asking))
+    }
+}
+
+/// The cover and title the tapped tile carried, in the header's own sizes, until the series' own
+/// view comes and takes their place without moving them.
+private struct KnownSeriesHeader: View {
+    let tile: WorkTile
+    let wide: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: wide ? 28 : 16) {
+            BookCover(url: tile.cover, width: wide ? (Device.isMac ? 200 : 220) : 116)
+            Text(tile.title)
+                .font(.showTitle(size: wide ? (Device.isMac ? 30 : 34) : 22, relativeTo: .largeTitle))
+                .foregroundStyle(.silk)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
     }
 }
 

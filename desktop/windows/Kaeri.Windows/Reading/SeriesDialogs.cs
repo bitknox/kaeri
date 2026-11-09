@@ -252,14 +252,35 @@ static class SeriesDialogs
             lead.Add(label);
         if (edition.Language is { Length: > 0 } language)
             lead.Add(Wording.LanguageName(language));
-        var latest = edition.Latest ?? edition.Chapters.ToString(System.Globalization.CultureInfo.CurrentCulture);
-        var parts = new List<string>(lead)
-        {
-            lead.Count == 0 ? T.SeriesReadFromChapters(latest) : T.SeriesReadFromChaptersLater(latest),
-        };
+        var parts = new List<string>(lead) { EditionChapters(edition, lead.Count == 0) };
         if (folder)
             parts.Add(T.SeriesReadFromOnDevice(SyncWords.Kind));
         return string.Join(" · ", parts);
+    }
+
+    /// <summary>
+    /// The chapters part of an edition's line. A list not asked for yet, or still on its way,
+    /// says it is being checked; an empty one says so; one that failed says why. Only a list the
+    /// source gave has a range, so it never reads "1 to 0".
+    /// </summary>
+    static string EditionChapters(BookEditionRow edition, bool first)
+    {
+        var checking = first ? T.SeriesReadFromChecking : T.SeriesReadFromCheckingLater;
+        var empty = first ? T.SeriesReadFromEmpty : T.SeriesReadFromEmptyLater;
+        var has = edition.Chapters > 0 || edition.Latest is not null;
+        switch (edition.Listing)
+        {
+            case EditionListing.Failed failed:
+                return failed.Failure.Words();
+            case EditionListing.Empty:
+                return empty;
+            case EditionListing.Asking:
+                return checking;
+        }
+        if (!has)
+            return edition.Listing is null ? checking : empty;
+        var latest = edition.Latest ?? edition.Chapters.ToString(System.Globalization.CultureInfo.CurrentCulture);
+        return first ? T.SeriesReadFromChapters(latest) : T.SeriesReadFromChaptersLater(latest);
     }
 
     // Tracking

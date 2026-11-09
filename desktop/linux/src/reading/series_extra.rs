@@ -13,8 +13,8 @@ use kaeri_model::{
     command::Command,
     event::Event,
     reading::{
-        BookEditionRow, ReadingCommand, ReadingEvent, SeriesView, TrackerMapping,
-        TrackerReadRow,
+        BookEditionRow, EditionListing, ReadingCommand, ReadingEvent, SeriesView,
+        TrackerMapping, TrackerReadRow,
     },
 };
 
@@ -433,17 +433,43 @@ fn edition_line(
     }
     lead.extend(edition.version_label.clone().filter(|l| !l.is_empty()));
     lead.extend(edition.language.as_deref().filter(|l| !l.is_empty()).map(say::language));
-    let latest = edition.latest.clone().unwrap_or_else(|| edition.chapters.to_string());
     let mut parts = lead.clone();
-    parts.push(if lead.is_empty() {
-        t::series_read_from_chapters(&latest)
-    } else {
-        t::series_read_from_chapters_later(&latest)
-    });
+    parts.push(edition_chapters(edition, lead.is_empty()));
     if folder {
         parts.push(t::series_read_from_on_device(&t::device_kind_computer()));
     }
     parts.join(" \u{b7} ")
+}
+
+/// The chapters part of an edition's line. A list not asked for yet, or still on its way, says
+/// it is being checked; an empty one says so; one that failed says why. Only a list the source
+/// gave has a range, so it never reads "1 to 0".
+fn edition_chapters(edition: &BookEditionRow, first: bool) -> String {
+    let checking = || {
+        if first {
+            t::series_read_from_checking()
+        } else {
+            t::series_read_from_checking_later()
+        }
+    };
+    let empty =
+        || if first { t::series_read_from_empty() } else { t::series_read_from_empty_later() };
+    let has = edition.chapters > 0 || edition.latest.is_some();
+    match &edition.listing {
+        Some(EditionListing::Failed { failure }) => super::failure(failure),
+        Some(EditionListing::Empty) => empty(),
+        Some(EditionListing::Asking) => checking(),
+        None if !has => checking(),
+        Some(EditionListing::Listed) if !has => empty(),
+        Some(EditionListing::Listed) | None => {
+            let latest = edition.latest.clone().unwrap_or_else(|| edition.chapters.to_string());
+            if first {
+                t::series_read_from_chapters(&latest)
+            } else {
+                t::series_read_from_chapters_later(&latest)
+            }
+        }
+    }
 }
 
 /// The field under a source that has no match, and what that source finds.

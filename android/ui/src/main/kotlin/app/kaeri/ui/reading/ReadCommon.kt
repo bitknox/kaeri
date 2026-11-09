@@ -542,6 +542,7 @@ internal fun agoWords(context: Context, unix: Long): String =
 internal fun failureWords(context: Context, failure: ReadingFailure): String = when (failure) {
     is ReadingFailure.Offline -> ReadingMsg.ReadingFailedOffline
     is ReadingFailure.SourceDown -> ReadingMsg.ReadingFailedSourceDown(failure.source)
+    is ReadingFailure.SourceOff -> ReadingMsg.ReadingFailedSourceOff(failure.source)
     is ReadingFailure.NotFound -> ReadingMsg.ReadingFailedNotFound
     is ReadingFailure.Blocked -> ReadingMsg.ReadingFailedBlocked(failure.source, failure.reason)
     is ReadingFailure.Parse -> ReadingMsg.ReadingFailedParse(failure.source)

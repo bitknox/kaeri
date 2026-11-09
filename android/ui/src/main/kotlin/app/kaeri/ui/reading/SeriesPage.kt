@@ -55,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.platform.LocalContext
@@ -80,6 +81,7 @@ import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SeriesAction
 import app.kaeri.engine.model.SeriesView
+import app.kaeri.engine.model.WorkTile
 import app.kaeri.engine.model.TrackerMapping
 import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.i18n.Strings
@@ -93,9 +95,11 @@ import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.Menu
 import app.kaeri.ui.Shared
 import app.kaeri.ui.TextPlaceholder
+import app.kaeri.ui.itemMotion
 import app.kaeri.ui.kaeriIsFor
 import app.kaeri.ui.sharedWork
 import app.kaeri.ui.wideWindow
+import kotlinx.coroutines.delay
 
 /**
  * What the screenshots open on the series page once it has loaded: a sheet or menu by name
@@ -134,6 +138,15 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
     }
     val series = seriesMap[work]
     val chapters = chapterMap[work]
+    // The chapters' placeholders come only once the wait is long enough to notice (native-ux.md).
+    var lateChapters by remember(work) { mutableStateOf(false) }
+    LaunchedEffect(work, chapters == null) {
+        lateChapters = false
+        if (chapters == null) {
+            delay(600)
+            lateChapters = true
+        }
+    }
     val volumes = chapters?.volumes.orEmpty()
     var chosen by remember { mutableStateOf<Set<ChapterId>?>(null) }
     var sheet by remember { mutableStateOf<SeriesSheet?>(null) }
@@ -247,13 +260,20 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
         },
     ) { padding ->
         when {
-            series == null && failure != null -> FailedState(
-                title = Strings.titleLoadFailed(context),
-                reason = failureWords(context, failure),
-                retry = { store.reading.loadSeries(work) },
-                modifier = Modifier.padding(padding),
-            )
-            series == null -> SeriesLoading(Modifier.padding(padding))
+            series == null && failure != null -> Column(Modifier.padding(padding)) {
+                // The header that was known stays above why the rest did not come.
+                store.reading.knownTile(work)?.let { KnownSeriesHeader(it) }
+                FailedState(
+                    title = Strings.titleLoadFailed(context),
+                    reason = failureWords(context, failure),
+                    retry = { store.reading.loadSeries(work) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            series == null -> store.reading.knownTile(work)?.let { tile ->
+                // What the tile tapped already showed, at once and where the header puts it.
+                Box(Modifier.padding(padding)) { KnownSeriesHeader(tile) }
+            } ?: SeriesLoading(Modifier.padding(padding))
             else -> {
                 val top: @Composable () -> Unit = {
                     SeriesHeader(series, wide, coverKey, onCover = {
@@ -291,6 +311,7 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                     seriesChapters(
                         series = series,
                         chapters = chapters,
+                        late = lateChapters,
                         newestFirst = newestFirst,
                         onOrder = { newestFirst = it },
                         folds = folds,
@@ -342,6 +363,22 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
         SeriesSheet.ReadAgain -> series?.let { ReadAgainDialog(it) { sheet = null } }
         is SeriesSheet.Send -> SendToEreaderSheet(work, open.chapters, actions) { sheet = null }
         SeriesSheet.WhereStop -> series?.let { WhereStopSheet(it) { sheet = null } }
+    }
+}
+
+/** The cover and title the tapped tile carried, in the header's own sizes and place. */
+@Composable
+private fun KnownSeriesHeader(tile: WorkTile) {
+    Row(Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        ReadCover(tile.cover, 112.dp, Modifier.sharedWork(Shared.Cover, tile.work))
+        Text(
+            tile.title,
+            style = ShowTitle.page,
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f).semantics { heading() },
+        )
     }
 }
 
@@ -446,8 +483,17 @@ private fun SeriesActions(
     val context = LocalContext.current
     val words = SeriesWords.action(context, series.action)
     val failed = chapters?.failure != null
+    // No source is known to have it yet, but the engine is still asking: the chapters have not
+    // come. The main button holds its place, quiet, rather than say there is nothing to read.
+    val asking = series.action is SeriesAction.NoSource && chapters == null
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (words == null || failed) {
+        if (asking) {
+            Button(
+                onClick = {},
+                enabled = false,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).clearAndSetSemantics {},
+            ) {}
+        } else if (words == null || failed) {
             FilledTonalButton(onClick = onReadFrom, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)) {
                 Text(Strings.seriesReadFromAnother(context), style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
             }
@@ -458,7 +504,7 @@ private fun SeriesActions(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             ) { Text(words, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center) }
         }
-        if (!failed && words != null) {
+        if (!failed && (words != null || asking)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.weight(1f)) {
                     MenuButton(series.list?.let { listWords(context, it) } ?: Strings.seriesAddToList(context), enabled = !choosing) { onStatus(true) }
@@ -582,6 +628,7 @@ private fun PanelRow(label: String, value: String, action: String?, onClick: () 
 private fun LazyListScope.seriesChapters(
     series: SeriesView,
     chapters: ReadChapters?,
+    late: Boolean,
     newestFirst: Boolean,
     onOrder: (Boolean) -> Unit,
     folds: SnapshotStateMap<String, Boolean>,
@@ -598,10 +645,16 @@ private fun LazyListScope.seriesChapters(
     if (chosen == null) {
         item(key = "chapters-heading") { ChaptersHeading(byVolume, newestFirst, onOrder) }
     }
+    // Until the chapters come the space is held, its placeholders drawn only after [late]; the
+    // rows fade in where they fade out, so nothing above moves and nothing goes blank.
     if (chapters == null) {
+        if (!late) {
+            item(key = "placeholder-hold") { Spacer(Modifier.height(4 * 72.dp)) }
+            return
+        }
         items(4, key = { "placeholder-$it" }) {
             Column(
-                Modifier.fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 14.dp),
+                Modifier.itemMotion().fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 TextPlaceholder(0.5f)
@@ -620,16 +673,18 @@ private fun LazyListScope.seriesChapters(
         chapters.volumes
     }
     if (failure != null) {
-        item(key = "chapters-failed") { ChaptersFailed(series, failure, groups.chapterRows().size, onRetry) }
+        item(key = "chapters-failed") { Box(Modifier.itemMotion()) { ChaptersFailed(series, failure, groups.chapterRows().size, onRetry) } }
     } else if (groups.isEmpty()) {
         item(key = "chapters-none") {
             val context = LocalContext.current
+            Box(Modifier.itemMotion()) {
             PlainEmpty(
                 Strings.seriesNoChaptersTitle(context),
                 Strings.seriesNoChaptersLine(context),
                 action = Strings.seriesReadFromAnother(context),
                 onAction = onReadFrom,
             )
+            }
         }
     }
     val ordered = if (newestFirst) groups.reversed() else groups
@@ -641,7 +696,7 @@ private fun LazyListScope.seriesChapters(
             item(key = "volume-$key") {
                 val context = LocalContext.current
                 val (name, rest) = SeriesWords.volume(context, group, novel)
-                Column {
+                Column(Modifier.itemMotion()) {
                     SeriesRule()
                     VolumeRowItem(name, rest, open, onToggle = { folds[key] = !open })
                 }
@@ -649,7 +704,7 @@ private fun LazyListScope.seriesChapters(
         }
         if (open) {
             val rows = if (newestFirst) group.chapters.reversed() else group.chapters
-            items(rows, key = { "chapter-${it.id}" }) { row -> ChapterItem(series, row, chosen, onChosen, onOpen, onLong) }
+            items(rows, key = { "chapter-${it.id}" }) { row -> Box(Modifier.itemMotion()) { ChapterItem(series, row, chosen, onChosen, onOpen, onLong) } }
         }
     }
 }

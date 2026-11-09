@@ -62,6 +62,7 @@ import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ChapterReadState
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.DownloadPick
+import app.kaeri.engine.model.EditionListing
 import app.kaeri.engine.model.EditionMiss
 import app.kaeri.engine.model.ListRemovalOutcome
 import app.kaeri.engine.model.SeriesView
@@ -292,9 +293,8 @@ private fun EditionRow(edition: BookEditionRow, onClick: () -> Unit) {
     edition.language?.takeIf { it.isNotBlank() }?.let { code ->
         Locale.forLanguageTag(code).getDisplayLanguage(app.kaeri.store.AirTime.locale).takeIf { it.isNotBlank() }?.let { lead += it }
     }
-    val latest = edition.latest ?: edition.chapters.toString()
     val parts = lead.toMutableList()
-    parts += if (lead.isEmpty()) Strings.seriesReadFromChapters(context, latest) else Strings.seriesReadFromChaptersLater(context, latest)
+    parts += editionChapters(context, edition, first = lead.isEmpty())
     if (folder) parts += Strings.seriesReadFromOnDevice(context, deviceName(context))
     Row(
         Modifier
@@ -314,6 +314,27 @@ private fun EditionRow(edition: BookEditionRow, onClick: () -> Unit) {
             Text(parts.joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant) // i18n-skip
         }
         if (edition.inUse) Icon(Icons.Check, contentDescription = null, tint = colors.onSurface, modifier = Modifier.padding(start = 12.dp).size(20.dp))
+    }
+}
+
+/**
+ * The chapters part of an edition's line. A list not asked for yet, or still on its way, says it
+ * is being checked; an empty one says so; one that failed says why. Only a list the source gave
+ * has a range, so it never reads "1 to 0".
+ */
+internal fun editionChapters(context: Context, edition: BookEditionRow, first: Boolean): String {
+    val has = edition.chapters > 0u || edition.latest != null
+    return when (val listing = edition.listing) {
+        is EditionListing.Failed -> failureWords(context, listing.failure)
+        is EditionListing.Empty -> if (first) Strings.seriesReadFromEmpty(context) else Strings.seriesReadFromEmptyLater(context)
+        is EditionListing.Listed, null -> when {
+            has -> (edition.latest ?: edition.chapters.toString()).let { latest ->
+                if (first) Strings.seriesReadFromChapters(context, latest) else Strings.seriesReadFromChaptersLater(context, latest)
+            }
+            listing == null -> if (first) Strings.seriesReadFromChecking(context) else Strings.seriesReadFromCheckingLater(context)
+            else -> if (first) Strings.seriesReadFromEmpty(context) else Strings.seriesReadFromEmptyLater(context)
+        }
+        is EditionListing.Asking -> if (first) Strings.seriesReadFromChecking(context) else Strings.seriesReadFromCheckingLater(context)
     }
 }
 
