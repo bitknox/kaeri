@@ -7,17 +7,19 @@
 
 package app.kaeri.ui.reading
 
+import android.content.Context
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -25,14 +27,21 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -53,34 +63,28 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.design.Motion
 import app.kaeri.design.rememberSystemReducedMotion
+import app.kaeri.design.tabular
+import app.kaeri.engine.model.ReadFilters
 import app.kaeri.engine.model.ReadHomeRow
 import app.kaeri.engine.model.WorkTile
+import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
+import app.kaeri.store.ReadSearchState
 import app.kaeri.store.text
+import app.kaeri.ui.AfterWait
 import app.kaeri.ui.Icons
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.PLACEHOLDERS_AFTER
+import app.kaeri.ui.PosterGrid
 import app.kaeri.ui.PosterPlaceholder
 import app.kaeri.ui.cardGap
+import app.kaeri.ui.itemMotion
 import app.kaeri.ui.posterWidth
 import app.kaeri.ui.shelfTop
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBar
-import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import app.kaeri.i18n.R
-import app.kaeri.ui.AfterWait
-import app.kaeri.ui.PosterGrid
-import app.kaeri.ui.itemMotion
 import app.kaeri.ui.wideWindow
 import kotlinx.coroutines.delay
 
@@ -335,6 +339,8 @@ internal fun rememberViewAll(): (ReadHomeRow) -> Unit {
         { row ->
             row.viewAll?.let { query ->
                 ReadPlaces.viewAllTitle = row.title.text(context)
+                ReadPlaces.viewAllLine = row.viewAllTitle?.text(context)
+                ReadPlaces.viewAllQuery = query
                 store.reading.runViewAll(query)
                 navigator.openReadPage(READ_PAGE_VIEW_ALL)
             }
@@ -408,6 +414,14 @@ private fun ViewAllPage() {
                         PlainEmpty(Strings.readSearchNothingBrowse(context), Strings.readSearchNothingFiltersLine(context), inset = 0.dp)
                     }
                     else -> {
+                        item(span = { GridItemSpan(maxLineSpan) }, key = "line", contentType = "line") {
+                            Text(
+                                viewAllLine(context, search, store.reading.filters),
+                                style = MaterialTheme.typography.bodySmall.tabular(),
+                                color = colors.onSurfaceVariant,
+                                modifier = itemMotion(),
+                            )
+                        }
                         items(search.tiles, key = { "v-${it.work}" }, contentType = { "cover" }) { tile ->
                             BoxWithConstraints(itemMotion()) {
                                 ReadTile(tile, maxWidth, from = "read-view-all", lines = if (wideWindow()) 1 else 2, reserveLine = true, planning = true)
@@ -426,4 +440,14 @@ private fun ViewAllPage() {
             }
         }
     }
+}
+
+/**
+ * The line over View all's results: the row's own words and the count once AniList gives it,
+ * "Webtoons, trending · 1,920 series from AniList". With the filter changed, the filter's words.
+ */
+private fun viewAllLine(context: Context, search: ReadSearchState, filters: ReadFilters): String {
+    val line = ReadPlaces.viewAllLine?.takeIf { search.query == ReadPlaces.viewAllQuery } ?: return browseLine(context, search, filters)
+    val total = search.total ?: return Strings.readSearchBrowseLine(context, line)
+    return listOf(line, Strings.readSearchTotal(context, total.toInt())).joinToString(" · ") // i18n-skip
 }

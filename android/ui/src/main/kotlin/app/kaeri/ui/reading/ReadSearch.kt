@@ -418,7 +418,7 @@ private fun sortWords(context: android.content.Context, key: String?): String = 
  * The line over browsing: what is shown and where the list comes from, "Popular · from AniList";
  * once every result is listed, with how many.
  */
-private fun browseLine(context: android.content.Context, search: ReadSearchState, filters: ReadFilters): String {
+internal fun browseLine(context: android.content.Context, search: ReadSearchState, filters: ReadFilters): String {
     val query = search.query
     val parts = buildList {
         addAll(query.formats.mapNotNull { key -> filters.formats.firstOrNull { it.key == key }?.label?.text(context) })

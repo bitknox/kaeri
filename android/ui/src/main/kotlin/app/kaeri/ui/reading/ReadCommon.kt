@@ -335,7 +335,8 @@ internal fun listWords(context: Context, segment: LibrarySegmentRead): String = 
 /** The line under a cover: the engine's words for where the person is, else its facts joined. */
 internal fun WorkTile.line(context: Context): String =
     if (notInSources) Strings.homeNotFound(context)
-    else next?.text(context) ?: facts.joinToString(" · ") { it.text(context) } // i18n-skip
+    else next?.text(context) ?: started?.let { since -> listOfNotNull(origin?.text(context), since.text(context)).joinToString(" · ") } // i18n-skip
+        ?: facts.joinToString(" · ") { it.text(context) } // i18n-skip
 
 /** An AniList result's caption: its format and where it comes from, "Light novel · Japan". */
 internal fun WorkTile.anilistLine(context: Context): String =
@@ -432,6 +433,12 @@ internal object ReadPlaces {
 
     /** The row title View all's page shows. */
     var viewAllTitle by mutableStateOf("")
+
+    /** The line over View all's results, before the count: "Webtoons, trending", for [viewAllQuery]. */
+    var viewAllLine by mutableStateOf<String?>(null)
+
+    /** The row's own View all query; once the filter changes it, [viewAllLine] no longer says what is shown. */
+    var viewAllQuery by mutableStateOf<ReadSearchQuery?>(null)
 
     /** The reading list Library shows. */
     var list by mutableStateOf(LibrarySegmentRead.READING)
