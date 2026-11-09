@@ -248,6 +248,7 @@ read-filter-genres-count = { $n ->
  }
 read-filter-included = Bao gồm
 read-filter-left-out = Loại trừ
+read-filter-more-genres = Thể loại khác
 read-search-started = Ra mắt
 read-search-sources-only = Chỉ { -source-pl } của bạn
 read-search-from-sources = Từ { -source-pl } của bạn
@@ -256,6 +257,7 @@ read-search-source-failed = { $source } không phản hồi.
 read-search-source-timeout = Không có phản hồi sau { $seconds } giây.
 read-search-source-nothing = Không tìm thấy gì trong { $sources }.
 read-search-in-source = Có trong { $source }
+read-search-in-folders = Có trong thư mục của bạn
 read-search-in-sources = { $n ->
    *[other] Có trong { $n } { -source } của bạn
  }
@@ -263,6 +265,8 @@ read-search-anilist-nothing = AniList không tìm thấy gì với những từ 
 read-search-anilist-failed = AniList không phản hồi.
 read-search-anilist-failed-line = { -source-cap-pl } của bạn vẫn được hỏi.
 read-search-sources-nothing = { -source-cap-pl } của bạn cũng không có gì.
+read-search-sources-only-nothing = Không tìm thấy gì trong { -source-pl } của bạn
+read-state-offline-line = Ngoại tuyến. Các chương đã tải vẫn mở được.
 read-search-total-unknown = Bộ truyện từ AniList
 read-search-more-anilist = Xem thêm từ AniList
 read-search-shown = Đang hiện { $shown }/{ $total }
@@ -271,6 +275,37 @@ read-search-source-kind-server = Máy chủ
 read-search-source-kind-folder = Thư mục
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Hiện thêm { $n }
+read-search-line-total = { $line } · { $total }
+read-search-browse-parts = { $list }, { $next }
+read-caption-two = { $first } · { $second }
+read-filter-shown = { $name }: { $value }
+read-name-tile = { $title }, { $line }
+read-name-tile-placed = { $title }, { $line }, { $placed }
+read-name-tile-only-placed = { $title }, { $placed }
+read-name-week-tile = { $title }, { $time }, { $chapter }
+read-name-week-tile-time = { $title }, { $time }
+read-name-spotlight-art = { $title }, Chi tiết
+read-name-heading = { $heading }, { $side }
+read-name-loading = { $name }, đang tải
+read-name-heading-loading = { $heading }, { $side }, đang tải
+read-name-view-all = Xem tất cả, { $row }
+read-name-filter = { $name }, { $value }
+read-name-failure = { $line }, { $reason }
+read-name-source = { $source }, { $kind }
+read-name-source-more = { $n ->
+   *[other] Hiện thêm { $n } từ { $source }
+ }
+read-search-sources-only-line = Kết quả từ AniList đã được ẩn. Các bộ lọc bên dưới chỉ áp dụng cho kết quả từ AniList.
+read-search-done = { $anilist } từ AniList, { $sources } từ { -source-pl } của bạn.
+read-home-row-loading = { $row }, đang tải
+read-tile-add-planning = Thêm vào Dự định
+read-search-anilist-hidden = Kết quả từ AniList đã được ẩn.
+read-search-said-anilist = { $n ->
+   *[other] { $n } từ AniList
+ }
+read-search-said-sources = { $n ->
+   *[other] { $n } từ { -source-pl } của bạn
+ }
 onboarding-step = { $step }/{ $total }
 onboarding-welcome-line = Theo dõi những gì bạn xem và đọc, từ { -source-pl } của riêng bạn.
 onboarding-welcome-note = Danh sách và tiến độ của bạn nằm trên { -device-pl } của bạn. Bạn tự thêm { -tracker-pl } và { -source-pl }.

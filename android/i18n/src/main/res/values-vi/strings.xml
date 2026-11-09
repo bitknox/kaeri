@@ -383,6 +383,7 @@
         <item quantity="other">%1$,d tệp · %2$s</item>
     </plurals>
     <string name="read_source_folders">Thư mục</string>
+    <string name="read_feed_downloads">Tải xuống</string>
     <string name="reading_since_january">từ tháng 1</string>
     <string name="reading_since_february">từ tháng 2</string>
     <string name="reading_since_march">từ tháng 3</string>
@@ -395,6 +396,15 @@
     <string name="reading_since_october">từ tháng 10</string>
     <string name="reading_since_november">từ tháng 11</string>
     <string name="reading_since_december">từ tháng 12</string>
+    <string name="read_view_all_trending_manga">Manga, thịnh hành</string>
+    <string name="read_view_all_trending_webtoons">Webtoon, thịnh hành</string>
+    <string name="read_view_all_trending_novels">Light novel, thịnh hành</string>
+    <string name="read_view_all_new_manga">Manga ra mắt trong 12 tháng qua</string>
+    <string name="read_view_all_new_webtoons">Webtoon ra mắt trong 12 tháng qua</string>
+    <string name="read_view_all_new_novels">Light novel ra mắt trong 12 tháng qua</string>
+    <string name="read_view_all_finished_manga">Manga đã hoàn thành, phổ biến nhất</string>
+    <string name="read_view_all_finished_webtoons">Webtoon đã hoàn thành, phổ biến nhất</string>
+    <string name="read_view_all_finished_novels">Light novel đã hoàn thành, phổ biến nhất</string>
     <string name="store_joined">Đã tham gia %1$s với tên %2$s.</string>
     <string name="store_joined_unnamed">Đã tham gia %1$s mà không có tên.</string>
     <string name="store_left">Đã rời %1$s. Các plugin đã cài vẫn được giữ lại.</string>
@@ -774,7 +784,32 @@
     <string name="reader_opening_waited">%1$s · %2$,d giây</string>
     <string name="reader_sources_title">Đọc chương này từ</string>
     <string name="reader_paper_parts">Những gì nó thay đổi</string>
+    <string name="eink_tab_more">Thêm</string>
+    <string name="eink_home_all">Tất cả</string>
+    <string name="eink_place_chapter_page">Ch. %1$s · tr. %2$d</string>
+    <string name="eink_place_chapter_percent">Ch. %1$s · %2$,d%%</string>
+    <string name="eink_home_new_chapters">Chương mới</string>
+    <string name="eink_more_trackers">Các dịch vụ theo dõi</string>
+    <string name="eink_more_sync">Đồng bộ</string>
+    <string name="eink_more_settings_line">Bộ nhớ, thông báo và ngôn ngữ</string>
+    <string name="eink_downloads_space">%1$s trên thiết bị này · %2$s còn trống</string>
+    <string name="eink_downloads_space_used">%1$s trên thiết bị này</string>
+    <string name="eink_downloads_downloading">Đang tải</string>
+    <string name="eink_downloads_here">Trên thiết bị này</string>
+    <string name="eink_keep_ready_on">Bật · các chương sau của bộ truyện bạn đang đọc</string>
+    <string name="eink_keep_ready_off">Tắt</string>
     <string name="read_home_offline_line">Trang chủ phần Đọc cần kết nối lần đầu mở. Các chương đã tải vẫn mở được.</string>
+    <string name="read_search_source_busy">%1$s, đang tìm</string>
+    <string name="read_search_source_busy_kind">%1$s, %2$s, đang tìm</string>
+    <string name="read_search_source_named">%1$s, %2$s</string>
+    <plurals name="read_search_source_timeout_spoken">
+        <item quantity="other">Không có phản hồi sau %1$,d giây.</item>
+    </plurals>
+    <string name="read_search_try_again_source">Thử lại, %1$s</string>
+    <string name="read_search_sources_only_nothing_line">Hãy thử từ khác.</string>
+    <string name="read_tile_spoken_title">%1$s.</string>
+    <string name="read_tile_spoken">%1$s. %2$s.</string>
+    <string name="read_tile_spoken_in">%1$s. %2$s. %3$s.</string>
     <string name="channel_chapters_name">Chương mới</string>
     <string name="channel_chapters_description">Khi một bộ truyện trong danh sách Đang đọc của bạn có chương mới.</string>
     <string name="channel_downloads_finished_name">Tải xong</string>
@@ -2690,6 +2725,7 @@
     </plurals>
     <string name="read_filter_included">Bao gồm</string>
     <string name="read_filter_left_out">Loại trừ</string>
+    <string name="read_filter_more_genres">Thể loại khác</string>
     <string name="read_search_started">Ra mắt</string>
     <string name="read_search_sources_only">Chỉ các nguồn của bạn</string>
     <string name="read_search_from_sources">Từ các nguồn của bạn</string>
@@ -2698,6 +2734,7 @@
     <string name="read_search_source_timeout">Không có phản hồi sau %1$,d giây.</string>
     <string name="read_search_source_nothing">Không tìm thấy gì trong %1$s.</string>
     <string name="read_search_in_source">Có trong %1$s</string>
+    <string name="read_search_in_folders">Có trong thư mục của bạn</string>
     <plurals name="read_search_in_sources">
         <item quantity="other">Có trong %1$,d nguồn của bạn</item>
     </plurals>
@@ -2705,6 +2742,8 @@
     <string name="read_search_anilist_failed">AniList không phản hồi.</string>
     <string name="read_search_anilist_failed_line">Các nguồn của bạn vẫn được hỏi.</string>
     <string name="read_search_sources_nothing">Các nguồn của bạn cũng không có gì.</string>
+    <string name="read_search_sources_only_nothing">Không tìm thấy gì trong các nguồn của bạn</string>
+    <string name="read_state_offline_line">Ngoại tuyến. Các chương đã tải vẫn mở được.</string>
     <string name="read_search_total_unknown">Bộ truyện từ AniList</string>
     <string name="read_search_more_anilist">Xem thêm từ AniList</string>
     <string name="read_search_shown">Đang hiện %1$,d/%2$,d</string>
@@ -2713,6 +2752,37 @@
     <string name="read_search_source_kind_folder">Thư mục</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">Hiện thêm %1$,d</string>
+    <string name="read_search_line_total">%1$s · %2$s</string>
+    <string name="read_search_browse_parts">%1$s, %2$s</string>
+    <string name="read_caption_two">%1$s · %2$s</string>
+    <string name="read_filter_shown">%1$s: %2$s</string>
+    <string name="read_name_tile">%1$s, %2$s</string>
+    <string name="read_name_tile_placed">%1$s, %2$s, %3$s</string>
+    <string name="read_name_tile_only_placed">%1$s, %2$s</string>
+    <string name="read_name_week_tile">%1$s, %2$s, %3$s</string>
+    <string name="read_name_week_tile_time">%1$s, %2$s</string>
+    <string name="read_name_spotlight_art">%1$s, Chi tiết</string>
+    <string name="read_name_heading">%1$s, %2$s</string>
+    <string name="read_name_loading">%1$s, đang tải</string>
+    <string name="read_name_heading_loading">%1$s, %2$s, đang tải</string>
+    <string name="read_name_view_all">Xem tất cả, %1$s</string>
+    <string name="read_name_filter">%1$s, %2$s</string>
+    <string name="read_name_failure">%1$s, %2$s</string>
+    <string name="read_name_source">%1$s, %2$s</string>
+    <plurals name="read_name_source_more">
+        <item quantity="other">Hiện thêm %1$,d từ %2$s</item>
+    </plurals>
+    <string name="read_search_sources_only_line">Kết quả từ AniList đã được ẩn. Các bộ lọc bên dưới chỉ áp dụng cho kết quả từ AniList.</string>
+    <string name="read_search_done">%1$,d từ AniList, %2$,d từ các nguồn của bạn.</string>
+    <string name="read_home_row_loading">%1$s, đang tải</string>
+    <string name="read_tile_add_planning">Thêm vào Dự định</string>
+    <string name="read_search_anilist_hidden">Kết quả từ AniList đã được ẩn.</string>
+    <plurals name="read_search_said_anilist">
+        <item quantity="other">%1$,d từ AniList</item>
+    </plurals>
+    <plurals name="read_search_said_sources">
+        <item quantity="other">%1$,d từ các nguồn của bạn</item>
+    </plurals>
     <string name="onboarding_step">%1$,d/%2$,d</string>
     <string name="onboarding_welcome_line">Theo dõi những gì bạn xem và đọc, từ các nguồn của riêng bạn.</string>
     <string name="onboarding_welcome_note">Danh sách và tiến độ của bạn nằm trên các thiết bị của bạn. Bạn tự thêm các dịch vụ theo dõi và các nguồn.</string>

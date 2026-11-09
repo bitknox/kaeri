@@ -197524,6 +197524,12 @@
             "state" : "translated",
             "value" : "%1$@ · %2$@"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
         }
       }
     },
@@ -199222,6 +199228,12 @@
             "state" : "translated",
             "value" : "İndirilenler"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tải xuống"
+          }
         }
       }
     },
@@ -200204,6 +200216,12 @@
             "state" : "translated",
             "value" : "Diğer türler"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thể loại khác"
+          }
         }
       }
     },
@@ -200614,6 +200632,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@: %2$@"
@@ -203828,6 +203852,12 @@
             "state" : "translated",
             "value" : "%1$@, yükleniyor"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, đang tải"
+          }
         }
       }
     },
@@ -205566,6 +205596,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -205640,6 +205676,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -205722,6 +205764,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -205799,6 +205847,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, yükleniyor"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, đang tải"
           }
         }
       }
@@ -205878,6 +205932,12 @@
             "state" : "translated",
             "value" : "%1$@, yükleniyor"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, đang tải"
+          }
         }
       }
     },
@@ -205952,6 +206012,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206334,6 +206400,28 @@
               }
             }
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Hiện thêm %1$lld từ %2$@"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -206412,6 +206500,12 @@
             "state" : "translated",
             "value" : "%1$@, Ayrıntılar"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, Chi tiết"
+          }
         }
       }
     },
@@ -206486,6 +206580,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -206568,6 +206668,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -206642,6 +206748,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        },
+        "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
@@ -206724,6 +206836,12 @@
             "state" : "translated",
             "value" : "Tümünü gör, %1$@"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xem tất cả, %1$@"
+          }
         }
       }
     },
@@ -206802,6 +206920,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@, %3$@"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@, %3$@"
+          }
         }
       }
     },
@@ -206876,6 +207000,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        },
+        "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
@@ -207125,6 +207255,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AniList sonuçları gizli."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết quả từ AniList đã được ẩn."
           }
         }
       }
@@ -207456,6 +207592,12 @@
             "state" : "translated",
             "value" : "%1$@, %2$@"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
         }
       }
     },
@@ -207617,6 +207759,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "AniList: %1$lld, eklediğiniz kaynaklar: %2$lld."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld từ AniList, %2$lld từ các nguồn của bạn."
           }
         }
       }
@@ -207863,6 +208011,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Klasörlerinizde"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Có trong thư mục của bạn"
           }
         }
       }
@@ -208422,6 +208576,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
@@ -209308,6 +209468,28 @@
               }
             }
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld từ AniList"
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -209680,6 +209862,28 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "eklediğiniz kaynaklar: %1$lld"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld từ các nguồn của bạn"
                     }
                   }
                 }
@@ -210688,6 +210892,12 @@
             "state" : "translated",
             "value" : "AniList sonuçları gizli. Aşağıdaki filtreler yalnızca AniList sonuçlarına uygulanır."
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kết quả từ AniList đã được ẩn. Các bộ lọc bên dưới chỉ áp dụng cho kết quả từ AniList."
+          }
         }
       }
     },
@@ -210765,6 +210975,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eklediğiniz kaynaklar içinde bir şey bulunamadı"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tìm thấy gì trong các nguồn của bạn"
           }
         }
       }
@@ -212168,6 +212384,12 @@
             "state" : "translated",
             "value" : "Çevrimdışı. İndirilen bölümler yine de açılır."
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ngoại tuyến. Các chương đã tải vẫn mở được."
+          }
         }
       }
     },
@@ -212245,6 +212467,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Planlamaya ekle"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thêm vào Dự định"
           }
         }
       }
@@ -212324,6 +212552,12 @@
             "state" : "translated",
             "value" : "Tamamlanan mangalar, en popüler"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga đã hoàn thành, phổ biến nhất"
+          }
         }
       }
     },
@@ -212401,6 +212635,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tamamlanan hafif romanlar, en popüler"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novel đã hoàn thành, phổ biến nhất"
           }
         }
       }
@@ -212480,6 +212720,12 @@
             "state" : "translated",
             "value" : "Tamamlanan webtoonlar, en popüler"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoon đã hoàn thành, phổ biến nhất"
+          }
         }
       }
     },
@@ -212557,6 +212803,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Son 12 ayda başlayan mangalar"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga ra mắt trong 12 tháng qua"
           }
         }
       }
@@ -212636,6 +212888,12 @@
             "state" : "translated",
             "value" : "Son 12 ayda başlayan hafif romanlar"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novel ra mắt trong 12 tháng qua"
+          }
         }
       }
     },
@@ -212713,6 +212971,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Son 12 ayda başlayan webtoonlar"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoon ra mắt trong 12 tháng qua"
           }
         }
       }
@@ -212792,6 +213056,12 @@
             "state" : "translated",
             "value" : "Gündemdeki mangalar"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manga, thịnh hành"
+          }
         }
       }
     },
@@ -212870,6 +213140,12 @@
             "state" : "translated",
             "value" : "Gündemdeki hafif romanlar"
           }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Light novel, thịnh hành"
+          }
         }
       }
     },
@@ -212947,6 +213223,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gündemdeki webtoonlar"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Webtoon, thịnh hành"
           }
         }
       }

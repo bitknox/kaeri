@@ -1034,6 +1034,9 @@
   <data name="ReadSourceFolders" xml:space="preserve">
     <value>Thư mục</value>
   </data>
+  <data name="ReadFeedDownloads" xml:space="preserve">
+    <value>Tải xuống</value>
+  </data>
   <data name="ReadingSinceJanuary" xml:space="preserve">
     <value>từ tháng 1</value>
   </data>
@@ -1069,6 +1072,33 @@
   </data>
   <data name="ReadingSinceDecember" xml:space="preserve">
     <value>từ tháng 12</value>
+  </data>
+  <data name="ReadViewAllTrendingManga" xml:space="preserve">
+    <value>Manga, thịnh hành</value>
+  </data>
+  <data name="ReadViewAllTrendingWebtoons" xml:space="preserve">
+    <value>Webtoon, thịnh hành</value>
+  </data>
+  <data name="ReadViewAllTrendingNovels" xml:space="preserve">
+    <value>Light novel, thịnh hành</value>
+  </data>
+  <data name="ReadViewAllNewManga" xml:space="preserve">
+    <value>Manga ra mắt trong 12 tháng qua</value>
+  </data>
+  <data name="ReadViewAllNewWebtoons" xml:space="preserve">
+    <value>Webtoon ra mắt trong 12 tháng qua</value>
+  </data>
+  <data name="ReadViewAllNewNovels" xml:space="preserve">
+    <value>Light novel ra mắt trong 12 tháng qua</value>
+  </data>
+  <data name="ReadViewAllFinishedManga" xml:space="preserve">
+    <value>Manga đã hoàn thành, phổ biến nhất</value>
+  </data>
+  <data name="ReadViewAllFinishedWebtoons" xml:space="preserve">
+    <value>Webtoon đã hoàn thành, phổ biến nhất</value>
+  </data>
+  <data name="ReadViewAllFinishedNovels" xml:space="preserve">
+    <value>Light novel đã hoàn thành, phổ biến nhất</value>
   </data>
   <data name="StoreJoined" xml:space="preserve">
     <value>Đã tham gia {store} với tên {member}.</value>
@@ -1978,6 +2008,21 @@
   </data>
   <data name="WindowsReadDownloadsEmptyDetail" xml:space="preserve">
     <value>Chương đã tải mở được khi không có kết nối.</value>
+  </data>
+  <data name="WindowsReadSearchFinished" xml:space="preserve">
+    <value>{anilist} từ AniList, {sources} từ các nguồn của bạn.</value>
+  </data>
+  <data name="WindowsReadSearchFinishedSources" xml:space="preserve">
+    <value>{sources} từ các nguồn của bạn.</value>
+  </data>
+  <data name="WindowsReadSearchAnilistHidden" xml:space="preserve">
+    <value>Kết quả từ AniList đã được ẩn.</value>
+  </data>
+  <data name="WindowsReadSearchSourceTimeoutSaid_other" xml:space="preserve">
+    <value>Không có phản hồi sau {seconds} giây.</value>
+  </data>
+  <data name="WindowsReadSearchFiltersDimmed" xml:space="preserve">
+    <value>Các bộ lọc chỉ áp dụng cho kết quả từ AniList.</value>
   </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>Đang đọc lại {title} từ đầu</value>
@@ -6776,6 +6821,9 @@
   <data name="ReadFilterLeftOut" xml:space="preserve">
     <value>Loại trừ</value>
   </data>
+  <data name="ReadFilterMoreGenres" xml:space="preserve">
+    <value>Thể loại khác</value>
+  </data>
   <data name="ReadSearchStarted" xml:space="preserve">
     <value>Ra mắt</value>
   </data>
@@ -6800,6 +6848,9 @@
   <data name="ReadSearchInSource" xml:space="preserve">
     <value>Có trong {source}</value>
   </data>
+  <data name="ReadSearchInFolders" xml:space="preserve">
+    <value>Có trong thư mục của bạn</value>
+  </data>
   <data name="ReadSearchInSources_other" xml:space="preserve">
     <value>Có trong {n} nguồn của bạn</value>
   </data>
@@ -6814,6 +6865,12 @@
   </data>
   <data name="ReadSearchSourcesNothing" xml:space="preserve">
     <value>Các nguồn của bạn cũng không có gì.</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyNothing" xml:space="preserve">
+    <value>Không tìm thấy gì trong các nguồn của bạn</value>
+  </data>
+  <data name="ReadStateOfflineLine" xml:space="preserve">
+    <value>Ngoại tuyến. Các chương đã tải vẫn mở được.</value>
   </data>
   <data name="ReadSearchTotalUnknown" xml:space="preserve">
     <value>Bộ truyện từ AniList</value>
@@ -6838,6 +6895,81 @@
   </data>
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Hiện thêm {n}</value>
+  </data>
+  <data name="ReadSearchLineTotal" xml:space="preserve">
+    <value>{line} · {total}</value>
+  </data>
+  <data name="ReadSearchBrowseParts" xml:space="preserve">
+    <value>{list}, {next}</value>
+  </data>
+  <data name="ReadCaptionTwo" xml:space="preserve">
+    <value>{first} · {second}</value>
+  </data>
+  <data name="ReadFilterShown" xml:space="preserve">
+    <value>{name}: {value}</value>
+  </data>
+  <data name="ReadNameTile" xml:space="preserve">
+    <value>{title}, {line}</value>
+  </data>
+  <data name="ReadNameTilePlaced" xml:space="preserve">
+    <value>{title}, {line}, {placed}</value>
+  </data>
+  <data name="ReadNameTileOnlyPlaced" xml:space="preserve">
+    <value>{title}, {placed}</value>
+  </data>
+  <data name="ReadNameWeekTile" xml:space="preserve">
+    <value>{title}, {time}, {chapter}</value>
+  </data>
+  <data name="ReadNameWeekTileTime" xml:space="preserve">
+    <value>{title}, {time}</value>
+  </data>
+  <data name="ReadNameSpotlightArt" xml:space="preserve">
+    <value>{title}, Chi tiết</value>
+  </data>
+  <data name="ReadNameHeading" xml:space="preserve">
+    <value>{heading}, {side}</value>
+  </data>
+  <data name="ReadNameLoading" xml:space="preserve">
+    <value>{name}, đang tải</value>
+  </data>
+  <data name="ReadNameHeadingLoading" xml:space="preserve">
+    <value>{heading}, {side}, đang tải</value>
+  </data>
+  <data name="ReadNameViewAll" xml:space="preserve">
+    <value>Xem tất cả, {row}</value>
+  </data>
+  <data name="ReadNameFilter" xml:space="preserve">
+    <value>{name}, {value}</value>
+  </data>
+  <data name="ReadNameFailure" xml:space="preserve">
+    <value>{line}, {reason}</value>
+  </data>
+  <data name="ReadNameSource" xml:space="preserve">
+    <value>{source}, {kind}</value>
+  </data>
+  <data name="ReadNameSourceMore_other" xml:space="preserve">
+    <value>Hiện thêm {n} từ {source}</value>
+  </data>
+  <data name="ReadSearchSourcesOnlyLine" xml:space="preserve">
+    <value>Kết quả từ AniList đã được ẩn. Các bộ lọc bên dưới chỉ áp dụng cho kết quả từ AniList.</value>
+  </data>
+  <data name="ReadSearchDone" xml:space="preserve">
+    <value>{anilist} từ AniList, {sources} từ các nguồn của bạn.</value>
+  </data>
+  <data name="ReadHomeRowLoading" xml:space="preserve">
+    <value>{row}, đang tải</value>
+  </data>
+  <data name="ReadTileAddPlanning" xml:space="preserve">
+    <value>Thêm vào Dự định</value>
+  </data>
+  <data name="ReadSearchAnilistHidden" xml:space="preserve">
+    <value>Kết quả từ AniList đã được ẩn.</value>
+  </data>
+  <data name="ReadSearchSaidAnilist_other" xml:space="preserve">
+    <value>{n} từ AniList</value>
+  </data>
+  <data name="ReadSearchSaidSources_other" xml:space="preserve">
+    <value>{n} từ các nguồn của bạn</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step}/{total}</value>

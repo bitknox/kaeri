@@ -191,6 +191,7 @@ read-hit-files-format = { $count ->
    *[other] { $count } tệp · { $format }
  }
 read-source-folders = Thư mục
+read-feed-downloads = Tải xuống
 reading-since-january = từ tháng 1
 reading-since-february = từ tháng 2
 reading-since-march = từ tháng 3
@@ -203,3 +204,12 @@ reading-since-september = từ tháng 9
 reading-since-october = từ tháng 10
 reading-since-november = từ tháng 11
 reading-since-december = từ tháng 12
+read-view-all-trending-manga = Manga, thịnh hành
+read-view-all-trending-webtoons = Webtoon, thịnh hành
+read-view-all-trending-novels = Light novel, thịnh hành
+read-view-all-new-manga = Manga ra mắt trong 12 tháng qua
+read-view-all-new-webtoons = Webtoon ra mắt trong 12 tháng qua
+read-view-all-new-novels = Light novel ra mắt trong 12 tháng qua
+read-view-all-finished-manga = Manga đã hoàn thành, phổ biến nhất
+read-view-all-finished-webtoons = Webtoon đã hoàn thành, phổ biến nhất
+read-view-all-finished-novels = Light novel đã hoàn thành, phổ biến nhất

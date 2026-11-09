@@ -1,0 +1,36 @@
+tui-read-anilist = AniList
+tui-read-filters-none = không có bộ lọc
+tui-read-filters = bộ lọc { $set }
+tui-read-sources-only = chỉ { -source-pl } của bạn
+tui-read-on = bật
+tui-read-off = tắt
+tui-read-try-again = thử lại
+tui-read-sources-only-words = Nhập tên truyện để tìm trong { -source-pl } của bạn.
+tui-read-sources-nothing = Không tìm thấy gì trong { -source-pl } của bạn
+tui-read-source-offline = { $source } cần kết nối mạng.
+tui-read-names-and = { $names } và { $last }
+tui-read-opens-in-apps = Mở trong ứng dụng { -app-name }.
+tui-read-sources-in-apps = Thư mục, máy chủ và { -plugin-store-pl } được thêm trong ứng dụng { -app-name }.
+tui-read-sources-only-on = Chỉ { -source-pl } của bạn. Kết quả từ AniList đã được ẩn.
+tui-read-sources-only-off = Kết quả từ AniList hiện lại.
+tui-read-header-sources = { -source } { $mark } { $n }
+tui-read-status = { $n ->
+   *[other] Truyện · { $n } { -source }
+ }
+tui-read-status-short = Truyện
+tui-read-hint-next-section = Phần kế tiếp
+tui-read-hint-section = Phần
+tui-read-hint-sources-only = Chỉ { -source-pl } của bạn
+tui-read-hint-sources-only-short = Chỉ { -source-pl }
+tui-read-hint-to-reading = Truyện
+tui-read-hint-to-shows = Phim
+tui-read-hint-planning = Dự định
+tui-read-status-shows = Phim · { $state }
+tui-read-action-switch = Phim hoặc truyện
+tui-read-where-switch = ở Trang chủ, Đọc và Tìm kiếm khi { -app-name } dùng cho cả phim và truyện
+tui-read-keys-planning = Thêm vào Dự định
+tui-read-keys-heading = Truyện
+tui-read-keys-next-section = Phần kế tiếp
+tui-read-keys-sources-only = Chỉ { -source-pl } của bạn, bật hoặc tắt
+tui-read-keys-try-again = Hỏi lại, hoặc tải lại
+tui-read-keys-filters = Bộ lọc tìm kiếm
