@@ -5,7 +5,7 @@
   "description": "A Kaeri plugin store, as a Vercel function on Postgres",
   "license": "MIT",
   "dependencies": {
-    "@vercel/functions": "^3.10.1",
+    "@vercel/functions": "^3.10.5",
     "pg": "^8.23.1"
   }
 }
