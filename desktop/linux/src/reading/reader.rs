@@ -227,7 +227,6 @@ impl Reader {
         let strip_foot = gtk::Box::new(gtk::Orientation::Vertical, 0);
         strip_foot.set_margin_top(64);
         strip_foot.set_margin_bottom(160);
-        strip_foot.set_halign(gtk::Align::Center);
         let trail = trail::Trail::new();
         let strip_column = gtk::Box::new(gtk::Orientation::Vertical, 0);
         strip_column.append(&trail.above);

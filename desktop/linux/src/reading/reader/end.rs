@@ -1,7 +1,8 @@
 //! The page between chapters, as the reader board and the Apple reader lay it out: what was
 //! read and where it went, the next chapter with its facts and its first page, and Continue. With
 //! no next chapter it says why, and the series page is the action. The column is 440 px,
-//! left-aligned, centred in the window; at a strip's foot it follows the last image.
+//! left-aligned, centred in the window, and narrower in a narrower window, its buttons going one
+//! under the other when they don't fit side by side; at a strip's foot it follows the last image.
 
 use std::rc::Rc;
 
@@ -34,7 +35,8 @@ pub struct EndPage {
     /// The paged reader's "end" child: the column centred, scrolling when the window is short.
     pub scroll: gtk::ScrolledWindow,
     holder: gtk::Box,
-    pub column: gtk::Box,
+    /// The column, at most 440 px and never wider than the window.
+    column: adw::Clamp,
     top: gtk::Label,
     read_veil: gtk::Overlay,
     read: gtk::Label,
@@ -123,21 +125,24 @@ impl EndPage {
         let back_button = gtk::Button::with_label(&t::linux_reader_back_to_series());
         back_button.add_css_class("pill");
         back_button.connect_clicked(move |_| back());
-        let buttons = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+        let buttons = adw::WrapBox::builder().child_spacing(10).line_spacing(10).build();
         buttons.set_margin_top(22);
         buttons.set_halign(gtk::Align::Start);
         buttons.append(&continue_button);
         buttons.append(&back_button);
 
-        let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        column.add_css_class("reader-end");
-        column.set_width_request(COLUMN);
-        column.set_halign(gtk::Align::Center);
-        column.append(&top);
-        column.append(&read_veil);
-        column.append(&next_box);
-        column.append(&none_box);
-        column.append(&buttons);
+        let body = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        body.add_css_class("reader-end");
+        body.append(&top);
+        body.append(&read_veil);
+        body.append(&next_box);
+        body.append(&none_box);
+        body.append(&buttons);
+        let column = adw::Clamp::builder()
+            .maximum_size(COLUMN)
+            .tightening_threshold(COLUMN)
+            .child(&body)
+            .build();
 
         // From the top, as the board draws every end state, so the words stay put whether a
         // next chapter follows or not.
@@ -302,7 +307,52 @@ fn why_body(why: NoNext) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::joined;
+    use std::rc::Rc;
+
+    use adw::prelude::*;
+
+    use super::{COLUMN, EndPage, joined};
+    use crate::gtk_test::{pump, run};
+
+    /// The end page asks for no more width than its widest part: never the column's 440 px or
+    /// both buttons side by side. At the normal text size it fits the narrowest window, and at
+    /// twice the size its buttons go one under the other; on a wide window the column keeps its
+    /// 440 px.
+    #[test]
+    fn the_end_page_fits_a_narrow_window_at_any_text_size() {
+        run(|| {
+            let min_width =
+                |widget: &gtk::Widget| widget.measure(gtk::Orientation::Horizontal, -1).0;
+            let end = EndPage::new(Rc::new(|| {}), Rc::new(|| {}));
+            let window = gtk::Window::builder().default_width(1280).default_height(800).build();
+            window.set_child(Some(&end.scroll));
+            window.present();
+            pump(150);
+            let normal = min_width(end.scroll.upcast_ref());
+            let wide = end.column.child().map(|body| body.width());
+
+            let settings = gtk::Settings::default().expect("a display");
+            let dpi = settings.gtk_xft_dpi();
+            settings.set_gtk_xft_dpi(2 * 96 * 1024);
+            pump(150);
+            let large = min_width(end.scroll.upcast_ref());
+            let widest = [end.continue_button.upcast_ref(), end.back.upcast_ref()]
+                .into_iter()
+                .map(min_width)
+                .max()
+                .unwrap_or(0);
+            settings.set_gtk_xft_dpi(dpi);
+            window.destroy();
+
+            assert!(normal <= 360, "the end page needs {normal} px at the normal text size");
+            // The column's margins on each side.
+            assert!(
+                large <= widest + 48,
+                "{large} px at twice the size, its widest part {widest}"
+            );
+            assert_eq!(wide, Some(COLUMN));
+        });
+    }
 
     #[test]
     fn names_join_as_a_sentence() {
