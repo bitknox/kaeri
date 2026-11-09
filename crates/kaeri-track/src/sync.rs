@@ -385,6 +385,24 @@ pub fn read_work(anilist_id: kaeri_core::ids::AnilistId) -> String {
     format!("a:{}", anilist_id.get())
 }
 
+/// A tracker's reading status by the name the store keeps: [`read_status_from_name`] the other
+/// way.
+pub fn read_status_name(
+    status: kaeri_core::traits::WatchStatus,
+    rereading: bool,
+) -> &'static str {
+    use kaeri_core::traits::WatchStatus as W;
+    match status {
+        W::Current if rereading => "rereading",
+        W::Repeating => "rereading",
+        W::Current => "reading",
+        W::Planning => "planning",
+        W::Completed => "completed",
+        W::Paused => "paused",
+        W::Dropped => "dropped",
+    }
+}
+
 /// A reading status as the store names it, as a tracker's status and whether it is a reread.
 pub fn read_status_from_name(name: &str) -> Option<(kaeri_core::traits::WatchStatus, bool)> {
     use kaeri_core::traits::WatchStatus as W;
@@ -529,6 +547,9 @@ pub fn reconcile_read(
                 .map_err(stored)?;
             report.adopted += 1;
         }
+        // A series a read put on Reading takes the status the tracker holds for it.
+        let theirs = read_status_name(entry.status, entry.rereading);
+        store.settle_auto_read_status(&work, theirs).map_err(stored)?;
         report.conflicts.extend(merged.conflicts);
     }
     tracing::info!(
@@ -550,6 +571,9 @@ pub fn local_read_state(
     let (chapters, volumes) = store.tracked_progress(work)?;
     let (status, score) = store.read_status(work)?;
     let at = store.read_status_at(work)?;
+    // A Reading that a read put there is no choice of the person's: the tracker's list stands.
+    let auto = store.read_status_is_auto(work)?;
+    let status = status.filter(|_| !auto);
     let named = status.as_deref().and_then(read_status_from_name);
     Ok(merge::ReadLocal {
         chapters,
@@ -1264,5 +1288,43 @@ mod tests {
             [TrackOp::SetReadProgress { anilist_id: id, chapter: 12, volume: None }],
             "the unread is the latest change"
         );
+    }
+
+    #[test]
+    fn a_reading_a_read_put_here_never_goes_over_the_trackers_status() {
+        let id = AnilistId::new(900_302);
+        let work = read_work(id);
+        let remote = |status| kaeri_core::traits::TrackedReadEntry {
+            anilist_id: id,
+            medium: kaeri_core::media::Medium::Manga,
+            chapters: 40,
+            volumes: None,
+            status,
+            rereading: false,
+            score: None,
+        };
+        let store = Store::open_in_memory().unwrap();
+        let mut read = kaeri_store::reading::ReadEvent::new(&work, "1", 400);
+        read.completed = true;
+        store.record_read(&read, Vec::new()).unwrap();
+        assert_eq!(store.read_status(&work).unwrap().0.as_deref(), Some("reading"));
+        assert_eq!(local_read_state(&store, &work).unwrap().status, None, "no choice here");
+
+        let rule = WhenTrackersDisagree::Latest;
+        reconcile_read(&store, "anilist", &[remote(WatchStatus::Completed)], 500, 0, rule)
+            .unwrap();
+        let sent_status = store
+            .read_outbox("anilist")
+            .unwrap()
+            .into_iter()
+            .any(|op| matches!(op, TrackOp::SetReadStatus { .. }));
+        assert!(!sent_status, "the tracker keeps Completed");
+        assert_eq!(store.read_status(&work).unwrap().0.as_deref(), Some("completed"));
+
+        // Once the tracker's, the status is a choice: a later pull of another one is a
+        // difference to settle, not a quiet swap.
+        reconcile_read(&store, "anilist", &[remote(WatchStatus::Paused)], 600, 550, rule)
+            .unwrap();
+        assert_eq!(store.read_status(&work).unwrap().0.as_deref(), Some("completed"));
     }
 }

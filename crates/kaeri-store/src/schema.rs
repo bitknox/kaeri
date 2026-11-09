@@ -1058,6 +1058,20 @@ const MIGRATIONS: &[(&str, &str)] = &[
     ) WITHOUT ROWID;
     "#,
     ),
+    (
+        "0033_read_status_auto",
+        r#"
+    -- `auto` is 1 for a Reading that a read put there, not the person or a tracker. A tracker's
+    -- own status replaces it, and it is never sent to one. Series read before this release with
+    -- no status of their own go on Reading the same way, dated by their last read.
+    ALTER TABLE read_status ADD COLUMN auto INTEGER NOT NULL DEFAULT 0;
+    INSERT INTO read_status (work, status, score, updated_at, auto)
+        SELECT work, 'reading', NULL, updated_at, 1 FROM read_work
+         WHERE last_chapter IS NOT NULL
+        ON CONFLICT(work) DO UPDATE SET status = 'reading', auto = 1
+         WHERE read_status.status IS NULL;
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.
