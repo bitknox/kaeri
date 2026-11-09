@@ -189,6 +189,11 @@ impl EndPage {
         }
     }
 
+    /// Let go of the next chapter's preview, as the reader closes.
+    pub fn forget(&self) {
+        self.preview.set_paintable(gdk::Paintable::NONE);
+    }
+
     /// Show `facts`. A change of the read line crossfades in place; the rest is set as it is.
     pub fn fill(&self, facts: &EndFacts) {
         self.top.set_label(&t::reader_end_of_chapter_number(&facts.chapter));
