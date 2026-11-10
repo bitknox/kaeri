@@ -2599,6 +2599,11 @@ public enum L {
         Self.format("reader-group-line", fallback: "%1$@ · page %2$@ of %3$@", chapter, String(page), String(total))
     }
 
+    /// The control group's line on the end page, after the chapter's last page.
+    public static func readerGroupLineEnd(chapter: String) -> String {
+        Self.format("reader-group-line-end", fallback: "%1$@ · end of chapter", chapter)
+    }
+
     /// The control group's line when a spread shows two pages.
     public static func readerGroupLineSpread(chapter: String, first: Int, second: Int) -> String {
         Self.format("reader-group-line-spread", fallback: "%1$@ · pages %2$@ and %3$@", chapter, String(first), String(second))

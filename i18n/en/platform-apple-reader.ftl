@@ -31,6 +31,10 @@ reader-text-label = Aa
 # @arg total: plain
 reader-group-line = { $chapter } · page { $page } of { $total }
 
+# The control group's line on the end page, after the chapter's last page.
+# @arg chapter: text
+reader-group-line-end = { $chapter } · end of chapter
+
 # The control group's line when a spread shows two pages.
 # @arg chapter: text
 # @arg first: plain

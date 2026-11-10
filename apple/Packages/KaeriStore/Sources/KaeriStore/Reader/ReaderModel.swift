@@ -395,8 +395,14 @@ public final class ReaderModel {
             pages: UInt32(max(pages, 0)), how: how)))
     }
 
-    public func openChapter(_ id: ChapterId) {
+    /// The chapter opened by going back from the first page of the one after it: it shows its
+    /// last page, or the top of its last image in a strip, once its leaves come.
+    private var openAtEnd: ChapterId?
+
+    /// Open a chapter of the book; `atEnd` shows its last page, for going back into it.
+    public func openChapter(_ id: ChapterId, atEnd: Bool = false) {
         guard session != 0 else { return }
+        openAtEnd = atEnd ? id : nil
         holdEnd(to: id)
         end = nil
         read = false
@@ -608,6 +614,10 @@ public final class ReaderModel {
             phase = .open
             if !leaves.isEmpty { current = min(max(current, startLeaf(leaves)), leaves.count - 1) }
             if let goTo = pendingGoTo, goTo < leaves.count { show(goTo) }
+            if let chapter = openAtEnd, chapter == view?.chapter.id, !leaves.isEmpty {
+                openAtEnd = nil
+                showEnd(of: leaves)
+            }
             settleHeld()
         case .pageReady(let session, let chapter, let page, let half, let file):
             guard session == self.session else { return }
@@ -676,6 +686,16 @@ public final class ReaderModel {
     }
 
     private var pendingGoTo: Int?
+
+    /// The chapter's last page, before its end page; in a strip, the top of its last image.
+    private func showEnd(of leaves: [Leaf]) {
+        if view?.mode == .strip, novel == nil {
+            let images = leaves.filter { !$0.endPage }.reduce(0) { $0 + $1.parts.count }
+            stripRestore = StripPos(image: UInt32(max(images - 1, 0)), offset: 0)
+            return
+        }
+        current = leaves.lastIndex { !$0.endPage } ?? leaves.count - 1
+    }
 
     private func startLeaf(_ leaves: [Leaf]) -> Int {
         guard let page = view?.start.page else { return 0 }
@@ -796,10 +816,20 @@ public final class ReaderModel {
         return leaves.isEmpty ? 0 : Int(last) + 1
     }
 
-    /// The page number, from 1, a leaf starts at.
+    /// The page number, from 1, a leaf starts at. The end page, and a leaf past what is laid
+    /// out, count as the last page: a leaf's own index runs past the pages wherever a spread was
+    /// split in two, so it never stands in for a page number.
     public func pageNumber(of leaf: Int) -> Int {
-        guard leaves.indices.contains(leaf), let page = leaves[leaf].parts.map(\.page).min() else { return leaf + 1 }
-        return Int(page) + 1
+        let last = max(pageCount, 1)
+        guard leaves.indices.contains(leaf), let page = leaves[leaf].parts.map(\.page).min() else {
+            return leaves.isEmpty ? leaf + 1 : last
+        }
+        return min(Int(page) + 1, last)
+    }
+
+    /// The leaf at `index` is the end page, between this chapter and the next.
+    public func isEndPage(_ index: Int) -> Bool {
+        leaves.indices.contains(index) && leaves[index].endPage
     }
 
     /// The leaf a page, from 1, is on.

@@ -216559,6 +216559,18 @@
         }
       }
     },
+    "reader-group-line-end" : {
+      "comment" : "The control group's line on the end page, after the chapter's last page. Argument 1: chapter (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · end of chapter"
+          }
+        }
+      }
+    },
     "reader-group-line-novel" : {
       "comment" : "The control group's line for a novel, paged. Argument 1: chapter (Text). Argument 2: page (Plain). Argument 3: total (Plain).",
       "extractionState" : "manual",
