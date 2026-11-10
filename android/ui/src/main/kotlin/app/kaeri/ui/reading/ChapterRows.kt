@@ -330,9 +330,22 @@ internal fun SeriesRule(modifier: Modifier = Modifier) {
 /** Every chapter of [groups] in reading order. */
 internal fun List<VolumeGroup>.chapterRows(): List<ChapterRow> = flatMap { it.chapters }
 
-/** Where Choose chapters starts: the unread chapters not downloaded yet. */
-internal fun List<VolumeGroup>.chooseStart(): Set<String> =
-    chapterRows().filter { it.state !is ChapterReadState.Read && it.download == null }.map { it.id }.toSet()
+/** How many chapters Choose chapters starts with ticked. */
+internal const val CHOOSE_START_COUNT = 10
+
+/**
+ * Where Choose chapters starts: the next [CHOOSE_START_COUNT] unread chapters not downloaded yet,
+ * from the reader's place on. The place is the chapter in progress, or the one after the last read
+ * one. With none left after it, the first unread ones are ticked instead.
+ */
+internal fun List<VolumeGroup>.chooseStart(): Set<String> {
+    val rows = chapterRows()
+    val reading = rows.indexOfLast { it.state is ChapterReadState.InProgress }
+    val from = if (reading >= 0) reading else rows.indexOfLast { it.state is ChapterReadState.Read } + 1
+    val wanted = { row: ChapterRow -> row.state !is ChapterReadState.Read && row.download == null }
+    val next = rows.drop(from).filter(wanted).ifEmpty { rows.filter(wanted) }
+    return next.take(CHOOSE_START_COUNT).map { it.id }.toSet()
+}
 
 /** All unread, from the bar. */
 internal fun List<VolumeGroup>.allUnread(): Set<String> =
