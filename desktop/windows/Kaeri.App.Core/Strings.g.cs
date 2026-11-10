@@ -6373,6 +6373,9 @@ public static partial class T
     /// <summary>A tracker's progress in chapters, total unknown.</summary>
     public static string SeriesTrackerChapters(long n) => Fill(GetPlural("SeriesTrackerChapters", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>A tracker's progress when the person has read none of the series yet, in place of "0 chapters".</summary>
+    public static string SeriesTrackerNotStarted => Get("SeriesTrackerNotStarted");
+
     /// <summary>A tracker's progress in chapters, then the volume.</summary>
     public static string SeriesTrackerWithVolume(string chapters, long volume) => Fill(Get("SeriesTrackerWithVolume"), ("chapters", chapters), ("volume", volume.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -13985,6 +13988,7 @@ public static partial class T
         ["SeriesTrackerChaptersOf_other"] = "{n} of {total} chapters",
         ["SeriesTrackerChapters_one"] = "1 chapter",
         ["SeriesTrackerChapters_other"] = "{n} chapters",
+        ["SeriesTrackerNotStarted"] = "Not started",
         ["SeriesTrackerWithVolume"] = "{chapters} · volume {volume}",
         ["SeriesTrackerVolumes"] = "Volume {volume} of {total}",
         ["SeriesReadFromAnother"] = "Read from another source",

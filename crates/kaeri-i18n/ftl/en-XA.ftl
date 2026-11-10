@@ -9415,6 +9415,9 @@ series-tracker-chapters =
        *[other] [{ $n } çĥàþţéŕš~~~~]
     }
 
+# A tracker's progress when the person has read none of the series yet, in place of "0 chapters".
+series-tracker-not-started = [Ñöţ šţàŕţéð~~~~]
+
 # A tracker's progress in chapters, then the volume.
 series-tracker-with-volume = [{ $chapters } · ṽöļüɱé { $volume }~~~~~]
 

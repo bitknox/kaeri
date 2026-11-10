@@ -9562,6 +9562,10 @@ object Strings {
     fun seriesTrackerChapters(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.series_tracker_chapters, n, n)
 
+    /** A tracker's progress when the person has read none of the series yet, in place of "0 chapters". */
+    fun seriesTrackerNotStarted(context: Context): String =
+        context.getString(R.string.series_tracker_not_started)
+
     /** A tracker's progress in chapters, then the volume. */
     fun seriesTrackerWithVolume(context: Context, chapters: String, volume: Int): String =
         context.getString(R.string.series_tracker_with_volume, chapters, volume)

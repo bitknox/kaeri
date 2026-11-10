@@ -262811,6 +262811,18 @@
         }
       }
     },
+    "series-tracker-not-started" : {
+      "comment" : "A tracker's progress when the person has read none of the series yet, in place of \"0 chapters\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not started"
+          }
+        }
+      }
+    },
     "series-tracker-not-there" : {
       "comment" : "A tracker that has no such series.",
       "extractionState" : "manual",

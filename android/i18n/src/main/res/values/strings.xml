@@ -5079,6 +5079,8 @@
         <item quantity="one">1 chapter</item>
         <item quantity="other">%1$,d chapters</item>
     </plurals>
+    <!-- A tracker's progress when the person has read none of the series yet, in place of "0 chapters". -->
+    <string name="series_tracker_not_started">Not started</string>
     <!-- A tracker's progress in chapters, then the volume. -->
     <string name="series_tracker_with_volume">%1$s · volume %2$d</string>
     <!-- A light novel tracker's progress in volumes. -->
