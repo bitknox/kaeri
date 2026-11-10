@@ -692,6 +692,24 @@ async fn a_chapter_asked_for_is_not_let_go_of_by_reading_past_it_without_the_set
 }
 
 #[tokio::test]
+async fn a_download_queued_before_a_relaunch_waits_for_its_plugin_to_load() {
+    let kit = kit(&["1"]);
+    kit.setup(Setup { hold: true, ..Setup::default() });
+    kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
+    // The next launch: the queue goes on while the source's plugin is still loading.
+    kit.lent.sources.registry.remove("shelf");
+    kit.lent.plugins.expect_arrivals();
+    assert!(kit.queue.configure(Setup::default()));
+    kit.queue.start(&kit.lent);
+    tokio::time::sleep(Duration::from_millis(100)).await;
+    assert_eq!(*kit.shelf.fetched.lock().unwrap(), 0);
+    kit.lent.sources.registry.put(kit.shelf.clone());
+    kit.lent.plugins.arrivals_done();
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+}
+
+#[tokio::test]
 async fn downloads_cut_short_are_queued_again_and_half_files_go() {
     let kit = kit(&["1"]);
     let work = WorkId::new(WORK);

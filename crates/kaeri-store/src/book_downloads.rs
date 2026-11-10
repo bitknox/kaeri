@@ -170,6 +170,12 @@ impl Store {
         })
     }
 
+    /// A row with its file's whole path, in the data folder as it is now.
+    fn whole(&self, mut row: BookDownload) -> BookDownload {
+        row.path = row.path.map(|p| self.full_path(p));
+        row
+    }
+
     /// The row for one chapter.
     pub fn book_download(&self, work: &str, chapter: &str) -> Result<Option<BookDownload>> {
         self.with_conn(|c| {
@@ -180,7 +186,8 @@ impl Store {
                 params![work, chapter],
                 row_of,
             )
-            .optional()?)
+            .optional()?
+            .map(|r| self.whole(r)))
         })
     }
 
@@ -192,7 +199,10 @@ impl Store {
                 "SELECT {COLUMNS} FROM book_download
                   WHERE state <> 'removed' AND (?1 IS NULL OR work = ?1) ORDER BY id"
             ))?;
-            Ok(stmt.query_map([work], row_of)?.collect::<rusqlite::Result<_>>()?)
+            Ok(stmt
+                .query_map([work], row_of)?
+                .map(|r| r.map(|r| self.whole(r)))
+                .collect::<rusqlite::Result<_>>()?)
         })
     }
 
@@ -217,7 +227,8 @@ impl Store {
                 [],
                 row_of,
             )
-            .optional()?)
+            .optional()?
+            .map(|r| self.whole(r)))
         })
     }
 
@@ -248,12 +259,13 @@ impl Store {
         bytes: u64,
         now: i64,
     ) -> Result<()> {
+        let kept = self.kept_path(path);
         self.with_conn(|c| {
             c.execute(
                 "UPDATE book_download SET state = 'done', path = ?2, pages_total = ?3,
                     pages_done = COALESCE(?3, pages_done), bytes = ?4, error = NULL,
                     updated_at = ?5 WHERE id = ?1",
-                params![id, path, pages, i64::try_from(bytes).unwrap_or(i64::MAX), now],
+                params![id, kept, pages, i64::try_from(bytes).unwrap_or(i64::MAX), now],
             )?;
             Ok(())
         })
@@ -269,12 +281,13 @@ impl Store {
         bytes: u64,
         now: i64,
     ) -> Result<bool> {
+        let kept = self.kept_path(path);
         self.with_conn(|c| {
             let changed = c.execute(
                 "UPDATE book_download SET state = 'done', path = ?2, pages_total = ?3,
                     pages_done = COALESCE(?3, pages_done), bytes = ?4, error = NULL,
                     updated_at = ?5 WHERE id = ?1 AND state = 'downloading'",
-                params![id, path, pages, i64::try_from(bytes).unwrap_or(i64::MAX), now],
+                params![id, kept, pages, i64::try_from(bytes).unwrap_or(i64::MAX), now],
             )?;
             Ok(changed > 0)
         })
@@ -333,6 +346,7 @@ impl Store {
                 .query_map([work], row_of)?
                 .collect::<rusqlite::Result<Vec<_>>>()?
                 .into_iter()
+                .map(|r| self.whole(r))
                 .filter(|r| chapters.is_empty() || chapters.contains(&r.chapter))
                 .filter(|r| !only_done || r.state == BookDownloadState::Done)
                 .collect();
@@ -397,6 +411,8 @@ impl Store {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use super::*;
 
     fn ask<'a>(chapter: &'a str, keep_ready: bool) -> BookDownloadAsk<'a> {
@@ -457,6 +473,32 @@ mod tests {
         let shelf = store.shelf("a:900401").unwrap();
         assert_eq!(shelf.len(), 1);
         assert_eq!(shelf[0].path, "/dl/1.cbz");
+    }
+
+    #[test]
+    fn a_download_is_found_again_after_the_data_folder_moves() {
+        let root = tempfile::tempdir().unwrap();
+        let (before, after) = (root.path().join("before"), root.path().join("after"));
+        let file = before.join("book-downloads").join("work").join("1.cbz");
+        {
+            let store = Store::open(before.join("kaeri.db")).unwrap();
+            store.queue_book_download(&ask("1", false), 1).unwrap();
+            let row = store.next_book_download().unwrap().unwrap();
+            store.book_download_done(row.id, &file.to_string_lossy(), Some(4), 100, 2).unwrap();
+            let kept: String = store
+                .with_conn(|c| {
+                    Ok(c.query_row("SELECT path FROM book_download", [], |r| r.get(0))?)
+                })
+                .unwrap();
+            assert!(Path::new(&kept).is_relative(), "kept as {kept}");
+        }
+        std::fs::rename(&before, &after).unwrap();
+        let store = Store::open(after.join("kaeri.db")).unwrap();
+        let moved = after.join("book-downloads").join("work").join("1.cbz");
+        let row = store.book_download("a:900401", "1").unwrap().unwrap();
+        assert_eq!(row.path.as_deref(), Some(&*moved.to_string_lossy()));
+        assert_eq!(store.shelf("a:900401").unwrap()[0].path, moved.to_string_lossy());
+        assert_eq!(store.book_downloads(None).unwrap()[0].path, row.path);
     }
 
     #[test]

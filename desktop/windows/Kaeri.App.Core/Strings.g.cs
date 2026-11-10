@@ -582,6 +582,12 @@ public static partial class T
     /// <summary>The same notice for a chapter known only by its number, such as 14 or 14.5.</summary>
     public static string ReaderMovedNumber(string chapter, long page, string device) => Fill(Get("ReaderMovedNumber"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("device", device));
 
+    /// <summary>The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.</summary>
+    public static string ReaderMovedElsewhere(string chapter, long page) => Fill(Get("ReaderMovedElsewhere"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same notice for a chapter known only by its number, such as 14 or 14.5.</summary>
+    public static string ReaderMovedNumberElsewhere(string chapter, long page) => Fill(Get("ReaderMovedNumberElsewhere"), ("chapter", chapter), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>A notice the first time a series opens with its reading direction guessed. It offers Change.</summary>
     public static string ReaderDetectedRightToLeft => Get("ReaderDetectedRightToLeft");
 
@@ -11891,6 +11897,8 @@ public static partial class T
         ["ReaderBackToPage"] = "Back to page {page}",
         ["ReaderMoved"] = "Moved to {chapter}, page {page}, where {device} stopped",
         ["ReaderMovedNumber"] = "Moved to chapter {chapter}, page {page}, where {device} stopped",
+        ["ReaderMovedElsewhere"] = "Moved to {chapter}, page {page}, where another device stopped",
+        ["ReaderMovedNumberElsewhere"] = "Moved to chapter {chapter}, page {page}, where another device stopped",
         ["ReaderDetectedRightToLeft"] = "Looks like right to left",
         ["ReaderDetectedLeftToRight"] = "Looks like left to right",
         ["ReaderDetectedStrip"] = "Looks like a long strip",

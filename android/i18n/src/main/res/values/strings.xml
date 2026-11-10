@@ -407,6 +407,10 @@
     <string name="reader_moved">Moved to %1$s, page %2$d, where %3$s stopped</string>
     <!-- The same notice for a chapter known only by its number, such as 14 or 14.5. -->
     <string name="reader_moved_number">Moved to chapter %1$s, page %2$d, where %3$s stopped</string>
+    <!-- The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall. -->
+    <string name="reader_moved_elsewhere">Moved to %1$s, page %2$d, where another device stopped</string>
+    <!-- The same notice for a chapter known only by its number, such as 14 or 14.5. -->
+    <string name="reader_moved_number_elsewhere">Moved to chapter %1$s, page %2$d, where another device stopped</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->
     <string name="reader_detected_right_to_left">Looks like right to left</string>
     <!-- A notice the first time a series opens with its reading direction guessed. It offers Change. -->

@@ -342,6 +342,8 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReaderBackToPage -> Strings.readerBackToPage(context, this.page.toInt())
         is ReadingMsg.ReaderMoved -> Strings.readerMoved(context, this.chapter, this.page.toInt(), this.device)
         is ReadingMsg.ReaderMovedNumber -> Strings.readerMovedNumber(context, this.chapter, this.page.toInt(), this.device)
+        is ReadingMsg.ReaderMovedElsewhere -> Strings.readerMovedElsewhere(context, this.chapter, this.page.toInt())
+        is ReadingMsg.ReaderMovedNumberElsewhere -> Strings.readerMovedNumberElsewhere(context, this.chapter, this.page.toInt())
         is ReadingMsg.ReaderDetectedRightToLeft -> Strings.readerDetectedRightToLeft(context)
         is ReadingMsg.ReaderDetectedLeftToRight -> Strings.readerDetectedLeftToRight(context)
         is ReadingMsg.ReaderDetectedStrip -> Strings.readerDetectedStrip(context)

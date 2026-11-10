@@ -1102,6 +1102,19 @@ const MIGRATIONS: &[(&str, &str)] = &[
          WHERE read_status.status IS NULL;
     "#,
     ),
+    (
+        "0034_book_download_relative",
+        r#"
+    -- A downloaded chapter's path is kept within the data folder, so the files are found again
+    -- when the system moves the folder. Whole paths written before are cut back to it.
+    UPDATE book_download
+       SET path = substr(path, instr(path, '/book-downloads/') + 1)
+     WHERE path LIKE '/%' AND instr(path, '/book-downloads/') > 0;
+    UPDATE book_download
+       SET path = substr(path, instr(path, '\book-downloads\') + 1)
+     WHERE path LIKE '_:\%' AND instr(path, '\book-downloads\') > 0;
+    "#,
+    ),
 ];
 
 /// Apply any migrations the database has not yet seen.
@@ -1271,6 +1284,38 @@ mod tests {
                 .unwrap();
             assert!(found, "table {table} missing");
         }
+    }
+
+    #[test]
+    fn download_paths_written_whole_are_cut_back_to_the_data_folder() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrate_until(&conn, Some("0034_book_download_relative")).unwrap();
+        for (chapter, path) in [
+            ("1", Some("/home/someone/.local/share/kaeri/book-downloads/w/1.cbz")),
+            ("2", Some(r"C:\Users\someone\AppData\kaeri\book-downloads\w\2.cbz")),
+            ("3", Some("/elsewhere/3.cbz")),
+            ("4", None),
+        ] {
+            conn.execute(
+                "INSERT INTO book_download (work, chapter, source_id, state, path, created_at,
+                    updated_at) VALUES ('w', ?1, 's', 'done', ?2, 1, 1)",
+                rusqlite::params![chapter, path],
+            )
+            .unwrap();
+        }
+        migrate(&conn).unwrap();
+        let mut stmt = conn.prepare("SELECT path FROM book_download ORDER BY chapter").unwrap();
+        let paths: Vec<Option<String>> =
+            stmt.query_map([], |r| r.get(0)).unwrap().map(Result::unwrap).collect();
+        assert_eq!(
+            paths,
+            [
+                Some("book-downloads/w/1.cbz".to_owned()),
+                Some(r"book-downloads\w\2.cbz".to_owned()),
+                Some("/elsewhere/3.cbz".to_owned()),
+                None,
+            ]
+        );
     }
 
     #[test]

@@ -111,12 +111,19 @@ pub fn sort(list: &mut [Kept]) {
     list.sort_by_cached_key(|c| (c.range().is_none(), c.range()));
 }
 
-/// Keep a source's answer, and give the chapters it lists that the last answer did not. The
+/// Where the chapters an answer left out are remembered, by id with when each was first seen.
+fn left_key(source: &str, series: &str) -> String {
+    format!("book_chapters_left:{source}/{series}")
+}
+
+/// Keep a source's answer, and give the chapters it lists that no answer listed before. The
 /// first answer for a series gives none: everything in it was out before.
 ///
 /// An empty answer is no answer: a server part way through a scan or a scrape that broke says
 /// nothing of what came out. It is not kept, so the next full answer is not all new; and a
-/// list kept empty before counts as none.
+/// list kept empty before counts as none. A short answer (a later page of the source's list
+/// that failed) is kept as the list, and the chapters it left out are remembered: back in a
+/// later answer, they are known, not new.
 pub fn keep(
     store: &Store,
     source: &str,
@@ -131,6 +138,13 @@ pub fn keep(
     // By id, so a long list is looked through once rather than once a chapter.
     let before: Option<HashMap<&str, &Kept>> =
         before.as_ref().map(|list| list.iter().map(|k| (k.id.as_str(), k)).collect());
+    let key = left_key(source, series);
+    let left: HashMap<String, Option<i64>> = store
+        .get_meta_text(&key)
+        .ok()
+        .flatten()
+        .and_then(|text| serde_json::from_str(&text).ok())
+        .unwrap_or_default();
     // Parts are kept under their whole chapter, so what is new is a chapter, not a part.
     let arranged = super::arrange::arrange(chapters, None, None);
     let mut fresh: Vec<Kept> = Vec::new();
@@ -140,10 +154,14 @@ pub fn keep(
         .enumerate()
         .map(|(i, c)| {
             let id = arranged.ids[i].as_str().to_owned();
-            let earlier = before.as_ref().map(|b| b.get(id.as_str()).copied());
+            // When an earlier answer first listed it, if one did.
+            let earlier = before.as_ref().map(|b| match b.get(id.as_str()) {
+                Some(k) => Some(k.seen_at),
+                None => left.get(&id).copied(),
+            });
             let seen_at = match earlier {
                 None => None,
-                Some(Some(k)) => k.seen_at,
+                Some(Some(seen_at)) => seen_at,
                 Some(None) => Some(now),
             };
             let kept = Kept {
@@ -170,6 +188,29 @@ pub fn keep(
     let json = serde_json::to_string(&list).unwrap_or_else(|_| "[]".into());
     if let Err(e) = store.put_book_chapters(source, series, &json, now) {
         tracing::warn!(error = %e, "a chapter list was not kept");
+    }
+    // What this answer left out of what was listed before, or left out already.
+    let listed: HashSet<&str> = list.iter().map(|k| k.id.as_str()).collect();
+    let mut still_left: HashMap<String, Option<i64>> = left
+        .iter()
+        .filter(|(id, _)| !listed.contains(id.as_str()))
+        .map(|(id, seen)| (id.clone(), *seen))
+        .collect();
+    for (id, k) in before.iter().flatten() {
+        if !listed.contains(id) {
+            still_left.insert((*id).to_owned(), k.seen_at);
+        }
+    }
+    if still_left != left {
+        let kept = if still_left.is_empty() {
+            store.delete_meta(&key)
+        } else {
+            let text = serde_json::to_string(&still_left).unwrap_or_default();
+            store.set_meta_text(&key, &text)
+        };
+        if let Err(e) = kept {
+            tracing::warn!(error = %e, "the chapters an answer left out were not kept");
+        }
     }
     fresh
 }

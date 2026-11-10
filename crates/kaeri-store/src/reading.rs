@@ -233,7 +233,7 @@ pub(crate) fn refresh_work(tx: &Transaction<'_>, work: &str) -> rusqlite::Result
             "SELECT upto_milli, upto_volume, stamp FROM read_adopt
               WHERE work = ?1 AND stamp > ?2
               ORDER BY upto_volume IS NOT NULL DESC, CAST(upto_volume AS REAL) DESC,
-                       upto_milli DESC
+                       upto_milli DESC, stamp DESC
               LIMIT 1",
             params![work, reset as i64],
             |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
@@ -541,8 +541,10 @@ fn undo_reset_row(
     stamp: Stamp,
 ) -> rusqlite::Result<()> {
     tx.execute(
+        // Two undos of one reset keep the later stamp, whichever arrives last.
         "INSERT INTO read_reset (uid, work, stamp, at, undone) VALUES (?1, ?2, 0, 0, ?3)
-         ON CONFLICT(uid) DO UPDATE SET undone = excluded.undone",
+         ON CONFLICT(uid) DO UPDATE SET
+            undone = MAX(COALESCE(read_reset.undone, 0), excluded.undone)",
         params![reset, work, stamp as i64],
     )?;
     Ok(())
@@ -1234,19 +1236,27 @@ impl Store {
 
     pub fn set_bookmark(&self, work: &str, chapter: &str, on: bool, at: i64) -> Result<()> {
         self.with_personal_tx(|tx| {
-            write_bookmark(tx, work, chapter, on, at)?;
+            // Dated by its sync stamp, as the devices it reaches date it, so every device
+            // lists the bookmarks in one order.
+            let mut at = at;
             if syncs(work) {
                 let key = format!("{work}/{chapter}");
-                self.emit_reg(tx, kinds::READ_BOOKMARK, &key, on.then_some("1"))?;
+                if let Some(op) =
+                    self.emit_reg(tx, kinds::READ_BOOKMARK, &key, on.then_some("1"))?
+                {
+                    at = crate::sync::secs_of_stamp(op.stamp);
+                }
             }
+            write_bookmark(tx, work, chapter, on, at)?;
             Ok(())
         })
     }
 
     pub fn bookmarks(&self, work: &str) -> Result<Vec<String>> {
         self.with_personal(|c| {
-            let mut stmt =
-                c.prepare("SELECT chapter FROM read_bookmark WHERE work = ?1 ORDER BY at")?;
+            let mut stmt = c.prepare(
+                "SELECT chapter FROM read_bookmark WHERE work = ?1 ORDER BY at, chapter",
+            )?;
             Ok(stmt.query_map([work], |r| r.get(0))?.collect::<rusqlite::Result<_>>()?)
         })
     }

@@ -1039,6 +1039,8 @@ impl Chapter {
                     Some(FeedPage::Coming) => {
                         self.sent.remove(&(part.page, half));
                         fed.waiting.insert(leaf);
+                        // Waited on: fetched before the pages nobody is looking at yet.
+                        fed.feed.want(part.page as usize);
                         continue;
                     }
                     // Said once: a retry asks for it again.

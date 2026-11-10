@@ -827,6 +827,14 @@
     <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, þàĝé {page}, ŵĥéŕé {device} šţöþþéð~~~~~~~~~~~~~~~]</value>
     <comment>The same notice for a chapter known only by its number, such as 14 or 14.5.</comment>
   </data>
+  <data name="ReaderMovedElsewhere" xml:space="preserve">
+    <value>[Ṁöṽéð ţö {chapter}, þàĝé {page}, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~]</value>
+    <comment>The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.</comment>
+  </data>
+  <data name="ReaderMovedNumberElsewhere" xml:space="preserve">
+    <value>[Ṁöṽéð ţö çĥàþţéŕ {chapter}, þàĝé {page}, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same notice for a chapter known only by its number, such as 14 or 14.5.</comment>
+  </data>
   <data name="ReaderDetectedRightToLeft" xml:space="preserve">
     <value>[Ļööķš ļîķé ŕîĝĥţ ţö ļéƒţ~~~~~~~~]</value>
     <comment>A notice the first time a series opens with its reading direction guessed. It offers Change.</comment>

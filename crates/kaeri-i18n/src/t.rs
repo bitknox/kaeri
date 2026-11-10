@@ -950,6 +950,16 @@ pub fn reader_moved_number(chapter: &str, page: i64, device: &str) -> String {
     text("reader-moved-number", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page)), ("device", Arg::Text(device))])
 }
 
+/// The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.
+pub fn reader_moved_elsewhere(chapter: &str, page: i64) -> String {
+    text("reader-moved-elsewhere", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page))])
+}
+
+/// The same notice for a chapter known only by its number, such as 14 or 14.5.
+pub fn reader_moved_number_elsewhere(chapter: &str, page: i64) -> String {
+    text("reader-moved-number-elsewhere", &[("chapter", Arg::Text(chapter)), ("page", Arg::Plain(page))])
+}
+
 /// A notice the first time a series opens with its reading direction guessed. It offers Change.
 pub fn reader_detected_right_to_left() -> String {
     text("reader-detected-right-to-left", &[])

@@ -523,3 +523,5 @@ async fn a_strip_writes_its_place_when_the_image_changes() {
     h.send(ReaderCommand::Close { session });
     assert_eq!(offset(&h), 0.5, "the close keeps the place within the image");
 }
+
+mod lifecycle;

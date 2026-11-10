@@ -1046,6 +1046,7 @@ pub enum ReaderEvent {
     Moved {
         session: u64,
         to: ReadPlace,
+        /// The device's name, empty when it is not known.
         from_device: String,
         back: ReadPlace,
     },
