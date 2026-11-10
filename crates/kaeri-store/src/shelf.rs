@@ -161,7 +161,7 @@ impl Store {
                   WHERE work = ?1 AND state = 'done' AND path IS NOT NULL ORDER BY id",
             )?;
             let downloads = stmt.query_map([work], |r| {
-                let path: String = r.get(0)?;
+                let path = self.full_path(r.get(0)?);
                 let chapter: String = r.get(1)?;
                 let format = std::path::Path::new(&path)
                     .extension()

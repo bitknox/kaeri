@@ -1153,6 +1153,20 @@ mod tests {
                 break failure;
             }
         };
+        // A source not reached is not answering; the device is offline only when the network
+        // says so.
+        let down =
+            kaeri_model::reading::ReadingFailure::SourceDown { source: "cellar shelf".into() };
+        assert_eq!(failure, Some(down));
+        kit.sources.write_back_network(true, NOW);
+        search_there(&kit, ask(NOW), work.clone(), "cellar".into(), "ferry".into(), &out);
+        let failure = loop {
+            if let Some(Event::BookSources(BookSourceEvent::SourceSeries { failure, .. })) =
+                rx.recv().await
+            {
+                break failure;
+            }
+        };
         assert_eq!(failure, Some(kaeri_model::reading::ReadingFailure::Offline));
 
         choose(&kit, ask(NOW), work.clone(), "attic".into(), "a-1".into(), &out);

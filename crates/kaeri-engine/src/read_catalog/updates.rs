@@ -633,4 +633,52 @@ mod tests {
             view(&kit, ask(2_000, true)).days.iter().map(|d| d.rows.len()).sum::<usize>();
         assert_eq!(rows, 1);
     }
+
+    /// A short answer (the newest 10 of 60, as a source whose later page failed) does not make
+    /// the 50 it left out new once they are listed again: nothing is told or queued.
+    #[tokio::test]
+    async fn a_short_answer_does_not_make_the_rest_new_next_time() {
+        use crate::downloads::books::Setup;
+        let dir = tempfile::tempdir().unwrap();
+        let manifest = BookSourceManifest {
+            id: "shelf".into(),
+            name: "Shelf".into(),
+            version: "1".into(),
+            kind: BookSourceKind::Native,
+            media: vec![Medium::Manga],
+            languages: Vec::new(),
+            allowed_hosts: Vec::new(),
+            capabilities: Vec::new(),
+        };
+        let full: Vec<SourceChapter> = (1..=60).map(chapter).collect();
+        let shelf = Arc::new(Shelf { manifest, listed: Mutex::new(full.clone()) });
+        let kit = kit(dir.path(), shelf.clone());
+        let work = "a:900301";
+        kit.store.set_book_match("shelf", "s-1", work, 100, true, false, 1).unwrap();
+        kit.store.adopt_read(work, "10", None, 2).unwrap();
+        kit.store.set_read_status(work, Some("reading"), 2).unwrap();
+        let setup = Setup {
+            keep_ready: true,
+            new_chapters: NewChapters::Reading,
+            hold: true,
+            ..Setup::default()
+        };
+        kit.sources.downloads.configure(setup);
+        let first = run(&kit, ask(1_000, true)).await;
+        assert!(first.found.is_empty() && first.queued == 0);
+        *shelf.listed.lock().unwrap() = full[50..].to_vec();
+        let short = run(&kit, ask(2_000, true)).await;
+        assert!(short.found.is_empty() && short.queued == 0);
+        *shelf.listed.lock().unwrap() = full.clone();
+        let again = run(&kit, ask(3_000, true)).await;
+        assert!(again.found.is_empty(), "{} told as new", again.found.len());
+        assert_eq!(again.queued, 0, "nothing came out to download");
+
+        // A chapter the source really adds after that is still new.
+        let mut more = full;
+        more.push(chapter(61));
+        *shelf.listed.lock().unwrap() = more;
+        let added = run(&kit, ask(4_000, true)).await;
+        assert_eq!(added.found.len(), 1);
+    }
 }

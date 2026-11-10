@@ -603,6 +603,12 @@ reader-moved = [Ṁöṽéð ţö { $chapter }, þàĝé { $page }, ŵĥéŕé {
 # The same notice for a chapter known only by its number, such as 14 or 14.5.
 reader-moved-number = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, þàĝé { $page }, ŵĥéŕé { $device } šţöþþéð~~~~~~~~~~~~~~~]
 
+# The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.
+reader-moved-elsewhere = [Ṁöṽéð ţö { $chapter }, þàĝé { $page }, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~]
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-elsewhere = [Ṁöṽéð ţö çĥàþţéŕ { $chapter }, þàĝé { $page }, ŵĥéŕé àñöţĥéŕ ðéṽîçé šţöþþéð~~~~~~~~~~~~~~~~~~]
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 reader-detected-right-to-left = [Ļööķš ļîķé ŕîĝĥţ ţö ļéƒţ~~~~~~~~]
 

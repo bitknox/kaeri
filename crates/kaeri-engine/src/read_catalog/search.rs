@@ -540,7 +540,9 @@ async fn ask_source(
         Ok(Ok(hits)) => Ok(hits),
         // A source without the title is not a failure.
         Ok(Err(ProviderError::NotFound)) => Ok(Vec::new()),
-        Ok(Err(error)) => Err(ReadSourceState::Failed { failure: failure(name, &error) }),
+        Ok(Err(error)) => Err(ReadSourceState::Failed {
+            failure: kit.sources.offline_or(failure(name, &error)),
+        }),
     }
 }
 

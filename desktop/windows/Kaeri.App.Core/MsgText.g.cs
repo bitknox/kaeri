@@ -339,6 +339,8 @@ public static class MsgText
         ReadingMsg.ReaderBackToPage x => T.ReaderBackToPage(x.Page),
         ReadingMsg.ReaderMoved x => T.ReaderMoved(x.Chapter, x.Page, x.Device),
         ReadingMsg.ReaderMovedNumber x => T.ReaderMovedNumber(x.Chapter, x.Page, x.Device),
+        ReadingMsg.ReaderMovedElsewhere x => T.ReaderMovedElsewhere(x.Chapter, x.Page),
+        ReadingMsg.ReaderMovedNumberElsewhere x => T.ReaderMovedNumberElsewhere(x.Chapter, x.Page),
         ReadingMsg.ReaderDetectedRightToLeft => T.ReaderDetectedRightToLeft,
         ReadingMsg.ReaderDetectedLeftToRight => T.ReaderDetectedLeftToRight,
         ReadingMsg.ReaderDetectedStrip => T.ReaderDetectedStrip,

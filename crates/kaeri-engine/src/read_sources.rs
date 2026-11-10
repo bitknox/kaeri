@@ -363,6 +363,18 @@ impl BookSources {
 
     /// Put plugins that have loaded into the registry, and take out the ones that were removed.
     pub fn adopt_plugins(&self, plugins: &BookPlugins) {
+        let here = self.take_in_plugins(plugins);
+        for source in self.registry.all() {
+            let manifest = source.manifest();
+            if manifest.kind == BookSourceKind::Plugin && !here.contains(&manifest.id) {
+                self.registry.remove(&manifest.id);
+            }
+        }
+    }
+
+    /// Put plugins that have loaded into the registry, leaving the rest as it is; the ids of
+    /// the plugins loaded.
+    pub(crate) fn take_in_plugins(&self, plugins: &BookPlugins) -> HashSet<String> {
         let here: HashSet<String> = plugins.ids().into_iter().collect();
         for id in &here {
             if let Some(plugin) = plugins.get(id) {
@@ -375,11 +387,17 @@ impl BookSources {
                 }
             }
         }
-        for source in self.registry.all() {
-            let manifest = source.manifest();
-            if manifest.kind == BookSourceKind::Plugin && !here.contains(&manifest.id) {
-                self.registry.remove(&manifest.id);
-            }
+        here
+    }
+
+    /// [`Self::take_in_plugins`], once plugins still loading are in, when `source` is not in yet
+    /// (any source with `None`): a download or list asked for at launch is not answered "not
+    /// found" for want of its plugin. Waits no longer than the series page does.
+    pub(crate) async fn plugins_in(&self, plugins: &BookPlugins, source: Option<&str>) {
+        self.take_in_plugins(plugins);
+        if plugins.is_arriving() && source.is_none_or(|s| self.registry.get(s).is_none()) {
+            plugins.arrived(crate::read_catalog::editions::PLUGINS_WAIT).await;
+            self.take_in_plugins(plugins);
         }
     }
 
@@ -1292,7 +1310,7 @@ use kaeri_model::reading::{
 use crate::read_catalog::chapters::Asked;
 
 /// A chapter opened: what it holds and where it came from.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Opened {
     pub source_id: String,
     pub series_ref: String,
@@ -1308,7 +1326,9 @@ pub(crate) fn failure(source: &str, error: &ProviderError) -> ReadingFailure {
         ProviderError::Unavailable(_) => {
             ReadingFailure::SignInNeeded { what: source.to_owned() }
         }
-        ProviderError::Transport(_) => ReadingFailure::Offline,
+        // A source not reached is not answering: the device is offline only when the network
+        // says so, which [`BookSources::failure`] knows.
+        ProviderError::Transport(_) => ReadingFailure::SourceDown { source: source.to_owned() },
         ProviderError::Blocked(reason) => {
             ReadingFailure::Blocked { source: source.to_owned(), reason: reason.clone() }
         }
@@ -1462,9 +1482,13 @@ impl BookSources {
         if matches!(error, ProviderError::Unavailable(_)) && self.registry.is_off(source) {
             return ReadingFailure::SourceOff { source: name };
         }
-        match failure(&name, error) {
-            // A source that could not be reached while the network says there is none is
-            // offline, whatever words the source chose for it.
+        self.offline_or(failure(&name, error))
+    }
+
+    /// A source that could not be reached while the network says there is none is offline,
+    /// whatever words the source chose for it.
+    pub(crate) fn offline_or(&self, failure: ReadingFailure) -> ReadingFailure {
+        match failure {
             ReadingFailure::SourceDown { .. } if self.write_back.is_offline() => {
                 ReadingFailure::Offline
             }
@@ -1752,6 +1776,25 @@ impl BookSources {
         let (source, series) = self.edition_of(work, None)?;
         let chapters = self.kept_source_list(&source, &series, now, max_age)?;
         Some(self.groups_of(work, &chapters))
+    }
+
+    /// As [`Self::chapters`], from the list as kept alone when it was asked within `max_age`
+    /// seconds; `None` when there is none.
+    pub(crate) fn kept_listing(
+        &self,
+        work: &WorkId,
+        now: i64,
+        max_age: i64,
+    ) -> Option<(Option<BookEditionRow>, Vec<VolumeGroup>)> {
+        let (source, series) = self.edition_of(work, None)?;
+        let chapters = self.kept_source_list(&source, &series, now, max_age)?;
+        let groups = self.groups_of(work, &chapters);
+        let row =
+            self.editions(work).into_iter().find(|e| e.source_id == source).map(|mut e| {
+                e.chapters = u32::try_from(chapters.len()).unwrap_or(u32::MAX);
+                e
+            });
+        Some((row, groups))
     }
 
     /// Ask the source for a series' whole list, put it in reading order and keep it.

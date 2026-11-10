@@ -765,6 +765,14 @@ object Strings {
     fun readerMovedNumber(context: Context, chapter: String, page: Int, device: String): String =
         context.getString(R.string.reader_moved_number, chapter, page, device)
 
+    /** The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall. */
+    fun readerMovedElsewhere(context: Context, chapter: String, page: Int): String =
+        context.getString(R.string.reader_moved_elsewhere, chapter, page)
+
+    /** The same notice for a chapter known only by its number, such as 14 or 14.5. */
+    fun readerMovedNumberElsewhere(context: Context, chapter: String, page: Int): String =
+        context.getString(R.string.reader_moved_number_elsewhere, chapter, page)
+
     /** A notice the first time a series opens with its reading direction guessed. It offers Change. */
     fun readerDetectedRightToLeft(context: Context): String =
         context.getString(R.string.reader_detected_right_to_left)

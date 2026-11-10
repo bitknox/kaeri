@@ -150,6 +150,17 @@ struct Listing {
     at: OpenAt,
     surface: ReaderSurface,
     slot: novel::Listed,
+    /// What the wait was for.
+    then: Then,
+}
+
+/// What an open waiting off the actor does once its wait ends.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Then {
+    /// Open from the chapters in the slot.
+    Open,
+    /// Book plugins were loading: look for the work's chapters again, now they are in.
+    Look,
 }
 
 impl std::fmt::Debug for Reader {
@@ -226,6 +237,8 @@ pub struct Session {
     demo: Option<kaeri_model::sources::DemoWorkInfo>,
     /// What the source and the catalogue said of how the series reads, when it opened.
     source: SourceWord,
+    /// Said on close, for the pages still coming from a source into the session's folder.
+    gone: crate::reading::feed::Gone,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -400,10 +413,8 @@ impl Reader {
             let _ = std::fs::remove_dir_all(
                 novel::cache_dir(&cx.services.paths.cache_dir).join(format!("{}-fixed", s.id)),
             );
-            let _ = std::fs::remove_dir_all(novel::streamed_dir(
-                &cx.services.paths.cache_dir,
-                s.id,
-            ));
+            // Its fetched pages go, and any still on their way go as they land.
+            s.gone.set();
         }
     }
 
@@ -422,6 +433,30 @@ impl Reader {
         }
         self.next += 1;
         let id = self.next;
+        // Without the book plugins, the list would be the shelf alone and the chapter asked for
+        // missed: ones still loading that may hold the work are waited for.
+        cx.services.book_sources.take_in_plugins(&cx.services.book_plugins);
+        if let Some(slot) = novel::plugins_coming(cx, id, &work) {
+            self.listing =
+                Some(Listing { id, work, chapter, at, surface, slot, then: Then::Look });
+            cx.send(ReaderEvent::Opening { chapter: None, wait: None });
+            return;
+        }
+        self.look(cx, id, work, chapter, at, surface);
+    }
+
+    /// The chapters of `work` as the shelf and its source have them, and the open from them:
+    /// at once, or once the source has listed them.
+    fn look(
+        &mut self,
+        cx: &mut Cx<'_>,
+        id: u64,
+        work: WorkId,
+        chapter: Option<ChapterId>,
+        at: OpenAt,
+        surface: ReaderSurface,
+    ) {
+        cx.services.book_sources.take_in_plugins(&cx.services.book_plugins);
         let mut chapters = shelf::chapters(&cx.services.store, work.as_str());
         if let Some((_, _, list)) = crate::read_catalog::chapters::of_work(
             &cx.services.book_sources,
@@ -435,21 +470,34 @@ impl Reader {
         // with nothing on the shelf, the source is asked off the actor. A shelf with no list
         // kept beside it opens on its own, never waiting on the source.
         if novel::sourced(cx, &work) {
-            match novel::kept_list(cx, &work, &chapters) {
-                Some(listed) => chapters = listed,
-                None if chapters.is_empty() => {
-                    // The source is known: it is asked for the list, and the line names it.
-                    let source = cx.services.book_sources.edition_of(&work, None);
-                    let source = source.map(|(id, _)| cx.services.book_sources.source_name(&id));
-                    let slot = novel::list(cx, id, &work);
-                    self.listing = Some(Listing { id, work, chapter, at, surface, slot });
-                    cx.send(ReaderEvent::Opening {
-                        chapter: None,
-                        wait: source.map(|source| ReaderWait::ChapterList { source }),
-                    });
-                    return;
+            let kept = novel::kept_list(cx, &work, &chapters);
+            // A chapter asked for that the list as kept does not name yet (a notification of
+            // one just out) is looked for in the source's list as it is now.
+            let missing = |list: &[ShelfChapter]| {
+                chapter.as_ref().is_some_and(|c| list.iter().all(|l| l.id != *c))
+            };
+            // Whether the source is asked for the list, and asked again past the kept one.
+            let ask = match kept {
+                Some(listed) if !missing(&listed) => {
+                    chapters = listed;
+                    None
                 }
-                None => {}
+                Some(_) => Some(true),
+                None if chapters.is_empty() || missing(&chapters) => Some(false),
+                None => None,
+            };
+            if let Some(again) = ask {
+                // The source is known: it is asked for the list, and the line names it.
+                let source = cx.services.book_sources.edition_of(&work, None);
+                let source = source.map(|(id, _)| cx.services.book_sources.source_name(&id));
+                let slot = novel::list(cx, id, &work, chapters, again);
+                self.listing =
+                    Some(Listing { id, work, chapter, at, surface, slot, then: Then::Open });
+                cx.send(ReaderEvent::Opening {
+                    chapter: None,
+                    wait: source.map(|source| ReaderWait::ChapterList { source }),
+                });
+                return;
             }
         }
         // No word kept yet on how the series reads, and a source being asked: the open waits
@@ -457,7 +505,8 @@ impl Reader {
         if !chapters.is_empty()
             && let Some(slot) = novel::after_hint(cx, id, &work, &chapters)
         {
-            self.listing = Some(Listing { id, work, chapter, at, surface, slot });
+            self.listing =
+                Some(Listing { id, work, chapter, at, surface, slot, then: Then::Open });
             return;
         }
         self.open_with(cx, id, work, chapters, chapter, at, surface);
@@ -471,6 +520,11 @@ impl Reader {
     /// A source listed the chapters an open waited for.
     fn listed(&mut self, cx: &mut Cx<'_>, session: u64) {
         let Some(listing) = self.listing.take_if(|l| l.id == session) else { return };
+        if listing.then == Then::Look {
+            let Listing { id, work, chapter, at, surface, .. } = listing;
+            self.look(cx, id, work, chapter, at, surface);
+            return;
+        }
         let listed = listing.slot.lock().ok().and_then(|mut s| s.take());
         match listed {
             Some(Ok(chapters)) if !chapters.is_empty() => {
@@ -610,6 +664,10 @@ impl Reader {
             prepared: Arc::default(),
             feed: None,
             novel_resumed: false,
+            gone: crate::reading::feed::Gone::new(novel::streamed_dir(
+                &cx.services.paths.cache_dir,
+                id,
+            )),
         };
         let pages = self.pages(cx);
         session.lay_out(cx, &pages, page);
@@ -684,6 +742,26 @@ fn session_of(command: &ReaderCommand) -> Option<u64> {
     }
 }
 
+/// Whether the download queue is fetching `chapter`, or will once its turn comes: queued, or
+/// unread and about to be kept ready as the chapter before it opens.
+fn downloading(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> bool {
+    use kaeri_store::book_downloads::BookDownloadState as State;
+    let setup = cx.services.book_sources.downloads.setup();
+    match cx.services.store.book_download(work.as_str(), chapter.as_str()) {
+        Ok(Some(row)) => match row.state {
+            State::Downloading => true,
+            State::Queued => !setup.hold,
+            _ => false,
+        },
+        Ok(None) if setup.keep_ready && !setup.hold => cx
+            .services
+            .store
+            .read_marks(work.as_str())
+            .is_ok_and(|marks| !marks.is_read(chapter.as_str())),
+        _ => false,
+    }
+}
+
 /// Where a chapter opens.
 struct Start {
     /// The chapter's index in the shelf.
@@ -725,17 +803,22 @@ fn start_of(
         (page > 0 || strip.is_some_and(|s| s.offset > 0.0)).then_some((page, strip, k.of_pages))
     };
     let at_page = |index, page| Start { index, page, strip: None, resumed: false, of: None };
+    // A chapter asked for and not in the list opens nothing: never another chapter in its place.
+    let asked = || match chapter {
+        Some(id) => index_of(id).map(Some),
+        None => Some(None),
+    };
     Some(match at {
         OpenAt::Place { place } => at_page(index_of(&place.chapter)?, place.page.unwrap_or(0)),
-        OpenAt::Page { page } => at_page(chapter.and_then(index_of).unwrap_or(0), *page),
+        OpenAt::Page { page } => at_page(asked()?.unwrap_or(0), *page),
         OpenAt::Start => {
             let first_unread =
                 chapters.iter().position(|c| !marks.is_read(c.id.as_str())).unwrap_or(0);
-            at_page(chapter.and_then(index_of).unwrap_or(first_unread), 0)
+            at_page(asked()?.unwrap_or(first_unread), 0)
         }
         OpenAt::Resume => {
-            let index = match chapter {
-                Some(id) => index_of(id)?,
+            let index = match asked()? {
+                Some(index) => index,
                 None => {
                     let last = store
                         .read_work(work.as_str())
@@ -909,6 +992,7 @@ impl Session {
     /// Ask the worker for the open chapter, starting at `page`.
     fn lay_out(&mut self, cx: &Cx<'_>, pages: &Pages, page: u32) {
         self.generation += 1;
+        self.follow_download(cx, self.at);
         let chapter = self.chapter().clone();
         self.start.page = Some(page);
         // The place within a strip holds only while the chapter opens at its image.
@@ -1165,13 +1249,57 @@ impl Session {
     /// through the open one, so it opens at once from the end page or the strip's foot.
     fn read_ahead(&mut self, cx: &Cx<'_>, pages: &Pages) {
         let index = self.at + 1;
+        self.follow_download(cx, index);
         let Some(next) = self.chapters.get(index).filter(|c| c.format == novel::SOURCE) else {
             return;
         };
         if self.ahead.as_ref().is_some_and(|a| a.chapter == next.id) {
             return;
         }
-        self.ahead = Some(novel::fetch_ahead(cx, pages, self.id, &self.work, (index, next)));
+        // The download queue is fetching it, as one kept ready: it opens from that file, and
+        // the source is not asked for it twice.
+        if downloading(cx, &self.work, &next.id) {
+            return;
+        }
+        let gone = self.gone.clone();
+        let ahead = novel::fetch_ahead(cx, pages, self.id, &self.work, (index, next), &gone);
+        self.ahead = Some(ahead);
+    }
+
+    /// A chapter as the downloads have it now, not as they had it when the session opened: one
+    /// downloaded since reads from its file, and one whose file was deleted from its source.
+    fn follow_download(&mut self, cx: &Cx<'_>, index: usize) {
+        let work = self.work.clone();
+        let Some(chapter) = self.chapters.get_mut(index) else { return };
+        if chapter.format == novel::SOURCE {
+            let Ok(Some(row)) =
+                cx.services.store.book_download(work.as_str(), chapter.id.as_str())
+            else {
+                return;
+            };
+            let Some(path) = row.path.filter(|p| std::path::Path::new(p).exists()) else {
+                return;
+            };
+            if row.state != kaeri_store::book_downloads::BookDownloadState::Done {
+                return;
+            }
+            let path = PathBuf::from(path);
+            chapter.format = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .map_or_else(|| "folder".to_owned(), str::to_ascii_lowercase);
+            chapter.path = path;
+            chapter.pages = row.pages_total.or(chapter.pages);
+            chapter.source = Some(row.source_id);
+        } else if chapter.source.is_some()
+            && !chapter.path.as_os_str().is_empty()
+            && !chapter.path.exists()
+            && novel::sourced(cx, &work)
+        {
+            chapter.format = novel::SOURCE.into();
+            chapter.path = PathBuf::new();
+            chapter.source = None;
+        }
     }
 
     /// Ask the worker for the next chapter's first page, once a chapter. A chapter from a
@@ -1180,6 +1308,7 @@ impl Session {
         if std::mem::replace(&mut self.peeked, true) {
             return;
         }
+        self.follow_download(cx, self.at + 1);
         let Some(next) = self.chapters.get(self.at + 1) else { return };
         if next.format == novel::SOURCE {
             // Its first page comes with the chapter fetched ahead.
@@ -1406,11 +1535,13 @@ impl Session {
         if theirs.read || !further {
             return;
         }
+        // A device whose name is not known (removed from sync, or this one before a reinstall)
+        // is never named by its id.
         let name = store
             .sync_peers()
             .ok()
             .and_then(|peers| peers.into_iter().find(|p| p.0 == device).and_then(|p| p.1))
-            .unwrap_or_else(|| device.clone());
+            .filter(|name| !name.trim().is_empty());
         let back = self
             .place
             .clone()
@@ -1420,7 +1551,8 @@ impl Session {
         let label = self.chapters[index].label.clone();
         self.moved_back = Some(back.clone());
         self.go_to(cx, pages, to.clone());
-        cx.send(ReaderEvent::Moved { session: self.id, to, from_device: name.clone(), back });
+        let from_device = name.clone().unwrap_or_default();
+        cx.send(ReaderEvent::Moved { session: self.id, to, from_device, back });
         let msg = moved_msg(&label, i64::from(page) + 1, name);
         cx.send(notice(msg, Some(ReaderAction::GoBack), MOVED_MS, self.eink()));
     }
@@ -1461,17 +1593,22 @@ fn resumed_msg(mode: ReaderMode, page: u32, strip: Option<StripPos>) -> Option<R
 
 /// The Moved notice for a chapter's label. A label that is only a number, with or without a
 /// chapter word (`14`, `14.5`, `Chapter 14`), reads "chapter 14"; any other label is shown whole.
-fn moved_msg(label: &str, page: i64, device: String) -> ReadingMsg {
+fn moved_msg(label: &str, page: i64, device: Option<String>) -> ReadingMsg {
     let lower = label.trim().to_lowercase();
     let rest = ["chapter", "chap.", "chap", "ch.", "ch"]
         .iter()
         .find_map(|w| lower.strip_prefix(w))
         .map_or(lower.as_str(), |r| r.trim_start_matches([' ', '.', ':', '#']));
-    match kaeri_core::books::ChapterNumber::parse(rest) {
-        Some(number) => {
-            ReadingMsg::ReaderMovedNumber { chapter: number.to_string(), page, device }
+    let number = kaeri_core::books::ChapterNumber::parse(rest).map(|n| n.to_string());
+    match (number, device) {
+        (Some(chapter), Some(device)) => {
+            ReadingMsg::ReaderMovedNumber { chapter, page, device }
         }
-        None => ReadingMsg::ReaderMoved { chapter: label.to_owned(), page, device },
+        (Some(chapter), None) => ReadingMsg::ReaderMovedNumberElsewhere { chapter, page },
+        (None, Some(device)) => {
+            ReadingMsg::ReaderMoved { chapter: label.to_owned(), page, device }
+        }
+        (None, None) => ReadingMsg::ReaderMovedElsewhere { chapter: label.to_owned(), page },
     }
 }
 
@@ -1537,7 +1674,7 @@ fn queue_trackers(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, at: i64) -> V
 mod tests {
     #[test]
     fn moved_notice_names_the_chapter_once() {
-        let moved = |label: &str| moved_msg(label, 6, "Desk".into());
+        let moved = |label: &str| moved_msg(label, 6, Some("Desk".into()));
         let number = |n: &str| ReadingMsg::ReaderMovedNumber {
             chapter: n.into(),
             page: 6,
@@ -1608,8 +1745,10 @@ mod tests {
         seen: std::collections::VecDeque<ReaderEvent>,
         /// Sessions whose leaves went out.
         laid: std::collections::HashSet<u64>,
-        /// Whether a failed page is expected, and kept as an event instead of a panic.
+        /// Whether a failed page or open is expected, and kept instead of a panic.
         failures: bool,
+        /// The opens that failed, when `failures` is on.
+        failed: Vec<ReadingFailure>,
         _dir: tempfile::TempDir,
     }
 
@@ -1733,6 +1872,7 @@ mod tests {
             seen: Default::default(),
             laid: Default::default(),
             failures: false,
+            failed: Vec::new(),
             _dir: dir,
         }
     }
@@ -1786,7 +1926,8 @@ mod tests {
                     self.seen.push_back(event);
                 }
                 Envelope::Event(Event::Reading(ReadingEvent::Failed { failure, .. })) => {
-                    panic!("the reader failed: {failure:?}");
+                    assert!(self.failures, "the reader failed: {failure:?}");
+                    self.failed.push(failure);
                 }
                 _ => {}
             }
@@ -2426,6 +2567,36 @@ mod tests {
             })
             .await;
         assert_eq!(view.as_str(), "2");
+    }
+
+    /// A device sync no longer knows the name of is "another device", never its id.
+    #[tokio::test(start_paused = true)]
+    async fn a_device_with_no_name_is_another_device_in_the_moved_notice() {
+        let mine = Store::open_in_memory().unwrap();
+        mine.sync_enable("phone").unwrap();
+        let gone = Store::open_in_memory().unwrap();
+        gone.set_sync_clock(|| 4_000_000_000_000);
+        gone.sync_enable("gone").unwrap();
+        let mut h = harness(mine.clone());
+        h.open(OpenAt::Resume).await;
+        h.shown(1, TurnHow::Turn).await;
+        let mut ahead = ReadEvent::new(WORK, "2", 2);
+        ahead.page = Some(2);
+        gone.record_read(&ahead, Vec::new()).unwrap();
+        let ops = gone.ops_after(&mine.version_vector().unwrap(), usize::MAX).unwrap();
+        mine.apply_ops(ops).unwrap();
+        h.synced();
+        h.until(|e| matches!(e, ReaderEvent::Opened(_)).then_some(())).await;
+        let said = h.drain();
+        let from = said.iter().find_map(|e| match e {
+            ReaderEvent::Moved { from_device, .. } => Some(from_device.clone()),
+            _ => None,
+        });
+        assert_eq!(from.as_deref(), Some(""));
+        assert_eq!(
+            notices(&said),
+            [ReadingMsg::ReaderMovedNumberElsewhere { chapter: "2".into(), page: 3 }]
+        );
     }
 
     #[tokio::test(start_paused = true)]

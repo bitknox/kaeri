@@ -758,6 +758,16 @@ public enum L {
         Self.format("reader-moved-number", fallback: "Moved to chapter %1$@, page %2$@, where %3$@ stopped", chapter, String(page), device)
     }
 
+    /// The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.
+    public static func readerMovedElsewhere(chapter: String, page: Int) -> String {
+        Self.format("reader-moved-elsewhere", fallback: "Moved to %1$@, page %2$@, where another device stopped", chapter, String(page))
+    }
+
+    /// The same notice for a chapter known only by its number, such as 14 or 14.5.
+    public static func readerMovedNumberElsewhere(chapter: String, page: Int) -> String {
+        Self.format("reader-moved-number-elsewhere", fallback: "Moved to chapter %1$@, page %2$@, where another device stopped", chapter, String(page))
+    }
+
     /// A notice the first time a series opens with its reading direction guessed. It offers Change.
     public static var readerDetectedRightToLeft: String { string("reader-detected-right-to-left", fallback: "Looks like right to left") }
 

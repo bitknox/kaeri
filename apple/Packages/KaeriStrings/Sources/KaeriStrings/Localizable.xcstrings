@@ -221371,6 +221371,18 @@
         }
       }
     },
+    "reader-moved-elsewhere" : {
+      "comment" : "The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall. Argument 1: chapter (Text). Argument 2: page (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to %1$@, page %2$@, where another device stopped"
+          }
+        }
+      }
+    },
     "reader-moved-number" : {
       "comment" : "The same notice for a chapter known only by its number, such as 14 or 14.5. Argument 1: chapter (Text). Argument 2: page (Plain). Argument 3: device (Text).",
       "extractionState" : "manual",
@@ -221451,6 +221463,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã chuyển tới chương %1$@, trang %2$@, nơi %3$@ dừng lại"
+          }
+        }
+      }
+    },
+    "reader-moved-number-elsewhere" : {
+      "comment" : "The same notice for a chapter known only by its number, such as 14 or 14.5. Argument 1: chapter (Text). Argument 2: page (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to chapter %1$@, page %2$@, where another device stopped"
           }
         }
       }

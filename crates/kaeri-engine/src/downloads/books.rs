@@ -429,7 +429,7 @@ impl BookDownloads {
     /// that asked.
     pub async fn download(&self, lent: &Lent, work: WorkId, pick: DownloadPick) {
         let now = lent.clock.now();
-        lent.sources.adopt_plugins(&lent.plugins);
+        lent.sources.plugins_in(&lent.plugins, None).await;
         let listed = ordered_chapters(&lent.sources, &work, now).await;
         let (source, rows) = match listed {
             Ok(found) => found,
@@ -629,9 +629,18 @@ impl BookDownloads {
         }
         let now = lent.clock.now();
         lent.sources.adopt_plugins(&lent.plugins);
-        let Ok((source, rows)) = ordered_chapters(&lent.sources, work, now).await else {
-            return;
+        // The list the reader opened from serves while it is fresh: a chapter read is no reason
+        // to ask the source for the whole list again.
+        let listed = match lent.sources.kept_listing(work, now, crate::read_sources::LIST_FRESH)
+        {
+            Some((edition, groups)) => edition
+                .map(|e| e.source_id)
+                .or_else(|| lent.sources.edition_of(work, None).map(|(source, _)| source))
+                .map(|source| (source, flatten(groups)))
+                .ok_or(ReadingFailure::NotFound),
+            None => ordered_chapters(&lent.sources, work, now).await,
         };
+        let Ok((source, rows)) = listed else { return };
         let Some(at) = rows.iter().position(|r| r.id == *after) else { return };
         let ahead = Self::picked(
             &DownloadPick::NextUnread { n: u32::try_from(KEEP_AHEAD).unwrap_or(3) },
@@ -650,7 +659,12 @@ impl BookDownloads {
         tokio::spawn(async move {
             let now = lent.clock.now();
             lent.sources.adopt_plugins(&lent.plugins);
-            let event = match lent.sources.chapters(&work, None, now).await {
+            // Only the downloads changed: the list as kept says the rest.
+            let listed = match lent.sources.kept_listing(&work, now, i64::MAX) {
+                Some(kept) => Ok(kept),
+                None => lent.sources.chapters(&work, None, now).await,
+            };
+            let event = match listed {
                 Ok((edition, volumes)) => {
                     ReadingEvent::Chapters { work, edition, volumes, failure: None }
                 }
@@ -836,7 +850,7 @@ impl BookDownloads {
         if self.free().is_some_and(|free| free < KEEP_FREE) {
             return Err(ReadingFailure::DiskFull.into());
         }
-        lent.sources.adopt_plugins(&lent.plugins);
+        lent.sources.plugins_in(&lent.plugins, Some(&job.source_id)).await;
         let (work, chapter) = (&job.work, &job.chapter);
         let mut opened = lent
             .sources

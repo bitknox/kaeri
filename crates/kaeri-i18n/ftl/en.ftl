@@ -603,6 +603,12 @@ reader-moved = Moved to { $chapter }, page { $page }, where { $device } stopped
 # The same notice for a chapter known only by its number, such as 14 or 14.5.
 reader-moved-number = Moved to chapter { $chapter }, page { $page }, where { $device } stopped
 
+# The notice when another device read further and its name is not known: a device removed from sync, or this one before a reinstall.
+reader-moved-elsewhere = Moved to { $chapter }, page { $page }, where another device stopped
+
+# The same notice for a chapter known only by its number, such as 14 or 14.5.
+reader-moved-number-elsewhere = Moved to chapter { $chapter }, page { $page }, where another device stopped
+
 # A notice the first time a series opens with its reading direction guessed. It offers Change.
 reader-detected-right-to-left = Looks like right to left
 

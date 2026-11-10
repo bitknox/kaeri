@@ -114,7 +114,9 @@ pub(crate) async fn chapters(
             let failure = volumes.is_empty().then(|| {
                 kit.sources
                     .switched_off_holder(work)
-                    .map_or(ReadingFailure::NoSource, |source| ReadingFailure::SourceOff { source })
+                    .map_or(ReadingFailure::NoSource, |source| ReadingFailure::SourceOff {
+                        source,
+                    })
             });
             send(
                 tx,

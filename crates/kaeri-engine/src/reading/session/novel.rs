@@ -169,6 +169,7 @@ pub(super) fn fetch_ahead(
     session: u64,
     work: &WorkId,
     next: (usize, &ShelfChapter),
+    gone: &crate::reading::feed::Gone,
 ) -> Ahead {
     let (index, next) = next;
     let sources = cx.services.book_sources.clone();
@@ -180,6 +181,7 @@ pub(super) fn fetch_ahead(
         (streamed.join(format!("ahead-{index}")), streamed.join(format!("next-{index}")));
     let worker = pages.clone();
     let out = cx.tx.clone();
+    let gone = gone.clone();
     let (tx, feed) = tokio::sync::watch::channel(None);
     let id = chapter.clone();
     let task = tokio::spawn(async move {
@@ -206,6 +208,7 @@ pub(super) fn fetch_ahead(
                 0,
                 now,
                 out.clone(),
+                gone.clone(),
                 landed,
             );
             let feed = match started.await {
@@ -220,6 +223,7 @@ pub(super) fn fetch_ahead(
                 && let Some(name) = first.file_name()
                 && tokio::fs::create_dir_all(&peek_dir).await.is_ok()
                 && tokio::fs::copy(&first, peek_dir.join(name)).await.is_ok()
+                && !gone.swept()
             {
                 worker.peek(PeekJob { session, chapter, path: peek_dir, out });
             }
@@ -372,7 +376,15 @@ pub(super) fn kept_list(
 /// A work with nothing on the shelf, listed from its source off the actor.
 pub(super) type Listed = Arc<Mutex<Option<Result<Vec<ShelfChapter>, ReadingFailure>>>>;
 
-pub(super) fn list(cx: &Cx<'_>, session: u64, work: &WorkId) -> Listed {
+/// A work's list from its source, off the actor, with `shelf` read from its files. `again`
+/// asks the source past a list kept within [`LIST_FRESH`](crate::read_sources::LIST_FRESH).
+pub(super) fn list(
+    cx: &Cx<'_>,
+    session: u64,
+    work: &WorkId,
+    shelf: Vec<ShelfChapter>,
+    again: bool,
+) -> Listed {
     let slot = Listed::default();
     let out = slot.clone();
     let sources = cx.services.book_sources.clone();
@@ -380,7 +392,12 @@ pub(super) fn list(cx: &Cx<'_>, session: u64, work: &WorkId) -> Listed {
     let now = cx.now();
     let done = wake(cx.tx, session, ReaderWake::Listed);
     tokio::spawn(async move {
-        let listed = sources.reading_chapters(&work, now).await.map(source_chapters);
+        let listed = if again {
+            sources.chapters(&work, None, now).await.map(|(_, groups)| groups)
+        } else {
+            sources.reading_chapters(&work, now).await
+        };
+        let listed = listed.map(|groups| with_shelf(source_chapters(groups), shelf));
         // The listing asked the source how the series reads, if it had not said lately.
         if let Some(lookup) = sources.hint_lookup(&work) {
             crate::read_sources::settle_hint(lookup).await;
@@ -391,6 +408,27 @@ pub(super) fn list(cx: &Cx<'_>, session: u64, work: &WorkId) -> Listed {
         done();
     });
     slot
+}
+
+/// Book plugins still loading when a work they may hold opens: a source of the work's is not
+/// in yet. The open waits for them, as long as the series page would, then looks again.
+pub(super) fn plugins_coming(cx: &Cx<'_>, session: u64, work: &WorkId) -> Option<Listed> {
+    let plugins = cx.services.book_plugins.clone();
+    if !plugins.is_arriving() {
+        return None;
+    }
+    let sources = &cx.services.book_sources;
+    let refs = cx.services.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+    if refs.iter().all(|(source, _)| sources.registry.get(source).is_some()) {
+        return None;
+    }
+    let slot = Listed::default();
+    let done = wake(cx.tx, session, ReaderWake::Listed);
+    tokio::spawn(async move {
+        plugins.arrived(crate::read_catalog::editions::PLUGINS_WAIT).await;
+        done();
+    });
+    Some(slot)
 }
 
 /// A work on the shelf whose source is being asked how it reads, with no answer kept: its open
@@ -469,9 +507,14 @@ impl Session {
         let (first, strip, kept_of) =
             (self.start.page.unwrap_or(0), self.start.strip, self.kept_of);
         let (session, worker, out) = (self.id, pages.clone(), cx.tx.clone());
+        let gone = self.gone.clone();
         // The chapter fetched ahead opens from its feed, the pages still coming behind it.
         let ahead = self.ahead.take_if(|a| a.chapter == chapter.id);
         tokio::spawn(async move {
+            // Closed before its turn came: the source is not asked for nothing.
+            if gone.is() {
+                return;
+            }
             if let Some(ahead) = ahead
                 && let Some(feed) = ahead.feed().await
             {
@@ -497,7 +540,7 @@ impl Session {
                         worker.landed(session, chapter.clone(), page, out);
                     };
                     let fed = crate::reading::feed::start(
-                        sources, opened, id, streamed, first, now, out, landed,
+                        sources, opened, id, streamed, first, now, out, gone, landed,
                     );
                     match fed.await {
                         Ok(feed) => Prepared::Feed(feed),

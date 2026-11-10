@@ -7,7 +7,10 @@
 
 use std::{
     path::{Path, PathBuf},
-    sync::{Arc, Mutex, Weak},
+    sync::{
+        Arc, Mutex, Weak,
+        atomic::{AtomicBool, Ordering},
+    },
 };
 
 use kaeri_core::books::{ChapterContent, ChapterId};
@@ -18,6 +21,40 @@ use crate::{
     outbox::Outbox,
     read_sources::{BookSources, Opened},
 };
+
+/// Says once a reader session is closed, for the feeds filling its folder: a page that lands
+/// after takes the folder with it, so nothing is left behind.
+#[derive(Debug, Clone)]
+pub struct Gone {
+    flag: Arc<AtomicBool>,
+    /// The session's folder of fetched pages.
+    root: PathBuf,
+}
+
+impl Gone {
+    pub fn new(root: PathBuf) -> Self {
+        Self { flag: Arc::default(), root }
+    }
+
+    /// The session closed: its folder goes now, and anything landing later goes too.
+    pub fn set(&self) {
+        self.flag.store(true, Ordering::SeqCst);
+        let _ = std::fs::remove_dir_all(&self.root);
+    }
+
+    pub fn is(&self) -> bool {
+        self.flag.load(Ordering::SeqCst)
+    }
+
+    /// Take away what was written after the close; `true` when the session is closed.
+    pub fn swept(&self) -> bool {
+        let gone = self.is();
+        if gone {
+            let _ = std::fs::remove_dir_all(&self.root);
+        }
+        gone
+    }
+}
 
 /// One page of a feed.
 #[derive(Debug, Clone, PartialEq)]
@@ -47,6 +84,7 @@ struct Fetcher<F> {
     now: i64,
     landed: F,
     again: mpsc::UnboundedReceiver<(usize, Outbox)>,
+    gone: Gone,
 }
 
 impl Feed {
@@ -90,7 +128,8 @@ impl Feed {
 /// Start feeding `opened`'s pictures, the reader's `chapter`, into `dir`, from page `first` on. The first page is
 /// fetched before this returns; the feed is `Err` when it fails, as the chapter failing to open
 /// would be. The rest come behind it, `landed` called with each page's index, and `out` to
-/// answer on, once it has landed or failed.
+/// answer on, once it has landed or failed. Once `gone` says the session closed, nothing more is
+/// fetched and what landed goes.
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn start(
     sources: BookSources,
@@ -100,6 +139,7 @@ pub(crate) async fn start(
     first: usize,
     now: i64,
     out: Outbox,
+    gone: Gone,
     landed: impl Fn(u32, &Outbox) + Send + 'static,
 ) -> Result<Arc<Feed>, ReadingFailure> {
     let ChapterContent::Images(list) = &opened.content else {
@@ -109,11 +149,14 @@ pub(crate) async fn start(
     if total == 0 {
         return Err(ReadingFailure::NotFound);
     }
+    if gone.is() {
+        return Err(ReadingFailure::NotFound);
+    }
     let first = first.min(total - 1);
     tokio::fs::create_dir_all(&dir)
         .await
         .map_err(|e| ReadingFailure::Other { reason: e.to_string() })?;
-    let page = fetch(&sources, &mut opened, &dir, first, now).await;
+    let page = fetch(&sources, &mut opened, &dir, first, now, &gone).await;
     if let FeedPage::Failed(failure) = page {
         return Err(failure);
     }
@@ -121,7 +164,7 @@ pub(crate) async fn start(
     let mut pages = vec![FeedPage::Coming; total];
     pages[first] = page;
     let feed = Arc::new(Feed { chapter, dir, pages: Mutex::new(pages), again });
-    let fetcher = Fetcher { sources, opened, now, landed, again: asked };
+    let fetcher = Fetcher { sources, opened, now, landed, again: asked, gone };
     let order: Vec<usize> = (first + 1..total).chain(0..first).collect();
     tokio::spawn(fetcher.run(Arc::downgrade(&feed), order, out));
     Ok(feed)
@@ -146,7 +189,8 @@ impl<F: Fn(u32, &Outbox) + Send + 'static> Fetcher<F> {
     /// Fetch one page into the feed; `false` once nothing holds the feed.
     async fn one(&mut self, feed: &Weak<Feed>, index: usize, out: &Outbox) -> bool {
         let Some(dir) = feed.upgrade().map(|f| f.dir.clone()) else { return false };
-        let page = fetch(&self.sources, &mut self.opened, &dir, index, self.now).await;
+        let page =
+            fetch(&self.sources, &mut self.opened, &dir, index, self.now, &self.gone).await;
         let Some(feed) = feed.upgrade() else { return false };
         feed.set(index, page);
         (self.landed)(index as u32, out);
@@ -161,6 +205,7 @@ async fn fetch(
     dir: &Path,
     index: usize,
     now: i64,
+    gone: &Gone,
 ) -> FeedPage {
     let bytes = match sources.page(opened, index, now).await {
         Ok(bytes) => bytes,
@@ -175,7 +220,12 @@ async fn fetch(
         tokio::fs::write(&temp, &bytes).await?;
         tokio::fs::rename(&temp, &path).await
     };
-    match written.await {
+    let written = written.await;
+    // Closed while the page came: it goes with the folder.
+    if gone.swept() {
+        return FeedPage::Failed(ReadingFailure::NotFound);
+    }
+    match written {
         Ok(()) => FeedPage::Landed(path),
         Err(e) => FeedPage::Failed(ReadingFailure::Other { reason: e.to_string() }),
     }

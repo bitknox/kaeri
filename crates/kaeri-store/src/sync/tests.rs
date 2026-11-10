@@ -937,3 +937,5 @@ fn a_removed_device_starts_over_under_a_new_id_and_the_group_takes_it() {
     // What it held stays.
     assert_eq!(b.store.events_for(SHOW, 10).unwrap().len(), 2);
 }
+
+mod reading_order;
