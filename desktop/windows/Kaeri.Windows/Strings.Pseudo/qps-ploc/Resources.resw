@@ -1287,6 +1287,10 @@
     <value>[Ñöţ àñšŵéŕîñĝ~~~~]</value>
     <comment>The source has failed every ask, since a time on another day or not known.</comment>
   </data>
+  <data name="ReadingMissPossible" xml:space="preserve">
+    <value>[Þöššîƀļé ɱàţçĥ~~~~~]</value>
+    <comment>The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.</comment>
+  </data>
   <data name="ReadingDlParts_one" xml:space="preserve">
     <value>[1 þàŕţ~~]</value>
     <comment>How many parts of a light novel are downloaded.</comment>

@@ -445,6 +445,7 @@ public static class MsgText
         ReadingMsg.ReadingMissNoSeries => T.ReadingMissNoSeries,
         ReadingMsg.ReadingMissDownSince x => T.ReadingMissDownSince(x.Time),
         ReadingMsg.ReadingMissDown => T.ReadingMissDown,
+        ReadingMsg.ReadingMissPossible => T.ReadingMissPossible,
         ReadingMsg.ReadingDlParts x => T.ReadingDlParts(x.Count),
         ReadingMsg.ReadingDlSize x => T.ReadingDlSize(Wording.Size(x.Size)),
         ReadingMsg.ReadingDlRead x => T.ReadingDlRead(x.Count),

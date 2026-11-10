@@ -1358,6 +1358,36 @@ impl Store {
         })
     }
 
+    /// Let go of a match made without the person: its series is then nobody's work again. A
+    /// match the person confirmed stays.
+    pub fn forget_book_match(&self, source_id: &str, series_ref: &str) -> Result<()> {
+        self.with_personal(|c| {
+            c.execute(
+                "DELETE FROM book_source_match
+                  WHERE source_id = ?1 AND series_ref = ?2 AND confirmed = 0",
+                params![source_id, series_ref],
+            )?;
+            Ok(())
+        })
+    }
+
+    /// How sure a source's series match is, 0 to 100, and whether the person confirmed it.
+    pub fn book_match_confidence(
+        &self,
+        source_id: &str,
+        series_ref: &str,
+    ) -> Result<Option<(u8, bool)>> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT confidence, confirmed FROM book_source_match
+                      WHERE source_id = ?1 AND series_ref = ?2",
+                params![source_id, series_ref],
+                |r| Ok((r.get::<_, u8>(0)?, r.get::<_, i32>(1)? != 0)),
+            )
+            .optional()?)
+        })
+    }
+
     /// The work a source's series was matched to.
     pub fn book_match(&self, source_id: &str, series_ref: &str) -> Result<Option<String>> {
         self.with_personal(|c| {

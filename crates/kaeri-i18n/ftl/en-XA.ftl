@@ -957,6 +957,9 @@ reading-miss-down-since = [Ñöţ àñšŵéŕîñĝ šîñçé { $time }~~~~~~~
 # The source has failed every ask, since a time on another day or not known.
 reading-miss-down = [Ñöţ àñšŵéŕîñĝ~~~~]
 
+# The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.
+reading-miss-possible = [Þöššîƀļé ɱàţçĥ~~~~~]
+
 # How many parts of a light novel are downloaded.
 reading-dl-parts =
     { $count ->

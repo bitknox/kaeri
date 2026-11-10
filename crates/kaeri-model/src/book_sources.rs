@@ -435,8 +435,16 @@ pub enum BookSourceEvent {
 pub struct EditionMiss {
     pub source_id: String,
     pub source_name: String,
-    /// Why: "No series with this name", "Not answering since 10:12".
+    /// Why: "No series with this name", "Not answering since 10:12", "Possible match".
     pub reason: Msg,
+    /// A series there that may be this one in another edition, as "Full Color" beside its
+    /// name: never matched by itself, offered for the person to confirm with one tap.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub possible: Option<SourceSeriesChoice>,
+    /// The words most likely to find the series there, for Search there's field: the romaji
+    /// when the English name found nothing.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub query: Option<String>,
 }
 
 /// One of a source's series, offered for "Search there".

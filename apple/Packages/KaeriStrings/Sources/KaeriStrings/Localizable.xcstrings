@@ -234587,6 +234587,18 @@
         }
       }
     },
+    "reading-miss-possible" : {
+      "comment" : "The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Possible match"
+          }
+        }
+      }
+    },
     "reading-next-chapter" : {
       "comment" : "Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5. Argument 1: chapter (Text).",
       "extractionState" : "manual",

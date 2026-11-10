@@ -1480,6 +1480,11 @@ pub fn reading_miss_down() -> String {
     text("reading-miss-down", &[])
 }
 
+/// The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.
+pub fn reading_miss_possible() -> String {
+    text("reading-miss-possible", &[])
+}
+
 /// How many parts of a light novel are downloaded.
 pub fn reading_dl_parts(count: i64) -> String {
     text("reading-dl-parts", &[("count", Arg::Int(count))])

@@ -1189,6 +1189,10 @@ object Strings {
     fun readingMissDown(context: Context): String =
         context.getString(R.string.reading_miss_down)
 
+    /** The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it. */
+    fun readingMissPossible(context: Context): String =
+        context.getString(R.string.reading_miss_possible)
+
     /** How many parts of a light novel are downloaded. */
     fun readingDlParts(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.reading_dl_parts, count, count)

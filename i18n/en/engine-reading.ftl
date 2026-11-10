@@ -626,6 +626,10 @@ reading-miss-down-since = Not answering since { $time }
 # The source has failed every ask, since a time on another day or not known.
 reading-miss-down = Not answering
 
+# The source has no series by the series' names, but has one that may be it in another edition,
+# as a full-colour release. That series is shown under this line, and choosing it confirms it.
+reading-miss-possible = Possible match
+
 ## Downloads by series
 ## Each series on Downloads gets one line: "6 chapters · 214 MB · 2 read", or while one downloads
 ## "Chapter 42 · 12 of 19 pages · 2 more queued". The Reading section's total uses the first two

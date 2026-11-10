@@ -1505,6 +1505,8 @@ pub enum ReadingMsg {
     ReadingMissDownSince { time: String },
     /// The source has failed every ask, since a time on another day or not known.
     ReadingMissDown,
+    /// The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.
+    ReadingMissPossible,
     /// How many parts of a light novel are downloaded.
     ReadingDlParts { count: i64 },
     /// What the downloads take up on this device.
@@ -1754,6 +1756,7 @@ impl ReadingMsg {
             Self::ReadingMissNoSeries => "reading-miss-no-series",
             Self::ReadingMissDownSince { .. } => "reading-miss-down-since",
             Self::ReadingMissDown => "reading-miss-down",
+            Self::ReadingMissPossible => "reading-miss-possible",
             Self::ReadingDlParts { .. } => "reading-dl-parts",
             Self::ReadingDlSize { .. } => "reading-dl-size",
             Self::ReadingDlRead { .. } => "reading-dl-read",
@@ -1943,6 +1946,7 @@ impl ReadingMsg {
             Self::ReadingMissNoSeries => Vec::new(),
             Self::ReadingMissDownSince { time } => vec![("time", Value::Text(time.clone()))],
             Self::ReadingMissDown => Vec::new(),
+            Self::ReadingMissPossible => Vec::new(),
             Self::ReadingDlParts { count } => vec![("count", Value::Int(*count))],
             Self::ReadingDlSize { size } => vec![("size", Value::Size(*size))],
             Self::ReadingDlRead { count } => vec![("count", Value::Int(*count))],
