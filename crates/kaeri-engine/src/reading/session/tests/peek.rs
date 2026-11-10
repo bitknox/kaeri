@@ -1,5 +1,6 @@
-//! The end page's preview of the next chapter, for a chapter from a source: its first page
-//! alone is fetched, the way the reader fetches a source's pages, and nothing waits on it.
+//! The next chapter from a source, fetched ahead while the open one is read, the way the reader
+//! fetches a source's pages: its first page is the end page's preview, nothing waits on it, and
+//! the chapter opens from what was fetched.
 
 use std::{
     collections::HashMap,
@@ -208,10 +209,10 @@ impl Harness {
     }
 }
 
-/// Near the end of a server's chapter, the next chapter's first page is fetched, and only that
-/// page, for the end page's preview.
+/// Near the end of a server's chapter, the next chapter is fetched ahead, a page at a time and
+/// first page first, and that page is the end page's preview.
 #[tokio::test(start_paused = true)]
-async fn a_server_chapter_previews_the_next_one_from_its_first_page_alone() {
+async fn a_server_chapter_previews_the_next_one_from_its_first_page() {
     let server = Arc::new(ShelfServer::new(vec!["c1", "c2"]));
     let mut h = opened(server.clone()).await;
     let next = h.next_chapter();
@@ -220,13 +221,43 @@ async fn a_server_chapter_previews_the_next_one_from_its_first_page_alone() {
     assert_eq!(chapter, next);
     assert_eq!((file.width, file.height), (320, 480));
     assert!(Path::new(&file.path).exists());
-    assert_eq!(server.fetched_of("c2"), ["https://books.example/c2/1?round=1"]);
+    assert_eq!(server.fetched_of("c2")[0], "https://books.example/c2/1?round=1");
 
     h.near_the_end(2);
     tokio::time::sleep(Duration::from_millis(50)).await;
     let again = h.drain().iter().any(|e| matches!(e, ReaderEvent::NextPreview { .. }));
     assert!(!again, "made once per chapter");
-    assert_eq!(server.fetched_of("c2").len(), 1);
+    assert_eq!(
+        server.fetched_of("c2"),
+        (1..=3).map(|n| format!("https://books.example/c2/{n}?round=1")).collect::<Vec<_>>(),
+        "each page once"
+    );
+}
+
+/// The chapter fetched ahead opens from what was fetched: Continue asks the source for nothing
+/// more.
+#[tokio::test(start_paused = true)]
+async fn the_chapter_fetched_ahead_opens_without_asking_again() {
+    let server = Arc::new(ShelfServer::new(vec!["c1", "c2", "c3"]));
+    let mut h = opened(server.clone()).await;
+    h.near_the_end(1);
+    h.preview().await;
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    assert_eq!(server.fetched_of("c2").len(), 3);
+    let asked = server.asked_of("c2");
+
+    let session = h.session();
+    let next = h.next_chapter();
+    h.send(ReaderCommand::OpenChapter { session, chapter: next });
+    let leaves = h
+        .until(|e| match e {
+            ReaderEvent::Leaves { leaves, .. } => Some(leaves.clone()),
+            _ => None,
+        })
+        .await;
+    assert_eq!(leaves.iter().filter(|l| !l.end_page).count(), 3);
+    assert_eq!(server.fetched_of("c2").len(), 3, "no page fetched twice");
+    assert_eq!(server.asked_of("c2"), asked, "the chapter was not asked for again");
 }
 
 /// A first page whose address has expired (403) is asked for again once with fresh addresses,
@@ -240,7 +271,7 @@ async fn an_expired_first_page_is_fetched_again_from_fresh_addresses() {
     let (_, file) = h.preview().await;
     assert!(Path::new(&file.path).exists());
     assert_eq!(
-        server.fetched_of("c2"),
+        server.fetched_of("c2")[..2],
         ["https://books.example/c2/1?round=1", "https://books.example/c2/1?round=2"]
     );
     assert_eq!(server.asked_of("c2"), 2, "the chapter was asked for once more");

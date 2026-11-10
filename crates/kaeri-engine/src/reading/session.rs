@@ -201,6 +201,8 @@ pub struct Session {
     ended: bool,
     /// The next chapter's first page was asked of the worker.
     peeked: bool,
+    /// The next chapter from a source, being fetched while this one is read.
+    ahead: Option<novel::Ahead>,
     /// The place before a jump, for Back to page.
     back_to: Option<ReadPlace>,
     /// The place before another device moved the reader, for Go back.
@@ -589,6 +591,7 @@ impl Reader {
             resumed: resumed.then_some(page),
             kept_of: of,
             peeked: false,
+            ahead: None,
             back_to: None,
             moved_back: None,
             read_fired: false,
@@ -1045,10 +1048,13 @@ impl Session {
                     want.push(before);
                 }
                 pages.want(self.id, self.generation, want, cx.tx);
-                // Near the foot, the divider names the next chapter and shows its first page.
+                // Near the foot, the divider names the next chapter and shows its first page;
+                // from half way, a chapter from a source is fetched ahead.
                 if at.image + 3 >= self.pages_total {
                     self.say_end_page(cx);
                     self.peek(cx, pages);
+                } else if (at.image + 1) * 2 >= self.pages_total {
+                    self.read_ahead(cx, pages);
                 }
             }
             C::Surface { surface, .. } if self.novel.is_some() => {
@@ -1144,21 +1150,38 @@ impl Session {
             want.push(before);
         }
         pages.want(self.id, self.generation, want, cx.tx);
-        // Near the end, the next chapter's first page is made for the end page.
+        // Near the end, the next chapter's first page is made for the end page; from half way,
+        // a chapter from a source is fetched ahead.
         if leaf + 3 >= story {
             self.peek(cx, pages);
+        } else if (leaf + 1) * 2 >= story {
+            self.read_ahead(cx, pages);
         }
     }
 
+    /// Fetch the next chapter ahead when it comes from a source, once a chapter: from half way
+    /// through the open one, so it opens at once from the end page or the strip's foot.
+    fn read_ahead(&mut self, cx: &Cx<'_>, pages: &Pages) {
+        let index = self.at + 1;
+        let Some(next) = self.chapters.get(index).filter(|c| c.format == novel::SOURCE) else {
+            return;
+        };
+        if self.ahead.as_ref().is_some_and(|a| a.chapter == next.id) {
+            return;
+        }
+        self.ahead = Some(novel::fetch_ahead(cx, pages, self.id, &self.work, (index, next)));
+    }
+
     /// Ask the worker for the next chapter's first page, once a chapter. A chapter from a
-    /// source has that page fetched first, and only that page.
+    /// source is fetched ahead, and that page is made as it lands.
     fn peek(&mut self, cx: &Cx<'_>, pages: &Pages) {
         if std::mem::replace(&mut self.peeked, true) {
             return;
         }
         let Some(next) = self.chapters.get(self.at + 1) else { return };
         if next.format == novel::SOURCE {
-            novel::peek_source(cx, pages, self.id, &self.work, (self.at + 1, next));
+            // Its first page comes with the chapter fetched ahead.
+            self.read_ahead(cx, pages);
             return;
         }
         if novel::prepares(next) {
@@ -1330,6 +1353,8 @@ impl Session {
         self.back_to = None;
         self.place = None;
         self.kept_of = None;
+        // A chapter fetched ahead and not the one opening stops fetching.
+        self.ahead = self.ahead.take().filter(|a| a.chapter == self.chapters[index].id);
         self.start = place(&self.work, &self.chapters[index].id, Some(page));
         self.lay_out(cx, pages, page);
     }
