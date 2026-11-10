@@ -247,12 +247,12 @@ struct SeriesPage: View {
             navigator.launchSheet = nil
         }
         .task {
-            // Every unread chapter chosen, as Download's Choose chapters starts.
+            // The chapters Download's Choose chapters starts with.
             guard navigator.launchSheet == "choose-chapters" else { return } // i18n-skip: a shot's sheet name
             for _ in 0..<30 where store.reading.chapters[work] == nil {
                 try? await Task.sleep(for: .milliseconds(100))
             }
-            choosing = SeriesChoosing.start(store.reading.chapters[work])
+            choosing = SeriesChoosing.start(store.reading.chapters[work], action: store.reading.series[work]?.action)
             // Taken once the bar is up, so the snapshot waits for it.
             try? await Task.sleep(for: .milliseconds(500))
             navigator.launchSheet = nil
@@ -310,10 +310,26 @@ struct SeriesPage: View {
 
 /// Choosing chapters to download or mark: it starts with every unread chapter chosen.
 enum SeriesChoosing {
-    /// Where Download's Choose chapters starts: the unread chapters not downloaded yet.
-    static func start(_ chapters: ReadChapters?) -> Set<String> {
+    /// How many chapters Choose chapters starts with.
+    static let ahead = 10
+
+    /// Where Download's Choose chapters starts: the next ten unread chapters not downloaded yet,
+    /// from the reader's place on. Select all in the bar still takes every unread one.
+    static func start(_ chapters: ReadChapters?, action: SeriesAction? = nil) -> Set<String> {
         let rows = chapters?.volumes.flatMap(\.chapters) ?? []
-        return Set(rows.filter { $0.state != .read && $0.download == nil }.map(\.id))
+        let at = place(action).flatMap { place in rows.firstIndex { $0.id == place } }
+            ?? rows.lastIndex { $0.state == .read }.map { $0 + 1 } ?? 0
+        let next = rows[min(at, rows.count)...].filter { $0.state != .read && $0.download == nil }
+        return Set(next.prefix(ahead).map(\.id))
+    }
+
+    /// The chapter the series' main action reads next, which is the reader's place.
+    private static func place(_ action: SeriesAction?) -> ChapterId? {
+        switch action {
+        case .read(let chapter, _), .continue(let chapter, _, _), .continuePart(let chapter, _, _, _),
+             .readPart(let chapter, _, _): chapter
+        default: nil
+        }
     }
 
     /// All unread, in the bar.
@@ -631,7 +647,7 @@ private struct SeriesActions: View {
             }
             Divider()
             Button(L.downloadChoose) {
-                choosing = SeriesChoosing.start(store.reading.chapters[series.work])
+                choosing = SeriesChoosing.start(store.reading.chapters[series.work], action: series.action)
             }
             if !downloaded.isEmpty {
                 Divider()
