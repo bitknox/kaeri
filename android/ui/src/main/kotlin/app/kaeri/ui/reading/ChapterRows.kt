@@ -92,9 +92,10 @@ internal object SeriesWords {
     /** "AniList and MangaUpdates": the trackers that follow the series. */
     fun trackers(rows: List<TrackerReadRow>): String = Wording.list(rows.map { tracker(it.tracker) })
 
-    /** "87 of 88 chapters · volume 9", "Volume 5 of 5". */
+    /** "87 of 88 chapters · volume 9", "Volume 5 of 5", or "Not started" while nothing is read. */
     fun progress(context: Context, row: TrackerReadRow, series: SeriesView): String {
         val volumes = row.volumes
+        if (row.chapters == 0u && (volumes ?: 0u) == 0u) return Strings.seriesTrackerNotStarted(context)
         if (series.medium == Medium.NOVEL && volumes != null) {
             return Strings.seriesTrackerVolumes(context, volumes.toInt(), (series.volumesTotal ?: volumes).toInt())
         }
