@@ -62,6 +62,8 @@ struct ReaderChrome: View {
             }
             HStack(spacing: 4) {
                 if mac {
+                    // Back to the window as it was before the book opened, as Esc goes.
+                    button("chevron.backward", L.actionBack, action: onClose)
                     chaptersButton
                 } else {
                     button("xmark", L.readerClose, action: onClose).accessibilitySortPriority(5)

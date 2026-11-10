@@ -28,7 +28,7 @@ struct KaeriDev: App {
         Window("Kaeri", id: "main") {
             RootView()
                 .hostsPlayer(delegate.player)
-                .hostsReader(delegate.store.reader, inline: true)
+                .hostsReader(delegate.store.reader)
                 .environment(\.playerUp, delegate.player.isPresented)
                 .environment(delegate.store)
                 .environment(delegate.navigator)
