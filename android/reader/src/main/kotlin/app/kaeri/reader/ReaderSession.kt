@@ -664,11 +664,16 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 val start = startAt?.also { startAt = null }
                 // Flowed into from above: the scroll is already where the chapter starts.
                 if (start != null && now.previous != null) return run { _state.value = placed }
+                // Laid out again before any page was painted, as a long strip is once its images'
+                // sizes are known: the place it opened at still stands, not the old layout's leaf.
+                val shown = shownPage
+                val unpainted = if (start == null && shown == null) here?.takeIf { it.chapter == now.chapter } else null
                 val leaf = when {
                     start != null -> placed.leafOf(start)
-                    else -> shownPage?.let(placed::leafOf)
+                    shown != null -> placed.leafOf(shown)
+                    else -> unpainted?.let(placed::leafOf)
                 }
-                placed.copy(jump = leaf?.let { ReaderJump(it, start?.strip, ++ids) } ?: now.jump)
+                placed.copy(jump = leaf?.let { ReaderJump(it, (start ?: unpainted)?.strip, ++ids) } ?: now.jump)
             }
             is ReaderEvent.PageReady -> {
                 if (!ours(event.session) || event.chapter != now.chapter) return

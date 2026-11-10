@@ -82,6 +82,22 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun a_layout_that_comes_before_any_page_is_painted_keeps_the_place_it_opened_at() {
+        // A long strip opens at image 4 on whole images, then is cut into two leaves an image
+        // once the sizes are known, before image 4 was painted: image 4 starts at leaf 8 now.
+        opened(start = 4u)
+        val first = session.state.value.jump!!
+        session.jumped(first.id)
+        val cuts = ReaderFixtures.leaves(6).filter { !it.endPage }.flatMap { listOf(it, it) }.mapIndexed { i, leaf ->
+            app.kaeri.engine.model.Leaf(i.toUInt(), leaf.parts, false)
+        }
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, cuts))
+        val jump = session.state.value.jump!!
+        assertEquals(8, jump.leaf)
+        assertTrue(jump.id != first.id)
+    }
+
+    @Test
     fun a_second_layout_of_the_open_chapter_keeps_its_place_and_its_pictures() {
         // The page it opens at lays out first; the rest stream in and lay the chapter out again.
         opened(start = 0u)
