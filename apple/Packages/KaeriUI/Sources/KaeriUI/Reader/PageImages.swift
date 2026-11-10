@@ -5,6 +5,7 @@ import KaeriKit
 import CoreGraphics
 import Foundation
 import ImageIO
+import Synchronization
 
 enum PageImages {
     nonisolated(unsafe) private static let cache: NSCache<NSString, CGImage> = {
@@ -17,9 +18,27 @@ enum PageImages {
     /// side of them.
     static let costLimit = 192 << 20
 
-    /// Let every decoded page go, as the reader closes.
+    /// How many times the reader has closed, so a page decoded for a reader that has closed since
+    /// is not kept for the next one.
+    private static let closes = Mutex(0)
+
+    static var closeCount: Int { closes.withLock { $0 } }
+
+    /// Let every decoded page go, as the reader closes, and any decode still running with them.
     static func removeAll() {
-        cache.removeAllObjects()
+        closes.withLock { closes in
+            closes += 1
+            cache.removeAllObjects()
+        }
+    }
+
+    /// Keep a decoded page, unless the reader it was decoded for has closed since `closeCount`
+    /// was `since`.
+    static func keep(_ image: CGImage, _ file: PageFile, longestSide: CGFloat, since: Int) {
+        closes.withLock { closes in
+            guard closes == since else { return }
+            cache.setObject(image, forKey: key(file, longestSide), cost: image.bytesPerRow * image.height)
+        }
     }
 
     /// The page as an image, cropped when the file says so; nil when the file cannot be read.
@@ -43,15 +62,25 @@ enum PageImages {
     static func load(_ file: PageFile, longestSide: CGFloat) async -> CGImage? {
         let key = key(file, longestSide)
         if let hit = cache.object(forKey: key) { return hit }
+        let since = closeCount
         let image = await Task.detached(priority: .userInitiated) {
+            #if os(macOS)
+            // SwiftUI on the Mac readies an image for the screen itself, off the main thread. A
+            // page redrawn here first is one Core Graphics converts again for that, and it keeps
+            // the copy in a cache of its own that outlives the page and the reader: a long strip
+            // left over 100 MB behind after the reader closed.
+            decode(file, longestSide: longestSide)
+            #else
             decode(file, longestSide: longestSide).map(forScreen)
+            #endif
         }.value
-        if let image { cache.setObject(image, forKey: key, cost: image.bytesPerRow * image.height) }
+        if let image { keep(image, file, longestSide: longestSide, since: since) }
         return image
     }
 
     /// The image redrawn in the layout the screen draws, off the main thread, so its first frame
     /// on screen converts nothing. A page a turn brings in would otherwise hold that frame up.
+    /// iPhone and iPad only: see `load`.
     static func forScreen(_ image: CGImage) -> CGImage {
         let grey = image.colorSpace?.model == .monochrome
         let space = grey ? CGColorSpaceCreateDeviceGray() : CGColorSpace(name: CGColorSpace.sRGB)!
