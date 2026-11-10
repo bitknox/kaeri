@@ -24,7 +24,7 @@ use super::{
 use crate::{
     states::{Shape, States},
     widgets,
-    window::Ctx,
+    window::{Ctx, Size},
 };
 
 pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
@@ -105,6 +105,16 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
             }
         }
     });
+    // A narrow window puts the cover over the words, so the main action has the width.
+    let top: Rc<glib::WeakRef<gtk::Box>> = Rc::default();
+    ctx.on_size({
+        let top = Rc::clone(&top);
+        move |size| {
+            if let Some(top) = top.upgrade() {
+                lay_top(&top, size);
+            }
+        }
+    });
     let wanted = work.clone();
     listen(ctx, &page, {
         let (ctx, states, head, page) =
@@ -113,7 +123,7 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
             (status_button.clone(), download_button.clone(), Rc::clone(&shown));
         let (listed, redraw) = (Rc::clone(&listed), Rc::clone(&redraw));
         let (details, memo, work) = (details.clone(), Rc::clone(&memo), work.clone());
-        let menu_button = menu_button.clone();
+        let (menu_button, top) = (menu_button.clone(), Rc::clone(&top));
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
             if series_extra::follow(&memo, &work, event) {
@@ -137,7 +147,7 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
                         return;
                     }
                     for button in [&status_button, &download_button] {
-                        if let Some(parent) = button.parent().and_downcast::<gtk::Box>() {
+                        if let Some(parent) = button.parent().and_downcast::<adw::WrapBox>() {
                             parent.remove(button);
                         }
                     }
@@ -147,7 +157,9 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
                         &view.list.map_or_else(t::series_add_to_list, library::name),
                     );
                     status_button.set_menu_model(Some(&status_menu(view)));
-                    draw_head(&ctx, &head, view, &[&status_button, &download_button]);
+                    let drawn =
+                        draw_head(&ctx, &head, view, &[&status_button, &download_button]);
+                    top.set(Some(&drawn));
                     shown.replace(Some(SeriesView::clone(view)));
                     // The heading says Volumes for a novel, which the series view tells.
                     if listed.borrow().is_some() {
@@ -366,8 +378,26 @@ fn page_actions(
     group
 }
 
-fn draw_head(ctx: &Rc<Ctx>, head: &gtk::Box, view: &SeriesView, menus: &[&gtk::MenuButton]) {
+/// The cover beside the words, or over them in a narrow window.
+fn lay_top(top: &gtk::Box, size: Size) {
+    let narrow = size == Size::Narrow;
+    top.set_orientation(if narrow {
+        gtk::Orientation::Vertical
+    } else {
+        gtk::Orientation::Horizontal
+    });
+    top.set_spacing(if narrow { 14 } else { 20 });
+}
+
+/// Draw the page's head, and give back the row of the cover and the words.
+fn draw_head(
+    ctx: &Rc<Ctx>,
+    head: &gtk::Box,
+    view: &SeriesView,
+    menus: &[&gtk::MenuButton],
+) -> gtk::Box {
     let top = gtk::Box::new(gtk::Orientation::Horizontal, 20);
+    lay_top(&top, ctx.size());
     top.append(&cover(&ctx.hub, view.cover.as_deref(), &view.titles.display.clone(), 160));
     let text = gtk::Box::new(gtk::Orientation::Vertical, 6);
     text.set_valign(gtk::Align::Center);
@@ -388,7 +418,9 @@ fn draw_head(ctx: &Rc<Ctx>, head: &gtk::Box, view: &SeriesView, menus: &[&gtk::M
     if let Some(rhythm) = &view.rhythm {
         text.append(&widgets::haze(&crate::say::msg(rhythm), "caption"));
     }
-    let buttons = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+    // The main action and its menus go one under the other when a narrow window or large text
+    // leaves no room for them side by side.
+    let buttons = adw::WrapBox::builder().child_spacing(8).line_spacing(8).build();
     buttons.set_margin_top(8);
     match action_chapter(&view.action) {
         Some((chapter, label)) => buttons.append(&read_button(&label, &view.work, &chapter)),
@@ -417,6 +449,7 @@ fn draw_head(ctx: &Rc<Ctx>, head: &gtk::Box, view: &SeriesView, menus: &[&gtk::M
     if !view.genres.is_empty() {
         head.append(&widgets::haze(&view.genres.join(" \u{b7} "), "caption"));
     }
+    top
 }
 
 pub(super) fn state_line(chapter: &ChapterRow) -> String {
@@ -837,4 +870,57 @@ pub fn shot_source_picker(shell: &Rc<crate::window::Shell>) {
             "The Lantern Ferry", // i18n-skip
         );
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use adw::prelude::*;
+    use kaeri_core::books::{ChapterId, WorkId};
+
+    use super::{Size, lay_top, menu_pill, read_button};
+    use crate::gtk_test::{pump, run};
+
+    /// The head's row in the smallest window, 350 px inside, whose column leaves 326 px: the
+    /// cover goes over the words, and the main action and its menus wrap, at twice the text
+    /// size too.
+    #[test]
+    fn the_head_fits_a_narrow_window_at_any_text_size() {
+        run(|| {
+            let min_width =
+                |widget: &gtk::Widget| widget.measure(gtk::Orientation::Horizontal, -1).0;
+            let top = gtk::Box::new(gtk::Orientation::Horizontal, 20);
+            let cover = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            cover.set_size_request(160, 240);
+            top.append(&cover);
+            let text = gtk::Box::new(gtk::Orientation::Vertical, 6);
+            let buttons = adw::WrapBox::builder().child_spacing(8).line_spacing(8).build();
+            let (work, chapter) = (WorkId("a:1".into()), ChapterId("13".into()));
+            buttons.append(&read_button("Continue chapter 13 \u{b7} page 10", &work, &chapter));
+            buttons.append(&menu_pill("Add to list"));
+            buttons.append(&menu_pill("Download"));
+            text.append(&buttons);
+            top.append(&text);
+            let window = gtk::Window::builder().default_width(1280).default_height(800).build();
+            window.set_child(Some(&top));
+            window.present();
+
+            lay_top(&top, Size::Wide);
+            pump(100);
+            assert_eq!(top.orientation(), gtk::Orientation::Horizontal);
+            lay_top(&top, Size::Narrow);
+            pump(100);
+            let normal = min_width(top.upcast_ref());
+            let settings = gtk::Settings::default().expect("a display");
+            let dpi = settings.gtk_xft_dpi();
+            settings.set_gtk_xft_dpi(2 * 96 * 1024);
+            pump(150);
+            let large = min_width(top.upcast_ref());
+            settings.set_gtk_xft_dpi(dpi);
+            window.destroy();
+
+            assert_eq!(top.orientation(), gtk::Orientation::Vertical);
+            assert!(normal <= 326, "the head needs {normal} px at the normal text size");
+            assert!(large <= 326, "the head needs {large} px at twice the size");
+        });
+    }
 }

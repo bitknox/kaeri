@@ -164,6 +164,8 @@ pub struct Reader {
     waiting: Cell<Option<Waiting>>,
     /// The last open asked for, to open again after a failure.
     asked_open: RefCell<Option<(WorkId, Option<ChapterId>)>>,
+    /// The control that opened the reader, which has the keyboard back when it closes.
+    opener: Rc<keys::Opener>,
     /// A line over the page for a while: resumed, back to page, moved, mode detected.
     notice: gtk::Box,
     notice_text: gtk::Label,
@@ -543,6 +545,7 @@ impl Reader {
                 wait_ticker: RefCell::default(),
                 waiting: Cell::new(None),
                 asked_open: RefCell::default(),
+                opener: Rc::default(),
                 notice,
                 notice_text,
                 notice_button,
@@ -791,6 +794,11 @@ impl Reader {
     /// Open a chapter of a work, from where it was left when `chapter` is none.
     pub fn open(self: &Rc<Self>, work: WorkId, chapter: Option<ChapterId>) {
         self.reset();
+        if !self.showing.get()
+            && let Some(ctx) = self.ctx.upgrade()
+        {
+            self.opener.note(&ctx.window, &self.widget);
+        }
         self.showing.set(true);
         self.state.borrow_mut().work = Some(work.clone());
         self.asked_open.replace(Some((work.clone(), chapter.clone())));
@@ -946,7 +954,11 @@ impl Reader {
         self.stop_wait();
         self.hide_notice();
         self.widget.set_cursor(None);
+        let was_showing = self.showing.get();
         (self.show)(false);
+        if was_showing && let Some(ctx) = self.ctx.upgrade() {
+            self.opener.give_back(&ctx.window, &self.widget);
+        }
         if let Some(ctx) = self.ctx.upgrade()
             && let Some(work) = self.state.borrow().work.clone()
         {
@@ -2703,6 +2715,7 @@ impl Reader {
                     this.upgrade().is_some_and(|this| this.take_key(key, modifiers))
                 }),
             );
+            self.opener.watch(&ctx.window, &self.widget);
         }
 
         // A closed reader lets go of what it held once the window has crossfaded away from it.
