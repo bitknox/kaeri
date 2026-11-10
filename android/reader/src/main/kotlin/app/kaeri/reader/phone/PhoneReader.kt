@@ -471,7 +471,7 @@ fun PhoneReader(
                     // what it waits on and for how long, stays over the page until the first one shows.
                     var novelPlateGone by remember(view.chapter.id) { mutableStateOf(false) }
                     if (!novelPlateGone && place.failed == null) {
-                        Opening(state, done = place.ready, drawn = place.ready, fades = fades && leaving == null, onGone = { novelPlateGone = true })
+                        Opening(state, done = place.ready, drawn = place.ready, fades = fades && leaving == null, onGone = { novelPlateGone = true }, session = session, instant = instant, onClose = actions.onClose)
                     }
                     val failed = place.failed
                     when {
