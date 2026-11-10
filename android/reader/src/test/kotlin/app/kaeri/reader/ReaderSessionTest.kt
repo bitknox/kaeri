@@ -168,6 +168,32 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun a_surface_that_changed_while_opening_goes_out_once_the_session_opened() {
+        // A phone held sideways turns while the reader opens: the engine opened for the old shape.
+        session.open(WORK, ReaderFixtures.surface)
+        val wide = ReaderFixtures.surface.copy(widthPx = 2400u, heightPx = 1080u, twoPages = true)
+        session.surface(wide)
+        sent.clear()
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertEquals(ReaderCommand.Surface(SESSION, wide), sent.single())
+        // The engine has it now: the same size again sends nothing, nor does the next chapter's open.
+        sent.clear()
+        session.surface(wide)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertTrue(sent.isEmpty())
+    }
+
+    @Test
+    fun a_surface_back_to_the_opened_one_sends_nothing_once_the_session_opened() {
+        session.open(WORK, ReaderFixtures.surface)
+        session.surface(ReaderFixtures.surface.copy(widthPx = 2400u, heightPx = 1080u, twoPages = true))
+        session.surface(ReaderFixtures.surface)
+        sent.clear()
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
+        assertTrue(sent.isEmpty())
+    }
+
+    @Test
     fun pages_land_and_fail_by_page_and_half() {
         opened()
         val file = ReaderFixtures.part(2u)

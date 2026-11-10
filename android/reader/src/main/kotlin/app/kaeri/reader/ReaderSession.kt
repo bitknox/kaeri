@@ -190,7 +190,9 @@ class ReaderSession(private val send: (Command) -> Unit) {
     private var ids = 0L
     private var work: WorkId? = null
     private var asked: Pair<ChapterId?, OpenAt>? = null
+    /** The screen's latest surface, and the one the engine lays out for: they differ while it opens. */
     private var surface: ReaderSurface? = null
+    private var engineSurface: ReaderSurface? = null
     /** A chapter asked for and not yet opened, so its failure is shown in its name. */
     private var awaiting: ChapterRow? = null
     private var awaitingOpen = false
@@ -216,6 +218,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
         this.work = work
         this.asked = chapter to at
         this.surface = surface
+        engineSurface = surface
         awaitingOpen = true
         flowTo = null
         flowFrom = null
@@ -233,11 +236,21 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.Open(work, chapter, at, surface))
     }
 
-    /** The surface changed size, room for two pages or look: sent only when it did. */
+    /**
+     * The surface changed size, room for two pages or look: sent only when it did. One that changes
+     * while the reader opens (a phone held sideways turns then) goes out once the session opened.
+     */
     fun surface(surface: ReaderSurface) {
         if (surface == this.surface) return
         this.surface = surface
+        sendSurface()
+    }
+
+    private fun sendSurface() {
+        val surface = surface ?: return
+        if (surface == engineSurface) return
         val session = state.value.session ?: return
+        engineSurface = surface
         reader(ReaderCommand.Surface(session, surface))
     }
 
@@ -709,6 +722,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 now.copy(parts = ReaderParts(event.parts, event.total, event.missing))
             }
         }
+        // The engine opened with the surface the open asked with; the screen may have turned since.
+        if (event is ReaderEvent.Opened) sendSurface()
     }
 
     private fun reader(command: ReaderCommand) {
