@@ -1170,7 +1170,8 @@ pub fn step(
 /// Put `value`, as written for `key`, into `config`: what a write puts in effect.
 ///
 /// `false`, with nothing changed, for a value the setting does not take: the wrong kind, a
-/// name it does not know, or a setting that is not written from here.
+/// name it does not know, a setting that is not written from here, or no mpv options over
+/// none.
 pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
     use SettingValue as V;
     use kaeri_core::config::{DownloadQuality, PlayerUi, ThemeMode, Upscaling};
@@ -1272,11 +1273,18 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             let Some(options) = mpv_options(options.iter().map(String::as_str)) else {
                 return false;
             };
+            if options.is_empty() && playback.mpv_args.is_empty() {
+                return false;
+            }
             playback.mpv_args = options;
         }
-        // Typed, one to a line, as the row's text gives them.
+        // Typed, one to a line, as the row's text gives them. An empty field over no options
+        // is nothing to write: a stray Enter in it saves nothing and says nothing.
         (SettingKey::MpvOptions, V::Str(lines)) => {
             let Some(options) = mpv_options(lines.lines()) else { return false };
+            if options.is_empty() && playback.mpv_args.is_empty() {
+                return false;
+            }
             playback.mpv_args = options;
         }
         (SettingKey::UpNextCountdown, V::Int(seconds)) => {
@@ -2219,6 +2227,11 @@ mod tests {
     fn the_viewer_s_own_mpv_options_are_kept_as_written_and_shown_as_a_count() {
         let mut config = Config::default();
         assert_eq!(value(&config, &config, SettingKey::MpvOptions), "none");
+        // An empty field over no options writes nothing.
+        for empty in [SettingValue::Str(String::new()), SettingValue::Str(" \n ".into())] {
+            assert!(!put(&mut config, SettingKey::MpvOptions, &empty), "{empty:?}");
+        }
+        assert!(!put(&mut config, SettingKey::MpvOptions, &SettingValue::Strings(Vec::new())));
         let options = SettingValue::Strings(vec![
             "--sub-font-size=40".into(),
             " --no-audio-display ".into(),
@@ -2251,6 +2264,9 @@ mod tests {
             assert!(!put(&mut config, SettingKey::MpvOptions, &refused), "{wrong}");
         }
         assert_eq!(config.playback.mpv_args, ["--hwdec=no", "--sub-scale=1.2"]);
+        // Emptying the field clears the options that were there.
+        assert!(put(&mut config, SettingKey::MpvOptions, &SettingValue::Str(String::new())));
+        assert!(config.playback.mpv_args.is_empty());
         assert_eq!(SettingKey::at(&["playback"], "mpv_args"), Some(SettingKey::MpvOptions));
         assert_eq!(SettingKey::MpvOptions.category(), "advanced");
     }
