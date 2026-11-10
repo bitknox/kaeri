@@ -443,6 +443,12 @@ pub fn read_target(work: &WorkId, chapter: Option<&ChapterId>) -> glib::Variant 
 /// A button that opens a chapter in the reader.
 pub fn read_button(label: &str, work: &WorkId, chapter: &ChapterId) -> gtk::Button {
     let button = gtk::Button::with_label(label);
+    // "Continue chapter 13 · page 10" in large text is wider than a narrow window: it wraps.
+    if let Some(words) = button.child().and_downcast::<gtk::Label>() {
+        words.set_wrap(true);
+        words.set_wrap_mode(gtk::pango::WrapMode::WordChar);
+        words.set_justify(gtk::Justification::Center);
+    }
     button.add_css_class("pill");
     button.add_css_class("suggested-action");
     button.set_action_target_value(Some(&read_target(work, Some(chapter))));
