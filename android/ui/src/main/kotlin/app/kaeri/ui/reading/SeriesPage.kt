@@ -649,12 +649,12 @@ private fun LazyListScope.seriesChapters(
     // rows fade in where they fade out, so nothing above moves and nothing goes blank.
     if (chapters == null) {
         if (!late) {
-            item(key = "placeholder-hold") { Spacer(Modifier.height(4 * 72.dp)) }
+            item(key = "placeholder-hold") { Spacer(Modifier.height(288.dp)) }
             return
         }
         items(4, key = { "placeholder-$it" }) {
             Column(
-                Modifier.itemMotion().fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 14.dp),
+                itemMotion().fillMaxWidth().heightIn(min = 72.dp).padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 TextPlaceholder(0.5f)
@@ -676,7 +676,7 @@ private fun LazyListScope.seriesChapters(
         // Nothing was ever read from a source, so nothing failed: an empty state that leads to Read from.
         item(key = "chapters-no-source") {
             val context = LocalContext.current
-            Box(Modifier.itemMotion()) {
+            Box(itemMotion()) {
                 PlainEmpty(
                     Strings.seriesNoSourceTitle(context),
                     Strings.seriesNoSourceLine(context),
@@ -686,11 +686,11 @@ private fun LazyListScope.seriesChapters(
             }
         }
     } else if (failure != null) {
-        item(key = "chapters-failed") { Box(Modifier.itemMotion()) { ChaptersFailed(series, failure, groups.chapterRows().size, onRetry) } }
+        item(key = "chapters-failed") { Box(itemMotion()) { ChaptersFailed(series, failure, groups.chapterRows().size, onRetry) } }
     } else if (groups.isEmpty()) {
         item(key = "chapters-none") {
             val context = LocalContext.current
-            Box(Modifier.itemMotion()) {
+            Box(itemMotion()) {
             PlainEmpty(
                 Strings.seriesNoChaptersTitle(context),
                 Strings.seriesNoChaptersLine(context),
@@ -709,7 +709,7 @@ private fun LazyListScope.seriesChapters(
             item(key = "volume-$key") {
                 val context = LocalContext.current
                 val (name, rest) = SeriesWords.volume(context, group, novel)
-                Column(Modifier.itemMotion()) {
+                Column(itemMotion()) {
                     SeriesRule()
                     VolumeRowItem(name, rest, open, onToggle = { folds[key] = !open })
                 }
@@ -717,7 +717,7 @@ private fun LazyListScope.seriesChapters(
         }
         if (open) {
             val rows = if (newestFirst) group.chapters.reversed() else group.chapters
-            items(rows, key = { "chapter-${it.id}" }) { row -> Box(Modifier.itemMotion()) { ChapterItem(series, row, chosen, onChosen, onOpen, onLong) } }
+            items(rows, key = { "chapter-${it.id}" }) { row -> Box(itemMotion()) { ChapterItem(series, row, chosen, onChosen, onOpen, onLong) } }
         }
     }
 }
