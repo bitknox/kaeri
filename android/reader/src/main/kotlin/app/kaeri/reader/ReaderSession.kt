@@ -19,9 +19,12 @@ import app.kaeri.engine.model.NovelPos
 import app.kaeri.engine.model.OpenAt
 import app.kaeri.engine.model.PageFile
 import app.kaeri.engine.model.PageHalf
+import app.kaeri.engine.model.PageKind
+import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReadPlace
 import app.kaeri.engine.model.ReaderCommand
 import app.kaeri.engine.model.ReaderEvent
+import app.kaeri.engine.model.ReaderMode
 import app.kaeri.engine.model.ReaderNotice
 import app.kaeri.engine.model.ReaderSettingKey
 import app.kaeri.engine.model.ReaderSettingsView
@@ -73,6 +76,12 @@ data class ReaderState(
     val layout: Int = 0,
     /** Files that landed after the leaves came: [file] puts them in their parts. */
     val files: Map<PageKey, PageFile> = emptyMap(),
+    /**
+     * The files a page had before the chapter was laid out again (a page that landed in another
+     * shape): drawn until the engine sends the page for the new layout, so the page on screen
+     * never drops to its plate.
+     */
+    val held: Map<PageKey, PageFile> = emptyMap(),
     val failures: Map<UInt, ReadingFailure> = emptyMap(),
     val end: EndPageView? = null,
     val notice: ShownNotice? = null,
@@ -108,17 +117,44 @@ data class ReaderState(
     val session: ULong? get() = view?.session
     val chapter: ChapterId? get() = view?.chapter?.id
 
-    /** The leaves that are pages, without the end page. */
-    val pages: Int get() = leaves.count { !it.endPage }
+    /**
+     * The chapter's pages, without the end page: as many as the leaves on one page a leaf, more
+     * where a leaf holds a spread's two pages, fewer where a spread is split into halves.
+     */
+    val pages: Int get() = leaves.filter { !it.endPage }.maxOfOrNull { leaf -> leaf.parts.maxOfOrNull { it.page.toInt() + 1 } ?: 0 } ?: 0
 
     /** The file for [part]: the one the leaf came with, or the one that landed since. */
-    fun file(part: LeafPart): PageFile? = files[PageKey(part.page, part.half)] ?: part.file
+    fun file(part: LeafPart): PageFile? = PageKey(part.page, part.half).let { key -> files[key] ?: part.file ?: held[key] }
+
+    /** The file made for [part] in this layout, without the one [held] from the layout before. */
+    fun landed(part: LeafPart): PageFile? = files[PageKey(part.page, part.half)] ?: part.file
 
     /** The leaf that shows [page], or null when no leaf does. */
     fun leafOf(page: UInt): Int? = leaves.indexOfFirst { leaf -> leaf.parts.any { it.page == page } }.takeIf { it >= 0 }
 
     /** The leaf a place shows: its page, its strip image, or the first. */
     fun leafOf(place: ReadPlace): Int = place.page?.let(::leafOf) ?: place.strip?.image?.let(::leafOf) ?: 0
+}
+
+/**
+ * This view with the mode and direction [settings] now give, for a paged or strip work; a novel's
+ * pages are its own. On e-ink a vertical scroll reads as pages, as the engine lays it out.
+ */
+internal fun ReaderView.following(settings: ReaderSettingsView, eink: Boolean): ReaderView {
+    if (medium == Medium.NOVEL || settings.medium != medium) return this
+    fun word(key: ReaderSettingKey) = (settings.rows.firstOrNull { it.key == key }?.value as? ReaderValue.Choice)?.name
+    val direction = when (word(ReaderSettingKey.DIRECTION)) {
+        "ltr" -> ReadDirection.LEFT_TO_RIGHT
+        "rtl" -> ReadDirection.RIGHT_TO_LEFT
+        else -> direction
+    }
+    val mode = when (word(ReaderSettingKey.MODE)) {
+        "strip" -> ReaderMode.STRIP
+        "vertical" -> if (eink) ReaderMode.PAGED else ReaderMode.VERTICAL
+        "paged" -> ReaderMode.PAGED
+        else -> mode
+    }
+    return if (mode == this.mode && direction == this.direction) this else copy(mode = mode, direction = direction)
 }
 
 /**
@@ -398,7 +434,14 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 if (!ours(event.session) || event.chapter != now.chapter) return
                 askedPages.clear()
                 // The start place on the first layout; after that the page shown stays shown.
-                val placed = now.copy(leaves = event.leaves, layout = now.layout + 1, files = emptyMap())
+                // Laid out again: a page keeps the picture it had until its new one lands. Strip cuts
+                // are new pictures each layout, and a strip asks for its own.
+                val held = if (now.leaves.isEmpty()) emptyMap() else {
+                    val pictures = event.leaves.flatMap { it.parts }.filter { it.kind != PageKind.STRIP_CUT }
+                        .map { PageKey(it.page, it.half) }.toSet()
+                    (now.held + now.files).filterKeys { it in pictures }
+                }
+                val placed = now.copy(leaves = event.leaves, layout = now.layout + 1, files = emptyMap(), held = held)
                 val start = startAt?.also { startAt = null }
                 // Flowed into from above: the scroll is already where the chapter starts.
                 if (start != null && now.previous != null) return run { _state.value = placed }
@@ -433,7 +476,15 @@ class ReaderSession(private val send: (Command) -> Unit) {
             is ReaderEvent.Settings -> {
                 val work = now.view?.work
                 if (now.view != null && event.v1.work != null && event.v1.work != work) return
-                now.copy(settings = event.v1)
+                // A mode or direction changed in the reader lays the chapter out again without
+                // opening it anew: the view follows, so the tap zones and the scrubber turn with it.
+                // Only a change counts: the engine's own layout (with any guess) stands until one.
+                val before = now.settings
+                val changed = before != null && before.medium == event.v1.medium &&
+                    listOf(ReaderSettingKey.MODE, ReaderSettingKey.DIRECTION).any { key ->
+                        before.rows.firstOrNull { it.key == key }?.value != event.v1.rows.firstOrNull { it.key == key }?.value
+                    }
+                now.copy(settings = event.v1, view = if (changed) now.view?.following(event.v1, surface?.eink == true) else now.view)
             }
             is ReaderEvent.GoTo -> {
                 if (!ours(event.session) || event.place.chapter != now.chapter) return

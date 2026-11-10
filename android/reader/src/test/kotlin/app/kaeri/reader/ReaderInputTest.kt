@@ -42,8 +42,10 @@ class ReaderInputTest {
         val rules = ReaderKeyRules(rtl)
         assertEquals(ReaderAction.FORWARD, rules.action(KeyEvent.KEYCODE_VOLUME_UP)?.action)
         assertEquals(ReaderAction.BACK, rules.action(KeyEvent.KEYCODE_VOLUME_DOWN)?.action)
-        val swapped = rules.copy(swapVolume = true)
-        assertEquals(ReaderAction.BACK, swapped.action(KeyEvent.KEYCODE_VOLUME_UP)?.action)
+        // A phone's default: volume down goes forward, under the thumb.
+        val phone = rules.copy(volumeDownForward = true)
+        assertEquals(ReaderAction.BACK, phone.action(KeyEvent.KEYCODE_VOLUME_UP)?.action)
+        assertEquals(ReaderAction.FORWARD, phone.action(KeyEvent.KEYCODE_VOLUME_DOWN)?.action)
         // Off: the volume keys stay the system's.
         assertNull(rules.copy(volumeTurns = false).action(KeyEvent.KEYCODE_VOLUME_UP))
         assertEquals(true, rules.takesKeyUp(KeyEvent.KEYCODE_VOLUME_DOWN))

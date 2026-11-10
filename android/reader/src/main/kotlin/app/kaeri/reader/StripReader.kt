@@ -224,7 +224,7 @@ private fun LazyListScope.images(
         val part = leaf.parts.firstOrNull()
         val ratio = state.ratioOf(part)
         // A row on screen with no file asks for its image; the session asks once a layout.
-        val missing = part != null && state.file(part) == null && state.failures[part.page] == null
+        val missing = part != null && state.landed(part) == null && state.failures[part.page] == null
         LaunchedEffect(part?.page, missing) { if (missing && part != null) onMissing(part) }
         Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().aspectRatio(ratio)) {
             LeafView(
