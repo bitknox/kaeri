@@ -819,6 +819,12 @@ fn listed(id: &str, pages: Option<u32>) -> ChapterRow {
         read_at: None,
         line: Vec::new(),
         gone_from_source: false,
+        parts: 1,
+        other_group: false,
+        missing_parts: Vec::new(),
+        part_groups: Vec::new(),
+        group_language: None,
+        other_source: None,
     }
 }
 

@@ -166,7 +166,7 @@ impl Ahead {
 pub(super) fn fetch_ahead(
     cx: &Cx<'_>,
     pages: &Pages,
-    session: u64,
+    (session, learning): (u64, crate::reading::credits::Learning),
     work: &WorkId,
     next: (usize, &ShelfChapter),
 ) -> Ahead {
@@ -201,9 +201,9 @@ pub(super) fn fetch_ahead(
             let started = crate::reading::feed::start(
                 sources,
                 opened,
-                chapter.clone(),
+                (chapter.clone(), learning),
                 dir,
-                0,
+                |_| 0,
                 now,
                 out.clone(),
                 landed,
@@ -469,6 +469,7 @@ impl Session {
         let (first, strip, kept_of) =
             (self.start.page.unwrap_or(0), self.start.strip, self.kept_of);
         let (session, worker, out) = (self.id, pages.clone(), cx.tx.clone());
+        let learning = self.learning(cx);
         // The chapter fetched ahead opens from its feed, the pages still coming behind it.
         let ahead = self.ahead.take_if(|a| a.chapter == chapter.id);
         tokio::spawn(async move {
@@ -483,21 +484,26 @@ impl Session {
                 // A source's pictures land a page at a time in a folder the page worker reads
                 // as a book, laid out once the page it opens at is there.
                 Ok(opened) if matches!(opened.content, ChapterContent::Images(_)) => {
-                    // A place kept in another split of the chapter: its page comes first.
-                    let total = match &opened.content {
-                        ChapterContent::Images(list) => list.len() as u32,
-                        _ => 0,
+                    // A place kept in another split of the chapter: its page comes first, as
+                    // the pages are counted once the credit pages are left out.
+                    let first = move |total| {
+                        kept_of
+                            .and_then(|of| super::rescaled(first, strip, of, total))
+                            .map_or(first, |(page, _)| page) as usize
                     };
-                    let first = kept_of
-                        .and_then(|of| super::rescaled(first, strip, of, total))
-                        .map_or(first, |(page, _)| page)
-                        as usize;
                     let chapter = id.clone();
                     let landed = move |page, out: &Outbox| {
                         worker.landed(session, chapter.clone(), page, out);
                     };
                     let fed = crate::reading::feed::start(
-                        sources, opened, id, streamed, first, now, out, landed,
+                        sources,
+                        opened,
+                        (id, learning),
+                        streamed,
+                        first,
+                        now,
+                        out,
+                        landed,
                     );
                     match fed.await {
                         Ok(feed) => Prepared::Feed(feed),

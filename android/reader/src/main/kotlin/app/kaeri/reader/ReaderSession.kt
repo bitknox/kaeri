@@ -496,6 +496,9 @@ class ReaderSession(private val send: (Command) -> Unit) {
             is ReaderEvent.Closed -> if (ours(event.session)) now.copy(closed = true) else return
             // The page between chapters does not show the server's answer yet.
             is ReaderEvent.ProgressSent -> return
+            // The skipped credit pages' line and the part ticks come with their boards.
+            is ReaderEvent.CreditPages -> return
+            is ReaderEvent.ChapterParts -> return
         }
     }
 

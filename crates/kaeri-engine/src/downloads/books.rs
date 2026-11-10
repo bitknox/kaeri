@@ -911,12 +911,22 @@ impl BookDownloads {
                 let mut cbz =
                     kaeri_books::write::CbzWriter::new(BufWriter::new(file), info.as_ref())
                         .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
+                // The edge pages are fingerprinted on the way, for the series' credit pages.
+                let mut prints = crate::reading::credits::Recorder::new(&opened.spans());
                 for index in 0..total {
                     let bytes =
                         kept.read(index).map_err(|e| Stop::Failed(io_failure(&e, &dir)))?;
+                    prints.page(index, &bytes).await;
                     cbz.add_page(&bytes)
                         .map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
                 }
+                prints.keep(
+                    lent.sources.store(),
+                    work.as_str(),
+                    chapter.as_str(),
+                    opened.group.as_deref(),
+                    lent.clock.now(),
+                );
                 let mut out =
                     cbz.finish().map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
                 out.flush().map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
@@ -1090,6 +1100,12 @@ pub(crate) fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> Cha
         read_at: None,
         line: Vec::new(),
         gone_from_source: false,
+        parts: 1,
+        other_group: false,
+        missing_parts: Vec::new(),
+        part_groups: Vec::new(),
+        group_language: None,
+        other_source: None,
     }
 }
 
@@ -1177,7 +1193,9 @@ pub(crate) async fn ordered_chapters(
         .map(|e| e.source_id)
         .or_else(|| sources.edition_of(work, None).map(|(source, _)| source))
         .ok_or(ReadingFailure::NotFound)?;
-    Ok((source, flatten(groups)))
+    // Downloads come from the edition: a chapter listed from another source is read there.
+    let rows = flatten(groups).into_iter().filter(|r| r.other_source.is_none()).collect();
+    Ok((source, rows))
 }
 
 /// The chapters of every volume, ordered by volume then number; chapters with no number last,

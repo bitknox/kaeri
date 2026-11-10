@@ -566,6 +566,10 @@ pub(crate) fn apply_read_reg(
             Some(key.to_owned())
         }
         kinds::READ_HIDE => Some(key.to_owned()),
+        // A page kept is never taken back, so a delete is passed over.
+        kinds::READ_CREDIT_KEEP if value.is_some() => {
+            crate::book_credits::apply_keep(tx, key, at)?
+        }
         kinds::READ_BOOKMARK => {
             let Some((work, chapter)) = key.split_once('/') else { return Ok(None) };
             write_bookmark(tx, work, chapter, value.is_some(), at)?;
@@ -1662,6 +1666,9 @@ pub(crate) fn backfill(tx: &Transaction<'_>, device: &str) -> Result<()> {
         })? {
             regs.push(row?);
         }
+    }
+    for (key, at) in crate::book_credits::synced_keeps(tx)? {
+        regs.push((kinds::READ_CREDIT_KEEP, key, Some("1".to_owned()), at));
     }
     for (kind, key, value, at) in regs {
         let stamp = tick(0, at * 1000);

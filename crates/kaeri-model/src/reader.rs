@@ -285,6 +285,9 @@ pub enum ReaderSettingKey {
     PaperLook,
     PaperDim,
     PaperVolume,
+    /// Skip the credit pages a series repeats at the start or end of its chapters. On by
+    /// default.
+    SkipCreditPages,
 }
 
 /// Where a setting's value is kept.
@@ -348,6 +351,7 @@ impl ReaderSettingKey {
         Self::PaperLook,
         Self::PaperDim,
         Self::PaperVolume,
+        Self::SkipCreditPages,
     ];
 
     /// The setting's name in the store, the config and the `read_series` register.
@@ -387,6 +391,7 @@ impl ReaderSettingKey {
             Self::PaperLook => "paper_look",
             Self::PaperDim => "paper_dim",
             Self::PaperVolume => "paper_volume",
+            Self::SkipCreditPages => "skip_credit_pages",
         }
     }
 
@@ -408,7 +413,8 @@ impl ReaderSettingKey {
             | Self::PageLayout
             | Self::Spreads
             | Self::StripWidth
-            | Self::StripGap => matches!(medium, Medium::Manga),
+            | Self::StripGap
+            | Self::SkipCreditPages => matches!(medium, Medium::Manga),
             Self::Font | Self::TextSize | Self::Margins | Self::LineSpacing | Self::Justify => {
                 matches!(medium, Medium::Novel)
             }
@@ -435,9 +441,17 @@ impl ReaderSettingKey {
     }
 
     /// Whether the medium's value follows the person to their other devices: the choices (mode,
-    /// direction, colour, look, font). Layout stays on each device.
+    /// direction, colour, look, font, skipping credit pages). Layout stays on each device.
     pub const fn syncs(self) -> bool {
-        matches!(self, Self::Mode | Self::Direction | Self::Colour | Self::Look | Self::Font)
+        matches!(
+            self,
+            Self::Mode
+                | Self::Direction
+                | Self::Colour
+                | Self::Look
+                | Self::Font
+                | Self::SkipCreditPages
+        )
     }
 }
 
@@ -924,6 +938,13 @@ pub enum ReaderCommand {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         session: u64,
     },
+    /// The person said a skipped page is not a credit page: the work never skips a page with
+    /// this fingerprint again, and the open chapter is laid out again with it in its place.
+    NotACreditPage {
+        session: u64,
+        /// From [`CreditPage::fingerprint`].
+        fingerprint: u64,
+    },
 }
 
 impl ReaderCommand {
@@ -1049,6 +1070,60 @@ pub enum ReaderEvent {
     Closed {
         session: u64,
     },
+    /// Pages of the open chapter left out as credit pages: the leaves hold the rest, and page
+    /// totals and progress count without them. The quiet line says `msg` ("1 credit page
+    /// skipped") and shows the pages when tapped, each with Not a credit page. Sent after
+    /// [`ReaderEvent::Leaves`] whenever a layout skipped any.
+    CreditPages {
+        session: u64,
+        chapter: ChapterId,
+        pages: Vec<CreditPage>,
+        msg: Msg,
+    },
+    /// The open chapter is read in parts: one count of pages with a tick on the track where
+    /// each later part starts, and the scrub preview naming the part. `parts` names each part
+    /// there is, in order; `total` is the parts in all and `missing` those no group lists,
+    /// which the reader marks where they would be. Sent after [`ReaderEvent::Leaves`] (and
+    /// [`ReaderEvent::CreditPages`]) for a chapter of pictures in parts.
+    ChapterParts {
+        session: u64,
+        chapter: ChapterId,
+        parts: Vec<ChapterPart>,
+        total: u32,
+        missing: Vec<u32>,
+    },
+}
+
+/// One part of the open chapter.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct ChapterPart {
+    /// Its number, from 1.
+    pub number: u32,
+    /// Its first page, from 1, as the reader counts pages: skipped credit pages left out.
+    pub first_page: u32,
+    /// The group it is read from, as the source names it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub group: Option<String>,
+    /// From another group than the chapter's first part, which lacks it: the reader names the
+    /// group.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub other_group: bool,
+}
+
+/// A page skipped as a credit page.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct CreditPage {
+    /// Where it was in the chapter, from 0, counting every page the source has.
+    pub page: u32,
+    /// At the chapter's (or a part's) end rather than its start.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub at_end: bool,
+    /// The page as the book had it, to show when the line is tapped.
+    pub file: PageFile,
+    /// What `NotACreditPage` sends back.
+    pub fingerprint: u64,
 }
 
 #[cfg(test)]
@@ -1069,7 +1144,7 @@ mod tests {
     #[test]
     fn choices_sync_and_layout_stays_on_the_device() {
         use ReaderSettingKey as K;
-        for key in [K::Mode, K::Direction, K::Colour, K::Look, K::Font] {
+        for key in [K::Mode, K::Direction, K::Colour, K::Look, K::Font, K::SkipCreditPages] {
             assert!(key.syncs(), "{key:?}");
             assert_eq!(key.home_scope(), SettingScope::Medium);
         }

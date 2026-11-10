@@ -40,6 +40,7 @@ pub mod decode;
 pub mod dither;
 pub mod export;
 pub mod layout;
+pub mod print;
 pub mod rainbow;
 pub mod render;
 pub mod resize;

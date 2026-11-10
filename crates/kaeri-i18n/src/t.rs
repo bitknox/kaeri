@@ -1415,6 +1415,51 @@ pub fn reading_row_versions(n: i64) -> String {
     text("reading-row-versions", &[("n", Arg::Int(n))])
 }
 
+/// A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".
+pub fn reading_row_parts(n: i64) -> String {
+    text("reading-row-parts", &[("n", Arg::Int(n))])
+}
+
+/// A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.
+pub fn reading_row_from_group(group: &str) -> String {
+    text("reading-row-from-group", &[("group", Arg::Text(group))])
+}
+
+/// A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".
+pub fn reading_row_from_group_in(group: &str, language: &str) -> String {
+    text("reading-row-from-group-in", &[("group", Arg::Text(group)), ("language", Arg::Text(language))])
+}
+
+/// A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
+pub fn reading_row_parts_of(have: i64, n: i64) -> String {
+    text("reading-row-parts-of", &[("have", Arg::Int(have)), ("n", Arg::Int(n))])
+}
+
+/// A chapter row, after the parts count: the part no group has released. With several, how many.
+pub fn reading_row_part_missing(count: i64, part: i64) -> String {
+    text("reading-row-part-missing", &[("count", Arg::Int(count)), ("part", Arg::Plain(part))])
+}
+
+/// A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".
+pub fn reading_row_part_from_group(part: i64, group: &str) -> String {
+    text("reading-row-part-from-group", &[("part", Arg::Plain(part)), ("group", Arg::Text(group))])
+}
+
+/// The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
+pub fn reading_row_part_from_group_in(part: i64, group: &str, language: &str) -> String {
+    text("reading-row-part-from-group-in", &[("part", Arg::Plain(part)), ("group", Arg::Text(group)), ("language", Arg::Text(language))])
+}
+
+/// A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.
+pub fn reading_row_from_source(source: &str) -> String {
+    text("reading-row-from-source", &[("source", Arg::Text(source))])
+}
+
+/// A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
+pub fn reader_credit_pages_skipped(count: i64) -> String {
+    text("reader-credit-pages-skipped", &[("count", Arg::Int(count))])
+}
+
 /// A chapter row: when it was read or came out, under a minute ago.
 pub fn reading_ago_now() -> String {
     text("reading-ago-now", &[])
