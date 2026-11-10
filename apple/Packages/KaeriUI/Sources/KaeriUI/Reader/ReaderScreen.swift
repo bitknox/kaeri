@@ -273,12 +273,12 @@ public struct ReaderScreen: View {
 
     var actions: ReaderActions {
         ReaderActions(
-            rtl: rtl, keys: keyContext, canGoBack: model.backTo != nil, backPage: model.backTo == nil ? nil : model.ring.map { model.pageNumber(of: $0) },
+            rtl: rtl, keys: keyContext, canGoBack: model.backToPage != nil, backPage: model.backToPage,
             turn: { forward, line in model.requestTurn(forward: forward, line: line) },
             chapter: { next in
                 if let row = next ? model.view?.next : model.view?.previous { model.openChapter(row.id) }
             },
-            back: { model.act(.backTo) },
+            back: { model.back() },
             askPage: { model.chromeShown = true; model.askingPage = true },
             edge: { first in edge(first: first) },
             escape: { escape() },

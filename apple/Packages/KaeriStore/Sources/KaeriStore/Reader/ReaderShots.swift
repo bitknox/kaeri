@@ -70,7 +70,7 @@ extension ReaderModel {
                     requestTurn(forward: true)
                 }
             case "scrub": chromeShown = true; shotScrub = max(leaves.count / 4, 1)
-            case "pill": backTo = ReaderNoticeLine(id: bump(), text: L.readerBackToPage(page: 9), action: .backTo)
+            case "pill": chromeShown = true; backToPage = 9
             case "opening": hold(.opening)
             case "error": hold(.failed(.offline))
             default: break
@@ -106,8 +106,67 @@ extension ReaderModel {
                 }
             }
         }
+        if Self.demoAsked { await resumeForDemo(work: work) }
         _ = shown
+        if Self.demoAsked { playBackToDemo() }
         return true
+    }
+
+    /// `-KaeriReaderDemo`: Back to page's moments for a recording, with the chrome up for each.
+    /// The reader opens again at a page kept from the first open, then moves one page, jumps
+    /// ten (or to the last page of a shorter chapter), turns once and, in a novel, lays out again
+    /// at another text size.
+    public static var demoAsked: Bool { ProcessInfo.processInfo.arguments.contains("-KaeriReaderDemo") }
+
+    /// A place to resume at: the sixth page shown, or nearer the start of a short chapter, then
+    /// the reader closed and opened again. Pages show one at a time, so a leaf is a page.
+    private func resumeForDemo(work: String) async {
+        if novel != nil {
+            // Large text, so the scene's short first document runs to enough pages for a jump.
+            set(.textSize, .amount(value: 2.4))
+            try? await Task.sleep(for: .milliseconds(1200))
+        } else if view?.mode != .strip {
+            set(.pageLayout, .choice(name: "single"))
+            try? await Task.sleep(for: .milliseconds(800))
+        }
+        requestJump(min(5, position.count / 4))
+        try? await Task.sleep(for: .milliseconds(1500))
+        close()
+        try? await Task.sleep(for: .milliseconds(600))
+        open(work: work)
+        let deadline = ContinuousClock.now + .seconds(10)
+        while ContinuousClock.now < deadline {
+            if phase == .open, novel != nil ? novelPainted : !pages.isEmpty { break }
+            try? await Task.sleep(for: .milliseconds(100))
+        }
+        try? await Task.sleep(for: .milliseconds(1200))
+        notice = nil
+    }
+
+    private func playBackToDemo() {
+        let steps: [(ms: Int, act: @MainActor (ReaderModel) -> Void)] = [
+            (1000, { $0.chromeShown = true }),
+            (1500, { $0.requestJump($0.position.index + 1) }),
+            (300, { $0.chromeShown = true }),
+            // A strip's turn scrolls on within its last image: the jump stops one short of it.
+            (1700, { $0.requestJump(min($0.position.index + 10, $0.position.count - ($0.view?.mode == .strip ? 2 : 1))) }),
+            (300, { $0.chromeShown = true }),
+            (2700, { $0.requestTurn(forward: true) }),
+            (500, { $0.chromeShown = true }),
+            // A strip's turn can stay within a tall image; it goes once the scroll is on the next.
+            (800, { if $0.view?.mode == .strip { $0.requestTurn(forward: true) } }),
+            (800, { if $0.view?.mode == .strip { $0.requestTurn(forward: true) } }),
+            (400, { $0.chromeShown = true }),
+            (1000, { if $0.novel != nil { $0.set(.textSize, .amount(value: 1.8)) } }),
+            (1200, { $0.chromeShown = true }),
+        ]
+        Task { @MainActor [weak self] in
+            for step in steps {
+                try? await Task.sleep(for: .milliseconds(step.ms))
+                guard let self else { return }
+                step.act(self)
+            }
+        }
     }
 }
 
@@ -173,8 +232,6 @@ extension ReaderModel {
         if scene == "readermoved" {
             let line = ReaderNoticeLine(id: bump(), text: L.readerMoved(chapter: "14", page: 5, device: "Kim's iPad"), action: .goBack)
             notice = line
-            let back = ReaderNoticeLine(id: bump(), text: L.readerBackToPage(page: 9), action: .backTo)
-            backTo = back
         }
     }
 

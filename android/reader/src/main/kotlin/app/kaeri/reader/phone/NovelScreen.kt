@@ -112,7 +112,8 @@ fun NovelScreen(
                     place.pages = message.pages
                     place.ended = false
                     message.pos?.let {
-                        session.novelAt(it, message.page.toUInt(), message.pages.toUInt(), message.how ?: TurnHow.JUMP)
+                        // A first layout says no how: the app's own move, never the person's jump.
+                        session.novelAt(it, message.page.toUInt(), message.pages.toUInt(), message.how ?: TurnHow.PLACED)
                     }
                 }
                 is NovelMessage.Layout -> {
@@ -168,6 +169,9 @@ fun NovelScreen(
             place.reload = { host.open(novel.spine, novel.entry, novel.restore) }
             host.open(novel.spine, novel.entry, novel.restore)
         }
+    }
+    LaunchedEffect(state.novelGoTo?.id) {
+        state.novelGoTo?.let { host.goToPos(it.pos, TurnHow.PLACED) }
     }
     LaunchedEffect(state.novelStyle?.style) {
         state.novelStyle?.let { host.configure(it.style) }

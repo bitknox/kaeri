@@ -64,8 +64,11 @@ public sealed class ReaderSession
     public ReaderEnd? End { get; private set; }
     public ReaderSettingsView? Settings { get; private set; }
     public ReaderNoticeLine? Notice { get; private set; }
-    /// <summary>"Back to page 8", waiting in the corner.</summary>
-    public ReaderNoticeLine? BackTo { get; private set; }
+    /// <summary>
+    /// The page "Back to page 8" offers, from 1, over the scrubber while the controls are up.
+    /// The engine offers it after the person's jump and takes it away at the next turn.
+    /// </summary>
+    public uint? BackTo { get; private set; }
     /// <summary>The leaf shown now.</summary>
     public int Current { get; private set; }
     /// <summary>Where the person was before the last jump, as a leaf, for the ring on the scrubber.</summary>
@@ -111,7 +114,7 @@ public sealed class ReaderSession
     bool opened;
     int? pendingGoTo;
     Request? afterClose;
-    CancellationTokenSource? noticeTimer, backTimer;
+    CancellationTokenSource? noticeTimer;
     DateTimeOffset lastStrip = DateTimeOffset.MinValue;
     CancellationTokenSource? pendingStrip;
 
@@ -322,30 +325,30 @@ public sealed class ReaderSession
         switch (action)
         {
             case ReaderAction.StartOver: Ask(new ReaderCommand.StartOver(session)); break;
-            case ReaderAction.BackTo: Ask(new ReaderCommand.BackTo(session)); break;
             case ReaderAction.GoBack: Ask(new ReaderCommand.GoBack(session)); break;
         }
         if (action != ReaderAction.ChangeMode)
             Dismiss(action);
     }
 
-    /// <summary>The notice or the Back to pill leaves.</summary>
+    /// <summary>The notice leaves.</summary>
     public void Dismiss(ReaderAction? action)
     {
-        if (action == ReaderAction.BackTo)
-        {
-            BackTo = null;
-            backTimer?.Cancel();
-            Changed?.Invoke(ReaderChange.BackTo);
-        }
-        else
-        {
-            Notice = null;
-            noticeTimer?.Cancel();
-            noticeTimer = null;
-            noticeLeft = null;
-            Changed?.Invoke(ReaderChange.Notice);
-        }
+        Notice = null;
+        noticeTimer?.Cancel();
+        noticeTimer = null;
+        noticeLeft = null;
+        Changed?.Invoke(ReaderChange.Notice);
+    }
+
+    /// <summary>Back to the page the last jump left, while the engine offers it.</summary>
+    public void GoBackTo()
+    {
+        if (session == 0 || BackTo is null)
+            return;
+        BackTo = null;
+        Changed?.Invoke(ReaderChange.BackTo);
+        Ask(new ReaderCommand.BackTo(session));
     }
 
     // Settings
@@ -572,6 +575,12 @@ public sealed class ReaderSession
             case ReaderEvent.Notice notice:
                 Show(notice.V1);
                 break;
+            case ReaderEvent.BackToPage offer:
+                if (offer.Session != session || BackTo == offer.Page)
+                    return;
+                BackTo = offer.Page;
+                Changed?.Invoke(ReaderChange.BackTo);
+                break;
             case ReaderEvent.Moved:
                 // The notice that comes with it says where, and offers the way back.
                 break;
@@ -676,43 +685,18 @@ public sealed class ReaderSession
 
     static uint Words(string text) => (uint)text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
 
-    async void Show(ReaderNotice incoming)
+    void Show(ReaderNotice incoming)
     {
         var line = new ReaderNoticeLine(++noticeCount, incoming.Msg.Text(), incoming.Action);
-        var back = incoming.Action == ReaderAction.BackTo;
-        if (!back)
-        {
-            noticeTimer?.Cancel();
-            noticeTimer = null;
-            Notice = line;
-            var hasAction = incoming.Action is ReaderAction.StartOver or ReaderAction.GoBack or ReaderAction.ChangeMode;
-            var hold = NoticeHold(incoming.LastsMs, Words(line.Text), hasAction, ScreenReader?.Invoke() ?? false);
-            // 0 is e-ink's: the notice stays until the next turn clears it.
-            noticeLeft = hold is { } ms && ms > 0 ? TimeSpan.FromMilliseconds(ms) : null;
-            Changed?.Invoke(ReaderChange.Notice);
-            NoticeClock();
-            return;
-        }
-        var timer = new CancellationTokenSource();
-        backTimer?.Cancel();
-        backTimer = timer;
-        BackTo = line;
-        Changed?.Invoke(ReaderChange.BackTo);
-        if (incoming.LastsMs == 0)
-            return;
-        try
-        {
-            await Task.Delay((int)incoming.LastsMs, timer.Token);
-        }
-        catch (TaskCanceledException)
-        {
-            return;
-        }
-        if (BackTo?.Id == line.Id)
-        {
-            BackTo = null;
-            Changed?.Invoke(ReaderChange.BackTo);
-        }
+        noticeTimer?.Cancel();
+        noticeTimer = null;
+        Notice = line;
+        var hasAction = incoming.Action is ReaderAction.StartOver or ReaderAction.GoBack or ReaderAction.ChangeMode;
+        var hold = NoticeHold(incoming.LastsMs, Words(line.Text), hasAction, ScreenReader?.Invoke() ?? false);
+        // 0 is e-ink's: the notice stays until the next turn clears it.
+        noticeLeft = hold is { } ms && ms > 0 ? TimeSpan.FromMilliseconds(ms) : null;
+        Changed?.Invoke(ReaderChange.Notice);
+        NoticeClock();
     }
 
     /// <summary>The notice's time runs, or waits while something holds it.</summary>
@@ -759,7 +743,6 @@ public sealed class ReaderSession
         noticeTimer?.Cancel();
         noticeTimer = null;
         noticeLeft = null;
-        backTimer?.Cancel();
         var had = Notice is not null;
         var hadBack = BackTo is not null;
         Notice = null;
@@ -776,7 +759,6 @@ public sealed class ReaderSession
         noticeTimer = null;
         noticeLeft = null;
         noticeHover = false;
-        backTimer?.Cancel();
         pendingStrip?.Cancel();
         View = null;
         Leaves = [];

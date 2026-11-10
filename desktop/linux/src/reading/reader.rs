@@ -166,7 +166,7 @@ pub struct Reader {
     asked_open: RefCell<Option<(WorkId, Option<ChapterId>)>>,
     /// The control that opened the reader, which has the keyboard back when it closes.
     opener: Rc<keys::Opener>,
-    /// A line over the page for a while: resumed, back to page, moved, mode detected.
+    /// A line over the page for a while: resumed, moved, mode detected.
     notice: gtk::Box,
     notice_text: gtk::Label,
     notice_button: gtk::Button,
@@ -189,6 +189,11 @@ pub struct Reader {
     scrub_at: gtk::Label,
     scrub_total: gtk::Label,
     scrub_timer: RefCell<Option<glib::SourceId>>,
+    /// Back to page N, over the scrubber, while the engine offers it after a jump.
+    back_to: gtk::Button,
+    back_to_label: gtk::Label,
+    back_to_page: Cell<Option<u32>>,
+    back_to_fade: motion::Fader,
     settings: gtk::MenuButton,
     /// The settings popover, filled from the engine's settings.
     sheet: gtk::Popover,
@@ -392,6 +397,18 @@ impl Reader {
         scrub_row.append(&scrub_at);
         scrub_row.append(&scrub);
         scrub_row.append(&scrub_total);
+        // Back to page: the place left by a jump, above the scrubber, only while offered.
+        let back_to_label = gtk::Label::new(None);
+        back_to_label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        let back_to_row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        back_to_row.append(&gtk::Image::from_icon_name("edit-undo-symbolic"));
+        back_to_row.append(&back_to_label);
+        let back_to = gtk::Button::new();
+        back_to.set_child(Some(&back_to_row));
+        back_to.add_css_class("reader-back-to");
+        back_to.set_halign(gtk::Align::Start);
+        back_to.set_margin_start(8);
+        back_to.set_visible(false);
 
         let group_title = gtk::Label::new(None);
         group_title.add_css_class("reader-group-title");
@@ -442,6 +459,7 @@ impl Reader {
         row.set_end_widget(Some(&ends));
         let group = gtk::Box::new(gtk::Orientation::Vertical, 2);
         group.add_css_class("reader-group");
+        group.append(&back_to);
         group.append(&scrub_row);
         group.append(&row);
         group.set_halign(gtk::Align::Center);
@@ -565,6 +583,10 @@ impl Reader {
                 scrub_at,
                 scrub_total,
                 scrub_timer: RefCell::default(),
+                back_to,
+                back_to_label,
+                back_to_page: Cell::new(None),
+                back_to_fade: motion::Fader::default(),
                 settings,
                 sheet,
                 sheet_shape_now: RefCell::default(),
@@ -628,6 +650,14 @@ impl Reader {
             move |_| {
                 if let Some(this) = this.upgrade() {
                     this.close();
+                }
+            }
+        });
+        this.back_to.connect_clicked({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.go_back_to();
                 }
             }
         });
@@ -836,6 +866,7 @@ impl Reader {
         self.line.set_label("");
         self.opening_line.replace(t::linux_reader_opening());
         self.hide_notice();
+        self.offer_back_to(None);
         self.show_pages(0, 0);
         self.chapters.clear();
     }
@@ -978,13 +1009,32 @@ impl Reader {
 
     /// Alt+Left: back to the page before a jump while that is offered, else out of the reader.
     pub fn back(&self) {
-        let session = self.state.borrow().session;
-        if self.notice_action.get() == Some(ReaderAction::BackTo) && session != 0 {
-            self.send(ReaderCommand::BackTo { session });
-            self.hide_notice();
-        } else {
+        if !self.go_back_to() {
             self.close();
         }
+    }
+
+    /// Back to the page a jump left, while the engine offers it. False when it does not.
+    fn go_back_to(&self) -> bool {
+        let session = self.state.borrow().session;
+        if self.back_to_page.get().is_none() || session == 0 {
+            return false;
+        }
+        self.offer_back_to(None);
+        self.send(ReaderCommand::BackTo { session });
+        true
+    }
+
+    /// Show Back to page `page` above the scrubber, or take it away. It shows with the chrome,
+    /// as part of the group, and fades in and out on its own.
+    fn offer_back_to(&self, page: Option<u32>) {
+        self.back_to_page.set(page);
+        if let Some(page) = page {
+            let words = t::reader_back_to_page(i64::from(page));
+            self.back_to_label.set_label(&words);
+            self.back_to.update_property(&[gtk::accessible::Property::Label(&words)]);
+        }
+        self.back_to_fade.set(&self.back_to, page.is_some());
     }
 
     /// Hold the place of what is on its way: nothing for 600 ms, then the page plate with the
@@ -1176,7 +1226,10 @@ impl Reader {
             }
             ReaderEvent::Settings(view) => self.settings_view(view.clone()),
             ReaderEvent::GoTo { session, place } if self.mine(*session) => {
-                if let Some(at) = place.strip.filter(|_| self.flows()) {
+                let novel = self.novel.borrow().clone();
+                if let (Some(pos), Some(novel)) = (&place.novel, novel) {
+                    novel.go_to_pos(pos);
+                } else if let Some(at) = place.strip.filter(|_| self.flows()) {
                     self.state.borrow_mut().strip_anchor = Some(at);
                     self.hold_strip_place();
                 } else if let Some(page) = place.page {
@@ -1209,6 +1262,9 @@ impl Reader {
                     self.wait_number.set_label(&line);
                 }
                 self.opening_line.replace(line);
+            }
+            ReaderEvent::BackToPage { session, page } if self.mine(*session) => {
+                self.offer_back_to(*page);
             }
             ReaderEvent::Notice(notice) if self.state.borrow().session != 0 => {
                 self.notice(notice);
@@ -1320,8 +1376,7 @@ impl Reader {
     // ---------------------------------------------------------------------------------------
     // Notices
 
-    /// A line over the page for a while, with its button when it has one: Back to page is the
-    /// whole line.
+    /// A line over the page for a while, with its button when it has one.
     fn notice(self: &Rc<Self>, notice: &ReaderNotice) {
         let text = say::msg(&notice.msg);
         if text.is_empty() {
@@ -1331,23 +1386,15 @@ impl Reader {
             Some(ReaderAction::StartOver) => Some(t::linux_reader_start_over()),
             Some(ReaderAction::GoBack) => Some(t::linux_reader_go_back()),
             Some(ReaderAction::ChangeMode) => Some(t::linux_reader_change()),
-            Some(ReaderAction::BackTo) | None => None,
+            None => None,
         };
         self.notice_action.set(notice.action);
         self.place_notice(self.head_fade.shown());
-        let back_to = notice.action == Some(ReaderAction::BackTo);
-        // Back to page is the whole line as one button; the others are a line and a button.
-        if back_to {
-            self.notice_text.set_visible(false);
-            self.notice_button.set_label(&text);
-            self.notice_button.set_visible(true);
-        } else {
-            self.notice_text.set_label(&text);
-            self.notice_text.set_visible(true);
-            self.notice_button.set_visible(words.is_some());
-            if let Some(words) = &words {
-                self.notice_button.set_label(words);
-            }
+        self.notice_text.set_label(&text);
+        self.notice_text.set_visible(true);
+        self.notice_button.set_visible(words.is_some());
+        if let Some(words) = &words {
+            self.notice_button.set_label(words);
         }
         self.notice_fade.set(&self.notice, true);
         if let Some(id) = self.notice_timer.borrow_mut().take() {
@@ -1390,7 +1437,6 @@ impl Reader {
         let Some(action) = self.notice_action.get() else { return };
         match action {
             ReaderAction::StartOver => self.send(ReaderCommand::StartOver { session }),
-            ReaderAction::BackTo => self.send(ReaderCommand::BackTo { session }),
             ReaderAction::GoBack => self.send(ReaderCommand::GoBack { session }),
             ReaderAction::ChangeMode => {
                 self.reveal_chrome();
@@ -1472,7 +1518,8 @@ impl Reader {
             state.leaves = leaves;
         }
         let index = self.state.borrow().index;
-        self.show_leaf(index, TurnHow::Jump);
+        // The first layout, or a new one: the reader put the place there, not the person.
+        self.show_leaf(index, TurnHow::Placed);
     }
 
     fn page_of(&self, index: usize) -> Option<u32> {
@@ -1585,7 +1632,7 @@ impl Reader {
             self.fill_strip_page(page);
         } else if self.is_current_page(page) {
             let index = self.state.borrow().index;
-            self.show_leaf(index, TurnHow::Jump);
+            self.show_leaf(index, TurnHow::Placed);
         }
     }
 
@@ -1827,7 +1874,8 @@ impl Reader {
                     Some(StripPos { image: at as u32, offset: 0.0 });
                 self.hold_strip_place();
             } else {
-                self.show_leaf(at, TurnHow::Jump);
+                // The engine's move: a resume, Back to page, another device's place.
+                self.show_leaf(at, TurnHow::Placed);
             }
         }
     }
@@ -2625,12 +2673,20 @@ impl Reader {
             self.state.borrow_mut().strip_anchor =
                 Some(StripPos { image: index as u32, offset: 0.0 });
             self.hold_strip_place();
-            // A jump is the person's: the place reports once the strip is there.
+            // A jump is the person's: it reports once the strip is there, so the engine can
+            // offer Back to page, and the place follows from the scroll.
             let this = Rc::downgrade(self);
             glib::timeout_add_local_once(Duration::from_millis(300), move || {
-                if let Some(this) = this.upgrade() {
-                    this.release_strip();
+                let Some(this) = this.upgrade() else { return };
+                let (session, chapter) = {
+                    let state = this.state.borrow();
+                    (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
+                };
+                if let Some(chapter) = chapter {
+                    let (leaf, how) = (index as u32, TurnHow::Jump);
+                    this.send(ReaderCommand::Shown { session, chapter, leaf, how });
                 }
+                this.release_strip();
             });
         } else {
             self.show_leaf(index, TurnHow::Jump);

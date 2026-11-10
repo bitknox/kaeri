@@ -90,6 +90,7 @@ sealed interface NovelMessage {
             "key" -> TurnHow.KEY
             "jump" -> TurnHow.JUMP
             "scroll" -> TurnHow.SCROLL
+            "placed" -> TurnHow.PLACED
             else -> TurnHow.TURN
         }
 
@@ -218,6 +219,7 @@ class NovelWebHost(
 
     /** Go to a contents entry: its document, and the element its fragment names. */
     fun openEntry(spineIndex: Int, url: String) {
+        turnedInto = TurnHow.JUMP
         index = spineIndex.coerceIn(0, (spine.size - 1).coerceAtLeast(0))
         view.loadUrl(url)
     }

@@ -60,6 +60,9 @@ data class ShownNotice(val notice: ReaderNotice, val id: Long)
  */
 data class ReaderJump(val leaf: Int, val strip: StripPos?, val id: Long)
 
+/** A place in the open novel the engine asked for: Back to page, Start over, Go back. */
+data class NovelGoTo(val pos: NovelPos, val id: Long)
+
 /** What the engine said of the open session. */
 data class ReaderState(
     /** Asked to open and not yet answered. */
@@ -80,6 +83,12 @@ data class ReaderState(
     /** Chapters the read rule counted while this reader was open. */
     val read: Set<ChapterId> = emptySet(),
     val jump: ReaderJump? = null,
+    val novelGoTo: NovelGoTo? = null,
+    /**
+     * Back to page in the slider bar: the page counted from 1, offered after the person's own jump
+     * of more than two pages and gone at the next turn.
+     */
+    val backTo: UInt? = null,
     /** The series' chapters by volume, once asked for. */
     val volumes: List<VolumeGroup> = emptyList(),
     /** The trackers each chapter read here was queued for. */
@@ -162,7 +171,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.Surface(session, surface))
     }
 
-    /** Leaf [leaf] was painted. An e-ink notice clears at the next turn. */
+    /** Leaf [leaf] was painted. An e-ink notice clears at the next turn, not at a jump or the app's own move. */
     fun shown(leaf: Int, how: TurnHow) {
         val now = state.value
         val session = now.session ?: return
@@ -170,7 +179,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
         shownPage = now.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page ?: shownPage
         reader(ReaderCommand.Shown(session, chapter, leaf.toUInt(), how))
         val notice = now.notice
-        if (notice != null && notice.notice.lastsMs == 0u && how != TurnHow.JUMP) dismissNotice(notice.id)
+        if (notice != null && notice.notice.lastsMs == 0u && how != TurnHow.JUMP && how != TurnHow.PLACED) dismissNotice(notice.id)
     }
 
     /** A strip settled at [at]; [footVisible] when the last image's foot is in view. */
@@ -179,15 +188,12 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.StripAt(now.session ?: return, now.chapter ?: return, at, footVisible))
     }
 
-    /**
-     * The paginator turned in a novel. A notice lies over the text, so the first turn takes it,
-     * apart from Back to page.
-     */
+    /** The paginator turned in a novel. A notice lies over the text, so the first turn takes it. */
     fun novelAt(pos: NovelPos, page: UInt, pages: UInt, how: TurnHow) {
         val now = state.value
         reader(ReaderCommand.NovelAt(now.session ?: return, now.novel?.chapter ?: now.chapter ?: return, pos, page, pages, how))
         val notice = now.notice
-        if (notice != null && how != TurnHow.JUMP && notice.notice.action != app.kaeri.engine.model.ReaderAction.BACK_TO) dismissNotice(notice.id)
+        if (notice != null && how != TurnHow.JUMP && how != TurnHow.PLACED) dismissNotice(notice.id)
     }
 
     /** The hidden web view counted the volume's pages for these settings and this screen. */
@@ -277,7 +283,14 @@ class ReaderSession(private val send: (Command) -> Unit) {
         send(Command.Reading(ReadingCommand.LoadChapters(work, null)))
     }
 
-    fun backTo() = state.value.session?.let { reader(ReaderCommand.BackTo(it)) }
+    /** Back to the page before the jump. The engine takes the offer away as it goes. */
+    fun backTo() {
+        val now = state.value
+        val session = now.session ?: return
+        if (now.backTo == null) return
+        _state.value = now.copy(backTo = null)
+        reader(ReaderCommand.BackTo(session))
+    }
 
     fun startOver() = state.value.session?.let { reader(ReaderCommand.StartOver(it)) }
 
@@ -424,8 +437,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
             }
             is ReaderEvent.GoTo -> {
                 if (!ours(event.session) || event.place.chapter != now.chapter) return
+                val pos = event.place.novel
+                if (pos != null && now.novel != null) return run { _state.value = now.copy(novelGoTo = NovelGoTo(pos, ++ids)) }
                 now.copy(jump = ReaderJump(now.leafOf(event.place), event.place.strip, ++ids))
             }
+            is ReaderEvent.BackToPage -> if (ours(event.session)) now.copy(backTo = event.page) else return
             is ReaderEvent.Closed -> if (ours(event.session)) now.copy(closed = true) else return
             // The page between chapters does not show the server's answer yet.
             is ReaderEvent.ProgressSent -> return

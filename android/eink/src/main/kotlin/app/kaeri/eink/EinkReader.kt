@@ -218,7 +218,7 @@ fun EinkReader(
                 page = page,
                 pages = state.pages,
                 rtl = direction.rightToLeft,
-                backTo = (state.notice?.notice?.action == NoticeAction.BACK_TO).takeIf { it }?.let { state.notice },
+                backTo = state.backTo,
                 hasNext = view.next != null,
                 hasPrevious = view.previous != null,
                 canClean = painter.controller.available,
@@ -234,11 +234,10 @@ fun EinkReader(
             )
         }
         val notice = state.notice
-        if (notice != null && !chrome && notice.notice.action != NoticeAction.BACK_TO) {
+        if (notice != null && !chrome) {
             EinkNotice(notice, onAction = { action ->
                 when (action) {
                     NoticeAction.START_OVER -> session.startOver()
-                    NoticeAction.BACK_TO -> session.backTo()
                     NoticeAction.GO_BACK -> session.goBack()
                     NoticeAction.CHANGE_MODE -> actions.onSettings()
                 }
@@ -365,7 +364,8 @@ fun EinkBottomBar(
     page: Int,
     pages: Int,
     rtl: Boolean,
-    backTo: ShownNotice?,
+    /** Back to page while it is offered: the page counted from 1. */
+    backTo: UInt?,
     hasNext: Boolean,
     hasPrevious: Boolean,
     canClean: Boolean,
@@ -388,7 +388,7 @@ fun EinkBottomBar(
         }
         EinkProgress(page.toFloat() / pages.coerceAtLeast(1), fromRight = rtl)
         if (backTo != null) {
-            EinkOutlinedButton(backTo.notice.msg.text(context), onBackTo, height = 46.dp)
+            EinkOutlinedButton(Strings.readerBackToPage(context, backTo.toInt()), onBackTo, height = 46.dp)
         }
         // Mirrored for left to right: the next chapter is on the reading side.
         val next = @Composable { if (hasNext) EinkTextButton(if (rtl) "‹ " + Strings.einkNextChapter(context) else Strings.einkNextChapter(context) + " ›", onNext) }
@@ -718,7 +718,6 @@ fun EinkNotice(notice: ShownNotice, onAction: (NoticeAction) -> Unit, modifier: 
         if (action != null) {
             val words = when (action) {
                 NoticeAction.START_OVER -> Strings.readerNoticeStartOver(context)
-                NoticeAction.BACK_TO -> notice.notice.msg.text(context)
                 NoticeAction.GO_BACK -> Strings.readerNoticeGoBack(context)
                 NoticeAction.CHANGE_MODE -> Strings.readerNoticeChange(context)
             }

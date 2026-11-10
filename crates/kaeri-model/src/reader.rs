@@ -551,10 +551,15 @@ pub enum OpenAt {
 pub enum TurnHow {
     Turn,
     Swipe,
-    /// The scrubber, the page grid or Go to page.
+    /// The person's own jump: the scrubber, the page grid, contents or Go to page. More than
+    /// two pages from where they were, it offers [`ReaderEvent::BackToPage`].
     Jump,
     Scroll,
     Key,
+    /// The app moved the reader itself: the first layout, a resume, Back to page, Start over,
+    /// another device's place, or a new layout after a resize or a settings change. It neither
+    /// offers Back to page nor takes it away.
+    Placed,
 }
 
 /// The screen a session draws on.
@@ -767,12 +772,11 @@ pub enum NoNext {
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderAction {
     StartOver,
-    BackTo,
     GoBack,
     ChangeMode,
 }
 
-/// A line over the page for a while: resumed, back to page, moved, mode detected.
+/// A line over the page for a while: resumed, moved, mode detected.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct ReaderNotice {
@@ -826,7 +830,8 @@ pub enum ReaderCommand {
         session: u64,
         surface: ReaderSurface,
     },
-    /// A leaf was painted. Drives prefetch, the read rule and Back to page.
+    /// A leaf was painted. Drives prefetch, the read rule and Back to page. A strip reports
+    /// the person's jump this way too, once it has landed, besides its `StripAt`.
     Shown {
         session: u64,
         chapter: ChapterId,
@@ -880,7 +885,7 @@ pub enum ReaderCommand {
         session: u64,
         chapter: ChapterId,
     },
-    /// "Back to page 8".
+    /// "Back to page 8", from the control [`ReaderEvent::BackToPage`] offers.
     BackTo {
         session: u64,
     },
@@ -1024,6 +1029,15 @@ pub enum ReaderEvent {
         back: ReadPlace,
     },
     Settings(ReaderSettingsView),
+    /// Back to page `page`, counted from 1, is offered in the slider bar while the controls
+    /// are up; `None` takes it away. It comes after the person's own jump of more than two
+    /// pages, or screens of a novel, and goes at the next turn, once used, or with the chapter:
+    /// [`ReaderEvent::Opened`] starts without it.
+    BackToPage {
+        session: u64,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        page: Option<u32>,
+    },
     /// Show this place in the open chapter: Back to page, Start over, Go back, or a place
     /// another device reached. A place in another chapter comes as [`ReaderEvent::Opened`]
     /// instead.

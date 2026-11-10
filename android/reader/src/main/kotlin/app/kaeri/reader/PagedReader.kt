@@ -93,7 +93,7 @@ class PagedReaderState(initial: Int = 0) {
     fun go(to: Int, how: TurnHow): Boolean {
         val target = to.coerceIn(0, (count - 1).coerceAtLeast(0))
         if (target == leaf && turns > 0) return false
-        under = if (how == TurnHow.TURN || how == TurnHow.KEY) leaf else null
+        under = if (how == TurnHow.TURN || how == TurnHow.KEY || how == TurnHow.PLACED) leaf else null
         leaf = target
         this.how = how
         turns++
@@ -150,8 +150,8 @@ fun PagedReader(
     LaunchedEffect(state.jump, leaves.size) {
         val jump = state.jump ?: return@LaunchedEffect
         if (leaves.isEmpty()) return@LaunchedEffect
-        // Reported as a turn, so the engine does not offer Back to page for its own move.
-        pager.go(jump.leaf, TurnHow.TURN)
+        // The app's own move, which never offers Back to page.
+        pager.go(jump.leaf, TurnHow.PLACED)
         if (fresh) pager.under = null
         pager.chapter = chapter
         onJumped(jump.id)

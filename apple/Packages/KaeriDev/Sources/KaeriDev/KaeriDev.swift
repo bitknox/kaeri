@@ -220,8 +220,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
             if options.reduceMotion { navigator.motionReduced = true }
             await motion.prelude(navigator: navigator, store: store)
             await frames(of: motion, in: window, to: url)
-        } else if options.artTrouble != nil, !options.frames.isEmpty, let window = Snapshot.window {
-            // The window left alone while the troubled art comes in.
+        } else if options.artTrouble != nil || ReaderModel.demoAsked, !options.frames.isEmpty, let window = Snapshot.window {
+            // The window left alone while the troubled art comes in, or the reader's demo plays.
             await frames(of: nil, in: window, to: url)
         }
         if options.fullScreenCycles > 0, let window = Snapshot.window {
@@ -280,10 +280,17 @@ final class Delegate: NSObject, NSApplicationDelegate {
         var taken: [(offset: Int, at: Duration, image: CGImage)] = []
         let start = ContinuousClock.now
         motion?.run(navigator: navigator, store: store)
+        // The reader's demo over a novel: the window server's picture can leave the page's web
+        // view blank, so each frame is drawn with WebKit's own picture of it, as a shot is.
+        let web = ReaderModel.demoAsked && store.reader.novel != nil
         for offset in options.frames.sorted() {
             let at = start + .milliseconds(offset)
             if at > .now { try? await Task.sleep(until: at) }
-            if let image = Snapshot.composited(window).flatMap({ Snapshot.withSheets($0, of: window) }) {
+            if web { await Snapshot.snapshotWebViews(in: window) }
+            let image = web
+                ? Snapshot.cached(window)
+                : Snapshot.composited(window).flatMap { Snapshot.withSheets($0, of: window) }
+            if let image {
                 taken.append((offset, ContinuousClock.now - start, image))
             }
         }
