@@ -102,10 +102,12 @@ public final class Navigator {
     public var searchFiltersShown = false
     /// The search the launch arguments ask for, for a screenshot, until Search runs it.
     public var launchSearch: SearchQuery?
+    /// Reading's Search as the launch arguments set it, for a screenshot.
+    public var launchReadSearch: ReadSearchQuery?
     /// Points to scroll Search's results at launch, for shots.
     public var launchScroll: Int?
-    /// The same points for Reading's Home and Search, which the shows' Search, drawn first while
-    /// Reading loads, would otherwise take.
+    /// The same points for Reading's Home, which the shows' Search, drawn first while Reading
+    /// loads, would otherwise take. Reading's Search scrolls by `launchScroll`, as the shows' does.
     @ObservationIgnored var launchReadScroll: Int?
     /// Counts the asks to scroll the iPhone's pinned filter row to its end, for the motion audit.
     public var searchRowToEnd = 0
@@ -220,6 +222,16 @@ public final class Navigator {
             launchSearch = SearchQuery(
                 text: route.query ?? "", genres: ["Fantasy"], formats: [.tv], season: .spring, years: Bounds(min: 2024, max: 2024),
                 minScore: 70, licensedOnly: true)
+        }
+        if route.filters == "set", route.reading {
+            // Reading's row set as Android's shots set it.
+            var query = ReadingModel.emptyQuery
+            query.text = route.query ?? ""
+            query.genres = ["Fantasy"]
+            query.formats = ["manga", "one-shot"] // i18n-skip: format keys
+            query.origins = ["JP"] // i18n-skip
+            query.status = "releasing" // i18n-skip
+            launchReadSearch = query
         }
         launchScroll = route.scroll
         launchReadScroll = route.scroll
