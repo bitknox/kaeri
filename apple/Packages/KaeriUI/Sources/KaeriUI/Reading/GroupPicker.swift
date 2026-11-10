@@ -15,7 +15,7 @@ struct GroupPicker: View {
     @Environment(\.dynamicTypeSize) private var type
     let work: String
     let edition: BookEditionRow
-    /// The row the arrow keys are on, on the Mac: 0 is Most chapters.
+    /// The row the arrow keys are on, on the Mac and an iPad with a keyboard: 0 is Most chapters.
     @State private var keyed: Int?
     @FocusState private var focused: Bool
 
@@ -42,6 +42,14 @@ struct GroupPicker: View {
 
     var body: some View {
         if phone { sheet } else { popover }
+    }
+
+    private static var closePlacement: ToolbarItemPlacement {
+        #if os(iOS)
+        .topBarTrailing
+        #else
+        .cancellationAction
+        #endif
     }
 
     // MARK: iPhone
@@ -71,8 +79,9 @@ struct GroupPicker: View {
                         Text(L.groupPickerIn(source: edition.sourceName)).font(.ui(12)).foregroundStyle(.haze)
                     }
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(L.actionClose, systemImage: "xmark") { dismiss() }
+                // The system's quiet close, not a filled confirmation.
+                ToolbarItem(placement: Self.closePlacement) {
+                    Button(role: .close) { dismiss() }
                 }
             }
         }
@@ -114,7 +123,7 @@ struct GroupPicker: View {
         .focusable()
         .focusEffectDisabled()
         .focused($focused)
-        .onAppear { focused = mac }
+        .onAppear { focused = true }
         .onKeyPress(.downArrow) { move(1) }
         .onKeyPress(.upArrow) { move(-1) }
         .onKeyPress(.return) {
@@ -147,7 +156,8 @@ struct GroupPicker: View {
         let title = group?.label ?? L.groupPickerMost
         let line: String? = if let group {
             ([L.groupPickerCount(have: Int(group.chapters), total: total)] + [group.language.map(ReadWords.language)].compactMap { $0 })
-                .joined(separator: " · ") // i18n-skip
+                // A no-break space before the dot keeps it with the count when the line wraps.
+                .joined(separator: "\u{00A0}· ") // i18n-skip
         } else {
             Self.mostNow(edition).map { L.groupPickerMostNow(group: $0) }
         }

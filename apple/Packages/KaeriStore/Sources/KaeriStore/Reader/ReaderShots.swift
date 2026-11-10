@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 
 extension ReaderModel {
     /// `-KaeriReader chrome|settings|chapters|chapterlist|ask|end|scrub|plate|opening|error`, and with
-    /// `-KaeriCredits` `creditline|creditchrome|creditshown|creditshownchrome|creditkept|parts|partscrub`,
+    /// `-KaeriCredits` `creditline|creditchrome|creditshown|creditshownchrome|creditkept|parts|partscrub|partmissingscrub`,
     /// after a reader scene.
     public static let argument = "-KaeriReader"
 
@@ -55,7 +55,7 @@ extension ReaderModel {
         }
         try? await Task.sleep(for: .milliseconds(novel != nil ? 2500 : 1500))
         let shown = phase == .open
-        // `-KaeriCredits start|end|both|parts`: credit pages the engine skipped, and parts, for
+        // `-KaeriCredits start|end|both|parts|partsmissing`: credit pages the engine skipped, and parts, for
         // their shots.
         if let at = arguments.firstIndex(of: "-KaeriCredits"), arguments.indices.contains(at + 1) {
             stageCreditShot(arguments[at + 1])
@@ -94,6 +94,12 @@ extension ReaderModel {
                 try? await Task.sleep(for: .milliseconds(400))
                 chromeShown = true
                 shotScrub = partTicks.first?.leaf ?? max(leaves.count / 2, 1)
+            // The scrubber held on the tick of a part whose part before it is missing.
+            case "partmissingscrub":
+                notice = nil
+                try? await Task.sleep(for: .milliseconds(400))
+                chromeShown = true
+                shotScrub = partTicks.first { $0.missing }?.leaf ?? max(leaves.count / 2, 1)
             // Past the first later part, so its tick sits behind the thumb on the track.
             case "parts":
                 notice = nil
@@ -229,6 +235,16 @@ extension ReaderModel {
                 total: 2, missing: []))
             return
         }
+        // Parts 1, 2 and 4, with 3 missing: "Page 14 · part 4 · part 3 missing" on the scrubber.
+        if what == "partsmissing" {
+            let second = max(count / 4, 2) + 1, fourth = max(count * 2 / 3, second + 1) + 1
+            stageCredits([], parts: ReaderParts(
+                parts: [ChapterPart(number: 1, firstPage: 1, group: nil, otherGroup: false),
+                        ChapterPart(number: 2, firstPage: second, group: nil, otherGroup: false),
+                        ChapterPart(number: 4, firstPage: fourth, group: nil, otherGroup: false)],
+                total: 4, missing: [3]))
+            return
+        }
         let dir = FileManager.default.temporaryDirectory.appending(path: "kaeri-reader-shot", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let strip = view?.mode == .strip
@@ -237,12 +253,19 @@ extension ReaderModel {
         let file = PageFile(
             path: url.path, encoding: .original(mime: "image/png"), width: 800, height: strip ? 1000 : 1200,
             crop: nil, colour: true, bytes: 1)
+        // One at an end, or two at each end for `both` (the board's Edges: "2 credit pages
+        // skipped", "credit page 1 of 2", and the end page naming only its own).
+        let each: UInt64 = what == "both" ? 2 : 1
         var pages: [CreditPage] = []
         if what == "start" || what == "both" {
-            pages.append(CreditPage(page: 0, atEnd: false, file: file, fingerprint: 0xC0FFEE))
+            for n in 0..<each {
+                pages.append(CreditPage(page: UInt32(n), atEnd: false, file: file, fingerprint: 0xC0FFEE + n * 16))
+            }
         }
         if what == "end" || what == "both" {
-            pages.append(CreditPage(page: count + UInt32(pages.count), atEnd: true, file: file, fingerprint: 0xC0FFEF))
+            for n in 0..<each {
+                pages.append(CreditPage(page: count + UInt32(pages.count), atEnd: true, file: file, fingerprint: 0xC0FFEF + n * 16))
+            }
         }
         stageCredits(pages)
     }

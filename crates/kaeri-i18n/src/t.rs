@@ -1420,12 +1420,12 @@ pub fn reading_row_parts(n: i64) -> String {
     text("reading-row-parts", &[("n", Arg::Int(n))])
 }
 
-/// A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.
+/// A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.
 pub fn reading_row_from_group(group: &str) -> String {
     text("reading-row-from-group", &[("group", Arg::Text(group))])
 }
 
-/// A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".
+/// A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".
 pub fn reading_row_from_group_in(group: &str, language: &str) -> String {
     text("reading-row-from-group-in", &[("group", Arg::Text(group)), ("language", Arg::Text(language))])
 }
@@ -1450,7 +1450,7 @@ pub fn reading_row_part_from_group_in(part: i64, group: &str, language: &str) ->
     text("reading-row-part-from-group-in", &[("part", Arg::Plain(part)), ("group", Arg::Text(group)), ("language", Arg::Text(language))])
 }
 
-/// A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.
+/// A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.
 pub fn reading_row_from_source(source: &str) -> String {
     text("reading-row-from-source", &[("source", Arg::Text(source))])
 }
@@ -14462,6 +14462,11 @@ pub fn reader_credit_page_of(n: i64, total: i64) -> String {
     text("reader-credit-page-of", &[("n", Arg::Plain(n)), ("total", Arg::Plain(total))])
 }
 
+/// The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
+pub fn reader_group_line_place(chapter: &str, place: &str) -> String {
+    text("reader-group-line-place", &[("chapter", Arg::Text(chapter)), ("place", Arg::Text(place))])
+}
+
 /// Spoken name of a credit page shown again.
 pub fn reader_credit_page_label() -> String {
     text("reader-credit-page-label", &[])
@@ -14470,6 +14475,11 @@ pub fn reader_credit_page_label() -> String {
 /// The scrubber's preview on the first page of a chapter's later part.
 pub fn reader_part_preview(page: i64, part: i64) -> String {
     text("reader-part-preview", &[("page", Arg::Plain(page)), ("part", Arg::Plain(part))])
+}
+
+/// The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing".
+pub fn reader_part_preview_missing(page: i64, part: i64, missing: i64) -> String {
+    text("reader-part-preview-missing", &[("page", Arg::Plain(page)), ("part", Arg::Plain(part)), ("missing", Arg::Plain(missing))])
 }
 
 /// Spoken value of the scrubber on the first page of a chapter's later part.

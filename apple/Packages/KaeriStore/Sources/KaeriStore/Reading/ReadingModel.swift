@@ -219,6 +219,19 @@ public final class ReadingModel {
     /// Whose version of each chapter the series lists, inside the source in use. `nil` goes back
     /// to the group with the most chapters. The engine answers with the series and its chapters.
     public func chooseGroup(_ work: String, group: String?) {
+        #if FIXTURES
+        // The shot's made-up groups are the app's own: the pick lands here, as the engine's would.
+        if Self.groupsShot, var view = series[work], var edition = view.edition {
+            let pick = group ?? edition.groups.max { $0.chapters < $1.chapters }?.label
+            edition.groups = edition.groups.map {
+                GroupChoice(label: $0.label, chapters: $0.chapters, inUse: $0.label == pick, language: $0.language)
+            }
+            edition.groupChosen = group != nil
+            view.edition = edition
+            series[work] = view
+            return
+        }
+        #endif
         send?(.reading(.chooseGroup(work: work, group: group)))
     }
 

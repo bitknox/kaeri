@@ -405,11 +405,17 @@ struct ReaderScrubber: View {
         return L.readerScrubberValue(page: index + 1, total: count)
     }
 
-    /// The preview's number: "Page 25 · part 2" on the first page of a later part.
+    /// The preview's number: "Page 25 · part 2" on the first page of a later part, and "Page 14 ·
+    /// part 4 · part 3 missing" when the part before it is missing.
     private func previewLabel(index: Int) -> String {
         guard model.novel == nil, model.view?.mode != .strip else { return "\(index + 1)" }
         let page = model.pageNumber(of: index)
-        if let part = model.partStarting(atPage: page) { return L.readerPartPreview(page: page, part: Int(part)) }
+        if let part = model.partStarting(atPage: page) {
+            if let missing = model.partMissing(beforePage: page) {
+                return L.readerPartPreviewMissing(page: page, part: Int(part), missing: Int(missing))
+            }
+            return L.readerPartPreview(page: page, part: Int(part))
+        }
         return "\(page)"
     }
 
@@ -493,9 +499,10 @@ struct ReaderNotices: View {
                 .padding(.trailing, mac ? 16 : 0)
                 .transition(.opacity)
             }
-            if model.notice == nil, let credit = model.view?.demoCredit, model.position.index == 0 {
+            if model.notice == nil, !creditLineShows, let credit = model.view?.demoCredit, model.position.index == 0 {
                 // The demo's credit on page 1, where its licence asks for it: centred under the
                 // top on iPhone and iPad, at the top's trailing end on the Mac, as the board has it.
+                // It waits while the credit line holds the same spot, and comes back after it.
                 VStack {
                     HStack {
                         if mac { Spacer() }
@@ -575,7 +582,8 @@ struct ReaderNotices: View {
     /// capsule is the button. It grows to accessibility 1 and stops, so it never covers the page.
     private var creditLine: some View {
         // Page 1 gives way to the credit page by the same crossfade as a turn.
-        Button { withAnimation(paper ? nil : .quick) { model.showStartCredits() } } label: {
+        // The credit page only appears in place, so it fades in.
+        Button { withAnimation(paper ? nil : .fadeIn) { model.showStartCredits() } } label: {
             Text(L.readerCreditPagesSkipped(count: model.startSkipped.count))
                 .font(.ui(13, weight: .medium))
                 .foregroundStyle(theme.silk)

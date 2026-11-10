@@ -658,7 +658,7 @@ struct ReaderChaptersSheet: View {
 
     /// The row's state, then its parts and the group it comes from: "Reading · page 30 of 46 · 2 parts".
     private func state(_ row: ChapterRow) -> String {
-        ([stateWords(row)] + ReadWords.rowOrigin(row)).filter { !$0.isEmpty }.joined(separator: " · ") // i18n-skip
+        ReadWords.leading(([stateWords(row)] + ReadWords.rowOrigin(row)).filter { !$0.isEmpty }.joined(separator: " · ")) // i18n-skip
     }
 
     private func stateWords(_ row: ChapterRow) -> String {

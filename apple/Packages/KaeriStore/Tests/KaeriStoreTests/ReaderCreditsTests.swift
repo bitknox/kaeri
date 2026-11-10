@@ -91,17 +91,61 @@ struct ReaderCreditsTests {
         #expect(!box.commands.contains { if case .reader(.notACreditPage) = $0 { true } else { false } })
     }
 
-    @Test func turningAwayFromAKeptPageTellsTheEngine() {
+    private func sent(_ box: Box) -> [UInt64] {
+        box.commands.compactMap { command -> UInt64? in
+            if case .reader(.notACreditPage(_, let fingerprint)) = command { fingerprint } else { nil }
+        }
+    }
+
+    @Test func undoOutlastsATurnAndTheEngineHearsWhenItRunsOut() {
         let (model, box) = opened()
         credits(model)
         model.showStartCredits()
         model.act(.keepCredit)
+        model.showCredit(nil, leaf: 0, how: .turn)
         model.shown(1, how: .turn)
+        #expect(model.keeping != nil)
+        #expect(model.notice?.local == .undoKeep)
+        #expect(sent(box).isEmpty)
+        // Undo from the next page still puts it back.
+        model.undoKeep()
         #expect(model.keeping == nil)
-        let sent = box.commands.compactMap { command -> UInt64? in
-            if case .reader(.notACreditPage(_, let fingerprint)) = command { fingerprint } else { nil }
-        }
-        #expect(sent == [11])
+        #expect(sent(box).isEmpty)
+        // Back on it and kept again; the notice running out tells the engine.
+        model.showCredit(0, leaf: 0, how: .turn)
+        model.act(.keepCredit)
+        model.shown(1, how: .turn)
+        model.commitKeep()
+        #expect(sent(box) == [11])
+    }
+
+    @Test func undoLastsEightSecondsAndSixteenWithAScreenReader() {
+        #expect(ReaderModel.keepHold(screenReader: false) == 8_000)
+        #expect(ReaderModel.keepHold(screenReader: true) == 16_000)
+    }
+
+    @Test func twoShownCreditPagesInARowEachGetTheirNotice() {
+        let (model, box) = opened()
+        model.apply(.creditPages(session: 1, chapter: chapter, pages: [
+            CreditPage(page: 0, atEnd: false, file: file, fingerprint: 11),
+            CreditPage(page: 1, atEnd: false, file: file, fingerprint: 13),
+        ], msg: .reading(.readerCreditPagesSkipped(count: 2))))
+        model.showStartCredits()
+        #expect(model.onCredit == 0)
+        #expect(model.creditPlace?.n == 1 && model.creditPlace?.of == 2)
+        model.act(.keepCredit)
+        // On to the second credit page: the first one's Undo stays up.
+        model.showCredit(1, leaf: 0, how: .turn)
+        #expect(model.onCredit == 1)
+        #expect(model.notice?.local == .undoKeep)
+        #expect(model.keeping?.credit.fingerprint == 11)
+        // Undo runs out: the first goes to the engine and the second gets Not a credit page.
+        model.commitKeep()
+        #expect(sent(box) == [11])
+        #expect(model.notice?.local == .keepCredit)
+        // A second keep while the first waits sends the first at once.
+        model.act(.keepCredit)
+        #expect(model.keeping?.credit.fingerprint == 13)
     }
 
     @Test func theLayoutWithTheKeptPageMovesTheLandedPagesUp() {
@@ -112,11 +156,15 @@ struct ReaderCreditsTests {
         model.apply(.pageReady(session: 1, chapter: chapter, page: 0, half: nil, file: page))
         model.showStartCredits()
         model.act(.keepCredit)
-        model.shown(1, how: .turn)
+        // The reader is on another leaf when the keep commits and the layout lands.
+        model.shown(2, how: .turn)
+        model.commitKeep()
+        #expect(model.keeping == nil)
         model.apply(.leaves(session: 1, chapter: chapter, leaves: model.leaves))
         #expect(model.pages[ReaderPageKey(chapter: chapter, page: 0)]?.path == file.path)
         #expect(model.pages[ReaderPageKey(chapter: chapter, page: 1)]?.path == page.path)
         #expect(model.chapterCredits(chapter).isEmpty)
+        #expect(model.onCredit == nil)
     }
 
     @Test func eachLaterPartHasATickAndAMissingOneIsMarked() {
@@ -131,5 +179,6 @@ struct ReaderCreditsTests {
         #expect(ticks.last?.missing == true)
         #expect(model.partStarting(atPage: 5) == 3)
         #expect(model.partStarting(atPage: 1) == nil)
+        #expect(model.partMissing(beforePage: 5) == 2)
     }
 }

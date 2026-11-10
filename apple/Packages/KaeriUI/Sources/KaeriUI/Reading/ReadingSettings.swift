@@ -145,11 +145,11 @@ struct ReadingPane: View {
             SettingsRow(title: SettingKey.countsAsRead.title, note: CountsAsReadNote.text(store)) {
                 SettingMenu(key: .countsAsRead)
             }
-            // Pages a group repeats are skipped unless this is off; silk when on, as the board has it.
+            // Pages a group repeats are skipped unless this is off; amber when on, as the app's switches are.
             SettingsRow(title: L.settingsSkipCredits, note: L.settingsSkipCreditsNote) {
                 Toggle(L.settingsSkipCredits, isOn: ReaderDefaultWords.skipsCreditsBinding(store))
                     .toggleStyle(.switch)
-                    .tint(.silk)
+                    .tint(.amber)
                     .labelsHidden()
                     .disabled(ReaderDefaultWords.skipsCredits(store) == nil)
             }
@@ -290,7 +290,7 @@ struct PhoneReadingPage: View {
                 Toggle(isOn: ReaderDefaultWords.skipsCreditsBinding(store)) {
                     PhoneRowTitle(title: L.settingsSkipCredits, note: L.settingsSkipCreditsNote, status: nil)
                 }
-                .tint(.silk)
+                .tint(.amber)
                 .disabled(ReaderDefaultWords.skipsCredits(store) == nil)
                 .listRowBackground(Palette.raised)
             } header: {

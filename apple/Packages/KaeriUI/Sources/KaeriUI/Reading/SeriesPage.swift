@@ -816,24 +816,27 @@ private struct SeriesPanel: View {
     }
 
     /// Group: "Lanternlight Scans · most chapters", the name in silk and why in haze. Change
-    /// opens the group picker on the button.
+    /// opens the group picker under the row, so the value stays in view. A new pick crossfades
+    /// into the value.
     private func groupRow(_ edition: BookEditionRow) -> some View {
         let name = edition.groups.first(where: \.inUse)?.label ?? edition.versionLabel ?? ""
         let why = edition.groupChosen ? L.seriesGroupPicked : L.seriesGroupMost
-        let value = Text(name).foregroundStyle(.silk) + Text(verbatim: " · " + why).foregroundStyle(.haze) // i18n-skip: a separator
+        let value = (Text(name).foregroundStyle(.silk) + Text(verbatim: " · " + why).foregroundStyle(.haze)) // i18n-skip: a separator
+            .contentTransition(.opacity)
+            .animation(.fadeIn, value: name + why)
         let change = Button(L.seriesChange) { pickingGroup = true }
             .accessibilityHint(L.seriesGroupHint)
+        return row(label: L.seriesGroup, value: value, button: change)
             .popover(isPresented: $pickingGroup, arrowEdge: .top) {
                 GroupPicker(work: series.work, edition: edition)
             }
-        return row(label: L.seriesGroup, value: value, button: change)
     }
 
     private func row(label: String, value: String, action: String?, perform: @escaping () -> Void) -> some View {
         row(label: label, value: Text(value).foregroundStyle(.silk), button: action.map { Button($0, action: perform) })
     }
 
-    private func row(label: String, value: Text, button: (some View)?) -> some View {
+    private func row(label: String, value: some View, button: (some View)?) -> some View {
         let words = VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.plat(mac: 11, touch: 13)).foregroundStyle(.haze).lineLimit(type.isAccessibilitySize ? 3 : 1)
             value.font(.plat(mac: 13, touch: 17)).lineLimit(type.isAccessibilitySize ? 4 : 2)

@@ -492,14 +492,21 @@ extension ReadWords {
         }
     }
 
+    /// Engine text that leads a line gets a capital first letter, and nothing else changes:
+    /// "from Saltmarsh Team" alone reads "From Saltmarsh Team".
+    static func leading(_ line: String) -> String {
+        guard let first = line.first else { return line }
+        return first.uppercased() + line.dropFirst()
+    }
+
     /// The engine's line for a chapter row: "Read · 2 weeks ago · 2 parts", "New · today ·
-    /// From Saltmarsh Team".
+    /// from Saltmarsh Team".
     static func rowLine(_ row: ChapterRow) -> String {
-        row.line.map { text($0, row: row) }.joined(separator: " · ") // i18n-skip
+        leading(row.line.map { text($0, row: row) }.joined(separator: " · ")) // i18n-skip
     }
 
     /// Only what a row says of its parts and where it comes from: "2 parts", "2 of 3 parts ·
-    /// part 2 missing", "From Saltmarsh Team". For lists that say the state their own way.
+    /// part 2 missing", "from Saltmarsh Team". For lists that say the state their own way.
     static func rowOrigin(_ row: ChapterRow) -> [String] {
         row.line.filter(isOrigin).map { text($0, row: row) }
     }
@@ -507,8 +514,9 @@ extension ReadWords {
     /// The line's state words, then its parts and origin words, apart: a new row draws the
     /// first in silk and the rest in haze.
     static func rowLineParts(_ row: ChapterRow) -> (state: String, origin: String) {
-        let state = row.line.filter { !isOrigin($0) }.map { text($0, row: row) }
-        return (state.joined(separator: " · "), rowOrigin(row).joined(separator: " · ")) // i18n-skip
+        let state = leading(row.line.filter { !isOrigin($0) }.map { text($0, row: row) }.joined(separator: " · ")) // i18n-skip
+        let origin = rowOrigin(row).joined(separator: " · ") // i18n-skip
+        return (state, state.isEmpty ? leading(origin) : origin)
     }
 
     private static func isOrigin(_ msg: Msg) -> Bool {

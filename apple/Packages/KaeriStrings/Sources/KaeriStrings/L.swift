@@ -1134,14 +1134,14 @@ public enum L {
         Self.format("reading-row-parts", fallback: "%1$lld parts", n)
     }
 
-    /// A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.
+    /// A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.
     public static func readingRowFromGroup(group: String) -> String {
-        Self.format("reading-row-from-group", fallback: "From %1$@", group)
+        Self.format("reading-row-from-group", fallback: "from %1$@", group)
     }
 
-    /// A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".
+    /// A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".
     public static func readingRowFromGroupIn(group: String, language: String) -> String {
-        Self.format("reading-row-from-group-in", fallback: "From %1$@, %2$@", group, language)
+        Self.format("reading-row-from-group-in", fallback: "from %1$@, %2$@", group, language)
     }
 
     /// A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
@@ -1164,9 +1164,9 @@ public enum L {
         Self.format("reading-row-part-from-group-in", fallback: "part %1$@ from %2$@, %3$@", String(part), group, language)
     }
 
-    /// A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.
+    /// A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.
     public static func readingRowFromSource(source: String) -> String {
-        Self.format("reading-row-from-source", fallback: "From %1$@", source)
+        Self.format("reading-row-from-source", fallback: "from %1$@", source)
     }
 
     /// A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
@@ -2661,11 +2661,6 @@ public enum L {
     /// The control group's line on the end page, after the chapter's last page.
     public static func readerGroupLineEnd(chapter: String) -> String {
         Self.format("reader-group-line-end", fallback: "%1$@ · end of chapter", chapter)
-    }
-
-    /// The control group's line while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
-    public static func readerGroupLinePlace(chapter: String, place: String) -> String {
-        Self.format("reader-group-line-place", fallback: "%1$@ · %2$@", chapter, place)
     }
 
     /// The control group's line when a spread shows two pages.
@@ -8499,12 +8494,22 @@ public enum L {
         Self.format("reader-credit-page-of", fallback: "credit page %1$@ of %2$@", String(n), String(total))
     }
 
+    /// The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
+    public static func readerGroupLinePlace(chapter: String, place: String) -> String {
+        Self.format("reader-group-line-place", fallback: "%1$@ · %2$@", chapter, place)
+    }
+
     /// Spoken name of a credit page shown again.
     public static var readerCreditPageLabel: String { string("reader-credit-page-label", fallback: "Credit page") }
 
     /// The scrubber's preview on the first page of a chapter's later part.
     public static func readerPartPreview(page: Int, part: Int) -> String {
         Self.format("reader-part-preview", fallback: "Page %1$@ · part %2$@", String(page), String(part))
+    }
+
+    /// The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing".
+    public static func readerPartPreviewMissing(page: Int, part: Int, missing: Int) -> String {
+        Self.format("reader-part-preview-missing", fallback: "Page %1$@ · part %2$@ · part %3$@ missing", String(page), String(part), String(missing))
     }
 
     /// Spoken value of the scrubber on the first page of a chapter's later part.

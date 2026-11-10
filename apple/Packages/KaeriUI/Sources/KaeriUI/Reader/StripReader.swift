@@ -20,6 +20,7 @@ struct StripReader: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.readerPaper) private var paper
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ScaledMetric(relativeTo: .title2) private var markerHeight: CGFloat = 168
     @State private var position = ScrollPosition()
     @State private var offsetY: CGFloat = 0
@@ -170,14 +171,16 @@ struct StripReader: View {
     /// A page kept loses its caption at once; it becomes an image of the chapter with the engine's
     /// next layout.
     private func creditsHeight(_ pages: [CreditPage], chapter: String) -> CGFloat {
-        var h: CGFloat = pages.contains { !model.isRevealed($0, chapter: chapter) } ? Self.lineHeight : 0
+        var h: CGFloat = pages.contains { !model.isRevealed($0, chapter: chapter) } ? lineHeight : 0
         for credit in pages where model.isRevealed(credit, chapter: chapter) {
-            h += (isKeeping(credit, chapter: chapter) ? 0 : Self.lineHeight) + creditHeight(credit) + spacing
+            h += (isKeeping(credit, chapter: chapter) ? 0 : lineHeight) + creditHeight(credit) + spacing
         }
         return h
     }
 
-    private static let lineHeight: CGFloat = 44
+    /// The credit line and captions: 44 points, and room for two lines at accessibility sizes,
+    /// where they wrap (they stop growing at accessibility1).
+    private var lineHeight: CGFloat { typeSize.isAccessibilitySize ? 68 : 44 }
 
     private func isKeeping(_ credit: CreditPage, chapter: String) -> Bool {
         model.keeping.map { $0.chapter == chapter && $0.credit.page == credit.page } ?? false
@@ -381,7 +384,8 @@ struct StripReader: View {
                 }
         case .credits(let chapter, let pages):
             StripCredits(model: model, chapter: chapter, pages: pages, theme: theme, tone: tone, width: column,
-                         heights: pages.map(creditHeight), spacing: spacing, scale: scale, instant: instant)
+                         heights: pages.map(creditHeight), spacing: spacing, scale: scale, lineHeight: lineHeight,
+                         instant: instant)
                 .frame(width: column, height: row.height, alignment: .top)
                 .clipped()
         case .marker(let next, let source, let chapter):
@@ -576,39 +580,28 @@ private struct StripCredits: View {
     let heights: [CGFloat]
     let spacing: CGFloat
     let scale: CGFloat
+    let lineHeight: CGFloat
     let instant: Bool
 
     private var skipped: [CreditPage] { pages.filter { !model.isRevealed($0, chapter: chapter) } }
 
     var body: some View {
         VStack(spacing: 0) {
-            if !skipped.isEmpty {
-                Button {
-                    withAnimation(instant ? nil : .standard) { model.reveal(skipped, chapter: chapter) }
-                } label: {
-                    HStack(spacing: 6) {
-                        Text(L.readerCreditPagesSkipped(count: skipped.count))
-                            .font(.ui(13)).foregroundStyle(theme.haze)
-                        Text(L.readerCreditShow)
-                            .font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk)
-                            .underline()
-                    }
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                    .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
-                    .background(theme.ground)
-                    .contentShape(.rect)
+            // The line and the first page's caption share one slot, so Show crossfades the line
+            // into the caption in place, with no jump.
+            ZStack {
+                if !skipped.isEmpty {
+                    line.transition(.opacity)
+                } else if let first = pages.first, model.isRevealed(first, chapter: chapter), !keeping(first) {
+                    caption(first).transition(.opacity)
                 }
-                .buttonStyle(.plain)
-                .pointerHover()
-                .accessibilityLabel(L.readerCreditPagesSkipped(count: skipped.count))
-                .accessibilityHint(L.readerCreditShowHint)
-                .transition(.opacity)
             }
+            .frame(maxWidth: .infinity)
+            .frame(height: skipped.isEmpty && headless ? 0 : lineHeight)
             ForEach(Array(pages.enumerated()), id: \.element.page) { n, credit in
                 if model.isRevealed(credit, chapter: chapter) {
                     VStack(spacing: 0) {
-                        if !keeping(credit) { caption(credit).transition(.opacity) }
+                        if n > 0, !keeping(credit) { caption(credit).transition(.opacity) }
                         PageImage(file: credit.file, longest: max(width, heights[n]) * scale, tone: tone)
                             .frame(width: width, height: heights[n])
                             .clipped()
@@ -617,11 +610,39 @@ private struct StripCredits: View {
                             .accessibilityLabel(L.readerCreditPageLabel)
                             .accessibilityAddTraits(.isImage)
                     }
-                    // The image fades in over where the line was while the row grows.
+                    // The image fades in under the caption while the row grows.
                     .transition(.opacity.animation(instant ? nil : .fadeIn))
                 }
             }
         }
+        // Past accessibility1 the rows would crowd the strip; they wrap up to there.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+    }
+
+    /// The first page is being kept, so its caption has gone and the slot closes.
+    private var headless: Bool {
+        guard let first = pages.first else { return true }
+        return keeping(first)
+    }
+
+    /// "1 credit page skipped  Show", the whole row a button.
+    private var line: some View {
+        Button {
+            withAnimation(instant ? nil : .standard) { model.reveal(skipped, chapter: chapter) }
+        } label: {
+            (Text(L.readerCreditPagesSkipped(count: skipped.count)).font(.ui(13)).foregroundStyle(theme.haze)
+                + Text(verbatim: "  ") // i18n-skip
+                + Text(L.readerCreditShow).font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk).underline())
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(theme.ground)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .pointerHover()
+        .accessibilityLabel(L.readerCreditPagesSkipped(count: skipped.count))
+        .accessibilityHint(L.readerCreditShowHint)
     }
 
     private func keeping(_ credit: CreditPage) -> Bool {
@@ -629,20 +650,23 @@ private struct StripCredits: View {
     }
 
     private func caption(_ credit: CreditPage) -> some View {
-        HStack(spacing: 6) {
-            Text(L.readerCreditShown).font(.ui(13)).foregroundStyle(theme.haze)
-            Button(L.readerCreditNot) {
-                withAnimation(instant ? nil : .standard) { model.keepCredit(credit, chapter: chapter) }
-            }
-            .font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk)
-            .underline()
-            .buttonStyle(.plain)
-            .padding(.vertical, 12).contentShape(.rect).padding(.vertical, -12)
-            .pointerHover()
+        let words = Text(L.readerCreditShown).font(.ui(13)).foregroundStyle(theme.haze)
+        let button = Button(L.readerCreditNot) {
+            withAnimation(instant ? nil : .standard) { model.keepCredit(credit, chapter: chapter) }
         }
-        .lineLimit(1)
-        .minimumScaleFactor(0.8)
-        .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
+        .font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk)
+        .underline()
+        .buttonStyle(.plain)
+        .padding(.vertical, 12).contentShape(.rect).padding(.vertical, -12)
+        .pointerHover()
+        // On one line while it fits; at large sizes the button goes under the words.
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 6) { words.fixedSize(); button.fixedSize() }
+            VStack(spacing: 2) { words.multilineTextAlignment(.center); button }
+        }
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity)
+        .frame(height: lineHeight)
         .background(theme.ground)
         .accessibilityElement(children: .contain)
     }

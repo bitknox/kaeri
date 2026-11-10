@@ -1228,12 +1228,12 @@
     <comment>A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".</comment>
   </data>
   <data name="ReadingRowFromGroup" xml:space="preserve">
-    <value>From {group}</value>
-    <comment>A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.</comment>
+    <value>from {group}</value>
+    <comment>A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.</comment>
   </data>
   <data name="ReadingRowFromGroupIn" xml:space="preserve">
-    <value>From {group}, {language}</value>
-    <comment>A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".</comment>
+    <value>from {group}, {language}</value>
+    <comment>A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".</comment>
   </data>
   <data name="ReadingRowPartsOf" xml:space="preserve">
     <value>{have} of {n} parts</value>
@@ -1256,8 +1256,8 @@
     <comment>The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".</comment>
   </data>
   <data name="ReadingRowFromSource" xml:space="preserve">
-    <value>From {source}</value>
-    <comment>A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.</comment>
+    <value>from {source}</value>
+    <comment>A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.</comment>
   </data>
   <data name="ReaderCreditPagesSkipped_one" xml:space="preserve">
     <value>{count} credit page skipped</value>
@@ -8398,6 +8398,10 @@
     <value>credit page {n} of {total}</value>
     <comment>The same, when more than one credit page is shown: "credit page 1 of 2".</comment>
   </data>
+  <data name="ReaderGroupLinePlace" xml:space="preserve">
+    <value>{chapter} · {place}</value>
+    <comment>The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".</comment>
+  </data>
   <data name="ReaderCreditPageLabel" xml:space="preserve">
     <value>Credit page</value>
     <comment>Spoken name of a credit page shown again.</comment>
@@ -8405,6 +8409,10 @@
   <data name="ReaderPartPreview" xml:space="preserve">
     <value>Page {page} · part {part}</value>
     <comment>The scrubber's preview on the first page of a chapter's later part.</comment>
+  </data>
+  <data name="ReaderPartPreviewMissing" xml:space="preserve">
+    <value>Page {page} · part {part} · part {missing} missing</value>
+    <comment>The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing".</comment>
   </data>
   <data name="ReaderPartStarts" xml:space="preserve">
     <value>Part {part} starts at page {page}</value>

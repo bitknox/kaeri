@@ -479,11 +479,11 @@ struct ReaderEndPage: View {
             // The pages skipped at the chapter's end, under what was updated, with Show beside it.
             if held == nil, let chapterId = chapter?.id, !model.endSkipped(chapterId).isEmpty {
                 ReaderSkippedLine(count: model.endSkipped(chapterId).count, theme: theme) {
-                    // The page takes the end page's place by a turn's crossfade; a strip grows it in.
+                    // The page only appears over the end page, so it fades in; a strip grows it in.
                     let strip = model.view?.mode == .strip
-                    withAnimation(endPaper ? nil : (strip ? .standard : .quick)) { model.showEndCredits(chapterId) }
+                    withAnimation(endPaper ? nil : (strip ? .standard : .fadeIn)) { model.showEndCredits(chapterId) }
                 }
-                .padding(.top, 2)
+                .padding(.top, 8)
             }
             if let next {
                 Text(L.readerEndNext).font(.ui(13)).foregroundStyle(theme.haze)
@@ -755,5 +755,7 @@ struct ReaderSkippedLine: View {
                 .accessibilityHint(L.readerCreditShowHint)
         }
         .accessibilityElement(children: .contain)
+        // As the paged credit line: it stops growing at accessibility1.
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
 }

@@ -864,10 +864,10 @@ public static partial class T
     /// <summary>A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".</summary>
     public static string ReadingRowParts(long n) => Fill(GetPlural("ReadingRowParts", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.</summary>
+    /// <summary>A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.</summary>
     public static string ReadingRowFromGroup(string group) => Fill(Get("ReadingRowFromGroup"), ("group", group));
 
-    /// <summary>A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".</summary>
+    /// <summary>A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".</summary>
     public static string ReadingRowFromGroupIn(string group, string language) => Fill(Get("ReadingRowFromGroupIn"), ("group", group), ("language", language));
 
     /// <summary>A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".</summary>
@@ -882,7 +882,7 @@ public static partial class T
     /// <summary>The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".</summary>
     public static string ReadingRowPartFromGroupIn(long part, string group, string language) => Fill(Get("ReadingRowPartFromGroupIn"), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("group", group), ("language", language));
 
-    /// <summary>A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.</summary>
+    /// <summary>A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.</summary>
     public static string ReadingRowFromSource(string source) => Fill(Get("ReadingRowFromSource"), ("source", source));
 
     /// <summary>A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.</summary>
@@ -6058,11 +6058,17 @@ public static partial class T
     /// <summary>The same, when more than one credit page is shown: "credit page 1 of 2".</summary>
     public static string ReaderCreditPageOf(long n, long total) => Fill(Get("ReaderCreditPageOf"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".</summary>
+    public static string ReaderGroupLinePlace(string chapter, string place) => Fill(Get("ReaderGroupLinePlace"), ("chapter", chapter), ("place", place));
+
     /// <summary>Spoken name of a credit page shown again.</summary>
     public static string ReaderCreditPageLabel => Get("ReaderCreditPageLabel");
 
     /// <summary>The scrubber's preview on the first page of a chapter's later part.</summary>
     public static string ReaderPartPreview(long page, long part) => Fill(Get("ReaderPartPreview"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing".</summary>
+    public static string ReaderPartPreviewMissing(long page, long part, long missing) => Fill(Get("ReaderPartPreviewMissing"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("missing", missing.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Spoken value of the scrubber on the first page of a chapter's later part.</summary>
     public static string ReaderPartStarts(long part, long page) => Fill(Get("ReaderPartStarts"), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -12051,14 +12057,14 @@ public static partial class T
         ["ReadingRowVersions_other"] = "{n} versions",
         ["ReadingRowParts_one"] = "1 part",
         ["ReadingRowParts_other"] = "{n} parts",
-        ["ReadingRowFromGroup"] = "From {group}",
-        ["ReadingRowFromGroupIn"] = "From {group}, {language}",
+        ["ReadingRowFromGroup"] = "from {group}",
+        ["ReadingRowFromGroupIn"] = "from {group}, {language}",
         ["ReadingRowPartsOf"] = "{have} of {n} parts",
         ["ReadingRowPartMissing_one"] = "part {part} missing",
         ["ReadingRowPartMissing_other"] = "{count} parts missing",
         ["ReadingRowPartFromGroup"] = "part {part} from {group}",
         ["ReadingRowPartFromGroupIn"] = "part {part} from {group}, {language}",
-        ["ReadingRowFromSource"] = "From {source}",
+        ["ReadingRowFromSource"] = "from {source}",
         ["ReaderCreditPagesSkipped_one"] = "{count} credit page skipped",
         ["ReaderCreditPagesSkipped_other"] = "{count} credit pages skipped",
         ["ReadingAgoNow"] = "just now",
@@ -13851,8 +13857,10 @@ public static partial class T
         ["ReaderCreditKept"] = "This page will show from now on",
         ["ReaderCreditPage"] = "credit page",
         ["ReaderCreditPageOf"] = "credit page {n} of {total}",
+        ["ReaderGroupLinePlace"] = "{chapter} · {place}",
         ["ReaderCreditPageLabel"] = "Credit page",
         ["ReaderPartPreview"] = "Page {page} · part {part}",
+        ["ReaderPartPreviewMissing"] = "Page {page} · part {part} · part {missing} missing",
         ["ReaderPartStarts"] = "Part {part} starts at page {page}",
         ["OnboardingReadDemo"] = "Read the demo",
         ["OnboardingDemoBooksDetail"] = "One short comic and one short story, shared by their makers under Creative Commons.",

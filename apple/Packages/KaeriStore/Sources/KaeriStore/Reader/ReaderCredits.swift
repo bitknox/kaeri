@@ -182,6 +182,14 @@ extension ReaderModel {
         parts?.parts.dropFirst().first { Int($0.firstPage) == page }?.number
     }
 
+    /// The missing part just before the part a page starts, for "Page 14 · part 4 · part 3
+    /// missing". With more than one missing in a row, the nearest.
+    public func partMissing(beforePage page: Int) -> UInt32? {
+        guard let parts, let part = partStarting(atPage: page) else { return nil }
+        let before = parts.parts.last { $0.number < part }?.number ?? 0
+        return parts.missing.filter { $0 > before && $0 < part }.max()
+    }
+
     // MARK: Stepping through them in pages
 
     /// Where a turn goes when credit pages brought back are in its way. Nil when the turn is an
@@ -213,8 +221,6 @@ extension ReaderModel {
     /// with nil. A leaf that changes is reported as shown.
     public func showCredit(_ page: UInt32?, leaf: Int, how: TurnHow) {
         if leaf != current { shown(leaf, how: how) }
-        // A page kept from the one being left is kept now: the person has moved on from it.
-        if let keeping, keeping.credit.page != page { commitKeep() }
         onCredit = page
         if leaf == 0, page != nil { endCreditLine() }
         if page != nil { hideChrome() }
@@ -254,6 +260,10 @@ extension ReaderModel {
         keep(credit, chapter: chapter)
     }
 
+    /// How long Undo stays after Not a credit page: 8 s, doubled while a screen reader runs. It
+    /// always runs out, so the engine hears of the keep even when no one turns away.
+    static func keepHold(screenReader: Bool) -> UInt32 { screenReader ? 16_000 : 8_000 }
+
     /// Not a credit page, for a credit page of a strip.
     public func keepCredit(_ credit: CreditPage, chapter: String) {
         keep(credit, chapter: chapter)
@@ -270,7 +280,9 @@ extension ReaderModel {
         noticeTask?.cancel()
         noticeTask = nil
         keepTask?.cancel()
-        keepTask = countdown(8_000) { [weak self] in
+        // Undo outlasts a turn: the keep goes to the engine when its notice runs out, on a second
+        // keep, or when the chapter closes, never because the person read on.
+        keepTask = countdown(Self.keepHold(screenReader: pinChrome)) { [weak self] in
             guard let self, self.keeping == keep else { return }
             self.commitKeep()
             if self.notice?.id == line.id { self.notice = nil }
@@ -295,6 +307,8 @@ extension ReaderModel {
         keepTask = nil
         keeping = nil
         if notice?.local == .undoKeep { notice = nil }
+        // Read on to another credit page while Undo ran: that page gets its own notice now.
+        if onCredit != keep.credit.page { sayCredit() }
         guard session != 0 else { return }
         relayKeep = keep
         send?(.reader(.notACreditPage(session: session, fingerprint: keep.credit.fingerprint)))
@@ -340,9 +354,8 @@ extension ReaderModel {
         }
     }
 
-    /// Off a credit page. A page kept from it goes to the engine now.
+    /// Off a credit page. A page kept from it waits out its Undo.
     func leftCredit() {
-        if keeping != nil, view?.mode != .strip { commitKeep() }
         if onCredit != nil {
             onCredit = nil
             sayCredit()

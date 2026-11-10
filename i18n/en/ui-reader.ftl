@@ -264,6 +264,12 @@ reader-credit-page = credit page
 # @arg total: plain
 reader-credit-page-of = credit page { $n } of { $total }
 
+# The reader's line under the title while a credit page shows: the chapter, then "credit page"
+# or "credit page 1 of 2".
+# @arg chapter: text
+# @arg place: text
+reader-group-line-place = { $chapter } · { $place }
+
 # Spoken name of a credit page shown again.
 reader-credit-page-label = Credit page
 
@@ -271,6 +277,13 @@ reader-credit-page-label = Credit page
 # @arg page: plain
 # @arg part: plain
 reader-part-preview = Page { $page } · part { $part }
+
+# The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3
+# missing".
+# @arg page: plain
+# @arg part: plain
+# @arg missing: plain
+reader-part-preview-missing = Page { $page } · part { $part } · part { $missing } missing
 
 # Spoken value of the scrubber on the first page of a chapter's later part.
 # @arg part: plain
