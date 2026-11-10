@@ -585,7 +585,7 @@ mod tests {
             "Changes in 15",
             "The Far Shore \u{2014} 2",
             "Countdown - 3",
-            "Re-15",
+            "Re-15 and After",
         ] {
             assert_eq!(own("15", kept).as_deref(), Some(kept));
         }
