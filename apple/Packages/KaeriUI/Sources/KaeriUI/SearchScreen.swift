@@ -272,9 +272,23 @@ struct SearchScreen: View {
         #endif
     }
 
+    /// Whether Search looks for reading. The two scopes share this screen: the row, the panel,
+    /// the margins and the motion are one, and only what is in them changes.
+    private var reading: Bool {
+        ReadSearchScope.active(store: store, navigator: navigator)
+    }
+
+    /// Reading's filters without its words, which change when one of its filters does.
+    private var readFiltersAsked: ReadSearchQuery {
+        var query = store.reading.search.query
+        query.text = ""
+        return query
+    }
+
     var body: some View {
         @Bindable var navigator = navigator
         let startShown = store.search.startShown
+        let reading = reading
         ScrollView {
             ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: compact ? 16 : 20) {
@@ -293,20 +307,30 @@ struct SearchScreen: View {
                     }
                     ActiveFilters(compact: compact)
                 }
-                if store.search.livePaused, !store.search.query.isBrowse() {
+                if !reading, store.search.livePaused, !store.search.query.isBrowse() {
                     LivePaused(compact: compact)
                 }
-                // Start and results crossfade (standard), the one in place of the other.
+                // The scopes crossfade, the one in place of the other, as start and results do.
                 ZStack(alignment: .topLeading) {
-                    if startShown {
-                        SearchStart(compact: compact)
+                    if reading {
+                        ReadSearchContent(compact: compact)
                             .transition(.opacity)
                     } else {
-                        SearchResults(compact: compact)
-                            .transition(.opacity)
+                        // Start and results crossfade (standard), the one in place of the other.
+                        ZStack(alignment: .topLeading) {
+                            if startShown {
+                                SearchStart(compact: compact)
+                                    .transition(.opacity)
+                            } else {
+                                SearchResults(compact: compact)
+                                    .transition(.opacity)
+                            }
+                        }
+                        .animation(.standard, value: startShown)
+                        .transition(.opacity)
                     }
                 }
-                .animation(.standard, value: startShown)
+                .animation(.standard, value: reading)
                 .id(Self.firstRow)
             }
             // A filter changed with the results scrolled brings its answer in at the first row,
@@ -315,6 +339,10 @@ struct SearchScreen: View {
             // the placeholders take over). Typing is left to the field.
             .onChange(of: filtersAsked) {
                 toFirstRow = pinned && scrolled
+            }
+            .onChange(of: readFiltersAsked) {
+                guard pinned, scrolled else { return }
+                proxy.scrollTo(Self.firstRow, anchor: .top)
             }
             .onChange(of: AnswerShown(store.search)) {
                 guard toFirstRow, !store.search.pending || store.search.overdue else { return }
@@ -327,6 +355,7 @@ struct SearchScreen: View {
             // With Reduce Motion it changes at once. The iPhone's pinned row is not in the page:
             // it moves on its own, and its page jumps to the first row instead.
             .animation(reduceMotion || navigator.motionReduced || pinned ? nil : .standard, value: filtersAsked)
+            .animation(reduceMotion || navigator.motionReduced || pinned ? nil : .standard, value: readFiltersAsked)
             .frame(width: settledWidth, alignment: .leading)
             .environment(\.searchSettledWidth, settledWidth)
             .environment(\.searchCoverWidth, coverWidth)
@@ -355,12 +384,12 @@ struct SearchScreen: View {
             if pinned { SearchFilterRow(compact: true, pinned: true) }
         }
         .scrollEdgeEffectStyle(pinned ? .soft : nil, for: .top)
-        .screenSubtitle(store.search.searchingLine ?? "")
+        .screenSubtitle(reading ? "" : store.search.searchingLine ?? "")
         // The ground inside the inspector: it hosts the screen in a column of its own, which
         // draws the system's black over the ground TabStack puts behind it.
         .background(Palette.ground)
         .inspector(isPresented: $navigator.searchFiltersShown) {
-            SearchFiltersPanel(compact: compact)
+            FiltersPanelScope(reading: reading, compact: compact)
                 .inspectorColumnWidth(min: 300, ideal: 340, max: 420)
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
@@ -380,7 +409,7 @@ struct SearchScreen: View {
         // the cards glide to their new columns instead of stepping through every count between.
         .overlay(alignment: .trailing) {
             let shown = navigator.searchFiltersShown
-            MacFiltersPanel()
+            MacFiltersPanel(reading: reading)
                 .offset(x: shown || reduceMotion ? 0 : MacFiltersPanel.width + 1)
                 .opacity(shown || !reduceMotion ? 1 : 0)
                 .allowsHitTesting(shown)
@@ -392,12 +421,13 @@ struct SearchScreen: View {
         // Esc in the results closes the open panel; with it shut, Esc is left to whoever had it.
         .onExitCommand(perform: navigator.searchFiltersShown ? { navigator.searchFiltersShown = false } : nil)
         #endif
-        .task {
+        // Again as the scope changes: the shows' side starts its search as it did on its own.
+        .task(id: reading) {
             store.loadSearchStart()
             if let launch = navigator.launchSearch {
                 navigator.launchSearch = nil
                 navigator.search(launch, in: store)
-            } else if store.search.asked == nil, !navigator.query.isEmpty {
+            } else if !reading, store.search.asked == nil, !navigator.query.isEmpty {
                 store.search(text: navigator.query)
             }
             // Only when Search is what the launch opened: the iPhone's tab can be drawn early,
@@ -423,7 +453,7 @@ struct SearchScreen: View {
         // A title opened from what was found keeps the search among the recent ones, as Return
         // would have.
         .onChange(of: navigator.paths[.search]?.count ?? 0) { before, after in
-            if after > before, !store.search.atStart { store.rememberSearch() }
+            if after > before, !reading, !store.search.atStart { store.rememberSearch() }
         }
     }
 }
@@ -432,9 +462,10 @@ struct SearchScreen: View {
 /// The Mac's filters panel: every filter, beside the results, a hairline at its edge.
 private struct MacFiltersPanel: View {
     static let width: CGFloat = 340
+    var reading = false
 
     var body: some View {
-        SearchFiltersPanel()
+        FiltersPanelScope(reading: reading)
             .frame(width: Self.width)
             .overlay(alignment: .leading) {
                 Rectangle().fill(Palette.faintRule).frame(width: 1)
@@ -442,6 +473,24 @@ private struct MacFiltersPanel: View {
     }
 }
 #endif
+
+/// The filters panel of the scope Search is in, the one crossfading into the other as the scope
+/// changes with the panel open.
+private struct FiltersPanelScope: View {
+    let reading: Bool
+    var compact = false
+
+    var body: some View {
+        ZStack {
+            if reading {
+                ReadFiltersPanel(compact: compact).transition(.opacity)
+            } else {
+                SearchFiltersPanel(compact: compact).transition(.opacity)
+            }
+        }
+        .animation(.standard, value: reading)
+    }
+}
 
 /// Typing waits for Return: the AniList budget is nearly spent. Filters still search.
 private struct LivePaused: View {
@@ -569,7 +618,8 @@ struct ScrollEdgeFade: View {
 }
 
 /// The filters up front: genres, year, season, format and status, each a menu, then Filters for
-/// the rest and the sort. Changing one searches.
+/// the rest and the sort. Changing one searches. Reading's row is this row with reading's
+/// capsules in the same places (`ReadFilterCapsules`) and its sort.
 struct SearchFilterRow: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
@@ -578,6 +628,10 @@ struct SearchFilterRow: View {
     /// The iPhone's pinned row: held under the search field while the results scroll, the
     /// filter pill fixed at its end, Clear all in front once anything is set.
     var pinned = false
+
+    private var reading: Bool {
+        ReadSearchScope.active(store: store, navigator: navigator)
+    }
 
     var body: some View {
         let query = store.search.query
@@ -680,7 +734,13 @@ struct SearchFilterRow: View {
     /// more beyond it, then the filter pill, which never scrolls. The capsules are keyed by what
     /// they filter, so one set or taken off moves its neighbours rather than redrawing them.
     private func pinnedRow(_ query: SearchQuery) -> some View {
-        let state = PinnedFilterState(query)
+        let read = store.reading.search.query
+        let state = reading
+            ? PinnedFilterState(showsClearAll: ReadFilterWords.any(read) || read.sourcesOnly, filterCount: 0)
+            : PinnedFilterState(query)
+        let layout = reading
+            ? AnyHashable(ReadRowLayout(read, filters: store.reading.filters))
+            : AnyHashable(PinnedFilterState.Layout(query))
         return HStack(spacing: 0) {
             ScrollView(.horizontal) {
                 capsules(query, state)
@@ -688,7 +748,7 @@ struct SearchFilterRow: View {
                     .padding(.vertical, 1)
                     // Width and reflow on standard. With Reduce Motion the old row crossfades into
                     // the new, and nothing slides or scales.
-                    .modifier(RowReflow(layout: PinnedFilterState.Layout(query), reduceMotion: reduceMotion))
+                    .modifier(RowReflow(layout: layout, reduceMotion: reduceMotion))
             }
             .scrollIndicators(.never)
             .scrollPosition($position)
@@ -707,6 +767,9 @@ struct SearchFilterRow: View {
         .onChange(of: query.text) {
             withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .leading) }
         }
+        .onChange(of: read.text) {
+            withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .leading) }
+        }
         .onChange(of: navigator.searchRowToEnd) {
             withAnimation(reduceMotion ? nil : .standard) { position.scrollTo(edge: .trailing) }
         }
@@ -716,18 +779,36 @@ struct SearchFilterRow: View {
         HStack(spacing: 8) {
             if state.showsClearAll { clearAll }
             sort(query).id(PinnedFilterState.Pill.sort)
-            genres(query).id(PinnedFilterState.Pill.genres)
-            year(query).id(PinnedFilterState.Pill.year)
-            season(query).id(PinnedFilterState.Pill.season)
-            formats(query).id(PinnedFilterState.Pill.formats)
-            statuses(query).id(PinnedFilterState.Pill.statuses)
-            available(query).id(PinnedFilterState.Pill.available)
+            // The scopes' capsules crossfade in place as the scope changes.
+            ZStack(alignment: .leading) {
+                if reading {
+                    HStack(spacing: 8) {
+                        ReadFilterCapsules(compact: true, pinned: true)
+                    }
+                    .transition(.opacity)
+                } else {
+                    HStack(spacing: 8) {
+                        genres(query).id(PinnedFilterState.Pill.genres)
+                        year(query).id(PinnedFilterState.Pill.year)
+                        season(query).id(PinnedFilterState.Pill.season)
+                        formats(query).id(PinnedFilterState.Pill.formats)
+                        statuses(query).id(PinnedFilterState.Pill.statuses)
+                        available(query).id(PinnedFilterState.Pill.available)
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .animation(.standard, value: reading)
         }
     }
 
     private var clearAll: some View {
         Button {
-            store.searchLive(store.search.query.cleared())
+            if reading {
+                store.reading.runSearch(store.reading.search.query.cleared)
+            } else {
+                store.searchLive(store.search.query.cleared())
+            }
         } label: {
             FilterCapsule(title: L.searchClearAll, compact: true, symbol: "xmark", chevron: false, pinned: true)
         }
@@ -755,12 +836,26 @@ struct SearchFilterRow: View {
 
     @ViewBuilder
     private func capsules(_ query: SearchQuery) -> some View {
-        genres(query)
-        year(query)
-        season(query)
-        formats(query)
-        statuses(query)
-        available(query)
+        // The scopes' capsules crossfade in place as the scope changes.
+        ZStack(alignment: .leading) {
+            if reading {
+                HStack(spacing: 8) {
+                    ReadFilterCapsules(compact: compact)
+                }
+                .transition(.opacity)
+            } else {
+                HStack(spacing: 8) {
+                    genres(query)
+                    year(query)
+                    season(query)
+                    formats(query)
+                    statuses(query)
+                    available(query)
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.standard, value: reading)
         if compact { filters(query) }
     }
 
@@ -915,7 +1010,8 @@ struct SearchFilterRow: View {
 
     /// Filters, with its word, or its glyph alone (`glyph`) where the row is short of room.
     private func filters(_ query: SearchQuery, glyph: Bool = false) -> some View {
-        let count = query.advancedCount()
+        // Reading's row holds every filter its panel has, so its Filters has no count.
+        let count = reading ? 0 : query.advancedCount()
         return Button {
             navigator.searchFiltersShown.toggle()
         } label: {
@@ -929,7 +1025,7 @@ struct SearchFilterRow: View {
     }
 
     private func filtersCapsule(_ query: SearchQuery, glyph: Bool) -> some View {
-        let count = query.advancedCount()
+        let count = reading ? 0 : query.advancedCount()
         return FilterCapsule(
             title: glyph ? "" : L.filtersTitle, active: count > 0, compact: compact,
             symbol: "line.3.horizontal.decrease", badge: count, chevron: false
@@ -937,7 +1033,16 @@ struct SearchFilterRow: View {
     }
 
     /// The sort, with what it sorts by, or its glyph alone (`glyph`) where the row is short of room.
+    @ViewBuilder
     private func sort(_ query: SearchQuery, glyph: Bool = false) -> some View {
+        if reading {
+            ReadSortMenu(compact: compact, pinned: pinned, glyph: glyph)
+        } else {
+            showsSort(query, glyph: glyph)
+        }
+    }
+
+    private func showsSort(_ query: SearchQuery, glyph: Bool) -> some View {
         let current = query.sortInEffect()
         return Menu {
             Picker(L.searchSortBy, selection: Binding(
@@ -957,11 +1062,16 @@ struct SearchFilterRow: View {
         .tooltip(glyph ? L.sortLabel(sort: searchSortLabel(sort: current)) : "")
     }
 
+    @ViewBuilder
     private func sortCapsule(_ query: SearchQuery, glyph: Bool) -> some View {
-        FilterCapsule(
-            title: glyph ? "" : searchSortLabel(sort: query.sortInEffect()), active: query.sort != nil,
-            compact: compact, symbol: "arrow.up.arrow.down", pinned: pinned
-        )
+        if reading {
+            ReadSortMenu.capsule(store, compact: compact, pinned: pinned, glyph: glyph)
+        } else {
+            FilterCapsule(
+                title: glyph ? "" : searchSortLabel(sort: query.sortInEffect()), active: query.sort != nil,
+                compact: compact, symbol: "arrow.up.arrow.down", pinned: pinned
+            )
+        }
     }
 }
 
@@ -992,21 +1102,54 @@ struct RowReflow<Layout: Hashable>: ViewModifier {
     }
 }
 
-/// What is set, each as the engine words it, each taken off with a tap.
+/// A filter set, as its removable chip under the row says it, keyed by what it filters.
+struct FilterChipItem: Hashable {
+    let key: String
+    let label: String
+}
+
+/// What is set, each as the engine words it, each taken off with a tap. Reading's filters the
+/// same way, worded by `ReadFilterWords`.
 struct ActiveFilters: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var compact = false
 
+    private var reading: Bool {
+        ReadSearchScope.active(store: store, navigator: navigator)
+    }
+
+    private var items: [FilterChipItem] {
+        if reading {
+            return ReadFilterWords.chips(store.reading.search.query, filters: store.reading.filters)
+        }
+        return store.search.query.active().map { FilterChipItem(key: String(describing: $0.key), label: $0.label) }
+    }
+
+    private func remove(_ item: FilterChipItem) {
+        if reading {
+            store.reading.runSearch(ReadFilterWords.removing(item.key, from: store.reading.search.query))
+        } else if let filter = store.search.query.active().first(where: { String(describing: $0.key) == item.key }) {
+            store.searchLive(store.search.query.without(key: filter.key))
+        }
+    }
+
+    private func clearAll() {
+        if reading {
+            store.reading.runSearch(store.reading.search.query.cleared)
+        } else {
+            store.searchLive(store.search.query.cleared())
+        }
+    }
+
     var body: some View {
-        let query = store.search.query
-        let active = query.active()
+        let active = items
         if !active.isEmpty {
             FlowLayout(spacing: 8, lineSpacing: 8) {
                 ForEach(active, id: \.key) { filter in
                     Button {
-                        store.searchLive(store.search.query.without(key: filter.key))
+                        remove(filter)
                     } label: {
                         HStack(spacing: 6) {
                             Text(filter.label).lineLimit(1)
@@ -1030,7 +1173,7 @@ struct ActiveFilters: View {
                 }
                 if active.count > 1 {
                     Button {
-                        store.searchLive(store.search.query.cleared())
+                        clearAll()
                     } label: {
                         Text(L.searchClearAll)
                             .frame(minHeight: compact ? 44 : 24)
@@ -1213,16 +1356,27 @@ struct SearchStart: View {
             }
             .animation(.standard, value: store.search.rails == nil)
             if let genres = store.search.facets?.genres, !genres.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    SectionHeading(L.searchGenres, compact: compact)
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: compact ? 100 : 140), spacing: 8)], spacing: 8) {
-                        ForEach(genres, id: \.self) { genre in
-                            Button(genre) {
-                                navigator.search(SearchQuery(genres: [genre]), in: store)
-                            }
-                            .buttonStyle(ChipStyle(height: compact ? 44 : 32, fontSize: compact ? 17 : 13))
-                        }
-                    }
+                SearchGenres(genres: genres, compact: compact) { genre in
+                    navigator.search(SearchQuery(genres: [genre]), in: store)
+                }
+            }
+        }
+    }
+}
+
+/// The start's Genres: each genre a chip that browses it. Reading's start has them too.
+struct SearchGenres: View {
+    let genres: [String]
+    var compact = false
+    let browse: (String) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeading(L.searchGenres, compact: compact)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: compact ? 100 : 140), spacing: 8)], spacing: 8) {
+                ForEach(genres, id: \.self) { genre in
+                    Button(genre) { browse(genre) }
+                        .buttonStyle(ChipStyle(height: compact ? 44 : 32, fontSize: compact ? 17 : 13))
                 }
             }
         }
@@ -1309,7 +1463,9 @@ private struct RailRow: View {
         // so the covers swap in one crossfade when they come, not cell by cell.
         let drawn = !trending ? TrendPeriod.today : kept != nil ? period : held?.period ?? .today
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            RailHeader(compact: compact, detail: rail.detail) {
+                navigator.search(trending ? SearchQuery(sort: .trending, period: period == .today ? nil : period) : rail.query, in: store)
+            } heading: {
                 // The engine says it in sentence case, as the iPhone has it; the Mac's headings
                 // are in title case.
                 if trending {
@@ -1317,21 +1473,6 @@ private struct RailRow: View {
                 } else {
                     SectionHeading(compact ? rail.title : rail.title.capitalizedSentence, compact: compact)
                 }
-                if let detail = rail.detail {
-                    Text(detail).font(compact ? .ui(15) : .mac(13)).foregroundStyle(.haze)
-                }
-                Spacer()
-                Button {
-                    navigator.search(trending ? SearchQuery(sort: .trending, period: period == .today ? nil : period) : rail.query, in: store)
-                } label: {
-                    Text(L.searchSeeAll)
-                        .frame(minHeight: compact ? 44 : 28)
-                        .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .font(compact ? .ui(15, weight: .semibold) : .mac(13, weight: .semibold))
-                .foregroundStyle(.silk)
-                .pointerHover()
             }
             if trending, let kept {
                 TrendingNote(rail: kept, period: period) { store.loadTrending(period) }
@@ -1345,18 +1486,13 @@ private struct RailRow: View {
                 } else if plates {
                     RailPlates(width: width, compact: compact).transition(.opacity)
                 } else {
-                    ScrollView(.horizontal) {
-                        LazyHStack(alignment: .top, spacing: compact ? 12 : 20) {
-                            ForEach(entries, id: \.id) { entry in
-                                let current = store.titles[entry.id] ?? entry
-                                PosterCell(entry: current, detail: line(entry), count: current.countLine, width: width, place: .rail(rail.title))
-                                    .railCover(compact: compact)
-                            }
+                    RailStrip(compact: compact) { _ in
+                        ForEach(entries, id: \.id) { entry in
+                            let current = store.titles[entry.id] ?? entry
+                            PosterCell(entry: current, detail: line(entry), count: current.countLine, width: width, place: .rail(rail.title))
+                                .railCover(compact: compact)
                         }
-                        .padding(bleed)
                     }
-                    .scrollIndicators(.never)
-                    .padding(-bleed)
                     .id(drawn)
                     .transition(.opacity)
                 }
@@ -1383,12 +1519,74 @@ private struct RailRow: View {
         }
     }
 
-    private var bleed: EdgeInsets {
-        RailCover.bleed(compact: compact, panelOpen: cover != nil && navigator.searchFiltersShown)
-    }
-
     private func line(_ entry: Entry) -> String? {
         entry.genres.first
+    }
+}
+
+/// A rail's heading line: the heading, its detail, and See all at the end.
+struct RailHeader<Heading: View>: View {
+    var compact = false
+    var detail: String?
+    /// See all's action; none, no See all.
+    var seeAll: (() -> Void)?
+    @ViewBuilder let heading: () -> Heading
+
+    init(compact: Bool, detail: String? = nil, seeAll: (() -> Void)?, @ViewBuilder heading: @escaping () -> Heading) {
+        self.compact = compact
+        self.detail = detail
+        self.seeAll = seeAll
+        self.heading = heading
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            heading()
+            if let detail {
+                Text(detail).font(compact ? .ui(15) : .mac(13)).foregroundStyle(.haze)
+            }
+            Spacer()
+            if let seeAll {
+                Button(action: seeAll) {
+                    Text(L.searchSeeAll)
+                        .frame(minHeight: compact ? 44 : 28)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .font(compact ? .ui(15, weight: .semibold) : .mac(13, weight: .semibold))
+                .foregroundStyle(.silk)
+                .pointerHover()
+            }
+        }
+        // A rail with no See all keeps its height.
+        .frame(minHeight: compact ? 44 : 28)
+    }
+}
+
+/// A rail's covers in a row that scrolls past Search's column to the screen's edge. Its content
+/// is handed the cover width: 112 on iPhone, a column of the results grid on the Mac and iPad.
+struct RailStrip<Content: View>: View {
+    @Environment(Navigator.self) private var navigator
+    @Environment(\.searchCoverWidth) private var cover
+    var compact = false
+    @ViewBuilder let content: (CGFloat) -> Content
+    @State private var column: CGFloat = 0
+
+    var body: some View {
+        let width = compact ? 112 : cover ?? (column > 0 ? RailCover.width(in: column) : 128)
+        ScrollView(.horizontal) {
+            LazyHStack(alignment: .top, spacing: compact ? 12 : 20) {
+                content(width)
+            }
+            .padding(bleed)
+        }
+        .scrollIndicators(.never)
+        .padding(-bleed)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { column = $0 }
+    }
+
+    private var bleed: EdgeInsets {
+        RailCover.bleed(compact: compact, panelOpen: cover != nil && navigator.searchFiltersShown)
     }
 }
 
@@ -1468,8 +1666,8 @@ private struct TrendingFailed: View {
 }
 
 /// A rail's plates, while a period's covers are on their way.
-private struct RailPlates: View {
-    let width: CGFloat
+struct RailPlates: View {
+    var width: CGFloat = 128
     var compact = false
 
     var body: some View {
@@ -1488,7 +1686,7 @@ private struct RailPlates: View {
 
 /// Covers to come, while the rails are on their way: nothing for 600 ms, then rails of plates at
 /// the size the rails will have.
-private struct RailPlaceholder: View {
+struct RailPlaceholder: View {
     @Environment(Navigator.self) private var navigator
     @Environment(\.searchCoverWidth) private var cover
     var compact = false
@@ -1606,6 +1804,17 @@ enum SearchGridColumns {
         let gap = count > 1 ? (width - column * count) / (count - 1) : spacing
         return GridColumns(count: Int(count), width: column, spacing: gap)
     }
+
+    /// Search's results grid across `width`: on the Mac the steady cover's columns, elsewhere as
+    /// many columns of at least the minimum as fit, sharing the width, as `PosterGrid` lays them.
+    static func search(width: CGFloat, compact: Bool, cover: CGFloat?, settled: CGFloat?) -> GridColumns {
+        let minimum: CGFloat = compact ? 100 : 128
+        let spacing: CGFloat = compact ? 12 : 20
+        if let cover, let settled { return columns(cover: cover, in: settled, spacing: spacing) }
+        guard width > minimum else { return GridColumns(count: 1, width: max(width, minimum), spacing: spacing) }
+        let count = max(1, ((width + spacing) / (minimum + spacing)).rounded(.down))
+        return GridColumns(count: Int(count), width: ((width - spacing * (count - 1)) / count).rounded(.down), spacing: spacing)
+    }
 }
 
 extension EnvironmentValues {
@@ -1667,7 +1876,9 @@ struct SearchFiltersPanel: View {
         let query = store.search.query
         let facets = store.search.facets
         return VStack(spacing: 0) {
-            header(query)
+            FiltersPanelHeader(compact: compact, canReset: query.hasFilters(), reset: reset) {
+                navigator.searchFiltersShown = false
+            }
                 .padding(.horizontal, compact ? 16 : 14)
                 .padding(.top, compact ? 16 : 14)
                 .padding(.bottom, compact ? 8 : 6)
@@ -1804,53 +2015,6 @@ struct SearchFiltersPanel: View {
         .closesOnEscape { navigator.searchFiltersShown = false }
     }
 
-    /// The panel's name and Reset, pinned above the scrolling filters; Done on iPhone, as a
-    /// sheet has, and a close button on the Mac and iPad.
-    @ViewBuilder
-    private func header(_ query: SearchQuery) -> some View {
-        if compact {
-            ZStack {
-                Text(L.filtersTitle).font(.ui(17, weight: .semibold)).foregroundStyle(.silk)
-                HStack {
-                    Button(L.actionReset) { reset() }
-                        .disabled(!query.hasFilters())
-                    Spacer()
-                    Button(L.actionDone) { navigator.searchFiltersShown = false }
-                        .fontWeight(.semibold)
-                }
-                .font(.ui(17))
-                .foregroundStyle(.silk)
-            }
-            .frame(minHeight: 44)
-        } else {
-            HStack {
-                Text(L.filtersTitle).font(.mac(15, weight: .semibold)).foregroundStyle(.silk)
-                Spacer()
-                Button(L.actionReset) { reset() }
-                    .buttonStyle(SecondaryCapsuleStyle())
-                    .disabled(!query.hasFilters())
-                closeButton
-            }
-        }
-    }
-
-    private var closeButton: some View {
-        Button {
-            navigator.searchFiltersShown = false
-        } label: {
-            Image(systemName: "xmark")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Color.silk)
-                .frame(width: 28, height: 28)
-                .background(Circle().fill(Palette.raised))
-                .contentShape(Circle())
-        }
-        .buttonStyle(.plain)
-        .pointerHover()
-        .accessibilityLabel(L.filtersClose)
-        .tooltip(L.filtersClose)
-    }
-
     @ViewBuilder
     private func tags(_ query: SearchQuery, _ facets: SearchFacets?) -> some View {
         PanelSection(compact: compact, L.filterTags) {
@@ -1907,8 +2071,61 @@ struct SearchFiltersPanel: View {
     }
 }
 
+/// A filters panel's name and Reset, pinned above the scrolling filters; Done on iPhone, as a
+/// sheet has, and a close button on the Mac and iPad. Both scopes' panels have it.
+struct FiltersPanelHeader: View {
+    var compact = false
+    let canReset: Bool
+    let reset: () -> Void
+    let close: () -> Void
+
+    var body: some View {
+        if compact {
+            ZStack {
+                Text(L.filtersTitle).font(.ui(17, weight: .semibold)).foregroundStyle(.silk)
+                HStack {
+                    Button(L.actionReset) { reset() }
+                        .disabled(!canReset)
+                    Spacer()
+                    Button(L.actionDone) { close() }
+                        .fontWeight(.semibold)
+                }
+                .font(.ui(17))
+                .foregroundStyle(.silk)
+            }
+            .frame(minHeight: 44)
+        } else {
+            HStack {
+                Text(L.filtersTitle).font(.mac(15, weight: .semibold)).foregroundStyle(.silk)
+                Spacer()
+                Button(L.actionReset) { reset() }
+                    .buttonStyle(SecondaryCapsuleStyle())
+                    .disabled(!canReset)
+                closeButton
+            }
+        }
+    }
+
+    private var closeButton: some View {
+        Button {
+            close()
+        } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(Color.silk)
+                .frame(width: 28, height: 28)
+                .background(Circle().fill(Palette.raised))
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .pointerHover()
+        .accessibilityLabel(L.filtersClose)
+        .tooltip(L.filtersClose)
+    }
+}
+
 /// A switch at the end of its row, its label at the start.
-private struct PanelSwitch: View {
+struct PanelSwitch: View {
     let title: String
     let isOn: Binding<Bool>
 
@@ -2004,7 +2221,7 @@ private struct PanelDisclosureStyle: DisclosureGroupStyle {
 }
 
 /// A group of filters under its heading, on a raised card.
-private struct PanelSection<Content: View>: View {
+struct PanelSection<Content: View>: View {
     var compact = false
     let title: String
     @ViewBuilder let content: Content
@@ -2081,7 +2298,7 @@ private struct TagRow: View {
 
 /// A genre as a chip: off, in or out, a tap moving it on. `neutral` draws an included genre in
 /// the raised fill with silk words rather than amber.
-private struct PickChip: View {
+struct PickChip: View {
     let name: String
     let pick: Pick
     var compact = false
@@ -2128,7 +2345,7 @@ private struct PickChip: View {
 
 /// A choice that is on or off, as a chip. `neutral` draws it on in the raised fill with silk
 /// words rather than amber.
-private struct ToggleChip: View {
+struct ToggleChip: View {
     let name: String
     let on: Bool
     var compact = false

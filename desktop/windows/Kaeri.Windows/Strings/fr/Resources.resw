@@ -7262,9 +7262,6 @@
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Effacer les filtres</value>
   </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Populaires</value>
-  </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Tendances</value>
   </data>

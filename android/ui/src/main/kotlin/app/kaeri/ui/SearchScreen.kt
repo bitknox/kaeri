@@ -108,6 +108,10 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import app.kaeri.design.Motion
 import app.kaeri.design.SwapFade
+import app.kaeri.design.rememberAnimationsRemoved
+import app.kaeri.design.rememberStillFade
+import app.kaeri.design.stillFade
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import app.kaeri.design.tabular
 import app.kaeri.engine.model.Bounds
 import app.kaeri.engine.model.BrowseRail
@@ -239,12 +243,45 @@ fun SearchScreen(
 ) {
     // Reading's search with Read alone, or with Both once Reading is chosen in the control.
     val isFor = kaeriIsFor()
-    if (isFor == KaeriIsFor.READ || (isFor == KaeriIsFor.BOTH && ReadPlaces.searchReading)) {
-        ReadSearchScreen(start?.text?.takeIf { it.isNotBlank() })
-        return
+    val reading = isFor == KaeriIsFor.READ || (isFor == KaeriIsFor.BOTH && ReadPlaces.searchReading)
+    // Switching scope swaps behind a still of the screen that fades out over the other: the field,
+    // the title and the control stay put, the row and the content crossfade, and no frame is empty.
+    val fade = rememberStillFade()
+    var shown by remember { mutableStateOf(reading) }
+    val removed = rememberAnimationsRemoved()
+    LaunchedEffect(reading) { if (reading != shown) fade.swap(fullSpeed = removed) { shown = reading } }
+    Box(Modifier.stillFade(fade)) {
+        if (shown) {
+            ReadSearchScreen(start?.text?.takeIf { it.isNotBlank() })
+        } else {
+            ShowsSearch(start, startFilters, open, opened, both = isFor == KaeriIsFor.BOTH)
+        }
     }
-    ShowsSearch(start, startFilters, open, opened, both = isFor == KaeriIsFor.BOTH)
 }
+
+/**
+ * Search's top, the same on both sides so switching scope moves nothing: with Both the Shows or
+ * Reading control, then the [field] and the [row]. On a phone it sits on the screen until what is
+ * under it scrolls, then on a surface.
+ */
+@Composable
+internal fun SearchTop(phone: Boolean, scrolledUnder: Boolean, both: Boolean, reading: Boolean, field: @Composable () -> Unit, row: @Composable () -> Unit) {
+    val barSurface by animateColorAsState(
+        if (scrolledUnder) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surface,
+        Motion.standard(),
+        label = "search bar surface", // i18n-skip
+    )
+    Column(Modifier.then(if (phone) Modifier.background(barSurface) else Modifier).windowInsetsPadding(WindowInsets.statusBars)) {
+        if (both) {
+            ScopeControl(reading = reading, modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp)) { ReadPlaces.searchReading = it }
+        }
+        field()
+        row()
+    }
+}
+
+/** Where Search's field sits: 16 from the sides, 8 under what is above it, the full width. */
+internal val SearchFieldPlace: Modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp).fillMaxWidth()
 
 /** The shows' search; with Both, the Shows or Reading control comes first. */
 @Composable
@@ -343,24 +380,12 @@ private fun ShowsSearch(start: SearchQuery?, startFilters: Boolean, open: Boolea
     // The field and the row sit on the screen until the start or the results scroll under them,
     // then on a surface.
     val scrolledUnder = phone && (if (startShown) startGrid else grid).canScrollBackward
-    val barSurface by animateColorAsState(
-        if (scrolledUnder) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surface,
-        Motion.standard(),
-        label = "search bar surface", // i18n-skip
-    )
     Column(Modifier.semantics { paneTitle = searchTitle }) {
-        Column(Modifier.then(if (phone) Modifier.background(barSurface) else Modifier).windowInsetsPadding(WindowInsets.statusBars)) {
-            if (both) {
-                ScopeControl(reading = false, modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp)) { ReadPlaces.searchReading = it }
-            }
-            SearchBar(
-                state = bar,
-                inputField = input,
-                colors = colors,
-                modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp).fillMaxWidth(),
-            )
-            FilterRow(status.query, phone, rowScroll, onFilters = { filtersShown = true })
-        }
+        SearchTop(
+            phone, scrolledUnder, both, reading = false,
+            field = { SearchBar(state = bar, inputField = input, colors = colors, modifier = SearchFieldPlace) },
+            row = { FilterRow(status.query, phone, rowScroll, onFilters = { filtersShown = true }) },
+        )
         // While the demo is the only source: other titles play once a plugin store is joined.
         val demo by store.demo.collectAsStateWithLifecycle()
         androidx.compose.animation.AnimatedVisibility(demo.only, enter = androidx.compose.animation.fadeIn(Motion.standard()), exit = androidx.compose.animation.fadeOut(Motion.quick())) {
@@ -732,21 +757,29 @@ internal fun SearchChip(
 }
 
 /** The filters set, each in the engine's words with a cross that takes it off, and Clear all. */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ActiveFilters(query: SearchQuery) {
     val store = LocalAppStore.current
-    val active = query.active()
+    RemovableFilters(
+        query.active().map { filter -> filter.label to { store.searchLive(store.search.status.value.query.without(filter.key)) } },
+        onClearAll = { store.searchLive(store.search.status.value.query.cleared()) },
+    )
+}
+
+/** Filters set, each its words with a cross that takes it off, then Clear all when more than one is set. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun RemovableFilters(active: List<Pair<String, () -> Unit>>, onClearAll: () -> Unit) {
     if (active.isEmpty()) return
     val colors = MaterialTheme.colorScheme
     val shape = MaterialTheme.shapes.small
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.Center) {
-        for (filter in active) {
-            val removeLabel = stringResource(R.string.filter_remove, filter.label)
+        for ((label, remove) in active) {
+            val removeLabel = stringResource(R.string.filter_remove, label)
             Box(
                 Modifier
                     .heightIn(min = 48.dp)
-                    .clickable(onClickLabel = stringResource(R.string.action_remove)) { store.searchLive(store.search.status.value.query.without(filter.key)) }
+                    .clickable(onClickLabel = stringResource(R.string.action_remove), onClick = remove)
                     .semantics { contentDescription = removeLabel },
                 contentAlignment = Alignment.Center,
             ) {
@@ -759,14 +792,14 @@ private fun ActiveFilters(query: SearchQuery) {
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(filter.label, style = MaterialTheme.typography.labelMedium, color = colors.onSurface, maxLines = 1)
+                    Text(label, style = MaterialTheme.typography.labelMedium, color = colors.onSurface, maxLines = 1)
                     Icon(Icons.Clear, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
                 }
             }
         }
         if (active.size > 1) {
             Box(Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
-                QuietButton(stringResource(R.string.action_clear_all)) { store.searchLive(store.search.status.value.query.cleared()) }
+                QuietButton(stringResource(R.string.action_clear_all), onClick = onClearAll)
             }
         }
     }
@@ -867,13 +900,7 @@ private fun SearchResults(query: SearchQuery, overdue: Boolean, phone: Boolean, 
                     }
                 }
                 is ListState.Failed -> item(span = { GridItemSpan(maxLineSpan) }, key = "failed") {
-                    Column {
-                        Text(plainReason(context, list.reason), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Row {
-                            QuietButton(stringResource(R.string.action_try_again)) { store.retrySearch() }
-                            QuietButton(stringResource(R.string.action_report)) { openBugReport(context, store, BugContext("load", list.reason)) }
-                        }
-                    }
+                    SearchFailed(plainReason(context, list.reason), onRetry = { store.retrySearch() }) { openBugReport(context, store, BugContext("load", list.reason)) }
                 }
                 else -> item(span = { GridItemSpan(maxLineSpan) }, key = "nothing") { NothingFound(query) }
             }
@@ -885,12 +912,30 @@ private fun SearchResults(query: SearchQuery, overdue: Boolean, phone: Boolean, 
 @Composable
 private fun NothingFound(query: SearchQuery) {
     val store = LocalAppStore.current
+    SearchNothing(query.nothingFound(), onClearFilters = if (query.hasFilters()) ({ store.searchLive(store.search.status.value.query.cleared()) }) else null)
+}
+
+/** Search found nothing: [said] in a line, and Clear filters when there are filters to clear. */
+@Composable
+internal fun SearchNothing(said: String, onClearFilters: (() -> Unit)?) {
     Column(Modifier.padding(top = 8.dp)) {
-        Text(query.nothingFound(), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (query.hasFilters()) {
+        Text(said, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (onClearFilters != null) {
             Box(Modifier.padding(top = 8.dp)) {
-                QuietButton(stringResource(R.string.search_clear_filters)) { store.searchLive(store.search.status.value.query.cleared()) }
+                QuietButton(stringResource(R.string.search_clear_filters), onClick = onClearFilters)
             }
+        }
+    }
+}
+
+/** A search that failed: the [reason] in a line, Try again, and Report when there is one to send. */
+@Composable
+internal fun SearchFailed(reason: String, onRetry: () -> Unit, onReport: (() -> Unit)? = null) {
+    Column {
+        Text(reason, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row {
+            QuietButton(stringResource(R.string.action_try_again), onClick = onRetry)
+            if (onReport != null) QuietButton(stringResource(R.string.action_report), onClick = onReport)
         }
     }
 }
@@ -919,12 +964,7 @@ private fun SearchStart(gridState: LazyGridState) {
         val genres = status.facets?.genres.orEmpty()
         if (genres.isNotEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }, key = "genres") {
-                Column {
-                    StartHeading(stringResource(R.string.search_genres))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        for (genre in genres) SearchChip(genre, selected = false) { store.search(SearchQuery(genres = listOf(genre))) }
-                    }
-                }
+                StartGenres(genres) { genre -> store.search(SearchQuery(genres = listOf(genre))) }
             }
         }
     }
@@ -963,18 +1003,54 @@ private fun LazyGridScope.recentSearches(recents: List<SearchQuery>) {
 @Composable
 private fun RailRow(rail: BrowseRail, entries: List<Entry>) {
     val store = LocalAppStore.current
+    Rail(rail.title, rail.detail, onSeeAll = { store.search(rail.query) }) {
+        items(entries, key = { it.id.toLong() }) { PosterCell(it, itemMotion().width(RAIL_COVER), from = "rail-${rail.title}", detail = it.genreLine, count = it.countLineNow()) }
+    }
+}
+
+/** A rail's covers: 104 wide, 13 apart. */
+internal val RAIL_COVER = 104.dp
+internal val RAIL_GAP = 13.dp
+
+/** A rail of Search's start: its heading, what it is beside it, See all at the end, and [covers] in a row that scrolls. */
+@Composable
+internal fun Rail(title: String, detail: String?, onSeeAll: (() -> Unit)?, covers: androidx.compose.foundation.lazy.LazyListScope.() -> Unit) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                StartHeading(rail.title)
-                rail.detail?.let {
+                StartHeading(title)
+                detail?.let {
                     Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 }
             }
-            QuietButton(stringResource(R.string.search_see_all)) { store.search(rail.query) }
+            if (onSeeAll != null) QuietButton(stringResource(R.string.search_see_all), onClick = onSeeAll)
         }
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(13.dp)) {
-            items(entries, key = { it.id.toLong() }) { PosterCell(it, itemMotion().width(104.dp), from = "rail-${rail.title}", detail = it.genreLine, count = it.countLineNow()) }
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(RAIL_GAP), content = covers)
+    }
+}
+
+/** A rail on its way: its heading, then four covers' placeholders. */
+@Composable
+internal fun RailPlaceholderRow(title: String, detail: String?) {
+    Column {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            StartHeading(title)
+            detail?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1) }
+        }
+        Row(Modifier.clearAndSetSemantics {}, horizontalArrangement = Arrangement.spacedBy(RAIL_GAP)) {
+            repeat(4) { Box(Modifier.width(RAIL_COVER)) { PosterPlaceholder() } }
+        }
+    }
+}
+
+/** The genres at the end of Search's start, each a chip that browses it. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun StartGenres(genres: List<String>, onGenre: (String) -> Unit) {
+    Column {
+        StartHeading(stringResource(R.string.search_genres))
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (genre in genres) SearchChip(genre, selected = false) { onGenre(genre) }
         }
     }
 }
@@ -1055,7 +1131,7 @@ private fun TrendingRail(rail: BrowseRail, titles: Map<AnilistId, Entry>) {
 
 /** Rails to come, once they are 600 ms away: headings and posters where the rails will be. */
 @Composable
-private fun RailPlaceholder() {
+internal fun RailPlaceholder() {
     AfterWait {
         Column {
             repeat(3) {
@@ -1069,7 +1145,7 @@ private fun RailPlaceholder() {
 }
 
 @Composable
-private fun StartHeading(text: String) {
+internal fun StartHeading(text: String) {
     Text(text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(vertical = 12.dp).semantics { heading() })
 }
 
@@ -1079,7 +1155,7 @@ private fun StartHeading(text: String) {
  * Every filter, in sections, in a sheet over the results: each change searches, so there is
  * nothing to apply. Half the screen at first, so the results show change under it.
  */
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FiltersSheet(onDismiss: () -> Unit) {
     val store = LocalAppStore.current
@@ -1087,114 +1163,126 @@ private fun FiltersSheet(onDismiss: () -> Unit) {
     val query = status.query
     val facets = status.facets
     val scoreAny = stringResource(R.string.filter_score_any)
-    val colors = MaterialTheme.colorScheme
     // On a phone a chosen chip takes the neutral fill of the pinned row's set pills, leaving amber
     // to the switches and the action; a wide window keeps primaryContainer for now.
     val phone = !wideWindow()
+    FiltersSheetFrame(onDismiss, canReset = query.hasFilters(), onReset = { store.searchLive(query.cleared()) }) {
+        FilterHeading(stringResource(R.string.filter_genres))
+        FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (name in facets?.genres.orEmpty()) {
+                PickChip(name, query.genrePick(name)) { store.editSearch { it.pickingGenre(name, it.genrePick(name).next) } }
+            }
+        }
+        FilterNote(stringResource(R.string.filter_hint_touch))
+
+        TagsSection(query)
+
+        FilterHeading(stringResource(R.string.filter_released))
+        YearsRange(query.years) { bounds ->
+            store.editSearch { now ->
+                val next = now.copy(years = bounds)
+                if (next.singleYear == null) next.copy(season = null) else next
+            }
+        }
+
+        FilterHeading(stringResource(R.string.filter_length))
+        FilterLabel(stringResource(R.string.filter_episodes))
+        Presets(
+            listOf(Bounds(1u, 1u), Bounds(null, 12u), Bounds(13u, 26u), Bounds(50u, null)),
+            query.episodes,
+            words = { SearchQuery(episodes = it).label(FilterKey.Episodes) },
+        ) { bounds -> store.editSearch { it.copy(episodes = bounds) } }
+        FilterLabel(stringResource(R.string.filter_episode_length))
+        Presets(
+            listOf(Bounds(null, 15u), Bounds(20u, 30u), Bounds(60u, null)),
+            query.minutes,
+            words = { SearchQuery(minutes = it).label(FilterKey.Minutes) },
+        ) { bounds -> store.editSearch { it.copy(minutes = bounds) } }
+
+        FilterHeading(stringResource(R.string.filter_reception))
+        StepSlider(
+            stringResource(R.string.filter_score_at_least),
+            value = query.minScore?.toInt() ?: 0,
+            range = 0..95,
+            step = 5,
+            words = { if (it == 0) scoreAny else percentText(it) },
+        ) { score -> store.editSearch { it.copy(minScore = score.takeIf { it > 0 }?.toUByte()) } }
+        FilterSwitch(stringResource(R.string.filter_hide_obscure), query.minPopularity != null) { on ->
+            store.editSearch { it.copy(minPopularity = if (on) OBSCURE_BELOW else null) }
+        }
+
+        FilterHeading(stringResource(R.string.filter_origin))
+        FilterLabel(stringResource(R.string.filter_source_material))
+        FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (source in searchSources()) {
+                SearchChip(searchSourceLabel(source), source in query.sources, phone = phone) { store.editSearch { it.togglingSource(source) } }
+            }
+        }
+        FilterLabel(stringResource(R.string.filter_country))
+        FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (code in searchCountries()) {
+                SearchChip(SearchWords.country(LocalContext.current, code), code in query.countries, phone = phone) { store.editSearch { it.togglingCountry(code) } }
+            }
+        }
+
+        FilterHeading(stringResource(R.string.filter_where_to_watch))
+        val sites = facets?.streamingSites.orEmpty()
+        if (sites.isNotEmpty()) {
+            FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for (site in sites) {
+                    SearchChip(site, site in query.streamingOn, phone = phone) { store.editSearch { it.togglingStreaming(site) } }
+                }
+            }
+        }
+        FilterSwitch(stringResource(R.string.filter_licensed_only), query.licensedOnly) { on -> store.editSearch { it.copy(licensedOnly = on) } }
+
+        FilterHeading(stringResource(R.string.search_available))
+        val availableChoices = listOf<Available?>(null, Available.PLAYS_HERE, Available.ON_YOUR_SERVICES)
+        ConnectedChoice(
+            listOf(stringResource(R.string.search_available_all), stringResource(R.string.search_available_here), stringResource(R.string.search_available_services)),
+            selected = availableChoices.indexOf(query.available),
+            onSelect = { index -> store.editSearch { it.copy(available = availableChoices[index]) } },
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
+
+        if (anilistSignedIn()) {
+            FilterHeading(stringResource(R.string.calendar_filter_mine))
+            val choices = listOf<OnList?>(null, OnList.HIDE, OnList.ONLY)
+            ConnectedChoice(
+                listOf(stringResource(R.string.filter_show), stringResource(R.string.filter_hide), stringResource(R.string.filter_only)),
+                selected = choices.indexOf(query.onList),
+                onSelect = { index -> store.editSearch { it.copy(onList = choices[index]) } },
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
+        }
+
+        FilterNote(stringResource(R.string.filter_live_note))
+    }
+}
+
+/**
+ * The filters sheet over Search: half the screen at first, so the results show change under it,
+ * with Filters and Reset at its top and [sections] under them; each change searches, so there is
+ * nothing to apply.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun FiltersSheetFrame(onDismiss: () -> Unit, canReset: Boolean, onReset: () -> Unit, sections: @Composable ColumnScope.() -> Unit) {
+    val colors = MaterialTheme.colorScheme
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberBottomSheetState(SheetValue.Hidden, setOf(SheetValue.Hidden, SheetValue.PartiallyExpanded, SheetValue.Expanded)),
         containerColor = colors.surfaceContainer,
-        scrimColor = androidx.compose.material3.MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f),
+        scrimColor = colors.scrim.copy(alpha = 0.32f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = colors.onSurfaceVariant.copy(alpha = 0.4f)) },
         modifier = Modifier.padding(top = 77.dp - 24.dp),
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
             Row(Modifier.padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.filters_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).semantics { heading() })
-                QuietButton(stringResource(R.string.action_reset), enabled = query.hasFilters()) { store.searchLive(query.cleared()) }
+                QuietButton(stringResource(R.string.action_reset), enabled = canReset, onClick = onReset)
             }
-
-            FilterHeading(stringResource(R.string.filter_genres))
-            FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (name in facets?.genres.orEmpty()) {
-                    PickChip(name, query.genrePick(name)) { store.editSearch { it.pickingGenre(name, it.genrePick(name).next) } }
-                }
-            }
-            FilterNote(stringResource(R.string.filter_hint_touch))
-
-            TagsSection(query)
-
-            FilterHeading(stringResource(R.string.filter_released))
-            YearsRange(query.years) { bounds ->
-                store.editSearch { now ->
-                    val next = now.copy(years = bounds)
-                    if (next.singleYear == null) next.copy(season = null) else next
-                }
-            }
-
-            FilterHeading(stringResource(R.string.filter_length))
-            FilterLabel(stringResource(R.string.filter_episodes))
-            Presets(
-                listOf(Bounds(1u, 1u), Bounds(null, 12u), Bounds(13u, 26u), Bounds(50u, null)),
-                query.episodes,
-                words = { SearchQuery(episodes = it).label(FilterKey.Episodes) },
-            ) { bounds -> store.editSearch { it.copy(episodes = bounds) } }
-            FilterLabel(stringResource(R.string.filter_episode_length))
-            Presets(
-                listOf(Bounds(null, 15u), Bounds(20u, 30u), Bounds(60u, null)),
-                query.minutes,
-                words = { SearchQuery(minutes = it).label(FilterKey.Minutes) },
-            ) { bounds -> store.editSearch { it.copy(minutes = bounds) } }
-
-            FilterHeading(stringResource(R.string.filter_reception))
-            StepSlider(
-                stringResource(R.string.filter_score_at_least),
-                value = query.minScore?.toInt() ?: 0,
-                range = 0..95,
-                step = 5,
-                words = { if (it == 0) scoreAny else percentText(it) },
-            ) { score -> store.editSearch { it.copy(minScore = score.takeIf { it > 0 }?.toUByte()) } }
-            FilterSwitch(stringResource(R.string.filter_hide_obscure), query.minPopularity != null) { on ->
-                store.editSearch { it.copy(minPopularity = if (on) OBSCURE_BELOW else null) }
-            }
-
-            FilterHeading(stringResource(R.string.filter_origin))
-            FilterLabel(stringResource(R.string.filter_source_material))
-            FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (source in searchSources()) {
-                    SearchChip(searchSourceLabel(source), source in query.sources, phone = phone) { store.editSearch { it.togglingSource(source) } }
-                }
-            }
-            FilterLabel(stringResource(R.string.filter_country))
-            FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                for (code in searchCountries()) {
-                    SearchChip(SearchWords.country(LocalContext.current, code), code in query.countries, phone = phone) { store.editSearch { it.togglingCountry(code) } }
-                }
-            }
-
-            FilterHeading(stringResource(R.string.filter_where_to_watch))
-            val sites = facets?.streamingSites.orEmpty()
-            if (sites.isNotEmpty()) {
-                FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    for (site in sites) {
-                        SearchChip(site, site in query.streamingOn, phone = phone) { store.editSearch { it.togglingStreaming(site) } }
-                    }
-                }
-            }
-            FilterSwitch(stringResource(R.string.filter_licensed_only), query.licensedOnly) { on -> store.editSearch { it.copy(licensedOnly = on) } }
-
-            FilterHeading(stringResource(R.string.search_available))
-            val availableChoices = listOf<Available?>(null, Available.PLAYS_HERE, Available.ON_YOUR_SERVICES)
-            ConnectedChoice(
-                listOf(stringResource(R.string.search_available_all), stringResource(R.string.search_available_here), stringResource(R.string.search_available_services)),
-                selected = availableChoices.indexOf(query.available),
-                onSelect = { index -> store.editSearch { it.copy(available = availableChoices[index]) } },
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-
-            if (anilistSignedIn()) {
-                FilterHeading(stringResource(R.string.calendar_filter_mine))
-                val choices = listOf<OnList?>(null, OnList.HIDE, OnList.ONLY)
-                ConnectedChoice(
-                    listOf(stringResource(R.string.filter_show), stringResource(R.string.filter_hide), stringResource(R.string.filter_only)),
-                    selected = choices.indexOf(query.onList),
-                    onSelect = { index -> store.editSearch { it.copy(onList = choices[index]) } },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                )
-            }
-
-            FilterNote(stringResource(R.string.filter_live_note))
+            sections()
         }
     }
 }
@@ -1273,7 +1361,7 @@ private fun TagsSection(query: SearchQuery) {
  * its action; a wide window keeps primaryContainer for now.
  */
 @Composable
-private fun PickChip(name: String, pick: Pick, onClick: () -> Unit) {
+internal fun PickChip(name: String, pick: Pick, onClick: () -> Unit) {
     val words = pick.words(LocalContext.current)
     val colors = MaterialTheme.colorScheme
     val phone = !wideWindow()
@@ -1417,7 +1505,7 @@ private fun Presets(choices: List<Bounds>, current: Bounds, words: (Bounds) -> S
 
 /** A switch at the end of its row, its label at the start, the whole row the target. */
 @Composable
-private fun FilterSwitch(title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+internal fun FilterSwitch(title: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -1434,7 +1522,7 @@ private fun FilterSwitch(title: String, checked: Boolean, onChange: (Boolean) ->
 
 /** A section's heading in the sheet, in haze, as the show settings sheet has them. */
 @Composable
-private fun FilterHeading(text: String) {
+internal fun FilterHeading(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.titleMedium,
@@ -1445,12 +1533,12 @@ private fun FilterHeading(text: String) {
 
 /** What a group of chips under a heading chooses. */
 @Composable
-private fun FilterLabel(text: String) {
+internal fun FilterLabel(text: String) {
     Text(text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 16.dp).padding(top = 8.dp, bottom = 4.dp))
 }
 
 @Composable
-private fun FilterNote(text: String) {
+internal fun FilterNote(text: String) {
     Text(
         text,
         style = MaterialTheme.typography.bodyMedium,

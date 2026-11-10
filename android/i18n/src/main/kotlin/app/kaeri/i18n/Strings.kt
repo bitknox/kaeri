@@ -10119,10 +10119,6 @@ object Strings {
         context.getString(R.string.read_search_clear_filters)
 
     /** A sort of reading's Search, AniList's. */
-    fun readSortPopular(context: Context): String =
-        context.getString(R.string.read_sort_popular)
-
-    /** A sort of reading's Search, AniList's. */
     fun readSortTrending(context: Context): String =
         context.getString(R.string.read_sort_trending)
 
@@ -10141,6 +10137,10 @@ object Strings {
     /** A filter. */
     fun readFilterOrigin(context: Context): String =
         context.getString(R.string.read_filter_origin)
+
+    /** The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off. */
+    fun readFilterAnyOrigin(context: Context): String =
+        context.getString(R.string.read_filter_any_origin)
 
     /** A filter. */
     fun readFilterStatus(context: Context): String =

@@ -9480,9 +9480,6 @@ read-search-nothing-filters-line = Ít bộ lọc hơn có thể tìm thấy nhi
 read-search-clear-filters = Xóa bộ lọc
 
 # A sort of reading's Search, AniList's.
-read-sort-popular = Phổ biến
-
-# A sort of reading's Search, AniList's.
 read-sort-trending = Thịnh hành
 
 # A sort of reading's Search, AniList's.

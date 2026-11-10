@@ -2671,7 +2671,6 @@
     <string name="read_search_nothing_line">Coba kata lain, atau judul dalam bahasa lain.</string>
     <string name="read_search_nothing_filters_line">Filter yang lebih sedikit mungkin menemukan lebih banyak.</string>
     <string name="read_search_clear_filters">Hapus filter</string>
-    <string name="read_sort_popular">Populer</string>
     <string name="read_sort_trending">Sedang tren</string>
     <string name="read_sort_score">Skor</string>
     <string name="read_sort_newest">Terbaru</string>

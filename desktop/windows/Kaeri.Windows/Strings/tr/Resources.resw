@@ -6995,9 +6995,6 @@
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Filtreleri temizle</value>
   </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Popüler</value>
-  </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Trend</value>
   </data>

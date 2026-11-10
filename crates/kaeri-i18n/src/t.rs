@@ -2910,6 +2910,11 @@ pub fn read_linux_view_all_row(row: &str) -> String {
     text("read-linux-view-all-row", &[("row", Arg::Text(row))])
 }
 
+/// Screen reader name of See all on a row of reading's Search start: the row's heading follows, as for Read's rows.
+pub fn read_linux_see_all_row(row: &str) -> String {
+    text("read-linux-see-all-row", &[("row", Arg::Text(row))])
+}
+
 /// Screen reader name of a discovery row's heading while its covers are on their way.
 pub fn read_linux_row_loading(row: &str) -> String {
     text("read-linux-row-loading", &[("row", Arg::Text(row))])
@@ -15698,11 +15703,6 @@ pub fn read_search_clear_filters() -> String {
 }
 
 /// A sort of reading's Search, AniList's.
-pub fn read_sort_popular() -> String {
-    text("read-sort-popular", &[])
-}
-
-/// A sort of reading's Search, AniList's.
 pub fn read_sort_trending() -> String {
     text("read-sort-trending", &[])
 }
@@ -15725,6 +15725,11 @@ pub fn read_filter_format() -> String {
 /// A filter.
 pub fn read_filter_origin() -> String {
     text("read-filter-origin", &[])
+}
+
+/// The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+pub fn read_filter_any_origin() -> String {
+    text("read-filter-any-origin", &[])
 }
 
 /// A filter.

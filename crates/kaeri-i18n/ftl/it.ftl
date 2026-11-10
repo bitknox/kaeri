@@ -9706,9 +9706,6 @@ read-search-nothing-filters-line = Con meno filtri potresti trovare di più.
 read-search-clear-filters = Cancella i filtri
 
 # A sort of reading's Search, AniList's.
-read-sort-popular = Popolari
-
-# A sort of reading's Search, AniList's.
 read-sort-trending = Di tendenza
 
 # A sort of reading's Search, AniList's.

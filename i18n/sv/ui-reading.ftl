@@ -242,7 +242,6 @@ read-search-nothing-browse = Inget matchar de här filtren
 read-search-nothing-line = Prova andra ord, eller en titel på ett annat språk.
 read-search-nothing-filters-line = Färre filter kan ge fler träffar.
 read-search-clear-filters = Rensa filter
-read-sort-popular = Populära
 read-sort-trending = Trendande
 read-sort-score = Betyg
 read-sort-newest = Nyaste

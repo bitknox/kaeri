@@ -268,7 +268,6 @@ read-search-nothing-browse = Ничего не подходит под эти ф
 read-search-nothing-line = Попробуйте другие слова или название на другом языке.
 read-search-nothing-filters-line = С меньшим числом фильтров может найтись больше.
 read-search-clear-filters = Сбросить фильтры
-read-sort-popular = Популярное
 read-sort-trending = В тренде
 read-sort-score = Оценка
 read-sort-newest = Новинки

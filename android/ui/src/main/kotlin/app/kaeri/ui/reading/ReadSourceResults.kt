@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -158,15 +160,9 @@ internal fun LazyGridScope.wordsResults(shown: ShownSearch, both: Boolean, demoO
         // Its own item, so it stays while the first source's row leaves or is asked again.
         item(span = { GridItemSpan(maxLineSpan) }, key = "src-heading", contentType = "heading") {
             val context = LocalContext.current
-            Text(
-                Strings.readSearchFromSources(context),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                modifier = searchMotion()
-                    .padding(top = if (sourcesOnly) 0.dp else 16.dp)
-                    // The grid's gap stands under it; it sits 4 over its first row, as the board has it.
-                    .pullUp(12.dp)
-                    .semantics { heading() },
-            )
+            // A heading as the shows' Search start has them; the grid's gap under it is taken back,
+            // so it sits over its first row as a rail's heading does.
+            Box(searchMotion().pullUp(16.dp)) { app.kaeri.ui.StartHeading(Strings.readSearchFromSources(context)) }
         }
         shownGroups.forEach { group ->
             item(span = { GridItemSpan(maxLineSpan) }, key = "src-${group.sourceId}", contentType = "source") {
@@ -227,9 +223,10 @@ private fun LazyGridScope.countLine(search: ReadSearchState?, asking: Boolean) {
         }
         Row(searchMotion(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             app.kaeri.design.SwapFade(words, animationSpec = tween(COVERS_IN, easing = LinearOutSlowInEasing), label = "count") { said -> // i18n-skip
+                // The shows' caption style over the grid.
                 Text(
                     said,
-                    style = MaterialTheme.typography.bodySmall.tabular(),
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -289,6 +286,7 @@ private fun ResultCell(tile: WorkTile, joins: List<ReadSourceJoin>?, grid: ReadG
             extra = extra,
             list = grid.list,
             planning = true,
+            titleMax = 2,
         )
         ReadTileMenu(tile, menu, current = null) { menu = false }
     }
@@ -321,10 +319,10 @@ private fun SourceGroupRow(group: ReadSourceGroup, again: Boolean, waited: Boole
         else -> group.sourceName
     }
     Column {
+        // Headed as the shows' Search rails are: the name, and what it is beside it in haze.
         Row(
             Modifier
                 .fillMaxWidth()
-                .heightIn(min = 32.dp)
                 .semantics(mergeDescendants = true) {
                     heading()
                     contentDescription = label
@@ -332,7 +330,12 @@ private fun SourceGroupRow(group: ReadSourceGroup, again: Boolean, waited: Boole
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Text(group.sourceName, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), maxLines = 1, modifier = Modifier.weight(1f, fill = false))
+            Text(
+                group.sourceName,
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                modifier = Modifier.weight(1f, fill = false).padding(vertical = 12.dp),
+            )
             if (kind != null) Text(kind, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1)
             androidx.compose.animation.AnimatedVisibility(asking || (again && waited), enter = androidx.compose.animation.fadeIn(Motion.fadeIn()), exit = androidx.compose.animation.fadeOut(Motion.fadeOut())) {
                 CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp, color = colors.onSurfaceVariant)
@@ -341,26 +344,39 @@ private fun SourceGroupRow(group: ReadSourceGroup, again: Boolean, waited: Boole
         // The slot keeps its place while asking; a failure closes it to its height on the spring.
         LandingSlot(
             landed = !asking,
-            modifier = Modifier.bleed(16.dp).then(if (reduced) Modifier else Modifier.animateContentSize(Motion.standard())),
-            placeholders = { CoverStripPlaceholder() },
+            modifier = if (reduced) Modifier else Modifier.animateContentSize(Motion.standard()),
+            placeholders = { RailCoversPlaceholder() },
         ) {
             // A new answer over the one kept from the words before: one crossfade in the same slot.
             // Asked again by its Try again, the last answer stays until the slot's placeholders take it.
             app.kaeri.design.SwapFade(answer.state to answer.tiles, animationSpec = tween(COVERS_IN, easing = LinearOutSlowInEasing), label = "source answer") { (state, tiles) -> // i18n-skip
                 when (state) {
-                    is ReadSourceState.Failed -> SourceFailed(group, failureWords(context, state.failure), null, Modifier.padding(horizontal = 16.dp))
+                    is ReadSourceState.Failed -> SourceFailed(group, failureWords(context, state.failure), null)
                     is ReadSourceState.TimedOut -> SourceFailed(
                         group,
                         Strings.readSearchSourceTimeout(context, state.seconds.toInt()),
                         Strings.readSearchSourceTimeoutSpoken(context, state.seconds.toInt()),
-                        Modifier.padding(horizontal = 16.dp),
                     )
                     // Source hits: no menu and no Add to Planning, as the board has them.
-                    else -> TileStrip(tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false, cap = SOURCE_HITS_SHOWN) { hit ->
+                    else -> TileStrip(tiles, "read-src-${group.sourceId}", rowKey = group.sourceId, planning = false, cap = SOURCE_HITS_SHOWN, rail = true) { hit ->
                         hit.hitLine(context).let { RowCaption(it, it) }
                     }
                 }
             }
+        }
+    }
+}
+
+/** A rail's covers on their way: as many 104 dp placeholders as the width shows, and one more past the edge. */
+@Composable
+private fun RailCoversPlaceholder() {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val count = ((maxWidth + app.kaeri.ui.RAIL_GAP) / (app.kaeri.ui.RAIL_COVER + app.kaeri.ui.RAIL_GAP)).toInt() + 1
+        Row(
+            Modifier.wrapContentWidth(Alignment.Start, unbounded = true),
+            horizontalArrangement = Arrangement.spacedBy(app.kaeri.ui.RAIL_GAP),
+        ) {
+            repeat(count.coerceAtLeast(1)) { Box(Modifier.width(app.kaeri.ui.RAIL_COVER)) { app.kaeri.ui.PosterPlaceholder(titleLines(), 1) } }
         }
     }
 }
@@ -424,27 +440,15 @@ internal fun FailureNotice(
 private fun AnilistFailed(search: ReadSearchState) {
     val store = LocalAppStore.current
     val context = LocalContext.current
-    FailureNotice(
-        title = Strings.readSearchAnilistFailed(context),
-        line = Strings.readSearchAnilistFailedLine(context),
-        action = Strings.actionTryAgain(context),
-        onAction = { store.reading.runSearch(search.query) },
-    )
+    // As the shows' Search says a failure: the line, then Try again.
+    app.kaeri.ui.SearchFailed(Strings.readSearchAnilistFailedLine(context), onRetry = { store.reading.runSearch(search.query) })
 }
 
 /** AniList found nothing, while the sources are still asked or found something. */
 @Composable
 private fun AnilistNothing() {
     val context = LocalContext.current
-    Column(Modifier.padding(vertical = 8.dp).semantics(mergeDescendants = true) {}) {
-        Text(Strings.readSearchAnilistNothing(context), style = MaterialTheme.typography.titleMedium)
-        Text(
-            Strings.readSearchNothingLine(context),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
-        )
-    }
+    app.kaeri.ui.SearchNothing(Strings.readSearchAnilistNothing(context), onClearFilters = null)
 }
 
 /**
@@ -459,20 +463,12 @@ private fun NothingAnywhere(search: ReadSearchState, eitherLine: Boolean) {
     val filtered = query.formats.isNotEmpty() || query.origins.isNotEmpty() || query.status != null ||
         query.genres.isNotEmpty() || query.excludeGenres.isNotEmpty() || (query.started != null && query.started != "any") // i18n-skip
     Column {
+        // As the shows' Search says nothing found: the line, then Clear filters when any are set.
         when {
-            query.sourcesOnly -> PlainEmpty(
-                Strings.readSearchSourcesOnlyNothing(context),
-                Strings.readSearchSourcesOnlyNothingLine(context),
-                inset = 0.dp,
-                small = true,
-            )
-            else -> PlainEmpty(
+            query.sourcesOnly -> app.kaeri.ui.SearchNothing(Strings.readSearchSourcesOnlyNothing(context), onClearFilters = null)
+            else -> app.kaeri.ui.SearchNothing(
                 Strings.readSearchNothing(context, query.text),
-                if (filtered) Strings.readSearchNothingFiltersLine(context) else Strings.readSearchNothingLine(context),
-                inset = 0.dp,
-                small = true,
-                action = if (filtered) Strings.readSearchClearFilters(context) else null,
-                onAction = { store.reading.runSearch(ReadingModel.EMPTY_QUERY.copy(text = query.text, sort = query.sort, sourcesOnly = query.sourcesOnly)) },
+                onClearFilters = if (filtered) ({ store.reading.runSearch(query.clearedFilters().copy(sourcesOnly = query.sourcesOnly)) }) else null,
             )
         }
         if (eitherLine && !query.sourcesOnly) {

@@ -43,6 +43,11 @@
 #
 #   android/scripts/shots.sh phone reading-home:read reading-series:read+page=read/series/a%3A900301+series=read-from
 #
+# Search's reading side: scope=reading with medium=both (or read), query=<words> as the shows'
+# search takes them, and readfilters=set for Fantasy, Manga, Japan and Releasing:
+#
+#   android/scripts/shots.sh phone reading-home:medium=both+search+scope=reading+readfilters=set
+#
 # The status bar is in demo mode at 19:30, and the system dark. The app says KAERI_READY in the
 # log once its screens have what they asked for, and the shot is taken then.
 set -euo pipefail

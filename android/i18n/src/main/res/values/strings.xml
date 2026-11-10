@@ -5382,8 +5382,6 @@
     <!-- The button under it. -->
     <string name="read_search_clear_filters">Clear filters</string>
     <!-- A sort of reading's Search, AniList's. -->
-    <string name="read_sort_popular">Popular</string>
-    <!-- A sort of reading's Search, AniList's. -->
     <string name="read_sort_trending">Trending</string>
     <!-- A sort of reading's Search, AniList's. -->
     <string name="read_sort_score">Score</string>
@@ -5393,6 +5391,8 @@
     <string name="read_filter_format">Format</string>
     <!-- A filter. -->
     <string name="read_filter_origin">Origin</string>
+    <!-- The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off. -->
+    <string name="read_filter_any_origin">Any origin</string>
     <!-- A filter. -->
     <string name="read_filter_status">Status</string>
     <!-- A filter. -->

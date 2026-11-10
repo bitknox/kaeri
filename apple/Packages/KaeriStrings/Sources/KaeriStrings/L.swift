@@ -9396,9 +9396,6 @@ public enum L {
     public static var readSearchClearFilters: String { string("read-search-clear-filters", fallback: "Clear filters") }
 
     /// A sort of reading's Search, AniList's.
-    public static var readSortPopular: String { string("read-sort-popular", fallback: "Popular") }
-
-    /// A sort of reading's Search, AniList's.
     public static var readSortTrending: String { string("read-sort-trending", fallback: "Trending") }
 
     /// A sort of reading's Search, AniList's.
@@ -9412,6 +9409,9 @@ public enum L {
 
     /// A filter.
     public static var readFilterOrigin: String { string("read-filter-origin", fallback: "Origin") }
+
+    /// The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+    public static var readFilterAnyOrigin: String { string("read-filter-any-origin", fallback: "Any origin") }
 
     /// A filter.
     public static var readFilterStatus: String { string("read-filter-status", fallback: "Status") }

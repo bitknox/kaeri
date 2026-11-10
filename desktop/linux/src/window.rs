@@ -47,6 +47,8 @@ type OnSize = Box<dyn Fn(Size)>;
 
 /// How long a pushed page takes to slide over the one under it.
 const PUSH_MS: u32 = 250;
+/// Search's Shows and Reading sides crossfading into each other.
+const SIDES_MS: u32 = 200;
 
 /// What one of the window's actions does.
 type ShellAction = Box<dyn Fn(&Shell, Option<&glib::Variant>)>;
@@ -624,6 +626,19 @@ impl Shell {
         }
     }
 
+    /// Show `dest`'s other side, Shows or Reading. Search's two sides stand in one place: the
+    /// one crossfades into the other, so the title, the field and the row stay put while the
+    /// chips and the content change. A crossfade is kept under Reduce Animation too.
+    fn switch_side(&self, dest: Dest) {
+        let stack = &self.ctx.stack;
+        if matches!(dest, Dest::Search | Dest::ReadSearch) {
+            stack.set_transition_type(gtk::StackTransitionType::Crossfade);
+            stack.set_transition_duration(SIDES_MS);
+        }
+        self.go(dest);
+        stack.set_transition_type(gtk::StackTransitionType::None);
+    }
+
     /// Show `dest` as a page pushed over the one on screen, or popped back to it: libadwaita's
     /// push, over from the end and back under it. With Reduce Animation it is there at once.
     fn slide(&self, dest: Dest, forward: bool) {
@@ -1110,7 +1125,7 @@ impl Shell {
                 if let Some(dest) =
                     a.and_then(String::from_variant).and_then(|n| Dest::named(&n))
                 {
-                    s.go(dest);
+                    s.switch_side(dest);
                 }
             }),
         );

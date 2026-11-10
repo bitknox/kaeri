@@ -302,6 +302,10 @@ internal object Flavour {
                     }.first { it }
                 }
             }
+            // Reading's Search asked for: its answer in, the sources' with it.
+            if (intent.getStringExtra("scope") == "reading") {
+                withTimeoutOrNull(15_000) { store.reading.search.first { !it.loading && (it.sources == null || it.sources?.done == true) } }
+            }
             // The sheet a shot asked for, opening.
             delay(if (intent.getStringExtra("series") != null) 1_200 else 300)
             true
@@ -388,6 +392,10 @@ internal object Flavour {
                 ?: Log.w(KaeriApp.TAG, "medium takes read, watch or both, not $named")
         }
         intent.getStringExtra("series")?.let { app.kaeri.ui.reading.SeriesShots.open = it }
+        // scope=reading: Search on reading's side, with the query's words and readfilters=set.
+        if (intent.getStringExtra("scope") == "reading") {
+            app.kaeri.ui.reading.showReadingSearch(store, intent.getStringExtra(MainActivity.QUERY), intent.getStringExtra("readfilters") == "set")
+        }
         if (intent.getStringExtra("notify") != null) notifyFixtures(store, notifier)
         intent.getStringExtra("widgets")?.let { pinWidgets(context, it) }
         intent.getStringExtra("check")?.toLongOrNull()?.let { delay ->

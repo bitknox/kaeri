@@ -6995,9 +6995,6 @@
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Rensa filter</value>
   </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Populära</value>
-  </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Trendande</value>
   </data>

@@ -6728,9 +6728,6 @@
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Xóa bộ lọc</value>
   </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Phổ biến</value>
-  </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Thịnh hành</value>
   </data>

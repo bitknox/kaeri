@@ -176,6 +176,10 @@ struct MacShell: View {
             return store.seasonName ?? ""
         case .search:
             // The search as a job past 600 ms, then what is asked (Running jobs, native-ux.md).
+            if ReadSearchScope.active(store: store, navigator: navigator) {
+                let search = store.reading.search
+                return search.query.atStart ? "" : ReadFilterWords.headline(search.query, filters: store.reading.filters)
+            }
             return store.search.searchingLine ?? (store.search.atStart ? "" : store.search.query.headline())
         case .downloads:
             return downloadsSubtitle(store)
@@ -487,7 +491,8 @@ struct SectionView: View {
         case .calendar: CalendarScreen()
         case .seasonal: SeasonalScreen()
         case .search:
-            if ReadSearchScope.active(store: store, navigator: navigator) { ReadSearchScreen() } else { SearchScreen() }
+            // One screen for both scopes: reading's Search is drawn inside it.
+            SearchScreen()
         case .library: LibraryScreen()
         case .settings: SettingsScreen()
         case .downloads: DownloadsScreen()

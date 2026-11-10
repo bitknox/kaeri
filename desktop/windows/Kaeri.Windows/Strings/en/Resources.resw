@@ -9462,10 +9462,6 @@
     <value>Clear filters</value>
     <comment>The button under it.</comment>
   </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Popular</value>
-    <comment>A sort of reading's Search, AniList's.</comment>
-  </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Trending</value>
     <comment>A sort of reading's Search, AniList's.</comment>
@@ -9485,6 +9481,10 @@
   <data name="ReadFilterOrigin" xml:space="preserve">
     <value>Origin</value>
     <comment>A filter.</comment>
+  </data>
+  <data name="ReadFilterAnyOrigin" xml:space="preserve">
+    <value>Any origin</value>
+    <comment>The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.</comment>
   </data>
   <data name="ReadFilterStatus" xml:space="preserve">
     <value>Status</value>

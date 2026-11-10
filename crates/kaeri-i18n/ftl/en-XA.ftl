@@ -1907,6 +1907,9 @@ linux-book-plugin-use = [Ûšé ţĥîš þļüĝîñ~~~~~]
 # Screen reader name of a discovery row's View all button: the row's heading follows, so a list of links makes sense on its own.
 read-linux-view-all-row = [Ṽîéŵ àļļ, { $row }~~~~]
 
+# Screen reader name of See all on a row of reading's Search start: the row's heading follows, as for Read's rows.
+read-linux-see-all-row = [Šéé àļļ, { $row }~~~~]
+
 # Screen reader name of a discovery row's heading while its covers are on their way.
 read-linux-row-loading = [{ $row }, ļöàðîñĝ~~~~]
 
@@ -9871,9 +9874,6 @@ read-search-nothing-filters-line = [Ƒéŵéŕ ƒîļţéŕš ɱàý ƒîñð ɱ
 read-search-clear-filters = [Çļéàŕ ƒîļţéŕš~~~~]
 
 # A sort of reading's Search, AniList's.
-read-sort-popular = [Þöþüļàŕ~~~]
-
-# A sort of reading's Search, AniList's.
 read-sort-trending = [Ţŕéñðîñĝ~~~]
 
 # A sort of reading's Search, AniList's.
@@ -9887,6 +9887,9 @@ read-filter-format = [Ƒöŕɱàţ~~]
 
 # A filter.
 read-filter-origin = [Öŕîĝîñ~~]
+
+# The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+read-filter-any-origin = [Åñý öŕîĝîñ~~~]
 
 # A filter.
 read-filter-status = [Šţàţüš~~]

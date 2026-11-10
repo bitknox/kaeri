@@ -8,6 +8,12 @@
 # @arg row: text
 read-linux-view-all-row = View all, { $row }
 
+# Screen reader name of See all on a row of reading's Search start: the row's heading follows,
+# as for Read's rows.
+# @only linux
+# @arg row: text
+read-linux-see-all-row = See all, { $row }
+
 # Screen reader name of a discovery row's heading while its covers are on their way.
 # @only linux
 # @arg row: text
