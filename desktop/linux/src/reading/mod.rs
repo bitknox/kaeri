@@ -54,6 +54,62 @@ pub fn send(hub: &Hub, command: ReadingCommand) {
     hub.send(Command::Reading(command));
 }
 
+/// Settings, Reading, Reader defaults: Skip credit pages, on by default, a manga setting that
+/// syncs. The switch follows the engine's settings for manga, and a flip sets them.
+pub fn reader_defaults_group(ctx: &Rc<Ctx>) -> adw::PreferencesGroup {
+    use kaeri_model::reader::{ReaderCommand, ReaderEvent, ReaderSettingKey, ReaderValue};
+    let group = adw::PreferencesGroup::builder().title(t::settings_reader_defaults()).build();
+    let row = adw::SwitchRow::builder()
+        .title(glib::markup_escape_text(&t::settings_skip_credits()))
+        .subtitle(glib::markup_escape_text(&t::settings_skip_credits_note()))
+        .active(true)
+        .build();
+    group.add(&row);
+    let key = ReaderSettingKey::SkipCreditPages;
+    // The engine's word is what the switch shows; a flip it sends back is not sent again.
+    let answering = Rc::new(Cell::new(false));
+    listen(ctx, &row, {
+        let (row, answering) = (row.downgrade(), Rc::clone(&answering));
+        move |event| {
+            if let kaeri_model::event::Event::Reader(ReaderEvent::Settings(view)) = event
+                && view.medium == kaeri_core::media::Medium::Manga
+                && view.work.is_none()
+                && let Some(found) = view.rows.iter().find(|r| r.key == key)
+                && let ReaderValue::Toggle { on } = found.value
+                && let Some(row) = row.upgrade()
+                && row.is_active() != on
+            {
+                answering.set(true);
+                row.set_active(on);
+                answering.set(false);
+            }
+        }
+    });
+    row.connect_active_notify({
+        let hub = Rc::downgrade(&ctx.hub);
+        move |row| {
+            if answering.get() {
+                return;
+            }
+            if let Some(hub) = hub.upgrade() {
+                hub.send(Command::Reader(ReaderCommand::SetSetting {
+                    session: None,
+                    medium: kaeri_core::media::Medium::Manga,
+                    work: None,
+                    key,
+                    scope: key.home_scope(),
+                    value: ReaderValue::Toggle { on: row.is_active() },
+                }));
+            }
+        }
+    });
+    ctx.hub.send(Command::Reader(ReaderCommand::LoadSettings {
+        medium: kaeri_core::media::Medium::Manga,
+        work: None,
+    }));
+    group
+}
+
 /// Whether reading shows anywhere on this device.
 pub fn reads(hub: &Hub) -> bool {
     hub.known.borrow().medium.as_ref().is_some_and(|m| m.reads())
@@ -74,6 +130,46 @@ pub fn answer(hub: &Hub) -> KaeriIsFor {
 /// Engine messages joined with a middle dot, in the language in use.
 pub fn dotted(parts: &[Msg]) -> String {
     parts.iter().map(say::msg).filter(|s| !s.is_empty()).collect::<Vec<_>>().join(" \u{b7} ")
+}
+
+/// A chapter row's line in the engine's words, with a group's language named in the app's
+/// language from its tag ("from Group B, Spanish"), not the engine's English name.
+pub fn row_line(chapter: &kaeri_model::reading::ChapterRow) -> String {
+    use kaeri_model::ReadingMsg as R;
+    let named = |tag: Option<&str>, english: &str| {
+        tag.map_or_else(
+            || english.to_owned(),
+            |tag| say::language(tag.split(['-', '_']).next().unwrap_or(tag)),
+        )
+    };
+    let line: Vec<Msg> = chapter
+        .line
+        .iter()
+        .map(|msg| match msg {
+            Msg::Reading(R::ReadingRowFromGroupIn { group, language }) => {
+                Msg::Reading(R::ReadingRowFromGroupIn {
+                    group: group.clone(),
+                    language: named(chapter.group_language.as_deref(), language),
+                })
+            }
+            Msg::Reading(R::ReadingRowPartFromGroupIn { part, group, language }) => {
+                let tag = chapter
+                    .part_groups
+                    .iter()
+                    .find(|p| i64::from(p.part) == *part)
+                    .and_then(|p| p.language.as_deref());
+                Msg::Reading(R::ReadingRowPartFromGroupIn {
+                    part: *part,
+                    group: group.clone(),
+                    language: named(tag, language),
+                })
+            }
+            other => other.clone(),
+        })
+        .collect();
+    // The engine's words start in lower case, "from Group B, Spanish"; the row's line starts
+    // with a capital.
+    say::capitalized(&dotted(&line))
 }
 
 /// What failed, in plain words.

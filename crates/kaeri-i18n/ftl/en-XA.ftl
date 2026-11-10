@@ -9071,6 +9071,9 @@ reader-group-line-place = [{ $chapter } · { $place }~~~]
 # Spoken name of a credit page shown again.
 reader-credit-page-label = [Çŕéðîţ þàĝé~~~~]
 
+# Notice when a skipped credit page's picture can't be read, so it can't be shown.
+reader-credit-failed = [Çöüļðñ'ţ ļöàð ţĥîš çŕéðîţ þàĝé~~~~~~~~~]
+
 # The scrubber's preview on the first page of a chapter's later part.
 reader-part-preview = [Þàĝé { $page } · þàŕţ { $part }~~~~~~]
 

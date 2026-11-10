@@ -373,6 +373,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         return settle;
     }
     #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_reading_credits::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
     if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
         return settle;
     }
@@ -1379,6 +1383,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
     #[cfg(feature = "fixtures")]
     crate::shots_read_discovery::unstage(shell, shot);
     #[cfg(feature = "fixtures")]
+    crate::shots_reading_credits::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
     crate::shots_prelaunch::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
@@ -2060,6 +2066,10 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 | "read-novel-paper" => open_popover(&window),
                 #[cfg(feature = "fixtures")]
                 "read-disc-poster-menu" | "read-disc-poster-menu-own" => context_menu(&window),
+                #[cfg(feature = "fixtures")]
+                "read-series-group-picker" => {
+                    crate::shots_reading_credits::shown_popover(&window)
+                }
                 party if party.starts_with("party-") => player.shot_party_popover(),
                 _ => None,
             };
@@ -2117,6 +2127,11 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "reading" => {
                     crate::shots_reading::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
+                #[cfg(feature = "fixtures")]
+                "reading-credits" => crate::shots_reading_credits::NAMES
+                    .iter()
+                    .map(|p| (*p).to_owned())
+                    .collect(),
                 #[cfg(feature = "fixtures")]
                 "reading-discovery" => {
                     crate::shots_read_discovery::NAMES.iter().map(|p| (*p).to_owned()).collect()

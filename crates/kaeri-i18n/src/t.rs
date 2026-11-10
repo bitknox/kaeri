@@ -14492,6 +14492,11 @@ pub fn reader_credit_page_label() -> String {
     text("reader-credit-page-label", &[])
 }
 
+/// Notice when a skipped credit page's picture can't be read, so it can't be shown.
+pub fn reader_credit_failed() -> String {
+    text("reader-credit-failed", &[])
+}
+
 /// The scrubber's preview on the first page of a chapter's later part.
 pub fn reader_part_preview(page: i64, part: i64) -> String {
     text("reader-part-preview", &[("page", Arg::Plain(page)), ("part", Arg::Plain(part))])

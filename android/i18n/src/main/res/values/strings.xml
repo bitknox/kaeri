@@ -4840,6 +4840,8 @@
     <string name="reader_group_line_place">%1$s · %2$s</string>
     <!-- Spoken name of a credit page shown again. -->
     <string name="reader_credit_page_label">Credit page</string>
+    <!-- Notice when a skipped credit page's picture can't be read, so it can't be shown. -->
+    <string name="reader_credit_failed">Couldn\'t load this credit page</string>
     <!-- The scrubber's preview on the first page of a chapter's later part. -->
     <string name="reader_part_preview">Page %1$d · part %2$d</string>
     <!-- The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing". -->

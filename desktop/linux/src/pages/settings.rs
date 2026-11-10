@@ -549,7 +549,10 @@ impl Inner {
                 page.add(&group);
             }
             "general" => page.add(&self.language_group()),
-            "reading" => page.add(&crate::reading::medium::settings_group(&self.ctx)),
+            "reading" => {
+                page.add(&crate::reading::medium::settings_group(&self.ctx));
+                page.add(&crate::reading::reader_defaults_group(&self.ctx));
+            }
             // The TVs paired for Play on TV moved to Devices; whether it lists TVs with
             // Chromecast built in stays with the integrations.
             "integrations" => {

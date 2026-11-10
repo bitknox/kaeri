@@ -517,6 +517,7 @@ On the ground (`#161A2E`): silk 13.0:1, water 9.1:1, amber 8.5:1 (and ground on 
 
 - Android uses the system's own rule: the times above, or `getRecommendedTimeoutMillis` when the user's time to take action is longer. A notice with a button stays until it is dismissed, acted on or replaced. In the player the Undo and Resume notes also stay past their playback seconds while TalkBack or Switch Access runs.
 - Windows and Linux use the times above, doubled while a screen reader runs. A notice with a button stays until it is dismissed or acted on. The player's Undo note stays twice as long while a screen reader runs.
+- One exception on every platform: the reader's Undo after Not a credit page lasts 8 s, 16 s while a screen reader runs, and then goes by itself. The keep is held until then, and the engine hears of it when the notice times out, at a second keep, or as the chapter closes or another opens.
 - Apple keeps its own rule above, which pauses under VoiceOver focus.
 
 ### Reduce Motion, Reduce Transparency, captions

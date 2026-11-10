@@ -43,7 +43,6 @@ struct Listing {
     volumes: Vec<VolumeGroup>,
     failure: Option<String>,
     order: Option<Order>,
-    name_group: bool,
     steps: Vec<Step>,
     /// What each step drawn so far drew, by step.
     drawn: Vec<Drawn>,
@@ -106,21 +105,12 @@ impl SeriesChapters {
         } else {
             volumes.to_vec()
         };
-        // The group is named only when the series has more than one.
-        let groups = volumes
-            .iter()
-            .flat_map(|v| &v.chapters)
-            .filter_map(|c| c.version_label.as_deref())
-            .collect::<std::collections::HashSet<_>>()
-            .len();
-        let name_group = groups > 1;
         let steps = steps(&volumes);
         let failure = failure.map(str::to_owned);
         let same = {
             let old = self.listing.borrow();
             old.order == Some(order)
                 && old.failure == failure
-                && old.name_group == name_group
                 && old.steps == steps
                 && same_chapters(&old.volumes, &volumes)
         };
@@ -138,7 +128,6 @@ impl SeriesChapters {
             volumes,
             failure,
             order: Some(order),
-            name_group,
             steps,
             ..Listing::default()
         });
@@ -184,8 +173,7 @@ impl SeriesChapters {
         match step {
             Step::Fold(group) => {
                 let newest = listing.order.is_some_and(|o| o.newest);
-                let fold =
-                    fold(&self.work, &listing.volumes[*group], listing.name_group, newest);
+                let fold = fold(&self.work, &listing.volumes[*group], newest);
                 let list = listing
                     .folded
                     .get_or_insert_with(|| {
@@ -215,7 +203,7 @@ impl SeriesChapters {
             }
             Step::Row(group, index) => {
                 let chapter = &listing.volumes[*group].chapters[*index];
-                let row = chapter_row(&self.work, chapter, listing.name_group);
+                let row = chapter_row(&self.work, chapter);
                 let Some(list) = listing.list.clone() else { return Drawn::Other };
                 list.append(&row);
                 listing.rows += 1;
@@ -230,7 +218,7 @@ impl SeriesChapters {
         let mut listing = self.listing.borrow_mut();
         let old = std::mem::replace(&mut listing.volumes, volumes);
         let newest = listing.order.is_some_and(|o| o.newest);
-        let Listing { volumes, steps, drawn, name_group, .. } = &mut *listing;
+        let Listing { volumes, steps, drawn, .. } = &mut *listing;
         for (step, drawn) in steps.iter().zip(drawn.iter_mut()) {
             match (step, drawn) {
                 (Step::Row(g, i), Drawn::Row(row, list)) => {
@@ -238,7 +226,7 @@ impl SeriesChapters {
                     if old[*g].chapters[*i] == *chapter {
                         continue;
                     }
-                    let fresh = chapter_row(&self.work, chapter, *name_group);
+                    let fresh = chapter_row(&self.work, chapter);
                     swap(list, row, &fresh);
                     *row = fresh;
                 }
@@ -246,7 +234,7 @@ impl SeriesChapters {
                     if old[*g] == volumes[*g] {
                         continue;
                     }
-                    let fresh = self::fold(&self.work, &volumes[*g], *name_group, newest);
+                    let fresh = self::fold(&self.work, &volumes[*g], newest);
                     fresh.set_expanded(fold.is_expanded());
                     swap(list, fold, &fresh);
                     *fold = fresh;
@@ -309,12 +297,7 @@ fn same_chapters(old: &[VolumeGroup], new: &[VolumeGroup]) -> bool {
 
 /// A read volume folded into one line: "Volume 9 · chapters 77 to 84 · read". Its chapters
 /// are drawn the first time it opens.
-fn fold(
-    work: &WorkId,
-    group: &VolumeGroup,
-    name_group: bool,
-    newest: bool,
-) -> adw::ExpanderRow {
+fn fold(work: &WorkId, group: &VolumeGroup, newest: bool) -> adw::ExpanderRow {
     let name = group.volume.as_deref().map_or_else(t::series_no_volume, t::series_volume);
     let mut line = Vec::new();
     let (first, last) = (group.chapters.first(), group.chapters.last());
@@ -335,7 +318,7 @@ fn fold(
     fold.connect_expanded_notify(move |fold| {
         if fold.is_expanded() && !filled.replace(true) {
             for chapter in &chapters {
-                fold.add_row(&chapter_row(&work, chapter, name_group));
+                fold.add_row(&chapter_row(&work, chapter));
             }
         }
     });

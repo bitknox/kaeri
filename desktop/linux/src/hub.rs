@@ -462,7 +462,15 @@ pub struct Hub {
     /// of the fixture engine, which has no discovery rows or sources' search to show.
     #[cfg(feature = "fixtures")]
     pub read_answer: RefCell<Option<ReadAnswer>>,
+    /// For a shot: each event changed before it is heard, for states the fixture engine has
+    /// none of (groups, parts, chapters from another group).
+    #[cfg(feature = "fixtures")]
+    pub dress: RefCell<Option<Dress>>,
 }
+
+/// How a shot changes each event before it is heard.
+#[cfg(feature = "fixtures")]
+pub type Dress = Rc<dyn Fn(&mut Event)>;
 
 /// What a shot answers a reading command with, when it answers it: events and their delays.
 #[cfg(feature = "fixtures")]
@@ -505,6 +513,8 @@ impl Hub {
             match_hold: Cell::default(),
             #[cfg(feature = "fixtures")]
             read_answer: RefCell::default(),
+            #[cfg(feature = "fixtures")]
+            dress: RefCell::default(),
         })
     }
 
@@ -654,7 +664,14 @@ impl Hub {
     pub fn take(self: &Rc<Self>, batch: Vec<Event>) {
         for event in batch {
             #[cfg(feature = "fixtures")]
-            let event = self.unsourced_in(event);
+            let event = {
+                let mut event = self.unsourced_in(event);
+                let dress = self.dress.borrow().clone();
+                if let Some(dress) = dress {
+                    dress(&mut event);
+                }
+                event
+            };
             match &event {
                 Event::ArtworkReady { url, bytes } => {
                     self.art.arrived(url.clone(), bytes.clone());

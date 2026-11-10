@@ -8517,6 +8517,9 @@ public enum L {
     /// Spoken name of a credit page shown again.
     public static var readerCreditPageLabel: String { string("reader-credit-page-label", fallback: "Credit page") }
 
+    /// Notice when a skipped credit page's picture can't be read, so it can't be shown.
+    public static var readerCreditFailed: String { string("reader-credit-failed", fallback: "Couldn't load this credit page") }
+
     /// The scrubber's preview on the first page of a chapter's later part.
     public static func readerPartPreview(page: Int, part: Int) -> String {
         Self.format("reader-part-preview", fallback: "Page %1$@ · part %2$@", String(page), String(part))

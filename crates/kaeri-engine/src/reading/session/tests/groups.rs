@@ -553,3 +553,38 @@ async fn a_downloaded_chapter_in_parts_is_told_its_parts() {
         marks.0.iter().map(|p| (p.number, p.first_page, p.other_group)).collect();
     assert_eq!((starts, marks.1, marks.2), (vec![(1, 1, false), (2, 4, false)], 2, vec![]));
 }
+
+/// Kept at the start: the chapter is laid out again with the kept page as page 0 and every later
+/// page one on, its files sent again under the new numbers from another folder, and only the
+/// page at the end still left out. A client drops what it holds under the old numbers.
+#[tokio::test(start_paused = true)]
+async fn a_page_kept_at_the_start_comes_back_as_page_0_and_the_rest_move_one_on() {
+    let source = Arc::new(Groups::both_ends());
+    let mut h = harness_with(source, false);
+    let (leaves, credits) = third_chapter(&mut h).await;
+    assert_eq!(leaves.len(), 4);
+    let start = credits.iter().find(|c| !c.at_end).unwrap().clone();
+    let first = |events: Vec<ReaderEvent>| {
+        events.into_iter().find_map(|e| match e {
+            ReaderEvent::PageReady { page: 0, file, .. } => Some(file.path),
+            _ => None,
+        })
+    };
+    let before = first(h.drain()).expect("page 0 landed");
+    let session = h.session();
+    h.send(ReaderCommand::NotACreditPage { session, fingerprint: start.fingerprint });
+    let leaves = leaves_of(&mut h, "3").await;
+    let pages: Vec<Vec<u32>> =
+        leaves.iter().map(|l| l.parts.iter().map(|p| p.page).collect()).collect();
+    assert_eq!(pages, vec![vec![0], vec![1], vec![2], vec![3], vec![]], "four pages, the end");
+    let left = h
+        .until(|e| match e {
+            ReaderEvent::CreditPages { pages, .. } => Some(pages.clone()),
+            _ => None,
+        })
+        .await;
+    assert_eq!(left.iter().map(|c| (c.page, c.at_end)).collect::<Vec<_>>(), vec![(4, true)]);
+    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+    let after = first(h.drain()).expect("page 0 sent again");
+    assert_ne!(after, before, "page 0 is another file now");
+}

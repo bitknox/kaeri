@@ -40,6 +40,7 @@ use super::{
 };
 use crate::{motion, say, window::Ctx};
 
+mod credits;
 mod end;
 mod keys;
 mod sheet;
@@ -120,10 +121,35 @@ struct State {
     flowed: bool,
     /// The demo's work being read, with its credit capsule in the header on page 1.
     demo: Option<(kaeri_model::sources::DemoWorkInfo, gtk::Widget)>,
+    /// The open chapter's credit pages, skipped, from the engine's last layout.
+    credits: Vec<kaeri_model::reader::CreditPage>,
+    /// The credit page on screen in paged reading, by its place in `credits`.
+    credit_on: Option<usize>,
+    /// The credit pages at the start, or at the end, were shown: they stay until the chapter
+    /// closes.
+    shown_start: bool,
+    shown_end: bool,
+    /// The line on page 1 has had its 4 s, or a turn took it.
+    credit_line_done: bool,
+    /// The credit page that was on screen when a new layout came: shown again if the layout
+    /// still skips it.
+    credit_wanted: Option<u64>,
+    credit_textures: HashMap<u64, gdk::Texture>,
+    /// A strip's credit pages above its first image and after its last.
+    lead: Option<credits::CreditBlock>,
+    tail: Option<credits::CreditBlock>,
+    /// The open chapter's parts, for the scrubber's ticks and its preview.
+    parts: Option<credits::Parts>,
+    /// Each part preview shown counts up; an older one's timer leaves a newer one alone.
+    tip_ask: u32,
+    /// A page kept from the credit pages was sent: the next layout numbers pages afresh.
+    relay_kept: Option<credits::Relay>,
 }
 
 pub struct Reader {
     pub widget: gtk::Overlay,
+    /// Itself, for the callbacks of widgets made after it.
+    me: std::rc::Weak<Self>,
     ctx: std::rc::Weak<Ctx>,
     show: Rc<dyn Fn(bool)>,
     state: RefCell<State>,
@@ -166,6 +192,24 @@ pub struct Reader {
     asked_open: RefCell<Option<(WorkId, Option<ChapterId>)>>,
     /// The control that opened the reader, which has the keyboard back when it closes.
     opener: Rc<keys::Opener>,
+    /// The toasts over the pages: a shown credit page's notice.
+    toasts: adw::ToastOverlay,
+    /// Adds the toasts over the pages, so that they can all be dismissed safely.
+    notices: crate::notices::Notices,
+    /// "1 credit page skipped", top trailing on page 1; the whole pill shows the pages.
+    credit_line: gtk::Button,
+    credit_fade: motion::Fader,
+    credit_timer: RefCell<Option<glib::SourceId>>,
+    credit_toast: RefCell<Option<adw::Toast>>,
+    /// Not a credit page, held while its Undo shows: sent to the engine when the notice times
+    /// out, at a second keep, or as the chapter closes or another opens.
+    keeping: RefCell<Option<credits::Keeping>>,
+    /// A strip's credit pages: above its first image, and after its last.
+    strip_lead: gtk::Box,
+    strip_tail: gtk::Box,
+    /// "Page 25 · part 2" over the scrubber's thumb on a part's tick.
+    part_tip: gtk::Label,
+    part_tip_fade: motion::Fader,
     /// A line over the page for a while: resumed, moved, mode detected.
     notice: gtk::Box,
     notice_text: gtk::Label,
@@ -242,9 +286,15 @@ impl Reader {
         strip_foot.set_margin_top(64);
         strip_foot.set_margin_bottom(160);
         let trail = trail::Trail::new();
+        let strip_lead = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        strip_lead.set_halign(gtk::Align::Center);
+        let strip_tail = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        strip_tail.set_halign(gtk::Align::Center);
         let strip_column = gtk::Box::new(gtk::Orientation::Vertical, 0);
         strip_column.append(&trail.above);
+        strip_column.append(&strip_lead);
         strip_column.append(&strip);
+        strip_column.append(&strip_tail);
         strip_column.append(&strip_foot);
         strip_column.append(&trail.foot);
         let strip_scroll = gtk::ScrolledWindow::builder()
@@ -505,11 +555,38 @@ impl Reader {
         notice.set_margin_top(60);
         notice.set_visible(false);
 
+        // The credit line: the demo credit's capsule, top trailing, the whole pill the button.
+        let credit_line = gtk::Button::new();
+        credit_line.add_css_class("reader-credit-line");
+        credit_line.set_cursor_from_name(Some("pointer"));
+        credit_line.set_halign(gtk::Align::End);
+        credit_line.set_valign(gtk::Align::Start);
+        credit_line.set_margin_end(16);
+        credit_line.set_margin_top(credits::LINE_TOP);
+        credit_line.set_visible(false);
+        credit_line.update_property(&[gtk::accessible::Property::Description(
+            &t::reader_credit_show_hint(),
+        )]);
+        // The part preview over the scrubber's thumb: a label over the reader, placed above the
+        // thumb when it shows.
+        let part_tip = gtk::Label::new(None);
+        part_tip.add_css_class("reader-part-tip");
+        part_tip.add_css_class("numeric");
+        part_tip.set_halign(gtk::Align::Start);
+        part_tip.set_valign(gtk::Align::Start);
+        part_tip.set_can_target(false);
+        part_tip.set_visible(false);
+        let toasts = adw::ToastOverlay::new();
+        toasts.add_css_class("reader-toasts");
+        toasts.set_child(Some(&veil));
+
         let widget = gtk::Overlay::new();
-        widget.set_child(Some(&veil));
+        widget.set_child(Some(&toasts));
         widget.add_overlay(&head);
         widget.add_overlay(&group);
         widget.add_overlay(&notice);
+        widget.add_overlay(&credit_line);
+        widget.add_overlay(&part_tip);
         widget.set_focusable(true);
         widget.add_css_class("reader");
         let this = Rc::new_cyclic(|weak: &std::rc::Weak<Self>| {
@@ -530,9 +607,18 @@ impl Reader {
                 }
             });
             let end = end::EndPage::new(go_on, back);
+            end.credit_show.connect_clicked({
+                let weak = weak.clone();
+                move |_| {
+                    if let Some(this) = weak.upgrade() {
+                        this.show_credits(true);
+                    }
+                }
+            });
             stack.add_named(&end.scroll, Some("end"));
             Self {
                 widget,
+                me: weak.clone(),
                 ctx: Rc::downgrade(ctx),
                 show,
                 state: RefCell::default(),
@@ -564,6 +650,17 @@ impl Reader {
                 waiting: Cell::new(None),
                 asked_open: RefCell::default(),
                 opener: Rc::default(),
+                notices: crate::notices::Notices::new(&toasts),
+                toasts,
+                credit_line,
+                credit_fade: motion::Fader::always(),
+                credit_timer: RefCell::default(),
+                credit_toast: RefCell::default(),
+                keeping: RefCell::default(),
+                strip_lead,
+                strip_tail,
+                part_tip,
+                part_tip_fade: motion::Fader::default(),
                 notice,
                 notice_text,
                 notice_button,
@@ -658,6 +755,14 @@ impl Reader {
             move |_| {
                 if let Some(this) = this.upgrade() {
                     this.go_back_to();
+                }
+            }
+        });
+        this.credit_line.connect_clicked({
+            let this = Rc::downgrade(&this);
+            move |_| {
+                if let Some(this) = this.upgrade() {
+                    this.show_credits(false);
                 }
             }
         });
@@ -801,6 +906,10 @@ impl Reader {
     }
 
     fn send(&self, command: ReaderCommand) {
+        // A held keep goes first when the chapter is left, while the session still has it.
+        if matches!(command, ReaderCommand::OpenChapter { .. } | ReaderCommand::Close { .. }) {
+            self.commit_keep();
+        }
         if let Some(hub) = self.hub() {
             hub.send(Command::Reader(command));
         }
@@ -847,6 +956,7 @@ impl Reader {
     /// Drop everything the last open held: its pages and textures, the strip, the trail, the
     /// end page's preview and the novel's web view, which takes its WebKit processes with it.
     fn reset(&self) {
+        self.forget_credits();
         let old = self.state.replace(State::default());
         // The demo's credit capsule leaves with the work, or the next open adds a second one.
         if let Some((_, capsule)) = old.demo {
@@ -928,7 +1038,7 @@ impl Reader {
         let (heights, spacing) = self.strip_heights();
         let foot = strip_target(&heights, spacing, heights.len(), None) - f64::from(spacing);
         let page = self.strip_scroll.vadjustment().page_size();
-        self.scroll_strip_to(self.trail.height() + foot - page * share);
+        self.scroll_strip_to(self.strip_base() + foot + self.tail_height() - page * share);
     }
 
     /// "Resumed at page 2 · Start over" held over a novel, with the chrome up or gone, where the
@@ -984,6 +1094,7 @@ impl Reader {
         }
         self.stop_wait();
         self.hide_notice();
+        self.quiet_credits();
         self.widget.set_cursor(None);
         let was_showing = self.showing.get();
         (self.show)(false);
@@ -1269,6 +1380,16 @@ impl Reader {
             ReaderEvent::Notice(notice) if self.state.borrow().session != 0 => {
                 self.notice(notice);
             }
+            ReaderEvent::CreditPages { session, chapter, pages, .. }
+                if self.mine(*session) && self.is_open(chapter) =>
+            {
+                self.credit_pages(pages.clone());
+            }
+            ReaderEvent::ChapterParts { session, chapter, parts, missing, .. }
+                if self.mine(*session) && self.is_open(chapter) =>
+            {
+                self.chapter_parts(parts.clone(), missing.clone());
+            }
             _ => {}
         }
         if let ReaderEvent::NovelStyle { session, style, .. } = event
@@ -1342,6 +1463,7 @@ impl Reader {
             state.strip_frames.clear();
             state.index = 0;
         }
+        self.forget_credits();
         self.demo_credit(view.demo_credit.as_ref());
         self.title.set_label(&view.title);
         self.group_title.set_label(&view.title);
@@ -1453,6 +1575,9 @@ impl Reader {
     fn leaves(self: &Rc<Self>, leaves: Vec<Leaf>) {
         let flows = self.flows();
         let first = self.state.borrow().leaves.is_empty();
+        // The credit pages and parts that follow a layout are the engine's word on it.
+        let on_credit = self.relaid();
+        let relay = self.relay_kept();
         {
             let mut state = self.state.borrow_mut();
             for leaf in &leaves {
@@ -1465,11 +1590,21 @@ impl Reader {
         }
         if flows {
             // The same images again, after a resize: the strip keeps its pictures and its place.
-            let same =
-                !first && strip_leaves(&self.state.borrow().leaves) == strip_leaves(&leaves);
+            let same = !first
+                && relay.is_none()
+                && strip_leaves(&self.state.borrow().leaves) == strip_leaves(&leaves);
             if !first && self.state.borrow().strip_anchor.is_none() {
                 let here = self.strip_place();
                 self.state.borrow_mut().strip_anchor = here;
+            }
+            if let Some(relay) = &relay {
+                // The images from the kept page on are one further down the strip.
+                let mut state = self.state.borrow_mut();
+                if let Some(anchor) = state.strip_anchor.as_mut()
+                    && anchor.image >= relay.page
+                {
+                    anchor.image += 1;
+                }
             }
             if first && std::mem::take(&mut self.state.borrow_mut().flowed) {
                 // Under the marker, where the scroll already is: nothing to hold.
@@ -1497,8 +1632,35 @@ impl Reader {
             if same {
                 self.size_strip();
             } else {
+                self.drop_strip_credits();
                 self.build_strip();
             }
+            return;
+        }
+        if let Some(relay) = &relay
+            && on_credit.is_some_and(|(print, _)| print == relay.fingerprint)
+        {
+            // The kept page was on screen: it stays, now one of the chapter's pages.
+            {
+                let mut state = self.state.borrow_mut();
+                state.index = leaves
+                    .iter()
+                    .position(|l| l.parts.iter().any(|p| p.page == relay.page))
+                    .unwrap_or(0);
+                state.leaves = leaves;
+            }
+            let index = self.state.borrow().index;
+            self.show_leaf(index, TurnHow::Placed);
+            return;
+        }
+        if let Some((print, at_end)) = on_credit.filter(|_| !first) {
+            // A credit page is on screen: it stays if the new layout still skips it, and
+            // otherwise its own page takes its place, kept where it was.
+            let mut state = self.state.borrow_mut();
+            state.index =
+                if at_end { leaves.iter().rposition(|l| !l.end_page).unwrap_or(0) } else { 0 };
+            state.leaves = leaves;
+            state.credit_wanted = Some(print);
             return;
         }
         {
@@ -1506,8 +1668,10 @@ impl Reader {
             let start = if first {
                 state.start_page
             } else {
-                // A new layout keeps the page that was showing.
-                state.leaves.get(state.index).and_then(|l| l.parts.first()).map(|p| p.page)
+                // A new layout keeps the page that was showing, one on from a kept page before it.
+                state.leaves.get(state.index).and_then(|l| l.parts.first()).map(|p| {
+                    p.page + u32::from(relay.as_ref().is_some_and(|r| r.page <= p.page))
+                })
             };
             state.index = start
                 .and_then(|p| {
@@ -1622,7 +1786,14 @@ impl Reader {
 
     fn page_ready(self: &Rc<Self>, page: u32, file: PageFile) {
         self.chapters.page_ready(page, &file);
-        self.state.borrow_mut().files.insert(page, file);
+        {
+            // Another file under a page's number, as after a kept credit page: drawn afresh.
+            let mut state = self.state.borrow_mut();
+            if state.files.get(&page).is_some_and(|old| old.path != file.path) {
+                state.textures.remove(&page);
+            }
+            state.files.insert(page, file);
+        }
         {
             let mut state = self.state.borrow_mut();
             state.failures.remove(&page);
@@ -1720,6 +1891,7 @@ impl Reader {
     }
 
     fn show_leaf(self: &Rc<Self>, index: usize, how: TurnHow) {
+        self.leave_credit();
         if self.is_end(index) {
             self.show_end(index, how);
             return;
@@ -1763,6 +1935,7 @@ impl Reader {
         if let Some((_, capsule)) = &self.state.borrow().demo {
             capsule.set_visible(index == 0);
         }
+        self.credit_line_on(index);
         let (session, chapter) = {
             let state = self.state.borrow();
             (state.session, state.chapter.as_ref().map(|c| c.id.clone()))
@@ -1807,6 +1980,7 @@ impl Reader {
                 source: state.next_source.clone(),
                 preview,
                 novel: state.medium == Some(Medium::Novel),
+                credits: credits::end_line(&state),
             }
         };
         self.end.fill(&facts);
@@ -1831,7 +2005,8 @@ impl Reader {
                 .map(|(_, texture)| texture.clone());
             (next, state.next_source.clone(), preview)
         };
-        self.trail.show_next(next.as_ref(), source.as_deref());
+        let credits = next.as_ref().and_then(|_| self.marker_credit_line());
+        self.trail.show_next(next.as_ref(), source.as_deref(), credits.as_ref());
         self.trail.set_lead(preview.as_ref());
         self.strip_foot.set_visible(next.is_none());
         self.size_strip();
@@ -1908,6 +2083,9 @@ impl Reader {
             return;
         }
         if matches!(how, TurnHow::Key) && !on_end && self.scroll_within(forward) {
+            return;
+        }
+        if self.credit_step(forward, on_end) {
             return;
         }
         if on_end && forward {
@@ -2047,10 +2225,11 @@ impl Reader {
             return None;
         }
         // Above the open chapter, in the trail, there is no place in it.
-        let top = self.strip_scroll.vadjustment().value() - self.trail.height();
-        if top < 0.0 && !self.trail.is_empty() {
+        let value = self.strip_scroll.vadjustment().value();
+        if value < self.trail.height() && !self.trail.is_empty() {
             return None;
         }
+        let top = value - self.strip_base();
         let (image, offset) = strip_place_of(&heights, spacing, top);
         Some(StripPos { image: image as u32, offset })
     }
@@ -2059,12 +2238,9 @@ impl Reader {
     /// sent it, until the person scrolls.
     fn hold_strip_place(&self) {
         let Some(anchor) = self.state.borrow().strip_anchor else { return };
-        let (heights, spacing) = self.strip_heights();
-        let target =
-            strip_target(&heights, spacing, anchor.image as usize, Some(anchor.offset));
-        let total = heights.len();
+        let total = self.strip_heights().0.len();
         self.show_pages((anchor.image as usize + 1).min(total.max(1)), total);
-        self.scroll_strip_to(self.trail.height() + target);
+        self.scroll_strip_to(self.strip_scroll_for(anchor));
     }
 
     /// The person moved the strip: it no longer holds where it opened, and says where it is.
@@ -2122,11 +2298,9 @@ impl Reader {
                 changed = true;
             }
         }
+        changed |= self.size_strip_credits(column.round() as i32);
         if changed && let Some(keep) = keep {
-            let (heights, spacing) = self.strip_heights();
-            let target =
-                strip_target(&heights, spacing, keep.image as usize, Some(keep.offset));
-            self.scroll_strip_to(self.trail.height() + target);
+            self.scroll_strip_to(self.strip_scroll_for(keep));
         }
     }
 
@@ -2171,7 +2345,7 @@ impl Reader {
     /// into the next chapter crossing the middle opens that chapter.
     fn strip_moved(self: &Rc<Self>) {
         let adj = self.strip_scroll.vadjustment();
-        let base = self.trail.height();
+        let base = self.strip_base();
         let middle = adj.value() + adj.page_size() / 2.0;
         let over = self.trail.over(adj.value(), middle);
         let line = match &over {
@@ -2214,7 +2388,7 @@ impl Reader {
             return;
         }
         if let Some(marker) = self.trail.marker_height()
-            && middle - base > foot_top + marker / 2.0
+            && middle - base > foot_top + self.tail_height() + marker / 2.0
         {
             self.flow_on();
             return;
@@ -2251,6 +2425,7 @@ impl Reader {
     /// The marker crossed the middle: the next chapter opens under it, in the same scroll, with
     /// no plate over the page. The chapter run from is read and stays above.
     fn flow_on(self: &Rc<Self>) {
+        self.commit_keep();
         let (session, chapter, next, work) = {
             let state = self.state.borrow();
             (state.session, state.chapter.clone(), state.next.clone(), state.work.clone())
@@ -2273,7 +2448,8 @@ impl Reader {
         });
         // A notice belongs to the chapter it was about.
         self.hide_notice();
-        self.trail.take(chapter.label.clone(), &self.strip, frames);
+        let (lead, tail) = self.give_strip_credits();
+        self.trail.take(chapter.label.clone(), &self.strip, frames, lead, tail);
         self.state.borrow_mut().flowing = Some(next.id.clone());
         if let Some(work) = work {
             self.asked_open.replace(Some((work, Some(next.id.clone()))));
@@ -2532,6 +2708,7 @@ impl Reader {
         self.place_notice(true);
         self.head_fade.set(&self.head, true);
         self.group_fade.set(&self.group, true);
+        self.credit_line_chrome(true);
         self.widget.set_cursor(None);
         if let Some(id) = self.hide_timer.borrow_mut().take() {
             id.remove();
@@ -2562,6 +2739,7 @@ impl Reader {
         }
         self.head_fade.set(&self.head, false);
         self.group_fade.set(&self.group, false);
+        self.credit_line_chrome(false);
         self.widget.set_cursor_from_name(Some("none"));
         self.place_notice(false);
     }
@@ -2619,6 +2797,7 @@ impl Reader {
 
     /// Where the place is, for the scrubber: page `at` from 1 of `total`.
     fn show_pages(&self, at: usize, total: usize) {
+        let (at, total) = self.held_pages(at, total);
         let total = total.max(1);
         let at = at.clamp(1, total);
         self.scrub.set_range(1.0, total.max(2) as f64);
@@ -2628,7 +2807,9 @@ impl Reader {
             self.scrub_at.set_label(&at.to_string());
         }
         self.scrub_total.set_label(&total.to_string());
-        let said = t::linux_reader_page_of(at as i64, total as i64);
+        let said = self
+            .part_said(at)
+            .unwrap_or_else(|| t::linux_reader_page_of(at as i64, total as i64));
         self.scrub.update_property(&[gtk::accessible::Property::ValueText(&said)]);
         self.go_to_field.set_range(1.0, total as f64);
         let hint = t::linux_reader_go_to_page_field(total as i64);
@@ -2642,6 +2823,7 @@ impl Reader {
         let at = value.round().clamp(lower, upper) as usize;
         self.scrub_at.set_label(&at.to_string());
         self.reveal_chrome();
+        self.part_tip_at(at);
         if let Some(id) = self.scrub_timer.borrow_mut().take() {
             id.remove();
         }
@@ -2941,6 +3123,7 @@ impl Reader {
                 K::plus | K::equal | K::KP_Add => self.step_text_size(1),
                 K::minus | K::KP_Subtract => self.step_text_size(-1),
                 K::_0 | K::KP_0 => self.step_text_size(0),
+                K::z if self.keeping.borrow().is_some() => self.undo_keep(),
                 _ => return false,
             }
             return true;

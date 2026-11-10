@@ -6073,6 +6073,9 @@ public static partial class T
     /// <summary>Spoken name of a credit page shown again.</summary>
     public static string ReaderCreditPageLabel => Get("ReaderCreditPageLabel");
 
+    /// <summary>Notice when a skipped credit page's picture can't be read, so it can't be shown.</summary>
+    public static string ReaderCreditFailed => Get("ReaderCreditFailed");
+
     /// <summary>The scrubber's preview on the first page of a chapter's later part.</summary>
     public static string ReaderPartPreview(long page, long part) => Fill(Get("ReaderPartPreview"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -13871,6 +13874,7 @@ public static partial class T
         ["ReaderCreditPageOf"] = "credit page {n} of {total}",
         ["ReaderGroupLinePlace"] = "{chapter} · {place}",
         ["ReaderCreditPageLabel"] = "Credit page",
+        ["ReaderCreditFailed"] = "Couldn't load this credit page",
         ["ReaderPartPreview"] = "Page {page} · part {part}",
         ["ReaderPartPreviewMissing"] = "Page {page} · part {part} · part {missing} missing",
         ["ReaderPartStarts"] = "Part {part} starts at page {page}",

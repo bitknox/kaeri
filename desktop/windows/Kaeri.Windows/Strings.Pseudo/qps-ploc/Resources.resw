@@ -8418,6 +8418,10 @@
     <value>[Çŕéðîţ þàĝé~~~~]</value>
     <comment>Spoken name of a credit page shown again.</comment>
   </data>
+  <data name="ReaderCreditFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ļöàð ţĥîš çŕéðîţ þàĝé~~~~~~~~~]</value>
+    <comment>Notice when a skipped credit page's picture can't be read, so it can't be shown.</comment>
+  </data>
   <data name="ReaderPartPreview" xml:space="preserve">
     <value>[Þàĝé {page} · þàŕţ {part}~~~~~~]</value>
     <comment>The scrubber's preview on the first page of a chapter's later part.</comment>

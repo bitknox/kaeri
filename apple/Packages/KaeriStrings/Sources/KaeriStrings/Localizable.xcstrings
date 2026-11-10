@@ -211665,6 +211665,18 @@
         }
       }
     },
+    "reader-credit-failed" : {
+      "comment" : "Notice when a skipped credit page's picture can't be read, so it can't be shown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load this credit page"
+          }
+        }
+      }
+    },
     "reader-credit-kept" : {
       "comment" : "Notice after Not a credit page, with Undo.",
       "extractionState" : "manual",

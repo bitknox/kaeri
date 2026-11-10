@@ -20,7 +20,8 @@ use kaeri_model::{
 
 use super::series_chapters::SeriesChapters;
 use super::{
-    action_chapter, cover, dotted, library, listen, read_button, send, series_extra, series_tag,
+    action_chapter, cover, dotted, library, listen, read_button, row_line, send, series_extra,
+    series_tag,
 };
 use crate::{
     states::{Shape, States},
@@ -32,10 +33,14 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
     let head = gtk::Box::new(gtk::Orientation::Vertical, 14);
     let chapters = gtk::Box::new(gtk::Orientation::Vertical, 12);
     let details = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    // The rows' veil: after a group pick the old rows fade over the new ones.
+    let details_veil = gtk::Overlay::new();
+    details_veil.set_child(Some(&details));
+    details_veil.set_widget_name(series_extra::DETAILS_VEIL);
     let memo: Rc<RefCell<series_extra::Memo>> = Rc::default();
     let column = gtk::Box::new(gtk::Orientation::Vertical, 22);
     column.append(&head);
-    column.append(&details);
+    column.append(&details_veil);
     column.append(&chapters);
     let scroll = widgets::column_page(&column, 820);
     let empty = states_plain();
@@ -123,11 +128,13 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
             (status_button.clone(), download_button.clone(), Rc::clone(&shown));
         let (listed, redraw) = (Rc::clone(&listed), Rc::clone(&redraw));
         let (details, memo, work) = (details.clone(), Rc::clone(&memo), work.clone());
+        let details_veil = details_veil.clone();
         let (menu_button, top) = (menu_button.clone(), Rc::clone(&top));
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
             if series_extra::follow(&memo, &work, event) {
-                series_extra::draw(&ctx, &details, &memo.borrow());
+                let series = matches!(event, Event::Reading(ReadingEvent::Series(_)));
+                series_extra::redraw(&ctx, &details_veil, &details, &memo.borrow(), series);
             }
             match event {
                 Event::Reading(ReadingEvent::Series(view)) if view.work == wanted => {
@@ -454,7 +461,7 @@ fn draw_head(
 
 pub(super) fn state_line(chapter: &ChapterRow) -> String {
     // The engine's words say it all: the state, when, and what is downloaded.
-    let said = dotted(&chapter.line);
+    let said = row_line(chapter);
     if !said.is_empty() {
         return said;
     }
@@ -481,7 +488,7 @@ pub(super) fn state_line(chapter: &ChapterRow) -> String {
         }
         None => {}
     }
-    let line = dotted(&chapter.line);
+    let line = row_line(chapter);
     if !line.is_empty() {
         parts.push(line);
     }
@@ -530,11 +537,7 @@ pub(super) fn chapters_head(order: Order) -> gtk::Box {
 /// A chapter's row, 52 px: the number in silk and its title in haze, the state under them. A
 /// read chapter has both lines in haze; a new one says so in silk after the water dot. A
 /// download in progress shows its ring, a failed one Try again.
-pub(super) fn chapter_row(
-    work: &WorkId,
-    chapter: &ChapterRow,
-    name_group: bool,
-) -> gtk::ListBoxRow {
+pub(super) fn chapter_row(work: &WorkId, chapter: &ChapterRow) -> gtk::ListBoxRow {
     let read = matches!(chapter.state, ChapterReadState::Read);
     let first = gtk::Box::new(gtk::Orientation::Horizontal, 8);
     let number = gtk::Label::new(Some(&chapter.label));
@@ -556,16 +559,9 @@ pub(super) fn chapter_row(
         first.append(&mark);
     }
     let second = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-    let mut words = state_line(chapter);
-    if name_group
-        && let Some(group) = chapter.version_label.as_deref().filter(|g| !g.is_empty())
-    {
-        words = if words.is_empty() {
-            group.to_owned()
-        } else {
-            format!("{words} \u{b7} {group}") // i18n-skip
-        };
-    }
+    // A chapter from another group or source says so in the engine's words; the row never
+    // names the group in use.
+    let words = state_line(chapter);
     if chapter.new_chapter && !read {
         let dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         dot.add_css_class("home-new");

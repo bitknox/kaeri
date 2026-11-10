@@ -9150,6 +9150,10 @@ object Strings {
     fun readerCreditPageLabel(context: Context): String =
         context.getString(R.string.reader_credit_page_label)
 
+    /** Notice when a skipped credit page's picture can't be read, so it can't be shown. */
+    fun readerCreditFailed(context: Context): String =
+        context.getString(R.string.reader_credit_failed)
+
     /** The scrubber's preview on the first page of a chapter's later part. */
     fun readerPartPreview(context: Context, page: Int, part: Int): String =
         context.getString(R.string.reader_part_preview, page, part)
