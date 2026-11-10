@@ -2901,6 +2901,10 @@
     <value>[Ţĥé ƒîļţéŕš àþþļý ţö ÅñîĻîšţ'š ŕéšüļţš öñļý.~~~~~~~~~~~~~~]</value>
     <comment>Narrator's help on Search's filters while Your sources only is on.</comment>
   </data>
+  <data name="WindowsReadSourcesUsePlugin" xml:space="preserve">
+    <value>[Ûšé ţĥîš þļüĝîñ~~~~~]</value>
+    <comment>Name of the switch that turns a book plugin on or off in the book sources.</comment>
+  </data>
   <data name="SeriesReadAgainDoneWindows" xml:space="preserve">
     <value>[Ŕéàðîñĝ {title} àĝàîñ ƒŕöɱ ţĥé šţàŕţ~~~~~~~~~~]</value>
     <comment>Notice after Read again from the start, with an Undo button beside it. The title is the series' name.</comment>

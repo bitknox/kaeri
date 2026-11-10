@@ -142,7 +142,7 @@ sealed class NovelView : Grid
                 currentUrl = core.Source;
                 // A document that didn't load never says ready, and the reader would wait on it.
                 if (!e.IsSuccess && e.WebErrorStatus != CoreWebView2WebErrorStatus.OperationCanceled)
-                    Failed($"a book document didn't load: {e.WebErrorStatus}");
+                    Failed($"a book document didn't load: {e.WebErrorStatus} (host {HostOf(core.Source)})");
             };
             // Every request comes here: the book's from the engine, anything else refused.
             core.AddWebResourceRequestedFilter("*", CoreWebView2WebResourceContext.All);
@@ -209,7 +209,8 @@ sealed class NovelView : Grid
 
     /// <summary>
     /// What the reader itself needs from inside the page: the keys that leave or go full screen,
-    /// pointer movement for the group, and the wheel, which turns pages. The paginator handles
+    /// Tab, which brings the chrome up and goes into it, pointer movement for the group, and the
+    /// wheel, which turns pages. The paginator handles
     /// the turning keys.
     /// </summary>
     const string HostScript = """
@@ -219,7 +220,7 @@ sealed class NovelView : Grid
           var post = function (m) { try { window.chrome.webview.postMessage(JSON.stringify(m)); } catch (e) {} };
           document.addEventListener('keydown', function (e) {
             var k = e.key;
-            if (k === 'Escape' || k === 'F11' || (e.altKey && k === 'ArrowLeft') || (e.ctrlKey && (k === '+' || k === '-' || k === '=' || k === '0'))) {
+            if (k === 'Escape' || k === 'F11' || (k === 'Tab' && !e.ctrlKey && !e.altKey) || (e.altKey && k === 'ArrowLeft') || (e.ctrlKey && (k === '+' || k === '-' || k === '=' || k === '0'))) {
               e.preventDefault();
               post({ type: 'hostkey', key: k, alt: e.altKey, ctrl: e.ctrlKey, shift: e.shiftKey });
             }
@@ -264,6 +265,10 @@ sealed class NovelView : Grid
             });
             if (answer is null || closed)
             {
+                // The host alone: it names the session, and a changed one (a web view that
+                // rewrote it) is what leaves a book blank.
+                if (answer is null && !closed)
+                    KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows", $"no book resource for host {HostOf(uri)}");
                 body?.Dispose();
                 e.Response = env.CreateWebResourceResponse(null, 404, "Not Found", "");
                 return;
@@ -281,6 +286,8 @@ sealed class NovelView : Grid
             deferral.Complete();
         }
     }
+
+    static string HostOf(string uri) => Uri.TryCreate(uri, UriKind.Absolute, out var at) ? at.Host : "?";
 
     static Stream? OpenFile(string path)
     {

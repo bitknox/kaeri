@@ -465,10 +465,24 @@ sealed class StripView : Grid
         scroll.ChangeView(null, Math.Max(0, scroll.VerticalOffset + (forward ? step : -step)), null, !Motion.Enabled || owner.PaperMode);
     }
 
+    /// <summary>
+    /// Home and End: the top and the foot of the chapter under the window's middle. After the
+    /// strip ran on, the chapter before stays above in the scroll, and Home doesn't climb into it.
+    /// </summary>
     public void Ends(bool last)
     {
         restoring = false;
-        scroll.ChangeView(null, last ? scroll.ScrollableHeight : 0, null, !Motion.Enabled || owner.PaperMode);
+        var section = shown ?? Current;
+        double to;
+        if (section is null || section.Parts.Count == 0 || section.Tops.Count != section.Parts.Count)
+            to = last ? scroll.ScrollableHeight : 0;
+        else if (!last)
+            to = section.Tops[0];
+        else if (section == Current)
+            to = scroll.ScrollableHeight;
+        else
+            to = Math.Max(section.Tops[0], section.Bottom - scroll.ViewportHeight);
+        scroll.ChangeView(null, Math.Clamp(to, 0, scroll.ScrollableHeight), null, !Motion.Enabled || owner.PaperMode);
     }
 
     /// <summary>To the top of an image of the chapter under the middle, counted from 0: the scrubber and the engine's moves.</summary>

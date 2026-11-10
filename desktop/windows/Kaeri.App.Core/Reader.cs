@@ -112,6 +112,10 @@ public sealed class ReaderSession
     ulong session;
     int ticks, noticeCount;
     bool opened;
+    /// <summary>The reader has moved off the chapter's start: a new layout keeps the page on screen.</summary>
+    bool moved;
+    /// <summary>Opens let go of before the engine named their session, until the engine says they went.</summary>
+    int dropped;
     int? pendingGoTo;
     Request? afterClose;
     CancellationTokenSource? noticeTimer;
@@ -187,10 +191,19 @@ public sealed class ReaderSession
 
     public void Close()
     {
+        // A book waiting for this one to close doesn't open behind a reader that has gone.
+        afterClose = null;
         if (Asked is null && session == 0)
             return;
         if (session != 0)
             Ask(new ReaderCommand.Close(session));
+        else if (opened)
+        {
+            // The engine has the open but hasn't named its session: session 0 drops the open
+            // still waiting, so nothing more is fetched for a reader that has gone.
+            dropped++;
+            Ask(new ReaderCommand.Close(0));
+        }
         Reset();
         Asked = null;
         Phase = ReaderPhase.Closed;
@@ -205,6 +218,7 @@ public sealed class ReaderSession
         if (how == TurnHow.Jump && leaf != Current)
             Ring = Current;
         Current = leaf;
+        moved = true;
         Ask(new ReaderCommand.Shown(session, view.Chapter.Id, Leaves[leaf].Index, how));
     }
 
@@ -447,12 +461,25 @@ public sealed class ReaderSession
         {
             case ReaderEvent.Opened opened:
                 var view = opened.V1;
+                if (dropped > 0 || Asked is null)
+                {
+                    // An open the person left before it came: the engine closes it too. The one
+                    // this reader is closing already heard.
+                    if (view.Session != session)
+                        Ask(new ReaderCommand.Close(view.Session));
+                    return;
+                }
+                var flowedFrom = Flowing ? View?.Chapter.Id : null;
                 session = view.Session;
                 View = view;
                 Phase = ReaderPhase.Open;
                 Failure = null;
                 Leaves = [];
-                Pages.Clear();
+                moved = false;
+                // A strip flowing on keeps the files of the chapter it flows from: those images
+                // stay in its scroll, and the engine doesn't send them again.
+                foreach (var gone in Pages.Keys.Where(k => k.Chapter != flowedFrom).ToList())
+                    Pages.Remove(gone);
                 PageFailures.Clear();
                 Novel = null;
                 NovelPainted = false;
@@ -482,10 +509,11 @@ public sealed class ReaderSession
             case ReaderEvent.Leaves leaves:
                 if (leaves.Session != session)
                     return;
+                var before = Leaves;
                 Leaves = leaves.LeavesValue;
                 Phase = ReaderPhase.Open;
                 if (Leaves.Length > 0)
-                    Current = Math.Clamp(Math.Max(Current, StartLeaf()), 0, Leaves.Length - 1);
+                    Current = Placed(before, Current);
                 Changed?.Invoke(ReaderChange.Leaves);
                 if (pendingGoTo is { } page && LeafOfPageIndex((uint)page) is { } at)
                     Show(at);
@@ -569,6 +597,9 @@ public sealed class ReaderSession
                 Changed?.Invoke(ReaderChange.Preview);
                 break;
             case ReaderEvent.Opening opening:
+                // An open the person left says nothing over the next one.
+                if (dropped > 0 || Asked is null)
+                    return;
                 Opening = (opening.Chapter, opening.Wait);
                 Changed?.Invoke(ReaderChange.Opening);
                 break;
@@ -599,7 +630,14 @@ public sealed class ReaderSession
                 GoToPlace(go.Place);
                 break;
             case ReaderEvent.Closed closed:
-                if (closed.Session != session && session != 0)
+                if (closed.Session == 0)
+                {
+                    // An open dropped before it had a session is gone: what follows is the next one's.
+                    if (dropped > 0)
+                        dropped--;
+                    return;
+                }
+                if (closed.Session != session)
                     return;
                 session = 0;
                 opened = false;
@@ -613,6 +651,23 @@ public sealed class ReaderSession
     }
 
     int StartLeaf() => View?.Start.Page is { } page && LeafOfPageIndex(page) is { } at ? at : 0;
+
+    /// <summary>
+    /// The leaf to show once the leaves came: the chapter's start until the person moves (the
+    /// leaves may still be coming in as an archive extracts), and after that the page that was
+    /// on screen, wherever the new layout (full screen, a resize, a setting) puts it.
+    /// </summary>
+    int Placed(Leaf[] before, int was)
+    {
+        if (!moved || was < 0 || was >= before.Length)
+            return Math.Clamp(StartLeaf(), 0, Leaves.Length - 1);
+        var leaf = before[was];
+        if (leaf.EndPage)
+            return Array.FindIndex(Leaves, l => l.EndPage) is var end and >= 0 ? end : Leaves.Length - 1;
+        if (leaf.Parts.Length > 0 && LeafOfPageIndex(leaf.Parts.Min(p => p.Page)) is { } at)
+            return at;
+        return Math.Clamp(was, 0, Leaves.Length - 1);
+    }
 
     /// <summary>The leaf that holds a page, counted from 0.</summary>
     int? LeafOfPageIndex(uint page)
@@ -650,6 +705,7 @@ public sealed class ReaderSession
     {
         pendingGoTo = null;
         Current = leaf;
+        moved = true;
         GoTo = (leaf, Bump());
         Changed?.Invoke(ReaderChange.GoTo);
     }
@@ -787,6 +843,7 @@ public sealed class ReaderSession
         ChaptersLoaded = false;
         Failure = null;
         opened = false;
+        moved = false;
         pendingGoTo = null;
         lastStrip = DateTimeOffset.MinValue;
         sentSurface = null;

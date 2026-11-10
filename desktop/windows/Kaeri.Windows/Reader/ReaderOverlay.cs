@@ -48,6 +48,8 @@ public sealed partial class ReaderOverlay : UserControl
     bool pointerHidden;
     bool overChrome;
     bool flyoutOpen;
+    /// <summary>The last input was a key, not the pointer.</summary>
+    bool keyed;
     Point lastPointer = new(-1, -1);
     long lastNovelWheel;
     string? lastFit, lastBackground;
@@ -82,13 +84,19 @@ public sealed partial class ReaderOverlay : UserControl
             chaptersFlyout.Content = ChaptersFlyout.Build(this, chaptersFlyout);
             FlyoutTheme(chaptersFlyout);
         };
-        foreach (var flyout in new[] { settingsFlyout, chaptersFlyout })
+        foreach (var (flyout, button) in new[] { (settingsFlyout, chrome.Settings), (chaptersFlyout, chrome.Chapters) })
         {
             flyout.Opened += (_, _) => flyoutOpen = true;
             flyout.Closed += (_, _) =>
             {
                 flyoutOpen = false;
                 SettingsFlyout.ModePicked = false;
+                // Opened from the keyboard, focus goes back to its button, which keeps the chrome
+                // up; otherwise the keys go back to the page.
+                if (showing && keyed && chromeShown && button.Visibility == Visibility.Visible)
+                    button.Focus(FocusState.Keyboard);
+                else if (showing)
+                    Focus(FocusState.Programmatic);
                 Idle();
             };
         }
@@ -98,6 +106,7 @@ public sealed partial class ReaderOverlay : UserControl
         AddHandler(PointerMovedEvent, new PointerEventHandler(OnPointerMoved), true);
         AddHandler(PointerPressedEvent, new PointerEventHandler((_, e) =>
         {
+            keyed = false;
             TouchInput = e.Pointer.PointerDeviceType != Microsoft.UI.Input.PointerDeviceType.Mouse;
             // The mouse's back button leaves, as everywhere in the app.
             if (e.GetCurrentPoint(this).Properties.IsXButton1Pressed)
@@ -109,6 +118,7 @@ public sealed partial class ReaderOverlay : UserControl
         PreviewKeyDown += (s, e) =>
         {
             TouchInput = false;
+            keyed = true;
             OnKey(s, e);
         };
         SizeChanged += (_, _) =>
@@ -605,8 +615,10 @@ public sealed partial class ReaderOverlay : UserControl
         style.Setters.Add(new Setter(Control.BackgroundProperty, new SolidColorBrush(ReaderPalette.WithAlpha(Palette.Raised, 0.98))));
         style.Setters.Add(new Setter(Control.CornerRadiusProperty, new CornerRadius(8)));
         style.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(12)));
-        style.Setters.Add(new Setter(FrameworkElement.MaxWidthProperty, 420.0));
-        style.Setters.Add(new Setter(FrameworkElement.MaxHeightProperty, 620.0));
+        // The content sizes itself from the text size and the window (SettingsFlyout.Size): the
+        // presenter's own cap would cut it at large text sizes.
+        style.Setters.Add(new Setter(FrameworkElement.MaxWidthProperty, Math.Max(420.0, ActualWidth - 24)));
+        style.Setters.Add(new Setter(FrameworkElement.MaxHeightProperty, Math.Max(620.0, ActualHeight - 24)));
         style.Setters.Add(new Setter(FrameworkElement.RequestedThemeProperty, PaperMode ? ElementTheme.Light : ElementTheme.Dark));
         flyout.FlyoutPresenterStyle = style;
     }
@@ -1083,6 +1095,8 @@ public sealed partial class ReaderOverlay : UserControl
             case VirtualKey.F11:
                 ToggleFullscreen();
                 return true;
+            case VirtualKey.Tab when !ctrl && !alt:
+                return IntoChrome(last: shift);
         }
         if (alt)
             return false;
@@ -1193,16 +1207,52 @@ public sealed partial class ReaderOverlay : UserControl
         return false;
     }
 
-    /// <summary>Esc steps out: the chrome first, then full screen, then the reader.</summary>
+    /// <summary>
+    /// Tab with the keys on the page: the chrome comes up and focus goes to its first control,
+    /// or its last with Shift. Inside the chrome, or over a screen with buttons, Tab moves as it
+    /// does anywhere.
+    /// </summary>
+    bool IntoChrome(bool last)
+    {
+        if (StateShown || InChrome())
+            return false;
+        ShowChrome();
+        if (chrome.FocusEdge(last))
+            return true;
+        // The chrome was collapsed a moment ago: focus once it is laid out.
+        DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+        {
+            if (showing && chromeShown)
+                chrome.FocusEdge(last);
+        });
+        return true;
+    }
+
+    /// <summary>Keyboard focus is on a control of the chrome.</summary>
+    bool InChrome()
+    {
+        if (XamlRoot is not { } root || FocusManager.GetFocusedElement(root) is not DependencyObject focused)
+            return false;
+        for (var at = focused; at is not null; at = VisualTreeHelper.GetParent(at))
+            if (at == chrome.Top || at == chrome.Group || at == chrome.Notice || at == chrome.BackTo)
+                return true;
+        return false;
+    }
+
+    /// <summary>
+    /// Esc steps out: from the chrome back to the page when the keys are in it, then out of full
+    /// screen, then out of the reader. The chrome that comes up by itself takes no Esc.
+    /// </summary>
     void Escape()
     {
         if (novel?.CloseNote() == true)
             return;
-        if (chromeShown && !StateShown && !DeviceWatch.ScreenReaderRunning())
+        if (chromeShown && !StateShown && InChrome())
         {
+            // The keys go back to the page, and the chrome with them.
+            Focus(FocusState.Programmatic);
             HideChrome();
-            if (!chromeShown)
-                return;
+            return;
         }
         if (Ctx.Window.ReaderFullscreen)
         {
@@ -1251,6 +1301,7 @@ public sealed partial class ReaderOverlay : UserControl
         {
             "Escape" => VirtualKey.Escape,
             "F11" => VirtualKey.F11,
+            "Tab" => VirtualKey.Tab,
             "ArrowLeft" => VirtualKey.Left,
             "+" or "=" => VirtualKey.Add,
             "-" => VirtualKey.Subtract,
