@@ -597,8 +597,14 @@ public static partial class T
     /// <summary>Why a chapter or a list could not load: the source did not answer. The source is its name.</summary>
     public static string ReadingFailedSourceDown(string source) => Fill(Get("ReadingFailedSourceDown"), ("source", source));
 
+    /// <summary>Why something could not load: the source the series reads from is switched off in Your sources.</summary>
+    public static string ReadingFailedSourceOff(string source) => Fill(Get("ReadingFailedSourceOff"), ("source", source));
+
     /// <summary>Why a chapter could not load: the source no longer has it.</summary>
     public static string ReadingFailedNotFound => Get("ReadingFailedNotFound");
+
+    /// <summary>Why a series has no chapters: none of the person's sources holds it, and none was ever picked.</summary>
+    public static string ReadingFailedNoSource => Get("ReadingFailedNoSource");
 
     /// <summary>Why a chapter or a list could not load: the source refused. The reason comes from the source.</summary>
     public static string ReadingFailedBlocked(string source, string reason) => Fill(Get("ReadingFailedBlocked"), ("source", source), ("reason", reason));
@@ -5986,6 +5992,18 @@ public static partial class T
     /// <summary>Under the series title in the reader's controls, and the title on a strip's marker into the next chapter. The chapter is its number, such as 12.</summary>
     public static string ReaderChapterLineTitled(string chapter, string title) => Fill(Get("ReaderChapterLineTitled"), ("chapter", chapter), ("title", title));
 
+    /// <summary>The reader's opening line while the series' source sends its chapter list.</summary>
+    public static string ReaderWaitChapterList(string source) => Fill(Get("ReaderWaitChapterList"), ("source", source));
+
+    /// <summary>The reader's opening line while the source sends the chapter's pages or text.</summary>
+    public static string ReaderWaitChapterPages(string chapter, string source) => Fill(Get("ReaderWaitChapterPages"), ("chapter", chapter), ("source", source));
+
+    /// <summary>The opening line after a few seconds, with how long it has waited so far.</summary>
+    public static string ReaderWaitSeconds(string line, long seconds) => Fill(Get("ReaderWaitSeconds"), ("line", line), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.</summary>
+    public static string ReaderWaitLong => Get("ReaderWaitLong");
+
     /// <summary>Button in the first run that opens the reading demo.</summary>
     public static string OnboardingReadDemo => Get("OnboardingReadDemo");
 
@@ -6343,6 +6361,15 @@ public static partial class T
     /// <summary>Line under it.</summary>
     public static string SeriesNoChaptersLine => Get("SeriesNoChaptersLine");
 
+    /// <summary>The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.</summary>
+    public static string SeriesNoSourceTitle => Get("SeriesNoSourceTitle");
+
+    /// <summary>Line under it.</summary>
+    public static string SeriesNoSourceLine => Get("SeriesNoSourceLine");
+
+    /// <summary>Its button: opens Read from, where each source can be searched by another name.</summary>
+    public static string SeriesNoSourceSearch => Get("SeriesNoSourceSearch");
+
     /// <summary>The chapter list when the source failed. Downloaded chapters are listed under it.</summary>
     public static string SeriesChaptersFailed(string source) => Fill(Get("SeriesChaptersFailed"), ("source", source));
 
@@ -6468,6 +6495,18 @@ public static partial class T
 
     /// <summary>A source's chapters, after its kind on the line.</summary>
     public static string SeriesReadFromChaptersLater(string latest) => Fill(Get("SeriesReadFromChaptersLater"), ("latest", latest));
+
+    /// <summary>A source's line while it is asked for its chapter list, first on its line.</summary>
+    public static string SeriesReadFromChecking => Get("SeriesReadFromChecking");
+
+    /// <summary>The same, after its kind on the line.</summary>
+    public static string SeriesReadFromCheckingLater => Get("SeriesReadFromCheckingLater");
+
+    /// <summary>A source that answered with no chapters for this series, first on its line.</summary>
+    public static string SeriesReadFromEmpty => Get("SeriesReadFromEmpty");
+
+    /// <summary>The same, after its kind on the line.</summary>
+    public static string SeriesReadFromEmptyLater => Get("SeriesReadFromEmptyLater");
 
     /// <summary>After a folder's chapters.</summary>
     public static string SeriesReadFromOnDevice(string device) => Fill(Get("SeriesReadFromOnDevice"), ("device", device));
@@ -11821,7 +11860,9 @@ public static partial class T
         ["ReaderDetectedStrip"] = "Looks like a long strip",
         ["ReadingFailedOffline"] = "You're offline. Downloaded chapters still open.",
         ["ReadingFailedSourceDown"] = "{source} isn't answering. Try again later.",
+        ["ReadingFailedSourceOff"] = "{source} is switched off. Switch it on in Your sources, or read from another source.",
         ["ReadingFailedNotFound"] = "This source doesn't have it anymore. Try another source.",
+        ["ReadingFailedNoSource"] = "None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.",
         ["ReadingFailedBlocked"] = "{source} refused the request. {reason}",
         ["ReadingFailedParse"] = "Kaeri couldn't read what {source} sent. Its plugin may need an update.",
         ["ReadingFailedPage"] = "This page didn't load (error {status}). Try again.",
@@ -13689,6 +13730,10 @@ public static partial class T
         ["ReaderDividerImages_one"] = "One image",
         ["ReaderDividerImages_other"] = "{count} images",
         ["ReaderChapterLineTitled"] = "Chapter {chapter} · {title}",
+        ["ReaderWaitChapterList"] = "Getting the chapter list from {source}",
+        ["ReaderWaitChapterPages"] = "Getting chapter {chapter} from {source}",
+        ["ReaderWaitSeconds"] = "{line} · {seconds} s",
+        ["ReaderWaitLong"] = "This is taking a while.",
         ["OnboardingReadDemo"] = "Read the demo",
         ["OnboardingDemoBooksDetail"] = "One short comic and one short story, shared by their makers under Creative Commons.",
         ["OnboardingDemoBothDetail"] = "One short episode and one short comic, shared by their makers under Creative Commons.",
@@ -13819,6 +13864,9 @@ public static partial class T
         ["SeriesCollapsed"] = "Collapsed",
         ["SeriesNoChaptersTitle"] = "No chapters in this source yet",
         ["SeriesNoChaptersLine"] = "Another source may have them.",
+        ["SeriesNoSourceTitle"] = "None of your sources has this series yet",
+        ["SeriesNoSourceLine"] = "Search for it by another name, or add a source in Your sources.",
+        ["SeriesNoSourceSearch"] = "Search by another name",
         ["SeriesChaptersFailed"] = "Couldn't load chapters from {source}.",
         ["SeriesChapterNumber"] = "Chapter {n}",
         ["SeriesBookmarked"] = "Bookmarked",
@@ -13864,6 +13912,10 @@ public static partial class T
         ["SeriesReadFromNoneLine"] = "Add a folder, a server or a plugin store in Your sources.",
         ["SeriesReadFromChapters"] = "Chapters 1 to {latest}",
         ["SeriesReadFromChaptersLater"] = "chapters 1 to {latest}",
+        ["SeriesReadFromChecking"] = "Checking chapters",
+        ["SeriesReadFromCheckingLater"] = "checking chapters",
+        ["SeriesReadFromEmpty"] = "No chapters here yet",
+        ["SeriesReadFromEmptyLater"] = "no chapters here yet",
         ["SeriesReadFromOnDevice"] = "on this {device}",
         ["SeriesReadFromNote"] = "Read marks belong to the series, so they carry over when you change. Downloads from the old source stay until you delete them.",
         ["SeriesNotTracked"] = "Not tracked here",

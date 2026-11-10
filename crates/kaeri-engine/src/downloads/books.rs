@@ -1082,6 +1082,7 @@ fn encode(failure: &ReadingFailure) -> String {
         ReadingFailure::Protected => "protected".into(),
         ReadingFailure::PageFetch { status } => format!("page:{status}"),
         ReadingFailure::SourceDown { source } => format!("down:{source}"),
+        ReadingFailure::SourceOff { source } => format!("off:{source}"),
         ReadingFailure::Parse { source } => format!("parse:{source}"),
         ReadingFailure::SignInNeeded { what } => format!("sign_in:{what}"),
         ReadingFailure::Blocked { source, reason } => format!("blocked:{source}:{reason}"),
@@ -1099,6 +1100,7 @@ fn decode(text: &str) -> ReadingFailure {
         "protected" => ReadingFailure::Protected,
         "page" => ReadingFailure::PageFetch { status: rest.parse().unwrap_or(0) },
         "parse" => ReadingFailure::Parse { source: rest.to_owned() },
+        "off" => ReadingFailure::SourceOff { source: rest.to_owned() },
         "sign_in" => ReadingFailure::SignInNeeded { what: rest.to_owned() },
         "blocked" => {
             let (source, reason) = rest.split_once(':').unwrap_or((rest, ""));

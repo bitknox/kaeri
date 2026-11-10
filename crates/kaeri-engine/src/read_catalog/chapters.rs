@@ -246,6 +246,14 @@ fn milli_label(milli: i64) -> String {
     }
 }
 
+/// An edition's chapter-list ask that left no list kept.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum Asked {
+    Asking,
+    Empty,
+    Failed(kaeri_model::reading::ReadingFailure),
+}
+
 /// The list a work is read from: the edition in use, as kept.
 pub fn of_work(
     sources: &crate::read_sources::BookSources,

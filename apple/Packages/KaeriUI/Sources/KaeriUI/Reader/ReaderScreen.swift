@@ -115,7 +115,7 @@ public struct ReaderScreen: View {
     @ViewBuilder private var content: some View {
         switch model.phase {
         case .closed, .opening:
-            ReaderOpening(model: model, theme: theme, size: size)
+            ReaderOpening(model: model, theme: theme, size: size, chooseSource: chooseSource, close: close)
         case .failed(let failure):
             ReaderChapterFailed(model: model, theme: theme, failure: failure, chooseSource: chooseSource, close: close)
         case .open:
@@ -394,8 +394,14 @@ struct ReaderOpening: View {
     let model: ReaderModel
     let theme: ReaderTheme
     let size: CGSize
+    let chooseSource: () -> Void
+    let close: () -> Void
     @State private var seconds = 0
     @State private var shown = false
+
+    /// How long a stage goes on before the screen offers another way: the player's own wait
+    /// before it offers another source.
+    static let longWait = 15
 
     /// The page's place as the opening holds it: the column of a strip, a page fitted to the
     /// screen otherwise. The first page fades in on the same plate.
@@ -405,33 +411,65 @@ struct ReaderOpening: View {
         return CGSize(width: width, height: min(size.height, width / 0.7))
     }
 
+    /// What the open waits on, in words: the stage the engine named, else the chapter.
+    static func stage(_ wait: ReaderWait?, chapter label: String) -> String {
+        switch wait {
+        case .chapterList(let source)?: L.readerWaitChapterList(source: source)
+        case .chapterPages(let chapter, let source)?: L.readerWaitChapterPages(chapter: chapter, source: source)
+        case .findingSource?, nil: L.readerOpening(chapter: label)
+        }
+    }
+
     var body: some View {
         let chapter = model.view?.chapter
         let label = chapter.map { $0.number ?? $0.label } ?? ""
+        let stage = Self.stage(model.openingWait, chapter: label)
         ZStack {
             if model.medium != .novel {
                 Rectangle().fill(theme.raised).frame(width: plate.width, height: plate.height)
             }
             VStack(spacing: 6) {
                 if shown {
-                    Text(seconds >= 3 ? L.readerOpeningSlow(seconds: seconds) : L.readerOpening(chapter: label))
+                    Text(seconds >= 3 ? L.readerWaitSeconds(line: stage, seconds: seconds) : stage)
                         .font(.ui(15)).foregroundStyle(theme.haze).monospacedDigit()
                         .multilineTextAlignment(.center)
                         .contentTransition(.opacity)
                         .transition(.opacity)
                 }
+                if seconds >= Self.longWait {
+                    // A stage that goes on offers the way on, as a failed open does.
+                    VStack(spacing: 12) {
+                        Text(L.readerWaitLong).font(.ui(13)).foregroundStyle(theme.haze)
+                        HStack(spacing: 10) {
+                            Button(L.seriesReadFromAnother, action: chooseSource)
+                                .buttonStyle(SecondaryCapsuleStyle(height: Device.isMac ? 28 : 40, fontSize: Device.isMac ? 13 : 15))
+                            Button(L.readerGoBack, action: close)
+                                .buttonStyle(.plain)
+                                .font(.plat(mac: 13, touch: 15, weight: .semibold))
+                                .foregroundStyle(theme.haze)
+                                .pointerHover()
+                        }
+                    }
+                    .padding(.top, 10)
+                    .transition(.opacity)
+                }
             }
             .padding(.horizontal, 28)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .contain)
+        .onChange(of: model.openingWait) { _, wait in
+            // A new stage is said aloud, as the first one was.
+            guard shown, let wait else { return }
+            AccessibilityNotification.Announcement(Self.stage(wait, chapter: label)).post()
+        }
         .task {
             // The plate at once; its line from 600 ms, and the wait admitted from 3 s.
             seconds = 0
             try? await Task.sleep(for: .milliseconds(600))
             guard !Task.isCancelled else { return }
             withAnimation(.fadeIn) { shown = true }
-            AccessibilityNotification.Announcement(L.readerOpening(chapter: label)).post()
+            AccessibilityNotification.Announcement(Self.stage(model.openingWait, chapter: label)).post()
             seconds = 1
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(1))

@@ -86,7 +86,7 @@ class ReaderShots {
 
     @Test
     fun opening_slowly_over_the_cover() {
-        val state = ReaderState(opening = true, openingChapter = ReaderFixtures.chapter(), openingWait = ReaderWait.FINDING_SOURCE)
+        val state = ReaderState(opening = true, openingChapter = ReaderFixtures.chapter(), openingWait = ReaderWait.ChapterPages("1", "Paper Lantern"))
         compose.mainClock.autoAdvance = false
         reader(state, cover)
         compose.mainClock.advanceTimeBy(300)
@@ -95,6 +95,8 @@ class ReaderShots {
         captureScreenRoboImage(file("opening-1s"))
         compose.mainClock.advanceTimeBy(3_200)
         captureScreenRoboImage(file("opening-slow-4s"))
+        compose.mainClock.advanceTimeBy(12_000)
+        captureScreenRoboImage(file("opening-long-16s"))
     }
 
     private fun failed(sources: List<ChapterVersion>?) = ReaderState(

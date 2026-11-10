@@ -738,12 +738,17 @@ pub struct NovelAssets {
     pub csp: String,
 }
 
-/// What an open waits on, for the opening screen's slow line.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+/// What an open waits on, for the opening screen's line. Each names the source asked, by the
+/// name the person knows it by.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderWait {
-    /// A source is asked for the series' chapters.
+    /// Kept for apps built before the stages below; the engine no longer sends it.
     FindingSource,
+    /// The source is asked for the series' chapter list.
+    ChapterList { source: String },
+    /// The source is asked for the chapter's pages, or its text.
+    ChapterPages { chapter: String, source: String },
 }
 
 /// Why the end page names no next chapter.

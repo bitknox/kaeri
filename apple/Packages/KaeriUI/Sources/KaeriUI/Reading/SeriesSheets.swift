@@ -334,11 +334,31 @@ struct ReadFromSheet: View {
            let name = AirTime.locale.localizedString(forLanguageCode: language) {
             lead.append(name)
         }
-        let latest = edition.latest ?? String(edition.chapters)
         var parts = lead
-        parts.append(lead.isEmpty ? L.seriesReadFromChapters(latest: latest) : L.seriesReadFromChaptersLater(latest: latest))
+        parts.append(Self.chapters(edition, first: lead.isEmpty))
         if folder { parts.append(L.seriesReadFromOnDevice(device: Device.name)) }
         return parts.joined(separator: " · ") // i18n-skip
+    }
+
+    /// The chapters part of an edition's line. A list not asked for yet, or still on its way,
+    /// says it is being checked; an empty one says so; one that failed says why. Only a list the
+    /// source gave has a range, so it never reads "1 to 0".
+    static func chapters(_ edition: BookEditionRow, first: Bool) -> String {
+        let checking = first ? L.seriesReadFromChecking : L.seriesReadFromCheckingLater
+        let empty = first ? L.seriesReadFromEmpty : L.seriesReadFromEmptyLater
+        let has = edition.chapters > 0 || edition.latest != nil
+        switch edition.listing {
+        case .failed(let failure):
+            return failure.words
+        case .empty:
+            return empty
+        case .asking:
+            return checking
+        case .listed, nil:
+            guard has else { return edition.listing == nil ? checking : empty }
+            let latest = edition.latest ?? String(edition.chapters)
+            return first ? L.seriesReadFromChapters(latest: latest) : L.seriesReadFromChaptersLater(latest: latest)
+        }
     }
 }
 

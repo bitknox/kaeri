@@ -48,7 +48,23 @@ pub struct Memory {
     /// The series opened that no source had, with when that was found: a Home tile says so for
     /// the rest of its row's 30 minutes.
     pub(crate) not_found: Arc<Mutex<std::collections::HashMap<String, i64>>>,
+    /// The works whose sources are being searched for them by name, each ending when the
+    /// search does: a page waits for it before it says no source has the series.
+    pub(crate) checks: Arc<Mutex<std::collections::HashMap<String, editions::Check>>>,
+    /// Each edition's last chapter-list ask that left no list kept: being asked, answered
+    /// empty, or failed, with when.
+    pub(crate) listings: Listings,
+    /// The chapter lists on their way to a page, by work and edition asked for: a second ask
+    /// meanwhile hears the first one's answer rather than asking the source again.
+    pub(crate) chapter_loads: ChapterLoads,
 }
+
+/// Each edition's last chapter-list ask that left no list kept, by source and series, with when.
+pub(crate) type Listings =
+    Arc<Mutex<std::collections::HashMap<(String, String), (i64, chapters::Asked)>>>;
+
+/// The chapter lists on their way to a page, by work and the edition asked for.
+pub(crate) type ChapterLoads = Arc<Mutex<std::collections::HashSet<(String, Option<String>)>>>;
 
 /// The handles the catalogue's tasks are lent, cloned.
 #[derive(Clone)]

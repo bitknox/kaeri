@@ -361,6 +361,31 @@ class ReadingModel(private val send: (Command) -> Unit) {
     }
 
     /** A series page: its view and its chapters. */
+    /**
+     * The tile [work] was shown as, on Home, in Search or in a list: its title and cover, for its
+     * page to show at once while the series' own view is on its way.
+     */
+    fun knownTile(work: WorkId): WorkTile? {
+        val home = _home.value
+        val all = sequence {
+            if (home != null) {
+                home.spotlight?.let { yield(it) }
+                yieldAll(home.continueReading)
+                yieldAll(home.thisWeek)
+                yieldAll(home.upNext)
+                yieldAll(home.releasing)
+                yieldAll(home.because)
+                yieldAll(home.genreShelf)
+                home.rows.forEach { yieldAll(it.tiles) }
+            }
+            val search = _search.value
+            yieldAll(search.tiles)
+            search.sources?.groups?.forEach { yieldAll(it.tiles) }
+            _lists.value.values.forEach { yieldAll(it) }
+        }
+        return all.firstOrNull { it.work == work && it.title.isNotEmpty() }
+    }
+
     fun loadSeries(work: WorkId) {
         _failures.update { it - ReadingAbout.SERIES }
         reading(ReadingCommand.LoadSeries(work))

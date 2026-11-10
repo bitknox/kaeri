@@ -78,6 +78,7 @@ import app.kaeri.reader.readerKeys
 import app.kaeri.reader.rememberPagedReaderState
 import app.kaeri.reader.rightToLeft
 import app.kaeri.reader.phone.endReadLine
+import app.kaeri.reader.phone.openingStage
 import app.kaeri.reader.text
 import app.kaeri.store.text
 import androidx.compose.ui.draw.alpha
@@ -175,7 +176,7 @@ fun EinkReader(
         val failure = state.failure
         when {
             failure != null && state.leaves.isEmpty() -> EinkChapterFailed(failure, state, session, onRetry = { session.retry(null) }, onBack = actions.onBack)
-            state.leaves.isEmpty() -> EinkWaiting(view?.chapter?.let(::chapterNumber))
+            state.leaves.isEmpty() -> EinkWaiting(state)
             else -> PagedReader(
                 state = state,
                 pager = pager,
@@ -414,17 +415,24 @@ fun EinkProgress(fraction: Float, fromRight: Boolean, modifier: Modifier = Modif
     )
 }
 
-/** Nothing for 600 ms, then one static line, painted once: "Loading chapter 13". */
+/**
+ * Nothing for 600 ms, then one static line, painted once: what the open waits on then, as the
+ * engine named it ("Getting chapter 13 from …"), else "Loading chapter 13". A later stage does not
+ * repaint it, and there is no counter: each repaint flashes the panel.
+ */
 @Composable
-fun BoxScope.EinkWaiting(chapter: String?) {
-    var shown by remember { mutableStateOf(false) }
+fun BoxScope.EinkWaiting(state: ReaderState) {
+    val context = LocalContext.current
+    var line by remember { mutableStateOf<String?>(null) }
+    val now by rememberUpdatedState(state)
     LaunchedEffect(Unit) {
         delay(600)
-        shown = true
+        val chapter = (now.openingChapter ?: now.view?.chapter)?.let(::chapterNumber)
+        line = if (now.openingWait != null) openingStage(context, now.openingWait, chapter) else chapter?.let { Strings.einkLoadingChapter(context, it) }
     }
-    if (!shown || chapter == null) return
+    val shown = line ?: return
     Text(
-        Strings.einkLoadingChapter(LocalContext.current, chapter),
+        shown,
         style = EinkType.Waiting,
         textAlign = TextAlign.Center,
         modifier = Modifier.align(Alignment.TopCenter).offset(y = 300.dp).padding(horizontal = 24.dp),

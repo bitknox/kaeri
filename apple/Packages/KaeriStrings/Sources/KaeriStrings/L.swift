@@ -775,8 +775,16 @@ public enum L {
         Self.format("reading-failed-source-down", fallback: "%1$@ isn't answering. Try again later.", source)
     }
 
+    /// Why something could not load: the source the series reads from is switched off in Your sources.
+    public static func readingFailedSourceOff(source: String) -> String {
+        Self.format("reading-failed-source-off", fallback: "%1$@ is switched off. Switch it on in Your sources, or read from another source.", source)
+    }
+
     /// Why a chapter could not load: the source no longer has it.
     public static var readingFailedNotFound: String { string("reading-failed-not-found", fallback: "This source doesn't have it anymore. Try another source.") }
+
+    /// Why a series has no chapters: none of the person's sources holds it, and none was ever picked.
+    public static var readingFailedNoSource: String { string("reading-failed-no-source", fallback: "None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources.") }
 
     /// Why a chapter or a list could not load: the source refused. The reason comes from the source.
     public static func readingFailedBlocked(source: String, reason: String) -> String {
@@ -8394,6 +8402,24 @@ public enum L {
         Self.format("reader-chapter-line-titled", fallback: "Chapter %1$@ · %2$@", chapter, title)
     }
 
+    /// The reader's opening line while the series' source sends its chapter list.
+    public static func readerWaitChapterList(source: String) -> String {
+        Self.format("reader-wait-chapter-list", fallback: "Getting the chapter list from %1$@", source)
+    }
+
+    /// The reader's opening line while the source sends the chapter's pages or text.
+    public static func readerWaitChapterPages(chapter: String, source: String) -> String {
+        Self.format("reader-wait-chapter-pages", fallback: "Getting chapter %1$@ from %2$@", chapter, source)
+    }
+
+    /// The opening line after a few seconds, with how long it has waited so far.
+    public static func readerWaitSeconds(line: String, seconds: Int) -> String {
+        Self.format("reader-wait-seconds", fallback: "%1$@ · %2$lld s", line, seconds)
+    }
+
+    /// Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
+    public static var readerWaitLong: String { string("reader-wait-long", fallback: "This is taking a while.") }
+
     /// Button in the first run that opens the reading demo.
     public static var onboardingReadDemo: String { string("onboarding-read-demo", fallback: "Read the demo") }
 
@@ -8843,6 +8869,15 @@ public enum L {
     /// Line under it.
     public static var seriesNoChaptersLine: String { string("series-no-chapters-line", fallback: "Another source may have them.") }
 
+    /// The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.
+    public static var seriesNoSourceTitle: String { string("series-no-source-title", fallback: "None of your sources has this series yet") }
+
+    /// Line under it.
+    public static var seriesNoSourceLine: String { string("series-no-source-line", fallback: "Search for it by another name, or add a source in Your sources.") }
+
+    /// Its button: opens Read from, where each source can be searched by another name.
+    public static var seriesNoSourceSearch: String { string("series-no-source-search", fallback: "Search by another name") }
+
     /// The chapter list when the source failed. Downloaded chapters are listed under it.
     public static func seriesChaptersFailed(source: String) -> String {
         Self.format("series-chapters-failed", fallback: "Couldn't load chapters from %1$@.", source)
@@ -8998,6 +9033,18 @@ public enum L {
     public static func seriesReadFromChaptersLater(latest: String) -> String {
         Self.format("series-read-from-chapters-later", fallback: "chapters 1 to %1$@", latest)
     }
+
+    /// A source's line while it is asked for its chapter list, first on its line.
+    public static var seriesReadFromChecking: String { string("series-read-from-checking", fallback: "Checking chapters") }
+
+    /// The same, after its kind on the line.
+    public static var seriesReadFromCheckingLater: String { string("series-read-from-checking-later", fallback: "checking chapters") }
+
+    /// A source that answered with no chapters for this series, first on its line.
+    public static var seriesReadFromEmpty: String { string("series-read-from-empty", fallback: "No chapters here yet") }
+
+    /// The same, after its kind on the line.
+    public static var seriesReadFromEmptyLater: String { string("series-read-from-empty-later", fallback: "no chapters here yet") }
 
     /// After a folder's chapters.
     public static func seriesReadFromOnDevice(device: String) -> String {

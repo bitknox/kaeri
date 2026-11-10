@@ -309,6 +309,16 @@ series-no-chapters-title = No chapters in this { -source } yet
 # Line under it.
 series-no-chapters-line = Another { -source } may have them.
 
+# The chapter list when none of the person's sources holds the series and none was picked: an
+# empty state, not a failure. Its button opens Read from.
+series-no-source-title = None of your { -source-pl } has this series yet
+
+# Line under it.
+series-no-source-line = Search for it by another name, or add a { -source } in Your { -source-pl }.
+
+# Its button: opens Read from, where each source can be searched by another name.
+series-no-source-search = Search by another name
+
 # The chapter list when the source failed. Downloaded chapters are listed under it.
 # @arg source: text
 series-chapters-failed = Couldn't load chapters from { $source }.
@@ -469,6 +479,18 @@ series-read-from-chapters = Chapters 1 to { $latest }
 # A source's chapters, after its kind on the line.
 # @arg latest: text
 series-read-from-chapters-later = chapters 1 to { $latest }
+
+# A source's line while it is asked for its chapter list, first on its line.
+series-read-from-checking = Checking chapters
+
+# The same, after its kind on the line.
+series-read-from-checking-later = checking chapters
+
+# A source that answered with no chapters for this series, first on its line.
+series-read-from-empty = No chapters here yet
+
+# The same, after its kind on the line.
+series-read-from-empty-later = no chapters here yet
 
 # After a folder's chapters.
 # @arg device: text

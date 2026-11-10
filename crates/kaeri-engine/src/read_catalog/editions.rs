@@ -21,11 +21,8 @@ use kaeri_model::{
     event::Event,
 };
 
-use super::{Ask, Kit, series, tiles};
-use crate::{
-    outbox::Outbox,
-    read_sources::{FOLDERS, failure},
-};
+use super::{Ask, Kit, chapters::Asked, series, tiles};
+use crate::{outbox::Outbox, read_sources::FOLDERS};
 
 /// How long a source's answer for a series stands before it is asked again.
 pub(crate) const ASKED_FOR: i64 = 10 * 60;
@@ -146,7 +143,7 @@ async fn ask_one(kit: &Kit, source: &str, work: &WorkId, names: &[String], now: 
             Ok(hits) => hits,
             Err(ProviderError::NotFound) => Vec::new(),
             Err(ProviderError::Transport(_)) => return down(),
-            Err(error) => return Answer::Missed(failure(source, &error).msg()),
+            Err(error) => return Answer::Missed(kit.sources.failure(source, &error).msg()),
         };
         for hit in hits {
             if closeness(names, &hit) < 1.0 {
@@ -188,7 +185,7 @@ fn keep_miss(kit: &Kit, work: &WorkId, miss: Option<EditionMiss>, source: &str, 
 }
 
 fn source_name(kit: &Kit, id: &str) -> String {
-    kit.sources.registry.manifest(id).map_or_else(|| id.to_owned(), |m| m.name)
+    kit.sources.source_name(id)
 }
 
 fn send_for_work(
@@ -203,29 +200,98 @@ fn send_for_work(
     let _ = tx.send(Event::BookSources(event));
 }
 
-/// Read from for a work: the editions kept at once, then each source's answer as it comes.
-pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
-    kit.sources.adopt_plugins(&kit.plugins);
-    let now = ask.now;
-    let medium = medium(kit, &work);
-    let wanted = searchable(kit, &work, medium);
-    let names = names(kit, &work);
+/// A search of a work's sources by name, under way: it ends when the sender goes.
+pub(crate) type Check = tokio::sync::watch::Receiver<()>;
+
+/// How long a check waits for book plugins still compiling before it searches without them.
+pub(crate) const PLUGINS_WAIT: std::time::Duration = std::time::Duration::from_secs(30);
+
+/// The check under way for `work`, if one is.
+fn running(kit: &Kit, work: &WorkId) -> Option<Check> {
+    kit.sources
+        .catalog
+        .checks
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .get(work.as_str())
+        .cloned()
+}
+
+/// Wait for a check to end.
+pub(crate) async fn ended(mut check: Check) {
+    // The sender going is the end; nothing is ever sent on it.
+    let _ = check.changed().await;
+}
+
+/// Search the sources for `work` unless that is under way or was done lately: the check to wait
+/// for before saying no source has it, or `None` when nothing is being asked.
+pub(crate) fn check(kit: &Kit, ask: Ask, work: &WorkId, tx: &Outbox) -> Option<Check> {
+    if let Some(check) = running(kit, work) {
+        return Some(check);
+    }
+    load(kit, ask, work.clone(), tx);
+    running(kit, work)
+}
+
+/// The sources still to search for `work` by name, in the person's order.
+fn to_ask(kit: &Kit, work: &WorkId, now: i64) -> (Medium, Vec<String>, Vec<String>) {
+    let medium = medium(kit, work);
+    let wanted = searchable(kit, work, medium);
+    let names = names(kit, work);
     let known: HashSet<String> =
-        kept_misses(kit, &work, &wanted, now).into_iter().map(|m| m.source_id).collect();
+        kept_misses(kit, work, &wanted, now).into_iter().map(|m| m.source_id).collect();
     // Nothing to search by: the editions kept are the answer.
     let to_ask: Vec<String> = if names.is_empty() {
         Vec::new()
     } else {
         wanted.iter().filter(|id| !known.contains(*id)).cloned().collect()
     };
-    send_for_work(kit, &work, !to_ask.is_empty(), kept_misses(kit, &work, &wanted, now), tx);
-    if to_ask.is_empty() {
+    (medium, names, to_ask)
+}
+
+/// Read from for a work: the editions kept at once, then each source's answer as it comes. A
+/// search already under way for it is not started twice: its answers are on their way.
+pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
+    let now = ask.now;
+    kit.sources.adopt_plugins(&kit.plugins);
+    let (medium, _, to_ask) = to_ask(kit, &work, now);
+    let wanted = searchable(kit, &work, medium);
+    if running(kit, &work).is_some() {
+        send_for_work(kit, &work, true, kept_misses(kit, &work, &wanted, now), tx);
+        return;
+    }
+    let arriving = kit.plugins.is_arriving();
+    send_for_work(
+        kit,
+        &work,
+        arriving || !to_ask.is_empty(),
+        kept_misses(kit, &work, &wanted, now),
+        tx,
+    );
+    list_unlisted(kit, &work, now, tx);
+    if !arriving && to_ask.is_empty() {
         settled(kit, ask, &work, tx);
         return;
     }
     let had_edition = kit.sources.edition_of(&work, None).is_some();
+    let (ended, check) = tokio::sync::watch::channel(());
+    kit.sources
+        .catalog
+        .checks
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .insert(work.as_str().to_owned(), check);
     let (kit, tx) = (kit.clone(), tx.clone());
     tokio::spawn(async move {
+        // A plugin still compiling is asked once it has joined.
+        let to_ask = if arriving {
+            kit.plugins.arrived(PLUGINS_WAIT).await;
+            kit.sources.adopt_plugins(&kit.plugins);
+            to_ask_now(&kit, &work, now)
+        } else {
+            to_ask
+        };
+        let names = names(&kit, &work);
         let mut asking: FuturesUnordered<_> = to_ask
             .iter()
             .map(|source| {
@@ -247,12 +313,96 @@ pub(crate) fn load(kit: &Kit, ask: Ask, work: WorkId, tx: &Outbox) {
             let missing = kept_misses(&kit, &work, &wanted, now);
             send_for_work(&kit, &work, !asking.is_empty(), missing, &tx);
         }
+        if arriving && to_ask.is_empty() {
+            let wanted = searchable(&kit, &work, medium);
+            send_for_work(&kit, &work, false, kept_misses(&kit, &work, &wanted, now), &tx);
+        }
         settled(&kit, ask, &work, &tx);
+        kit.sources
+            .catalog
+            .checks
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .remove(work.as_str());
+        // A page waiting on the check asks for its own chapters once it ends.
+        let waited = ended.receiver_count() > 0;
+        // Its waiters hear the check end as the sender goes.
+        drop(ended);
         // A series that had nowhere to be read from now has: its page fills in.
-        if !had_edition && kit.sources.edition_of(&work, None).is_some() {
+        if !had_edition && !waited && kit.sources.edition_of(&work, None).is_some() {
             series::load(&kit, ask, work, &tx);
         }
     });
+}
+
+fn to_ask_now(kit: &Kit, work: &WorkId, now: i64) -> Vec<String> {
+    to_ask(kit, work, now).2
+}
+
+/// The editions whose chapter lists were never asked for, or not lately, so Read from can say
+/// what each holds: asked in the background, each line updated as its answer comes.
+fn list_unlisted(kit: &Kit, work: &WorkId, now: i64, tx: &Outbox) {
+    let due = unlisted(kit, work, now);
+    if due.is_empty() {
+        return;
+    }
+    let (kit, work, tx) = (kit.clone(), work.clone(), tx.clone());
+    tokio::spawn(async move { list_editions(&kit, &work, due, now, &tx).await });
+}
+
+/// The editions of `work` with no list kept and none asked for within [`ASKED_FOR`].
+fn unlisted(kit: &Kit, work: &WorkId, now: i64) -> Vec<String> {
+    let refs = kit.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+    let mut seen = HashSet::new();
+    refs.into_iter()
+        .filter(|(source, _)| seen.insert(source.clone()))
+        .filter(|(source, _)| kit.sources.registry.manifest(source).is_some())
+        .filter(|(source, series)| {
+            super::chapters::kept(&kit.store, source, series).is_none_or(|(l, _)| l.is_empty())
+                && kit
+                    .sources
+                    .listing_asked_at(source, series)
+                    .is_none_or(|at| now - at >= ASKED_FOR)
+        })
+        .map(|(source, _)| source)
+        .collect()
+}
+
+/// Ask each of `sources` for its list of `work`, sending Read from's lines as they change.
+async fn list_editions(kit: &Kit, work: &WorkId, sources: Vec<String>, now: i64, tx: &Outbox) {
+    // Each line says it is being asked before any answer comes.
+    for source in &sources {
+        if let Some((source, series)) = kit.sources.edition_of(work, Some(source.as_str())) {
+            kit.sources.note_listing(&source, &series, Some(Asked::Asking), now);
+        }
+    }
+    let wanted = searchable(kit, work, medium(kit, work));
+    let send = || {
+        let missing = kept_misses(kit, work, &wanted, now);
+        send_for_work(kit, work, running(kit, work).is_some(), missing, tx);
+    };
+    send();
+    let mut asking: FuturesUnordered<_> = sources
+        .iter()
+        .map(|source| kit.sources.chapters(work, Some(source.as_str()), now))
+        .collect();
+    while asking.next().await.is_some() {
+        send();
+    }
+}
+
+/// The edition in use answered with no chapters: ask the work's other editions for theirs,
+/// unless asked lately, so the edition picked can move to one that has chapters and Read from
+/// says what each holds. True when the edition in use changed meanwhile.
+pub(crate) async fn list_others(kit: &Kit, work: &WorkId, now: i64, tx: &Outbox) -> bool {
+    let before = kit.sources.edition_of(work, None);
+    let in_use = before.as_ref().map(|(source, _)| source.clone());
+    let due: Vec<String> =
+        unlisted(kit, work, now).into_iter().filter(|s| Some(s) != in_use.as_ref()).collect();
+    if !due.is_empty() {
+        list_editions(kit, work, due, now, tx).await;
+    }
+    kit.sources.edition_of(work, None) != before
 }
 
 /// The check of a series' sources is done: a series none of them has is kept as not found, so
@@ -303,7 +453,7 @@ pub(crate) fn search_there(
         let (choices, failure) = match asked {
             Ok(hits) => (hits, None),
             Err(ProviderError::NotFound) => (Vec::new(), None),
-            Err(error) => (Vec::new(), Some(failure(&source, &error))),
+            Err(error) => (Vec::new(), Some(kit.sources.failure(&source, &error))),
         };
         // Closeness to the series' own names, not to what was typed.
         let names = &names[1..];

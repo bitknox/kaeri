@@ -26,24 +26,34 @@ static class ReaderText
 /// <summary>
 /// Opening a chapter: the page plate holds the page's place from the first frame, with the
 /// chapter on it, and the page fades in over it when it comes; there is no spinner and no blank
-/// page. From 4 s a line under the chapter says it is opening, or counts the wait while a source
-/// is found. Narrator hears "Opening Chapter N" once.
+/// page. From 3 s a line under the chapter says what the open waits on and counts the wait; from
+/// <see cref="LongWait"/> it offers another source and Go back. Narrator hears each stage once.
 /// </summary>
 sealed class OpeningView : Grid
 {
+    /// <summary>How long a stage goes on before the opening offers another way, as the player's start does.</summary>
+    public const int LongWait = 15;
+
     readonly PagePlate plate;
     readonly DispatcherQueueTimer tick;
     readonly DateTimeOffset since = DateTimeOffset.UtcNow;
-    readonly ReaderSession reader;
+    readonly ReaderOverlay owner;
+    readonly ReaderPalette palette;
+    readonly string chapter;
+    string? said;
+    bool offered;
 
-    public OpeningView(ReaderSession reader, ReaderPalette palette, string chapter)
+    public OpeningView(ReaderOverlay owner, ReaderPalette palette, string chapter)
     {
-        this.reader = reader;
+        this.owner = owner;
+        this.palette = palette;
+        this.chapter = chapter;
         Background = new SolidColorBrush(palette.Page);
-        var words = string.IsNullOrEmpty(chapter) ? "" : T.WindowsReaderOpening(chapter);
+        var words = Stage(owner.Reader.Opening?.Wait, chapter);
         plate = new PagePlate(chapter, words, palette, atOnce: true);
         AutomationProperties.SetAccessibilityView(plate, AccessibilityView.Raw);
         Children.Add(plate);
+        said = words;
         AutomationProperties.SetName(this, words);
         AutomationProperties.SetLiveSetting(this, AutomationLiveSetting.Polite);
         tick = Timers.Weak(this, TimeSpan.FromSeconds(1), true, o => o.Tick());
@@ -56,12 +66,48 @@ sealed class OpeningView : Grid
         Unloaded += (_, _) => tick.Stop();
     }
 
+    /// <summary>What the open waits on, in words: the stage the engine named, else the chapter.</summary>
+    public static string Stage(ReaderWait? wait, string chapter) => wait switch
+    {
+        ReaderWait.ChapterList list => T.ReaderWaitChapterList(list.Source),
+        ReaderWait.ChapterPages pages => T.ReaderWaitChapterPages(pages.Chapter, pages.Source),
+        _ => string.IsNullOrEmpty(chapter) ? "" : T.WindowsReaderOpening(chapter),
+    };
+
     void Tick()
     {
         var seconds = (int)(DateTimeOffset.UtcNow - since).TotalSeconds;
-        if (seconds < 4 || reader.Opening?.Wait != ReaderWait.FindingSource)
+        var stage = Stage(owner.Reader.Opening?.Wait, chapter);
+        if (stage.Length == 0)
             return;
-        plate.Loading(T.WindowsReaderOpeningSlow(seconds));
+        if (stage != said)
+        {
+            // A new stage is said aloud, as the first one was.
+            said = stage;
+            AutomationProperties.SetName(this, stage);
+            ReaderSpeech.Raise(this);
+        }
+        plate.Loading(seconds < 3 ? stage : T.ReaderWaitSeconds(stage, seconds));
+        if (seconds >= LongWait && !offered)
+            Offer();
+    }
+
+    /// <summary>A stage that goes on offers the way on, as a failed open does.</summary>
+    void Offer()
+    {
+        offered = true;
+        var stack = new StackPanel { Spacing = 10, MaxWidth = 440, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(28, 28, 28, 40) };
+        stack.Children.Add(ReaderText.Line(T.ReaderWaitLong, 15, palette.Haze));
+        var quiet = new Grid { ColumnSpacing = 8 };
+        quiet.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        quiet.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var choose = ReaderButtons.Plain(T.WindowsReaderChooseSource, palette, (_, _) => owner.ChooseSource());
+        var back = ReaderButtons.Plain(T.WindowsReaderGoBack, palette, (_, _) => owner.Close());
+        SetColumn(back, 1);
+        quiet.Children.Add(choose);
+        quiet.Children.Add(back);
+        stack.Children.Add(quiet);
+        Children.Add(stack);
     }
 }
 

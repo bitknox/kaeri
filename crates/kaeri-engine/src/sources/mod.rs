@@ -206,7 +206,9 @@ pub fn spawn_plugin_load(
     let shows = plugins_enabled(&config);
     // Said before the task is spawned, so a play sent the moment the engine is up sees it.
     let arriving = shows.then(|| Arrivals::expected(&registry));
+    let books_arriving = books.clone().map(BookArrivals::expected);
     tokio::spawn(async move {
+        let _books_arriving = books_arriving;
         if !shows && books.is_none() {
             return None;
         }
@@ -249,6 +251,22 @@ impl Arrivals {
     fn expected(registry: &ProviderRegistry) -> Self {
         registry.expect_arrivals();
         Self(registry.clone())
+    }
+}
+
+/// Book plugins on their way: said done when this is dropped, however the load ends.
+struct BookArrivals(crate::book_plugins::BookPlugins);
+
+impl BookArrivals {
+    fn expected(plugins: crate::book_plugins::BookPlugins) -> Self {
+        plugins.expect_arrivals();
+        Self(plugins)
+    }
+}
+
+impl Drop for BookArrivals {
+    fn drop(&mut self) {
+        self.0.arrivals_done();
     }
 }
 

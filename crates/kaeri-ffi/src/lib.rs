@@ -416,6 +416,13 @@ mod tests {
             chapter: None,
             wait: Some(kaeri_model::reader::ReaderWait::FindingSource),
         }));
+        crosses_intact(Event::Reader(ReaderEvent::Opening {
+            chapter: None,
+            wait: Some(kaeri_model::reader::ReaderWait::ChapterPages {
+                chapter: "12".into(),
+                source: "Slow Books".into(),
+            }),
+        }));
         crosses_intact(Event::Reader(ReaderEvent::GoTo {
             session: 7,
             place: ReadPlace {

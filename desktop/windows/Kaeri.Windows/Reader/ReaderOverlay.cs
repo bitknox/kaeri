@@ -357,7 +357,7 @@ public sealed partial class ReaderOverlay : UserControl
             // The next chapter opens under the strip's marker: the scroll stays as it is.
             ClearState();
         else if (Reader.Phase == ReaderPhase.Opening || (Reader.Phase == ReaderPhase.Open && !hasContent))
-            ShowState("opening:" + ChapterLabel(), () => new OpeningView(Reader, PagePalette, ChapterLabel()));
+            ShowState("opening:" + ChapterLabel(), () => new OpeningView(this, PagePalette, ChapterLabel()));
         else
             ClearState();
     }

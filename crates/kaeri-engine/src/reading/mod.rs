@@ -229,7 +229,7 @@ pub(crate) fn reading(
         ReadingCommand::Search { query } => return search(services, query, 0, tx),
         ReadingCommand::SearchMore { query, page } => return search(services, query, page, tx),
         ReadingCommand::LoadChapters { work, edition } => {
-            return chapters(services, work, edition, tx);
+            return chapters(engine, services, work, edition, tx);
         }
         ReadingCommand::LoadVersions { work, chapter } => {
             let versions = other_sources(services, &work, &chapter);
@@ -240,7 +240,7 @@ pub(crate) fn reading(
             if let Err(e) = services.store.set_edition_pref(work.as_str(), Some(&pref)) {
                 tracing::warn!(error = %e, "the edition choice was not kept");
             }
-            return chapters(services, work, Some(pref.source_id), tx);
+            return chapters(engine, services, work, Some(pref.source_id), tx);
         }
         ReadingCommand::MarkRead { work, chapters: ids, read } => {
             mark_read(services, work, ids, read, tx);
@@ -431,38 +431,29 @@ fn search(services: &Services, query: ReadSearchQuery, page: u32, tx: &Outbox) {
 
 /// A work's chapters for the reader's sheet and the series page. A series no source holds lists
 /// its files on this device; one with neither answers why.
-fn chapters(services: &Services, work: WorkId, edition: Option<String>, tx: &Outbox) {
+fn chapters(
+    engine: &EngineState,
+    services: &Services,
+    work: WorkId,
+    edition: Option<String>,
+    tx: &Outbox,
+) {
     let kit = crate::read_catalog::Kit::of(services);
-    let (tx, now) = (tx.clone(), services.clock.now());
+    let ask = crate::read_catalog::Ask::of(engine, services);
+    chapters_of(kit, ask, work, edition, tx);
+}
+
+/// [`chapters`] with the catalogue's handles, as the series page's tests drive it.
+pub(crate) fn chapters_of(
+    kit: crate::read_catalog::Kit,
+    ask: crate::read_catalog::Ask,
+    work: WorkId,
+    edition: Option<String>,
+    tx: &Outbox,
+) {
+    let tx = tx.clone();
     tokio::spawn(async move {
-        kit.sources.adopt_plugins(&kit.plugins);
-        let event = if kit.sources.edition_of(&work, edition.as_deref()).is_none() {
-            let list = crate::read_catalog::chapters::of_work(&kit.sources, &kit.store, &work);
-            let volumes = shelf::volumes(
-                &kit.store,
-                work.as_str(),
-                list.as_ref().map(|(_, _, l)| l.as_slice()),
-                crate::read_catalog::series::medium_of(&kit, &work),
-                now,
-                &kit.clock.zone(),
-            );
-            let failure = volumes.is_empty().then_some(ReadingFailure::NotFound);
-            ReadingEvent::Chapters { work, edition: None, volumes, failure }
-        } else {
-            match kit.sources.chapters(&work, edition.as_deref(), now).await {
-                Ok((edition, mut volumes)) => {
-                    crate::read_catalog::series::finish(&kit, &work, &mut volumes, now);
-                    ReadingEvent::Chapters { work, edition, volumes, failure: None }
-                }
-                Err(failure) => ReadingEvent::Chapters {
-                    work,
-                    edition: None,
-                    volumes: Vec::new(),
-                    failure: Some(failure),
-                },
-            }
-        };
-        let _ = tx.send(Event::Reading(event));
+        crate::read_catalog::series::chapters(&kit, ask, &work, edition, &tx).await;
     });
 }
 

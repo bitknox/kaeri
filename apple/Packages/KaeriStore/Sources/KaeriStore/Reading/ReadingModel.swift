@@ -179,6 +179,18 @@ public final class ReadingModel {
         send?(.reading(.searchMore(query: search.query, page: search.page + 1)))
     }
 
+    /// The tile a series was opened from, or any tile of it on screen lately: its title and
+    /// cover show on the series page at once, before the engine's header has them.
+    public func knownTile(_ work: String) -> WorkTile? {
+        var all: [WorkTile] = []
+        if let home {
+            all += [home.spotlight].compactMap { $0 } + home.continueReading + home.thisWeek + home.upNext
+            all += home.releasing + home.because + home.genreShelf + home.rows.flatMap(\.tiles)
+        }
+        all += search.tiles + (search.sources?.groups.flatMap(\.tiles) ?? []) + lists.values.flatMap { $0 }
+        return all.first { $0.work == work && !$0.title.isEmpty }
+    }
+
     public func loadSeries(_ work: String) {
         failures[.series] = nil
         send?(.reading(.loadSeries(work: work)))

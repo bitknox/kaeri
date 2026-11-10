@@ -169,7 +169,7 @@ fn tile_of(kit: &Kit, work: &str) -> Option<WorkTile> {
 }
 
 fn source_name(sources: &BookSources, source: &str) -> String {
-    sources.registry.manifest(source).map_or_else(|| source.to_owned(), |m| m.name)
+    sources.source_name(source)
 }
 
 pub(crate) fn row_of(chapter: &chapters::Kept, read: &chapters::Read) -> ChapterRow {
@@ -281,7 +281,7 @@ pub(crate) async fn run(kit: &Kit, ask: Ask) -> Checked {
                     work: id,
                     title,
                     source_name: source_name(sources, &source),
-                    failure: crate::read_sources::failure(&source, &e),
+                    failure: sources.failure(&source, &e),
                 });
                 continue;
             }

@@ -242,8 +242,8 @@ class ReaderSessionTest {
     @Test
     fun what_an_open_waits_on_shows_only_while_opening() {
         session.open(WORK, ReaderFixtures.surface)
-        session.apply(ReaderEvent.Opening(ReaderFixtures.chapter(), ReaderWait.FINDING_SOURCE))
-        assertEquals(ReaderWait.FINDING_SOURCE, session.state.value.openingWait)
+        session.apply(ReaderEvent.Opening(ReaderFixtures.chapter(), ReaderWait.ChapterPages("1", "Paper Lantern")))
+        assertEquals(ReaderWait.ChapterPages("1", "Paper Lantern"), session.state.value.openingWait)
         session.apply(ReaderEvent.Opened(ReaderFixtures.view()))
         session.apply(ReaderEvent.Opening(null, null))
         assertNull(session.state.value.openingWait)

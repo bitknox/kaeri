@@ -16,8 +16,22 @@ use kaeri_model::book_sources::BookPluginRow;
 use kaeri_plugin::WasmBookSource;
 
 /// The loaded book plugins, shared by every clone. Empty while reading is off.
-#[derive(Clone, Default)]
-pub struct BookPlugins(Arc<RwLock<Vec<Arc<WasmBookSource>>>>);
+#[derive(Clone)]
+pub struct BookPlugins {
+    loaded: Arc<RwLock<Vec<Arc<WasmBookSource>>>>,
+    /// Whether a load from the plugin directory is under way: a series a plugin holds is not
+    /// "not found" while its plugin is still compiling.
+    arriving: Arc<tokio::sync::watch::Sender<bool>>,
+}
+
+impl Default for BookPlugins {
+    fn default() -> Self {
+        Self {
+            loaded: Arc::default(),
+            arriving: Arc::new(tokio::sync::watch::Sender::new(false)),
+        }
+    }
+}
 
 impl std::fmt::Debug for BookPlugins {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -27,11 +41,32 @@ impl std::fmt::Debug for BookPlugins {
 
 impl BookPlugins {
     fn read(&self) -> std::sync::RwLockReadGuard<'_, Vec<Arc<WasmBookSource>>> {
-        self.0.read().unwrap_or_else(|e| e.into_inner())
+        self.loaded.read().unwrap_or_else(|e| e.into_inner())
     }
 
     fn write(&self) -> std::sync::RwLockWriteGuard<'_, Vec<Arc<WasmBookSource>>> {
-        self.0.write().unwrap_or_else(|e| e.into_inner())
+        self.loaded.write().unwrap_or_else(|e| e.into_inner())
+    }
+
+    /// A load from the plugin directory has started.
+    pub fn expect_arrivals(&self) {
+        self.arriving.send_replace(true);
+    }
+
+    /// The load has ended, loaded or not.
+    pub fn arrivals_done(&self) {
+        self.arriving.send_replace(false);
+    }
+
+    /// Whether a load from the plugin directory is under way.
+    pub fn is_arriving(&self) -> bool {
+        *self.arriving.borrow()
+    }
+
+    /// Wait for a load under way to end, for at most `limit`. Returns at once when none is.
+    pub async fn arrived(&self, limit: std::time::Duration) {
+        let mut arriving = self.arriving.subscribe();
+        let _ = tokio::time::timeout(limit, arriving.wait_for(|a| !*a)).await;
     }
 
     /// Add plugins from a directory load. A plugin with the id of one already here replaces it.

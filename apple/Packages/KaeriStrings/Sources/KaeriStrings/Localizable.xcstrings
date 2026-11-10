@@ -225551,6 +225551,54 @@
         }
       }
     },
+    "reader-wait-chapter-list" : {
+      "comment" : "The reader's opening line while the series' source sends its chapter list. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting the chapter list from %1$@"
+          }
+        }
+      }
+    },
+    "reader-wait-chapter-pages" : {
+      "comment" : "The reader's opening line while the source sends the chapter's pages or text. Argument 1: chapter (Text). Argument 2: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting chapter %1$@ from %2$@"
+          }
+        }
+      }
+    },
+    "reader-wait-long" : {
+      "comment" : "Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is taking a while."
+          }
+        }
+      }
+    },
+    "reader-wait-seconds" : {
+      "comment" : "The opening line after a few seconds, with how long it has waited so far. Argument 1: line (Text). Argument 2: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld s"
+          }
+        }
+      }
+    },
     "reader-window" : {
       "comment" : "Title of the Mac reader window.",
       "extractionState" : "manual",
@@ -232007,6 +232055,18 @@
         }
       }
     },
+    "reading-failed-no-source" : {
+      "comment" : "Why a series has no chapters: none of the person's sources holds it, and none was ever picked.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of your sources has this series yet. Search for it by another name in Read from, or add a source in Your sources."
+          }
+        }
+      }
+    },
     "reading-failed-not-found" : {
       "comment" : "Why a chapter could not load: the source no longer has it.",
       "extractionState" : "manual",
@@ -233095,6 +233155,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ không phản hồi. Hãy thử lại sau."
+          }
+        }
+      }
+    },
+    "reading-failed-source-off" : {
+      "comment" : "Why something could not load: the source the series reads from is switched off in Your sources. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is switched off. Switch it on in Your sources, or read from another source."
           }
         }
       }
@@ -258247,6 +258319,42 @@
         }
       }
     },
+    "series-no-source-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search for it by another name, or add a source in Your sources."
+          }
+        }
+      }
+    },
+    "series-no-source-search" : {
+      "comment" : "Its button: opens Read from, where each source can be searched by another name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search by another name"
+          }
+        }
+      }
+    },
+    "series-no-source-title" : {
+      "comment" : "The chapter list when none of the person's sources holds the series and none was picked: an empty state, not a failure. Its button opens Read from.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of your sources has this series yet"
+          }
+        }
+      }
+    },
     "series-no-volume" : {
       "comment" : "The heading for chapters that are in no volume yet.",
       "extractionState" : "manual",
@@ -259251,6 +259359,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "chương 1 đến %1$@"
+          }
+        }
+      }
+    },
+    "series-read-from-checking" : {
+      "comment" : "A source's line while it is asked for its chapter list, first on its line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking chapters"
+          }
+        }
+      }
+    },
+    "series-read-from-checking-later" : {
+      "comment" : "The same, after its kind on the line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "checking chapters"
+          }
+        }
+      }
+    },
+    "series-read-from-empty" : {
+      "comment" : "A source that answered with no chapters for this series, first on its line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No chapters here yet"
+          }
+        }
+      }
+    },
+    "series-read-from-empty-later" : {
+      "comment" : "The same, after its kind on the line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no chapters here yet"
           }
         }
       }
