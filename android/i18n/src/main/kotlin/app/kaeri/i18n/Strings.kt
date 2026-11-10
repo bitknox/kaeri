@@ -12628,6 +12628,10 @@ object Strings {
     fun accountsChangesWaiting(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.accounts_changes_waiting, count, count)
 
+    /** Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one. */
+    fun accountsChangesHeld(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.accounts_changes_held, count, count)
+
     /** Choice for the download quality: larger files with more detail. */
     fun settingsQualityHigher(context: Context): String =
         context.getString(R.string.settings_quality_higher)

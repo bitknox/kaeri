@@ -6087,6 +6087,11 @@ pub fn accounts_row_queued_held(queued: i64, held: i64) -> String {
     text("accounts-row-queued-held", &[("queued", Arg::Int(queued)), ("held", Arg::Int(held))])
 }
 
+/// Part of an account's overlay row: changes held back until the title is matched to the { -tracker }'s own id, with nothing else queued.
+pub fn accounts_row_held(count: i64) -> String {
+    text("accounts-row-held", &[("count", Arg::Int(count))])
+}
+
 /// Action beside a sync difference in the overlay: Enter keeps the value on this device.
 pub fn accounts_conflict_keep_mine() -> String {
     text("accounts-conflict-keep-mine", &[])
@@ -18793,6 +18798,11 @@ pub fn widget_resume_dubbed_label(episode: i64, title: &str) -> String {
 /// Line under a signed-in account while changes wait to be sent.
 pub fn accounts_changes_waiting(count: i64) -> String {
     text("accounts-changes-waiting", &[("count", Arg::Int(count))])
+}
+
+/// Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one.
+pub fn accounts_changes_held(count: i64) -> String {
+    text("accounts-changes-held", &[("count", Arg::Int(count))])
 }
 
 /// Choice for the download quality: larger files with more detail.

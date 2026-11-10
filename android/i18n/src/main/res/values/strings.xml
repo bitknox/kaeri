@@ -6713,6 +6713,11 @@
         <item quantity="one">One change waiting to sync</item>
         <item quantity="other">%1$,d changes waiting to sync</item>
     </plurals>
+    <!-- Line under a signed-in account when nothing else waits but some changes can't go out yet: the { -tracker } has no match for those titles. They go out by themselves once it has one. -->
+    <plurals name="accounts_changes_held">
+        <item quantity="one">One change can\'t sync yet</item>
+        <item quantity="other">%1$,d changes can\'t sync yet</item>
+    </plurals>
     <!-- Choice for the download quality: larger files with more detail. -->
     <string name="settings_quality_higher">Higher</string>
     <!-- Choice for the download quality: the usual size. -->

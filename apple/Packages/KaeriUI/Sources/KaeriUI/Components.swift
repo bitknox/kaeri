@@ -390,6 +390,12 @@ struct SyncCapsule: View {
         }
         .accessibilityLabel(accessibilityLabel(summary))
         .accessibilityHint(L.shellSyncHint)
+        .onAppear {
+            // `sheet=sync-status`: the popover open, for its shot.
+            guard navigator.launchSheet == "sync-status" else { return }
+            navigator.launchSheet = nil
+            showing = true
+        }
         .popover(isPresented: $showing, arrowEdge: .bottom) {
             JobsPopover(openAccounts: {
                 showing = false
@@ -434,6 +440,7 @@ struct JobsPopover: View {
             Text(store.accounts.summary.text)
                 .font(.mac(13, weight: .semibold))
                 .foregroundStyle(.silk)
+            heldLines
             if store.jobs.running.isEmpty {
                 Text(L.shellNothingRunning)
                     .font(.mac(13))
@@ -475,6 +482,26 @@ struct JobsPopover: View {
         }
         .padding(16)
         .frame(width: 300, alignment: .leading)
+    }
+
+    /// Changes a tracker can't take yet, quiet under the status: they are not waiting on
+    /// anything the person can do, and go out by themselves once there is a match.
+    @ViewBuilder private var heldLines: some View {
+        let held = store.accounts.held
+        if !held.isEmpty {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(held, id: \.tracker) { row in
+                    Text(L.shellSyncHeld(count: row.count, tracker: AccountsModel.name(row.tracker)))
+                        .font(.mac(13))
+                }
+                Text(L.shellSyncHeldDetail)
+                    .font(.mac(12))
+            }
+            .foregroundStyle(.haze)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityElement(children: .combine)
+            .padding(.top, 6)
+        }
     }
 
     /// The sync pass: whom it talks with and how long it has run.

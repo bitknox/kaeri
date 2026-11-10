@@ -130,6 +130,21 @@ shell-sync-not-connected = { $tracker } not connected
 # Line in the list of what the engine is doing, when it is doing nothing.
 shell-nothing-running = Nothing is running.
 
+# Line in the sync status's popover: changes a { -tracker } can't take yet, because it has no
+# match for those titles. They go out by themselves once it has one.
+# @only apple
+# @arg count: int
+# @arg tracker: text
+shell-sync-held = { $count ->
+    [one] One change can't sync to { $tracker } yet
+   *[other] { $count } changes can't sync to { $tracker } yet
+ }
+
+# Under the lines above in the sync status's popover: why those changes wait, and that nothing
+# needs doing.
+# @only apple
+shell-sync-held-detail = No match for these titles yet. They sync once there is one.
+
 # Placeholder of the search field while Settings is open.
 shell-search-settings = Search settings
 
