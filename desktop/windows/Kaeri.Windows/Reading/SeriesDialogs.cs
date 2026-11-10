@@ -143,10 +143,15 @@ static class SeriesDialogs
                 }
                 misses.Children.Add(row);
                 if (open != miss.SourceId)
+                {
+                    // Another edition the source has, which may be it: one press confirms it.
+                    if (miss.Possible is { } possible)
+                        misses.Children.Add(ChoiceButton(ctx, work, miss.SourceId, possible));
                     continue;
+                }
                 if (!boxes.TryGetValue(miss.SourceId, out var field))
                 {
-                    field = new TextBox { PlaceholderText = T.ReadFromSearchPlaceholder(miss.SourceName) };
+                    field = new TextBox { PlaceholderText = T.ReadFromSearchPlaceholder(miss.SourceName), Text = miss.Query ?? "" };
                     AutomationProperties.SetName(field, T.ReadFromSearchPlaceholder(miss.SourceName));
                     var id = miss.SourceId;
                     field.KeyDown += (_, e) =>
@@ -211,29 +216,33 @@ static class SeriesDialogs
             return list;
         }
         foreach (var choice in found.Choices)
-        {
-            var parts = new List<string>();
-            if (choice.Year is { } year)
-                parts.Add(year.ToString(System.Globalization.CultureInfo.CurrentCulture));
-            if (choice.Language is { Length: > 0 } language)
-                parts.Add(Wording.LanguageName(language));
-            if (choice.Confidence > 0)
-                parts.Add(T.LibraryMatchPercent(choice.Confidence));
-            var line = string.Join(" · ", parts);
-            var button = new Button
-            {
-                HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
-                BorderThickness = new Thickness(0),
-                Padding = new Thickness(12, 6, 12, 6),
-                Content = SeriesWords.Pair(choice.Title, line),
-            };
-            AutomationProperties.SetName(button, line.Length > 0 ? $"{choice.Title}, {line}" : choice.Title);
-            button.Click += (_, _) => ctx.Known.Books.ChooseSourceSeries(work, found.SourceId, choice.SeriesRef);
-            list.Children.Add(button);
-        }
+            list.Children.Add(ChoiceButton(ctx, work, found.SourceId, choice));
         return list;
+    }
+
+    /// <summary>One series a source has: its title, year, language and match, chosen with a press.</summary>
+    static Button ChoiceButton(Ctx ctx, string work, string sourceId, SourceSeriesChoice choice)
+    {
+        var parts = new List<string>();
+        if (choice.Year is { } year)
+            parts.Add(year.ToString(System.Globalization.CultureInfo.CurrentCulture));
+        if (choice.Language is { Length: > 0 } language)
+            parts.Add(Wording.LanguageName(language));
+        if (choice.Confidence > 0)
+            parts.Add(T.LibraryMatchPercent(choice.Confidence));
+        var line = string.Join(" · ", parts);
+        var button = new Button
+        {
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            HorizontalContentAlignment = HorizontalAlignment.Stretch,
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(12, 6, 12, 6),
+            Content = SeriesWords.Pair(choice.Title, line),
+        };
+        AutomationProperties.SetName(button, line.Length > 0 ? $"{choice.Title}, {line}" : choice.Title);
+        button.Click += (_, _) => ctx.Known.Books.ChooseSourceSeries(work, sourceId, choice.SeriesRef);
+        return button;
     }
 
     /// <summary>"Kavita · Group · English · chapters 1 to 88", and "on this PC" for a folder.</summary>
