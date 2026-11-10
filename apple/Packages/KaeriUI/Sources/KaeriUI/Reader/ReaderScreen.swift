@@ -208,7 +208,8 @@ public struct ReaderScreen: View {
         hideTask?.cancel()
         hideTask = Task {
             try? await Task.sleep(for: .seconds(2))
-            guard !Task.isCancelled, model.sheet == nil, !model.pinChrome else { return }
+            // A shot holding the scrubber keeps the group up under a still pointer.
+            guard !Task.isCancelled, model.sheet == nil, !model.pinChrome, model.shotScrub == nil else { return }
             model.chromeShown = false
             NSCursor.setHiddenUntilMouseMoves(true)
         }

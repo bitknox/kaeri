@@ -159,6 +159,7 @@ struct SeriesPage: View {
 
     var body: some View {
         let series = store.reading.series[work]
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if let series {
@@ -202,6 +203,18 @@ struct SeriesPage: View {
             .padding(.bottom, 32)
             .frame(maxWidth: 1_120, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        // A launch scroll brings the series panel's Group row near the top, for the Fixtures
+        // shots at large text sizes.
+        .task(id: series?.edition?.groups.count ?? 0) {
+            guard navigator.launchScroll != nil, (series?.edition?.groups.count ?? 0) > 1 else { return }
+            // Taken only once the scroll is done: the page is drawn again as the series settles,
+            // which cancels a wait under way.
+            try? await Task.sleep(for: .milliseconds(800))
+            guard !Task.isCancelled else { return }
+            navigator.launchScroll = nil
+            proxy.scrollTo("series-group", anchor: UnitPoint(x: 0, y: 0.2))
+        }
         }
         .scrollIndicators(.automatic)
         .onScrollGeometryChange(for: Bool.self) { geometry in
@@ -757,7 +770,7 @@ private struct SeriesPanel: View {
                 // Whose version of each chapter, inside the source: only when it has a choice.
                 if edition.groups.count > 1 {
                     rule
-                    groupRow(edition)
+                    groupRow(edition).id("series-group") // i18n-skip: a scroll target
                 }
             }
             if let first = followed.first {
