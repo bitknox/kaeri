@@ -41,11 +41,16 @@ struct StripReader: View {
     @State private var pinchAt: CGPoint = .zero
     @State private var pinching = false
     @State private var offsetX: CGFloat = 0
+    @State private var contentHeight: CGFloat = 0
 
     private struct Metrics: Equatable {
         var x: CGFloat
         var y: CGFloat
         var height: CGFloat
+        /// The scroll's own height: images that land shorter than their guess shorten it under a
+        /// place that stays put, and the place is worked out again then too, or the marker
+        /// could come into view with nothing to open the next chapter.
+        var content: CGFloat
     }
 
     /// One row of the scroll, where it sits and how tall it is, so the place in it is worked out
@@ -155,7 +160,8 @@ struct StripReader: View {
         .scrollPosition($position)
         .onScrollGeometryChange(for: Metrics.self) { geometry in
             Metrics(x: geometry.contentOffset.x + geometry.contentInsets.leading,
-                    y: geometry.contentOffset.y + geometry.contentInsets.top, height: geometry.containerSize.height)
+                    y: geometry.contentOffset.y + geometry.contentInsets.top, height: geometry.containerSize.height,
+                    content: geometry.contentSize.height)
         } action: { _, metrics in
             offsetX = metrics.x
             track(metrics)
@@ -231,7 +237,12 @@ struct StripReader: View {
             }
             let step = request.line ? 120 : size.height * 0.9
             restoring = false
-            let to = max(0, offsetY + (request.forward ? step : -step))
+            // A turn at the foot, with the marker already above the middle, opens the next
+            // chapter: the scroll has nowhere to go, so no new place would.
+            if request.forward, flowIfPast(y: offsetY, height: size.height) { return }
+            // Never past the foot, where a scroll would not go at all.
+            let end = contentHeight > size.height ? contentHeight - size.height : .infinity
+            let to = min(max(0, offsetY + (request.forward ? step : -step)), end)
             withAnimation(instant ? nil : .standard) { position.scrollTo(y: to) }
         }
     }
@@ -364,6 +375,15 @@ struct StripReader: View {
         position.scrollTo(y: row.top + CGFloat(at.offset) * (row.height - spacing))
     }
 
+    /// The open chapter's marker is above the middle of the screen: the next chapter opens under
+    /// it. True when it did.
+    @discardableResult private func flowIfPast(y: CGFloat, height: CGFloat) -> Bool {
+        guard !restoring, let marker = rows.last(where: \.isMarker), marker.trail == nil,
+              y + height / 2 > marker.top + marker.height / 2 else { return false }
+        model.flowOn()
+        return true
+    }
+
     /// Where the person is. The chapter whose rows hold the middle of the screen names the line,
     /// the image at the top is the place, and the open chapter's marker crossing the middle
     /// opens the next chapter under it.
@@ -393,9 +413,8 @@ struct StripReader: View {
                 model.stripAt(StripPos(image: UInt32(place), offset: Float(into)), footVisible: foot)
             }
         }
-        if !restoring, let marker = markers.last, marker.trail == nil, middle > marker.top + marker.height / 2 {
-            model.flowOn()
-        }
+        contentHeight = metrics.content
+        flowIfPast(y: metrics.y, height: metrics.height)
         prepare(rows, from: metrics.y + metrics.height, to: metrics.y + metrics.height * 2)
     }
 
@@ -468,7 +487,7 @@ private struct StripMarker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(L.readerEndNext).font(.ui(13)).foregroundStyle(theme.haze)
-            Text(next.title.map { L.readerChapterLineTitled(chapter: next.number ?? next.label, title: $0) } ?? next.label)
+            Text(next.title.map { L.readerChapterLineTitled(chapter: next.number ?? next.label, title: $0) } ?? ReaderChrome.chapterName(next.label))
                 .font(.showTitle(size: 22, relativeTo: .title2)).fontWeight(.bold)
                 .foregroundStyle(theme.silk)
                 .lineLimit(3)

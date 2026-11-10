@@ -397,7 +397,7 @@ struct ReaderEndPage: View {
             if let next {
                 Text(L.readerEndNext).font(.ui(13)).foregroundStyle(theme.haze)
                     .padding(.top, phone ? 18 : 22)
-                Text(next.title ?? next.label)
+                Text(next.title ?? ReaderChrome.chapterName(next.label))
                     .font(.showTitle(size: 30, relativeTo: .title))
                     .fontWeight(.bold)
                     .foregroundStyle(theme.silk)
@@ -495,10 +495,15 @@ struct ReaderEndPage: View {
     }
 
     /// "Read · AniList updated", or Read alone when no tracker took it.
-    private var readLine: String {
+    private var readLine: String { Self.readLine(read: read, trackers: readTrackers, offline: store.offline) }
+
+    /// Offline the trackers hear of the read only once the device is back online, and the line
+    /// says so rather than call them updated.
+    static func readLine(read: Bool, trackers: [String], offline: Bool) -> String {
         guard read else { return L.readerEndNotRead }
-        guard !readTrackers.isEmpty else { return L.readerEndRead }
-        return L.readerEndTracker(trackers: readTrackers.formatted(.list(type: .and).locale(AirTime.locale)))
+        guard !trackers.isEmpty else { return L.readerEndRead }
+        let names = trackers.formatted(.list(type: .and).locale(AirTime.locale))
+        return offline ? L.readerEndTrackerOffline(tracker: names) : L.readerEndTracker(trackers: names)
     }
 
     private func title(_ why: NoNext, _ chapter: String) -> String {

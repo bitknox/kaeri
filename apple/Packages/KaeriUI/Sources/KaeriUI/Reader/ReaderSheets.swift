@@ -637,7 +637,7 @@ struct ReaderChaptersSheet: View {
         } label: {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(row.title ?? row.label).font(.ui(16, weight: here ? .semibold : .regular))
+                    Text(row.title ?? ReaderChrome.chapterName(row.label)).font(.ui(16, weight: here ? .semibold : .regular))
                         .foregroundStyle(rowRead(row) ? theme.haze : theme.silk).lineLimit(1)
                     Text(state(row)).font(.ui(13)).foregroundStyle(theme.haze)
                 }
