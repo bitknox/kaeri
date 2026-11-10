@@ -8549,6 +8549,9 @@ reader-end-read = 既読になりました
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = 既読になりました · { $trackers }を更新しました
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = 既読になりました · { $tracker }はオンラインに戻ると更新されます
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = 次の章
 

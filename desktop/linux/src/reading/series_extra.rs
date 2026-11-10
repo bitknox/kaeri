@@ -370,7 +370,8 @@ fn draw_read_from(
                 button.connect_clicked({
                     let (found, source) = (Rc::clone(found), miss.source_id.clone());
                     let ctx = Rc::downgrade(ctx);
-                    let (work, query) = (work.clone(), miss.query.clone().unwrap_or_else(|| title.to_owned()));
+                    let (work, query) =
+                        (work.clone(), miss.query.clone().unwrap_or_else(|| title.to_owned()));
                     move |_| {
                         let Some(ctx) = ctx.upgrade() else { return };
                         {
@@ -400,7 +401,14 @@ fn draw_read_from(
                 list.append(&search_there(ctx, dialog, work, title, miss, &state));
             } else if let Some(possible) = &miss.possible {
                 // Another edition the source has, which may be it: one press confirms it.
-                list.append(&possible_row(ctx, dialog, work, &miss.source_id, possible, &state));
+                list.append(&possible_row(
+                    ctx,
+                    dialog,
+                    work,
+                    &miss.source_id,
+                    possible,
+                    &state,
+                ));
             }
         }
         body.append(&list);

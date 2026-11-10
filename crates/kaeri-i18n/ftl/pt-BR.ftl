@@ -8731,6 +8731,9 @@ reader-end-read = Contado como lido
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Contado como lido · Atualizado em { $trackers }
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Contado como lido · { $tracker } atualiza quando você voltar online
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Seguinte
 

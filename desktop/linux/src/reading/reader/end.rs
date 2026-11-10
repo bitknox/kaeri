@@ -202,7 +202,7 @@ impl EndPage {
     /// Show `facts`. A change of the read line crossfades in place; the rest is set as it is.
     pub fn fill(&self, facts: &EndFacts) {
         self.top.set_label(&t::reader_end_of_chapter_number(&facts.chapter));
-        let read = read_line(facts.read.as_deref());
+        let read = read_line(facts.read.as_deref(), crate::widgets::is_offline());
         if self.read.label() != read {
             if self.read.label().is_empty() || !self.read.is_mapped() {
                 self.read.set_label(&read);
@@ -246,14 +246,19 @@ impl EndPage {
 }
 
 /// "Read · AniList and MangaUpdates updated", Read alone when no tracker took it, and a line
-/// saying it has not counted yet before the read rule fired.
-fn read_line(read: Option<&[String]>) -> String {
+/// saying it has not counted yet before the read rule fired. Offline the trackers only hear of
+/// it once the device is back online, and the line says so.
+fn read_line(read: Option<&[String]>, offline: bool) -> String {
     match read {
         None => t::linux_reader_end_not_read(),
         Some([]) => t::reader_end_read(),
         Some(names) => {
             let names: Vec<&str> = names.iter().map(|n| crate::say::tracker_name(n)).collect();
-            t::reader_end_tracker(&joined(&names))
+            if offline {
+                t::reader_end_tracker_offline(&joined(&names))
+            } else {
+                t::reader_end_tracker(&joined(&names))
+            }
         }
     }
 }
@@ -311,7 +316,7 @@ mod tests {
 
     use adw::prelude::*;
 
-    use super::{COLUMN, EndPage, joined};
+    use super::{COLUMN, EndPage, joined, read_line};
     use crate::gtk_test::{pump, run};
 
     /// The end page asks for no more width than its widest part: never the column's 440 px or
@@ -360,5 +365,18 @@ mod tests {
         assert_eq!(joined(&["Alpha"]), "Alpha");
         assert_eq!(joined(&["Alpha", "Beta"]), "Alpha and Beta");
         assert_eq!(joined(&["Alpha", "Beta", "Gamma"]), "Alpha, Beta and Gamma");
+    }
+
+    /// Offline the trackers only hear of the read later, and the line says so.
+    #[test]
+    fn the_read_line_waits_for_the_network_offline() {
+        let names = ["Alpha".to_owned()];
+        let online = read_line(Some(&names), false);
+        let offline = read_line(Some(&names), true);
+        assert_eq!(online, kaeri_i18n::t::reader_end_tracker("Alpha"));
+        assert_eq!(offline, kaeri_i18n::t::reader_end_tracker_offline("Alpha"));
+        assert_ne!(online, offline);
+        // With no tracker there is nothing to wait for.
+        assert_eq!(read_line(Some(&[]), true), read_line(Some(&[]), false));
     }
 }

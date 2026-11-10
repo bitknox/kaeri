@@ -843,7 +843,6 @@
     <string name="reader_grid_page">Przejdź do strony %1$d</string>
     <string name="reader_scrubber_in_chapter">Strona w rozdziale</string>
     <string name="reader_failed_novel">Nie udało się wyświetlić rozdziału</string>
-    <string name="reader_end_tracker_offline">Zaliczono jako przeczytany · %1$s zaktualizuje się po powrocie online</string>
     <string name="reader_end_none">Twoje źródła nie mają jeszcze rozdziału %1$s</string>
     <string name="reader_end_none_line">Kaeri sprawdza nowe rozdziały w tle i dodaje je w sekcji Aktualizacje.</string>
     <string name="reader_end_finished_title">Koniec</string>
@@ -2592,6 +2591,7 @@
     <string name="reader_close">Zamknij</string>
     <string name="reader_end_read">Zaliczono jako przeczytany</string>
     <string name="reader_end_tracker">Zaliczono jako przeczytany · zaktualizowano: %1$s</string>
+    <string name="reader_end_tracker_offline">Zaliczono jako przeczytany · %1$s zaktualizuje się po powrocie online</string>
     <string name="reader_end_next">Kolejny</string>
     <string name="reader_mode_rtl">Od prawej do lewej</string>
     <string name="reader_mode_ltr">Od lewej do prawej</string>

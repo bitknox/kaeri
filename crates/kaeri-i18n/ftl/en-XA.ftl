@@ -8882,6 +8882,9 @@ reader-end-read = [Çöüñţéð àš ŕéàð~~~~~]
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = [Çöüñţéð àš ŕéàð · { $trackers } üþðàţéð~~~~~~~~~]
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = [Çöüñţéð àš ŕéàð · { $tracker } üþðàţéš ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé~~~~~~~~~~~~~~~~]
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = [Ñéẋţ~~]
 

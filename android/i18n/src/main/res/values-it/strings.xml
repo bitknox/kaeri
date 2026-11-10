@@ -808,7 +808,6 @@
     <string name="reader_grid_page">Vai alla pagina %1$d</string>
     <string name="reader_scrubber_in_chapter">Pagina nel capitolo</string>
     <string name="reader_failed_novel">Impossibile mostrare questo capitolo</string>
-    <string name="reader_end_tracker_offline">Contato come letto · %1$s si aggiorna quando torni online</string>
     <string name="reader_end_none">Il capitolo %1$s non è ancora nelle tue fonti</string>
     <string name="reader_end_none_line">Kaeri cerca nuovi capitoli in background e li aggiunge ad Aggiornamenti.</string>
     <string name="reader_end_finished_title">La fine</string>
@@ -2508,6 +2507,7 @@
     <string name="reader_close">Chiudi</string>
     <string name="reader_end_read">Contato come letto</string>
     <string name="reader_end_tracker">Contato come letto · aggiornamento inviato a %1$s</string>
+    <string name="reader_end_tracker_offline">Contato come letto · %1$s si aggiorna quando torni online</string>
     <string name="reader_end_next">Prossimo</string>
     <string name="reader_mode_rtl">Da destra a sinistra</string>
     <string name="reader_mode_ltr">Da sinistra a destra</string>

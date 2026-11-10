@@ -817,7 +817,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     content.append(&filters.row);
     states.widget.set_vexpand(true);
     content.append(&states.widget);
-    let page = widgets::content_page(&t::nav_search(), &header, &content);
+    let page = widgets::read_content_page(&t::nav_search(), &header, &content);
 
     let search = Rc::new(Search {
         ctx: Rc::downgrade(ctx),

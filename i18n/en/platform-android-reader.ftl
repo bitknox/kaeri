@@ -655,12 +655,6 @@ reader-scrubber-in-chapter = Page in chapter
 # @max 40
 reader-failed-novel = Couldn't show this chapter
 
-# Under the end of chapter line when the phone is offline.
-# @only android
-# @arg tracker: text
-# @max 90
-reader-end-tracker-offline = Counted as read · { $tracker } updates when you're back online
-
 # Title of the end page when no source has the next chapter.
 # @only android
 # @arg chapter: text

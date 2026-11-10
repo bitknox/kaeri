@@ -14197,6 +14197,11 @@ pub fn reader_end_tracker(trackers: &str) -> String {
     text("reader-end-tracker", &[("trackers", Arg::Text(trackers))])
 }
 
+/// Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+pub fn reader_end_tracker_offline(tracker: &str) -> String {
+    text("reader-end-tracker-offline", &[("tracker", Arg::Text(tracker))])
+}
+
 /// Small heading above the next chapter on the page between chapters.
 pub fn reader_end_next() -> String {
     text("reader-end-next", &[])

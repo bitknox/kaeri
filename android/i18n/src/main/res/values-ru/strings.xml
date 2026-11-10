@@ -843,7 +843,6 @@
     <string name="reader_grid_page">Перейти к странице %1$d</string>
     <string name="reader_scrubber_in_chapter">Страница в главе</string>
     <string name="reader_failed_novel">Не удалось показать эту главу</string>
-    <string name="reader_end_tracker_offline">Засчитано как прочитанная · %1$s обновится, когда вы вернётесь в сеть</string>
     <string name="reader_end_none">Ни у одного источника пока нет главы %1$s</string>
     <string name="reader_end_none_line">Kaeri проверяет новые главы в фоне и добавляет их в «Обновления».</string>
     <string name="reader_end_finished_title">Конец</string>
@@ -2592,6 +2591,7 @@
     <string name="reader_close">Закрыть</string>
     <string name="reader_end_read">Засчитано как прочитанная</string>
     <string name="reader_end_tracker">Засчитано как прочитанная · обновлено: %1$s</string>
+    <string name="reader_end_tracker_offline">Засчитано как прочитанная · %1$s обновится, когда вы вернётесь в сеть</string>
     <string name="reader_end_next">Следующая</string>
     <string name="reader_mode_rtl">Справа налево</string>
     <string name="reader_mode_ltr">Слева направо</string>

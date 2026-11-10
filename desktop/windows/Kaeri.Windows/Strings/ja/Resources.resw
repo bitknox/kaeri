@@ -5864,6 +5864,9 @@
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>既読になりました · {trackers}を更新しました</value>
   </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>既読になりました · {tracker}はオンラインに戻ると更新されます</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>次の章</value>
   </data>

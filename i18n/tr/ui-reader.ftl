@@ -4,6 +4,7 @@ reader-try-again = Tekrar dene
 reader-close = Kapat
 reader-end-read = Okundu sayıldı
 reader-end-tracker = Okundu sayıldı · { $trackers } güncellendi
+reader-end-tracker-offline = Okundu sayıldı · çevrimiçi olunca { $tracker } güncellenir
 reader-end-next = Sonraki
 reader-mode-rtl = Sağdan sola
 reader-mode-ltr = Soldan sağa

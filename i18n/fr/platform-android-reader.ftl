@@ -130,7 +130,6 @@ reader-paper-line = Les pages tournent aussitôt et rien ne bouge dans le lecteu
 reader-grid-page = Aller à la page { $page }
 reader-scrubber-in-chapter = Page dans le chapitre
 reader-failed-novel = Impossible d'afficher ce chapitre
-reader-end-tracker-offline = Compté comme lu · { $tracker } se mettra à jour une fois en ligne
 reader-end-none = Pas de chapitre { $chapter } dans vos { -source-pl }
 reader-end-none-line = { -app-name } cherche de nouveaux chapitres en arrière-plan et les ajoute à Mises à jour.
 reader-end-finished-title = Fin

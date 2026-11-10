@@ -8882,6 +8882,9 @@ reader-end-read = Counted as read
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Counted as read · { $trackers } updated
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Counted as read · { $tracker } updates when you're back online
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Next
 

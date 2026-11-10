@@ -214757,6 +214757,90 @@
         }
       }
     },
+    "reader-end-tracker-offline" : {
+      "comment" : "Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online. Argument 1: tracker (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Als gelesen gezählt · %1$@ aktualisiert, sobald du wieder online bist"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Counted as read · %1$@ updates when you're back online"
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contado como leído · %1$@ se actualiza al volver la conexión"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compté comme lu · %1$@ se mettra à jour une fois en ligne"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dihitung sudah dibaca · %1$@ diperbarui saat Anda kembali online"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contato come letto · %1$@ si aggiorna quando torni online"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "既読になりました · %1$@はオンラインに戻ると更新されます"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaliczono jako przeczytany · %1$@ zaktualizuje się po powrocie online"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contado como lido · %1$@ atualiza quando você voltar online"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Засчитано как прочитанная · %1$@ обновится, когда вы вернётесь в сеть"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Räknas som läst · %1$@ uppdateras när du är online igen"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okundu sayıldı · çevrimiçi olunca %1$@ güncellenir"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã tính là đã đọc · %1$@ sẽ cập nhật khi bạn có mạng lại"
+          }
+        }
+      }
+    },
     "reader-fit" : {
       "comment" : "Rows of the manga sheet.",
       "extractionState" : "manual",

@@ -6467,6 +6467,9 @@
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Zaliczono jako przeczytany · zaktualizowano: {trackers}</value>
   </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Zaliczono jako przeczytany · {tracker} zaktualizuje się po powrocie online</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Kolejny</value>
   </data>

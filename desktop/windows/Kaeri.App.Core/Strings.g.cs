@@ -5899,6 +5899,9 @@ public static partial class T
     /// <summary>Under the end of chapter line, naming the trackers the read went to.</summary>
     public static string ReaderEndTracker(string trackers) => Fill(Get("ReaderEndTracker"), ("trackers", trackers));
 
+    /// <summary>Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.</summary>
+    public static string ReaderEndTrackerOffline(string tracker) => Fill(Get("ReaderEndTrackerOffline"), ("tracker", tracker));
+
     /// <summary>Small heading above the next chapter on the page between chapters.</summary>
     public static string ReaderEndNext => Get("ReaderEndNext");
 
@@ -13732,6 +13735,7 @@ public static partial class T
         ["ReaderClose"] = "Close",
         ["ReaderEndRead"] = "Counted as read",
         ["ReaderEndTracker"] = "Counted as read · {trackers} updated",
+        ["ReaderEndTrackerOffline"] = "Counted as read · {tracker} updates when you're back online",
         ["ReaderEndNext"] = "Next",
         ["ReaderModeRtl"] = "Right to left",
         ["ReaderModeLtr"] = "Left to right",

@@ -123,12 +123,19 @@ pub struct Opener {
 
 impl Opener {
     /// Note what has the keyboard as `reader` opens over the window. Focus in a dialog, or none,
-    /// leaves nothing to go back to.
+    /// leaves nothing to go back to. Opened again straight after a close, the keyboard is still
+    /// in the reader, or nowhere, until the close's give-back lands: the control from before
+    /// still holds then.
     pub fn note(&self, window: &impl IsA<gtk::Window>, reader: &impl IsA<gtk::Widget>) {
         let reader = reader.as_ref();
-        let control = focused(window.as_ref())
-            .filter(|focus| place(Some(focus), reader) == Focus::Behind);
+        let focus = focused(window.as_ref());
+        let at = place(focus.as_ref(), reader);
+        let control = focus.filter(|_| at == Focus::Behind);
+        let pending = self.giving.get() || at == Focus::Inside;
         self.giving.set(false);
+        if control.is_none() && pending && self.control.upgrade().is_some() {
+            return;
+        }
         self.remember(control.as_ref(), reader);
     }
 
@@ -445,6 +452,37 @@ mod tests {
             head.append(&other);
             head.append(&same);
             assert_eq!(settled(&s.window, &same).as_ref(), Some(same.upcast_ref()));
+            s.window.destroy();
+        });
+    }
+
+    /// Esc and an open at once: the keyboard is still in the reader when it opens again, and
+    /// the control from the first open has it back after the second close.
+    #[test]
+    fn opened_again_before_the_give_back_the_first_control_still_holds() {
+        run(|| {
+            let s = scene();
+            let head = openers(&s);
+            let read = opener("Continue chapter 3", "3");
+            head.append(&read);
+            pump(50);
+            let held = Rc::new(Opener::default());
+            held.watch(&s.window, &s.reader);
+            read.grab_focus();
+            pump(20);
+            held.note(&s.window, &s.reader);
+            s.stack.set_visible_child(&s.reader);
+            s.reader.grab_focus();
+            pump(50);
+            // Closed, and opened again before the give-back has run.
+            s.stack.set_visible_child_name("main");
+            held.give_back(&s.window, &s.reader);
+            held.note(&s.window, &s.reader);
+            s.stack.set_visible_child(&s.reader);
+            pump(50);
+            s.stack.set_visible_child_name("main");
+            held.give_back(&s.window, &s.reader);
+            assert_eq!(settled(&s.window, &read).as_ref(), Some(read.upcast_ref()));
             s.window.destroy();
         });
     }

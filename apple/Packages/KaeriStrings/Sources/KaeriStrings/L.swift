@@ -8309,6 +8309,11 @@ public enum L {
         Self.format("reader-end-tracker", fallback: "Counted as read · %1$@ updated", trackers)
     }
 
+    /// Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+    public static func readerEndTrackerOffline(tracker: String) -> String {
+        Self.format("reader-end-tracker-offline", fallback: "Counted as read · %1$@ updates when you're back online", tracker)
+    }
+
     /// Small heading above the next chapter on the page between chapters.
     public static var readerEndNext: String { string("reader-end-next", fallback: "Next") }
 

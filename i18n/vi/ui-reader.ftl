@@ -4,6 +4,7 @@ reader-try-again = Thử lại
 reader-close = Đóng
 reader-end-read = Đã tính là đã đọc
 reader-end-tracker = Đã tính là đã đọc · đã cập nhật { $trackers }
+reader-end-tracker-offline = Đã tính là đã đọc · { $tracker } sẽ cập nhật khi bạn có mạng lại
 reader-end-next = Kế tiếp
 reader-mode-rtl = Phải sang trái
 reader-mode-ltr = Trái sang phải
