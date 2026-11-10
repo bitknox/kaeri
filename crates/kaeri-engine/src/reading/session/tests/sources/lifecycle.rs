@@ -1,6 +1,8 @@
 //! A session over a source as it opens and closes: an open waits for plugins still loading, a
 //! chapter not listed is not swapped for another, a close leaves nothing behind, a deleted
-//! download reads from the source again, and keeping chapters ready asks the source once.
+//! download reads from the source again, and keeping chapters ready asks the source once. Its
+//! pages come a few at a time, a page jumped to comes first, and a page that hangs holds only
+//! itself.
 
 use std::{collections::HashSet, sync::Mutex, time::Duration};
 
@@ -56,6 +58,17 @@ impl Many {
     fn hold_all_but(&self, pages: &[usize]) {
         *self.let_through.lock().unwrap() = Some(pages.iter().copied().collect());
         self.changed.notify_waiters();
+    }
+
+    /// Every page comes but these, which wait.
+    fn hold(&self, pages: &[usize]) {
+        let through: Vec<usize> = (0..self.pages).filter(|p| !pages.contains(p)).collect();
+        self.hold_all_but(&through);
+    }
+
+    /// How many times page `index` was asked for.
+    fn asked_of(&self, index: usize) -> usize {
+        self.fetched().iter().filter(|(_, p)| *p == index).count()
     }
 
     fn let_all(&self) {
@@ -370,4 +383,68 @@ async fn a_download_deleted_while_reading_opens_from_the_source() {
     assert!(back.is_ok(), "chapter 2 did not open again: {:?}", h.failed);
     assert!(h.failed.is_empty(), "{:?}", h.failed);
     assert_eq!(source.opened_of("ch-2"), 1, "read from the source");
+}
+
+/// A jump once the chapter is laid out asks for the page jumped to next, ahead of the pages
+/// before it still to come, even while those hang.
+#[tokio::test]
+async fn a_jump_asks_for_the_page_jumped_to_first() {
+    let source = Arc::new(Many::new(1, 40));
+    source.hold_all_but(&[0, 1, 38, 39]);
+    let mut h = many(source.clone());
+    h.open_many(Some("1"));
+    let leaves = timeout(Duration::from_secs(20), h.leaves_of("1")).await.expect("laid out");
+    h.pump(Duration::from_millis(300)).await;
+    let asked = source.fetched().len();
+    let leaf = leaves.iter().find(|l| l.parts.iter().any(|p| p.page == 30)).unwrap().index;
+    h.shown(leaf, TurnHow::Jump).await;
+    h.pump(Duration::from_millis(500)).await;
+    let after = source.fetched();
+    let next: Vec<usize> = after[asked..].iter().map(|(_, p)| *p).collect();
+    assert!(next.iter().take(3).any(|p| *p == 30), "asked after the jump: {next:?}");
+}
+
+/// A page that does not come holds only itself: the pages after it are asked for and land.
+#[tokio::test]
+async fn a_page_that_hangs_holds_only_itself() {
+    let source = Arc::new(Many::new(1, 40));
+    source.hold(&[2]);
+    let mut h = many(source.clone());
+    h.open_many(Some("1"));
+    timeout(Duration::from_secs(20), h.leaves_of("1")).await.expect("laid out");
+    let start = tokio::time::Instant::now();
+    while source.asked_of(37) == 0 && start.elapsed() < Duration::from_secs(10) {
+        h.pump(Duration::from_millis(50)).await;
+    }
+    let missing: Vec<usize> = (3..38).filter(|p| source.asked_of(*p) == 0).collect();
+    assert!(missing.is_empty(), "never asked for: {missing:?}");
+}
+
+/// A page that never comes is asked for once more after its wait, then fails as its source not
+/// answering, with its own retry; the rest of the chapter still comes. The clock stops once the
+/// chapter is laid out, so the waits pass at once.
+#[tokio::test]
+async fn a_page_that_never_comes_fails_after_one_more_try() {
+    let source = Arc::new(Many::new(1, 12));
+    source.hold(&[2]);
+    let mut h = many(source.clone());
+    h.failures = true;
+    h.open_many(Some("1"));
+    let leaves = timeout(Duration::from_secs(20), h.leaves_of("1")).await.expect("laid out");
+    let leaf = leaves.iter().find(|l| l.parts.iter().any(|p| p.page == 2)).unwrap().index;
+    tokio::time::pause();
+    h.shown(leaf, TurnHow::Jump).await;
+    let failure = timeout(
+        Duration::from_secs(120),
+        h.until(|e| match e {
+            ReaderEvent::PageFailed { page: 2, failure, .. } => Some(failure.clone()),
+            _ => None,
+        }),
+    )
+    .await
+    .expect("page 2 failed in time");
+    assert!(matches!(failure, ReadingFailure::SourceDown { .. }), "{failure:?}");
+    assert_eq!(source.asked_of(2), 2, "page 2 asked for once more");
+    let missing: Vec<usize> = (3..12).filter(|p| source.asked_of(*p) == 0).collect();
+    assert!(missing.is_empty(), "never asked for: {missing:?}");
 }
