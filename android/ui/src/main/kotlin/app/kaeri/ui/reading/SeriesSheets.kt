@@ -65,6 +65,7 @@ import app.kaeri.engine.model.DownloadPick
 import app.kaeri.engine.model.EditionMiss
 import app.kaeri.engine.model.ListRemovalOutcome
 import app.kaeri.engine.model.SeriesView
+import app.kaeri.engine.model.SourceSeriesChoice
 import app.kaeri.engine.model.TrackerMapping
 import app.kaeri.engine.model.TrackerReadRow
 import app.kaeri.engine.model.VolumeGroup
@@ -317,14 +318,19 @@ private fun EditionRow(edition: BookEditionRow, onClick: () -> Unit) {
     }
 }
 
-/** A source searched without finding the series: its name and why in haze, with Search there. */
+/**
+ * A source searched without finding the series: its name and why in haze, with Search there. A
+ * possible match, another edition of the series, sits under the reason, chosen with one tap.
+ */
 @Composable
 private fun MissRow(work: WorkId, miss: EditionMiss, title: String, open: Boolean, onOpen: () -> Unit) {
     val context = LocalContext.current
     val store = LocalAppStore.current
     val colors = MaterialTheme.colorScheme
     val found by store.bookSources.sourceSeries.collectAsStateWithLifecycle()
-    var query by rememberSaveable(miss.sourceId) { mutableStateOf(title) }
+    // The words most likely to find it there: the romaji when the English name found nothing.
+    val words = miss.query ?: title
+    var query by rememberSaveable(miss.sourceId) { mutableStateOf(words) }
     fun search() {
         val words = query.trim()
         if (words.isNotEmpty()) store.bookSources.searchSource(work, miss.sourceId, words)
@@ -339,12 +345,16 @@ private fun MissRow(work: WorkId, miss: EditionMiss, title: String, open: Boolea
                 TextButton(
                     onClick = {
                         onOpen()
-                        query = title
-                        store.bookSources.searchSource(work, miss.sourceId, title)
+                        query = words
+                        store.bookSources.searchSource(work, miss.sourceId, words)
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = colors.onSurface),
                 ) { Text(Strings.readFromSearchThere(context)) }
             }
+        }
+        val possible = miss.possible
+        if (possible != null && !open) {
+            ChoiceRow(possible) { store.bookSources.chooseSourceSeries(work, miss.sourceId, possible.seriesRef) }
         }
         if (open) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -371,30 +381,37 @@ private fun MissRow(work: WorkId, miss: EditionMiss, title: String, open: Boolea
                 result.choices.isEmpty() -> SheetText(Strings.readFromSearchNone(context), Modifier.padding(vertical = 12.dp))
                 else -> Column(Modifier.padding(top = 4.dp)) {
                     result.choices.forEach { choice ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 64.dp)
-                                .clickable { store.bookSources.chooseSourceSeries(work, miss.sourceId, choice.seriesRef) }
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            ReadCover(choice.cover, 34.dp)
-                            Column(Modifier.weight(1f)) {
-                                Text(choice.title, style = MaterialTheme.typography.bodyLarge)
-                                val facts = listOfNotNull(
-                                    choice.year?.toString(),
-                                    choice.language?.takeIf { it.isNotBlank() }?.let {
-                                        Locale.forLanguageTag(it).getDisplayLanguage(app.kaeri.store.AirTime.locale).takeIf { name -> name.isNotBlank() }
-                                    },
-                                ).joinToString(" · ") // i18n-skip
-                                if (facts.isNotEmpty()) Text(facts, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-                            }
-                        }
+                        ChoiceRow(choice) { store.bookSources.chooseSourceSeries(work, miss.sourceId, choice.seriesRef) }
                     }
                 }
             }
+        }
+    }
+}
+
+/** One of a source's series: its cover, title, and year and language, chosen with one tap. */
+@Composable
+private fun ChoiceRow(choice: SourceSeriesChoice, onChoose: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 64.dp)
+            .clickable(onClick = onChoose)
+            .padding(vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        ReadCover(choice.cover, 34.dp)
+        Column(Modifier.weight(1f)) {
+            Text(choice.title, style = MaterialTheme.typography.bodyLarge)
+            val facts = listOfNotNull(
+                choice.year?.toString(),
+                choice.language?.takeIf { it.isNotBlank() }?.let {
+                    Locale.forLanguageTag(it).getDisplayLanguage(app.kaeri.store.AirTime.locale).takeIf { name -> name.isNotBlank() }
+                },
+            ).joinToString(" · ") // i18n-skip
+            if (facts.isNotEmpty()) Text(facts, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
         }
     }
 }

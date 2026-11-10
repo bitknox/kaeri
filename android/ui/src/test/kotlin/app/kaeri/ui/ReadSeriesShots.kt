@@ -7,6 +7,7 @@ import app.kaeri.i18n.Strings
 import app.kaeri.store.AppStore
 import app.kaeri.store.ExportJob
 import app.kaeri.store.FixtureScene
+import app.kaeri.store.ReadFromStage
 import app.kaeri.ui.reading.SeriesShots
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -43,6 +44,22 @@ class ReadSeriesShots : ReadingShotHarness() {
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
     fun phone_read_series_read_from() = series("phone-read-series-read-from", open = "read-from")
+
+    /** Read from with a source that has no series by the work's names and one with another edition. */
+    @Test
+    @Config(qualifiers = ReadingShotHarness.PHONE)
+    fun phone_read_series_read_from_misses() = shoot(
+        "phone-read-series-read-from-misses",
+        FixtureScene.READING_SERIES,
+        Destination.Read,
+        page = page(MANGA),
+        screen = true,
+        then = {
+            ReadFromStage.stage(it, MANGA)
+            SeriesShots.open = "read-from"
+        },
+        ready = loaded(MANGA),
+    )
 
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
