@@ -1575,6 +1575,18 @@ impl BookSources {
         }
     }
 
+    /// The name of a switched-off source that holds `work`, in the person's order, for a work no
+    /// source that is on holds: its page says the source is switched off, not that none has it.
+    pub(crate) fn switched_off_holder(&self, work: &WorkId) -> Option<String> {
+        let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        self.registry
+            .ids()
+            .into_iter()
+            .filter(|id| self.registry.is_off(id))
+            .find(|id| refs.iter().any(|(source, _)| source == id))
+            .map(|id| self.source_name(&id))
+    }
+
     /// The series' chapter list came back empty within the last quarter hour, or was kept
     /// empty before.
     fn came_back_empty(&self, source: &str, series: &str) -> bool {

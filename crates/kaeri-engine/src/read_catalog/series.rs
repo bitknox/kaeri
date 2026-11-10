@@ -110,7 +110,12 @@ pub(crate) async fn chapters(
         if volumes.is_empty() && kit.sources.edition_of(work, edition.as_deref()).is_some() {
             // Found by name: read from there, below.
         } else {
-            let failure = volumes.is_empty().then_some(ReadingFailure::NoSource);
+            // A source switched off still holds it: the page says so by the source's name.
+            let failure = volumes.is_empty().then(|| {
+                kit.sources
+                    .switched_off_holder(work)
+                    .map_or(ReadingFailure::NoSource, |source| ReadingFailure::SourceOff { source })
+            });
             send(
                 tx,
                 ReadingEvent::Chapters { work: work.clone(), edition: None, volumes, failure },
