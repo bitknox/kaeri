@@ -957,6 +957,8 @@ impl ReaderCommand {
     }
 }
 
+// The end page carries two chapter rows. Not boxed: the bindings carry records by value.
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
 pub enum ReaderEvent {

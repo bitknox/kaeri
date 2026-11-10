@@ -804,6 +804,17 @@ impl BookDownloads {
         }
     }
 
+    /// The first page of a chapter being fetched, once it has landed and been kept: for the
+    /// reader's end page, which shows it before the chapter is done.
+    pub(crate) fn first_kept_page(&self, work: &str, chapter: &str) -> Option<PathBuf> {
+        let dir = pages_of(&self.0.dir.join(safe(work)).join(safe(chapter)));
+        std::fs::read_dir(dir).ok()?.flatten().map(|entry| entry.path()).find(|path| {
+            path.file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.starts_with("00000-") && n.ends_with(".page"))
+        })
+    }
+
     fn file_stem(&self, row: &BookDownload) -> PathBuf {
         self.0.dir.join(safe(&row.work)).join(safe(&row.chapter))
     }

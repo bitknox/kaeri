@@ -321,3 +321,58 @@ async fn a_slow_preview_never_holds_up_the_reader() {
     let (chapter, _) = h.preview().await;
     assert_eq!(chapter, h.next_chapter());
 }
+
+/// Queue the next chapter for download, as Keep next chapters ready does.
+fn queue_next(h: &Harness) -> i64 {
+    let chapter = h.next_chapter();
+    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+        work: SERVED,
+        chapter: chapter.as_str(),
+        source_id: "shelf-1",
+        version_label: None,
+        keep_ready: true,
+    };
+    h.services.store.queue_book_download(&ask, 1).unwrap();
+    h.services.store.book_download(SERVED, chapter.as_str()).unwrap().unwrap().id
+}
+
+/// A next chapter the download queue is fetching is not fetched ahead as well, but its first
+/// page still comes for the end page: made from the download as it lands, with no page asked of
+/// the source twice.
+#[tokio::test(start_paused = true)]
+async fn a_chapter_being_downloaded_previews_from_the_download() {
+    let server = Arc::new(ShelfServer::new(vec!["c1", "c2"]));
+    let mut h = opened(server.clone()).await;
+    let next = h.next_chapter();
+    queue_next(&h);
+    h.near_the_end(1);
+    let (chapter, file) = h.preview().await;
+    assert_eq!(chapter, next);
+    assert!(Path::new(&file.path).exists());
+    tokio::time::sleep(Duration::from_millis(50)).await;
+    let mut fetched = server.fetched_of("c2");
+    let all = fetched.len();
+    fetched.sort();
+    fetched.dedup();
+    assert_eq!(fetched.len(), all, "a page asked twice: {fetched:?}");
+}
+
+/// A next chapter downloaded by the time the end page nears previews from its file, and the
+/// source is asked for nothing.
+#[tokio::test(start_paused = true)]
+async fn a_downloaded_next_chapter_previews_from_its_file() {
+    let server = Arc::new(ShelfServer::new(vec!["c1", "c2"]));
+    let mut h = opened(server.clone()).await;
+    let folder = tempfile::tempdir().unwrap();
+    for n in 1..=3 {
+        let page = image::GrayImage::from_pixel(300, 450, image::Luma([60 + n]));
+        page.save(folder.path().join(format!("{n:03}.png"))).unwrap();
+    }
+    let id = queue_next(&h);
+    let path = folder.path().to_str().unwrap();
+    h.services.store.book_download_done(id, path, Some(3), 1, 1).unwrap();
+    h.near_the_end(1);
+    let (_, file) = h.preview().await;
+    assert_eq!((file.width, file.height), (300, 450), "made from the downloaded file");
+    assert!(server.fetched_of("c2").is_empty());
+}

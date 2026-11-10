@@ -213,6 +213,9 @@ pub struct Session {
     peeked: bool,
     /// The next chapter from a source, being fetched while this one is read.
     ahead: Option<novel::Ahead>,
+    /// The next chapter's first page for the end page, followed from the download queue's fetch
+    /// of that chapter.
+    first_page: Option<novel::FirstPage>,
     /// The place before the person's own jump, while Back to page is offered.
     back_to: Option<ReadPlace>,
     /// The place before another device moved the reader, for Go back.
@@ -654,6 +657,7 @@ impl Reader {
             kept_of: of,
             peeked: false,
             ahead: None,
+            first_page: None,
             back_to: None,
             moved_back: None,
             read_fired: false,
@@ -1424,17 +1428,33 @@ impl Session {
         }
     }
 
-    /// Ask the worker for the next chapter's first page, once a chapter. A chapter from a
-    /// source is fetched ahead, and that page is made as it lands.
+    /// Ask the worker for the next chapter's first page, once a chapter. A downloaded chapter's
+    /// is made from its file. A chapter from a source is fetched ahead, and that page is made as
+    /// it lands; one the download queue has is followed, and its first page made from the
+    /// download as it lands.
     fn peek(&mut self, cx: &Cx<'_>, pages: &Pages) {
         if std::mem::replace(&mut self.peeked, true) {
             return;
         }
-        self.follow_download(cx, self.at + 1);
-        let Some(next) = self.chapters.get(self.at + 1) else { return };
+        let index = self.at + 1;
+        self.follow_download(cx, index);
+        let Some(next) = self.chapters.get(index) else { return };
         if next.format == novel::SOURCE {
-            // Its first page comes with the chapter fetched ahead.
-            self.read_ahead(cx, pages);
+            let fetching = self.ahead.as_ref().is_some_and(|a| a.chapter == next.id);
+            if !fetching && downloading(cx, &self.work, &next.id) {
+                let first = novel::follow_first_page(
+                    cx,
+                    pages,
+                    self.id,
+                    &self.work,
+                    (index, next),
+                    &self.gone,
+                );
+                self.first_page = Some(first);
+            } else {
+                // Its first page comes with the chapter fetched ahead.
+                self.read_ahead(cx, pages);
+            }
             return;
         }
         if novel::prepares(next) {
@@ -1622,6 +1642,7 @@ impl Session {
         self.kept_of = None;
         // A chapter fetched ahead and not the one opening stops fetching.
         self.ahead = self.ahead.take().filter(|a| a.chapter == self.chapters[index].id);
+        self.first_page = None;
         self.start = place(&self.work, &self.chapters[index].id, Some(page));
         self.lay_out(cx, pages, page);
     }

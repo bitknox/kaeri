@@ -234,6 +234,117 @@ pub(super) fn fetch_ahead(
     Ahead { chapter: id, feed, task }
 }
 
+/// The next chapter's first page for the end page, while the download queue has the chapter.
+/// Dropped, it stops.
+#[derive(Debug)]
+pub(super) struct FirstPage {
+    task: tokio::task::JoinHandle<()>,
+}
+
+impl Drop for FirstPage {
+    fn drop(&mut self) {
+        self.task.abort();
+    }
+}
+
+/// How often the end page looks at the download it waits on.
+const FIRST_PAGE_LOOK: std::time::Duration = std::time::Duration::from_millis(300);
+/// How long a queued download may wait to start before the source is asked for the first page.
+const FIRST_PAGE_QUEUED: std::time::Duration = std::time::Duration::from_secs(5);
+
+/// Make the next chapter's first page for the end page from its download: from the page the
+/// download keeps first, as soon as it lands, or from the finished file. The source is not asked
+/// for the chapter a second time. Only a download still queued after [`FIRST_PAGE_QUEUED`], or
+/// one that failed, has the source asked for the first page alone.
+pub(super) fn follow_first_page(
+    cx: &Cx<'_>,
+    pages: &Pages,
+    session: u64,
+    work: &WorkId,
+    next: (usize, &ShelfChapter),
+    gone: &crate::reading::feed::Gone,
+) -> FirstPage {
+    use kaeri_store::book_downloads::BookDownloadState as State;
+    let (index, next) = next;
+    let sources = cx.services.book_sources.clone();
+    let store = cx.services.store.clone();
+    let clock = cx.services.clock.clone();
+    let (work, chapter) = (work.clone(), next.id.clone());
+    let peek_dir =
+        streamed_dir(&cx.services.paths.cache_dir, session).join(format!("first-{index}"));
+    let (worker, out, gone) = (pages.clone(), cx.tx.clone(), gone.clone());
+    let task = tokio::spawn(async move {
+        let peek = |path: PathBuf| {
+            if !gone.swept() {
+                worker.peek(PeekJob {
+                    session,
+                    chapter: chapter.clone(),
+                    path,
+                    out: out.clone(),
+                });
+            }
+        };
+        let started = tokio::time::Instant::now();
+        let bytes = loop {
+            let row = store.book_download(work.as_str(), chapter.as_str()).ok().flatten();
+            match row.as_ref().map(|r| r.state) {
+                Some(State::Done) => {
+                    if let Some(path) = row.and_then(|r| r.path).map(PathBuf::from)
+                        && path.exists()
+                    {
+                        peek(path);
+                        return;
+                    }
+                }
+                Some(State::Downloading) => {
+                    let kept =
+                        sources.downloads.first_kept_page(work.as_str(), chapter.as_str());
+                    if let Some(bytes) = kept.and_then(|p| std::fs::read(p).ok()) {
+                        break bytes;
+                    }
+                }
+                Some(State::Queued) | None if started.elapsed() < FIRST_PAGE_QUEUED => {}
+                // Waiting behind other downloads, or failed: the first page alone.
+                _ => match first_from_source(&sources, &work, &chapter, clock.now()).await {
+                    Some(bytes) => break bytes,
+                    None => return,
+                },
+            }
+            tokio::time::sleep(FIRST_PAGE_LOOK).await;
+        };
+        if gone.is() || tokio::fs::create_dir_all(&peek_dir).await.is_err() {
+            return;
+        }
+        let written = crate::reading::feed::write(&peek_dir, "00001", bytes, &gone).await;
+        if matches!(written, FeedPage::Landed(_)) {
+            peek(peek_dir);
+        }
+    });
+    FirstPage { task }
+}
+
+/// Ask the source for a chapter's first page and nothing more.
+async fn first_from_source(
+    sources: &crate::read_sources::BookSources,
+    work: &WorkId,
+    chapter: &ChapterId,
+    now: i64,
+) -> Option<Vec<u8>> {
+    let fetched = async {
+        let Some(mut opened) = sources.pictures(work, chapter, now).await? else {
+            return Ok(None);
+        };
+        sources.page(&mut opened, 0, now).await.map(Some)
+    };
+    match fetched.await {
+        Ok(bytes) => bytes,
+        Err(failure) => {
+            tracing::debug!(?failure, "the next chapter's first page was not fetched");
+            None
+        }
+    }
+}
+
 /// The format of a chapter read from a source rather than a file on the shelf.
 pub(crate) const SOURCE: &str = "source";
 
