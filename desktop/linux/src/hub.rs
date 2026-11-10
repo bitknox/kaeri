@@ -466,7 +466,15 @@ pub struct Hub {
     /// none of (groups, parts, chapters from another group).
     #[cfg(feature = "fixtures")]
     pub dress: RefCell<Option<Dress>>,
+    /// For a shot: reader commands the fixture engine has no answer for, taken here first. True
+    /// when the shot answered it and the engine never hears it.
+    #[cfg(feature = "fixtures")]
+    pub reader_answer: RefCell<Option<ReaderAnswer>>,
 }
+
+/// What a shot does with a reader command: true when it answered it in place of the engine.
+#[cfg(feature = "fixtures")]
+pub type ReaderAnswer = Rc<dyn Fn(&kaeri_model::reader::ReaderCommand) -> bool>;
 
 /// How a shot changes each event before it is heard.
 #[cfg(feature = "fixtures")]
@@ -515,6 +523,8 @@ impl Hub {
             read_answer: RefCell::default(),
             #[cfg(feature = "fixtures")]
             dress: RefCell::default(),
+            #[cfg(feature = "fixtures")]
+            reader_answer: RefCell::default(),
         })
     }
 
@@ -543,6 +553,14 @@ impl Hub {
                 }
             });
             return None;
+        }
+        // A reader shot's own answers.
+        #[cfg(feature = "fixtures")]
+        if let Command::Reader(reader) = &command {
+            let answer = self.reader_answer.borrow().clone();
+            if answer.is_some_and(|answer| answer(reader)) {
+                return None;
+            }
         }
         // A reading shot's own answers.
         #[cfg(feature = "fixtures")]
