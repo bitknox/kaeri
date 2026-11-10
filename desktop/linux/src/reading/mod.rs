@@ -17,6 +17,7 @@ pub mod novel;
 pub mod reader;
 pub mod search;
 pub mod series;
+pub mod series_chapters;
 pub mod series_extra;
 pub mod server_progress;
 pub mod sources;
@@ -383,7 +384,7 @@ pub fn place(
         widgets::column_page(&column, 820)
     };
     let states = States::new(&ctx.hub, &scroll, shape, empty, failed);
-    let page = widgets::content_page(title, &header, &states.widget);
+    let page = widgets::read_content_page(title, &header, &states.widget);
     Place { page, header, states, column }
 }
 

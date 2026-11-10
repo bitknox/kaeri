@@ -1467,8 +1467,6 @@
     <string name="reader_scrubber_in_chapter">Page in chapter</string>
     <!-- Heading when a novel could not be shown. -->
     <string name="reader_failed_novel">Couldn\'t show this chapter</string>
-    <!-- Under the end of chapter line when the phone is offline. -->
-    <string name="reader_end_tracker_offline">Counted as read · %1$s updates when you\'re back online</string>
     <!-- Title of the end page when no source has the next chapter. -->
     <string name="reader_end_none">No chapter %1$s in your sources yet</string>
     <!-- Line under the no next chapter title. -->
@@ -4690,6 +4688,8 @@
     <string name="reader_end_read">Counted as read</string>
     <!-- Under the end of chapter line, naming the trackers the read went to. -->
     <string name="reader_end_tracker">Counted as read · %1$s updated</string>
+    <!-- Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online. -->
+    <string name="reader_end_tracker_offline">Counted as read · %1$s updates when you\'re back online</string>
     <!-- Small heading above the next chapter on the page between chapters. -->
     <string name="reader_end_next">Next</string>
     <!-- A reading mode, and a reading direction. -->

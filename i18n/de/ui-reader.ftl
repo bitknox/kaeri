@@ -4,6 +4,7 @@ reader-try-again = Erneut versuchen
 reader-close = Schließen
 reader-end-read = Als gelesen gezählt
 reader-end-tracker = Als gelesen gezählt · { $trackers } aktualisiert
+reader-end-tracker-offline = Als gelesen gezählt · { $tracker } aktualisiert, sobald du wieder online bist
 reader-end-next = Nächstes
 reader-mode-rtl = Rechts nach links
 reader-mode-ltr = Links nach rechts

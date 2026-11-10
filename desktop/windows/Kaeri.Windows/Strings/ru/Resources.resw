@@ -6467,6 +6467,9 @@
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Засчитано как прочитанная · обновлено: {trackers}</value>
   </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Засчитано как прочитанная · {tracker} обновится, когда вы вернётесь в сеть</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Следующая</value>
   </data>

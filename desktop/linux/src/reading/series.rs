@@ -18,6 +18,7 @@ use kaeri_model::{
     },
 };
 
+use super::series_chapters::SeriesChapters;
 use super::{
     action_chapter, cover, dotted, library, listen, read_button, send, series_extra, series_tag,
 };
@@ -67,18 +68,17 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
     // the list redraws from what the engine sent last.
     let newest = Rc::new(Cell::new(true));
     let listed: Rc<RefCell<Listed>> = Rc::default();
+    // Drawn as the page scrolls to them, and changed in place when only some rows changed.
+    let list = SeriesChapters::new(&chapters, &scroll, work);
     let redraw: Rc<dyn Fn()> = Rc::new({
-        let (ctx, chapters, work) = (Rc::downgrade(ctx), chapters.clone(), work.clone());
         let (listed, newest, shown) =
             (Rc::clone(&listed), Rc::clone(&newest), Rc::clone(&shown));
         move || {
-            let Some(ctx) = ctx.upgrade() else { return };
-            super::clear(&chapters);
             let listed = listed.borrow();
             let Some((volumes, failure)) = listed.as_ref() else { return };
             let novel = shown.borrow().as_ref().is_some_and(|v| v.medium == Medium::Novel);
             let order = Order { newest: newest.get(), novel };
-            draw_chapters(&ctx, &chapters, &work, volumes, failure.as_deref(), order);
+            list.show(volumes, failure.as_deref(), order);
         }
     });
     let order = gio::SimpleAction::new_stateful(
@@ -492,14 +492,14 @@ pub(super) fn state_line(chapter: &ChapterRow) -> String {
 type Listed = Option<(Vec<VolumeGroup>, Option<String>)>;
 
 /// How the chapter list reads: its order, and whether its heading says Volumes.
-#[derive(Clone, Copy)]
-struct Order {
-    newest: bool,
-    novel: bool,
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct Order {
+    pub newest: bool,
+    pub novel: bool,
 }
 
 /// The heading with the order menu at its end, as on the board.
-fn chapters_head(order: Order) -> gtk::Box {
+pub(super) fn chapters_head(order: Order) -> gtk::Box {
     let heading =
         widgets::heading(&if order.novel { t::series_volumes() } else { t::series_chapters() });
     heading.set_hexpand(true);
@@ -527,91 +527,14 @@ fn chapters_head(order: Order) -> gtk::Box {
     head
 }
 
-fn draw_chapters(
-    ctx: &Rc<Ctx>,
-    column: &gtk::Box,
-    work: &WorkId,
-    volumes: &[VolumeGroup],
-    failure: Option<&str>,
-    order: Order,
-) {
-    // The group is named only when the series has more than one.
-    let groups = volumes
-        .iter()
-        .flat_map(|v| &v.chapters)
-        .filter_map(|c| c.version_label.as_deref())
-        .collect::<std::collections::HashSet<_>>()
-        .len();
-    column.append(&chapters_head(order));
-    if let Some(failure) = failure {
-        column.append(&widgets::haze(failure, "caption"));
-    }
-    // The engine lists oldest first; newest first turns the volumes and their chapters round.
-    let turned: Vec<VolumeGroup>;
-    let volumes = if order.newest {
-        turned = volumes
-            .iter()
-            .rev()
-            .map(|group| {
-                let mut group = group.clone();
-                group.chapters.reverse();
-                group
-            })
-            .collect();
-        &turned[..]
-    } else {
-        volumes
-    };
-    // Read volumes in a row share one list, each folded into one line.
-    let mut folded: Option<gtk::ListBox> = None;
-    for group in volumes {
-        let name = group.volume.as_deref().map_or_else(t::series_no_volume, t::series_volume);
-        if group.all_read && volumes.len() > 1 {
-            // Volume 9 · chapters 77 to 84 · read.
-            let mut line = Vec::new();
-            let (first, last) = (group.chapters.first(), group.chapters.last());
-            let (low, high) = if order.newest { (last, first) } else { (first, last) };
-            if let (Some(low), Some(high)) = (low, high) {
-                let number =
-                    |c: &ChapterRow| c.number.clone().unwrap_or_else(|| c.label.clone());
-                line.push(t::series_chapter_range(&number(low), &number(high)));
-            }
-            line.push(t::series_volume_read());
-            let fold = adw::ExpanderRow::builder()
-                .title(glib::markup_escape_text(&name))
-                .subtitle(glib::markup_escape_text(&line.join(" \u{b7} ")))
-                .build();
-            for chapter in &group.chapters {
-                fold.add_row(&chapter_row(work, chapter, groups > 1));
-            }
-            let list = folded.get_or_insert_with(|| {
-                let list = widgets::boxed_list();
-                column.append(&list);
-                list
-            });
-            list.append(&fold);
-            continue;
-        }
-        folded = None;
-        if volumes.len() > 1 {
-            let heading = widgets::heading(&name);
-            heading.remove_css_class("title-4");
-            heading.add_css_class("heading");
-            column.append(&heading);
-        }
-        let list = widgets::boxed_list();
-        for chapter in &group.chapters {
-            list.append(&chapter_row(work, chapter, groups > 1));
-        }
-        column.append(&list);
-    }
-    let _ = ctx;
-}
-
 /// A chapter's row, 52 px: the number in silk and its title in haze, the state under them. A
 /// read chapter has both lines in haze; a new one says so in silk after the water dot. A
 /// download in progress shows its ring, a failed one Try again.
-fn chapter_row(work: &WorkId, chapter: &ChapterRow, name_group: bool) -> gtk::ListBoxRow {
+pub(super) fn chapter_row(
+    work: &WorkId,
+    chapter: &ChapterRow,
+    name_group: bool,
+) -> gtk::ListBoxRow {
     let read = matches!(chapter.state, ChapterReadState::Read);
     let first = gtk::Box::new(gtk::Orientation::Horizontal, 8);
     let number = gtk::Label::new(Some(&chapter.label));

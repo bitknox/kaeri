@@ -405,16 +405,20 @@ impl Shell {
             read_from_home: Cell::new(false),
         });
 
-        // The offline scene is offline before Home first asks, as a device without a network
-        // would be: the monitor that says so otherwise is not watched under fixtures.
+        // The monitor that says where the network stands is not watched under fixtures. The
+        // offline scene is offline before Home first asks, as a device without a network would
+        // be, and the reading scene online, so the chapters queued there download.
         #[cfg(feature = "fixtures")]
-        if fixtures && crate::fixtures::OFFLINE_SCENE.load(std::sync::atomic::Ordering::Relaxed)
-        {
-            ctx.hub.send(Command::NetworkPath {
-                cellular: false,
-                constrained: false,
-                offline: true,
-            });
+        if fixtures {
+            use std::sync::atomic::Ordering::Relaxed;
+            let offline = crate::fixtures::OFFLINE_SCENE.load(Relaxed);
+            if offline || crate::fixtures::ONLINE_SCENE.load(Relaxed) {
+                ctx.hub.send(Command::NetworkPath {
+                    cellular: false,
+                    constrained: false,
+                    offline,
+                });
+            }
         }
 
         // The destinations, each a navigation view of its own.

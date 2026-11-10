@@ -5864,6 +5864,9 @@
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Đã tính là đã đọc · đã cập nhật {trackers}</value>
   </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Đã tính là đã đọc · {tracker} sẽ cập nhật khi bạn có mạng lại</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Kế tiếp</value>
   </data>

@@ -2952,6 +2952,17 @@ impl Reader {
             K::Left => self.turn(rtl, TurnHow::Key),
             K::space | K::Page_Down | K::Down => self.turn(true, TurnHow::Key),
             K::Page_Up | K::Up => self.turn(false, TurnHow::Key),
+            // A novel's first and last page are its paginator's, as Go to page has them.
+            K::Home | K::End if self.state.borrow().medium == Some(Medium::Novel) => {
+                let novel = self.novel.borrow().clone();
+                if let Some(novel) = novel {
+                    if key == K::Home {
+                        novel.go_to(0);
+                    } else {
+                        novel.go_to_end();
+                    }
+                }
+            }
             K::Home => self.jump_to(0),
             K::End => {
                 let last = if self.flows() {

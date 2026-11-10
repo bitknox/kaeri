@@ -390,6 +390,13 @@ impl NovelView {
         self.call(&format!("window.kaeriReader && window.kaeriReader.goTo({page}, 'jump')")); // i18n-skip
     }
 
+    /// Show the document's last page, from End.
+    pub fn go_to_end(&self) {
+        self.call(
+            "window.kaeriReader && window.kaeriReader.goTo(window.kaeriReader.count() - 1, 'jump')", // i18n-skip
+        );
+    }
+
     /// Show a place the engine moved to: a resume, Back to page, another device's place. It
     /// reports as placed, so it neither offers Back to page nor takes it away.
     pub fn go_to_pos(&self, pos: &NovelPos) {
@@ -469,6 +476,8 @@ impl NovelView {
                 Some("ArrowLeft") => self.turn(rtl),   // i18n-skip
                 Some("ArrowDown" | "PageDown" | " ") => self.turn(true),
                 Some("ArrowUp" | "PageUp") => self.turn(false),
+                Some("Home") => self.go_to(0),   // i18n-skip
+                Some("End") => self.go_to_end(), // i18n-skip
                 _ => {}
             },
             Some("tap") => {

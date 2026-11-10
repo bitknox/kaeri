@@ -773,7 +773,6 @@
     <string name="reader_grid_page">Sayfa %1$d konumuna git</string>
     <string name="reader_scrubber_in_chapter">Bölümdeki sayfa</string>
     <string name="reader_failed_novel">Bu bölüm gösterilemedi</string>
-    <string name="reader_end_tracker_offline">Okundu sayıldı · çevrimiçi olunca %1$s güncellenir</string>
     <string name="reader_end_none">Bölüm %1$s henüz kaynaklar arasında yok</string>
     <string name="reader_end_none_line">Kaeri yeni bölümleri arka planda arar ve Güncellemeler\'e ekler.</string>
     <string name="reader_end_finished_title">Son</string>
@@ -2424,6 +2423,7 @@
     <string name="reader_close">Kapat</string>
     <string name="reader_end_read">Okundu sayıldı</string>
     <string name="reader_end_tracker">Okundu sayıldı · %1$s güncellendi</string>
+    <string name="reader_end_tracker_offline">Okundu sayıldı · çevrimiçi olunca %1$s güncellenir</string>
     <string name="reader_end_next">Sonraki</string>
     <string name="reader_mode_rtl">Sağdan sola</string>
     <string name="reader_mode_ltr">Soldan sağa</string>

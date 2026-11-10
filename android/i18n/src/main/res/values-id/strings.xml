@@ -738,7 +738,6 @@
     <string name="reader_grid_page">Ke halaman %1$d</string>
     <string name="reader_scrubber_in_chapter">Halaman dalam bab</string>
     <string name="reader_failed_novel">Bab ini tidak bisa ditampilkan</string>
-    <string name="reader_end_tracker_offline">Dihitung sudah dibaca · %1$s diperbarui saat Anda kembali online</string>
     <string name="reader_end_none">Belum ada bab %1$s di sumber-sumber Anda</string>
     <string name="reader_end_none_line">Kaeri memeriksa bab baru di latar belakang dan menambahkannya ke Pembaruan.</string>
     <string name="reader_end_finished_title">Tamat</string>
@@ -2340,6 +2339,7 @@
     <string name="reader_close">Tutup</string>
     <string name="reader_end_read">Dihitung sudah dibaca</string>
     <string name="reader_end_tracker">Dihitung sudah dibaca · %1$s diperbarui</string>
+    <string name="reader_end_tracker_offline">Dihitung sudah dibaca · %1$s diperbarui saat Anda kembali online</string>
     <string name="reader_end_next">Selanjutnya</string>
     <string name="reader_mode_rtl">Kanan ke kiri</string>
     <string name="reader_mode_ltr">Kiri ke kanan</string>

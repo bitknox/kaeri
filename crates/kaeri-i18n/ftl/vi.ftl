@@ -8549,6 +8549,9 @@ reader-end-read = Đã tính là đã đọc
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Đã tính là đã đọc · đã cập nhật { $trackers }
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Đã tính là đã đọc · { $tracker } sẽ cập nhật khi bạn có mạng lại
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Kế tiếp
 

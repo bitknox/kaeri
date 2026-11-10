@@ -635,8 +635,13 @@ gridview.reader-pages > child { padding: 5px; border-radius: 8px; }
 .reader-thumb.open { outline: 2px solid var(--silk); outline-offset: -2px; }
 list.reader-chapter-list { background: none; }
 list.reader-chapter-list > row { border-radius: 8px; }
-.reader-chapter-list row.reader-here { background: var(--raised-selected); }
 .reader-chapter-list row.reader-read .title { color: var(--haze); }
+listview.reader-chapter-list { background: none; }
+listview.reader-chapter-list > row { border-radius: 8px; padding: 0; }
+.reader-chapter { min-height: 50px; padding: 0 12px; border-radius: 8px; }
+.reader-chapter.reader-here { background: var(--raised-selected); }
+.reader-chapter.reader-read .reader-chapter-title { color: var(--haze); }
+.reader-chapter-line { font-size: smaller; opacity: 0.55; }
 
 /* Reading prelaunch: first run's pages, the add forms' outcomes, Your sources' rows, the demo. */
 .first-title { font-family: "Zen Kaku Gothic New", sans-serif; font-size: 26px; font-weight: 700; line-height: 1.2; }

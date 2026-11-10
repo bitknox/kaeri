@@ -2729,10 +2729,6 @@ object Strings {
     fun readerFailedNovel(context: Context): String =
         context.getString(R.string.reader_failed_novel)
 
-    /** Under the end of chapter line when the phone is offline. */
-    fun readerEndTrackerOffline(context: Context, tracker: String): String =
-        context.getString(R.string.reader_end_tracker_offline, tracker)
-
     /** Title of the end page when no source has the next chapter. */
     fun readerEndNone(context: Context, chapter: String): String =
         context.getString(R.string.reader_end_none, chapter)
@@ -8885,6 +8881,10 @@ object Strings {
     /** Under the end of chapter line, naming the trackers the read went to. */
     fun readerEndTracker(context: Context, trackers: String): String =
         context.getString(R.string.reader_end_tracker, trackers)
+
+    /** Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online. */
+    fun readerEndTrackerOffline(context: Context, tracker: String): String =
+        context.getString(R.string.reader_end_tracker_offline, tracker)
 
     /** Small heading above the next chapter on the page between chapters. */
     fun readerEndNext(context: Context): String =

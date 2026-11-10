@@ -6065,6 +6065,9 @@
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Okundu sayıldı · {trackers} güncellendi</value>
   </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Okundu sayıldı · çevrimiçi olunca {tracker} güncellenir</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Sonraki</value>
   </data>
