@@ -53,7 +53,11 @@ struct StripReader: View {
     private struct Row: Identifiable {
         enum Kind {
             case image(chapter: String, part: LeafPart)
-            case marker(next: ChapterRow, source: String?)
+            /// Credit pages the engine skipped where they were: a 44 point line while skipped,
+            /// each image under its caption once brought back.
+            case credits(chapter: String, pages: [CreditPage])
+            /// Into `next`, after `chapter`, whose pages skipped at its end it names.
+            case marker(next: ChapterRow, source: String?, chapter: String)
             /// Under the marker until the next chapter's images come: its first image when the
             /// engine made it, over the page plate.
             case lead
@@ -117,27 +121,77 @@ struct StripReader: View {
             rows.append(Row(id: id, kind: kind, top: y, height: h, trail: trail))
             y += h
         }
-        for (n, past) in model.trail.chapters.enumerated() {
-            for part in past.parts {
-                add("\(past.id)#\(part.page)", .image(chapter: past.id, part: part), height(of: part, chapter: past.id) + spacing, n)
+        // A chapter's images with its credit pages where the engine took them out: a group
+        // before the image it sat before, and those at the end after the last image once shown.
+        func images(_ id: String, _ list: [LeafPart], _ trail: Int?) {
+            var groups = creditGroups(id, count: list.count)
+            for part in list {
+                for anchor in groups.keys.sorted() where anchor <= Int(part.page) {
+                    let pages = groups.removeValue(forKey: anchor) ?? []
+                    add("\(id)~\(anchor)", .credits(chapter: id, pages: pages), creditsHeight(pages, chapter: id), trail)
+                }
+                add("\(id)#\(part.page)", .image(chapter: id, part: part), height(of: part, chapter: id) + spacing, trail)
             }
-            add("\(past.id)>", .marker(next: past.next, source: past.nextSource), markerHeight, n)
+            let end = groups.values.flatMap { $0 }.filter { model.isRevealed($0, chapter: id) }.sorted { $0.page < $1.page }
+            if !end.isEmpty {
+                add("\(id)~end", .credits(chapter: id, pages: end), creditsHeight(end, chapter: id), trail) // i18n-skip: a row id
+            }
+        }
+        for (n, past) in model.trail.chapters.enumerated() {
+            images(past.id, past.parts, n)
+            add("\(past.id)>", .marker(next: past.next, source: past.nextSource, chapter: past.id), markerHeight(past.id), n)
         }
         if waiting {
             add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
             return rows
         }
-        for part in parts {
-            add("\(chapter)#\(part.page)", .image(chapter: chapter, part: part), height(of: part, chapter: chapter) + spacing, nil)
-        }
         guard !parts.isEmpty else { return rows }
+        images(chapter, parts, nil)
         if let next {
-            add("\(chapter)>", .marker(next: next, source: model.end?.nextSource), markerHeight, nil)
+            add("\(chapter)>", .marker(next: next, source: model.end?.nextSource, chapter: chapter), markerHeight(chapter), nil)
             add("lead", .lead, leadHeight, nil) // i18n-skip: a row id
         } else {
             add("\(chapter)!", .foot, max(size.height * 0.8, 420), nil)
         }
         return rows
+    }
+
+    /// A chapter's credit pages by the image they sat before; those at the end under the count.
+    private func creditGroups(_ chapter: String, count: Int) -> [Int: [CreditPage]] {
+        var groups: [Int: [CreditPage]] = [:]
+        for credit in model.chapterCredits(chapter) {
+            let anchor = model.anchor(of: credit, in: chapter)
+            groups[credit.atEnd ? max(anchor, count) : anchor, default: []].append(credit)
+        }
+        return groups
+    }
+
+    /// The line while any of the group is skipped, and each page brought back under its caption.
+    /// A page kept loses its caption at once; it becomes an image of the chapter with the engine's
+    /// next layout.
+    private func creditsHeight(_ pages: [CreditPage], chapter: String) -> CGFloat {
+        var h: CGFloat = pages.contains { !model.isRevealed($0, chapter: chapter) } ? Self.lineHeight : 0
+        for credit in pages where model.isRevealed(credit, chapter: chapter) {
+            h += (isKeeping(credit, chapter: chapter) ? 0 : Self.lineHeight) + creditHeight(credit) + spacing
+        }
+        return h
+    }
+
+    private static let lineHeight: CGFloat = 44
+
+    private func isKeeping(_ credit: CreditPage, chapter: String) -> Bool {
+        model.keeping.map { $0.chapter == chapter && $0.credit.page == credit.page } ?? false
+    }
+
+    private func creditHeight(_ credit: CreditPage) -> CGFloat {
+        let w = CGFloat(credit.file.crop?.width ?? credit.file.width)
+        let h = CGFloat(credit.file.crop?.height ?? credit.file.height)
+        return w > 0 ? (column * h / w).rounded() : (column * 1.5).rounded()
+    }
+
+    /// The marker, with room for the line naming the pages skipped at the end of the chapter before it.
+    private func markerHeight(_ chapter: String) -> CGFloat {
+        markerHeight + (model.endSkipped(chapter).isEmpty ? 0 : 32)
     }
 
     var body: some View {
@@ -217,6 +271,16 @@ struct StripReader: View {
         .onChange(of: model.stripRelaid) { _, _ in
             restoring = true
             restore()
+        }
+        // The line comes after the images; while the place is still being restored it moves with them.
+        .onChange(of: model.chapterCredits(chapter).count) { _, _ in if restoring { restore() } }
+        // Show from a marker or the end puts the pages back above it and scrolls to them.
+        .onChange(of: model.revealed) { old, new in
+            guard let key = new.subtracting(old).first,
+                  model.chapterCredits(key.chapter).contains(where: { $0.page == key.page && $0.atEnd }),
+                  let row = rows.first(where: { $0.id == "\(key.chapter)~end" }) else { return } // i18n-skip: a row id
+            restoring = false
+            withAnimation(instant ? nil : .standard) { position.scrollTo(y: row.top) }
         }
         .onChange(of: model.jump?.tick) { _, _ in
             guard let index = model.jump?.index else { return }
@@ -315,9 +379,17 @@ struct StripReader: View {
                 .onAppear {
                     if row.trail == nil, model.file(of: part, chapter: chapter) == nil { model.needPage(part.page) }
                 }
-        case .marker(let next, let source):
-            StripMarker(next: next, facts: Self.facts(next, source: source), theme: theme)
-                .frame(width: column)
+        case .credits(let chapter, let pages):
+            StripCredits(model: model, chapter: chapter, pages: pages, theme: theme, tone: tone, width: column,
+                         heights: pages.map(creditHeight), spacing: spacing, scale: scale, instant: instant)
+                .frame(width: column, height: row.height, alignment: .top)
+                .clipped()
+        case .marker(let next, let source, let chapter):
+            StripMarker(next: next, facts: Self.facts(next, source: source), theme: theme,
+                        skipped: model.endSkipped(chapter).count) {
+                withAnimation(instant ? nil : .standard) { model.showEndCredits(chapter) }
+            }
+            .frame(width: column)
         case .lead:
             ZStack(alignment: .top) {
                 PagePlate(page: 1, theme: theme, atOnce: true)
@@ -464,6 +536,9 @@ private struct StripMarker: View {
     let next: ChapterRow
     let facts: String
     let theme: ReaderTheme
+    /// Pages skipped at the end of the chapter before, named under the facts with Show.
+    var skipped = 0
+    var show: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -475,10 +550,100 @@ private struct StripMarker: View {
             if !facts.isEmpty {
                 Text(facts).font(.ui(14)).foregroundStyle(theme.haze).padding(.top, 2)
             }
+            if skipped > 0 {
+                ReaderSkippedLine(count: skipped, theme: theme, show: show)
+                    .padding(.top, 14)
+            }
         }
         .padding(.horizontal, 24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .background(theme.ground)
-        .accessibilityElement(children: .combine)
+        // The facts read as one; the line keeps its own Show button.
+        .accessibilityElement(children: skipped > 0 ? .contain : .combine)
+    }
+}
+
+/// Credit pages in the flow of a strip. While skipped, one 44 point row on the ground names
+/// them, and the whole row is Show. Shown, each image sits under its caption, Skipped as a
+/// credit page with Not a credit page.
+private struct StripCredits: View {
+    let model: ReaderModel
+    let chapter: String
+    let pages: [CreditPage]
+    let theme: ReaderTheme
+    let tone: PageTone
+    let width: CGFloat
+    let heights: [CGFloat]
+    let spacing: CGFloat
+    let scale: CGFloat
+    let instant: Bool
+
+    private var skipped: [CreditPage] { pages.filter { !model.isRevealed($0, chapter: chapter) } }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if !skipped.isEmpty {
+                Button {
+                    withAnimation(instant ? nil : .standard) { model.reveal(skipped, chapter: chapter) }
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(L.readerCreditPagesSkipped(count: skipped.count))
+                            .font(.ui(13)).foregroundStyle(theme.haze)
+                        Text(L.readerCreditShow)
+                            .font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk)
+                            .underline()
+                    }
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+                    .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
+                    .background(theme.ground)
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .pointerHover()
+                .accessibilityLabel(L.readerCreditPagesSkipped(count: skipped.count))
+                .accessibilityHint(L.readerCreditShowHint)
+                .transition(.opacity)
+            }
+            ForEach(Array(pages.enumerated()), id: \.element.page) { n, credit in
+                if model.isRevealed(credit, chapter: chapter) {
+                    VStack(spacing: 0) {
+                        if !keeping(credit) { caption(credit).transition(.opacity) }
+                        PageImage(file: credit.file, longest: max(width, heights[n]) * scale, tone: tone)
+                            .frame(width: width, height: heights[n])
+                            .clipped()
+                            .padding(.bottom, spacing)
+                            .accessibilityElement()
+                            .accessibilityLabel(L.readerCreditPageLabel)
+                            .accessibilityAddTraits(.isImage)
+                    }
+                    // The image fades in over where the line was while the row grows.
+                    .transition(.opacity.animation(instant ? nil : .fadeIn))
+                }
+            }
+        }
+    }
+
+    private func keeping(_ credit: CreditPage) -> Bool {
+        model.keeping.map { $0.chapter == chapter && $0.credit.page == credit.page } ?? false
+    }
+
+    private func caption(_ credit: CreditPage) -> some View {
+        HStack(spacing: 6) {
+            Text(L.readerCreditShown).font(.ui(13)).foregroundStyle(theme.haze)
+            Button(L.readerCreditNot) {
+                withAnimation(instant ? nil : .standard) { model.keepCredit(credit, chapter: chapter) }
+            }
+            .font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk)
+            .underline()
+            .buttonStyle(.plain)
+            .padding(.vertical, 12).contentShape(.rect).padding(.vertical, -12)
+            .pointerHover()
+        }
+        .lineLimit(1)
+        .minimumScaleFactor(0.8)
+        .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
+        .background(theme.ground)
+        .accessibilityElement(children: .contain)
     }
 }

@@ -83057,6 +83057,88 @@
         }
       }
     },
+    "group-picker-count" : {
+      "comment" : "A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot. Argument 1: have (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@total@"
+          },
+          "substitutions" : {
+            "total" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld of %2$lld chapter"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld of %2$lld chapters"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "group-picker-fallback" : {
+      "comment" : "Under the group picker's choices.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chapters a group doesn't have come from another group, and their rows say which."
+          }
+        }
+      }
+    },
+    "group-picker-in" : {
+      "comment" : "Under the group picker's title: the source the groups are in. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In %1$@"
+          }
+        }
+      }
+    },
+    "group-picker-most" : {
+      "comment" : "The group picker's first choice: the group with the most chapters, whichever that is.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Most chapters"
+          }
+        }
+      }
+    },
+    "group-picker-most-now" : {
+      "comment" : "Under Most chapters: the group that means today. Argument 1: group (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now %1$@"
+          }
+        }
+      }
+    },
     "home-adding" : {
       "comment" : "Shown in place of Add to Planning while it saves, after a moment.",
       "extractionState" : "manual",
@@ -211655,6 +211737,66 @@
         }
       }
     },
+    "reader-credit-kept" : {
+      "comment" : "Notice after Not a credit page, with Undo.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This page will show from now on"
+          }
+        }
+      }
+    },
+    "reader-credit-not" : {
+      "comment" : "The notice's action on a shown credit page: show this page from now on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not a credit page"
+          }
+        }
+      }
+    },
+    "reader-credit-page" : {
+      "comment" : "In the reader's line in place of a page number, while a credit page shows: \"Chapter 87 · credit page\".",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "credit page"
+          }
+        }
+      }
+    },
+    "reader-credit-page-label" : {
+      "comment" : "Spoken name of a credit page shown again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credit page"
+          }
+        }
+      }
+    },
+    "reader-credit-page-of" : {
+      "comment" : "The same, when more than one credit page is shown: \"credit page 1 of 2\". Argument 1: n (Plain). Argument 2: total (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "credit page %1$@ of %2$@"
+          }
+        }
+      }
+    },
     "reader-credit-pages-skipped" : {
       "comment" : "A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them. Argument 1: count (Int).",
       "extractionState" : "manual",
@@ -211685,6 +211827,42 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "reader-credit-show" : {
+      "comment" : "Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show"
+          }
+        }
+      }
+    },
+    "reader-credit-show-hint" : {
+      "comment" : "Spoken hint of the line that says how many credit pages were skipped.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shows the page"
+          }
+        }
+      }
+    },
+    "reader-credit-shown" : {
+      "comment" : "Notice over a credit page shown again, and the caption above it in a long strip.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skipped as a credit page"
           }
         }
       }
@@ -216697,6 +216875,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · trang %2$@/%3$@"
+          }
+        }
+      }
+    },
+    "reader-group-line-place" : {
+      "comment" : "The control group's line while a credit page shows: the chapter, then \"credit page\" or \"credit page 1 of 2\". Argument 1: chapter (Text). Argument 2: place (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
           }
         }
       }
@@ -223397,6 +223587,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Với Tập trung"
+          }
+        }
+      }
+    },
+    "reader-part-preview" : {
+      "comment" : "The scrubber's preview on the first page of a chapter's later part. Argument 1: page (Plain). Argument 2: part (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$@ · part %2$@"
+          }
+        }
+      }
+    },
+    "reader-part-starts" : {
+      "comment" : "Spoken value of the scrubber on the first page of a chapter's later part. Argument 1: part (Plain). Argument 2: page (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Part %1$@ starts at page %2$@"
           }
         }
       }
@@ -258013,6 +258227,54 @@
         }
       }
     },
+    "series-group" : {
+      "comment" : "Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Group"
+          }
+        }
+      }
+    },
+    "series-group-hint" : {
+      "comment" : "Spoken hint of the Group row's Change button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Picks the group"
+          }
+        }
+      }
+    },
+    "series-group-most" : {
+      "comment" : "After the group's name on the Group row: it is in use because it has the most chapters.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "most chapters"
+          }
+        }
+      }
+    },
+    "series-group-picked" : {
+      "comment" : "After the group's name on the Group row: the person picked it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "your pick"
+          }
+        }
+      }
+    },
     "series-mark-read" : {
       "comment" : "Chapter menu and swipe action.",
       "extractionState" : "manual",
@@ -290845,6 +291107,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Khi phần mở đầu hoặc kết thúc đang phát và không được tự động bỏ qua"
+          }
+        }
+      }
+    },
+    "settings-skip-credits" : {
+      "comment" : "Reader default for manga: pages a group repeats at the start or end of its chapters are left out.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip credit pages"
+          }
+        }
+      }
+    },
+    "settings-skip-credits-note" : {
+      "comment" : "Line under Skip credit pages.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pages a group repeats at the start or end of its chapters"
           }
         }
       }

@@ -236,7 +236,8 @@ public struct ReaderScreen: View {
     /// The place as VoiceOver hears it, once a turn has settled.
     private var spokenPlace: String {
         guard voiceOver, model.phase == .open else { return "" }
-        return "\(model.view?.chapter.id ?? "")|\(model.inTrail?.id ?? "")|\(model.position.index)|\(model.position.count)"
+        // A credit page shown or left is a place of its own: "Chapter 87, credit page".
+        return "\(model.view?.chapter.id ?? "")|\(model.inTrail?.id ?? "")|\(model.position.index)|\(model.position.count)|\(model.onCredit.map(String.init) ?? "")"
     }
 
     private func announcePlace() {

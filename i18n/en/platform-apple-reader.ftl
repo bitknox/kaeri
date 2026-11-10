@@ -35,6 +35,12 @@ reader-group-line = { $chapter } · page { $page } of { $total }
 # @arg chapter: text
 reader-group-line-end = { $chapter } · end of chapter
 
+# The control group's line while a credit page shows: the chapter, then "credit page" or "credit
+# page 1 of 2".
+# @arg chapter: text
+# @arg place: text
+reader-group-line-place = { $chapter } · { $place }
+
 # The control group's line when a spread shows two pages.
 # @arg chapter: text
 # @arg first: plain

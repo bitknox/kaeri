@@ -18,6 +18,9 @@ struct PagedReader: View {
     @State private var drag: CGFloat = 0
     @State private var fading: Int?
     @State private var fade: Double = 1
+    /// The credit page that was over the leaf fading out, so a turn off it fades it with its leaf.
+    @State private var fadingCredit: UInt32?
+    @AppStorage(ReaderDefaults.background) private var background = "theme"
     @State private var settling = false
     @State private var zoom = PageZoom()
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -32,7 +35,7 @@ struct PagedReader: View {
             // The neighbours stay mounted off screen, so a drag starts with its page already there,
             // and the page a tap turn leaves is the same view held under the one that fades in.
             ForEach(mounted, id: \.self) { index in
-                leaf(index)
+                slot(index)
                     .zoomed(zoom, on: index == current)
                     .offset(x: offset(of: index))
                     .opacity(index == current && fading != nil ? fade : 1)
@@ -78,6 +81,13 @@ struct PagedReader: View {
             turn(forward: request.forward, how: .key)
         }
         .accessibilityScrollAction { edge in turn(forward: edge == .trailing || edge == .bottom, how: .turn) }
+        // The chapter's credit pages are decoded ahead, so Show draws one on its first frame.
+        .task(id: model.openCredits.map(\.page)) {
+            for credit in model.openCredits {
+                guard !Task.isCancelled else { return }
+                _ = await PageImages.load(credit.file, longestSide: CreditPageView.longest(size, scale))
+            }
+        }
     }
 
     private var mounted: [Int] {
@@ -92,6 +102,26 @@ struct PagedReader: View {
         if index == current { return drag }
         if index == fading { return 0 }
         return drag + (index > current ? -sign : sign) * size.width
+    }
+
+    /// A leaf, with the credit page brought back over it while one shows. The leaf stays under
+    /// the credit page, so a step between them crossfades and never fades through empty.
+    private func slot(_ index: Int) -> some View {
+        ZStack {
+            leaf(index)
+            if let credit = credit(over: index) {
+                CreditPageView(credit: credit, size: size, scale: scale, tone: tone, backdrop: theme.backdrop(background))
+                    .id(credit.page)
+                    .transition(.opacity)
+                    .zIndex(1)
+            }
+        }
+    }
+
+    private func credit(over index: Int) -> CreditPage? {
+        if index == current, fading != index { return model.shownCredit }
+        if index == fading, let fadingCredit { return model.openCredits.first { $0.page == fadingCredit } }
+        return nil
     }
 
     @ViewBuilder private func leaf(_ index: Int) -> some View {
@@ -134,6 +164,10 @@ struct PagedReader: View {
     private func turn(forward: Bool, how: TurnHow) {
         guard model.leaves.indices.contains(current) else { return }
         model.hideChrome()
+        if let step = model.creditStep(forward: forward) {
+            creditTurn(step, how: how)
+            return
+        }
         if forward, model.leaves[current].endPage {
             if let next = model.view?.next { model.openChapter(next.id) }
             return
@@ -151,6 +185,7 @@ struct PagedReader: View {
             return
         }
         let old = current
+        fadingCredit = model.onCredit
         fading = old
         fade = 0
         model.shown(target, how: how)
@@ -158,6 +193,46 @@ struct PagedReader: View {
             fade = 1
         } completion: {
             fading = nil
+            fadingCredit = nil
+        }
+    }
+
+    /// A turn onto, between or off credit pages brought back. On the same leaf the credit page
+    /// crossfades over it; onto another leaf it turns as a tap does, the credit page with its leaf.
+    private func creditTurn(_ step: ReaderModel.CreditStep, how: TurnHow) {
+        let (page, leaf): (UInt32?, Int) = switch step {
+        case let .credit(page, leaf): (page, leaf)
+        case let .leaf(leaf): (nil, leaf)
+        }
+        if paper {
+            model.showCredit(page, leaf: leaf, how: how)
+            return
+        }
+        if leaf == current {
+            withAnimation(page == nil ? .fadeOut : .fadeIn) { model.showCredit(page, leaf: leaf, how: how) }
+            return
+        }
+        fadingCredit = model.onCredit
+        fading = current
+        fade = 0
+        model.showCredit(page, leaf: leaf, how: how)
+        withAnimation(.quick, completionCriteria: .logicallyComplete) {
+            fade = 1
+        } completion: {
+            fading = nil
+            fadingCredit = nil
+        }
+    }
+
+    /// Whether a drag the way `forward` stays on the same leaf: between credit pages, or from
+    /// one onto its leaf. Such a drag moves a little and lets go into a crossfade.
+    private func staysOnLeaf(forward: Bool) -> ReaderModel.CreditStep? {
+        guard let step = model.creditStep(forward: forward) else { return nil }
+        switch step {
+        case let .credit(_, leaf) where leaf == current: return step
+        case let .leaf(leaf) where leaf == current: return step
+        case .credit: return step
+        case .leaf: return nil
         }
     }
 
@@ -175,6 +250,7 @@ struct PagedReader: View {
                 let target = current + (forward ? 1 : -1)
                 let endForward = forward && model.leaves.indices.contains(current) && model.leaves[current].endPage
                 if !model.leaves.indices.contains(target) || (endForward && model.view?.next == nil) { x /= 4 }
+                if staysOnLeaf(forward: forward) != nil { x /= 4 }
                 drag = x
             }
             .onEnded { value in
@@ -190,6 +266,11 @@ struct PagedReader: View {
                 let forward = x * sign > 0
                 let target = current + (forward ? 1 : -1)
                 let endForward = forward && model.leaves.indices.contains(current) && model.leaves[current].endPage
+                if let step = staysOnLeaf(forward: forward) {
+                    withAnimation(paper ? nil : .standard) { drag = 0 }
+                    if commit { creditTurn(step, how: .swipe) }
+                    return
+                }
                 if commit, endForward {
                     drag = 0
                     if let next = model.view?.next { model.openChapter(next.id) }
@@ -229,6 +310,7 @@ struct ReaderEndPage: View {
     let size: CGSize
     /// The end page as it was when the chapter was left, held over the next one while it opens.
     var held: ReaderModel.HeldEnd?
+    @Environment(\.readerPaper) private var endPaper
     @Environment(\.readerClose) private var closeReader
     @Environment(Navigator.self) private var navigator
     @Environment(AppStore.self) private var store
@@ -391,6 +473,15 @@ struct ReaderEndPage: View {
                store.serverProgress.holds(work: work, chapter: chapterId) {
                 ReaderServerLine(line: store.serverProgress.lines[chapterId], theme: theme) {
                     store.serverProgress.retry(chapter: chapterId)
+                }
+                .padding(.top, 2)
+            }
+            // The pages skipped at the chapter's end, under what was updated, with Show beside it.
+            if held == nil, let chapterId = chapter?.id, !model.endSkipped(chapterId).isEmpty {
+                ReaderSkippedLine(count: model.endSkipped(chapterId).count, theme: theme) {
+                    // The page takes the end page's place by a turn's crossfade; a strip grows it in.
+                    let strip = model.view?.mode == .strip
+                    withAnimation(endPaper ? nil : (strip ? .standard : .quick)) { model.showEndCredits(chapterId) }
                 }
                 .padding(.top, 2)
             }
@@ -598,5 +689,71 @@ struct ReaderServerLine: View {
         case .retrying: "retrying" // i18n-skip: an animation key
         case .failed: "failed" // i18n-skip: an animation key
         }
+    }
+}
+
+/// A credit page brought back, drawn over its leaf on the reader's backdrop as one page.
+struct CreditPageView: View {
+    let credit: CreditPage
+    let size: CGSize
+    let scale: CGFloat
+    let tone: PageTone
+    let backdrop: Color
+    /// The image is decoded. Until then nothing of the credit page shows, its backdrop included,
+    /// so the page under it stays and the two crossfade instead of passing through an empty page.
+    @State private var ready: Bool
+    @Environment(\.readerPaper) private var paper
+
+    init(credit: CreditPage, size: CGSize, scale: CGFloat, tone: PageTone, backdrop: Color) {
+        self.credit = credit
+        self.size = size
+        self.scale = scale
+        self.tone = tone
+        self.backdrop = backdrop
+        _ready = State(initialValue: PageImages.cached(credit.file, longestSide: Self.longest(size, scale)) != nil)
+    }
+
+    static func longest(_ size: CGSize, _ scale: CGFloat) -> CGFloat { max(size.width, size.height) * scale }
+
+    var body: some View {
+        ZStack {
+            backdrop
+            PageImage(file: credit.file, longest: Self.longest(size, scale), tone: tone)
+                .accessibilityElement()
+                .accessibilityLabel(L.readerCreditPageLabel)
+                .accessibilityAddTraits(.isImage)
+        }
+        .frame(width: size.width, height: size.height)
+        .opacity(ready ? 1 : 0)
+        .task(id: credit.page) {
+            guard !ready else { return }
+            _ = await PageImages.load(credit.file, longestSide: Self.longest(size, scale))
+            guard !Task.isCancelled else { return }
+            withAnimation(paper ? nil : .fadeIn) { ready = true }
+        }
+    }
+}
+
+/// "1 credit page skipped  Show": the end page's line and the strip marker's, 13 point haze with
+/// Show underlined in silk.
+struct ReaderSkippedLine: View {
+    let count: Int
+    let theme: ReaderTheme
+    let show: () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(L.readerCreditPagesSkipped(count: count))
+                .font(.ui(13)).foregroundStyle(theme.haze)
+            Button(L.readerCreditShow, action: show)
+                .font(.ui(13, weight: .semibold)).foregroundStyle(theme.silk)
+                .underline()
+                .buttonStyle(.plain)
+                // A 44 point target that keeps the line's own height.
+                .padding(.vertical, 12).contentShape(.rect).padding(.vertical, -12)
+                .pointerHover()
+                .accessibilityHint(L.readerCreditShowHint)
+        }
+        .accessibilityElement(children: .contain)
     }
 }

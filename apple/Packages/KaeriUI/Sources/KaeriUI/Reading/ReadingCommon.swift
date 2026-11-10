@@ -468,3 +468,57 @@ struct MediumPlaces: ViewModifier {
 extension View {
     func mediumPlaces() -> some View { modifier(MediumPlaces()) }
 }
+
+// MARK: Chapter rows in parts and from other groups
+
+extension ReadWords {
+    /// A language by its tag, in the app's language: "es" and "es-419" read "Spanish" in English
+    /// and "español" in Spanish. The engine's name is English, so the rows name it here.
+    static func language(_ tag: String) -> String {
+        let primary = tag.split { $0 == "-" || $0 == "_" }.first.map(String.init) ?? tag
+        return AirTime.locale.localizedString(forLanguageCode: primary) ?? tag
+    }
+
+    /// One word of a chapter row's line, with a group's language named in the app's language.
+    static func text(_ msg: Msg, row: ChapterRow) -> String {
+        switch msg {
+        case .reading(.readingRowFromGroupIn(let group, let english)):
+            return L.readingRowFromGroupIn(group: group, language: row.groupLanguage.map(language) ?? english)
+        case .reading(.readingRowPartFromGroupIn(let part, let group, let english)):
+            let tag = row.partGroups.first { Int64($0.part) == part }?.language
+            return L.readingRowPartFromGroupIn(part: Int(part), group: group, language: tag.map(language) ?? english)
+        default:
+            return msg.text
+        }
+    }
+
+    /// The engine's line for a chapter row: "Read · 2 weeks ago · 2 parts", "New · today ·
+    /// From Saltmarsh Team".
+    static func rowLine(_ row: ChapterRow) -> String {
+        row.line.map { text($0, row: row) }.joined(separator: " · ") // i18n-skip
+    }
+
+    /// Only what a row says of its parts and where it comes from: "2 parts", "2 of 3 parts ·
+    /// part 2 missing", "From Saltmarsh Team". For lists that say the state their own way.
+    static func rowOrigin(_ row: ChapterRow) -> [String] {
+        row.line.filter(isOrigin).map { text($0, row: row) }
+    }
+
+    /// The line's state words, then its parts and origin words, apart: a new row draws the
+    /// first in silk and the rest in haze.
+    static func rowLineParts(_ row: ChapterRow) -> (state: String, origin: String) {
+        let state = row.line.filter { !isOrigin($0) }.map { text($0, row: row) }
+        return (state.joined(separator: " · "), rowOrigin(row).joined(separator: " · ")) // i18n-skip
+    }
+
+    private static func isOrigin(_ msg: Msg) -> Bool {
+        switch msg {
+        case .reading(.readingRowParts), .reading(.readingRowPartsOf), .reading(.readingRowPartMissing),
+             .reading(.readingRowPartFromGroup), .reading(.readingRowPartFromGroupIn),
+             .reading(.readingRowFromGroup), .reading(.readingRowFromGroupIn), .reading(.readingRowFromSource):
+            true
+        default:
+            false
+        }
+    }
+}

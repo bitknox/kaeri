@@ -84,10 +84,10 @@ enum ReadSeriesWords {
         return L.seriesTrackerWithVolume(chapters: chapters, volume: Int(volume))
     }
 
-    /// "books.home.example · Kavita · 1 more": the source, its version, and how many others have it.
+    /// "books.home.example · 1 more": the source and how many others have it. The group has a
+    /// row of its own.
     static func source(_ edition: BookEditionRow, others: Int) -> String {
         var parts = [edition.sourceName]
-        if let label = edition.versionLabel, !label.isEmpty { parts.append(label) }
         if others > 0 { parts.append(L.seriesSourcesMore(n: others)) }
         return parts.joined(separator: " · ") // i18n-skip
     }
@@ -95,7 +95,7 @@ enum ReadSeriesWords {
     /// The second line of a chapter row: the engine's words ("Read · 4 days ago · Downloaded",
     /// "New · yesterday", "Not downloaded"), else its state, when it came out and the group.
     static func chapterLine(_ row: ChapterRow, preferred: String?) -> String {
-        if !row.line.isEmpty { return row.line.map(\.text).joined(separator: " · ") } // i18n-skip
+        if !row.line.isEmpty { return ReadWords.rowLine(row) }
         var parts: [String] = []
         if let state = ReadWords.state(row) { parts.append(state) }
         // When it was read, or when a new chapter came out: the date always follows the state it
@@ -742,6 +742,7 @@ private struct SeriesPanel: View {
     @Environment(Navigator.self) private var navigator
     @Environment(\.dynamicTypeSize) private var type
     let series: SeriesView
+    @State private var pickingGroup = false
 
     var body: some View {
         let tracking = store.reading.tracking[series.work] ?? series.tracking
@@ -753,6 +754,11 @@ private struct SeriesPanel: View {
                 row(label: L.seriesReadingFrom,
                     value: ReadSeriesWords.source(edition, others: max(0, editions.count - 1)),
                     action: L.seriesChange) { navigator.seriesSheet = .source(series.work) }
+                // Whose version of each chapter, inside the source: only when it has a choice.
+                if edition.groups.count > 1 {
+                    rule
+                    groupRow(edition)
+                }
             }
             if let first = followed.first {
                 rule
@@ -762,12 +768,6 @@ private struct SeriesPanel: View {
                 rule
                 row(label: ReadSeriesWords.trackers(tracking), value: L.seriesTrackerAsk,
                     action: L.seriesChange) { navigator.seriesSheet = .tracking(series.work) }
-            }
-            if let label = series.edition?.versionLabel, !label.isEmpty {
-                rule
-                row(label: label, value: L.seriesPreferredGroup, action: L.seriesChange) {
-                    navigator.seriesSheet = .source(series.work)
-                }
             }
             if let sent = series.askWhereStopped {
                 rule
@@ -803,19 +803,43 @@ private struct SeriesPanel: View {
             store.bookSources.loadForWork(series.work)
             store.reading.sending.loadTargets()
         }
+        .task {
+            // The Fixtures app's shot of the group picker opens it.
+            guard ReadingModel.groupPickerShot else { return }
+            try? await Task.sleep(for: .milliseconds(1200))
+            pickingGroup = true
+        }
     }
 
     private var rule: some View {
         Rectangle().fill(Palette.faintRule).frame(height: 1).accessibilityHidden(true)
     }
 
+    /// Group: "Lanternlight Scans · most chapters", the name in silk and why in haze. Change
+    /// opens the group picker on the button.
+    private func groupRow(_ edition: BookEditionRow) -> some View {
+        let name = edition.groups.first(where: \.inUse)?.label ?? edition.versionLabel ?? ""
+        let why = edition.groupChosen ? L.seriesGroupPicked : L.seriesGroupMost
+        let value = Text(name).foregroundStyle(.silk) + Text(verbatim: " · " + why).foregroundStyle(.haze) // i18n-skip: a separator
+        let change = Button(L.seriesChange) { pickingGroup = true }
+            .accessibilityHint(L.seriesGroupHint)
+            .popover(isPresented: $pickingGroup, arrowEdge: .top) {
+                GroupPicker(work: series.work, edition: edition)
+            }
+        return row(label: L.seriesGroup, value: value, button: change)
+    }
+
     private func row(label: String, value: String, action: String?, perform: @escaping () -> Void) -> some View {
+        row(label: label, value: Text(value).foregroundStyle(.silk), button: action.map { Button($0, action: perform) })
+    }
+
+    private func row(label: String, value: Text, button: (some View)?) -> some View {
         let words = VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.plat(mac: 11, touch: 13)).foregroundStyle(.haze).lineLimit(type.isAccessibilitySize ? 3 : 1)
-            Text(value).font(.plat(mac: 13, touch: 17)).foregroundStyle(.silk).lineLimit(type.isAccessibilitySize ? 4 : 2)
+            value.font(.plat(mac: 13, touch: 17)).lineLimit(type.isAccessibilitySize ? 4 : 2)
         }
-        let button = action.map { action in
-            Button(action, action: perform)
+        let button = button.map { button in
+            button
                 .buttonStyle(.plain)
                 .font(.plat(mac: 13, touch: 15, weight: .semibold))
                 .foregroundStyle(.silk)
@@ -1027,6 +1051,16 @@ private struct ChapterRowView: View {
     let row: ChapterRow
     let preferred: String?
     @Binding var choosing: Set<String>?
+    @Environment(\.dynamicTypeSize) private var type
+
+    /// A new row's state is silk; its parts and the group it comes from stay haze.
+    private func lineText(_ line: String) -> Text {
+        let split = ReadWords.rowLineParts(row)
+        guard row.newChapter, row.state != .read, !row.line.isEmpty, !split.origin.isEmpty, !split.state.isEmpty else {
+            return Text(line)
+        }
+        return Text(split.state) + Text(verbatim: " · " + split.origin).foregroundStyle(.haze) // i18n-skip: a separator
+    }
 
     var body: some View {
         let unreadNew = row.newChapter && row.state != .read
@@ -1066,7 +1100,11 @@ private struct ChapterRowView: View {
                     if !line.isEmpty {
                         HStack(spacing: 6) {
                             if unreadNew { WaterDot() }
-                            Text(line).lineLimit(1)
+                            lineText(line)
+                                // Rows wrap at accessibility sizes instead of cutting.
+                                .lineLimit(type.isAccessibilitySize ? nil : 1)
+                                .contentTransition(.opacity)
+                                .animation(.fadeIn, value: line)
                         }
                         .font(.plat(mac: 12, touch: 15))
                         .foregroundStyle(unreadNew ? .silk : .haze)

@@ -14427,6 +14427,56 @@ pub fn reader_wait_long() -> String {
     text("reader-wait-long", &[])
 }
 
+/// Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.
+pub fn reader_credit_show() -> String {
+    text("reader-credit-show", &[])
+}
+
+/// Spoken hint of the line that says how many credit pages were skipped.
+pub fn reader_credit_show_hint() -> String {
+    text("reader-credit-show-hint", &[])
+}
+
+/// Notice over a credit page shown again, and the caption above it in a long strip.
+pub fn reader_credit_shown() -> String {
+    text("reader-credit-shown", &[])
+}
+
+/// The notice's action on a shown credit page: show this page from now on.
+pub fn reader_credit_not() -> String {
+    text("reader-credit-not", &[])
+}
+
+/// Notice after Not a credit page, with Undo.
+pub fn reader_credit_kept() -> String {
+    text("reader-credit-kept", &[])
+}
+
+/// In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".
+pub fn reader_credit_page() -> String {
+    text("reader-credit-page", &[])
+}
+
+/// The same, when more than one credit page is shown: "credit page 1 of 2".
+pub fn reader_credit_page_of(n: i64, total: i64) -> String {
+    text("reader-credit-page-of", &[("n", Arg::Plain(n)), ("total", Arg::Plain(total))])
+}
+
+/// Spoken name of a credit page shown again.
+pub fn reader_credit_page_label() -> String {
+    text("reader-credit-page-label", &[])
+}
+
+/// The scrubber's preview on the first page of a chapter's later part.
+pub fn reader_part_preview(page: i64, part: i64) -> String {
+    text("reader-part-preview", &[("page", Arg::Plain(page)), ("part", Arg::Plain(part))])
+}
+
+/// Spoken value of the scrubber on the first page of a chapter's later part.
+pub fn reader_part_starts(part: i64, page: i64) -> String {
+    text("reader-part-starts", &[("part", Arg::Plain(part)), ("page", Arg::Plain(page))])
+}
+
 /// Button in the first run that opens the reading demo.
 pub fn onboarding_read_demo() -> String {
     text("onboarding-read-demo", &[])
@@ -14850,6 +14900,51 @@ pub fn series_tracker_ask() -> String {
 /// Value of the group row: the chosen group is used for this series.
 pub fn series_preferred_group() -> String {
     text("series-preferred-group", &[])
+}
+
+/// Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.
+pub fn series_group() -> String {
+    text("series-group", &[])
+}
+
+/// After the group's name on the Group row: it is in use because it has the most chapters.
+pub fn series_group_most() -> String {
+    text("series-group-most", &[])
+}
+
+/// After the group's name on the Group row: the person picked it.
+pub fn series_group_picked() -> String {
+    text("series-group-picked", &[])
+}
+
+/// Spoken hint of the Group row's Change button.
+pub fn series_group_hint() -> String {
+    text("series-group-hint", &[])
+}
+
+/// Under the group picker's title: the source the groups are in.
+pub fn group_picker_in(source: &str) -> String {
+    text("group-picker-in", &[("source", Arg::Text(source))])
+}
+
+/// The group picker's first choice: the group with the most chapters, whichever that is.
+pub fn group_picker_most() -> String {
+    text("group-picker-most", &[])
+}
+
+/// Under Most chapters: the group that means today.
+pub fn group_picker_most_now(group: &str) -> String {
+    text("group-picker-most-now", &[("group", Arg::Text(group))])
+}
+
+/// A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.
+pub fn group_picker_count(have: i64, total: i64) -> String {
+    text("group-picker-count", &[("have", Arg::Int(have)), ("total", Arg::Int(total))])
+}
+
+/// Under the group picker's choices.
+pub fn group_picker_fallback() -> String {
+    text("group-picker-fallback", &[])
 }
 
 /// A tracker's progress in chapters, with the total.
@@ -16373,6 +16468,16 @@ pub fn settings_counts_read_moving_on_note() -> String {
 /// Value of Counts as read: only the person's own marks; the reader marks nothing.
 pub fn settings_counts_read_marked() -> String {
     text("settings-counts-read-marked", &[])
+}
+
+/// Reader default for manga: pages a group repeats at the start or end of its chapters are left out.
+pub fn settings_skip_credits() -> String {
+    text("settings-skip-credits", &[])
+}
+
+/// Line under Skip credit pages.
+pub fn settings_skip_credits_note() -> String {
+    text("settings-skip-credits-note", &[])
 }
 
 /// Line under Counts as read when it is When you mark it.

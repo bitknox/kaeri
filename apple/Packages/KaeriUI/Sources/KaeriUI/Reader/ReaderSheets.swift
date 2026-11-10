@@ -489,7 +489,7 @@ enum ReaderDevice {
 struct ReaderChaptersSheet: View {
     @Bindable var model: ReaderModel
     let theme: ReaderTheme
-    @State private var tab = 0
+    @State private var tab = ReaderModel.chapterListShot ? 1 : 0
     /// The loading line waits 600 ms, as every state does.
     @State private var loadingShown = false
 
@@ -656,7 +656,12 @@ struct ReaderChaptersSheet: View {
         return false
     }
 
+    /// The row's state, then its parts and the group it comes from: "Reading · page 30 of 46 · 2 parts".
     private func state(_ row: ChapterRow) -> String {
+        ([stateWords(row)] + ReadWords.rowOrigin(row)).filter { !$0.isEmpty }.joined(separator: " · ") // i18n-skip
+    }
+
+    private func stateWords(_ row: ChapterRow) -> String {
         // The open chapter's row says the page on screen: the list was made when the reader opened.
         if row.id == model.view?.chapter.id, !rowRead(row), let view = model.view, view.medium != .novel,
            !model.leaves.isEmpty {

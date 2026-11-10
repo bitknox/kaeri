@@ -67,6 +67,24 @@ enum ReaderDefaultWords {
         store.reading.setReaderDefault(.novel, .mode, .choice(name: value.rawValue))
     }
 
+    /// Skip credit pages, on unless turned off. Nil until the manga defaults are here.
+    @MainActor
+    static func skipsCredits(_ store: AppStore) -> Bool? {
+        guard let view = store.reading.readerDefaults[.manga] else { return nil }
+        guard case .toggle(let on)? = view.rows.first(where: { $0.key == .skipCreditPages })?.value else { return true }
+        return on
+    }
+
+    @MainActor
+    static func setSkipsCredits(_ on: Bool, _ store: AppStore) {
+        store.reading.setReaderDefault(.manga, .skipCreditPages, .toggle(on: on))
+    }
+
+    @MainActor
+    static func skipsCreditsBinding(_ store: AppStore) -> Binding<Bool> {
+        Binding(get: { skipsCredits(store) ?? true }, set: { setSkipsCredits($0, store) })
+    }
+
     private static func choice(_ view: ReaderSettingsView, _ key: ReaderSettingKey) -> String? {
         guard case .choice(let name)? = view.rows.first(where: { $0.key == key })?.value else { return nil }
         return name
@@ -126,6 +144,14 @@ struct ReadingPane: View {
             }
             SettingsRow(title: SettingKey.countsAsRead.title, note: CountsAsReadNote.text(store)) {
                 SettingMenu(key: .countsAsRead)
+            }
+            // Pages a group repeats are skipped unless this is off; silk when on, as the board has it.
+            SettingsRow(title: L.settingsSkipCredits, note: L.settingsSkipCreditsNote) {
+                Toggle(L.settingsSkipCredits, isOn: ReaderDefaultWords.skipsCreditsBinding(store))
+                    .toggleStyle(.switch)
+                    .tint(.silk)
+                    .labelsHidden()
+                    .disabled(ReaderDefaultWords.skipsCredits(store) == nil)
             }
         }
         SettingsGroup(title: L.settingsFollowGroup, footnote: L.settingsFollowFooter(device: Device.name)) {
@@ -261,6 +287,12 @@ struct PhoneReadingPage: View {
                 .listRowBackground(Palette.raised)
                 PhoneSettingPicker(key: .countsAsRead, note: CountsAsReadNote.text(store))
                     .listRowBackground(Palette.raised)
+                Toggle(isOn: ReaderDefaultWords.skipsCreditsBinding(store)) {
+                    PhoneRowTitle(title: L.settingsSkipCredits, note: L.settingsSkipCreditsNote, status: nil)
+                }
+                .tint(.silk)
+                .disabled(ReaderDefaultWords.skipsCredits(store) == nil)
+                .listRowBackground(Palette.raised)
             } header: {
                 PhoneSectionHeader(L.settingsReaderDefaults)
             } footer: {
