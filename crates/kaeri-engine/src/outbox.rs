@@ -58,6 +58,9 @@ pub enum ReaderWake {
     Prepared(u64),
     /// A source listed the work's chapters for an open waiting on them.
     Listed,
+    /// Every page of a source's chapter landed, and they lay out otherwise than the layout of
+    /// this generation guessed before they had.
+    Relay(u64),
 }
 
 /// One item of the engine side's inbox, in the order it was sent.

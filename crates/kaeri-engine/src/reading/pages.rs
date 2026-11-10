@@ -38,6 +38,7 @@ use kaeri_pages::{
 use crate::{
     host::PageDecoder,
     outbox::{Internal, Outbox, ReaderWake},
+    reading::feed::{Feed, FeedPage},
 };
 
 /// How long a book may take to open before the chapter fails.
@@ -100,6 +101,9 @@ pub struct OpenJob {
     pub shared: Shared,
     /// A way to answer, held while the worker has pages to make.
     pub out: Outbox,
+    /// A source's chapter whose pages land in `path` as they are fetched: the chapter is laid
+    /// out from the feed, and a page not landed yet is made once it lands.
+    pub feed: Option<Arc<Feed>>,
 }
 
 #[derive(Debug)]
@@ -123,6 +127,13 @@ enum Job {
     },
     /// Make the first page of the next chapter, for the end page to show.
     Peek(Box<PeekJob>),
+    /// A page of a feed landed, or failed.
+    Landed {
+        session: u64,
+        chapter: ChapterId,
+        page: u32,
+        out: Outbox,
+    },
 }
 
 /// The next chapter's first page, made while the reader nears the end of this one.
@@ -171,6 +182,11 @@ impl Pages {
 
     pub fn peek(&self, job: PeekJob) {
         let _ = self.jobs.send(Job::Peek(Box::new(job)));
+    }
+
+    /// A page of `chapter`'s feed landed, or failed.
+    pub fn landed(&self, session: u64, chapter: ChapterId, page: u32, out: &Outbox) {
+        let _ = self.jobs.send(Job::Landed { session, chapter, page, out: out.clone() });
     }
 }
 
@@ -301,6 +317,22 @@ struct Chapter {
     /// never hears of a page before the leaf it belongs to.
     held: Option<Vec<ReaderEvent>>,
     decoder: HostDecoder,
+    /// The pages landing from a source, and how they were laid out before they had.
+    feed: Option<Fed>,
+}
+
+/// A chapter laid out from a feed before all its pages landed.
+struct Fed {
+    feed: Arc<Feed>,
+    /// Leaves wanted whose pages had not landed yet: made once they do.
+    waiting: HashSet<u32>,
+    /// What the layout took, to lay the pages out again once their shapes are all known.
+    kinds: Vec<layout::PageKind>,
+    options: Option<LayoutOptions>,
+    /// Some pages' shapes were guessed from the first: the layout is checked once all land.
+    guessed: bool,
+    /// An e-ink strip, shown image by image until every image is there to cut.
+    eink_strip: bool,
 }
 
 struct Worker {
@@ -387,8 +419,11 @@ impl Worker {
                 }
             }
             Job::Again { session, page, out } => {
-                self.out = Some(out);
                 if let Some(c) = self.open.as_mut().filter(|c| c.session == session) {
+                    // A page from a source that failed is fetched again, and made once it lands.
+                    if let Some(fed) = &c.feed {
+                        fed.feed.retry(page as usize, &out);
+                    }
                     c.sent.retain(|(p, _)| *p != page);
                     if let Some(leaf) =
                         c.leaves.iter().position(|l| l.iter().any(|p| p.page == page))
@@ -399,6 +434,16 @@ impl Worker {
                         c.queue.push_front(page);
                         c.asked.insert(page);
                     }
+                }
+                self.out = Some(out);
+            }
+            Job::Landed { session, chapter, page, out } => {
+                self.out = Some(out);
+                if let Some(c) =
+                    self.open.as_mut().filter(|c| c.session == session && c.chapter == chapter)
+                    && c.landed(page)
+                {
+                    self.relay(session);
                 }
             }
             Job::Close { session } => {
@@ -462,6 +507,15 @@ impl Worker {
         })
     }
 
+    /// Every page of the open chapter's feed landed, and they lay out otherwise than guessed.
+    fn relay(&self, session: u64) {
+        let Some(generation) = self.open.as_ref().map(|c| c.generation) else { return };
+        if let Some(out) = &self.out {
+            let _ =
+                out.internal(Internal::Reader { session, wake: ReaderWake::Relay(generation) });
+        }
+    }
+
     fn fail(&self, job: &OpenJob, failure: ReadingFailure) {
         if let Ok(mut laid) = job.shared.lock() {
             laid.generation = job.generation;
@@ -481,15 +535,31 @@ impl Worker {
         touch(&dir);
         evict(&self.cache, &dir);
         let path = job.path.display().to_string();
-        let book = match open_book(&job.path, &self.opening) {
-            Ok(book) => book,
-            Err(failure) => return self.fail(&job, failure),
+        // A feed's pages are the ones landed so far; a book is opened.
+        let book = match &job.feed {
+            Some(_) => None,
+            None => match open_book(&job.path, &self.opening) {
+                Ok(book) => Some(book),
+                Err(failure) => return self.fail(&job, failure),
+            },
         };
         let mut originals = Vec::new();
         let mut kinds = Vec::new();
         let mut info_rtl = None;
+        if let Some(feed) = &job.feed {
+            for (i, page) in feed.pages().iter().enumerate() {
+                kinds.push(layout::PageKind::Story);
+                originals.push(match page {
+                    FeedPage::Landed(file) => {
+                        std::fs::read(file).ok().and_then(|b| keep_original(&dir, i, &b))
+                    }
+                    FeedPage::Coming | FeedPage::Failed(_) => None,
+                });
+            }
+        }
         match book {
-            Book::Comic(mut comic) => {
+            None => {}
+            Some(Book::Comic(mut comic)) => {
                 if let Some(info) = comic.info() {
                     use kaeri_books::comicinfo::MangaFlag;
                     info_rtl = match info.manga {
@@ -529,7 +599,7 @@ impl Worker {
                 }
             }
             #[allow(unreachable_patterns)]
-            Book::Pdf(pdf) => {
+            Some(Book::Pdf(pdf)) => {
                 let room = (job.plan.target.width * 2, job.plan.target.height * 2);
                 let pages = match pdf_pages(pdf, &dir, room, &self.opening) {
                     Ok(pages) => pages,
@@ -543,7 +613,7 @@ impl Worker {
                     originals.push(bytes.and_then(|b| keep_original(&dir, i, &b)));
                 }
             }
-            Book::Epub(mut epub) => {
+            Some(Book::Epub(mut epub)) => {
                 // A manga made into an EPUB: every spine item one picture. Anything with text
                 // is a novel, which the session serves to the web view instead.
                 let Some(images) = epub.image_pages() else {
@@ -566,10 +636,27 @@ impl Worker {
                 }
             }
         }
+        // A feed's pages not landed yet are laid out in the shape of the first that has: the
+        // pages of one chapter mostly share one. Their parts have no ratio until they land.
+        let fed = job.feed.as_ref().is_some_and(|f| !f.complete());
+        let guess = originals
+            .iter()
+            .flatten()
+            .next()
+            .filter(|_| fed)
+            .map_or((1000, 1400), |o| (o.width, o.height));
         let shapes: Vec<(u32, u32)> = originals
             .iter()
-            .map(|o| o.as_ref().map_or((1000, 1400), |o| (o.width, o.height)))
+            .map(|o| o.as_ref().map_or(guess, |o| (o.width, o.height)))
             .collect();
+        let known: Vec<(u32, u32)> = if fed {
+            originals
+                .iter()
+                .map(|o| o.as_ref().map_or((0, 0), |o| (o.width, o.height)))
+                .collect()
+        } else {
+            shapes.clone()
+        };
         // The guesses, in the board's order after the series' choice: ComicInfo, then the shape
         // of the pages.
         let plan = &job.plan;
@@ -607,8 +694,10 @@ impl Worker {
             asked: HashSet::new(),
             held: Some(Vec::new()),
             decoder: self.decoder.clone(),
+            feed: None,
         };
-        let (leaves, cuts) = if mode == ReaderMode::Strip && eink {
+        let mut options_used = None;
+        let (leaves, cuts) = if mode == ReaderMode::Strip && eink && !fed {
             chapter.strip = cut_strip(&chapter, plan.target);
             let strip = chapter.strip.as_ref();
             let leaves: Vec<Leaf> = strip
@@ -633,7 +722,7 @@ impl Worker {
             let cuts = strip.map(strip_places).unwrap_or_default();
             (leaves, cuts)
         } else {
-            let pixels = shapes.clone();
+            let pixels = known;
             let shapes: Vec<PageShape> = shapes
                 .iter()
                 .zip(&kinds)
@@ -658,6 +747,7 @@ impl Worker {
                 first_is_cover: plan.two_pages,
             };
             let laid = layout::lay_out(&shapes, options);
+            options_used = Some(options);
             chapter.leaves = laid.iter().map(|l| l.parts.clone()).collect();
             (
                 laid.iter()
@@ -677,6 +767,14 @@ impl Worker {
                 .unwrap_or(0)
         };
         chapter.queue = [start_leaf, start_leaf + 1].into_iter().map(|l| l as u32).collect();
+        chapter.feed = job.feed.clone().map(|feed| Fed {
+            feed,
+            waiting: HashSet::new(),
+            kinds,
+            options: options_used,
+            guessed: fed,
+            eink_strip: fed && mode == ReaderMode::Strip && eink,
+        });
         if let Ok(mut laid) = job.shared.lock() {
             *laid = Laid {
                 generation: job.generation,
@@ -893,6 +991,35 @@ impl Chapter {
             if !self.sent.insert((part.page, half)) {
                 continue;
             }
+            // A page from a source not landed yet is made once it does; one that failed says so.
+            if let Some(fed) = self.feed.as_mut()
+                && self.originals.get(part.page as usize).is_some_and(Option::is_none)
+            {
+                match fed.feed.page(part.page as usize) {
+                    Some(FeedPage::Coming) => {
+                        self.sent.remove(&(part.page, half));
+                        fed.waiting.insert(leaf);
+                        continue;
+                    }
+                    // Said once: a retry asks for it again.
+                    Some(FeedPage::Failed(failure)) => {
+                        events.push(ReaderEvent::PageFailed {
+                            session: self.session,
+                            chapter: self.chapter.clone(),
+                            page: part.page,
+                            failure,
+                        });
+                        continue;
+                    }
+                    Some(FeedPage::Landed(file)) => {
+                        let at = part.page as usize;
+                        self.originals[at] = std::fs::read(file)
+                            .ok()
+                            .and_then(|b| keep_original(&self.dir, at, &b));
+                    }
+                    None => {}
+                }
+            }
             let (w, h) = {
                 let (w, h) = (
                     (target.width as f32 * part.place.width) as u32,
@@ -921,6 +1048,52 @@ impl Chapter {
             events.push(event);
         }
         events
+    }
+
+    /// A page of the feed landed or failed: the leaves waiting on it are made. `true` when it
+    /// was the last to land and the pages lay out otherwise than guessed before they had.
+    fn landed(&mut self, page: u32) -> bool {
+        let Some(fed) = self.feed.as_mut() else { return false };
+        let leaves = &self.leaves;
+        let ready: Vec<u32> = fed
+            .waiting
+            .iter()
+            .copied()
+            .filter(|l| {
+                leaves.get(*l as usize).is_some_and(|ps| ps.iter().any(|p| p.page == page))
+            })
+            .collect();
+        for leaf in ready {
+            fed.waiting.remove(&leaf);
+            self.queue.push_front(leaf);
+            self.asked.insert(leaf);
+        }
+        if !fed.guessed || !fed.feed.complete() {
+            return false;
+        }
+        fed.guessed = false;
+        for (at, page) in fed.feed.pages().into_iter().enumerate() {
+            if let FeedPage::Landed(file) = page
+                && self.originals.get(at).is_some_and(Option::is_none)
+            {
+                self.originals[at] =
+                    std::fs::read(file).ok().and_then(|b| keep_original(&self.dir, at, &b));
+            }
+        }
+        if fed.eink_strip {
+            return true;
+        }
+        let Some(options) = fed.options else { return false };
+        let shapes: Vec<PageShape> = self
+            .originals
+            .iter()
+            .zip(&fed.kinds)
+            .map(|(o, &kind)| {
+                let (width, height) = o.as_ref().map_or((1000, 1400), |o| (o.width, o.height));
+                PageShape { width, height, kind }
+            })
+            .collect();
+        layout::lay_out(&shapes, options).iter().map(|l| &l.parts).ne(self.leaves.iter())
     }
 
     fn unreadable(&self) -> ReadingFailure {

@@ -46,6 +46,21 @@ impl Kept {
         ChapterId::new(self.id.clone()).key().and_then(|k| k.range())
     }
 
+    /// The chapter as the source listed it, read back from the list as kept.
+    pub fn source_chapter(&self) -> SourceChapter {
+        SourceChapter {
+            id: self.source_ref.clone(),
+            number_raw: self.label.clone(),
+            number: self.range(),
+            volume: self.volume.clone(),
+            title: self.title.clone(),
+            version_label: self.version_label.clone(),
+            language: self.language.clone(),
+            published: self.published,
+            page_count: self.pages,
+        }
+    }
+
     /// Its title, unless the title only names the chapter again (see [`own_title`]).
     pub fn own_title(&self) -> Option<&str> {
         own_title(self.title.as_deref(), &self.label, self.number.as_deref())

@@ -35,6 +35,7 @@ use super::{BACK_MS, Cx, RESUMED_MS, Session, notice, place};
 use crate::{
     outbox::{Internal, Outbox, ReaderWake},
     reading::{
+        feed::page_extension,
         novel::{self as served, EinkImages, NovelBook, Opened, Opening, ServedBook},
         pages::{Pages, PeekJob},
         shelf::ShelfChapter,
@@ -48,6 +49,8 @@ pub(super) type Slot = Arc<Mutex<Option<(u64, Prepared)>>>;
 pub(super) enum Prepared {
     /// Pictures: read through the page worker from this file.
     Pages(PathBuf),
+    /// A source's pictures, landing a page at a time in the feed's folder.
+    Feed(Arc<crate::reading::feed::Feed>),
     Novel(Box<NovelBook>),
     Failed(ReadingFailure),
 }
@@ -128,48 +131,6 @@ pub(super) fn prepares(chapter: &ShelfChapter) -> bool {
 /// layout. It goes when the session closes.
 pub(super) fn streamed_dir(cache: &Path, session: u64) -> PathBuf {
     cache_dir(cache).join(format!("{session}-pages"))
-}
-
-/// Fetch every page of a source's chapter of pictures into `dir`, named in reading order with
-/// the type their bytes are, so the page worker opens the folder as a book.
-async fn fetch_pages(
-    sources: &crate::read_sources::BookSources,
-    opened: &mut crate::read_sources::Opened,
-    dir: &Path,
-    now: i64,
-) -> Prepared {
-    let ChapterContent::Images(pages) = &opened.content else {
-        return Prepared::Failed(ReadingFailure::NotFound);
-    };
-    let total = pages.len();
-    if total == 0 {
-        return Prepared::Failed(ReadingFailure::NotFound);
-    }
-    let io = |e: std::io::Error| ReadingFailure::Other { reason: e.to_string() };
-    if let Err(e) = tokio::fs::create_dir_all(dir).await {
-        return Prepared::Failed(io(e));
-    }
-    for index in 0..total {
-        let bytes = match sources.page(opened, index, now).await {
-            Ok(bytes) => bytes,
-            Err(failure) => return Prepared::Failed(failure),
-        };
-        let Some(ext) = page_extension(&bytes) else {
-            return Prepared::Failed(ReadingFailure::Unsupported { extension: "page".into() });
-        };
-        if let Err(e) =
-            tokio::fs::write(dir.join(format!("{:05}.{ext}", index + 1)), &bytes).await
-        {
-            return Prepared::Failed(io(e));
-        }
-    }
-    Prepared::Pages(dir.to_owned())
-}
-
-/// The extension a page's bytes are of, by their first bytes, for the page worker.
-fn page_extension(bytes: &[u8]) -> Option<&'static str> {
-    let ext = kaeri_books::mime::sniff_image(bytes)?.strip_prefix("image/")?;
-    Some(if ext == "jpeg" { "jpg" } else { ext })
 }
 
 /// Make the end page's preview of the next chapter, one from a source, as a shelf chapter's is
@@ -287,8 +248,9 @@ pub(super) fn source_chapters(groups: Vec<VolumeGroup>) -> Vec<ShelfChapter> {
         .flat_map(|g| g.chapters)
         .map(|row| ShelfChapter {
             id: row.id,
-            label: row.title.clone().filter(|t| !t.is_empty()).unwrap_or(row.label),
-            title: None,
+            // Named as the series page names it: the number, with the title beside it.
+            label: row.label,
+            title: row.title,
             volume: row.volume,
             path: PathBuf::new(),
             format: SOURCE.into(),
@@ -299,14 +261,59 @@ pub(super) fn source_chapters(groups: Vec<VolumeGroup>) -> Vec<ShelfChapter> {
         .collect()
 }
 
+/// One list of a work's chapters: the source's, in its order, with each chapter on the shelf
+/// (a download, or a file in a folder) read from its file. A file the source does not list
+/// goes in among the others by its number, or at the end without one.
+pub(super) fn with_shelf(
+    listed: Vec<ShelfChapter>,
+    shelf: Vec<ShelfChapter>,
+) -> Vec<ShelfChapter> {
+    let index: std::collections::HashMap<ChapterId, usize> =
+        shelf.iter().enumerate().map(|(i, c)| (c.id.clone(), i)).collect();
+    let mut shelf: Vec<Option<ShelfChapter>> = shelf.into_iter().map(Some).collect();
+    let mut out: Vec<ShelfChapter> = listed
+        .into_iter()
+        .map(|chapter| {
+            let file = index.get(&chapter.id).and_then(|&i| shelf[i].take());
+            file.unwrap_or(chapter)
+        })
+        .collect();
+    let range = |c: &ShelfChapter| c.id.key().and_then(|k| k.range());
+    for file in shelf.into_iter().flatten() {
+        let at = range(&file).map_or(out.len(), |mine| {
+            out.iter().position(|c| range(c).is_some_and(|r| r > mine)).unwrap_or(out.len())
+        });
+        out.insert(at, file);
+    }
+    out
+}
+
+/// Whether a work is read from a source other than the folders: its chapters are the source's
+/// list, the ones on the shelf read from their files.
+pub(super) fn sourced(cx: &Cx<'_>, work: &WorkId) -> bool {
+    cx.services
+        .book_sources
+        .edition_of(work, None)
+        .is_some_and(|(source, _)| source != crate::read_sources::FOLDERS)
+}
+
+/// The source's list as kept, with what is on the shelf, when there is one to read: kept at any
+/// age when the shelf has chapters, which open without asking the source, and within
+/// [`LIST_FRESH`](crate::read_sources::LIST_FRESH) when it has none.
+pub(super) fn kept_list(
+    cx: &Cx<'_>,
+    work: &WorkId,
+    shelf: &[ShelfChapter],
+) -> Option<Vec<ShelfChapter>> {
+    let max_age = if shelf.is_empty() { crate::read_sources::LIST_FRESH } else { i64::MAX };
+    let groups = cx.services.book_sources.kept_chapters(work, cx.now(), max_age)?;
+    Some(with_shelf(source_chapters(groups), shelf.to_vec()))
+}
+
 /// A work with nothing on the shelf, listed from its source off the actor.
 pub(super) type Listed = Arc<Mutex<Option<Result<Vec<ShelfChapter>, ReadingFailure>>>>;
 
-pub(super) fn list(cx: &Cx<'_>, session: u64, work: &WorkId) -> Option<Listed> {
-    let refs = cx.services.store.book_refs_for_work(work.as_str()).unwrap_or_default();
-    if refs.is_empty() {
-        return None;
-    }
+pub(super) fn list(cx: &Cx<'_>, session: u64, work: &WorkId) -> Listed {
     let slot = Listed::default();
     let out = slot.clone();
     let sources = cx.services.book_sources.clone();
@@ -314,7 +321,7 @@ pub(super) fn list(cx: &Cx<'_>, session: u64, work: &WorkId) -> Option<Listed> {
     let now = cx.now();
     let done = wake(cx.tx, session, ReaderWake::Listed);
     tokio::spawn(async move {
-        let listed = sources.chapters(&work, None, now).await.map(|(_, g)| source_chapters(g));
+        let listed = sources.reading_chapters(&work, now).await.map(source_chapters);
         // The listing asked the source how the series reads, if it had not said lately.
         if let Some(lookup) = sources.hint_lookup(&work) {
             crate::read_sources::settle_hint(lookup).await;
@@ -324,7 +331,7 @@ pub(super) fn list(cx: &Cx<'_>, session: u64, work: &WorkId) -> Option<Listed> {
         }
         done();
     });
-    Some(slot)
+    slot
 }
 
 /// A work on the shelf whose source is being asked how it reads, with no answer kept: its open
@@ -374,7 +381,7 @@ impl Session {
     }
 
     /// Opens the chapter off the actor: an EPUB on a thread, a source's chapter on the runtime.
-    pub(super) fn prepare(&mut self, cx: &Cx<'_>, chapter: &ShelfChapter) {
+    pub(super) fn prepare(&mut self, cx: &Cx<'_>, pages: &Pages, chapter: &ShelfChapter) {
         let generation = self.generation;
         let slot = self.prepared.clone();
         let opening = self.opening(cx);
@@ -400,12 +407,35 @@ impl Session {
         let now = cx.now();
         let streamed =
             streamed_dir(&cx.services.paths.cache_dir, self.id).join(generation.to_string());
+        let (first, strip, kept_of) =
+            (self.start.page.unwrap_or(0), self.start.strip, self.kept_of);
+        let (session, worker, out) = (self.id, pages.clone(), cx.tx.clone());
         tokio::spawn(async move {
             let prepared = match sources.open(&work, &id, None, now).await {
                 Err(failure) => Prepared::Failed(failure),
-                // A source's pictures are fetched into a folder the page worker reads as a book.
-                Ok(mut opened) if matches!(opened.content, ChapterContent::Images(_)) => {
-                    fetch_pages(&sources, &mut opened, &streamed, now).await
+                // A source's pictures land a page at a time in a folder the page worker reads
+                // as a book, laid out once the page it opens at is there.
+                Ok(opened) if matches!(opened.content, ChapterContent::Images(_)) => {
+                    // A place kept in another split of the chapter: its page comes first.
+                    let total = match &opened.content {
+                        ChapterContent::Images(list) => list.len() as u32,
+                        _ => 0,
+                    };
+                    let first = kept_of
+                        .and_then(|of| super::rescaled(first, strip, of, total))
+                        .map_or(first, |(page, _)| page)
+                        as usize;
+                    let chapter = id.clone();
+                    let landed = move |page, out: &Outbox| {
+                        worker.landed(session, chapter.clone(), page, out);
+                    };
+                    let fed = crate::reading::feed::start(
+                        sources, opened, id, streamed, first, now, out, landed,
+                    );
+                    match fed.await {
+                        Ok(feed) => Prepared::Feed(feed),
+                        Err(failure) => Prepared::Failed(failure),
+                    }
                 }
                 Ok(opened) => match opened.content {
                     ChapterContent::Text(xhtml) => {
@@ -450,6 +480,15 @@ impl Session {
                 let chapter = &mut self.chapters[self.at];
                 chapter.path = path;
                 chapter.format = "pages".into();
+                let page = self.start.page.unwrap_or(0);
+                self.lay_out(cx, pages, page);
+            }
+            Prepared::Feed(feed) => {
+                let chapter = &mut self.chapters[self.at];
+                chapter.path = feed.dir.clone();
+                chapter.format = "pages".into();
+                self.rescale_kept(feed.pages().len() as u32);
+                self.feed = Some(feed);
                 let page = self.start.page.unwrap_or(0);
                 self.lay_out(cx, pages, page);
             }
