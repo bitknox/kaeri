@@ -767,6 +767,15 @@ enum ReadFilterWords {
         chips(query, filters: filters).map(\.label).joined(separator: ", ") // i18n-skip
     }
 
+    /// The words if there are any, and otherwise the filters set or the order, in one line as the
+    /// shows' search says it under the Mac title: "Fantasy · Japan · Manga".
+    static func headline(_ query: ReadSearchQuery, filters: ReadFilters) -> String {
+        let words = query.text.trimmingCharacters(in: .whitespaces)
+        guard words.isEmpty else { return words }
+        let set = chips(query, filters: filters).map(\.label)
+        return set.isEmpty ? query.sort.map(sort) ?? "" : set.joined(separator: " \u{b7} ") // i18n-skip
+    }
+
     /// Each filter set, keyed by what it filters, worded as its removable chip says it.
     static func chips(_ query: ReadSearchQuery, filters: ReadFilters) -> [FilterChipItem] {
         var chips = [FilterChipItem]()

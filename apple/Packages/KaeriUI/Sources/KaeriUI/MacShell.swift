@@ -176,8 +176,10 @@ struct MacShell: View {
             return store.seasonName ?? ""
         case .search:
             // The search as a job past 600 ms, then what is asked (Running jobs, native-ux.md).
-            // Reading's search says what it holds in its own caption line.
-            if ReadSearchScope.active(store: store, navigator: navigator) { return "" }
+            if ReadSearchScope.active(store: store, navigator: navigator) {
+                let search = store.reading.search
+                return search.query.atStart ? "" : ReadFilterWords.headline(search.query, filters: store.reading.filters)
+            }
             return store.search.searchingLine ?? (store.search.atStart ? "" : store.search.query.headline())
         case .downloads:
             return downloadsSubtitle(store)
