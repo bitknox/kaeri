@@ -1167,6 +1167,195 @@ impl Reader {
 
 #[cfg(feature = "fixtures")]
 impl Reader {
+    /// A keep answered as the engine answers it, which the fixture engine can't: it has no
+    /// credit pages. The chapter is laid out again with the kept page in its place and every
+    /// page after it one on, then the kept page and the next land from a new cache folder, so
+    /// the kept page's picture swaps for the engine's. A page asked for later comes from the
+    /// fixture engine one page back and is moved one on.
+    pub fn shot_engine_keeps(self: &Rc<Self>) {
+        use std::{
+            cell::{Cell, RefCell},
+            collections::HashSet,
+        };
+
+        use kaeri_model::{
+            command::Command,
+            event::Event,
+            reader::{PageFile, ReaderEvent},
+        };
+
+        use crate::hub::{Dress, ReaderAnswer};
+
+        let Some(hub) = self.hub() else { return };
+        // The session and the kept page's number, once the chapter is laid out again.
+        let relaid: Rc<Cell<Option<(u64, u32)>>> = Rc::default();
+        let kept_file: Rc<RefCell<Option<PageFile>>> = Rc::default();
+        // Pages asked of the fixture engine one back, which go to it as they are.
+        let passing: Rc<RefCell<HashSet<u32>>> = Rc::default();
+        let dress: Dress = Rc::new({
+            let relaid = Rc::clone(&relaid);
+            move |event| {
+                let Some((at, kept)) = relaid.get() else { return };
+                if let Event::Reader(
+                    ReaderEvent::PageReady { session, page, .. }
+                    | ReaderEvent::PageFailed { session, page, .. },
+                ) = event
+                    && *session == at
+                    && *page >= kept
+                {
+                    *page += 1;
+                }
+            }
+        });
+        hub.dress.replace(Some(dress));
+        let me = Rc::downgrade(self);
+        let to_hub = Rc::downgrade(&hub);
+        let answer: ReaderAnswer = Rc::new(move |command| {
+            let Some(this) = me.upgrade() else { return false };
+            match command {
+                ReaderCommand::NotACreditPage { session, fingerprint } => {
+                    if let Some((kept, file)) = this.shot_relay(*session, *fingerprint) {
+                        relaid.set(Some((*session, kept)));
+                        kept_file.replace(Some(file));
+                    }
+                    true
+                }
+                ReaderCommand::NeedPage { session, chapter, page } => {
+                    let Some((at, kept)) = relaid.get() else { return false };
+                    if *session != at || *page < kept || passing.borrow_mut().remove(page) {
+                        return false;
+                    }
+                    if *page == kept {
+                        let file = kept_file.borrow().clone();
+                        if let Some(file) = file {
+                            let (session, chapter, page) = (*session, chapter.clone(), *page);
+                            glib::idle_add_local_once(move || {
+                                this.take(&ReaderEvent::PageReady {
+                                    session,
+                                    chapter,
+                                    page,
+                                    half: None,
+                                    file,
+                                });
+                            });
+                        }
+                        return true;
+                    }
+                    passing.borrow_mut().insert(page - 1);
+                    let back = ReaderCommand::NeedPage {
+                        session: *session,
+                        chapter: chapter.clone(),
+                        page: page - 1,
+                    };
+                    let to_hub = to_hub.clone();
+                    glib::idle_add_local_once(move || {
+                        if let Some(hub) = to_hub.upgrade() {
+                            hub.send(Command::Reader(back));
+                        }
+                    });
+                    true
+                }
+                _ => false,
+            }
+        });
+        hub.reader_answer.replace(Some(answer));
+    }
+
+    /// The chapter laid out again around the kept page, as `NotACreditPage` does: the leaves
+    /// with no files, the pages still skipped, then the kept page and the next landing. Gives
+    /// the kept page's number and the file it lands from.
+    fn shot_relay(
+        self: &Rc<Self>,
+        session: u64,
+        fingerprint: u64,
+    ) -> Option<(u32, kaeri_model::reader::PageFile)> {
+        use kaeri_model::reader::{Leaf, LeafPart, PageFile, ReaderEvent};
+
+        let (chapter, leaves, files, credit, rest, kept) = {
+            let state = self.state.borrow();
+            let credit = state.credits.iter().find(|c| c.fingerprint == fingerprint)?.clone();
+            let rest: Vec<CreditPage> = state
+                .credits
+                .iter()
+                .filter(|c| c.fingerprint != fingerprint)
+                .cloned()
+                .collect();
+            let story = state.leaves.iter().flat_map(|l| &l.parts).map(|p| p.page + 1).max();
+            let kept = if credit.at_end {
+                story.unwrap_or(0)
+            } else {
+                kept_number(&state.credits, fingerprint)?
+            };
+            let chapter = state.chapter.as_ref()?.id.clone();
+            (chapter, state.leaves.clone(), state.files.clone(), credit, rest, kept)
+        };
+        let model = leaves.iter().flat_map(|l| &l.parts).next()?.clone();
+        let kept_leaf = Leaf {
+            index: 0,
+            parts: vec![LeafPart { page: kept, file: None, ..model }],
+            end_page: false,
+        };
+        let mut relaid = Vec::new();
+        let mut placed = false;
+        for mut leaf in leaves {
+            let first = leaf.parts.first().map(|p| p.page);
+            if !placed && (leaf.end_page || first.is_some_and(|p| p >= kept)) {
+                relaid.push(kept_leaf.clone());
+                placed = true;
+            }
+            for part in &mut leaf.parts {
+                part.page += u32::from(part.page >= kept);
+                part.file = None;
+            }
+            relaid.push(leaf);
+        }
+        if !placed {
+            relaid.push(kept_leaf);
+        }
+        for (i, leaf) in relaid.iter_mut().enumerate() {
+            leaf.index = i as u32;
+        }
+        // Each page from a new cache folder, as the engine's new layout lands them.
+        let land = |page: u32, file: &PageFile| -> Option<PageFile> {
+            let from = std::path::Path::new(&file.path);
+            let ext = from.extension().and_then(|e| e.to_str()).unwrap_or("png"); // i18n-skip
+            let to = std::env::temp_dir().join(format!("kaeri-shot-relaid-{page}.{ext}"));
+            std::fs::copy(from, &to).ok()?;
+            Some(PageFile { path: to.to_string_lossy().into_owned(), ..file.clone() })
+        };
+        let kept_file = land(kept, &credit.file)?;
+        let next_file = files.get(&kept).and_then(|f| land(kept + 1, f));
+        let me = Rc::downgrade(self);
+        let landing = kept_file.clone();
+        glib::timeout_add_local_once(Duration::from_millis(250), move || {
+            let Some(this) = me.upgrade() else { return };
+            this.take(&ReaderEvent::Leaves {
+                session,
+                chapter: chapter.clone(),
+                leaves: relaid,
+            });
+            if !rest.is_empty() {
+                this.credit_pages(rest);
+            }
+            let me = Rc::downgrade(&this);
+            glib::timeout_add_local_once(Duration::from_millis(300), move || {
+                let Some(this) = me.upgrade() else { return };
+                for (page, file) in [(kept, Some(landing)), (kept + 1, next_file)] {
+                    if let Some(file) = file {
+                        this.take(&ReaderEvent::PageReady {
+                            session,
+                            chapter: chapter.clone(),
+                            page,
+                            half: None,
+                            file,
+                        });
+                    }
+                }
+            });
+        });
+        Some((kept, kept_file))
+    }
+
     /// The open chapter as if the engine had skipped `start` credit pages at its start and
     /// `end` at its end, a made-up group's credits page drawn for each.
     pub fn shot_credits(self: &Rc<Self>, start: usize, end: usize) {

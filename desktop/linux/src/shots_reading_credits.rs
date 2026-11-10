@@ -256,10 +256,12 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             4.6
         }
         // For the motion clip: Not a credit page, Undo, then the keep again, held until its
-        // notice times out 8 s later and the keep goes to the engine.
+        // notice times out 8 s later and the keep goes to the engine, which lays the chapter
+        // out again with the kept page in its place.
         "read-credit-keep-motion" => {
             read(shell, MANGA, "13");
             later(shell, 2500, |reader| {
+                reader.shot_engine_keeps();
                 reader.shot_go_to_first();
                 reader.shot_credits(1, 0);
             });
@@ -285,6 +287,7 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         "read-credit-kept" => {
             read(shell, MANGA, "13");
             later(shell, 2500, |reader| {
+                reader.shot_engine_keeps();
                 reader.shot_go_to_first();
                 reader.shot_credits(1, 0);
             });
@@ -436,6 +439,7 @@ pub fn unstage(shell: &Rc<Shell>, shot: &str) {
     shell.reader.close();
     shell.ctx.hub.dress.replace(None);
     shell.ctx.hub.read_answer.replace(None);
+    shell.ctx.hub.reader_answer.replace(None);
     shell.go(Dest::Read);
 }
 
