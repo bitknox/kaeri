@@ -2195,6 +2195,9 @@ linux-send-save-failed = [Çöüļðñ'ţ šàṽé ţĥé ƒîļéš îñ ţĥ�
 # Tooltip and spoken name of the button on Updates that looks for new chapters now.
 linux-updates-check = [Çĥéçķ ƒöŕ ñéŵ çĥàþţéŕš~~~~~~~]
 
+# The line under the series' name in the reader's group while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
+linux-reader-line-place = [{ $chapter } · { $place }~~~]
+
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = [Þŕéṽîéŵ~~~]
 
@@ -9038,6 +9041,36 @@ reader-wait-seconds = [{ $line } · { $seconds } š~~~~]
 # Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
 reader-wait-long = [Ţĥîš îš ţàķîñĝ à ŵĥîļé.~~~~~~~]
 
+# Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.
+reader-credit-show = [Šĥöŵ~~]
+
+# Spoken hint of the line that says how many credit pages were skipped.
+reader-credit-show-hint = [Šĥöŵš ţĥé þàĝé~~~~~]
+
+# Notice over a credit page shown again, and the caption above it in a long strip.
+reader-credit-shown = [Šķîþþéð àš à çŕéðîţ þàĝé~~~~~~~~]
+
+# The notice's action on a shown credit page: show this page from now on.
+reader-credit-not = [Ñöţ à çŕéðîţ þàĝé~~~~~~]
+
+# Notice after Not a credit page, with Undo.
+reader-credit-kept = [Ţĥîš þàĝé ŵîļļ šĥöŵ ƒŕöɱ ñöŵ öñ~~~~~~~~~~]
+
+# In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".
+reader-credit-page = [çŕéðîţ þàĝé~~~~]
+
+# The same, when more than one credit page is shown: "credit page 1 of 2".
+reader-credit-page-of = [çŕéðîţ þàĝé { $n } öƒ { $total }~~~~~~~]
+
+# Spoken name of a credit page shown again.
+reader-credit-page-label = [Çŕéðîţ þàĝé~~~~]
+
+# The scrubber's preview on the first page of a chapter's later part.
+reader-part-preview = [Þàĝé { $page } · þàŕţ { $part }~~~~~~]
+
+# Spoken value of the scrubber on the first page of a chapter's later part.
+reader-part-starts = [Þàŕţ { $part } šţàŕţš àţ þàĝé { $page }~~~~~~~~~]
+
 # Button in the first run that opens the reading demo.
 onboarding-read-demo = [Ŕéàð ţĥé ðéɱö~~~~]
 
@@ -9324,6 +9357,37 @@ series-tracker-ask = [Ŵĥîçĥ šéŕîéš îš ţĥîš? Çĥööšé~~~~~~~
 
 # Value of the group row: the chosen group is used for this series.
 series-preferred-group = [Ýöüŕ þŕéƒéŕŕéð ĝŕöüþ ĥéŕé~~~~~~~~]
+
+# Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.
+series-group = [Ĝŕöüþ~~]
+
+# After the group's name on the Group row: it is in use because it has the most chapters.
+series-group-most = [ɱöšţ çĥàþţéŕš~~~~]
+
+# After the group's name on the Group row: the person picked it.
+series-group-picked = [ýöüŕ þîçķ~~~]
+
+# Spoken hint of the Group row's Change button.
+series-group-hint = [Þîçķš ţĥé ĝŕöüþ~~~~~]
+
+# Under the group picker's title: the source the groups are in.
+group-picker-in = [Îñ { $source }~~]
+
+# The group picker's first choice: the group with the most chapters, whichever that is.
+group-picker-most = [Ṁöšţ çĥàþţéŕš~~~~]
+
+# Under Most chapters: the group that means today.
+group-picker-most-now = [Ñöŵ { $group }~~~]
+
+# A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.
+group-picker-count =
+    { $total ->
+        [one] [{ $have } öƒ { $total } çĥàþţéŕ~~~~~~]
+       *[other] [{ $have } öƒ { $total } çĥàþţéŕš~~~~~~]
+    }
+
+# Under the group picker's choices.
+group-picker-fallback = [Çĥàþţéŕš à ĝŕöüþ ðöéšñ'ţ ĥàṽé çöɱé ƒŕöɱ àñöţĥéŕ ĝŕöüþ, àñð ţĥéîŕ ŕöŵš šàý ŵĥîçĥ.~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # A tracker's progress in chapters, with the total.
 series-tracker-chapters-of =
@@ -10313,6 +10377,12 @@ settings-counts-read-moving-on-note = [Ţüŕñîñĝ þàšţ ţĥé ļàšţ �
 
 # Value of Counts as read: only the person's own marks; the reader marks nothing.
 settings-counts-read-marked = [Ŵĥéñ ýöü ɱàŕķ îţ~~~~~]
+
+# Reader default for manga: pages a group repeats at the start or end of its chapters are left out.
+settings-skip-credits = [Šķîþ çŕéðîţ þàĝéš~~~~~~]
+
+# Line under Skip credit pages.
+settings-skip-credits-note = [Þàĝéš à ĝŕöüþ ŕéþéàţš àţ ţĥé šţàŕţ öŕ éñð öƒ îţš çĥàþţéŕš~~~~~~~~~~~~~~~~~~]
 
 # Line under Counts as read when it is When you mark it.
 settings-counts-read-marked-note = [Çöñţîñüé àñð ýöüŕ ţŕàçķéŕš ƒöļļöŵ ýöüŕ ɱàŕķš~~~~~~~~~~~~~~]

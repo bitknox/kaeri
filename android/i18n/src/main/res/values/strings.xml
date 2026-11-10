@@ -4818,6 +4818,26 @@
     <string name="reader_wait_seconds">%1$s · %2$,d s</string>
     <!-- Under the opening line once the wait has gone on for a long time, above Read from another source and Go back. -->
     <string name="reader_wait_long">This is taking a while.</string>
+    <!-- Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them. -->
+    <string name="reader_credit_show">Show</string>
+    <!-- Spoken hint of the line that says how many credit pages were skipped. -->
+    <string name="reader_credit_show_hint">Shows the page</string>
+    <!-- Notice over a credit page shown again, and the caption above it in a long strip. -->
+    <string name="reader_credit_shown">Skipped as a credit page</string>
+    <!-- The notice's action on a shown credit page: show this page from now on. -->
+    <string name="reader_credit_not">Not a credit page</string>
+    <!-- Notice after Not a credit page, with Undo. -->
+    <string name="reader_credit_kept">This page will show from now on</string>
+    <!-- In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page". -->
+    <string name="reader_credit_page">credit page</string>
+    <!-- The same, when more than one credit page is shown: "credit page 1 of 2". -->
+    <string name="reader_credit_page_of">credit page %1$d of %2$d</string>
+    <!-- Spoken name of a credit page shown again. -->
+    <string name="reader_credit_page_label">Credit page</string>
+    <!-- The scrubber's preview on the first page of a chapter's later part. -->
+    <string name="reader_part_preview">Page %1$d · part %2$d</string>
+    <!-- Spoken value of the scrubber on the first page of a chapter's later part. -->
+    <string name="reader_part_starts">Part %1$d starts at page %2$d</string>
     <!-- Button in the first run that opens the reading demo. -->
     <string name="onboarding_read_demo">Read the demo</string>
     <!-- Under the first run's demo heading when the device is for reading. -->
@@ -5012,6 +5032,27 @@
     <string name="series_tracker_ask">Which series is this? Choose</string>
     <!-- Value of the group row: the chosen group is used for this series. -->
     <string name="series_preferred_group">Your preferred group here</string>
+    <!-- Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name. -->
+    <string name="series_group">Group</string>
+    <!-- After the group's name on the Group row: it is in use because it has the most chapters. -->
+    <string name="series_group_most">most chapters</string>
+    <!-- After the group's name on the Group row: the person picked it. -->
+    <string name="series_group_picked">your pick</string>
+    <!-- Spoken hint of the Group row's Change button. -->
+    <string name="series_group_hint">Picks the group</string>
+    <!-- Under the group picker's title: the source the groups are in. -->
+    <string name="group_picker_in">In %1$s</string>
+    <!-- The group picker's first choice: the group with the most chapters, whichever that is. -->
+    <string name="group_picker_most">Most chapters</string>
+    <!-- Under Most chapters: the group that means today. -->
+    <string name="group_picker_most_now">Now %1$s</string>
+    <!-- A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot. -->
+    <plurals name="group_picker_count">
+        <item quantity="one">%1$,d of %2$,d chapter</item>
+        <item quantity="other">%1$,d of %2$,d chapters</item>
+    </plurals>
+    <!-- Under the group picker's choices. -->
+    <string name="group_picker_fallback">Chapters a group doesn\'t have come from another group, and their rows say which.</string>
     <!-- A tracker's progress in chapters, with the total. -->
     <plurals name="series_tracker_chapters_of">
         <item quantity="one">%1$,d of %2$,d chapter</item>
@@ -5677,6 +5718,10 @@
     <string name="settings_counts_read_moving_on_note">Turning past the last page, or opening the next chapter</string>
     <!-- Value of Counts as read: only the person's own marks; the reader marks nothing. -->
     <string name="settings_counts_read_marked">When you mark it</string>
+    <!-- Reader default for manga: pages a group repeats at the start or end of its chapters are left out. -->
+    <string name="settings_skip_credits">Skip credit pages</string>
+    <!-- Line under Skip credit pages. -->
+    <string name="settings_skip_credits_note">Pages a group repeats at the start or end of its chapters</string>
     <!-- Line under Counts as read when it is When you mark it. -->
     <string name="settings_counts_read_marked_note">Continue and your trackers follow your marks</string>
     <!-- Group: series settings that follow you to your other devices. -->

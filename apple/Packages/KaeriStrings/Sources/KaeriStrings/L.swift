@@ -8476,6 +8476,42 @@ public enum L {
     /// Under the opening line once the wait has gone on for a long time, above Read from another source and Go back.
     public static var readerWaitLong: String { string("reader-wait-long", fallback: "This is taking a while.") }
 
+    /// Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them.
+    public static var readerCreditShow: String { string("reader-credit-show", fallback: "Show") }
+
+    /// Spoken hint of the line that says how many credit pages were skipped.
+    public static var readerCreditShowHint: String { string("reader-credit-show-hint", fallback: "Shows the page") }
+
+    /// Notice over a credit page shown again, and the caption above it in a long strip.
+    public static var readerCreditShown: String { string("reader-credit-shown", fallback: "Skipped as a credit page") }
+
+    /// The notice's action on a shown credit page: show this page from now on.
+    public static var readerCreditNot: String { string("reader-credit-not", fallback: "Not a credit page") }
+
+    /// Notice after Not a credit page, with Undo.
+    public static var readerCreditKept: String { string("reader-credit-kept", fallback: "This page will show from now on") }
+
+    /// In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page".
+    public static var readerCreditPage: String { string("reader-credit-page", fallback: "credit page") }
+
+    /// The same, when more than one credit page is shown: "credit page 1 of 2".
+    public static func readerCreditPageOf(n: Int, total: Int) -> String {
+        Self.format("reader-credit-page-of", fallback: "credit page %1$@ of %2$@", String(n), String(total))
+    }
+
+    /// Spoken name of a credit page shown again.
+    public static var readerCreditPageLabel: String { string("reader-credit-page-label", fallback: "Credit page") }
+
+    /// The scrubber's preview on the first page of a chapter's later part.
+    public static func readerPartPreview(page: Int, part: Int) -> String {
+        Self.format("reader-part-preview", fallback: "Page %1$@ · part %2$@", String(page), String(part))
+    }
+
+    /// Spoken value of the scrubber on the first page of a chapter's later part.
+    public static func readerPartStarts(part: Int, page: Int) -> String {
+        Self.format("reader-part-starts", fallback: "Part %1$@ starts at page %2$@", String(part), String(page))
+    }
+
     /// Button in the first run that opens the reading demo.
     public static var onboardingReadDemo: String { string("onboarding-read-demo", fallback: "Read the demo") }
 
@@ -8804,6 +8840,39 @@ public enum L {
 
     /// Value of the group row: the chosen group is used for this series.
     public static var seriesPreferredGroup: String { string("series-preferred-group", fallback: "Your preferred group here") }
+
+    /// Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name.
+    public static var seriesGroup: String { string("series-group", fallback: "Group") }
+
+    /// After the group's name on the Group row: it is in use because it has the most chapters.
+    public static var seriesGroupMost: String { string("series-group-most", fallback: "most chapters") }
+
+    /// After the group's name on the Group row: the person picked it.
+    public static var seriesGroupPicked: String { string("series-group-picked", fallback: "your pick") }
+
+    /// Spoken hint of the Group row's Change button.
+    public static var seriesGroupHint: String { string("series-group-hint", fallback: "Picks the group") }
+
+    /// Under the group picker's title: the source the groups are in.
+    public static func groupPickerIn(source: String) -> String {
+        Self.format("group-picker-in", fallback: "In %1$@", source)
+    }
+
+    /// The group picker's first choice: the group with the most chapters, whichever that is.
+    public static var groupPickerMost: String { string("group-picker-most", fallback: "Most chapters") }
+
+    /// Under Most chapters: the group that means today.
+    public static func groupPickerMostNow(group: String) -> String {
+        Self.format("group-picker-most-now", fallback: "Now %1$@", group)
+    }
+
+    /// A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot.
+    public static func groupPickerCount(have: Int, total: Int) -> String {
+        Self.format("group-picker-count", fallback: "%1$lld of %2$lld chapters", have, total)
+    }
+
+    /// Under the group picker's choices.
+    public static var groupPickerFallback: String { string("group-picker-fallback", fallback: "Chapters a group doesn't have come from another group, and their rows say which.") }
 
     /// A tracker's progress in chapters, with the total.
     public static func seriesTrackerChaptersOf(n: Int, total: Int) -> String {
@@ -9903,6 +9972,12 @@ public enum L {
 
     /// Value of Counts as read: only the person's own marks; the reader marks nothing.
     public static var settingsCountsReadMarked: String { string("settings-counts-read-marked", fallback: "When you mark it") }
+
+    /// Reader default for manga: pages a group repeats at the start or end of its chapters are left out.
+    public static var settingsSkipCredits: String { string("settings-skip-credits", fallback: "Skip credit pages") }
+
+    /// Line under Skip credit pages.
+    public static var settingsSkipCreditsNote: String { string("settings-skip-credits-note", fallback: "Pages a group repeats at the start or end of its chapters") }
 
     /// Line under Counts as read when it is When you mark it.
     public static var settingsCountsReadMarkedNote: String { string("settings-counts-read-marked-note", fallback: "Continue and your trackers follow your marks") }

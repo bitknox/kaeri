@@ -409,3 +409,10 @@ linux-send-save-failed = Couldn't save the files in that folder
 # @only linux
 # @max 40
 linux-updates-check = Check for new chapters
+
+# The line under the series' name in the reader's group while a credit page shows: the chapter,
+# then "credit page" or "credit page 1 of 2".
+# @only linux
+# @arg chapter: text
+# @arg place: text
+linux-reader-line-place = { $chapter } · { $place }

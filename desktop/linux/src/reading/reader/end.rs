@@ -29,6 +29,8 @@ pub struct EndFacts {
     pub source: Option<String>,
     pub preview: Option<gdk::Texture>,
     pub novel: bool,
+    /// "1 credit page skipped", for credit pages skipped at the chapter's end and not shown.
+    pub credits: Option<String>,
 }
 
 pub struct EndPage {
@@ -40,6 +42,10 @@ pub struct EndPage {
     top: gtk::Label,
     read_veil: gtk::Overlay,
     read: gtk::Label,
+    credit_row: gtk::Box,
+    credit_text: gtk::Label,
+    /// Show, beside the credit line: the reader connects it.
+    pub credit_show: gtk::Button,
     next_box: gtk::Box,
     next_title: gtk::Label,
     facts: gtk::Label,
@@ -69,6 +75,10 @@ impl EndPage {
         let read_veil = gtk::Overlay::new();
         read_veil.set_child(Some(&read));
         read_veil.set_margin_top(4);
+        // Under what was updated: the credit pages skipped at the end, with Show beside them.
+        let (credit_row, credit_text, credit_show) = super::credits::show_line();
+        credit_row.set_margin_top(14);
+        credit_row.set_visible(false);
 
         let next_label = label("reader-end-read");
         next_label.set_label(&t::reader_end_next());
@@ -135,6 +145,7 @@ impl EndPage {
         body.add_css_class("reader-end");
         body.append(&top);
         body.append(&read_veil);
+        body.append(&credit_row);
         body.append(&next_box);
         body.append(&none_box);
         body.append(&buttons);
@@ -164,6 +175,9 @@ impl EndPage {
             top,
             read_veil,
             read,
+            credit_row,
+            credit_text,
+            credit_show,
             next_box,
             next_title,
             facts,
@@ -213,6 +227,8 @@ impl EndPage {
                 });
             }
         }
+        self.credit_row.set_visible(facts.credits.is_some());
+        self.credit_text.set_label(facts.credits.as_deref().unwrap_or_default());
         match &facts.next {
             Some(next) => {
                 self.next_box.set_visible(true);
