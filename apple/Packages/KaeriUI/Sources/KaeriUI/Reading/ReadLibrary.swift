@@ -208,6 +208,8 @@ struct ReadGrid: View {
     /// The silk line under a cover's facts, such as the source a Search result is in.
     var note: (WorkTile) -> String? = { _ in nil }
     var caption = ReadCaption.plain
+    /// The columns across the grid's width, where the grid is Search's: the shows' results'.
+    var columns: ((CGFloat) -> GridColumns)?
     @State private var width: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -227,15 +229,20 @@ struct ReadGrid: View {
     }
 
     private var covers: some View {
-        let (columns, cell) = Self.columns(width)
+        let (count, cell) = Self.columns(width)
+        let grid = columns.map { $0(width) }
+            ?? GridColumns(count: count, width: cell, spacing: Self.gap)
+        let cellWidth = grid.width
         return LazyVGrid(
-            columns: Array(repeating: GridItem(.fixed(cell), spacing: Self.gap, alignment: .top), count: columns),
+            columns: grid.items,
             alignment: .leading,
-            spacing: Device.isMac ? 24 : 20
+            spacing: columns != nil || Device.isMac ? 24 : 20
         ) {
             ForEach(tiles, id: \.work) { tile in
-                ReadTileCard(tile: tile, width: cell, twoLines: twoLines, note: note(tile), planAction: twoLines, caption: caption)
+                ReadTileCard(tile: tile, width: cellWidth, twoLines: twoLines, note: note(tile), planAction: twoLines, caption: caption)
                     .contextMenu { ReadTileMenu(tile: tile, kind: twoLines ? .plan : .lists) }
+                    // A cover and its lines move as one when the columns change.
+                    .geometryGroup()
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

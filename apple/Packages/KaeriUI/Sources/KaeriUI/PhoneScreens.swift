@@ -286,12 +286,14 @@ struct PhoneSearch: View {
     @Environment(Navigator.self) private var navigator
 
     var body: some View {
-        if ReadSearchScope.active(store: store, navigator: navigator) {
-            ReadSearchScreen()
-        } else {
-            SearchScreen(compact: true)
-                .toolbar { ToolbarItem(placement: .topBarTrailing) { SurpriseButton() } }
-        }
+        // One screen for both scopes: reading's Search is drawn inside it. Reading has no
+        // Surprise me.
+        SearchScreen(compact: true)
+            .toolbar {
+                if !ReadSearchScope.active(store: store, navigator: navigator) {
+                    ToolbarItem(placement: .topBarTrailing) { SurpriseButton() }
+                }
+            }
     }
 }
 #endif
