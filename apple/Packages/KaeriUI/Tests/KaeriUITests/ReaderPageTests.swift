@@ -5,6 +5,7 @@ import KaeriKit
 @testable import KaeriUI
 import CoreGraphics
 import Foundation
+import ImageIO
 import Testing
 
 struct ReaderPageTests {
@@ -33,6 +34,48 @@ struct ReaderPageTests {
         let image = try #require(PageImages.decode(file, longestSide: 400))
         #expect(image.width == 30)
         #expect(image.height == 44)
+    }
+
+    /// A made-up page saved as a PNG, as the engine hands over an original: stripes a pixel wide.
+    private func original(width: Int, height: Int) throws -> PageFile {
+        let context = try #require(CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        context.setFillColor(red: 0.9, green: 0.9, blue: 0.85, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+        context.setFillColor(red: 0.1, green: 0.1, blue: 0.3, alpha: 1)
+        for x in stride(from: 0, to: width, by: 2) { context.fill(CGRect(x: x, y: 0, width: 1, height: height)) }
+        let image = try #require(context.makeImage())
+        let url = FileManager.default.temporaryDirectory.appending(path: "reader-page-\(UUID().uuidString).png")
+        let destination = try #require(CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, image, nil)
+        #expect(CGImageDestinationFinalize(destination))
+        let bytes = try Data(contentsOf: url).count
+        return PageFile(
+            path: url.path, encoding: .original(mime: "image/png"), width: UInt32(width), height: UInt32(height),
+            crop: nil, colour: true, bytes: UInt64(bytes))
+    }
+
+    @Test func aFitWidthPageIsDecodedForTheHeightItIsDrawnAt() throws {
+        // A tall page in a Mac window 760 by 859 points at 2x, drawn 760 points wide and
+        // scrolled. Decoded for the box's longest side it would come out 573 pixels wide and be
+        // stretched across 1520.
+        let file = try original(width: 2000, height: 6000)
+        defer { try? FileManager.default.removeItem(atPath: file.path) }
+        let box = CGSize(width: 760, height: 859)
+        let longest = PageImages.longest(file, width: box.width) * 2
+        #expect(longest == 4560)
+        let image = try #require(PageImages.decode(file, longestSide: longest))
+        #expect(image.width >= Int(box.width * 2))
+    }
+
+    @Test func aStripImageKeepsEveryPixelOfItsWidth() throws {
+        // The long-strip shape, drawn in the Mac's 720 point column at 2x.
+        let file = try original(width: 720, height: 4000)
+        defer { try? FileManager.default.removeItem(atPath: file.path) }
+        let image = try #require(PageImages.decode(file, longestSide: PageImages.longest(file, width: 720) * 2))
+        #expect(image.width == 720)
+        #expect(image.height == 4000)
     }
 
     @Test func aMissingFileDecodesToNothing() {

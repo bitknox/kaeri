@@ -32,6 +32,14 @@ enum PageImages {
         cache.object(forKey: key(file, longestSide))
     }
 
+    /// The longest side of the page drawn `width` wide, in the same units as the width.
+    static func longest(_ file: PageFile, width: CGFloat) -> CGFloat {
+        let w = CGFloat(file.crop?.width ?? file.width)
+        let h = CGFloat(file.crop?.height ?? file.height)
+        guard w > 0 else { return width }
+        return max(width, width * h / w)
+    }
+
     static func load(_ file: PageFile, longestSide: CGFloat) async -> CGImage? {
         let key = key(file, longestSide)
         if let hit = cache.object(forKey: key) { return hit }

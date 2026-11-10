@@ -882,6 +882,7 @@ impl Session {
             },
             guess_mode: !l.series_has(Key::Mode) && !l.sourced(Key::Mode),
             guess_direction: !l.series_has(Key::Direction) && !l.sourced(Key::Direction),
+            fit_width: l.word(Key::Fit) == "width",
         }
     }
 

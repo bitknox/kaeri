@@ -237,7 +237,10 @@ struct PartView: View {
                 PagePlate(page: number, theme: theme, atOnce: fresh)
             }
             if let file = model.file(of: part, chapter: chapter) {
-                let image = PageImage(file: file, longest: max(box.width, box.height) * scale, tone: tone, onPaint: {
+                // Fit width draws the page as wide as the box however tall that makes it, so it
+                // is decoded for that height, not the box's.
+                let shown = fitWidth && !part.rotate ? PageImages.longest(file, width: box.width) : max(box.width, box.height)
+                let image = PageImage(file: file, longest: shown * scale, tone: tone, onPaint: {
                     painted = true
                     model.pagePainted(chapter: chapter, page: part.page)
                 })
