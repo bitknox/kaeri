@@ -167,6 +167,8 @@ pub(crate) fn command(
         }
         ReadingCommand::SetSendTarget { target } => {
             use kaeri_core::settings::SettingValue;
+            // In effect before it is written, as a setting is: `write` keeps only the file.
+            engine.config.effective_mut().reading.send_target = Some(target.clone());
             if let Err(e) = engine.config.write(
                 &services.paths,
                 &["reading"],
@@ -174,6 +176,8 @@ pub(crate) fn command(
                 SettingValue::Str(target),
             ) {
                 tracing::warn!(error = %e, "the send target was not kept");
+                let kept = engine.config.saved().reading.send_target.clone();
+                engine.config.effective_mut().reading.send_target = kept;
             }
             let _ = tx.send(Event::Reading(ReadingEvent::ExportTargets(targets_of(engine))));
         }
@@ -675,15 +679,27 @@ fn set_feed_share(
 ) {
     use kaeri_core::settings::SettingValue;
     use kaeri_model::reading::FeedShelf;
+    fn share(feed: &mut kaeri_core::config::FeedConfig, shelf: FeedShelf) -> &mut Option<bool> {
+        match shelf {
+            FeedShelf::Downloads => &mut feed.share_downloads,
+            FeedShelf::MangaFolders => &mut feed.share_manga,
+            FeedShelf::NovelFolders => &mut feed.share_novels,
+        }
+    }
     let key = match shelf {
         FeedShelf::Downloads => "share_downloads",
         FeedShelf::MangaFolders => "share_manga",
         FeedShelf::NovelFolders => "share_novels",
     };
+    // In effect before it is written, as a setting is: the feed reads what is in effect.
+    *share(&mut engine.config.effective_mut().reading.feed, shelf) = Some(on);
     if let Err(e) =
         engine.config.write(&services.paths, &["reading", "feed"], key, SettingValue::Bool(on))
     {
         tracing::warn!(error = %e, "the feed shelf was not kept");
+        let mut saved = engine.config.saved().reading.feed.clone();
+        *share(&mut engine.config.effective_mut().reading.feed, shelf) =
+            *share(&mut saved, shelf);
     }
     apply_feed(engine, services, tx);
 }
@@ -714,8 +730,12 @@ fn set_feed(
 ) {
     use kaeri_core::settings::SettingValue;
     let paths = &services.paths;
+    // Each value is put in effect before it is written, as a setting is: `write` keeps the
+    // file and puts back only a value it refused, and the feed follows what is in effect. So
+    // off stops serving at once, and on starts at once.
     if let Some(password) = password {
         let set = keep_password(services, &password);
+        engine.config.effective_mut().reading.feed.password_set = set;
         if let Err(e) = engine.config.write(
             paths,
             &["reading", "feed"],
@@ -725,10 +745,16 @@ fn set_feed(
             tracing::warn!(error = %e, "the feed password flag was not kept");
         }
     }
+    engine.config.effective_mut().reading.feed.on = on;
     if let Err(e) =
         engine.config.write(paths, &["reading", "feed"], "on", SettingValue::Bool(on))
     {
         tracing::warn!(error = %e, "the feed switch was not kept");
+    }
+    // Off stays off for this launch even when the file refused it: the library is not served
+    // a moment longer than the person wants.
+    if !on {
+        engine.config.effective_mut().reading.feed.on = false;
     }
     apply_feed(engine, services, tx);
 }
