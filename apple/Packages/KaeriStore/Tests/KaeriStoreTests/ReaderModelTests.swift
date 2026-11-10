@@ -125,6 +125,53 @@ struct ReaderModelTests {
         #expect(model.goTo?.how == .placed)
     }
 
+    /// Twenty pages as single leaves, or as a cover and spreads of two after it.
+    private func layout(_ chapter: ChapterId, spreads: Bool) -> [Leaf] {
+        let groups: [[UInt32]] = spreads
+            ? [[0]] + stride(from: 1, to: 20, by: 2).map { $0 + 1 < 20 ? [$0, $0 + 1] : [$0] }
+            : (0..<20).map { [UInt32($0)] }
+        return groups.enumerated().map { index, pages in
+            Leaf(index: UInt32(index), parts: pages.map { page in
+                LeafPart(page: page, kind: .story, file: nil, place: UnitRect(x: 0, y: 0, width: 1, height: 1),
+                         rotate: false, half: nil)
+            }, endPage: false)
+        } + [Leaf(index: UInt32(groups.count), parts: [], endPage: true)]
+    }
+
+    @Test func aTurnBetweenPagesAndSpreadsKeepsThePage() {
+        let (model, _) = model()
+        let work = WorkId("a:900301")
+        let chapter = ChapterRow(
+            id: ChapterId("c13"), label: "Chapter 13", state: .unread, number: nil, title: nil, volume: nil,
+            published: nil, pages: 20, newChapter: false, download: nil, versions: 1, bookmarked: false)
+        // Opened at page 10, upright.
+        model.apply(.opened(ReaderView(
+            session: 1, work: work, title: "The Lantern Ferry", medium: .manga, chapter: chapter,
+            mode: .paged, direction: .rightToLeft,
+            start: ReadPlace(work: work, chapter: chapter.id, page: 9, strip: nil, novel: nil),
+            next: nil, previous: nil, settings: nil)))
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: false)))
+        #expect(model.current == 9)
+        // Turned on its side: the spread that holds page 10, then upright again at page 10.
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: true)))
+        #expect(model.leaves[model.current].parts.map(\.page) == [9, 10])
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: false)))
+        #expect(model.current == 9)
+        // A page before the one it opened at stays where it is, rather than go forward to it.
+        model.shown(3, how: .turn)
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: true)))
+        #expect(model.leaves[model.current].parts.map(\.page) == [3, 4])
+        model.shown(1, how: .turn)
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: false)))
+        #expect(model.current == 1)
+        // The end page stays the end page.
+        model.shown(20, how: .turn)
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: true)))
+        #expect(model.leaves[model.current].endPage)
+        model.apply(.leaves(session: 1, chapter: chapter.id, leaves: layout(chapter.id, spreads: false)))
+        #expect(model.current == 20)
+    }
+
     @Test func closingClearsTheRequest() {
         let (model, _) = model()
         model.open(work: "a:900301")

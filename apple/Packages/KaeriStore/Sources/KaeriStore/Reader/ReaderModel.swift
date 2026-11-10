@@ -672,14 +672,28 @@ public final class ReaderModel {
             // A source's chapter is laid out again once all its pages have landed, when their
             // shapes differ from the guess: a strip keeps the place it is at, under the same
             // image, rather than move with the heights above it.
-            let relaid = !self.leaves.isEmpty && chapter == view?.chapter.id && view?.mode == .strip && novel == nil
+            let again = !self.leaves.isEmpty && chapter == view?.chapter.id && novel == nil
+            let relaid = again && view?.mode == .strip
+            // Pages laid out again, as when the screen turns between single pages and spreads:
+            // the page on screen stays, in whichever leaf holds it now, and so does the ring's.
+            let paged = again && view?.mode == .paged && keepPage == nil
+            let shownPage = paged ? firstPage(of: current) : nil
+            let ringPage = paged ? ring.flatMap(firstPage(of:)) : nil
+            let atEnd = paged && self.leaves.indices.contains(current) && self.leaves[current].endPage
             self.leaves = leaves
             if relaid, let here = stripHere {
                 stripRestore = here
                 stripRelaid += 1
             }
             phase = .open
-            if !leaves.isEmpty { current = min(max(current, startLeaf(leaves)), leaves.count - 1) }
+            if let shownPage, let index = Self.leaf(holding: shownPage, in: leaves) {
+                current = index
+                ring = ringPage.flatMap { Self.leaf(holding: $0, in: leaves) }
+            } else if atEnd, let end = leaves.lastIndex(where: \.endPage) {
+                current = end
+            } else if !leaves.isEmpty {
+                current = min(max(current, startLeaf(leaves)), leaves.count - 1)
+            }
             if let goTo = pendingGoTo, goTo < leaves.count { show(goTo) }
             if let chapter = openAtEnd, chapter == view?.chapter.id, !leaves.isEmpty {
                 openAtEnd = nil
@@ -784,8 +798,7 @@ public final class ReaderModel {
     private func pageOnScreen(_ mode: ReaderMode) -> UInt32? {
         switch mode {
         case .paged:
-            guard leaves.indices.contains(current) else { return nil }
-            return leaves[current].parts.map(\.page).min()
+            return firstPage(of: current)
         default:
             return inTrail == nil ? UInt32(max(position.index, 0)) : nil
         }
@@ -825,7 +838,17 @@ public final class ReaderModel {
 
     private func startLeaf(_ leaves: [Leaf]) -> Int {
         guard let page = view?.start.page else { return 0 }
-        return leaves.firstIndex { $0.parts.contains { $0.page >= page } } ?? 0
+        return Self.leaf(holding: page, in: leaves) ?? 0
+    }
+
+    /// The first page a leaf shows: the lower of a spread's two.
+    private func firstPage(of leaf: Int) -> UInt32? {
+        leaves.indices.contains(leaf) ? leaves[leaf].parts.map(\.page).min() : nil
+    }
+
+    /// The leaf that shows `page`, or the first after it when no leaf does.
+    nonisolated static func leaf(holding page: UInt32, in leaves: [Leaf]) -> Int? {
+        leaves.firstIndex { $0.parts.contains { $0.page >= page } }
     }
 
     private func goTo(_ place: ReadPlace) {

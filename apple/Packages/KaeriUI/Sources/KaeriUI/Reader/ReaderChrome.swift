@@ -237,9 +237,9 @@ struct ReaderChrome: View {
     /// one a strip ran on from while it is still above the middle of the screen.
     static func line(model: ReaderModel, index: Int) -> String {
         if let past = model.inTrail {
-            return L.readerGroupLineStrip(chapter: past.label, image: index + 1, total: max(model.position.count, 1))
+            return L.readerGroupLineStrip(chapter: chapterName(past.label), image: index + 1, total: max(model.position.count, 1))
         }
-        let chapter = model.view?.chapter.label ?? ""
+        let chapter = chapterName(model.view?.chapter.label ?? "")
         let count = max(model.position.count, 1)
         if model.novel != nil {
             if model.choice(.mode) == "scrolled" {
@@ -254,6 +254,15 @@ struct ReaderChrome: View {
             return L.readerGroupLineSpread(chapter: chapter, first: pages[0], second: pages[1])
         }
         return L.readerGroupLine(chapter: chapter, page: model.pageNumber(of: index), total: max(model.pageCount, 1))
+    }
+
+    /// A chapter named in the reader: the source's own words, or "Chapter 12" when they are only
+    /// its number.
+    static func chapterName(_ label: String) -> String {
+        let words = label.trimmingCharacters(in: .whitespaces)
+        let bare = words.first?.isASCII == true && words.first?.isNumber == true
+            && words.allSatisfy { $0.isASCII && ($0.isNumber || $0 == ".") }
+        return bare ? L.readerChapterLine(chapter: words) : label
     }
 
     private var goToTotal: Int { model.novel != nil || model.view?.mode == .strip ? max(model.position.count, 1) : max(model.pageCount, 1) }

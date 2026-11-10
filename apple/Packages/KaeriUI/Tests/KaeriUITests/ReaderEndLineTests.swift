@@ -47,4 +47,20 @@ struct ReaderEndLineTests {
         #expect(ReaderChrome.ends(model: model, index: 4)?.total == 3)
         #expect(ReaderChrome.ends(model: model, index: 2)?.at == 2)
     }
+
+    @Test func aChapterLabelledOnlyWithItsNumberIsCalledAChapter() {
+        #expect(ReaderChrome.chapterName("1") == "Chapter 1")
+        #expect(ReaderChrome.chapterName("10.5") == "Chapter 10.5")
+        #expect(ReaderChrome.chapterName("Chapter 1") == "Chapter 1")
+        #expect(ReaderChrome.chapterName("Episode 63") == "Episode 63")
+        #expect(ReaderChrome.chapterName("Prologue") == "Prologue")
+    }
+
+    @Test func offlineTheTrackersWaitForTheNetwork() {
+        let online = ReaderEndPage.readLine(read: true, trackers: ["AniList"], offline: false)
+        let offline = ReaderEndPage.readLine(read: true, trackers: ["AniList"], offline: true)
+        #expect(online == "Counted as read · AniList updated")
+        #expect(offline == "Counted as read · AniList updates when you're back online")
+        #expect(ReaderEndPage.readLine(read: true, trackers: [], offline: true) == "Counted as read")
+    }
 }
