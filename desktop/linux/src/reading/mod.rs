@@ -412,8 +412,15 @@ pub fn listen(
 /// The chapter and the words a series' main action opens, when it opens one.
 pub fn action_chapter(action: &SeriesAction) -> Option<(ChapterId, String)> {
     match action {
+        // "Read chapter 12", but a chapter with no number goes by its own title: "Read Oneshot".
+        SeriesAction::Read { chapter, label } if !numbered(label) => {
+            Some((chapter.clone(), t::action_read_named(label)))
+        }
         SeriesAction::Read { chapter, label } => {
             Some((chapter.clone(), t::action_read_chapter(label)))
+        }
+        SeriesAction::Continue { chapter, label, page } if !numbered(label) => {
+            Some((chapter.clone(), t::action_continue_named_page(label, i64::from(*page))))
         }
         SeriesAction::Continue { chapter, label, page } => {
             Some((chapter.clone(), t::action_continue_chapter(label, i64::from(*page))))
@@ -422,17 +429,30 @@ pub fn action_chapter(action: &SeriesAction) -> Option<(ChapterId, String)> {
         SeriesAction::ContinuePart { chapter, named: Some(named), .. } => {
             Some((chapter.clone(), t::action_continue_named_plain(named)))
         }
+        SeriesAction::ContinuePart { chapter, label, named: None, .. } if !numbered(label) => {
+            Some((chapter.clone(), t::action_continue_named_plain(label)))
+        }
         SeriesAction::ContinuePart { chapter, label, named: None, .. } => {
             Some((chapter.clone(), t::action_continue_part_plain(label)))
         }
         SeriesAction::ReadPart { chapter, named: Some(named), .. } => {
             Some((chapter.clone(), t::action_read_named(named)))
         }
+        SeriesAction::ReadPart { chapter, label, named: None } if !numbered(label) => {
+            Some((chapter.clone(), t::action_read_named(label)))
+        }
         SeriesAction::ReadPart { chapter, label, named: None } => {
             Some((chapter.clone(), t::action_read_part(label)))
         }
         SeriesAction::ReadAgain | SeriesAction::NoSource => None,
     }
+}
+
+/// The label is a chapter's number, "12", "10.5" or "12-13", which the words put "chapter" or
+/// "part" before; anything else is the chapter's own title.
+fn numbered(label: &str) -> bool {
+    label.starts_with(|c: char| c.is_ascii_digit())
+        && label.chars().all(|c| c.is_ascii_digit() || c == '.' || c == '-')
 }
 
 /// Open the reader on a chapter of a work: `win.read` takes the work and the chapter.
@@ -465,4 +485,20 @@ pub fn is_blank(view: &kaeri_model::reading::ReadingHomeView) -> bool {
         && view.because.is_empty()
         && view.genre_shelf.is_empty()
         && view.rows.is_empty()
+}
+
+#[cfg(test)]
+mod label_tests {
+    use super::numbered;
+
+    /// The series button puts "chapter" before a number, never before a chapter's own title.
+    #[test]
+    fn only_a_number_takes_the_word_chapter() {
+        for label in ["12", "10.5", "12-13"] {
+            assert!(numbered(label), "{label}");
+        }
+        for label in ["Oneshot", "The Lantern Festival", "1st Anniversary Extra", ""] {
+            assert!(!numbered(label), "{label}");
+        }
+    }
 }

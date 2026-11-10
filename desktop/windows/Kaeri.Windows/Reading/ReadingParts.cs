@@ -455,16 +455,7 @@ static class ReadingParts
         Wording.Ago(Math.Max(0, DateTimeOffset.UtcNow.ToUnixTimeSeconds() - unix));
 
     /// <summary>The main action's words, or null where there is nothing to read.</summary>
-    public static string? Action(SeriesAction? action) => action switch
-    {
-        SeriesAction.Read r => T.ActionReadChapter(r.Label),
-        SeriesAction.Continue c => T.ActionContinueChapter(c.Label, c.Page),
-        SeriesAction.ContinuePart { Percent: { } percent } p => T.ActionContinuePart(p.Label, percent),
-        SeriesAction.ContinuePart p => T.ActionContinuePartPlain(p.Label),
-        SeriesAction.ReadPart r => T.ActionReadPart(r.Label),
-        SeriesAction.ReadAgain => T.ActionReadAgain,
-        _ => null,
-    };
+    public static string? Action(SeriesAction? action) => SeriesWords.Action(action);
 
     /// <summary>
     /// Does the main action: the reader at its chapter. Read again and no source are asked on the

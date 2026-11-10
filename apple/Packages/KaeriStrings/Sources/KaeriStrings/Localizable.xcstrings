@@ -12101,6 +12101,18 @@
         }
       }
     },
+    "action-continue-named-page" : {
+      "comment" : "The main action for a chapter part read that has no number, named by its own title (\"Oneshot\", \"Extra\"). Argument 1: label (Text). Argument 2: page (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue %1$@ · page %2$@"
+          }
+        }
+      }
+    },
     "action-continue-named-plain" : {
       "comment" : "The main action for a light novel part, part read, named in the source's own words, when how far is not known. Argument 1: label (Text).",
       "extractionState" : "manual",
@@ -14538,7 +14550,7 @@
       }
     },
     "action-read-named" : {
-      "comment" : "The main action for a light novel part not opened yet, named in the source's own words. Argument 1: label (Text).",
+      "comment" : "The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title (\"Read Oneshot\"). Argument 1: label (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {

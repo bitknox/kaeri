@@ -14727,7 +14727,12 @@ pub fn action_continue_named_plain(label: &str) -> String {
     text("action-continue-named-plain", &[("label", Arg::Text(label))])
 }
 
-/// The main action for a light novel part not opened yet, named in the source's own words.
+/// The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra").
+pub fn action_continue_named_page(label: &str, page: i64) -> String {
+    text("action-continue-named-page", &[("label", Arg::Text(label)), ("page", Arg::Plain(page))])
+}
+
+/// The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
 pub fn action_read_named(label: &str) -> String {
     text("action-read-named", &[("label", Arg::Text(label))])
 }

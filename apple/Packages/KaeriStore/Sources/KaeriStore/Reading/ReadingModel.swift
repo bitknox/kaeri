@@ -294,7 +294,7 @@ public final class ReadingModel {
     public func loadDownloads() { send?(.reading(.loadDownloads)) }
 
     private func refreshSeries(_ work: String) {
-        if series[work] != nil {
+        if series[work] != nil || chapters[work] != nil {
             send?(.reading(.loadSeries(work: work)))
             send?(.reading(.loadChapters(work: work, edition: chapters[work]?.edition?.sourceId)))
         }
@@ -304,13 +304,34 @@ public final class ReadingModel {
 
     // MARK: Hearing
 
+    /// The book the reader has open, so its page is asked for again once the reader closes.
+    @ObservationIgnored private var readerWork: String?
+
     func observe(_ event: Event) {
         if case .reader(.settings(let view)) = event, view.work == nil {
             readerDefaults[view.medium] = view
         }
+        if case .reader(let reader) = event { heard(reader) }
         guard case .reading(let event) = event else { return }
         sending.apply(event)
         apply(event)
+    }
+
+    /// The engine sends nothing for a read or a place kept by the reader: the series page under
+    /// it asks again, so its main button offers the next chapter or the place left at, not the
+    /// chapter just read.
+    private func heard(_ event: ReaderEvent) {
+        switch event {
+        case .opened(let view):
+            readerWork = view.work
+        case .chapterRead(let work, _, _):
+            refreshSeries(work)
+        case .closed:
+            if let work = readerWork { refreshSeries(work) }
+            readerWork = nil
+        default:
+            break
+        }
     }
 
     /// Ask for the manga and novel defaults, for Settings.

@@ -150,7 +150,14 @@ action-continue-named = { -continue-reading-cap } { $label } · { $percent }%
 # @arg label: text
 action-continue-named-plain = { -continue-reading-cap } { $label }
 
-# The main action for a light novel part not opened yet, named in the source's own words.
+# The main action for a chapter part read that has no number, named by its own title
+# ("Oneshot", "Extra").
+# @arg label: text
+# @arg page: plain
+action-continue-named-page = { -continue-reading-cap } { $label } · page { $page }
+
+# The main action for a light novel part not opened yet, named in the source's own words, and
+# for a chapter with no number, named by its own title ("Read Oneshot").
 # @arg label: text
 action-read-named = Read { $label }
 

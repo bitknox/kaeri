@@ -9037,7 +9037,7 @@ action-continue-named = Läs vidare på { $label } · { $percent }%
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
 action-continue-named-plain = Läs vidare på { $label }
 
-# The main action for a light novel part not opened yet, named in the source's own words.
+# The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
 action-read-named = Läs { $label }
 
 # The main action when every chapter is read.

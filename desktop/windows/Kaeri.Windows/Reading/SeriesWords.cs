@@ -40,13 +40,26 @@ static class SeriesWords
 
     public static string Tracker(string id) => KaeriFfiMethods.TrackerName(id);
 
+    /// <summary>
+    /// The label is a chapter's number, "12", "10.5" or "12-13", which the words put "chapter" or
+    /// "part" before; anything else is the chapter's own title.
+    /// </summary>
+    public static bool Numbered(string label) =>
+        label.Length > 0 && char.IsAsciiDigit(label[0]) && label.All(c => char.IsAsciiDigit(c) || c == '.' || c == '-');
+
     /// <summary>The main action's words, or null where there is nothing to read.</summary>
     public static string? Action(SeriesAction? action) => action switch
     {
+        // "Read chapter 12", but a chapter with no number goes by its own title: "Read Oneshot".
+        SeriesAction.Read read when !Numbered(read.Label) => T.ActionReadNamed(read.Label),
         SeriesAction.Read read => T.ActionReadChapter(read.Label),
+        SeriesAction.Continue go when !Numbered(go.Label) => T.ActionContinueNamedPage(go.Label, go.Page),
         SeriesAction.Continue go => T.ActionContinueChapter(go.Label, go.Page),
+        SeriesAction.ContinuePart { Percent: { } percent } part when !Numbered(part.Label) => T.ActionContinueNamed(part.Label, percent),
         SeriesAction.ContinuePart { Percent: { } percent } part => T.ActionContinuePart(part.Label, percent),
+        SeriesAction.ContinuePart part when !Numbered(part.Label) => T.ActionContinueNamedPlain(part.Label),
         SeriesAction.ContinuePart part => T.ActionContinuePartPlain(part.Label),
+        SeriesAction.ReadPart part when !Numbered(part.Label) => T.ActionReadNamed(part.Label),
         SeriesAction.ReadPart part => T.ActionReadPart(part.Label),
         SeriesAction.ReadAgain => T.ActionReadAgain,
         _ => null,

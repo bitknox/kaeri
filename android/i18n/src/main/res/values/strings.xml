@@ -4908,7 +4908,9 @@
     <string name="action_continue_named">Continue %1$s · %2$,d%%</string>
     <!-- The main action for a light novel part, part read, named in the source's own words, when how far is not known. -->
     <string name="action_continue_named_plain">Continue %1$s</string>
-    <!-- The main action for a light novel part not opened yet, named in the source's own words. -->
+    <!-- The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra"). -->
+    <string name="action_continue_named_page">Continue %1$s · page %2$d</string>
+    <!-- The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot"). -->
     <string name="action_read_named">Read %1$s</string>
     <!-- The main action when every chapter is read. -->
     <string name="action_read_again">Read again</string>
