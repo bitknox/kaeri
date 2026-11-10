@@ -84,6 +84,7 @@ pub async fn run(
     let host = Arc::new(DesktopHost::new(&config, &paths));
     let (engine, mut from_engine) = Engine::start(options, host).await?;
     engine.send(network_at_launch());
+    engine.send(medium_at_launch());
 
     // The settings as the engine starts on them, which it says again at launch.
     let settings = kaeri_model::settings::view(&config, &saved);
@@ -420,6 +421,14 @@ fn restore_terminal(terminal: &mut Tui) -> Result<()> {
 /// keeps what is kept to Wi-Fi waiting.
 pub(crate) fn network_at_launch() -> Command {
     Command::NetworkPath { cellular: false, constrained: false, offline: false }
+}
+
+/// What the terminal asks the engine at launch, as the apps' stores do: what Kaeri is for on
+/// this computer. The answer fills the rail's Read and the Shows or reading key, and carries
+/// the question the engine holds: the first run's on a new install, the update's on a config
+/// from before reading.
+pub(crate) fn medium_at_launch() -> Command {
+    Command::Medium(kaeri_model::medium::MediumCommand::Load)
 }
 
 #[cfg(test)]
