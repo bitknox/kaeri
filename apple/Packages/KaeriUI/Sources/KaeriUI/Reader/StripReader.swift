@@ -28,8 +28,17 @@ struct StripReader: View {
     /// model's previews before its own images come.
     @State private var lead: PageFile?
     @State private var ahead = Ahead()
+    /// How far the strip is zoomed: the column is this many times its fitted width, and the
+    /// strip scrolls sideways across it. iPhone and iPad only.
+    @State private var zoom: CGFloat = 1
+    /// A pinch under way, drawn over the strip until it ends and the column takes it.
+    @State private var pinch: CGFloat = 1
+    @State private var pinchAt: CGPoint = .zero
+    @State private var pinching = false
+    @State private var offsetX: CGFloat = 0
 
     private struct Metrics: Equatable {
+        var x: CGFloat
         var y: CGFloat
         var height: CGFloat
     }
@@ -65,7 +74,12 @@ struct StripReader: View {
     /// Paper mode and Reduce Motion jump instead of scrolling.
     private var instant: Bool { paper || reduceMotion }
 
-    private var column: CGFloat {
+    private var column: CGFloat { fitColumn * zoom }
+
+    /// The strip zooms in up to this.
+    private static let most: CGFloat = 3
+
+    private var fitColumn: CGFloat {
         if !mac && sizeClass == .compact { return size.width }
         let base: CGFloat = mac ? 720 : (size.width > size.height ? 620 : 720)
         let factor = (model.amount(.stripWidth) ?? 0.6) / 0.6
@@ -123,24 +137,51 @@ struct StripReader: View {
 
     var body: some View {
         let rows = self.rows
-        ScrollView(.vertical, showsIndicators: false) {
+        ScrollView(mac ? Axis.Set.vertical : [.vertical, .horizontal], showsIndicators: false) {
             LazyVStack(spacing: 0) {
                 ForEach(rows) { row in
                     view(of: row).frame(height: row.height)
                 }
             }
-            .frame(maxWidth: .infinity)
+            // As wide as the screen while fitted, so it only scrolls sideways once zoomed.
+            .frame(width: max(size.width, column))
         }
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         .scrollPosition($position)
         .onScrollGeometryChange(for: Metrics.self) { geometry in
-            Metrics(y: geometry.contentOffset.y + geometry.contentInsets.top, height: geometry.containerSize.height)
+            Metrics(x: geometry.contentOffset.x + geometry.contentInsets.leading,
+                    y: geometry.contentOffset.y + geometry.contentInsets.top, height: geometry.containerSize.height)
         } action: { _, metrics in
+            offsetX = metrics.x
             track(metrics)
         }
         .onScrollPhaseChange { _, phase in
             if phase == .interacting { restoring = false; model.hideChrome() }
         }
+        #if os(iOS)
+        .scaleEffect(pinch, anchor: UnitPoint(x: pinchAt.x / max(size.width, 1), y: pinchAt.y / max(size.height, 1)))
+        .simultaneousGesture(
+            SpatialTapGesture(count: 2).onEnded { tap in zoomByTap(at: tap.location) }
+                .exclusively(before: SpatialTapGesture().onEnded { _ in onTap() })
+        )
+        .simultaneousGesture(
+            MagnifyGesture()
+                .onChanged { value in
+                    if !pinching {
+                        pinching = true
+                        pinchAt = value.startLocation
+                    }
+                    // A little past each end while the fingers are down, so the limit is felt.
+                    pinch = min(max(value.magnification, 0.85 / zoom), Self.most * 1.1 / zoom)
+                }
+                .onEnded { _ in
+                    pinching = false
+                    settle(to: zoom * pinch, at: pinchAt)
+                }
+        )
+        #else
         .simultaneousGesture(SpatialTapGesture().onEnded { _ in onTap() })
+        #endif
         .frame(width: size.width, height: size.height)
         .onAppear {
             model.position = (0, max(parts.count, 1))
@@ -155,6 +196,9 @@ struct StripReader: View {
         .onChange(of: model.view?.chapter.id) { _, _ in
             // Flowing on keeps the place: the new chapter's images take the lead's room.
             if !model.trail.chapters.isEmpty { restoring = false; return }
+            // A chapter opened afresh starts fitted.
+            zoom = 1
+            pinch = 1
             lead = nil
             restoring = true
             position.scrollTo(y: 0)
@@ -185,6 +229,46 @@ struct StripReader: View {
             let to = max(0, offsetY + (request.forward ? step : -step))
             withAnimation(instant ? nil : .standard) { position.scrollTo(y: to) }
         }
+    }
+
+    /// A double tap: in at the point, or back to fitted. The strip grows about the point and
+    /// the column takes the zoom once it has.
+    private func zoomByTap(at point: CGPoint) {
+        let to: CGFloat = zoom > 1.01 ? 1 : 2
+        pinchAt = point
+        guard !instant else { return settle(to: to, at: point) }
+        withAnimation(.standard, completionCriteria: .logicallyComplete) {
+            pinch = to / zoom
+        } completion: {
+            settle(to: to, at: point)
+        }
+    }
+
+    /// The column takes the zoom, and the strip scrolls so the place under the fingers stays put.
+    private func settle(to wanted: CGFloat, at point: CGPoint) {
+        let to = wanted < 1.05 ? 1 : min(wanted, Self.most)
+        restoring = false
+        let before = rows
+        let oldColumn = column
+        // The row under the point and how far into it, and how far across the column.
+        let y = offsetY + point.y
+        let x = offsetX + point.x - (max(size.width, oldColumn) - oldColumn) / 2
+        let row = before.last { $0.top <= y }
+        let down = row.map { (y - $0.top) / max($0.height, 1) } ?? 0
+        let across = x / max(oldColumn, 1)
+        var still = Transaction()
+        still.disablesAnimations = true
+        withTransaction(still) {
+            zoom = to
+            pinch = 1
+        }
+        let after = rows
+        let newColumn = column
+        let top = row.flatMap { row in after.first { $0.id == row.id } }.map { $0.top + down * $0.height } ?? y
+        let left = (max(size.width, newColumn) - newColumn) / 2 + across * newColumn
+        let wide = max(size.width, newColumn)
+        position.scrollTo(point: CGPoint(x: min(max(left - point.x, 0), wide - size.width),
+                                         y: max(top - point.y, 0)))
     }
 
     /// To an image of the chapter the line is on.
@@ -280,10 +364,14 @@ struct StripReader: View {
                 model.position = (at, images.count)
             }
             if on == nil, !restoring, !waiting {
-                let row = images[at]
-                let into = min(max((metrics.y - row.top) / max(row.height - spacing, 1), 0), 1)
                 let foot = images[images.count - 1].top + images[images.count - 1].height <= metrics.y + metrics.height
-                model.stripAt(StripPos(image: UInt32(at), offset: Float(into)), footVisible: foot)
+                // With the last image's foot in sight the chapter has been seen to its end: the
+                // place is that image, which is what counts it as read, though short credit
+                // pages above it may still hold the top of the screen.
+                let place = foot ? images.count - 1 : at
+                let row = images[place]
+                let into = min(max((metrics.y - row.top) / max(row.height - spacing, 1), 0), 1)
+                model.stripAt(StripPos(image: UInt32(place), offset: Float(into)), footVisible: foot)
             }
         }
         if !restoring, let marker = markers.last, marker.trail == nil, middle > marker.top + marker.height / 2 {

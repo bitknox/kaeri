@@ -241,11 +241,7 @@ struct ReadViewAllPage: View {
                     // The row's own caption, so the first covers read as they did on Home.
                     ReadGrid(tiles: search.tiles, twoLines: true,
                              caption: .list(search.query, viewAll: search.query == page.query))
-                    if search.hasMore {
-                        HStack { if search.loading { ProgressView().controlSize(.small) } }
-                            .frame(maxWidth: .infinity, minHeight: 32)
-                            .onAppear { store.reading.searchMore() }
-                    }
+                    ReadSearchMore()
                 }
             }
             .padding(EdgeInsets(top: 8, leading: 16, bottom: 24, trailing: 16))
