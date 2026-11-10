@@ -43,6 +43,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
@@ -90,12 +93,18 @@ fun EinkOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = M
 
 /** A quiet action: words on paper, 52 dp tall. */
 @Composable
-fun EinkTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, underline: Boolean = false) {
+fun EinkTextButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, underline: Boolean = false, oneLine: Boolean = false) {
     Box(
         modifier.heightIn(min = EinkSizes.TextButtonHeight).einkClick(onClick = onClick).padding(horizontal = 12.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = EinkType.Label.copy(textDecoration = if (underline) TextDecoration.Underline else null))
+        val style = EinkType.Label.copy(textDecoration = if (underline) TextDecoration.Underline else null)
+        if (oneLine) {
+            // One line in a full bar: the words shrink a little before they would wrap.
+            Text(text, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis, autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = style.fontSize))
+        } else {
+            Text(text, style = style)
+        }
     }
 }
 
@@ -116,7 +125,16 @@ fun <T> EinkSegmented(choices: List<T>, chosen: T, label: @Composable (T) -> Str
                     .einkClick(role = Role.Tab) { onChoose(choice) },
                 contentAlignment = Alignment.Center,
             ) {
-                Text(label(choice), style = EinkType.Label.copy(fontWeight = if (on) FontWeight.Bold else FontWeight.Medium))
+                // One line: a long choice shrinks a little to fit its part, never wrapping onto the border.
+                val style = EinkType.Label.copy(fontWeight = if (on) FontWeight.Bold else FontWeight.Medium)
+                Text(
+                    label(choice),
+                    style = style,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    autoSize = TextAutoSize.StepBased(minFontSize = 12.sp, maxFontSize = style.fontSize),
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                )
             }
         }
     }

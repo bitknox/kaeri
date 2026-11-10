@@ -764,11 +764,9 @@
     <string name="eink_ask_body">Kaeri znalazł oznaki ekranu e-ink, ale nie mógł tego potwierdzić. Układ e-ink dzieli tekst na strony zamiast przewijać, nigdy nie animuje i prosi ekran o samoczyszczenie, gdy trzeba.</string>
     <string name="eink_ask_yes">Użyj układu e-ink</string>
     <string name="eink_ask_no">Zostaw standardowy układ</string>
-    <string name="eink_ask_later">Możesz to zmienić później w Ustawieniach, w sekcji Ekran.</string>
     <string name="eink_colour_title">Czy ten ekran pokazuje kolory?</string>
     <string name="eink_colour_body">To urządzenie nie mówi, czy ma kolory, więc Kaeri nie wie. Spójrz na cztery kwadraty.</string>
     <string name="eink_colour_squares">Cztery kwadraty: czerwony, zielony, niebieski i bursztynowy</string>
-    <string name="eink_colour_hint">Jeśli wyglądają jak cztery szarości, wybierz Tylko szarości. Możesz to zmienić w Ustawienia › Ekran.</string>
     <string name="eink_colour_yes">Tak, kolory</string>
     <string name="eink_colour_no">Tylko szarości</string>
     <string name="eink_colour_skip">Pomiń</string>

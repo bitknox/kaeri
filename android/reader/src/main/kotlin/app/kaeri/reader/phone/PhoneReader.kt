@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.view.accessibility.AccessibilityManager
 import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.EnterTransition
@@ -145,6 +146,7 @@ import app.kaeri.i18n.Strings
 import app.kaeri.reader.LocalPageTone
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.PageWaits
+import app.kaeri.reader.openingClock
 import app.kaeri.reader.PagedReader
 import app.kaeri.reader.ReaderAction
 import app.kaeri.reader.ReaderKeyRules
@@ -264,11 +266,8 @@ fun PhoneReader(
     // A demo work opens with the chrome and its credit held for 3 s; the credit returns with the
     // chrome on every tap.
     val demo = view?.demoCredit
-    // The pager reports the first page as a turn; that report must not take the held chrome away.
-    var demoOpening by remember { mutableStateOf(false) }
     LaunchedEffect(demo != null, view?.chapter?.id) {
         if (demo == null) return@LaunchedEffect
-        demoOpening = true
         chrome = true
         delay(DEMO_CREDIT_HOLD_MILLIS)
         chrome = false
@@ -330,8 +329,17 @@ fun PhoneReader(
         // The last page of the chapter's story, before its end page.
         val last = state.leaves.indexOfLast { !it.endPage }.coerceAtLeast(0)
         when (action) {
-            ReaderAction.FORWARD -> if (novelOpen) place.turn(true) else pager.forward(TurnHow.KEY)
-            ReaderAction.BACK -> if (novelOpen) place.turn(false) else pager.back(TurnHow.KEY)
+            // On the end page a forward key crosses to the next chapter, as its hint says.
+            ReaderAction.FORWARD -> when {
+                novelOpen && place.ended -> session.crossOn()
+                novelOpen -> place.turn(true)
+                else -> pager.forward(TurnHow.KEY)
+            }
+            ReaderAction.BACK -> when {
+                novelOpen && place.ended -> place.ended = false
+                novelOpen -> place.turn(false)
+                else -> pager.back(TurnHow.KEY)
+            }
             ReaderAction.CONTROLS -> chrome = !chrome
             ReaderAction.CLEAN -> {}
             ReaderAction.FIRST -> if (novelOpen) place.go(0) else pager.go(0, TurnHow.JUMP)
@@ -459,6 +467,12 @@ fun PhoneReader(
                 }
                 novelOpen && view != null -> {
                     novel(place) { chrome = !chrome }
+                    // The text comes from the source after the chapter opens: the opening plate, with
+                    // what it waits on and for how long, stays over the page until the first one shows.
+                    var novelPlateGone by remember(view.chapter.id) { mutableStateOf(false) }
+                    if (!novelPlateGone && place.failed == null) {
+                        Opening(state, done = place.ready, drawn = place.ready, fades = fades && leaving == null, onGone = { novelPlateGone = true })
+                    }
                     val failed = place.failed
                     when {
                         failed != null -> Box(Modifier.fillMaxSize().background(colours.ground)) {
@@ -472,7 +486,7 @@ fun PhoneReader(
                                 instant = instant,
                             )
                         }
-                        place.ended -> NovelEndPage(state, session, actions, images, direction, onBack = { place.ended = false }, cover = cover, onFirstPage = {
+                        place.ended -> NovelEndPage(state, session, actions, images, direction, tapZones, onBack = { place.ended = false }, cover = cover, onFirstPage = {
                             place.ended = false
                             place.go(0)
                         })
@@ -519,16 +533,17 @@ fun PhoneReader(
                     direction = direction,
                     zones = tapZones,
                     onControls = { chrome = !chrome },
-                    onShown = { leaf, how ->
+                    onShown = { leaf, how, turned ->
                         session.shown(leaf, how)
-                        if (how != TurnHow.JUMP) {
-                            if (demoOpening) demoOpening = false else chrome = false
-                        }
+                        // A turn takes the chrome away; the opening page and a new layout of the same
+                        // place (after a rotation) leave it as it is.
+                        if (turned && how != TurnHow.JUMP) chrome = false
                     },
                     onMissing = session::needPage,
                     onRetry = { session.retry(it.toUInt()) },
                     onJumped = session::jumped,
                     endPage = { PhoneEndPage(state, session, actions, images, onFirstPage = { pager.go(0, TurnHow.JUMP) }, cover = cover, pageGround = background) },
+                    onPastEnd = session::crossOn,
                     motion = fades,
                     onReady = {
                         openingHeld = false
@@ -1059,6 +1074,7 @@ private fun NovelEndPage(
     actions: PhoneReaderActions,
     images: PageImages,
     direction: ReadDirection,
+    zones: TapZones,
     onBack: () -> Unit,
     cover: (@Composable (Modifier) -> Unit)?,
     onFirstPage: () -> Unit,
@@ -1067,7 +1083,17 @@ private fun NovelEndPage(
     val far = with(density) { 80.dp.toPx() }
     val next = (state.end?.next ?: state.view?.next)
     Box(
-        Modifier.fillMaxSize().pointerInput(next?.id, direction) {
+        Modifier.fillMaxSize().pointerInput(zones) {
+            // A tap in the forward zone goes on, in the back zone returns to the text; the page's
+            // buttons take their own taps first.
+            detectTapGestures { at ->
+                when (zones.at(at.x / size.width)) {
+                    ReaderAction.FORWARD -> session.crossOn()
+                    ReaderAction.BACK -> onBack()
+                    else -> {}
+                }
+            }
+        }.pointerInput(next?.id, direction) {
             var total = 0f
             detectHorizontalDragGestures(
                 onDragStart = { total = 0f },
@@ -1080,7 +1106,7 @@ private fun NovelEndPage(
                     val forward = if (direction.rightToLeft) total > far else total < -far
                     val backward = if (direction.rightToLeft) total < -far else total > far
                     when {
-                        forward && next != null -> session.openChapter(next.id)
+                        forward && next != null -> session.crossOn()
                         backward -> onBack()
                     }
                 },
@@ -1236,13 +1262,13 @@ private fun Opening(
     onClose: () -> Unit,
 ) {
     val context = LocalContext.current
-    var waited by remember { mutableIntStateOf(0) }
-    LaunchedEffect(Unit) {
-        delay(PageWaits.PLATE_MS)
-        waited = PageWaits.PLATE_MS.toInt()
+    // Counted from the ask, so a novel's plate after the chapter opens goes on from the first one.
+    val since = remember(state.openingSince) { state.openingSince.takeIf { it > 0 } ?: openingClock() }
+    var waited by remember { mutableIntStateOf((openingClock() - since).toInt()) }
+    LaunchedEffect(since) {
         while (true) {
+            waited = (openingClock() - since).toInt()
             delay(200)
-            waited += 200
         }
     }
     val shown = remember { Animatable(1f) }

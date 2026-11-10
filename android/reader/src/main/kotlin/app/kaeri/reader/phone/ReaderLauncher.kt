@@ -4,6 +4,7 @@ package app.kaeri.reader.phone
 
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.WorkId
+import app.kaeri.engine.model.ReadPlace
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,13 +34,30 @@ object ReaderLauncher {
     /** A settings page asked for from outside the reader, such as the Do Not Disturb rule's. */
     val settings: StateFlow<SettingsPane?> = _settings.asStateFlow()
 
+    /** The open request's place, kept while the activity is made anew (font size, language). */
+    private var kept: Pair<ReaderRequest, ReadPlace>? = null
+
     fun open(request: ReaderRequest) {
+        kept = null
         _request.value = request
     }
 
     fun close() {
+        kept = null
         _request.value = null
     }
+
+    /**
+     * The reader of [request] goes with its activity while the request stays: the next reader for
+     * it opens at [place], the chapter and page it showed, and not where the request began.
+     */
+    fun keep(request: ReaderRequest, place: ReadPlace?) {
+        if (_request.value != request) return
+        kept = place?.let { request to it }
+    }
+
+    /** Where the reader of [request] was when its activity went, if it went while open. */
+    fun keptPlace(request: ReaderRequest): ReadPlace? = kept?.takeIf { it.first == request }?.second
 
     /** Show the open reader's settings on [pane]. */
     fun showSettings(pane: SettingsPane) {

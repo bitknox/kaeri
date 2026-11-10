@@ -1337,7 +1337,7 @@
     <!-- The answer that keeps the phone layout. -->
     <string name="eink_ask_no">Keep the standard layout</string>
     <!-- Foot of the e-ink question. -->
-    <string name="eink_ask_later">You can change this later in Settings, under Screen.</string>
+    <string name="eink_ask_later">You can change this later in Settings, under Reading.</string>
     <!-- Heading of the question asked when an e-ink screen may or may not show colour. -->
     <string name="eink_colour_title">Does this screen show colour?</string>
     <!-- Line under it, above four coloured squares. -->
@@ -1345,7 +1345,7 @@
     <!-- What a screen reader says for the four squares. -->
     <string name="eink_colour_squares">Four squares: red, green, blue and amber</string>
     <!-- Line under the squares. -->
-    <string name="eink_colour_hint">If they look like four greys, choose Only greys. You can change this in Settings › Screen.</string>
+    <string name="eink_colour_hint">If they look like four greys, choose Only greys. You can change this in Settings › Reading.</string>
     <!-- The answer for a colour screen. -->
     <string name="eink_colour_yes">Yes, colour</string>
     <!-- The answer for a grey screen. -->
@@ -5154,6 +5154,8 @@
     <string name="download_next">Next %1$,d unread</string>
     <!-- Download menu item. -->
     <string name="download_unread">Every unread chapter</string>
+    <!-- Short note after Next 5 or Next 10 unread when those chapters are all on this device already. -->
+    <string name="download_already">Already downloaded</string>
     <!-- Download menu item: a volume's chapters not yet downloaded. -->
     <plurals name="download_volume_count">
         <item quantity="one">%1$s · 1 chapter</item>
@@ -5679,6 +5681,16 @@
     <string name="settings_counts_read_marked">When you mark it</string>
     <!-- Line under Counts as read when it is When you mark it. -->
     <string name="settings_counts_read_marked_note">Continue and your trackers follow your marks</string>
+    <!-- Group in the Reading pane: how this device's screen is drawn. -->
+    <string name="settings_screen_group">Screen</string>
+    <!-- Row in Screen: the e-ink layout, on or off. -->
+    <string name="settings_eink_layout">E-ink layout</string>
+    <!-- Line under E-ink layout. -->
+    <string name="settings_eink_layout_note">Pages instead of scrolling, nothing animates, and the screen clears itself when it needs to</string>
+    <!-- Row in Screen, with the e-ink layout on: the panel shows colour. -->
+    <string name="settings_eink_colour">Colour screen</string>
+    <!-- Line under Colour screen. -->
+    <string name="settings_eink_colour_note">Off draws every picture in greys</string>
     <!-- Group: series settings that follow you to your other devices. -->
     <string name="settings_follow_group">Series settings that follow you</string>
     <!-- Row in that group. -->

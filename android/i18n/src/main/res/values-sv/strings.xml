@@ -694,11 +694,9 @@
     <string name="eink_ask_body">Kaeri hittade tecken på en e-ink-skärm men kunde inte bekräfta det. E-ink-layouten bläddrar sidor i stället för att rulla, animerar aldrig och ber skärmen rensa sig själv vid behov.</string>
     <string name="eink_ask_yes">Använd e-ink-layouten</string>
     <string name="eink_ask_no">Behåll standardlayouten</string>
-    <string name="eink_ask_later">Du kan ändra det här senare i Inställningar, under Skärm.</string>
     <string name="eink_colour_title">Visar den här skärmen färg?</string>
     <string name="eink_colour_body">Kaeri kunde inte avgöra det på den här enheten. Titta på de fyra rutorna.</string>
     <string name="eink_colour_squares">Fyra rutor: röd, grön, blå och bärnsten</string>
-    <string name="eink_colour_hint">Om de ser ut som fyra gråtoner, välj Bara gråtoner. Du kan ändra det i Inställningar › Skärm.</string>
     <string name="eink_colour_yes">Ja, färg</string>
     <string name="eink_colour_no">Bara gråtoner</string>
     <string name="eink_colour_skip">Hoppa över</string>

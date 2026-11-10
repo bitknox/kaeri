@@ -694,11 +694,9 @@
     <string name="eink_ask_body">Kaeri hat Hinweise auf einen E-Ink-Bildschirm gefunden, konnte es aber nicht bestätigen. Das E-Ink-Layout blättert, statt zu scrollen, zeigt keine Animationen und lässt den Bildschirm sich selbst löschen, wenn nötig.</string>
     <string name="eink_ask_yes">E-Ink-Layout verwenden</string>
     <string name="eink_ask_no">Standardlayout behalten</string>
-    <string name="eink_ask_later">Du kannst das später unter Einstellungen › Bildschirm ändern.</string>
     <string name="eink_colour_title">Zeigt dieser Bildschirm Farbe?</string>
     <string name="eink_colour_body">Kaeri konnte es an diesem Gerät nicht erkennen. Sieh dir die vier Quadrate an.</string>
     <string name="eink_colour_squares">Vier Quadrate: Rot, Grün, Blau und Bernstein</string>
-    <string name="eink_colour_hint">Wirken sie wie vier Grautöne, wähle Nur Grau. Du kannst das unter Einstellungen › Bildschirm ändern.</string>
     <string name="eink_colour_yes">Ja, Farbe</string>
     <string name="eink_colour_no">Nur Grau</string>
     <string name="eink_colour_skip">Überspringen</string>

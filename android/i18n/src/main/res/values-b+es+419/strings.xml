@@ -729,11 +729,9 @@
     <string name="eink_ask_body">Kaeri encontró señales de una pantalla e-ink, pero no pudo confirmarlo. El diseño e-ink pasa páginas en lugar de desplazar, nunca usa animaciones y pide a la pantalla que se limpie cuando hace falta.</string>
     <string name="eink_ask_yes">Usar el diseño e-ink</string>
     <string name="eink_ask_no">Mantener el diseño estándar</string>
-    <string name="eink_ask_later">Puedes cambiarlo luego en Ajustes, en Pantalla.</string>
     <string name="eink_colour_title">¿Esta pantalla muestra color?</string>
     <string name="eink_colour_body">Kaeri no pudo saberlo en este dispositivo. Mira los cuatro cuadrados.</string>
     <string name="eink_colour_squares">Cuatro cuadrados: rojo, verde, azul y ámbar</string>
-    <string name="eink_colour_hint">Si se ven como cuatro grises, elige Solo grises. Puedes cambiarlo en Ajustes › Pantalla.</string>
     <string name="eink_colour_yes">Sí, a color</string>
     <string name="eink_colour_no">Solo grises</string>
     <string name="eink_colour_skip">Omitir</string>

@@ -659,11 +659,9 @@
     <string name="eink_ask_body">Kaeri thấy dấu hiệu của màn hình e-ink nhưng chưa chắc chắn. Bố cục e-ink lật từng trang thay vì cuộn, không có hiệu ứng chuyển động và tự yêu cầu màn hình làm sạch khi cần.</string>
     <string name="eink_ask_yes">Dùng bố cục e-ink</string>
     <string name="eink_ask_no">Giữ bố cục chuẩn</string>
-    <string name="eink_ask_later">Bạn có thể đổi lại sau trong Cài đặt, mục Màn hình.</string>
     <string name="eink_colour_title">Màn hình này có hiển thị màu không?</string>
     <string name="eink_colour_body">Kaeri không xác định được từ thiết bị này. Hãy nhìn bốn ô vuông.</string>
     <string name="eink_colour_squares">Bốn ô vuông: đỏ, xanh lá, xanh lam và hổ phách</string>
-    <string name="eink_colour_hint">Nếu chúng trông như bốn màu xám, hãy chọn Chỉ có xám. Bạn có thể đổi trong Cài đặt › Màn hình.</string>
     <string name="eink_colour_yes">Có, màn hình màu</string>
     <string name="eink_colour_no">Chỉ có xám</string>
     <string name="eink_colour_skip">Bỏ qua</string>

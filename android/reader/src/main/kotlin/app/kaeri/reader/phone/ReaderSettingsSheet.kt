@@ -9,6 +9,8 @@ package app.kaeri.reader.phone
 
 import androidx.activity.compose.BackHandler
 import android.content.Context
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.selection.selectable
@@ -259,12 +261,18 @@ private fun stepSize(session: ReaderSession, row: ReaderSettingRow, value: Reade
 }
 
 /** The five looks as round "Aa" swatches in their own paper and ink, the chosen one ringed in silk. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LookSwatches(context: Context, session: ReaderSession, row: ReaderSettingRow) {
     val chosen = (row.value as? ReaderValue.Choice)?.name
     val order = listOf("paper", "light", "sepia", "dark", "system")
     val looks = order.filter { name -> row.choices.any { (it as? ReaderValue.Choice)?.name == name } }
-    Row(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 10.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+    // The five in one row; at the largest text sizes the last ones go to a second row whole.
+    FlowRow(
+        Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         looks.forEach { name ->
             val selected = name == chosen
             val label = choiceLabel(context, Key.LOOK, ReaderValue.Choice(name)).orEmpty()
@@ -673,7 +681,16 @@ internal fun Segments(labels: List<String>, selected: Int, onSelect: (Int) -> Un
                     inactiveBorderColor = Chrome.rule,
                 ),
                 icon = {},
-            ) { Text(label, fontSize = 14.sp, maxLines = 1) }
+            ) {
+                // At the largest text sizes a label shrinks to fit its segment, and is cut with an
+                // ellipsis only past that.
+                Text(
+                    label,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    autoSize = TextAutoSize.StepBased(minFontSize = 9.sp, maxFontSize = 14.sp),
+                )
+            }
         }
     }
 }

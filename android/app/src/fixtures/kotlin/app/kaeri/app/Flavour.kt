@@ -117,7 +117,11 @@ internal object Flavour {
     var einkSupport: String? = null
         private set
 
+    /** The process's launch: the engine starts once, so a rebuilt activity keeps the files it runs on. */
+    private var launched: EngineLaunch? = null
+
     fun launch(context: Context, intent: Intent): EngineLaunch {
+        launched?.let { return it }
         appContext = context.applicationContext
         val named = intent.getStringExtra("scene")
         val scene = named?.let(FixtureScene::named) ?: FixtureScene.WATCHING
@@ -135,7 +139,9 @@ internal object Flavour {
         intent.getStringExtra("media")?.let { fixtureMedia = it }
         FixtureCasts.scene = CastScene.named(intent.getStringExtra("cast"))
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)
-        return EngineLaunch.fixtures(scene, context.cacheDir).copy(platform = enginePlatform(context), profile = intent.getStringExtra("profile") ?: ProfileChoice.saved(context))
+        return EngineLaunch.fixtures(scene, context.cacheDir)
+            .copy(platform = enginePlatform(context), profile = intent.getStringExtra("profile") ?: ProfileChoice.saved(context))
+            .also { launched = it }
     }
 
     /**

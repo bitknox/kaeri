@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -340,10 +341,12 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                                 .padding(start = 24.dp, end = 24.dp, bottom = 24.dp),
                         ) { top() }
                         VerticalDivider(color = ObiSilk.FaintRule)
-                        LazyColumn(Modifier.weight(1f).fillMaxHeight(), contentPadding = PaddingValues(bottom = 24.dp)) { list() }
+                        val listed = rememberLazyListState()
+                        LazyColumn(Modifier.weight(1f).fillMaxHeight().panelPageKeys(listed), state = listed, contentPadding = PaddingValues(bottom = 24.dp)) { list() }
                     }
                 } else {
-                    LazyColumn(Modifier.padding(padding).fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
+                    val listed = rememberLazyListState()
+                    LazyColumn(Modifier.padding(padding).fillMaxSize().panelPageKeys(listed), state = listed, contentPadding = PaddingValues(bottom = 24.dp)) {
                         if (chosen == null) {
                             item(key = "top") { Column(Modifier.padding(horizontal = 16.dp)) { top() } }
                         }

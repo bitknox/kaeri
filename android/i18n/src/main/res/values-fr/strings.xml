@@ -729,11 +729,9 @@
     <string name="eink_ask_body">Kaeri a trouvé des signes d\'un écran e-ink sans pouvoir le confirmer. La mise en page e-ink tourne les pages au lieu de défiler, n\'anime rien et demande à l\'écran de se rafraîchir quand il le faut.</string>
     <string name="eink_ask_yes">Passer en mise en page e-ink</string>
     <string name="eink_ask_no">Garder la mise en page standard</string>
-    <string name="eink_ask_later">Vous pourrez changer cela plus tard dans Réglages, sous Écran.</string>
     <string name="eink_colour_title">Cet écran affiche-t-il la couleur ?</string>
     <string name="eink_colour_body">Kaeri n\'a pas pu le savoir pour cet appareil. Regardez les quatre carrés.</string>
     <string name="eink_colour_squares">Quatre carrés : rouge, vert, bleu et ambre</string>
-    <string name="eink_colour_hint">S\'ils ressemblent à quatre gris, choisissez Gris seulement. Modifiable dans Réglages › Écran.</string>
     <string name="eink_colour_yes">Oui, en couleur</string>
     <string name="eink_colour_no">Gris seulement</string>
     <string name="eink_colour_skip">Passer</string>

@@ -66,6 +66,9 @@ data class ReaderJump(val leaf: Int, val strip: StripPos?, val id: Long)
 /** A place in the open novel the engine asked for: Back to page, Start over, Go back. */
 data class NovelGoTo(val pos: NovelPos, val id: Long)
 
+/** The clock a chapter's opening wait counts on, in milliseconds. */
+fun openingClock(): Long = System.nanoTime() / 1_000_000
+
 /** What the engine said of the open session. */
 data class ReaderState(
     /** Asked to open and not yet answered. */
@@ -108,6 +111,8 @@ data class ReaderState(
     /** While opening: the chapter, once the engine knows it, and what it waits on. */
     val openingChapter: ChapterRow? = null,
     val openingWait: ReaderWait? = null,
+    /** When the chapter on screen was asked for, on [openingClock]; 0 when nothing was asked. */
+    val openingSince: Long = 0L,
     val preview: NextPreview? = null,
     /** The chapter a strip flowed on from, drawn above this one in the same scroll. */
     val previous: ReaderState? = null,
@@ -178,6 +183,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
     private var flowFrom: ReaderState? = null
     private var startAt: ReadPlace? = null
     private var shownPage: UInt? = null
+    /** Where the reader is: the chapter on screen and the page, strip spot or text place shown. */
+    private var here: ReadPlace? = null
     private val askedPages = mutableSetOf<PageKey>()
 
     /** Hear the store's reader events until what is returned is called. */
@@ -194,8 +201,13 @@ class ReaderSession(private val send: (Command) -> Unit) {
         flowFrom = null
         startAt = null
         shownPage = null
+        here = null
         askedPages.clear()
-        _state.value = ReaderState(opening = true, openingChapter = state.value.openingChapter?.takeIf { it.id == chapter })
+        _state.value = ReaderState(
+            opening = true,
+            openingChapter = state.value.openingChapter?.takeIf { it.id == chapter },
+            openingSince = openingClock(),
+        )
         reader(ReaderCommand.Open(work, chapter, at, surface))
     }
 
@@ -213,6 +225,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
         val session = now.session ?: return
         val chapter = now.chapter ?: return
         shownPage = now.leaves.getOrNull(leaf)?.parts?.firstOrNull()?.page ?: shownPage
+        here = here?.takeIf { it.chapter == chapter }?.copy(page = shownPage, strip = null)
         reader(ReaderCommand.Shown(session, chapter, leaf.toUInt(), how))
         val notice = now.notice
         if (notice != null && notice.notice.lastsMs == 0u && how != TurnHow.JUMP && how != TurnHow.PLACED) dismissNotice(notice.id)
@@ -221,13 +234,18 @@ class ReaderSession(private val send: (Command) -> Unit) {
     /** A strip settled at [at]; [footVisible] when the last image's foot is in view. */
     fun stripAt(at: StripPos, footVisible: Boolean) {
         val now = state.value
-        reader(ReaderCommand.StripAt(now.session ?: return, now.chapter ?: return, at, footVisible))
+        val chapter = now.chapter ?: return
+        here = here?.takeIf { it.chapter == chapter }?.copy(page = at.image, strip = at)
+        reader(ReaderCommand.StripAt(now.session ?: return, chapter, at, footVisible))
     }
 
     /** The paginator turned in a novel. A notice lies over the text, so the first turn takes it. */
     fun novelAt(pos: NovelPos, page: UInt, pages: UInt, how: TurnHow) {
         val now = state.value
-        reader(ReaderCommand.NovelAt(now.session ?: return, now.novel?.chapter ?: now.chapter ?: return, pos, page, pages, how))
+        val chapter = now.novel?.chapter ?: now.chapter ?: return
+        val work = work
+        if (work != null) here = (here?.takeIf { it.chapter == chapter } ?: ReadPlace(work, chapter, null, null, null)).copy(novel = pos)
+        reader(ReaderCommand.NovelAt(now.session ?: return, chapter, pos, page, pages, how))
         val notice = now.notice
         if (notice != null && how != TurnHow.JUMP && how != TurnHow.PLACED) dismissNotice(notice.id)
     }
@@ -264,6 +282,18 @@ class ReaderSession(private val send: (Command) -> Unit) {
         awaiting = now.view?.next?.takeIf { it.id == chapter } ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
         awaitingOpen = true
         reader(ReaderCommand.OpenChapter(session, chapter))
+    }
+
+    /**
+     * A forward turn on the end page, by swipe, tap or key: the next chapter opens, as the page's
+     * hint says. False when there is no next chapter; a second turn while it opens asks nothing.
+     */
+    fun crossOn(): Boolean {
+        val now = state.value
+        val next = now.end?.next ?: now.view?.next ?: return false
+        if (awaitingOpen && awaiting?.id == next.id) return true
+        openChapter(next.id)
+        return true
     }
 
     /**
@@ -348,6 +378,12 @@ class ReaderSession(private val send: (Command) -> Unit) {
 
     fun loadSettings(medium: Medium, work: WorkId?) = reader(ReaderCommand.LoadSettings(medium, work))
 
+    /**
+     * Where the reader is, to open there again when the activity is made anew: the chapter on
+     * screen and the page, strip spot or text place it shows. Null before a chapter opened.
+     */
+    fun place(): ReadPlace? = here
+
     fun close() {
         val session = state.value.session ?: return
         reader(ReaderCommand.Close(session))
@@ -415,6 +451,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
                 awaiting = null
                 startAt = event.v1.start
                 shownPage = null
+                here = event.v1.start
                 askedPages.clear()
                 // A strip that flowed on keeps the chapter it left above this one.
                 val previous = flowFrom?.takeIf { flowTo == event.v1.chapter.id }
@@ -428,6 +465,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
                     volumes = now.volumes,
                     layout = now.layout + 1,
                     previous = previous,
+                    // A novel's text comes after this; the wait it shows counts from the ask.
+                    openingSince = now.openingSince,
                 )
             }
             is ReaderEvent.Leaves -> {

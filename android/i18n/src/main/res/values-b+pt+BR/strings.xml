@@ -729,11 +729,9 @@
     <string name="eink_ask_body">O Kaeri achou sinais de uma tela e-ink, mas não conseguiu confirmar. O layout e-ink passa as páginas em vez de rolar, nunca anima e pede à tela que se limpe quando precisar.</string>
     <string name="eink_ask_yes">Usar o layout e-ink</string>
     <string name="eink_ask_no">Manter o layout padrão</string>
-    <string name="eink_ask_later">Você pode mudar isso depois em Ajustes, em Tela.</string>
     <string name="eink_colour_title">Esta tela mostra cores?</string>
     <string name="eink_colour_body">O Kaeri não conseguiu saber por este dispositivo. Olhe os quatro quadrados.</string>
     <string name="eink_colour_squares">Quatro quadrados: vermelho, verde, azul e âmbar</string>
-    <string name="eink_colour_hint">Se parecerem quatro cinzas, escolha Só cinzas. Você pode mudar isso em Ajustes › Tela.</string>
     <string name="eink_colour_yes">Sim, colorida</string>
     <string name="eink_colour_no">Só cinzas</string>
     <string name="eink_colour_skip">Pular</string>
