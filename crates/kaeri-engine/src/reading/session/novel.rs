@@ -252,6 +252,34 @@ fn wake(tx: &Outbox, session: u64, wake: ReaderWake) -> impl Fn() + Send + 'stat
     }
 }
 
+/// Where an open off the actor puts what it came to, once. An open that ends without putting
+/// anything, by a panic on the way, puts a failure as it unwinds, so the reader shows the chapter
+/// failed instead of waiting on it.
+struct PutOnce<F: FnOnce(Prepared)>(Option<F>);
+
+impl<F: FnOnce(Prepared)> PutOnce<F> {
+    fn put(mut self, prepared: Prepared) {
+        if let Some(put) = self.0.take() {
+            put(prepared);
+        }
+    }
+
+    /// Nothing to put: the reader closed before the open began.
+    fn forget(mut self) {
+        self.0 = None;
+    }
+}
+
+impl<F: FnOnce(Prepared)> Drop for PutOnce<F> {
+    fn drop(&mut self) {
+        if let Some(put) = self.0.take() {
+            put(Prepared::Failed(ReadingFailure::Other {
+                reason: "the chapter stopped opening".into(),
+            }));
+        }
+    }
+}
+
 fn failed(cx: &Cx<'_>, failure: ReadingFailure) {
     let _ = cx
         .tx
@@ -484,17 +512,17 @@ impl Session {
         let opening = self.opening(cx);
         let done = wake(cx.tx, self.id, ReaderWake::Prepared(generation));
         // Opens can finish out of order: one for an older layout never replaces a newer one.
-        let put = move |p: Prepared| {
+        let put = PutOnce(Some(move |p: Prepared| {
             if let Ok(mut s) = slot.lock()
                 && s.as_ref().is_none_or(|(g, _)| *g < generation)
             {
                 *s = Some((generation, p));
             }
             done();
-        };
+        }));
         if chapter.format != SOURCE {
             let path = chapter.path.clone();
-            std::thread::spawn(move || put(open_file(&path, opening)));
+            std::thread::spawn(move || put.put(open_file(&path, opening)));
             return;
         }
         let sources = cx.services.book_sources.clone();
@@ -514,12 +542,13 @@ impl Session {
         tokio::spawn(async move {
             // Closed before its turn came: the source is not asked for nothing.
             if gone.is() {
+                put.forget();
                 return;
             }
             if let Some(ahead) = ahead
                 && let Some(feed) = ahead.feed().await
             {
-                put(Prepared::Feed(feed));
+                put.put(Prepared::Feed(feed));
                 return;
             }
             let prepared = match sources.open(&work, &id, None, now).await {
@@ -582,7 +611,7 @@ impl Session {
                     ChapterContent::Images(_) => Prepared::Failed(ReadingFailure::NotFound),
                 },
             };
-            put(prepared);
+            put.put(prepared);
         });
     }
 

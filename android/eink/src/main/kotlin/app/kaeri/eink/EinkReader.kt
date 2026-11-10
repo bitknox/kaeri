@@ -84,6 +84,11 @@ import app.kaeri.reader.ReaderState
 import app.kaeri.reader.ShownNotice
 import app.kaeri.reader.TapZones
 import app.kaeri.reader.readerKeys
+import app.kaeri.reader.onKeyDown
+import app.kaeri.reader.takesKeyUp
+import app.kaeri.reader.phone.NovelPlace
+import app.kaeri.engine.core.Medium
+import androidx.compose.runtime.SideEffect
 import app.kaeri.reader.rememberPagedReaderState
 import app.kaeri.reader.rightToLeft
 import app.kaeri.reader.phone.endReadLine
@@ -143,9 +148,13 @@ fun EinkReader(
     modifier: Modifier = Modifier,
     pager: PagedReaderState = rememberPagedReaderState(),
     showZones: Boolean = false,
+    /** Draws a novel's web view, as the phone's reader does; without it a novel only waits. */
+    novel: (@Composable (place: NovelPlace, onControls: () -> Unit) -> Unit)? = null,
 ) {
     val view = state.view
     val direction = view?.direction ?: ReadDirection.RIGHT_TO_LEFT
+    val place = remember { NovelPlace() }
+    val novelOpen = novel != null && (state.novel != null || view?.medium == Medium.NOVEL)
     val host = LocalView.current
     var chrome by remember { mutableStateOf(false) }
     var zones by remember { mutableStateOf(showZones) }
@@ -224,12 +233,22 @@ fun EinkReader(
     fun act(action: ReaderAction) {
         when (action) {
             // Contents turns its own pages, not the reader's under it.
-            ReaderAction.FORWARD -> if (layer == EinkLayer.Contents) contentsKeys.forward() else pager.forward(TurnHow.KEY)
-            ReaderAction.BACK -> if (layer == EinkLayer.Contents) contentsKeys.back() else pager.back(TurnHow.KEY)
+            ReaderAction.FORWARD -> when {
+                layer == EinkLayer.Contents -> contentsKeys.forward()
+                novelOpen && place.ended -> session.crossOn()
+                novelOpen -> place.turn(true)
+                else -> pager.forward(TurnHow.KEY)
+            }
+            ReaderAction.BACK -> when {
+                layer == EinkLayer.Contents -> contentsKeys.back()
+                novelOpen && place.ended -> place.ended = false
+                novelOpen -> place.turn(false)
+                else -> pager.back(TurnHow.KEY)
+            }
             ReaderAction.CONTROLS -> toggleChrome()
             ReaderAction.CLEAN -> paint(EinkPaint.Clean)
-            ReaderAction.FIRST -> pager.go(0, TurnHow.JUMP)
-            ReaderAction.LAST -> pager.go(state.leaves.indexOfLast { !it.endPage }.coerceAtLeast(0), TurnHow.JUMP)
+            ReaderAction.FIRST -> if (novelOpen) place.go(0) else pager.go(0, TurnHow.JUMP)
+            ReaderAction.LAST -> if (novelOpen) place.go((place.pages - 1).coerceAtLeast(0)) else pager.go(state.leaves.indexOfLast { !it.endPage }.coerceAtLeast(0), TurnHow.JUMP)
             ReaderAction.ESCAPE -> when {
                 layer != EinkLayer.None -> show(EinkLayer.None)
                 chrome -> toggleChrome()
@@ -239,11 +258,26 @@ fun EinkReader(
         }
     }
 
+    val keyRules = ReaderKeyRules(direction, volumeTurns = state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.VOLUME_KEYS_TURN }?.let { (it.value as? ReaderValue.Toggle)?.on } ?: true, volumeDownForward = !ReaderLook.volumeSwapped(LocalContext.current), holdCleans = painter.controller.available)
+    // A novel's web view hears keys first and hands the reader's own over.
+    SideEffect {
+        place.keys = { event ->
+            when (event.action) {
+                android.view.KeyEvent.ACTION_DOWN -> keyRules.onKeyDown(event)?.let { answer ->
+                    answer.action?.let(::act)
+                    true
+                } ?: false
+                android.view.KeyEvent.ACTION_UP -> keyRules.takesKeyUp(event.keyCode)
+                else -> false
+            }
+        }
+    }
+
     Box(
         modifier
             .fillMaxSize()
             .background(EinkColours.Paper)
-            .readerKeys(ReaderKeyRules(direction, volumeTurns = state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.VOLUME_KEYS_TURN }?.let { (it.value as? ReaderValue.Toggle)?.on } ?: true, volumeDownForward = !ReaderLook.volumeSwapped(LocalContext.current), holdCleans = painter.controller.available), ::act)
+            .readerKeys(keyRules, ::act)
             // The first touch anywhere clears the guide, and still turns or opens what it touched.
             .pointerInput(zones) {
                 if (!zones) return@pointerInput
@@ -255,7 +289,8 @@ fun EinkReader(
     ) {
         val failure = state.failure
         when {
-            failure != null && state.leaves.isEmpty() -> EinkChapterFailed(failure, state, session, onRetry = { session.retry(null) }, onBack = actions.onBack)
+            failure != null && state.leaves.isEmpty() && state.novel == null -> EinkChapterFailed(failure, state, session, onRetry = { session.retry(null) }, onBack = actions.onBack)
+            novelOpen && view != null && novel != null -> EinkNovel(state, session, place, actions, chrome, { paint(it) }, ::toggleChrome, novel)
             state.leaves.isEmpty() -> EinkWaiting(state)
             else -> PagedReader(
                 state = state,
@@ -337,12 +372,12 @@ fun EinkReader(
                 modifier = Modifier.align(Alignment.TopCenter),
                 subtitle = view.demoCredit?.let { demo -> demo.licence?.let { Strings.readerDemoCredit(LocalContext.current, demo.series, demo.author, it) } ?: demo.credit },
             )
-            val page = state.shownPage(leaf?.parts?.firstOrNull()?.page?.toInt() ?: 0) + 1
+            val page = if (novelOpen) place.page + 1 else state.shownPage(leaf?.parts?.firstOrNull()?.page?.toInt() ?: 0) + 1
             EinkBottomBar(
                 page = page,
-                pages = state.shownPages,
-                onCredit = state.onUnkeptCredit,
-                parts = state.partTicks.map { state.shownPage(it.page) to it.missing },
+                pages = if (novelOpen) place.pages.coerceAtLeast(1) else state.shownPages,
+                onCredit = !novelOpen && state.onUnkeptCredit,
+                parts = if (novelOpen) emptyList() else state.partTicks.map { state.shownPage(it.page) to it.missing },
                 rtl = direction.rightToLeft,
                 backTo = state.backTo,
                 hasNext = view.next != null,
@@ -646,6 +681,23 @@ fun BoxScope.EinkPageFailed(page: Int, failure: ReadingFailure, retry: () -> Uni
  */
 @Composable
 fun BoxScope.EinkChapterFailed(failure: ReadingFailure, state: ReaderState, session: ReaderSession, onRetry: () -> Unit, onBack: () -> Unit) {
+    EinkChapterFailed(failure.text(LocalContext.current), state, session, onRetry, onBack)
+}
+
+/**
+ * The same screen in words: [line] under [title] when there is one, and without the glyph for
+ * an open still going on.
+ */
+@Composable
+fun BoxScope.EinkChapterFailed(
+    line: String,
+    state: ReaderState,
+    session: ReaderSession,
+    onRetry: () -> Unit,
+    onBack: () -> Unit,
+    title: String? = null,
+    glyph: Boolean = true,
+) {
     val context = LocalContext.current
     LaunchedEffect(Unit) { session.loadSources() }
     val sources = state.sources.orEmpty()
@@ -678,8 +730,13 @@ fun BoxScope.EinkChapterFailed(failure: ReadingFailure, state: ReaderState, sess
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        BrokenPageGlyph(EinkColours.Ink, Modifier.size(52.dp))
-        Text(failure.text(context), style = EinkType.Body, textAlign = TextAlign.Center)
+        if (glyph) BrokenPageGlyph(EinkColours.Ink, Modifier.size(52.dp))
+        if (title != null) {
+            Text(title, style = EinkType.ReaderTitle, textAlign = TextAlign.Center)
+            Text(line, style = EinkType.Body.copy(color = EinkColours.Secondary), textAlign = TextAlign.Center)
+        } else {
+            Text(line, style = EinkType.Body, textAlign = TextAlign.Center)
+        }
         if (sources.isNotEmpty()) {
             EinkSolidButton(Strings.readerFailedChoose(context), { choosing = true }, Modifier.fillMaxWidth())
             EinkOutlinedButton(Strings.readerTryAgain(context), onRetry, Modifier.fillMaxWidth())

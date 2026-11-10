@@ -501,7 +501,14 @@ impl PluginHost {
             .wasm_component_model(true)
             // The only mechanism that can stop a guest which never yields. Everything else here
             // is a default; async support is unconditional in wasmtime 47 and no longer a flag.
-            .epoch_interruption(true);
+            .epoch_interruption(true)
+            // A guest that faults or panics traps on explicit checks in its own code, never on a
+            // signal. Signal-based traps need wasmtime's handlers to see SIGILL and SIGSEGV
+            // first, and an Android app shares those signals with ART, debuggerd and the web
+            // view: there a guest's SIGILL can end the app instead of the call. The checks
+            // cost a little speed on every platform, and in exchange each one traps the same
+            // way, the way the tests on this machine see.
+            .signals_based_traps(false);
         if INTERPRETED {
             // Pulley's little-endian form at this machine's width: 64-bit on an arm64 phone,
             // 32-bit on a TV box running 32-bit Android.
@@ -511,6 +518,11 @@ impl PluginHost {
             })?;
         }
         Ok(config)
+    }
+
+    /// Whether a guest's trap relies on a signal handler: never, see [`Self::config`].
+    pub fn signals_based_traps(&self) -> bool {
+        self.engine.get_signals_based_traps()
     }
 
     fn from_config(
@@ -1092,6 +1104,13 @@ mod tests {
         let host = PluginHost::new(Limits::default(), None).unwrap();
         assert_eq!(host.engine.is_pulley(), INTERPRETED);
         assert_eq!(INTERPRETED, cfg!(any(target_os = "ios", feature = "interpret")));
+    }
+
+    #[test]
+    fn no_host_leaves_a_trap_to_a_signal_handler() {
+        let limits = Limits::default();
+        assert!(!PluginHost::new(limits, None).unwrap().signals_based_traps());
+        assert!(!PluginHost::for_inspection(limits).unwrap().signals_based_traps());
     }
 
     #[test]

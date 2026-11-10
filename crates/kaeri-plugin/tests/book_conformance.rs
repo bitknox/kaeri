@@ -433,6 +433,26 @@ async fn a_spinning_book_plugin_is_stopped_by_the_deadline_and_can_be_called_aga
 }
 
 #[tokio::test]
+async fn a_book_plugin_that_panics_is_an_error_and_can_be_called_again() {
+    let Some(path) = hostile() else { return };
+    let host = host();
+    let plugin = host.load_book(&path).await.expect("load");
+
+    // The guest's panic traps: the host answers with an error, on no signal of its own.
+    assert!(!host.signals_based_traps());
+    let error = plugin.chapter_content("x", "panics").await.expect_err("the guest trapped");
+    let PluginError::Trap { plugin: id, message } = &error else {
+        panic!("expected a trap, got {error:?}")
+    };
+    assert_eq!(id, "test-hostile-books");
+    assert!(!message.is_empty());
+    // Again, then something else: the same plugin keeps working.
+    let again = plugin.chapter_content("x", "panics").await.expect_err("traps again");
+    assert!(matches!(again, PluginError::Trap { .. }), "got {again:?}");
+    assert_eq!(plugin.describe().await.expect("describe again").id, "test-hostile-books");
+}
+
+#[tokio::test]
 async fn a_hoarding_book_plugin_is_stopped_by_the_memory_ceiling() {
     let Some(path) = hostile() else { return };
     let host = PluginHost::new(
