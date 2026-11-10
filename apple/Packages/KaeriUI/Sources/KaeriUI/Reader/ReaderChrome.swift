@@ -1,5 +1,5 @@
-// The reader's chrome: the group at the bottom with the scrubber, the notice capsule and the
-// Back to page pill. All of it is glass over the page.
+// The reader's chrome: the group at the bottom with the scrubber and Back to page, and the notice
+// capsule. All of it is glass over the page.
 
 import KaeriDesign
 import KaeriKit
@@ -13,10 +13,12 @@ struct ReaderChrome: View {
     let mac: Bool
     let size: CGSize
     let onClose: () -> Void
-    /// The group's height, for the Back to page pill to clear it.
+    /// The group's height, for a novel's notice to clear it.
     @Binding var groupHeight: CGFloat
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var type
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.readerPaper) private var paper
     @State private var scrub: Int?
     @State private var goToText = ""
     @FocusState private var fieldFocused: Bool
@@ -39,6 +41,9 @@ struct ReaderChrome: View {
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { groupHeight = $0 }
         }
         .onChange(of: model.shotScrub) { _, held in if let held { scrub = held } }
+        .onChange(of: model.backToPage) { _, page in
+            if let page, model.chromeShown { AccessibilityNotification.Announcement(L.readerBackToPage(page: page)).post() }
+        }
         .opacity(model.chromeShown ? 1 : 0)
         .allowsHitTesting(model.chromeShown)
         .accessibilityHidden(!model.chromeShown)
@@ -52,6 +57,12 @@ struct ReaderChrome: View {
     /// for Close, and Full screen ends the row.
     private var group: some View {
         VStack(spacing: 0) {
+            if let page = model.backToPage {
+                backTo(page)
+                    .padding(.horizontal, 12)
+                    .padding(.top, 8)
+                    .transition(.opacity)
+            }
             scrubberRow
                 .padding(.horizontal, 18)
                 .padding(.top, 6)
@@ -88,6 +99,34 @@ struct ReaderChrome: View {
             .padding(.bottom, 6)
         }
         .glassEffect(.regular, in: .rect(cornerRadius: 30))
+        // The group grows upwards, so the scrubber under the finger stays where it is.
+        .animation(paper ? nil : (reduceMotion ? .fadeIn : .standard), value: model.backToPage == nil)
+    }
+
+    /// Back to page, offered after the person's own jump of more than two pages: a quiet
+    /// button at the leading end above the scrubber. It goes at the next turn.
+    private func backTo(_ page: Int) -> some View {
+        HStack {
+            Button { model.back() } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.system(size: 12, weight: .semibold))
+                        .accessibilityHidden(true)
+                    Text(L.readerBackToPage(page: page))
+                        .font(.ui(13, weight: .medium))
+                        .lineLimit(1)
+                }
+                .foregroundStyle(theme.silk)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 30)
+                .background(theme.selected, in: .capsule)
+                .frame(minHeight: mac ? 30 : 44)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilitySortPriority(0.5)
+            Spacer(minLength: 0)
+        }
     }
 
     /// The series over the line, which opens Go to page.
@@ -343,33 +382,25 @@ struct ReaderScrubber: View {
     }
 }
 
-/// The notice capsule, and the Back to page pill.
+/// The notice capsule.
 struct ReaderNotices: View {
     let model: ReaderModel
     let theme: ReaderTheme
     let mac: Bool
     let size: CGSize
-    /// The chrome group's height, which the pill clears while it shows.
+    /// The chrome group's height, which a novel's notice clears while it shows.
     let groupHeight: CGFloat
     @Environment(\.readerPaper) private var paper
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var type
     @AccessibilityFocusState private var noticeFocused: Bool
-    @AccessibilityFocusState private var pillFocused: Bool
     @State private var hovering = false
 
     private var wide: Bool { mac || sizeClass == .regular }
     /// A novel's notices sit in its bottom margin, in place of the pages-left line, clear of the
     /// text.
     private var inMargin: Bool { model.novel != nil }
-
-    /// Where the pill sits above the bottom: over the chrome group while it shows on a phone,
-    /// where the group spans the width.
-    private var pillBottom: CGFloat {
-        guard model.chromeShown, !wide else { return 40 }
-        return ReaderChrome.bottom(mac: mac, wide: wide) + groupHeight + 12
-    }
 
     /// Where a novel's notice sits above the bottom: in the margin, or over the chrome group
     /// while it shows, since the group sits in the same margin.
@@ -402,23 +433,12 @@ struct ReaderNotices: View {
                 .padding(.trailing, mac ? 12 : 0)
                 .transition(.opacity)
             }
-            VStack {
-                Spacer()
-                HStack {
-                    if let back = model.backTo { pill(back).transition(.opacity) }
-                    Spacer()
-                }
-                .padding(.leading, 16).padding(.bottom, pillBottom)
-            }
-            .animation(paper || reduceMotion ? nil : .standard, value: pillBottom)
         }
         .animation(paper ? nil : (model.notice == nil ? .fadeOut : .fadeIn), value: model.notice?.id)
         .animation(paper ? nil : .fadeOut, value: model.position.index == 0)
-        .animation(paper ? nil : (model.backTo == nil ? .fadeOut : .fadeIn), value: model.backTo?.id)
         // Every notice is said, and its time stops while VoiceOver or the pointer rests on it.
         .onChange(of: model.notice?.id) { _, _ in announce(model.notice) }
-        .onChange(of: model.backTo?.id) { _, _ in announce(model.backTo) }
-        .onChange(of: noticeFocused || pillFocused || hovering) { _, held in model.noticeHeld = held }
+        .onChange(of: noticeFocused || hovering) { _, held in model.noticeHeld = held }
     }
 
     @ViewBuilder private var notices: some View {
@@ -494,29 +514,11 @@ struct ReaderNotices: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func pill(_ line: ReaderNoticeLine) -> some View {
-        Button { model.act(.backTo) } label: {
-            HStack(spacing: 8) {
-                Image(systemName: "arrow.uturn.backward").font(.system(size: 13, weight: .semibold))
-                Text(line.text).font(.ui(15, weight: .medium))
-            }
-            .foregroundStyle(theme.silk)
-            .padding(.horizontal, 16)
-            .frame(height: 40)
-            .background(theme.glass, in: .capsule)
-            .glassEffect(.regular, in: .capsule)
-        }
-        .buttonStyle(.plain)
-        .accessibilityFocused($pillFocused)
-        .onHover { hovering = $0 }
-    }
-
     static func label(_ action: ReaderAction) -> String? {
         switch action {
         case .startOver: L.readerStartOver
         case .goBack: L.readerGoBack
         case .changeMode: L.readerChange
-        case .backTo: nil
         }
     }
 }

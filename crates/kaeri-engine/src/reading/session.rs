@@ -52,7 +52,9 @@ pub const READ_AFTER: Duration = Duration::from_secs(2);
 pub const WRITE_EVERY: Duration = Duration::from_secs(1);
 const RESUMED_MS: u32 = 6_000;
 const MOVED_MS: u32 = 8_000;
-const BACK_MS: u32 = 8_000;
+/// The person's own jump of more than this many pages, or screens of a novel, offers Back to
+/// page.
+const BACK_PAST: u32 = 2;
 
 /// What the reader needs from the rest of the engine for one command.
 pub struct Cx<'a> {
@@ -207,7 +209,7 @@ pub struct Session {
     peeked: bool,
     /// The next chapter from a source, being fetched while this one is read.
     ahead: Option<novel::Ahead>,
-    /// The place before a jump, for Back to page.
+    /// The place before the person's own jump, while Back to page is offered.
     back_to: Option<ReadPlace>,
     /// The place before another device moved the reader, for Go back.
     moved_back: Option<ReadPlace>,
@@ -734,6 +736,7 @@ fn session_of(command: &ReaderCommand) -> Option<u64> {
         | C::BackTo { session }
         | C::StartOver { session }
         | C::GoBack { session }
+        | C::NotACreditPage { session, .. }
         | C::Close { session } => Some(*session),
         C::Open { .. }
         | C::SetSetting { .. }
@@ -997,9 +1000,10 @@ impl Session {
         self.start.page = Some(page);
         // The place within a strip holds only while the chapter opens at its image.
         self.start.strip = self.start.strip.filter(|s| s.image == page);
-        // Another chapter's pages that had not all landed are fetched again when it opens.
+        // Another chapter's pages that had not all landed are fetched again when it opens, and
+        // so is one with credit pages or parts, which its folder alone does not tell.
         if let Some(left) = self.feed.take_if(|f| f.chapter != chapter.id)
-            && !left.complete()
+            && (!left.complete() || !left.credits.is_empty() || left.parts.is_some())
             && let Some(c) = self.chapters.iter_mut().find(|c| c.id == left.chapter)
         {
             c.format = novel::SOURCE.into();
@@ -1020,7 +1024,31 @@ impl Session {
             shared: self.laid.clone(),
             out: cx.tx.clone(),
             feed: self.feed.clone(),
+            // A feed left its credit pages out as it came.
+            credits: self.credit_check(cx).filter(|_| self.feed.is_none()),
         });
+    }
+
+    /// What a source's chapter learns of the series' credit pages as it is fetched, and whether
+    /// it leaves them out.
+    fn learning(&self, cx: &Cx<'_>) -> super::credits::Learning {
+        super::credits::Learning {
+            store: cx.services.store.clone(),
+            work: self.work.as_str().to_owned(),
+            skip: self.medium == Medium::Manga && self.layers.on(Key::SkipCreditPages),
+        }
+    }
+
+    /// The credit pages are looked for in a manga's chapters, unless the person turned that off.
+    fn credit_check(&self, cx: &Cx<'_>) -> Option<super::credits::CreditCheck> {
+        (self.medium == Medium::Manga && self.layers.on(Key::SkipCreditPages)).then(|| {
+            super::credits::CreditCheck {
+                store: cx.services.store.clone(),
+                work: self.work.as_str().to_owned(),
+                chapter: self.chapter().id.as_str().to_owned(),
+                now: cx.now(),
+            }
+        })
     }
 
     fn laid_out(&mut self, cx: &mut Cx<'_>, pages: &Pages) {
@@ -1090,6 +1118,27 @@ impl Session {
             chapter: self.chapter().id.clone(),
             leaves,
         });
+        if !laid.credits.is_empty() {
+            let count = laid.credits.len() as i64;
+            cx.send(ReaderEvent::CreditPages {
+                session: self.id,
+                chapter: self.chapter().id.clone(),
+                pages: laid.credits.clone(),
+                msg: Msg::Reading(ReadingMsg::ReaderCreditPagesSkipped { count }),
+            });
+        }
+        if let Some(feed) = &self.feed
+            && feed.chapter == self.chapter().id
+            && let Some(parts) = &feed.parts
+        {
+            cx.send(ReaderEvent::ChapterParts {
+                session: self.id,
+                chapter: feed.chapter.clone(),
+                parts: parts.parts.clone(),
+                total: parts.total,
+                missing: parts.missing.clone(),
+            });
+        }
         if let Some(msg) = said {
             cx.send(notice(msg, Some(ReaderAction::ChangeMode), RESUMED_MS, eink));
         }
@@ -1119,6 +1168,10 @@ impl Session {
                 self.shown(cx, pages, leaf, how)
             }
             C::StripAt { chapter, at, foot_visible, .. } if chapter == self.chapter().id => {
+                // Scrolling on to another image is a turn.
+                if self.page() != Some(at.image) {
+                    self.drop_back(cx);
+                }
                 let mut here = place(&self.work, &chapter, Some(at.image));
                 here.strip = Some(at);
                 self.place = Some(here);
@@ -1180,7 +1233,8 @@ impl Session {
                 self.open_chapter(cx, pages, index, page, novel);
             }
             C::BackTo { .. } => {
-                if let Some(back) = self.back_to.take() {
+                if let Some(back) = self.back_to.clone() {
+                    self.drop_back(cx);
                     self.go_to(cx, pages, back);
                 }
             }
@@ -1188,6 +1242,26 @@ impl Session {
                 let mut start = place(&self.work, &self.chapter().id, Some(0));
                 start.novel = self.novel_start();
                 self.go_to(cx, pages, start);
+            }
+            C::NotACreditPage { fingerprint, .. } => {
+                let store = &cx.services.store;
+                if let Err(e) =
+                    store.keep_credit_page(self.work.as_str(), fingerprint, cx.now())
+                {
+                    tracing::warn!(error = %e, "a page kept from the credit pages was not kept");
+                    return;
+                }
+                if self.novel.is_none() {
+                    // A source's chapter is fetched again, the page kept this time.
+                    if let Some(feed) = self.feed.take()
+                        && let Some(c) = self.chapters.iter_mut().find(|c| c.id == feed.chapter)
+                    {
+                        c.format = novel::SOURCE.into();
+                        c.path = PathBuf::new();
+                    }
+                    let page = self.page().unwrap_or(0);
+                    self.lay_out(cx, pages, page);
+                }
             }
             C::GoBack { .. } => {
                 if let Some(back) = self.moved_back.take() {
@@ -1202,6 +1276,9 @@ impl Session {
     }
 
     fn shown(&mut self, cx: &mut Cx<'_>, pages: &Pages, leaf: u32, how: TurnHow) {
+        if !matches!(how, TurnHow::Jump | TurnHow::Placed) {
+            self.drop_back(cx);
+        }
         let story = self.leaves.len() as u32;
         if leaf >= story {
             // The end page, in the flow: read at once.
@@ -1212,18 +1289,8 @@ impl Session {
         let (page, strip) = self.page_of_leaf(leaf);
         let mut here = place(&self.work, &self.chapter().id, page);
         here.strip = strip;
-        if how == TurnHow::Jump
-            && self.back_to.is_none()
-            && let Some(before) = self.place.clone().filter(|p| p.page != here.page)
-        {
-            let page = i64::from(before.page.unwrap_or(0)) + 1;
-            self.back_to = Some(before);
-            cx.send(notice(
-                ReadingMsg::ReaderBackToPage { page },
-                Some(ReaderAction::BackTo),
-                BACK_MS,
-                self.eink(),
-            ));
+        if how == TurnHow::Jump {
+            self.jumped(cx, &here);
         }
         self.place = Some(here);
         self.note_place(cx);
@@ -1262,7 +1329,15 @@ impl Session {
             return;
         }
         let gone = self.gone.clone();
-        let ahead = novel::fetch_ahead(cx, pages, self.id, &self.work, (index, next), &gone);
+        let learning = self.learning(cx);
+        let ahead = novel::fetch_ahead(
+            cx,
+            pages,
+            (self.id, learning),
+            &self.work,
+            (index, next),
+            &gone,
+        );
         self.ahead = Some(ahead);
     }
 
@@ -1299,6 +1374,28 @@ impl Session {
             chapter.format = novel::SOURCE.into();
             chapter.path = PathBuf::new();
             chapter.source = None;
+        }
+    }
+
+    /// The person jumped to `here`: more than [`BACK_PAST`] pages from the place before, Back to
+    /// page offers that place. A second jump keeps the first place.
+    pub(super) fn jumped(&mut self, cx: &Cx<'_>, here: &ReadPlace) {
+        if self.back_to.is_some() {
+            return;
+        }
+        let Some(before) = self.place.clone() else { return };
+        let (Some(from), Some(to)) = (before.page, here.page) else { return };
+        if from.abs_diff(to) <= BACK_PAST {
+            return;
+        }
+        cx.send(ReaderEvent::BackToPage { session: self.id, page: Some(from + 1) });
+        self.back_to = Some(before);
+    }
+
+    /// A turn, a used return or another device's place: Back to page goes.
+    pub(super) fn drop_back(&mut self, cx: &Cx<'_>) {
+        if self.back_to.take().is_some() {
+            cx.send(ReaderEvent::BackToPage { session: self.id, page: None });
         }
     }
 
@@ -1550,6 +1647,7 @@ impl Session {
         to.novel = their_pos;
         let label = self.chapters[index].label.clone();
         self.moved_back = Some(back.clone());
+        self.drop_back(cx);
         self.go_to(cx, pages, to.clone());
         let from_device = name.clone().unwrap_or_default();
         cx.send(ReaderEvent::Moved { session: self.id, to, from_device, back });
@@ -1709,6 +1807,8 @@ mod tests {
     use super::*;
     use crate::{host::QuietHost, outbox::Envelope};
 
+    mod back_to;
+    mod groups;
     mod hints;
     mod leaving;
     mod novels;
@@ -1725,7 +1825,8 @@ mod tests {
         let stored = zip::write::SimpleFileOptions::default()
             .compression_method(zip::CompressionMethod::Stored);
         for i in 0..pages {
-            let page = image::GrayImage::from_pixel(300, 450, image::Luma([40 + i * 20]));
+            let page =
+                image::GrayImage::from_pixel(300, 450, image::Luma([40 + (i % 10) * 20]));
             let mut png = Vec::new();
             page.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
                 .unwrap();
@@ -1998,6 +2099,17 @@ mod tests {
             let store = &self.services.store;
             store.read_chapters(WORK).unwrap().into_iter().find(|c| c.chapter == chapter)
         }
+    }
+
+    /// What Back to page offered and took away, in order: `Some(page)` offered, `None` gone.
+    fn offers(events: &[ReaderEvent]) -> Vec<Option<u32>> {
+        events
+            .iter()
+            .filter_map(|e| match e {
+                ReaderEvent::BackToPage { page, .. } => Some(*page),
+                _ => None,
+            })
+            .collect()
     }
 
     fn notices(events: &[ReaderEvent]) -> Vec<ReadingMsg> {
@@ -2529,24 +2641,6 @@ mod tests {
     }
 
     #[tokio::test(start_paused = true)]
-    async fn a_jump_offers_the_page_it_left() {
-        let mut h = harness(Store::open_in_memory().unwrap());
-        h.open(OpenAt::Resume).await;
-        h.shown(0, TurnHow::Turn).await;
-        h.shown(1, TurnHow::Turn).await;
-        h.shown(2, TurnHow::Jump).await;
-        assert_eq!(notices(&h.drain()), [ReadingMsg::ReaderBackToPage { page: 2 }]);
-        h.send(ReaderCommand::BackTo { session: h.session() });
-        let to = h
-            .until(|e| match e {
-                ReaderEvent::GoTo { place, .. } => Some(place.clone()),
-                _ => None,
-            })
-            .await;
-        assert_eq!((to.chapter.as_str(), to.page), ("1", Some(1)));
-    }
-
-    #[tokio::test(start_paused = true)]
     async fn the_next_chapter_counts_this_one_read() {
         let mut h = harness(Store::open_in_memory().unwrap());
         h.open(OpenAt::Resume).await;
@@ -2722,6 +2816,9 @@ mod tests {
         });
         let profile = h.reader.detect(h.config.effective()).unwrap();
         assert_eq!(profile.panel, kaeri_model::eink::EinkPanel::Grey);
+        let mut kept = ReadEvent::new(WORK, "1", 1);
+        kept.page = Some(2);
+        h.services.store.record_read(&kept, Vec::new()).unwrap();
         let work = WorkId::new(WORK);
         let surface = ReaderSurface { eink: true, ..surface() };
         h.send(ReaderCommand::Open { work, chapter: None, at: OpenAt::Resume, surface });
@@ -2739,8 +2836,6 @@ mod tests {
             std::fs::metadata(&file.path).unwrap().len(),
             u64::from(file.width * file.height)
         );
-        h.shown(0, TurnHow::Turn).await;
-        h.shown(2, TurnHow::Jump).await;
         let said = h.drain();
         let lasts = said.iter().find_map(|e| match e {
             ReaderEvent::Notice(n) => Some(n.lasts_ms),

@@ -1139,6 +1139,51 @@ public enum L {
         Self.format("reading-row-versions", fallback: "%1$lld versions", n)
     }
 
+    /// A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".
+    public static func readingRowParts(n: Int) -> String {
+        Self.format("reading-row-parts", fallback: "%1$lld parts", n)
+    }
+
+    /// A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.
+    public static func readingRowFromGroup(group: String) -> String {
+        Self.format("reading-row-from-group", fallback: "From %1$@", group)
+    }
+
+    /// A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".
+    public static func readingRowFromGroupIn(group: String, language: String) -> String {
+        Self.format("reading-row-from-group-in", fallback: "From %1$@, %2$@", group, language)
+    }
+
+    /// A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
+    public static func readingRowPartsOf(have: Int, n: Int) -> String {
+        Self.format("reading-row-parts-of", fallback: "%1$lld of %2$lld parts", have, n)
+    }
+
+    /// A chapter row, after the parts count: the part no group has released. With several, how many.
+    public static func readingRowPartMissing(count: Int, part: Int) -> String {
+        Self.format("reading-row-part-missing", fallback: "%1$lld parts missing", count, String(part))
+    }
+
+    /// A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".
+    public static func readingRowPartFromGroup(part: Int, group: String) -> String {
+        Self.format("reading-row-part-from-group", fallback: "part %1$@ from %2$@", String(part), group)
+    }
+
+    /// The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
+    public static func readingRowPartFromGroupIn(part: Int, group: String, language: String) -> String {
+        Self.format("reading-row-part-from-group-in", fallback: "part %1$@ from %2$@, %3$@", String(part), group, language)
+    }
+
+    /// A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.
+    public static func readingRowFromSource(source: String) -> String {
+        Self.format("reading-row-from-source", fallback: "From %1$@", source)
+    }
+
+    /// A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
+    public static func readerCreditPagesSkipped(count: Int) -> String {
+        Self.format("reader-credit-pages-skipped", fallback: "%1$lld credit pages skipped", count)
+    }
+
     /// A chapter row: when it was read or came out, under a minute ago.
     public static var readingAgoNow: String { string("reading-ago-now", fallback: "just now") }
 
@@ -8274,6 +8319,11 @@ public enum L {
         Self.format("reader-end-tracker", fallback: "Counted as read · %1$@ updated", trackers)
     }
 
+    /// Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+    public static func readerEndTrackerOffline(tracker: String) -> String {
+        Self.format("reader-end-tracker-offline", fallback: "Counted as read · %1$@ updates when you're back online", tracker)
+    }
+
     /// Small heading above the next chapter on the page between chapters.
     public static var readerEndNext: String { string("reader-end-next", fallback: "Next") }
 
@@ -9356,9 +9406,6 @@ public enum L {
     public static var readSearchClearFilters: String { string("read-search-clear-filters", fallback: "Clear filters") }
 
     /// A sort of reading's Search, AniList's.
-    public static var readSortPopular: String { string("read-sort-popular", fallback: "Popular") }
-
-    /// A sort of reading's Search, AniList's.
     public static var readSortTrending: String { string("read-sort-trending", fallback: "Trending") }
 
     /// A sort of reading's Search, AniList's.
@@ -9372,6 +9419,9 @@ public enum L {
 
     /// A filter.
     public static var readFilterOrigin: String { string("read-filter-origin", fallback: "Origin") }
+
+    /// The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+    public static var readFilterAnyOrigin: String { string("read-filter-any-origin", fallback: "Any origin") }
 
     /// A filter.
     public static var readFilterStatus: String { string("read-filter-status", fallback: "Status") }

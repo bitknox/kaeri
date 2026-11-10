@@ -229,7 +229,6 @@ read-search-nothing-browse = この条件に合う作品はありません
 read-search-nothing-line = 別の言葉や、ほかの言語のタイトルをお試しください。
 read-search-nothing-filters-line = 条件を減らすと見つかるかもしれません。
 read-search-clear-filters = 条件をクリア
-read-sort-popular = 人気順
 read-sort-trending = 急上昇
 read-sort-score = スコア順
 read-sort-newest = 新着順

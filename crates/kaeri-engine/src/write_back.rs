@@ -451,10 +451,11 @@ impl BookSources {
                 return whole_server(problem).then_some(problem);
             }
         };
-        let restarts = crate::read_sources::restarts_per_volume(&listed);
+        // A chapter the server lists in parts is marked part by part, all of them.
+        let arranged = crate::read_catalog::arrange::arrange(&listed, None, None);
         for (i, item) in items.iter().enumerate() {
-            let Some(chapter) =
-                listed.iter().find(|c| c.key(restarts).id().as_str() == item.chapter)
+            let Some(row) =
+                arranged.row(&kaeri_core::books::ChapterId::new(item.chapter.clone()))
             else {
                 self.failed(item, WriteBackProblem::SeriesGone, now, pass);
                 continue;
@@ -462,11 +463,17 @@ impl BookSources {
             if i > 0 {
                 tokio::time::sleep(PACE).await;
             }
-            match self
-                .registry
-                .report_progress(server, series, &chapter.id, item.read, now)
-                .await
-            {
+            let mut answer = Ok(());
+            for &part in &row.parts {
+                answer = self
+                    .registry
+                    .report_progress(server, series, &listed[part].id, item.read, now)
+                    .await;
+                if answer.is_err() {
+                    break;
+                }
+            }
+            match answer {
                 Ok(()) => {
                     pass.sent += 1;
                     if let Err(e) = self.store().book_progress_sent(item, now) {

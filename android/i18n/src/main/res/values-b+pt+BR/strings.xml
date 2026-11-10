@@ -808,7 +808,6 @@
     <string name="reader_grid_page">Ir para a página %1$d</string>
     <string name="reader_scrubber_in_chapter">Página no capítulo</string>
     <string name="reader_failed_novel">Não foi possível mostrar este capítulo</string>
-    <string name="reader_end_tracker_offline">Contado como lido · %1$s atualiza quando você voltar online</string>
     <string name="reader_end_none">Ainda não há o capítulo %1$s nas suas fontes</string>
     <string name="reader_end_none_line">O Kaeri procura capítulos novos em segundo plano e os adiciona a Novidades.</string>
     <string name="reader_end_finished_title">Fim</string>
@@ -2508,6 +2507,7 @@
     <string name="reader_close">Fechar</string>
     <string name="reader_end_read">Contado como lido</string>
     <string name="reader_end_tracker">Contado como lido · Atualizado em %1$s</string>
+    <string name="reader_end_tracker_offline">Contado como lido · %1$s atualiza quando você voltar online</string>
     <string name="reader_end_next">Seguinte</string>
     <string name="reader_mode_rtl">Direita p/ esquerda</string>
     <string name="reader_mode_ltr">Esquerda p/ direita</string>
@@ -2883,7 +2883,6 @@
     <string name="read_search_nothing_line">Tente outras palavras ou um título em outro idioma.</string>
     <string name="read_search_nothing_filters_line">Menos filtros podem achar mais.</string>
     <string name="read_search_clear_filters">Limpar filtros</string>
-    <string name="read_sort_popular">Popular</string>
     <string name="read_sort_trending">Em alta</string>
     <string name="read_sort_score">Nota</string>
     <string name="read_sort_newest">Mais recentes</string>

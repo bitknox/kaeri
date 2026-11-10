@@ -570,6 +570,14 @@ settings-downloads-count = { $count ->
    *[other] { $count } episodes
  }
 
+# Settings, Downloads: the count of downloaded chapters of manga, webtoons and books.
+# @only android
+# @arg count: int
+settings-downloads-chapters = { $count ->
+    [one] One chapter
+   *[other] { $count } chapters
+ }
+
 # Settings, Accounts: the group about the main tracker.
 # @only android
 settings-anilist-footer = Progress and list changes sync to AniList. { -library-cap } shows your AniList lists.

@@ -65,6 +65,8 @@ struct PagedReader: View {
             model.position = (current, max(model.leaves.count, 1))
             zoom.reset()
         }
+        // A place the app chose (Back to page, Start over, another device's, a change of mode) is
+        // its own move, never the person's jump.
         .onChange(of: model.goTo?.tick) { _, _ in
             if let to = model.goTo { model.shown(to.leaf, how: to.how) }
         }

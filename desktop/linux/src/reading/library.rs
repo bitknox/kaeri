@@ -284,7 +284,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
     header.pack_end(&order);
-    let page = widgets::content_page(&t::nav_library(), &header, &body);
+    let page = widgets::read_content_page(&t::nav_library(), &header, &body);
     states.on_retry({
         let ask_all = ask_all.clone();
         move || ask_all()

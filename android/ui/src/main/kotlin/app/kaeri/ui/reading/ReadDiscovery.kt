@@ -317,6 +317,8 @@ internal fun TileStrip(
     planning: Boolean = true,
     /** Shows this many covers, then "Show N more" in the next slot until it's pressed. */
     cap: Int? = null,
+    /** Search's rails: the shows' 104 dp covers 13 apart, two title lines, inside the grid's margins. */
+    rail: Boolean = false,
     /** The line under each title in place of the tile's own, shown and spoken. */
     caption: ((WorkTile) -> RowCaption)? = null,
 ) {
@@ -326,10 +328,12 @@ internal fun TileStrip(
     var open by rememberSaveable(rowKey) { mutableStateOf(false) }
     val capped = cap != null && !open && tiles.size > cap
     val shown = if (capped) tiles.take(cap!!) else tiles
+    val width = if (rail) app.kaeri.ui.RAIL_COVER else posterWidth()
+    val titleMax = if (rail) 2 else null
     LazyRow(
         state = state,
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(cardGap()),
+        contentPadding = PaddingValues(horizontal = if (rail) 0.dp else 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (rail) app.kaeri.ui.RAIL_GAP else cardGap()),
     ) {
         items(shown, key = { "$rowKey-${it.work}" }, contentType = { "cover" }) { tile ->
             val words = caption?.invoke(tile)
@@ -338,19 +342,19 @@ internal fun TileStrip(
                 if (planning) {
                     var menu by remember { mutableStateOf(false) }
                     ReadTile(
-                        tile, posterWidth(), from = from, lines = 1, reserveLine = true, planning = true,
-                        caption = words?.shown, spoken = words?.spoken, onLongClick = { menu = true },
+                        tile, width, from = from, lines = 1, reserveLine = true, planning = true,
+                        caption = words?.shown, spoken = words?.spoken, onLongClick = { menu = true }, titleMax = titleMax,
                     )
                     ReadTileMenu(tile, menu, current = null) { menu = false }
                 } else {
-                    ReadTile(tile, posterWidth(), from = from, lines = 1, reserveLine = true, caption = words?.shown, spoken = words?.spoken)
+                    ReadTile(tile, width, from = from, lines = 1, reserveLine = true, caption = words?.shown, spoken = words?.spoken, titleMax = titleMax)
                 }
             }
         }
         if (capped) {
             item(key = "$rowKey-more", contentType = "more") {
                 Box(
-                    (if (reduced) Modifier else itemMotion()).width(posterWidth()).aspectRatio(2f / 3f),
+                    (if (reduced) Modifier else itemMotion()).width(width).aspectRatio(2f / 3f),
                     contentAlignment = Alignment.Center,
                 ) {
                     TextButton(onClick = { open = true }) {
@@ -517,6 +521,12 @@ internal fun LazyGridScope.browseCells(
     val failure = shown.failureShown
     val from = if (viewAll) "read-view-all" else "read-search" // i18n-skip
     when {
+        failure != null && !viewAll -> item(span = { GridItemSpan(maxLineSpan) }, key = "failed", contentType = "quiet") {
+            val store = LocalAppStore.current
+            val context = LocalContext.current
+            // Search's failure as the shows' Search says one.
+            Box(searchMotion()) { app.kaeri.ui.SearchFailed(failureWords(context, failure), onRetry = { store.reading.runSearch(search.query) }) }
+        }
         failure != null -> item(span = { GridItemSpan(maxLineSpan) }, key = "failed", contentType = "quiet") {
             val store = LocalAppStore.current
             val context = LocalContext.current
@@ -533,7 +543,7 @@ internal fun LazyGridScope.browseCells(
         }
         search.tiles.isEmpty() && search.loading -> {
             // The line's place is held, so the covers land where their placeholders were.
-            if (lineFor != null) item(span = { GridItemSpan(maxLineSpan) }, key = "line", contentType = "line") { LineSpace() }
+            if (lineFor != null) item(span = { GridItemSpan(maxLineSpan) }, key = "line", contentType = "line") { LineSpace(small = viewAll) }
             if (shown.waited) placeholderCells(grid.columns * 3, grid.list, grid.lines, "b-wait")
         }
         search.tiles.isEmpty() -> item(span = { GridItemSpan(maxLineSpan) }, key = "nothing", contentType = "quiet") {
@@ -544,12 +554,13 @@ internal fun LazyGridScope.browseCells(
                 item(span = { GridItemSpan(maxLineSpan) }, key = "line", contentType = "line") {
                     val context = LocalContext.current
                     SwapFade(lineFor(context), searchMotion(), animationSpec = tween(LAND_IN, easing = LinearOutSlowInEasing), label = "browse line") { said -> // i18n-skip
-                        Text(said, style = MaterialTheme.typography.bodySmall.tabular(), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        // Search's line in the shows' caption style; View all's as the board has it.
+                        Text(said, style = if (viewAll) MaterialTheme.typography.bodySmall.tabular() else MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
             items(search.tiles, key = { "b-${it.work}" }, contentType = { "cover" }) { tile ->
-                Box(searchMotion(anilist = true)) { BrowseCell(tile, grid, from) }
+                Box(searchMotion(anilist = true)) { BrowseCell(tile, grid, from, titleMax = if (viewAll) null else 2) }
             }
             if (search.hasMore) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "more-${search.page}", contentType = "more") {
@@ -566,8 +577,9 @@ internal fun LazyGridScope.browseCells(
 
 /** An empty line at the height of the browse line, held while the first covers come. */
 @Composable
-private fun LazyGridItemScope.LineSpace() {
-    val height = with(LocalDensity.current) { MaterialTheme.typography.bodySmall.lineHeight.toDp() }
+private fun LazyGridItemScope.LineSpace(small: Boolean) {
+    val style = if (small) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium
+    val height = with(LocalDensity.current) { style.lineHeight.toDp() }
     Box(searchMotion().height(height))
 }
 
@@ -580,12 +592,12 @@ private fun BrowseNothing() {
 
 /** A cover while browsing, with its long-press menu: Details and the lists, Planning among them. */
 @Composable
-private fun BrowseCell(tile: WorkTile, grid: ReadGridShape, from: String) {
+private fun BrowseCell(tile: WorkTile, grid: ReadGridShape, from: String, titleMax: Int? = null) {
     var menu by remember { mutableStateOf(false) }
     BoxWithConstraints {
         ReadTile(
             tile, maxWidth, from = from, lines = grid.lines, reserveLine = true, planning = true,
-            onLongClick = { menu = true }, list = grid.list,
+            onLongClick = { menu = true }, list = grid.list, titleMax = titleMax,
         )
         ReadTileMenu(tile, menu, current = null) { menu = false }
     }
@@ -595,7 +607,7 @@ private fun BrowseCell(tile: WorkTile, grid: ReadGridShape, from: String) {
  * The line over View all's results: the row's own words and the count once AniList gives it,
  * "Webtoons, trending · 1,920 series from AniList". With the filter changed, the filter's words.
  */
-private fun viewAllLine(context: Context, row: ReadHomeRow?, search: ReadSearchState, filters: ReadFilters): String {
+internal fun viewAllLine(context: Context, row: ReadHomeRow?, search: ReadSearchState, filters: ReadFilters): String {
     val line = row?.viewAllTitle?.takeIf { search.query == row.viewAll }?.text(context) ?: return browseLine(context, search, filters)
     val total = search.total ?: return Strings.readSearchBrowseLine(context, line)
     return listOf(line, Strings.readSearchTotal(context, total.toInt())).joinToString(" · ") // i18n-skip

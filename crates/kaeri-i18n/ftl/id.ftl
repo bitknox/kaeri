@@ -8549,6 +8549,9 @@ reader-end-read = Dihitung sudah dibaca
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Dihitung sudah dibaca · { $trackers } diperbarui
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Dihitung sudah dibaca · { $tracker } diperbarui saat Anda kembali online
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Selanjutnya
 
@@ -9475,9 +9478,6 @@ read-search-nothing-filters-line = Filter yang lebih sedikit mungkin menemukan l
 
 # The button under it.
 read-search-clear-filters = Hapus filter
-
-# A sort of reading's Search, AniList's.
-read-sort-popular = Populer
 
 # A sort of reading's Search, AniList's.
 read-sort-trending = Sedang tren

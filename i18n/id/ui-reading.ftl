@@ -229,7 +229,6 @@ read-search-nothing-browse = Tidak ada yang cocok dengan filter ini
 read-search-nothing-line = Coba kata lain, atau judul dalam bahasa lain.
 read-search-nothing-filters-line = Filter yang lebih sedikit mungkin menemukan lebih banyak.
 read-search-clear-filters = Hapus filter
-read-sort-popular = Populer
 read-sort-trending = Sedang tren
 read-sort-score = Skor
 read-sort-newest = Terbaru

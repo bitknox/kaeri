@@ -31,7 +31,7 @@ use kaeri_model::{
 };
 use kaeri_pages::{Renderer, resize::Fit};
 
-use super::{BACK_MS, Cx, RESUMED_MS, Session, notice, place};
+use super::{Cx, RESUMED_MS, Session, notice, place};
 use crate::{
     outbox::{Internal, Outbox, ReaderWake},
     reading::{
@@ -166,7 +166,7 @@ impl Ahead {
 pub(super) fn fetch_ahead(
     cx: &Cx<'_>,
     pages: &Pages,
-    session: u64,
+    (session, learning): (u64, crate::reading::credits::Learning),
     work: &WorkId,
     next: (usize, &ShelfChapter),
     gone: &crate::reading::feed::Gone,
@@ -203,9 +203,9 @@ pub(super) fn fetch_ahead(
             let started = crate::reading::feed::start(
                 sources,
                 opened,
-                chapter.clone(),
+                (chapter.clone(), learning),
                 dir,
-                0,
+                |_| 0,
                 now,
                 out.clone(),
                 gone.clone(),
@@ -508,6 +508,7 @@ impl Session {
             (self.start.page.unwrap_or(0), self.start.strip, self.kept_of);
         let (session, worker, out) = (self.id, pages.clone(), cx.tx.clone());
         let gone = self.gone.clone();
+        let learning = self.learning(cx);
         // The chapter fetched ahead opens from its feed, the pages still coming behind it.
         let ahead = self.ahead.take_if(|a| a.chapter == chapter.id);
         tokio::spawn(async move {
@@ -526,21 +527,27 @@ impl Session {
                 // A source's pictures land a page at a time in a folder the page worker reads
                 // as a book, laid out once the page it opens at is there.
                 Ok(opened) if matches!(opened.content, ChapterContent::Images(_)) => {
-                    // A place kept in another split of the chapter: its page comes first.
-                    let total = match &opened.content {
-                        ChapterContent::Images(list) => list.len() as u32,
-                        _ => 0,
+                    // A place kept in another split of the chapter: its page comes first, as
+                    // the pages are counted once the credit pages are left out.
+                    let first = move |total| {
+                        kept_of
+                            .and_then(|of| super::rescaled(first, strip, of, total))
+                            .map_or(first, |(page, _)| page) as usize
                     };
-                    let first = kept_of
-                        .and_then(|of| super::rescaled(first, strip, of, total))
-                        .map_or(first, |(page, _)| page)
-                        as usize;
                     let chapter = id.clone();
                     let landed = move |page, out: &Outbox| {
                         worker.landed(session, chapter.clone(), page, out);
                     };
                     let fed = crate::reading::feed::start(
-                        sources, opened, id, streamed, first, now, out, gone, landed,
+                        sources,
+                        opened,
+                        (id, learning),
+                        streamed,
+                        first,
+                        now,
+                        out,
+                        gone,
+                        landed,
                     );
                     match fed.await {
                         Ok(feed) => Prepared::Feed(feed),
@@ -786,13 +793,19 @@ impl Session {
         pages: u32,
         how: TurnHow,
     ) {
+        if self.novel.is_none() {
+            return;
+        }
+        if !matches!(how, TurnHow::Jump | TurnHow::Placed) {
+            self.drop_back(cx);
+        }
         let Some(open) = self.novel.as_mut() else { return };
         if pos.spine >= open.spine_len {
             return;
         }
         // A turn to the next page of the same document teaches the pace.
         let now = Instant::now();
-        if how != TurnHow::Jump
+        if !matches!(how, TurnHow::Jump | TurnHow::Placed)
             && pages > 0
             && let Some((at, spine, before)) = open.turned
             && spine == pos.spine
@@ -820,18 +833,8 @@ impl Session {
         let shown = open.volume_page(pos.spine, page);
         let mut here = place(&self.work, &open.chapter, Some(shown));
         here.novel = Some(pos);
-        if how == TurnHow::Jump
-            && self.back_to.is_none()
-            && let Some(before) = self.place.clone().filter(|p| p.novel != here.novel)
-        {
-            let back = i64::from(before.page.unwrap_or(0)) + 1;
-            self.back_to = Some(before);
-            cx.send(notice(
-                ReadingMsg::ReaderBackToPage { page: back },
-                Some(ReaderAction::BackTo),
-                BACK_MS,
-                self.eink(),
-            ));
+        if how == TurnHow::Jump {
+            self.jumped(cx, &here);
         }
         self.place = Some(here);
         self.note_place(cx);

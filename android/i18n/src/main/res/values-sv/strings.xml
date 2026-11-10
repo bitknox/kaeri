@@ -773,7 +773,6 @@
     <string name="reader_grid_page">Gå till sida %1$d</string>
     <string name="reader_scrubber_in_chapter">Sida i kapitlet</string>
     <string name="reader_failed_novel">Kunde inte visa kapitlet</string>
-    <string name="reader_end_tracker_offline">Räknas som läst · %1$s uppdateras när du är online igen</string>
     <string name="reader_end_none">Inget kapitel %1$s hos dina källor än</string>
     <string name="reader_end_none_line">Kaeri söker efter nya kapitel i bakgrunden och lägger till dem i Uppdateringar.</string>
     <string name="reader_end_finished_title">Slutet</string>
@@ -2424,6 +2423,7 @@
     <string name="reader_close">Stäng</string>
     <string name="reader_end_read">Räknas som läst</string>
     <string name="reader_end_tracker">Räknas som läst · uppdaterat på %1$s</string>
+    <string name="reader_end_tracker_offline">Räknas som läst · %1$s uppdateras när du är online igen</string>
     <string name="reader_end_next">Nästa</string>
     <string name="reader_mode_rtl">Höger till vänster</string>
     <string name="reader_mode_ltr">Vänster till höger</string>
@@ -2777,7 +2777,6 @@
     <string name="read_search_nothing_line">Prova andra ord, eller en titel på ett annat språk.</string>
     <string name="read_search_nothing_filters_line">Färre filter kan ge fler träffar.</string>
     <string name="read_search_clear_filters">Rensa filter</string>
-    <string name="read_sort_popular">Populära</string>
     <string name="read_sort_trending">Trendande</string>
     <string name="read_sort_score">Betyg</string>
     <string name="read_sort_newest">Nyaste</string>

@@ -1145,6 +1145,42 @@ object Strings {
     fun readingRowVersions(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.reading_row_versions, n, n)
 
+    /** A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts". */
+    fun readingRowParts(context: Context, n: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_parts, n, n)
+
+    /** A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. */
+    fun readingRowFromGroup(context: Context, group: String): String =
+        context.getString(R.string.reading_row_from_group, group)
+
+    /** A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish". */
+    fun readingRowFromGroupIn(context: Context, group: String, language: String): String =
+        context.getString(R.string.reading_row_from_group_in, group, language)
+
+    /** A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts". */
+    fun readingRowPartsOf(context: Context, have: Int, n: Int): String =
+        context.getString(R.string.reading_row_parts_of, have, n)
+
+    /** A chapter row, after the parts count: the part no group has released. With several, how many. */
+    fun readingRowPartMissing(context: Context, count: Int, part: Int): String =
+        context.resources.getQuantityString(R.plurals.reading_row_part_missing, count, count, part)
+
+    /** A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team". */
+    fun readingRowPartFromGroup(context: Context, part: Int, group: String): String =
+        context.getString(R.string.reading_row_part_from_group, part, group)
+
+    /** The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish". */
+    fun readingRowPartFromGroupIn(context: Context, part: Int, group: String, language: String): String =
+        context.getString(R.string.reading_row_part_from_group_in, part, group, language)
+
+    /** A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. */
+    fun readingRowFromSource(context: Context, source: String): String =
+        context.getString(R.string.reading_row_from_source, source)
+
+    /** A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them. */
+    fun readerCreditPagesSkipped(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.reader_credit_pages_skipped, count, count)
+
     /** A chapter row: when it was read or came out, under a minute ago. */
     fun readingAgoNow(context: Context): String =
         context.getString(R.string.reading_ago_now)
@@ -2737,10 +2773,6 @@ object Strings {
     fun readerFailedNovel(context: Context): String =
         context.getString(R.string.reader_failed_novel)
 
-    /** Under the end of chapter line when the phone is offline. */
-    fun readerEndTrackerOffline(context: Context, tracker: String): String =
-        context.getString(R.string.reader_end_tracker_offline, tracker)
-
     /** Title of the end page when no source has the next chapter. */
     fun readerEndNone(context: Context, chapter: String): String =
         context.getString(R.string.reader_end_none, chapter)
@@ -2936,6 +2968,74 @@ object Strings {
     /** The line under Keep next chapters ready on the e-reader's Downloads while it is off. */
     fun einkKeepReadyOff(context: Context): String =
         context.getString(R.string.eink_keep_ready_off)
+
+    /** Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward instead of volume down. */
+    fun readerRowVolumeSwap(context: Context): String =
+        context.getString(R.string.reader_row_volume_swap)
+
+    /** Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself. */
+    fun einkSheetScreen(context: Context): String =
+        context.getString(R.string.eink_sheet_screen)
+
+    /** Row in the e-ink reader's settings: a full refresh on every page with a picture. */
+    fun einkRowRefreshImage(context: Context): String =
+        context.getString(R.string.eink_row_refresh_image)
+
+    /** Row in the e-ink reader's settings: how often text pages get a full refresh. */
+    fun einkRowRefreshText(context: Context): String =
+        context.getString(R.string.eink_row_refresh_text)
+
+    /** Row in the e-ink reader's settings: how often lists get a full refresh as they page. */
+    fun einkRowRefreshList(context: Context): String =
+        context.getString(R.string.eink_row_refresh_list)
+
+    /** Value of a full refresh row in the e-ink reader's settings: once every so many pages. */
+    fun einkRefreshEvery(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.eink_refresh_every, count, count)
+
+    /** Row in the e-ink reader's settings on a colour screen with speed modes: which mode pages use. */
+    fun einkRowScreenSpeed(context: Context): String =
+        context.getString(R.string.eink_row_screen_speed)
+
+    /** Choice of Screen speed: the screen's usual mode. */
+    fun einkSpeedStandard(context: Context): String =
+        context.getString(R.string.eink_speed_standard)
+
+    /** Choice of Screen speed: quicker updates with more ghosting. */
+    fun einkSpeedFast(context: Context): String =
+        context.getString(R.string.eink_speed_fast)
+
+    /** Choice of Screen speed: the slowest and cleanest updates. */
+    fun einkSpeedBest(context: Context): String =
+        context.getString(R.string.eink_speed_best)
+
+    /** Row in the e-ink reader's settings on a colour screen: softens the rainbow pattern in colour pictures. */
+    fun einkRowRainbow(context: Context): String =
+        context.getString(R.string.eink_row_rainbow)
+
+    /** Row in the e-ink reader's settings on a colour screen: how strong colours are drawn. */
+    fun einkRowSaturation(context: Context): String =
+        context.getString(R.string.eink_row_saturation)
+
+    /** Row in the e-ink reader's settings on a colour screen: the pictures' contrast. */
+    fun einkRowContrast(context: Context): String =
+        context.getString(R.string.eink_row_contrast)
+
+    /** Value of an amount row in the e-ink reader's settings, such as Text size or Contrast. */
+    fun einkPercent(context: Context, percent: Int): String =
+        context.getString(R.string.eink_percent, percent)
+
+    /** Button that makes a setting in the e-ink reader's settings smaller. */
+    fun einkStepDown(context: Context): String =
+        context.getString(R.string.eink_step_down)
+
+    /** Button that makes a setting in the e-ink reader's settings bigger. */
+    fun einkStepUp(context: Context): String =
+        context.getString(R.string.eink_step_up)
+
+    /** Marks the chapter open in the reader on the e-ink contents page. */
+    fun einkContentsReading(context: Context): String =
+        context.getString(R.string.eink_contents_reading)
 
     /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
     fun readHomeOfflineLine(context: Context): String =
@@ -3944,6 +4044,10 @@ object Strings {
     /** Settings, Downloads: the count of downloaded episodes. */
     fun settingsDownloadsCount(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.settings_downloads_count, count, count)
+
+    /** Settings, Downloads: the count of downloaded chapters of manga, webtoons and books. */
+    fun settingsDownloadsChapters(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.settings_downloads_chapters, count, count)
 
     /** Settings, Accounts: the group about the main tracker. */
     fun settingsAnilistFooter(context: Context): String =
@@ -8822,6 +8926,10 @@ object Strings {
     fun readerEndTracker(context: Context, trackers: String): String =
         context.getString(R.string.reader_end_tracker, trackers)
 
+    /** Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online. */
+    fun readerEndTrackerOffline(context: Context, tracker: String): String =
+        context.getString(R.string.reader_end_tracker_offline, tracker)
+
     /** Small heading above the next chapter on the page between chapters. */
     fun readerEndNext(context: Context): String =
         context.getString(R.string.reader_end_next)
@@ -10019,10 +10127,6 @@ object Strings {
         context.getString(R.string.read_search_clear_filters)
 
     /** A sort of reading's Search, AniList's. */
-    fun readSortPopular(context: Context): String =
-        context.getString(R.string.read_sort_popular)
-
-    /** A sort of reading's Search, AniList's. */
     fun readSortTrending(context: Context): String =
         context.getString(R.string.read_sort_trending)
 
@@ -10041,6 +10145,10 @@ object Strings {
     /** A filter. */
     fun readFilterOrigin(context: Context): String =
         context.getString(R.string.read_filter_origin)
+
+    /** The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off. */
+    fun readFilterAnyOrigin(context: Context): String =
+        context.getString(R.string.read_filter_any_origin)
 
     /** A filter. */
     fun readFilterStatus(context: Context): String =

@@ -6065,6 +6065,9 @@
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Als gelesen gezählt · {trackers} aktualisiert</value>
   </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Als gelesen gezählt · {tracker} aktualisiert, sobald du wieder online bist</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Nächstes</value>
   </data>
@@ -6991,9 +6994,6 @@
   </data>
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Filter löschen</value>
-  </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Beliebt</value>
   </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Im Trend</value>

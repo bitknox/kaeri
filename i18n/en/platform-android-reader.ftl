@@ -655,12 +655,6 @@ reader-scrubber-in-chapter = Page in chapter
 # @max 40
 reader-failed-novel = Couldn't show this chapter
 
-# Under the end of chapter line when the phone is offline.
-# @only android
-# @arg tracker: text
-# @max 90
-reader-end-tracker-offline = Counted as read · { $tracker } updates when you're back online
-
 # Title of the end page when no source has the next chapter.
 # @only android
 # @arg chapter: text
@@ -924,3 +918,94 @@ eink-keep-ready-on = On · the next chapters of series you're reading
 # @only android
 # @max 60
 eink-keep-ready-off = Off
+
+# Switch under Volume keys turn pages in the phone reader's settings: volume up turns forward
+# instead of volume down.
+# @only android
+# @max 40
+reader-row-volume-swap = Swap the volume keys
+
+# Heading of the e-ink reader's settings sheet over the rows for the e-ink screen itself.
+# @only android
+# @max 30
+eink-sheet-screen = This screen
+
+# Row in the e-ink reader's settings: a full refresh on every page with a picture.
+# @only android
+# @max 40
+eink-row-refresh-image = Full refresh on picture pages
+
+# Row in the e-ink reader's settings: how often text pages get a full refresh.
+# @only android
+# @max 36
+eink-row-refresh-text = Full refresh on text pages
+
+# Row in the e-ink reader's settings: how often lists get a full refresh as they page.
+# @only android
+# @max 36
+eink-row-refresh-list = Full refresh on lists
+
+# Value of a full refresh row in the e-ink reader's settings: once every so many pages.
+# @only android
+# @arg count: int
+# @max 24
+eink-refresh-every = { $count ->
+    [one] Every page
+   *[other] Every { $count } pages
+ }
+
+# Row in the e-ink reader's settings on a colour screen with speed modes: which mode pages use.
+# @only android
+# @max 30
+eink-row-screen-speed = Screen speed
+
+# Choice of Screen speed: the screen's usual mode.
+# @only android
+# @max 16
+eink-speed-standard = Standard
+
+# Choice of Screen speed: quicker updates with more ghosting.
+# @only android
+# @max 16
+eink-speed-fast = Fast
+
+# Choice of Screen speed: the slowest and cleanest updates.
+# @only android
+# @max 16
+eink-speed-best = Best quality
+
+# Row in the e-ink reader's settings on a colour screen: softens the rainbow pattern in colour pictures.
+# @only android
+# @max 36
+eink-row-rainbow = Soften colour patterns
+
+# Row in the e-ink reader's settings on a colour screen: how strong colours are drawn.
+# @only android
+# @max 30
+eink-row-saturation = Colour strength
+
+# Row in the e-ink reader's settings on a colour screen: the pictures' contrast.
+# @only android
+# @max 30
+eink-row-contrast = Contrast
+
+# Value of an amount row in the e-ink reader's settings, such as Text size or Contrast.
+# @only android
+# @arg percent: int
+# @max 8
+eink-percent = { $percent }%
+
+# Button that makes a setting in the e-ink reader's settings smaller.
+# @only android
+# @max 30
+eink-step-down = Less
+
+# Button that makes a setting in the e-ink reader's settings bigger.
+# @only android
+# @max 30
+eink-step-up = More
+
+# Marks the chapter open in the reader on the e-ink contents page.
+# @only android
+# @max 20
+eink-contents-reading = Reading

@@ -6266,6 +6266,9 @@
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Contado como leído · Actualizado en {trackers}</value>
   </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Contado como leído · {tracker} se actualiza al volver la conexión</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>A continuación</value>
   </data>
@@ -7258,9 +7261,6 @@
   </data>
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Quitar filtros</value>
-  </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Popular</value>
   </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>Tendencias</value>

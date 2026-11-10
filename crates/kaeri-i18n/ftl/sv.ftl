@@ -8640,6 +8640,9 @@ reader-end-read = Räknas som läst
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Räknas som läst · uppdaterat på { $trackers }
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Räknas som läst · { $tracker } uppdateras när du är online igen
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Nästa
 
@@ -9588,9 +9591,6 @@ read-search-nothing-filters-line = Färre filter kan ge fler träffar.
 
 # The button under it.
 read-search-clear-filters = Rensa filter
-
-# A sort of reading's Search, AniList's.
-read-sort-popular = Populära
 
 # A sort of reading's Search, AniList's.
 read-sort-trending = Trendande

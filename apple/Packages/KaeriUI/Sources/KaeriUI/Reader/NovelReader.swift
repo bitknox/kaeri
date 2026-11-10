@@ -61,6 +61,9 @@ struct NovelReader: View {
         .onChange(of: model.jump?.tick) { _, _ in
             if let index = model.jump?.index { controller.goTo(index) }
         }
+        .onChange(of: model.novelGoTo?.tick) { _, _ in
+            if let pos = model.novelGoTo?.pos { controller.goTo(pos) }
+        }
         .onChange(of: model.turnRequest) { _, request in
             guard let request else { return }
             if shown.end, !request.forward { shown.end = false; return }
@@ -282,6 +285,18 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
 
     func goTo(_ page: Int) { call("window.kaeriReader && window.kaeriReader.goTo(\(max(page, 0)), 'jump')") }
 
+    /// A place the engine chose: Back to page, Start over, another device's. The page says it
+    /// back as placed, never as the person's jump.
+    func goTo(_ pos: NovelPos) {
+        guard let book, book.spine.indices.contains(Int(pos.spine)) else { return }
+        readyHow = nil
+        if Int(pos.spine) == currentSpine {
+            call("window.kaeriReader && window.kaeriReader.goToPos('\(Self.text(pos))', 'placed')")
+        } else {
+            load(book.spine[Int(pos.spine)].url, fragment: "kaeri:pos=" + Self.text(pos))
+        }
+    }
+
     /// Which taps and keys the page turns on by itself, so a turn is one message from the page:
     /// the tap setting's sides, forward on the side the book reads towards, and none while the
     /// chrome or the end page is up, when a tap is the reader's.
@@ -404,16 +419,26 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
             spine: UInt32(pos["spine"] as? Int ?? 0), path: (pos["path"] as? [Int] ?? []).map(UInt32.init),
             offset: UInt32(pos["offset"] as? Int ?? 0))
         if let spine = currentSpine { lastPlace = (spine, place) }
-        model?.novelAt(place, page: page, pages: pages, how: Self.how(json["how"] as? String))
+        let word = json["how"] as? String
+        let how = ready && word == nil ? (readyHow ?? .placed) : Self.how(word)
+        if ready { readyHow = nil }
+        model?.novelAt(place, page: page, pages: pages, how: how)
     }
 
+    /// How the document loading now came: a turn past a document's edge, or a link the person
+    /// followed. Anything else the host loads is placed.
+    private var readyHow: TurnHow?
+
+    /// The page's word for a turn. A first layout says none, and a document the host loaded
+    /// is its own move: neither is the person's jump.
     static func how(_ text: String?) -> TurnHow {
         switch text {
         case "swipe": .swipe
         case "key": .key
         case "scroll": .scroll
         case "turn": .turn
-        default: .jump
+        case "jump": .jump
+        default: .placed
         }
     }
 
@@ -436,6 +461,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     private func next() {
         guard let book, let current = currentSpine else { return }
         if let index = book.spine.indices.dropFirst(current + 1).first(where: { book.spine[$0].linear }) {
+            readyHow = .turn
             load(book.spine[index].url, fragment: nil)
         } else {
             shown.end = true
@@ -445,6 +471,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     private func previous() {
         guard let book, let current = currentSpine else { return }
         if let index = book.spine.indices.prefix(current).last(where: { book.spine[$0].linear }) {
+            readyHow = .turn
             load(book.spine[index].url, fragment: "kaeri:end")
         }
     }
@@ -465,6 +492,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
         if let note = json["note"] as? String, !note.isEmpty { shown.note = note; return }
         // Only links inside the book are followed; everything else stays where it is.
         if json["internal"] as? Bool == true, let href = json["href"] as? String, let target = URL(string: href) {
+            readyHow = .jump
             webView.load(URLRequest(url: target))
         }
     }

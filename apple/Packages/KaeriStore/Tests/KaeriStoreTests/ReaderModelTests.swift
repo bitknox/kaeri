@@ -122,7 +122,7 @@ struct ReaderModelTests {
         model.apply(.leaves(session: 1, chapter: chapter.id, leaves: leaves))
         #expect(model.current == 2)
         #expect(model.goTo?.leaf == 2)
-        #expect(model.goTo?.how == .scroll)
+        #expect(model.goTo?.how == .placed)
     }
 
     @Test func closingClearsTheRequest() {

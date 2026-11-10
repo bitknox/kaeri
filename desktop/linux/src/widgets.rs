@@ -205,7 +205,16 @@ thread_local! {
 /// The banner under a page's header bar that says the device is offline: shown on every page
 /// that has one while it is, and gone once the network is back.
 pub fn offline_banner() -> adw::Banner {
-    let banner = adw::Banner::new(&t::state_offline_line());
+    banner_saying(&t::state_offline_line())
+}
+
+/// The offline banner on Read's pages, which speaks of chapters.
+pub fn read_offline_banner() -> adw::Banner {
+    banner_saying(&t::read_state_offline_line())
+}
+
+fn banner_saying(line: &str) -> adw::Banner {
+    let banner = adw::Banner::new(line);
     banner.add_css_class("offline");
     banner.set_revealed(OFFLINE.get());
     BANNERS.with_borrow_mut(|banners| {
@@ -213,6 +222,11 @@ pub fn offline_banner() -> adw::Banner {
         banners.push(banner.downgrade());
     });
     banner
+}
+
+/// Whether the device is offline, as the engine last said.
+pub fn is_offline() -> bool {
+    OFFLINE.get()
 }
 
 /// Show or hide every offline banner.
@@ -232,9 +246,27 @@ pub fn content_page(
     header: &adw::HeaderBar,
     content: &impl IsA<gtk::Widget>,
 ) -> adw::NavigationPage {
+    page_with_banner(title, header, &offline_banner(), content)
+}
+
+/// A page of Read: its header bar and Read's offline banner over `content`.
+pub fn read_content_page(
+    title: &str,
+    header: &adw::HeaderBar,
+    content: &impl IsA<gtk::Widget>,
+) -> adw::NavigationPage {
+    page_with_banner(title, header, &read_offline_banner(), content)
+}
+
+fn page_with_banner(
+    title: &str,
+    header: &adw::HeaderBar,
+    banner: &adw::Banner,
+    content: &impl IsA<gtk::Widget>,
+) -> adw::NavigationPage {
     let view = adw::ToolbarView::new();
     view.add_top_bar(header);
-    view.add_top_bar(&offline_banner());
+    view.add_top_bar(banner);
     view.set_content(Some(content));
     adw::NavigationPage::builder().title(title).child(&view).build()
 }
@@ -590,7 +622,8 @@ pub fn context_menu(widget: &impl IsA<gtk::Widget>, menu: &gio::Menu) {
 }
 
 /// Surprise me, or Another: a flat header bar button with its word. It asks the engine for a pick
-/// from `pool` and opens it (or swaps the page on screen for it when `swap`), showing a spinner in
+/// from `pool` and opens it (or swaps the page on screen for it when `swap`; a book from reading's
+/// filters opens as a series, with no Another), showing a spinner in
 /// place of the glyph once the pick takes more than 600 ms. Pressed again while it waits, it does
 /// nothing. An empty pool or no connection is said by the engine's own notice.
 pub fn surprise_button(
@@ -649,7 +682,13 @@ pub fn surprise_button(
             id.remove();
         }
         icon.set_visible_child_name("dice");
-        if let SurpriseOutcome::Picked { id, more } = outcome {
+        if let SurpriseOutcome::Picked { id, .. } = outcome
+            && matches!(pool, kaeri_model::browsing::SurprisePool::Reading { .. })
+        {
+            ctx.pick.replace(None);
+            let _ = button
+                .activate_action("win.open-series", Some(&format!("a:{id}").to_variant()));
+        } else if let SurpriseOutcome::Picked { id, more } = outcome {
             ctx.pick.replace(Some(crate::window::Pick {
                 id: *id,
                 pool: pool.clone(),
@@ -708,5 +747,21 @@ mod tests {
     fn a_placeholder_is_its_cover_colour_at_half_over_raised() {
         assert_eq!(half_over_raised([0xFF, 0xFF, 0xFF]), [0x90, 0x92, 0x9B]);
         assert_eq!(half_over_raised(RAISED), RAISED);
+    }
+
+    /// Read's pages speak of chapters offline, the shows' pages of episodes, and both follow
+    /// the network.
+    #[test]
+    fn reads_offline_banner_speaks_of_chapters() {
+        crate::gtk_test::run(|| {
+            let shows = offline_banner();
+            let read = read_offline_banner();
+            assert_eq!(shows.title(), t::state_offline_line());
+            assert_eq!(read.title(), t::read_state_offline_line());
+            set_offline(true);
+            assert!(shows.is_revealed() && read.is_revealed());
+            set_offline(false);
+            assert!(!shows.is_revealed() && !read.is_revealed());
+        });
     }
 }

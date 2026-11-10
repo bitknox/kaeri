@@ -10,7 +10,15 @@ import app.kaeri.engine.model.NoNext
 import app.kaeri.engine.model.OpenAt
 import app.kaeri.engine.model.PageEncoding
 import app.kaeri.engine.model.PageFile
+import app.kaeri.engine.core.Medium
+import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReadPlace
+import app.kaeri.engine.model.ReaderMode
+import app.kaeri.engine.model.ReaderSettingKey
+import app.kaeri.engine.model.ReaderSettingRow
+import app.kaeri.engine.model.ReaderSettingsView
+import app.kaeri.engine.model.ReaderValue
+import app.kaeri.engine.model.SettingScope
 import app.kaeri.engine.model.ReaderAction as NoticeAction
 import app.kaeri.engine.model.ReaderCommand
 import app.kaeri.engine.model.ReaderEvent
@@ -73,6 +81,63 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun a_second_layout_of_the_open_chapter_keeps_its_place_and_its_pictures() {
+        // The page it opens at lays out first; the rest stream in and lay the chapter out again.
+        opened(start = 0u)
+        session.jumped(session.state.value.jump!!.id)
+        val first = PageFile("/cache/0.jpg", app.kaeri.engine.model.PageEncoding.Original("image/jpeg"), 800u, 1200u, null, false, 1u)
+        val second = first.copy(path = "/cache/1.jpg")
+        session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 0u, null, first))
+        session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 1u, null, second))
+        session.shown(1, TurnHow.TURN)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(8)))
+        val state = session.state.value
+        assertEquals(8, state.pages)
+        assertEquals(1, state.jump?.leaf)
+        // Drawn from before until the page lands for this layout, which a strip still asks for.
+        val part = ReaderFixtures.part(1u)
+        assertEquals(second, state.file(part))
+        assertNull(state.landed(part))
+        val fresh = second.copy(path = "/cache/1b.jpg")
+        session.apply(ReaderEvent.PageReady(SESSION, CHAPTER, 1u, null, fresh))
+        assertEquals(fresh, session.state.value.file(part))
+        // A new chapter starts with nothing held.
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u)))
+        assertNull(session.state.value.file(part))
+    }
+
+    @Test
+    fun a_mode_changed_in_the_reader_turns_the_view_with_it() {
+        opened()
+        fun row(key: ReaderSettingKey, word: String) =
+            ReaderSettingRow(key, ReaderValue.Choice(word), SettingScope.SERIES, false, true, emptyList())
+        // The first settings leave the engine's layout as it is, guesses and all.
+        val opened = session.state.value.view
+        session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.MANGA, WORK, listOf(row(ReaderSettingKey.MODE, "strip"), row(ReaderSettingKey.DIRECTION, "rtl")))))
+        assertEquals(opened, session.state.value.view)
+        session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.MANGA, WORK, listOf(row(ReaderSettingKey.MODE, "paged"), row(ReaderSettingKey.DIRECTION, "ltr")))))
+        assertEquals(ReadDirection.LEFT_TO_RIGHT, session.state.value.view?.direction)
+        assertEquals(ReaderMode.PAGED, session.state.value.view?.mode)
+        session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.MANGA, WORK, listOf(row(ReaderSettingKey.MODE, "strip"), row(ReaderSettingKey.DIRECTION, "ltr")))))
+        assertEquals(ReaderMode.STRIP, session.state.value.view?.mode)
+        // Another medium's defaults leave the open chapter alone.
+        session.apply(ReaderEvent.Settings(ReaderSettingsView(Medium.NOVEL, null, listOf(row(ReaderSettingKey.MODE, "paged")))))
+        assertEquals(ReaderMode.STRIP, session.state.value.view?.mode)
+    }
+
+    @Test
+    fun spreads_count_pages_not_leaves() {
+        opened(start = 0u, pages = 9)
+        // The cover alone, then pairs: five leaves hold nine pages.
+        val parts = ReaderFixtures.leaves(9).filter { !it.endPage }.flatMap { it.parts }
+        val spreads = (listOf(listOf(parts[0])) + parts.drop(1).chunked(2)).mapIndexed { i, pair ->
+            app.kaeri.engine.model.Leaf(i.toUInt(), pair, false)
+        } + app.kaeri.engine.model.Leaf(5u, emptyList(), true)
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, spreads))
+        assertEquals(9, session.state.value.pages)
+    }
+
+    @Test
     fun shown_reports_the_leaf_and_how() {
         opened()
         sent.clear()
@@ -127,14 +192,35 @@ class ReaderSessionTest {
     }
 
     @Test
-    fun an_eink_notice_clears_at_the_next_turn_but_not_at_a_jump() {
+    fun an_eink_notice_clears_at_the_next_turn_but_not_at_a_jump_or_the_apps_own_move() {
         opened()
-        val notice = ReaderNotice(Msg.Reading(ReadingMsg.ReaderBackToPage(5)), NoticeAction.BACK_TO, 0u)
+        val notice = ReaderNotice(Msg.Reading(ReadingMsg.ReaderResumed(5)), NoticeAction.START_OVER, 0u)
         session.apply(ReaderEvent.Notice(notice))
+        session.shown(4, TurnHow.PLACED)
         session.shown(2, TurnHow.JUMP)
         assertEquals(notice, session.state.value.notice?.notice)
         session.shown(3, TurnHow.TURN)
         assertNull(session.state.value.notice)
+    }
+
+    @Test
+    fun back_to_page_is_state_the_engine_offers_and_takes_away() {
+        opened()
+        session.apply(ReaderEvent.BackToPage(SESSION, 2u))
+        assertEquals(2u, session.state.value.backTo)
+        sent.clear()
+        session.backTo()
+        assertEquals(ReaderCommand.BackTo(SESSION), sent.single())
+        assertNull(session.state.value.backTo)
+        session.apply(ReaderEvent.BackToPage(SESSION, 3u))
+        session.apply(ReaderEvent.BackToPage(SESSION, null))
+        assertNull(session.state.value.backTo)
+        // Another session's offer is left, and a new chapter starts without one.
+        session.apply(ReaderEvent.BackToPage(SESSION + 1u, 3u))
+        assertNull(session.state.value.backTo)
+        session.apply(ReaderEvent.BackToPage(SESSION, 3u))
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u)))
+        assertNull(session.state.value.backTo)
     }
 
     @Test

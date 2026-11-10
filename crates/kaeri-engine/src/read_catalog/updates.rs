@@ -84,22 +84,25 @@ pub(crate) fn view(kit: &Kit, ask: Ask) -> UpdatesView {
         let id = WorkId::new(work.clone());
         let Some((source, _, list)) = chapters::of_work(sources, store, &id) else { continue };
         let read = chapters::Read::of(store, &work);
-        // One row per chapter: two versions of it are one chapter come out.
-        let mut listed = HashSet::new();
-        let new: Vec<&chapters::Kept> = list
-            .iter()
-            .filter(|c| listed.insert(c.id.as_str()))
-            .filter(|c| c.seen_at.is_some() || c.published.is_some())
-            .filter(|c| c.out_at().is_some_and(|at| at >= since && at <= ask.now + 86_400))
-            .collect();
+        // One row per chapter, as the series lists it: two versions of it are one chapter come
+        // out, and its parts one chapter.
+        let new: Vec<(&chapters::Kept, ChapterRow)> =
+            super::series::kept_rows(kit, &id, &source, &list, &read)
+                .into_iter()
+                .map(|(first, row)| (&list[first], row))
+                .filter(|(c, _)| c.seen_at.is_some() || c.published.is_some())
+                .filter(|(c, _)| {
+                    c.out_at().is_some_and(|at| at >= since && at <= ask.now + 86_400)
+                })
+                .collect();
         if new.is_empty() {
             continue;
         }
         let Some(tile) = tile_of(kit, &work) else { continue };
         let source_name = source_name(sources, &source);
-        for chapter in new {
+        for (chapter, mut chapter_row) in new {
             let is_read = read.is_read(&chapter.id);
-            let mut chapter_row = row_of(chapter, &read);
+            chapter_row.new_chapter = !matches!(chapter_row.state, ChapterReadState::Read);
             chapter_row.line = super::rows::line(
                 &chapter_row,
                 super::rows::Kept::Source,
@@ -201,6 +204,12 @@ pub(crate) fn row_of(chapter: &chapters::Kept, read: &chapters::Read) -> Chapter
         read_at: None,
         line: Vec::new(),
         gone_from_source: false,
+        parts: 1,
+        other_group: false,
+        missing_parts: Vec::new(),
+        part_groups: Vec::new(),
+        group_language: None,
+        other_source: None,
     }
 }
 

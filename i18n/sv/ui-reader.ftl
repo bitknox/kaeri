@@ -4,6 +4,7 @@ reader-try-again = Försök igen
 reader-close = Stäng
 reader-end-read = Räknas som läst
 reader-end-tracker = Räknas som läst · uppdaterat på { $trackers }
+reader-end-tracker-offline = Räknas som läst · { $tracker } uppdateras när du är online igen
 reader-end-next = { -up-next-cap }
 reader-mode-rtl = Höger till vänster
 reader-mode-ltr = Vänster till höger

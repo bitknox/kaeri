@@ -6,7 +6,7 @@
 
 use std::{
     cell::{Cell, RefCell},
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     rc::Rc,
 };
 
@@ -53,7 +53,11 @@ pub struct Chapters {
     stack: gtk::Stack,
     model: gtk::StringList,
     grid: gtk::GridView,
-    list: gtk::Box,
+    /// The chapters, a row each, drawn as they scroll into view: a series can list a thousand.
+    list: gtk::ListView,
+    entries: gio::ListStore,
+    /// The read volumes opened since the popover opened, by their place in `volumes`.
+    open_folds: Rc<RefCell<HashSet<usize>>>,
     volumes: RefCell<Option<Vec<VolumeGroup>>>,
     here: RefCell<Option<ChapterId>>,
     open_leaf: Cell<usize>,
@@ -95,7 +99,14 @@ impl Chapters {
             .vexpand(true)
             .build();
 
-        let list = gtk::Box::new(gtk::Orientation::Vertical, 0);
+        let entries = gio::ListStore::new::<glib::BoxedAnyObject>();
+        let rows = gtk::SignalListItemFactory::new();
+        let list = gtk::ListView::new(
+            Some(gtk::NoSelection::new(Some(entries.clone()))),
+            Some(rows.clone()),
+        );
+        list.set_single_click_activate(true);
+        list.add_css_class("reader-chapter-list");
         let chapters = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never)
             .child(&list)
@@ -121,6 +132,8 @@ impl Chapters {
             model,
             grid,
             list,
+            entries,
+            open_folds: Rc::default(),
             volumes: RefCell::default(),
             here: RefCell::default(),
             open_leaf: Cell::new(0),
@@ -163,6 +176,43 @@ impl Chapters {
                     return;
                 };
                 this.bind(item);
+            }
+        });
+        rows.connect_bind({
+            let this = Rc::downgrade(&this);
+            move |_, item| {
+                let (Some(this), Some(item)) =
+                    (this.upgrade(), item.downcast_ref::<gtk::ListItem>())
+                else {
+                    return;
+                };
+                let Some(entry) = item.item().and_downcast::<glib::BoxedAnyObject>() else {
+                    return;
+                };
+                let entry = entry.borrow::<Entry>();
+                // A chapter is the list's own row; a folded volume's row is inside its line.
+                let take = matches!(*entry, Entry::Chapter { .. });
+                item.set_activatable(take);
+                item.set_focusable(take);
+                item.set_accessible_label(&entry_label(&entry));
+                let widget = match &*entry {
+                    Entry::Fold { group, name, line } => this.fold(*group, name, line),
+                    other => entry_widget(other),
+                };
+                item.set_child(Some(&widget));
+            }
+        });
+        rows.connect_unbind(|_, item| {
+            if let Some(item) = item.downcast_ref::<gtk::ListItem>() {
+                item.set_child(gtk::Widget::NONE);
+            }
+        });
+        this.list.connect_activate({
+            let this = Rc::downgrade(&this);
+            move |_, position| {
+                if let Some(this) = this.upgrade() {
+                    this.picked(position);
+                }
             }
         });
         this.grid.connect_activate({
@@ -211,6 +261,7 @@ impl Chapters {
         let tab = if here.pages { "pages" } else { "chapters" };
         self.tabs.set_active_name(Some(tab));
         self.stack.set_visible_child_name(tab);
+        self.open_folds.borrow_mut().clear();
         self.draw_list();
         // The open page and the open chapter in view.
         let open = entries.iter().position(|(l, _)| *l == here.open_leaf);
@@ -220,8 +271,13 @@ impl Chapters {
             if let Some(open) = open {
                 this.grid.scroll_to(open as u32, gtk::ListScrollFlags::NONE, None);
             }
-            if let Some(row) = find_here(this.list.upcast_ref()) {
-                row.grab_focus();
+            let here = (0..this.entries.n_items()).find(|&i| {
+                this.entries.item(i).and_downcast::<glib::BoxedAnyObject>().is_some_and(|e| {
+                    matches!(*e.borrow::<Entry>(), Entry::Chapter { here: true, .. })
+                })
+            });
+            if let Some(here) = here {
+                this.list.scroll_to(here, gtk::ListScrollFlags::FOCUS, None);
             }
         });
     }
@@ -248,6 +304,8 @@ impl Chapters {
         self.files.borrow_mut().clear();
         self.waiting.borrow_mut().clear();
         self.model.splice(0, self.model.n_items(), &[]);
+        self.entries.remove_all();
+        self.open_folds.borrow_mut().clear();
     }
 
     /// A page landed: thumbnails waiting for it show it.
@@ -290,122 +348,251 @@ impl Chapters {
     }
 
     fn draw_list(&self) {
-        while let Some(child) = self.list.first_child() {
-            self.list.remove(&child);
-        }
         let volumes = self.volumes.borrow().clone();
-        let Some(volumes) = volumes else {
-            let loading = crate::widgets::haze(&t::reader_chapters_loading(), "body");
-            loading.set_margin_top(16);
-            self.list.append(&loading);
+        let entries = match volumes {
+            Some(volumes) => entries(&volumes, self.here.borrow().as_ref()),
+            None => vec![Entry::Loading],
+        };
+        let entries: Vec<glib::BoxedAnyObject> =
+            entries.into_iter().map(glib::BoxedAnyObject::new).collect();
+        self.entries.splice(0, self.entries.n_items(), &entries);
+    }
+
+    /// A row was picked: a chapter opens, a read volume folds open or shut.
+    fn picked(&self, position: u32) {
+        let Some(entry) = self.entries.item(position).and_downcast::<glib::BoxedAnyObject>()
+        else {
             return;
         };
-        let here = self.here.borrow().clone();
-        for group in &volumes {
-            let name =
-                group.volume.as_deref().map_or_else(t::series_no_volume, t::series_volume);
-            let list = gtk::ListBox::new();
-            list.set_selection_mode(gtk::SelectionMode::None);
-            list.add_css_class("reader-chapter-list");
-            // A read volume folds into one line, unless the open chapter is in it.
-            let holds_here = group.chapters.iter().any(|c| Some(&c.id) == here.as_ref());
-            if group.all_read && volumes.len() > 1 && !holds_here {
-                let mut line = Vec::new();
-                if let (Some(low), Some(high)) = (group.chapters.first(), group.chapters.last())
-                {
-                    let number =
-                        |c: &ChapterRow| c.number.clone().unwrap_or_else(|| c.label.clone());
-                    line.push(t::series_chapter_range(&number(low), &number(high)));
+        let entry = entry.borrow::<Entry>().clone();
+        match entry {
+            Entry::Chapter { row, here, .. } => {
+                self.popover.popdown();
+                if !here {
+                    self.tell(Ask::Open(row.id));
                 }
-                line.push(t::series_volume_read());
-                let fold = adw::ExpanderRow::builder()
-                    .title(glib::markup_escape_text(&name))
-                    .subtitle(glib::markup_escape_text(&line.join(" \u{b7} ")))
-                    .build();
-                for chapter in &group.chapters {
-                    fold.add_row(&self.row(chapter, false));
-                }
-                list.append(&fold);
-                self.list.append(&list);
-                continue;
             }
-            if volumes.len() > 1 {
-                let heading = crate::widgets::haze(&name, "caption-heading");
-                heading.set_margin_top(14);
-                heading.set_margin_bottom(6);
-                heading.set_accessible_role(gtk::AccessibleRole::Heading);
-                self.list.append(&heading);
-            }
-            for chapter in &group.chapters {
-                list.append(&self.row(chapter, Some(&chapter.id) == here.as_ref()));
-            }
-            self.list.append(&list);
+            Entry::Fold { .. } | Entry::Heading(_) | Entry::Loading => {}
         }
     }
 
-    /// A chapter: its words, its title and state under them, the open one on the selected fill
-    /// and a new one with the water dot in a place every row keeps. No icon on any row.
-    fn row(&self, chapter: &ChapterRow, here: bool) -> adw::ActionRow {
-        let read = matches!(chapter.state, ChapterReadState::Read);
-        let mut under: Vec<String> = Vec::new();
-        if let Some(title) = chapter.title.as_deref().filter(|t| !t.is_empty()) {
-            under.push(title.to_owned());
-        }
-        let state = super::series::state_line(chapter);
-        if !state.is_empty() {
-            under.push(state);
-        }
-        let row = adw::ActionRow::builder()
-            .title(glib::markup_escape_text(&chapter.label))
-            .subtitle(glib::markup_escape_text(&under.join(" \u{b7} ")))
-            .title_lines(1)
-            .subtitle_lines(1)
-            .activatable(true)
+    /// A read volume folded into one line that opens to its chapters, drawn the first time it
+    /// opens. It stays open when its line scrolls away and back.
+    fn fold(&self, group: usize, name: &str, line: &str) -> gtk::Widget {
+        let fold = adw::ExpanderRow::builder()
+            .title(glib::markup_escape_text(name))
+            .subtitle(glib::markup_escape_text(line))
             .build();
-        if read {
-            row.add_css_class("reader-read");
-        }
-        if here {
-            row.add_css_class("reader-here");
-            row.upcast_ref::<gtk::Widget>()
-                .update_state(&[gtk::accessible::State::Selected(Some(true))]);
-        }
-        // Every row keeps the dot's place, so titles line up with and without it.
-        let slot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-        slot.set_width_request(6);
-        slot.set_valign(gtk::Align::Center);
-        if chapter.new_chapter && !read {
-            slot.add_css_class("home-new");
-        }
-        row.add_prefix(&slot);
-        let id = chapter.id.clone();
-        let popover = self.popover.downgrade();
-        let ask = self.ask.borrow().clone();
-        row.connect_activated(move |_| {
-            if let Some(popover) = popover.upgrade() {
-                popover.popdown();
+        let chapters = self
+            .volumes
+            .borrow()
+            .as_ref()
+            .and_then(|v| v.get(group))
+            .map(|g| g.chapters.clone())
+            .unwrap_or_default();
+        let filled = Cell::new(false);
+        let (popover, ask, open) =
+            (self.popover.downgrade(), self.ask.borrow().clone(), Rc::clone(&self.open_folds));
+        fold.connect_expanded_notify(move |fold| {
+            if fold.is_expanded() {
+                open.borrow_mut().insert(group);
+            } else {
+                open.borrow_mut().remove(&group);
             }
-            if !here && let Some(ask) = &ask {
-                ask(Ask::Open(id.clone()));
+            if fold.is_expanded() && !filled.replace(true) {
+                for chapter in &chapters {
+                    fold.add_row(&fold_row(chapter, &popover, ask.clone()));
+                }
             }
         });
-        row
+        // Before it is shown, so it opens without the slide.
+        fold.set_expanded(self.open_folds.borrow().contains(&group));
+        let list = gtk::ListBox::new();
+        list.set_selection_mode(gtk::SelectionMode::None);
+        list.add_css_class("reader-chapter-list");
+        list.append(&fold);
+        list.upcast()
     }
 }
 
-/// The open chapter's row among `widget` and what it holds.
-fn find_here(widget: &gtk::Widget) -> Option<gtk::Widget> {
-    if widget.has_css_class("reader-here") {
-        return Some(widget.clone());
+/// A chapter in an opened volume: picking it opens it.
+fn fold_row(
+    chapter: &ChapterRow,
+    popover: &glib::WeakRef<gtk::Popover>,
+    ask: Option<Asker>,
+) -> adw::ActionRow {
+    let read = matches!(chapter.state, ChapterReadState::Read);
+    let row = adw::ActionRow::builder()
+        .title(glib::markup_escape_text(&chapter.label))
+        .subtitle(glib::markup_escape_text(&under_line(chapter)))
+        .title_lines(1)
+        .subtitle_lines(1)
+        .activatable(true)
+        .build();
+    if read {
+        row.add_css_class("reader-read");
     }
-    let mut child = widget.first_child();
-    while let Some(c) = child {
-        if let Some(found) = find_here(&c) {
-            return Some(found);
+    // Every row keeps the dot's place, so titles line up with and without it.
+    let slot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    slot.set_width_request(6);
+    slot.set_valign(gtk::Align::Center);
+    if chapter.new_chapter && !read {
+        slot.add_css_class("home-new");
+    }
+    row.add_prefix(&slot);
+    let (id, popover) = (chapter.id.clone(), popover.clone());
+    row.connect_activated(move |_| {
+        if let Some(popover) = popover.upgrade() {
+            popover.popdown();
         }
-        child = c.next_sibling();
+        if let Some(ask) = &ask {
+            ask(Ask::Open(id.clone()));
+        }
+    });
+    row
+}
+
+/// A chapter's title and state, under its words.
+fn under_line(chapter: &ChapterRow) -> String {
+    let mut under: Vec<String> = Vec::new();
+    if let Some(title) = chapter.title.as_deref().filter(|t| !t.is_empty()) {
+        under.push(title.to_owned());
     }
-    None
+    let state = super::series::state_line(chapter);
+    if !state.is_empty() {
+        under.push(state);
+    }
+    under.join(" \u{b7} ")
+}
+
+/// A line of the Chapters list.
+#[derive(Clone)]
+enum Entry {
+    /// The chapters have not come yet.
+    Loading,
+    /// A volume's name, when the series has more than one.
+    Heading(String),
+    /// A read volume folded into one line, unless the open chapter is in it.
+    Fold {
+        group: usize,
+        name: String,
+        line: String,
+    },
+    Chapter {
+        row: Box<ChapterRow>,
+        here: bool,
+    },
+}
+
+/// The lines for `volumes`, with the open chapter `here` marked.
+fn entries(volumes: &[VolumeGroup], here: Option<&ChapterId>) -> Vec<Entry> {
+    let mut entries = Vec::new();
+    for (index, group) in volumes.iter().enumerate() {
+        let name = group.volume.as_deref().map_or_else(t::series_no_volume, t::series_volume);
+        let holds_here = group.chapters.iter().any(|c| Some(&c.id) == here);
+        if group.all_read && volumes.len() > 1 && !holds_here {
+            let mut line = Vec::new();
+            if let (Some(low), Some(high)) = (group.chapters.first(), group.chapters.last()) {
+                let number =
+                    |c: &ChapterRow| c.number.clone().unwrap_or_else(|| c.label.clone());
+                line.push(t::series_chapter_range(&number(low), &number(high)));
+            }
+            line.push(t::series_volume_read());
+            let line = line.join(" \u{b7} ");
+            entries.push(Entry::Fold { group: index, name, line });
+            continue;
+        }
+        if volumes.len() > 1 {
+            entries.push(Entry::Heading(name));
+        }
+        entries.extend(group.chapters.iter().map(|chapter| Entry::Chapter {
+            row: Box::new(chapter.clone()),
+            here: Some(&chapter.id) == here,
+        }));
+    }
+    entries
+}
+
+/// What a line shows. A chapter: its words, its title and state under them, the open one on the
+/// selected fill and a new one with the water dot in a place every row keeps. No icon on any
+/// row. A folded volume: its name and range, with the arrow that says it opens.
+fn entry_widget(entry: &Entry) -> gtk::Widget {
+    match entry {
+        Entry::Loading => {
+            let loading = crate::widgets::haze(&t::reader_chapters_loading(), "body");
+            loading.set_margin_top(16);
+            loading.upcast()
+        }
+        Entry::Heading(name) => {
+            let heading = crate::widgets::haze(name, "caption-heading");
+            heading.set_margin_top(14);
+            heading.set_margin_bottom(6);
+            heading.set_accessible_role(gtk::AccessibleRole::Heading);
+            heading.upcast()
+        }
+        // Drawn by the popover, which opens it: see `Chapters::fold`.
+        Entry::Fold { name, .. } => crate::widgets::haze(name, "body").upcast(),
+        Entry::Chapter { row: chapter, here } => {
+            let read = matches!(chapter.state, ChapterReadState::Read);
+            let row = two_lines(&chapter.label, &under_line(chapter));
+            // Every row keeps the dot's place, so titles line up with and without it.
+            let slot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+            slot.set_width_request(6);
+            slot.set_valign(gtk::Align::Center);
+            if chapter.new_chapter && !read {
+                slot.add_css_class("home-new");
+            }
+            row.prepend(&slot);
+            if read {
+                row.add_css_class("reader-read");
+            }
+            if *here {
+                row.add_css_class("reader-here");
+                row.update_state(&[gtk::accessible::State::Selected(Some(true))]);
+            }
+            row.upcast()
+        }
+    }
+}
+
+/// What a screen reader says for a line: its words, as the row shows them.
+fn entry_label(entry: &Entry) -> String {
+    match entry {
+        Entry::Loading => t::reader_chapters_loading(),
+        Entry::Heading(name) => name.clone(),
+        Entry::Fold { name, line, .. } => [name.as_str(), line].join(", "), // i18n-skip
+        Entry::Chapter { row, .. } => {
+            let under = under_line(row);
+            if under.is_empty() {
+                row.label.clone()
+            } else {
+                [row.label.as_str(), &under].join(", ") // i18n-skip
+            }
+        }
+    }
+}
+
+/// A row with a title and, when there is one, a line under it, each cut to one line.
+fn two_lines(title: &str, line: &str) -> gtk::Box {
+    let words = gtk::Box::new(gtk::Orientation::Vertical, 2);
+    words.set_valign(gtk::Align::Center);
+    words.set_hexpand(true);
+    let title = gtk::Label::new(Some(title));
+    title.add_css_class("reader-chapter-title");
+    title.set_xalign(0.0);
+    title.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    words.append(&title);
+    if !line.is_empty() {
+        let line = gtk::Label::new(Some(line));
+        line.add_css_class("reader-chapter-line");
+        line.set_xalign(0.0);
+        line.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        words.append(&line);
+    }
+    let row = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+    row.add_css_class("reader-chapter");
+    row.append(&words);
+    row
 }
 
 /// Every page of the chapter as the person counts them, with the leaf it is on: both halves of

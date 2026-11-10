@@ -6467,6 +6467,9 @@
   <data name="ReaderEndTracker" xml:space="preserve">
     <value>Засчитано как прочитанная · обновлено: {trackers}</value>
   </data>
+  <data name="ReaderEndTrackerOffline" xml:space="preserve">
+    <value>Засчитано как прочитанная · {tracker} обновится, когда вы вернётесь в сеть</value>
+  </data>
   <data name="ReaderEndNext" xml:space="preserve">
     <value>Следующая</value>
   </data>
@@ -7525,9 +7528,6 @@
   </data>
   <data name="ReadSearchClearFilters" xml:space="preserve">
     <value>Сбросить фильтры</value>
-  </data>
-  <data name="ReadSortPopular" xml:space="preserve">
-    <value>Популярное</value>
   </data>
   <data name="ReadSortTrending" xml:space="preserve">
     <value>В тренде</value>

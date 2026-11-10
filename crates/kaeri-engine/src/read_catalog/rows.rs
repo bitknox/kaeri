@@ -70,12 +70,6 @@ pub fn line(
         ChapterReadState::Unread if row.new_chapter => {
             parts.push(r(ReadingMsg::ReadingRowNew));
             parts.extend(row.published.map(|at| ago(at, now, zone)));
-            if let Some(label) = &row.version_label {
-                parts.push(Msg::Verbatim { text: label.clone() });
-            }
-            if row.versions > 1 {
-                parts.push(r(ReadingMsg::ReadingRowVersions { n: i64::from(row.versions) }));
-            }
         }
         ChapterReadState::Unread => {}
     }
@@ -113,10 +107,67 @@ pub fn line(
         }),
         (None, _) => {}
     }
+    parts.extend(parts_line(row));
+    // Where a chapter comes from when the group or edition in use lacks it. The versions it has
+    // are in the row's menu, not here.
+    match (&row.other_source, &row.version_label) {
+        (Some(source), _) => {
+            parts.push(r(ReadingMsg::ReadingRowFromSource { source: source.clone() }));
+        }
+        (None, Some(group)) if row.other_group => parts.push(r(match &row.group_language {
+            Some(tag) => ReadingMsg::ReadingRowFromGroupIn {
+                group: group.clone(),
+                language: language_of(tag),
+            },
+            None => ReadingMsg::ReadingRowFromGroup { group: group.clone() },
+        })),
+        _ => {}
+    }
     if row.gone_from_source {
         parts.push(r(ReadingMsg::ReadingRowGoneFromSource));
     }
     parts
+}
+
+/// What a row says of a chapter in parts: how many, the missing ones, and those from another
+/// group. "3 parts", or "2 of 3 parts · part 2 missing".
+fn parts_line(row: &ChapterRow) -> Vec<Msg> {
+    let r = Msg::Reading;
+    let mut out = Vec::new();
+    if row.parts <= 1 && row.missing_parts.is_empty() {
+        return out;
+    }
+    let n = i64::from(row.parts);
+    match row.missing_parts.as_slice() {
+        [] => out.push(r(ReadingMsg::ReadingRowParts { n })),
+        missing => {
+            let count = i64::try_from(missing.len()).unwrap_or(i64::MAX);
+            out.push(r(ReadingMsg::ReadingRowPartsOf { have: n - count, n }));
+            out.push(r(ReadingMsg::ReadingRowPartMissing {
+                count,
+                part: i64::from(missing[0]),
+            }));
+        }
+    }
+    for from in &row.part_groups {
+        let part = i64::from(from.part);
+        let group = from.group.clone();
+        out.push(r(match &from.language {
+            Some(tag) => ReadingMsg::ReadingRowPartFromGroupIn {
+                part,
+                group,
+                language: language_of(tag),
+            },
+            None => ReadingMsg::ReadingRowPartFromGroup { part, group },
+        }));
+    }
+    out
+}
+
+/// A source's language tag by name: "es" and "es-419" read "Spanish".
+fn language_of(tag: &str) -> String {
+    let primary = tag.split(['-', '_']).next().unwrap_or(tag);
+    kaeri_model::present::language_name(primary)
 }
 
 /// How long ago `at` was, by the person's calendar past the first hour: "12 min ago", "today",
@@ -177,6 +228,12 @@ mod tests {
             read_at: None,
             line: Vec::new(),
             gone_from_source: false,
+            parts: 1,
+            other_group: false,
+            missing_parts: Vec::new(),
+            part_groups: Vec::new(),
+            group_language: None,
+            other_source: None,
         }
     }
 
@@ -229,7 +286,8 @@ mod tests {
         };
         assert_eq!(
             words(&new, Kept::Source),
-            ["reading-row-new", "reading-ago-yesterday", "verbatim", "reading-row-versions"]
+            ["reading-row-new", "reading-ago-yesterday"],
+            "a row names no group of its own, and its versions are in its menu"
         );
 
         let page = row(ChapterReadState::InProgress { page: 8, of: Some(19) });
@@ -248,6 +306,47 @@ mod tests {
         assert_eq!(
             words(&failed, Kept::Source),
             ["reading-row-failed", "reading-failed-offline"]
+        );
+    }
+
+    #[test]
+    fn a_chapter_in_parts_says_how_many_which_are_missing_and_where_others_come_from() {
+        let utc = TimeZone::UTC;
+        let words = |row: &ChapterRow| line(row, Kept::Source, Medium::Manga, NOW, &utc);
+        let whole = ChapterRow { parts: 3, ..row(ChapterReadState::Read) };
+        assert_eq!(words(&whole)[1], Msg::Reading(ReadingMsg::ReadingRowParts { n: 3 }));
+
+        let gap = ChapterRow {
+            parts: 3,
+            missing_parts: vec![2],
+            part_groups: vec![kaeri_model::reading::PartGroup {
+                part: 3,
+                group: "Group B".into(),
+                language: Some("es-419".into()),
+            }],
+            ..row(ChapterReadState::Read)
+        };
+        assert_eq!(
+            words(&gap)[1..],
+            [
+                Msg::Reading(ReadingMsg::ReadingRowPartsOf { have: 2, n: 3 }),
+                Msg::Reading(ReadingMsg::ReadingRowPartMissing { count: 1, part: 2 }),
+                Msg::Reading(ReadingMsg::ReadingRowPartFromGroupIn {
+                    part: 3,
+                    group: "Group B".into(),
+                    language: "Spanish".into(),
+                }),
+            ]
+        );
+
+        let other = ChapterRow {
+            other_group: true,
+            version_label: Some("Group B".into()),
+            ..row(ChapterReadState::Read)
+        };
+        assert_eq!(
+            words(&other)[1],
+            Msg::Reading(ReadingMsg::ReadingRowFromGroup { group: "Group B".into() })
         );
     }
 

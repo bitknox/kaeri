@@ -60,7 +60,6 @@ public sealed partial class ReaderOverlay : UserControl
         root.Children.Add(stage);
         root.Children.Add(states);
         root.Children.Add(chrome.Notice);
-        root.Children.Add(chrome.BackTo);
         root.Children.Add(chrome.Group);
         root.Children.Add(chrome.PreviewLayer);
         root.Children.Add(chrome.Top);

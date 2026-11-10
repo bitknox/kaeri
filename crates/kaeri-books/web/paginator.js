@@ -50,7 +50,7 @@
   var DEFAULTS = {
     spine: 0, last: false,
     look: { name: 'light', bg: '#F7F5F0', fg: '#1E2033', link: '#1E2033', ink: false },
-    font: '"Literata", "Iowan Old Style", Charter, Georgia, serif',
+    font: '"Literata", "Iowan Old Style", Charter, Georgia, "Kaeri Serif CJK", serif',
     size: 19, line: 1.5, margin: 28, top: 40, bottom: 48,
     justify: true, hyphens: true, mode: 'paged', columns: 'auto', column: 720,
     measure: [65, 75], eink: false, legacy: false, fixed: false

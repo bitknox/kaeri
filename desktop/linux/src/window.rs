@@ -47,6 +47,8 @@ type OnSize = Box<dyn Fn(Size)>;
 
 /// How long a pushed page takes to slide over the one under it.
 const PUSH_MS: u32 = 250;
+/// Search's Shows and Reading sides crossfading into each other.
+const SIDES_MS: u32 = 200;
 
 /// What one of the window's actions does.
 type ShellAction = Box<dyn Fn(&Shell, Option<&glib::Variant>)>;
@@ -405,16 +407,20 @@ impl Shell {
             read_from_home: Cell::new(false),
         });
 
-        // The offline scene is offline before Home first asks, as a device without a network
-        // would be: the monitor that says so otherwise is not watched under fixtures.
+        // The monitor that says where the network stands is not watched under fixtures. The
+        // offline scene is offline before Home first asks, as a device without a network would
+        // be, and the reading scene online, so the chapters queued there download.
         #[cfg(feature = "fixtures")]
-        if fixtures && crate::fixtures::OFFLINE_SCENE.load(std::sync::atomic::Ordering::Relaxed)
-        {
-            ctx.hub.send(Command::NetworkPath {
-                cellular: false,
-                constrained: false,
-                offline: true,
-            });
+        if fixtures {
+            use std::sync::atomic::Ordering::Relaxed;
+            let offline = crate::fixtures::OFFLINE_SCENE.load(Relaxed);
+            if offline || crate::fixtures::ONLINE_SCENE.load(Relaxed) {
+                ctx.hub.send(Command::NetworkPath {
+                    cellular: false,
+                    constrained: false,
+                    offline,
+                });
+            }
         }
 
         // The destinations, each a navigation view of its own.
@@ -618,6 +624,19 @@ impl Shell {
         if shown == Dest::Search {
             self.search.focus();
         }
+    }
+
+    /// Show `dest`'s other side, Shows or Reading. Search's two sides stand in one place: the
+    /// one crossfades into the other, so the title, the field and the row stay put while the
+    /// chips and the content change. A crossfade is kept under Reduce Animation too.
+    fn switch_side(&self, dest: Dest) {
+        let stack = &self.ctx.stack;
+        if matches!(dest, Dest::Search | Dest::ReadSearch) {
+            stack.set_transition_type(gtk::StackTransitionType::Crossfade);
+            stack.set_transition_duration(SIDES_MS);
+        }
+        self.go(dest);
+        stack.set_transition_type(gtk::StackTransitionType::None);
     }
 
     /// Show `dest` as a page pushed over the one on screen, or popped back to it: libadwaita's
@@ -1106,7 +1125,7 @@ impl Shell {
                 if let Some(dest) =
                     a.and_then(String::from_variant).and_then(|n| Dest::named(&n))
                 {
-                    s.go(dest);
+                    s.switch_side(dest);
                 }
             }),
         );

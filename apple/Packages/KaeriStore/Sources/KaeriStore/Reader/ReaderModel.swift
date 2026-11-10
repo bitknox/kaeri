@@ -80,8 +80,9 @@ public final class ReaderModel {
     public private(set) var previews: [ChapterId: PageFile] = [:]
     public private(set) var settings: ReaderSettingsView?
     public internal(set) var notice: ReaderNoticeLine?
-    /// "Back to page 8", waiting in the corner.
-    public internal(set) var backTo: ReaderNoticeLine?
+    /// "Back to page 8" in the slider bar: the page the engine offers to go back to after the
+    /// person's own jump of more than two pages, counted from 1.
+    public internal(set) var backToPage: Int?
     /// The reader is out of sight: the app is inactive or in the background. Notices wait.
     public var away = false
     /// VoiceOver rests on the notice, or the pointer is over it. It waits.
@@ -116,10 +117,12 @@ public final class ReaderModel {
     public private(set) var readTrackers: [String] = []
     /// The reader closed: the page between chapters' server lines are forgotten.
     @ObservationIgnored var onClosed: (() -> Void)?
-    /// A place the paged reader is told to show (Back to page, Start over, another device's), and
-    /// how it got there: the page kept across a change of mode is no jump to offer a way back from.
+    /// A place the paged reader is told to show (Back to page, Start over, another device's, the
+    /// page kept across a change of mode), and how it got there: the app's own move, never the
+    /// person's jump.
     public private(set) var goTo: (leaf: Int, tick: Int, how: TurnHow)?
-    /// A novel place the web view is told to show.
+    /// A novel place the web view is told to show (Back to page, Start over, another
+    /// device's); the novel opens at its own restore.
     public private(set) var novelGoTo: (pos: NovelPos, tick: Int)?
     /// The sheet the screen shows: settings at This series, or the chapters.
     public var sheet: Sheet?
@@ -258,7 +261,6 @@ public final class ReaderModel {
     @ObservationIgnored private var session: UInt64 = 0
     @ObservationIgnored private var noticeCount = 0
     @ObservationIgnored private var noticeTask: Task<Void, Never>?
-    @ObservationIgnored private var backTask: Task<Void, Never>?
     @ObservationIgnored private var ticks = 0
     @ObservationIgnored private var lastStrip: ContinuousClock.Instant?
     @ObservationIgnored private var pendingStrip: Task<Void, Never>?
@@ -382,7 +384,9 @@ public final class ReaderModel {
     /// A leaf was painted.
     public func shown(_ leaf: Int, how: TurnHow) {
         guard session != 0, let chapter = view?.chapter.id, leaves.indices.contains(leaf) else { return }
-        if how == .jump, leaf != current { ring = current }
+        if how == .jump, leaf != current, view?.mode != .strip { ring = current }
+        // A strip's scroll report from before the jump would read as a turn after it.
+        if how == .jump { pendingStrip?.cancel() }
         current = leaf
         if how == .turn || how == .swipe || how == .key { hideChrome() }
         if end != nil, !leaves[leaf].endPage { end = end }
@@ -491,24 +495,30 @@ public final class ReaderModel {
         guard session != 0 else { return }
         switch action {
         case .startOver: send?(.reader(.startOver(session: session)))
-        case .backTo: send?(.reader(.backTo(session: session)))
         case .goBack: send?(.reader(.goBack(session: session)))
         case .changeMode: sheet = .settings
         }
         if action != .changeMode { dismissNotice(action) }
     }
 
-    /// The person went back to the page; the pill leaves.
+    /// The notice's button was used; the notice leaves.
     public func dismissNotice(_ action: ReaderAction?) {
-        if action == .backTo { backTo = nil; backTask?.cancel() } else { notice = nil; noticeTask?.cancel() }
+        notice = nil
+        noticeTask?.cancel()
+    }
+
+    /// Back to page: the place before the jump. The engine takes the offer away as it goes.
+    public func back() {
+        guard session != 0, backToPage != nil else { return }
+        backToPage = nil
+        send?(.reader(.backTo(session: session)))
     }
 
     /// Notices belong to an open chapter: opening and failing screens show none.
     private func clearNotices() {
         noticeTask?.cancel()
-        backTask?.cancel()
         notice = nil
-        backTo = nil
+        backToPage = nil
     }
 
     /// A turn the menu or a key asked for; the reader on screen answers it.
@@ -650,7 +660,7 @@ public final class ReaderModel {
             read = false
             readTrackers = []
             ring = nil
-            backTo = nil
+            backToPage = nil
             notice = nil
             current = 0
             if let settings = opened.settings { self.settings = settings }
@@ -677,7 +687,7 @@ public final class ReaderModel {
             }
             if let page = keepPage, let index = leaves.firstIndex(where: { $0.parts.contains { $0.page >= page } }) {
                 keepPage = nil
-                show(index, how: .scroll)
+                show(index)
             }
             settleHeld()
         case .pageReady(let session, let chapter, let page, let half, let file):
@@ -699,7 +709,6 @@ public final class ReaderModel {
             novel = open
             novelStyle = open.style
             phase = .open
-            if let restore = open.restore { novelGoTo = (restore, bump()) }
             settleHeld()
         case .novelStyle(let session, let style, _, _):
             guard session == self.session else { return }
@@ -747,9 +756,15 @@ public final class ReaderModel {
                 }
                 self.view = followed
             }
+        case .backToPage(let session, let page):
+            guard session == self.session else { return }
+            backToPage = page.map(Int.init)
         case .goTo(let session, let place):
             guard session == self.session else { return }
             goTo(place)
+        case .creditPages, .chapterParts:
+            // The skipped credit pages' line and the part ticks come with their boards.
+            break
         case .closed(let session):
             guard session == self.session || self.session == 0 else { return }
             self.session = 0
@@ -820,7 +835,7 @@ public final class ReaderModel {
         }
         if let image = place.strip {
             stripRestore = image
-            self.goTo = (Int(image.image), bump(), .jump)
+            self.goTo = (Int(image.image), bump(), .placed)
             return
         }
         guard let page = place.page else { return }
@@ -831,7 +846,7 @@ public final class ReaderModel {
         }
     }
 
-    private func show(_ leaf: Int, how: TurnHow = .jump) {
+    private func show(_ leaf: Int, how: TurnHow = .placed) {
         pendingGoTo = nil
         current = leaf
         goTo = (leaf, bump(), how)
@@ -841,14 +856,6 @@ public final class ReaderModel {
         noticeCount += 1
         let line = ReaderNoticeLine(id: noticeCount, text: incoming.msg.text, action: incoming.action)
         let hold = holdFor(incoming.lastsMs, text: line.text, action: incoming.action != nil)
-        if incoming.action == .backTo {
-            backTo = line
-            backTask?.cancel()
-            backTask = countdown(hold) { [weak self] in
-                if self?.backTo?.id == line.id { self?.backTo = nil }
-            }
-            return
-        }
         notice = line
         noticeTask?.cancel()
         noticeTask = countdown(hold) { [weak self] in
@@ -886,7 +893,6 @@ public final class ReaderModel {
     private func reset() {
         dropHeld()
         noticeTask?.cancel()
-        backTask?.cancel()
         pendingStrip?.cancel()
         view = nil
         leaves = []
@@ -898,7 +904,7 @@ public final class ReaderModel {
         end = nil
         previews = [:]
         notice = nil
-        backTo = nil
+        backToPage = nil
         current = 0
         ring = nil
         stripRestore = nil

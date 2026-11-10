@@ -309,7 +309,7 @@ sealed class PagedView : Grid
     {
         if (target < 0 || target >= Reader.Leaves.Length)
             return;
-        Reader.Shown(target, TurnHow.Jump);
+        Reader.Shown(target, TurnHow.Placed);
         if (target != current)
         {
             Go(target, animate: false);

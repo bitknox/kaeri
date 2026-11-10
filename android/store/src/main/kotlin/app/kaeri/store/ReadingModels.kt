@@ -322,6 +322,11 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reading(ReadingCommand.Search(query))
     }
 
+    /** Search back at its start, with nothing asked: no words, no filters and no order chosen. */
+    fun searchStart() {
+        _search.value = ReadSearchState()
+    }
+
     /** [query] marked as asked with nothing sent, for a Fixtures stage that answers it itself. */
     internal fun askedForStage(query: ReadSearchQuery) {
         _search.value = _search.value.asking(query)
@@ -505,6 +510,9 @@ class ReadingModel(private val send: (Command) -> Unit) {
     private fun reading(command: ReadingCommand) = send(Command.Reading(command))
 
     private fun reloadChapters(work: WorkId) = reading(ReadingCommand.LoadChapters(work, _chapters.value[work]?.edition?.sourceId))
+
+    /** The reader closed on [work]: its page and lists show where reading got to. */
+    fun readerClosed(work: WorkId) = refreshSeries(work)
 
     private fun refreshSeries(work: WorkId) {
         if (_series.value[work] != null || _chapters.value[work] != null) {

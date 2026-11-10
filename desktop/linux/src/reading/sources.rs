@@ -403,7 +403,7 @@ fn draw_plugins(ctx: &Rc<Ctx>, column: &gtk::Box, plugins: &[BookPluginRow]) {
 fn plugin_page(ctx: &Rc<Ctx>, id: &str) -> adw::NavigationPage {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 18);
     let header = adw::HeaderBar::new();
-    let page = widgets::content_page("", &header, &widgets::column_page(&column, 640));
+    let page = widgets::read_content_page("", &header, &widgets::column_page(&column, 640));
     let draw = {
         let (ctx, column, page, id) =
             (Rc::downgrade(ctx), column.clone(), page.clone(), id.to_owned());
@@ -468,7 +468,7 @@ fn draw_plugin(ctx: &Rc<Ctx>, column: &gtk::Box, plugin: &BookPluginRow) {
 fn server_page(ctx: &Rc<Ctx>, id: &str) -> adw::NavigationPage {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 18);
     let header = adw::HeaderBar::new();
-    let page = widgets::content_page("", &header, &widgets::column_page(&column, 640));
+    let page = widgets::read_content_page("", &header, &widgets::column_page(&column, 640));
     let draw = {
         let (ctx, column, page, id) =
             (Rc::downgrade(ctx), column.clone(), page.clone(), id.to_owned());

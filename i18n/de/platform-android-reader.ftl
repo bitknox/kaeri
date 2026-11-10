@@ -128,7 +128,6 @@ reader-paper-line = Seiten wechseln sofort und nichts im Reader bewegt sich. Än
 reader-grid-page = Zu Seite { $page }
 reader-scrubber-in-chapter = Seite im Kapitel
 reader-failed-novel = Kapitel konnte nicht angezeigt werden
-reader-end-tracker-offline = Als gelesen gezählt · { $tracker } aktualisiert, sobald du wieder online bist
 reader-end-none = Kein Kapitel { $chapter } in deinen { -source-pl }
 reader-end-none-line = { -app-name } prüft im Hintergrund auf neue Kapitel und legt sie unter Updates ab.
 reader-end-finished-title = Das Ende

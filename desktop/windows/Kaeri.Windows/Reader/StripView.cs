@@ -415,6 +415,13 @@ sealed class StripView : Grid
             if (!restoring)
                 owner.StripSettled();
         }
+        // The person's jump reports once the scroll lands, so the engine can offer Back to page.
+        if (!moving && jumped is { } leaf)
+        {
+            jumped = null;
+            if (!restoring && under == current)
+                Reader.Shown(leaf, TurnHow.Jump);
+        }
         if (!restoring && !moving && under == current && current.Parts.Count > 0)
         {
             var h = HeightOf(current, current.Parts[found]);
@@ -472,8 +479,12 @@ sealed class StripView : Grid
             return;
         restoring = false;
         index = Math.Clamp(index, 0, section.Parts.Count - 1);
+        jumped = section == Current && Math.Abs(scroll.VerticalOffset - section.Tops[index]) > 1 ? index : null;
         scroll.ChangeView(null, section.Tops[index], null, !Motion.Enabled || owner.PaperMode);
     }
+
+    /// <summary>The image the person jumped to, until the scroll lands on it.</summary>
+    int? jumped;
 
     /// <summary>The engine moved the place: a restore, as on opening.</summary>
     public void Restored()

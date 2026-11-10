@@ -14,7 +14,8 @@ import Foundation
 ///     -KaeriGenre Fantasy       Search browses a genre, with any query's words
 ///     -KaeriAvailable here      Search's Available filter: here or services
 ///     -KaeriFilters set         Search with a row of filters and the sheet's set: Fantasy, 2024, Spring, TV,
-///                                   score 70% and Licensed only
+///                                   score 70% and Licensed only; with -KaeriReading 1, reading's: Fantasy,
+///                                   Manga, Japan and Releasing
 ///     -KaeriScroll 420          Search's results scrolled this many points once they are drawn; on
 ///                                   iPhone the title page at its episodes, on the Mac at that episode
 ///     -KaeriLibrary planning    the Library's list

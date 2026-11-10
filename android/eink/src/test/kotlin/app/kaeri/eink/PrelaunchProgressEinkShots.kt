@@ -55,7 +55,7 @@ class PrelaunchProgressEinkShots {
     ).around(compose)
 
     private val host = "books.home.example"
-    private val actions = EinkReaderActions({}, {}, {}, {}, {})
+    private val actions = EinkReaderActions({}, {}, {}, {})
     private val lines = ServerLines(CoroutineScope(SupervisorJob() + Dispatchers.Main))
 
     private fun file(name: String) = "${roborazziSystemPropertyOutputDirectory()}/pl-$name.png"

@@ -2058,7 +2058,15 @@ public sealed partial class MainWindow : Window
             page.ToggleFilters();
             return;
         }
-        SearchPage.FiltersOnArrival = true;
+        if (ContentFrame.Content is ReadSearchPage reading)
+        {
+            reading.ToggleFilters();
+            return;
+        }
+        if (PageFor("search") == typeof(ReadSearchPage))
+            ReadSearchPage.FiltersOnArrival = true;
+        else
+            SearchPage.FiltersOnArrival = true;
         var query = SearchBox.Text.Trim();
         Navigate("search", query.Length > 0 ? query : null);
     }

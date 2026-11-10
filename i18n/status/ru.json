@@ -18783,12 +18783,6 @@
     "by": "agent",
     "at": "2026-11-07"
   },
-  "read-sort-popular": {
-    "source": "791ef75ce61f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-07"
-  },
   "read-sort-score": {
     "source": "7d684b625728",
     "state": "draft",

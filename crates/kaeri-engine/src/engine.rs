@@ -3532,7 +3532,7 @@ mod tests {
             .await;
             let (volumes, failure) = chapters(seen).unwrap();
             assert!(volumes.is_empty());
-            assert_eq!(failure, Some(ReadingFailure::NotFound));
+            assert_eq!(failure, Some(ReadingFailure::NoSource));
         }
 
         #[tokio::test]

@@ -908,6 +908,45 @@ reading-row-versions =
        *[other] { $n } versions
     }
 
+# A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".
+reading-row-parts =
+    { $n ->
+        [one] 1 part
+       *[other] { $n } parts
+    }
+
+# A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.
+reading-row-from-group = From { $group }
+
+# A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".
+reading-row-from-group-in = From { $group }, { $language }
+
+# A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
+reading-row-parts-of = { $have } of { $n } parts
+
+# A chapter row, after the parts count: the part no group has released. With several, how many.
+reading-row-part-missing =
+    { $count ->
+        [one] part { $part } missing
+       *[other] { $count } parts missing
+    }
+
+# A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".
+reading-row-part-from-group = part { $part } from { $group }
+
+# The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
+reading-row-part-from-group-in = part { $part } from { $group }, { $language }
+
+# A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.
+reading-row-from-source = From { $source }
+
+# A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
+reader-credit-pages-skipped =
+    { $count ->
+        [one] { $count } credit page skipped
+       *[other] { $count } credit pages skipped
+    }
+
 # A chapter row: when it was read or came out, under a minute ago.
 reading-ago-now = just now
 
@@ -1873,6 +1912,9 @@ linux-book-plugin-use = Use this plugin
 
 # Screen reader name of a discovery row's View all button: the row's heading follows, so a list of links makes sense on its own.
 read-linux-view-all-row = View all, { $row }
+
+# Screen reader name of See all on a row of reading's Search start: the row's heading follows, as for Read's rows.
+read-linux-see-all-row = See all, { $row }
 
 # Screen reader name of a discovery row's heading while its covers are on their way.
 read-linux-row-loading = { $row }, loading
@@ -8849,6 +8891,9 @@ reader-end-read = Counted as read
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Counted as read · { $trackers } updated
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Counted as read · { $tracker } updates when you're back online
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Next
 
@@ -9835,9 +9880,6 @@ read-search-nothing-filters-line = Fewer filters may find more.
 read-search-clear-filters = Clear filters
 
 # A sort of reading's Search, AniList's.
-read-sort-popular = Popular
-
-# A sort of reading's Search, AniList's.
 read-sort-trending = Trending
 
 # A sort of reading's Search, AniList's.
@@ -9851,6 +9893,9 @@ read-filter-format = Format
 
 # A filter.
 read-filter-origin = Origin
+
+# The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+read-filter-any-origin = Any origin
 
 # A filter.
 read-filter-status = Status

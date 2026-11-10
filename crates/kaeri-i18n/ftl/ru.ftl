@@ -8822,6 +8822,9 @@ reader-end-read = Засчитано как прочитанная
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Засчитано как прочитанная · обновлено: { $trackers }
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Засчитано как прочитанная · { $tracker } обновится, когда вы вернётесь в сеть
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Следующая
 
@@ -9814,9 +9817,6 @@ read-search-nothing-filters-line = С меньшим числом фильтро
 
 # The button under it.
 read-search-clear-filters = Сбросить фильтры
-
-# A sort of reading's Search, AniList's.
-read-sort-popular = Популярное
 
 # A sort of reading's Search, AniList's.
 read-sort-trending = В тренде

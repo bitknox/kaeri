@@ -85,6 +85,38 @@ struct ReaderPageTests {
         #expect(PageImages.decode(file, longestSide: 100) == nil)
     }
 
+    /// The decoded pages' cache, which the reader's close empties. One at a time, as they share it.
+    @Suite(.serialized) struct Cache {
+        @Test func aPageDecodedBeforeTheReaderClosedIsNotKept() throws {
+            let file = try ReaderPageTests().original(width: 40, height: 60)
+            defer { try? FileManager.default.removeItem(atPath: file.path) }
+            let image = try #require(PageImages.decode(file, longestSide: 60))
+            let opened = PageImages.closeCount
+            PageImages.removeAll()
+            PageImages.keep(image, file, longestSide: 60, since: opened)
+            #expect(PageImages.cached(file, longestSide: 60) == nil)
+            PageImages.keep(image, file, longestSide: 60, since: PageImages.closeCount)
+            #expect(PageImages.cached(file, longestSide: 60) != nil)
+            PageImages.removeAll()
+            #expect(PageImages.cached(file, longestSide: 60) == nil)
+        }
+
+        #if os(macOS)
+        /// SwiftUI on the Mac readies a page for the screen itself. A page redrawn first is one
+        /// Core Graphics keeps a converted copy of in its own cache, past the reader's close.
+        @Test func theMacKeepsAPageAsItDecodes() async throws {
+            let file = try ReaderPageTests().original(width: 40, height: 60)
+            defer { try? FileManager.default.removeItem(atPath: file.path) }
+            let decoded = try #require(PageImages.decode(file, longestSide: 60))
+            let loaded = try #require(await PageImages.load(file, longestSide: 60))
+            let redrawn = PageImages.forScreen(decoded)
+            #expect(redrawn.bitmapInfo != decoded.bitmapInfo)
+            #expect(loaded.bitmapInfo == decoded.bitmapInfo)
+            PageImages.removeAll()
+        }
+        #endif
+    }
+
     @Test func theLightLooksUseTheLightTokensAndDarkKeepsTheApps() {
         #expect(ReaderTheme.forLook("paper").isLight)
         #expect(ReaderTheme.forLook("sepia").isLight)

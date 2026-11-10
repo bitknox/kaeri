@@ -867,6 +867,33 @@ public static partial class T
     /// <summary>A chapter row: how many versions the person's sources have of it. The row's menu lists them.</summary>
     public static string ReadingRowVersions(long n) => Fill(GetPlural("ReadingRowVersions", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".</summary>
+    public static string ReadingRowParts(long n) => Fill(GetPlural("ReadingRowParts", n), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.</summary>
+    public static string ReadingRowFromGroup(string group) => Fill(Get("ReadingRowFromGroup"), ("group", group));
+
+    /// <summary>A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".</summary>
+    public static string ReadingRowFromGroupIn(string group, string language) => Fill(Get("ReadingRowFromGroupIn"), ("group", group), ("language", language));
+
+    /// <summary>A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".</summary>
+    public static string ReadingRowPartsOf(long have, long n) => Fill(Get("ReadingRowPartsOf"), ("have", have.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("n", n.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row, after the parts count: the part no group has released. With several, how many.</summary>
+    public static string ReadingRowPartMissing(long count, long part) => Fill(GetPlural("ReadingRowPartMissing", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. "part 2 from Saltmarsh Team".</summary>
+    public static string ReadingRowPartFromGroup(long part, string group) => Fill(Get("ReadingRowPartFromGroup"), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("group", group));
+
+    /// <summary>The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".</summary>
+    public static string ReadingRowPartFromGroupIn(long part, string group, string language) => Fill(Get("ReadingRowPartFromGroupIn"), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("group", group), ("language", language));
+
+    /// <summary>A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.</summary>
+    public static string ReadingRowFromSource(string source) => Fill(Get("ReadingRowFromSource"), ("source", source));
+
+    /// <summary>A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.</summary>
+    public static string ReaderCreditPagesSkipped(long count) => Fill(GetPlural("ReaderCreditPagesSkipped", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>A chapter row: when it was read or came out, under a minute ago.</summary>
     public static string ReadingAgoNow => Get("ReadingAgoNow");
 
@@ -5878,6 +5905,9 @@ public static partial class T
     /// <summary>Under the end of chapter line, naming the trackers the read went to.</summary>
     public static string ReaderEndTracker(string trackers) => Fill(Get("ReaderEndTracker"), ("trackers", trackers));
 
+    /// <summary>Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.</summary>
+    public static string ReaderEndTrackerOffline(string tracker) => Fill(Get("ReaderEndTrackerOffline"), ("tracker", tracker));
+
     /// <summary>Small heading above the next chapter on the page between chapters.</summary>
     public static string ReaderEndNext => Get("ReaderEndNext");
 
@@ -6776,9 +6806,6 @@ public static partial class T
     public static string ReadSearchClearFilters => Get("ReadSearchClearFilters");
 
     /// <summary>A sort of reading's Search, AniList's.</summary>
-    public static string ReadSortPopular => Get("ReadSortPopular");
-
-    /// <summary>A sort of reading's Search, AniList's.</summary>
     public static string ReadSortTrending => Get("ReadSortTrending");
 
     /// <summary>A sort of reading's Search, AniList's.</summary>
@@ -6792,6 +6819,9 @@ public static partial class T
 
     /// <summary>A filter.</summary>
     public static string ReadFilterOrigin => Get("ReadFilterOrigin");
+
+    /// <summary>The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.</summary>
+    public static string ReadFilterAnyOrigin => Get("ReadFilterAnyOrigin");
 
     /// <summary>A filter.</summary>
     public static string ReadFilterStatus => Get("ReadFilterStatus");
@@ -11967,6 +11997,18 @@ public static partial class T
         ["ReadingRowPages_other"] = "{n} pages",
         ["ReadingRowVersions_one"] = "1 version",
         ["ReadingRowVersions_other"] = "{n} versions",
+        ["ReadingRowParts_one"] = "1 part",
+        ["ReadingRowParts_other"] = "{n} parts",
+        ["ReadingRowFromGroup"] = "From {group}",
+        ["ReadingRowFromGroupIn"] = "From {group}, {language}",
+        ["ReadingRowPartsOf"] = "{have} of {n} parts",
+        ["ReadingRowPartMissing_one"] = "part {part} missing",
+        ["ReadingRowPartMissing_other"] = "{count} parts missing",
+        ["ReadingRowPartFromGroup"] = "part {part} from {group}",
+        ["ReadingRowPartFromGroupIn"] = "part {part} from {group}, {language}",
+        ["ReadingRowFromSource"] = "From {source}",
+        ["ReaderCreditPagesSkipped_one"] = "{count} credit page skipped",
+        ["ReaderCreditPagesSkipped_other"] = "{count} credit pages skipped",
         ["ReadingAgoNow"] = "just now",
         ["ReadingAgoMinutes"] = "{minutes} min ago",
         ["ReadingAgoToday"] = "today",
@@ -13701,6 +13743,7 @@ public static partial class T
         ["ReaderClose"] = "Close",
         ["ReaderEndRead"] = "Counted as read",
         ["ReaderEndTracker"] = "Counted as read · {trackers} updated",
+        ["ReaderEndTrackerOffline"] = "Counted as read · {tracker} updates when you're back online",
         ["ReaderEndNext"] = "Next",
         ["ReaderModeRtl"] = "Right to left",
         ["ReaderModeLtr"] = "Left to right",
@@ -14022,12 +14065,12 @@ public static partial class T
         ["ReadSearchNothingLine"] = "Try other words, or a title in another language.",
         ["ReadSearchNothingFiltersLine"] = "Fewer filters may find more.",
         ["ReadSearchClearFilters"] = "Clear filters",
-        ["ReadSortPopular"] = "Popular",
         ["ReadSortTrending"] = "Trending",
         ["ReadSortScore"] = "Score",
         ["ReadSortNewest"] = "Newest",
         ["ReadFilterFormat"] = "Format",
         ["ReadFilterOrigin"] = "Origin",
+        ["ReadFilterAnyOrigin"] = "Any origin",
         ["ReadFilterStatus"] = "Status",
         ["ReadFilterGenres"] = "Genres",
         ["ReadFilterTitle"] = "Filters",

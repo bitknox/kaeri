@@ -161,6 +161,8 @@ internal fun ReadTile(
     spoken: String? = null,
     /** A one-column list's row rather than a cover over its words: grids at the largest text. */
     list: Boolean = false,
+    /** Lines the title may take, where it is not one (two from font scale 1.3): Search's two, as the shows' posters. */
+    titleMax: Int? = null,
 ) {
     val navigator = LocalNavigator.current
     val store = app.kaeri.ui.LocalAppStore.current
@@ -201,7 +203,7 @@ internal fun ReadTile(
             style = ShowTitle.caption,
             // Two lines from font scale 1.3, as Watch's shelves, so large text keeps more than a word;
             // a list row has the width for three.
-            maxLines = if (list) 3 else titleLines,
+            maxLines = if (list) 3 else titleMax?.coerceAtLeast(titleLines) ?: titleLines,
             minLines = if (reserveLine && !list) titleLines else 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = if (list) 0.dp else if (track) 6.dp else 8.dp).clearAndSetSemantics {},

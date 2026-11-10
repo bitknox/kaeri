@@ -4,6 +4,7 @@ reader-try-again = Coba lagi
 reader-close = Tutup
 reader-end-read = Dihitung sudah dibaca
 reader-end-tracker = Dihitung sudah dibaca · { $trackers } diperbarui
+reader-end-tracker-offline = Dihitung sudah dibaca · { $tracker } diperbarui saat Anda kembali online
 reader-end-next = Selanjutnya
 reader-mode-rtl = Kanan ke kiri
 reader-mode-ltr = Kiri ke kanan

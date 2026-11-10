@@ -7,11 +7,14 @@ import KaeriStore
 import KaeriStrings
 import SwiftUI
 
-/// Where a pick comes from on the screen shown: the filters in Search's browse, the Planning list
-/// in the Library. `nil` elsewhere, and on results for typed text.
+/// Where a pick comes from on the screen shown: the filters in Search's browse, shows' or
+/// reading's, the Planning list in the Library. `nil` elsewhere, and on results for typed text.
 @MainActor
 func surprisePool(store: AppStore, navigator: Navigator) -> SurprisePool? {
     switch navigator.section {
+    case .search where ReadSearchScope.active(store: store, navigator: navigator):
+        let query = store.reading.search.query
+        return query.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .reading(query: query) : nil
     case .search:
         let query = store.search.query
         return query.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? .filters(query: query) : nil
@@ -84,9 +87,14 @@ struct AnotherButton: View {
 }
 
 extension Navigator {
-    /// A pick arrived: open it, or with Another asked, swap the page in place.
+    /// A pick arrived: open it, or with Another asked, swap the page in place. A book opens as a
+    /// series, as its tile in reading's Search does.
     func receive(_ pick: SearchModel.Pick) {
-        if anotherAsked, pickVisit != nil {
+        if case .reading = pick.pool {
+            anotherAsked = false
+            pickVisit = nil
+            openSeries("a:\(pick.id)")
+        } else if anotherAsked, pickVisit != nil {
             anotherAsked = false
             replacePick(pick)
         } else {

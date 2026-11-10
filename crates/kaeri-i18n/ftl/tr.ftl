@@ -8640,6 +8640,9 @@ reader-end-read = Okundu sayıldı
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Okundu sayıldı · { $trackers } güncellendi
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Okundu sayıldı · çevrimiçi olunca { $tracker } güncellenir
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Sonraki
 
@@ -9588,9 +9591,6 @@ read-search-nothing-filters-line = Daha az filtre daha çok sonuç verebilir.
 
 # The button under it.
 read-search-clear-filters = Filtreleri temizle
-
-# A sort of reading's Search, AniList's.
-read-sort-popular = Popüler
 
 # A sort of reading's Search, AniList's.
 read-sort-trending = Trend

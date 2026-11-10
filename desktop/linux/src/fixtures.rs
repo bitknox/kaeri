@@ -171,6 +171,12 @@ pub const HOME_WORLD_VAR: &str = "KAERI_FIXTURES_HOME_WORLD";
 pub static OFFLINE_SCENE: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
 
+/// Set by the reading scene, so the network path says online and the chapters queued there
+/// download, from the scene's own sources. The other scenes leave the network unsaid: their
+/// seeded queues, the downloads scene's rows in every state among them, hold still for shots.
+pub static ONLINE_SCENE: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
 /// How long a slow scene holds each of Home's discovery answers: long enough for the shots to
 /// catch the placeholders and the activity line after four seconds, inside the wait the slow
 /// scene gives the client.
@@ -340,6 +346,9 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
         HomeScene::Offline => {
             OFFLINE_SCENE.store(true, std::sync::atomic::Ordering::Relaxed);
             server.fail_always(Failure::Disconnect)
+        }
+        HomeScene::Reading if !scene.demo => {
+            ONLINE_SCENE.store(true, std::sync::atomic::Ordering::Relaxed);
         }
         _ => {}
     }

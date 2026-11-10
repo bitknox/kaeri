@@ -24,6 +24,11 @@ struct StripReader: View {
     @State private var position = ScrollPosition()
     @State private var offsetY: CGFloat = 0
     @State private var restoring = true
+    /// A jump is scrolling: the places it passes are not reported, and where it lands goes to the
+    /// engine as the person's jump.
+    @State private var jumping = false
+    /// The image a jump goes to, until the scroll reaches it.
+    @State private var landing: Int?
     /// The next chapter's first image, kept while the strip flows into it: opening it clears the
     /// model's previews before its own images come.
     @State private var lead: PageFile?
@@ -274,10 +279,23 @@ struct StripReader: View {
     /// To an image of the chapter the line is on.
     private func go(to index: Int) {
         restoring = false
-        let images = rows.filter { $0.isImage && $0.trail == trailIndex }
+        let trail = trailIndex
+        let images = rows.filter { $0.isImage && $0.trail == trail }
         guard !images.isEmpty else { return }
-        let to = images[min(max(index, 0), images.count - 1)].top
-        withAnimation(instant ? nil : .standard) { position.scrollTo(y: to) }
+        let image = min(max(index, 0), images.count - 1)
+        jumping = true
+        landing = image
+        withAnimation(instant ? nil : .standard) {
+            position.scrollTo(y: images[image].top)
+        } completion: {
+            jumping = false
+            if trail == nil { model.shown(image, how: .jump) }
+            // The scroll can report the place it left once more before it reaches the new one.
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(600))
+                if landing == image { landing = nil }
+            }
+        }
     }
 
     /// The trail chapter the line is on, by its place in the trail; nil for the open one.
@@ -363,7 +381,8 @@ struct StripReader: View {
             if model.position.index != at || model.position.count != images.count {
                 model.position = (at, images.count)
             }
-            if on == nil, !restoring, !waiting {
+            if let landing, at == landing, !jumping { self.landing = nil }
+            if on == nil, !restoring, !waiting, !jumping, landing == nil {
                 let foot = images[images.count - 1].top + images[images.count - 1].height <= metrics.y + metrics.height
                 // With the last image's foot in sight the chapter has been seen to its end: the
                 // place is that image, which is what counts it as read, though short credit

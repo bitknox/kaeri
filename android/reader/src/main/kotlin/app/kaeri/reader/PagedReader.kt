@@ -34,6 +34,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.input.pointer.pointerInput
@@ -89,16 +90,19 @@ class PagedReaderState(initial: Int = 0) {
 
     internal var count = 0
 
+    /** Where a leaf starts panned: a page fitted wider or taller than the screen shows its reading edge. */
+    internal var startPan: (Int) -> Offset = { Offset.Zero }
+
     /** Show [to] (clamped to the leaves there are), reached [how]. Returns false when it is already shown. */
     fun go(to: Int, how: TurnHow): Boolean {
         val target = to.coerceIn(0, (count - 1).coerceAtLeast(0))
         if (target == leaf && turns > 0) return false
-        under = if (how == TurnHow.TURN || how == TurnHow.KEY) leaf else null
+        under = if (how == TurnHow.TURN || how == TurnHow.KEY || how == TurnHow.PLACED) leaf else null
         leaf = target
         this.how = how
         turns++
         zoom = 1f
-        pan = Offset.Zero
+        pan = startPan(target)
         return true
     }
 
@@ -134,6 +138,8 @@ fun PagedReader(
     onReady: (leaf: Int) -> Unit = {},
     waiting: WaitingSlot = { page, long -> PageWaiting(page, long) },
     failed: FailedSlot = { page, failure, retry -> PageFailed(page, failure, retry) },
+    /** The Fit setting: "screen", or "width" or "height" to fill that side and pan along the other. */
+    fit: String? = null,
 ) {
     val leaves = state.leaves
     pager.count = leaves.size
@@ -150,8 +156,8 @@ fun PagedReader(
     LaunchedEffect(state.jump, leaves.size) {
         val jump = state.jump ?: return@LaunchedEffect
         if (leaves.isEmpty()) return@LaunchedEffect
-        // Reported as a turn, so the engine does not offer Back to page for its own move.
-        pager.go(jump.leaf, TurnHow.TURN)
+        // The app's own move, which never offers Back to page.
+        pager.go(jump.leaf, TurnHow.PLACED)
         if (fresh) pager.under = null
         pager.chapter = chapter
         onJumped(jump.id)
@@ -189,7 +195,24 @@ fun PagedReader(
     var settling by remember { mutableStateOf<Job?>(null) }
     BoxWithConstraints(modifier.fillMaxSize()) {
         val width = constraints.maxWidth.toFloat().coerceAtLeast(1f)
+        val height = constraints.maxHeight.toFloat().coerceAtLeast(1f)
         val flick = with(LocalDensity.current) { 450.dp.toPx() }
+        // Fit: a single page's drawn size, and how much more it is scaled to fill the chosen side.
+        val fitting = remember(leaves, state.files, fit, width, height) {
+            { index: Int -> fitOf(leaves.getOrNull(index), state, fit, width, height) }
+        }
+        val fitNow by rememberUpdatedState(fitting)
+        SideEffect {
+            pager.startPan = { index ->
+                val f = fitting(index)
+                // Moved left, a page shows its right side first: where right to left starts.
+                clampPan(Offset(if (rtl) -Float.MAX_VALUE else Float.MAX_VALUE, Float.MAX_VALUE), f.scale, width, height, f.content)
+            }
+        }
+        // A change of Fit, or the page's size landing, puts the page at its reading edge.
+        LaunchedEffect(fitting(pager.leaf)) {
+            if (!pager.zoomed) pager.pan = pager.startPan(pager.leaf)
+        }
 
         fun neighbour(offset: Float): Int? {
             // A drag to the right brings in the page at the left: the next one when reading right to left.
@@ -238,7 +261,7 @@ fun PagedReader(
                         detectTapGestures(
                             onDoubleTap = {
                                 pager.zoom = 1f
-                                pager.pan = Offset.Zero
+                                pager.pan = pager.startPan(pager.leaf)
                             },
                             onTap = { onControls() },
                         )
@@ -264,12 +287,14 @@ fun PagedReader(
                         tracker.addPosition(down.uptimeMillis, down.position)
                         var dragging = false
                         var total = Offset.Zero
+                        var moved = Offset.Zero
                         var event: androidx.compose.ui.input.pointer.PointerEvent
                         do {
                             event = awaitPointerEvent()
                             val pressed = event.changes.filter { it.pressed }
                             if (pressed.size >= 2) {
                                 // Pinch: zoom about the centre, pan within the page.
+                                val f = fitNow(pager.leaf)
                                 val before = pager.zoom
                                 val zoom = (before * event.calculateZoom()).coerceIn(1f, 4f)
                                 val ratio = zoom / before
@@ -277,7 +302,7 @@ fun PagedReader(
                                 // The point under the fingers stays under them.
                                 val held = pager.pan * ratio + (event.calculateCentroid() - middle) * (1f - ratio)
                                 pager.zoom = zoom
-                                pager.pan = clampPan(held + event.calculatePan(), zoom, size.width.toFloat(), size.height.toFloat())
+                                pager.pan = clampPan(held + event.calculatePan(), f.scale * zoom, size.width.toFloat(), size.height.toFloat(), f.content)
                                 if (dragging) {
                                     dragging = false
                                     drag = 0f
@@ -285,11 +310,22 @@ fun PagedReader(
                                 event.changes.forEach { it.consume() }
                             } else if (pressed.size == 1) {
                                 val change = pressed.first()
-                                val delta = change.positionChange()
+                                val f = fitNow(pager.leaf)
+                                var delta = change.positionChange()
                                 if (pager.zoomed) {
-                                    pager.pan = clampPan(pager.pan + delta, pager.zoom, size.width.toFloat(), size.height.toFloat())
+                                    pager.pan = clampPan(pager.pan + delta, f.scale * pager.zoom, size.width.toFloat(), size.height.toFloat(), f.content)
                                     if (delta != Offset.Zero) change.consume()
                                 } else {
+                                    // A page fitted past the screen pans first, once the finger has moved
+                                    // past a tap's slop; what is left at its edge turns.
+                                    moved += delta
+                                    if (f.scale > 1.01f && !dragging && moved.getDistance() > viewConfiguration.touchSlop) {
+                                        val wanted = pager.pan + delta
+                                        val panned = clampPan(wanted, f.scale, size.width.toFloat(), size.height.toFloat(), f.content)
+                                        if (panned != pager.pan) change.consume()
+                                        pager.pan = panned
+                                        delta = Offset(wanted.x - panned.x, 0f)
+                                    }
                                     total += delta
                                     if (!dragging && abs(total.x) > viewConfiguration.touchSlop && abs(total.x) > abs(total.y)) dragging = true
                                     if (dragging) {
@@ -302,8 +338,9 @@ fun PagedReader(
                             }
                         } while (event.changes.any { it.pressed })
                         if (pager.zoom <= 1.01f) {
+                            val f = fitNow(pager.leaf)
                             pager.zoom = 1f
-                            pager.pan = Offset.Zero
+                            pager.pan = clampPan(pager.pan, f.scale, size.width.toFloat(), size.height.toFloat(), f.content)
                         }
                         if (dragging) {
                             settle(tracker.calculateVelocity().x)
@@ -322,11 +359,19 @@ fun PagedReader(
                 Box(
                     Modifier.fillMaxSize().graphicsLayer {
                         this.alpha = alpha
+                        val f = fitting(index)
                         translationX = shift + if (current) pager.pan.x else 0f
                         translationY = if (current) pager.pan.y else 0f
                         if (current) {
-                            scaleX = pager.zoom
-                            scaleY = pager.zoom
+                            scaleX = pager.zoom * f.scale
+                            scaleY = pager.zoom * f.scale
+                        } else if (f.scale > 1.01f) {
+                            // A neighbour comes in fitted too, at its reading edge.
+                            val edge = clampPan(Offset(if (rtl) -Float.MAX_VALUE else Float.MAX_VALUE, Float.MAX_VALUE), f.scale, width, height, f.content)
+                            translationX += edge.x
+                            translationY = edge.y
+                            scaleX = f.scale
+                            scaleY = f.scale
                         }
                     },
                 ) {
@@ -380,9 +425,39 @@ private fun describe(context: android.content.Context, leaf: Leaf, pages: Int): 
     }
 }
 
-/** Keeps a zoomed page's edges on screen. */
-internal fun clampPan(pan: Offset, zoom: Float, width: Float, height: Float): Offset {
-    val x = (zoom - 1f) * width / 2
-    val y = (zoom - 1f) * height / 2
+/**
+ * Keeps a zoomed page's edges on screen. [content] is what is drawn at no zoom, centred: the whole
+ * screen unless a page fitted inside it leaves bands.
+ */
+internal fun clampPan(pan: Offset, zoom: Float, width: Float, height: Float, content: Size = Size(width, height)): Offset {
+    val x = ((content.width * zoom - width) / 2).coerceAtLeast(0f)
+    val y = ((content.height * zoom - height) / 2).coerceAtLeast(0f)
     return Offset(pan.x.coerceIn(-x, x), pan.y.coerceIn(-y, y))
+}
+
+/** A leaf under Fit: the size it is drawn at to fit the screen, and the scale that fills the chosen side. */
+internal data class LeafFit(val content: Size, val scale: Float)
+
+/**
+ * How Fit draws [leaf] on a [width] by [height] screen. Screen fits the whole page; Height scales a
+ * page that leaves bands above and below until it fills the height, Width one with bands at the
+ * sides until it fills the width. Only a leaf of one page with its size known is scaled.
+ */
+internal fun fitOf(leaf: Leaf?, state: ReaderState, fit: String?, width: Float, height: Float): LeafFit {
+    val whole = LeafFit(Size(width, height), 1f)
+    if (leaf == null || leaf.endPage || leaf.parts.size != 1 || (fit != "width" && fit != "height")) return whole
+    val part = leaf.parts.first()
+    val file = state.file(part) ?: return whole
+    val boxW = part.place.width * width
+    val boxH = part.place.height * height
+    val w = (file.crop?.width ?: file.width).toFloat().coerceAtLeast(1f)
+    val h = (file.crop?.height ?: file.height).toFloat().coerceAtLeast(1f)
+    val (iw, ih) = if (part.rotate) h to w else w to h
+    val inside = minOf(boxW / iw, boxH / ih)
+    val drawn = Size(iw * inside, ih * inside)
+    val scale = when (fit) {
+        "height" -> if (drawn.height < height - 1f) height / drawn.height else 1f
+        else -> if (drawn.width < width - 1f) width / drawn.width else 1f
+    }
+    return LeafFit(drawn, scale.coerceIn(1f, 4f))
 }

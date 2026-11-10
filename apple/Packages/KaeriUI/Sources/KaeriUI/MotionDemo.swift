@@ -61,6 +61,8 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case clear
     /// Search: the iPhone's pinned row scrolled sideways to its end.
     case rowEnd
+    /// Search: Shows switched to Reading, or back, as a click on the scope control does.
+    case scope
     /// The Mac's hover card: a pointer path rests on a cover, hands the card to the next cover
     /// and leaves it (the hover card board's Motion studies).
     case hover
@@ -246,6 +248,8 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             store.searchLive(store.search.query.cleared())
         case .rowEnd:
             navigator.searchRowToEnd += 1
+        case .scope:
+            ReadSearchScope.choose(!navigator.searchReading, store: store, navigator: navigator)
         case .hover:
             #if os(macOS)
             HoverCardScript.requested = true

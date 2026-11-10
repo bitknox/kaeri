@@ -10,6 +10,7 @@
 //! says so and the reader shows that the chapter cannot open here.
 
 use std::{
+    cell::Cell,
     ffi::{CStr, CString, c_char, c_int, c_void},
     rc::Rc,
     sync::OnceLock,
@@ -230,6 +231,9 @@ pub struct NovelView {
     chapter: ChapterId,
     spine: Vec<(String, bool)>,
     tell: Rc<dyn Fn(NovelSays)>,
+    /// How the document loading now came: a turn past a document's edge, or a link the
+    /// person followed. Anything else loaded is placed.
+    ready_how: Cell<Option<TurnHow>>,
 }
 
 /// What the novel tells the reader around it.
@@ -309,6 +313,7 @@ impl NovelView {
             chapter: open.chapter.clone(),
             spine: open.spine.iter().map(|i| (i.url.clone(), i.linear)).collect(),
             tell,
+            ready_how: Cell::new(None),
         });
         let read = api.value_string;
         content.connect_local("script-message-received::kaeri", false, {
@@ -385,6 +390,28 @@ impl NovelView {
         self.call(&format!("window.kaeriReader && window.kaeriReader.goTo({page}, 'jump')")); // i18n-skip
     }
 
+    /// Show the document's last page, from End.
+    pub fn go_to_end(&self) {
+        self.call(
+            "window.kaeriReader && window.kaeriReader.goTo(window.kaeriReader.count() - 1, 'jump')", // i18n-skip
+        );
+    }
+
+    /// Show a place the engine moved to: a resume, Back to page, another device's place. It
+    /// reports as placed, so it neither offers Back to page nor takes it away.
+    pub fn go_to_pos(&self, pos: &NovelPos) {
+        let Some((url, _)) = self.spine.get(pos.spine as usize) else { return };
+        let at = pos.encode();
+        self.ready_how.set(None);
+        if self.current() == Some(pos.spine as usize) {
+            self.call(&format!(
+                "window.kaeriReader && window.kaeriReader.goToPos('{at}', 'placed')" // i18n-skip
+            ));
+        } else {
+            self.load(&format!("{url}#kaeri:pos={at}"));
+        }
+    }
+
     pub fn turn(&self, forward: bool) {
         self.call(&format!(
             "window.kaeriReader && window.kaeriReader.{}('key')", // i18n-skip
@@ -416,8 +443,13 @@ impl NovelView {
                     Some("key") => TurnHow::Key,
                     Some("scroll") => TurnHow::Scroll,
                     Some("turn") => TurnHow::Turn,
-                    _ => TurnHow::Jump,
+                    Some("jump") => TurnHow::Jump,
+                    // Ready after a load: how it came, or the app's own move.
+                    _ => self.ready_how.get().unwrap_or(TurnHow::Placed),
                 };
+                if json["type"].as_str() == Some("ready") {
+                    self.ready_how.set(None);
+                }
                 (self.send)(ReaderCommand::NovelAt {
                     session: self.session,
                     chapter: self.chapter.clone(),
@@ -444,6 +476,8 @@ impl NovelView {
                 Some("ArrowLeft") => self.turn(rtl),   // i18n-skip
                 Some("ArrowDown" | "PageDown" | " ") => self.turn(true),
                 Some("ArrowUp" | "PageUp") => self.turn(false),
+                Some("Home") => self.go_to(0),   // i18n-skip
+                Some("End") => self.go_to_end(), // i18n-skip
                 _ => {}
             },
             Some("tap") => {
@@ -461,13 +495,17 @@ impl NovelView {
             Some("end") => {
                 let at = self.current();
                 match at.and_then(|at| (at + 1..self.spine.len()).find(|&i| self.spine[i].1)) {
-                    Some(next) => self.load(&self.spine[next].0.clone()),
+                    Some(next) => {
+                        self.ready_how.set(Some(TurnHow::Turn));
+                        self.load(&self.spine[next].0.clone());
+                    }
                     None => (self.tell)(NovelSays::End),
                 }
             }
             Some("start") => {
                 let at = self.current();
                 if let Some(prev) = at.and_then(|at| (0..at).rev().find(|&i| self.spine[i].1)) {
+                    self.ready_how.set(Some(TurnHow::Turn));
                     self.load(&format!("{}#kaeri:end", self.spine[prev].0));
                 }
             }
@@ -476,6 +514,7 @@ impl NovelView {
                     && let Some(href) = json["href"].as_str()
                     && href.starts_with("kaeri-book://")
                 {
+                    self.ready_how.set(Some(TurnHow::Jump));
                     self.load(href);
                 }
             }

@@ -1,6 +1,7 @@
 // The e-ink reader on made-up grey pages: the zone guide over the first chapter, turns at once by
 // the 40% forward zone and the upper page button, the folio in the margin, the bars on a middle
-// tap, the page between chapters in the flow, and a full refresh asked for each image page.
+// tap, the page between chapters in the flow, a full refresh asked for each image page, and the
+// reader's own settings and Contents, which Back closes before it closes the reader.
 
 package app.kaeri.eink
 
@@ -14,6 +15,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.pressKey
@@ -56,15 +58,15 @@ class EinkReaderTest {
     ).around(compose)
 
     private val sent = mutableListOf<ReaderCommand>()
-    private val session = ReaderSession { sent += (it as Command.Reader).v1 }
+    private val session = ReaderSession { (it as? Command.Reader)?.let { reader -> sent += reader.v1 } }
     private val fake = FakeRefresh()
 
-    private fun open() {
+    private fun open(onBack: () -> Unit = {}) {
         session.open(EinkFixtures.WORK, EinkFixtures.surface.copy(eink = true))
         session.apply(ReaderEvent.Opened(EinkFixtures.view(start = 0u)))
         session.apply(ReaderEvent.Leaves(EinkFixtures.SESSION, EinkFixtures.CHAPTER, EinkFixtures.leaves(3) { EinkFixtures.grey(dir.root, "$it.gray", 80, 80) }))
         val painter = EinkPainter.defaults(app.kaeri.engine.model.EinkPanel.GREY, fake)
-        val actions = EinkReaderActions({}, {}, {}, {}, {})
+        val actions = EinkReaderActions(onBack, {}, {})
         val images = PageImages()
         compose.setContent {
             EinkTheme {
@@ -81,7 +83,7 @@ class EinkReaderTest {
     fun the_guide_shows_until_the_first_touch_which_still_turns() {
         open()
         compose.onNodeWithText("Tap, or swipe right").assertIsDisplayed()
-        assertEquals(ReaderCommand.Shown(EinkFixtures.SESSION, EinkFixtures.CHAPTER, 0u, TurnHow.TURN), shown().first())
+        assertEquals(ReaderCommand.Shown(EinkFixtures.SESSION, EinkFixtures.CHAPTER, 0u, TurnHow.PLACED), shown().first())
         // Right to left: forward is the left 40%.
         compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.2f, height * 0.5f)) }
         compose.waitForIdle()
@@ -123,5 +125,40 @@ class EinkReaderTest {
         compose.onNodeWithText("Continue to chapter 13").assertIsDisplayed()
         compose.onNodeWithText("Turn the page to continue").assertIsDisplayed()
         assertEquals(Refresh.FULL, fake.requests.last().refresh)
+    }
+
+    @Test
+    fun settings_and_contents_are_the_readers_own_and_back_closes_them_first() {
+        var closed = 0
+        open(onBack = { closed++ })
+        fun middle() {
+            compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+            compose.waitForIdle()
+        }
+        fun back() {
+            compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
+            compose.waitForIdle()
+        }
+        middle()
+        compose.onNodeWithText("Settings").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Reader settings").assertIsDisplayed()
+        assertEquals(Refresh.REGION, fake.requests.last().refresh)
+        back()
+        assertTrue(compose.onAllNodes(hasText("Reader settings")).fetchSemanticsNodes().isEmpty())
+        assertEquals(0, closed)
+
+        middle()
+        compose.onNodeWithText("Contents").performClick()
+        compose.waitForIdle()
+        assertEquals(Refresh.FAST, fake.requests.last().refresh)
+        back()
+        assertTrue(compose.onAllNodes(hasText("Contents")).fetchSemanticsNodes().isEmpty())
+        assertEquals(Refresh.FULL, fake.requests.last().refresh)
+        assertEquals(0, closed)
+
+        // With nothing over the page, Back closes the reader.
+        back()
+        assertEquals(1, closed)
     }
 }

@@ -1059,6 +1059,50 @@ const MIGRATIONS: &[(&str, &str)] = &[
     "#,
     ),
     (
+        "0032_book_credit_pages",
+        r#"
+    -- Fingerprints of the pages at either edge of a chapter (the first two and last two of
+    -- each part), taken from pages the reader or a download fetched anyway: a 64-bit dHash per
+    -- page. A fingerprint at the edge of three chapters of one work is a credit page. `page`
+    -- counts from 0 through the chapter as read, parts and all; `edge` is 0 at a part's start
+    -- and 1 at its end; `group_label` is the version label the chapter was read in, when the
+    -- source gave one. Stays on the device, as the chapter lists do.
+    CREATE TABLE book_page_print (
+        work        TEXT    NOT NULL,
+        chapter     TEXT    NOT NULL,
+        page        INTEGER NOT NULL,
+        edge        INTEGER NOT NULL,
+        print       INTEGER NOT NULL,
+        group_label TEXT,
+        at          INTEGER NOT NULL,
+        PRIMARY KEY (work, chapter, page)
+    ) WITHOUT ROWID;
+
+    -- Pages the person said are not credit pages, by fingerprint: never skipped again in the
+    -- work.
+    CREATE TABLE book_credit_keep (
+        work  TEXT    NOT NULL,
+        print INTEGER NOT NULL,
+        at    INTEGER NOT NULL,
+        PRIMARY KEY (work, print)
+    ) WITHOUT ROWID;
+    "#,
+    ),
+    (
+        "0033_read_status_auto",
+        r#"
+    -- `auto` is 1 for a Reading that a read put there, not the person or a tracker. A tracker's
+    -- own status replaces it, and it is never sent to one. Series read before this release with
+    -- no status of their own go on Reading the same way, dated by their last read.
+    ALTER TABLE read_status ADD COLUMN auto INTEGER NOT NULL DEFAULT 0;
+    INSERT INTO read_status (work, status, score, updated_at, auto)
+        SELECT work, 'reading', NULL, updated_at, 1 FROM read_work
+         WHERE last_chapter IS NOT NULL
+        ON CONFLICT(work) DO UPDATE SET status = 'reading', auto = 1
+         WHERE read_status.status IS NULL;
+    "#,
+    ),
+    (
         "0034_book_download_relative",
         r#"
     -- A downloaded chapter's path is kept within the data folder, so the files are found again

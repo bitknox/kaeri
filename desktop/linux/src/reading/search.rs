@@ -21,11 +21,12 @@ use adw::prelude::*;
 use gtk::{gio, glib};
 use kaeri_i18n::t;
 use kaeri_model::{
+    browsing::SurprisePool,
     event::Event,
     reading::{
-        ReadFilterChoice, ReadFilters, ReadRowFormat, ReadSearchQuery, ReadSourceGroup,
-        ReadSourceKind, ReadSourceSearch, ReadSourceState, ReadingAbout, ReadingCommand,
-        ReadingEvent, WorkTile, read_filters,
+        ReadFilterChoice, ReadFilters, ReadHomeRow, ReadRowFormat, ReadRowKind,
+        ReadSearchQuery, ReadSourceGroup, ReadSourceKind, ReadSourceSearch, ReadSourceState,
+        ReadingAbout, ReadingCommand, ReadingEvent, ReadingHomeView, WorkTile, read_filters,
     },
 };
 
@@ -37,7 +38,10 @@ use super::{
 use crate::{
     hub::Hub,
     motion,
-    pages::search_filters::{faded_scroll, menu_button, set_label},
+    pages::search_filters::{
+        chips_box, filter_row, focus_chip, mark_set, menu_button, set_label, show_chips,
+        sort_button,
+    },
     say,
     squeeze::Squeeze,
     states::{Shape, States},
@@ -45,6 +49,8 @@ use crate::{
     window::Ctx,
 };
 
+/// How many covers a row of the start shows, as the shows' rails do.
+const START_SHOWN: usize = 12;
 /// Placeholders in a source's row while it is asked.
 const SOURCE_PLACEHOLDERS: usize = 5;
 /// AniList's grid waits as two full rows of placeholders.
@@ -61,7 +67,7 @@ fn sort_name(key: &str) -> String {
         "SCORE_DESC" => t::read_sort_score(),
         "START_DATE_DESC" => t::read_sort_newest(),
         "TITLE_ROMAJI" => t::library_sort_title(),
-        _ => t::read_sort_popular(),
+        _ => t::sort_popularity(),
     }
 }
 
@@ -83,16 +89,6 @@ fn format_labels(keys: &[String], choices: &[ReadFilterChoice]) -> Vec<String> {
         }
     }
     labels(&keys, choices)
-}
-
-/// "Manga", or "Manga +1" when more than one is chosen.
-fn many(words: &[String]) -> Option<String> {
-    let first = words.first()?;
-    Some(if words.len() == 1 {
-        first.clone()
-    } else {
-        t::read_filter_many(first, words.len() as i64 - 1)
-    })
 }
 
 /// When a series started, as the query keeps it: `None` for any time.
@@ -188,22 +184,42 @@ fn settled_words(anilist: Option<Option<usize>>, groups: &[ReadSourceGroup]) -> 
     said
 }
 
-/// The filters and the order, and the query they make.
+/// The order with words and none chosen: AniList's match, as the engine asks with no sort.
+const RELEVANCE: &str = "relevance"; // i18n-skip
+
+/// What a chip takes off.
+#[derive(Clone)]
+enum ChipKey {
+    Genre(String),
+    NotGenre(String),
+    Started,
+    Origins,
+    Formats,
+    Status,
+    Mine,
+}
+
+/// The filters and the order, and the query they make: the shows' row of capsules with their
+/// chips under it, reading's filters in the shows' slots (Started in Year's, Origin in Season's,
+/// Your sources only in Available's).
 struct Filters {
     row: gtk::Box,
-    format: gtk::MenuButton,
-    origin: gtk::MenuButton,
-    status: gtk::MenuButton,
+    chips: adw::WrapBox,
     genres: gtk::MenuButton,
     started: gtk::MenuButton,
-    rule: gtk::Separator,
+    origin: gtk::MenuButton,
+    format: gtk::MenuButton,
+    status: gtk::MenuButton,
     mine: gtk::ToggleButton,
-    mine_check: gtk::Image,
     sort: gtk::MenuButton,
     sort_label: gtk::Label,
     actions: gio::SimpleActionGroup,
     choices: ReadFilters,
     query: RefCell<ReadSearchQuery>,
+    /// What each chip on show takes off, in their order.
+    chip_keys: RefCell<Vec<ChipKey>>,
+    /// Words are typed: Your sources only shows, and the order offers Relevance.
+    words: Cell<bool>,
     changed: RefCell<Option<Rc<dyn Fn()>>>,
     /// The switch is being set to the query's state, not by the person.
     settling: Cell<bool>,
@@ -211,67 +227,45 @@ struct Filters {
 
 impl Filters {
     fn new() -> Rc<Self> {
-        let format = menu_button(&t::read_filter_format());
-        let origin = menu_button(&t::read_filter_origin());
-        let status = menu_button(&t::read_filter_status());
         let genres = menu_button(&t::read_filter_genres());
         let started = menu_button(&t::read_search_started());
-        let sort_label = gtk::Label::new(None);
-        let sort_line = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        sort_line.append(&gtk::Image::from_icon_name("view-sort-descending-symbolic"));
-        sort_line.append(&sort_label);
-        let sort = gtk::MenuButton::builder().child(&sort_line).always_show_arrow(true).build();
-        sort.add_css_class("flat");
-        sort.add_css_class("filter");
-        // Your sources only, after a rule: off it is outlined, on it is raised with a check.
-        let rule = gtk::Separator::new(gtk::Orientation::Vertical);
-        rule.add_css_class("read-filter-rule");
-        rule.set_valign(gtk::Align::Center);
-        rule.set_visible(false);
-        let mine_check = gtk::Image::from_icon_name("object-select-symbolic");
-        mine_check.set_pixel_size(12);
-        mine_check.set_visible(false);
-        let mine_words = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        mine_words.append(&mine_check);
-        mine_words.append(&gtk::Label::new(Some(&t::read_search_sources_only())));
-        let mine = gtk::ToggleButton::builder().child(&mine_words).build();
+        let origin = menu_button(&t::read_filter_origin());
+        let format = menu_button(&t::read_filter_format());
+        let status = menu_button(&t::read_filter_status());
+        let (sort, sort_label) = sort_button();
+        // Your sources only, in Available's slot: a capsule of the row, raised while on.
+        let mine = gtk::ToggleButton::with_label(&t::read_search_sources_only());
+        mine.add_css_class("flat");
+        mine.add_css_class("filter");
         mine.add_css_class("read-sources-only");
-        mine.set_valign(gtk::Align::Center);
         mine.set_visible(false);
         mine.set_accessible_role(gtk::AccessibleRole::Switch);
-        mine.update_property(&[gtk::accessible::Property::Label(
-            &t::read_search_sources_only(),
-        )]);
         let capsules = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        for button in [&format, &origin, &status, &genres, &started] {
+        for button in [&genres, &started, &origin, &format, &status] {
             capsules.append(button);
         }
-        capsules.append(&rule);
         capsules.append(&mine);
-        let row = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        row.set_margin_start(12);
-        row.set_margin_end(12);
-        row.set_margin_top(6);
-        row.set_margin_bottom(6);
-        row.append(&faded_scroll(&capsules));
-        row.append(&sort);
+        let row = filter_row(&capsules, &sort);
+        let chips = chips_box();
         let actions = gio::SimpleActionGroup::new();
         row.insert_action_group("rfilter", Some(&actions));
+        chips.insert_action_group("rfilter", Some(&actions));
         let filters = Rc::new(Self {
             row,
-            format,
-            origin,
-            status,
+            chips,
             genres,
             started,
-            rule,
+            origin,
+            format,
+            status,
             mine,
-            mine_check,
             sort,
             sort_label,
             actions,
             choices: read_filters(),
             query: RefCell::default(),
+            chip_keys: RefCell::default(),
+            words: Cell::new(false),
             changed: RefCell::default(),
             settling: Cell::new(false),
         });
@@ -293,8 +287,67 @@ impl Filters {
                 }
             }
         });
+        filters.wire();
         filters.refresh();
         filters
+    }
+
+    fn wire(self: &Rc<Self>) {
+        let plain = |name: &str, f: fn(&ReadSearchQuery) -> ReadSearchQuery| {
+            let action = gio::SimpleAction::new(name, None);
+            let weak = Rc::downgrade(self);
+            action.connect_activate(move |_, _| {
+                if let Some(filters) = weak.upgrade() {
+                    filters.edit(f);
+                }
+            });
+            self.actions.add_action(&action);
+        };
+        plain("any-genre", |q| ReadSearchQuery {
+            genres: Vec::new(),
+            exclude_genres: Vec::new(),
+            ..q.clone()
+        });
+        plain("any-origin", |q| ReadSearchQuery { origins: Vec::new(), ..q.clone() });
+        plain("any-format", |q| ReadSearchQuery { formats: Vec::new(), ..q.clone() });
+        plain("any-status", |q| ReadSearchQuery { status: None, ..q.clone() });
+        // Every filter off, Your sources only with them; the order stays, as the shows' does.
+        plain("clear", |q| ReadSearchQuery {
+            sort: q.sort.clone(),
+            ..ReadSearchQuery::default()
+        });
+
+        // Each chip takes its filter off: its index among those on show.
+        let remove = gio::SimpleAction::new("remove", Some(glib::VariantTy::UINT32));
+        let weak = Rc::downgrade(self);
+        remove.connect_activate(move |_, target| {
+            let (Some(filters), Some(at)) =
+                (weak.upgrade(), target.and_then(u32::from_variant))
+            else {
+                return;
+            };
+            let Some(key) = filters.chip_keys.borrow().get(at as usize).cloned() else {
+                return;
+            };
+            let had_focus = filters.chips.focus_child().is_some();
+            filters.edit(|q| {
+                let mut q = q.clone();
+                match key {
+                    ChipKey::Genre(name) => q.genres.retain(|g| *g != name),
+                    ChipKey::NotGenre(name) => q.exclude_genres.retain(|g| *g != name),
+                    ChipKey::Started => q.started = None,
+                    ChipKey::Origins => q.origins.clear(),
+                    ChipKey::Formats => q.formats.clear(),
+                    ChipKey::Status => q.status = None,
+                    ChipKey::Mine => q.sources_only = false,
+                }
+                q
+            });
+            if had_focus {
+                focus_chip(&filters.chips, at as usize, &filters.genres);
+            }
+        });
+        self.actions.add_action(&remove);
     }
 
     fn on_change(&self, f: impl Fn() + 'static) {
@@ -318,22 +371,30 @@ impl Filters {
             && q.exclude_genres.is_empty())
     }
 
-    /// Words were typed or cleared: Your sources only shows only with words.
-    fn set_words(&self, words: bool) {
-        self.rule.set_visible(words);
-        self.mine.set_visible(words);
+    /// Nothing typed, set or chosen: Search's start.
+    fn at_start(&self, text: &str) -> bool {
+        text.trim().is_empty() && !self.any_set() && self.query.borrow().sort.is_none()
     }
 
-    /// Every filter off; the order and Your sources only stay.
-    fn clear(self: &Rc<Self>) {
-        self.edit(|q| ReadSearchQuery {
-            sort: q.sort.clone(),
-            sources_only: q.sources_only,
-            ..ReadSearchQuery::default()
-        });
+    /// Words were typed or cleared: Your sources only shows only with words, and the order offers
+    /// Relevance.
+    fn set_words(self: &Rc<Self>, words: bool) {
+        if self.words.replace(words) != words {
+            self.refresh();
+        }
     }
 
-    /// Take `query`'s filters and order as they are, as View all on a Read row hands them over.
+    /// Every filter off, as Clear filters does.
+    fn clear(&self) {
+        self.actions.activate_action("clear", None);
+    }
+
+    /// One genre's series, as its filter alone, as a genre tile asks.
+    fn only_genre(self: &Rc<Self>, genre: String) {
+        self.edit(|_| ReadSearchQuery { genres: vec![genre], ..ReadSearchQuery::default() });
+    }
+
+    /// Take `query`'s filters and order as they are, as See all on a row hands them over.
     fn adopt(self: &Rc<Self>, query: &ReadSearchQuery) {
         self.query.replace(ReadSearchQuery {
             text: String::new(),
@@ -376,7 +437,7 @@ impl Filters {
         self.actions.add_action(&action);
     }
 
-    /// Format or Origin: any number of each.
+    /// Format or Origin: any number of each, then Any once one is set, as the shows' Format.
     fn several(self: &Rc<Self>, origin: bool) {
         let query = self.query.borrow().clone();
         let (button, title, list, picked, prefix) = if origin {
@@ -396,7 +457,7 @@ impl Filters {
                 "format",
             )
         };
-        let menu = gio::Menu::new();
+        let all = gio::Menu::new();
         for choice in list {
             let name = format!("{prefix}-{}", choice.key);
             let key = choice.key.clone();
@@ -410,11 +471,28 @@ impl Filters {
                 }
                 q
             });
-            menu.append(Some(&say::msg(&choice.label)), Some(&format!("rfilter.{name}")));
+            all.append(Some(&say::msg(&choice.label)), Some(&format!("rfilter.{name}")));
+        }
+        let menu = gio::Menu::new();
+        menu.append_section(None, &all);
+        let words = if origin { labels(picked, list) } else { format_labels(picked, list) };
+        if !words.is_empty() {
+            let any = gio::Menu::new();
+            let (said, action) = if origin {
+                (t::read_filter_any(), "rfilter.any-origin")
+            } else {
+                (t::filter_any_format(), "rfilter.any-format")
+            };
+            any.append(Some(&said), Some(action));
+            menu.append_section(None, &any);
         }
         button.set_menu_model(Some(&menu));
-        let words = if origin { labels(picked, list) } else { format_labels(picked, list) };
-        set_label(button, &many(&words).unwrap_or(title), !words.is_empty());
+        let label = match words.len() {
+            0 => title,
+            n if n > 2 && !origin => t::filter_linux_formats_count(n as i64),
+            _ => words.join(", "),
+        };
+        set_label(button, &label, !words.is_empty());
     }
 
     fn refresh(self: &Rc<Self>) {
@@ -422,14 +500,9 @@ impl Filters {
         self.several(true);
         let query = self.query.borrow().clone();
         let choices = &self.choices;
+        let words = self.words.get();
 
-        // Status: one, or any.
-        let any = gio::Menu::new();
-        self.check("status-any", query.status.is_none(), |q| ReadSearchQuery {
-            status: None,
-            ..q.clone()
-        });
-        any.append(Some(&t::read_filter_any()), Some("rfilter.status-any"));
+        // Status: one of them, then Any status once one is set, as the shows' Status.
         let statuses = gio::Menu::new();
         for choice in &choices.statuses {
             let name = format!("status-{}", choice.key);
@@ -441,8 +514,12 @@ impl Filters {
             statuses.append(Some(&say::msg(&choice.label)), Some(&format!("rfilter.{name}")));
         }
         let menu = gio::Menu::new();
-        menu.append_section(None, &any);
         menu.append_section(None, &statuses);
+        if query.status.is_some() {
+            let any = gio::Menu::new();
+            any.append(Some(&t::filter_any_status()), Some("rfilter.any-status"));
+            menu.append_section(None, &any);
+        }
         self.status.set_menu_model(Some(&menu));
         let status = query.status.as_ref().and_then(|s| {
             labels(std::slice::from_ref(s), &choices.statuses).into_iter().next()
@@ -453,8 +530,8 @@ impl Filters {
             status.is_some(),
         );
 
-        // Genres: included, or left out.
-        let included = gio::Menu::new();
+        // Genres, as the shows' menu: each a toggle, Left out in a submenu, Any genre once set.
+        let wanted = gio::Menu::new();
         let left_out = gio::Menu::new();
         for (at, genre) in choices.genres.iter().enumerate() {
             let (want, leave) = (format!("genre-{at}"), format!("leave-{at}"));
@@ -480,48 +557,71 @@ impl Filters {
                 }
                 q
             });
-            included.append(Some(&say::genre(genre)), Some(&format!("rfilter.{want}")));
+            wanted.append(Some(&say::genre(genre)), Some(&format!("rfilter.{want}")));
             left_out.append(Some(&say::genre(genre)), Some(&format!("rfilter.{leave}")));
         }
         let menu = gio::Menu::new();
-        menu.append_submenu(Some(&t::read_filter_included()), &included);
-        menu.append_submenu(Some(&t::read_filter_left_out()), &left_out);
-        self.genres.set_menu_model(Some(&menu));
+        menu.append_section(None, &wanted);
+        let more = gio::Menu::new();
+        more.append_submenu(Some(&t::filter_left_out()), &left_out);
+        menu.append_section(None, &more);
         let set = query.genres.len() + query.exclude_genres.len();
+        if set > 0 {
+            let any = gio::Menu::new();
+            any.append(Some(&t::filter_any_genre()), Some("rfilter.any-genre"));
+            menu.append_section(None, &any);
+        }
+        self.genres.set_menu_model(Some(&menu));
         let label = match (set, query.genres.first(), query.exclude_genres.first()) {
             (0, ..) => t::read_filter_genres(),
             (1, Some(genre), _) => say::genre(genre),
-            (1, None, Some(genre)) => t::read_filter_not_genre(&say::genre(genre)),
-            (n, ..) => t::read_filter_genres_count(n as i64),
+            (1, None, Some(genre)) => t::filter_linux_not(&say::genre(genre)),
+            (n, ..) => t::filter_linux_genres_count(n as i64),
         };
         set_label(&self.genres, &label, set > 0);
 
-        // Started: any time, or one of the spans.
+        // Started: any time on its own, then the spans, as the shows' Year.
         let started = started_of(&query).map(str::to_owned);
+        let any = gio::Menu::new();
         let spans = gio::Menu::new();
         for choice in &choices.started {
             let name = format!("started-{}", choice.key);
             let key = (choice.key != "any").then(|| choice.key.clone());
+            let shown = key.is_none();
             self.check(&name, started == key, move |q| ReadSearchQuery {
                 started: key.clone(),
                 ..q.clone()
             });
-            spans.append(Some(&say::msg(&choice.label)), Some(&format!("rfilter.{name}")));
+            let menu = if shown { &any } else { &spans };
+            menu.append(Some(&say::msg(&choice.label)), Some(&format!("rfilter.{name}")));
         }
-        self.started.set_menu_model(Some(&spans));
-        let words = started
+        let menu = gio::Menu::new();
+        menu.append_section(None, &any);
+        menu.append_section(None, &spans);
+        self.started.set_menu_model(Some(&menu));
+        let started_words = started
             .as_ref()
             .and_then(|s| labels(std::slice::from_ref(s), &choices.started).into_iter().next());
         set_label(
             &self.started,
-            words.as_deref().unwrap_or(&t::read_search_started()),
-            words.is_some(),
+            started_words.as_deref().unwrap_or(&t::read_search_started()),
+            started_words.is_some(),
         );
 
-        // The order.
-        let current =
-            query.sort.clone().or_else(|| choices.sorts.first().cloned()).unwrap_or_default();
+        // The order, as the shows' sort: with words and none chosen, Relevance, offered first.
+        let current = match &query.sort {
+            Some(sort) => sort.clone(),
+            None if words => RELEVANCE.to_owned(),
+            None => choices.sorts.first().cloned().unwrap_or_default(),
+        };
         let sorts = gio::Menu::new();
+        if words {
+            self.check("sort-relevance", current == RELEVANCE, |q| ReadSearchQuery {
+                sort: None,
+                ..q.clone()
+            });
+            sorts.append(Some(&t::sort_relevance()), Some("rfilter.sort-relevance"));
+        }
         for key in &choices.sorts {
             let name = format!("sort-{key}");
             let chosen = key.clone();
@@ -531,24 +631,63 @@ impl Filters {
             });
             sorts.append(Some(&sort_name(key)), Some(&format!("rfilter.{name}")));
         }
-        self.sort.set_menu_model(Some(&sorts));
-        self.sort_label.set_label(&sort_name(&current));
+        let menu = gio::Menu::new();
+        menu.append_section(Some(&t::filter_linux_sort_by()), &sorts);
+        self.sort.set_menu_model(Some(&menu));
+        let named =
+            if current == RELEVANCE { t::sort_relevance() } else { sort_name(&current) };
+        self.sort_label.set_label(&named);
+        self.sort.set_tooltip_text(Some(&t::sort_label(&named)));
+        mark_set(&self.sort, query.sort.is_some());
 
         // Your sources only: the other filters are AniList's, so they dim while it is on.
-        let mine = query.sources_only;
+        let mine = query.sources_only && words;
+        self.mine.set_visible(words);
         self.settling.set(true);
         self.mine.set_active(mine);
         self.settling.set(false);
-        self.mine_check.set_visible(mine);
+        mark_set(&self.mine, mine);
         self.mine.update_state(&[gtk::accessible::State::Checked(if mine {
             gtk::AccessibleTristate::True
         } else {
             gtk::AccessibleTristate::False
         })]);
-        for button in [&self.format, &self.origin, &self.status, &self.genres, &self.started] {
+        for button in [&self.genres, &self.started, &self.origin, &self.format, &self.status] {
             dim(button, mine);
         }
         dim(&self.sort, mine);
+
+        // What is set, as the shows' chips, in the row's order.
+        let mut chips: Vec<(String, ChipKey)> = Vec::new();
+        for genre in &query.genres {
+            chips.push((say::genre(genre), ChipKey::Genre(genre.clone())));
+        }
+        for genre in &query.exclude_genres {
+            chips.push((
+                t::filter_linux_not(&say::genre(genre)),
+                ChipKey::NotGenre(genre.clone()),
+            ));
+        }
+        if let Some(words) = started_words {
+            chips.push((words, ChipKey::Started));
+        }
+        let origins = labels(&query.origins, &choices.origins);
+        if !origins.is_empty() {
+            chips.push((origins.join(", "), ChipKey::Origins));
+        }
+        let formats = format_labels(&query.formats, &choices.formats);
+        if !formats.is_empty() {
+            chips.push((formats.join(", "), ChipKey::Formats));
+        }
+        if let Some(status) = status {
+            chips.push((status, ChipKey::Status));
+        }
+        if mine {
+            chips.push((t::read_search_sources_only(), ChipKey::Mine));
+        }
+        let words: Vec<String> = chips.iter().map(|(label, _)| label.clone()).collect();
+        show_chips(&self.chips, &words, "rfilter.remove", "rfilter.clear");
+        self.chip_keys.replace(chips.into_iter().map(|(_, key)| key).collect());
     }
 }
 
@@ -564,6 +703,19 @@ fn dim(button: &impl IsA<gtk::Widget>, on: bool) {
     }
 }
 
+/// Covers stand this far in from the page's margin and under what is over them, as the shows'
+/// grid's padding and cells put theirs.
+const COVERS_IN: i32 = 32;
+const COVERS_DOWN: i32 = 16;
+
+/// Covers, or their placeholders, set in as the shows' grid sets its covers.
+fn inset<W: IsA<gtk::Widget>>(covers: W) -> W {
+    covers.set_margin_start(COVERS_IN);
+    covers.set_margin_end(COVERS_IN);
+    covers.set_margin_top(COVERS_DOWN);
+    covers
+}
+
 /// A grid of posters, as many columns as fit, 16 apart across and 24 down.
 fn poster_grid() -> gtk::Box {
     let layout = crate::cards_layout::CardsLayout::apart(
@@ -576,7 +728,7 @@ fn poster_grid() -> gtk::Box {
     grid.set_valign(gtk::Align::Start);
     grid.set_accessible_role(gtk::AccessibleRole::List);
     grid.update_property(&[gtk::accessible::Property::Label(&t::poster_grid_name())]);
-    grid
+    inset(grid)
 }
 
 fn add_posters(
@@ -610,6 +762,20 @@ fn caption_for(query: &ReadSearchQuery) -> Caption {
     } else {
         Caption::FormatStatus
     }
+}
+
+/// One row of the start: a discovery row of reading's Home, as the shows' rails stand.
+struct StartRow {
+    id: String,
+    place: gtk::Box,
+    title: gtk::Label,
+    side: gtk::Label,
+    all: gtk::Button,
+    landing: Rc<Landing>,
+    /// See all's query and the line over its results.
+    view_all: RefCell<Option<(ReadSearchQuery, Option<String>)>>,
+    /// What it shows, to leave it be when a send changes nothing in it.
+    signature: RefCell<String>,
 }
 
 /// One source's row in From your sources.
@@ -653,14 +819,18 @@ struct Search {
     more_row: gtk::Box,
     more_shown: gtk::Label,
     spinner: adw::Spinner,
-    /// Nothing found anywhere.
-    nothing: gtk::Box,
-    nothing_title: gtk::Label,
-    nothing_line_one: gtk::Label,
-    nothing_line_two: gtk::Label,
-    /// The empty state while browsing, with Clear filters.
+    /// Nothing found anywhere: the empty state shows in the page's place.
+    nothing: Cell<bool>,
+    /// The empty state, with Clear filters while filters are set.
     empty: adw::StatusPage,
     clear: gtk::Button,
+    /// The start, before anything is typed, set or chosen, and the results.
+    body: gtk::Stack,
+    /// The start's rows, reading Home's discovery rows, by id.
+    start_rows: gtk::Box,
+    rows: RefCell<Vec<Rc<StartRow>>>,
+    /// Home's rows have been asked for, or have come.
+    home_asked: Cell<bool>,
 
     /// The query asked and the last page of it in, from 0.
     at: RefCell<(ReadSearchQuery, u32)>,
@@ -685,7 +855,9 @@ struct Search {
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     // AniList's part.
-    let line = widgets::haze("", "read-search-total");
+    // What the results are, in the shows' caption over the grid.
+    let line = widgets::haze("", "caption");
+    line.set_margin_bottom(12);
     line.set_visible(false);
     let other_words = widgets::haze("", "caption");
     let show_them = gtk::Button::with_label(&t::search_show_them());
@@ -699,10 +871,11 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let anilist_landing = Landing::new(|| {
         let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
         column.set_accessible_role(gtk::AccessibleRole::Presentation);
-        let room = widgets::haze("", "read-search-total");
+        let room = widgets::haze("", "caption");
+        room.set_margin_bottom(12);
         room.set_accessible_role(gtk::AccessibleRole::Presentation);
         column.append(&room);
-        column.append(&discovery::grid_placeholders(ANILIST_PLACEHOLDER_ROWS));
+        column.append(&inset(discovery::grid_placeholders(ANILIST_PLACEHOLDER_ROWS)));
         column.upcast()
     });
     let anilist = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -711,7 +884,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
 
     // From your sources.
     let sources_head = gtk::Label::new(Some(&t::read_search_from_sources()));
-    sources_head.add_css_class("read-search-section");
+    sources_head.add_css_class("title-4");
     sources_head.set_xalign(0.0);
     sources_head.set_accessible_role(gtk::AccessibleRole::Heading);
     sources_head.update_property(&[gtk::accessible::Property::Level(2)]);
@@ -746,25 +919,8 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     spinner.set_margin_top(16);
     spinner.set_visible(false);
 
-    // Nothing found anywhere.
-    let nothing_title = gtk::Label::new(None);
-    nothing_title.add_css_class("read-search-nothing-title");
-    nothing_title.set_xalign(0.0);
-    nothing_title.set_wrap(true);
-    nothing_title.set_accessible_role(gtk::AccessibleRole::Heading);
-    let nothing_line_one = widgets::haze("", "read-search-nothing-text");
-    let nothing_line_two = widgets::haze("", "read-search-nothing-text");
-    nothing_line_two.set_margin_top(6);
-    let nothing = gtk::Box::new(gtk::Orientation::Vertical, 6);
-    nothing.set_margin_top(6);
-    nothing.append(&nothing_title);
-    nothing.append(&nothing_line_one);
-    nothing.append(&nothing_line_two);
-    nothing.set_visible(false);
-
     let body = gtk::Box::new(gtk::Orientation::Vertical, 0);
     body.add_css_class("read-search-body");
-    body.append(&nothing);
     body.append(&anilist_place);
     body.append(&sources);
     body.append(&later);
@@ -776,7 +932,8 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         .hscrollbar_policy(gtk::PolicyType::Never)
         .child(&veil)
         .build();
-    let clear = gtk::Button::with_label(&t::read_search_clear_filters());
+    // The shows' empty state, with reading's words, and Clear filters as theirs.
+    let clear = gtk::Button::with_label(&t::search_clear_filters());
     clear.add_css_class("pill");
     clear.set_visible(false);
     let empty =
@@ -784,14 +941,16 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     clear.set_halign(gtk::Align::Center);
     empty.set_child(Some(&clear));
     let states = States::new(&ctx.hub, &scroll, Shape::Grid, &empty, &t::read_search_failed());
+    states.offline_words(&t::search_needs_connection(), &t::state_offline_detail());
 
-    let entry = gtk::SearchEntry::builder()
-        .placeholder_text(t::read_search_placeholder())
-        .hexpand(true)
-        .build();
-    let clamp = adw::Clamp::builder().maximum_size(520).child(&entry).build();
+    // The field in its bar under the header, where the shows' Search has it, so switching sides
+    // moves neither.
+    let (bar, entry, toggle) = crate::pages::search::field(&t::read_search_placeholder());
+    bar.set_search_mode(true);
     let header = adw::HeaderBar::new();
     header.pack_start(&widgets::sidebar_button(&ctx.split));
+    header.pack_start(&crate::window::tv_session_button(ctx));
+    header.pack_end(&toggle);
     // Back to Read, while View all has Search pushed over it.
     let back = gtk::Button::from_icon_name("go-previous-symbolic");
     back.set_tooltip_text(Some(&t::action_back()));
@@ -809,15 +968,57 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             back.set_visible(ctx.read_from_home.get());
         }
     });
-    header.set_title_widget(Some(&clamp));
     let filters = Filters::new();
+    // Surprise me: a random book from the filters in effect, in the shows' place.
+    let surprise =
+        widgets::surprise_button(ctx, &t::surprise_me(), &t::surprise_hint_filters(), false, {
+            let filters = Rc::downgrade(&filters);
+            move || {
+                let filters = filters.upgrade()?;
+                Some(SurprisePool::Reading { query: filters.query("") })
+            }
+        });
+    header.pack_end(&surprise);
     // Shows or Reading leads the content bar, where Library has it.
     filters.row.prepend(&scope(ctx, Dest::Search, true));
-    let content = gtk::Box::new(gtk::Orientation::Vertical, 0);
+
+    // The start: Home's discovery rows, then the genres, as the shows' start.
+    let start_rows = gtk::Box::new(gtk::Orientation::Vertical, 18);
+    // Until Home's rows come, two rows of placeholders, as the shows' rails wait.
+    for _ in 0..2 {
+        let waiting = inset(discovery::grid_placeholders(1));
+        waiting.set_margin_start(18 + COVERS_IN);
+        waiting.set_margin_end(18 + COVERS_IN);
+        start_rows.append(&waiting);
+    }
+    let genres = crate::pages::search::genre_tiles(&filters.choices.genres, {
+        let filters = Rc::downgrade(&filters);
+        move |genre| {
+            if let Some(filters) = filters.upgrade() {
+                filters.only_genre(genre);
+            }
+        }
+    });
+    let start = gtk::Box::new(gtk::Orientation::Vertical, 18);
+    start.set_margin_top(12);
+    start.set_margin_bottom(24);
+    start.append(&start_rows);
+    start.append(&crate::pages::search::section(&t::search_genres(), &genres));
+    let start = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never)
+        .child(&start)
+        .build();
+    let body_stack = gtk::Stack::new();
+    body_stack.set_vexpand(true);
+    body_stack.add_named(&start, Some("start"));
+    body_stack.add_named(&states.widget, Some("results"));
+
+    let content = gtk::Box::new(gtk::Orientation::Vertical, 6);
+    content.append(&bar);
     content.append(&filters.row);
-    states.widget.set_vexpand(true);
-    content.append(&states.widget);
-    let page = widgets::content_page(&t::nav_search(), &header, &content);
+    content.append(&filters.chips);
+    content.append(&body_stack);
+    let page = widgets::read_content_page(&t::nav_search(), &header, &content);
 
     let search = Rc::new(Search {
         ctx: Rc::downgrade(ctx),
@@ -844,12 +1045,13 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         more_row,
         more_shown,
         spinner,
-        nothing,
-        nothing_title,
-        nothing_line_one,
-        nothing_line_two,
+        nothing: Cell::new(false),
         empty,
         clear: clear.clone(),
+        body: body_stack,
+        start_rows,
+        rows: RefCell::default(),
+        home_asked: Cell::new(false),
         at: RefCell::new((ReadSearchQuery::default(), 0)),
         titled: RefCell::default(),
         asked: Cell::new(false),
@@ -956,14 +1158,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         let search = Rc::downgrade(&search);
         move |query, line: Option<String>| {
             if let Some(search) = search.upgrade() {
-                search.filters.adopt(&query);
-                search.entry.set_text("");
-                search.filters.set_words(false);
-                search.titled.replace(None);
-                search.ask(true);
-                let asked = search.at.borrow().0.clone();
-                search.titled.replace(line.map(|line| (asked, line)));
-                search.set_line();
+                search.see_all(&query, line);
                 // Focus waits on Back until the list lands, then takes its first result.
                 search.focus_first.set(true);
                 let back = search.back.clone();
@@ -1007,6 +1202,15 @@ impl Search {
         }
         self.asked.set(true);
         self.focus_first.set(false);
+        // Nothing typed, set or chosen: the start, and nothing is asked of AniList.
+        if self.filters.at_start(&query.text) {
+            *self.at.borrow_mut() = (query, 0);
+            self.titled.replace(None);
+            self.body.set_visible_child_name("start");
+            self.ask_home(&hub);
+            return;
+        }
+        self.body.set_visible_child_name("results");
         let words = !query.text.is_empty();
         let same_words = words && before.text == query.text && self.source.borrow().is_some();
         *self.at.borrow_mut() = (query.clone(), 0);
@@ -1021,7 +1225,7 @@ impl Search {
         self.more_row.set_visible(false);
         self.later.set_visible(false);
         super::clear(&self.later);
-        self.nothing.set_visible(false);
+        self.nothing.set(false);
         // New words keep the sources' rows where they are until their new answers land, as
         // AniList's grid is kept; a browse has no sources' part and starts it again.
         if !same_words {
@@ -1046,9 +1250,29 @@ impl Search {
                 self.anilist_landing.wait(false);
             }
         } else {
-            self.states.loading(None);
+            self.states.loading(Some(t::activity_browse()));
         }
         send(&hub, ReadingCommand::Search { query });
+    }
+
+    /// See all on a row of the start, or View all on Read's: the row's filters and order with no
+    /// words, under the row's own line.
+    fn see_all(self: &Rc<Self>, query: &ReadSearchQuery, line: Option<String>) {
+        self.filters.adopt(query);
+        self.entry.set_text("");
+        self.filters.set_words(false);
+        self.titled.replace(None);
+        self.ask(true);
+        let asked = self.at.borrow().0.clone();
+        self.titled.replace(line.map(|line| (asked, line)));
+        self.set_line();
+    }
+
+    /// Home's rows for the start, once: Read asks for them too, and the start follows each send.
+    fn ask_home(&self, hub: &Rc<Hub>) {
+        if !self.home_asked.replace(true) {
+            send(hub, ReadingCommand::LoadHome { refresh: false });
+        }
     }
 
     /// AniList's next page: under the grid while browsing, under the sources with words.
@@ -1119,6 +1343,93 @@ impl Search {
         animation.play();
     }
 
+    /// The start's rows as Home's newest send has them: each keeps its place by id, its
+    /// placeholders while it is on its way, and its covers crossfading in.
+    fn draw_start(self: &Rc<Self>, view: &ReadingHomeView) {
+        let Some(hub) = self.hub.upgrade() else { return };
+        if self.rows.borrow().is_empty() {
+            super::clear(&self.start_rows);
+        }
+        let mut old = self.rows.take();
+        let mut live = Vec::new();
+        // Catalogue-wide, as the shows' start: Because you finished stays on Home.
+        for row in view.rows.iter().filter(|r| r.kind != ReadRowKind::Because) {
+            let slot = match old.iter().position(|s| s.id == row.id) {
+                Some(at) => old.remove(at),
+                None => self.start_row(row),
+            };
+            fill_start_row(&hub, &slot, row);
+            live.push(slot);
+        }
+        for slot in old {
+            if slot.place.parent().is_some() {
+                self.start_rows.remove(&slot.place);
+            }
+        }
+        let mut previous: Option<gtk::Widget> = None;
+        for slot in &live {
+            let place = &slot.place;
+            if place.parent().as_ref() == Some(self.start_rows.upcast_ref()) {
+                self.start_rows.reorder_child_after(place, previous.as_ref());
+            } else {
+                self.start_rows.insert_child_after(place, previous.as_ref());
+            }
+            previous = Some(place.clone().upcast());
+        }
+        self.rows.replace(live);
+    }
+
+    /// A row of the start: its heading and side words, See all at the right, then its covers.
+    fn start_row(self: &Rc<Self>, row: &ReadHomeRow) -> Rc<StartRow> {
+        let title = widgets::heading("");
+        title.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        title.update_property(&[gtk::accessible::Property::Level(2)]);
+        let side = widgets::haze("", "caption");
+        side.set_wrap(false);
+        side.set_valign(gtk::Align::Center);
+        side.set_visible(false);
+        let face = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+        face.append(&gtk::Label::new(Some(&t::search_see_all())));
+        face.append(&gtk::Image::from_icon_name("go-next-symbolic"));
+        let all = gtk::Button::builder().child(&face).build();
+        all.add_css_class("flat");
+        all.set_visible(false);
+        let top = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        top.append(&title);
+        top.append(&side);
+        let spacer = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        spacer.set_hexpand(true);
+        top.append(&spacer);
+        top.append(&all);
+        let landing = Landing::new(|| inset(discovery::grid_placeholders(1)));
+        let place = gtk::Box::new(gtk::Orientation::Vertical, 8);
+        place.set_margin_start(18);
+        place.set_margin_end(18);
+        place.append(&top);
+        place.append(&landing.widget);
+        let slot = Rc::new(StartRow {
+            id: row.id.clone(),
+            place,
+            title,
+            side,
+            all: all.clone(),
+            landing,
+            view_all: RefCell::default(),
+            signature: RefCell::default(),
+        });
+        all.connect_clicked({
+            let (search, slot) = (Rc::downgrade(self), Rc::downgrade(&slot));
+            move |_| {
+                let (Some(search), Some(slot)) = (search.upgrade(), slot.upgrade()) else {
+                    return;
+                };
+                let Some((query, line)) = slot.view_all.borrow().clone() else { return };
+                search.see_all(&query, line);
+            }
+        });
+        slot
+    }
+
     /// From your sources sits 34 under AniList's grid, or at the top with nothing over it.
     fn place_sources(&self, alone: bool) {
         self.sources_head.set_margin_top(if alone { 4 } else { ABOVE_SOURCES });
@@ -1161,6 +1472,10 @@ impl Search {
                     self.draw_anilist();
                     self.draw_sources();
                 }
+            }
+            Event::Reading(ReadingEvent::Home(view)) => {
+                self.home_asked.set(true);
+                self.draw_start(view);
             }
             Event::Medium(_) if self.hub.upgrade().is_some_and(|h| super::reads(&h)) => {
                 self.ask(true);
@@ -1404,30 +1719,25 @@ impl Search {
                 && self.first_page.borrow().is_empty());
         let all_nothing = search.groups.iter().all(|g| g.state == ReadSourceState::Nothing);
         let nowhere = search.done && anilist_nothing && all_nothing;
-        let switch = || {
-            if nowhere {
-                self.nothing_title.set_label(&t::read_search_nothing(&query.text));
-                self.nothing_line_one.set_label(&t::read_search_nothing_line());
-                self.nothing_line_two.set_label(&t::read_search_sources_nothing());
-                self.nothing_line_two
-                    .set_visible(!query.sources_only && !search.groups.is_empty());
-                self.nothing.set_visible(true);
-                self.anilist_place.set_visible(false);
-                self.sources.set_visible(false);
-            } else {
-                self.nothing.set_visible(false);
-                if !query.sources_only && !self.anilist_place.is_closing() {
-                    self.anilist_place.set_visible(true);
-                }
-                self.show_sources();
-            }
-        };
-        // Nothing anywhere takes the page's place, or gives it back, in one crossfade.
-        match self.veil.child() {
-            Some(body) if self.nothing.get_visible() != nowhere && self.page.is_mapped() => {
-                motion::ghost(&self.veil, &body, true, switch);
-            }
-            _ => switch(),
+        // Nothing anywhere takes the page's place as the shows' empty state, or gives it back.
+        if nowhere {
+            self.empty.set_title(&t::read_search_nothing(&query.text));
+            let line = t::read_search_nothing_line();
+            self.empty.set_description(Some(
+                &if !query.sources_only && !search.groups.is_empty() {
+                    t::read_linux_said_then(&line, &t::read_search_sources_nothing())
+                } else {
+                    line
+                },
+            ));
+            self.clear.set_visible(self.filters.any_set());
+            self.nothing.set(true);
+            self.states.empty();
+        } else if self.nothing.replace(false) {
+            self.states.content();
+        }
+        if !nowhere && !query.sources_only && !self.anilist_place.is_closing() {
+            self.anilist_place.set_visible(true);
         }
         self.draw_more();
 
@@ -1461,7 +1771,7 @@ impl Search {
     /// fading in when it comes and out when it goes; never over Nothing anywhere.
     fn show_sources(&self) {
         let rows = self.slots.borrow().iter().any(|s| s.part.place.get_visible());
-        let show = !self.nothing.get_visible() && (rows || self.nothing_line.get_visible());
+        let show = rows || self.nothing_line.get_visible();
         // Fading out counts as gone, so a row that comes back meanwhile stops the fade.
         let leaving = self
             .sources_fade
@@ -1533,6 +1843,9 @@ impl Search {
         let inner = gtk::Box::new(gtk::Orientation::Vertical, 0);
         inner.append(&head);
         let landing = Landing::new(|| discovery::placeholders(SOURCE_PLACEHOLDERS));
+        // A source's covers stand in from its name, as the shows' rails' covers do.
+        landing.widget.set_margin_start(COVERS_IN);
+        landing.widget.set_margin_end(COVERS_IN);
         inner.append(&landing.widget);
         let part = Part::new(inner, landing, {
             let search = Rc::downgrade(self);
@@ -1687,6 +2000,41 @@ impl Search {
     }
 }
 
+/// A row of the start as the engine sent it: the heading, See all, and the covers once in.
+fn fill_start_row(hub: &Hub, slot: &StartRow, row: &ReadHomeRow) {
+    let title = say::msg(&row.title);
+    slot.title.set_label(&title);
+    let side = row.side.as_ref().map(say::msg);
+    slot.side.set_label(side.as_deref().unwrap_or_default());
+    slot.side.set_visible(side.is_some());
+    slot.view_all
+        .replace(row.view_all.clone().map(|q| (q, row.view_all_title.as_ref().map(say::msg))));
+    slot.all.set_visible(row.view_all.is_some());
+    slot.all.update_property(&[gtk::accessible::Property::Label(&t::read_linux_see_all_row(
+        &title,
+    ))]);
+    if row.pending {
+        slot.title.update_property(&[gtk::accessible::Property::Label(
+            &t::read_linux_row_loading(&title),
+        )]);
+        slot.place.set_visible(true);
+        slot.landing.wait(true);
+        return;
+    }
+    slot.title.update_property(&[gtk::accessible::Property::Label(&title)]);
+    // A row with nothing to show stays out of the start.
+    slot.place.set_visible(!row.tiles.is_empty());
+    let signature = format!("{:?}", row.tiles);
+    if *slot.signature.borrow() == signature && slot.landing.is_visible() {
+        return;
+    }
+    slot.signature.replace(signature);
+    let grid = poster_grid();
+    let shown = &row.tiles[..row.tiles.len().min(START_SHOWN)];
+    add_posters(hub, &grid, shown, Caption::row(row.kind), &HashMap::new());
+    slot.landing.land(&grid);
+}
+
 /// A line over AniList's part: AniList found nothing, or didn't answer, with a line under it.
 fn note(title: &str, line: &str) -> gtk::Box {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 2);
@@ -1702,9 +2050,25 @@ fn note(title: &str, line: &str) -> gtk::Box {
     column
 }
 
-/// For a screenshot: Format set to Manga, its menu open.
+/// For a screenshot, as the shows' filters shot: a genre left out, two formats and a status,
+/// browsing with nothing typed.
 #[cfg(feature = "fixtures")]
 pub fn shot_filters(shell: &Rc<crate::window::Shell>) {
+    fn first<T: IsA<gtk::Widget>>(widget: &gtk::Widget) -> Option<T> {
+        if let Some(found) = widget.downcast_ref::<T>()
+            && widget.is_mapped()
+        {
+            return Some(found.clone());
+        }
+        let mut child = widget.first_child();
+        while let Some(next) = child {
+            if let Some(found) = first(&next) {
+                return Some(found);
+            }
+            child = next.next_sibling();
+        }
+        None
+    }
     fn first_filter(widget: &gtk::Widget) -> Option<gtk::MenuButton> {
         if let Some(button) = widget.downcast_ref::<gtk::MenuButton>()
             && widget.is_mapped()
@@ -1723,9 +2087,18 @@ pub fn shot_filters(shell: &Rc<crate::window::Shell>) {
     }
     let window = shell.ctx.window.clone();
     glib::timeout_add_local_once(Duration::from_millis(1500), move || {
-        if let Some(button) = first_filter(window.upcast_ref()) {
-            let _ = button.activate_action("rfilter.format-manga", None);
-            glib::timeout_add_local_once(Duration::from_millis(600), move || button.popup());
+        if let Some(entry) = first::<gtk::SearchEntry>(window.upcast_ref()) {
+            entry.set_text("");
+        }
+        let Some(button) = first_filter(window.upcast_ref()) else { return };
+        let left_out = read_filters().genres.iter().position(|g| g == "Romance").unwrap_or(0); // i18n-skip
+        for action in [
+            format!("rfilter.leave-{left_out}"),
+            "rfilter.format-manga".into(),    // i18n-skip
+            "rfilter.format-webtoon".into(),  // i18n-skip
+            "rfilter.status-finished".into(), // i18n-skip
+        ] {
+            let _ = button.activate_action(&action, None);
         }
     });
 }

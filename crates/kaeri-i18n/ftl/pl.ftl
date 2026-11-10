@@ -8822,6 +8822,9 @@ reader-end-read = Zaliczono jako przeczytany
 # Under the end of chapter line, naming the trackers the read went to.
 reader-end-tracker = Zaliczono jako przeczytany · zaktualizowano: { $trackers }
 
+# Under the end of chapter line when the device is offline: the trackers hear of the read once it is back online.
+reader-end-tracker-offline = Zaliczono jako przeczytany · { $tracker } zaktualizuje się po powrocie online
+
 # Small heading above the next chapter on the page between chapters.
 reader-end-next = Kolejny
 
@@ -9814,9 +9817,6 @@ read-search-nothing-filters-line = Mniej filtrów może dać więcej wyników.
 
 # The button under it.
 read-search-clear-filters = Wyczyść filtry
-
-# A sort of reading's Search, AniList's.
-read-sort-popular = Popularne
 
 # A sort of reading's Search, AniList's.
 read-sort-trending = Na topie
