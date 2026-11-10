@@ -111,7 +111,7 @@ pub fn default_for(key: Key, medium: Medium, screen: Screen) -> ReaderValue {
             amount(if screen.eink == Some(EinkPanel::Kaleido3) { 1.2 } else { 1.0 })
         }
         Key::FootValue => choice("pages_left"),
-        Key::Folio => on(true),
+        Key::Folio | Key::SkipCreditPages => on(true),
         Key::StripGap => choice("none"),
         // Paper mode's parts, on by default inside it; the page's white dimmed a little.
         Key::PaperInstant | Key::PaperLook | Key::PaperVolume => on(true),
@@ -418,6 +418,7 @@ pub const fn relays(key: Key) -> bool {
             | Key::Saturation
             | Key::Contrast
             | Key::GreyscalePages
+            | Key::SkipCreditPages
     )
 }
 

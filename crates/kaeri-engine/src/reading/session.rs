@@ -674,6 +674,7 @@ fn session_of(command: &ReaderCommand) -> Option<u64> {
         | C::BackTo { session }
         | C::StartOver { session }
         | C::GoBack { session }
+        | C::NotACreditPage { session, .. }
         | C::Close { session } => Some(*session),
         C::Open { .. }
         | C::SetSetting { .. }
@@ -911,9 +912,10 @@ impl Session {
         self.start.page = Some(page);
         // The place within a strip holds only while the chapter opens at its image.
         self.start.strip = self.start.strip.filter(|s| s.image == page);
-        // Another chapter's pages that had not all landed are fetched again when it opens.
+        // Another chapter's pages that had not all landed are fetched again when it opens, and
+        // so is one with credit pages or parts, which its folder alone does not tell.
         if let Some(left) = self.feed.take_if(|f| f.chapter != chapter.id)
-            && !left.complete()
+            && (!left.complete() || !left.credits.is_empty() || left.parts.is_some())
             && let Some(c) = self.chapters.iter_mut().find(|c| c.id == left.chapter)
         {
             c.format = novel::SOURCE.into();
@@ -934,7 +936,31 @@ impl Session {
             shared: self.laid.clone(),
             out: cx.tx.clone(),
             feed: self.feed.clone(),
+            // A feed left its credit pages out as it came.
+            credits: self.credit_check(cx).filter(|_| self.feed.is_none()),
         });
+    }
+
+    /// What a source's chapter learns of the series' credit pages as it is fetched, and whether
+    /// it leaves them out.
+    fn learning(&self, cx: &Cx<'_>) -> super::credits::Learning {
+        super::credits::Learning {
+            store: cx.services.store.clone(),
+            work: self.work.as_str().to_owned(),
+            skip: self.medium == Medium::Manga && self.layers.on(Key::SkipCreditPages),
+        }
+    }
+
+    /// The credit pages are looked for in a manga's chapters, unless the person turned that off.
+    fn credit_check(&self, cx: &Cx<'_>) -> Option<super::credits::CreditCheck> {
+        (self.medium == Medium::Manga && self.layers.on(Key::SkipCreditPages)).then(|| {
+            super::credits::CreditCheck {
+                store: cx.services.store.clone(),
+                work: self.work.as_str().to_owned(),
+                chapter: self.chapter().id.as_str().to_owned(),
+                now: cx.now(),
+            }
+        })
     }
 
     fn laid_out(&mut self, cx: &mut Cx<'_>, pages: &Pages) {
@@ -1004,6 +1030,27 @@ impl Session {
             chapter: self.chapter().id.clone(),
             leaves,
         });
+        if !laid.credits.is_empty() {
+            let count = laid.credits.len() as i64;
+            cx.send(ReaderEvent::CreditPages {
+                session: self.id,
+                chapter: self.chapter().id.clone(),
+                pages: laid.credits.clone(),
+                msg: Msg::Reading(ReadingMsg::ReaderCreditPagesSkipped { count }),
+            });
+        }
+        if let Some(feed) = &self.feed
+            && feed.chapter == self.chapter().id
+            && let Some(parts) = &feed.parts
+        {
+            cx.send(ReaderEvent::ChapterParts {
+                session: self.id,
+                chapter: feed.chapter.clone(),
+                parts: parts.parts.clone(),
+                total: parts.total,
+                missing: parts.missing.clone(),
+            });
+        }
         if let Some(msg) = said {
             cx.send(notice(msg, Some(ReaderAction::ChangeMode), RESUMED_MS, eink));
         }
@@ -1103,6 +1150,26 @@ impl Session {
                 start.novel = self.novel_start();
                 self.go_to(cx, pages, start);
             }
+            C::NotACreditPage { fingerprint, .. } => {
+                let store = &cx.services.store;
+                if let Err(e) =
+                    store.keep_credit_page(self.work.as_str(), fingerprint, cx.now())
+                {
+                    tracing::warn!(error = %e, "a page kept from the credit pages was not kept");
+                    return;
+                }
+                if self.novel.is_none() {
+                    // A source's chapter is fetched again, the page kept this time.
+                    if let Some(feed) = self.feed.take()
+                        && let Some(c) = self.chapters.iter_mut().find(|c| c.id == feed.chapter)
+                    {
+                        c.format = novel::SOURCE.into();
+                        c.path = PathBuf::new();
+                    }
+                    let page = self.page().unwrap_or(0);
+                    self.lay_out(cx, pages, page);
+                }
+            }
             C::GoBack { .. } => {
                 if let Some(back) = self.moved_back.take() {
                     self.go_to(cx, pages, back);
@@ -1169,7 +1236,9 @@ impl Session {
         if self.ahead.as_ref().is_some_and(|a| a.chapter == next.id) {
             return;
         }
-        self.ahead = Some(novel::fetch_ahead(cx, pages, self.id, &self.work, (index, next)));
+        let learning = self.learning(cx);
+        self.ahead =
+            Some(novel::fetch_ahead(cx, pages, (self.id, learning), &self.work, (index, next)));
     }
 
     /// Ask the worker for the next chapter's first page, once a chapter. A chapter from a
@@ -1570,6 +1639,7 @@ mod tests {
     use super::*;
     use crate::{host::QuietHost, outbox::Envelope};
 
+    mod groups;
     mod hints;
     mod leaving;
     mod novels;

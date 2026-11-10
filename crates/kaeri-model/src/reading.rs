@@ -210,6 +210,44 @@ pub struct BookEditionRow {
     /// The series reads from this one now: the person's choice, else the one picked for them.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub in_use: bool,
+    /// The groups whose releases it lists, the most chapters first: what the group picker
+    /// offers. `version_label` is the one the chapters are listed from. Empty when the source
+    /// names no group.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub groups: Vec<GroupChoice>,
+    /// The person picked the group (`ChooseGroup`); otherwise it is the one with the most
+    /// chapters.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub group_chosen: bool,
+}
+
+/// One group an edition lists releases from, for the series' group picker.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct GroupChoice {
+    /// As the source names it.
+    pub label: String,
+    /// How many chapters it has released in this edition.
+    pub chapters: u32,
+    /// The chapters are listed from it.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub in_use: bool,
+    /// The language most of its chapters are in, as the source tags it ("es", "pt-BR").
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub language: Option<String>,
+}
+
+/// A part of a chapter read from another group than the rest of the chapter, which lacks it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct PartGroup {
+    /// The part, from 1.
+    pub part: u32,
+    /// The group it is read from, as the source names it.
+    pub group: String,
+    /// That group's language as the source tags it, when it is not the app's.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub language: Option<String>,
 }
 
 /// A volume's chapters, or the chapters in no volume.
@@ -270,6 +308,29 @@ pub struct ChapterRow {
     /// Downloaded here, and the source no longer lists it. It still opens from the file.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub gone_from_source: bool,
+    /// How many parts the chapter has in all, read as one chapter: "Chapter 1, 2 parts". 0 or 1
+    /// is a chapter listed whole. It counts parts no group lists, which `missing_parts` names.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub parts: u32,
+    /// Parts of the chapter no group lists, from 1: "2 of 3 parts, part 2 missing". The chapter
+    /// still opens, with the rest.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub missing_parts: Vec<u32>,
+    /// Parts read from another group than `version_label`, which lacks them.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub part_groups: Vec<PartGroup>,
+    /// The group the series is listed from lacks this chapter, so it is listed from
+    /// `version_label`, another group.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub other_group: bool,
+    /// For a chapter from another group: that group's language as the source tags it, when it
+    /// is not the app's language.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub group_language: Option<String>,
+    /// The edition in use lacks this chapter and another of the person's sources lists it: that
+    /// source's name. It opens from there.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub other_source: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1595,6 +1656,14 @@ pub enum ReadingCommand {
         version_label: Option<String>,
         language: Option<String>,
     },
+    /// List the series' chapters from this group of the edition in use, falling back to
+    /// another group for a chapter it lacks; `None` goes back to the group with the most
+    /// chapters. Read marks stay: they hang on the chapter, whichever group released it. Answered
+    /// with the chapters and the series header again.
+    ChooseGroup {
+        work: WorkId,
+        group: Option<String>,
+    },
     MarkRead {
         work: WorkId,
         chapters: Vec<ChapterId>,
@@ -1738,6 +1807,7 @@ impl ReadingCommand {
             }
             Self::LoadSeries { .. }
             | Self::ChooseEdition { .. }
+            | Self::ChooseGroup { .. }
             | Self::ReadAgain { .. }
             | Self::UndoReadAgain { .. }
             | Self::SetStatus { .. }

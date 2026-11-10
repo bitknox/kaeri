@@ -264,6 +264,9 @@ pub struct BookSources {
     pub demo: kaeri_providers::reading_demo::ReadingDemo,
     /// The series whose sources are being asked how they read, by source and series.
     hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
+    /// The language the app speaks, as [`BookSources::set_language`] last gave it: the group a
+    /// series is read from is one in it when the person picked none.
+    language: Arc<RwLock<Option<String>>>,
     /// What reading's catalogue keeps between commands: see [`crate::read_catalog::Memory`].
     pub catalog: crate::read_catalog::Memory,
     /// The chapters downloaded for reading and the queue that fetches them.
@@ -302,6 +305,7 @@ impl BookSources {
             undo: Arc::default(),
             pending: Arc::default(),
             hint_lookups: Arc::default(),
+            language: Arc::default(),
             demo: kaeri_providers::reading_demo::ReadingDemo::new(Some(
                 paths.cache_dir.join("reading-demo"),
             )),
@@ -1138,9 +1142,17 @@ impl BookSources {
     /// Name what the engine names in the language the app speaks (a tag from
     /// `kaeri_i18n::languages()`): the folders as a source, and the feed's sections.
     pub fn set_language(&self, tag: &str) {
+        if let Ok(mut language) = self.language.write() {
+            *language = Some(tag.to_owned());
+        }
         self.registry.put(Arc::new(FolderSource::named(self.store.clone(), folders_name(tag))));
         #[cfg(feature = "opds-feed")]
         self.feed.use_language(tag);
+    }
+
+    /// The language the app speaks, once set.
+    pub fn language(&self) -> Option<String> {
+        self.language.read().ok().and_then(|l| l.clone())
     }
 
     /// A source's name as its manifest gives it, or its id when it is no longer loaded.
@@ -1157,13 +1169,34 @@ impl BookSources {
         let in_use = self.edition_of(work, None).map(|(source, _)| source);
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
         let mut seen = HashSet::new();
+        let language = self.language();
         refs.into_iter()
             .filter(|(source, _)| seen.insert(source.clone()))
             .filter_map(|(source, series)| {
                 let manifest = self.registry.manifest(&source)?;
                 // What the source listed last time, from the chapter cache.
-                let kept =
-                    crate::read_catalog::chapters::summary(&self.store, &source, &series);
+                let chosen = crate::read_catalog::chapters::chosen_group(
+                    &self.store,
+                    work.as_str(),
+                    &source,
+                );
+                let kept = crate::read_catalog::chapters::summary(
+                    &self.store,
+                    &source,
+                    &series,
+                    chosen.as_deref(),
+                    language.as_deref(),
+                );
+                let groups = kept
+                    .groups
+                    .iter()
+                    .map(|g| kaeri_model::reading::GroupChoice {
+                        in_use: kept.version_label.as_deref() == Some(g.label.as_str()),
+                        label: g.label.clone(),
+                        chapters: g.chapters,
+                        language: g.language.clone(),
+                    })
+                    .collect();
                 Some(kaeri_model::reading::BookEditionRow {
                     preferred: preferred.as_ref().is_some_and(|p| p.source_id == source),
                     in_use: in_use.as_deref() == Some(source.as_str()),
@@ -1173,6 +1206,8 @@ impl BookSources {
                     version_label: kept.version_label,
                     chapters: kept.chapters,
                     latest: kept.latest,
+                    groups,
+                    group_chosen: kept.chosen,
                 })
             })
             .collect()
@@ -1192,8 +1227,142 @@ use kaeri_model::reading::{
 pub struct Opened {
     pub source_id: String,
     pub series_ref: String,
+    /// The chapter, or its first part.
     pub chapter: SourceChapter,
+    /// The pages of every part in reading order, or the chapter's text or file.
     pub content: ChapterContent,
+    /// A chapter the source lists in parts: each part with its own page addresses, which
+    /// [`BookSources::page`] asks for again by part when they expire. Empty for a chapter
+    /// listed whole.
+    pub parts: Vec<OpenedPart>,
+    /// The group it is read in, as the source names it.
+    pub group: Option<String>,
+    /// For a chapter in parts: the parts in all, and those no group lists.
+    pub total: u32,
+    pub missing: Vec<u32>,
+}
+
+/// One part of a chapter opened in parts.
+#[derive(Debug, Clone)]
+pub struct OpenedPart {
+    pub chapter: SourceChapter,
+    pub pages: Vec<PageRef>,
+    /// Its number, from 1.
+    pub number: u32,
+}
+
+/// A chapter's entries in a source's list, in reading order, as [`BookSources::open`] reads
+/// them.
+#[derive(Debug)]
+struct Found {
+    entries: Vec<SourceChapter>,
+    /// For a chapter in parts: each entry's part number, the parts in all and those missing.
+    numbers: Vec<u32>,
+    total: u32,
+    missing: Vec<u32>,
+}
+
+impl Opened {
+    /// A copy of a chapter of pictures, to fetch some of its pages alongside others. `None`
+    /// for a chapter of text or a file.
+    pub(crate) fn pictures_copy(&self) -> Option<Self> {
+        let ChapterContent::Images(pages) = &self.content else { return None };
+        Some(Self {
+            source_id: self.source_id.clone(),
+            series_ref: self.series_ref.clone(),
+            chapter: self.chapter.clone(),
+            content: ChapterContent::Images(pages.clone()),
+            parts: self.parts.clone(),
+            group: self.group.clone(),
+            total: self.total,
+            missing: self.missing.clone(),
+        })
+    }
+
+    /// Where each part starts in the pages and how many pages it has: one span for a chapter
+    /// listed whole.
+    pub fn spans(&self) -> Vec<(u32, u32)> {
+        let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
+        if self.parts.is_empty() {
+            return match &self.content {
+                ChapterContent::Images(pages) => vec![(0, count(pages.len()))],
+                _ => Vec::new(),
+            };
+        }
+        let mut at = 0;
+        self.parts
+            .iter()
+            .map(|p| {
+                let span = (at, count(p.pages.len()));
+                at += span.1;
+                span
+            })
+            .collect()
+    }
+}
+
+/// A chapter row from the source's entries for it: one, or its parts in order.
+fn source_row(
+    parts: &[&SourceChapter],
+    id: ChapterId,
+    state: ChapterReadState,
+    read_at: Option<i64>,
+    download: Option<kaeri_model::reading::ChapterDownloadState>,
+    bookmarked: bool,
+    (all, arranged, app): (
+        &crate::read_catalog::arrange::Arranged,
+        &crate::read_catalog::arrange::Row,
+        Option<&str>,
+    ),
+) -> ChapterRow {
+    let chapter = parts[0];
+    let split = crate::read_catalog::arrange::Arranged::in_parts(arranged);
+    let label = if split {
+        crate::read_catalog::arrange::merged_label(chapter, &id)
+    } else {
+        chapter.number_raw.clone()
+    };
+    let number = id
+        .key()
+        .and_then(|k| k.range())
+        .map(|r| r.to_string())
+        .or_else(|| chapter.number.map(|n| n.to_string()));
+    // A part's title often only says which part it is; the chapter's is the first part's,
+    // without that.
+    let merged = split.then(|| crate::read_catalog::arrange::merged_title(chapter)).flatten();
+    let title = crate::read_catalog::chapters::own_title(
+        if split { merged.as_deref() } else { chapter.title.as_deref() },
+        &label,
+        number.as_deref(),
+    )
+    .map(str::to_owned);
+    let pages = parts.iter().map(|p| p.page_count).sum::<Option<u32>>();
+    let mut row = ChapterRow {
+        id,
+        label,
+        state,
+        number,
+        title,
+        volume: chapter.volume.clone(),
+        published: parts.iter().filter_map(|p| p.published).max(),
+        pages,
+        new_chapter: false,
+        download,
+        versions: 1,
+        bookmarked,
+        version_label: chapter.version_label.clone(),
+        read_at,
+        line: Vec::new(),
+        gone_from_source: false,
+        parts: 1,
+        missing_parts: Vec::new(),
+        part_groups: Vec::new(),
+        other_group: false,
+        group_language: None,
+        other_source: None,
+    };
+    all.fill(arranged, app, &mut row);
+    row
 }
 
 pub(crate) fn failure(source: &str, error: &ProviderError) -> ReadingFailure {
@@ -1452,12 +1621,10 @@ impl BookSources {
         // The source is asked how the series reads beside its chapters, and never held up for.
         self.ask_hint(&source, &series, now);
         let chapters = self.fetch_list(&source, &series, now).await?;
-        let groups = self.groups_of(work, &chapters);
-        let editions = self.editions(work);
-        let row = editions.into_iter().find(|e| e.source_id == source).map(|mut e| {
-            e.chapters = u32::try_from(chapters.len()).unwrap_or(u32::MAX);
-            e
-        });
+        let groups = self.groups_of(work, &source, &chapters);
+        // The list just kept, counted as every screen counts it: one per chapter, its parts and
+        // its groups' releases as one.
+        let row = self.editions(work).into_iter().find(|e| e.source_id == source);
         Ok((row, groups))
     }
 
@@ -1486,7 +1653,7 @@ impl BookSources {
     ) -> Option<Vec<VolumeGroup>> {
         let (source, series) = self.edition_of(work, None)?;
         let chapters = self.kept_source_list(&source, &series, now, max_age)?;
-        Some(self.groups_of(work, &chapters))
+        Some(self.groups_of(work, &source, &chapters))
     }
 
     /// Ask the source for a series' whole list, put it in reading order and keep it.
@@ -1530,9 +1697,22 @@ impl BookSources {
         Some(chapters)
     }
 
-    /// A work's chapters grouped by volume, with the person's reading marked.
-    fn groups_of(&self, work: &WorkId, chapters: &[SourceChapter]) -> Vec<VolumeGroup> {
-        let restarts = restarts_per_volume(chapters);
+    /// A work's chapters in `source`'s list grouped by volume, with the person's reading
+    /// marked: one row per chapter, its parts as one, from the preferred group.
+    fn groups_of(
+        &self,
+        work: &WorkId,
+        source: &str,
+        chapters: &[SourceChapter],
+    ) -> Vec<VolumeGroup> {
+        let chosen =
+            crate::read_catalog::chapters::chosen_group(&self.store, work.as_str(), source);
+        let language = self.language();
+        let arranged = crate::read_catalog::arrange::arrange(
+            chapters,
+            chosen.as_deref(),
+            language.as_deref(),
+        );
         let read: HashMap<String, kaeri_store::reading::ReadChapter> = self
             .store
             .read_chapters(work.as_str())
@@ -1546,15 +1726,14 @@ impl BookSources {
         let bookmarks: HashSet<String> =
             self.store.bookmarks(work.as_str()).unwrap_or_default().into_iter().collect();
         let mut groups: Vec<VolumeGroup> = Vec::new();
-        let mut listed: HashSet<ChapterId> = HashSet::new();
         let mut group_of: HashMap<Option<String>, usize> = HashMap::new();
-        for chapter in chapters {
-            let id = chapter.key(restarts).id();
-            // Two versions of one chapter, as two groups' releases of it, are one row: the first
-            // listed, which is the one that opens. Its row counts the others as versions.
-            if !listed.insert(id.clone()) {
-                continue;
-            }
+        // One row per chapter: its parts read as one, from the preferred group, or another
+        // group where that one lacks it. Its row counts the other groups as versions.
+        for arranged_row in &arranged.rows {
+            let parts: Vec<&SourceChapter> =
+                arranged_row.parts.iter().map(|&i| &chapters[i]).collect();
+            let chapter = parts[0];
+            let id = arranged_row.id.clone();
             let state = match read.get(id.as_str()) {
                 _ if marks.is_read(id.as_str()) => ChapterReadState::Read,
                 Some(r) if r.read => ChapterReadState::Read,
@@ -1570,31 +1749,15 @@ impl BookSources {
             let read_at = read.get(id.as_str()).and_then(|r| r.read_at);
             let download = downloads.get(id.as_str()).cloned();
             let bookmarked = bookmarks.contains(id.as_str());
-            let number = chapter.number.map(|n| n.to_string());
-            let title = crate::read_catalog::chapters::own_title(
-                chapter.title.as_deref(),
-                &chapter.number_raw,
-                number.as_deref(),
-            )
-            .map(str::to_owned);
-            let row = ChapterRow {
+            let row = source_row(
+                &parts,
                 id,
-                label: chapter.number_raw.clone(),
                 state,
-                number,
-                title,
-                volume: chapter.volume.clone(),
-                published: chapter.published,
-                pages: chapter.page_count,
-                new_chapter: false,
-                download,
-                versions: 1,
-                bookmarked,
-                version_label: chapter.version_label.clone(),
                 read_at,
-                line: Vec::new(),
-                gone_from_source: false,
-            };
+                download,
+                bookmarked,
+                (&arranged, arranged_row, language.as_deref()),
+            );
             let at = *group_of.entry(chapter.volume.clone()).or_insert_with(|| {
                 groups.push(VolumeGroup {
                     volume: chapter.volume.clone(),
@@ -1607,6 +1770,7 @@ impl BookSources {
             groups[at].chapters.push(row);
         }
         keep_dropped(&self.store, work, &read, &marks, &bookmarks, &mut groups);
+        self.fill_from_others(work, source, &read, &mut groups);
         for group in &mut groups {
             group.all_read =
                 group.chapters.iter().all(|c| matches!(c.state, ChapterReadState::Read));
@@ -1625,34 +1789,88 @@ impl BookSources {
     ) -> Result<Opened, ReadingFailure> {
         let (source, series, found, kept) =
             self.find_chapter(work, chapter, edition, now, true).await?;
-        let content = match self.registry.content(&source, &series, &found.id, now).await {
-            Ok(content) => content,
+        match self.open_found(&source, &series, found, now).await {
+            Ok(opened) => Ok(opened),
             // The chapter as a kept list named it may have moved: the list is asked for again,
             // once, unless the source could not be reached at all.
             Err(e) if kept && !matches!(e, ProviderError::Transport(_)) => {
                 tracing::debug!(error = %e, "a kept chapter did not open; listing again");
                 let (source, series, found, _) =
                     self.find_chapter(work, chapter, edition, now, false).await?;
-                let content = self
-                    .registry
-                    .content(&source, &series, &found.id, now)
+                self.open_found(&source, &series, found, now)
                     .await
-                    .map_err(|e| failure(&source, &e))?;
-                return Ok(Opened {
-                    source_id: source,
-                    series_ref: series,
-                    chapter: found,
-                    content,
-                });
+                    .map_err(|e| failure(&source, &e))
             }
-            Err(e) => return Err(failure(&source, &e)),
-        };
-        Ok(Opened { source_id: source, series_ref: series, chapter: found, content })
+            Err(e) => Err(failure(&source, &e)),
+        }
     }
 
-    /// The source, its series and its own chapter for `chapter` of `work`, in the edition, and
-    /// whether a kept list named it. With `kept`, a list the source gave within [`REF_FRESH`]
-    /// that names the chapter is enough; otherwise, or when it does not, the source is asked.
+    /// Open a chapter's entries in a source's list: its parts read on from the first with no
+    /// break. A chapter whose first part is a whole file opens as that file.
+    async fn open_found(
+        &self,
+        source: &str,
+        series: &str,
+        found: Found,
+        now: i64,
+    ) -> Result<Opened, ProviderError> {
+        let Found { entries: mut found, numbers, total, missing } = found;
+        // The group the chapter is read in: its first part's, as a part from another group is
+        // named on its own.
+        let group = found[0].version_label.clone();
+        let first = found.remove(0);
+        let mut numbers = numbers.into_iter();
+        let first_number = numbers.next().unwrap_or(1);
+        let content = self.registry.content(source, series, &first.id, now).await?;
+        let mut opened = Opened {
+            source_id: source.to_owned(),
+            series_ref: series.to_owned(),
+            chapter: first,
+            content,
+            parts: Vec::new(),
+            group,
+            total,
+            missing,
+        };
+        if found.is_empty() {
+            return Ok(opened);
+        }
+        let mut parts = Vec::new();
+        let mut text = String::new();
+        for (part, number) in found.into_iter().zip(numbers.chain(std::iter::repeat(0))) {
+            let more = self.registry.content(source, series, &part.id, now).await?;
+            match more {
+                ChapterContent::Images(pages) => {
+                    parts.push(OpenedPart { chapter: part, pages, number })
+                }
+                ChapterContent::Text(xhtml) => text.push_str(&xhtml),
+                ChapterContent::Book(_) => {}
+            }
+        }
+        match &mut opened.content {
+            ChapterContent::Images(pages) => {
+                let first = OpenedPart {
+                    chapter: opened.chapter.clone(),
+                    pages: pages.clone(),
+                    number: first_number,
+                };
+                parts.insert(0, first);
+                *pages = parts.iter().flat_map(|p| p.pages.iter().cloned()).collect();
+                opened.parts = parts;
+            }
+            ChapterContent::Text(xhtml) => xhtml.push_str(&text),
+            ChapterContent::Book(_) => {}
+        }
+        Ok(opened)
+    }
+
+    /// The source, its series and its own entries for `chapter` of `work`, in the edition, and
+    /// whether a kept list named it: the chapter as the list shows it, from the preferred
+    /// group, with its parts in order. With `kept`, a list the source gave within
+    /// [`REF_FRESH`] that names the chapter is enough; otherwise, or when it does not, the
+    /// source is asked. A chapter the edition lacks, asked for without naming an edition, is
+    /// looked for in the person's other sources whose kept lists have it, as the series page
+    /// lists it.
     async fn find_chapter(
         &self,
         work: &WorkId,
@@ -1660,22 +1878,62 @@ impl BookSources {
         edition: Option<&str>,
         now: i64,
         kept: bool,
-    ) -> Result<(String, String, SourceChapter, bool), ReadingFailure> {
+    ) -> Result<(String, String, Found, bool), ReadingFailure> {
         let (source, series) =
             self.edition_of(work, edition).ok_or(ReadingFailure::NotFound)?;
-        let find = |chapters: Vec<SourceChapter>| {
-            let restarts = restarts_per_volume(&chapters);
-            chapters.into_iter().find(|c| c.key(restarts).id() == *chapter)
+        let language = self.language();
+        let find = |source: &str, chapters: Vec<SourceChapter>| {
+            let chosen =
+                crate::read_catalog::chapters::chosen_group(&self.store, work.as_str(), source);
+            let arranged = crate::read_catalog::arrange::arrange(
+                &chapters,
+                chosen.as_deref(),
+                language.as_deref(),
+            );
+            let row = arranged.row(chapter)?;
+            Some(Found {
+                entries: row.parts.iter().map(|&i| chapters[i].clone()).collect(),
+                numbers: row.numbers.clone(),
+                total: row.total,
+                missing: row.missing.clone(),
+            })
         };
         if kept
-            && let Some(found) =
-                self.kept_source_list(&source, &series, now, REF_FRESH).and_then(find)
+            && let Some(found) = self
+                .kept_source_list(&source, &series, now, REF_FRESH)
+                .and_then(|list| find(&source, list))
         {
             return Ok((source, series, found, true));
         }
         let chapters = self.fetch_list(&source, &series, now).await?;
-        let found = find(chapters).ok_or(ReadingFailure::NotFound)?;
-        Ok((source, series, found, false))
+        if let Some(found) = find(&source, chapters) {
+            return Ok((source, series, found, false));
+        }
+        if edition.is_some() {
+            return Err(ReadingFailure::NotFound);
+        }
+        for (other, other_series) in
+            self.store.book_refs_for_work(work.as_str()).unwrap_or_default()
+        {
+            if other == source {
+                continue;
+            }
+            let Some((list, _)) =
+                crate::read_catalog::chapters::kept(&self.store, &other, &other_series)
+            else {
+                continue;
+            };
+            if !list.iter().any(|k| k.id == chapter.as_str()) {
+                continue;
+            }
+            let Ok(chapters) = self.fetch_list(&other, &other_series, now).await else {
+                continue;
+            };
+            if let Some(found) = find(&other, chapters) {
+                return Ok((other, other_series, found, false));
+            }
+        }
+        Err(ReadingFailure::NotFound)
     }
 
     /// The first page of a chapter of pictures, and nothing more of it: the reader's preview of
@@ -1694,8 +1952,9 @@ impl BookSources {
         self.page(&mut opened, 0, now).await.map(Some)
     }
 
-    /// A chapter's page images as its source names them, without downloading a whole book
-    /// file: `None` for a chapter of text or one kept as a file.
+    /// A chapter's page images as its source names them, every part's in reading order,
+    /// without downloading a whole book file: `None` for a chapter of text or one kept as a
+    /// file.
     pub async fn pictures(
         &self,
         work: &WorkId,
@@ -1704,17 +1963,39 @@ impl BookSources {
     ) -> Result<Option<Opened>, ReadingFailure> {
         let (source, series, found, _) =
             self.find_chapter(work, chapter, None, now, true).await?;
-        let pages = self
-            .registry
-            .chapter_pages(&source, &series, &found.id, now)
-            .await
-            .map_err(|e| failure(&source, &e))?;
-        let Some(pages) = pages.filter(|p| !p.is_empty()) else { return Ok(None) };
+        let Found { entries, numbers, total, missing } = found;
+        let group = entries.first().and_then(|c| c.version_label.clone());
+        let mut parts = Vec::new();
+        let mut numbers = numbers.into_iter().chain(std::iter::repeat(0));
+        for (at, entry) in entries.into_iter().enumerate() {
+            let number = numbers.next().unwrap_or(0);
+            let pages = self
+                .registry
+                .chapter_pages(&source, &series, &entry.id, now)
+                .await
+                .map_err(|e| failure(&source, &e))?;
+            match pages.filter(|p| !p.is_empty()) {
+                Some(pages) => parts.push(OpenedPart { chapter: entry, pages, number }),
+                // A chapter whose first part is not pictures is left to its open.
+                None if at == 0 => return Ok(None),
+                None => {}
+            }
+        }
+        let first = parts[0].chapter.clone();
+        let pages: Vec<PageRef> = parts.iter().flat_map(|p| p.pages.iter().cloned()).collect();
+        // A chapter listed whole reads its pages as the chapter's own.
+        if parts.len() == 1 {
+            parts.clear();
+        }
         Ok(Some(Opened {
             source_id: source,
             series_ref: series,
-            chapter: found,
+            chapter: first,
             content: ChapterContent::Images(pages),
+            parts,
+            group,
+            total,
+            missing,
         }))
     }
 
@@ -1726,13 +2007,32 @@ impl BookSources {
         index: usize,
         now: i64,
     ) -> Result<Vec<u8>, ReadingFailure> {
-        let ChapterContent::Images(pages) = &mut opened.content else {
-            return Err(ReadingFailure::NotFound);
+        // A part's page is fetched as that part's, so expired addresses are asked for again
+        // of the part they belong to.
+        let (chapter, pages, index) = if opened.parts.is_empty() {
+            let ChapterContent::Images(pages) = &mut opened.content else {
+                return Err(ReadingFailure::NotFound);
+            };
+            (&opened.chapter.id, pages, index)
+        } else {
+            let mut index = index;
+            let part = opened
+                .parts
+                .iter_mut()
+                .find(|p| {
+                    let here = index < p.pages.len();
+                    if !here {
+                        index -= p.pages.len();
+                    }
+                    here
+                })
+                .ok_or(ReadingFailure::NotFound)?;
+            (&part.chapter.id, &mut part.pages, index)
         };
         let at = kaeri_providers::ChapterAt {
             source: &opened.source_id,
             series: &opened.series_ref,
-            chapter: &opened.chapter.id,
+            chapter,
         };
         self.registry
             .fetch_page(&at, pages, index, now, |page: PageRef| {
@@ -1741,6 +2041,111 @@ impl BookSources {
             })
             .await
             .map_err(|e| failure(&opened.source_id, &e))
+    }
+}
+
+impl BookSources {
+    /// Chapters the edition does not list that the person's other sources for the work do, as
+    /// last asked: listed in their place, marked with the source they come from, so the list
+    /// never hides a chapter another source has. Opening one reads it from that source.
+    fn fill_from_others(
+        &self,
+        work: &WorkId,
+        source: &str,
+        read: &HashMap<String, kaeri_store::reading::ReadChapter>,
+        groups: &mut Vec<VolumeGroup>,
+    ) {
+        let mut listed: HashSet<String> = groups
+            .iter()
+            .flat_map(|g| g.chapters.iter().map(|c| c.id.as_str().to_owned()))
+            .collect();
+        let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        for (other, series) in refs.into_iter().filter(|(s, _)| s != source) {
+            let Some((list, _)) =
+                crate::read_catalog::chapters::kept(&self.store, &other, &series)
+            else {
+                continue;
+            };
+            if list.iter().all(|k| listed.contains(&k.id)) {
+                continue;
+            }
+            let entries: Vec<SourceChapter> = list.iter().map(|k| k.source_chapter()).collect();
+            let chosen =
+                crate::read_catalog::chapters::chosen_group(&self.store, work.as_str(), &other);
+            let language = self.language();
+            let arranged = crate::read_catalog::arrange::arrange(
+                &entries,
+                chosen.as_deref(),
+                language.as_deref(),
+            );
+            let name = self.source_name(&other);
+            let missing: Vec<_> =
+                arranged.rows.iter().filter(|r| !listed.contains(r.id.as_str())).collect();
+            for row in missing {
+                // The kept list's ids are the ones its source lists; arranged again they match.
+                let parts: Vec<&SourceChapter> =
+                    row.parts.iter().map(|&i| &entries[i]).collect();
+                let was = read.get(row.id.as_str());
+                let state = match was {
+                    Some(r) if r.read => ChapterReadState::Read,
+                    Some(r) => match r.last_page {
+                        Some(page) => ChapterReadState::InProgress {
+                            page: kaeri_model::reading::shown_page(page),
+                            of: r.of_pages,
+                        },
+                        None => ChapterReadState::Unread,
+                    },
+                    None => ChapterReadState::Unread,
+                };
+                let mut chapter_row = source_row(
+                    &parts,
+                    row.id.clone(),
+                    state,
+                    was.and_then(|r| r.read_at),
+                    None,
+                    false,
+                    (&arranged, row, language.as_deref()),
+                );
+                chapter_row.other_group = false;
+                chapter_row.group_language = None;
+                chapter_row.other_source = Some(name.clone());
+                listed.insert(row.id.as_str().to_owned());
+                let group = match groups.iter().position(|g| g.volume == chapter_row.volume) {
+                    Some(at) => &mut groups[at],
+                    None => {
+                        let at = groups
+                            .iter()
+                            .position(|g| {
+                                volume_after(g.volume.as_deref(), chapter_row.volume.as_deref())
+                            })
+                            .unwrap_or(groups.len());
+                        groups.insert(
+                            at,
+                            VolumeGroup {
+                                volume: chapter_row.volume.clone(),
+                                title: None,
+                                chapters: Vec::new(),
+                                all_read: false,
+                            },
+                        );
+                        &mut groups[at]
+                    }
+                };
+                let at = place_of(&group.chapters, &chapter_row);
+                group.chapters.insert(at, chapter_row);
+            }
+        }
+    }
+}
+
+/// Whether volume `a` comes after volume `b` in a list rising by volume; a volume without a
+/// number goes last.
+fn volume_after(a: Option<&str>, b: Option<&str>) -> bool {
+    let number = |v: Option<&str>| v.and_then(|v| v.trim().parse::<f64>().ok());
+    match (number(a), number(b)) {
+        (Some(a), Some(b)) => a > b,
+        (None, Some(_)) => true,
+        _ => false,
     }
 }
 

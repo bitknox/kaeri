@@ -211655,6 +211655,40 @@
         }
       }
     },
+    "reader-credit-pages-skipped" : {
+      "comment" : "A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld credit page skipped"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld credit pages skipped"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "reader-crop-borders" : {
       "comment" : "",
       "extractionState" : "manual",
@@ -236543,6 +236577,42 @@
         }
       }
     },
+    "reading-row-from-group" : {
+      "comment" : "A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Argument 1: group (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %1$@"
+          }
+        }
+      }
+    },
+    "reading-row-from-group-in" : {
+      "comment" : "A chapter row: the same, for a group in another language than the app's, named after the group. \"From Saltmarsh Team, Spanish\". Argument 1: group (Text). Argument 2: language (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %1$@, %2$@"
+          }
+        }
+      }
+    },
+    "reading-row-from-source" : {
+      "comment" : "A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %1$@"
+          }
+        }
+      }
+    },
     "reading-row-gone-from-source" : {
       "comment" : "A chapter row's state: it is downloaded on this device, and the source no longer lists it. It still opens from the download.",
       "extractionState" : "manual",
@@ -237527,6 +237597,110 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "reading-row-part-from-group" : {
+      "comment" : "A chapter row: one part of a chapter in parts comes from another group, as the group the series is read from lacks it. \"part 2 from Saltmarsh Team\". Argument 1: part (Plain). Argument 2: group (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "part %1$@ from %2$@"
+          }
+        }
+      }
+    },
+    "reading-row-part-from-group-in" : {
+      "comment" : "The same, for a group in another language than the app's. \"part 2 from Saltmarsh Team, Spanish\". Argument 1: part (Plain). Argument 2: group (Text). Argument 3: language (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "part %1$@ from %2$@, %3$@"
+          }
+        }
+      }
+    },
+    "reading-row-part-missing" : {
+      "comment" : "A chapter row, after the parts count: the part no group has released. With several, how many. Argument 1: count (Int). Argument 2: part (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "part %2$@ missing"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld parts missing"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-row-parts" : {
+      "comment" : "A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: \"Chapter 1, 2 parts\". Argument 1: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@n@"
+          },
+          "substitutions" : {
+            "n" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "1 part"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld parts"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "reading-row-parts-of" : {
+      "comment" : "A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: \"2 of 3 parts\". Argument 1: have (Int). Argument 2: n (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld parts"
           }
         }
       }

@@ -720,6 +720,9 @@ public final class ReaderModel {
         case .goTo(let session, let place):
             guard session == self.session else { return }
             goTo(place)
+        case .creditPages, .chapterParts:
+            // The skipped credit pages' line and the part ticks come with their boards.
+            break
         case .closed(let session):
             guard session == self.session || self.session == 0 else { return }
             self.session = 0

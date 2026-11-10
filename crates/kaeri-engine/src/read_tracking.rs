@@ -678,6 +678,7 @@ mod tests {
             published: None,
             pages: None,
             seen_at: None,
+            part: None,
         }
     }
 
