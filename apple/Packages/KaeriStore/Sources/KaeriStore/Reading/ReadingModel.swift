@@ -604,19 +604,26 @@ public final class BookSourcesModel {
         #endif
     }
 
-    /// For shots: Read from with a made-up source that had no series of the work's name, once
-    /// the work's editions are in. Does nothing outside the fixtures.
-    public func stageMissShot(work: String) async {
+    /// For shots: Read from with a made-up source that had no series of the work's name and
+    /// one with another edition of it, drawn with `cover`, once the work's editions are in. Does
+    /// nothing outside the fixtures.
+    public func stageMissShot(work: String, cover: String? = nil) async {
         #if FIXTURES
         let miss = EditionMiss(sourceId: "fixture-comics", sourceName: "Comics server", // i18n-skip: made up
                                reason: .reading(.readingMissNoSeries))
+        // Another edition of it, offered as a possible match. i18n-skip: made up
+        let colour = SourceSeriesChoice(seriesRef: "ferry-colour", title: "The Lantern Ferry - Full Color", // i18n-skip
+                                        cover: cover, year: 2019, language: "en", confidence: 70) // i18n-skip
+        let possible = EditionMiss(sourceId: "fixture-northwind", sourceName: "Northwind", // i18n-skip: made up
+                                   reason: .reading(.readingMissPossible), possible: colour)
+        let misses = [miss, possible]
         // Kept, so the engine's later answers for the work carry it too.
-        stagedMisses[work] = [miss]
+        stagedMisses[work] = misses
         for _ in 0..<30 where forWork[work] == nil {
             try? await Task.sleep(for: .milliseconds(100))
         }
         guard let found = forWork[work] else { return }
-        showcase(.forWork(work: work, editions: found.editions, asking: found.asking, missing: [miss]))
+        showcase(.forWork(work: work, editions: found.editions, asking: found.asking, missing: misses))
         #endif
     }
 

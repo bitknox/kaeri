@@ -171,7 +171,8 @@ struct ReadFromSheet: View {
     }
 
     /// A source searched without finding the series: its name and why in haze, and Search
-    /// there, which opens a field under it and lists what the source finds.
+    /// there, which opens a field under it and lists what the source finds. A possible match,
+    /// another edition of the series, sits under the reason, chosen with one tap.
     @ViewBuilder
     private func missRow(_ miss: EditionMiss, title: String) -> some View {
         let open = searching == miss.sourceId
@@ -189,9 +190,12 @@ struct ReadFromSheet: View {
                 Spacer(minLength: 8)
                 if !open {
                     Button(L.readFromSearchThere) {
+                        // The words most likely to find it there: the romaji when the English
+                        // name found nothing.
+                        let words = miss.query ?? title
                         searching = miss.sourceId
-                        query = title
-                        store.bookSources.searchSource(work, sourceId: miss.sourceId, query: title)
+                        query = words
+                        store.bookSources.searchSource(work, sourceId: miss.sourceId, query: words)
                     }
                     .buttonStyle(.plain)
                     .font(.plat(mac: 12, touch: 15, weight: .semibold))
@@ -201,6 +205,12 @@ struct ReadFromSheet: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, Device.isMac ? 9 : 12)
+            if let possible = miss.possible, !open {
+                choiceRow(possible, sourceId: miss.sourceId)
+                    .padding(.horizontal, 12)
+                    .padding(.top, -4)
+                    .padding(.bottom, 6)
+            }
             if open {
                 searchThere(miss)
                     .padding(.horizontal, 12)
@@ -235,36 +245,42 @@ struct ReadFromSheet: View {
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(found.choices, id: \.seriesRef) { choice in
-                        Button {
-                            searching = nil
-                            store.bookSources.chooseSourceSeries(work, sourceId: miss.sourceId, seriesRef: choice.seriesRef)
-                        } label: {
-                            HStack(spacing: 10) {
-                                BookCover(url: choice.cover, width: Device.isMac ? 28 : 34, radius: 3)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(choice.title)
-                                        .font(.plat(mac: 13, touch: 17))
-                                        .foregroundStyle(.silk)
-                                        .lineLimit(1)
-                                    let facts = choiceFacts(choice)
-                                    if !facts.isEmpty {
-                                        Text(facts)
-                                            .font(.plat(mac: 12, touch: 13))
-                                            .foregroundStyle(.haze)
-                                    }
-                                }
-                                Spacer(minLength: 0)
-                            }
-                            .padding(.vertical, 6)
-                            .contentShape(.rect)
-                        }
-                        .buttonStyle(.plain)
-                        .pointerHover()
+                        choiceRow(choice, sourceId: miss.sourceId)
                     }
                 }
                 .padding(.top, 6)
             }
         }
+    }
+
+    /// One of a source's series: its cover, title, and year and language, chosen as this work
+    /// with one tap.
+    private func choiceRow(_ choice: SourceSeriesChoice, sourceId: String) -> some View {
+        Button {
+            searching = nil
+            store.bookSources.chooseSourceSeries(work, sourceId: sourceId, seriesRef: choice.seriesRef)
+        } label: {
+            HStack(spacing: 10) {
+                BookCover(url: choice.cover, width: Device.isMac ? 28 : 34, radius: 3)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(choice.title)
+                        .font(.plat(mac: 13, touch: 17))
+                        .foregroundStyle(.silk)
+                        .lineLimit(1)
+                    let facts = choiceFacts(choice)
+                    if !facts.isEmpty {
+                        Text(facts)
+                            .font(.plat(mac: 12, touch: 13))
+                            .foregroundStyle(.haze)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 6)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .pointerHover()
     }
 
     private func search(_ miss: EditionMiss) {
