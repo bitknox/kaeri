@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.dp
 import app.kaeri.i18n.Strings
 import app.kaeri.reader.CreditNotice
@@ -68,7 +69,7 @@ fun EinkCreditNotice(notice: CreditNotice, session: ReaderSession, modifier: Mod
             .semantics { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(words, style = EinkType.Body, modifier = Modifier.weight(1f).padding(end = 12.dp))
+        Text(words, style = EinkType.Body.copy(lineBreak = LineBreak.Heading), modifier = Modifier.weight(1f).padding(end = 12.dp))
         EinkOutlinedButton(
             action,
             {

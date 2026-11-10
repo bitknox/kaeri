@@ -110,6 +110,26 @@ class ReaderCreditsTest {
     }
 
     @Test
+    fun a_kept_page_keeps_its_number_and_no_notice_while_the_engine_lays_it_out() {
+        opened()
+        session.showStartCredits()
+        session.showCredit(0u)
+        session.shown(0, TurnHow.TURN)
+        session.keepCredit()
+        session.commitKeep()
+        assertEquals(ReaderCommand.NotACreditPage(SESSION, 11uL), sent.single { it is ReaderCommand.NotACreditPage })
+        // Not Skipped as a credit page again between the engine hearing and its answer.
+        assertNull(state.creditNotice)
+        assertFalse(state.onUnkeptCredit)
+        assertEquals(7, state.shownPages)
+        assertEquals(0, state.shownPage(0))
+        // The answer: the chapter laid out with the page in it.
+        session.apply(ReaderEvent.Leaves(SESSION, CHAPTER, ReaderFixtures.leaves(7)))
+        assertNull(state.committed)
+        assertEquals(7, state.shownPages)
+    }
+
+    @Test
     fun the_engine_hears_a_kept_page_when_the_chapter_closes() {
         opened()
         session.showStartCredits()

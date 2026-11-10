@@ -24,8 +24,11 @@ import app.kaeri.engine.model.ReadingMsg
 import java.io.File
 
 object CreditsStage {
-    /** start, end, both or parts. */
-    val STATES = listOf("start", "end", "both", "parts")
+    /**
+     * start, end, both, parts; two (two pages at the start), missing (parts 1, 2 and 4, part 3 no
+     * group has) and broken (a start page whose picture cannot be read).
+     */
+    val STATES = listOf("start", "end", "both", "parts", "two", "missing", "broken")
 
     private var unlisten: (() -> Unit)? = null
 
@@ -35,13 +38,32 @@ object CreditsStage {
      */
     fun stage(context: Context, store: AppStore, what: String, grey: Boolean = false): Boolean {
         if (what !in STATES) return false
-        val file = if (what == "parts") null else draw(context, grey)
+        val split = what == "parts" || what == "missing"
+        val file = when {
+            split -> null
+            what == "broken" -> File(context.cacheDir, "credit-broken.png").let { out ->
+                out.writeText("not a picture") // i18n-skip
+                PageFile(out.path, PageEncoding.Original("image/png"), 800u, 1200u, null, true, out.length().toULong())
+            }
+            else -> draw(context, grey)
+        }
         val main = Handler(Looper.getMainLooper())
         unlisten?.invoke()
         unlisten = store.listenToReading { event ->
             val leaves = ((event as? Event.Reader)?.v1 as? ReaderEvent.Leaves) ?: return@listenToReading
             val count = leaves.leaves.flatMap { leaf -> leaf.parts.map { it.page } }.distinct().size.toUInt()
-            val said = if (file == null) {
+            val said = if (file == null && what == "missing") {
+                // Part 3 no group has: part 4 starts two thirds of the way in.
+                val second = maxOf(count / 3u, 2u) + 1u
+                val fourth = maxOf(count * 2u / 3u, second + 1u) + 1u
+                ReaderEvent.ChapterParts(
+                    leaves.session,
+                    leaves.chapter,
+                    listOf(ChapterPart(1u, 1u, null, false), ChapterPart(2u, second, null, false), ChapterPart(4u, fourth, null, false)),
+                    4u,
+                    listOf(3u),
+                )
+            } else if (file == null) {
                 val second = maxOf(count / 2u, 2u) + 1u
                 ReaderEvent.ChapterParts(
                     leaves.session,
@@ -52,7 +74,11 @@ object CreditsStage {
                 )
             } else {
                 val pages = buildList {
-                    if (what == "start" || what == "both") add(CreditPage(0u, false, file, 0xC0FFEEuL))
+                    if (what == "start" || what == "both" || what == "broken") add(CreditPage(0u, false, file, 0xC0FFEEuL))
+                    if (what == "two") {
+                        add(CreditPage(0u, false, file, 0xC0FFEEuL))
+                        add(CreditPage(1u, false, file, 0xC0FFF0uL))
+                    }
                     if (what == "end" || what == "both") add(CreditPage(count + size.toUInt(), true, file, 0xC0FFEFuL))
                 }
                 ReaderEvent.CreditPages(leaves.session, leaves.chapter, pages, Msg.Reading(ReadingMsg.ReaderCreditPagesSkipped(pages.size.toLong())))

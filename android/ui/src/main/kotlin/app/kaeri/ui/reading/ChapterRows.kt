@@ -53,7 +53,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
+import app.kaeri.design.SwapFade
 import app.kaeri.design.tabular
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.model.BookEditionRow
@@ -306,18 +308,24 @@ internal fun ChapterRowItem(
                     if (failed) Icon(Icons.Problem, contentDescription = null, tint = ObiSilk.Vermilion, modifier = Modifier.size(16.dp))
                     // A new row's state is silk; its parts and the group it comes from stay haze.
                     val split = if (fresh) SeriesWords.lineParts(context, row) else null
-                    Text(
-                        if (split == null) {
-                            AnnotatedString(line)
-                        } else {
-                            buildAnnotatedString {
-                                append(split.first)
-                                withStyle(SpanStyle(color = colors.onSurfaceVariant)) { append(" · " + split.second) } // i18n-skip: a separator
-                            }
-                        },
-                        style = MaterialTheme.typography.bodyMedium.tabular(),
-                        color = if (fresh || failed) colors.onSurface else colors.onSurfaceVariant,
-                    )
+                    val words = if (split == null) {
+                        AnnotatedString(line)
+                    } else {
+                        buildAnnotatedString {
+                            append(split.first)
+                            withStyle(SpanStyle(color = colors.onSurfaceVariant)) { append(" · " + split.second) } // i18n-skip: a separator
+                        }
+                    }
+                    val colour = if (fresh || failed) colors.onSurface else colors.onSurfaceVariant
+                    // A group picked changes the line: it crossfades, except on e-ink and while a
+                    // download counts up.
+                    if (LocalEinkLayout.current != null || row.download is ChapterDownloadState.Downloading) {
+                        Text(words, style = MaterialTheme.typography.bodyMedium.tabular(), color = colour)
+                    } else {
+                        SwapFade(words to colour, animationSpec = Motion.fadeIn()) { (shown, tint) ->
+                            Text(shown, style = MaterialTheme.typography.bodyMedium.tabular(), color = tint)
+                        }
+                    }
                 }
             }
         }

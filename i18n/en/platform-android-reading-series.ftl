@@ -22,3 +22,9 @@ read-downloads-empty-both = Downloaded episodes and chapters open without a conn
 # @arg source: text
 # @max 40
 group-menu-in = Group in { $source }
+
+# What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's
+# click labels are.
+# @only android
+# @max 24
+series-group-action = Pick a group

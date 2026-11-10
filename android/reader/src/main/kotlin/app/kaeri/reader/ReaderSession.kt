@@ -132,6 +132,8 @@ data class ReaderState(
     val onCredit: UInt? = null,
     /** Not a credit page was used: the page is kept once its Undo has run out. */
     val keeping: CreditKeep? = null,
+    /** A keep the engine has heard, until the chapter comes laid out with the page in it. */
+    val committed: CreditKeep? = null,
 ) {
     val session: ULong? get() = view?.session
     val chapter: ChapterId? get() = view?.chapter?.id
@@ -497,7 +499,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun commitKeep() {
         val now = state.value
         val keep = now.keeping ?: return
-        _state.value = now.copy(keeping = null)
+        _state.value = now.copy(keeping = null, committed = keep)
         val session = now.session ?: return
         relayKeep = keep
         reader(ReaderCommand.NotACreditPage(session, keep.credit.fingerprint))
@@ -627,14 +629,18 @@ class ReaderSession(private val send: (Command) -> Unit) {
                         .map { PageKey(it.page, it.half) }.toSet()
                     (now.held + now.files).filterKeys { it in pictures }
                 }
-                // The credit pages and parts come again after every layout.
+                // The credit pages and parts come again after every layout; until they do, those of
+                // the last layout stay, so a turn of the device does not drop them for a moment. A
+                // page just kept is no longer one of them.
+                val kept = relayKeep?.takeIf { it.chapter == event.chapter }?.credit?.fingerprint
+                val credits = now.credits[event.chapter]?.filter { it.fingerprint != kept }
                 val laid = now.copy(
                     leaves = event.leaves,
                     layout = now.layout + 1,
                     files = emptyMap(),
                     held = held,
-                    credits = now.credits - event.chapter,
-                    parts = null,
+                    credits = if (credits == null) now.credits else now.credits + (event.chapter to credits),
+                    committed = null,
                 )
                 val placed = relaidWithKept(laid, now)
                 if (placed.jump != null && placed.jump != now.jump) return run { _state.value = placed }

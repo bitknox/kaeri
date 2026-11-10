@@ -6,6 +6,7 @@
 package app.kaeri.eink
 
 import androidx.compose.foundation.background
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.clickable
@@ -55,6 +56,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.EinkPaint
 import app.kaeri.engine.model.Leaf
@@ -187,6 +191,14 @@ fun EinkReader(
         if (chrome) toggleChrome()
     }
 
+    // A kept credit page reaches the engine before the app can be killed in the background.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle, session) {
+        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_STOP) session.commitKeep() }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
+
     // A Fixtures shot's step, once the credit pages it staged have come.
     val creditShot = CreditShot.step
     val staged = state.openCredits.isNotEmpty() || state.parts != null
@@ -303,11 +315,15 @@ fun EinkReader(
                 session.showStartCredits()?.let { pager.show(it, TurnHow.TURN, session::showCredit, state.shownCredit) }
             }, modifier = Modifier.align(Alignment.TopCenter))
         }
-        // The box says a page was kept, with Undo, until the next turn; no timer, since a timed
-        // change costs a refresh. The kept page reaches the engine when the chapter closes.
+        // The box says a page was kept, with Undo, until the next turn, and stays gone after it; no
+        // timer, since a timed change costs a refresh. The kept page reaches the engine when the
+        // chapter closes, another opens, another page is kept, or the app goes to the background.
         val keeping = state.keeping
-        val keptAt = remember(keeping) { pager.leaf to state.onCredit }
-        val creditNotice = state.creditNotice?.takeIf { it != CreditNotice.KEPT || keptAt == (pager.leaf to state.onCredit) }
+        val here = pager.leaf to state.onCredit
+        val keptAt = remember(keeping) { here }
+        var keptGone by remember(keeping) { mutableStateOf(false) }
+        LaunchedEffect(here, keptAt) { if (here != keptAt) keptGone = true }
+        val creditNotice = state.creditNotice?.takeIf { it != CreditNotice.KEPT || (!keptGone && keptAt == here) }
         if (creditNotice != null && !chrome && layer == EinkLayer.None) {
             EinkCreditNotice(creditNotice, session, Modifier.align(Alignment.TopCenter))
         }
@@ -541,8 +557,8 @@ fun EinkBottomBar(
 
 /**
  * A 6 dp ink bar with a 1 dp edge, filled from the right when reading right to left. A tick marks
- * where each later part of the chapter starts: ink through the bar, outlined where it is filled,
- * and a hairline in grey for a part no source has.
+ * where each later part of the chapter starts: ink through the bar, paper where it is filled, and
+ * hollow, an ink outline, where a part no source has would start.
  */
 @Composable
 fun EinkProgress(fraction: Float, fromRight: Boolean, modifier: Modifier = Modifier, ticks: List<Pair<Float, Boolean>> = emptyList()) {
@@ -555,12 +571,17 @@ fun EinkProgress(fraction: Float, fromRight: Boolean, modifier: Modifier = Modif
             for ((at, missing) in ticks) {
                 val f = at.coerceIn(0f, 1f)
                 val x = (if (fromRight) 1f - f else f) * size.width
-                val colour = when {
-                    missing -> EinkColours.Tertiary
-                    f < filled -> EinkColours.Paper
-                    else -> EinkColours.Ink
+                val top = Offset(x - wide / 2, -2.dp.toPx())
+                val tick = androidx.compose.ui.geometry.Size(wide, size.height + 4.dp.toPx())
+                if (missing) {
+                    // Hollow: paper inside an ink outline, which reads on a 1-bit panel as well.
+                    val hollow = androidx.compose.ui.geometry.Size(4.dp.toPx(), tick.height)
+                    val corner = Offset(x - hollow.width / 2, top.y)
+                    drawRect(EinkColours.Paper, topLeft = corner, size = hollow)
+                    drawRect(EinkColours.Ink, topLeft = corner, size = hollow, style = androidx.compose.ui.graphics.drawscope.Stroke(EinkSizes.Hairline.toPx()))
+                } else {
+                    drawRect(if (f < filled) EinkColours.Paper else EinkColours.Ink, topLeft = top, size = tick)
                 }
-                drawRect(colour, topLeft = Offset(x - wide / 2, -2.dp.toPx()), size = androidx.compose.ui.geometry.Size(wide, size.height + 4.dp.toPx()))
             }
         },
     )

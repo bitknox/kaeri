@@ -22,7 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -38,17 +38,24 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import app.kaeri.design.ObiSilk
 import app.kaeri.eink.EinkColours
 import app.kaeri.eink.EinkLook
@@ -103,6 +110,16 @@ internal object GroupWords {
         ).joinToString(" · ") // i18n-skip
     }
 
+    /** A choice as TalkBack reads it, with commas for the dots: "Saltmarsh Team, 12 of 18 chapters, English". */
+    fun spoken(context: Context, edition: BookEditionRow, group: GroupChoice?): String {
+        if (group == null) return listOfNotNull(Strings.groupPickerMost(context), mostNow(edition)?.let { Strings.groupPickerMostNow(context, it) }).joinToString(", ") // i18n-skip
+        return listOfNotNull(
+            group.label,
+            Strings.groupPickerCount(context, group.chapters.toInt(), total(edition)),
+            group.language?.let(SeriesWords::language),
+        ).joinToString(", ") // i18n-skip
+    }
+
     /** Most chapters, then each group. */
     fun choices(edition: BookEditionRow): List<GroupChoice?> = listOf<GroupChoice?>(null) + edition.groups
 }
@@ -126,13 +143,16 @@ internal fun GroupSheet(work: WorkId, edition: BookEditionRow, onDismiss: () -> 
         SheetTitle(Strings.seriesGroup(context))
         SheetText(Strings.groupPickerIn(context, edition.sourceName), Modifier.padding(bottom = 8.dp))
         Column(Modifier.selectableGroup()) {
-            for (group in GroupWords.choices(edition)) {
+            GroupWords.choices(edition).forEachIndexed { index, group ->
+                if (index == 1) HorizontalDivider(color = ObiSilk.FaintRule)
                 val on = GroupWords.checked(edition, group)
+                val spoken = GroupWords.spoken(context, edition, group)
                 Row(
                     Modifier
                         .fillMaxWidth()
                         .heightIn(min = 64.dp)
                         .selectable(selected = on, role = Role.RadioButton, onClick = { pick(group) })
+                        .clearAndSetSemantics { contentDescription = spoken; selected = on; role = Role.RadioButton; onClick { pick(group); true } }
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -174,12 +194,14 @@ internal fun ColumnScope.GroupMenuRows(work: WorkId, edition: BookEditionRow, on
         GroupWords.choices(edition).forEachIndexed { index, group ->
             if (index == 1) HorizontalDivider(color = colors.outlineVariant, modifier = Modifier.padding(vertical = 4.dp))
             val on = GroupWords.checked(edition, group)
+            val spoken = GroupWords.spoken(context, edition, group)
             Row(
                 Modifier
                     .fillMaxWidth()
                     .heightIn(min = 56.dp)
                     .background(if (on) ObiSilk.RaisedSelected else Color.Transparent)
                     .selectable(selected = on, role = Role.RadioButton, onClick = { pick(group) })
+                    .clearAndSetSemantics { contentDescription = spoken; selected = on; role = Role.RadioButton; onClick { pick(group); true } }
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -212,13 +234,22 @@ internal fun ColumnScope.GroupMenuRows(work: WorkId, edition: BookEditionRow, on
 internal fun EinkGroupPage(work: WorkId, title: String, edition: BookEditionRow, onDismiss: () -> Unit) {
     val context = LocalContext.current
     val pick = rememberPick(work, edition, onDismiss)
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+        // One refresh each way: no window animation, no dim, and paper under the system bars.
+        val view = LocalView.current
+        DisposableEffect(view) {
+            generateSequence(view.parent) { it.parent }.filterIsInstance<DialogWindowProvider>().firstOrNull()?.window?.apply {
+                setWindowAnimations(0)
+                setDimAmount(0f)
+            }
+            onDispose {}
+        }
         EinkTheme(LocalEinkLayout.current ?: EinkLook()) {
             Column(
                 Modifier
                     .fillMaxSize()
                     .background(EinkColours.Paper)
-                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .windowInsetsPadding(WindowInsets.systemBars)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 28.dp),
             ) {
@@ -233,6 +264,7 @@ internal fun EinkGroupPage(work: WorkId, title: String, edition: BookEditionRow,
                 Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     for (group in GroupWords.choices(edition)) {
                         val on = GroupWords.checked(edition, group)
+                        val spoken = GroupWords.spoken(context, edition, group)
                         val shape = RoundedCornerShape(10.dp)
                         Row(
                             Modifier
@@ -241,7 +273,7 @@ internal fun EinkGroupPage(work: WorkId, title: String, edition: BookEditionRow,
                                 .background(if (on) EinkColours.Selected else EinkColours.Paper, shape)
                                 .border(EinkSizes.Rule, EinkColours.Ink, shape)
                                 .einkClick(role = Role.RadioButton) { pick(group) }
-                                .semantics { selected = on }
+                                .clearAndSetSemantics { contentDescription = spoken; selected = on; role = Role.RadioButton; onClick { pick(group); true } }
                                 .padding(horizontal = 18.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(16.dp),

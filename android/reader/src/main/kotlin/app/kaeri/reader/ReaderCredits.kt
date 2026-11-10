@@ -109,8 +109,11 @@ val ReaderState.creditPlace: Pair<Int, Int>?
         return n to group.size.coerceAtLeast(1)
     }
 
-/** The page kept from the open chapter, while its Undo runs. */
-val ReaderState.keptHere: CreditKeep? get() = keeping?.takeIf { it.chapter == chapter }
+/**
+ * The page kept from the open chapter, while its Undo runs and then until the chapter comes laid
+ * out with it, so its number and the notice hold through the engine's answer.
+ */
+val ReaderState.keptHere: CreditKeep? get() = (keeping ?: committed)?.takeIf { it.chapter == chapter }
 
 /** The page count the scrubber shows: a kept page counts as soon as it is kept, page 1 of 38. */
 val ReaderState.shownPages: Int get() = pages + if (keptHere == null) 0 else 1
@@ -182,9 +185,10 @@ val ReaderState.creditNotice: CreditNotice?
 
 /**
  * What a Fixtures shot asks the open reader to show once its credit pages or parts have come:
- * line (page 1's line, held), chrome (with the chrome), shown, shownchrome, kept (with the chrome,
- * its Undo held), parts (the chrome over a chapter in parts) or end (the end page). Set by the
- * Fixtures app's `creditshot` extra; null in the app.
+ * line (page 1's line, held, with the Undo after it timed as in the app), chrome (with the
+ * chrome), shown, shownchrome, kept (with the chrome, its Undo held), parts (the chrome over a
+ * chapter in parts) or end (the end page). Set by the Fixtures app's `creditshot` extra; null in
+ * the app.
  */
 object CreditShot {
     var step by mutableStateOf<String?>(null)

@@ -79,11 +79,17 @@ class ReadSeriesShots : ReadingShotHarness() {
 
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
-    fun phone_read_series_groups() = groups("phone-read-series-groups", null)
+    fun phone_read_series_groups() {
+        groups("phone-read-series-groups", null)
+        compose.spoken("phone-groups")
+    }
 
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)
-    fun phone_read_series_group_sheet() = groups("phone-read-series-group-sheet", "group")
+    fun phone_read_series_group_sheet() {
+        groups("phone-read-series-group-sheet", "group")
+        compose.spoken("phone-group-sheet")
+    }
 
     @Test
     @Config(qualifiers = ReadingShotHarness.TABLET)
@@ -95,7 +101,10 @@ class ReadSeriesShots : ReadingShotHarness() {
 
     @Test
     @Config(qualifiers = ReadingShotHarness.EINK_PHONE)
-    fun eink_read_series_group_page() = groups("eink-read-series-group-page", "group", app.kaeri.eink.EinkLook())
+    fun eink_read_series_group_page() {
+        groups("eink-read-series-group-page", "group", app.kaeri.eink.EinkLook())
+        compose.spoken("eink-group-page")
+    }
 
     @Test
     @Config(qualifiers = ReadingShotHarness.PHONE)

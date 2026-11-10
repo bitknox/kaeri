@@ -148,6 +148,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import app.kaeri.design.Motion
+import app.kaeri.design.SwapFade
 import app.kaeri.design.atFullSpeed
 import app.kaeri.design.rememberAnimationsRemoved
 import app.kaeri.design.robotoFlex
@@ -334,7 +335,11 @@ fun PhoneReader(
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> started = true
-                Lifecycle.Event.ON_STOP -> started = false
+                Lifecycle.Event.ON_STOP -> {
+                    started = false
+                    // A kept credit page reaches the engine before the app can be killed in the background.
+                    session.commitKeep()
+                }
                 Lifecycle.Event.ON_RESUME -> if (askedAccess) {
                     askedAccess = false
                     // Back from the access page: on when it was granted, otherwise it stays off and says why.
@@ -703,10 +708,9 @@ fun PhoneReader(
                     delay(CREDIT_LINE_MILLIS)
                     lineUp = false
                 }
-                AnimatedVisibility(
+                CreditFade(
                     visible = onFirst && skipped.isNotEmpty() && (lineUp || shown) && sheet == Sheet.None && state.notice == null && demo == null,
-                    enter = if (fades) fadeIn(Motion.fadeIn()) else EnterTransition.None,
-                    exit = if (fades) fadeOut(Motion.fadeOut()) else ExitTransition.None,
+                    fades = fades,
                     modifier = Modifier.align(Alignment.TopCenter),
                 ) {
                     val count = remember { mutableIntStateOf(1) }
@@ -771,8 +775,9 @@ fun PhoneReader(
             ) {
                 NoticePlate(note.orEmpty(), null, Modifier) {}
             }
-            // A credit page's own notice: at the foot, above the controls while they show.
-            if (view != null) CreditSnackbar(state, session, visible = sheet == Sheet.None, above = if (shown) scrub.groupHeight else 0, fades = fades, timed = CreditShot.step == null, exploring = exploring)
+            // A credit page's own notice: at the foot, above the controls while they show. A Fixtures
+            // shot holds its Undo, except from the line, where it runs out as in the app.
+            if (view != null) CreditSnackbar(state, session, images, visible = sheet == Sheet.None, above = if (shown) scrub.groupHeight else 0, fades = fades, timed = CreditShot.step == null || CreditShot.step == "line", exploring = exploring)
         }
 
         if (view != null) {
@@ -896,7 +901,7 @@ private fun ChromeGroup(
             }
             Column(Modifier.weight(1f).padding(horizontal = 6.dp)) {
                 Text(title, color = Chrome.text, fontFamily = robotoFlex(FontWeight.Bold, 14.sp), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(line, color = Chrome.faint, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                SwapFade(line, animationSpec = Motion.fadeIn()) { Text(it, color = Chrome.faint, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
             IconButton(
                 onClick = onChapters,
@@ -1007,16 +1012,19 @@ private fun Scrubber(state: ReaderState, rtl: Boolean, shownLeaf: Int, scrub: Sc
                     ) {
                         SliderDefaults.Track(sliderState = sliderState, colors = colours, enabled = count > 1, drawStopIndicator = null)
                         if (ticks.isNotEmpty()) {
-                            // Where each later part starts: 2 by 9 dp; a part no group has is fainter.
+                            // Where each later part starts: 2 by 9 dp, in the ground over the filled
+                            // track and haze past it; a part no group has is fainter.
                             val tick = Chrome.faint
+                            val inside = Chrome.ground
                             Canvas(Modifier.matchParentSize()) {
+                                val reached = sliderState.value
                                 for (t in ticks) {
                                     val f = t.page.coerceIn(0, last).toFloat() / last
                                     val x = if (layoutDirection == LayoutDirection.Rtl) size.width * (1f - f) else size.width * f
                                     val w = 2.dp.toPx()
                                     val h = 9.dp.toPx()
                                     drawRoundRect(
-                                        tick.copy(alpha = if (t.missing) 0.4f else 1f),
+                                        (if (t.page <= reached) inside else tick).copy(alpha = if (t.missing) 0.4f else 1f),
                                         topLeft = Offset(x - w / 2, size.height / 2 - h / 2),
                                         size = Size(w, h),
                                         cornerRadius = CornerRadius(w / 2),
@@ -1043,7 +1051,9 @@ private fun Scrubber(state: ReaderState, rtl: Boolean, shownLeaf: Int, scrub: Sc
                         ?: if (unnumbered) Strings.readerCreditPageLabel(context) else Strings.readerPageOf(context, state.shownPage(at) + 1, state.shownPages.coerceAtLeast(1))
                 },
             )
-            Text(state.shownPages.coerceAtLeast(1).toString(), color = Chrome.faint, fontFamily = FontFamily.Monospace, fontSize = 13.sp, modifier = Modifier.widthIn(min = 32.dp))
+            SwapFade(state.shownPages.coerceAtLeast(1), Modifier.widthIn(min = 32.dp), animationSpec = Motion.fadeIn()) {
+                Text(it.toString(), color = Chrome.faint, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+            }
         }
     }
 }

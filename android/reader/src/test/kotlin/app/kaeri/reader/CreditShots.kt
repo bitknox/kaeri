@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
@@ -105,7 +107,7 @@ class CreditShots {
     private val end by lazy { CreditPage(9u, true, page("credit-end", true), 22uL) }
 
     /** Chapter 12 in 8 story pages, a credit page before them and one after, in [mode]. */
-    private fun opened(mode: ReaderMode = ReaderMode.PAGED, parts: Boolean = false) {
+    private fun opened(mode: ReaderMode = ReaderMode.PAGED, parts: Boolean = false, missing: Boolean = false) {
         session.open(WORK, ReaderFixtures.surface)
         session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u, mode = mode, next = next)))
         val story = (0u until 8u).associateWith { page("p$it", false) }
@@ -114,7 +116,18 @@ class CreditShots {
         images.load(start.file)
         images.load(end.file)
         session.apply(ReaderEvent.CreditPages(SESSION, CHAPTER, listOf(start, end), Msg.Reading(ReadingMsg.ReaderCreditPagesSkipped(2))))
-        if (parts) {
+        if (missing) {
+            // Part 3 no group has: part 4 starts on page 7.
+            session.apply(
+                ReaderEvent.ChapterParts(
+                    SESSION,
+                    CHAPTER,
+                    listOf(ChapterPart(1u, 1u, null, false), ChapterPart(2u, 4u, null, false), ChapterPart(4u, 7u, null, false)),
+                    4u,
+                    listOf(3u),
+                ),
+            )
+        } else if (parts) {
             session.apply(
                 ReaderEvent.ChapterParts(
                     SESSION,
@@ -143,15 +156,26 @@ class CreditShots {
         compose.waitForIdle()
     }
 
-    private fun chrome() {
-        compose.onRoot().performTouchInput { click(Offset(width * 0.5f, height * 0.5f)) }
-        settle()
+    private val scrubber = SemanticsMatcher.keyIsDefined(androidx.compose.ui.semantics.SemanticsProperties.ProgressBarRangeInfo)
+
+    /** The page's Controls action, as TalkBack would give it: shows or hides the chrome. */
+    private fun chrome(on: Boolean = true) {
+        val label = app.kaeri.i18n.Strings.readerActionControls(compose.activity)
+        repeat(3) {
+            val up = compose.onAllNodes(scrubber, useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+            if (up == on) return
+            val page = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsActions.CustomActions)).fetchSemanticsNodes()
+                .first { node -> node.config[SemanticsActions.CustomActions].any { it.label == label } }
+            compose.runOnUiThread { page.config[SemanticsActions.CustomActions].first { it.label == label }.action() }
+            settle()
+        }
     }
 
     private fun lineAndChrome(prefix: String) {
         opened()
         reader()
         captureScreenRoboImage(file("$prefix-line"))
+        compose.spoken("$prefix-line")
         chrome()
         captureScreenRoboImage(file("$prefix-line-chrome"))
     }
@@ -163,12 +187,14 @@ class CreditShots {
         session.showCredit(0u)
         settle()
         captureScreenRoboImage(file("$prefix-shown"))
+        compose.spoken("$prefix-shown")
         chrome()
         captureScreenRoboImage(file("$prefix-shown-chrome"))
-        chrome()
+        chrome(on = false)
         session.keepCredit()
         settle()
         captureScreenRoboImage(file("$prefix-kept"))
+        compose.spoken("$prefix-kept")
     }
 
     @Test
@@ -194,6 +220,22 @@ class CreditShots {
     }
 
     @Test
+    fun phone_the_scrub_tip_names_a_missing_part() {
+        opened(missing = true)
+        reader()
+        chrome()
+        // Held on page 7, where part 4 starts after the missing part 3, without letting go.
+        compose.onAllNodes(scrubber, useUnmergedTree = true)[0].performTouchInput {
+            val rtl = (session.state.value.view?.direction ?: app.kaeri.engine.model.ReadDirection.RIGHT_TO_LEFT).rightToLeft
+            val f = 6f / 7f
+            down(Offset(width * 0.5f, height / 2f))
+            moveTo(Offset(width * (if (rtl) 1f - f else f), height / 2f))
+        }
+        settle()
+        captureScreenRoboImage(file("phone-parts-missing-tip"))
+    }
+
+    @Test
     fun the_end_page_names_the_page_skipped_after_the_last() {
         opened()
         compose.setContent {
@@ -202,6 +244,7 @@ class CreditShots {
         }
         compose.waitForIdle()
         captureScreenRoboImage(file("end-page"))
+        compose.spoken("end-page")
     }
 
     @Test
@@ -219,9 +262,11 @@ class CreditShots {
         }
         compose.waitForIdle()
         compose.onRoot().captureRoboImage(file("strip-line"))
+        compose.spoken("strip-line")
         session.reveal(listOf(start), CHAPTER)
         compose.waitForIdle()
         compose.onRoot().captureRoboImage(file("strip-shown"))
+        compose.spoken("strip-shown")
     }
 
     companion object {

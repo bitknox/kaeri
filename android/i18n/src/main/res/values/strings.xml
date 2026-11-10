@@ -1633,6 +1633,8 @@
     <string name="eink_step_up">More</string>
     <!-- Marks the chapter open in the reader on the e-ink contents page. -->
     <string name="eink_contents_reading">Reading</string>
+    <!-- What TalkBack says the line of skipped credit pages does, after "Double-tap to": an imperative, as Android's click labels are. -->
+    <string name="reader_credit_show_action">Show the page</string>
     <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
     <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
     <!-- Screen readers: a source group in Search while its source is still being asked. The source is its name. -->
@@ -1691,6 +1693,8 @@
     <string name="read_downloads_empty_both">Downloaded episodes and chapters open without a connection.</string>
     <!-- The head of the group menu on a large screen, over its choices: the source the groups are in. -->
     <string name="group_menu_in">Group in %1$s</string>
+    <!-- What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. -->
+    <string name="series_group_action">Pick a group</string>
     <!-- Line under Notifications in the Settings list: chapter notifications are on. -->
     <string name="settings_summary_chapters_on">New chapters on</string>
     <!-- Line under Notifications in the Settings list: chapter notifications are off. -->

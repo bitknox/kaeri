@@ -1009,3 +1009,9 @@ eink-step-up = More
 # @only android
 # @max 20
 eink-contents-reading = Reading
+
+# What TalkBack says the line of skipped credit pages does, after "Double-tap to": an
+# imperative, as Android's click labels are.
+# @only android
+# @max 24
+reader-credit-show-action = Show the page

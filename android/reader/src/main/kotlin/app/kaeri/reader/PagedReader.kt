@@ -7,6 +7,11 @@
 
 package app.kaeri.reader
 
+import androidx.compose.runtime.key
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import app.kaeri.engine.model.ReadingFailure
+import kotlinx.coroutines.delay
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animate
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -581,23 +586,57 @@ fun PagedReader(
 }
 
 /**
- * A credit page brought back, drawn whole on [ground] once it has decoded, so the leaf under it
- * shows until then rather than an empty page.
+ * A credit page brought back, drawn whole on [ground] and faded in once it has decoded. Until then
+ * the leaf under it shows for 600 ms, then the reader's waiting plate; a page that cannot be had
+ * gets the failed page with Try again. In a [strip] the plate is the strip's own.
  */
 @Composable
-fun CreditPageView(credit: CreditPage, images: PageImages, ground: Color, modifier: Modifier = Modifier) {
+fun CreditPageView(credit: CreditPage, images: PageImages, ground: Color, modifier: Modifier = Modifier, strip: Boolean = false) {
     val context = LocalContext.current
-    val result by produceState(images.cached(credit.file)?.let { PageDecodeResult.Decoded(it) } as PageDecodeResult?, credit.file) {
-        value = images.cached(credit.file)?.let { PageDecodeResult.Decoded(it) }
-        if (value == null) value = withContext(Dispatchers.IO) { images.load(credit.file) }
+    var tries by remember(credit.file) { mutableStateOf(0) }
+    val first = remember(credit.file) { images.cached(credit.file) }
+    val result by produceState(first?.let { PageDecodeResult.Decoded(it) } as PageDecodeResult?, credit.file, tries) {
+        if (value is PageDecodeResult.Decoded) return@produceState
+        value = null
+        value = withContext(Dispatchers.IO) { images.load(credit.file) }
     }
+    val alpha = remember(credit.file) { Animatable(if (first != null) 1f else 0f) }
     val decoded = result as? PageDecodeResult.Decoded
+    LaunchedEffect(decoded != null) {
+        if (decoded != null && alpha.value < 1f) atFullSpeed { alpha.animateTo(1f, Motion.fadeIn()) }
+    }
+    val page = credit.page.toInt()
     Box(
-        modifier
-            .then(if (decoded != null) Modifier.background(ground) else Modifier)
-            .semantics { contentDescription = Strings.readerCreditPageLabel(context) },
+        modifier.semantics {
+            contentDescription = Strings.readerCreditPageLabel(context)
+            role = Role.Image
+        },
     ) {
-        if (decoded != null) PageCanvas(decoded.page, rotate = false, modifier = Modifier.fillMaxSize())
+        when (val now = result) {
+            is PageDecodeResult.Decoded -> PageCanvas(
+                now.page,
+                rotate = false,
+                modifier = Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha.value }.background(ground),
+            )
+            null -> key(tries) {
+                var plate by remember { mutableStateOf(0) }
+                LaunchedEffect(Unit) {
+                    delay(PageWaits.PLATE_MS)
+                    plate = 1
+                    delay(PageWaits.WORDS_MS - PageWaits.PLATE_MS)
+                    plate = 2
+                }
+                if (plate > 0) {
+                    if (strip) ImageWaiting(page, plate > 1) else PageWaiting(page, plate > 1)
+                }
+            }
+            is PageDecodeResult.Missing -> Box(Modifier.fillMaxSize().background(ground)) {
+                PageFailed(page, ReadingFailure.NotFound) { tries++ }
+            }
+            is PageDecodeResult.Unreadable -> Box(Modifier.fillMaxSize().background(ground)) {
+                PageFailed(page, ReadingFailure.Other(now.reason)) { tries++ }
+            }
+        }
     }
 }
 

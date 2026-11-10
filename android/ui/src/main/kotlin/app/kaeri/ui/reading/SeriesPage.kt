@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -72,8 +73,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.ShowTitle
+import app.kaeri.design.SwapFade
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.core.WorkId
@@ -604,7 +607,7 @@ private fun SeriesPanel(
                         Strings.seriesChange(context),
                         onClick = { onGroup(true) },
                         tail = GroupWords.why(context, edition),
-                        actionHint = Strings.seriesGroupHint(context),
+                        actionHint = Strings.seriesGroupAction(context),
                     )
                     if (groupMenu) {
                         Box(Modifier.align(Alignment.TopEnd)) {
@@ -673,19 +676,21 @@ private fun PanelRow(label: String, value: String, action: String?, onClick: () 
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f)) {
+        // TalkBack hears the label, the value and the tail, with a comma for the dot.
+        val spoken = listOf(label, value, tail).filter { !it.isNullOrBlank() }.joinToString(", ") // i18n-skip: a separator
+        Column(Modifier.weight(1f).clearAndSetSemantics { contentDescription = spoken }) {
             Text(label, style = MaterialTheme.typography.bodySmall, color = haze)
-            if (tail == null) {
-                Text(value, style = MaterialTheme.typography.bodyLarge)
+            val words = if (tail == null) {
+                AnnotatedString(value)
             } else {
-                Text(
-                    buildAnnotatedString {
-                        append(value)
-                        withStyle(SpanStyle(color = haze)) { append(" · $tail") } // i18n-skip: a separator
-                    },
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                buildAnnotatedString {
+                    append(value)
+                    withStyle(SpanStyle(color = haze)) { append(" · $tail") } // i18n-skip: a separator
+                }
             }
+            // A new value crossfades, as a group picked; e-ink swaps it at once.
+            val text = @Composable { shown: AnnotatedString -> Text(shown, style = MaterialTheme.typography.bodyLarge) }
+            if (eink) text(words) else SwapFade(words, animationSpec = Motion.fadeIn()) { text(it) }
         }
         if (action != null) {
             Text(
