@@ -482,10 +482,14 @@ impl Home {
     }
 
     /// The reading mix: series on lists plus chapters read in the last 90 days, counted by
-    /// format, from what is kept of AniList's books.
+    /// format, from what is kept of AniList's books. A Reading that a read put there counts by
+    /// its chapters alone, as it did before it had a status.
     fn mix(&self) -> HashMap<ReadRowFormat, u32> {
         let mut weight: HashMap<String, u32> = HashMap::new();
         for (work, _) in self.store.read_statuses().unwrap_or_default() {
+            if self.store.read_status_is_auto(&work).unwrap_or(false) {
+                continue;
+            }
             *weight.entry(work).or_default() += 1;
         }
         let since = self.ask.now - MIX_DAYS * DAY;
