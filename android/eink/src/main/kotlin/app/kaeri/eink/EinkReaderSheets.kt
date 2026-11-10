@@ -51,7 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.model.ChapterRow
-import app.kaeri.engine.model.Medium
+import app.kaeri.engine.core.Medium
 import app.kaeri.engine.model.ReaderMode
 import app.kaeri.engine.model.ReaderSettingKey
 import app.kaeri.engine.model.ReaderSettingRow

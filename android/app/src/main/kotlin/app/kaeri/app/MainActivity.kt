@@ -527,7 +527,7 @@ class MainActivity : ComponentActivity() {
         super.onConfigurationChanged(newConfig)
         // The player asks for landscape on a phone while it is up, and the reader follows the
         // sensor while it is open; each asks for portrait again as it closes.
-        if (!app.player.isPresented && app.kaeri.reader.phone.ReaderLauncher.request.value == null) holdPortraitOnPhones(newConfig)
+        if (!app.player.isPresented && ReaderLauncher.request.value == null) holdPortraitOnPhones(newConfig)
     }
 
     /**
