@@ -8626,9 +8626,13 @@
     <value>[Çöñţîñüé {label}~~~~]</value>
     <comment>The main action for a light novel part, part read, named in the source's own words, when how far is not known.</comment>
   </data>
+  <data name="ActionContinueNamedPage" xml:space="preserve">
+    <value>[Çöñţîñüé {label} · þàĝé {page}~~~~~~~]</value>
+    <comment>The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra").</comment>
+  </data>
   <data name="ActionReadNamed" xml:space="preserve">
     <value>[Ŕéàð {label}~~~]</value>
-    <comment>The main action for a light novel part not opened yet, named in the source's own words.</comment>
+    <comment>The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").</comment>
   </data>
   <data name="ActionReadAgain" xml:space="preserve">
     <value>[Ŕéàð àĝàîñ~~~]</value>

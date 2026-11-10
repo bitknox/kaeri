@@ -20,18 +20,31 @@ enum ReadSeriesWords {
     /// The main action's words, or nil where there is nothing to read.
     static func action(_ action: SeriesAction?) -> String? {
         switch action {
-        case .read(_, let label): L.actionReadChapter(n: label)
-        case .continue(_, let label, let page): L.actionContinueChapter(n: label, page: Int(page))
+        // "Read chapter 12", but a chapter with no number goes by its own title: "Read Oneshot".
+        case .read(_, let label) where numbered(label): L.actionReadChapter(n: label)
+        case .read(_, let label): L.actionReadNamed(label: label)
+        case .continue(_, let label, let page) where numbered(label): L.actionContinueChapter(n: label, page: Int(page))
+        case .continue(_, let label, let page): L.actionContinueNamedPage(label: label, page: Int(page))
         // A part goes by the source's own name for it where it has one, as its row does.
         case .continuePart(_, _, let percent?, let named?): L.actionContinueNamed(label: midSentence(named), percent: Int(percent))
+        case .continuePart(_, let label, let percent?, nil) where !numbered(label): L.actionContinueNamed(label: label, percent: Int(percent))
         case .continuePart(_, let label, let percent?, nil): L.actionContinuePart(n: label, percent: Int(percent))
         case .continuePart(_, _, nil, let named?): L.actionContinueNamedPlain(label: midSentence(named))
+        case .continuePart(_, let label, nil, nil) where !numbered(label): L.actionContinueNamedPlain(label: label)
         case .continuePart(_, let label, nil, nil): L.actionContinuePartPlain(n: label)
         case .readPart(_, _, let named?): L.actionReadNamed(label: midSentence(named))
+        case .readPart(_, let label, nil) where !numbered(label): L.actionReadNamed(label: label)
         case .readPart(_, let label, nil): L.actionReadPart(n: label)
         case .readAgain: L.actionReadAgain
         case .noSource, .none: nil
         }
+    }
+
+    /// The label is a chapter's number, "12", "10.5" or "12-13", which the words put "chapter" or
+    /// "part" before; anything else is the chapter's own title.
+    static func numbered(_ label: String) -> Bool {
+        label.first?.isASCII == true && label.first?.isNumber == true
+            && label.allSatisfy { $0.isASCII && ($0.isNumber || $0 == "." || $0 == "-") }
     }
 
     /// A source's own name for a part, inside a sentence: "Chapter 3" reads "chapter 3" after

@@ -1688,6 +1688,20 @@ impl BookSources {
         chapter: &ChapterId,
         now: i64,
     ) -> Result<Option<Vec<u8>>, ReadingFailure> {
+        let Some(mut opened) = self.pictures(work, chapter, now).await? else {
+            return Ok(None);
+        };
+        self.page(&mut opened, 0, now).await.map(Some)
+    }
+
+    /// A chapter's page images as its source names them, without downloading a whole book
+    /// file: `None` for a chapter of text or one kept as a file.
+    pub async fn pictures(
+        &self,
+        work: &WorkId,
+        chapter: &ChapterId,
+        now: i64,
+    ) -> Result<Option<Opened>, ReadingFailure> {
         let (source, series, found, _) =
             self.find_chapter(work, chapter, None, now, true).await?;
         let pages = self
@@ -1696,13 +1710,12 @@ impl BookSources {
             .await
             .map_err(|e| failure(&source, &e))?;
         let Some(pages) = pages.filter(|p| !p.is_empty()) else { return Ok(None) };
-        let mut opened = Opened {
+        Ok(Some(Opened {
             source_id: source,
             series_ref: series,
             chapter: found,
             content: ChapterContent::Images(pages),
-        };
-        self.page(&mut opened, 0, now).await.map(Some)
+        }))
     }
 
     /// Fetch page `index` of an opened chapter's images, asking the source again once for

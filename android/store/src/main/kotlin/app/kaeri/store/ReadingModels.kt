@@ -482,7 +482,7 @@ class ReadingModel(private val send: (Command) -> Unit) {
     private fun reloadChapters(work: WorkId) = reading(ReadingCommand.LoadChapters(work, _chapters.value[work]?.edition?.sourceId))
 
     private fun refreshSeries(work: WorkId) {
-        if (_series.value[work] != null) {
+        if (_series.value[work] != null || _chapters.value[work] != null) {
             reading(ReadingCommand.LoadSeries(work))
             reloadChapters(work)
         }
@@ -492,11 +492,26 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     // Hearing
 
+    /** The book the reader has open, so its page is asked for again once the reader closes. */
+    private var readerWork: WorkId? = null
+
     internal fun observe(event: Event) {
         if (event is Event.Reader) {
             val reader = event.v1
             if (reader is ReaderEvent.Settings && reader.v1.work == null) {
                 _readerDefaults.update { it + (reader.v1.medium to reader.v1) }
+            }
+            // The engine sends nothing for a read or a place kept by the reader: the series page
+            // under it asks again, so its main button offers the next chapter or the place left
+            // at, not the chapter just read.
+            when (reader) {
+                is ReaderEvent.Opened -> readerWork = reader.v1.work
+                is ReaderEvent.ChapterRead -> refreshSeries(reader.work)
+                is ReaderEvent.Closed -> {
+                    readerWork?.let { refreshSeries(it) }
+                    readerWork = null
+                }
+                else -> Unit
             }
             return
         }

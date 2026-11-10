@@ -2599,6 +2599,11 @@ public enum L {
         Self.format("reader-group-line", fallback: "%1$@ · page %2$@ of %3$@", chapter, String(page), String(total))
     }
 
+    /// The control group's line on the end page, after the chapter's last page.
+    public static func readerGroupLineEnd(chapter: String) -> String {
+        Self.format("reader-group-line-end", fallback: "%1$@ · end of chapter", chapter)
+    }
+
     /// The control group's line when a spread shows two pages.
     public static func readerGroupLineSpread(chapter: String, first: Int, second: Int) -> String {
         Self.format("reader-group-line-spread", fallback: "%1$@ · pages %2$@ and %3$@", chapter, String(first), String(second))
@@ -8688,7 +8693,12 @@ public enum L {
         Self.format("action-continue-named-plain", fallback: "Continue %1$@", label)
     }
 
-    /// The main action for a light novel part not opened yet, named in the source's own words.
+    /// The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra").
+    public static func actionContinueNamedPage(label: String, page: Int) -> String {
+        Self.format("action-continue-named-page", fallback: "Continue %1$@ · page %2$@", label, String(page))
+    }
+
+    /// The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
     public static func actionReadNamed(label: String) -> String {
         Self.format("action-read-named", fallback: "Read %1$@", label)
     }

@@ -35,7 +35,7 @@ use super::{BACK_MS, Cx, RESUMED_MS, Session, notice, place};
 use crate::{
     outbox::{Internal, Outbox, ReaderWake},
     reading::{
-        feed::page_extension,
+        feed::{Feed, FeedPage},
         novel::{self as served, EinkImages, NovelBook, Opened, Opening, ServedBook},
         pages::{Pages, PeekJob},
         shelf::ShelfChapter,
@@ -133,42 +133,101 @@ pub(super) fn streamed_dir(cache: &Path, session: u64) -> PathBuf {
     cache_dir(cache).join(format!("{session}-pages"))
 }
 
-/// Make the end page's preview of the next chapter, one from a source, as a shelf chapter's is
-/// made: its first page alone is fetched, off the actor, into a folder of the session that the
-/// page worker opens as a book. Nothing waits on it. A chapter of text, or one only a whole
-/// file's download would open, has no preview, and neither has one that fails.
-pub(super) fn peek_source(
+/// The next chapter from a source, fetched while the open one is read through a feed, the
+/// way its open fetches it, so it opens from the pages already landed. Dropped, its feed stops.
+#[derive(Debug)]
+pub(super) struct Ahead {
+    pub chapter: ChapterId,
+    /// `None` while its first page comes; then its feed, or `None` when the feed did not start
+    /// and the chapter opens the usual way.
+    feed: tokio::sync::watch::Receiver<Option<Option<Arc<Feed>>>>,
+    task: tokio::task::JoinHandle<()>,
+}
+
+impl Drop for Ahead {
+    fn drop(&mut self) {
+        self.task.abort();
+    }
+}
+
+impl Ahead {
+    /// The chapter's feed, once its first page has landed.
+    async fn feed(mut self) -> Option<Arc<Feed>> {
+        let feed = self.feed.wait_for(Option::is_some).await.ok()?.clone();
+        feed.flatten()
+    }
+}
+
+/// Fetch the next chapter from a source while the open one is read: a feed from its first
+/// page on, one page after another, the requests its open would make anyway. Its first page,
+/// once it lands, is the end page's preview, made as a shelf chapter's is. A chapter of text,
+/// or one only a whole file's download would open, is left to its open, and so is one whose
+/// first page fails: it has no preview.
+pub(super) fn fetch_ahead(
     cx: &Cx<'_>,
     pages: &Pages,
     session: u64,
     work: &WorkId,
     next: (usize, &ShelfChapter),
-) {
+) -> Ahead {
     let (index, next) = next;
     let sources = cx.services.book_sources.clone();
     let work = work.clone();
     let chapter = next.id.clone();
     let now = cx.now();
-    let dir = streamed_dir(&cx.services.paths.cache_dir, session).join(format!("next-{index}"));
-    let pages = pages.clone();
+    let streamed = streamed_dir(&cx.services.paths.cache_dir, session);
+    let (dir, peek_dir) =
+        (streamed.join(format!("ahead-{index}")), streamed.join(format!("next-{index}")));
+    let worker = pages.clone();
     let out = cx.tx.clone();
-    tokio::spawn(async move {
-        let bytes = match sources.first_page(&work, &chapter, now).await {
-            Ok(Some(bytes)) => bytes,
-            Ok(None) => return,
-            Err(failure) => {
-                tracing::debug!(?failure, "no preview of the next chapter");
-                return;
+    let (tx, feed) = tokio::sync::watch::channel(None);
+    let id = chapter.clone();
+    let task = tokio::spawn(async move {
+        let fed = async {
+            let opened = match sources.pictures(&work, &chapter, now).await {
+                Ok(Some(opened)) => opened,
+                Ok(None) => return None,
+                Err(failure) => {
+                    tracing::debug!(?failure, "the next chapter was not fetched ahead");
+                    return None;
+                }
+            };
+            // Each page is told to the page worker as it lands, which takes it once the chapter
+            // is open there.
+            let landed = {
+                let (worker, chapter) = (worker.clone(), chapter.clone());
+                move |page, out: &Outbox| worker.landed(session, chapter.clone(), page, out)
+            };
+            let started = crate::reading::feed::start(
+                sources,
+                opened,
+                chapter.clone(),
+                dir,
+                0,
+                now,
+                out.clone(),
+                landed,
+            );
+            let feed = match started.await {
+                Ok(feed) => feed,
+                Err(failure) => {
+                    tracing::debug!(?failure, "the next chapter was not fetched ahead");
+                    return None;
+                }
+            };
+            // The preview opens a folder of the first page alone, never one still filling.
+            if let Some(FeedPage::Landed(first)) = feed.page(0)
+                && let Some(name) = first.file_name()
+                && tokio::fs::create_dir_all(&peek_dir).await.is_ok()
+                && tokio::fs::copy(&first, peek_dir.join(name)).await.is_ok()
+            {
+                worker.peek(PeekJob { session, chapter, path: peek_dir, out });
             }
+            Some(feed)
         };
-        let Some(ext) = page_extension(&bytes) else { return };
-        if tokio::fs::create_dir_all(&dir).await.is_err()
-            || tokio::fs::write(dir.join(format!("00001.{ext}")), &bytes).await.is_err()
-        {
-            return;
-        }
-        pages.peek(PeekJob { session, chapter, path: dir, out });
+        let _ = tx.send(Some(fed.await));
     });
+    Ahead { chapter: id, feed, task }
 }
 
 /// The format of a chapter read from a source rather than a file on the shelf.
@@ -410,7 +469,15 @@ impl Session {
         let (first, strip, kept_of) =
             (self.start.page.unwrap_or(0), self.start.strip, self.kept_of);
         let (session, worker, out) = (self.id, pages.clone(), cx.tx.clone());
+        // The chapter fetched ahead opens from its feed, the pages still coming behind it.
+        let ahead = self.ahead.take_if(|a| a.chapter == chapter.id);
         tokio::spawn(async move {
+            if let Some(ahead) = ahead
+                && let Some(feed) = ahead.feed().await
+            {
+                put(Prepared::Feed(feed));
+                return;
+            }
             let prepared = match sources.open(&work, &id, None, now).await {
                 Err(failure) => Prepared::Failed(failure),
                 // A source's pictures land a page at a time in a folder the page worker reads

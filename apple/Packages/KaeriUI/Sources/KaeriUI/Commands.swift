@@ -213,7 +213,9 @@ extension KaeriCommands where Playback == DimmedPlayback, PlayerWindowItems == E
 public struct DimmedPlayback: View {
     public var body: some View {
         Group {
-            Button(L.actionPlay) {}.keyboardShortcut(.space, modifiers: [])
+            // No Space here: a dimmed item with a key still takes it, from the reader and from
+            // every field.
+            Button(L.actionPlay) {}
             Button(L.menuSkipForward) {}
             Button(L.menuSkipBack) {}
             Button(L.menuNextEpisode) {}

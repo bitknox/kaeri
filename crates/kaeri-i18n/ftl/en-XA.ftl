@@ -9228,7 +9228,10 @@ action-continue-named = [Çöñţîñüé { $label } · { $percent }%~~~~~~]
 # The main action for a light novel part, part read, named in the source's own words, when how far is not known.
 action-continue-named-plain = [Çöñţîñüé { $label }~~~~]
 
-# The main action for a light novel part not opened yet, named in the source's own words.
+# The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra").
+action-continue-named-page = [Çöñţîñüé { $label } · þàĝé { $page }~~~~~~~]
+
+# The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").
 action-read-named = [Ŕéàð { $label }~~~]
 
 # The main action when every chapter is read.

@@ -65,6 +65,8 @@ pub struct Plan {
     pub direction: ReadDirection,
     pub guess_mode: bool,
     pub guess_direction: bool,
+    /// Pages are fitted to the screen's width (the Fit setting's Width), to be scrolled.
+    pub fit_width: bool,
 }
 
 /// What the book said, for the session: the layout and the guesses made.
@@ -319,6 +321,9 @@ struct Chapter {
     decoder: HostDecoder,
     /// The pages landing from a source, and how they were laid out before they had.
     feed: Option<Fed>,
+    /// Each page is drawn as wide as its share of the screen however tall it is: on an LCD in
+    /// the strip, vertical mode or Fit width.
+    by_width: bool,
 }
 
 /// A chapter laid out from a feed before all its pages landed.
@@ -695,6 +700,7 @@ impl Worker {
             held: Some(Vec::new()),
             decoder: self.decoder.clone(),
             feed: None,
+            by_width: !eink && (mode.flows() || plan.fit_width),
         };
         let mut options_used = None;
         let (leaves, cuts) = if mode == ReaderMode::Strip && eink && !fed {
@@ -1020,14 +1026,8 @@ impl Chapter {
                     None => {}
                 }
             }
-            let (w, h) = {
-                let (w, h) = (
-                    (target.width as f32 * part.place.width) as u32,
-                    (target.height as f32 * part.place.height) as u32,
-                );
-                if part.rotate { (h, w) } else { (w, h) }
-            };
-            let event = match self.make_part(&part, w.max(1), h.max(1)) {
+            let (w, h) = self.part_box(&part, target);
+            let event = match self.make_part(&part, w, h) {
                 Ok(file) => ReaderEvent::PageReady {
                     session: self.session,
                     chapter: self.chapter.clone(),
@@ -1096,6 +1096,28 @@ impl Chapter {
         layout::lay_out(&shapes, options).iter().map(|l| &l.parts).ne(self.leaves.iter())
     }
 
+    /// The box a part is fitted in, in pixels: its share of the screen. Where pages are drawn
+    /// by width, the height is the part's own at that width instead. A strip image fitted inside
+    /// the screen would shrink to a sliver as tall as the screen, and the column would then
+    /// stretch that sliver back across its width.
+    fn part_box(&self, part: &layout::LeafPart, target: Target) -> (u32, u32) {
+        let (w, h) = (
+            (target.width as f32 * part.place.width) as u32,
+            (target.height as f32 * part.place.height) as u32,
+        );
+        if part.rotate {
+            return (h.max(1), w.max(1));
+        }
+        let original = self.originals.get(part.page as usize).and_then(Option::as_ref);
+        match original {
+            Some(o) if self.by_width => {
+                let region = part.source.map_or((o.width, o.height), |s| (s.width, s.height));
+                Fit::Width(w.max(1)).size(region.0, region.1)
+            }
+            _ => (w.max(1), h.max(1)),
+        }
+    }
+
     fn unreadable(&self) -> ReadingFailure {
         ReadingFailure::Unreadable {
             path: self.source.display().to_string(),
@@ -1147,15 +1169,17 @@ impl Chapter {
             });
         }
         let bytes = std::fs::read(&original.path).map_err(|_| self.unreadable())?;
+        // What the page is decoded for: the screen, or the box it is drawn in by width, which
+        // is taller than the screen.
+        let room = if self.by_width { (w, h) } else { (target.width, target.height) };
         let page = if format.decodes() {
-            self.renderer.open(&bytes).map_err(|e| {
+            self.renderer.open_for(&bytes, room).map_err(|e| {
                 tracing::warn!(error = %e, "a page did not decode");
                 self.unreadable()
             })?
         } else {
             // A format the engine cannot read: the platform decodes it, small if it can.
-            let screen = (target.width, target.height);
-            let room = decode_room(original.width, original.height, screen);
+            let room = decode_room(original.width, original.height, room);
             match self.decoder.bitmap(bytes, format, room) {
                 Hosted::Image(bitmap) => {
                     self.renderer.open_bitmap(bitmap, format).map_err(|e| {
@@ -1511,6 +1535,137 @@ mod tests {
         // The wish comes first; 9 was asked for and is kept, 4 was only wished before.
         assert_eq!(wished(vec![5, 6, 7], &queue, &asked), VecDeque::from([5, 6, 7, 9]));
         assert_eq!(wished(vec![1], &VecDeque::new(), &HashSet::new()), VecDeque::from([1]));
+    }
+
+    /// A made-up strip image: fine colour stripes a pixel wide, as lettering would be.
+    fn stripes_jpeg(width: u32, height: u32) -> Vec<u8> {
+        let image = image::RgbImage::from_fn(width, height, |x, y| {
+            if (x + y / 7) % 2 == 0 {
+                image::Rgb([200, 40, 30])
+            } else {
+                image::Rgb([20, 30, 160])
+            }
+        });
+        let mut out = Vec::new();
+        image::DynamicImage::ImageRgb8(image)
+            .write_to(&mut std::io::Cursor::new(&mut out), image::ImageFormat::Jpeg)
+            .unwrap();
+        out
+    }
+
+    /// Every page a chapter of `pages` made-up images makes on an LCD screen of `screen`
+    /// pixels, opened the way a chapter from a source is: a folder of its pages.
+    fn made_pages(
+        pages: &[(u32, u32)],
+        screen: (u32, u32),
+        mode: ReaderMode,
+        fit_width: bool,
+    ) -> Vec<PageFile> {
+        let dir = tempfile::tempdir().unwrap();
+        let book = dir.path().join("1-pages");
+        std::fs::create_dir_all(&book).unwrap();
+        for (i, (w, h)) in pages.iter().enumerate() {
+            std::fs::write(book.join(format!("{:05}.jpg", i + 1)), stripes_jpeg(*w, *h))
+                .unwrap();
+        }
+        let worker = Pages::start(dir.path().join("cache"), None);
+        let (out, mut inbox) = Outbox::inbox();
+        let shared = Shared::default();
+        worker.open(OpenJob {
+            session: 1,
+            generation: 1,
+            chapter: ChapterId::new("1"),
+            path: book,
+            plan: Plan {
+                target: Target {
+                    panel: kaeri_pages::Panel::Lcd,
+                    width: screen.0,
+                    height: screen.1,
+                },
+                look: Look::default(),
+                two_pages: false,
+                spreads: SpreadOnSingle::Split,
+                mode,
+                direction: ReadDirection::TopToBottom,
+                guess_mode: false,
+                guess_direction: false,
+                fit_width,
+            },
+            start_page: 0,
+            shared: shared.clone(),
+            out: out.clone(),
+            feed: None,
+        });
+        worker.want(1, 1, (0..pages.len() as u32).collect(), &out);
+        let mut made = vec![None; pages.len()];
+        let until = Instant::now() + Duration::from_secs(60);
+        while made.iter().any(Option::is_none) {
+            assert!(Instant::now() < until, "every page was made: {made:?}");
+            match inbox.try_recv() {
+                Ok(crate::outbox::Envelope::Event(Event::Reader(ReaderEvent::PageReady {
+                    page,
+                    file,
+                    ..
+                }))) => made[page as usize] = Some(file),
+                Ok(crate::outbox::Envelope::Event(Event::Reader(
+                    failed @ ReaderEvent::PageFailed { .. },
+                ))) => panic!("{failed:?}"),
+                Ok(_) => {}
+                Err(_) => std::thread::sleep(Duration::from_millis(10)),
+            }
+        }
+        assert_eq!(shared.lock().unwrap().mode, Some(mode));
+        made.into_iter().map(Option::unwrap).collect()
+    }
+
+    #[test]
+    fn a_strip_image_keeps_its_full_width_on_a_screen_shorter_than_it() {
+        // The long-strip shape: 720 wide and several screens tall, on a Mac window 760 points
+        // wide at 2x. Fitted inside the screen it would come out 309 pixels wide.
+        let made = made_pages(
+            &[(720, 4000), (720, 4000), (720, 855)],
+            (1520, 1718),
+            ReaderMode::Strip,
+            false,
+        );
+        for file in made {
+            // Narrower than the screen: the platform draws the original, every pixel of it.
+            assert!(matches!(file.encoding, PageEncoding::Original { .. }), "{file:?}");
+            assert_eq!(file.width, 720, "{file:?}");
+            assert!(file.crop.is_none());
+        }
+    }
+
+    #[test]
+    fn a_strip_image_far_wider_than_the_screen_is_made_at_the_screens_width() {
+        // Shrunk past twice, so the engine makes it, at the width the strip draws it.
+        let made =
+            made_pages(&[(2400, 9000), (2400, 9000)], (1000, 1200), ReaderMode::Strip, false);
+        for file in made {
+            assert!(matches!(file.encoding, PageEncoding::Raw { .. }), "{file:?}");
+            assert_eq!((file.width, file.height), (1000, 3750), "{file:?}");
+        }
+    }
+
+    #[test]
+    fn a_page_turned_one_at_a_time_is_still_fitted_inside_the_screen() {
+        let made =
+            made_pages(&[(2400, 4000), (2400, 4000)], (600, 900), ReaderMode::Paged, false);
+        for file in made {
+            assert!(matches!(file.encoding, PageEncoding::Raw { .. }), "{file:?}");
+            assert_eq!((file.width, file.height), (540, 900), "{file:?}");
+        }
+    }
+
+    #[test]
+    fn fit_width_makes_a_page_as_wide_as_the_screen() {
+        // Scrolled down at the screen's width, not shrunk to its height.
+        let made =
+            made_pages(&[(2400, 4000), (2400, 4000)], (600, 900), ReaderMode::Paged, true);
+        for file in made {
+            assert!(matches!(file.encoding, PageEncoding::Raw { .. }), "{file:?}");
+            assert_eq!((file.width, file.height), (600, 1000), "{file:?}");
+        }
     }
 
     #[test]

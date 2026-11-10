@@ -113,7 +113,13 @@ struct PagedReader: View {
             return
         }
         let target = current + (forward ? 1 : -1)
-        guard model.leaves.indices.contains(target) else { return }
+        guard model.leaves.indices.contains(target) else {
+            // Back from the first page goes into the chapter before, at its last page.
+            if !forward, current == 0, let previous = model.view?.previous {
+                model.openChapter(previous.id, atEnd: true)
+            }
+            return
+        }
         if paper {
             model.shown(target, how: how)
             return
@@ -381,6 +387,15 @@ struct ReaderEndPage: View {
                     if let body = body(why) { Text(body).font(.ui(15)).foregroundStyle(theme.haze) }
                 }
                 .padding(.top, phone ? 18 : 22)
+            } else {
+                // Neither the next chapter nor why there is none is known yet: a long list may
+                // still be loading, so the page says so rather than caught up.
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small).tint(theme.haze)
+                    Text(L.readerChaptersLoading).font(.ui(15)).foregroundStyle(theme.haze)
+                }
+                .padding(.top, phone ? 18 : 22)
+                .transition(.opacity)
             }
             if !phone {
                 let row = Group {

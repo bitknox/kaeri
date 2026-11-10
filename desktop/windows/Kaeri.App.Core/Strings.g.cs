@@ -6217,7 +6217,10 @@ public static partial class T
     /// <summary>The main action for a light novel part, part read, named in the source's own words, when how far is not known.</summary>
     public static string ActionContinueNamedPlain(string label) => Fill(Get("ActionContinueNamedPlain"), ("label", label));
 
-    /// <summary>The main action for a light novel part not opened yet, named in the source's own words.</summary>
+    /// <summary>The main action for a chapter part read that has no number, named by its own title ("Oneshot", "Extra").</summary>
+    public static string ActionContinueNamedPage(string label, long page) => Fill(Get("ActionContinueNamedPage"), ("label", label), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The main action for a light novel part not opened yet, named in the source's own words, and for a chapter with no number, named by its own title ("Read Oneshot").</summary>
     public static string ActionReadNamed(string label) => Fill(Get("ActionReadNamed"), ("label", label));
 
     /// <summary>The main action when every chapter is read.</summary>
@@ -13770,6 +13773,7 @@ public static partial class T
         ["ActionReadPart"] = "Read part {n}",
         ["ActionContinueNamed"] = "Continue {label} · {percent}%",
         ["ActionContinueNamedPlain"] = "Continue {label}",
+        ["ActionContinueNamedPage"] = "Continue {label} · page {page}",
         ["ActionReadNamed"] = "Read {label}",
         ["ActionReadAgain"] = "Read again",
         ["SeriesReadingFrom"] = "Reading from",

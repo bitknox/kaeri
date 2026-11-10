@@ -165,12 +165,21 @@ struct StripReader: View {
             restoring = true
             restore()
         }
+        .onChange(of: model.stripRelaid) { _, _ in
+            restoring = true
+            restore()
+        }
         .onChange(of: model.jump?.tick) { _, _ in
             guard let index = model.jump?.index else { return }
             go(to: index)
         }
         .onChange(of: model.turnRequest) { _, request in
             guard let request else { return }
+            // Up from the top of the strip goes into the chapter before, at its last image.
+            if !request.forward, offsetY <= 1, model.inTrail == nil, let previous = model.view?.previous {
+                model.openChapter(previous.id, atEnd: true)
+                return
+            }
             let step = request.line ? 120 : size.height * 0.9
             restoring = false
             let to = max(0, offsetY + (request.forward ? step : -step))

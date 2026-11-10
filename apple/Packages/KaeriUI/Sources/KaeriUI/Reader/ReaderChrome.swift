@@ -62,6 +62,8 @@ struct ReaderChrome: View {
             }
             HStack(spacing: 4) {
                 if mac {
+                    // Back to the window as it was before the book opened, as Esc goes.
+                    button("chevron.backward", L.actionBack, action: onClose)
                     chaptersButton
                 } else {
                     button("xmark", L.readerClose, action: onClose).accessibilitySortPriority(5)
@@ -207,6 +209,7 @@ struct ReaderChrome: View {
             return L.readerGroupLineNovel(chapter: chapter, page: index + 1, total: count)
         }
         if model.view?.mode == .strip { return L.readerGroupLineStrip(chapter: chapter, image: index + 1, total: count) }
+        if model.isEndPage(index) { return L.readerGroupLineEnd(chapter: chapter) }
         if model.leaves.indices.contains(index), model.leaves[index].parts.count > 1 {
             let pages = model.leaves[index].parts.map { Int($0.page) + 1 }.sorted()
             return L.readerGroupLineSpread(chapter: chapter, first: pages[0], second: pages[1])

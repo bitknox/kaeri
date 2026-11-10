@@ -97,6 +97,11 @@ public final class ReaderModel {
     public private(set) var ring: Int?
     /// Where a strip is asked to scroll to once its images are in.
     public private(set) var stripRestore: StripPos?
+    /// Where the strip is, as it last said: kept through a second layout of the chapter.
+    @ObservationIgnored private var stripHere: StripPos?
+    /// Counts the open chapter's layouts after its first, so the strip puts the place back even
+    /// when it has not moved since the last restore.
+    public private(set) var stripRelaid = 0
     /// The chapters of the work, once the engine has listed them.
     public private(set) var chapters: [VolumeGroup] = []
     public private(set) var chaptersLoaded = false
@@ -254,6 +259,8 @@ public final class ReaderModel {
     @ObservationIgnored private var lastStrip: ContinuousClock.Instant?
     @ObservationIgnored private var pendingStrip: Task<Void, Never>?
     @ObservationIgnored private var rereadAfterClose: Request?
+    /// Closed after the open was sent and before the engine said it opened.
+    @ObservationIgnored private var closedOpening = false
 
     public init() {
         focusPaper = Self.defaults.bool(forKey: Self.focusKey)
@@ -294,7 +301,9 @@ public final class ReaderModel {
             send?(.reader(.close(session: session)))
             rereadAfterClose = next
             reset()
-            request = nil
+            // The reader stays up, opening, while the first book closes.
+            request = next
+            phase = .opening
             return
         }
         begin(next)
@@ -302,6 +311,7 @@ public final class ReaderModel {
 
     private func begin(_ next: Request) {
         reset()
+        closedOpening = false
         request = next
         phase = .opening
         openedAt = .now
@@ -347,8 +357,15 @@ public final class ReaderModel {
     #endif
 
     public func close() {
+        // A book waiting on the one before to close is dropped with it: closing always closes.
+        rereadAfterClose = nil
         guard request != nil || session != 0 else { return }
-        if session != 0 { send?(.reader(.close(session: session))) }
+        if session != 0 {
+            send?(.reader(.close(session: session)))
+        } else if opened {
+            // Asked for, not opened yet: the session the engine opens is closed as it comes.
+            closedOpening = true
+        }
         onClosed?()
         reset()
         request = nil
@@ -368,6 +385,7 @@ public final class ReaderModel {
     /// A strip settled: the image and how far down it, at most every 500 ms.
     public func stripAt(_ at: StripPos, footVisible: Bool) {
         guard session != 0, let chapter = view?.chapter.id else { return }
+        stripHere = at
         pendingStrip?.cancel()
         let now = ContinuousClock.now
         let send = { [weak self] in
@@ -395,8 +413,14 @@ public final class ReaderModel {
             pages: UInt32(max(pages, 0)), how: how)))
     }
 
-    public func openChapter(_ id: ChapterId) {
+    /// The chapter opened by going back from the first page of the one after it: it shows its
+    /// last page, or the top of its last image in a strip, once its leaves come.
+    private var openAtEnd: ChapterId?
+
+    /// Open a chapter of the book; `atEnd` shows its last page, for going back into it.
+    public func openChapter(_ id: ChapterId, atEnd: Bool = false) {
         guard session != 0 else { return }
+        openAtEnd = atEnd ? id : nil
         holdEnd(to: id)
         end = nil
         read = false
@@ -435,7 +459,13 @@ public final class ReaderModel {
     public private(set) var flowing: ChapterId?
 
     public func retry(page: UInt32?) {
-        guard session != 0, let chapter = view?.chapter.id else { return }
+        // An open that failed before the engine named a session is asked for again whole.
+        if session == 0, page == nil, let request {
+            begin(Request(work: request.work, chapter: request.chapter, at: request.at, tick: bump()))
+            return
+        }
+        // A strip that failed to flow on tries the chapter it was flowing into.
+        guard session != 0, let chapter = flowing ?? view?.chapter.id else { return }
         if let page { failures = failures.filter { $0.key.page != page } }
         send?(.reader(.retry(session: session, chapter: chapter, page: page)))
         if page == nil { phase = .opening; openedAt = .now; clearNotices() }
@@ -567,6 +597,13 @@ public final class ReaderModel {
     public func observe(_ event: Event) {
         switch event {
         case .reader(let event): apply(event)
+        case .reading(.failed(.reader, let failure)):
+            // The open failed: the chapter, the source or the book. The reader says so, with
+            // Try again and Close, rather than wait on an open that will not come. A strip that
+            // was flowing on, with the chapter before still on screen, says it the same way.
+            guard request != nil else { return }
+            phase = .failed(failure)
+            clearNotices()
         case .reading(.chapters(let work, _, let volumes, _)):
             guard work == view?.work || request.map({ WorkId($0.work) }) == work else { return }
             chapters = volumes
@@ -578,6 +615,12 @@ public final class ReaderModel {
     func apply(_ event: ReaderEvent) {
         switch event {
         case .opened(let opened):
+            // Closed while it opened: the engine's session goes too.
+            if closedOpening {
+                closedOpening = false
+                send?(.reader(.close(session: opened.session)))
+                return
+            }
             // A strip that flowed on keeps the chapters above; any other open starts clean.
             if flowing != opened.chapter.id || opened.mode != .strip {
                 trail = StripTrail()
@@ -601,13 +644,26 @@ public final class ReaderModel {
             current = 0
             if let settings = opened.settings { self.settings = settings }
             send?(.reader(.loadSettings(medium: opened.medium, work: opened.work)))
+            stripHere = nil
             if opened.mode == .strip { stripRestore = opened.start.strip }
-        case .leaves(let session, _, let leaves):
+        case .leaves(let session, let chapter, let leaves):
             guard session == self.session else { return }
+            // A source's chapter is laid out again once all its pages have landed, when their
+            // shapes differ from the guess: a strip keeps the place it is at, under the same
+            // image, rather than move with the heights above it.
+            let relaid = !self.leaves.isEmpty && chapter == view?.chapter.id && view?.mode == .strip && novel == nil
             self.leaves = leaves
+            if relaid, let here = stripHere {
+                stripRestore = here
+                stripRelaid += 1
+            }
             phase = .open
             if !leaves.isEmpty { current = min(max(current, startLeaf(leaves)), leaves.count - 1) }
             if let goTo = pendingGoTo, goTo < leaves.count { show(goTo) }
+            if let chapter = openAtEnd, chapter == view?.chapter.id, !leaves.isEmpty {
+                openAtEnd = nil
+                showEnd(of: leaves)
+            }
             settleHeld()
         case .pageReady(let session, let chapter, let page, let half, let file):
             guard session == self.session else { return }
@@ -676,6 +732,16 @@ public final class ReaderModel {
     }
 
     private var pendingGoTo: Int?
+
+    /// The chapter's last page, before its end page; in a strip, the top of its last image.
+    private func showEnd(of leaves: [Leaf]) {
+        if view?.mode == .strip, novel == nil {
+            let images = leaves.filter { !$0.endPage }.reduce(0) { $0 + $1.parts.count }
+            stripRestore = StripPos(image: UInt32(max(images - 1, 0)), offset: 0)
+            return
+        }
+        current = leaves.lastIndex { !$0.endPage } ?? leaves.count - 1
+    }
 
     private func startLeaf(_ leaves: [Leaf]) -> Int {
         guard let page = view?.start.page else { return 0 }
@@ -796,10 +862,20 @@ public final class ReaderModel {
         return leaves.isEmpty ? 0 : Int(last) + 1
     }
 
-    /// The page number, from 1, a leaf starts at.
+    /// The page number, from 1, a leaf starts at. The end page, and a leaf past what is laid
+    /// out, count as the last page: a leaf's own index runs past the pages wherever a spread was
+    /// split in two, so it never stands in for a page number.
     public func pageNumber(of leaf: Int) -> Int {
-        guard leaves.indices.contains(leaf), let page = leaves[leaf].parts.map(\.page).min() else { return leaf + 1 }
-        return Int(page) + 1
+        let last = max(pageCount, 1)
+        guard leaves.indices.contains(leaf), let page = leaves[leaf].parts.map(\.page).min() else {
+            return leaves.isEmpty ? leaf + 1 : last
+        }
+        return min(Int(page) + 1, last)
+    }
+
+    /// The leaf at `index` is the end page, between this chapter and the next.
+    public func isEndPage(_ index: Int) -> Bool {
+        leaves.indices.contains(index) && leaves[index].endPage
     }
 
     /// The leaf a page, from 1, is on.

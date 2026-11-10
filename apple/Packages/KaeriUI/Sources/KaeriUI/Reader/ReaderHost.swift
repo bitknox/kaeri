@@ -1,6 +1,7 @@
-// Where the reader lives. On iPhone and iPad it covers the app; on the Mac it is a window of its
-// own, one at a time. The Go menu's keys work on both, with a hardware keyboard on iPad. The dev
-// harness draws it over its window.
+// Where the reader lives. On iPhone and iPad it covers the app. On the Mac it takes the main
+// window over, one book at a time: the sidebar and the toolbar go, the window keeps its size,
+// place and full screen, and closing it shows the window as it was, scrolled where it was. The
+// Go menu's keys work on both, with a hardware keyboard on iPad.
 
 import KaeriStore
 import KaeriStrings
@@ -8,14 +9,14 @@ import SwiftUI
 
 extension View {
     /// Show the reader when the store has one open.
-    public func hostsReader(_ model: ReaderModel, inline: Bool = false) -> some View {
-        modifier(ReaderHost(model: model, inline: inline))
+    public func hostsReader(_ model: ReaderModel) -> some View {
+        modifier(ReaderHost(model: model))
     }
 }
 
 private struct ReaderHost: ViewModifier {
     @Bindable var model: ReaderModel
-    let inline: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var isOpen: Binding<Bool> {
         Binding(get: { model.request != nil }, set: { if !$0 { model.close() } })
@@ -29,21 +30,20 @@ private struct ReaderHost: ViewModifier {
                 .background(Color.black)
         }
         #else
-        if inline {
-            // The real reader is a window with a hidden title bar; the harness has one window, so
-            // the open reader takes the toolbar and title away, as that window has none.
-            content
-                .toolbarVisibility(model.request != nil ? .hidden : .automatic, for: .windowToolbar)
-                .overlay {
-                    if model.request != nil {
-                        ReaderScreen(model: model) {}
-                            .ignoresSafeArea()
-                            .background(TrafficLights(visible: model.chromeShown))
-                    }
+        // The window under the reader stays as it is, so going back finds it where it was. The
+        // reader crossfades in over it and out again.
+        content
+            .toolbarVisibility(model.request != nil ? .hidden : .automatic, for: .windowToolbar)
+            .overlay {
+                if model.request != nil {
+                    ReaderScreen(model: model) {}
+                        .ignoresSafeArea()
+                        .background(TrafficLights(visible: model.chromeShown))
+                        .background(CloseKey { model.close() })
+                        .transition(.opacity)
                 }
-        } else {
-            content.modifier(ReaderWindowOpener(model: model))
-        }
+            }
+            .animation(reduceMotion ? nil : .standard, value: model.request != nil)
         #endif
     }
 }
@@ -51,52 +51,85 @@ private struct ReaderHost: ViewModifier {
 #if os(macOS)
 import AppKit
 
-public enum ReaderWindow {
-    public static let id = "reader"
-}
+/// ⌘W closes the book, not the window under it: the menu bar's Close would take the window
+/// away with the reader still open in it. Answered before the menu, in the reader's window only.
+private struct CloseKey: NSViewRepresentable {
+    let close: () -> Void
 
-private struct ReaderWindowOpener: ViewModifier {
-    let model: ReaderModel
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.dismissWindow) private var dismissWindow
+    @MainActor final class Coordinator {
+        var monitor: Any?
+        var close: () -> Void = {}
+    }
 
-    func body(content: Content) -> some View {
-        content.onChange(of: model.request != nil) { _, open in
-            if open { openWindow(id: ReaderWindow.id) } else { dismissWindow(id: ReaderWindow.id) }
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        let coordinator = context.coordinator
+        coordinator.close = close
+        coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak view] event in
+            let closed = MainActor.assumeIsolated {
+                guard let window = view?.window, event.window === window,
+                      event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+                      event.charactersIgnoringModifiers?.lowercased() == "w"
+                else { return false }
+                coordinator.close()
+                return true
+            }
+            return closed ? nil : event
         }
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        context.coordinator.close = close
+    }
+
+    static func dismantleNSView(_ view: NSView, coordinator: Coordinator) {
+        if let monitor = coordinator.monitor { NSEvent.removeMonitor(monitor) }
+        coordinator.monitor = nil
     }
 }
 
-/// The content of the reader's window.
-public struct ReaderWindowView: View {
-    let model: ReaderModel
-    @Environment(\.dismissWindow) private var dismissWindow
-
-    public init(model: ReaderModel) { self.model = model }
-
-    public var body: some View {
-        ReaderScreen(model: model) { dismissWindow(id: ReaderWindow.id) }
-            .frame(minWidth: 480, minHeight: 600)
-            .ignoresSafeArea()
-            .background(TrafficLights(visible: model.chromeShown))
-            .onDisappear { model.close() }
-    }
-}
-
-/// The window's close, minimise and zoom buttons come and go with the chrome.
+/// The window's close, minimise and zoom buttons come and go with the reader's chrome, over a
+/// title bar the reader's pages show through. The window has them back as they were once the
+/// reader closes.
 private struct TrafficLights: NSViewRepresentable {
     let visible: Bool
+
+    final class Coordinator {
+        weak var window: NSWindow?
+        var before: (transparent: Bool, title: NSWindow.TitleVisibility)?
+    }
+
+    private static let buttons: [NSWindow.ButtonType] = [.closeButton, .miniaturizeButton, .zoomButton]
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> NSView { NSView() }
 
     func updateNSView(_ view: NSView, context: Context) {
+        let coordinator = context.coordinator
         DispatchQueue.main.async {
             guard let window = view.window else { return }
+            if coordinator.window == nil {
+                coordinator.window = window
+                coordinator.before = (window.titlebarAppearsTransparent, window.titleVisibility)
+            }
             window.titlebarAppearsTransparent = true
             window.titleVisibility = .hidden
-            for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
+            for kind in Self.buttons {
                 window.standardWindowButton(kind)?.animator().alphaValue = visible ? 1 : 0
             }
+        }
+    }
+
+    static func dismantleNSView(_ view: NSView, coordinator: Coordinator) {
+        guard let window = coordinator.window, let before = coordinator.before else { return }
+        window.titlebarAppearsTransparent = before.transparent
+        window.titleVisibility = before.title
+        for kind in buttons {
+            window.standardWindowButton(kind)?.alphaValue = 1
         }
     }
 }
@@ -112,21 +145,23 @@ public struct ReaderMenu: Commands {
     public var body: some Commands {
         CommandMenu(L.readerMenuGo) {
             if let reader {
-                let next: KeyEquivalent = reader.rtl ? .leftArrow : .rightArrow
-                let previous: KeyEquivalent = reader.rtl ? .rightArrow : .leftArrow
-                Button(L.readerMenuNextPage) { reader.turn(true, false) }.keyboardShortcut(next, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.turn(false, false) }.keyboardShortcut(previous, modifiers: [])
-                Button(L.readerMenuNextPage) { reader.turn(true, false) }.keyboardShortcut(.space, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.turn(false, false) }.keyboardShortcut(.space, modifiers: .shift)
-                Button(L.readerMenuNextPage) { reader.turn(true, false) }.keyboardShortcut(.pageDown, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.turn(false, false) }.keyboardShortcut(.pageUp, modifiers: [])
-                Button(L.readerMenuNextPage) { reader.turn(true, true) }.keyboardShortcut(.downArrow, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.turn(false, true) }.keyboardShortcut(.upArrow, modifiers: [])
-                Button(L.readerMenuFirstPage) { reader.edge(true) }.keyboardShortcut(.home, modifiers: [])
-                Button(L.readerMenuLastPage) { reader.edge(false) }.keyboardShortcut(.end, modifiers: [])
+                // The same keys as ReaderKeys, which the reader also takes itself.
+                if let next = ReaderKeys.arrow(forward: true, in: reader.keys),
+                   let previous = ReaderKeys.arrow(forward: false, in: reader.keys) {
+                    Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.keyboardShortcut(next, modifiers: [])
+                    Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.keyboardShortcut(previous, modifiers: [])
+                }
+                Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.keyboardShortcut(.space, modifiers: [])
+                Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.keyboardShortcut(.space, modifiers: .shift)
+                Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.keyboardShortcut(.pageDown, modifiers: [])
+                Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.keyboardShortcut(.pageUp, modifiers: [])
+                Button(L.readerMenuNextPage) { reader.perform(.line(forward: true)) }.keyboardShortcut(.downArrow, modifiers: [])
+                Button(L.readerMenuPreviousPage) { reader.perform(.line(forward: false)) }.keyboardShortcut(.upArrow, modifiers: [])
+                Button(L.readerMenuFirstPage) { reader.perform(.edge(first: true)) }.keyboardShortcut(.home, modifiers: [])
+                Button(L.readerMenuLastPage) { reader.perform(.edge(first: false)) }.keyboardShortcut(.end, modifiers: [])
                 Divider()
-                Button(L.readerMenuNextChapter) { reader.chapter(true) }.keyboardShortcut("]", modifiers: [])
-                Button(L.readerMenuPreviousChapter) { reader.chapter(false) }.keyboardShortcut("[", modifiers: [])
+                Button(L.readerMenuNextChapter) { reader.perform(.chapter(next: true)) }.keyboardShortcut("]", modifiers: [])
+                Button(L.readerMenuPreviousChapter) { reader.perform(.chapter(next: false)) }.keyboardShortcut("[", modifiers: [])
                 Button(L.readerMenuGoToPage) { reader.askPage() }.keyboardShortcut("g", modifiers: [])
                 if let page = reader.backPage {
                     Button(L.readerMenuBackToPage(page: page)) { reader.back() }.keyboardShortcut("[", modifiers: .command)

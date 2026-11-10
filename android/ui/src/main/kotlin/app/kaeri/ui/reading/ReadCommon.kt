@@ -461,10 +461,24 @@ internal fun WorkTile.hitLine(context: Context): String = amount?.text(context).
 /** The facts of a series as one line: "Manga · Japan · Releasing". */
 internal fun WorkTile.factsLine(context: Context): String = facts.joinToString(" · ") { it.text(context) } // i18n-skip
 
+/**
+ * The label is a chapter's number, "12", "10.5" or "12-13", which the words put "chapter" or "part"
+ * before; anything else is the chapter's own title.
+ */
+internal fun numbered(label: String): Boolean =
+    label.firstOrNull()?.let { it in '0'..'9' } == true && label.all { it in '0'..'9' || it == '.' || it == '-' }
+
 /** A main action's words, in the unit the series reads in, or `null` where there is nothing to read. */
 internal fun actionWords(context: Context, action: SeriesAction?): String? = when (action) {
-    is SeriesAction.Read -> Strings.actionReadChapter(context, action.label)
-    is SeriesAction.Continue -> Strings.actionContinueChapter(context, action.label, action.page.toInt())
+    // "Read chapter 12", but a chapter with no number goes by its own title: "Read Oneshot".
+    is SeriesAction.Read ->
+        if (numbered(action.label)) Strings.actionReadChapter(context, action.label) else Strings.actionReadNamed(context, action.label)
+    is SeriesAction.Continue ->
+        if (numbered(action.label)) {
+            Strings.actionContinueChapter(context, action.label, action.page.toInt())
+        } else {
+            Strings.actionContinueNamedPage(context, action.label, action.page.toInt())
+        }
     // A part goes by the source's own name for it where it has one, as its row does.
     is SeriesAction.ContinuePart -> {
         val percent = action.percent?.takeIf { it > 0u }?.toInt()
@@ -477,6 +491,8 @@ internal fun actionWords(context: Context, action: SeriesAction?): String? = whe
             unit?.first == NamedUnit.PART -> Strings.actionContinuePartPlain(context, unit.second)
             named != null && percent != null -> Strings.actionContinueNamed(context, named, percent)
             named != null -> Strings.actionContinueNamedPlain(context, named)
+            !numbered(action.label) && percent != null -> Strings.actionContinueNamed(context, action.label, percent)
+            !numbered(action.label) -> Strings.actionContinueNamedPlain(context, action.label)
             percent != null -> Strings.actionContinuePart(context, action.label, percent)
             else -> Strings.actionContinuePartPlain(context, action.label)
         }
@@ -488,6 +504,7 @@ internal fun actionWords(context: Context, action: SeriesAction?): String? = whe
             unit?.first == NamedUnit.CHAPTER -> Strings.actionReadChapter(context, unit.second)
             unit?.first == NamedUnit.PART -> Strings.actionReadPart(context, unit.second)
             named != null -> Strings.actionReadNamed(context, named)
+            !numbered(action.label) -> Strings.actionReadNamed(context, action.label)
             else -> Strings.actionReadPart(context, action.label)
         }
     }

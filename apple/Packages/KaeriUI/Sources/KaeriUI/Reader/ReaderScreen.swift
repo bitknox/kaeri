@@ -26,6 +26,8 @@ public struct ReaderScreen: View {
     @State private var novelWeb = NovelWebSession()
     /// The held end page's opacity: 1 while it waits, faded to 0 once the next page has drawn.
     @State private var heldShown = 1.0
+    /// The reader holds the keyboard from the moment it shows, so its keys need no click first.
+    @FocusState private var holdsKeys: Bool
 
     public init(model: ReaderModel, onClose: @escaping () -> Void) {
         self.model = model
@@ -83,6 +85,22 @@ public struct ReaderScreen: View {
             if case .active = phase { pointerMoved() }
         }
         .onExitCommand { escape() }
+        // The Go menu carries the keys; the reader also takes them itself, for a key the menu
+        // has not bound.
+        .focusable()
+        .focusEffectDisabled()
+        .focused($holdsKeys)
+        .onKeyPress(phases: [.down, .repeat]) { press in
+            guard model.sheet == nil, !model.askingPage,
+                  let key = ReaderKeys.action(press.key, modifiers: press.modifiers, in: keyContext)
+            else { return .ignored }
+            actions.perform(key)
+            return .handled
+        }
+        .onAppear { holdsKeys = true }
+        .onChange(of: model.sheet == nil) { _, closed in if closed { holdsKeys = true } }
+        .onChange(of: model.askingPage) { _, asking in if !asking { holdsKeys = true } }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { holdsKeys = true } }
         #endif
         .onChange(of: model.sheet) { _, sheet in if sheet != nil { model.chromeShown = true } }
         .onChange(of: model.held?.tick) { _, _ in heldShown = 1 }
@@ -196,11 +214,11 @@ public struct ReaderScreen: View {
         }
     }
 
-    /// Esc steps out: a sheet first, then the chrome, then full screen, then the reader.
+    /// Esc steps out: a sheet first, then Go to page, then the reader, back to where the book
+    /// was opened. Full screen is the window's, and stays.
     private func escape() {
         if model.sheet != nil { model.sheet = nil; return }
-        if model.chromeShown { model.chromeShown = false; return }
-        if let window = NSApp.keyWindow, window.styleMask.contains(.fullScreen) { window.toggleFullScreen(nil); return }
+        if model.askingPage { model.askingPage = false; return }
         close()
     }
     #else
@@ -255,7 +273,7 @@ public struct ReaderScreen: View {
 
     var actions: ReaderActions {
         ReaderActions(
-            rtl: rtl, canGoBack: model.backTo != nil, backPage: model.backTo == nil ? nil : model.ring.map { model.pageNumber(of: $0) },
+            rtl: rtl, keys: keyContext, canGoBack: model.backTo != nil, backPage: model.backTo == nil ? nil : model.ring.map { model.pageNumber(of: $0) },
             turn: { forward, line in model.requestTurn(forward: forward, line: line) },
             chapter: { next in
                 if let row = next ? model.view?.next : model.view?.previous { model.openChapter(row.id) }
@@ -267,6 +285,10 @@ public struct ReaderScreen: View {
             showChapters: { model.sheet = .chapters },
             showSettings: { model.sheet = .settings },
             zoom: { step in zoom(step) })
+    }
+
+    var keyContext: ReaderKeyContext {
+        ReaderKeyContext(novel: model.novel != nil, mode: model.view?.mode, direction: model.view?.direction)
     }
 
     /// Home and End: the first page or image, or the last one before the end page.
@@ -326,6 +348,8 @@ extension EnvironmentValues {
 /// What the Go menu can ask of the reader that is open.
 public struct ReaderActions {
     public var rtl: Bool
+    /// How the reader reads, for its keys.
+    var keys: ReaderKeyContext
     public var canGoBack: Bool
     public var backPage: Int?
     public var turn: (_ forward: Bool, _ line: Bool) -> Void
@@ -339,6 +363,18 @@ public struct ReaderActions {
     public var showChapters: () -> Void
     public var showSettings: () -> Void
     public var zoom: (_ step: Int) -> Void
+}
+
+extension ReaderActions {
+    /// Carry out what a key or its menu item asks.
+    func perform(_ key: ReaderKey) {
+        switch key {
+        case .page(let forward): turn(forward, false)
+        case .line(let forward): turn(forward, true)
+        case .edge(let first): edge(first)
+        case .chapter(let next): chapter(next)
+        }
+    }
 }
 
 public struct ReaderActionsKey: FocusedValueKey {

@@ -46,6 +46,52 @@ struct ReaderHeldEndTests {
         return model
     }
 
+    /// A source's chapter laid out again once its pages have landed keeps the strip's place:
+    /// the same image and how far down it, not the point the old heights put it at.
+    @Test func aSecondLayoutKeepsTheStripsPlace() {
+        let model = ReaderModel()
+        model.send = { _ in }
+        model.apply(.opened(view("13", next: "14", mode: .strip)))
+        model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(3)))
+        #expect(model.stripRelaid == 0, "the first layout puts the start place, not a kept one")
+        let here = StripPos(image: 2, offset: 0.4)
+        model.stripAt(here, footVisible: false)
+        model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(3)))
+        #expect(model.stripRestore == here)
+        #expect(model.stripRelaid == 1)
+        #expect(model.phase == .open)
+    }
+
+    /// Pages turn by leaf, so a second layout leaves them where they are.
+    @Test func aSecondLayoutDoesNotMovePages() {
+        let model = onEndPage()
+        model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(3)))
+        #expect(model.stripRelaid == 0)
+        #expect(model.stripRestore == nil)
+    }
+
+    /// Back from a chapter's first page: the chapter before opens at its last page, not at its
+    /// end page or its start.
+    @Test func goingBackOpensTheChapterBeforeAtItsLastPage() {
+        let model = ReaderModel()
+        var sent: [Command] = []
+        model.send = { sent.append($0) }
+        model.apply(.opened(view("13", next: "14")))
+        model.apply(.leaves(session: session, chapter: ChapterId("13"), leaves: leaves(3)))
+        model.openChapter(ChapterId("12"), atEnd: true)
+        #expect(sent.contains { if case .reader(.openChapter(_, ChapterId("12"))) = $0 { true } else { false } })
+        #expect(model.held == nil, "a first page is not held as an end page is")
+        model.apply(.opened(view("12", next: "13")))
+        model.apply(.leaves(session: session, chapter: ChapterId("12"), leaves: leaves(3)))
+        #expect(model.current == 2)
+        #expect(!model.leaves[model.current].endPage)
+        // A later open of that chapter starts as usual.
+        model.openChapter(ChapterId("12"))
+        model.apply(.opened(view("12", next: "13")))
+        model.apply(.leaves(session: session, chapter: ChapterId("12"), leaves: leaves(3)))
+        #expect(model.current == 0)
+    }
+
     @Test func continueHoldsTheEndPageAsItWas() {
         let model = onEndPage()
         model.openChapter(ChapterId("14"))
@@ -146,5 +192,54 @@ struct ReaderHeldEndTests {
         model.openChapter(ChapterId("14"))
         model.close()
         #expect(model.held == nil)
+    }
+}
+
+/// The bottom bar on the end page: the slider's numbers and the line never count past the
+/// chapter's pages, wherever spreads were split into more leaves than pages.
+@MainActor
+struct ReaderEndPageNumberTests {
+    private func model(pages: Int, split: Set<Int>) -> ReaderModel {
+        let model = ReaderModel()
+        model.send = { _ in }
+        let place = UnitRect(x: 0, y: 0, width: 1, height: 1)
+        var leaves: [Leaf] = []
+        for page in 0..<pages {
+            let halves: [PageHalf?] = split.contains(page) ? [.right, .left] : [nil]
+            for half in halves {
+                leaves.append(Leaf(index: UInt32(leaves.count), parts: [
+                    LeafPart(page: UInt32(page), kind: .story, file: nil, place: place, rotate: false, half: half),
+                ], endPage: false))
+            }
+        }
+        leaves.append(Leaf(index: UInt32(leaves.count), parts: [], endPage: true))
+        model.apply(.opened(ReaderView(
+            session: 1, work: WorkId("a:900301"), title: "The Lantern Ferry", medium: .manga,
+            chapter: ChapterRow(
+                id: ChapterId("1"), label: "1", state: .unread, number: "1", title: nil, volume: nil,
+                published: nil, pages: UInt32(pages), newChapter: false, download: nil, versions: 1, bookmarked: false),
+            mode: .paged, direction: .rightToLeft,
+            start: ReadPlace(work: WorkId("a:900301"), chapter: ChapterId("1"), page: 0, strip: nil, novel: nil),
+            next: nil, previous: nil, settings: nil)))
+        model.apply(.leaves(session: 1, chapter: ChapterId("1"), leaves: leaves))
+        return model
+    }
+
+    @Test func theEndPageCountsAsTheLastPage() {
+        // 51 pages, four split in two: 55 leaves of pages, then the end page as leaf 55.
+        let model = model(pages: 51, split: [10, 20, 30, 40])
+        #expect(model.leaves.count == 56)
+        #expect(model.pageCount == 51)
+        #expect(model.isEndPage(55))
+        #expect(model.pageNumber(of: 55) == 51)
+        #expect(!model.isEndPage(54))
+        #expect(model.pageNumber(of: 54) == 51)
+        #expect(model.pageNumber(of: 11) == 11, "both halves of page 11 say 11")
+        #expect(model.pageNumber(of: 12) == 12)
+        #expect(model.pageNumber(of: 0) == 1)
+        for leaf in 0..<model.leaves.count {
+            #expect((1...51).contains(model.pageNumber(of: leaf)))
+        }
+        #expect(model.pageNumber(of: 80) == 51, "a leaf past the end is still the last page")
     }
 }
