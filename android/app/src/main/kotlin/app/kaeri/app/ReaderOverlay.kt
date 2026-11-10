@@ -264,7 +264,7 @@ private fun OpenReader(
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    val session = remember { ReaderSession { store.send(it) } }
+    val session = remember { ReaderSession { command -> Flavour.readerSend(command) { store.send(it) } } }
     val images = remember { PageImages() }
     val quiet = remember { QuietPhone(context) }
     val state by session.state.collectAsState()

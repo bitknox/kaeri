@@ -35,6 +35,7 @@ import app.kaeri.reader.ReaderFixtures.CHAPTER
 import app.kaeri.reader.ReaderFixtures.SESSION
 import app.kaeri.reader.ReaderFixtures.WORK
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -306,6 +307,23 @@ class ReaderSessionTest {
         val view = ReaderFixtures.view().copy(chapter = ReaderFixtures.chapter("local:lantern-stair/13", "13"))
         session.apply(ReaderEvent.Opened(view))
         assertNull(session.state.value.previous)
+    }
+
+    @Test
+    fun a_chapter_asked_for_is_on_its_way_until_it_opens_and_taps_meanwhile_ask_nothing() {
+        opened()
+        sent.clear()
+        val next = "local:lantern-stair/13"
+        assertTrue(session.openChapter(next))
+        assertEquals(next, session.state.value.asking?.chapter)
+        assertTrue(session.state.value.openingSince > 0)
+        // A second tap, a forward turn on the end page or another chapter: nothing more is asked.
+        assertFalse(session.openChapter(next))
+        assertTrue(session.crossOn())
+        assertFalse(session.openChapter("local:lantern-stair/14"))
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, next)), sent)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view().copy(chapter = ReaderFixtures.chapter(next, "13"))))
+        assertNull(session.state.value.asking)
     }
 
     @Test

@@ -153,10 +153,7 @@ private fun SheetFrame(
         ) {
             Row(Modifier.fillMaxWidth().height(EinkSizes.SheetRow), verticalAlignment = Alignment.CenterVertically) {
                 if (onBack != null) {
-                    Box(
-                        Modifier.size(52.dp).semantics { contentDescription = Strings.einkBack(context) }.einkClick(onClick = onBack),
-                        contentAlignment = Alignment.Center,
-                    ) { Text("‹", style = EinkType.PageTitle) }
+                    EinkBackButton(onBack, 52.dp)
                 }
                 Text(title, style = EinkType.ReaderTitle, modifier = Modifier.weight(1f).semantics { heading() })
                 EinkTextButton(Strings.actionDone(context), onDone)
@@ -346,28 +343,31 @@ private fun EinkStepper(
     glyphs: Pair<String, String> = "−" to "+",
 ) {
     Row(modifier.semantics { stateDescription = words }, verticalAlignment = Alignment.CenterVertically) {
-        StepButton(glyphs.first, down, canDown, onDown)
+        StepButton(glyphs.first, down, canDown, words, onDown)
         Text(
             words,
             style = EinkType.Label.copy(fontWeight = FontWeight.Bold, fontFeatureSettings = "tnum"),
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f).semantics { contentDescription = "$title, $words" }, // i18n-skip
         )
-        StepButton(glyphs.second, up, canUp, onUp)
+        StepButton(glyphs.second, up, canUp, words, onUp)
     }
 }
 
 @Composable
-private fun StepButton(glyph: String, description: String, enabled: Boolean, onClick: () -> Unit) {
+private fun StepButton(glyph: String, description: String, enabled: Boolean, value: String, onClick: () -> Unit) {
     val ink = if (enabled) EinkColours.Ink else EinkColours.PlaceholderEdge
     val shape = RoundedCornerShape(EinkSizes.SegmentRadius)
+    // Held until the engine's answer shows the new value.
+    val press = rememberEinkPress(result = value)
     Box(
         Modifier
             .size(EinkSizes.SegmentHeight + 8.dp, EinkSizes.SegmentHeight)
             .clip(shape)
+            .einkInverted(press.inverted)
             .border(EinkSizes.Rule, ink, shape)
             .semantics { contentDescription = description }
-            .einkClick(enabled = enabled, onClick = onClick),
+            .einkPress(press, enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, style = EinkType.Button.copy(color = ink))
@@ -439,10 +439,7 @@ fun EinkContents(
             Modifier.fillMaxWidth().background(EinkColours.Paper).bottomRule().statusBarsPadding().height(EinkSizes.TopBar).padding(horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                Modifier.size(56.dp).semantics { contentDescription = Strings.einkBack(context) }.einkClick(onClick = onBack),
-                contentAlignment = Alignment.Center,
-            ) { Text("‹", style = EinkType.PageTitle) }
+            EinkBackButton(onBack, 56.dp)
             Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                 Text(Strings.einkContents(context), style = EinkType.ReaderTitle, maxLines = 1, modifier = Modifier.semantics { heading() })
                 Text(view.title, style = EinkType.Secondary, maxLines = 1)

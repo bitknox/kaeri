@@ -70,6 +70,9 @@ data class NovelGoTo(val pos: NovelPos, val id: Long)
 /** The clock a chapter's opening wait counts on, in milliseconds. */
 fun openingClock(): Long = System.nanoTime() / 1_000_000
 
+/** A chapter asked for from the one on screen: its row, when the session knows it. */
+data class ChapterAsk(val chapter: ChapterId, val row: ChapterRow?)
+
 /** What the engine said of the open session. */
 data class ReaderState(
     /** Asked to open and not yet answered. */
@@ -114,6 +117,11 @@ data class ReaderState(
     val openingWait: ReaderWait? = null,
     /** When the chapter on screen was asked for, on [openingClock]; 0 when nothing was asked. */
     val openingSince: Long = 0L,
+    /**
+     * Another chapter asked for while this one is on screen, until it opens or fails: the screen
+     * says it is on its way, and no second chapter is asked meanwhile.
+     */
+    val asking: ChapterAsk? = null,
     val preview: NextPreview? = null,
     /** The chapter a strip flowed on from, drawn above this one in the same scroll. */
     val previous: ReaderState? = null,
@@ -304,13 +312,22 @@ class ReaderSession(private val send: (Command) -> Unit) {
         reader(ReaderCommand.Retry(now.session ?: return, now.chapter ?: return, page))
     }
 
-    fun openChapter(chapter: ChapterId) {
+    /**
+     * Open [chapter] in place of the one on screen. False, asking nothing, with no session yet or
+     * while another chapter is on its way: taps that come while it opens do not queue more jumps.
+     */
+    fun openChapter(chapter: ChapterId): Boolean {
+        if (state.value.session == null || state.value.asking != null) return false
         commitKeep()
         val now = state.value
-        val session = now.session ?: return
-        awaiting = now.view?.next?.takeIf { it.id == chapter } ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
+        val session = now.session ?: return false
+        val view = now.view
+        awaiting = listOfNotNull(view?.next, view?.previous).firstOrNull { it.id == chapter }
+            ?: now.volumes.flatMap { it.chapters }.firstOrNull { it.id == chapter }
         awaitingOpen = true
+        _state.value = now.copy(asking = ChapterAsk(chapter, awaiting), openingSince = openingClock())
         reader(ReaderCommand.OpenChapter(session, chapter))
+        return true
     }
 
     /**
@@ -320,7 +337,7 @@ class ReaderSession(private val send: (Command) -> Unit) {
     fun crossOn(): Boolean {
         val now = state.value
         val next = now.end?.next ?: now.view?.next ?: return false
-        if (awaitingOpen && awaiting?.id == next.id) return true
+        if (now.asking != null) return true
         openChapter(next.id)
         return true
     }
