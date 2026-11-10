@@ -454,6 +454,9 @@ impl Worker {
             Job::Close { session } => {
                 if self.open.as_ref().is_some_and(|c| c.session == session) {
                     self.open = None;
+                    // The pages' working memory, kept for the next page while the reader was
+                    // open, goes back to the system with it.
+                    kaeri_alloc::release();
                 }
             }
             Job::Peek(job) => {

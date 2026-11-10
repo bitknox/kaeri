@@ -73,6 +73,7 @@ cli = ["uniffi/cli", "uniffi/cargo-metadata"]
 [dependencies]
 # The reading scenes' own fake book source, with `testing`.
 async-trait = { workspace = true, optional = true }
+kaeri-alloc.workspace = true
 kaeri-audio-tap.workspace = true
 kaeri-core.workspace = true
 kaeri-engine.workspace = true

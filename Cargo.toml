@@ -30,6 +30,7 @@ kaeri-playback = { path = "crates/kaeri-playback" }
 kaeri-party = { path = "crates/kaeri-party" }
 kaeri-mpv-host = { path = "crates/kaeri-mpv-host" }
 kaeri-audio-tap = { path = "crates/kaeri-audio-tap" }
+kaeri-alloc = { path = "crates/kaeri-alloc" }
 kaeri-plugin = { path = "crates/kaeri-plugin", default-features = false }
 kaeri-plugin-store = { path = "crates/kaeri-plugin-store" }
 kaeri-store-core = { path = "crates/kaeri-store-core" }

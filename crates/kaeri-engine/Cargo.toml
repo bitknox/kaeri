@@ -74,6 +74,7 @@ network-interface = { version = "2", optional = true }
 kaeri-track.workspace = true
 # The reader: book files opened and pages processed on the page worker.
 kaeri-pages.workspace = true
+kaeri-alloc.workspace = true
 toml.workspace = true
 open = { workspace = true, optional = true }
 async-trait.workspace = true
