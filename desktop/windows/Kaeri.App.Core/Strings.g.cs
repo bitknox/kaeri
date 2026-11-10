@@ -906,6 +906,9 @@ public static partial class T
     /// <summary>The source has failed every ask, since a time on another day or not known.</summary>
     public static string ReadingMissDown => Get("ReadingMissDown");
 
+    /// <summary>The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it.</summary>
+    public static string ReadingMissPossible => Get("ReadingMissPossible");
+
     /// <summary>How many parts of a light novel are downloaded.</summary>
     public static string ReadingDlParts(long count) => Fill(GetPlural("ReadingDlParts", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -11972,6 +11975,7 @@ public static partial class T
         ["ReadingMissNoSeries"] = "No series with this name",
         ["ReadingMissDownSince"] = "Not answering since {time}",
         ["ReadingMissDown"] = "Not answering",
+        ["ReadingMissPossible"] = "Possible match",
         ["ReadingDlParts_one"] = "1 part",
         ["ReadingDlParts_other"] = "{count} parts",
         ["ReadingDlSize"] = "{size}",

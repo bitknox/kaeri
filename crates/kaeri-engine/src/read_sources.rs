@@ -264,6 +264,12 @@ pub struct BookSources {
     pub demo: kaeri_providers::reading_demo::ReadingDemo,
     /// The series whose sources are being asked how they read, by source and series.
     hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
+    /// The series whose chapter list came back empty lately, by source and series: an empty
+    /// answer is not kept, so this is what keeps a work from being read from it meanwhile.
+    empty: Arc<Mutex<HashMap<(String, String), std::time::Instant>>>,
+    /// The language the app speaks, as `set_language` was told: the language a work's
+    /// chapters are counted in when its editions are compared.
+    language: Arc<RwLock<Option<String>>>,
     /// What reading's catalogue keeps between commands: see [`crate::read_catalog::Memory`].
     pub catalog: crate::read_catalog::Memory,
     /// The chapters downloaded for reading and the queue that fetches them.
@@ -302,6 +308,8 @@ impl BookSources {
             undo: Arc::default(),
             pending: Arc::default(),
             hint_lookups: Arc::default(),
+            empty: Arc::default(),
+            language: Arc::default(),
             demo: kaeri_providers::reading_demo::ReadingDemo::new(Some(
                 paths.cache_dir.join("reading-demo"),
             )),
@@ -1138,6 +1146,9 @@ impl BookSources {
     /// Name what the engine names in the language the app speaks (a tag from
     /// `kaeri_i18n::languages()`): the folders as a source, and the feed's sections.
     pub fn set_language(&self, tag: &str) {
+        if let Ok(mut language) = self.language.write() {
+            *language = Some(tag.to_owned());
+        }
         self.registry.put(Arc::new(FolderSource::named(self.store.clone(), folders_name(tag))));
         #[cfg(feature = "opds-feed")]
         self.feed.use_language(tag);
@@ -1154,8 +1165,13 @@ impl BookSources {
         work: &kaeri_core::books::WorkId,
     ) -> Vec<kaeri_model::reading::BookEditionRow> {
         let preferred = self.store.edition_pref(work.as_str()).ok().flatten();
-        let in_use = self.edition_of(work, None).map(|(source, _)| source);
-        let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        let in_use = self.edition_of(work, None);
+        let mut refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        // A source holding two series for the work shows the one read from.
+        if let Some(used) = &in_use {
+            refs.retain(|r| r.0 != used.0 || r == used);
+        }
+        let in_use = in_use.map(|(source, _)| source);
         let mut seen = HashSet::new();
         refs.into_iter()
             .filter(|(source, _)| seen.insert(source.clone()))
@@ -1179,6 +1195,88 @@ impl BookSources {
             })
             .collect()
     }
+}
+
+/// How well each held series fits a work, to pick its edition by: a tier (0 has about all its
+/// chapters or nothing is known of a server's or folder's books, 1 not known yet, 2 short of
+/// them, 3 missing the first chapters, 4 a one-shot, none or far more), then how far its count
+/// is from the work's. Chapters are counted in `language` when any series has some in it; the
+/// work's count is `total`, else the most any series has.
+fn editions_fit(
+    sources: &BookSources,
+    held: &[(String, String)],
+    total: Option<u32>,
+    language: Option<&str>,
+) -> Vec<(u8, u32)> {
+    use crate::read_catalog::{chapters, editions::counts_chapters, fit::Facts};
+    let primary = |tag: &str| tag.split(['-', '_']).next().unwrap_or(tag).to_lowercase();
+    let lists: Vec<Option<Vec<chapters::Kept>>> = held
+        .iter()
+        .map(|(source, series)| {
+            counts_chapters(sources, source)
+                .then(|| chapters::kept(&sources.store, source, series).map(|(list, _)| list))
+                .flatten()
+        })
+        .collect();
+    let count = |list: &[chapters::Kept], language: Option<&str>| {
+        let mut facts = Facts::default();
+        facts.count_labels(
+            list.iter()
+                .filter(|c| match (language, c.language.as_deref()) {
+                    (Some(want), Some(theirs)) => primary(theirs) == primary(want),
+                    _ => true,
+                })
+                .map(|c| (c.number.clone(), c.label.as_str(), c.title.as_deref())),
+        );
+        facts
+    };
+    let in_language = language.filter(|want| {
+        lists
+            .iter()
+            .flatten()
+            .flatten()
+            .any(|c| c.language.as_deref().is_some_and(|l| primary(l) == primary(want)))
+    });
+    let counted: Vec<Option<Facts>> =
+        lists.iter().map(|list| list.as_deref().map(|l| count(l, in_language))).collect();
+    let most = counted.iter().flatten().filter_map(|f| f.chapters).max();
+    let target = total.or(most);
+    counted
+        .into_iter()
+        .zip(held)
+        .map(|(facts, (source, _))| {
+            let Some(facts) = facts else {
+                return if counts_chapters(sources, source) {
+                    (1, u32::MAX)
+                } else {
+                    (0, u32::MAX)
+                };
+            };
+            let n = facts.chapters.unwrap_or(0);
+            let one_shot = facts.named_one_shot || (n <= 1 && target.is_some_and(|t| t >= 2));
+            // Nothing to read in the person's language, or only a stray chapter.
+            if n == 0 || one_shot {
+                return (4, u32::MAX);
+            }
+            let Some(target) = target else { return (0, 0) };
+            // How far it reaches: the last chapter's number when that is lower than the count,
+            // since extras, parts and side chapters add to a count and never to the numbers.
+            #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+            let n = facts.last.map_or(n, |last| n.min(last.max(0.0).floor() as u32).max(1));
+            let slack = (target / 5).max(10);
+            let near = (target / 20).max(3);
+            if n > target + slack {
+                (4, target.abs_diff(n))
+            } else if !facts.has_the_start() {
+                // A series that begins at chapter 47 cannot be read from the start.
+                (3, target.saturating_sub(n))
+            } else if n + near >= target {
+                (0, 0)
+            } else {
+                (2, target - n)
+            }
+        })
+        .collect()
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1418,24 +1516,75 @@ impl BookSources {
             .map(|(at, _)| *at)
     }
 
-    /// Which source and series reference a work is read from: the chosen edition, the person's
-    /// preference, or the first source in their order that holds it.
+    /// Which source and series reference a work is read from: the chosen edition or the
+    /// person's preference, then a series the person confirmed, then the series whose chapters
+    /// in the person's language come nearest the work's, then the person's order of sources. A
+    /// one-shot, or a source with a fraction of the chapters, comes after one that has them.
     pub(crate) fn edition_of(
         &self,
         work: &WorkId,
         edition: Option<&str>,
     ) -> Option<(String, String)> {
         let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
-        let wanted = edition.map(str::to_owned).or_else(|| {
-            self.store.edition_pref(work.as_str()).ok().flatten().map(|p| p.source_id)
-        });
-        if let Some(wanted) = wanted
-            && let Some(found) = refs.iter().find(|(source, _)| *source == wanted)
-        {
-            return Some(found.clone());
-        }
+        let pref = self.store.edition_pref(work.as_str()).ok().flatten();
+        let wanted =
+            edition.map(str::to_owned).or_else(|| pref.as_ref().map(|p| p.source_id.clone()));
         let order = self.registry.ids();
-        order.into_iter().find_map(|id| refs.iter().find(|(source, _)| *source == id).cloned())
+        let mut held = refs;
+        match wanted {
+            Some(wanted) if held.iter().any(|(source, _)| *source == wanted) => {
+                held.retain(|(source, _)| *source == wanted);
+            }
+            // Never a source switched off, nor one whose chapter list came back empty: with
+            // nothing else held, nothing is read from rather than a page with no chapters.
+            _ => held.retain(|(source, series)| {
+                order.contains(source)
+                    && !self.registry.is_off(source)
+                    && !self.came_back_empty(source, series)
+            }),
+        }
+        if held.len() <= 1 {
+            return held.pop();
+        }
+        let language = pref
+            .and_then(|p| p.language)
+            .or_else(|| self.language.read().ok().and_then(|l| l.clone()));
+        let total =
+            self.store.book_work(work.as_str()).ok().flatten().and_then(|w| w.chapters_total);
+        let fits = editions_fit(self, &held, total, language.as_deref());
+        let position =
+            |source: &str| order.iter().position(|id| id == source).unwrap_or(usize::MAX);
+        held.into_iter()
+            .zip(fits)
+            .min_by_key(|((source, series), fit)| {
+                let confirmed =
+                    matches!(self.store.book_match_state(source, series), Ok(Some((_, true))));
+                (!confirmed, fit.0, fit.1, position(source))
+            })
+            .map(|(held, _)| held)
+    }
+
+    /// Note what a source's chapter list came back as: empty, or with chapters again.
+    fn note_list(&self, source: &str, series: &str, chapters: &[SourceChapter]) {
+        let mut empty = self.empty.lock().unwrap_or_else(|e| e.into_inner());
+        let key = (source.to_owned(), series.to_owned());
+        if chapters.is_empty() {
+            empty.insert(key, std::time::Instant::now());
+        } else {
+            empty.remove(&key);
+        }
+    }
+
+    /// The series' chapter list came back empty within the last quarter hour, or was kept
+    /// empty before.
+    fn came_back_empty(&self, source: &str, series: &str) -> bool {
+        const EMPTY_FOR: std::time::Duration = std::time::Duration::from_secs(15 * 60);
+        let noted = self.empty.lock().unwrap_or_else(|e| e.into_inner());
+        noted
+            .get(&(source.to_owned(), series.to_owned()))
+            .is_some_and(|at| at.elapsed() < EMPTY_FOR)
+            || crate::read_catalog::chapters::kept(&self.store, source, series)
+                .is_some_and(|(list, _)| list.is_empty())
     }
 
     /// How the source a work is read from says its pages read, as last kept.
@@ -1509,6 +1658,37 @@ impl BookSources {
         }
     }
 
+    /// The chapter lists of a work's series that are not kept yet, fetched and kept, so the
+    /// edition read from is picked by what each source has. Only when nobody chose one, and
+    /// each source is asked once at the same time as the others.
+    async fn know_editions(&self, work: &WorkId, now: i64) {
+        let chosen = self.store.edition_pref(work.as_str()).ok().flatten().is_some();
+        let refs = self.store.book_refs_for_work(work.as_str()).unwrap_or_default();
+        let order = self.registry.ids();
+        if chosen || refs.len() < 2 {
+            return;
+        }
+        let unknown: Vec<(String, String)> = refs
+            .into_iter()
+            .filter(|(source, series)| {
+                order.contains(source)
+                    && !self.registry.is_off(source)
+                    && crate::read_catalog::editions::counts_chapters(self, source)
+                    && crate::read_catalog::chapters::kept(&self.store, source, series)
+                        .is_none()
+            })
+            .collect();
+        let fetches = unknown.iter().map(|(source, series)| async move {
+            if let Ok(list) =
+                self.registry.chapters(source, series, &BookHints::default(), now).await
+            {
+                self.note_list(source, series, &list);
+                crate::read_catalog::chapters::keep(&self.store, source, series, &list, now);
+            }
+        });
+        futures::future::join_all(fetches).await;
+    }
+
     /// A work's chapters from its edition, grouped by volume, with the person's reading marked.
     pub async fn chapters(
         &self,
@@ -1516,6 +1696,9 @@ impl BookSources {
         edition: Option<&str>,
         now: i64,
     ) -> Result<(Option<BookEditionRow>, Vec<VolumeGroup>), ReadingFailure> {
+        if edition.is_none() {
+            self.know_editions(work, now).await;
+        }
         let (source, series) =
             self.edition_of(work, edition).ok_or(ReadingFailure::NotFound)?;
         // The source is asked how the series reads beside its chapters, and never held up for.
@@ -1577,6 +1760,7 @@ impl BookSources {
         };
         let empty = chapters.is_empty().then_some(Asked::Empty);
         self.note_listing(source, series, empty, now);
+        self.note_list(source, series, &chapters);
         oldest_first(&mut chapters);
         crate::read_catalog::chapters::keep(&self.store, source, series, &chapters, now);
         Ok(chapters)

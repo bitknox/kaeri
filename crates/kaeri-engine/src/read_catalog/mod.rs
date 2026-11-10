@@ -8,6 +8,7 @@
 pub(crate) mod chapters;
 pub(crate) mod discovery;
 pub(crate) mod editions;
+pub(crate) mod fit;
 pub(crate) mod home;
 pub(crate) mod rows;
 pub(crate) mod search;

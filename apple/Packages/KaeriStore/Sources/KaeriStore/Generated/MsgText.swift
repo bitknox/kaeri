@@ -449,6 +449,7 @@ extension ReadingMsg {
         case .readingMissNoSeries: L.readingMissNoSeries
         case .readingMissDownSince(let time): L.readingMissDownSince(time: time)
         case .readingMissDown: L.readingMissDown
+        case .readingMissPossible: L.readingMissPossible
         case .readingDlParts(let count): L.readingDlParts(count: Int(count))
         case .readingDlSize(let size): L.readingDlSize(size: sizeText(size))
         case .readingDlRead(let count): L.readingDlRead(count: Int(count))

@@ -450,6 +450,7 @@ fun ReadingMsg.text(context: Context): String =
         is ReadingMsg.ReadingMissNoSeries -> Strings.readingMissNoSeries(context)
         is ReadingMsg.ReadingMissDownSince -> Strings.readingMissDownSince(context, this.time)
         is ReadingMsg.ReadingMissDown -> Strings.readingMissDown(context)
+        is ReadingMsg.ReadingMissPossible -> Strings.readingMissPossible(context)
         is ReadingMsg.ReadingDlParts -> Strings.readingDlParts(context, this.count.toInt())
         is ReadingMsg.ReadingDlSize -> Strings.readingDlSize(context, sizeText(context, this.size))
         is ReadingMsg.ReadingDlRead -> Strings.readingDlRead(context, this.count.toInt())

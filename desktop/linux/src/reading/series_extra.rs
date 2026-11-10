@@ -370,7 +370,7 @@ fn draw_read_from(
                 button.connect_clicked({
                     let (found, source) = (Rc::clone(found), miss.source_id.clone());
                     let ctx = Rc::downgrade(ctx);
-                    let (work, title) = (work.clone(), title.to_owned());
+                    let (work, query) = (work.clone(), miss.query.clone().unwrap_or_else(|| title.to_owned()));
                     move |_| {
                         let Some(ctx) = ctx.upgrade() else { return };
                         {
@@ -384,7 +384,7 @@ fn draw_read_from(
                             BookSourceCommand::SearchSourceForWork {
                                 work: work.clone(),
                                 source_id: source.clone(),
-                                query: title.clone(),
+                                query: query.clone(),
                             },
                         );
                         let redraw = found.borrow().redraw.clone();
@@ -398,6 +398,9 @@ fn draw_read_from(
             list.append(&line);
             if open {
                 list.append(&search_there(ctx, dialog, work, title, miss, &state));
+            } else if let Some(possible) = &miss.possible {
+                // Another edition the source has, which may be it: one press confirms it.
+                list.append(&possible_row(ctx, dialog, work, &miss.source_id, possible, &state));
             }
         }
         body.append(&list);
@@ -472,6 +475,48 @@ fn edition_chapters(edition: &BookEditionRow, first: bool) -> String {
     }
 }
 
+/// A series a source has in another edition: its title with year and language, chosen with a press.
+fn possible_row(
+    ctx: &Rc<Ctx>,
+    dialog: &adw::Dialog,
+    work: &WorkId,
+    source_id: &str,
+    choice: &SourceSeriesChoice,
+    state: &Found,
+) -> adw::ActionRow {
+    let mut parts: Vec<String> = Vec::new();
+    parts.extend(choice.year.map(|y| y.to_string()));
+    parts.extend(choice.language.as_deref().filter(|l| !l.is_empty()).map(say::language));
+    let line = row(&choice.title, &parts.join(" \u{b7} "));
+    line.set_activatable(true);
+    line.connect_activated({
+        let (ctx, work, source, series_ref, dialog, picked) = (
+            Rc::downgrade(ctx),
+            work.clone(),
+            source_id.to_owned(),
+            choice.series_ref.clone(),
+            dialog.downgrade(),
+            Rc::clone(&state.picked),
+        );
+        move |_| {
+            let Some(ctx) = ctx.upgrade() else { return };
+            picked.set(true);
+            sources(
+                &ctx.hub,
+                BookSourceCommand::ChooseSourceSeries {
+                    work: work.clone(),
+                    source_id: source.clone(),
+                    series_ref: series_ref.clone(),
+                },
+            );
+            if let Some(dialog) = dialog.upgrade() {
+                dialog.close();
+            }
+        }
+    });
+    line
+}
+
 /// The field under a source that has no match, and what that source finds.
 fn search_there(
     ctx: &Rc<Ctx>,
@@ -488,7 +533,7 @@ fn search_there(
     column.set_margin_end(12);
     let entry = gtk::SearchEntry::new();
     entry.set_placeholder_text(Some(&t::read_from_search_placeholder(&miss.source_name)));
-    entry.set_text(title);
+    entry.set_text(miss.query.as_deref().unwrap_or(title));
     column.append(&entry);
     let go = {
         let (ctx, work, source, entry) =

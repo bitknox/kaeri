@@ -222,7 +222,7 @@ struct SeriesPage: View {
         // Shots: Read from with a source that had no series of this name, and choosing chapters.
         .onLaunchSheet("read-from", navigator) { // i18n-skip: a shot's sheet name
             navigator.seriesSheet = .source(work)
-            Task { await store.bookSources.stageMissShot(work: work) }
+            Task { await store.bookSources.stageMissShot(work: work, cover: store.reading.series[work]?.cover) }
         }
         // Shots: Send to e-reader with the first three chapters, and Where did you stop after a send.
         .task {

@@ -650,6 +650,8 @@
     <string name="reading_miss_down_since">Not answering since %1$s</string>
     <!-- The source has failed every ask, since a time on another day or not known. -->
     <string name="reading_miss_down">Not answering</string>
+    <!-- The source has no series by the series' names, but has one that may be it in another edition, as a full-colour release. That series is shown under this line, and choosing it confirms it. -->
+    <string name="reading_miss_possible">Possible match</string>
     <!-- How many parts of a light novel are downloaded. -->
     <plurals name="reading_dl_parts">
         <item quantity="one">1 part</item>
