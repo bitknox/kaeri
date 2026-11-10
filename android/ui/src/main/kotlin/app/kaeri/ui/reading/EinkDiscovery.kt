@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -33,6 +32,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -46,6 +47,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
@@ -79,6 +81,7 @@ import app.kaeri.eink.topRule
 import app.kaeri.engine.model.ReadAnilistState
 import app.kaeri.engine.model.ReadFilterChoice
 import app.kaeri.engine.model.ReadHomeRow
+import app.kaeri.engine.model.ReadRowKind
 import app.kaeri.engine.model.ReadSearchQuery
 import app.kaeri.engine.model.ReadSourceGroup
 import app.kaeri.engine.model.ReadSourceState
@@ -86,6 +89,7 @@ import app.kaeri.engine.model.WorkTile
 import app.kaeri.i18n.Strings
 import app.kaeri.store.ReadSearchState
 import app.kaeri.store.text
+import app.kaeri.ui.Destination
 import app.kaeri.ui.Icons
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
@@ -99,26 +103,66 @@ import kotlinx.coroutines.flow.drop
  */
 val LocalEinkLayout = staticCompositionLocalOf<EinkLook?> { null }
 
-/** The gutter of the paper pages. */
-internal val Side = 28.dp
+/**
+ * The gutter of the paper pages: 28 dp, as the boards draw the 6 and 7 inch panels, and 40 on a
+ * panel 900 dp across and wider, as the e-ink board draws the 10.3 inch.
+ */
+internal val Side: Dp
+    @Composable @ReadOnlyComposable
+    get() = if (LocalConfiguration.current.screenWidthDp >= LARGE_PANEL_DP) 40.dp else 28.dp
 
-/** A cover in the e-ink grid at its largest, as the board draws it. */
-private val GridCover = 84.dp
+/** A panel this many dp across and wider takes the 10.3 inch board's gutter. */
+private const val LARGE_PANEL_DP = 900
+
+/** A paged cover grid's column is at least this wide; a panel holds as many as fit, three at least. */
+private val GridColumnLeast = 200.dp
+
+/** Between a grid's columns. */
+private val GridColumnGap = 24.dp
+
+/** What a grid row adds to its cover and its words: the gap above the title and the gap under the row. */
+private val GridGaps = 8.dp + 16.dp
 
 /** A grid cover at its smallest; below it a page holds fewer rows. */
 private val GridCoverLeast = 56.dp
 
-/** What a grid row adds to its cover: the gap above the title and the gap under the row. */
-private val GridGaps = 8.dp + 16.dp
+/** From this cover width a tile's title and line take the body size rather than the small one. */
+internal val GridLargeFrom = 140.dp
+
+/** How a paged cover grid fills its page: its columns and rows, and the cover's width. */
+@Immutable
+internal data class PaperGrid(val columns: Int, val rows: Int, val cover: Dp) {
+    val perPage: Int get() = columns * rows
+    /** The tile's words at the body size, under a large cover. */
+    val large: Boolean get() = cover >= GridLargeFrom
+}
 
 /**
- * The grid's cover width that fits three rows a page in [room], the height under the title with
- * the pager in it, each row adding its [caption] (title and line) and its gaps; at most
- * [GridCover] and at least [GridCoverLeast].
+ * The grid for a page [width] across with [height] under the title, the pager included. The
+ * columns come from the width: as many of at least [GridColumnLeast] as fit, three at least. The
+ * rows come from the height: as few as fill it with covers no wider than their column, three at
+ * least on an [upright] panel and two on its side, so a page is always full. The covers then take
+ * the size that fits; a row's words are [small] or, under a large cover, [large] tall.
  */
-internal fun gridCoverWidth(room: Dp, caption: Dp): Dp {
-    val row = (room - EinkSizes.PagerRow) / 3 - GridGaps - caption - 1.dp
-    return (row / 1.5f).coerceIn(GridCoverLeast, GridCover)
+internal fun paperGrid(width: Dp, height: Dp, small: Dp, large: Dp, upright: Boolean = true): PaperGrid {
+    val columns = (((width + GridColumnGap) / (GridColumnLeast + GridColumnGap)).toInt()).coerceAtLeast(3)
+    val column = (width - GridColumnGap * (columns - 1)) / columns
+    val room = height - EinkSizes.PagerRow
+    val least = if (upright) 3 else 2
+    fun cover(rows: Int, words: Dp): Dp = minOf(column, ((room / rows) - GridGaps - words - 1.dp) / 1.5f)
+    var rows = maxOf(least, kotlin.math.ceil((room / (column * 1.5f + GridGaps + large)).toDouble()).toInt())
+    var words = large
+    var width0 = cover(rows, words)
+    if (width0 < GridLargeFrom) {
+        words = small
+        width0 = cover(rows, words)
+    }
+    // Never below the least cover: fewer rows instead.
+    while (width0 < GridCoverLeast && rows > 1) {
+        rows--
+        width0 = cover(rows, words)
+    }
+    return PaperGrid(columns, rows, width0.coerceAtLeast(GridCoverLeast))
 }
 
 /** A cover in the e-ink lists. */
@@ -325,7 +369,7 @@ internal fun EinkBrowsePage() {
     }
 }
 
-/** A row from Browse: three by three, a page at a time; Search opens the same filter for more. */
+/** A row from Browse: a grid sized to the panel, a page at a time; Search opens the same filter for more. */
 @Composable
 internal fun EinkRowPage(id: String) {
     val store = LocalAppStore.current
@@ -342,23 +386,56 @@ internal fun EinkRowPage(id: String) {
         link = query?.let { Strings.homeSearch(context) },
         onLink = {
             if (query != null) {
+                // The Search tab itself at its start, so the bar marks Search rather than Home.
                 ReadPlaces.search(store.reading, query)
-                navigator.openReadPage(READ_PAGE_SEARCH)
+                navigator.goToStart(Destination.Search)
             }
         },
     ) {
-        // Three by three: the covers take the size that lets three rows fit the page.
-        val measurer = rememberTextMeasurer()
-        val density = LocalDensity.current
-        val caption = with(density) { (measurer.measure("Ag", TileTitle).size.height + measurer.measure("Ag", EinkType.Secondary).size.height).toDp() } // i18n-skip
-        BoxWithConstraints(Modifier.fillMaxSize().padding(top = 8.dp)) {
-            val cover = gridCoverWidth(maxHeight, caption)
-            PagedItems(row.tiles.chunked(3), page, { page = it }, most = 3) { three ->
-                Row(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
-                    for (tile in three) Box(Modifier.weight(1f)) { PaperTile(tile, cover) }
-                    repeat(3 - three.size) { Spacer(Modifier.weight(1f)) }
+        PagedCovers(row.tiles, page, { page = it }, Modifier.padding(top = 8.dp)) { tile, grid ->
+            PaperTile(tile, grid) { navigator.openSeries(tile.work, "eink-row") }
+        }
+    }
+}
+
+/** The heights of a grid tile's two lines of words, small and large, at the text size in use. */
+@Composable
+private fun tileWords(): Pair<Dp, Dp> {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    fun height(title: androidx.compose.ui.text.TextStyle, line: androidx.compose.ui.text.TextStyle) =
+        with(density) { (measurer.measure("Ag", title).size.height + measurer.measure("Ag", line).size.height).toDp() } // i18n-skip
+    return height(TileTitle, EinkType.Secondary) to height(TileTitleLarge, TileLineLarge)
+}
+
+/**
+ * Covers in a grid sized to the page ([paperGrid]), a page at a time with the pager under them.
+ * The page count follows from how many a page holds.
+ */
+@Composable
+internal fun <T> PagedCovers(
+    items: List<T>,
+    page: Int,
+    onPage: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    tile: @Composable (T, PaperGrid) -> Unit,
+) {
+    val (small, large) = tileWords()
+    BoxWithConstraints(modifier.fillMaxSize()) {
+        val upright = LocalConfiguration.current.let { it.screenHeightDp >= it.screenWidthDp }
+        val grid = paperGrid(maxWidth, maxHeight, small, large, upright)
+        val pages = items.chunked(grid.perPage)
+        val shown = page.coerceIn(0, (pages.size - 1).coerceAtLeast(0))
+        Column(Modifier.fillMaxSize()) {
+            Column(Modifier.weight(1f)) {
+                for (row in pages.getOrNull(shown).orEmpty().chunked(grid.columns)) {
+                    Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(GridColumnGap)) {
+                        for (each in row) Box(Modifier.weight(1f)) { tile(each, grid) }
+                        repeat(grid.columns - row.size) { Spacer(Modifier.weight(1f)) }
+                    }
                 }
             }
+            if (pages.size > 1) EinkPager(shown, pages.size, onPage)
         }
     }
 }
@@ -366,22 +443,31 @@ internal fun EinkRowPage(id: String) {
 /** A grid tile's title. */
 private val TileTitle = EinkType.Label.copy(fontSize = EinkType.Secondary.fontSize)
 
-/** A cover on paper with its edge, the title and its line under it. */
+/** A large grid tile's title and line: the body size, one step up the type scale. */
+private val TileTitleLarge = EinkType.Label
+private val TileLineLarge = EinkType.Body.copy(color = EinkColours.Secondary)
+
+/**
+ * A cover on paper with its edge at the grid's size, the title and its line under it across the
+ * column, one line each and cut with an ellipsis, as the board draws them.
+ */
 @Composable
-private fun PaperTile(tile: WorkTile, cover: Dp) {
-    val context = LocalContext.current
-    val navigator = LocalNavigator.current
+internal fun PaperTile(
+    tile: WorkTile,
+    grid: PaperGrid,
+    line: String = tile.line(LocalContext.current),
+    onClick: () -> Unit,
+) {
     Column(
         Modifier
-            .padding(end = 12.dp)
-            .einkClick { navigator.openSeries(tile.work, "eink-row") }
+            // The words take the column's width; on a short page the cover is narrower than it.
+            .fillMaxWidth()
+            .einkClick(onClick = onClick)
             .semantics(mergeDescendants = true) {},
     ) {
-        ReadCover(tile.cover, cover, Modifier.border(EinkSizes.Hairline, EinkColours.Ink), shape = RoundedCornerShape(0.dp), title = tile.title)
-        // One line each, as the board draws them, so three rows fit a page.
-        Text(tile.title, style = TileTitle, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
-        val line = tile.line(context)
-        if (line.isNotEmpty()) Text(line, style = EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        ReadCover(tile.cover, grid.cover, Modifier.border(EinkSizes.Hairline, EinkColours.Ink), shape = RoundedCornerShape(0.dp), title = tile.title)
+        Text(tile.title, style = if (grid.large) TileTitleLarge else TileTitle, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 8.dp))
+        if (line.isNotEmpty()) Text(line, style = if (grid.large) TileLineLarge else EinkType.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -499,7 +585,11 @@ internal fun EinkSearchPage(
     LaunchedEffect(text) {
         snapshotFlow { text.text.toString() }.drop(1).debounce(TYPING_REST_EINK).collect { typed ->
             val now = store.reading.search.value.query
-            if (typed.trim() != now.text) store.reading.runSearch(now.copy(text = typed.trim()))
+            if (typed.trim() != now.text) {
+                // Words cleared with nothing else set: back to the start, as the colour Search goes.
+                val asked = now.copy(text = typed.trim())
+                if (asked.isStart() && !asked.sourcesOnly) store.reading.searchStart() else store.reading.runSearch(asked)
+            }
         }
     }
     LaunchedEffect(search.query.text) {
@@ -515,12 +605,12 @@ internal fun EinkSearchPage(
             lineLimits = androidx.compose.foundation.text.input.TextFieldLineLimits.SingleLine,
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 52.dp)
                 .border(EinkSizes.Rule, EinkColours.Ink, RoundedCornerShape(EinkSizes.SegmentRadius))
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 16.dp, vertical = 2.dp),
             decorator = { field ->
-                Box {
-                    if (text.text.isEmpty()) Text(Strings.readSearchPlaceholder(context), style = EinkType.Tertiary)
+                // The words and the placeholder at the field's size, centred in its 52 dp.
+                Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) {
+                    if (text.text.isEmpty()) Text(Strings.readSearchPlaceholder(context), style = EinkType.Body.copy(color = EinkColours.Secondary))
                     field()
                 }
             },
@@ -533,9 +623,16 @@ internal fun EinkSearchPage(
         }
         val lines = foundLines(context, search, opened)
         when {
+            // Nothing asked: the start, not an empty search.
+            search.query.isStart() -> SearchStart()
             // After 600 ms one word; most searches answer first and cost the panel nothing.
             (search.query.text.isBlank() && search.tiles.isEmpty() && search.loading) || (lines.isEmpty() && search.loading) ->
                 PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp)) }
+            // Browsing by filters with no words that found nothing says so, not "Nothing found for".
+            lines.isEmpty() && search.query.text.isBlank() -> Column(Modifier.padding(top = 16.dp)) {
+                Text(Strings.readSearchNothingBrowse(context), style = EinkType.Body)
+                Text(Strings.readSearchNothingFiltersLine(context), style = EinkType.Secondary)
+            }
             lines.isEmpty() -> Column(Modifier.padding(top = 16.dp)) {
                 Text(Strings.readSearchNothing(context, search.query.text), style = EinkType.Body)
                 Text(Strings.readSearchNothingLine(context), style = EinkType.Secondary)
@@ -544,6 +641,30 @@ internal fun EinkSearchPage(
         }
     }
     if (filters) PaperFilters(search.query) { filters = false }
+}
+
+/**
+ * Search with nothing asked: Home's discovery rows as the colour Search's start shows them, each
+ * opening its grid, paged as the Browse list is.
+ */
+@Composable
+private fun SearchStart() {
+    val store = LocalAppStore.current
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    val home by store.reading.home.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { if (store.reading.home.value == null) store.reading.loadHome() }
+    var page by rememberSaveable { mutableIntStateOf(0) }
+    // Catalogue-wide, as the colour start: Because you finished stays on Home.
+    val rows = home?.rows.orEmpty().filter { it.kind != ReadRowKind.BECAUSE && it.tiles.isNotEmpty() }
+    when {
+        rows.isNotEmpty() -> Column(Modifier.padding(top = 8.dp)) {
+            Text(Strings.readHomeBrowse(context), style = EinkType.RowTitle, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp).semantics { heading() })
+            PagedItems(rows, page, { page = it }) { row -> BrowseLine(row) { navigator.openReadPage(READ_PAGE_ROW + row.id) } }
+        }
+        home == null || home?.rows.orEmpty().any { it.pending } ->
+            PaperWaiting { Text(Strings.stateLoading(context), style = EinkType.Body, modifier = Modifier.padding(top = 16.dp)) }
+    }
 }
 
 /** How long typing rests before e-ink Search asks: a little longer, as each refresh costs. */

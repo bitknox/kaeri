@@ -8,6 +8,8 @@ package app.kaeri.ui.reading
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.CubicBezierEasing
@@ -21,6 +23,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -94,6 +97,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.design.rememberAnimationsRemoved
+import app.kaeri.eink.EinkColours
+import app.kaeri.eink.EinkSizes
+import app.kaeri.eink.EinkSolidButton
+import app.kaeri.eink.EinkTheme
 import app.kaeri.engine.model.CameIn
 import app.kaeri.i18n.R
 import app.kaeri.store.Adding
@@ -508,16 +515,21 @@ internal fun CameInDialog(open: Boolean, form: @Composable () -> CameInForm) {
         properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
     ) {
         val wide = wideWindow()
-        val enter = if (reduced) fadeIn(tween(200)) else fadeIn(tween(CameInMotion.OPEN_MILLIS, easing = CameInMotion.EmphasizedDecelerate)) +
+        // On paper: no motion, and a frame of its own, a 2 dp ink edge round solid paper, as
+        // the dimmed page behind shows no depth and a shadow does not draw.
+        val paper = LocalEinkLayout.current
+        val enter = if (paper != null) EnterTransition.None else if (reduced) fadeIn(tween(200)) else fadeIn(tween(CameInMotion.OPEN_MILLIS, easing = CameInMotion.EmphasizedDecelerate)) +
             slideInVertically(tween(CameInMotion.OPEN_MILLIS, easing = CameInMotion.EmphasizedDecelerate)) { it / 10 }
-        val exit = if (reduced) fadeOut(tween(200)) else fadeOut(tween(CameInMotion.CLOSE_MILLIS, easing = CameInMotion.EmphasizedAccelerate)) +
+        val exit = if (paper != null) ExitTransition.None else if (reduced) fadeOut(tween(200)) else fadeOut(tween(CameInMotion.CLOSE_MILLIS, easing = CameInMotion.EmphasizedAccelerate)) +
             slideOutVertically(tween(CameInMotion.CLOSE_MILLIS, easing = CameInMotion.EmphasizedAccelerate)) { it / 10 }
         if (wide) {
             Box(Modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.Center) {
                 AnimatedVisibility(visible, enter = enter, exit = exit) {
                     Surface(
-                        shape = RoundedCornerShape(28.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = RoundedCornerShape(if (paper != null) EinkSizes.SegmentRadius else 28.dp),
+                        color = if (paper != null) EinkColours.Paper else MaterialTheme.colorScheme.surfaceContainerHigh,
+                        contentColor = if (paper != null) EinkColours.Ink else MaterialTheme.colorScheme.onSurface,
+                        border = if (paper != null) BorderStroke(EinkSizes.Rule, EinkColours.Ink) else null,
                         modifier = Modifier.widthIn(max = 560.dp).fillMaxWidth().heightIn(max = 720.dp).padding(vertical = 24.dp),
                     ) { DialogContent(drawn, wide = true) }
                 }
@@ -549,7 +561,15 @@ private fun DialogContent(form: CameInForm, wide: Boolean) {
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).semantics { heading() },
             )
-            form.primary?.let { action ->
+            val paper = LocalEinkLayout.current
+            if (paper != null) {
+                // On paper the action is the screen's one solid button, as every e-ink primary is.
+                form.primary?.let { action ->
+                    EinkTheme(paper) {
+                        EinkSolidButton(action.label, action.onClick, enabled = action.enabled && !action.working)
+                    }
+                }
+            } else form.primary?.let { action ->
                 // Amber once there is a result to act on, faded in over 0.2 s; silk at 38% until then.
                 val tint by animateColorAsState(
                     if (action.enabled) colors.primary else colors.onSurface.copy(alpha = 0.38f),

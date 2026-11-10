@@ -406,7 +406,9 @@ private fun TabletSettings(start: SettingsPane, actions: AppActions) {
                 label = "pane", // i18n-skip
             ) { shown ->
                 val focus = remember(shown) { RowFocus(shown.defaultFocus) }
-                CompositionLocalProvider(LocalRowFocus provides focus) {
+                // A row is filled as the one the column beside the pane is about; with no room for
+                // that column, as on a tablet held upright, no row is, as on a phone.
+                CompositionLocalProvider(LocalRowFocus provides if (aside) focus else null) {
                     Row(Modifier.fillMaxSize()) {
                         Column(Modifier.weight(1f).fillMaxHeight()) {
                             Box(Modifier.height(64.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {

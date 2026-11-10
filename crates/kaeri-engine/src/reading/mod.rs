@@ -615,6 +615,10 @@ fn eink(engine: &mut EngineState, services: &Services, command: ReadingCommand, 
                     tracing::warn!(error = %e, "the e-ink answer was not written");
                 }
             }
+            // The profile below reads the config in effect, which a write leaves alone: the
+            // file's answers go in effect too, or the switch would only take on the next start.
+            let answers = engine.config.saved().reading.eink.clone();
+            engine.config.effective_mut().reading.eink = answers;
         }
         _ => return,
     }

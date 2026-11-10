@@ -60,18 +60,19 @@ fun Modifier.einkClick(enabled: Boolean = true, role: Role = Role.Button, onClic
 
 /** The screen's one primary action: 54 dp, fully round, ink (amber on a colour panel). */
 @Composable
-fun EinkSolidButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun EinkSolidButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     val look = Eink.look
     Box(
         modifier
             .heightIn(min = EinkSizes.ButtonHeight)
             .clip(RoundedCornerShape(EinkSizes.ButtonRadius))
-            .background(look.primary)
-            .einkClick(onClick = onClick)
+            // Until it can be pressed: light grey with grey words, no fade on paper.
+            .background(if (enabled) look.primary else EinkColours.Selected)
+            .einkClick(enabled = enabled, onClick = onClick)
             .padding(horizontal = EinkSizes.ButtonSide),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = EinkType.Button.copy(color = look.onPrimary), textAlign = TextAlign.Center)
+        Text(text, style = EinkType.Button.copy(color = if (enabled) look.onPrimary else EinkColours.Secondary), textAlign = TextAlign.Center)
     }
 }
 

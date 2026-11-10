@@ -133,6 +133,15 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         }
     }
 
+    /**
+     * Switch to [destination] at its start, as a link into it from another destination opens it:
+     * the pages left open on it last time are closed.
+     */
+    fun goToStart(destination: Destination) {
+        go(destination)
+        nav.popBackStack(destination.route, inclusive = false)
+    }
+
     fun back() {
         nav.popBackStack()
     }
