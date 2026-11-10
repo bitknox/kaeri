@@ -17,12 +17,14 @@ use kaeri_model::{
 use crate::{pages::Dest, reading::reader::Reader, window::Shell};
 
 /// Every credit pages shot, in the order a run takes them.
-pub const NAMES: [&str; 23] = [
+pub const NAMES: [&str; 26] = [
     "read-credit-line",
     "read-credit-chrome",
     "read-credit-shown",
     "read-credit-shown-chrome",
     "read-credit-kept",
+    "read-credit-keep-motion",
+    "read-credit-failed",
     "read-credit-show-motion",
     "read-credit-end",
     "read-credit-end-shown",
@@ -35,6 +37,7 @@ pub const NAMES: [&str; 23] = [
     "read-parts",
     "read-parts-scrub",
     "read-parts-missing",
+    "read-parts-missing-end",
     "read-series-group",
     "read-series-group-picker",
     "read-series-group-picked",
@@ -252,16 +255,42 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             later(shell, 3600, |reader| reader.shot_show_credits(false));
             4.6
         }
-        // Not a credit page: the notice says the page shows from now on.
+        // For the motion clip: Not a credit page, Undo, then the keep again, held until its
+        // notice times out 8 s later and the keep goes to the engine.
+        "read-credit-keep-motion" => {
+            read(shell, MANGA, "13");
+            later(shell, 2500, |reader| {
+                reader.shot_go_to_first();
+                reader.shot_credits(1, 0);
+            });
+            // Shown on a later tick than the turn to page 1, as in read-credit-show-motion: under a
+            // recording the turn's own layout lands after it and would clear the shown page.
+            later(shell, 3600, |reader| reader.shot_show_credits(false));
+            later(shell, 4800, |reader| reader.shot_not_a_credit());
+            later(shell, 6800, |reader| reader.shot_undo_keep());
+            later(shell, 8300, |reader| reader.shot_not_a_credit());
+            17.5
+        }
+        // The credit page's file can't be read: the pill comes back with a notice.
+        "read-credit-failed" => {
+            read(shell, MANGA, "13");
+            later(shell, 2500, |reader| {
+                reader.shot_go_to_first();
+                reader.shot_credits_broken();
+            });
+            later(shell, 3000, |reader| reader.shot_show_credits(false));
+            3.8
+        }
+        // Not a credit page: the page counts at once and the notice offers Undo.
         "read-credit-kept" => {
             read(shell, MANGA, "13");
             later(shell, 2500, |reader| {
                 reader.shot_go_to_first();
                 reader.shot_credits(1, 0);
-                reader.shot_show_credits(false);
             });
-            later(shell, 3300, |reader| reader.shot_not_a_credit());
-            4.3
+            later(shell, 3600, |reader| reader.shot_show_credits(false));
+            later(shell, 4400, |reader| reader.shot_not_a_credit());
+            5.4
         }
         // A credit page skipped at the end, named on the end page, and shown after the last page.
         "read-credit-end" | "read-credit-end-shown" => {
@@ -326,7 +355,17 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
             });
             3.4
         }
-        // The thumb on the tick: the preview names part 2 and its group.
+        // A part no group has after the last: its tick at the end, named there.
+        "read-parts-missing-end" => {
+            read(shell, MANGA, "13");
+            later(shell, 2500, |reader| {
+                reader.shot_parts_missing_end(8);
+                reader.shot_chrome(true);
+            });
+            later(shell, 2900, |reader| reader.shot_scrub(20));
+            3.5
+        }
+        // The thumb on the tick: the preview names part 2.
         "read-parts-scrub" | "read-parts-missing" => {
             let missing = shot == "read-parts-missing";
             read(shell, MANGA, "13");

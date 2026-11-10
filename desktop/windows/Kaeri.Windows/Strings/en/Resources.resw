@@ -1228,11 +1228,11 @@
     <comment>A chapter row: the source lists this chapter in parts, and the reader runs through them as one chapter. Shown beside the chapter's name: "Chapter 1, 2 parts".</comment>
   </data>
   <data name="ReadingRowFromGroup" xml:space="preserve">
-    <value>From {group}</value>
+    <value>from {group}</value>
     <comment>A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.</comment>
   </data>
   <data name="ReadingRowFromGroupIn" xml:space="preserve">
-    <value>From {group}, {language}</value>
+    <value>from {group}, {language}</value>
     <comment>A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".</comment>
   </data>
   <data name="ReadingRowPartsOf" xml:space="preserve">
@@ -1256,7 +1256,7 @@
     <comment>The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".</comment>
   </data>
   <data name="ReadingRowFromSource" xml:space="preserve">
-    <value>From {source}</value>
+    <value>from {source}</value>
     <comment>A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.</comment>
   </data>
   <data name="ReaderCreditPagesSkipped_one" xml:space="preserve">
@@ -8402,9 +8402,17 @@
     <value>credit page {n} of {total}</value>
     <comment>The same, when more than one credit page is shown: "credit page 1 of 2".</comment>
   </data>
+  <data name="ReaderGroupLinePlace" xml:space="preserve">
+    <value>{chapter} · {place}</value>
+    <comment>The control group's line while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".</comment>
+  </data>
   <data name="ReaderCreditPageLabel" xml:space="preserve">
     <value>Credit page</value>
     <comment>Spoken name of a credit page shown again.</comment>
+  </data>
+  <data name="ReaderCreditFailed" xml:space="preserve">
+    <value>Couldn't load this credit page</value>
+    <comment>Notice when a skipped credit page's picture can't be read, so it can't be shown.</comment>
   </data>
   <data name="ReaderPartPreview" xml:space="preserve">
     <value>Page {page} · part {part}</value>

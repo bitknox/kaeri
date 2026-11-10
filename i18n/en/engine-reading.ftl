@@ -565,14 +565,14 @@ reading-row-parts = { $n ->
 # from another group, named here as the source names it.
 # @arg group: text
 # @max 32
-reading-row-from-group = From { $group }
+reading-row-from-group = from { $group }
 
 # A chapter row: the same, for a group in another language than the app's, named after the group.
 # "From Saltmarsh Team, Spanish".
 # @arg group: text
 # @arg language: text
 # @max 40
-reading-row-from-group-in = From { $group }, { $language }
+reading-row-from-group-in = from { $group }, { $language }
 
 # A chapter row: a chapter in parts that is missing some, as no group has released them. The
 # reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
@@ -608,7 +608,7 @@ reading-row-part-from-group-in = part { $part } from { $group }, { $language }
 # person's sources has it. Its name follows; the chapter opens from there.
 # @arg source: text
 # @max 32
-reading-row-from-source = From { $source }
+reading-row-from-source = from { $source }
 
 # A quiet line in the reader: pages a series repeats at the start or end of its chapters (a
 # group's credits or notices) were left out of this chapter. Tapping it shows them.

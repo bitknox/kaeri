@@ -229,6 +229,10 @@ impl EndPage {
         }
         self.credit_row.set_visible(facts.credits.is_some());
         self.credit_text.set_label(facts.credits.as_deref().unwrap_or_default());
+        // Show is named by its line, so it says what it shows: "1 credit page skipped, button".
+        if let Some(words) = facts.credits.as_deref() {
+            self.credit_show.update_property(&[gtk::accessible::Property::Label(words)]);
+        }
         match &facts.next {
             Some(next) => {
                 self.next_box.set_visible(true);

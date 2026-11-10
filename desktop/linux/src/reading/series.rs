@@ -33,10 +33,14 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
     let head = gtk::Box::new(gtk::Orientation::Vertical, 14);
     let chapters = gtk::Box::new(gtk::Orientation::Vertical, 12);
     let details = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    // The rows' veil: after a group pick the old rows fade over the new ones.
+    let details_veil = gtk::Overlay::new();
+    details_veil.set_child(Some(&details));
+    details_veil.set_widget_name(series_extra::DETAILS_VEIL);
     let memo: Rc<RefCell<series_extra::Memo>> = Rc::default();
     let column = gtk::Box::new(gtk::Orientation::Vertical, 22);
     column.append(&head);
-    column.append(&details);
+    column.append(&details_veil);
     column.append(&chapters);
     let scroll = widgets::column_page(&column, 820);
     let empty = states_plain();
@@ -124,11 +128,13 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
             (status_button.clone(), download_button.clone(), Rc::clone(&shown));
         let (listed, redraw) = (Rc::clone(&listed), Rc::clone(&redraw));
         let (details, memo, work) = (details.clone(), Rc::clone(&memo), work.clone());
+        let details_veil = details_veil.clone();
         let (menu_button, top) = (menu_button.clone(), Rc::clone(&top));
         move |event| {
             let Some(ctx) = ctx.upgrade() else { return };
             if series_extra::follow(&memo, &work, event) {
-                series_extra::draw(&ctx, &details, &memo.borrow());
+                let series = matches!(event, Event::Reading(ReadingEvent::Series(_)));
+                series_extra::redraw(&ctx, &details_veil, &details, &memo.borrow(), series);
             }
             match event {
                 Event::Reading(ReadingEvent::Series(view)) if view.work == wanted => {

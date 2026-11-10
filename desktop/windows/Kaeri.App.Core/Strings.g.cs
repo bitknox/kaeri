@@ -6061,8 +6061,14 @@ public static partial class T
     /// <summary>The same, when more than one credit page is shown: "credit page 1 of 2".</summary>
     public static string ReaderCreditPageOf(long n, long total) => Fill(Get("ReaderCreditPageOf"), ("n", n.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
 
+    /// <summary>The control group's line while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".</summary>
+    public static string ReaderGroupLinePlace(string chapter, string place) => Fill(Get("ReaderGroupLinePlace"), ("chapter", chapter), ("place", place));
+
     /// <summary>Spoken name of a credit page shown again.</summary>
     public static string ReaderCreditPageLabel => Get("ReaderCreditPageLabel");
+
+    /// <summary>Notice when a skipped credit page's picture can't be read, so it can't be shown.</summary>
+    public static string ReaderCreditFailed => Get("ReaderCreditFailed");
 
     /// <summary>The scrubber's preview on the first page of a chapter's later part.</summary>
     public static string ReaderPartPreview(long page, long part) => Fill(Get("ReaderPartPreview"), ("page", page.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("part", part.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -12054,14 +12060,14 @@ public static partial class T
         ["ReadingRowVersions_other"] = "{n} versions",
         ["ReadingRowParts_one"] = "1 part",
         ["ReadingRowParts_other"] = "{n} parts",
-        ["ReadingRowFromGroup"] = "From {group}",
-        ["ReadingRowFromGroupIn"] = "From {group}, {language}",
+        ["ReadingRowFromGroup"] = "from {group}",
+        ["ReadingRowFromGroupIn"] = "from {group}, {language}",
         ["ReadingRowPartsOf"] = "{have} of {n} parts",
         ["ReadingRowPartMissing_one"] = "part {part} missing",
         ["ReadingRowPartMissing_other"] = "{count} parts missing",
         ["ReadingRowPartFromGroup"] = "part {part} from {group}",
         ["ReadingRowPartFromGroupIn"] = "part {part} from {group}, {language}",
-        ["ReadingRowFromSource"] = "From {source}",
+        ["ReadingRowFromSource"] = "from {source}",
         ["ReaderCreditPagesSkipped_one"] = "{count} credit page skipped",
         ["ReaderCreditPagesSkipped_other"] = "{count} credit pages skipped",
         ["ReadingAgoNow"] = "just now",
@@ -13855,7 +13861,9 @@ public static partial class T
         ["ReaderCreditKept"] = "This page will show from now on",
         ["ReaderCreditPage"] = "credit page",
         ["ReaderCreditPageOf"] = "credit page {n} of {total}",
+        ["ReaderGroupLinePlace"] = "{chapter} · {place}",
         ["ReaderCreditPageLabel"] = "Credit page",
+        ["ReaderCreditFailed"] = "Couldn't load this credit page",
         ["ReaderPartPreview"] = "Page {page} · part {part}",
         ["ReaderPartStarts"] = "Part {part} starts at page {page}",
         ["OnboardingReadDemo"] = "Read the demo",

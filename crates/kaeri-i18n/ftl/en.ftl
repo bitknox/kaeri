@@ -910,10 +910,10 @@ reading-row-parts =
     }
 
 # A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.
-reading-row-from-group = From { $group }
+reading-row-from-group = from { $group }
 
 # A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".
-reading-row-from-group-in = From { $group }, { $language }
+reading-row-from-group-in = from { $group }, { $language }
 
 # A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
 reading-row-parts-of = { $have } of { $n } parts
@@ -932,7 +932,7 @@ reading-row-part-from-group = part { $part } from { $group }
 reading-row-part-from-group-in = part { $part } from { $group }, { $language }
 
 # A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.
-reading-row-from-source = From { $source }
+reading-row-from-source = from { $source }
 
 # A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
 reader-credit-pages-skipped =
@@ -2194,9 +2194,6 @@ linux-send-save-failed = Couldn't save the files in that folder
 
 # Tooltip and spoken name of the button on Updates that looks for new chapters now.
 linux-updates-check = Check for new chapters
-
-# The line under the series' name in the reader's group while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
-linux-reader-line-place = { $chapter } · { $place }
 
 # Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 settings-preview = Preview
@@ -9062,8 +9059,14 @@ reader-credit-page = credit page
 # The same, when more than one credit page is shown: "credit page 1 of 2".
 reader-credit-page-of = credit page { $n } of { $total }
 
+# The control group's line while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
+reader-group-line-place = { $chapter } · { $place }
+
 # Spoken name of a credit page shown again.
 reader-credit-page-label = Credit page
+
+# Notice when a skipped credit page's picture can't be read, so it can't be shown.
+reader-credit-failed = Couldn't load this credit page
 
 # The scrubber's preview on the first page of a chapter's later part.
 reader-part-preview = Page { $page } · part { $part }

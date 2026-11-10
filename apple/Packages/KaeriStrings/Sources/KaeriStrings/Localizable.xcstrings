@@ -211665,6 +211665,18 @@
         }
       }
     },
+    "reader-credit-failed" : {
+      "comment" : "Notice when a skipped credit page's picture can't be read, so it can't be shown.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load this credit page"
+          }
+        }
+      }
+    },
     "reader-credit-kept" : {
       "comment" : "Notice after Not a credit page, with Undo.",
       "extractionState" : "manual",
@@ -216887,6 +216899,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · trang %2$@/%3$@"
+          }
+        }
+      }
+    },
+    "reader-group-line-place" : {
+      "comment" : "The control group's line while a credit page shows: the chapter, then \"credit page\" or \"credit page 1 of 2\". Argument 1: chapter (Text). Argument 2: place (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
           }
         }
       }
@@ -236894,7 +236918,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "From %1$@"
+            "value" : "from %1$@"
           }
         }
       }
@@ -236906,7 +236930,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "From %1$@, %2$@"
+            "value" : "from %1$@, %2$@"
           }
         }
       }
@@ -236918,7 +236942,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "From %1$@"
+            "value" : "from %1$@"
           }
         }
       }

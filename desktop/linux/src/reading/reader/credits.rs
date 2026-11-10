@@ -34,6 +34,21 @@ const ROW: i32 = 44;
 /// The part preview stays this long after the scrubber last moved.
 const TIP_HOLD: Duration = Duration::from_millis(1500);
 
+/// Not a credit page, held while its Undo shows.
+pub struct Keeping {
+    session: u64,
+    fingerprint: u64,
+    at_end: bool,
+    toast: adw::Toast,
+}
+
+/// A kept page the engine was told of: the next layout has it as page `page`, every page from
+/// there one on.
+pub struct Relay {
+    pub fingerprint: u64,
+    pub page: u32,
+}
+
 /// The open chapter's parts, as the engine last sent them.
 pub struct Parts {
     pub parts: Vec<ChapterPart>,
@@ -75,8 +90,9 @@ fn skipped(count: usize) -> String {
 /// under its caption, once they are shown.
 pub struct CreditBlock {
     pub widget: gtk::Box,
-    /// The row: its line, then the first page's caption. At the start only.
-    row: Option<gtk::Stack>,
+    /// The row: its line, then the first page's caption, in a veil the line fades over. At
+    /// the start only.
+    row: Option<Row>,
     revealer: gtk::Revealer,
     /// Each page's picture and its width over height.
     frames: Vec<(gtk::Picture, f32)>,
@@ -113,15 +129,20 @@ impl CreditBlock {
         f64::from(tall(&self.widget))
     }
 
-    /// Grow the pages in under the row, its line turning into their caption.
-    fn reveal(&self) {
-        grow(self.row.as_ref(), &self.revealer);
+    /// The pages there at once, the row already their caption: shown before a new layout.
+    fn reveal_now(&self) {
+        if let Some(row) = &self.row {
+            row.stack.set_visible_child_name("caption");
+        }
+        self.revealer.set_transition_type(gtk::RevealerTransitionType::None);
+        self.revealer.set_reveal_child(true);
+        self.revealer.set_transition_type(gtk::RevealerTransitionType::SlideUp);
     }
 
-    /// What `reveal` needs, held apart from the reader's state: a revealer that does not
+    /// What `grow` needs, held apart from the reader's state: a revealer that does not
     /// animate, under Reduce Motion, says it is revealed at once, and the strip then reads the
     /// state.
-    fn grower(&self) -> (Option<gtk::Stack>, gtk::Revealer) {
+    fn grower(&self) -> (Option<Row>, gtk::Revealer) {
         (self.row.clone(), self.revealer.clone())
     }
 
@@ -130,12 +151,54 @@ impl CreditBlock {
     }
 }
 
-/// The row turns into the pages' caption and the pages grow in under it.
-fn grow(row: Option<&gtk::Stack>, revealer: &gtk::Revealer) {
+/// A strip's credit row: the line and the caption in a stack, and the veil the line fades
+/// over the caption in.
+#[derive(Clone)]
+struct Row {
+    veil: gtk::Overlay,
+    stack: gtk::Stack,
+}
+
+/// The row's line fades into the pages' caption and the pages grow in under it, top first and
+/// in place, fading in over 200 ms. Under Reduce Motion they are there at once at full height,
+/// still fading in. The keyboard goes from the row to the caption's Not a credit page.
+fn grow(row: Option<&Row>, revealer: &gtk::Revealer) {
     if let Some(row) = row {
-        row.set_visible_child_name("caption");
+        let focused = row.stack.child_by_name("line").is_some_and(|line| line.has_focus());
+        motion::ghost(&row.veil, &row.stack, true, || {
+            row.stack.set_visible_child_name("caption");
+        });
+        if focused
+            && let Some(not) = row
+                .stack
+                .child_by_name("caption")
+                .and_then(|caption| with_class(&caption, "reader-credit-show"))
+        {
+            not.grab_focus();
+        }
+    }
+    if let Some(pictures) = revealer.child() {
+        pictures.set_opacity(0.0);
+        let fade = motion::timed(&pictures, 0.0, 1.0, 200, motion::opacity(&pictures));
+        fade.set_easing(adw::Easing::EaseOutCubic);
+        fade.set_follow_enable_animations_setting(false);
+        fade.play();
     }
     revealer.set_reveal_child(true);
+}
+
+fn with_class(widget: &gtk::Widget, class: &str) -> Option<gtk::Widget> {
+    if widget.has_css_class(class) {
+        return Some(widget.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        if let Some(found) = with_class(&next, class) {
+            return Some(found);
+        }
+        child = next.next_sibling();
+    }
+    None
 }
 
 impl Reader {
@@ -242,9 +305,11 @@ impl Reader {
 
     /// The chapter closed or another opened: its credit pages and parts go with it.
     pub(super) fn forget_credits(&self) {
+        self.commit_keep();
         self.drop_strip_credits();
         {
             let mut state = self.state.borrow_mut();
+            state.relay_kept = None;
             state.credits.clear();
             state.credit_on = None;
             state.shown_start = false;
@@ -309,45 +374,86 @@ impl Reader {
             return;
         }
         let first = self.state.borrow().credits.iter().position(|c| c.at_end == at_end);
-        if let Some(first) = first {
-            self.show_credit(first);
+        if let Some(first) = first
+            && !self.show_credit(first)
+        {
+            self.credit_failed(at_end);
         }
         self.fill_end();
+    }
+
+    /// The pages could not be shown: they stay skipped, the pill or the line comes back, and a
+    /// notice says so.
+    fn credit_failed(&self, at_end: bool) {
+        {
+            let mut state = self.state.borrow_mut();
+            if at_end {
+                state.shown_end = false;
+            } else {
+                state.shown_start = false;
+            }
+        }
+        if !at_end && self.on_page() && self.fill_credit_line() {
+            self.credit_fade.set(&self.credit_line, true);
+        }
+        self.fill_end();
+        let toast = adw::Toast::builder()
+            .title(glib::markup_escape_text(&t::reader_credit_failed()))
+            .timeout(crate::say::notice_seconds(
+                &t::reader_credit_failed(),
+                false,
+                false,
+                crate::window::screen_reader_running(),
+            ))
+            .build();
+        self.notices.add(&toast);
     }
 
     /// Credit page `i` on screen in place of a page, by the same crossfade as a turn. False
     /// when its file can't be read.
     fn show_credit(self: &Rc<Self>, i: usize) -> bool {
         let Some(credit) = self.state.borrow().credits.get(i).cloned() else { return false };
-        let cached = self.state.borrow().credit_textures.get(&credit.fingerprint).cloned();
-        let Some(texture) = cached.or_else(|| load_texture(&credit.file)) else { return false };
-        {
-            let mut state = self.state.borrow_mut();
-            state.credit_textures.insert(credit.fingerprint, texture.clone());
-            state.credit_on = Some(i);
-        }
+        let Some(texture) = self.credit_texture(&credit) else { return false };
+        self.state.borrow_mut().credit_on = Some(i);
         self.stop_wait();
         motion::turn(&self.veil, &self.stack, || {
             self.picture.set_paintable(Some(&texture));
             self.apply_fit();
             self.stack.set_visible_child_name("paged");
         });
-        self.picture.update_property(&[gtk::accessible::Property::Label(
-            &t::reader_credit_page_label(),
-        )]);
         self.scroll_to_start();
         self.credit_fade.set(&self.credit_line, false);
         if let Some((_, capsule)) = &self.state.borrow().demo {
             capsule.set_visible(false);
         }
         self.credit_place(i);
-        self.credit_notice();
+        if !self.held(credit.fingerprint) {
+            self.credit_notice();
+        }
         true
     }
 
     /// "Chapter 87 · credit page", or "credit page 1 of 2", in the group; the totals stay and
     /// the thumb sits at the start, or at the end for the pages after the last.
     fn credit_place(&self, i: usize) {
+        let held = self.state.borrow().credits.get(i).is_some_and(|c| self.held(c.fingerprint));
+        if held {
+            // Kept, Undo still offered: one of the chapter's pages already.
+            let label = self.state.borrow().chapter.as_ref().map(|c| c.label.clone());
+            self.line.set_label(&label.unwrap_or_default());
+            self.picture.reset_property(gtk::AccessibleProperty::Label);
+            let total = self.story_pages();
+            self.show_pages(1, total);
+            let said = t::linux_reader_page_of(
+                self.scrub.value().round() as i64,
+                self.scrub.adjustment().upper() as i64,
+            );
+            self.scrub.update_property(&[gtk::accessible::Property::ValueText(&said)]);
+            return;
+        }
+        self.picture.update_property(&[gtk::accessible::Property::Label(
+            &t::reader_credit_page_label(),
+        )]);
         let (place, at_end, chapter) = {
             let state = self.state.borrow();
             let Some(credit) = state.credits.get(i) else { return };
@@ -364,7 +470,7 @@ impl Reader {
             let chapter = state.chapter.as_ref().map(|c| c.label.clone()).unwrap_or_default();
             (place, credit.at_end, chapter)
         };
-        self.line.set_label(&t::linux_reader_line_place(&chapter, &place));
+        self.line.set_label(&t::reader_group_line_place(&chapter, &place));
         let total = self.story_pages();
         self.show_pages(if at_end { total } else { 1 }, total);
         self.scrub_at.set_label("");
@@ -424,22 +530,58 @@ impl Reader {
         }
     }
 
+    /// A notice with its button beside the words, which wrap on a narrow window. The toast's
+    /// own button keeps its width and its words stay on one line, so the notice would ask for
+    /// more than a phone-width window has.
+    fn toast_line(
+        &self,
+        text: &str,
+        label: &str,
+        timeout: u32,
+        clicked: impl Fn(&Rc<Reader>) + 'static,
+    ) -> adw::Toast {
+        let toast = adw::Toast::builder()
+            .title(glib::markup_escape_text(text))
+            .timeout(timeout)
+            .priority(adw::ToastPriority::High)
+            .build();
+        let words = gtk::Label::new(Some(text));
+        words.set_wrap(true);
+        words.set_wrap_mode(gtk::pango::WrapMode::WordChar);
+        words.set_natural_wrap_mode(gtk::NaturalWrapMode::None);
+        words.set_xalign(0.0);
+        words.set_hexpand(true);
+        let button = gtk::Button::with_label(label);
+        button.set_valign(gtk::Align::Center);
+        button.connect_clicked({
+            let me = self.me.clone();
+            move |_| {
+                if let Some(this) = me.upgrade() {
+                    clicked(&this);
+                }
+            }
+        });
+        let line = gtk::Box::new(gtk::Orientation::Horizontal, 12);
+        line.append(&words);
+        line.append(&button);
+        toast.set_custom_title(Some(&line));
+        self.notices.add(&toast);
+        // The custom title may not reach a screen reader as the toast's text, so say it too.
+        self.notices
+            .overlay()
+            .upcast_ref::<gtk::Widget>()
+            .announce(text, gtk::AccessibleAnnouncementPriority::High);
+        toast
+    }
+
     /// The notice over a shown credit page: no timeout while the page shows, Not a credit page
     /// its action.
     fn credit_notice(&self) {
         if self.credit_toast.borrow().is_some() {
             return;
         }
-        let toast = adw::Toast::builder()
-            .title(glib::markup_escape_text(&t::reader_credit_shown()))
-            .button_label(t::reader_credit_not())
-            .timeout(0)
-            .priority(adw::ToastPriority::High)
-            .build();
-        toast.connect_button_clicked({
-            let me = self.me.clone();
-            move |_| {
-                let Some(this) = me.upgrade() else { return };
+        let toast =
+            self.toast_line(&t::reader_credit_shown(), &t::reader_credit_not(), 0, |this| {
                 let print = {
                     let state = this.state.borrow();
                     state.credit_on.and_then(|i| state.credits.get(i)).map(|c| c.fingerprint)
@@ -447,8 +589,7 @@ impl Reader {
                 if let Some(print) = print {
                     this.not_a_credit(print);
                 }
-            }
-        });
+            });
         toast.connect_dismissed({
             let me = self.me.clone();
             move |toast| {
@@ -458,24 +599,131 @@ impl Reader {
                 }
             }
         });
-        self.notices.add(&toast);
         self.credit_toast.replace(Some(toast));
     }
 
-    /// Not a credit page: the engine keeps the page in the series from now on and lays the
-    /// chapter out again with it; the notice says so for 8 s.
+    /// Not a credit page: the page counts as one of the chapter's at once and the notice offers
+    /// Undo for 8 s (16 s while a screen reader runs). The engine hears of it when the notice
+    /// times out, at a second keep, or as the chapter closes or another opens; it then keeps
+    /// the page in the series and lays the chapter out again with it.
     fn not_a_credit(&self, fingerprint: u64) {
-        let session = self.state.borrow().session;
-        self.send(ReaderCommand::NotACreditPage { session, fingerprint });
+        self.commit_keep();
         if let Some(toast) = self.credit_toast.take() {
             toast.dismiss();
         }
-        let kept = adw::Toast::builder()
-            .title(glib::markup_escape_text(&t::reader_credit_kept()))
-            .timeout(KEPT_HOLD)
-            .priority(adw::ToastPriority::High)
-            .build();
-        self.notices.add(&kept);
+        let (session, at_end) = {
+            let state = self.state.borrow();
+            let at_end = state.credits.iter().find(|c| c.fingerprint == fingerprint);
+            let Some(at_end) = at_end.map(|c| c.at_end) else { return };
+            (state.session, at_end)
+        };
+        let hold =
+            if crate::window::screen_reader_running() { KEPT_HOLD * 2 } else { KEPT_HOLD };
+        let kept = self.toast_line(&t::reader_credit_kept(), &t::action_undo(), hold, |this| {
+            this.undo_keep();
+        });
+        kept.connect_dismissed({
+            let me = self.me.clone();
+            move |toast| {
+                let Some(this) = me.upgrade() else { return };
+                let mine = this.keeping.borrow().as_ref().is_some_and(|k| &k.toast == toast);
+                if mine {
+                    this.commit_keep();
+                }
+            }
+        });
+        self.keeping.replace(Some(Keeping {
+            session,
+            fingerprint,
+            at_end,
+            toast: kept.clone(),
+        }));
+        self.place_again();
+    }
+
+    /// The held keep goes to the engine; the next layout numbers the pages afresh.
+    pub(super) fn commit_keep(&self) {
+        let Some(keep) = self.keeping.take() else { return };
+        keep.toast.dismiss();
+        let page = kept_number(&self.state.borrow().credits, keep.fingerprint);
+        if let Some(page) = page {
+            self.state.borrow_mut().relay_kept =
+                Some(Relay { fingerprint: keep.fingerprint, page });
+        }
+        self.send(ReaderCommand::NotACreditPage {
+            session: keep.session,
+            fingerprint: keep.fingerprint,
+        });
+    }
+
+    /// Undo, or Ctrl+Z: the page is a credit page again, nothing sent.
+    pub(super) fn undo_keep(&self) {
+        let Some(keep) = self.keeping.take() else { return };
+        keep.toast.dismiss();
+        self.place_again();
+        let on = {
+            let state = self.state.borrow();
+            state.credit_on.and_then(|i| state.credits.get(i)).map(|c| c.fingerprint)
+        };
+        if on == Some(keep.fingerprint) {
+            self.credit_notice();
+        }
+    }
+
+    /// The page is held as kept.
+    fn held(&self, fingerprint: u64) -> bool {
+        self.keeping.borrow().as_ref().is_some_and(|k| k.fingerprint == fingerprint)
+    }
+
+    /// The place and count again, after a keep or its Undo.
+    fn place_again(&self) {
+        if self.flows() {
+            return;
+        }
+        let (on, index) = {
+            let state = self.state.borrow();
+            (state.credit_on, state.index)
+        };
+        if let Some(i) = on {
+            self.credit_place(i);
+        } else if self.is_end(index) {
+            let total = self.story_pages();
+            self.show_pages(total, total);
+        } else {
+            self.show_pages(self.page_number(index), self.story_pages());
+        }
+    }
+
+    /// The scrubber's place and length with a held keep counted, as the chapter will have it.
+    pub(super) fn held_pages(&self, at: usize, total: usize) -> (usize, usize) {
+        let Some(at_end) = self.keeping.borrow().as_ref().map(|k| k.at_end) else {
+            return (at, total);
+        };
+        let state = self.state.borrow();
+        let on = state
+            .credit_on
+            .and_then(|i| state.credits.get(i))
+            .map(|c| self.held(c.fingerprint));
+        held_counts(at, total, at_end, on)
+    }
+
+    /// The next layout after a keep: the files and pictures under the old numbers go, and the
+    /// kept page's picture stands under its new one so it stays on screen.
+    pub(super) fn relay_kept(&self) -> Option<Relay> {
+        let relay = self.state.borrow_mut().relay_kept.take()?;
+        let mut state = self.state.borrow_mut();
+        let kept = state.credits.iter().find(|c| c.fingerprint == relay.fingerprint).cloned();
+        let texture = state.credit_textures.get(&relay.fingerprint).cloned();
+        state.files.clear();
+        state.textures.clear();
+        state.failed.clear();
+        state.failures.clear();
+        state.asked.clear();
+        if let (Some(kept), Some(texture)) = (kept, texture) {
+            state.files.insert(relay.page, kept.file);
+            state.textures.insert(relay.page, texture);
+        }
+        Some(relay)
     }
 
     /// A turn onto or past a shown credit page. True when it was one.
@@ -631,21 +879,15 @@ impl Reader {
             };
             (side(false), side(true), state.shown_start, state.shown_end)
         };
-        if !starts.is_empty() {
-            let block = self.credit_block(&starts, true);
+        if let Some(block) = self.credit_block(&starts, true) {
             if shown_start {
-                block.revealer.set_transition_type(gtk::RevealerTransitionType::None);
-                block.reveal();
-                block.revealer.set_transition_type(gtk::RevealerTransitionType::SlideDown);
+                block.reveal_now();
             }
             self.strip_lead.append(&block.widget);
             self.state.borrow_mut().lead = Some(block);
         }
-        if !ends.is_empty() && shown_end {
-            let block = self.credit_block(&ends, false);
-            block.revealer.set_transition_type(gtk::RevealerTransitionType::None);
-            block.reveal();
-            block.revealer.set_transition_type(gtk::RevealerTransitionType::SlideDown);
+        if shown_end && let Some(block) = self.credit_block(&ends, false) {
+            block.reveal_now();
             self.strip_tail.append(&block.widget);
             self.state.borrow_mut().tail = Some(block);
         }
@@ -654,7 +896,15 @@ impl Reader {
     }
 
     /// One block of credit pages, at the start (with its row) or at the end.
-    fn credit_block(self: &Rc<Self>, pages: &[CreditPage], start: bool) -> CreditBlock {
+    /// None when no page's picture can be read: a page that can't be read is left out.
+    fn credit_block(self: &Rc<Self>, pages: &[CreditPage], start: bool) -> Option<CreditBlock> {
+        let loaded: Vec<(CreditPage, gtk::gdk::Texture)> =
+            pages.iter().filter_map(|p| Some((p.clone(), self.credit_texture(p)?))).collect();
+        if loaded.is_empty() {
+            return None;
+        }
+        let pages: Vec<CreditPage> = loaded.iter().map(|(p, _)| p.clone()).collect();
+        let pages = pages.as_slice();
         let widget = gtk::Box::new(gtk::Orientation::Vertical, 0);
         widget.add_css_class("strip-credits");
         let mut rows: Vec<gtk::Widget> = Vec::new();
@@ -673,6 +923,7 @@ impl Reader {
             line.set_child(Some(&inner));
             line.add_css_class("flat");
             line.add_css_class("strip-credit-row");
+            line.set_cursor_from_name(Some("pointer"));
             line.update_property(&[
                 gtk::accessible::Property::Label(&words.label()),
                 gtk::accessible::Property::Description(&t::reader_credit_show_hint()),
@@ -686,17 +937,18 @@ impl Reader {
                 }
             });
             let caption = self.credit_caption(pages[0].fingerprint);
+            // The line fades over the caption by the veil, with or without Reduce Motion.
             let stack = gtk::Stack::new();
-            stack.set_transition_type(gtk::StackTransitionType::Crossfade);
-            stack.set_transition_duration(200);
             stack.add_named(&line, Some("line"));
             stack.add_named(&caption, Some("caption"));
+            let veil = gtk::Overlay::new();
+            veil.set_child(Some(&stack));
             rows.push(stack.clone().upcast());
-            widget.append(&stack);
-            stack
+            widget.append(&veil);
+            Row { veil, stack }
         });
         let pictures = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        for (i, page) in pages.iter().enumerate() {
+        for (i, (page, texture)) in loaded.iter().enumerate() {
             if i > 0 || !start {
                 let caption = self.credit_caption(page.fingerprint);
                 rows.push(caption.clone().upcast());
@@ -709,21 +961,15 @@ impl Reader {
             picture.update_property(&[gtk::accessible::Property::Label(
                 &t::reader_credit_page_label(),
             )]);
-            let texture = load_texture(&page.file);
-            let ratio = texture.as_ref().map_or_else(
-                || page.file.width as f32 / page.file.height.max(1) as f32,
-                |t| t.width() as f32 / t.height().max(1) as f32,
-            );
-            picture.set_paintable(texture.as_ref());
+            let ratio = texture.width() as f32 / texture.height().max(1) as f32;
+            picture.set_paintable(Some(texture));
             pictures.append(&picture);
             frames.push((picture, ratio.max(0.05)));
         }
+        // Slide up keeps the pages' top under the row as they grow, so they come in top first
+        // and in place; with animations off they are there at once, with no gap before.
         let revealer = gtk::Revealer::builder()
-            .transition_type(if motion::reduced() {
-                gtk::RevealerTransitionType::Crossfade
-            } else {
-                gtk::RevealerTransitionType::SlideDown
-            })
+            .transition_type(gtk::RevealerTransitionType::SlideUp)
             .transition_duration(300)
             .child(&pictures)
             .reveal_child(false)
@@ -738,7 +984,16 @@ impl Reader {
             }
         });
         widget.append(&revealer);
-        CreditBlock { widget, row, revealer, frames, rows }
+        Some(CreditBlock { widget, row, revealer, frames, rows })
+    }
+
+    /// A credit page's picture, decoded once and kept through every layout that follows a
+    /// resize. None when its file can't be read.
+    fn credit_texture(&self, page: &CreditPage) -> Option<gtk::gdk::Texture> {
+        let cached = self.state.borrow().credit_textures.get(&page.fingerprint).cloned();
+        let texture = cached.or_else(|| load_texture(&page.file))?;
+        self.state.borrow_mut().credit_textures.insert(page.fingerprint, texture.clone());
+        Some(texture)
     }
 
     /// "Skipped as a credit page · Not a credit page", above a shown page in a strip.
@@ -795,7 +1050,10 @@ impl Reader {
         }
         self.release_strip();
         if self.state.borrow().tail.is_none() {
-            let block = self.credit_block(&ends, false);
+            let Some(block) = self.credit_block(&ends, false) else {
+                self.credit_failed(true);
+                return;
+            };
             self.strip_tail.append(&block.widget);
             self.state.borrow_mut().tail = Some(block);
             self.size_strip();
@@ -819,6 +1077,7 @@ impl Reader {
         };
         let (row, words, show) = show_line();
         words.set_label(&text);
+        show.update_property(&[gtk::accessible::Property::Label(&text)]);
         show.connect_clicked({
             let me = self.me.clone();
             move |_| {
@@ -833,13 +1092,12 @@ impl Reader {
     // ---------------------------------------------------------------------------------------
     // Parts
 
-    /// What the scrubber says on a part's first page: "Part 2 starts at page 25".
+    /// What the scrubber says on a part's first page: "Part 2 starts at page 25", and the part
+    /// no group has when its place is there.
     pub(super) fn part_said(&self, at: usize) -> Option<String> {
+        let total = self.story_pages();
         let state = self.state.borrow();
-        let parts = &state.parts.as_ref()?.parts;
-        let first = parts.first()?.number;
-        let part = parts.iter().find(|p| p.number != first && p.first_page as usize == at)?;
-        Some(t::reader_part_starts(i64::from(part.number), at as i64))
+        part_words(state.parts.as_ref()?, at, total)
     }
 
     /// The part tip centred over the scrubber's thumb, 8 px above the track, inside the reader.
@@ -925,6 +1183,38 @@ impl Reader {
             });
         }
         self.credit_pages(pages);
+    }
+
+    /// One credit page skipped at the start whose file can't be read.
+    pub fn shot_credits_broken(self: &Rc<Self>) {
+        let Some(mut file) = credit_file(0) else { return };
+        file.path = std::env::temp_dir()
+            .join("kaeri-shot-credit-gone.png") // i18n-skip
+            .to_string_lossy()
+            .into_owned();
+        self.credit_pages(vec![CreditPage {
+            page: 0,
+            at_end: false,
+            file,
+            fingerprint: 0x5eed,
+        }]);
+    }
+
+    /// Undo on the held keep, as its button or Ctrl+Z would.
+    pub fn shot_undo_keep(&self) {
+        self.undo_keep();
+    }
+
+    /// The open chapter in two parts with a third no group has after the last.
+    pub fn shot_parts_missing_end(&self, second: u32) {
+        self.hide_notice();
+        let part = |number, first_page| ChapterPart {
+            number,
+            first_page,
+            group: Some("Lanternlight Scans".to_owned()), // i18n-skip
+            other_group: false,
+        };
+        self.chapter_parts(vec![part(1, 1), part(2, second)], vec![3]);
     }
 
     /// Page 1, where a chapter opened from its start lands.
@@ -1085,51 +1375,97 @@ fn credit_file(i: usize) -> Option<kaeri_model::reader::PageFile> {
     })
 }
 
+/// The number a kept page has once the engine lays the chapter out with it: its place in the
+/// chapter less the credit pages still left out before it.
+fn kept_number(credits: &[CreditPage], fingerprint: u64) -> Option<u32> {
+    let kept = credits.iter().find(|c| c.fingerprint == fingerprint)?;
+    let before =
+        credits.iter().filter(|c| c.fingerprint != fingerprint && c.page < kept.page).count()
+            as u32;
+    Some(kept.page.saturating_sub(before))
+}
+
+/// Page `at` of `total` with a held keep counted: one more page, and one on for the pages
+/// after a kept page at the start. `on` says whether a credit page is on screen and whether it
+/// is the held one, which reads as the first or last page.
+fn held_counts(at: usize, total: usize, at_end: bool, on: Option<bool>) -> (usize, usize) {
+    if total == 0 {
+        return (at, total);
+    }
+    match on {
+        Some(true) => (if at_end { total + 1 } else { 1 }, total + 1),
+        Some(false) => (at, total + 1),
+        None => (at + usize::from(!at_end), total + 1),
+    }
+}
+
 /// Where a missing part would start: at the next part there is, or at the end.
 fn missing_at(parts: &[ChapterPart], missing: u32, total: f64) -> f64 {
     parts.iter().find(|p| p.number > missing).map_or(total, |p| f64::from(p.first_page))
 }
 
-/// The part preview's words at page `at`, or none off the ticks.
-fn tip_words(parts: &Parts, at: usize, total: usize) -> Option<String> {
-    let first = parts.parts.first()?.number;
-    if let Some(part) =
-        parts.parts.iter().find(|p| p.number != first && p.first_page as usize == at)
-    {
-        let number = i64::from(part.number);
-        return Some(match part.group.as_deref().filter(|_| part.other_group) {
-            Some(group) => [
-                t::chapter_state_page(at as i64),
-                say::msg(&Msg::Reading(ReadingMsg::ReadingRowPartFromGroup {
-                    part: number,
-                    group: group.to_owned(),
-                })),
-            ]
-            .join(" \u{b7} "),
-            None => t::reader_part_preview(at as i64, number),
-        });
-    }
+/// The part that starts at page `at`, past the first, and the part no group has whose place
+/// is there: it would start where the next part does, or at the end.
+fn parts_at(parts: &Parts, at: usize, total: usize) -> (Option<u32>, Option<u32>) {
+    let first = parts.parts.first().map(|p| p.number);
+    let part = parts
+        .parts
+        .iter()
+        .find(|p| Some(p.number) != first && p.first_page as usize == at)
+        .map(|p| p.number);
     let missing = parts
         .missing
         .iter()
-        .find(|m| missing_at(&parts.parts, **m, total as f64) as usize == at)?;
-    Some(
-        [
-            t::chapter_state_page(at as i64),
-            say::msg(&Msg::Reading(ReadingMsg::ReadingRowPartMissing {
-                count: 1,
-                part: i64::from(*missing),
-            })),
-        ]
-        .join(" \u{b7} "),
-    )
+        .find(|m| missing_at(&parts.parts, **m, total as f64) as usize == at)
+        .copied();
+    (part, missing)
+}
+
+fn part_missing(part: u32) -> String {
+    say::msg(&Msg::Reading(ReadingMsg::ReadingRowPartMissing {
+        count: 1,
+        part: i64::from(part),
+    }))
+}
+
+/// The part preview's words at page `at`, or none off the ticks: "Page 11 · part 2", with the
+/// part no group has last, "Page 14 · part 4 · part 3 missing".
+fn tip_words(parts: &Parts, at: usize, total: usize) -> Option<String> {
+    let (part, missing) = parts_at(parts, at, total);
+    let mut words = match part {
+        Some(part) => t::reader_part_preview(at as i64, i64::from(part)),
+        None => t::chapter_state_page(at as i64),
+    };
+    match (part, missing) {
+        (None, None) => return None,
+        (_, Some(missing)) => {
+            words.push_str(" \u{b7} ");
+            words.push_str(&part_missing(missing));
+        }
+        _ => {}
+    }
+    Some(words)
+}
+
+/// What the scrubber says there: "Part 4 starts at page 14, part 3 missing".
+fn part_words(parts: &Parts, at: usize, total: usize) -> Option<String> {
+    let (part, missing) = parts_at(parts, at, total);
+    let missing = missing.map(part_missing);
+    match (part, missing) {
+        (Some(part), Some(missing)) => {
+            Some([t::reader_part_starts(i64::from(part), at as i64), missing].join(", "))
+        }
+        (Some(part), None) => Some(t::reader_part_starts(i64::from(part), at as i64)),
+        (None, Some(missing)) => Some(say::capitalized(&missing)),
+        (None, None) => None,
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use kaeri_model::reader::ChapterPart;
+    use kaeri_model::reader::{ChapterPart, CreditPage, PageEncoding, PageFile};
 
-    use super::{Parts, missing_at, tip_words};
+    use super::{Parts, held_counts, kept_number, missing_at, part_words, tip_words};
 
     fn part(number: u32, first_page: u32, group: Option<&str>, other: bool) -> ChapterPart {
         ChapterPart { number, first_page, group: group.map(str::to_owned), other_group: other }
@@ -1144,26 +1480,83 @@ mod tests {
         assert_eq!(tip_words(&parts, 25, 46).as_deref(), Some("Page 25 \u{b7} part 2"));
         assert_eq!(tip_words(&parts, 24, 46), None);
         assert_eq!(tip_words(&parts, 1, 46), None);
+        assert_eq!(part_words(&parts, 25, 46).as_deref(), Some("Part 2 starts at page 25"));
     }
 
     #[test]
-    fn the_preview_names_another_group() {
+    fn the_preview_leaves_another_group_out() {
         let parts = Parts {
             parts: vec![part(1, 1, Some("Group A"), false), part(2, 25, Some("Group B"), true)],
             missing: vec![],
         };
+        assert_eq!(tip_words(&parts, 25, 46).as_deref(), Some("Page 25 \u{b7} part 2"));
+    }
+
+    #[test]
+    fn a_missing_part_is_named_where_the_next_one_starts() {
+        let parts = vec![part(1, 1, None, false), part(4, 14, None, false)];
+        assert_eq!(missing_at(&parts, 3, 20.0), 14.0);
+        assert_eq!(missing_at(&parts, 5, 20.0), 20.0);
+        let parts = Parts { parts, missing: vec![3] };
         assert_eq!(
-            tip_words(&parts, 25, 46).as_deref(),
-            Some("Page 25 \u{b7} part 2 from Group B")
+            tip_words(&parts, 14, 20).as_deref(),
+            Some("Page 14 \u{b7} part 4 \u{b7} part 3 missing")
+        );
+        assert_eq!(
+            part_words(&parts, 14, 20).as_deref(),
+            Some("Part 4 starts at page 14, part 3 missing")
         );
     }
 
     #[test]
-    fn a_missing_part_sits_where_the_next_one_starts() {
-        let parts = vec![part(1, 1, None, false), part(3, 20, None, false)];
-        assert_eq!(missing_at(&parts, 2, 40.0), 20.0);
-        assert_eq!(missing_at(&parts, 4, 40.0), 40.0);
-        let parts = Parts { parts, missing: vec![2] };
-        assert_eq!(tip_words(&parts, 20, 40).as_deref(), Some("Page 20 \u{b7} part 3"));
+    fn a_missing_part_after_the_last_sits_at_the_end() {
+        let parts = Parts {
+            parts: vec![part(1, 1, None, false), part(2, 10, None, false)],
+            missing: vec![3],
+        };
+        assert_eq!(tip_words(&parts, 20, 20).as_deref(), Some("Page 20 \u{b7} part 3 missing"));
+        assert_eq!(part_words(&parts, 20, 20).as_deref(), Some("Part 3 missing"));
+    }
+
+    fn credit(page: u32, at_end: bool, fingerprint: u64) -> CreditPage {
+        CreditPage {
+            page,
+            at_end,
+            fingerprint,
+            file: PageFile {
+                path: String::new(),
+                encoding: PageEncoding::Original { mime: String::new() },
+                width: 1,
+                height: 1,
+                crop: None,
+                colour: false,
+                bytes: 0,
+            },
+        }
+    }
+
+    #[test]
+    fn a_kept_page_takes_its_number_less_the_pages_still_left_out_before_it() {
+        // Five pages: page 0 and page 4 left out, three in between.
+        let credits = vec![credit(0, false, 1), credit(4, true, 2)];
+        assert_eq!(kept_number(&credits, 1), Some(0), "kept at the start: page 0");
+        assert_eq!(kept_number(&credits, 2), Some(3), "kept at the end: after the three");
+        let two = vec![credit(0, false, 1), credit(1, false, 2)];
+        assert_eq!(kept_number(&two, 2), Some(0), "the second of two, the first still out");
+        assert_eq!(kept_number(&credits, 9), None);
+    }
+
+    #[test]
+    fn a_held_keep_counts_at_once() {
+        // Kept at the start, on the kept page: page 1 of 38 where 37 were.
+        assert_eq!(held_counts(1, 37, false, Some(true)), (1, 38));
+        // On a story page after it: one on.
+        assert_eq!(held_counts(5, 37, false, None), (6, 38));
+        // Kept at the end, on it: the last page.
+        assert_eq!(held_counts(37, 37, true, Some(true)), (38, 38));
+        assert_eq!(held_counts(5, 37, true, None), (5, 38));
+        // Another credit page on screen keeps its place.
+        assert_eq!(held_counts(1, 37, false, Some(false)), (1, 38));
+        assert_eq!(held_counts(0, 0, false, None), (0, 0));
     }
 }

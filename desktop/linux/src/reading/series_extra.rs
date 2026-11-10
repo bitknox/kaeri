@@ -109,6 +109,52 @@ fn change_button(label: &str) -> gtk::Button {
     button
 }
 
+/// The name of the veil over the rows, which a group pick marks.
+pub const DETAILS_VEIL: &str = "series-details-veil";
+/// The mark a pick leaves on the veil until the series comes back with the group in use.
+const PICKED_NOW: &str = "group-picked-now";
+
+/// Draw the rows again from `memo`. When the series comes back after a group pick, the old rows
+/// fade over the new ones (0.3 s, or 0.2 s under Reduce Motion as every crossfade) and the
+/// keyboard goes back to the Group row's Change.
+pub fn redraw(
+    ctx: &Rc<Ctx>,
+    veil: &gtk::Overlay,
+    details: &gtk::Box,
+    memo: &Memo,
+    series: bool,
+) {
+    if !(series && veil.has_css_class(PICKED_NOW)) {
+        draw(ctx, details, memo);
+        return;
+    }
+    veil.remove_css_class(PICKED_NOW);
+    crate::motion::ghost(veil, details, true, || draw(ctx, details, memo));
+    let details = details.downgrade();
+    gtk::glib::idle_add_local_once(move || {
+        if let Some(change) = details.upgrade().and_then(|d| named(d.upcast_ref(), CHANGE)) {
+            change.grab_focus();
+        }
+    });
+}
+
+/// The Group row's Change, by its name.
+const CHANGE: &str = "series-group-change";
+
+fn named(widget: &gtk::Widget, name: &str) -> Option<gtk::Widget> {
+    if widget.widget_name() == name {
+        return Some(widget.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        if let Some(found) = named(&next, name) {
+            return Some(found);
+        }
+        child = next.next_sibling();
+    }
+    None
+}
+
 /// Draw the rows into `details` from `memo`.
 pub fn draw(ctx: &Rc<Ctx>, details: &gtk::Box, memo: &Memo) {
     super::clear(details);
@@ -129,6 +175,31 @@ pub fn draw(ctx: &Rc<Ctx>, details: &gtk::Box, memo: &Memo) {
                 }
             }
         });
+        line.add_suffix(&button);
+        list.append(&line);
+    }
+    // The group whose version of each chapter the series lists, with one more to pick from.
+    if let Some(edition) = view.edition.as_ref().filter(|e| e.groups.len() > 1)
+        && let Some(label) = edition.version_label.clone().filter(|l| !l.is_empty())
+    {
+        let why = if edition.group_chosen {
+            t::series_group_picked()
+        } else {
+            t::series_group_most()
+        };
+        let line = row(&t::series_group(), &[label, why].join(" \u{b7} "));
+        // A menu button holds the picker, so the picker goes with the row when the series is
+        // drawn again after a pick.
+        let button = gtk::MenuButton::new();
+        button.set_child(Some(&gtk::Label::new(Some(&t::series_change()))));
+        button.set_always_show_arrow(false);
+        button.add_css_class("flat");
+        button.set_valign(gtk::Align::Center);
+        button.update_property(&[gtk::accessible::Property::Description(
+            &t::series_group_hint(),
+        )]);
+        button.set_widget_name(CHANGE);
+        button.set_popover(Some(&group_picker(ctx, &view.work, edition)));
         line.add_suffix(&button);
         list.append(&line);
     }
@@ -162,31 +233,6 @@ pub fn draw(ctx: &Rc<Ctx>, details: &gtk::Box, memo: &Memo) {
                 }
             }
         });
-        list.append(&line);
-    }
-    // The group whose version of each chapter the series lists, with one more to pick from.
-    if let Some(edition) = view.edition.as_ref().filter(|e| e.groups.len() > 1)
-        && let Some(label) = edition.version_label.clone().filter(|l| !l.is_empty())
-    {
-        let why = if edition.group_chosen {
-            t::series_group_picked()
-        } else {
-            t::series_group_most()
-        };
-        let line = row(&t::series_group(), &[label, why].join(" \u{b7} "));
-        // A menu button holds the picker, so the picker goes with the row when the series is
-        // drawn again after a pick.
-        let button = gtk::MenuButton::new();
-        button.set_child(Some(&gtk::Label::new(Some(&t::series_change()))));
-        button.set_always_show_arrow(false);
-        button.add_css_class("flat");
-        button.set_valign(gtk::Align::Center);
-        button.update_property(&[gtk::accessible::Property::Description(
-            &t::series_group_hint(),
-        )]);
-        button.set_widget_name("series-group-change");
-        button.set_popover(Some(&group_picker(ctx, &view.work, edition)));
-        line.add_suffix(&button);
         list.append(&line);
     }
     if list.first_child().is_some() {
@@ -270,6 +316,15 @@ pub fn group_picker(ctx: &Rc<Ctx>, work: &WorkId, edition: &BookEditionRow) -> g
                 return;
             }
             if let Some(popover) = popover.upgrade() {
+                // The series that comes back with the pick redraws the rows by a crossfade.
+                let mut up = popover.parent();
+                while let Some(widget) = up {
+                    if widget.widget_name() == DETAILS_VEIL {
+                        widget.add_css_class(PICKED_NOW);
+                        break;
+                    }
+                    up = widget.parent();
+                }
                 popover.popdown();
             }
             if let Some(ctx) = ctx.upgrade()
@@ -302,11 +357,15 @@ pub fn group_picker(ctx: &Rc<Ctx>, work: &WorkId, edition: &BookEditionRow) -> g
 
 /// A choice in the group picker: its name, its line, and a check when it is the one in use.
 fn choice_row(title: &str, subtitle: &str, picked: bool) -> gtk::ListBoxRow {
+    // Long names and lines wrap at large sizes; none is cut.
     let name = gtk::Label::new(Some(title));
     name.set_xalign(0.0);
-    name.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    name.set_wrap(true);
+    name.set_wrap_mode(gtk::pango::WrapMode::WordChar);
     let line = widgets::haze(subtitle, "caption");
     line.set_xalign(0.0);
+    line.set_wrap(true);
+    line.set_wrap_mode(gtk::pango::WrapMode::WordChar);
     let words = gtk::Box::new(gtk::Orientation::Vertical, 2);
     words.set_hexpand(true);
     words.set_valign(gtk::Align::Center);

@@ -142,6 +142,8 @@ struct State {
     parts: Option<credits::Parts>,
     /// Each part preview shown counts up; an older one's timer leaves a newer one alone.
     tip_ask: u32,
+    /// A page kept from the credit pages was sent: the next layout numbers pages afresh.
+    relay_kept: Option<credits::Relay>,
 }
 
 pub struct Reader {
@@ -199,6 +201,9 @@ pub struct Reader {
     credit_fade: motion::Fader,
     credit_timer: RefCell<Option<glib::SourceId>>,
     credit_toast: RefCell<Option<adw::Toast>>,
+    /// Not a credit page, held while its Undo shows: sent to the engine when the notice times
+    /// out, at a second keep, or as the chapter closes or another opens.
+    keeping: RefCell<Option<credits::Keeping>>,
     /// A strip's credit pages: above its first image, and after its last.
     strip_lead: gtk::Box,
     strip_tail: gtk::Box,
@@ -553,6 +558,7 @@ impl Reader {
         // The credit line: the demo credit's capsule, top trailing, the whole pill the button.
         let credit_line = gtk::Button::new();
         credit_line.add_css_class("reader-credit-line");
+        credit_line.set_cursor_from_name(Some("pointer"));
         credit_line.set_halign(gtk::Align::End);
         credit_line.set_valign(gtk::Align::Start);
         credit_line.set_margin_end(16);
@@ -650,6 +656,7 @@ impl Reader {
                 credit_fade: motion::Fader::always(),
                 credit_timer: RefCell::default(),
                 credit_toast: RefCell::default(),
+                keeping: RefCell::default(),
                 strip_lead,
                 strip_tail,
                 part_tip,
@@ -899,6 +906,10 @@ impl Reader {
     }
 
     fn send(&self, command: ReaderCommand) {
+        // A held keep goes first when the chapter is left, while the session still has it.
+        if matches!(command, ReaderCommand::OpenChapter { .. } | ReaderCommand::Close { .. }) {
+            self.commit_keep();
+        }
         if let Some(hub) = self.hub() {
             hub.send(Command::Reader(command));
         }
@@ -1566,6 +1577,7 @@ impl Reader {
         let first = self.state.borrow().leaves.is_empty();
         // The credit pages and parts that follow a layout are the engine's word on it.
         let on_credit = self.relaid();
+        let relay = self.relay_kept();
         {
             let mut state = self.state.borrow_mut();
             for leaf in &leaves {
@@ -1578,11 +1590,21 @@ impl Reader {
         }
         if flows {
             // The same images again, after a resize: the strip keeps its pictures and its place.
-            let same =
-                !first && strip_leaves(&self.state.borrow().leaves) == strip_leaves(&leaves);
+            let same = !first
+                && relay.is_none()
+                && strip_leaves(&self.state.borrow().leaves) == strip_leaves(&leaves);
             if !first && self.state.borrow().strip_anchor.is_none() {
                 let here = self.strip_place();
                 self.state.borrow_mut().strip_anchor = here;
+            }
+            if let Some(relay) = &relay {
+                // The images from the kept page on are one further down the strip.
+                let mut state = self.state.borrow_mut();
+                if let Some(anchor) = state.strip_anchor.as_mut()
+                    && anchor.image >= relay.page
+                {
+                    anchor.image += 1;
+                }
             }
             if first && std::mem::take(&mut self.state.borrow_mut().flowed) {
                 // Under the marker, where the scroll already is: nothing to hold.
@@ -1615,6 +1637,22 @@ impl Reader {
             }
             return;
         }
+        if let Some(relay) = &relay
+            && on_credit.is_some_and(|(print, _)| print == relay.fingerprint)
+        {
+            // The kept page was on screen: it stays, now one of the chapter's pages.
+            {
+                let mut state = self.state.borrow_mut();
+                state.index = leaves
+                    .iter()
+                    .position(|l| l.parts.iter().any(|p| p.page == relay.page))
+                    .unwrap_or(0);
+                state.leaves = leaves;
+            }
+            let index = self.state.borrow().index;
+            self.show_leaf(index, TurnHow::Placed);
+            return;
+        }
         if let Some((print, at_end)) = on_credit.filter(|_| !first) {
             // A credit page is on screen: it stays if the new layout still skips it, and
             // otherwise its own page takes its place, kept where it was.
@@ -1630,8 +1668,10 @@ impl Reader {
             let start = if first {
                 state.start_page
             } else {
-                // A new layout keeps the page that was showing.
-                state.leaves.get(state.index).and_then(|l| l.parts.first()).map(|p| p.page)
+                // A new layout keeps the page that was showing, one on from a kept page before it.
+                state.leaves.get(state.index).and_then(|l| l.parts.first()).map(|p| {
+                    p.page + u32::from(relay.as_ref().is_some_and(|r| r.page <= p.page))
+                })
             };
             state.index = start
                 .and_then(|p| {
@@ -1746,7 +1786,14 @@ impl Reader {
 
     fn page_ready(self: &Rc<Self>, page: u32, file: PageFile) {
         self.chapters.page_ready(page, &file);
-        self.state.borrow_mut().files.insert(page, file);
+        {
+            // Another file under a page's number, as after a kept credit page: drawn afresh.
+            let mut state = self.state.borrow_mut();
+            if state.files.get(&page).is_some_and(|old| old.path != file.path) {
+                state.textures.remove(&page);
+            }
+            state.files.insert(page, file);
+        }
         {
             let mut state = self.state.borrow_mut();
             state.failures.remove(&page);
@@ -2378,6 +2425,7 @@ impl Reader {
     /// The marker crossed the middle: the next chapter opens under it, in the same scroll, with
     /// no plate over the page. The chapter run from is read and stays above.
     fn flow_on(self: &Rc<Self>) {
+        self.commit_keep();
         let (session, chapter, next, work) = {
             let state = self.state.borrow();
             (state.session, state.chapter.clone(), state.next.clone(), state.work.clone())
@@ -2749,6 +2797,7 @@ impl Reader {
 
     /// Where the place is, for the scrubber: page `at` from 1 of `total`.
     fn show_pages(&self, at: usize, total: usize) {
+        let (at, total) = self.held_pages(at, total);
         let total = total.max(1);
         let at = at.clamp(1, total);
         self.scrub.set_range(1.0, total.max(2) as f64);
@@ -3074,6 +3123,7 @@ impl Reader {
                 K::plus | K::equal | K::KP_Add => self.step_text_size(1),
                 K::minus | K::KP_Subtract => self.step_text_size(-1),
                 K::_0 | K::KP_0 => self.step_text_size(0),
+                K::z if self.keeping.borrow().is_some() => self.undo_keep(),
                 _ => return false,
             }
             return true;

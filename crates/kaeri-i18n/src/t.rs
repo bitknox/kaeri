@@ -3382,11 +3382,6 @@ pub fn linux_updates_check() -> String {
     text("linux-updates-check", &[])
 }
 
-/// The line under the series' name in the reader's group while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
-pub fn linux_reader_line_place(chapter: &str, place: &str) -> String {
-    text("linux-reader-line-place", &[("chapter", Arg::Text(chapter)), ("place", Arg::Text(place))])
-}
-
 /// Tooltip on the button that opens a setting's preview on a page of its own, and accessible name of the preview.
 pub fn settings_preview() -> String {
     text("settings-preview", &[])
@@ -14477,9 +14472,19 @@ pub fn reader_credit_page_of(n: i64, total: i64) -> String {
     text("reader-credit-page-of", &[("n", Arg::Plain(n)), ("total", Arg::Plain(total))])
 }
 
+/// The control group's line while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
+pub fn reader_group_line_place(chapter: &str, place: &str) -> String {
+    text("reader-group-line-place", &[("chapter", Arg::Text(chapter)), ("place", Arg::Text(place))])
+}
+
 /// Spoken name of a credit page shown again.
 pub fn reader_credit_page_label() -> String {
     text("reader-credit-page-label", &[])
+}
+
+/// Notice when a skipped credit page's picture can't be read, so it can't be shown.
+pub fn reader_credit_failed() -> String {
+    text("reader-credit-failed", &[])
 }
 
 /// The scrubber's preview on the first page of a chapter's later part.

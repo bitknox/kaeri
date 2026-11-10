@@ -133,7 +133,7 @@ pub fn dotted(parts: &[Msg]) -> String {
 }
 
 /// A chapter row's line in the engine's words, with a group's language named in the app's
-/// language from its tag ("From Group B, Spanish"), not the engine's English name.
+/// language from its tag ("from Group B, Spanish"), not the engine's English name.
 pub fn row_line(chapter: &kaeri_model::reading::ChapterRow) -> String {
     use kaeri_model::ReadingMsg as R;
     let named = |tag: Option<&str>, english: &str| {
@@ -167,7 +167,9 @@ pub fn row_line(chapter: &kaeri_model::reading::ChapterRow) -> String {
             other => other.clone(),
         })
         .collect();
-    dotted(&line)
+    // The engine's words start in lower case, "from Group B, Spanish"; the row's line starts
+    // with a capital.
+    say::capitalized(&dotted(&line))
 }
 
 /// What failed, in plain words.

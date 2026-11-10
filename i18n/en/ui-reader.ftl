@@ -270,8 +270,17 @@ reader-credit-page = credit page
 # @arg total: plain
 reader-credit-page-of = credit page { $n } of { $total }
 
+# The control group's line while a credit page shows: the chapter, then "credit page" or "credit
+# page 1 of 2".
+# @arg chapter: text
+# @arg place: text
+reader-group-line-place = { $chapter } · { $place }
+
 # Spoken name of a credit page shown again.
 reader-credit-page-label = Credit page
+
+# Notice when a skipped credit page's picture can't be read, so it can't be shown.
+reader-credit-failed = Couldn't load this credit page
 
 # The scrubber's preview on the first page of a chapter's later part.
 # @arg page: plain

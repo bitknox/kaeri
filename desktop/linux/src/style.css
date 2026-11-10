@@ -491,13 +491,15 @@ popover.reader-sheet button.reader-sheet-choice { padding: 10px 16px; border-rad
 .reader-notice-action { font-weight: 700; color: var(--silk); padding: 4px 10px; min-height: 0; }
 
 /* Credit pages (the credit pages board's Linux frames). The pill on page 1 takes the demo credit's
-   capsule: 32 high, 13 px medium, glass, top trailing; the whole pill is the button. */
+   capsule: 32 high, 13 px medium, glass with a hair inside, top trailing; the whole pill is the
+   button. It stays dark in the light looks, as the demo credit does, and its text follows Large
+   Text. */
 button.reader-credit-line {
   min-height: 32px; padding: 0 14px; border-radius: 999px;
-  background: rgba(22, 26, 46, 0.78); border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 13px; font-weight: 500; color: #E4E0D6; box-shadow: none;
+  background: var(--glass); border: none; box-shadow: inset 0 0 0 1px rgba(228, 224, 214, 0.08);
+  font-size: 0.93em; font-weight: 500; color: #E4E0D6;
 }
-button.reader-credit-line:hover { background: rgba(34, 38, 60, 0.86); }
+button.reader-credit-line:hover { background: rgba(40, 45, 68, 0.86); }
 /* Show and Not a credit page beside a line: silk, bold and underlined, no button fill. */
 button.reader-credit-show {
   min-height: 0; padding: 2px 4px; font-weight: 700; color: var(--silk); text-decoration: underline;
@@ -508,7 +510,7 @@ button.reader-credit-show label { text-decoration: underline; }
 button.strip-credit-row { min-height: 44px; padding: 0; border-radius: 0; font-weight: 400; }
 .strip-credit-caption { min-height: 44px; }
 /* The toast over a shown credit page sits above the group while the chrome shows. */
-.reader-toasts toast { background: #2B2F45; color: #E4E0D6; border-radius: 24px; min-height: 48px; font-size: 14px; }
+.reader-toasts toast { background: #2B2F45; color: #E4E0D6; border-radius: 24px; min-height: 48px; font-size: 1em; }
 .reader-toasts toast button {
   min-height: 34px; border-radius: 8px; font-weight: 700; background: rgba(228, 224, 214, 0.12);
 }
@@ -525,10 +527,12 @@ list.group-picker-list > row.group-picker-rule { min-height: 0; padding: 4px 0; 
 .group-picker-foot { padding: 8px 10px 6px; }
 /* The part preview over the scrubber's thumb, and the ticks where each later part starts. */
 label.reader-part-tip {
-  background: var(--raised); color: var(--silk); border-radius: 999px; padding: 4px 12px;
-  font-size: 13px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: rgba(40, 45, 68, 0.96); color: #E4E0D6; border-radius: 999px; padding: 4px 12px;
+  font-size: 0.93em; font-weight: 600; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 scale.reader-scrub marks indicator { min-width: 2px; min-height: 9px; background-color: var(--haze); }
+/* GTK hangs marks under the trough; the board centres each tick on the track. */
+scale.reader-scrub marks.bottom { margin-top: -6px; }
 
 /* The reader settings popover, on Raised: headings in haze, the label at the start of each row and
    the control at its end, and the controls in silk (the reader board's Linux frames). */

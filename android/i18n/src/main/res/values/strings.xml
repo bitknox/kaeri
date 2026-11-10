@@ -614,9 +614,9 @@
         <item quantity="other">%1$,d parts</item>
     </plurals>
     <!-- A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. -->
-    <string name="reading_row_from_group">From %1$s</string>
+    <string name="reading_row_from_group">from %1$s</string>
     <!-- A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish". -->
-    <string name="reading_row_from_group_in">From %1$s, %2$s</string>
+    <string name="reading_row_from_group_in">from %1$s, %2$s</string>
     <!-- A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts". -->
     <string name="reading_row_parts_of">%1$,d of %2$,d parts</string>
     <!-- A chapter row, after the parts count: the part no group has released. With several, how many. -->
@@ -629,7 +629,7 @@
     <!-- The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish". -->
     <string name="reading_row_part_from_group_in">part %1$d from %2$s, %3$s</string>
     <!-- A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. -->
-    <string name="reading_row_from_source">From %1$s</string>
+    <string name="reading_row_from_source">from %1$s</string>
     <!-- A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them. -->
     <plurals name="reader_credit_pages_skipped">
         <item quantity="one">%1$,d credit page skipped</item>
@@ -4832,8 +4832,12 @@
     <string name="reader_credit_page">credit page</string>
     <!-- The same, when more than one credit page is shown: "credit page 1 of 2". -->
     <string name="reader_credit_page_of">credit page %1$d of %2$d</string>
+    <!-- The control group's line while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". -->
+    <string name="reader_group_line_place">%1$s · %2$s</string>
     <!-- Spoken name of a credit page shown again. -->
     <string name="reader_credit_page_label">Credit page</string>
+    <!-- Notice when a skipped credit page's picture can't be read, so it can't be shown. -->
+    <string name="reader_credit_failed">Couldn\'t load this credit page</string>
     <!-- The scrubber's preview on the first page of a chapter's later part. -->
     <string name="reader_part_preview">Page %1$d · part %2$d</string>
     <!-- Spoken value of the scrubber on the first page of a chapter's later part. -->

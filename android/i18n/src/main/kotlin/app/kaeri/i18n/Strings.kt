@@ -9134,9 +9134,17 @@ object Strings {
     fun readerCreditPageOf(context: Context, n: Int, total: Int): String =
         context.getString(R.string.reader_credit_page_of, n, total)
 
+    /** The control group's line while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". */
+    fun readerGroupLinePlace(context: Context, chapter: String, place: String): String =
+        context.getString(R.string.reader_group_line_place, chapter, place)
+
     /** Spoken name of a credit page shown again. */
     fun readerCreditPageLabel(context: Context): String =
         context.getString(R.string.reader_credit_page_label)
+
+    /** Notice when a skipped credit page's picture can't be read, so it can't be shown. */
+    fun readerCreditFailed(context: Context): String =
+        context.getString(R.string.reader_credit_failed)
 
     /** The scrubber's preview on the first page of a chapter's later part. */
     fun readerPartPreview(context: Context, page: Int, part: Int): String =
