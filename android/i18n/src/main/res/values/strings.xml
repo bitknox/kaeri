@@ -617,10 +617,10 @@
         <item quantity="one">1 part</item>
         <item quantity="other">%1$,d parts</item>
     </plurals>
-    <!-- A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. -->
-    <string name="reading_row_from_group">From %1$s</string>
-    <!-- A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish". -->
-    <string name="reading_row_from_group_in">From %1$s, %2$s</string>
+    <!-- A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter. -->
+    <string name="reading_row_from_group">from %1$s</string>
+    <!-- A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish". -->
+    <string name="reading_row_from_group_in">from %1$s, %2$s</string>
     <!-- A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts". -->
     <string name="reading_row_parts_of">%1$,d of %2$,d parts</string>
     <!-- A chapter row, after the parts count: the part no group has released. With several, how many. -->
@@ -632,8 +632,8 @@
     <string name="reading_row_part_from_group">part %1$d from %2$s</string>
     <!-- The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish". -->
     <string name="reading_row_part_from_group_in">part %1$d from %2$s, %3$s</string>
-    <!-- A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. -->
-    <string name="reading_row_from_source">From %1$s</string>
+    <!-- A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words. -->
+    <string name="reading_row_from_source">from %1$s</string>
     <!-- A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them. -->
     <plurals name="reader_credit_pages_skipped">
         <item quantity="one">%1$,d credit page skipped</item>
@@ -1633,8 +1633,6 @@
     <string name="eink_step_up">More</string>
     <!-- Marks the chapter open in the reader on the e-ink contents page. -->
     <string name="eink_contents_reading">Reading</string>
-    <!-- The chapter line in the reader's controls while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". -->
-    <string name="reader_line_place">%1$s · %2$s</string>
     <!-- Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. -->
     <string name="read_home_offline_line">Reading\'s Home needs a connection the first time it opens. Downloaded chapters still open.</string>
     <!-- Screen readers: a source group in Search while its source is still being asked. The source is its name. -->
@@ -4840,10 +4838,14 @@
     <string name="reader_credit_page">credit page</string>
     <!-- The same, when more than one credit page is shown: "credit page 1 of 2". -->
     <string name="reader_credit_page_of">credit page %1$d of %2$d</string>
+    <!-- The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". -->
+    <string name="reader_group_line_place">%1$s · %2$s</string>
     <!-- Spoken name of a credit page shown again. -->
     <string name="reader_credit_page_label">Credit page</string>
     <!-- The scrubber's preview on the first page of a chapter's later part. -->
     <string name="reader_part_preview">Page %1$d · part %2$d</string>
+    <!-- The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing". -->
+    <string name="reader_part_preview_missing">Page %1$d · part %2$d · part %3$d missing</string>
     <!-- Spoken value of the scrubber on the first page of a chapter's later part. -->
     <string name="reader_part_starts">Part %1$d starts at page %2$d</string>
     <!-- Button in the first run that opens the reading demo. -->

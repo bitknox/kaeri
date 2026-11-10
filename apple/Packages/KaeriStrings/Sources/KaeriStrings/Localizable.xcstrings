@@ -216891,6 +216891,18 @@
         }
       }
     },
+    "reader-group-line-place" : {
+      "comment" : "The reader's line under the title while a credit page shows: the chapter, then \"credit page\" or \"credit page 1 of 2\". Argument 1: chapter (Text). Argument 2: place (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "reader-group-line-scroll" : {
       "comment" : "The control group's line for a novel in one long scroll. Argument 1: chapter (Text). Argument 2: percent (Int).",
       "extractionState" : "manual",
@@ -223623,6 +223635,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Page %1$@ · part %2$@"
+          }
+        }
+      }
+    },
+    "reader-part-preview-missing" : {
+      "comment" : "The same, when the part before it is missing from every group: \"Page 14 · part 4 · part 3 missing\". Argument 1: page (Plain). Argument 2: part (Plain). Argument 3: missing (Plain).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Page %1$@ · part %2$@ · part %3$@ missing"
           }
         }
       }
@@ -236912,37 +236936,37 @@
       }
     },
     "reading-row-from-group" : {
-      "comment" : "A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Argument 1: group (Text).",
+      "comment" : "A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter. Argument 1: group (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "From %1$@"
+            "value" : "from %1$@"
           }
         }
       }
     },
     "reading-row-from-group-in" : {
-      "comment" : "A chapter row: the same, for a group in another language than the app's, named after the group. \"From Saltmarsh Team, Spanish\". Argument 1: group (Text). Argument 2: language (Text).",
+      "comment" : "A chapter row: the same, for a group in another language than the app's, named after the group. \"from Saltmarsh Team, Spanish\". Argument 1: group (Text). Argument 2: language (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "From %1$@, %2$@"
+            "value" : "from %1$@, %2$@"
           }
         }
       }
     },
     "reading-row-from-source" : {
-      "comment" : "A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Argument 1: source (Text).",
+      "comment" : "A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words. Argument 1: source (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "From %1$@"
+            "value" : "from %1$@"
           }
         }
       }

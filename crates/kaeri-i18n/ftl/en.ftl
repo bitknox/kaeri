@@ -915,11 +915,11 @@ reading-row-parts =
        *[other] { $n } parts
     }
 
-# A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it.
-reading-row-from-group = From { $group }
+# A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter.
+reading-row-from-group = from { $group }
 
-# A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish".
-reading-row-from-group-in = From { $group }, { $language }
+# A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish".
+reading-row-from-group-in = from { $group }, { $language }
 
 # A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts".
 reading-row-parts-of = { $have } of { $n } parts
@@ -937,8 +937,8 @@ reading-row-part-from-group = part { $part } from { $group }
 # The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish".
 reading-row-part-from-group-in = part { $part } from { $group }, { $language }
 
-# A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there.
-reading-row-from-source = From { $source }
+# A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words.
+reading-row-from-source = from { $source }
 
 # A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them.
 reader-credit-pages-skipped =
@@ -9065,11 +9065,17 @@ reader-credit-page = credit page
 # The same, when more than one credit page is shown: "credit page 1 of 2".
 reader-credit-page-of = credit page { $n } of { $total }
 
+# The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2".
+reader-group-line-place = { $chapter } · { $place }
+
 # Spoken name of a credit page shown again.
 reader-credit-page-label = Credit page
 
 # The scrubber's preview on the first page of a chapter's later part.
 reader-part-preview = Page { $page } · part { $part }
+
+# The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing".
+reader-part-preview-missing = Page { $page } · part { $part } · part { $missing } missing
 
 # Spoken value of the scrubber on the first page of a chapter's later part.
 reader-part-starts = Part { $part } starts at page { $page }

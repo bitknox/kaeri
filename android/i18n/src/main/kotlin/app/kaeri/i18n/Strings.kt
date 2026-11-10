@@ -1149,11 +1149,11 @@ object Strings {
     fun readingRowParts(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.reading_row_parts, n, n)
 
-    /** A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. */
+    /** A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter. */
     fun readingRowFromGroup(context: Context, group: String): String =
         context.getString(R.string.reading_row_from_group, group)
 
-    /** A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish". */
+    /** A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish". */
     fun readingRowFromGroupIn(context: Context, group: String, language: String): String =
         context.getString(R.string.reading_row_from_group_in, group, language)
 
@@ -1173,7 +1173,7 @@ object Strings {
     fun readingRowPartFromGroupIn(context: Context, part: Int, group: String, language: String): String =
         context.getString(R.string.reading_row_part_from_group_in, part, group, language)
 
-    /** A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. */
+    /** A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words. */
     fun readingRowFromSource(context: Context, source: String): String =
         context.getString(R.string.reading_row_from_source, source)
 
@@ -3036,10 +3036,6 @@ object Strings {
     /** Marks the chapter open in the reader on the e-ink contents page. */
     fun einkContentsReading(context: Context): String =
         context.getString(R.string.eink_contents_reading)
-
-    /** The chapter line in the reader's controls while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". */
-    fun readerLinePlace(context: Context, chapter: String, place: String): String =
-        context.getString(R.string.reader_line_place, chapter, place)
 
     /** Line under "You're offline" on reading's Home when it has never loaded, so nothing is kept to show. It has an Open Downloads button. */
     fun readHomeOfflineLine(context: Context): String =
@@ -9150,6 +9146,10 @@ object Strings {
     fun readerCreditPageOf(context: Context, n: Int, total: Int): String =
         context.getString(R.string.reader_credit_page_of, n, total)
 
+    /** The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". */
+    fun readerGroupLinePlace(context: Context, chapter: String, place: String): String =
+        context.getString(R.string.reader_group_line_place, chapter, place)
+
     /** Spoken name of a credit page shown again. */
     fun readerCreditPageLabel(context: Context): String =
         context.getString(R.string.reader_credit_page_label)
@@ -9157,6 +9157,10 @@ object Strings {
     /** The scrubber's preview on the first page of a chapter's later part. */
     fun readerPartPreview(context: Context, page: Int, part: Int): String =
         context.getString(R.string.reader_part_preview, page, part)
+
+    /** The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing". */
+    fun readerPartPreviewMissing(context: Context, page: Int, part: Int, missing: Int): String =
+        context.getString(R.string.reader_part_preview_missing, page, part, missing)
 
     /** Spoken value of the scrubber on the first page of a chapter's later part. */
     fun readerPartStarts(context: Context, part: Int, page: Int): String =

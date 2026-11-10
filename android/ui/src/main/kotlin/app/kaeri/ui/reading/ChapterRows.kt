@@ -172,9 +172,14 @@ internal object SeriesWords {
         return state.joinToString(" · ") { text(context, it, row) } to from.joinToString(" · ") { text(context, it, row) } // i18n-skip
     }
 
-    /** The second line in words: the engine's ("Read · 4 days ago · Downloaded"), else its state. */
+    /**
+     * The second line in words: the engine's ("Read · 4 days ago · Downloaded"), else its state.
+     * A from-line is lower case, so one that leads the line takes a capital.
+     */
     fun line(context: Context, row: ChapterRow): String {
-        if (row.line.isNotEmpty()) return row.line.joinToString(" · ") { text(context, it, row) } // i18n-skip
+        if (row.line.isNotEmpty()) {
+            return row.line.joinToString(" · ") { text(context, it, row) }.replaceFirstChar { it.titlecase(AirTime.locale) } // i18n-skip
+        }
         val read = when (val state = row.state) {
             is ChapterReadState.Read -> context.getString(R.string.chapter_state_read)
             is ChapterReadState.InProgress -> state.of?.let { Strings.chapterStatePageOf(context, state.page.toInt(), it.toInt()) }

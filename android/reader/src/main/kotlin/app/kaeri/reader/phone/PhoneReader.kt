@@ -51,6 +51,7 @@ import app.kaeri.reader.StripDividerHeight
 import app.kaeri.reader.endSkipped
 import app.kaeri.reader.onUnkeptCredit
 import app.kaeri.reader.paged
+import app.kaeri.reader.partMissingAt
 import app.kaeri.reader.partStarting
 import app.kaeri.reader.partTicks
 import app.kaeri.reader.shownCredit
@@ -645,7 +646,7 @@ fun PhoneReader(
                         line = when {
                             novelOpen -> novelLine(context, state)
                             // A credit page shows in place of a number until it is kept: "Chapter 87 · credit page".
-                            !strip && state.onUnkeptCredit -> Strings.readerLinePlace(context, chapterWords(context, view.chapter), creditPlaceWords(context, state).orEmpty())
+                            !strip && state.onUnkeptCredit -> Strings.readerGroupLinePlace(context, chapterWords(context, view.chapter), creditPlaceWords(context, state).orEmpty())
                             else -> chapterWords(context, above ?: view.chapter)
                         },
                         scrubber = when {
@@ -1103,7 +1104,11 @@ private fun BoxScope.ScrubPreview(session: ReaderSession, state: ReaderState, im
                     }
                 }
                 Text(
-                    state.partStarting(page)?.let { Strings.readerPartPreview(context, state.shownPage(page) + 1, it.toInt()) }
+                    state.partStarting(page)?.let { part ->
+                        // The part before it that no group has is named after it.
+                        state.partMissingAt(page)?.let { Strings.readerPartPreviewMissing(context, state.shownPage(page) + 1, part.toInt(), it.toInt()) }
+                            ?: Strings.readerPartPreview(context, state.shownPage(page) + 1, part.toInt())
+                    }
                         ?: Strings.readerPagePlate(context, state.shownPage(page) + 1),
                     color = Chrome.text,
                     fontSize = 13.sp,
