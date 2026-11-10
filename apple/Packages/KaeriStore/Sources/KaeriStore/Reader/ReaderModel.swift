@@ -254,6 +254,8 @@ public final class ReaderModel {
     @ObservationIgnored private var lastStrip: ContinuousClock.Instant?
     @ObservationIgnored private var pendingStrip: Task<Void, Never>?
     @ObservationIgnored private var rereadAfterClose: Request?
+    /// Closed after the open was sent and before the engine said it opened.
+    @ObservationIgnored private var closedOpening = false
 
     public init() {
         focusPaper = Self.defaults.bool(forKey: Self.focusKey)
@@ -294,7 +296,9 @@ public final class ReaderModel {
             send?(.reader(.close(session: session)))
             rereadAfterClose = next
             reset()
-            request = nil
+            // The reader stays up, opening, while the first book closes.
+            request = next
+            phase = .opening
             return
         }
         begin(next)
@@ -302,6 +306,7 @@ public final class ReaderModel {
 
     private func begin(_ next: Request) {
         reset()
+        closedOpening = false
         request = next
         phase = .opening
         openedAt = .now
@@ -347,8 +352,15 @@ public final class ReaderModel {
     #endif
 
     public func close() {
+        // A book waiting on the one before to close is dropped with it: closing always closes.
+        rereadAfterClose = nil
         guard request != nil || session != 0 else { return }
-        if session != 0 { send?(.reader(.close(session: session))) }
+        if session != 0 {
+            send?(.reader(.close(session: session)))
+        } else if opened {
+            // Asked for, not opened yet: the session the engine opens is closed as it comes.
+            closedOpening = true
+        }
         onClosed?()
         reset()
         request = nil
@@ -441,7 +453,13 @@ public final class ReaderModel {
     public private(set) var flowing: ChapterId?
 
     public func retry(page: UInt32?) {
-        guard session != 0, let chapter = view?.chapter.id else { return }
+        // An open that failed before the engine named a session is asked for again whole.
+        if session == 0, page == nil, let request {
+            begin(Request(work: request.work, chapter: request.chapter, at: request.at, tick: bump()))
+            return
+        }
+        // A strip that failed to flow on tries the chapter it was flowing into.
+        guard session != 0, let chapter = flowing ?? view?.chapter.id else { return }
         if let page { failures = failures.filter { $0.key.page != page } }
         send?(.reader(.retry(session: session, chapter: chapter, page: page)))
         if page == nil { phase = .opening; openedAt = .now; clearNotices() }
@@ -573,6 +591,13 @@ public final class ReaderModel {
     public func observe(_ event: Event) {
         switch event {
         case .reader(let event): apply(event)
+        case .reading(.failed(.reader, let failure)):
+            // The open failed: the chapter, the source or the book. The reader says so, with
+            // Try again and Close, rather than wait on an open that will not come. A strip that
+            // was flowing on, with the chapter before still on screen, says it the same way.
+            guard request != nil else { return }
+            phase = .failed(failure)
+            clearNotices()
         case .reading(.chapters(let work, _, let volumes, _)):
             guard work == view?.work || request.map({ WorkId($0.work) }) == work else { return }
             chapters = volumes
@@ -584,6 +609,12 @@ public final class ReaderModel {
     func apply(_ event: ReaderEvent) {
         switch event {
         case .opened(let opened):
+            // Closed while it opened: the engine's session goes too.
+            if closedOpening {
+                closedOpening = false
+                send?(.reader(.close(session: opened.session)))
+                return
+            }
             // A strip that flowed on keeps the chapters above; any other open starts clean.
             if flowing != opened.chapter.id || opened.mode != .strip {
                 trail = StripTrail()

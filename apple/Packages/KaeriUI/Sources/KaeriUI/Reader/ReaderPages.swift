@@ -47,7 +47,15 @@ struct PageImage: View {
                     .transition(.opacity)
             }
         }
-        .onAppear { if image != nil { onPaint?() } }
+        .onAppear {
+            // Back on screen after its pixels were let go: the cache's copy draws at once.
+            if image == nil { image = PageImages.cached(file, longestSide: longest) }
+            if image != nil { onPaint?() }
+        }
+        // Off screen, the page lets its pixels go: a long strip keeps every row it has shown,
+        // and each holding its own image would hold the whole run. The cache keeps the recent
+        // ones, up to its limit, for coming back.
+        .onDisappear { image = nil }
         .task(id: "\(file.path)|\(Int(longest))") {
             guard let loaded = await PageImages.load(file, longestSide: longest), !Task.isCancelled else { return }
             if image === loaded { return }
