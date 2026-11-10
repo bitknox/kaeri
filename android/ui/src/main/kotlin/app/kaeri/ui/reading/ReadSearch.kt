@@ -77,6 +77,7 @@ import app.kaeri.design.stillFade
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.engine.model.ReadFilterChoice
 import app.kaeri.engine.model.ReadFilters
+import app.kaeri.engine.model.ReadRowKind
 import app.kaeri.engine.model.ReadSearchQuery
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.i18n.R
@@ -276,7 +277,8 @@ private fun ReadSearchStart(
         if (rows == null) {
             item(span = { GridItemSpan(maxLineSpan) }, key = "rail-placeholder") { RailPlaceholder() }
         } else {
-            for (row in rows.filter { it.tiles.isNotEmpty() || it.pending }) {
+            // Catalogue-wide, as the shows' start: Because you finished stays on Home.
+            for (row in rows.filter { it.kind != ReadRowKind.BECAUSE && (it.tiles.isNotEmpty() || it.pending) }) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "rail-${row.id}") {
                     val title = row.title.text(context)
                     val side = row.side?.text(context)

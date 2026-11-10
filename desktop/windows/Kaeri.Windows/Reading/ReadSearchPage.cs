@@ -524,7 +524,8 @@ public sealed partial class ReadSearchPage : Page
         var reading = ctx.Known.Reading;
         if (reading.Home is null && !reading.HomeLoading && !reading.Failures.ContainsKey(ReadingAbout.Home))
             reading.LoadHome();
-        ReadHomeRow[] rows = [.. (reading.Home?.Rows ?? []).Where(r => (r.Tiles?.Length ?? 0) > 0 || r.Pending)];
+        // Catalogue-wide, as the shows' start: Because you finished stays on Home.
+        ReadHomeRow[] rows = [.. (reading.Home?.Rows ?? []).Where(r => r.Kind != ReadRowKind.Because && ((r.Tiles?.Length ?? 0) > 0 || r.Pending))];
         StartRows(rows);
         if (rows.Length > 0)
             startState.Done();

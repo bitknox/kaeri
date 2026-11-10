@@ -1341,7 +1341,8 @@ impl Search {
         }
         let mut old = self.rows.take();
         let mut live = Vec::new();
-        for row in &view.rows {
+        // Catalogue-wide, as the shows' start: Because you finished stays on Home.
+        for row in view.rows.iter().filter(|r| r.kind != ReadRowKind::Because) {
             let slot = match old.iter().position(|s| s.id == row.id) {
                 Some(at) => old.remove(at),
                 None => self.start_row(row),

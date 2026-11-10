@@ -194,7 +194,8 @@ private struct ReadSearchStart: View {
 
     var body: some View {
         let home = store.reading.home
-        let rows = (home?.rows ?? []).filter { !$0.tiles.isEmpty || $0.pending }
+        // Catalogue-wide, as the shows' start: Because you finished stays on Home.
+        let rows = (home?.rows ?? []).filter { $0.kind != .because && (!$0.tiles.isEmpty || $0.pending) }
         VStack(alignment: .leading, spacing: 28) {
             if store.demo.state.onlyBooks {
                 Text(L.searchDemoOnlyBooks)
