@@ -10,7 +10,7 @@
 mod novel;
 pub(crate) use novel::SOURCE;
 
-use std::{sync::Arc, time::Duration};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use kaeri_core::{
     books::{ChapterId, WorkId},
@@ -194,6 +194,9 @@ pub struct Session {
     place: Option<ReadPlace>,
     /// Show "Resumed at page N" once the leaves are out.
     resumed: Option<u32>,
+    /// How many pages the chapter had where its kept place was read, until it is laid out: a
+    /// place read in another source's split of the chapter is moved to the same point in this.
+    kept_of: Option<u32>,
     /// The catalogue says no more chapters are coming.
     ended: bool,
     /// The next chapter's first page was asked of the worker.
@@ -212,12 +215,16 @@ pub struct Session {
     flush_pending: bool,
     dirty: bool,
     last_write: Option<Instant>,
+    /// The chapter and page of the place last written.
+    written: Option<(ChapterId, Option<u32>)>,
     /// The novel open in the web view.
     novel: Option<novel::Open>,
     /// Where the next novel chapter opens.
     restore: Option<NovelPos>,
     /// What a chapter opened off the actor gave.
     prepared: novel::Slot,
+    /// The open chapter's pages from a source, landing as they are fetched.
+    feed: Option<Arc<crate::reading::feed::Feed>>,
     /// "Resumed at page N" waits for a novel's first page.
     novel_resumed: bool,
     /// A work of the reading demo, whose credit the reader shows.
@@ -428,22 +435,31 @@ impl Reader {
         ) {
             shelf::name_downloads(&mut chapters, &list);
         }
+        // A work from a source reads the source's whole list, the series page's, with what is
+        // on the shelf read from its file. The list as kept serves when there is one to read;
+        // with nothing on the shelf, the source is asked off the actor. A shelf with no list
+        // kept beside it opens on its own, never waiting on the source.
+        if novel::sourced(cx, &work) {
+            match novel::kept_list(cx, &work, &chapters) {
+                Some(listed) => chapters = listed,
+                None if chapters.is_empty() => {
+                    let slot = novel::list(cx, id, &work);
+                    self.listing = Some(Listing { id, work, chapter, at, surface, slot });
+                    cx.send(ReaderEvent::Opening {
+                        chapter: None,
+                        wait: Some(ReaderWait::FindingSource),
+                    });
+                    return;
+                }
+                None => {}
+            }
+        }
         // No word kept yet on how the series reads, and a source being asked: the open waits
         // a moment for its answer.
         if !chapters.is_empty()
             && let Some(slot) = novel::after_hint(cx, id, &work, &chapters)
         {
             self.listing = Some(Listing { id, work, chapter, at, surface, slot });
-            return;
-        }
-        if chapters.is_empty()
-            && let Some(slot) = novel::list(cx, id, &work)
-        {
-            self.listing = Some(Listing { id, work, chapter, at, surface, slot });
-            cx.send(ReaderEvent::Opening {
-                chapter: None,
-                wait: Some(ReaderWait::FindingSource),
-            });
             return;
         }
         self.open_with(cx, id, work, chapters, chapter, at, surface);
@@ -504,7 +520,7 @@ impl Reader {
             }
             _ => Medium::Manga,
         };
-        let Some(Start { index, page, strip, resumed }) =
+        let Some(Start { index, page, strip, resumed, of }) =
             start_of(cx, &work, &chapters, chapter.as_ref(), &at)
         else {
             let failure = ReadingFailure::NotFound;
@@ -571,6 +587,7 @@ impl Reader {
             start,
             place: None,
             resumed: resumed.then_some(page),
+            kept_of: of,
             peeked: false,
             back_to: None,
             moved_back: None,
@@ -582,9 +599,11 @@ impl Reader {
             flush_pending: false,
             dirty: false,
             last_write: None,
+            written: None,
             novel: None,
             restore,
             prepared: Arc::default(),
+            feed: None,
             novel_resumed: false,
         };
         let pages = self.pages(cx);
@@ -602,6 +621,13 @@ impl Reader {
         let Some(s) = self.session.as_mut().filter(|s| s.id == session) else { return };
         match wake {
             ReaderWake::Laid => s.laid_out(cx, &pages),
+            // Every page of a source's chapter landed and they lay out otherwise than guessed:
+            // laid out again at the same page, as a change of screen is.
+            ReaderWake::Relay(n) if n == s.generation && s.novel.is_none() => {
+                let page = s.page().unwrap_or(0);
+                s.lay_out(cx, &pages, page);
+            }
+            ReaderWake::Relay(_) => {}
             ReaderWake::Prepared(n) => s.prepared_now(cx, &pages, n),
             ReaderWake::Listed => {}
             ReaderWake::ReadRule(n) if n == s.read_timer => s.chapter_read(cx, Reached::Stayed),
@@ -662,6 +688,8 @@ struct Start {
     strip: Option<StripPos>,
     /// Whether that resumes a place.
     resumed: bool,
+    /// The pages the chapter had where that place was kept.
+    of: Option<u32>,
 }
 
 /// Which chapter to open and at which page, and whether that resumes a place.
@@ -689,9 +717,9 @@ fn start_of(
             .map(|(image, offset)| StripPos { image, offset: (offset as f32).clamp(0.0, 1.0) });
         let page = k.last_page.or(strip.map(|s| s.image)).unwrap_or(0);
         let strip = strip.filter(|s| s.image == page);
-        (page > 0 || strip.is_some_and(|s| s.offset > 0.0)).then_some((page, strip))
+        (page > 0 || strip.is_some_and(|s| s.offset > 0.0)).then_some((page, strip, k.of_pages))
     };
-    let at_page = |index, page| Start { index, page, strip: None, resumed: false };
+    let at_page = |index, page| Start { index, page, strip: None, resumed: false, of: None };
     Some(match at {
         OpenAt::Place { place } => at_page(index_of(&place.chapter)?, place.page.unwrap_or(0)),
         OpenAt::Page { page } => at_page(chapter.and_then(index_of).unwrap_or(0), *page),
@@ -724,7 +752,7 @@ fn start_of(
                 }
             };
             match left_at(&chapters[index].id) {
-                Some((page, strip)) => Start { index, page, strip, resumed: true },
+                Some((page, strip, of)) => Start { index, page, strip, resumed: true, of },
                 None => at_page(index, 0),
             }
         }
@@ -857,6 +885,21 @@ impl Session {
         }
     }
 
+    /// Move a kept place read in a split of the chapter `kept_of` pages long to the same point
+    /// of this one, `total` pages long. Once, as the chapter is first laid out.
+    fn rescale_kept(&mut self, total: u32) {
+        if let Some(of) = self.kept_of.take()
+            && let Some((page, strip)) =
+                rescaled(self.start.page.unwrap_or(0), self.start.strip, of, total)
+        {
+            self.start.page = Some(page);
+            self.start.strip = strip;
+            if self.resumed.is_some() {
+                self.resumed = Some(page);
+            }
+        }
+    }
+
     /// Ask the worker for the open chapter, starting at `page`.
     fn lay_out(&mut self, cx: &Cx<'_>, pages: &Pages, page: u32) {
         self.generation += 1;
@@ -864,9 +907,17 @@ impl Session {
         self.start.page = Some(page);
         // The place within a strip holds only while the chapter opens at its image.
         self.start.strip = self.start.strip.filter(|s| s.image == page);
+        // Another chapter's pages that had not all landed are fetched again when it opens.
+        if let Some(left) = self.feed.take_if(|f| f.chapter != chapter.id)
+            && !left.complete()
+            && let Some(c) = self.chapters.iter_mut().find(|c| c.id == left.chapter)
+        {
+            c.format = novel::SOURCE.into();
+            c.path = PathBuf::new();
+        }
         if novel::prepares(&chapter) {
             // Opened off the actor: a novel goes to the web view, pictures to the worker.
-            self.prepare(cx, &chapter);
+            self.prepare(cx, pages, &chapter);
             return;
         }
         pages.open(OpenJob {
@@ -878,6 +929,7 @@ impl Session {
             start_page: page,
             shared: self.laid.clone(),
             out: cx.tx.clone(),
+            feed: self.feed.clone(),
         });
     }
 
@@ -898,6 +950,9 @@ impl Session {
         self.leaves = laid.leaves;
         self.cuts = laid.cuts;
         self.pages_total = laid.pages;
+        // A place kept in a split of the chapter with other pages, as another source's, goes to
+        // the same point in this one.
+        self.rescale_kept(laid.pages);
         let eink = self.eink();
         // A guess is kept for the series on this device, and said once.
         let now = cx.now();
@@ -1214,6 +1269,14 @@ impl Session {
 
     fn note_place(&mut self, cx: &Cx<'_>) {
         self.dirty = true;
+        // A strip scrolled within the image last written is written once it leaves: on a new
+        // image or chapter, the close, or the app leaving the foreground.
+        if let Some(here) = &self.place
+            && here.strip.is_some()
+            && self.written.as_ref().is_some_and(|(c, p)| *c == here.chapter && *p == here.page)
+        {
+            return;
+        }
         let waited = self.last_write.map_or(WRITE_EVERY, |t| t.elapsed());
         if waited >= WRITE_EVERY {
             self.flush(cx);
@@ -1231,6 +1294,7 @@ impl Session {
         }
         let Some(here) = self.place.clone() else { return };
         self.last_write = Some(Instant::now());
+        self.written = Some((here.chapter.clone(), here.page));
         let mut event = ReadEvent::new(self.work.as_str(), here.chapter.as_str(), cx.now());
         event.page = here.page;
         event.of_pages = Some(self.pages_total).filter(|n| *n > 0);
@@ -1264,6 +1328,7 @@ impl Session {
         self.peeked = false;
         self.back_to = None;
         self.place = None;
+        self.kept_of = None;
         self.start = place(&self.work, &self.chapters[index].id, Some(page));
         self.lay_out(cx, pages, page);
     }
@@ -1335,6 +1400,25 @@ impl Session {
 
 /// "Resumed at page 8", or at an image in a strip. Nothing at the chapter's very start, where
 /// Start over would have nothing to do.
+/// A place at `page` (and in a strip, how far into its image) of a chapter `of` pages long, at
+/// the same point of the chapter in `total` pages. `None` when the two are the same length, or
+/// either is unknown.
+pub(super) fn rescaled(
+    page: u32,
+    strip: Option<StripPos>,
+    of: u32,
+    total: u32,
+) -> Option<(u32, Option<StripPos>)> {
+    if of == 0 || total == 0 || of == total {
+        return None;
+    }
+    let into = strip.filter(|s| s.image == page).map_or(0.0, |s| f64::from(s.offset));
+    let at = (f64::from(page) + into) / f64::from(of) * f64::from(total);
+    let image = (at.floor() as u32).min(total - 1);
+    let offset = (at - f64::from(image)).clamp(0.0, 1.0) as f32;
+    Some((image, strip.map(|_| StripPos { image, offset })))
+}
+
 fn resumed_msg(mode: ReaderMode, page: u32, strip: Option<StripPos>) -> Option<ReadingMsg> {
     let into = strip.filter(|s| s.image == page).map_or(0.0, |s| s.offset);
     if page == 0 && into < 0.05 {
@@ -1464,6 +1548,7 @@ mod tests {
     mod leaving;
     mod novels;
     mod peek;
+    mod sources;
     mod trackers;
 
     const WORK: &str = "a:4242";
