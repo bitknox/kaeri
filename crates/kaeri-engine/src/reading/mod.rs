@@ -247,7 +247,7 @@ pub(crate) fn reading(
             choose_group(services, &work, group);
             let ask = crate::read_catalog::Ask::of(engine, services);
             let kit = crate::read_catalog::Kit::of(services);
-            chapters(services, work.clone(), None, tx);
+            chapters(engine, services, work.clone(), None, tx);
             crate::read_catalog::series::header(&kit, ask, &work, tx);
             return;
         }
