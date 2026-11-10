@@ -82,6 +82,10 @@ class PagedReaderState(initial: Int = 0) {
     var turns by mutableIntStateOf(0)
         private set
 
+    /** The leaf on screen is where the engine put it (its start place, a new layout), not a turn. */
+    internal var placed = false
+        private set
+
     var zoom by mutableFloatStateOf(1f)
         internal set
     var pan by mutableStateOf(Offset.Zero)
@@ -94,9 +98,15 @@ class PagedReaderState(initial: Int = 0) {
     internal var startPan: (Int) -> Offset = { Offset.Zero }
 
     /** Show [to] (clamped to the leaves there are), reached [how]. Returns false when it is already shown. */
-    fun go(to: Int, how: TurnHow): Boolean {
+    fun go(to: Int, how: TurnHow): Boolean = move(to, how, placed = false)
+
+    /** The engine's own move: reported as a turn, but nobody turned. */
+    internal fun place(to: Int): Boolean = move(to, TurnHow.TURN, placed = true)
+
+    private fun move(to: Int, how: TurnHow, placed: Boolean): Boolean {
         val target = to.coerceIn(0, (count - 1).coerceAtLeast(0))
         if (target == leaf && turns > 0) return false
+        this.placed = placed
         under = if (how == TurnHow.TURN || how == TurnHow.KEY) leaf else null
         leaf = target
         this.how = how
@@ -117,8 +127,9 @@ fun rememberPagedReaderState(initial: Int = 0): PagedReaderState = remember { Pa
 /**
  * The paged reader over [state]'s leaves. [motion] is false on e-ink and in Paper mode. [onControls]
  * runs for a tap in the middle zone, or any tap while zoomed. [onShown] runs after the frame that
- * shows a leaf, with how it was reached; the screen passes it to [ReaderSession.shown]. The end page
- * leaf is drawn by [endPage].
+ * shows a leaf, with how it was reached and whether the person turned to it (not the engine's start
+ * place, and not the same leaf laid out again after a rotation); the screen passes it to
+ * [ReaderSession.shown]. The end page leaf is drawn by [endPage].
  */
 @Composable
 fun PagedReader(
@@ -128,7 +139,7 @@ fun PagedReader(
     direction: ReadDirection,
     zones: TapZones,
     onControls: () -> Unit,
-    onShown: (leaf: Int, how: TurnHow) -> Unit,
+    onShown: (leaf: Int, how: TurnHow, turned: Boolean) -> Unit,
     onMissing: (LeafPart) -> Unit,
     onRetry: (page: Int) -> Unit,
     onJumped: (id: Long) -> Unit,
@@ -157,17 +168,21 @@ fun PagedReader(
         val jump = state.jump ?: return@LaunchedEffect
         if (leaves.isEmpty()) return@LaunchedEffect
         // Reported as a turn, so the engine does not offer Back to page for its own move.
-        pager.go(jump.leaf, TurnHow.TURN)
+        pager.place(jump.leaf)
         if (fresh) pager.under = null
         pager.chapter = chapter
         onJumped(jump.id)
     }
     if (fresh && state.jump == null && leaves.isNotEmpty()) SideEffect { pager.chapter = chapter }
-    // A leaf counts as shown once it is on screen, never while a jump is still to come.
+    // A leaf counts as shown once it is on screen, never while a jump is still to come. A new layout
+    // reports the leaf again without a turn.
+    var reported by remember { mutableIntStateOf(pager.turns) }
     LaunchedEffect(pager.turns, state.layout) {
         if (leaves.isEmpty() || state.jump != null) return@LaunchedEffect
         withFrameNanos { }
-        shown(pager.leaf, pager.how)
+        val turned = pager.turns != reported && !pager.placed
+        reported = pager.turns
+        shown(pager.leaf, pager.how, turned)
     }
 
     // The crossfade: the new leaf over the old one, then the old one goes once the new one is drawn,

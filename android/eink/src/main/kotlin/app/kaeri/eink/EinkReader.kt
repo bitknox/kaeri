@@ -216,7 +216,7 @@ fun EinkReader(
                 direction = direction,
                 zones = TapZones.eink(direction),
                 onControls = ::toggleChrome,
-                onShown = { leaf, how ->
+                onShown = { leaf, how, _ ->
                     session.shown(leaf, how)
                     if (state.leaves.getOrNull(leaf)?.endPage == true) paint(EinkPaint.EndPage)
                 },

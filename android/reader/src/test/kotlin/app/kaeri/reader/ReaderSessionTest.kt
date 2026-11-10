@@ -107,6 +107,17 @@ class ReaderSessionTest {
     }
 
     @Test
+    fun the_opening_wait_counts_from_the_ask_through_the_chapter_opening() {
+        // A novel's text lands after Opened: its plate goes on counting from the ask.
+        val before = openingClock()
+        session.open(WORK, ReaderFixtures.surface)
+        val since = session.state.value.openingSince
+        assertTrue(since >= before)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(start = 0u)))
+        assertEquals(since, session.state.value.openingSince)
+    }
+
+    @Test
     fun a_mode_changed_in_the_reader_turns_the_view_with_it() {
         opened()
         fun row(key: ReaderSettingKey, word: String) =

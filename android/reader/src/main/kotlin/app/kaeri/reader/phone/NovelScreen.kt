@@ -49,6 +49,10 @@ class NovelPlace {
     var pages by mutableIntStateOf(0)
         internal set
 
+    /** The web view showed this chapter's first page: the opening plate can go. */
+    var ready by mutableStateOf(false)
+        internal set
+
     /** Turned past the last page of the chapter: the end page shows. */
     var ended by mutableStateOf(false)
 
@@ -108,6 +112,7 @@ fun NovelScreen(
                     message.x > 2f / 3f -> turn(!rtl, TurnHow.TURN)
                 }
                 is NovelMessage.Page -> {
+                    place.ready = true
                     place.page = message.page
                     place.pages = message.pages
                     place.ended = false
@@ -116,6 +121,7 @@ fun NovelScreen(
                     }
                 }
                 is NovelMessage.Layout -> {
+                    place.ready = true
                     place.page = message.page
                     place.pages = message.pages
                 }
@@ -164,6 +170,7 @@ fun NovelScreen(
     LaunchedEffect(novel?.session, novel?.chapter) {
         place.failed = null
         place.ended = false
+        place.ready = false
         if (novel != null) {
             place.reload = { host.open(novel.spine, novel.entry, novel.restore) }
             host.open(novel.spine, novel.entry, novel.restore)

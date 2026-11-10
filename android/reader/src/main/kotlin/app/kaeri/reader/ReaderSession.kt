@@ -63,6 +63,9 @@ data class ShownNotice(val notice: ReaderNotice, val id: Long)
  */
 data class ReaderJump(val leaf: Int, val strip: StripPos?, val id: Long)
 
+/** The clock a chapter's opening wait counts on, in milliseconds. */
+fun openingClock(): Long = System.nanoTime() / 1_000_000
+
 /** What the engine said of the open session. */
 data class ReaderState(
     /** Asked to open and not yet answered. */
@@ -99,6 +102,8 @@ data class ReaderState(
     /** While opening: the chapter, once the engine knows it, and what it waits on. */
     val openingChapter: ChapterRow? = null,
     val openingWait: ReaderWait? = null,
+    /** When the chapter on screen was asked for, on [openingClock]; 0 when nothing was asked. */
+    val openingSince: Long = 0L,
     val preview: NextPreview? = null,
     /** The chapter a strip flowed on from, drawn above this one in the same scroll. */
     val previous: ReaderState? = null,
@@ -186,7 +191,11 @@ class ReaderSession(private val send: (Command) -> Unit) {
         startAt = null
         shownPage = null
         askedPages.clear()
-        _state.value = ReaderState(opening = true, openingChapter = state.value.openingChapter?.takeIf { it.id == chapter })
+        _state.value = ReaderState(
+            opening = true,
+            openingChapter = state.value.openingChapter?.takeIf { it.id == chapter },
+            openingSince = openingClock(),
+        )
         reader(ReaderCommand.Open(work, chapter, at, surface))
     }
 
@@ -415,6 +424,8 @@ class ReaderSession(private val send: (Command) -> Unit) {
                     volumes = now.volumes,
                     layout = now.layout + 1,
                     previous = previous,
+                    // A novel's text comes after this; the wait it shows counts from the ask.
+                    openingSince = now.openingSince,
                 )
             }
             is ReaderEvent.Leaves -> {

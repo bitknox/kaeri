@@ -141,6 +141,7 @@ import app.kaeri.i18n.Strings
 import app.kaeri.reader.LocalPageTone
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.PageWaits
+import app.kaeri.reader.openingClock
 import app.kaeri.reader.PagedReader
 import app.kaeri.reader.ReaderAction
 import app.kaeri.reader.ReaderKeyRules
@@ -260,11 +261,8 @@ fun PhoneReader(
     // A demo work opens with the chrome and its credit held for 3 s; the credit returns with the
     // chrome on every tap.
     val demo = view?.demoCredit
-    // The pager reports the first page as a turn; that report must not take the held chrome away.
-    var demoOpening by remember { mutableStateOf(false) }
     LaunchedEffect(demo != null, view?.chapter?.id) {
         if (demo == null) return@LaunchedEffect
-        demoOpening = true
         chrome = true
         delay(DEMO_CREDIT_HOLD_MILLIS)
         chrome = false
@@ -455,6 +453,12 @@ fun PhoneReader(
                 }
                 novelOpen && view != null -> {
                     novel(place) { chrome = !chrome }
+                    // The text comes from the source after the chapter opens: the opening plate, with
+                    // what it waits on and for how long, stays over the page until the first one shows.
+                    var novelPlateGone by remember(view.chapter.id) { mutableStateOf(false) }
+                    if (!novelPlateGone && place.failed == null) {
+                        Opening(state, done = place.ready, drawn = place.ready, fades = fades && leaving == null, onGone = { novelPlateGone = true })
+                    }
                     val failed = place.failed
                     when {
                         failed != null -> Box(Modifier.fillMaxSize().background(colours.ground)) {
@@ -506,11 +510,11 @@ fun PhoneReader(
                     direction = direction,
                     zones = tapZones,
                     onControls = { chrome = !chrome },
-                    onShown = { leaf, how ->
+                    onShown = { leaf, how, turned ->
                         session.shown(leaf, how)
-                        if (how != TurnHow.JUMP) {
-                            if (demoOpening) demoOpening = false else chrome = false
-                        }
+                        // A turn takes the chrome away; the opening page and a new layout of the same
+                        // place (after a rotation) leave it as it is.
+                        if (turned && how != TurnHow.JUMP) chrome = false
                     },
                     onMissing = session::needPage,
                     onRetry = { session.retry(it.toUInt()) },
@@ -1199,13 +1203,13 @@ internal fun StripDivider(state: ReaderState, next: ChapterRow) {
 @Composable
 private fun Opening(state: ReaderState, done: Boolean, drawn: Boolean, fades: Boolean, onGone: () -> Unit) {
     val context = LocalContext.current
-    var waited by remember { mutableIntStateOf(0) }
-    LaunchedEffect(Unit) {
-        delay(PageWaits.PLATE_MS)
-        waited = PageWaits.PLATE_MS.toInt()
+    // Counted from the ask, so a novel's plate after the chapter opens goes on from the first one.
+    val since = remember(state.openingSince) { state.openingSince.takeIf { it > 0 } ?: openingClock() }
+    var waited by remember { mutableIntStateOf((openingClock() - since).toInt()) }
+    LaunchedEffect(since) {
         while (true) {
+            waited = (openingClock() - since).toInt()
             delay(200)
-            waited += 200
         }
     }
     val shown = remember { Animatable(1f) }
