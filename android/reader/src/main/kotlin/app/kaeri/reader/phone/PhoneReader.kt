@@ -11,6 +11,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.view.accessibility.AccessibilityManager
 import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.EnterTransition
@@ -324,8 +325,17 @@ fun PhoneReader(
         // The last page of the chapter's story, before its end page.
         val last = state.leaves.indexOfLast { !it.endPage }.coerceAtLeast(0)
         when (action) {
-            ReaderAction.FORWARD -> if (novelOpen) place.turn(true) else pager.forward(TurnHow.KEY)
-            ReaderAction.BACK -> if (novelOpen) place.turn(false) else pager.back(TurnHow.KEY)
+            // On the end page a forward key crosses to the next chapter, as its hint says.
+            ReaderAction.FORWARD -> when {
+                novelOpen && place.ended -> session.crossOn()
+                novelOpen -> place.turn(true)
+                else -> pager.forward(TurnHow.KEY)
+            }
+            ReaderAction.BACK -> when {
+                novelOpen && place.ended -> place.ended = false
+                novelOpen -> place.turn(false)
+                else -> pager.back(TurnHow.KEY)
+            }
             ReaderAction.CONTROLS -> chrome = !chrome
             ReaderAction.CLEAN -> {}
             ReaderAction.FIRST -> if (novelOpen) place.go(0) else pager.go(0, TurnHow.JUMP)
@@ -472,7 +482,7 @@ fun PhoneReader(
                                 instant = instant,
                             )
                         }
-                        place.ended -> NovelEndPage(state, session, actions, images, direction, onBack = { place.ended = false }, cover = cover, onFirstPage = {
+                        place.ended -> NovelEndPage(state, session, actions, images, direction, tapZones, onBack = { place.ended = false }, cover = cover, onFirstPage = {
                             place.ended = false
                             place.go(0)
                         })
@@ -520,6 +530,7 @@ fun PhoneReader(
                     onRetry = { session.retry(it.toUInt()) },
                     onJumped = session::jumped,
                     endPage = { PhoneEndPage(state, session, actions, images, onFirstPage = { pager.go(0, TurnHow.JUMP) }, cover = cover, pageGround = background) },
+                    onPastEnd = session::crossOn,
                     motion = fades,
                     onReady = {
                         openingHeld = false
@@ -1049,6 +1060,7 @@ private fun NovelEndPage(
     actions: PhoneReaderActions,
     images: PageImages,
     direction: ReadDirection,
+    zones: TapZones,
     onBack: () -> Unit,
     cover: (@Composable (Modifier) -> Unit)?,
     onFirstPage: () -> Unit,
@@ -1057,7 +1069,17 @@ private fun NovelEndPage(
     val far = with(density) { 80.dp.toPx() }
     val next = (state.end?.next ?: state.view?.next)
     Box(
-        Modifier.fillMaxSize().pointerInput(next?.id, direction) {
+        Modifier.fillMaxSize().pointerInput(zones) {
+            // A tap in the forward zone goes on, in the back zone returns to the text; the page's
+            // buttons take their own taps first.
+            detectTapGestures { at ->
+                when (zones.at(at.x / size.width)) {
+                    ReaderAction.FORWARD -> session.crossOn()
+                    ReaderAction.BACK -> onBack()
+                    else -> {}
+                }
+            }
+        }.pointerInput(next?.id, direction) {
             var total = 0f
             detectHorizontalDragGestures(
                 onDragStart = { total = 0f },
@@ -1070,7 +1092,7 @@ private fun NovelEndPage(
                     val forward = if (direction.rightToLeft) total > far else total < -far
                     val backward = if (direction.rightToLeft) total < -far else total > far
                     when {
-                        forward && next != null -> session.openChapter(next.id)
+                        forward && next != null -> session.crossOn()
                         backward -> onBack()
                     }
                 },

@@ -68,6 +68,7 @@ import app.kaeri.engine.model.TurnHow
 import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ReaderAction as NoticeAction
 import app.kaeri.i18n.Strings
+import app.kaeri.reader.phone.ReaderLook
 import app.kaeri.reader.BrokenPageGlyph
 import app.kaeri.reader.PageImages
 import app.kaeri.reader.PagedReader
@@ -125,7 +126,6 @@ fun EinkReader(
     modifier: Modifier = Modifier,
     pager: PagedReaderState = rememberPagedReaderState(),
     showZones: Boolean = false,
-    swapVolume: Boolean = false,
 ) {
     val view = state.view
     val direction = view?.direction ?: ReadDirection.RIGHT_TO_LEFT
@@ -174,10 +174,12 @@ fun EinkReader(
         if (chrome) toggleChrome()
     }
 
+    val contentsKeys = remember { ContentsKeys() }
     fun act(action: ReaderAction) {
         when (action) {
-            ReaderAction.FORWARD -> pager.forward(TurnHow.KEY)
-            ReaderAction.BACK -> pager.back(TurnHow.KEY)
+            // Contents turns its own pages, not the reader's under it.
+            ReaderAction.FORWARD -> if (layer == EinkLayer.Contents) contentsKeys.forward() else pager.forward(TurnHow.KEY)
+            ReaderAction.BACK -> if (layer == EinkLayer.Contents) contentsKeys.back() else pager.back(TurnHow.KEY)
             ReaderAction.CONTROLS -> toggleChrome()
             ReaderAction.CLEAN -> paint(EinkPaint.Clean)
             ReaderAction.FIRST -> pager.go(0, TurnHow.JUMP)
@@ -195,7 +197,7 @@ fun EinkReader(
         modifier
             .fillMaxSize()
             .background(EinkColours.Paper)
-            .readerKeys(ReaderKeyRules(direction, volumeTurns = state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.VOLUME_KEYS_TURN }?.let { (it.value as? ReaderValue.Toggle)?.on } ?: true, volumeDownForward = swapVolume, holdCleans = painter.controller.available), ::act)
+            .readerKeys(ReaderKeyRules(direction, volumeTurns = state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.VOLUME_KEYS_TURN }?.let { (it.value as? ReaderValue.Toggle)?.on } ?: true, volumeDownForward = !ReaderLook.volumeSwapped(LocalContext.current), holdCleans = painter.controller.available), ::act)
             // The first touch anywhere clears the guide, and still turns or opens what it touched.
             .pointerInput(zones) {
                 if (!zones) return@pointerInput
@@ -229,6 +231,8 @@ fun EinkReader(
                 },
                 motion = false,
                 endPage = { EinkEndPage(state, actions, onContinue = { next -> session.openChapter(next.id) }, onFirstPage = { pager.go(0, TurnHow.JUMP) }) },
+                // A page button, a volume key or a forward tap on the end page goes on, as on the phone.
+                onPastEnd = session::crossOn,
                 waiting = { page, long -> if (long) EinkPageWaiting(page) },
                 failed = { page, failure, retry -> EinkPageFailed(page, failure, retry, skip = { pager.forward(TurnHow.TURN) }) },
                 fit = (state.settings?.rows?.firstOrNull { it.key == ReaderSettingKey.FIT }?.value as? ReaderValue.Choice)?.name,
@@ -290,6 +294,7 @@ fun EinkReader(
                     show(EinkLayer.None)
                 },
                 onPage = { paint(EinkPaint.ListPage(false)) },
+                keys = contentsKeys,
             )
             EinkLayer.None -> Unit
         }
@@ -439,15 +444,16 @@ fun EinkBottomBar(
             EinkOutlinedButton(backTo.notice.msg.text(context), onBackTo, height = 46.dp)
         }
         // Mirrored for left to right: the next chapter is on the reading side.
-        val next = @Composable { if (hasNext) EinkTextButton(if (rtl) "‹ " + Strings.einkNextChapter(context) else Strings.einkNextChapter(context) + " ›", onNext) }
-        val previous = @Composable { if (hasPrevious) EinkTextButton(if (rtl) Strings.einkPreviousChapter(context) + " ›" else "‹ " + Strings.einkPreviousChapter(context), onPrevious) }
+        // The chapter buttons share what the middle leaves, each on one line.
+        val next = @Composable { m: Modifier -> if (hasNext) EinkTextButton(if (rtl) "‹ " + Strings.einkNextChapter(context) else Strings.einkNextChapter(context) + " ›", onNext, m, oneLine = true) }
+        val previous = @Composable { m: Modifier -> if (hasPrevious) EinkTextButton(if (rtl) Strings.einkPreviousChapter(context) + " ›" else "‹ " + Strings.einkPreviousChapter(context), onPrevious, m, oneLine = true) }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            if (rtl) next() else previous()
+            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) { if (rtl) next(Modifier) else previous(Modifier) }
             Row {
                 EinkTextButton(Strings.einkSettings(context), onSettings)
                 if (canClean) EinkTextButton(Strings.einkCleanScreen(context), onClean)
             }
-            if (rtl) previous() else next()
+            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) { if (rtl) previous(Modifier) else next(Modifier) }
         }
     }
 }

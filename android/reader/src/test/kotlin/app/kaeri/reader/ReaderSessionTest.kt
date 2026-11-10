@@ -324,4 +324,45 @@ class ReaderSessionTest {
         session.apply(ReaderEvent.Opening(null, null))
         assertNull(session.state.value.openingWait)
     }
+
+    @Test
+    fun the_place_shown_is_kept_to_open_there_again() {
+        opened(start = 4u)
+        assertEquals(ReadPlace(WORK, CHAPTER, 4u, null, null), session.place())
+        session.jumped(session.state.value.jump!!.id)
+        session.shown(5, TurnHow.TURN)
+        assertEquals(ReadPlace(WORK, CHAPTER, 5u, null, null), session.place())
+        session.stripAt(StripPos(2u, 0.5f), false)
+        assertEquals(ReadPlace(WORK, CHAPTER, 2u, StripPos(2u, 0.5f), null), session.place())
+    }
+
+    @Test
+    fun the_kept_place_follows_the_chapter_crossed_into() {
+        opened(start = 4u)
+        session.openChapter("local:lantern-stair/13")
+        val next = ReaderFixtures.view(start = 0u).let {
+            it.copy(chapter = ReaderFixtures.chapter("local:lantern-stair/13", "13"), start = ReadPlace(WORK, "local:lantern-stair/13", 0u, null, null))
+        }
+        session.apply(ReaderEvent.Opened(next))
+        assertEquals("local:lantern-stair/13", session.place()?.chapter)
+        assertEquals(0u, session.place()?.page)
+    }
+
+    @Test
+    fun a_forward_turn_on_the_end_page_opens_the_next_chapter_once() {
+        opened()
+        sent.clear()
+        assertTrue(session.crossOn())
+        assertTrue(session.crossOn())
+        assertEquals(listOf<ReaderCommand>(ReaderCommand.OpenChapter(SESSION, "local:lantern-stair/13")), sent)
+    }
+
+    @Test
+    fun with_no_next_chapter_a_forward_turn_on_the_end_page_stays() {
+        session.open(WORK, ReaderFixtures.surface)
+        session.apply(ReaderEvent.Opened(ReaderFixtures.view(next = null)))
+        sent.clear()
+        assertEquals(false, session.crossOn())
+        assertTrue(sent.isEmpty())
+    }
 }

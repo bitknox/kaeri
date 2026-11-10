@@ -116,7 +116,15 @@ class PagedReaderState(initial: Int = 0) {
         return true
     }
 
-    fun forward(how: TurnHow = TurnHow.TURN) = go(leaf + 1, how)
+    /** The last leaf is the end page, which a forward turn crosses from. */
+    internal var endLast = false
+
+    /** A forward turn on the end page: on to the next chapter. False when there is none. */
+    internal var pastEnd: () -> Boolean = { false }
+
+    /** The next leaf; on the end page, the next chapter, as its hint says. */
+    fun forward(how: TurnHow = TurnHow.TURN): Boolean =
+        if (endLast && leaf >= count - 1) pastEnd() else go(leaf + 1, how)
 
     fun back(how: TurnHow = TurnHow.TURN) = go(leaf - 1, how)
 }
@@ -145,6 +153,8 @@ fun PagedReader(
     onJumped: (id: Long) -> Unit,
     endPage: @Composable (Leaf) -> Unit,
     modifier: Modifier = Modifier,
+    /** A forward turn on the end page, by swipe, tap or key: true when it crossed to the next chapter. */
+    onPastEnd: () -> Boolean = { false },
     motion: Boolean = true,
     onReady: (leaf: Int) -> Unit = {},
     waiting: WaitingSlot = { page, long -> PageWaiting(page, long) },
@@ -154,6 +164,9 @@ fun PagedReader(
 ) {
     val leaves = state.leaves
     pager.count = leaves.size
+    pager.endLast = leaves.lastOrNull()?.endPage == true
+    val pastEnd by rememberUpdatedState(onPastEnd)
+    pager.pastEnd = { pastEnd() }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val rtl = direction.rightToLeft
@@ -239,6 +252,9 @@ fun PagedReader(
         fun settle(velocity: Float) {
             val target = neighbour(drag)
             val far = abs(drag) > width * 0.25f || abs(velocity) > flick && (velocity > 0) == (drag > 0)
+            // On from the end page: the next chapter opens while the page eases back.
+            val crossing = target == null && far && (drag > 0) == rtl && pager.endLast && pager.leaf == leaves.lastIndex
+            if (crossing) pager.pastEnd()
             if (target != null && far) {
                 if (!motion) {
                     drag = 0f

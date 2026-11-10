@@ -6,6 +6,10 @@ package app.kaeri.reader
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeRight
 import app.kaeri.engine.model.Leaf
 import app.kaeri.engine.model.ReadDirection
 import app.kaeri.engine.model.ReaderEvent
@@ -31,6 +35,7 @@ class PagedTurnsTest {
     private val session = ReaderSession {}
     private val pager = PagedReaderState()
     private val reports = mutableListOf<Triple<Int, TurnHow, Boolean>>()
+    private var crossed = 0
 
     private fun open() {
         session.open(WORK, ReaderFixtures.surface)
@@ -53,6 +58,10 @@ class PagedTurnsTest {
                 onRetry = {},
                 onJumped = session::jumped,
                 endPage = {},
+                onPastEnd = {
+                    crossed++
+                    true
+                },
                 motion = false,
             )
         }
@@ -83,5 +92,38 @@ class PagedTurnsTest {
         compose.runOnIdle { pager.forward() }
         compose.waitForIdle()
         assertEquals(Triple(3, TurnHow.TURN, true), reports.last())
+    }
+
+    @Test
+    fun a_forward_turn_on_the_end_page_crosses_to_the_next_chapter() {
+        open()
+        // The end page, after the eight pages.
+        compose.runOnIdle { pager.go(8, TurnHow.JUMP) }
+        compose.waitForIdle()
+        assertEquals(8, pager.leaf)
+
+        // A key or a tap in the forward zone.
+        compose.runOnIdle { pager.forward(TurnHow.KEY) }
+        assertEquals(1, crossed)
+
+        // Right to left, a swipe to the right goes on; one to the left returns to the last page.
+        compose.onRoot().performTouchInput { swipeRight() }
+        compose.waitForIdle()
+        assertEquals(2, crossed)
+        compose.onRoot().performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+        assertEquals(2, crossed)
+        assertEquals(7, pager.leaf)
+    }
+
+    @Test
+    fun forward_turns_before_the_end_page_never_cross() {
+        open()
+        compose.runOnIdle { pager.go(6, TurnHow.JUMP) }
+        compose.runOnIdle { pager.forward() }
+        compose.runOnIdle { pager.forward() }
+        compose.waitForIdle()
+        assertEquals(8, pager.leaf)
+        assertEquals(0, crossed)
     }
 }

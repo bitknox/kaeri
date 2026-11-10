@@ -33,6 +33,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +59,7 @@ import app.kaeri.engine.model.ReaderSettingRow
 import app.kaeri.engine.model.ReaderValue
 import app.kaeri.engine.model.SettingScope
 import app.kaeri.i18n.Strings
+import app.kaeri.reader.phone.ReaderLook
 import app.kaeri.reader.ReaderSession
 import app.kaeri.reader.ReaderState
 import app.kaeri.reader.phone.chapterWords
@@ -315,6 +317,18 @@ private fun EinkSettingLine(context: Context, session: ReaderSession, row: Reade
             }
         }
     }
+    // Which key goes forward, under the switch that lets them turn pages: the phone's own choice.
+    if (row.key == Key.VOLUME_KEYS_TURN && (value as? ReaderValue.Toggle)?.on == true) {
+        SheetLine(Strings.readerRowVolumeSwap(context)) {
+            EinkSegmented(
+                choices = listOf(true, false),
+                chosen = ReaderLook.volumeSwapped(context),
+                label = { if (it) Strings.readerValueOn(context) else Strings.readerValueOff(context) },
+                onChoose = { ReaderLook.swapVolume(context, it) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
 }
 
 /** Less and more around the value, the value between them as the stepper's state. */
@@ -408,7 +422,14 @@ private sealed interface ContentsLine {
  * each page of the list.
  */
 @Composable
-fun EinkContents(session: ReaderSession, state: ReaderState, onBack: () -> Unit, onOpen: (ChapterId) -> Unit, onPage: () -> Unit) {
+fun EinkContents(
+    session: ReaderSession,
+    state: ReaderState,
+    onBack: () -> Unit,
+    onOpen: (ChapterId) -> Unit,
+    onPage: () -> Unit,
+    keys: ContentsKeys = remember { ContentsKeys() },
+) {
     val context = LocalContext.current
     val view = state.view ?: return
     LaunchedEffect(view.work) { session.loadChapters() }
@@ -451,6 +472,8 @@ fun EinkContents(session: ReaderSession, state: ReaderState, onBack: () -> Unit,
             val here = lines.indexOfFirst { it is ContentsLine.Chapter && it.row.id == current }.coerceAtLeast(0)
             var page by remember(pages.size) { mutableIntStateOf((here / perPage).coerceIn(0, pages.size - 1)) }
             LaunchedEffect(page) { onPage() }
+            // The page buttons and volume keys turn the list's pages while it shows.
+            SideEffect { keys.turn = { by -> page = (page + by).coerceIn(0, pages.size - 1) } }
             Column(Modifier.fillMaxSize()) {
                 Column(Modifier.weight(1f)) {
                     pages[page].forEach { line ->
@@ -479,6 +502,16 @@ fun EinkContents(session: ReaderSession, state: ReaderState, onBack: () -> Unit,
             }
         }
     }
+}
+
+/** The reader's keys while Contents shows: its pages turn, not the reader's page under it. */
+class ContentsKeys {
+    /** Turn [by] pages of the list, -1 back and 1 on. */
+    internal var turn: (by: Int) -> Unit = {}
+
+    fun forward() = turn(1)
+
+    fun back() = turn(-1)
 }
 
 /** Touches here stay here, never reaching the page under it. */

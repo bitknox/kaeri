@@ -20,6 +20,10 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.pressKey
 import app.kaeri.engine.model.Command
+import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.ReadingEvent
+import app.kaeri.engine.model.VolumeGroup
+import app.kaeri.reader.phone.ReaderLook
 import app.kaeri.engine.model.ReaderCommand
 import app.kaeri.engine.model.ReaderEvent
 import app.kaeri.engine.model.Refresh
@@ -93,9 +97,10 @@ class EinkReaderTest {
     }
 
     @Test
-    fun the_upper_page_button_turns_forward_and_each_image_page_is_a_full_refresh() {
+    fun the_lower_volume_key_turns_forward_and_each_image_page_is_a_full_refresh() {
         open()
-        compose.onRoot().performKeyInput { pressKey(Key.VolumeUp) }
+        // Down goes forward, as on the phone, until the phone's swap says otherwise.
+        compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
         compose.waitForIdle()
         assertEquals(TurnHow.KEY, shown().last().how)
         assertEquals(1u, shown().last().leaf)
@@ -118,13 +123,55 @@ class EinkReaderTest {
     fun the_page_between_chapters_is_in_the_flow() {
         open()
         repeat(3) {
-            compose.onRoot().performKeyInput { pressKey(Key.VolumeUp) }
+            compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
             compose.waitForIdle()
         }
         assertEquals(3u, shown().last().leaf)
         compose.onNodeWithText("Continue to chapter 13").assertIsDisplayed()
         compose.onNodeWithText("Turn the page to continue").assertIsDisplayed()
         assertEquals(Refresh.FULL, fake.requests.last().refresh)
+
+        // As it says: the next turn opens the next chapter.
+        compose.onRoot().performKeyInput { pressKey(Key.PageDown) }
+        compose.waitForIdle()
+        assertEquals(listOf(ReaderCommand.OpenChapter(EinkFixtures.SESSION, "local:lantern-stair/13")), sent.filterIsInstance<ReaderCommand.OpenChapter>())
+    }
+
+    @Test
+    fun the_phones_volume_swap_turns_the_e_ink_pages_too() {
+        val context = RuntimeEnvironment.getApplication()
+        ReaderLook.swapVolume(context, true)
+        try {
+            open()
+            compose.onRoot().performKeyInput { pressKey(Key.VolumeUp) }
+            compose.waitForIdle()
+            assertEquals(1u, shown().last().leaf)
+        } finally {
+            ReaderLook.swapVolume(context, false)
+        }
+    }
+
+    @Test
+    fun the_keys_turn_the_pages_of_contents_and_not_the_page_under_it() {
+        open()
+        compose.onRoot().performTouchInput { click(androidx.compose.ui.geometry.Offset(width * 0.55f, height * 0.5f)) }
+        compose.waitForIdle()
+        compose.onNodeWithText("Contents").performClick()
+        val rows = List(60) { EinkFixtures.chapter(id = "local:lantern-stair/${it + 1}", number = "${it + 1}", title = null) }
+        session.apply(Event.Reading(ReadingEvent.Chapters(EinkFixtures.WORK, null, listOf(VolumeGroup(null, null, rows, false)), null)))
+        compose.waitForIdle()
+        fun listPage(n: Int) = compose.onAllNodes(hasText("Page $n of", substring = true)).fetchSemanticsNodes().isNotEmpty()
+        // Contents opens on the page with the chapter being read, the 12th: the second.
+        assertTrue(listPage(2))
+        compose.onRoot().performKeyInput { pressKey(Key.VolumeDown) }
+        compose.waitForIdle()
+        assertTrue(listPage(3))
+        assertTrue(!listPage(2))
+        compose.onRoot().performKeyInput { pressKey(Key.PageUp) }
+        compose.waitForIdle()
+        assertTrue(listPage(2))
+        // The reader's page stayed where it was.
+        assertEquals(0u, shown().last().leaf)
     }
 
     @Test
