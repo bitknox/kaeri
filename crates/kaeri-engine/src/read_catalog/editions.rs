@@ -1399,4 +1399,55 @@ mod tests {
         chapters::keep(&kit.store, "whole", "w-1", &list(51, 13), NOW);
         assert_eq!(kit.sources.edition_of(&work, None), Some(("whole".into(), "w-1".into())));
     }
+
+    #[test]
+    fn a_source_switched_off_is_never_read_from_unless_chosen() {
+        let dir = tempfile::tempdir().unwrap();
+        let manga = [Medium::Manga];
+        let dim = Stock::new("dim", &manga, Ok(Vec::new()));
+        let lit = Stock::new("lit", &manga, Ok(Vec::new()));
+        let kit = kit(dir.path(), &[&dim, &lit]);
+        kit.sources.registry.set_order(vec!["dim".into(), "lit".into()]);
+        let list = |to: u32| -> Vec<SourceChapter> {
+            (1..=to).map(|i| SourceChapter::new(format!("c{i}"), i.to_string())).collect()
+        };
+        let work = WorkId::new(WORK);
+        // First in the order and the fuller list, but switched off.
+        kit.store.set_book_match("dim", "d-1", WORK, 90, false, false, NOW).unwrap();
+        chapters::keep(&kit.store, "dim", "d-1", &list(80), NOW);
+        kit.sources.registry.set_off(["dim".to_owned()]);
+        assert_eq!(kit.sources.edition_of(&work, None), None, "nothing else is held");
+        kit.store.set_book_match("lit", "l-1", WORK, 90, false, false, NOW).unwrap();
+        chapters::keep(&kit.store, "lit", "l-1", &list(20), NOW);
+        assert_eq!(kit.sources.edition_of(&work, None), Some(("lit".into(), "l-1".into())));
+        // Asked for by name, it is still the one read from.
+        assert_eq!(
+            kit.sources.edition_of(&work, Some("dim")),
+            Some(("dim".into(), "d-1".into()))
+        );
+    }
+
+    #[tokio::test]
+    async fn a_source_whose_list_came_back_empty_is_never_the_fallback() {
+        let dir = tempfile::tempdir().unwrap();
+        let manga = [Medium::Manga];
+        let bare = Stock::new("bare", &manga, Ok(Vec::new()));
+        let full = Stock::new("full", &manga, Ok(Vec::new())).listing("f-1", 12, None);
+        let kit = kit(dir.path(), &[&bare, &full]);
+        kit.sources.registry.set_order(vec!["bare".into(), "full".into()]);
+        let work = WorkId::new(WORK);
+        // Its only match, and the list it gives is empty.
+        kit.store.set_book_match("bare", "b-1", WORK, 90, false, false, NOW).unwrap();
+        let (_, groups) = kit.sources.chapters(&work, None, NOW).await.unwrap();
+        assert!(groups.is_empty());
+        assert_eq!(kit.sources.edition_of(&work, None), None, "nothing else is held");
+        // First in the order, against one whose list is not known yet.
+        kit.store.set_book_match("full", "f-1", WORK, 90, false, false, NOW).unwrap();
+        assert_eq!(kit.sources.edition_of(&work, None), Some(("full".into(), "f-1".into())));
+        // Asked for by name, it is still the one read from.
+        assert_eq!(
+            kit.sources.edition_of(&work, Some("bare")),
+            Some(("bare".into(), "b-1".into()))
+        );
+    }
 }

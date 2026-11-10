@@ -258,6 +258,9 @@ pub struct BookSources {
     pub demo: kaeri_providers::reading_demo::ReadingDemo,
     /// The series whose sources are being asked how they read, by source and series.
     hint_lookups: Arc<Mutex<HashMap<(String, String), HintLookup>>>,
+    /// The series whose chapter list came back empty lately, by source and series: an empty
+    /// answer is not kept, so this is what keeps a work from being read from it meanwhile.
+    empty: Arc<Mutex<HashMap<(String, String), std::time::Instant>>>,
     /// The language the app speaks, as `set_language` was told: the language a work's
     /// chapters are counted in when its editions are compared.
     language: Arc<RwLock<Option<String>>>,
@@ -299,6 +302,7 @@ impl BookSources {
             undo: Arc::default(),
             pending: Arc::default(),
             hint_lookups: Arc::default(),
+            empty: Arc::default(),
             language: Arc::default(),
             demo: kaeri_providers::reading_demo::ReadingDemo::new(Some(
                 paths.cache_dir.join("reading-demo"),
@@ -1415,7 +1419,13 @@ impl BookSources {
             Some(wanted) if held.iter().any(|(source, _)| *source == wanted) => {
                 held.retain(|(source, _)| *source == wanted);
             }
-            _ => held.retain(|(source, _)| order.contains(source)),
+            // Never a source switched off, nor one whose chapter list came back empty: with
+            // nothing else held, nothing is read from rather than a page with no chapters.
+            _ => held.retain(|(source, series)| {
+                order.contains(source)
+                    && !self.registry.is_off(source)
+                    && !self.came_back_empty(source, series)
+            }),
         }
         if held.len() <= 1 {
             return held.pop();
@@ -1436,6 +1446,29 @@ impl BookSources {
                 (!confirmed, fit.0, fit.1, position(source))
             })
             .map(|(held, _)| held)
+    }
+
+    /// Note what a source's chapter list came back as: empty, or with chapters again.
+    fn note_list(&self, source: &str, series: &str, chapters: &[SourceChapter]) {
+        let mut empty = self.empty.lock().unwrap_or_else(|e| e.into_inner());
+        let key = (source.to_owned(), series.to_owned());
+        if chapters.is_empty() {
+            empty.insert(key, std::time::Instant::now());
+        } else {
+            empty.remove(&key);
+        }
+    }
+
+    /// The series' chapter list came back empty within the last quarter hour, or was kept
+    /// empty before.
+    fn came_back_empty(&self, source: &str, series: &str) -> bool {
+        const EMPTY_FOR: std::time::Duration = std::time::Duration::from_secs(15 * 60);
+        let noted = self.empty.lock().unwrap_or_else(|e| e.into_inner());
+        noted
+            .get(&(source.to_owned(), series.to_owned()))
+            .is_some_and(|at| at.elapsed() < EMPTY_FOR)
+            || crate::read_catalog::chapters::kept(&self.store, source, series)
+                .is_some_and(|(list, _)| list.is_empty())
     }
 
     /// How the source a work is read from says its pages read, as last kept.
@@ -1523,6 +1556,7 @@ impl BookSources {
             .into_iter()
             .filter(|(source, series)| {
                 order.contains(source)
+                    && !self.registry.is_off(source)
                     && crate::read_catalog::editions::counts_chapters(self, source)
                     && crate::read_catalog::chapters::kept(&self.store, source, series)
                         .is_none()
@@ -1532,6 +1566,7 @@ impl BookSources {
             if let Ok(list) =
                 self.registry.chapters(source, series, &BookHints::default(), now).await
             {
+                self.note_list(source, series, &list);
                 crate::read_catalog::chapters::keep(&self.store, source, series, &list, now);
             }
         });
@@ -1557,6 +1592,7 @@ impl BookSources {
             .chapters(&source, &series, &BookHints::default(), now)
             .await
             .map_err(|e| failure(&source, &e))?;
+        self.note_list(&source, &series, &chapters);
         crate::read_catalog::chapters::keep(&self.store, &source, &series, &chapters, now);
         let restarts = restarts_per_volume(&chapters);
         let read: HashMap<String, kaeri_store::reading::ReadChapter> = self
