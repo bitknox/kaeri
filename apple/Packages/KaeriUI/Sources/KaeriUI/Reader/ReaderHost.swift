@@ -112,21 +112,23 @@ public struct ReaderMenu: Commands {
     public var body: some Commands {
         CommandMenu(L.readerMenuGo) {
             if let reader {
-                let next: KeyEquivalent = reader.rtl ? .leftArrow : .rightArrow
-                let previous: KeyEquivalent = reader.rtl ? .rightArrow : .leftArrow
-                Button(L.readerMenuNextPage) { reader.turn(true, false) }.keyboardShortcut(next, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.turn(false, false) }.keyboardShortcut(previous, modifiers: [])
-                Button(L.readerMenuNextPage) { reader.turn(true, false) }.keyboardShortcut(.space, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.turn(false, false) }.keyboardShortcut(.space, modifiers: .shift)
-                Button(L.readerMenuNextPage) { reader.turn(true, false) }.keyboardShortcut(.pageDown, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.turn(false, false) }.keyboardShortcut(.pageUp, modifiers: [])
-                Button(L.readerMenuNextPage) { reader.turn(true, true) }.keyboardShortcut(.downArrow, modifiers: [])
-                Button(L.readerMenuPreviousPage) { reader.turn(false, true) }.keyboardShortcut(.upArrow, modifiers: [])
-                Button(L.readerMenuFirstPage) { reader.edge(true) }.keyboardShortcut(.home, modifiers: [])
-                Button(L.readerMenuLastPage) { reader.edge(false) }.keyboardShortcut(.end, modifiers: [])
+                // The same keys as ReaderKeys, which the reader also takes itself.
+                if let next = ReaderKeys.arrow(forward: true, in: reader.keys),
+                   let previous = ReaderKeys.arrow(forward: false, in: reader.keys) {
+                    Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.keyboardShortcut(next, modifiers: [])
+                    Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.keyboardShortcut(previous, modifiers: [])
+                }
+                Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.keyboardShortcut(.space, modifiers: [])
+                Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.keyboardShortcut(.space, modifiers: .shift)
+                Button(L.readerMenuNextPage) { reader.perform(.page(forward: true)) }.keyboardShortcut(.pageDown, modifiers: [])
+                Button(L.readerMenuPreviousPage) { reader.perform(.page(forward: false)) }.keyboardShortcut(.pageUp, modifiers: [])
+                Button(L.readerMenuNextPage) { reader.perform(.line(forward: true)) }.keyboardShortcut(.downArrow, modifiers: [])
+                Button(L.readerMenuPreviousPage) { reader.perform(.line(forward: false)) }.keyboardShortcut(.upArrow, modifiers: [])
+                Button(L.readerMenuFirstPage) { reader.perform(.edge(first: true)) }.keyboardShortcut(.home, modifiers: [])
+                Button(L.readerMenuLastPage) { reader.perform(.edge(first: false)) }.keyboardShortcut(.end, modifiers: [])
                 Divider()
-                Button(L.readerMenuNextChapter) { reader.chapter(true) }.keyboardShortcut("]", modifiers: [])
-                Button(L.readerMenuPreviousChapter) { reader.chapter(false) }.keyboardShortcut("[", modifiers: [])
+                Button(L.readerMenuNextChapter) { reader.perform(.chapter(next: true)) }.keyboardShortcut("]", modifiers: [])
+                Button(L.readerMenuPreviousChapter) { reader.perform(.chapter(next: false)) }.keyboardShortcut("[", modifiers: [])
                 Button(L.readerMenuGoToPage) { reader.askPage() }.keyboardShortcut("g", modifiers: [])
                 if let page = reader.backPage {
                     Button(L.readerMenuBackToPage(page: page)) { reader.back() }.keyboardShortcut("[", modifiers: .command)
