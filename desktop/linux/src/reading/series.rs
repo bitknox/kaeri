@@ -81,8 +81,11 @@ pub fn page(ctx: &Rc<Ctx>, work: &WorkId) -> adw::NavigationPage {
         move || {
             let listed = listed.borrow();
             let Some((volumes, failure)) = listed.as_ref() else { return };
-            let novel = shown.borrow().as_ref().is_some_and(|v| v.medium == Medium::Novel);
-            let order = Order { newest: newest.get(), novel };
+            // Volumes only for a novel whose rows sit in volumes; a novel listed by chapter
+            // says Chapters, as its rows do.
+            let by_volume = shown.borrow().as_ref().is_some_and(|v| v.medium == Medium::Novel)
+                && volumes.iter().any(|group| group.volume.is_some());
+            let order = Order { newest: newest.get(), by_volume };
             list.show(volumes, failure.as_deref(), order);
         }
     });
@@ -447,17 +450,62 @@ fn draw_head(
     top.append(&text);
     head.append(&top);
     if let Some(synopsis) = &view.synopsis {
-        let body = gtk::Label::new(Some(synopsis));
-        body.set_wrap(true);
-        body.set_xalign(0.0);
-        body.set_selectable(true);
-        head.append(&body);
+        head.append(&synopsis_more(synopsis));
     }
     if !view.genres.is_empty() {
         head.append(&widgets::haze(&view.genres.join(" \u{b7} "), "caption"));
     }
     top
 }
+
+/// The synopsis in four lines, then "More" under it, as on a show's page, only where the text is
+/// cut. More opens the rest in place: the place holds its height while the label lets go of its
+/// lines, then eases to the new height on the standard spring, so what is under it moves with
+/// it. The label's text is whole for a screen reader either way, and focus moves to the text.
+fn synopsis_more(synopsis: &str) -> gtk::Widget {
+    let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    let body = gtk::Label::new(Some(synopsis));
+    body.set_wrap(true);
+    body.set_xalign(0.0);
+    body.set_selectable(true);
+    body.set_lines(SYNOPSIS_LINES);
+    body.set_ellipsize(gtk::pango::EllipsizeMode::End);
+    column.append(&body);
+    let more = gtk::Button::with_label(&t::action_more());
+    more.add_css_class("flat");
+    more.set_halign(gtk::Align::Start);
+    more.set_visible(false);
+    column.append(&more);
+    let place = crate::squeeze::Squeeze::new(&column, gtk::Orientation::Vertical, 0);
+    more.connect_clicked({
+        let (body, place) = (body.clone(), place.downgrade());
+        move |more| {
+            let Some(place) = place.upgrade() else { return };
+            place.hold();
+            body.set_lines(-1);
+            body.set_ellipsize(gtk::pango::EllipsizeMode::None);
+            more.set_visible(false);
+            place.release();
+            // Focus stays on the text, without selecting it, now More has gone.
+            body.grab_focus();
+            body.select_region(0, 0);
+        }
+    });
+    body.add_tick_callback({
+        let more = more.clone();
+        move |label, _| {
+            if label.width() == 0 {
+                return glib::ControlFlow::Continue;
+            }
+            more.set_visible(label.layout().is_ellipsized());
+            glib::ControlFlow::Break
+        }
+    });
+    place.upcast()
+}
+
+/// How many lines of the synopsis show before More.
+const SYNOPSIS_LINES: i32 = 4;
 
 pub(super) fn state_line(chapter: &ChapterRow) -> String {
     // The engine's words say it all: the state, when, and what is downloaded.
@@ -502,13 +550,16 @@ type Listed = Option<(Vec<VolumeGroup>, Option<String>)>;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct Order {
     pub newest: bool,
-    pub novel: bool,
+    pub by_volume: bool,
 }
 
 /// The heading with the order menu at its end, as on the board.
 pub(super) fn chapters_head(order: Order) -> gtk::Box {
-    let heading =
-        widgets::heading(&if order.novel { t::series_volumes() } else { t::series_chapters() });
+    let heading = widgets::heading(&if order.by_volume {
+        t::series_volumes()
+    } else {
+        t::series_chapters()
+    });
     heading.set_hexpand(true);
     let shown = if order.newest { t::series_newest_first() } else { t::series_oldest_first() };
     let label = gtk::Box::new(gtk::Orientation::Horizontal, 4);

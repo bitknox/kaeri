@@ -394,7 +394,7 @@ mod tests {
         (window, scroll, column, list)
     }
 
-    const ORDER: Order = Order { newest: false, novel: false };
+    const ORDER: Order = Order { newest: false, by_volume: false };
 
     #[test]
     fn a_long_series_draws_a_chunk_and_more_near_the_end() {
@@ -438,7 +438,7 @@ mod tests {
             let volumes = one_volume(300);
             list.show(&volumes, None, ORDER);
             list.draw_to(CHUNK * 2);
-            list.show(&volumes, None, Order { newest: true, novel: false });
+            list.show(&volumes, None, Order { newest: true, by_volume: false });
             let drawn = rows(column.upcast_ref());
             assert_eq!(drawn.len(), CHUNK * 2);
             let first =
