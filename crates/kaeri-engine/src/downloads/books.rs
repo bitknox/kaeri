@@ -563,6 +563,7 @@ impl BookDownloads {
             Ok(rows) => {
                 for row in &rows {
                     forget_file(row);
+                    keep_parts(store, &row.work, &row.chapter, None);
                 }
                 rows.len()
             }
@@ -941,6 +942,13 @@ impl BookDownloads {
                     opened.group.as_deref(),
                     lent.clock.now(),
                 );
+                let parts = crate::reading::feed::SourceParts::of(&opened);
+                keep_parts(
+                    lent.sources.store(),
+                    work.as_str(),
+                    chapter.as_str(),
+                    parts.as_ref(),
+                );
                 let mut out =
                     cbz.finish().map_err(|e| Stop::Failed(book_failure(&e, &part, &source)))?;
                 out.flush().map_err(|e| Stop::Failed(io_failure(&e, &part)))?;
@@ -1017,6 +1025,38 @@ pub(crate) struct Fetched {
     pub(crate) path: PathBuf,
     pub(crate) pages: Option<u32>,
     pub(crate) bytes: u64,
+}
+
+/// The meta key a downloaded chapter's parts are kept under.
+fn parts_key(work: &str, chapter: &str) -> String {
+    format!("book_download_parts:{work}/{chapter}")
+}
+
+/// Keep the parts a chapter was downloaded in, or forget them for one listed whole.
+fn keep_parts(
+    store: &Store,
+    work: &str,
+    chapter: &str,
+    parts: Option<&crate::reading::feed::SourceParts>,
+) {
+    let key = parts_key(work, chapter);
+    let kept = match parts.and_then(|p| serde_json::to_string(p).ok()) {
+        Some(text) => store.set_meta_text(&key, &text),
+        None => store.delete_meta(&key),
+    };
+    if let Err(e) = kept {
+        tracing::warn!(error = %e, "a downloaded chapter's parts were not kept");
+    }
+}
+
+/// The parts a chapter was downloaded in; `None` for one downloaded whole.
+pub(crate) fn kept_parts(
+    store: &Store,
+    work: &str,
+    chapter: &str,
+) -> Option<crate::reading::feed::SourceParts> {
+    let text = store.get_meta_text(&parts_key(work, chapter)).ok()??;
+    serde_json::from_str(&text).ok()
 }
 
 fn finish(part: &Path, to: &Path, pages: Option<u32>) -> Result<Fetched, Stop> {

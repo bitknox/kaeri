@@ -10,7 +10,11 @@
 mod novel;
 pub(crate) use novel::SOURCE;
 
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+    time::Duration,
+};
 
 use kaeri_core::{
     books::{ChapterId, WorkId},
@@ -1051,6 +1055,29 @@ impl Session {
         })
     }
 
+    /// The open chapter's parts: from its feed, or as its download kept them.
+    fn parts_now(
+        &self,
+        cx: &Cx<'_>,
+        credits: &[kaeri_model::reader::CreditPage],
+    ) -> Option<super::feed::FeedParts> {
+        let chapter = self.chapter();
+        if let Some(feed) = &self.feed
+            && feed.chapter == chapter.id
+        {
+            return feed.parts.clone();
+        }
+        let store = &cx.services.store;
+        let (work, id) = (self.work.as_str(), chapter.id.as_str());
+        let download = store.book_download(work, id).ok()??;
+        // Only the downloaded file itself was cut into these parts.
+        if download.path.as_deref().map(Path::new) != Some(chapter.path.as_path()) {
+            return None;
+        }
+        let skipped: Vec<u32> = credits.iter().map(|c| c.page).collect();
+        crate::downloads::books::kept_parts(store, work, id).map(|p| p.counted(&skipped))
+    }
+
     fn laid_out(&mut self, cx: &mut Cx<'_>, pages: &Pages) {
         let laid: Laid = match self.laid.lock() {
             Ok(laid) if laid.generation == self.generation => laid.clone(),
@@ -1127,16 +1154,13 @@ impl Session {
                 msg: Msg::Reading(ReadingMsg::ReaderCreditPagesSkipped { count }),
             });
         }
-        if let Some(feed) = &self.feed
-            && feed.chapter == self.chapter().id
-            && let Some(parts) = &feed.parts
-        {
+        if let Some(parts) = self.parts_now(cx, &laid.credits) {
             cx.send(ReaderEvent::ChapterParts {
                 session: self.id,
-                chapter: feed.chapter.clone(),
-                parts: parts.parts.clone(),
+                chapter: self.chapter().id.clone(),
+                parts: parts.parts,
                 total: parts.total,
-                missing: parts.missing.clone(),
+                missing: parts.missing,
             });
         }
         if let Some(msg) = said {

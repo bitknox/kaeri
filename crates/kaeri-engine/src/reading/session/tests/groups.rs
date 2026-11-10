@@ -510,3 +510,46 @@ async fn part_markers_count_the_pages_left_after_credit_pages() {
     let starts: Vec<(u32, u32)> = marks.0.iter().map(|p| (p.number, p.first_page)).collect();
     assert_eq!((starts, marks.1), (vec![(1, 1), (2, 3)], 2), "part 2 starts on page 3 of 4");
 }
+
+/// A chapter in parts read from its download is told its parts as one read from the source is.
+#[tokio::test]
+async fn a_downloaded_chapter_in_parts_is_told_its_parts() {
+    use kaeri_model::reading::DownloadPick;
+    use kaeri_store::book_downloads::BookDownloadState;
+    let mut h = harness_with(Groups::new(false), false);
+    rows(&h).await;
+    let downloads = &h.services.book_sources.downloads;
+    downloads.configure(crate::downloads::books::Setup::default());
+    let lent = crate::downloads::books::Lent::of(&h.services, &h.tx);
+    let pick = DownloadPick::Chapters { ids: vec![ChapterId::new("1")] };
+    downloads.download(&lent, WorkId::new(WORK), pick).await;
+    let start = tokio::time::Instant::now();
+    loop {
+        let row = h.services.store.book_download(WORK, "1").unwrap();
+        if row.as_ref().is_some_and(|r| r.state == BookDownloadState::Done) {
+            break;
+        }
+        assert!(
+            start.elapsed() < std::time::Duration::from_secs(20),
+            "not downloaded: {row:?}"
+        );
+        tokio::time::sleep(std::time::Duration::from_millis(20)).await;
+    }
+
+    let (view, _, after) = h.open(OpenAt::Start).await;
+    assert_eq!(view.chapter.id.as_str(), "1");
+    let path = h.reader.session.as_ref().unwrap().chapter().path.clone();
+    assert!(path.extension().is_some_and(|e| e == "cbz"), "read from {path:?}");
+    let marks = after
+        .iter()
+        .find_map(|e| match e {
+            ReaderEvent::ChapterParts { parts, total, missing, .. } => {
+                Some((parts.clone(), *total, missing.clone()))
+            }
+            _ => None,
+        })
+        .expect("the parts are told");
+    let starts: Vec<(u32, u32, bool)> =
+        marks.0.iter().map(|p| (p.number, p.first_page, p.other_group)).collect();
+    assert_eq!((starts, marks.1, marks.2), (vec![(1, 1, false), (2, 4, false)], 2, vec![]));
+}
