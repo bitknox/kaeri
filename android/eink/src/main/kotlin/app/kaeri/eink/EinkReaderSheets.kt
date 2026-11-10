@@ -337,7 +337,7 @@ private fun EinkStepper(
             words,
             style = EinkType.Label.copy(fontWeight = FontWeight.Bold, fontFeatureSettings = "tnum"),
             textAlign = TextAlign.Center,
-            modifier = Modifier.weight(1f).semantics { contentDescription = "$title, $words" },
+            modifier = Modifier.weight(1f).semantics { contentDescription = "$title, $words" }, // i18n-skip
         )
         StepButton(glyphs.second, up, canUp, onUp)
     }
