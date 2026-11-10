@@ -14,7 +14,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.engine.core.Medium
+import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.engine.model.ReadingCommand
 import app.kaeri.engine.model.ReaderSettingKey
 import app.kaeri.engine.model.ReaderSettingsView
 import app.kaeri.engine.model.ReaderValue
@@ -31,6 +33,7 @@ import app.kaeri.ui.Pane
 import app.kaeri.ui.Place
 import app.kaeri.ui.SettingSwitch
 import app.kaeri.ui.SettingsGroup
+import app.kaeri.ui.SwitchRow
 import app.kaeri.ui.kindWord
 import app.kaeri.ui.sentence
 
@@ -220,6 +223,7 @@ internal fun ReadingPane() {
                 { place -> CountsAsReadRow(place) },
             ),
         )
+        ScreenGroup()
         SettingsGroup(
             title = stringResource(R.string.settings_follow_group),
             footer = Strings.settingsFollowFooter(LocalContext.current, kindWord()),
@@ -229,6 +233,35 @@ internal fun ReadingPane() {
             ),
         )
     }
+}
+
+/**
+ * Screen: the e-ink layout on or off, and with it on whether the panel shows colour. The engine
+ * keeps each answer, as the e-ink questions do, so a wrong one is undone here.
+ */
+@Composable
+private fun ScreenGroup() {
+    val store = LocalAppStore.current
+    val look = LocalEinkLayout.current
+    fun answer(eink: Boolean, colour: Boolean?) = store.send(Command.Reading(ReadingCommand.AnswerEink(eink, colour)))
+    SettingsGroup(
+        title = stringResource(R.string.settings_screen_group),
+        rows = listOfNotNull<@Composable (Place) -> Unit>(
+            { place ->
+                SwitchRow(place, stringResource(R.string.settings_eink_layout), checked = look != null, note = stringResource(R.string.settings_eink_layout_note)) {
+                    // Turned on, the colour question is asked again in the reader.
+                    answer(it, null)
+                }
+            },
+            look?.let {
+                { place ->
+                    SwitchRow(place, stringResource(R.string.settings_eink_colour), checked = look.colour, note = stringResource(R.string.settings_eink_colour_note)) {
+                        answer(true, it)
+                    }
+                }
+            },
+        ),
+    )
 }
 
 /** What the Settings list says under Reading: "Pages, right to left · After the last page". */

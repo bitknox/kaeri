@@ -405,6 +405,11 @@ download-next = Next { $n } unread
 # Download menu item.
 download-unread = Every unread chapter
 
+# Short note after Next 5 or Next 10 unread when those chapters are all on this device already.
+# @only android
+# @max 40
+download-already = Already downloaded
+
 # Download menu item: a volume's chapters not yet downloaded.
 # @arg volume: text
 # @arg n: int
@@ -1301,6 +1306,26 @@ settings-counts-read-marked = When you mark it
 
 # Line under Counts as read when it is When you mark it.
 settings-counts-read-marked-note = { -continue-reading-cap } and your { -tracker-pl } follow your marks
+
+# Group in the Reading pane: how this device's screen is drawn.
+# @only android
+settings-screen-group = Screen
+
+# Row in Screen: the e-ink layout, on or off.
+# @only android
+settings-eink-layout = E-ink layout
+
+# Line under E-ink layout.
+# @only android
+settings-eink-layout-note = Pages instead of scrolling, nothing animates, and the screen clears itself when it needs to
+
+# Row in Screen, with the e-ink layout on: the panel shows colour.
+# @only android
+settings-eink-colour = Colour screen
+
+# Line under Colour screen.
+# @only android
+settings-eink-colour-note = Off draws every picture in greys
 
 # Group: series settings that follow you to your other devices.
 settings-follow-group = Series settings that follow you

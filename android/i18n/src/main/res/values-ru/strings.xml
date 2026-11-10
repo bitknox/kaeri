@@ -764,11 +764,9 @@
     <string name="eink_ask_body">Kaeri нашёл признаки экрана E-ink, но не смог это подтвердить. В макете для E-ink страницы листаются, а не прокручиваются, анимации нет, а экран очищается, когда это нужно.</string>
     <string name="eink_ask_yes">Макет для E-ink</string>
     <string name="eink_ask_no">Обычный макет</string>
-    <string name="eink_ask_later">Это можно изменить позже в настройках, в разделе «Экран».</string>
     <string name="eink_colour_title">Экран цветной?</string>
     <string name="eink_colour_body">Kaeri не смог определить это по устройству. Посмотрите на четыре квадрата.</string>
     <string name="eink_colour_squares">Четыре квадрата: красный, зелёный, синий и янтарный</string>
-    <string name="eink_colour_hint">Если они выглядят как четыре серых, выберите «Только серый». Это можно изменить в Настройки › Экран.</string>
     <string name="eink_colour_yes">Да, цветной</string>
     <string name="eink_colour_no">Только серый</string>
     <string name="eink_colour_skip">Пропустить</string>

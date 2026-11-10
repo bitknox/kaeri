@@ -729,11 +729,9 @@
     <string name="eink_ask_body">Kaeri ha trovato indizi di uno schermo e-ink ma non è riuscito a confermarlo. Il layout e-ink sfoglia le pagine invece di scorrere, non anima mai nulla e chiede allo schermo di pulirsi quando serve.</string>
     <string name="eink_ask_yes">Usa il layout e-ink</string>
     <string name="eink_ask_no">Mantieni il layout standard</string>
-    <string name="eink_ask_later">Puoi cambiarlo più tardi in Impostazioni, sotto Schermo.</string>
     <string name="eink_colour_title">Questo schermo mostra i colori?</string>
     <string name="eink_colour_body">Kaeri non l\'ha capito da questo dispositivo. Guarda i quattro quadrati.</string>
     <string name="eink_colour_squares">Quattro quadrati: rosso, verde, blu e ambra</string>
-    <string name="eink_colour_hint">Se sembrano quattro grigi, scegli Solo grigi. Puoi cambiarlo in Impostazioni › Schermo.</string>
     <string name="eink_colour_yes">Sì, a colori</string>
     <string name="eink_colour_no">Solo grigi</string>
     <string name="eink_colour_skip">Salta</string>

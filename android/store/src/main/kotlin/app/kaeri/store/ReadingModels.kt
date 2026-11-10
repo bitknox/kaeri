@@ -491,6 +491,8 @@ class ReadingModel(private val send: (Command) -> Unit) {
         }
         // Updates' rows turn haze once read; Home's Continue moves.
         if (_updates.value != null) reading(ReadingCommand.LoadUpdates)
+        // Read home's Continue names the chapter and page reading got to, from what is kept here.
+        if (_home.value != null) reading(ReadingCommand.LoadHome(false))
     }
 
     // Hearing

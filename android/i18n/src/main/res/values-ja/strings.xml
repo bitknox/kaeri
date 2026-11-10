@@ -659,11 +659,9 @@
     <string name="eink_ask_body">E Ink 画面の兆候が見つかりましたが、確認できませんでした。E Ink 用レイアウトはスクロールせずにページ送りで表示し、アニメーションを使わず、必要なときに画面の消去を要求します。</string>
     <string name="eink_ask_yes">E Ink 用レイアウトを使う</string>
     <string name="eink_ask_no">標準レイアウトのまま</string>
-    <string name="eink_ask_later">あとから「設定」の「画面」で変更できます。</string>
     <string name="eink_colour_title">この画面はカラー表示ですか?</string>
     <string name="eink_colour_body">このデバイスからは判別できませんでした。4つの四角を見てください。</string>
     <string name="eink_colour_squares">4つの四角:赤、緑、青、琥珀色</string>
-    <string name="eink_colour_hint">4つとも灰色に見える場合は「グレーのみ」を選んでください。「設定」›「画面」であとから変更できます。</string>
     <string name="eink_colour_yes">はい、カラーです</string>
     <string name="eink_colour_no">グレーのみ</string>
     <string name="eink_colour_skip">スキップ</string>

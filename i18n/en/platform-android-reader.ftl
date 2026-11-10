@@ -255,7 +255,7 @@ eink-ask-no = Keep the standard layout
 # Foot of the e-ink question.
 # @only android
 # @max 80
-eink-ask-later = You can change this later in Settings, under Screen.
+eink-ask-later = You can change this later in Settings, under Reading.
 
 # Heading of the question asked when an e-ink screen may or may not show colour.
 # @only android
@@ -275,7 +275,7 @@ eink-colour-squares = Four squares: red, green, blue and amber
 # Line under the squares.
 # @only android
 # @max 120
-eink-colour-hint = If they look like four greys, choose Only greys. You can change this in Settings › Screen.
+eink-colour-hint = If they look like four greys, choose Only greys. You can change this in Settings › Reading.
 
 # The answer for a colour screen.
 # @only android

@@ -391,10 +391,14 @@ internal fun titleLines(): Int = if (androidx.compose.ui.platform.LocalDensity.c
 internal fun listInsteadOfGrid(): Boolean = androidx.compose.ui.platform.LocalDensity.current.fontScale >= 2f
 
 /** A tile as a screen reader says it: "Iron Kite Brigade. Manga, Japan, releasing. In Home library." */
-internal fun spokenTile(context: Context, title: String, line: String?, extra: String?): String = when {
-    line == null -> Strings.readTileSpokenTitle(context, title)
-    extra == null -> Strings.readTileSpoken(context, title, line)
-    else -> Strings.readTileSpokenIn(context, title, line, extra)
+internal fun spokenTile(context: Context, title: String, line: String?, extra: String?): String {
+    // A title that ends in a full stop takes no second one.
+    val said = title.trimEnd().removeSuffix(".")
+    return when {
+        line == null -> Strings.readTileSpokenTitle(context, said)
+        extra == null -> Strings.readTileSpoken(context, said, line)
+        else -> Strings.readTileSpokenIn(context, said, line, extra)
+    }
 }
 
 /** What a discovery row's caption is made of: the row picks two of them. */

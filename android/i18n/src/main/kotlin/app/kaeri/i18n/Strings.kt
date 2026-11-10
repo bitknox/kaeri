@@ -9622,6 +9622,10 @@ object Strings {
     fun downloadUnread(context: Context): String =
         context.getString(R.string.download_unread)
 
+    /** Short note after Next 5 or Next 10 unread when those chapters are all on this device already. */
+    fun downloadAlready(context: Context): String =
+        context.getString(R.string.download_already)
+
     /** Download menu item: a volume's chapters not yet downloaded. */
     fun downloadVolumeCount(context: Context, volume: String, n: Int): String =
         context.resources.getQuantityString(R.plurals.download_volume_count, n, volume, n)
@@ -10567,6 +10571,26 @@ object Strings {
     /** Line under Counts as read when it is When you mark it. */
     fun settingsCountsReadMarkedNote(context: Context): String =
         context.getString(R.string.settings_counts_read_marked_note)
+
+    /** Group in the Reading pane: how this device's screen is drawn. */
+    fun settingsScreenGroup(context: Context): String =
+        context.getString(R.string.settings_screen_group)
+
+    /** Row in Screen: the e-ink layout, on or off. */
+    fun settingsEinkLayout(context: Context): String =
+        context.getString(R.string.settings_eink_layout)
+
+    /** Line under E-ink layout. */
+    fun settingsEinkLayoutNote(context: Context): String =
+        context.getString(R.string.settings_eink_layout_note)
+
+    /** Row in Screen, with the e-ink layout on: the panel shows colour. */
+    fun settingsEinkColour(context: Context): String =
+        context.getString(R.string.settings_eink_colour)
+
+    /** Line under Colour screen. */
+    fun settingsEinkColourNote(context: Context): String =
+        context.getString(R.string.settings_eink_colour_note)
 
     /** Group: series settings that follow you to your other devices. */
     fun settingsFollowGroup(context: Context): String =

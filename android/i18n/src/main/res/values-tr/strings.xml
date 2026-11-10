@@ -694,11 +694,9 @@
     <string name="eink_ask_body">Kaeri e-ink ekran belirtileri buldu ama doğrulayamadı. E-ink düzeni kaydırmak yerine sayfalar, hiç animasyon kullanmaz ve gerektiğinde ekranın kendini temizlemesini ister.</string>
     <string name="eink_ask_yes">E-ink düzenini kullan</string>
     <string name="eink_ask_no">Standart düzeni koru</string>
-    <string name="eink_ask_later">Bunu sonra Ayarlar\'da Ekran bölümünden değiştirebilirsiniz.</string>
     <string name="eink_colour_title">Bu ekran renk gösteriyor mu?</string>
     <string name="eink_colour_body">Kaeri bunu bu cihazdan anlayamadı. Dört kareye bakın.</string>
     <string name="eink_colour_squares">Dört kare: kırmızı, yeşil, mavi ve kehribar</string>
-    <string name="eink_colour_hint">Dördü de gri görünüyorsa Yalnızca gri seçeneğini seçin. Bunu Ayarlar › Ekran\'dan değiştirebilirsiniz.</string>
     <string name="eink_colour_yes">Evet, renkli</string>
     <string name="eink_colour_no">Yalnızca gri</string>
     <string name="eink_colour_skip">Atla</string>

@@ -659,11 +659,9 @@
     <string name="eink_ask_body">Kaeri menemukan tanda layar e-ink tetapi tidak bisa memastikannya. Tata letak e-ink memakai halaman, bukan gulir, tanpa animasi, dan meminta layar membersihkan diri saat perlu.</string>
     <string name="eink_ask_yes">Pakai tata letak e-ink</string>
     <string name="eink_ask_no">Tetap pakai tata letak biasa</string>
-    <string name="eink_ask_later">Anda bisa mengubahnya nanti di Pengaturan, bagian Layar.</string>
     <string name="eink_colour_title">Apakah layar ini menampilkan warna?</string>
     <string name="eink_colour_body">Kaeri tidak bisa memastikannya dari perangkat ini. Lihat keempat kotak.</string>
     <string name="eink_colour_squares">Empat kotak: merah, hijau, biru, dan kuning amber</string>
-    <string name="eink_colour_hint">Jika tampak seperti empat warna abu-abu, pilih Hanya abu-abu. Anda bisa mengubahnya di Pengaturan › Layar.</string>
     <string name="eink_colour_yes">Ya, berwarna</string>
     <string name="eink_colour_no">Hanya abu-abu</string>
     <string name="eink_colour_skip">Lewati</string>
