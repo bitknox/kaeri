@@ -44,6 +44,7 @@ use kaeri_model::{
 use kaeri_pages::{Look, Panel, Renderer, Target, resize::Fit};
 
 use super::settings::Layers;
+use crate::read_sources::pictures::TextPicture;
 
 /// A stylesheet or picture kept for an open book: its type and its bytes.
 type Kept = (&'static str, Arc<[u8]>);
@@ -235,7 +236,8 @@ pub(crate) struct Opening {
 
 enum Content {
     Epub(Mutex<Box<Epub>>),
-    Text(Arc<Document>),
+    /// A source's text chapter and the pictures kept for it, by path.
+    Text(Arc<Document>, HashMap<String, TextPicture>),
 }
 
 /// One open book, as the web view sees it.
@@ -330,10 +332,15 @@ impl ServedBook {
 
     pub fn resource(&self, path: &str) -> BookResource {
         let epub = match &self.content {
-            Content::Text(doc) if path == TEXT_CHAPTER => {
+            Content::Text(doc, _) if path == TEXT_CHAPTER => {
                 return self.served_document(path, doc);
             }
-            Content::Text(_) => return missing(),
+            Content::Text(_, pictures) => {
+                return match pictures.get(path) {
+                    Some(picture) => self.image(path, picture.media_type, &picture.bytes),
+                    None => missing(),
+                };
+            }
             Content::Epub(epub) => epub,
         };
         let cached = self.docs.lock().ok().and_then(|d| d.get(path).cloned());
@@ -653,12 +660,13 @@ fn flatten_toc(
     }
 }
 
-/// A source's text chapter, ready for the web view.
+/// A source's text chapter, ready for the web view, with the pictures kept for it.
 pub(crate) fn open_text(
     xhtml: &str,
     title: &str,
     lang: Option<String>,
     identity: String,
+    pictures: Vec<TextPicture>,
     opening: Opening,
 ) -> NovelBook {
     let clean = Clean {
@@ -671,7 +679,10 @@ pub(crate) fn open_text(
     let flow = doc.flow.unwrap_or(novel::Flow::Horizontal);
     let served = Arc::new(ServedBook {
         session: opening.session,
-        content: Content::Text(Arc::new(doc)),
+        content: Content::Text(
+            Arc::new(doc),
+            pictures.into_iter().map(|p| (p.path.clone(), p)).collect(),
+        ),
         lang,
         soft_hyphens: opening.soft_hyphens,
         limits: opening.limits.clone(),
@@ -938,6 +949,7 @@ mod tests {
             "Chapter 1",
             Some("en".into()),
             "w:1".into(),
+            Vec::new(),
             opening,
         );
         book.served.set_style("{\"size\":18}".into());
@@ -978,6 +990,45 @@ mod tests {
         assert_eq!(books.resource("kaeri-book://7/_kaeri/reader.css").unwrap().status, 404);
         books.remove(7);
         assert_eq!(books.resource(&url).unwrap().status, 404);
+    }
+
+    #[test]
+    fn a_text_chapters_kept_pictures_are_served_from_the_book() {
+        let dir = tempfile::tempdir().unwrap();
+        let books = NovelBooks::with_scheme(Scheme::Kaeri);
+        let opening = Opening {
+            session: 9,
+            soft_hyphens: false,
+            dir: dir.path().join("novel-9"),
+            eink: None,
+            limits: Limits::default(),
+        };
+        let picture = TextPicture {
+            path: "images/1.png".into(),
+            media_type: "image/png",
+            bytes: crate::read_sources::pictures::ONE_PIXEL_PNG.to_vec(),
+        };
+        let book = open_text(
+            "<p>The bottle was cold.</p><img src=\"images/1.png\" alt=\"A bottle\"/>\
+             <img src=\"https://img.books.example/gone.png\"/>",
+            "Chapter 1",
+            Some("en".into()),
+            "w:1".into(),
+            vec![picture],
+            opening,
+        );
+        books.put(book.served.clone());
+        let r = books.resource(&books.url(9, TEXT_CHAPTER)).unwrap();
+        let BookBody::Bytes { data } = &r.body else { panic!("bytes") };
+        let text = String::from_utf8(data.clone()).unwrap();
+        assert!(text.contains("src=\"images/1.png\""), "{text}");
+        assert!(!text.contains("img.books.example"), "a web address never loads: {text}");
+
+        let r = books.resource(&books.url(9, "images/1.png")).unwrap();
+        assert_eq!((r.status, r.mime.as_str()), (200, "image/png"));
+        let BookBody::File { path } = &r.body else { panic!("a file") };
+        assert_eq!(std::fs::read(path).unwrap(), crate::read_sources::pictures::ONE_PIXEL_PNG);
+        assert_eq!(books.resource(&books.url(9, "images/2.png")).unwrap().status, 404);
     }
 
     #[test]

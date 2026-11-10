@@ -441,6 +441,29 @@ impl BookRegistry {
         fetch(page).await.map_err(page_failure)
     }
 
+    /// One picture a text chapter of `source` links, fetched as its pages are: by the source's
+    /// own `fetch_page`, so through a plugin's `allowed-hosts` and the host's pacing, with the
+    /// same retries. A source that does not fetch pages itself has it refused; the engine's
+    /// own client never fetches it. An address that has expired is not asked for again.
+    pub async fn fetch_picture(
+        &self,
+        source: &str,
+        picture: &PageRef,
+    ) -> Result<Vec<u8>, ProviderError> {
+        let owner = self.get(source).ok_or(ProviderError::NotFound)?;
+        let mut waits = PAGE_RETRIES.iter();
+        loop {
+            match owner.fetch_page(picture).await {
+                Ok(bytes) => return Ok(bytes),
+                Err(error) if error.transient() => match waits.next() {
+                    Some(wait) => tokio::time::sleep(*wait).await,
+                    None => return Err(page_failure(error)),
+                },
+                Err(error) => return Err(page_failure(error)),
+            }
+        }
+    }
+
     /// Probe every source that is not off, to refresh their health. Held back sources are
     /// skipped without a mark against them.
     pub async fn check_all(&self, now: i64) {

@@ -185,6 +185,12 @@ interface source {
         images(list<page>),
         /// A novel chapter: an XHTML body fragment, UTF-8. The host sanitises it before
         /// showing it, so scripts and remote loads in it never run.
+        ///
+        /// Pictures stay as `<img src="https://…">` on a host in `allowed-hosts`. The host
+        /// fetches each one as it fetches a page, with no headers, keeps it inside the book and
+        /// points the chapter at that copy, so it shows offline too. A picture on any other host,
+        /// or over `http`, is never fetched and is dropped. At most 64 a chapter, each under the
+        /// limits `page-bytes` states for a page.
         text(string),
     }
 

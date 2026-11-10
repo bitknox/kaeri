@@ -2,8 +2,9 @@
 //!
 //! This exists to be read. It uses every part of the `kaeri:books` ABI: the manifest with its
 //! media and languages, the lent `fetch`, `regex-captures` and `config-get`, the title hints, both
-//! kinds of chapter content and the error vocabulary. Everything but `search` answers from data
-//! kept in the plugin, so the shape of a real book source is visible without a server.
+//! kinds of chapter content (a text one with a picture in it) and the error vocabulary.
+//! Everything but `search` answers from data kept in the plugin, so the shape of a real book
+//! source is visible without a server.
 //!
 //! It talks to `books.example` for its catalogue and names page images on `pages.example`, two
 //! made-up hosts that stand for your own server. Both are in `allowed-hosts`: the host fetches
@@ -183,8 +184,18 @@ impl Guest for Component {
             (SALTGLASS, "saltglass-1" | "saltglass-2") => Ok(Content::Text(format!(
                 // An XHTML body fragment. The host sanitises it, so a script here would never run.
                 "<h2>{}</h2><p>The bottle was cold, and the letter inside was dry.</p>\
-                 <p>It began, as they all did, with the tide.</p>",
-                if chapter == "saltglass-1" { "The First Bottle" } else { "Low Tide" }
+                 <p>It began, as they all did, with the tide.</p>{}",
+                if chapter == "saltglass-1" { "The First Bottle" } else { "Low Tide" },
+                // A picture stays an `https` link on a declared host. The host fetches it as it
+                // fetches a page and keeps it inside the book; one on another host is dropped.
+                if chapter == "saltglass-1" {
+                    format!(
+                        "<p><img src=\"https://{PAGE_HOST}/saltglass/bottle.jpg\" \
+                         alt=\"A green bottle on wet sand\"/></p>"
+                    )
+                } else {
+                    String::new()
+                }
             ))),
             _ => Err(SourceError::NotFound),
         }

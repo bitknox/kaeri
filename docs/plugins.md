@@ -128,6 +128,13 @@ interface source {                        // what a book source exports
   it. `version-label` tells two versions of one chapter apart.
 - `chapter-content` returns `images`, the pages in reading order, or `text`, an XHTML body
   fragment that the host sanitises before showing it.
+- Pictures in a `text` chapter stay as `<img src="https://…">` on a host in `allowed-hosts`. The
+  host fetches each one as it fetches pages, with no headers, keeps it inside the book and points
+  the chapter at the kept copy, so the reader, downloads and e-reader copies show it offline. A
+  picture on a host the manifest leaves out is never fetched and is dropped, as is a `http`
+  address. At most 64 pictures a chapter are kept, each under the same size and pixel limits as a
+  page. No type in the contract changed for this, so a plugin built before it still loads; one
+  that drops its `<img>` tags can keep them now.
 - The plugin names each page's URL and the headers it needs, and the host fetches it through the
   plugin's own `allowed-hosts`, so list the page image hosts there too. A download fetches the
   pages again later the same way, and an address that answers 403 or 410 makes the host ask
