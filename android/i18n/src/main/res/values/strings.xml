@@ -617,10 +617,10 @@
         <item quantity="one">1 part</item>
         <item quantity="other">%1$,d parts</item>
     </plurals>
-    <!-- A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. -->
-    <string name="reading_row_from_group">From %1$s</string>
-    <!-- A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish". -->
-    <string name="reading_row_from_group_in">From %1$s, %2$s</string>
+    <!-- A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter. -->
+    <string name="reading_row_from_group">from %1$s</string>
+    <!-- A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish". -->
+    <string name="reading_row_from_group_in">from %1$s, %2$s</string>
     <!-- A chapter row: a chapter in parts that is missing some, as no group has released them. The reader runs through the parts there are. Followed by the missing part: "2 of 3 parts". -->
     <string name="reading_row_parts_of">%1$,d of %2$,d parts</string>
     <!-- A chapter row, after the parts count: the part no group has released. With several, how many. -->
@@ -632,8 +632,8 @@
     <string name="reading_row_part_from_group">part %1$d from %2$s</string>
     <!-- The same, for a group in another language than the app's. "part 2 from Saltmarsh Team, Spanish". -->
     <string name="reading_row_part_from_group_in">part %1$d from %2$s, %3$s</string>
-    <!-- A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. -->
-    <string name="reading_row_from_source">From %1$s</string>
+    <!-- A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words. -->
+    <string name="reading_row_from_source">from %1$s</string>
     <!-- A quiet line in the reader: pages a series repeats at the start or end of its chapters (a group's credits or notices) were left out of this chapter. Tapping it shows them. -->
     <plurals name="reader_credit_pages_skipped">
         <item quantity="one">%1$,d credit page skipped</item>
@@ -4822,6 +4822,30 @@
     <string name="reader_wait_seconds">%1$s · %2$,d s</string>
     <!-- Under the opening line once the wait has gone on for a long time, above Read from another source and Go back. -->
     <string name="reader_wait_long">This is taking a while.</string>
+    <!-- Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them. -->
+    <string name="reader_credit_show">Show</string>
+    <!-- Spoken hint of the line that says how many credit pages were skipped. -->
+    <string name="reader_credit_show_hint">Shows the page</string>
+    <!-- Notice over a credit page shown again, and the caption above it in a long strip. -->
+    <string name="reader_credit_shown">Skipped as a credit page</string>
+    <!-- The notice's action on a shown credit page: show this page from now on. -->
+    <string name="reader_credit_not">Not a credit page</string>
+    <!-- Notice after Not a credit page, with Undo. -->
+    <string name="reader_credit_kept">This page will show from now on</string>
+    <!-- In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page". -->
+    <string name="reader_credit_page">credit page</string>
+    <!-- The same, when more than one credit page is shown: "credit page 1 of 2". -->
+    <string name="reader_credit_page_of">credit page %1$d of %2$d</string>
+    <!-- The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". -->
+    <string name="reader_group_line_place">%1$s · %2$s</string>
+    <!-- Spoken name of a credit page shown again. -->
+    <string name="reader_credit_page_label">Credit page</string>
+    <!-- The scrubber's preview on the first page of a chapter's later part. -->
+    <string name="reader_part_preview">Page %1$d · part %2$d</string>
+    <!-- The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing". -->
+    <string name="reader_part_preview_missing">Page %1$d · part %2$d · part %3$d missing</string>
+    <!-- Spoken value of the scrubber on the first page of a chapter's later part. -->
+    <string name="reader_part_starts">Part %1$d starts at page %2$d</string>
     <!-- Button in the first run that opens the reading demo. -->
     <string name="onboarding_read_demo">Read the demo</string>
     <!-- Under the first run's demo heading when the device is for reading. -->
@@ -5016,6 +5040,27 @@
     <string name="series_tracker_ask">Which series is this? Choose</string>
     <!-- Value of the group row: the chosen group is used for this series. -->
     <string name="series_preferred_group">Your preferred group here</string>
+    <!-- Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name. -->
+    <string name="series_group">Group</string>
+    <!-- After the group's name on the Group row: it is in use because it has the most chapters. -->
+    <string name="series_group_most">most chapters</string>
+    <!-- After the group's name on the Group row: the person picked it. -->
+    <string name="series_group_picked">your pick</string>
+    <!-- Spoken hint of the Group row's Change button. -->
+    <string name="series_group_hint">Picks the group</string>
+    <!-- Under the group picker's title: the source the groups are in. -->
+    <string name="group_picker_in">In %1$s</string>
+    <!-- The group picker's first choice: the group with the most chapters, whichever that is. -->
+    <string name="group_picker_most">Most chapters</string>
+    <!-- Under Most chapters: the group that means today. -->
+    <string name="group_picker_most_now">Now %1$s</string>
+    <!-- A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot. -->
+    <plurals name="group_picker_count">
+        <item quantity="one">%1$,d of %2$,d chapter</item>
+        <item quantity="other">%1$,d of %2$,d chapters</item>
+    </plurals>
+    <!-- Under the group picker's choices. -->
+    <string name="group_picker_fallback">Chapters a group doesn\'t have come from another group, and their rows say which.</string>
     <!-- A tracker's progress in chapters, with the total. -->
     <plurals name="series_tracker_chapters_of">
         <item quantity="one">%1$,d of %2$,d chapter</item>
@@ -5683,6 +5728,10 @@
     <string name="settings_counts_read_moving_on_note">Turning past the last page, or opening the next chapter</string>
     <!-- Value of Counts as read: only the person's own marks; the reader marks nothing. -->
     <string name="settings_counts_read_marked">When you mark it</string>
+    <!-- Reader default for manga: pages a group repeats at the start or end of its chapters are left out. -->
+    <string name="settings_skip_credits">Skip credit pages</string>
+    <!-- Line under Skip credit pages. -->
+    <string name="settings_skip_credits_note">Pages a group repeats at the start or end of its chapters</string>
     <!-- Line under Counts as read when it is When you mark it. -->
     <string name="settings_counts_read_marked_note">Continue and your trackers follow your marks</string>
     <!-- Group in the Reading pane: how this device's screen is drawn. -->

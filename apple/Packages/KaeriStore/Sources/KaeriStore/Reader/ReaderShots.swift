@@ -10,7 +10,9 @@ import KaeriStrings
 import UniformTypeIdentifiers
 
 extension ReaderModel {
-    /// `-KaeriReader chrome|settings|chapters|ask|end|scrub|plate|opening|error` after a reader scene.
+    /// `-KaeriReader chrome|settings|chapters|chapterlist|ask|end|scrub|plate|opening|error`, and with
+    /// `-KaeriCredits` `creditline|creditchrome|creditshown|creditshownchrome|creditkept|parts|partscrub|partmissingscrub`,
+    /// after a reader scene.
     public static let argument = "-KaeriReader"
 
     /// The work a reader scene reads.
@@ -53,11 +55,60 @@ extension ReaderModel {
         }
         try? await Task.sleep(for: .milliseconds(novel != nil ? 2500 : 1500))
         let shown = phase == .open
+        // `-KaeriCredits start|end|both|parts|partsmissing`: credit pages the engine skipped, and parts, for
+        // their shots.
+        if let at = arguments.firstIndex(of: "-KaeriCredits"), arguments.indices.contains(at + 1) {
+            stageCreditShot(arguments[at + 1])
+        }
         if let at = arguments.firstIndex(of: Self.argument), arguments.indices.contains(at + 1) {
             switch arguments[at + 1] {
+            // Page 1 with its line, alone or with the chrome; a strip scrolled to its top.
+            case "creditline", "creditchrome":
+                notice = nil
+                requestJump(0)
+                try? await Task.sleep(for: .milliseconds(600))
+                if view?.mode == .strip {
+                    requestTurn(forward: false)
+                } else {
+                    stageCreditLine()
+                    if arguments[at + 1] == "creditchrome" { chromeShown = true }
+                }
+            // The credit page shown, then kept with its Undo; in a strip, shown in place.
+            case "creditshown", "creditshownchrome", "creditkept":
+                notice = nil
+                requestJump(0)
+                try? await Task.sleep(for: .milliseconds(600))
+                if view?.mode == .strip, let chapter = view?.chapter.id {
+                    reveal(startSkipped, chapter: chapter)
+                    try? await Task.sleep(for: .milliseconds(300))
+                    requestTurn(forward: false)
+                } else {
+                    showStartCredits()
+                    try? await Task.sleep(for: .milliseconds(400))
+                    if arguments[at + 1] == "creditkept" { keepCredit() }
+                    if arguments[at + 1] != "creditshown" { chromeShown = true }
+                }
+            // The scrubber held on the first later part's tick.
+            case "partscrub":
+                notice = nil
+                try? await Task.sleep(for: .milliseconds(400))
+                chromeShown = true
+                shotScrub = partTicks.first?.leaf ?? max(leaves.count / 2, 1)
+            // The scrubber held on the tick of a part whose part before it is missing.
+            case "partmissingscrub":
+                notice = nil
+                try? await Task.sleep(for: .milliseconds(400))
+                chromeShown = true
+                shotScrub = partTicks.first { $0.missing }?.leaf ?? max(leaves.count / 2, 1)
+            // Past the first later part, so its tick sits behind the thumb on the track.
+            case "parts":
+                notice = nil
+                requestJump(partTicks.first.map { min($0.leaf + 2, leaves.count - 1) } ?? 0)
+                try? await Task.sleep(for: .milliseconds(600))
+                chromeShown = true
             case "chrome": chromeShown = true
             case "settings": chromeShown = true; sheet = .settings
-            case "chapters": chromeShown = true; sheet = .chapters
+            case "chapters", "chapterlist": chromeShown = true; sheet = .chapters
             case "ask": chromeShown = true; askingPage = true
             // The end page is reached by reading on, by which time the resume notice has gone.
             // A strip has no end page: it scrolls on past its last image to the marker into the
@@ -171,6 +222,95 @@ extension ReaderModel {
 }
 
 extension ReaderModel {
+    /// Credit pages and parts for the open chapter of a drawn scene: a page skipped at the start,
+    /// at the end, both, or a chapter in two parts.
+    func stageCreditShot(_ what: String) {
+        guard view != nil else { return }
+        let count = UInt32(pageCount)
+        if what == "parts" {
+            let second = max(count / 2, 2) + 1
+            stageCredits([], parts: ReaderParts(
+                parts: [ChapterPart(number: 1, firstPage: 1, group: nil, otherGroup: false),
+                        ChapterPart(number: 2, firstPage: second, group: nil, otherGroup: false)],
+                total: 2, missing: []))
+            return
+        }
+        // Parts 1, 2 and 4, with 3 missing: "Page 14 · part 4 · part 3 missing" on the scrubber.
+        if what == "partsmissing" {
+            let second = max(count / 4, 2) + 1, fourth = max(count * 2 / 3, second + 1) + 1
+            stageCredits([], parts: ReaderParts(
+                parts: [ChapterPart(number: 1, firstPage: 1, group: nil, otherGroup: false),
+                        ChapterPart(number: 2, firstPage: second, group: nil, otherGroup: false),
+                        ChapterPart(number: 4, firstPage: fourth, group: nil, otherGroup: false)],
+                total: 4, missing: [3]))
+            return
+        }
+        let dir = FileManager.default.temporaryDirectory.appending(path: "kaeri-reader-shot", directoryHint: .isDirectory)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let strip = view?.mode == .strip
+        let url = dir.appending(path: strip ? "credit-strip.png" : "credit.png")
+        drawCredit(strip: strip, to: url)
+        let file = PageFile(
+            path: url.path, encoding: .original(mime: "image/png"), width: 800, height: strip ? 1000 : 1200,
+            crop: nil, colour: true, bytes: 1)
+        // One at an end, or two at each end for `both` (the board's Edges: "2 credit pages
+        // skipped", "credit page 1 of 2", and the end page naming only its own).
+        let each: UInt64 = what == "both" ? 2 : 1
+        var pages: [CreditPage] = []
+        if what == "start" || what == "both" {
+            for n in 0..<each {
+                pages.append(CreditPage(page: UInt32(n), atEnd: false, file: file, fingerprint: 0xC0FFEE + n * 16))
+            }
+        }
+        if what == "end" || what == "both" {
+            for n in 0..<each {
+                pages.append(CreditPage(page: count + UInt32(pages.count), atEnd: true, file: file, fingerprint: 0xC0FFEF + n * 16))
+            }
+        }
+        stageCredits(pages)
+    }
+
+    /// A made-up credit page: a lantern drawn in gold lines on a deep blue ground, in a frame.
+    private func drawCredit(strip: Bool, to url: URL) {
+        let width = 800, height = strip ? 1000 : 1200
+        guard let context = CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return }
+        let w = CGFloat(width), h = CGFloat(height)
+        context.setFillColor(CGColor(red: 0.17, green: 0.18, blue: 0.35, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        let gold = CGColor(red: 0.95, green: 0.78, blue: 0.42, alpha: 1)
+        context.setStrokeColor(gold)
+        context.setLineWidth(4)
+        context.stroke(CGRect(x: 40, y: 40, width: w - 80, height: h - 80))
+        // The lantern: a cord, a cap, a round body with ribs, and a foot.
+        let cx = w / 2, cy = h * 0.6
+        context.move(to: CGPoint(x: cx, y: h - 40))
+        context.addLine(to: CGPoint(x: cx, y: cy + 190))
+        context.strokePath()
+        context.setFillColor(gold)
+        context.fill(CGRect(x: cx - 60, y: cy + 160, width: 120, height: 26))
+        context.fill(CGRect(x: cx - 50, y: cy - 186, width: 100, height: 22))
+        context.strokeEllipse(in: CGRect(x: cx - 150, y: cy - 160, width: 300, height: 320))
+        context.strokeEllipse(in: CGRect(x: cx - 80, y: cy - 160, width: 160, height: 320))
+        context.setFillColor(CGColor(red: 0.85, green: 0.7, blue: 0.4, alpha: 1))
+        context.fillEllipse(in: CGRect(x: cx - 50, y: cy - 80, width: 100, height: 160))
+        // Lines where the credits would be written.
+        context.setFillColor(gold)
+        for row in 0..<4 {
+            let y = h * 0.22 - CGFloat(row) * 34
+            context.fill(CGRect(x: cx - 150, y: y, width: 110, height: 10))
+            context.fill(CGRect(x: cx + 10, y: y, width: 70, height: 10))
+        }
+        context.fill(CGRect(x: cx - 180, y: h * 0.3, width: 360, height: 26))
+        guard let image = context.makeImage(),
+            let target = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil)
+        else { return }
+        CGImageDestinationAddImage(target, image, nil)
+        CGImageDestinationFinalize(target)
+    }
+
     /// What the engine would send for the scene's work, with pages of made-up art.
     func playFixture(work: String, scene arguments: [String]) {
         guard let at = arguments.firstIndex(where: { $0 == "-KaeriScene" || $0 == "--scene" }) else { return }

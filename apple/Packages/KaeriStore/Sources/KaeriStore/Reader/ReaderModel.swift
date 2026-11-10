@@ -27,17 +27,27 @@ public struct ReaderEnd: Equatable, Sendable {
     public var nextSource: String?
 }
 
-/// The notice over the page, with the action it offers.
+/// The notice over the page, with the action it offers: the engine's, or one of the app's own.
 public struct ReaderNoticeLine: Equatable, Sendable {
     public let id: Int
     public let text: String
     public let action: ReaderAction?
+    public let local: ReaderLocalAction?
 
-    public init(id: Int, text: String, action: ReaderAction?) {
+    public init(id: Int, text: String, action: ReaderAction?, local: ReaderLocalAction? = nil) {
         self.id = id
         self.text = text
         self.action = action
+        self.local = local
     }
+}
+
+/// What a notice's button does when the app answers it, not the engine.
+public enum ReaderLocalAction: Equatable, Sendable {
+    /// Not a credit page, for the credit page on screen.
+    case keepCredit
+    /// Undo, after Not a credit page.
+    case undoKeep
 }
 
 /// The chapters a strip ran on from, kept above the open one so the scroll goes on: each one's
@@ -71,8 +81,8 @@ public final class ReaderModel {
     public private(set) var request: Request?
     public private(set) var view: ReaderView?
     public private(set) var leaves: [Leaf] = []
-    public private(set) var pages: [ReaderPageKey: PageFile] = [:]
-    public private(set) var failures: [ReaderPageKey: ReadingFailure] = [:]
+    public internal(set) var pages: [ReaderPageKey: PageFile] = [:]
+    public internal(set) var failures: [ReaderPageKey: ReadingFailure] = [:]
     public private(set) var novel: NovelOpenView?
     public private(set) var novelStyle = ""
     public private(set) var end: ReaderEnd?
@@ -99,7 +109,7 @@ public final class ReaderModel {
     /// Where a strip is asked to scroll to once its images are in.
     public private(set) var stripRestore: StripPos?
     /// Where the strip is, as it last said: kept through a second layout of the chapter.
-    @ObservationIgnored private var stripHere: StripPos?
+    @ObservationIgnored var stripHere: StripPos?
     /// Counts the open chapter's layouts after its first, so the strip puts the place back even
     /// when it has not moved since the last restore.
     public private(set) var stripRelaid = 0
@@ -168,6 +178,7 @@ public final class ReaderModel {
     /// A page of the open chapter is on screen. The held end page lands once every part of the
     /// leaf that shows has drawn.
     public func pagePainted(chapter: String, page: UInt32) {
+        if page == 0, chapter == view?.chapter.id { startCreditLine() }
         guard held != nil, chapter == view?.chapter.id else { return }
         heldPainted.insert(page)
         settleHeld()
@@ -258,15 +269,37 @@ public final class ReaderModel {
     @ObservationIgnored public var bookResource: (@Sendable (String) -> BookResource?)?
     @ObservationIgnored private var surface: ReaderSurface?
     @ObservationIgnored private var sentSurface: ReaderSurface?
-    @ObservationIgnored private var session: UInt64 = 0
-    @ObservationIgnored private var noticeCount = 0
-    @ObservationIgnored private var noticeTask: Task<Void, Never>?
+    @ObservationIgnored var session: UInt64 = 0
+    @ObservationIgnored var noticeCount = 0
+    @ObservationIgnored var noticeTask: Task<Void, Never>?
     @ObservationIgnored private var ticks = 0
     @ObservationIgnored private var lastStrip: ContinuousClock.Instant?
     @ObservationIgnored private var pendingStrip: Task<Void, Never>?
     /// Whether the last strip report had the chapter's foot in sight.
     @ObservationIgnored private var lastFoot = false
     @ObservationIgnored private var rereadAfterClose: Request?
+
+    // MARK: Credit pages and parts (what they do is in ReaderCredits.swift)
+
+    /// The credit pages the engine left out, by chapter: the open one's, and those of the
+    /// chapters a strip ran on from, which stay above it.
+    public internal(set) var credits: [String: [CreditPage]] = [:]
+    /// The open chapter's parts, when its source lists it in parts the reader runs through as one.
+    public internal(set) var parts: ReaderParts?
+    /// The credit pages the person brought back. They stay until their chapter closes.
+    public internal(set) var revealed: Set<CreditKey> = []
+    /// The credit page the paged reader shows in place of its leaf, by its page in the chapter.
+    public internal(set) var onCredit: UInt32?
+    /// The quiet line on page 1 is up: it holds 4 seconds and leaves with the first turn.
+    public internal(set) var creditLine = false
+    /// Not a credit page was used: the page is kept once its Undo has run out.
+    public internal(set) var keeping: CreditKeep?
+    /// The chapter whose line has shown, so it shows once each time the chapter opens.
+    @ObservationIgnored var creditLineFor: String?
+    @ObservationIgnored var creditLineTask: Task<Void, Never>?
+    @ObservationIgnored var keepTask: Task<Void, Never>?
+    /// A kept page's chapter is laid out again with it: the pages after it move up one.
+    @ObservationIgnored var relayKeep: CreditKeep?
     /// Closed after the open was sent and before the engine said it opened.
     @ObservationIgnored private var closedOpening = false
 
@@ -369,6 +402,7 @@ public final class ReaderModel {
         // A book waiting on the one before to close is dropped with it: closing always closes.
         rereadAfterClose = nil
         guard request != nil || session != 0 else { return }
+        commitKeep()
         if session != 0 {
             send?(.reader(.close(session: session)))
         } else if opened {
@@ -384,6 +418,9 @@ public final class ReaderModel {
     /// A leaf was painted.
     public func shown(_ leaf: Int, how: TurnHow) {
         guard session != 0, let chapter = view?.chapter.id, leaves.indices.contains(leaf) else { return }
+        // A turn off the credit page keeps a page waiting on its Undo, and the line on page 1 goes.
+        leftCredit()
+        if leaf != 0 { endCreditLine() }
         if how == .jump, leaf != current, view?.mode != .strip { ring = current }
         // A strip's scroll report from before the jump would read as a turn after it.
         if how == .jump { pendingStrip?.cancel() }
@@ -434,6 +471,7 @@ public final class ReaderModel {
     /// Open a chapter of the book; `atEnd` shows its last page, for going back into it.
     public func openChapter(_ id: ChapterId, atEnd: Bool = false) {
         guard session != 0 else { return }
+        commitKeep()
         openAtEnd = atEnd ? id : nil
         holdEnd(to: id)
         end = nil
@@ -455,6 +493,7 @@ public final class ReaderModel {
     /// far stay above it.
     public func flowOn() {
         guard session != 0, flowing == nil, let view, view.mode == .strip, let next = end?.next ?? view.next else { return }
+        commitKeep()
         let chapter = view.chapter.id
         let parts = leaves.filter { !$0.endPage }.flatMap(\.parts).map { part in
             var part = part
@@ -499,6 +538,14 @@ public final class ReaderModel {
         case .changeMode: sheet = .settings
         }
         if action != .changeMode { dismissNotice(action) }
+    }
+
+    /// The notice's own button, which the app answers.
+    public func act(_ action: ReaderLocalAction) {
+        switch action {
+        case .keepCredit: keepCredit()
+        case .undoKeep: undoKeep()
+        }
     }
 
     /// The notice's button was used; the notice leaves.
@@ -646,7 +693,14 @@ public final class ReaderModel {
             if flowing != opened.chapter.id || opened.mode != .strip {
                 trail = StripTrail()
                 inTrail = nil
+                // A chapter opened again skips its credit pages again.
+                credits = [:]
+                revealed = []
             }
+            parts = nil
+            onCredit = nil
+            endCreditLine()
+            creditLineFor = nil
             flowing = nil
             session = opened.session
             view = opened
@@ -669,6 +723,11 @@ public final class ReaderModel {
             if opened.mode == .strip { stripRestore = opened.start.strip }
         case .leaves(let session, let chapter, let leaves):
             guard session == self.session else { return }
+            // The credit pages and parts come again after every layout.
+            credits[chapter] = nil
+            if chapter == view?.chapter.id { parts = nil }
+            // A layout with a kept page sets the page to stay on, before the page shown is taken.
+            relaidWithKept(chapter)
             // A source's chapter is laid out again once all its pages have landed, when their
             // shapes differ from the guess: a strip keeps the place it is at, under the same
             // image, rather than move with the heights above it.
@@ -776,9 +835,12 @@ public final class ReaderModel {
         case .goTo(let session, let place):
             guard session == self.session else { return }
             goTo(place)
-        case .creditPages, .chapterParts:
-            // The skipped credit pages' line and the part ticks come with their boards.
-            break
+        case .creditPages(let session, let chapter, let pages, _):
+            guard session == self.session else { return }
+            creditsCame(chapter, pages)
+        case .chapterParts(let session, let chapter, let parts, let total, let missing):
+            guard session == self.session, chapter == view?.chapter.id else { return }
+            self.parts = ReaderParts(parts: parts, total: total, missing: missing)
         case .closed(let session):
             guard session == self.session || self.session == 0 else { return }
             self.session = 0
@@ -792,7 +854,7 @@ public final class ReaderModel {
 
     private var pendingGoTo: Int?
     /// The page a switch from the strip to pages keeps, until the pages are laid out.
-    @ObservationIgnored private var keepPage: UInt32?
+    @ObservationIgnored var keepPage: UInt32?
 
     /// The page on screen in `mode`: the first of the spread, or the strip's image at the top.
     private func pageOnScreen(_ mode: ReaderMode) -> UInt32? {
@@ -869,7 +931,7 @@ public final class ReaderModel {
         }
     }
 
-    private func show(_ leaf: Int, how: TurnHow = .placed) {
+    func show(_ leaf: Int, how: TurnHow = .placed) {
         pendingGoTo = nil
         current = leaf
         goTo = (leaf, bump(), how)
@@ -888,14 +950,14 @@ public final class ReaderModel {
 
     /// How long a notice stays, by the engine's rule: longer for long text, and until it is
     /// dismissed when it carries a button and VoiceOver runs. Nil when it waits.
-    private func holdFor(_ lastsMs: UInt32, text: String, action: Bool) -> UInt32? {
+    func holdFor(_ lastsMs: UInt32, text: String, action: Bool) -> UInt32? {
         let words = text.split(whereSeparator: \.isWhitespace).count
         let hold = readerNoticeHold(lastsMs: lastsMs, words: UInt32(words), hasAction: action, screenReader: pinChrome)
         return hold == 0 ? nil : hold
     }
 
     /// Counts `ms` down, only while notices are not paused, then calls `done`. Nothing for nil.
-    private func countdown(_ ms: UInt32?, done: @escaping @MainActor () -> Void) -> Task<Void, Never>? {
+    func countdown(_ ms: UInt32?, done: @escaping @MainActor () -> Void) -> Task<Void, Never>? {
         guard let ms else { return nil }
         return Task { [weak self] in
             var left = Int(ms)
@@ -943,6 +1005,15 @@ public final class ReaderModel {
         pendingGoTo = nil
         keepPage = nil
         lastStrip = nil
+        credits = [:]
+        parts = nil
+        revealed = []
+        onCredit = nil
+        endCreditLine()
+        creditLineFor = nil
+        keepTask?.cancel()
+        keeping = nil
+        relayKeep = nil
         trail = StripTrail()
         inTrail = nil
         flowing = nil

@@ -1149,11 +1149,11 @@ object Strings {
     fun readingRowParts(context: Context, n: Int): String =
         context.resources.getQuantityString(R.plurals.reading_row_parts, n, n)
 
-    /** A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. */
+    /** A chapter row: the group the series is listed from has not released this chapter, so it comes from another group, named here as the source names it. Lower case, as the line's other words; an app that starts a line with it capitalises the first letter. */
     fun readingRowFromGroup(context: Context, group: String): String =
         context.getString(R.string.reading_row_from_group, group)
 
-    /** A chapter row: the same, for a group in another language than the app's, named after the group. "From Saltmarsh Team, Spanish". */
+    /** A chapter row: the same, for a group in another language than the app's, named after the group. "from Saltmarsh Team, Spanish". */
     fun readingRowFromGroupIn(context: Context, group: String, language: String): String =
         context.getString(R.string.reading_row_from_group_in, group, language)
 
@@ -1173,7 +1173,7 @@ object Strings {
     fun readingRowPartFromGroupIn(context: Context, part: Int, group: String, language: String): String =
         context.getString(R.string.reading_row_part_from_group_in, part, group, language)
 
-    /** A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. */
+    /** A chapter row: the version the series is read from lacks this chapter, and another of the person's sources has it. Its name follows; the chapter opens from there. Lower case, as the line's other words. */
     fun readingRowFromSource(context: Context, source: String): String =
         context.getString(R.string.reading_row_from_source, source)
 
@@ -9114,6 +9114,54 @@ object Strings {
     fun readerWaitLong(context: Context): String =
         context.getString(R.string.reader_wait_long)
 
+    /** Beside the line that says how many credit pages were skipped, on the end page and in a long strip. Tapping it shows them. */
+    fun readerCreditShow(context: Context): String =
+        context.getString(R.string.reader_credit_show)
+
+    /** Spoken hint of the line that says how many credit pages were skipped. */
+    fun readerCreditShowHint(context: Context): String =
+        context.getString(R.string.reader_credit_show_hint)
+
+    /** Notice over a credit page shown again, and the caption above it in a long strip. */
+    fun readerCreditShown(context: Context): String =
+        context.getString(R.string.reader_credit_shown)
+
+    /** The notice's action on a shown credit page: show this page from now on. */
+    fun readerCreditNot(context: Context): String =
+        context.getString(R.string.reader_credit_not)
+
+    /** Notice after Not a credit page, with Undo. */
+    fun readerCreditKept(context: Context): String =
+        context.getString(R.string.reader_credit_kept)
+
+    /** In the reader's line in place of a page number, while a credit page shows: "Chapter 87 · credit page". */
+    fun readerCreditPage(context: Context): String =
+        context.getString(R.string.reader_credit_page)
+
+    /** The same, when more than one credit page is shown: "credit page 1 of 2". */
+    fun readerCreditPageOf(context: Context, n: Int, total: Int): String =
+        context.getString(R.string.reader_credit_page_of, n, total)
+
+    /** The reader's line under the title while a credit page shows: the chapter, then "credit page" or "credit page 1 of 2". */
+    fun readerGroupLinePlace(context: Context, chapter: String, place: String): String =
+        context.getString(R.string.reader_group_line_place, chapter, place)
+
+    /** Spoken name of a credit page shown again. */
+    fun readerCreditPageLabel(context: Context): String =
+        context.getString(R.string.reader_credit_page_label)
+
+    /** The scrubber's preview on the first page of a chapter's later part. */
+    fun readerPartPreview(context: Context, page: Int, part: Int): String =
+        context.getString(R.string.reader_part_preview, page, part)
+
+    /** The same, when the part before it is missing from every group: "Page 14 · part 4 · part 3 missing". */
+    fun readerPartPreviewMissing(context: Context, page: Int, part: Int, missing: Int): String =
+        context.getString(R.string.reader_part_preview_missing, page, part, missing)
+
+    /** Spoken value of the scrubber on the first page of a chapter's later part. */
+    fun readerPartStarts(context: Context, part: Int, page: Int): String =
+        context.getString(R.string.reader_part_starts, part, page)
+
     /** Button in the first run that opens the reading demo. */
     fun onboardingReadDemo(context: Context): String =
         context.getString(R.string.onboarding_read_demo)
@@ -9453,6 +9501,42 @@ object Strings {
     /** Value of the group row: the chosen group is used for this series. */
     fun seriesPreferredGroup(context: Context): String =
         context.getString(R.string.series_preferred_group)
+
+    /** Label of the series page's row for the group whose version of each chapter the series lists, inside the source in use. Its value is the group's name. */
+    fun seriesGroup(context: Context): String =
+        context.getString(R.string.series_group)
+
+    /** After the group's name on the Group row: it is in use because it has the most chapters. */
+    fun seriesGroupMost(context: Context): String =
+        context.getString(R.string.series_group_most)
+
+    /** After the group's name on the Group row: the person picked it. */
+    fun seriesGroupPicked(context: Context): String =
+        context.getString(R.string.series_group_picked)
+
+    /** Spoken hint of the Group row's Change button. */
+    fun seriesGroupHint(context: Context): String =
+        context.getString(R.string.series_group_hint)
+
+    /** Under the group picker's title: the source the groups are in. */
+    fun groupPickerIn(context: Context, source: String): String =
+        context.getString(R.string.group_picker_in, source)
+
+    /** The group picker's first choice: the group with the most chapters, whichever that is. */
+    fun groupPickerMost(context: Context): String =
+        context.getString(R.string.group_picker_most)
+
+    /** Under Most chapters: the group that means today. */
+    fun groupPickerMostNow(context: Context, group: String): String =
+        context.getString(R.string.group_picker_most_now, group)
+
+    /** A group in the picker: how many of the series' chapters it has released. Its language follows, after a middle dot. */
+    fun groupPickerCount(context: Context, have: Int, total: Int): String =
+        context.resources.getQuantityString(R.plurals.group_picker_count, total, have, total)
+
+    /** Under the group picker's choices. */
+    fun groupPickerFallback(context: Context): String =
+        context.getString(R.string.group_picker_fallback)
 
     /** A tracker's progress in chapters, with the total. */
     fun seriesTrackerChaptersOf(context: Context, n: Int, total: Int): String =
@@ -10675,6 +10759,14 @@ object Strings {
     /** Value of Counts as read: only the person's own marks; the reader marks nothing. */
     fun settingsCountsReadMarked(context: Context): String =
         context.getString(R.string.settings_counts_read_marked)
+
+    /** Reader default for manga: pages a group repeats at the start or end of its chapters are left out. */
+    fun settingsSkipCredits(context: Context): String =
+        context.getString(R.string.settings_skip_credits)
+
+    /** Line under Skip credit pages. */
+    fun settingsSkipCreditsNote(context: Context): String =
+        context.getString(R.string.settings_skip_credits_note)
 
     /** Line under Counts as read when it is When you mark it. */
     fun settingsCountsReadMarkedNote(context: Context): String =

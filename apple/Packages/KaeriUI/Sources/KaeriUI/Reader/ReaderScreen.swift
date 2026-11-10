@@ -208,7 +208,8 @@ public struct ReaderScreen: View {
         hideTask?.cancel()
         hideTask = Task {
             try? await Task.sleep(for: .seconds(2))
-            guard !Task.isCancelled, model.sheet == nil, !model.pinChrome else { return }
+            // A shot holding the scrubber keeps the group up under a still pointer.
+            guard !Task.isCancelled, model.sheet == nil, !model.pinChrome, model.shotScrub == nil else { return }
             model.chromeShown = false
             NSCursor.setHiddenUntilMouseMoves(true)
         }
@@ -236,7 +237,8 @@ public struct ReaderScreen: View {
     /// The place as VoiceOver hears it, once a turn has settled.
     private var spokenPlace: String {
         guard voiceOver, model.phase == .open else { return "" }
-        return "\(model.view?.chapter.id ?? "")|\(model.inTrail?.id ?? "")|\(model.position.index)|\(model.position.count)"
+        // A credit page shown or left is a place of its own: "Chapter 87, credit page".
+        return "\(model.view?.chapter.id ?? "")|\(model.inTrail?.id ?? "")|\(model.position.index)|\(model.position.count)|\(model.onCredit.map(String.init) ?? "")"
     }
 
     private func announcePlace() {

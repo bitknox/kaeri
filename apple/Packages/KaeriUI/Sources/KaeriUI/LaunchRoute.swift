@@ -17,7 +17,8 @@ import Foundation
 ///                                   score 70% and Licensed only; with -KaeriReading 1, reading's: Fantasy,
 ///                                   Manga, Japan and Releasing
 ///     -KaeriScroll 420          Search's results scrolled this many points once they are drawn; on
-///                                   iPhone the title page at its episodes, on the Mac at that episode
+///                                   iPhone the title page at its episodes, on the Mac at that episode;
+///                                   a series' page at its Group row
 ///     -KaeriLibrary planning    the Library's list
 ///     -KaeriPalette hoshi       the ⌘K palette, open on these words
 ///     -KaeriPane accounts       Settings' pane, or on iPhone the Settings sheet at its page
