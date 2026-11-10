@@ -278,6 +278,17 @@ class AppStore(
     /** An event a Fixtures shot says to the reader as though the engine had: credit pages, parts. */
     internal fun stageReaderEvent(event: Event) = readers.forEach { it(event) }
 
+    /**
+     * For a Fixtures shot: reader commands the fixture engine has no answer for, taken here
+     * first. True when the shot answered it and the engine never hears it. Null in the app.
+     */
+    @Volatile
+    internal var readerAnswer: ((app.kaeri.engine.model.ReaderCommand) -> Boolean)? = null
+
+    /** For a Fixtures shot: the engine's reader events as the shot's answers move them. Null in the app. */
+    @Volatile
+    internal var readerDress: ((Event) -> Event)? = null
+
     /** The engine's server for a novel's files: called on the web view's request thread. */
     fun bookResource(url: String): app.kaeri.engine.model.BookResource? = client?.engine?.bookResource(url)
 
@@ -443,6 +454,7 @@ class AppStore(
      * while it starts, the command waits and is sent once it has.
      */
     fun send(command: Command): JobId? {
+        if (command is Command.Reader && readerAnswer?.invoke(command.v1) == true) return null
         if (command is Command.Play || command is Command.PlaySource || command is Command.PlayLocal || command is Command.PlayParty) {
             onPlayAsked?.invoke()
         }
@@ -1497,15 +1509,16 @@ class AppStore(
             // The reader's own, and a reading load that failed where the reader or the e-ink
             // profile shows it.
             is Event.Reader -> {
-                when (val said = event.v1) {
+                val dressed = readerDress?.invoke(event) ?: event
+                when (val said = (dressed as? Event.Reader ?: event).v1) {
                     is ReaderEvent.ProgressSent -> serverLines.sent(said.chapter, said.server, said.host, said.result)
                     is ReaderEvent.ChapterRead -> serverLines.chapterRead(said.work, said.chapter)
                     is ReaderEvent.Closed -> serverLines.clear()
                     is ReaderEvent.Opened -> readerHosts[said.v1.work] = said.v1.progressHost
                     else -> {}
                 }
-                readers.forEach { it(event) }
-                reading.observe(event)
+                readers.forEach { it(dressed) }
+                reading.observe(dressed)
             }
             is Event.Reading -> when (val said = event.v1) {
                 is ReadingEvent.Eink -> readers.forEach { it(event) }
