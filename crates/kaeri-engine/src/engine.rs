@@ -3958,6 +3958,7 @@ mod tests {
                     .map(|n| {
                         let mut chapter = SourceChapter::new(n.to_string(), n.to_string());
                         chapter.published = Some(kaeri_store::now() - 3_600);
+                        chapter.language.clone_from(&self.language);
                         chapter
                     })
                     .collect())
@@ -4003,6 +4004,7 @@ mod tests {
                 },
                 held: AtomicBool::new(held),
                 fetched: Default::default(),
+                language: None,
             })
         }
 
@@ -4016,6 +4018,68 @@ mod tests {
                 }
             }
             found
+        }
+
+        /// A manga the reader reads right to left, as its source says, goes to the e-reader
+        /// paged the same way, and in the language its source gives its chapters.
+        #[tokio::test]
+        async fn a_send_pages_and_speaks_as_the_reader_reads() {
+            let dir = tempfile::tempdir().unwrap();
+            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+            let source = Arc::new(Pages {
+                language: Some("ja".into()),
+                ..Arc::into_inner(pages_source(false)).unwrap()
+            });
+            let (engine, mut events) = engine_with(dir.path(), host, |o| {
+                let now = kaeri_store::now();
+                o.reading = true;
+                o.store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
+                o.store
+                    .seed_book_work(WORK, "manga", None, None, "The Lantern Ferry", 1)
+                    .unwrap();
+                o.store.put_book_series_hint("shelf", "s-1", Some("rtl"), now).unwrap();
+                o.book_source = Some(source);
+            })
+            .await;
+            events.launch().await;
+            engine.send(network(false, false));
+            engine.send(Command::Reading(ReadingCommand::Prepare {
+                work: WorkId::new(WORK),
+                pick: DownloadPick::Chapters { ids: vec![ChapterId::new("1")] },
+                target: "kindle".into(),
+                format: kaeri_model::reading::ExportFormat::FixedEpub,
+            }));
+            let seen = seen_until(&mut events, |e| {
+                matches!(
+                    e,
+                    Event::Reading(
+                        ReadingEvent::ExportReady { .. }
+                            | ReadingEvent::ExportFailed { .. }
+                            | ReadingEvent::Failed { .. }
+                    )
+                )
+            })
+            .await;
+            let files = seen
+                .iter()
+                .find_map(|e| match e {
+                    Event::Reading(ReadingEvent::ExportReady { files, .. }) => {
+                        Some(files.clone())
+                    }
+                    _ => None,
+                })
+                .unwrap_or_else(|| panic!("the send failed: {seen:?}"));
+            let book = kaeri_books::open(
+                std::path::Path::new(&files[0].path),
+                &kaeri_books::Limits::default(),
+            )
+            .unwrap();
+            let kaeri_books::Book::Epub(epub) = book else { panic!("not an EPUB") };
+            assert_eq!(epub.package().direction, Some(kaeri_books::epub::Direction::Rtl));
+            assert_eq!(epub.metadata().languages, ["ja"]);
+            // Told apart from the other sends in the e-reader's library, as its file name is.
+            assert_eq!(epub.metadata().titles, ["The Lantern Ferry 1"]);
+            engine.shutdown().await;
         }
 
         #[tokio::test]

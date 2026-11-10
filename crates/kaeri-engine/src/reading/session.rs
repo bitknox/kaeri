@@ -102,14 +102,7 @@ impl Cx<'_> {
 
     /// What the series' source and the catalogue say of how it reads.
     fn source_word(&self, work: &WorkId) -> SourceWord {
-        let kind = self.services.store.book_work_kind(work.as_str()).ok().flatten();
-        // A demo work says it itself: opened before its page was ever loaded, its source was
-        // never asked.
-        let demo = kaeri_core::reading_demo::WORKS.iter().find(|w| w.work_id() == *work);
-        SourceWord {
-            hint: self.services.book_sources.hint_of(work).or_else(|| demo?.reading),
-            webtoon: kind.as_ref().is_some_and(BookWorkKind::webtoon),
-        }
+        SourceWord::of(self.services, work)
     }
 
     pub fn settings_view(&self, medium: Medium, work: Option<&WorkId>) -> ReaderSettingsView {

@@ -49,11 +49,22 @@ pub struct Request {
     /// A part is kept under this many bytes; `None` takes the Kindle limit for a profile that
     /// splits and no limit otherwise. Set by tests.
     pub limit: Option<u64>,
-    /// Right to left for manga, when the series says so.
-    pub right_to_left: Option<bool>,
+    /// Which way a manga's pages turn, as the reader turns them.
+    pub direction: PageDirection,
     /// Identifies the book to the e-reader, so a second send of the same chapters keeps its
     /// place there.
     pub identifier: String,
+}
+
+/// Which way a manga's pages turn: what the series says, else what its book says, else the
+/// medium's default, in the order the reader takes them.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct PageDirection {
+    /// Right to left or not, when the series says: the person's choice for it, its source's
+    /// word, or the reader's kept guess. A series read as a strip turns its pages forward.
+    pub said: Option<bool>,
+    /// Right to left or not when neither the series nor its book says: the medium's default.
+    pub otherwise: bool,
 }
 
 /// Why a send stopped.
@@ -184,14 +195,7 @@ fn clean(title: &str) -> String {
 
 /// `Title 40-45`, `Title 7`; the part, when there are several, as ` (2 of 3)`.
 fn file_name(req: &Request, part: Option<(usize, usize)>) -> String {
-    let first = req.chapters.first().map(|c| c.label.as_str()).unwrap_or("");
-    let last = req.chapters.last().map(|c| c.label.as_str()).unwrap_or("");
-    let range = if req.chapters.len() <= 1 || first == last {
-        first.to_owned()
-    } else {
-        format!("{first}-{last}")
-    };
-    let mut name = clean(&format!("{} {range}", req.title));
+    let mut name = clean(&book_title(req, None));
     if let Some((n, of)) = part.filter(|(_, of)| *of > 1) {
         name.push_str(&format!(" ({n} of {of})"));
     }
@@ -203,9 +207,33 @@ fn file_name(req: &Request, part: Option<(usize, usize)>) -> String {
     name
 }
 
+/// The book's title as the e-reader's library lists it: `Title 40-45`, `Title 7`, so each send
+/// is told apart as its file name tells it; the part, when there are several, as ` (2 of 3)`.
+fn book_title(req: &Request, part: Option<(usize, usize)>) -> String {
+    let first = req.chapters.first().map(|c| c.label.as_str()).unwrap_or("");
+    let last = req.chapters.last().map(|c| c.label.as_str()).unwrap_or("");
+    let range = if req.chapters.len() <= 1 || first == last {
+        first.to_owned()
+    } else {
+        format!("{first}-{last}")
+    };
+    let mut title = format!("{} {range}", req.title).trim().to_owned();
+    if let Some((n, of)) = part.filter(|(_, of)| *of > 1) {
+        title.push_str(&format!(" ({n} of {of})"));
+    }
+    title
+}
+
 fn done_file(path: PathBuf, name: String, part: Option<u32>) -> Result<ExportFile, Stop> {
     let bytes = fs::metadata(&path).map_err(|e| io(&e, &path))?.len();
     Ok(ExportFile { path: path.display().to_string(), name, bytes, part })
+}
+
+/// A language tag a book gives, `None` when it gives none or says it is undetermined.
+fn said_language(tag: Option<&str>) -> Option<String> {
+    tag.map(str::trim)
+        .filter(|t| !t.is_empty() && !t.eq_ignore_ascii_case("und"))
+        .map(str::to_owned)
 }
 
 fn chapter_title(label: &str) -> String {
@@ -239,9 +267,15 @@ fn manga(
         }
     }
     let total: u32 = comics.iter().map(|c| c.pages().len() as u32).sum();
-    let right_to_left = req.right_to_left.unwrap_or_else(|| {
-        comics.first().and_then(|c| c.info()).is_some_and(ComicInfo::right_to_left)
+    let info = comics.first().and_then(|c| c.info());
+    // A book's ComicInfo marks manga as the reader reads it: any manga right to left.
+    let book_says = info.and_then(|i| match i.manga {
+        Some(MangaFlag::YesAndRightToLeft | MangaFlag::Yes) => Some(true),
+        Some(MangaFlag::No) => Some(false),
+        _ => None,
     });
+    let right_to_left = req.direction.said.or(book_says).unwrap_or(req.direction.otherwise);
+    let language = info.and_then(|i| said_language(i.language.as_deref()));
     let direction = if right_to_left { Direction::RightToLeft } else { Direction::LeftToRight };
     let target = Target {
         panel: req.profile.panel,
@@ -285,8 +319,18 @@ fn manga(
         let out = BufWriter::new(File::create(&path).map_err(|e| io(&e, &path))?);
         let items = &prepared[range];
         match req.format {
-            ExportFormat::Cbz => write_cbz(req, items, out, &path)?,
-            _ => write_fixed(req, items, out, &path, right_to_left, n + 1, count)?,
+            ExportFormat::Cbz => {
+                write_cbz(req, items, out, &path, right_to_left, language.as_deref())?
+            }
+            _ => write_fixed(
+                req,
+                items,
+                out,
+                &path,
+                (right_to_left, language.as_deref()),
+                n + 1,
+                count,
+            )?,
         }
         files.push(done_file(path, name, (count > 1).then_some(n as u32 + 1))?);
     }
@@ -299,15 +343,15 @@ fn write_cbz(
     items: &[Prepared],
     out: BufWriter<File>,
     path: &Path,
+    right_to_left: bool,
+    language: Option<&str>,
 ) -> Result<(), Stop> {
     let info = ComicInfo {
+        title: Some(book_title(req, None)),
         series: Some(req.title.clone()),
-        manga: Some(if req.right_to_left == Some(true) {
-            MangaFlag::YesAndRightToLeft
-        } else {
-            MangaFlag::Yes
-        }),
+        manga: Some(if right_to_left { MangaFlag::YesAndRightToLeft } else { MangaFlag::Yes }),
         page_count: Some(items.len() as u32),
+        language: language.map(str::to_owned),
         ..ComicInfo::default()
     };
     let mut cbz = CbzWriter::new(out, Some(&info)).map_err(|e| book(&e, path))?;
@@ -324,20 +368,16 @@ fn write_fixed(
     items: &[Prepared],
     out: BufWriter<File>,
     path: &Path,
-    right_to_left: bool,
+    (right_to_left, language): (bool, Option<&str>),
     part: usize,
     parts: usize,
 ) -> Result<(), Stop> {
     let flavor =
         if req.format == ExportFormat::Kepub { EpubFlavor::Kepub } else { EpubFlavor::Epub };
-    let title = if parts > 1 {
-        format!("{} ({part} of {parts})", req.title)
-    } else {
-        req.title.clone()
-    };
+    let title = book_title(req, Some((part, parts)));
     let meta = BookMeta {
         title,
-        language: String::new(),
+        language: language.unwrap_or_default().to_owned(),
         identifier: Some(format!("{}:{part}", req.identifier)),
         direction: Some(if right_to_left { BookDirection::Rtl } else { BookDirection::Ltr }),
         ..BookMeta::default()
@@ -441,6 +481,14 @@ fn novel(
     let parts = split_parts(&sizes, limit_of(req));
     let count = parts.len();
     let total = req.chapters.len() as u32;
+    // The first chapter's language is the book's, so the e-reader sets it as that language.
+    let language =
+        req.chapters.first().and_then(|c| match kaeri_books::open(&c.path, &limits) {
+            Ok(Book::Epub(epub)) => {
+                said_language(epub.metadata().languages.first().map(String::as_str))
+            }
+            _ => None,
+        });
     let mut done = 0;
     progress(0, total);
     let mut files = Vec::with_capacity(count);
@@ -448,13 +496,10 @@ fn novel(
         let name = file_name(req, Some((n + 1, count)));
         let path = req.out.join(&name);
         let out = BufWriter::new(File::create(&path).map_err(|e| io(&e, &path))?);
-        let title = if count > 1 {
-            format!("{} ({} of {count})", req.title, n + 1)
-        } else {
-            req.title.clone()
-        };
+        let title = book_title(req, Some((n + 1, count)));
         let meta = BookMeta {
             title,
+            language: language.clone().unwrap_or_default(),
             identifier: Some(format!("{}:{}", req.identifier, n + 1)),
             ..BookMeta::default()
         };
@@ -544,7 +589,7 @@ mod tests {
             format,
             out: dir.join("out"),
             limit: None,
-            right_to_left: None,
+            direction: PageDirection::default(),
             identifier: "made-up:1".into(),
         }
     }
@@ -651,6 +696,92 @@ mod tests {
         }
     }
 
+    /// Which way an EPUB's pages turn, and the languages it says.
+    fn read_back(file: &ExportFile) -> (Option<BookDirection>, Vec<String>) {
+        let Ok(Book::Epub(epub)) = kaeri_books::open(Path::new(&file.path), &Limits::default())
+        else {
+            panic!("not an EPUB");
+        };
+        (epub.package().direction, epub.metadata().languages.clone())
+    }
+
+    #[test]
+    fn each_sent_book_is_titled_with_its_chapters_and_part() {
+        let dir = tempfile::tempdir().unwrap();
+        let title = |req: &Request| {
+            let file = &go(req).unwrap()[0];
+            let Ok(Book::Epub(epub)) =
+                kaeri_books::open(Path::new(&file.path), &Limits::default())
+            else {
+                panic!("not an EPUB");
+            };
+            epub.metadata().titles.clone()
+        };
+        let mut req =
+            request(dir.path(), chapters(dir.path(), 2, 1), "kobo", ExportFormat::Kepub);
+        assert_eq!(title(&req), ["The Lantern Ferry Chapter 1-Chapter 2"]);
+        req.chapters.truncate(1);
+        req.out = dir.path().join("one");
+        assert_eq!(title(&req), ["The Lantern Ferry Chapter 1"]);
+        assert_eq!(book_title(&req, Some((2, 3))), "The Lantern Ferry Chapter 1 (2 of 3)");
+    }
+
+    #[test]
+    fn a_send_turns_its_pages_and_says_its_language_as_the_reader_does() {
+        let dir = tempfile::tempdir().unwrap();
+        // A Japanese chapter that is marked manga and nothing more.
+        let path = dir.path().join("ja.cbz");
+        let info = ComicInfo {
+            manga: Some(MangaFlag::Yes),
+            language: Some("ja".into()),
+            ..ComicInfo::default()
+        };
+        let mut w =
+            CbzWriter::new(BufWriter::new(File::create(&path).unwrap()), Some(&info)).unwrap();
+        w.add_page(&noise(200, 300, 1)).unwrap();
+        w.finish().unwrap();
+        let marked = vec![Chapter { label: "Chapter 1".into(), path }];
+        let mut req = request(dir.path(), marked, "kindle", ExportFormat::FixedEpub);
+        let files = go(&req).unwrap();
+        assert_eq!(read_back(&files[0]), (Some(BookDirection::Rtl), vec!["ja".to_owned()]));
+
+        // What the series says comes before its book.
+        req.direction = PageDirection { said: Some(false), otherwise: true };
+        req.out = dir.path().join("said");
+        assert_eq!(read_back(&go(&req).unwrap()[0]).0, Some(BookDirection::Ltr));
+
+        // A book that says nothing turns as the medium does.
+        let plain = Request {
+            direction: PageDirection { said: None, otherwise: true },
+            out: dir.path().join("plain"),
+            ..request(dir.path(), chapters(dir.path(), 1, 2), "kindle", ExportFormat::FixedEpub)
+        };
+        assert_eq!(
+            read_back(&go(&plain).unwrap()[0]),
+            (Some(BookDirection::Rtl), vec!["und".to_owned()])
+        );
+
+        // A novel keeps its chapters' language.
+        let path = dir.path().join("ja.epub");
+        let meta = BookMeta {
+            title: "Ferry Notes".into(),
+            language: "ja".into(),
+            ..BookMeta::default()
+        };
+        let out = BufWriter::new(File::create(&path).unwrap());
+        let mut w = EpubWriter::new(out, meta, EpubFlavor::Epub, None).unwrap();
+        w.add_chapter("One", "<p>Lantern light.</p>").unwrap();
+        w.finish().unwrap();
+        let mut req = request(
+            dir.path(),
+            vec![Chapter { label: "Chapter 1".into(), path }],
+            "kobo",
+            ExportFormat::Kepub,
+        );
+        req.out = dir.path().join("novel");
+        assert_eq!(read_back(&go(&req).unwrap()[0]).1, ["ja"]);
+    }
+
     #[test]
     fn a_small_limit_splits_the_files_into_parts() {
         let dir = tempfile::tempdir().unwrap();
@@ -746,7 +877,9 @@ mod tests {
             let Ok(Book::Epub(epub)) = kaeri_books::open(at, &Limits::default()) else {
                 panic!("not an EPUB");
             };
-            assert_eq!(epub.metadata().titles.first().map(String::as_str), Some(title));
+            // The title is the series' with the chapter, as the file name has it.
+            let label = req.chapters[0].label.clone();
+            assert_eq!(epub.metadata().titles, [format!("{title} {label}")]);
             for (name, text) in documents(at) {
                 let head: String = text.chars().take(60).collect::<String>().to_lowercase();
                 assert!(head.contains("encoding=\"utf-8\""), "{format:?} {name}: {head}");
