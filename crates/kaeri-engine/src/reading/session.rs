@@ -1239,7 +1239,8 @@ impl Session {
                 let Some(index) = self.chapters.iter().position(|c| c.id == chapter) else {
                     return;
                 };
-                if index == self.at + 1 {
+                // Skipping the extras moves on as Continue does; they stay unread.
+                if index == self.at + 1 || Some(index) == self.skip_index() {
                     self.chapter_read(cx, Reached::MovedOn);
                 }
                 // A strip flows into the next chapter in the same scroll, under its marker:
@@ -1461,7 +1462,21 @@ impl Session {
             .and_then(|c| c.source.as_deref())
             .map(|id| cx.services.book_sources.source_name(id));
         let why_none = next.is_none().then(|| self.why_no_next(cx));
-        cx.send(ReaderEvent::EndPage { session: self.id, next, why_none, next_source });
+        let skip_to = self.skip_index().map(|i| self.chapters[i].row(&marks));
+        cx.send(ReaderEvent::EndPage {
+            session: self.id,
+            next,
+            why_none,
+            next_source,
+            skip_to,
+        });
+    }
+
+    /// Where the end page's skip goes: past the extras that follow the open chapter, to the
+    /// next whole chapter.
+    fn skip_index(&self) -> Option<usize> {
+        let ids: Vec<ChapterId> = self.chapters.iter().map(|c| c.id.clone()).collect();
+        super::extras::skip_to(&ids, self.at + 1)
     }
 
     /// Why the end page has no next chapter: the series ended with this one, which offers
@@ -1832,6 +1847,7 @@ mod tests {
     use crate::{host::QuietHost, outbox::Envelope};
 
     mod back_to;
+    mod extras;
     mod groups;
     mod hints;
     mod leaving;

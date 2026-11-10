@@ -1025,6 +1025,11 @@ pub enum ReaderEvent {
         /// folder.
         #[cfg_attr(feature = "ffi", uniffi(default))]
         next_source: Option<String>,
+        /// When `next` is an extra (16.5 beside 16 and 17, or one with no number): the first
+        /// chapter after it that is not one, for "Skip to chapter 17" beside Continue. `None`
+        /// for a next chapter that is not an extra. Skipped extras stay unread.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        skip_to: Option<ChapterRow>,
     },
     /// The next chapter's first page, made while this chapter is read, for the end page and a
     /// strip's divider.

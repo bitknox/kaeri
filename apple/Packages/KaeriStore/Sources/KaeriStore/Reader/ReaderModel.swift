@@ -791,7 +791,7 @@ public final class ReaderModel {
                 read = true
                 readTrackers = trackers
             }
-        case .endPage(let session, let next, let why, let source):
+        case .endPage(let session, let next, let why, let source, _):
             guard session == self.session else { return }
             end = ReaderEnd(next: next, why: why, nextSource: source ?? end?.nextSource)
         case .progressSent:

@@ -245,6 +245,12 @@ impl Read {
         {
             furthest = furthest.max(Some(adopted));
         }
+        // An extra left part way and passed over: once a later chapter is read, Continue goes
+        // on from there, and the extra stays unread in the list.
+        let in_progress = in_progress.filter(|(id, _, _)| {
+            !range(id).is_some_and(|r| r.end.is_none() && r.start.is_split())
+                || furthest.is_none_or(|f| range(id).is_some_and(|r| r > f))
+        });
         Self { marked, work: work_row, in_progress, furthest }
     }
 
@@ -256,14 +262,27 @@ impl Read {
         !self.marked.is_empty() || self.in_progress.is_some() || self.furthest.is_some()
     }
 
-    /// The first chapter of `list` after the furthest read that is not read.
+    /// The first chapter of `list` after the furthest read that is not read. Extras behind the
+    /// furthest read, the person passed over: a decimal one by its number, one with no number
+    /// when a later volume has been read.
     pub fn next<'a>(&self, list: &'a [Kept]) -> Option<&'a Kept> {
         list.iter().find(|c| {
             !self.is_read(&c.id)
                 && match (self.furthest, c.range()) {
                     (Some(furthest), Some(range)) => range > furthest,
-                    _ => true,
+                    (Some(furthest), None) => !self.passed_volume(c, list, furthest),
+                    (None, _) => true,
                 }
+        })
+    }
+
+    /// Whether `extra`, a chapter with no number in a volume, sits in a volume before one the
+    /// person has read a chapter of.
+    fn passed_volume(&self, extra: &Kept, list: &[Kept], furthest: ChapterRange) -> bool {
+        let Some(its) = extra.volume.as_deref().and_then(volume_number) else { return false };
+        list.iter().any(|c| {
+            c.range().is_some_and(|r| r <= furthest)
+                && c.volume.as_deref().and_then(volume_number).is_some_and(|v| v > its)
         })
     }
 
@@ -288,6 +307,13 @@ impl Read {
             })
             .collect()
     }
+}
+
+/// A volume's number as a source names it: "2", "Vol. 2", "Volume 2.5".
+fn volume_number(volume: &str) -> Option<kaeri_core::books::ChapterNumber> {
+    let digits = volume.trim_start_matches(|c: char| !c.is_ascii_digit());
+    let end = digits.find(|c: char| !c.is_ascii_digit() && c != '.').unwrap_or(digits.len());
+    kaeri_core::books::ChapterNumber::parse(digits[..end].trim_end_matches('.'))
 }
 
 /// A chapter number kept in thousandths, as the watermark keeps it, back in words: "12", "10.5".
@@ -528,5 +554,76 @@ mod tests {
         let read = Read::of(&store, "a:900301");
         assert_eq!(read.next(&kept).map(|c| c.id.as_str()), Some("13"));
         assert_eq!(read.unread(&kept).len(), 3);
+    }
+
+    fn read(store: &Store, work: &str, chapter: &str, page: Option<u32>, at: i64) {
+        let mut event = kaeri_store::reading::ReadEvent::new(work, chapter, at);
+        event.completed = page.is_none();
+        event.page = page;
+        event.of_pages = Some(20);
+        store.record_read(&event, Vec::new()).unwrap();
+    }
+
+    #[test]
+    fn an_extra_skipped_for_the_next_whole_chapter_stays_unread_and_is_never_next_again() {
+        const WORK: &str = "a:900302";
+        let store = Store::open_in_memory().unwrap();
+        let list: Vec<_> = ["15", "16", "16.5", "17", "18"]
+            .into_iter()
+            .map(|n| SourceChapter::new(format!("c-{n}"), n))
+            .collect();
+        keep(&store, "shelf", "s", &list, 1);
+        let (kept, _) = kept(&store, "shelf", "s").unwrap();
+        let next = |store: &Store| {
+            let read = Read::of(store, WORK);
+            let at = read.in_progress.as_ref().map(|(id, _, _)| id.clone());
+            at.or_else(|| read.next(&kept).map(|c| c.id.clone()))
+        };
+        read(&store, WORK, "15", None, 10);
+        read(&store, WORK, "16", None, 20);
+        assert_eq!(next(&store).as_deref(), Some("16.5"), "the extra is next until skipped");
+        // A look into the extra, then the skip to 17: 17 is where the person is.
+        read(&store, WORK, "16.5", Some(2), 30);
+        read(&store, WORK, "17", Some(4), 40);
+        assert_eq!(next(&store).as_deref(), Some("17"));
+        // Once 17 is read, 18 is next, never 16.5 again, and 16.5 stays unread.
+        read(&store, WORK, "17", None, 50);
+        assert_eq!(next(&store).as_deref(), Some("18"));
+        let after = Read::of(&store, WORK);
+        assert!(!after.is_read("16.5"));
+        // Read later by choice, it counts as any chapter does.
+        read(&store, WORK, "16.5", None, 60);
+        assert!(Read::of(&store, WORK).is_read("16.5"));
+        assert_eq!(next(&store).as_deref(), Some("18"));
+    }
+
+    #[test]
+    fn an_extra_with_no_number_is_passed_over_once_a_later_volume_is_read() {
+        const WORK: &str = "a:900303";
+        let store = Store::open_in_memory().unwrap();
+        let entry = |id: &str, label: &str, volume: &str| {
+            let mut c = SourceChapter::new(id, label);
+            c.volume = Some(volume.into());
+            c
+        };
+        let list = vec![
+            entry("c-1", "1", "1"),
+            entry("c-2", "2", "1"),
+            entry("c-x", "Volume Extras", "Vol. 1"),
+            entry("c-3", "3", "2"),
+            entry("c-4", "4", "2"),
+            entry("c-y", "Afterword", "2"),
+        ];
+        keep(&store, "shelf", "s", &list, 1);
+        let (kept, _) = kept(&store, "shelf", "s").unwrap();
+        let next = |store: &Store| Read::of(store, WORK).next(&kept).map(|c| c.id.clone());
+        read(&store, WORK, "1", None, 10);
+        read(&store, WORK, "2", None, 20);
+        assert_eq!(next(&store).as_deref(), Some("3"));
+        read(&store, WORK, "3", None, 30);
+        read(&store, WORK, "4", None, 40);
+        // Volume 1's extras sit behind volume 2, read; volume 2's afterword is still ahead.
+        assert_eq!(next(&store).as_deref(), Some("x/2/afterword"));
+        assert!(!Read::of(&store, WORK).is_read("x/1/volume extras"));
     }
 }

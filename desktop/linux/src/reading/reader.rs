@@ -1303,7 +1303,7 @@ impl Reader {
                     self.failed_page(*page, true);
                 }
             }
-            ReaderEvent::EndPage { session, next, why_none, next_source }
+            ReaderEvent::EndPage { session, next, why_none, next_source, .. }
                 if self.mine(*session) =>
             {
                 {
