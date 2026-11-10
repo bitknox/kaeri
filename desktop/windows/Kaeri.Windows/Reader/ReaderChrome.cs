@@ -29,6 +29,8 @@ sealed class ReaderChrome
     public Button BackTo { get; } = new() { Visibility = Visibility.Collapsed };
     /// <summary>Over the whole reader: the scrub preview, which follows the thumb above the group.</summary>
     public Canvas PreviewLayer { get; } = new() { IsHitTestVisible = false };
+    /// <summary>"1 credit page skipped" at the top trailing corner of page 1: Show turns to the pages.</summary>
+    public Button CreditPill { get; } = new() { Visibility = Visibility.Collapsed };
 
     readonly TextBlock topTitle = new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
     readonly Border credit = new() { Visibility = Visibility.Collapsed, CornerRadius = new CornerRadius(14), Padding = new Thickness(12, 4, 12, 4), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
@@ -39,20 +41,26 @@ sealed class ReaderChrome
     readonly TextBlock leftNumber = Number();
     readonly TextBlock rightNumber = Number();
     readonly Canvas ringLayer = new() { IsHitTestVisible = false };
+    readonly Canvas tickLayer = new() { IsHitTestVisible = false };
+    readonly List<(double Value, Rectangle Mark)> ticks = [];
     readonly Ellipse ring = new() { Width = 10, Height = 10, StrokeThickness = 1.5, Visibility = Visibility.Collapsed };
     readonly Grid scrubRow = new();
     readonly TextBlock title = new() { FontSize = 13, FontWeight = FontWeights.SemiBold, TextTrimming = TextTrimming.CharacterEllipsis, TextWrapping = TextWrapping.NoWrap };
     readonly TextBlock line = new() { FontSize = 12, TextTrimming = TextTrimming.CharacterEllipsis, TextWrapping = TextWrapping.NoWrap };
     readonly TextBlock noticeText = new() { FontSize = 13, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords, MaxWidth = 420 };
-    readonly Button noticeAction = new() { Visibility = Visibility.Collapsed, MinHeight = 28, Padding = new Thickness(10, 0, 10, 0), CornerRadius = new CornerRadius(4) };
+    /// <summary>The words a notice had, fading away as the next notice's come in over them.</summary>
+    readonly TextBlock noticeGhost = new() { FontSize = 13, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.WrapWholeWords, MaxWidth = 420, Opacity = 0, IsHitTestVisible = false };
+    readonly Button noticeAction = new() { Visibility = Visibility.Collapsed, MinHeight = 32, Padding = new Thickness(12, 0, 12, 0), CornerRadius = new CornerRadius(4), VerticalAlignment = VerticalAlignment.Center };
+    readonly TextBlock actionText = new();
+    readonly TextBlock actionGhost = new() { Opacity = 0 };
     public Button Chapters { get; }
     public Button Settings { get; }
     public Button Fullscreen { get; }
     readonly FontIcon fullscreenIcon = new() { Glyph = "", FontSize = 16 };
     bool scrubbing;
     bool setting;
-    readonly StackPanel preview = new() { Spacing = 6, Width = PreviewWidth, Visibility = Visibility.Collapsed };
-    readonly Border previewPage = new() { Width = PreviewWidth, Height = PreviewHeight, CornerRadius = new CornerRadius(4), BorderThickness = new Thickness(1) };
+    readonly StackPanel preview = new() { Spacing = 6, Visibility = Visibility.Collapsed };
+    readonly Border previewPage = new() { Width = PreviewWidth, Height = PreviewHeight, CornerRadius = new CornerRadius(4), BorderThickness = new Thickness(1), HorizontalAlignment = HorizontalAlignment.Center };
     readonly PageImageView previewImage = new();
     readonly TextBlock previewNumber = new() { FontSize = 13, FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     readonly Border previewPill = new() { Height = PillHeight, MinWidth = 36, CornerRadius = new CornerRadius(PillHeight / 2), Padding = new Thickness(10, 0, 10, 0), HorizontalAlignment = HorizontalAlignment.Center };
@@ -61,6 +69,8 @@ sealed class ReaderChrome
 
     const double PreviewWidth = 96, PreviewHeight = 136, PillHeight = 24;
     ReaderAction? noticeKind;
+    ReaderLocal? noticeLocal;
+    int? noticeShown;
 
     static TextBlock Number() => new() { FontSize = 12, VerticalAlignment = VerticalAlignment.Center, MinWidth = 24, TextAlignment = TextAlignment.Center };
 
@@ -88,6 +98,9 @@ sealed class ReaderChrome
         scrubRow.Children.Add(leftNumber);
         Grid.SetColumn(scrubber, 1);
         scrubRow.Children.Add(scrubber);
+        Grid.SetColumn(tickLayer, 1);
+        tickLayer.Margin = scrubber.Margin;
+        scrubRow.Children.Add(tickLayer);
         Grid.SetColumn(ringLayer, 1);
         ringLayer.Margin = scrubber.Margin;
         ringLayer.Children.Add(ring);
@@ -114,13 +127,18 @@ sealed class ReaderChrome
             else
                 ShowPreview((int)Math.Round(e.NewValue));
         };
-        scrubber.SizeChanged += (_, _) => PlaceRing();
+        scrubber.SizeChanged += (_, _) =>
+        {
+            PlaceRing();
+            PlaceTicks();
+        };
 
         // The scrub preview: the page under the thumb, 96 wide, with its number under it.
         previewImage.Width = PreviewWidth - 2;
         previewImage.Height = PreviewHeight - 2;
         previewPage.Child = previewImage;
         previewPill.Child = previewNumber;
+        previewNumber.TextWrapping = TextWrapping.NoWrap;
         preview.Children.Add(previewPage);
         preview.Children.Add(previewPill);
         PreviewLayer.Children.Add(preview);
@@ -157,11 +175,20 @@ sealed class ReaderChrome
         Group.Margin = new Thickness(16, 0, 16, 16);
         Group.BorderThickness = new Thickness(1);
 
-        // The notice, top centre.
-        var noticeRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12 };
-        noticeRow.Children.Add(noticeText);
+        // The notice, top centre, 48 high at least, its button 32.
+        var noticeRow = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, VerticalAlignment = VerticalAlignment.Center };
+        var words = new Grid { VerticalAlignment = VerticalAlignment.Center };
+        words.Children.Add(noticeGhost);
+        words.Children.Add(noticeText);
+        AutomationProperties.SetAccessibilityView(noticeGhost, AccessibilityView.Raw);
+        noticeRow.Children.Add(words);
+        var actionWords = new Grid();
+        actionWords.Children.Add(actionGhost);
+        actionWords.Children.Add(actionText);
+        noticeAction.Content = actionWords;
         noticeRow.Children.Add(noticeAction);
         Notice.Child = noticeRow;
+        Notice.MinHeight = 48;
         Notice.Padding = new Thickness(16, 8, 8, 8);
         Notice.CornerRadius = new CornerRadius(8);
         Notice.HorizontalAlignment = HorizontalAlignment.Center;
@@ -174,6 +201,11 @@ sealed class ReaderChrome
         Notice.LostFocus += (_, _) => owner.Reader.HoldNotice(false);
         noticeAction.Click += (_, _) =>
         {
+            if (noticeLocal is { } local)
+            {
+                owner.Reader.ActLocal(local);
+                return;
+            }
             if (noticeKind is not { } action)
                 return;
             if (action == ReaderAction.ChangeMode)
@@ -193,6 +225,18 @@ sealed class ReaderChrome
         BackTo.Padding = new Thickness(12, 0, 12, 0);
         BackTo.CornerRadius = new CornerRadius(14);
         BackTo.Click += (_, _) => owner.Reader.GoBackTo();
+
+        // The credit pill: 30 high on 4 px corners, acrylic like the group, 16 from the trailing edge.
+        CreditPill.HorizontalAlignment = HorizontalAlignment.Right;
+        CreditPill.VerticalAlignment = VerticalAlignment.Top;
+        CreditPill.Height = 30;
+        CreditPill.FontSize = 13;
+        CreditPill.Padding = new Thickness(12, 0, 12, 0);
+        CreditPill.CornerRadius = new CornerRadius(4);
+        CreditPill.BorderThickness = new Thickness(1);
+        AutomationProperties.SetHelpText(CreditPill, T.ReaderCreditShowHint);
+        CreditPill.Click += (_, _) => owner.ShowCredits(false);
+        PillUnder(true);
 
         Paint(owner.Palette);
     }
@@ -264,6 +308,16 @@ sealed class ReaderChrome
         Tint(BackTo, palette);
         BackTo.Background = new SolidColorBrush(palette.High);
         BackTo.Foreground = silk;
+        Tint(CreditPill, palette);
+        CreditPill.Background = Group.Background;
+        CreditPill.BorderBrush = Group.BorderBrush;
+        CreditPill.Resources["ButtonBorderBrush"] = Group.BorderBrush;
+        CreditPill.Resources["ButtonBorderBrushPointerOver"] = Group.BorderBrush;
+        CreditPill.Resources["ButtonBorderBrushPressed"] = Group.BorderBrush;
+        noticeGhost.Foreground = silk;
+        foreach (var (_, mark) in ticks)
+            mark.Fill = haze;
+        tickBrush = haze;
         var res = scrubber.Resources;
         res["SliderTrackFill"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.25));
         res["SliderTrackFillPointerOver"] = new SolidColorBrush(ReaderPalette.WithAlpha(palette.Silk, 0.3));
@@ -275,6 +329,18 @@ sealed class ReaderChrome
         res["SliderThumbBackgroundPointerOver"] = silk;
         res["SliderThumbBackgroundPressed"] = silk;
         res["SliderOuterThumbBackground"] = new SolidColorBrush(palette.Raised);
+    }
+
+    Brush? tickBrush;
+
+    /// <summary>The pill sits under the top row while the chrome shows, 44 from the top otherwise.</summary>
+    public void PillUnder(bool chrome) => CreditPill.Margin = new Thickness(0, chrome ? 56 : 44, 16, 0);
+
+    /// <summary>The pill's words, which are its name too.</summary>
+    public void PillWords(string words)
+    {
+        CreditPill.Content = words;
+        AutomationProperties.SetName(CreditPill, words);
     }
 
     static void Tint(Button button, ReaderPalette palette)
@@ -365,10 +431,13 @@ sealed class ReaderChrome
     /// Where the reader is, from 1, of <paramref name="count"/>. In a right-to-left book the
     /// track runs right to left: the total is on the left and where the reader is on the right.
     /// </summary>
-    public void Scrub(int at, int count, bool rtl, int? ringAt)
+    public void Scrub(int at, int count, bool rtl, int? ringAt, string? place = null, string? status = null)
     {
         total = Math.Max(count, 1);
         reversed = rtl;
+        here = place;
+        // A credit page or a part's start: Narrator hears it with the scrubber's value.
+        AutomationProperties.SetItemStatus(scrubber, place ?? status ?? "");
         scrubRow.Visibility = count > 1 ? Visibility.Visible : Visibility.Collapsed;
         setting = true;
         scrubber.Maximum = total;
@@ -391,10 +460,12 @@ sealed class ReaderChrome
     }
 
     int? ringValue;
+    /// <summary>A credit page's place: the number of the page at that end stays blank.</summary>
+    string? here;
 
     void ShowNumbers(int at)
     {
-        var here = at.ToString(System.Globalization.CultureInfo.CurrentCulture);
+        var here = this.here is not null && !scrubbing ? "" : at.ToString(System.Globalization.CultureInfo.CurrentCulture);
         var all = total.ToString(System.Globalization.CultureInfo.CurrentCulture);
         leftNumber.Text = reversed ? all : here;
         rightNumber.Text = reversed ? here : all;
@@ -413,6 +484,42 @@ sealed class ReaderChrome
         var x = thumb / 2 + fraction * (scrubber.ActualWidth - thumb) - ring.Width / 2;
         Canvas.SetLeft(ring, x);
         Canvas.SetTop(ring, (scrubber.ActualHeight - ring.Height) / 2);
+    }
+
+    /// <summary>
+    /// The parts' ticks on the track, 2 by 9 in haze: where each part after the first starts and
+    /// where a missing part would, at scrubber values from 1.
+    /// </summary>
+    public void Ticks(IReadOnlyList<double> values)
+    {
+        if (ticks.Select(t => t.Value).SequenceEqual(values))
+            return;
+        foreach (var (_, mark) in ticks)
+            tickLayer.Children.Remove(mark);
+        ticks.Clear();
+        foreach (var value in values)
+        {
+            var mark = new Rectangle { Width = 2, Height = 9, Fill = tickBrush };
+            tickLayer.Children.Add(mark);
+            ticks.Add((value, mark));
+        }
+        PlaceTicks();
+    }
+
+    void PlaceTicks()
+    {
+        if (scrubber.ActualWidth <= 0)
+            return;
+        const double thumb = 20;
+        foreach (var (value, mark) in ticks)
+        {
+            var fraction = total <= 1 ? 0 : Math.Clamp((value - 1) / (total - 1), 0, 1);
+            if (reversed)
+                fraction = 1 - fraction;
+            Canvas.SetLeft(mark, thumb / 2 + fraction * (scrubber.ActualWidth - thumb) - mark.Width / 2);
+            // Under the track, as the board draws them.
+            Canvas.SetTop(mark, scrubber.ActualHeight / 2 + 4);
+        }
     }
 
     void EndScrub()
@@ -441,7 +548,8 @@ sealed class ReaderChrome
         if (value != previewAt || fresh)
         {
             previewAt = value;
-            previewNumber.Text = value.ToString(System.Globalization.CultureInfo.CurrentCulture);
+            // On a tick the pill names the part: "Page 11 · part 2".
+            previewNumber.Text = owner.PartTip(value) ?? value.ToString(System.Globalization.CultureInfo.CurrentCulture);
             Picture();
         }
         PlacePreview();
@@ -496,7 +604,10 @@ sealed class ReaderChrome
         var centre = scrubber.TransformToVisual(PreviewLayer).TransformPoint(new global::Windows.Foundation.Point(x, 0));
         var groupTop = Group.TransformToVisual(PreviewLayer).TransformPoint(new global::Windows.Foundation.Point(0, 0)).Y;
         var height = previewPage.Visibility == Visibility.Visible ? PreviewHeight + preview.Spacing + PillHeight : PillHeight;
-        var left = Math.Clamp(centre.X - PreviewWidth / 2, 12, Math.Max(12, PreviewLayer.ActualWidth - PreviewWidth - 12));
+        // A part's words make the pill wider than the page: the preview is as wide as its widest.
+        preview.Measure(new global::Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
+        var width = Math.Max(PreviewWidth, preview.DesiredSize.Width);
+        var left = Math.Clamp(centre.X - width / 2, 12, Math.Max(12, PreviewLayer.ActualWidth - width - 12));
         Canvas.SetLeft(preview, left);
         Canvas.SetTop(preview, Math.Max(12, groupTop - height - 8));
     }
@@ -522,22 +633,56 @@ sealed class ReaderChrome
         if (notice is null)
         {
             noticeKind = null;
+            noticeLocal = null;
+            noticeShown = null;
             if (!owner.PaperMode)
                 Motion.Hide(Notice);
             else
                 Motion.Set(Notice, false);
             return;
         }
+        if (noticeShown == notice.Id)
+            return;
+        // Not a credit page giving way to Undo: the words crossfade in place, the notice stays.
+        var replacing = noticeShown is not null && notice.Local is not null && noticeLocal is not null
+            && Notice.Visibility == Visibility.Visible && !owner.PaperMode;
+        var action = notice.Local switch
+        {
+            ReaderLocal.NotACredit => T.ReaderCreditNot,
+            ReaderLocal.Undo => T.ActionUndo,
+            _ => notice.Action switch
+            {
+                ReaderAction.StartOver => T.WindowsReaderStartOver,
+                ReaderAction.GoBack => T.WindowsReaderGoBack,
+                ReaderAction.ChangeMode => T.WindowsReaderChange,
+                _ => null,
+            },
+        };
+        if (replacing)
+        {
+            noticeGhost.Text = noticeText.Text;
+            actionGhost.Text = actionText.Text;
+            noticeGhost.Opacity = 1;
+            actionGhost.Opacity = 1;
+            noticeText.Opacity = 0;
+            actionText.Opacity = 0;
+            Motion.Crossfade(noticeGhost, noticeText);
+            Motion.Crossfade(actionGhost, actionText);
+        }
+        else
+        {
+            noticeGhost.Text = "";
+            actionGhost.Text = "";
+            Motion.Set(noticeText, true);
+            Motion.Set(actionText, true);
+        }
+        noticeShown = notice.Id;
         noticeText.Text = notice.Text;
         noticeKind = notice.Action;
-        noticeAction.Content = notice.Action switch
-        {
-            ReaderAction.StartOver => T.WindowsReaderStartOver,
-            ReaderAction.GoBack => T.WindowsReaderGoBack,
-            ReaderAction.ChangeMode => T.WindowsReaderChange,
-            _ => null,
-        };
-        noticeAction.Visibility = noticeAction.Content is null ? Visibility.Collapsed : Visibility.Visible;
+        noticeLocal = notice.Local;
+        actionText.Text = action ?? "";
+        AutomationProperties.SetName(noticeAction, action ?? "");
+        noticeAction.Visibility = action is null ? Visibility.Collapsed : Visibility.Visible;
         if (!owner.PaperMode)
             Motion.Show(Notice);
         else

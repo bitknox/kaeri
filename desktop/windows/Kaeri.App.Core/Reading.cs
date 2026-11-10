@@ -198,6 +198,9 @@ public sealed class ReadingStore
     public void ChooseEdition(string work, BookEditionRow edition) =>
         Ask(new ReadingCommand.ChooseEdition(work, edition.SourceId, edition.VersionLabel, edition.Language));
 
+    /// <summary>The group chapters come from in the source in use, or null for the one with most chapters.</summary>
+    public void ChooseGroup(string work, string? group) => Ask(new ReadingCommand.ChooseGroup(work, group));
+
     string? InUse(string work) => Chapters.TryGetValue(work, out var c) ? c.Edition?.SourceId : null;
 
     /// <summary>Marks, then the series and its chapters again, as the engine sends nothing for a mark.</summary>

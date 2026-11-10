@@ -68,6 +68,12 @@ sealed class PagedView : Grid
     readonly ScrollViewer zoom;
     readonly Grid stage = new();
     readonly Dictionary<int, FrameworkElement> mounted = [];
+    /// <summary>A shown credit page, over the leaf it stands before or after.</summary>
+    readonly Grid credit = new() { Visibility = Visibility.Collapsed };
+    /// <summary>Two, so one credit page crossfades over the one before rather than through the ground.</summary>
+    readonly PageImageView[] creditImages = [new(), new()];
+    int creditFront;
+    ulong? creditShown;
     int current = -1;
     string? chapter;
     Storyboard? turning;
@@ -100,6 +106,10 @@ sealed class PagedView : Grid
         stage.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
         stage.VerticalAlignment = VerticalAlignment.Center;
         Children.Add(zoom);
+        foreach (var image in creditImages)
+            credit.Children.Add(image);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(credit, T.ReaderCreditPageLabel);
+        Children.Add(credit);
         Clip = new RectangleGeometry();
         SizeChanged += (_, e) =>
         {
@@ -154,6 +164,7 @@ sealed class PagedView : Grid
         current = Reader.Leaves.Length == 0 ? -1 : Math.Clamp(Reader.Current, 0, Reader.Leaves.Length - 1);
         zoom.ChangeView(0, 0, 1, true);
         Mount();
+        SyncCredit();
     }
 
     /// <summary>The engine's files changed: every mounted leaf shows what there is now.</summary>
@@ -234,7 +245,7 @@ sealed class PagedView : Grid
         Canvas.SetZIndex(element, index == current ? 1 : 0);
         element.IsHitTestVisible = index == current;
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(element,
-            index == current ? Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Content : Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+            index == current && creditShown is null ? Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Content : Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
     }
 
     /// <summary>The side a forward leaf comes in from: the left in a right-to-left book.</summary>
@@ -259,6 +270,11 @@ sealed class PagedView : Grid
         }
         stage.Width = cw;
         stage.Height = ch;
+        foreach (var image in creditImages)
+        {
+            image.Width = w;
+            image.Height = h;
+        }
         Rails();
         foreach (var element in mounted.Values)
         {
@@ -280,6 +296,8 @@ sealed class PagedView : Grid
     {
         if (current < 0 || current >= Reader.Leaves.Length)
             return;
+        if (owner.CreditTurn(forward))
+            return;
         if (forward && Reader.Leaves[current].EndPage)
         {
             if ((Reader.End?.Next ?? Reader.View?.Next) is { } next)
@@ -297,7 +315,19 @@ sealed class PagedView : Grid
     /// <summary>A jump the person asked for (the scrubber, the page grid): Back to remembers where they were.</summary>
     public void Jump(int target)
     {
-        if (target < 0 || target >= Reader.Leaves.Length || target == current)
+        if (target < 0 || target >= Reader.Leaves.Length)
+            return;
+        if (Reader.CreditOn is not null)
+        {
+            // A jump leaves a credit page, to the leaf under it too.
+            Reader.LeaveCredit();
+            if (target == current)
+            {
+                owner.Turned();
+                return;
+            }
+        }
+        if (target == current)
             return;
         Reader.Shown(target, TurnHow.Jump);
         Go(target, animate: false);
@@ -309,12 +339,96 @@ sealed class PagedView : Grid
     {
         if (target < 0 || target >= Reader.Leaves.Length)
             return;
+        Reader.LeaveCredit();
         Reader.Shown(target, TurnHow.Placed);
         if (target != current)
         {
             Go(target, animate: false);
             owner.Turned();
         }
+    }
+
+    /// <summary>From a credit page to a leaf: the leaf crossfades in as the page fades away.</summary>
+    public void Land(int target)
+    {
+        if (target < 0 || target >= Reader.Leaves.Length)
+            return;
+        Reader.LeaveCredit();
+        if (target == current)
+            return;
+        Reader.Shown(target, TurnHow.Turn);
+        Go(target, animate: false);
+    }
+
+    /// <summary>
+    /// The session's credit page on screen, or none: a page fades in over the leaf on the
+    /// fade-in token (one credit page to the next crossfades), and fades away on the fade-out
+    /// token. Paper mode cuts.
+    /// </summary>
+    public void SyncCredit()
+    {
+        var on = Reader.CreditOn;
+        if (on is null)
+        {
+            if (creditShown is null)
+                return;
+            creditShown = null;
+            credit.IsHitTestVisible = false;
+            if (owner.PaperMode)
+                Motion.Set(credit, false);
+            else
+                Motion.Hide(credit);
+            SetLeavesSeen(true);
+            return;
+        }
+        if (creditShown == on.Fingerprint)
+            return;
+        var fresh = creditShown is null;
+        creditShown = on.Fingerprint;
+        StopTurn();
+        if (zoom.ZoomFactor > 1.01f || zoom.VerticalOffset > 0 || zoom.HorizontalOffset > 0)
+            zoom.ChangeView(0, 0, 1, true);
+        credit.Background = owner.StageGround;
+        var back = creditImages[creditFront];
+        creditFront = fresh ? creditFront : 1 - creditFront;
+        var front = creditImages[creditFront];
+        front.Dim = owner.PagePalette.Paper;
+        // The layer or the page fades as a whole; the image itself shows as it decodes.
+        front.Cut = true;
+        front.FitWidth = owner.Fit == "width";
+        front.Width = ActualWidth;
+        front.Height = ActualHeight;
+        front.Show(on.File, owner.Scale);
+        Canvas.SetZIndex(front, 1);
+        Canvas.SetZIndex(back, 0);
+        credit.IsHitTestVisible = true;
+        SetLeavesSeen(false);
+        if (owner.PaperMode)
+        {
+            Motion.Set(credit, true);
+            Motion.Set(front, true);
+            back.Visibility = fresh ? Visibility.Visible : Visibility.Collapsed;
+        }
+        else if (fresh)
+        {
+            Motion.Set(front, true);
+            Motion.FadeIn(credit, Motion.FadeInTime);
+        }
+        else
+            // One credit page to the next: the new one fades in over the old, which goes after.
+            Motion.FadeInThen(front, () =>
+            {
+                if (creditImages[creditFront] == front)
+                    back.Visibility = Visibility.Collapsed;
+            });
+    }
+
+    /// <summary>Narrator reads the credit page, not the leaf under it.</summary>
+    void SetLeavesSeen(bool seen)
+    {
+        if (mounted.TryGetValue(current, out var element))
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAccessibilityView(element,
+                seen ? Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Content : Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
     }
 
     void Go(int target, bool animate)
@@ -447,7 +561,8 @@ sealed class PagedView : Grid
         swipeX = x;
         swipeVelocity = e.Velocities.Linear.X * 1000;
         // Paper mode and reduced motion: nothing follows the finger; the turn comes on release.
-        if (owner.PaperMode || !Motion.Enabled)
+        // A credit page over the leaves stays still too, and crossfades on release.
+        if (owner.PaperMode || !Motion.Enabled || Reader.CreditOn is not null)
             return;
         // Past either end the page gives a quarter of the way, and comes back.
         if (!CanGo(Forward(x)))
@@ -467,6 +582,13 @@ sealed class PagedView : Grid
         var forward = Forward(x);
         var flick = Math.Abs(swipeVelocity) > 450 && swipeVelocity * x > 0;
         var commit = Math.Abs(x) > Math.Max(ActualWidth, 1) * 0.25 || flick;
+        if (commit && (Reader.CreditOn is not null || owner.CreditTurnWaits(forward)))
+        {
+            // Onto, between or off credit pages: the leaves go back and the pages crossfade.
+            Mount();
+            Turn(forward, TurnHow.Swipe);
+            return;
+        }
         if (!commit || !CanGo(forward))
         {
             SpringBack();

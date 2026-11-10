@@ -422,6 +422,12 @@ public sealed partial class SeriesPage : Page
         var print = Drawn.Fingerprint((series.Edition, tracking, editions.Length, series.AskWhereStopped, both ? series.OtherMedium : null, ctx.Known.Reading.Sending.Targets.Select(t => (t.Id, t.Name)).ToList()));
         if (print == drawnSide)
             return;
+        if (groupPicked.Remove("side"))
+        {
+            // The series that comes back with a group pick crossfades to its new words.
+            Crossfade.Swap(side, DrawSide);
+            return;
+        }
         drawnSide = print;
         var focus = Ui.MarkFocus(side);
         side.Children.Clear();
@@ -436,8 +442,9 @@ public sealed partial class SeriesPage : Page
         else if (tracking.Length > 0)
             AddSide(SeriesWords.Names([.. tracking.Select(t => SeriesWords.Tracker(t.Tracker))]), T.SeriesTrackerAsk, T.SeriesChange,
                 () => _ = SeriesDialogs.Tracking(ctx, XamlRoot, work));
-        if (series.Edition?.VersionLabel is { Length: > 0 } label)
-            AddSide(label, T.SeriesPreferredGroup, T.SeriesChange, () => _ = SeriesDialogs.ReadFrom(ctx, XamlRoot, work));
+        // The group, when the source has more than one to read a chapter from.
+        if (GroupPicker.Offered(series.Edition))
+            AddGroup(series.Edition!);
         if (series.AskWhereStopped is { } sent)
             AddSide(T.SendTitle, T.StopNote(SeriesWords.Device(ctx, sent.Target)), T.StopNoteAction,
                 () => _ = StoppedDialog.Show(ctx, XamlRoot, series, sent));
@@ -501,6 +508,11 @@ public sealed partial class SeriesPage : Page
         var print = Drawn.Fingerprint((read, newestFirst, choosing?.Count, choosing is null ? null : string.Join(",", choosing.Order())));
         if (print == drawnChapters)
             return;
+        if (groupPicked.Remove("chapters"))
+        {
+            Crossfade.Swap(chapters, DrawChapters);
+            return;
+        }
         drawnChapters = print;
         // The head's Download menu counts what is left to fetch.
         DrawHead(series);
@@ -819,7 +831,8 @@ public sealed partial class SeriesPage : Page
 
     void StartChoosing()
     {
-        choosing = [];
+        // The next ten unread chapters not downloaded yet, from where the reader is, start ticked.
+        choosing = [.. ChooseChapters.Start([.. Volumes().SelectMany(v => v.Chapters)])];
         // Every volume opens while choosing, so a whole volume can be ticked.
         foreach (var group in Volumes())
             folded[group.Volume ?? ""] = true;

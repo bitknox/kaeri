@@ -30,6 +30,9 @@ sealed class StripView : Grid
         public Dictionary<ReaderPageKey, PageFile> Kept { get; } = [];
         /// <summary>The marker into this chapter: the foot it flowed from, its first image under the words.</summary>
         public FrameworkElement? Marker { get; set; }
+        /// <summary>The credit pages at the chapter's start (its row) and, once shown, at its end.</summary>
+        public StripCredits? Lead { get; set; }
+        public StripCredits? Tail { get; set; }
         public double Top { get; set; }
         public List<double> Tops { get; } = [];
         public double Bottom { get; set; }
@@ -115,8 +118,11 @@ sealed class StripView : Grid
             foreach (var key in live.Keys.ToList())
                 Unmount(key);
             foreach (var section in sections)
+            {
                 if (section.Marker is not null)
                     column.Children.Remove(section.Marker);
+                DropCredits(section);
+            }
             sections.Clear();
             sections.Add(new Section(newChapter, view?.Chapter.Label ?? ""));
             shown = null;
@@ -139,6 +145,8 @@ sealed class StripView : Grid
     void Flow(string chapter, string label, List<LeafPart> parts)
     {
         var from = Current!;
+        from.Lead?.Settle();
+        from.Tail?.Settle();
         // The chapter before keeps the files it showed: the session lets them go.
         foreach (var part in from.Parts)
             if (Reader.FileOf(part, from.Chapter) is { } file)
@@ -224,12 +232,14 @@ sealed class StripView : Grid
                 Canvas.SetZIndex(marker, 0);
                 y += MarkerHeight;
             }
+            y = PlaceCredits(section.Lead, y);
             section.Tops.Clear();
             foreach (var part in section.Parts)
             {
                 section.Tops.Add(y);
                 y += HeightOf(section, part) + gap;
             }
+            y = PlaceCredits(section.Tail, y);
             section.Bottom = y;
         }
         foot ??= BuildFoot();
@@ -449,10 +459,91 @@ sealed class StripView : Grid
             Unmount(key);
         if (gone.Marker is not null)
             column.Children.Remove(gone.Marker);
+        DropCredits(gone);
         sections.RemoveAt(0);
         var shift = sections[0].Top;
         Layout();
         scroll.ChangeView(null, Math.Max(0, y - shift), null, true);
+    }
+
+    // Credit pages
+
+    double PlaceCredits(StripCredits? block, double y)
+    {
+        if (block is null)
+            return y;
+        if (!column.Children.Contains(block))
+            column.Children.Add(block);
+        block.Size(columnWidth);
+        Canvas.SetTop(block, y);
+        return y + block.Shown;
+    }
+
+    void DropCredits(Section section)
+    {
+        if (section.Lead is not null)
+            column.Children.Remove(section.Lead);
+        if (section.Tail is not null)
+            column.Children.Remove(section.Tail);
+        section.Lead = null;
+        section.Tail = null;
+    }
+
+    /// <summary>
+    /// The open chapter's credit pages: the row at its start, the pages at its end once shown.
+    /// A chapter the strip ran on from keeps the ones it had.
+    /// </summary>
+    public void RefreshCredits()
+    {
+        if (Reader.Flowing || Current is not { } section || section.Chapter != Reader.View?.Chapter.Id)
+            return;
+        var starts = Reader.Credits.Where(c => !c.AtEnd).ToList();
+        var ends = Reader.Credits.Where(c => c.AtEnd).ToList();
+        var changed = Sync(section.Lead, starts, true, Reader.ShownStart, out var lead);
+        changed |= Sync(section.Tail, Reader.ShownEnd ? ends : [], false, true, out var tail);
+        section.Lead = lead;
+        section.Tail = tail;
+        if (changed)
+            Layout();
+    }
+
+    /// <summary>The block for these pages: the one there is when it holds the same, otherwise a new one. True when it changed.</summary>
+    bool Sync(StripCredits? block, List<CreditPage> pages, bool start, bool shown, out StripCredits? now)
+    {
+        if (block is not null && block.Prints.SequenceEqual(pages.Select(p => p.Fingerprint)))
+        {
+            now = block;
+            block.RefreshHeld();
+            if (shown && !block.Revealed)
+                block.Reveal(animate: !restoring, Moved);
+            return false;
+        }
+        if (block is not null)
+            column.Children.Remove(block);
+        now = pages.Count == 0 ? null : StripCredits.Build(owner, pages, start);
+        if (now is not null && shown)
+            now.Reveal(animate: false, () => { });
+        return true;
+    }
+
+    /// <summary>A block grew: everything under it moves with it.</summary>
+    void Moved() => Layout();
+
+    /// <summary>The pill's or the end page's Show: the pages there grow in, and the strip goes to the end's. False when none can show.</summary>
+    public bool RevealCredits(bool atEnd)
+    {
+        RefreshCredits();
+        if (Current is not { } section)
+            return false;
+        var block = atEnd ? section.Tail : section.Lead;
+        if (block is null)
+            return false;
+        if (atEnd)
+        {
+            restoring = false;
+            scroll.ChangeView(null, Canvas.GetTop(block), null, !Motion.Enabled || owner.PaperMode);
+        }
+        return true;
     }
 
     // Moving

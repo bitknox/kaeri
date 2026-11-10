@@ -2937,6 +2937,10 @@
     <value>To let e-readers at home reach the feed, allow Kaeri on private networks only. Leave public networks unticked.</value>
     <comment>Body of that dialog. "Private networks" and "public networks" are the names Windows' own question uses.</comment>
   </data>
+  <data name="WindowsGroupPickerIn" xml:space="preserve">
+    <value>Group in {source}</value>
+    <comment>Header of the group picker that opens from the Group row's Change on a series page. The source is a site or server name, such as "books.home.example".</comment>
+  </data>
   <data name="SettingsLoading" xml:space="preserve">
     <value>Loading settings</value>
     <comment>Busy line while Settings waits for the engine's values.</comment>

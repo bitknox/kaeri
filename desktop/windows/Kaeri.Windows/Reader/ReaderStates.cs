@@ -162,6 +162,36 @@ sealed class EndPageView : Grid
     /// <summary>The next chapter's first page, at the board's 1:1.42.</summary>
     const double PreviewWidth = 180;
 
+    /// <summary>"1 credit page skipped" in haze with an underlined Show: one button, named by its words.</summary>
+    static Button CreditLine(ReaderOverlay owner, string skipped, ReaderPalette palette)
+    {
+        var show = new Microsoft.UI.Xaml.Documents.Run { Text = T.ReaderCreditShow };
+        var underline = new Microsoft.UI.Xaml.Documents.Underline();
+        underline.Inlines.Add(show);
+        var text = new TextBlock { FontSize = 15, Foreground = new SolidColorBrush(palette.Haze), TextWrapping = TextWrapping.WrapWholeWords };
+        text.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = skipped + "  " });
+        var shown = new Microsoft.UI.Xaml.Documents.Span { Foreground = new SolidColorBrush(palette.Silk) };
+        shown.Inlines.Add(underline);
+        text.Inlines.Add(shown);
+        var button = new Button
+        {
+            Content = text,
+            Padding = new Thickness(0),
+            Margin = new Thickness(0, 6, 0, 0),
+            MinHeight = 32,
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            BorderThickness = new Thickness(0),
+            HorizontalAlignment = HorizontalAlignment.Left,
+        };
+        button.Resources["ButtonBackgroundPointerOver"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        button.Resources["ButtonBackgroundPressed"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        button.Resources["ButtonBorderBrushPointerOver"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        AutomationProperties.SetName(button, skipped);
+        AutomationProperties.SetHelpText(button, T.ReaderCreditShowHint);
+        button.Click += (_, _) => owner.ShowEndCredits();
+        return button;
+    }
+
     public EndPageView(ReaderOverlay owner, double width)
     {
         var reader = owner.Reader;
@@ -195,6 +225,9 @@ sealed class EndPageView : Grid
         var read = ReaderText.Line(readLine, 15, palette.Haze);
         read.Margin = new Thickness(0, 6, 0, 0);
         words.Children.Add(read);
+        // Pages skipped as credit pages at the end: the line shows them.
+        if (!reader.ShownEnd && reader.SkippedLine(true) is { } skipped)
+            words.Children.Add(CreditLine(owner, skipped, palette));
         words.Children.Add(owner.ServerLine.Take());
 
         if (next is not null)

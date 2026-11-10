@@ -63,6 +63,7 @@ public sealed partial class ReaderOverlay : UserControl
         root.Children.Add(chrome.Group);
         root.Children.Add(chrome.PreviewLayer);
         root.Children.Add(chrome.Top);
+        root.Children.Add(chrome.CreditPill);
         root.Children.Add(announcer);
         AutomationProperties.SetLiveSetting(announcer, AutomationLiveSetting.Polite);
         Content = root;
@@ -189,6 +190,9 @@ public sealed partial class ReaderOverlay : UserControl
                 strip?.Ends(true);
                 novel?.ShotEnd();
                 break;
+            case "reader-credit-pill" or "reader-credit" or "reader-credit-kept" or "reader-parts" or "reader-credit-end" or "reader-strip-credits":
+                ShotCredits(what);
+                break;
         }
     }
 #endif
@@ -208,6 +212,9 @@ public sealed partial class ReaderOverlay : UserControl
         Clear();
         chrome.ShowNotice(null);
         chrome.ShowBackTo(null);
+        pillHold?.Stop();
+        pillSaidFor = null;
+        Motion.Set(chrome.CreditPill, false);
         Visibility = Visibility.Collapsed;
         Ctx.Window.ReaderShowing(false);
     }
@@ -309,6 +316,10 @@ public sealed partial class ReaderOverlay : UserControl
                 if (Reader.NovelGoTo is { } place)
                     novel?.GoTo(place.Pos);
                 break;
+            case ReaderChange.Credits:
+            case ReaderChange.Parts:
+                CreditsChanged();
+                break;
             case ReaderChange.Chapters:
                 break;
         }
@@ -392,6 +403,7 @@ public sealed partial class ReaderOverlay : UserControl
         chromeShown = true;
         Motion.Set(chrome.Group, false);
         Ctx.Window.ReaderChrome(true);
+        Pill();
     }
 
     /// <summary>
@@ -632,6 +644,7 @@ public sealed partial class ReaderOverlay : UserControl
             Idle();
         else
             idle.Stop();
+        Pill();
     }
 
     /// <summary>Reading: the chrome and the pointer go.</summary>
@@ -649,6 +662,7 @@ public sealed partial class ReaderOverlay : UserControl
             novel?.SyncInput();
         }
         HidePointer();
+        Pill();
     }
 
     internal void ToggleChrome()
@@ -762,6 +776,7 @@ public sealed partial class ReaderOverlay : UserControl
     internal void Turned()
     {
         HideChrome();
+        Pill();
         PositionChanged();
         if (kind == Kind.Paged)
             Announce();
@@ -785,6 +800,11 @@ public sealed partial class ReaderOverlay : UserControl
                 var leaf = paged.Current;
                 if (leaf < 0 || leaf >= Reader.Leaves.Length)
                     return;
+                if (CreditSaid(out var credit))
+                {
+                    text = credit;
+                    break;
+                }
                 var pages = Reader.Leaves[leaf].Parts.Select(p => (int)p.Page + 1).Distinct().Order().ToList();
                 var total = Reader.PageCount;
                 text = Reader.Leaves[leaf].EndPage ? T.WindowsReaderEndOfChapter(label)
@@ -821,22 +841,28 @@ public sealed partial class ReaderOverlay : UserControl
             {
                 var leaf = paged.Current;
                 var total = Reader.PageCount;
+                PartTicks(total);
                 if (leaf < 0 || leaf >= Reader.Leaves.Length)
                 {
                     chrome.Line(label);
                     chrome.Scrub(1, total, Rtl, null);
                     break;
                 }
+                if (CreditPlace(label, total))
+                    break;
                 var pages = Reader.Leaves[leaf].Parts.Select(p => (int)p.Page + 1).Distinct().Order().ToList();
+                // A page kept with Undo still offered counts already: 37 pages become 38.
+                var (page, all) = Reader.HeldPages(pages.FirstOrDefault(1), total);
+                var shift = page - pages.FirstOrDefault(1);
                 if (Reader.Leaves[leaf].EndPage)
                     chrome.Line(T.WindowsReaderEndOfChapter(label));
                 else if (pages.Count >= 2)
-                    chrome.Line(T.WindowsReaderGroupLineSpread(label, pages[0], pages[1]));
+                    chrome.Line(T.WindowsReaderGroupLineSpread(label, pages[0] + shift, pages[1] + shift));
                 else
-                    chrome.Line(T.WindowsReaderGroupLine(label, pages.FirstOrDefault(1), Math.Max(total, 1)));
-                var at = Reader.Leaves[leaf].EndPage ? total : Reader.PageNumber(leaf);
+                    chrome.Line(T.WindowsReaderGroupLine(label, page, Math.Max(all, 1)));
+                var at = Reader.Leaves[leaf].EndPage ? all : Reader.PageNumber(leaf) + shift;
                 int? ringAt = Reader.Ring is { } r && r >= 0 && r < Reader.Leaves.Length ? Reader.PageNumber(r) : null;
-                chrome.Scrub(at, total, Rtl, ringAt);
+                chrome.Scrub(at, all, Rtl, ringAt, null, PartStatus(Reader.PageNumber(leaf), total));
                 break;
             }
             case Kind.Strip when strip is not null:
@@ -845,7 +871,11 @@ public sealed partial class ReaderOverlay : UserControl
                 var (image, count) = strip.Position;
                 label = strip.ChapterLabel ?? label;
                 chrome.Line(T.WindowsReaderGroupLineStrip(label, Math.Min(image + 1, Math.Max(count, 1)), Math.Max(count, 1)));
-                chrome.Scrub(image + 1, count, false, null);
+                if (strip.ChapterLabel is null)
+                    PartTicks(count);
+                else
+                    chrome.Ticks([]);
+                chrome.Scrub(image + 1, count, false, null, null, strip.ChapterLabel is null ? PartStatus(image + 1, count) : null);
                 break;
             }
             case Kind.Novel when novel is not null:
@@ -857,6 +887,7 @@ public sealed partial class ReaderOverlay : UserControl
                     chrome.Line(T.WindowsReaderGroupLineScroll(label, novel.Pages > 1 ? novel.Page * 100 / (novel.Pages - 1) : 0));
                 else
                     chrome.Line(T.WindowsReaderGroupLine(label, novel.Page + 1, novel.Pages));
+                chrome.Ticks([]);
                 chrome.Scrub(novel.Page + 1, novel.Pages, Rtl, null);
                 break;
             }
@@ -1170,6 +1201,9 @@ public sealed partial class ReaderOverlay : UserControl
     /// <summary>Ctrl in place of the Mac's Command: zoom for pages, text size for novels.</summary>
     bool CtrlKey(VirtualKey key)
     {
+        // Ctrl+Z takes back Not a credit page while Undo is offered.
+        if (key == VirtualKey.Z)
+            return Reader.UndoKeep();
         var plus = key is VirtualKey.Add || (int)key == 187;
         var minus = key is VirtualKey.Subtract || (int)key == 189;
         var zero = key is VirtualKey.Number0 or VirtualKey.NumberPad0;

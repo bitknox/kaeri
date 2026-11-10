@@ -13,7 +13,8 @@ public readonly record struct ReaderPageKey(string Chapter, uint Page, PageHalf?
 public sealed record ReaderEnd(ChapterRow? Next, NoNext? Why, string? NextSource);
 
 /// <summary>The notice over the page, with the action it offers.</summary>
-public sealed record ReaderNoticeLine(int Id, string Text, ReaderAction? Action);
+/// <remarks><paramref name="Local"/> names a button the reader offers itself: Not a credit page, or its Undo.</remarks>
+public sealed record ReaderNoticeLine(int Id, string Text, ReaderAction? Action, ReaderLocal? Local = null);
 
 public enum ReaderPhase { Closed, Opening, Open, Failed }
 
@@ -21,10 +22,10 @@ public enum ReaderPhase { Closed, Opening, Open, Failed }
 public enum ReaderChange
 {
     Phase, Leaves, Page, Novel, NovelStyle, End, Settings, Notice, BackTo, GoTo, NovelGoTo,
-    Chapters, Read, Preview, Opening, Sent,
+    Chapters, Read, Preview, Opening, Sent, Credits, Parts,
 }
 
-public sealed class ReaderSession
+public sealed partial class ReaderSession
 {
     internal Action<Command>? Send { get; set; }
 
@@ -139,6 +140,7 @@ public sealed class ReaderSession
         if (session != 0)
         {
             // One at a time: the first closes, then this opens.
+            ForgetCredits();
             Ask(new ReaderCommand.Close(session));
             afterClose = next;
             Reset();
@@ -190,7 +192,10 @@ public sealed class ReaderSession
         if (Asked is null && session == 0)
             return;
         if (session != 0)
+        {
+            ForgetCredits();
             Ask(new ReaderCommand.Close(session));
+        }
         Reset();
         Asked = null;
         Phase = ReaderPhase.Closed;
@@ -256,6 +261,7 @@ public sealed class ReaderSession
             return;
         End = null;
         Read = false;
+        LeaveChapter();
         ClearNotices();
         Ask(new ReaderCommand.OpenChapter(session, id));
         Phase = ReaderPhase.Opening;
@@ -275,6 +281,7 @@ public sealed class ReaderSession
         Flowing = true;
         End = null;
         Read = false;
+        LeaveChapter();
         ClearNotices();
         Ask(new ReaderCommand.OpenChapter(session, next.Id));
     }
@@ -334,11 +341,13 @@ public sealed class ReaderSession
     /// <summary>The notice leaves.</summary>
     public void Dismiss(ReaderAction? action)
     {
+        var old = Notice;
         Notice = null;
         noticeTimer?.Cancel();
         noticeTimer = null;
         noticeLeft = null;
         Changed?.Invoke(ReaderChange.Notice);
+        NoticeGone(old);
     }
 
     /// <summary>Back to the page the last jump left, while the engine offers it.</summary>
@@ -447,6 +456,8 @@ public sealed class ReaderSession
         {
             case ReaderEvent.Opened opened:
                 var view = opened.V1;
+                ForgetCredits();
+                leaving = null;
                 session = view.Session;
                 View = view;
                 Phase = ReaderPhase.Open;
@@ -480,15 +491,9 @@ public sealed class ReaderSession
                 Changed?.Invoke(ReaderChange.Settings);
                 break;
             case ReaderEvent.Leaves leaves:
-                if (leaves.Session != session)
+                if (leaves.Session != session || leaves.Chapter == leaving)
                     return;
-                Leaves = leaves.LeavesValue;
-                Phase = ReaderPhase.Open;
-                if (Leaves.Length > 0)
-                    Current = Math.Clamp(Math.Max(Current, StartLeaf()), 0, Leaves.Length - 1);
-                Changed?.Invoke(ReaderChange.Leaves);
-                if (pendingGoTo is { } page && LeafOfPageIndex((uint)page) is { } at)
-                    Show(at);
+                TakeLeaves(leaves);
                 break;
             case ReaderEvent.PageReady ready:
                 if (ready.Session != session)
@@ -598,6 +603,16 @@ public sealed class ReaderSession
                     return;
                 GoToPlace(go.Place);
                 break;
+            case ReaderEvent.CreditPages credits:
+                if (credits.Session == session && credits.Chapter == View?.Chapter.Id)
+                    TakeCredits(credits.Pages);
+                break;
+            case ReaderEvent.ChapterParts parts:
+                if (parts.Session != session || parts.Chapter != View?.Chapter.Id)
+                    return;
+                Parts = new ReaderParts(parts.Parts, parts.Total, parts.Missing);
+                Changed?.Invoke(ReaderChange.Parts);
+                break;
             case ReaderEvent.Closed closed:
                 if (closed.Session != session && session != 0)
                     return;
@@ -610,6 +625,71 @@ public sealed class ReaderSession
                 }
                 break;
         }
+    }
+
+    /// <summary>The leaves as the engine laid them out: where the reader was stays where it was.</summary>
+    void TakeLeaves(ReaderEvent.Leaves leaves)
+    {
+        var before = Leaves;
+        var was = Current;
+        var relaid = relay;
+        relay = null;
+        var on = CreditOn;
+        var kept = relaid is { } r ? Credits.FirstOrDefault(c => c.Fingerprint == r.Fingerprint) : null;
+        var hadCredits = Credits.Length > 0 || Parts is not null;
+        // The credit pages and parts that follow a layout are the engine's word on it.
+        Credits = [];
+        Parts = null;
+        creditWanted = null;
+        wantedTimer?.Cancel();
+        Leaves = leaves.LeavesValue;
+        Phase = ReaderPhase.Open;
+        if (relaid is { } re && Leaves.Length > 0)
+        {
+            Renumber(leaves.Chapter, re.Page, kept?.File);
+            if (on?.Fingerprint == re.Fingerprint)
+            {
+                // The kept page was on screen: it stays, now one of the chapter's pages.
+                CreditOn = null;
+                Current = LeafWithPage(re.Page) ?? 0;
+            }
+            else if (on is not null)
+                HoldCredit(on);
+            else
+                Current = RelaidLeaf(before, was, Leaves, re.Page);
+        }
+        else if (on is not null && Leaves.Length > 0)
+            HoldCredit(on);
+        else if (Leaves.Length > 0)
+            Current = Math.Clamp(Math.Max(Current, StartLeaf()), 0, Leaves.Length - 1);
+        Changed?.Invoke(ReaderChange.Leaves);
+        if (relaid is not null && Leaves.Length > 0)
+            // The engine counts the new numbers from the page on screen.
+            Shown(Current, TurnHow.Placed);
+        if (relaid is not null || hadCredits || on is not null)
+            Changed?.Invoke(ReaderChange.Credits);
+        if (pendingGoTo is { } page && LeafOfPageIndex((uint)page) is { } at)
+            Show(at);
+    }
+
+    int? LeafWithPage(uint page)
+    {
+        for (var i = 0; i < Leaves.Length; i++)
+            if (Leaves[i].Parts.Any(p => p.Page == page))
+                return i;
+        return null;
+    }
+
+    /// <summary>
+    /// A credit page is on screen as the chapter is laid out again: it stays while the layout's
+    /// credit pages say whether it is still one, under the leaf it would turn to.
+    /// </summary>
+    void HoldCredit(CreditPage on)
+    {
+        var last = Math.Max(0, Array.FindLastIndex(Leaves, l => !l.EndPage));
+        Current = on.AtEnd ? last : 0;
+        creditWanted = on.Fingerprint;
+        WaitForCredits();
     }
 
     int StartLeaf() => View?.Start.Page is { } page && LeafOfPageIndex(page) is { } at ? at : 0;
@@ -688,15 +768,23 @@ public sealed class ReaderSession
     void Show(ReaderNotice incoming)
     {
         var line = new ReaderNoticeLine(++noticeCount, incoming.Msg.Text(), incoming.Action);
-        noticeTimer?.Cancel();
-        noticeTimer = null;
-        Notice = line;
         var hasAction = incoming.Action is ReaderAction.StartOver or ReaderAction.GoBack or ReaderAction.ChangeMode;
         var hold = NoticeHold(incoming.LastsMs, Words(line.Text), hasAction, ScreenReader?.Invoke() ?? false);
         // 0 is e-ink's: the notice stays until the next turn clears it.
-        noticeLeft = hold is { } ms && ms > 0 ? TimeSpan.FromMilliseconds(ms) : null;
+        Put(line, hold is { } ms && ms > 0 ? ms : null);
+    }
+
+    /// <summary>A notice up for <paramref name="holdMs"/>, or until something takes it away.</summary>
+    void Put(ReaderNoticeLine line, uint? holdMs)
+    {
+        var old = Notice;
+        noticeTimer?.Cancel();
+        noticeTimer = null;
+        Notice = line;
+        noticeLeft = holdMs is { } ms ? TimeSpan.FromMilliseconds(ms) : null;
         Changed?.Invoke(ReaderChange.Notice);
         NoticeClock();
+        NoticeGone(old);
     }
 
     /// <summary>The notice's time runs, or waits while something holds it.</summary>
@@ -733,8 +821,10 @@ public sealed class ReaderSession
             return;
         noticeTimer = null;
         noticeLeft = null;
+        var old = Notice;
         Notice = null;
         Changed?.Invoke(ReaderChange.Notice);
+        NoticeGone(old);
     }
 
     /// <summary>Another chapter opens, or the open failed: neither the notice nor Back to stays over it.</summary>
@@ -743,14 +833,15 @@ public sealed class ReaderSession
         noticeTimer?.Cancel();
         noticeTimer = null;
         noticeLeft = null;
-        var had = Notice is not null;
+        var old = Notice;
         var hadBack = BackTo is not null;
         Notice = null;
         BackTo = null;
-        if (had)
+        if (old is not null)
             Changed?.Invoke(ReaderChange.Notice);
         if (hadBack)
             Changed?.Invoke(ReaderChange.BackTo);
+        NoticeGone(old);
     }
 
     void Reset()
@@ -760,6 +851,7 @@ public sealed class ReaderSession
         noticeLeft = null;
         noticeHover = false;
         pendingStrip?.Cancel();
+        ResetCredits();
         View = null;
         Leaves = [];
         Pages.Clear();
