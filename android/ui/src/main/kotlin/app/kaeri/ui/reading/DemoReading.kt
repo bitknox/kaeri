@@ -83,6 +83,8 @@ import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.PROVIDERS_ROUTE
 import app.kaeri.ui.Place
 import app.kaeri.ui.SettingsGroup
+import app.kaeri.ui.Shared
+import app.kaeri.ui.sharedWork
 import app.kaeri.ui.pixels
 import app.kaeri.ui.providerRoute
 
@@ -353,6 +355,8 @@ internal fun DemoSeriesScreen(series: SeriesView, demo: DemoWorkInfo, actions: A
     val navigator = LocalNavigator.current
     val wide = LocalContext.current.resources.configuration.screenWidthDp >= 700
     Scaffold(
+        // The page grows out of the tile it was opened from and shrinks back into it, as a show's does.
+        modifier = Modifier.fillMaxSize().sharedWork(Shared.Page, series.work, ground = MaterialTheme.colorScheme.surface),
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
