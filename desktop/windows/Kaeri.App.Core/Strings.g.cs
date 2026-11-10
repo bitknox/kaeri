@@ -6739,6 +6739,9 @@ public static partial class T
     /// <summary>A filter.</summary>
     public static string ReadFilterOrigin => Get("ReadFilterOrigin");
 
+    /// <summary>The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.</summary>
+    public static string ReadFilterAnyOrigin => Get("ReadFilterAnyOrigin");
+
     /// <summary>A filter.</summary>
     public static string ReadFilterStatus => Get("ReadFilterStatus");
 
@@ -13956,6 +13959,7 @@ public static partial class T
         ["ReadSortNewest"] = "Newest",
         ["ReadFilterFormat"] = "Format",
         ["ReadFilterOrigin"] = "Origin",
+        ["ReadFilterAnyOrigin"] = "Any origin",
         ["ReadFilterStatus"] = "Status",
         ["ReadFilterGenres"] = "Genres",
         ["ReadFilterTitle"] = "Filters",

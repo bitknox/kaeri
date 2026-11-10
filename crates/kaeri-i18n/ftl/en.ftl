@@ -9798,6 +9798,9 @@ read-filter-format = Format
 # A filter.
 read-filter-origin = Origin
 
+# The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+read-filter-any-origin = Any origin
+
 # A filter.
 read-filter-status = Status
 

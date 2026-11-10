@@ -9300,6 +9300,9 @@ public enum L {
     /// A filter.
     public static var readFilterOrigin: String { string("read-filter-origin", fallback: "Origin") }
 
+    /// The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+    public static var readFilterAnyOrigin: String { string("read-filter-any-origin", fallback: "Any origin") }
+
     /// A filter.
     public static var readFilterStatus: String { string("read-filter-status", fallback: "Status") }
 

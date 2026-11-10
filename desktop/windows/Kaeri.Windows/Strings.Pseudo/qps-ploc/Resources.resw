@@ -9370,6 +9370,10 @@
     <value>[Öŕîĝîñ~~]</value>
     <comment>A filter.</comment>
   </data>
+  <data name="ReadFilterAnyOrigin" xml:space="preserve">
+    <value>[Åñý öŕîĝîñ~~~]</value>
+    <comment>The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.</comment>
+  </data>
   <data name="ReadFilterStatus" xml:space="preserve">
     <value>[Šţàţüš~~]</value>
     <comment>A filter.</comment>

@@ -199177,6 +199177,18 @@
         }
       }
     },
+    "read-filter-any-origin" : {
+      "comment" : "The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any origin"
+          }
+        }
+      }
+    },
     "read-filter-format" : {
       "comment" : "A filter.",
       "extractionState" : "manual",

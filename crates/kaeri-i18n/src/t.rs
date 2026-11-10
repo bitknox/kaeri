@@ -15597,6 +15597,11 @@ pub fn read_filter_origin() -> String {
     text("read-filter-origin", &[])
 }
 
+/// The first choice of the Origin filter's menu in reading's Search once an origin is set: it takes them all off.
+pub fn read_filter_any_origin() -> String {
+    text("read-filter-any-origin", &[])
+}
+
 /// A filter.
 pub fn read_filter_status() -> String {
     text("read-filter-status", &[])
